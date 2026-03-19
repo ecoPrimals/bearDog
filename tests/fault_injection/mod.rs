@@ -6,7 +6,7 @@
     clippy::all
 )]
 
-//! Fault Injection Testing Framework for BearDog
+//! Fault Injection Testing Framework for `BearDog`
 //!
 //! This module provides systematic fault injection capabilities to test
 //! error handling, recovery, and resilience. Unlike chaos testing which
@@ -134,6 +134,7 @@ pub struct FaultInjector {
 
 impl FaultInjector {
     /// Create a new fault injector
+    #[must_use]
     pub fn new(config: FaultConfig) -> Self {
         let enabled = config.enabled;
         Self {
@@ -145,6 +146,7 @@ impl FaultInjector {
     }
 
     /// Create with default configuration
+    #[must_use]
     pub fn default_injector() -> Self {
         Self::new(FaultConfig::default())
     }

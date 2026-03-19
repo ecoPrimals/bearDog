@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! ECDSA Crypto Handlers
 //!
 //! Pure Rust ECDSA signature operations using RustCrypto's elliptic curve crates.

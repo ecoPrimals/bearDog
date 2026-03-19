@@ -19,13 +19,13 @@ use tracing::{debug, info};
 /// Test complete cross-platform HSM discovery workflow
 ///
 /// This E2E test validates:
-/// 1. Platform-specific HSM discovery (TPM, Secure Enclave, StrongBox)
+/// 1. Platform-specific HSM discovery (TPM, Secure Enclave, `StrongBox`)
 /// 2. Network HSM discovery (HTTP health checks, TCP fallback)
 /// 3. Cloud HSM discovery (AWS, Azure, GCP)
 /// 4. Software HSM fallback
 ///
 /// `TEST_CATEGORY`: e2e
-/// `TEST_DOMAIN`: hsm_discovery
+/// `TEST_DOMAIN`: `hsm_discovery`
 /// `TEST_PRIORITY`: critical
 pub async fn run_cross_platform_discovery_test(
     _config: &E2ETestConfig,
@@ -79,7 +79,7 @@ pub async fn run_cross_platform_discovery_test(
     info!("✅ Software HSM available: {}", software_hsm);
 
     // Step 6: Verify total discovery count
-    let total_hsms = platform_hsms + network_hsms + cloud_hsms + if software_hsm { 1 } else { 0 };
+    let total_hsms = platform_hsms + network_hsms + cloud_hsms + usize::from(software_hsm);
     info!("Step 6: Total HSMs discovered: {}", total_hsms);
 
     // At minimum, software HSM should always be available
@@ -102,7 +102,7 @@ pub async fn run_cross_platform_discovery_test(
         platform_hsms,
         network_hsms,
         cloud_hsms,
-        if software_hsm { 1 } else { 0 }
+        i32::from(software_hsm)
     );
     info!("   Duration: {:?}", duration);
     info!(
@@ -125,7 +125,7 @@ async fn initialize_discovery_engine() -> Result<(), BearDogError> {
     Ok(())
 }
 
-/// Discover platform-specific HSMs (TPM, Secure Enclave, StrongBox)
+/// Discover platform-specific HSMs (TPM, Secure Enclave, `StrongBox`)
 async fn discover_platform_hsms() -> Result<usize, BearDogError> {
     debug!("Discovering platform-specific HSMs");
 
@@ -207,16 +207,13 @@ async fn discover_network_hsms() -> Result<usize, BearDogError> {
         .ok()
         .filter(|s| !s.is_empty());
 
-    match known_endpoints {
-        Some(endpoints) => {
-            let endpoint_count = endpoints.split(',').count();
-            info!("   {} known endpoint(s) configured", endpoint_count);
-            Ok(endpoint_count)
-        }
-        None => {
-            debug!("   No known endpoints configured");
-            Ok(0)
-        }
+    if let Some(endpoints) = known_endpoints {
+        let endpoint_count = endpoints.split(',').count();
+        info!("   {} known endpoint(s) configured", endpoint_count);
+        Ok(endpoint_count)
+    } else {
+        debug!("   No known endpoints configured");
+        Ok(0)
     }
 }
 
@@ -275,7 +272,7 @@ async fn discover_software_hsm() -> Result<bool, BearDogError> {
 /// Test HSM discovery with configuration
 ///
 /// `TEST_CATEGORY`: e2e
-/// `TEST_DOMAIN`: hsm_discovery
+/// `TEST_DOMAIN`: `hsm_discovery`
 /// `TEST_PRIORITY`: high
 pub async fn test_discovery_with_configuration() -> Result<E2EMetrics, BearDogError> {
     info!("🔧 Testing HSM discovery with environment configuration");

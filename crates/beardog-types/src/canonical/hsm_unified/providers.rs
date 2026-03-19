@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // HSM Providers Configuration - MODERNIZED
 //
 // This module provides HSM provider configuration with universal capability discovery.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # `BearDog` Monitoring and Metrics
 //!
 //! Comprehensive monitoring, metrics collection, and security sentinel capabilities

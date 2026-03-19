@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 use crate::canonical::config::network::NetworkConfig;
 use crate::canonical::config::security::SecurityConfig;
 use crate::canonical::config::performance::PerformanceConfig;

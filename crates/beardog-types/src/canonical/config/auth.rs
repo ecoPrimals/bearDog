@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Authentication Configuration
 //!
 //! Canonical authentication configuration for managing user identity, sessions, and access control.

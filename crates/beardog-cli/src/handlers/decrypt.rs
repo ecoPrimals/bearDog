@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Decrypt Handler
 // Algorithm-agnostic: Automatically detects encryption algorithm from metadata
 

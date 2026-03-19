@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Genesis Module - Physical Bootstrap with Cryptographic Witness
 //!
 //! **"Never let a bird be alone in the dark forest"**

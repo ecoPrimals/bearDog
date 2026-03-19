@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Capability Detection
 //!
 //! Detects and manages HSM capabilities across different providers.

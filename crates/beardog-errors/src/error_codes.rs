@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Structured Error Code System for BearDog
 //!
 //! This module provides a comprehensive, structured error code system that enables:

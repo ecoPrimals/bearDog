@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! AI operation timeout configuration
 //!
 //! Provides timeout settings for AI decision-making and inference operations.

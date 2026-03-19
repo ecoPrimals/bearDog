@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! CTAP2 Protocol Implementation
 //!
 //! Implements the Client to Authenticator Protocol 2 (CTAP2) for FIDO2 devices.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! AI module tests
 
 /// Day 2: Hybrid Intelligence Comprehensive Tests - October 17, 2025

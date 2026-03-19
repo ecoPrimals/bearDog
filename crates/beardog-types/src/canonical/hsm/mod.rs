@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /// HSM (Hardware Security Module) types and configurations
 //
 // This module provides functionality for the BearDog ecosystem.

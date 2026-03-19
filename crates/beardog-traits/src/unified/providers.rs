@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // # Unified Provider Traits - The Foundation of BearDog Architecture
 //
 // This module defines the core provider traits that form the foundation of the BearDog

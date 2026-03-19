@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Key Rotation Manager
 //!
 //! Orchestrates key rotation operations, managing the complete lifecycle

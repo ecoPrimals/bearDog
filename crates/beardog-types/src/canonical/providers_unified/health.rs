@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Health Monitoring Configuration
 //
 // Provider health check and monitoring configuration.

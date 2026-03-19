@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Unified Human Entropy Classifier
 //!
 //! This module provides a unified classifier for human entropy from various sources
@@ -18,16 +20,12 @@ pub struct UnifiedHumanEntropyClassifier {
 #[derive(Debug, Clone)]
 pub struct TierElevationCriteria {
     /// Minimum entropy quality score for tier elevation
-    #[allow(dead_code)] // Future implementation
     pub min_quality_score: f64,
     /// Whether biometric entropy is required
-    #[allow(dead_code)] // Future implementation
     pub require_biometric: bool,
     /// Whether multiple entropy sources are required
-    #[allow(dead_code)] // Future implementation
     pub require_multiple_sources: bool,
     /// Whether real-time collection is required
-    #[allow(dead_code)] // Future implementation
     pub require_realtime: bool,
 }
 

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Inference Configuration
 //!
 //! Type-safe ML model inference and serving configuration with builder pattern.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Policy Resolution and Data Flow Types
 //!
 //! Test helper types for policy resolution and data flow analysis.

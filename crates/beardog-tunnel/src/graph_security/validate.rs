@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Template validation for security
 //!
 //! This module implements the `graph.validate_template` JSON-RPC method.
@@ -10,6 +12,7 @@ use crate::graph_security::{
 };
 use beardog_errors::BearDogError;
 use std::collections::HashSet;
+use tracing::debug;
 use uuid::Uuid;
 
 /// Validate a graph template for security issues
@@ -196,9 +199,12 @@ async fn verify_signature(
         }));
     }
 
-    // TODO: Get creator's public key via collaboration capability
-    // Future: Use CollaborationService::get_user_public_key(&template.creator)
-    // For now, we can't verify signatures without the collaboration service
+    // Planned: Get creator's public key via CollaborationService::get_user_public_key(&template.creator).
+    // Full signature verification is blocked until collaboration capability integration.
+    debug!(
+        "Template signature present but verification requires CollaborationService (creator: {})",
+        template.creator
+    );
 
     // Return low-severity issue noting signature can't be verified yet
     Ok(Some(ValidationIssue {

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Timeout Constants - UNIFIED
 //!
 //! **CANONICAL TIMEOUT CONSTANTS** - Single source of truth for all timeout durations.

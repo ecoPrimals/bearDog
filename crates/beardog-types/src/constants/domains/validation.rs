@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Validation Threshold Constants
 //!
 //! This module centralizes min/max limits used across validation logic throughout

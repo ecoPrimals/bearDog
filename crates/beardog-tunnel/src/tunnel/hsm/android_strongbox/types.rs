@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Android StrongBox Types
 //
 // Canonical type definitions for Android StrongBox HSM integration

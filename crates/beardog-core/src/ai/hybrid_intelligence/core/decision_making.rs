@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Decision Making and Confidence Assessment
 //!
 //! This module handles decision making, confidence assessment, and feedback

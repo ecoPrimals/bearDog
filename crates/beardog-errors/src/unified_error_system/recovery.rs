@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Error Recovery Module
 //!
 //! This module contains error recovery and remediation functionality.

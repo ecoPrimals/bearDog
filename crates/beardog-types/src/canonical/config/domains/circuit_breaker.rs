@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical Circuit Breaker Configuration
 //!
 //! This module provides the unified, canonical circuit breaker configuration

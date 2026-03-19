@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Population Evolution Integration Tests
 //!
 //! Substantive tests for actual genetic algorithm operations

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Base Provider Traits - Foundation of Unified Provider System
 //
 // This module defines the core BaseProvider trait that all provider implementations

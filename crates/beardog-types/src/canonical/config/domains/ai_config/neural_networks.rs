@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Neural Network Architecture Configuration
 //!
 //! This module contains all neural network architecture types including

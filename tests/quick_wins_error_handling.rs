@@ -1,7 +1,7 @@
 //! Quick Win Tests: Error Handling
 //!
 //! This module contains unit tests focused on verifying basic error handling patterns
-//! for BearDogError. These tests ensure that errors can be created, displayed, propagated,
+//! for `BearDogError`. These tests ensure that errors can be created, displayed, propagated,
 //! and serialized correctly across the system.
 //!
 //! Coverage: Error creation (3 tests), Propagation (1 test), Display/Debug (2 tests), Misc (2 tests)
@@ -24,7 +24,7 @@ fn test_beardog_error_creation() {
 
     // Then: error should contain validation type
     assert!(
-        format!("{:?}", err).contains("validation"),
+        format!("{err:?}").contains("validation"),
         "Should be validation error"
     );
 }
@@ -41,7 +41,7 @@ fn test_beardog_error_system() {
 
     // Then: error should contain system type
     assert!(
-        format!("{:?}", err).contains("System"),
+        format!("{err:?}").contains("System"),
         "Should be system error"
     );
 }
@@ -58,7 +58,7 @@ fn test_beardog_error_business() {
 
     // Then: error should contain business type
     assert!(
-        format!("{:?}", err).contains("Business"),
+        format!("{err:?}").contains("Business"),
         "Should be business error"
     );
 }
@@ -110,7 +110,7 @@ fn test_error_display() {
     let err = BearDogError::validation("Display test");
 
     // When: formatting with Display
-    let display_str = format!("{}", err);
+    let display_str = format!("{err}");
 
     // Then: should produce non-empty output
     assert!(
@@ -130,7 +130,7 @@ fn test_error_debug() {
     let err = BearDogError::validation("Debug test");
 
     // When: formatting with Debug
-    let debug_str = format!("{:?}", err);
+    let debug_str = format!("{err:?}");
 
     // Then: should produce meaningful output
     assert!(!debug_str.is_empty(), "Debug output should not be empty");

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Strategic Test Coverage - EntropyCollector Real Multi-Source Entropy
 //
 // Tests for the newly evolved real entropy collection

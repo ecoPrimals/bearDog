@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Adapter Operations Tests
 //!
 //! Tests for UniversalAdapter operations including:

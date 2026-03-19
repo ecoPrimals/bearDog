@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Modular handler architecture for JSON-RPC methods
 //!
 //! This module implements a trait-based handler registry pattern that allows

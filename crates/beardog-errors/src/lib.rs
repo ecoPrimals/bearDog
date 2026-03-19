@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! `BearDog` Error Handling System
 //!
 //! Comprehensive error handling with rich context, categorization, and automated remediation.

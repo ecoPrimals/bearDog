@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! TLS 1.2 handler tests
 //!
 //! Tests for ECDHE key generation, AES-GCM encryption roundtrips,

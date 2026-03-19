@@ -299,7 +299,7 @@ fn test_error_with_logging_context() {
     assert!(result.is_err());
 
     if let Err(e) = result {
-        let msg = format!("{}", e);
+        let msg = format!("{e}");
         assert!(msg.contains("empty"));
     }
 }
@@ -399,7 +399,7 @@ fn test_canonical_test_config_usage() {
 fn test_type_conversion_scenarios() {
     // Test type conversions and string representations
     let health = HealthStatus::Healthy;
-    let debug_str = format!("{:?}", health);
+    let debug_str = format!("{health:?}");
 
     assert!(!debug_str.is_empty());
     // TEST_CATEGORY: unit

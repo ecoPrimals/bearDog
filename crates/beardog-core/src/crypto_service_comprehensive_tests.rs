@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Crypto Service Tests
 //!
 //! High-value tests for crypto operations covering:

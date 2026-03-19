@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical Rollout Configuration
 //!
 //! This module provides the unified, canonical deployment rollout configuration

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Capability-Based Service Discovery
 //!
 //! **EVOLVED**: Zero vendor hardcoding! Uses capability-based discovery.
@@ -49,14 +51,11 @@ struct DiscoveredProvider {
     /// Provider name (e.g., "consul", "etcd", "nestgate")
     name: String,
     /// Provider capabilities
-    #[allow(dead_code)]
-    capabilities: Vec<String>,
+    _capabilities: Vec<String>,
     /// Provider endpoint (Unix socket path or URL)
-    #[allow(dead_code)]
-    endpoint: String,
+    _endpoint: String,
     /// When discovered
-    #[allow(dead_code)]
-    discovered_at: SystemTime,
+    _discovered_at: SystemTime,
 }
 
 /// Cached services with TTL
@@ -206,13 +205,13 @@ impl ServiceRegistryDiscovery {
             .into_iter()
             .map(|service| DiscoveredProvider {
                 name: service.id.clone(),
-                capabilities: service
+                _capabilities: service
                     .capabilities
                     .iter()
                     .map(|c| format!("{:?}", c))
                     .collect(),
-                endpoint: service.endpoint.primary_url.clone(),
-                discovered_at: SystemTime::now(),
+                _endpoint: service.endpoint.primary_url.clone(),
+                _discovered_at: SystemTime::now(),
             })
             .collect();
 

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Doctor mode handler - health diagnostics
 //!
 //! Comprehensive health checks for BearDog system.

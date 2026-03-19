@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive tests for neural_registration module
 //!
 //! Tests Tower Atomic TRUE PRIMAL pattern implementation

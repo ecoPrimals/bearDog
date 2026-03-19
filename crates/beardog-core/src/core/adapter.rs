@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Universal Adapter for Ecosystem Service Discovery
 //!
 //! Provides zero-knowledge capability discovery and service coordination
@@ -81,5 +83,73 @@ impl UniversalAdapter {
 impl Default for UniversalAdapter {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use beardog_types::canonical::capabilities::CapabilityType;
+
+    #[tokio::test]
+    async fn test_adapter_new() {
+        let adapter = UniversalAdapter::new();
+        let result = adapter
+            .discover_capability_endpoint(CapabilityType::KeyManagement)
+            .await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_adapter_register_and_discover() {
+        let adapter = UniversalAdapter::new();
+        adapter
+            .register_capability(
+                CapabilityType::KeyManagement,
+                "http://localhost:8080/kms".to_string(),
+            )
+            .await
+            .expect("register");
+        let endpoint = adapter
+            .discover_capability_endpoint(CapabilityType::KeyManagement)
+            .await
+            .expect("discover");
+        assert_eq!(endpoint, "http://localhost:8080/kms");
+    }
+
+    #[tokio::test]
+    async fn test_adapter_discover_unregistered() {
+        let adapter = UniversalAdapter::new();
+        let result = adapter
+            .discover_capability_endpoint(CapabilityType::HardwareSecurityModule)
+            .await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_adapter_default() {
+        let adapter = UniversalAdapter::default();
+        let result = adapter
+            .discover_capability_endpoint(CapabilityType::Authentication)
+            .await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_adapter_overwrite_capability() {
+        let adapter = UniversalAdapter::new();
+        adapter
+            .register_capability(CapabilityType::KeyManagement, "http://old:8080".to_string())
+            .await
+            .expect("register");
+        adapter
+            .register_capability(CapabilityType::KeyManagement, "http://new:9090".to_string())
+            .await
+            .expect("overwrite");
+        let endpoint = adapter
+            .discover_capability_endpoint(CapabilityType::KeyManagement)
+            .await
+            .expect("discover");
+        assert_eq!(endpoint, "http://new:9090");
     }
 }

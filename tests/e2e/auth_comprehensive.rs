@@ -154,7 +154,7 @@ pub async fn test_complete_user_registration_flow(
 
     // Calculate metrics
     metrics.average_latency_ms = latencies.iter().sum::<f64>() / latencies.len() as f64;
-    metrics.peak_latency_ms = latencies.iter().cloned().fold(0.0, f64::max);
+    metrics.peak_latency_ms = latencies.iter().copied().fold(0.0, f64::max);
     metrics.data_verified = true;
 
     info!("✅ E2E-AUTH-001: Complete User Registration Flow PASSED");
@@ -269,7 +269,7 @@ pub async fn test_multi_factor_authentication_flow(
 
     // Calculate metrics
     metrics.average_latency_ms = latencies.iter().sum::<f64>() / latencies.len() as f64;
-    metrics.peak_latency_ms = latencies.iter().cloned().fold(0.0, f64::max);
+    metrics.peak_latency_ms = latencies.iter().copied().fold(0.0, f64::max);
     metrics.data_verified = true;
 
     info!("✅ E2E-AUTH-002: Multi-Factor Authentication Flow PASSED");
@@ -340,7 +340,7 @@ pub async fn test_session_management_and_expiry(
 
     // Calculate metrics
     metrics.average_latency_ms = latencies.iter().sum::<f64>() / latencies.len() as f64;
-    metrics.peak_latency_ms = latencies.iter().cloned().fold(0.0, f64::max);
+    metrics.peak_latency_ms = latencies.iter().copied().fold(0.0, f64::max);
     metrics.data_verified = true;
 
     info!("✅ E2E-AUTH-003: Session Management & Expiry PASSED");
@@ -361,10 +361,8 @@ pub async fn test_permission_based_access_control(
     // Step 1: Create users with different roles
     info!("  Step 1: Create users with roles");
     for role in &["user", "admin", "auditor"] {
-        let payload = format!(
-            r#"{{"email": "{}@beardog.io", "password": "pass", "role": "{}"}}"#,
-            role, role
-        );
+        let payload =
+            format!(r#"{{"email": "{role}@beardog.io", "password": "pass", "role": "{role}"}}"#);
         let (response, _) = measure_latency(|| async {
             simulate_api_request("/api/v1/auth/register", Some(&payload)).await
         })
@@ -454,7 +452,7 @@ pub async fn test_permission_based_access_control(
 
     // Calculate metrics
     metrics.average_latency_ms = latencies.iter().sum::<f64>() / latencies.len() as f64;
-    metrics.peak_latency_ms = latencies.iter().cloned().fold(0.0, f64::max);
+    metrics.peak_latency_ms = latencies.iter().copied().fold(0.0, f64::max);
     metrics.data_verified = true;
 
     info!("✅ E2E-AUTH-004: Permission-Based Access Control PASSED");
@@ -570,7 +568,7 @@ pub async fn test_credential_recovery_flow(
 
     // Calculate metrics
     metrics.average_latency_ms = latencies.iter().sum::<f64>() / latencies.len() as f64;
-    metrics.peak_latency_ms = latencies.iter().cloned().fold(0.0, f64::max);
+    metrics.peak_latency_ms = latencies.iter().copied().fold(0.0, f64::max);
     metrics.data_verified = true;
 
     info!("✅ E2E-AUTH-005: Credential Recovery Flow PASSED");

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Zero-cost abstractions for BearDog
 //
 // This module provides zero-cost abstractions for performance-critical operations.

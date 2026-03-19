@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Handler Recovery Tests
 //!
 //! `TEST_CATEGORY`: unit

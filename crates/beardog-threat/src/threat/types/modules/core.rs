@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Core Threat Detection Types
 //!
 //! This module provides the fundamental types for threat detection including

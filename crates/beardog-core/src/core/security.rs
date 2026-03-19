@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core Security Provider
 //!
 //! Implements essential security services including authentication, authorization,

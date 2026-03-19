@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Software HSM memory management
 //!
 //! Provides secure memory management with automatic zeroing to prevent

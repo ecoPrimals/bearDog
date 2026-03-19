@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Production Ecosystem Lifecycle Tests
 //! Created: October 26, 2025
 //! Purpose: Week 2 Day 3 - Test ecosystem lifecycle, state transitions, and edge cases

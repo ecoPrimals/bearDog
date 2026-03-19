@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // BTSP (BearDog Tunnel Security Protocol) Provider Implementation
 //!
 //! **Note**: "BTSP" is used for developer context. The implementation uses generic
@@ -104,12 +106,10 @@ use types::PeerTrustRecord;
 /// BearDog's implementation of BTSP using genetic cryptography
 pub struct BeardogBtspProvider {
     /// HSM manager for cryptographic operations (reserved for lineage verification)
-    #[allow(dead_code)]
-    hsm: Arc<HsmManager>,
+    _hsm: Arc<HsmManager>,
 
     /// Genetics engine for key lineage and evolution (reserved for multi-hop paths)
-    #[allow(dead_code)]
-    genetics: Arc<EcosystemGeneticEngine>,
+    _genetics: Arc<EcosystemGeneticEngine>,
 
     /// BirdSong manager for lineage-aware encryption
     birdsong: Arc<BirdSongManager>,
@@ -152,8 +152,8 @@ impl BeardogBtspProvider {
         let birdsong = Arc::new(BirdSongManager::new(dummy_master_key, None).await?);
 
         Ok(Self {
-            hsm,
-            genetics,
+            _hsm: hsm,
+            _genetics: genetics,
             birdsong,
             tunnels: Arc::new(RwLock::new(HashMap::new())),
             trust_db: Arc::new(RwLock::new(HashMap::new())),
@@ -223,8 +223,8 @@ impl BeardogBtspProvider {
         info!("✅ BearDog BTSP Provider initialized with BirdSong genetics");
 
         Ok(Self {
-            hsm,
-            genetics,
+            _hsm: hsm,
+            _genetics: genetics,
             birdsong: Arc::new(birdsong),
             tunnels: Arc::new(RwLock::new(HashMap::new())),
             trust_db: Arc::new(RwLock::new(HashMap::new())),

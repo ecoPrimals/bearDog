@@ -31,9 +31,15 @@ beardog-security = { workspace = true }
 beardog-types = { workspace = true }
 beardog-utils = { path = "../crates/beardog-utils" }
 criterion = { version = "0.5", features = ["html_reports"] }
-pprof = { version = "0.13", features = ["criterion", "flamegraph"] }
+# Optional: pprof links to C (libc); default build is ecoBin-compliant
+pprof = { version = "0.13", features = ["criterion", "flamegraph"], optional = true }
 tokio = { version = "1.0", features = ["full"] }
 toml = "0.8"
 serde = { version = "1.0", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
-tracing = "0.1" 
+tracing = "0.1"
+
+[features]
+default = []
+# Enable flamegraph profiling (pprof links to C; opt-in for ecoBin compliance)
+profiling = ["dep:pprof"]

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Operation Router
 //!
 //! Routes operations to appropriate HSM providers based on requirements and availability.

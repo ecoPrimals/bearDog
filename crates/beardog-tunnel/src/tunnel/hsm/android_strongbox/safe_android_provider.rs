@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Safe Android Provider
 //!
 //! This module provides safe Android hardware-backed cryptographic operations.
@@ -10,7 +12,7 @@ use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 // Complete types to replace archived safe_keystore_replacement
 #[derive(Debug, Clone)]
@@ -388,9 +390,11 @@ impl SafeAndroidKeystore {
             .get(key_id)
             .ok_or_else(|| BearDogError::not_found(format!("Key {key_id} not found")))?;
 
-        // TODO: Implement actual Android StrongBox JNI call
-        // This requires JNI bindings to Android Keystore API
-        // For now, return error indicating real implementation needed
+        // Phase 2: JNI integration required. Actual Android StrongBox signing needs JNI bindings
+        // to Android Keystore API. Use SoftwareHSM provider as fallback until then.
+        warn!(
+            "Android StrongBox signing not yet implemented (JNI Phase 2); use SoftwareHSM fallback"
+        );
         Err(BearDogError::not_implemented(
             "Android StrongBox signing requires JNI integration (not yet implemented). \
              Use SoftwareHSM provider as fallback.",
@@ -439,7 +443,9 @@ impl SafeAndroidKeystore {
             .get(key_id)
             .ok_or_else(|| BearDogError::not_found(format!("Key {key_id} not found")))?;
 
-        // TODO: Implement actual Android StrongBox JNI call
+        // Phase 2: JNI integration required. Actual Android StrongBox verification needs JNI
+        // bindings to Android Keystore API.
+        warn!("Android StrongBox signature verification not yet implemented (JNI Phase 2)");
         Err(BearDogError::not_implemented(
             "Android StrongBox signature verification requires JNI integration (not yet implemented)"
         ))

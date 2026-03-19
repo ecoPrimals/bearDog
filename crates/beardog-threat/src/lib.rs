@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # `BearDog` Threat Detection and Analysis
 //!
 //! Advanced threat detection and security analysis for the `BearDog` ecosystem,

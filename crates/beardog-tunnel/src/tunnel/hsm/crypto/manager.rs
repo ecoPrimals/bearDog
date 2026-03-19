@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Crypto Provider Manager
 //!
 //! Manages multiple crypto providers and selects the best one for each operation.

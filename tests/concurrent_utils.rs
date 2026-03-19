@@ -66,6 +66,7 @@ impl CompletionSignal {
 }
 
 /// Create a completion signal
+#[must_use]
 pub fn completion_signal() -> (CompletionSignal, oneshot::Receiver<()>) {
     let (tx, rx) = oneshot::channel();
     (CompletionSignal { tx: Some(tx) }, rx)
@@ -106,7 +107,7 @@ where
 
     let result = tokio::select! {
         _ = rx.changed() => Ok(()),
-        _ = tokio::time::sleep(timeout) => {
+        () = tokio::time::sleep(timeout) => {
             handle.abort();
             Err(BearDogError::internal("Timeout waiting for condition".to_string()))
         }
@@ -153,6 +154,7 @@ where
 ///     });
 /// }
 /// ```
+#[must_use]
 pub fn create_barrier(n: usize) -> Arc<Barrier> {
     Arc::new(Barrier::new(n))
 }
@@ -173,6 +175,7 @@ pub fn create_barrier(n: usize) -> Arc<Barrier> {
 ///
 /// notify.notified().await;
 /// ```
+#[must_use]
 pub fn create_notify() -> Arc<Notify> {
     Arc::new(Notify::new())
 }
@@ -205,6 +208,7 @@ impl<T: Clone> ObservableState<T> {
     }
 
     /// Get current state
+    #[must_use]
     pub fn current(&self) -> T {
         self.tx.borrow().clone()
     }
@@ -257,7 +261,7 @@ where
     for handle in handles {
         let result = handle
             .await
-            .map_err(|e| BearDogError::internal(format!("Task panicked: {}", e)))??;
+            .map_err(|e| BearDogError::internal(format!("Task panicked: {e}")))??;
         results.push(result);
     }
 
@@ -281,6 +285,7 @@ impl<T> TestFixture<T> {
     }
 
     /// Get reference to state
+    #[must_use]
     pub fn state(&self) -> &T {
         &self.state
     }

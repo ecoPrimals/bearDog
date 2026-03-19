@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Session Management Tests
 //
 // Comprehensive tests for secure session creation, management, and lifecycle

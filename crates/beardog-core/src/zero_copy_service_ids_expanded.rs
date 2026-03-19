@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Expanded zero-copy service IDs for all BearDog crates
 //!
 //! Provides string interning for frequently used service IDs, endpoint URLs,

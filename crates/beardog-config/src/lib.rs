@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # `BearDog` Configuration
 //!
 //! Zero-hardcoding configuration system for `BearDog` with hierarchical loading:

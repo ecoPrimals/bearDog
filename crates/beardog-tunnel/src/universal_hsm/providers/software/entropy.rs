@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Software HSM entropy collection
 
 use beardog_errors::BearDogError;

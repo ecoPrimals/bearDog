@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Domain-specific configuration modules
 
 pub mod capacity;

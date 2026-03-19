@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Security Events Module
 //!
 //! Provides event types for security-related occurrences in the tunnel system.

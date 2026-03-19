@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Storage types for ecosystem integration
 
 use beardog_types::canonical::HealthStatus;

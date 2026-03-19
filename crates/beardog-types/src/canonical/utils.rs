@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical Types Utilities
 //!
 //! Utility functions for working with canonical types, including validation,

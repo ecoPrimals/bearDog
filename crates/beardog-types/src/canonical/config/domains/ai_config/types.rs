@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Type-safe newtypes and validated values for AI configuration
 //!
 //! This module provides compile-time and runtime validation through the type system.

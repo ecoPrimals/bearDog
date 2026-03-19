@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Capability metadata structures
 //!
 //! Defines metadata for capability advertisement and discovery.

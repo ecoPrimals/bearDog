@@ -1,4 +1,4 @@
-//! Fuzzing Test Framework for BearDog
+//! Fuzzing Test Framework for `BearDog`
 //!
 //! Implements property-based and fuzz testing infrastructure
 //! to discover edge cases and security vulnerabilities through
@@ -61,13 +61,14 @@ pub struct StringParserFuzzer {
 }
 
 impl StringParserFuzzer {
+    #[must_use]
     pub fn new(max_length: usize) -> Self {
         Self { max_length }
     }
 }
 
 impl FuzzTarget for StringParserFuzzer {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "String Parser"
     }
 
@@ -99,6 +100,7 @@ impl FuzzTarget for StringParserFuzzer {
 pub struct JsonParserFuzzer;
 
 impl JsonParserFuzzer {
+    #[must_use]
     pub fn new() -> Self {
         Self
     }
@@ -111,7 +113,7 @@ impl Default for JsonParserFuzzer {
 }
 
 impl FuzzTarget for JsonParserFuzzer {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "JSON Parser"
     }
 
@@ -124,7 +126,7 @@ impl FuzzTarget for JsonParserFuzzer {
                     Ok(false)
                 } else {
                     // Unexpected errors might indicate bugs
-                    Err(format!("Unexpected error: {}", e))
+                    Err(format!("Unexpected error: {e}"))
                 }
             }
         }
@@ -139,6 +141,7 @@ impl FuzzTarget for JsonParserFuzzer {
 pub struct ConfigParserFuzzer;
 
 impl ConfigParserFuzzer {
+    #[must_use]
     pub fn new() -> Self {
         Self
     }
@@ -151,7 +154,7 @@ impl Default for ConfigParserFuzzer {
 }
 
 impl FuzzTarget for ConfigParserFuzzer {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "Config Parser"
     }
 
@@ -202,6 +205,7 @@ pub struct FuzzEngine {
 }
 
 impl FuzzEngine {
+    #[must_use]
     pub fn new(config: FuzzConfig) -> Self {
         let seed = config.seed.unwrap_or_else(|| {
             use std::time::{SystemTime, UNIX_EPOCH};
@@ -231,16 +235,13 @@ impl FuzzEngine {
             target.reset();
 
             // Process input
-            match target.process(&input) {
-                Ok(_) => {
-                    // Valid or expected failure
-                }
-                Err(_) => {
-                    // Unexpected failure
-                    failures += 1;
-                    if failure_inputs.len() < 10 {
-                        failure_inputs.push(input);
-                    }
+            if let Ok(_) = target.process(&input) {
+                // Valid or expected failure
+            } else {
+                // Unexpected failure
+                failures += 1;
+                if failure_inputs.len() < 10 {
+                    failure_inputs.push(input);
                 }
             }
 
@@ -272,13 +273,11 @@ impl FuzzEngine {
 
                     (*t).reset();
 
-                    match (*t).process(&input) {
-                        Ok(_) => {}
-                        Err(_) => {
-                            failures += 1;
-                            if failure_inputs.len() < 10 {
-                                failure_inputs.push(input);
-                            }
+                    if let Ok(_) = (*t).process(&input) {
+                    } else {
+                        failures += 1;
+                        if failure_inputs.len() < 10 {
+                            failure_inputs.push(input);
                         }
                     }
 
@@ -307,7 +306,7 @@ impl FuzzEngine {
                 "❌ FAIL"
             };
 
-            println!("{} {}", status, name);
+            println!("{status} {name}");
             println!("   Iterations: {}", result.iterations_run);
             println!("   Failures: {}", result.failures);
 
@@ -319,17 +318,14 @@ impl FuzzEngine {
             }
 
             if let Some(coverage) = result.coverage_percent {
-                println!("   Coverage: {:.2}%", coverage);
+                println!("   Coverage: {coverage:.2}%");
             }
             println!();
         }
 
         let total_iterations: usize = results.iter().map(|r| r.iterations_run).sum();
         let total_failures: usize = results.iter().map(|r| r.failures).sum();
-        println!(
-            "Total iterations: {} | Total failures: {}\n",
-            total_iterations, total_failures
-        );
+        println!("Total iterations: {total_iterations} | Total failures: {total_failures}\n");
     }
 }
 

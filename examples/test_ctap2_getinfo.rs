@@ -1,7 +1,7 @@
-//! Test CTAP2 GetInfo Command with Real Hardware (Pure Rust)
+//! Test CTAP2 `GetInfo` Command with Real Hardware (Pure Rust)
 //!
-//! This example tests the CTAP2 GetInfo command implementation
-//! with actual FIDO2 devices (SoloKeys, YubiKey, etc.).
+//! This example tests the CTAP2 `GetInfo` command implementation
+//! with actual FIDO2 devices (`SoloKeys`, `YubiKey`, etc.).
 //!
 //! # ecoBin Compliance
 //!
@@ -114,7 +114,7 @@ async fn run_ctap2_test() -> Result<(), beardog_errors::BearDogError> {
                 // CTAP2 GetInfo: [CTAP2_CMD_GET_INFO]
                 let ctap2_getinfo = vec![0x04];
                 if let Err(e) = device.write(&ctap2_getinfo).await {
-                    println!("Failed to send command: {}", e);
+                    println!("Failed to send command: {e}");
                     continue;
                 }
 
@@ -124,21 +124,21 @@ async fn run_ctap2_test() -> Result<(), beardog_errors::BearDogError> {
                     Ok(n) if n > 0 => {
                         let status = response[0];
                         if status == 0x00 {
-                            println!("GetInfo SUCCESS! (status: 0x{:02x})", status);
-                            println!("Response: {} bytes", n);
+                            println!("GetInfo SUCCESS! (status: 0x{status:02x})");
+                            println!("Response: {n} bytes");
                             // Full CBOR parsing would go here
                             // For now, just show raw response
                             println!("Raw (first 64 bytes): {:02x?}", &response[..n.min(64)]);
                         } else {
-                            println!("GetInfo returned error status: 0x{:02x}", status);
+                            println!("GetInfo returned error status: 0x{status:02x}");
                         }
                     }
                     Ok(_) => println!("No response received"),
-                    Err(e) => println!("Read error: {}", e),
+                    Err(e) => println!("Read error: {e}"),
                 }
             }
             Err(e) => {
-                println!("Failed to open device: {}", e);
+                println!("Failed to open device: {e}");
                 println!("This might be:");
                 println!(
                     "   - Permission issues (try: sudo chmod 666 {})",

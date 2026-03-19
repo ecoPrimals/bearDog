@@ -1,6 +1,6 @@
-//! BearDog Core Initialization Tests
+//! `BearDog` Core Initialization Tests
 //!
-//! This module contains unit and integration tests for BearDogCore initialization,
+//! This module contains unit and integration tests for `BearDogCore` initialization,
 //! configuration, and component access. Tests verify that the core can be created,
 //! initialized, and that all components are properly accessible.
 //!
@@ -13,7 +13,7 @@ use beardog_types::canonical::config::unified::UnifiedBearDogConfig as BearDogCo
 // Core Creation Tests
 // ============================================================================
 
-/// Tests that BearDogCore can be created with default configuration
+/// Tests that `BearDogCore` can be created with default configuration
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -29,7 +29,7 @@ fn test_core_new_with_default_config() {
     // Then: should successfully create instance without panicking
 }
 
-/// Tests that BearDogCore can be created using convenience factory method
+/// Tests that `BearDogCore` can be created using convenience factory method
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Buffer Size Constants - UNIFIED
 //!
 //! **CANONICAL BUFFER CONSTANTS** - Single source of truth for all buffer sizes.

@@ -1,6 +1,6 @@
 # BearDog Roadmap
 
-**Updated**: February 11, 2026
+**Updated**: March 19, 2026
 **Status**: Production Ready
 
 ---
@@ -23,10 +23,13 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. All core 
 - HSM abstraction (software, PKCS#11, StrongBox)
 - `once_cell` migrated to `std::sync::LazyLock`
 - All production `unwrap()`/`expect()` eliminated (zero panic paths)
-- 12,751+ tests across 30 crates
+- 8,542+ tests across 29 crates (0 failures)
 - Deep debt evolution (20/20 rounds)
-- Doc comments added (328 warnings resolved)
-- Smart refactoring of oversized files
+- SPDX license headers on all 1,634 .rs files
+- Zero `#[allow()]` in production code
+- ecoBin C-dependency compliance (sysinfo removed, blake3 pure, pprof optional)
+- Smart refactoring of oversized files into submodule directories
+- Deprecated usage tracked with migration plans
 
 ### Platform Coverage
 
@@ -44,11 +47,18 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. All core 
 
 ### Test Coverage to 90%
 
-Current coverage is 78.6% (up from ~62% baseline). Targeting 90% across all crates.
+Coverage improved significantly in March 2026 wave. Targeting 90% across all crates.
 
-**Crates above 90%**: beardog-workflows (96.75%), beardog-threat (96.99%), beardog-monitoring (93.05%), beardog-hid (92.86%), beardog-utils (92.28%), beardog-config (92.06%), beardog-security (91.94%), beardog-genetics (90.87%), beardog-adapters (90.20%).
+**Crates at or above target**: beardog-workflows (97%), beardog-utils (92%), beardog-genetics (90%).
 
-**Crates in progress**: beardog-types (78.60%), beardog-tunnel (75.60%).
+**Crates in progress**: beardog-types (82%), beardog-core (74%), beardog-tunnel (73%), beardog-security (64% — much code is behind platform feature gates), beardog-ipc (41%).
+
+### primalSpring Capability Audit Fixes
+
+Three quick fixes from the [primalSpring capability audit](../primalSpring/wateringHole/handoffs/BEARDOG_CAPABILITY_AUDIT_MAR18_2026.md):
+1. Register `health.liveness` and `health.readiness` method aliases
+2. Register `capabilities.list` method alias
+3. Register bare crypto method aliases for Songbird TLS 1.3 compatibility
 
 ### Relay-Assisted Coordinated Punch (BearDog Step 3 — Complete)
 
@@ -94,4 +104,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: February 11, 2026
+**Last Updated**: March 19, 2026

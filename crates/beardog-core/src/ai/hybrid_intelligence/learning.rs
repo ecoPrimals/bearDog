@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Learning systems and optimization algorithms
 //
 // ⚠️ DEPRECATED: This module is being migrated to the canonical location.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Persistent audit storage implementation
 
 use super::super::types::{AuditLogEntry, AuditLogFilter};
@@ -11,7 +13,6 @@ use tracing::{debug, info};
 
 /// Persistent audit storage implementation
 #[derive(Debug, Clone)]
-#[allow(dead_code)] // Fields used in future implementation
 pub struct PersistentAuditStorage {
     file_path: std::path::PathBuf,
     cache: Arc<RwLock<VecDeque<AuditLogEntry>>>,

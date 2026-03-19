@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Configuration Tests
 //
 // Comprehensive tests for tunnel configuration types

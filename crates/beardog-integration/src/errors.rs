@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Integration-specific error types
 //!
 //! **EVOLVED**: Removed reqwest dependency (Tower Atomic uses Unix sockets, not HTTP)

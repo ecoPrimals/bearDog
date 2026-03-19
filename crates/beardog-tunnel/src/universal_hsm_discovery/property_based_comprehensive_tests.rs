@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Property-Based Testing
 //!
 //! Extended test coverage using property-based testing including:

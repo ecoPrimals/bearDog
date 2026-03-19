@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Automatic certificate renewal
 //!
 //! Handles automatic renewal for certificates that are about to expire.

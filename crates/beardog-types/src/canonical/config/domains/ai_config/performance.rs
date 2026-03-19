@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Performance and Security Configuration
 //!
 //! AI performance optimization and security settings.

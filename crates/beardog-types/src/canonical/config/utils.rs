@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Unified Config Utils System
 //!
 //! This module consolidates ALL scattered config utility modules across the BearDog ecosystem

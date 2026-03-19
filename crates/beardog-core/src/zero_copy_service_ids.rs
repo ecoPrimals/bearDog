@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Zero-copy service ID manager
 //!
 //! Provides string interning for frequently used service IDs, endpoint URLs,

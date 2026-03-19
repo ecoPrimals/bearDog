@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Unified Canonical Provider Configuration
 //
 // This module consolidates all provider configuration patterns across BearDog into a single,

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Integration Patterns Module
 //
 // This module provides focused integration patterns for the BearDog ecosystem,

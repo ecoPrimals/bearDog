@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core AI Configuration
 //!
 //! Consolidated configuration that brings together all AI/ML subsystems.

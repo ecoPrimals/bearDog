@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Analysis Module - Anomaly Detection and Trend Analysis
 
 use super::config::{AnomalyConfig, TrendConfig};

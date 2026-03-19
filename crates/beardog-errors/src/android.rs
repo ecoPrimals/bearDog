@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Android-specific structured errors
 //!
 //! These errors provide clear, actionable information about Android platform limitations

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Unified HSM Provider - Modular Architecture
 //!
 //! This module provides the **unified HSM provider** that consolidates all scattered

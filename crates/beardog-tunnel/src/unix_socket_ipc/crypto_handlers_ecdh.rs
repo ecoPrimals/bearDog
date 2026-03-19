@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! ECDH Key Exchange Handlers (Phase 6 - Critical TLS 1.3 Gap)
 //!
 //! Provides Elliptic Curve Diffie-Hellman (ECDH) key exchange for TLS 1.3.

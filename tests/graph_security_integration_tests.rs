@@ -44,7 +44,7 @@ async fn send_jsonrpc_request(
 
     // Send request
     let request_str = serde_json::to_string(&request).unwrap();
-    eprintln!("Sending request: {}", request_str);
+    eprintln!("Sending request: {request_str}");
     stream.write_all(request_str.as_bytes()).await.unwrap();
     stream.write_all(b"\n").await.unwrap();
     stream.flush().await.unwrap();

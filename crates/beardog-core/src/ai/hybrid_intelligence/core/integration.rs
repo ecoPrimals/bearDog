@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # External System Integration
 //!
 //! This module handles integration with external systems, data exchange protocols,

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Property-Based Testing Framework - Canonical Location
 //!
 //! **Unified property-based testing framework** - consolidated from scattered implementations.

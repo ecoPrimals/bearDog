@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Safe buffer pool implementation for BearDog
 // Provides memory-efficient buffer management without unsafe code
 

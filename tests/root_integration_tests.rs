@@ -5,7 +5,7 @@
 //!
 //! `TEST_CATEGORY`: integration
 //! `TEST_PRIORITY`: high
-//! COVERAGE_TARGET: src/lib.rs
+//! `COVERAGE_TARGET`: src/lib.rs
 //!
 //! ✅ FULLY CONCURRENT (Dec 8, 2025): NO serial markers, NO env var races
 //! - All tests use explicit configuration
@@ -115,8 +115,7 @@ async fn test_discover_services_with_valid_config() {
     // Either discovers services or gracefully handles when services aren't available
     assert!(
         result.is_ok() || matches!(result, Err(BearDogError::Configuration(_))),
-        "Should either succeed or fail gracefully, got: {:?}",
-        result
+        "Should either succeed or fail gracefully, got: {result:?}"
     );
     if let Ok(services) = result {
         assert!(
@@ -141,8 +140,7 @@ async fn test_discover_services_missing_compute_endpoint() {
     if let Err(BearDogError::Configuration(msg)) = result {
         assert!(
             msg.contains("BEARDOG_COMPUTE_ENDPOINT"),
-            "Error message should mention BEARDOG_COMPUTE_ENDPOINT, got: {}",
-            msg
+            "Error message should mention BEARDOG_COMPUTE_ENDPOINT, got: {msg}"
         );
     } else {
         panic!("Expected Configuration error");
@@ -166,11 +164,10 @@ async fn test_discover_services_missing_storage_endpoint() {
     } else if let Err(BearDogError::Configuration(msg)) = result {
         assert!(
             msg.contains("BEARDOG_STORAGE_ENDPOINT") || msg.contains("BEARDOG_COMPUTE_ENDPOINT"),
-            "Error message should mention missing endpoint configuration, got: {}",
-            msg
+            "Error message should mention missing endpoint configuration, got: {msg}"
         );
     } else {
-        panic!("Expected Configuration error, got: {:?}", result);
+        panic!("Expected Configuration error, got: {result:?}");
     }
 }
 
@@ -309,7 +306,7 @@ async fn test_stats_persistence_across_operations() {
 #[test]
 fn test_error_configuration_display() {
     let err = BearDogError::Configuration("test config error".to_string());
-    let msg = format!("{}", err);
+    let msg = format!("{err}");
     assert!(msg.contains("Configuration error"));
     assert!(msg.contains("test config error"));
 }
@@ -317,7 +314,7 @@ fn test_error_configuration_display() {
 #[test]
 fn test_error_discovery_display() {
     let err = BearDogError::Discovery("test discovery error".to_string());
-    let msg = format!("{}", err);
+    let msg = format!("{err}");
     assert!(msg.contains("Discovery error"));
     assert!(msg.contains("test discovery error"));
 }
@@ -325,7 +322,7 @@ fn test_error_discovery_display() {
 #[test]
 fn test_error_performance_display() {
     let err = BearDogError::Performance("test performance error".to_string());
-    let msg = format!("{}", err);
+    let msg = format!("{err}");
     assert!(msg.contains("Performance error"));
     assert!(msg.contains("test performance error"));
 }
@@ -333,7 +330,7 @@ fn test_error_performance_display() {
 #[test]
 fn test_error_general_display() {
     let err = BearDogError::General("test general error".to_string());
-    let msg = format!("{}", err);
+    let msg = format!("{err}");
     assert!(msg.contains("BearDog error"));
     assert!(msg.contains("test general error"));
 }
@@ -341,7 +338,7 @@ fn test_error_general_display() {
 #[test]
 fn test_error_debug_format() {
     let err = BearDogError::Configuration("test".to_string());
-    let debug_str = format!("{:?}", err);
+    let debug_str = format!("{err:?}");
     assert!(debug_str.contains("Configuration"));
 }
 
@@ -410,7 +407,7 @@ fn test_service_info_debug() {
         metadata: [].into(),
     };
 
-    let debug_str = format!("{:?}", service);
+    let debug_str = format!("{service:?}");
     assert!(debug_str.contains("test"));
     assert!(debug_str.contains("cap"));
 }

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Concurrent Operations Tests
 //!
 //! Real-world concurrent scenario tests for thread-safe operations,

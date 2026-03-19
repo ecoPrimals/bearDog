@@ -10,7 +10,7 @@
 
 //! Full-stack integration end-to-end test
 //!
-//! This test validates complete integration across all BearDog layers:
+//! This test validates complete integration across all `BearDog` layers:
 //! 1. API layer (request handling)
 //! 2. Business logic layer (core processing)
 //! 3. Security layer (authentication, encryption)
@@ -110,8 +110,7 @@ pub async fn run_full_stack_integration_test(
         let integrity_ok = verify_data_integrity(entity_id).await?;
         if !integrity_ok {
             return Err(BearDogError::internal(format!(
-                "Data persistence check failed for: {}",
-                entity_id
+                "Data persistence check failed for: {entity_id}"
             )));
         }
         metrics.total_requests += 1;

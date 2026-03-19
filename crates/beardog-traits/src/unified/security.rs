@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Unified Security Trait System
 //
 // This module provides comprehensive security traits that unify authentication,

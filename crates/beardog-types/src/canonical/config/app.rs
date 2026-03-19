@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Application Configuration
 //!
 //! Canonical application configuration module providing centralized app-level settings.

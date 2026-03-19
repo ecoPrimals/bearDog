@@ -12,7 +12,7 @@ fn main() {
 
     // Example 1: Default configuration
     let limits = ResourceLimits::default();
-    println!("Default limits: {:?}\n", limits);
+    println!("Default limits: {limits:?}\n");
 
     // Example 2: Environment-based configuration
     println!("For environment-based config, set:");
@@ -52,7 +52,7 @@ impl ResourceLimits {
     pub const DEFAULT_CONCURRENT_CONNECTIONS: u32 = 1000;
 
     // ✅ GOOD: Explicit method for defaults (no env reading)
-    /// Create ResourceLimits with hardcoded defaults
+    /// Create `ResourceLimits` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -62,6 +62,7 @@ impl ResourceLimits {
     /// let limits = ResourceLimits::with_defaults();
     /// assert_eq!(limits.memory_mb, ResourceLimits::DEFAULT_MEMORY_MB);
     /// ```
+    #[must_use]
     pub fn with_defaults() -> Self {
         Self {
             memory_mb: Self::DEFAULT_MEMORY_MB,
@@ -73,7 +74,7 @@ impl ResourceLimits {
     }
 
     // ✅ GOOD: Explicit method for environment-based config
-    /// Create ResourceLimits from environment variables
+    /// Create `ResourceLimits` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     /// This makes the intent explicit and allows testing without env pollution.
@@ -91,6 +92,7 @@ impl ResourceLimits {
     /// let limits = ResourceLimits::from_env();
     /// assert_eq!(limits.memory_mb, 2048);
     /// ```
+    #[must_use]
     pub fn from_env() -> Self {
         Self {
             memory_mb: std::env::var("BEARDOG_RESOURCE_MEMORY_MB")
@@ -117,7 +119,7 @@ impl ResourceLimits {
     }
 
     // ✅ GOOD: Builder pattern for programmatic configuration
-    /// Create a builder for ResourceLimits
+    /// Create a builder for `ResourceLimits`
     ///
     /// Allows fluent, type-safe configuration construction.
     /// Perfect for tests and programmatic configuration.
@@ -129,6 +131,7 @@ impl ResourceLimits {
     ///     .cpu_percent(75)
     ///     .build();
     /// ```
+    #[must_use]
     pub fn builder() -> ResourceLimitsBuilder {
         ResourceLimitsBuilder::new()
     }
@@ -155,6 +158,7 @@ pub struct ResourceLimitsBuilder {
 }
 
 impl ResourceLimitsBuilder {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             memory_mb: None,
@@ -165,31 +169,37 @@ impl ResourceLimitsBuilder {
         }
     }
 
+    #[must_use]
     pub fn memory_mb(mut self, value: u64) -> Self {
         self.memory_mb = Some(value);
         self
     }
 
+    #[must_use]
     pub fn cpu_percent(mut self, value: u8) -> Self {
         self.cpu_percent = Some(value);
         self
     }
 
+    #[must_use]
     pub fn disk_mb(mut self, value: u64) -> Self {
         self.disk_mb = Some(value);
         self
     }
 
+    #[must_use]
     pub fn network_mbps(mut self, value: u32) -> Self {
         self.network_mbps = Some(value);
         self
     }
 
+    #[must_use]
     pub fn concurrent_connections(mut self, value: u32) -> Self {
         self.concurrent_connections = Some(value);
         self
     }
 
+    #[must_use]
     pub fn build(self) -> ResourceLimits {
         ResourceLimits {
             memory_mb: self.memory_mb.unwrap_or(ResourceLimits::DEFAULT_MEMORY_MB),

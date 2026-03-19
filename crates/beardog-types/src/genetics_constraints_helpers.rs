@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Helper functions for constraint verification
 
 /// Simple glob-style path matching

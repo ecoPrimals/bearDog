@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! iOS HSM Provider
 //!
 //! Universal provider implementation for iOS HSM capabilities,

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! BirdSong lineage-based encryption CLI handlers
 //!
 //! Implements privacy-preserving encryption where only lineage members can decrypt.

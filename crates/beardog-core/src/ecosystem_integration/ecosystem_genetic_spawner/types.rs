@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Module documentation
 //
 // This module provides functionality for the BearDog ecosystem.
@@ -530,4 +532,74 @@ pub enum SpawningStage {
     HealthValidation,
     /// Final cleanup and completion
     Finalization,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_node_performance_metrics_default() {
+        let m = NodePerformanceMetrics::default();
+        assert_eq!(m.cpu_utilization, 0.0);
+        assert_eq!(m.requests_per_second, 0.0);
+    }
+
+    #[test]
+    fn test_ecosystem_spawning_statistics_default() {
+        let s = EcosystemSpawningStatistics::default();
+        assert_eq!(s.total_spawns, 0);
+        assert_eq!(s.successful_spawns, 0);
+        assert_eq!(s.failed_spawns, 0);
+    }
+
+    #[test]
+    fn test_trait_category_serialization() {
+        let categories = [
+            TraitCategory::Security,
+            TraitCategory::Compute,
+            TraitCategory::Custom("custom".to_string()),
+        ];
+        for cat in categories {
+            let json = serde_json::to_string(&cat).unwrap();
+            let _: TraitCategory = serde_json::from_str(&json).unwrap();
+        }
+    }
+
+    #[test]
+    fn test_ecosystem_capability_serialization() {
+        let caps = [
+            EcosystemCapability::SecureKeyManagement,
+            EcosystemCapability::Custom("custom".to_string()),
+        ];
+        for cap in caps {
+            let json = serde_json::to_string(&cap).unwrap();
+            let _: EcosystemCapability = serde_json::from_str(&json).unwrap();
+        }
+    }
+
+    #[test]
+    fn test_security_level_ordering() {
+        assert!(SecurityLevel::CriticalInfrastructure > SecurityLevel::Development);
+        assert!(SecurityLevel::Production >= SecurityLevel::Staging);
+    }
+
+    #[test]
+    fn test_spawning_status_variants() {
+        let _ = SpawningStatus::Initializing;
+        let _ = SpawningStatus::Completed;
+        let _ = SpawningStatus::Failed;
+    }
+
+    #[test]
+    fn test_spawning_stage_variants() {
+        let _ = SpawningStage::Initialization;
+        let _ = SpawningStage::Finalization;
+    }
+
+    #[test]
+    fn test_node_health_status_variants() {
+        let _ = NodeHealthStatus::Healthy;
+        let _ = NodeHealthStatus::Critical;
+    }
 }

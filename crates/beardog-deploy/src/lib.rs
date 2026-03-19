@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! BearDog Deployment - Platform Deployment Automation
 //!
 //! Comprehensive deployment capabilities for the BearDog ecosystem including

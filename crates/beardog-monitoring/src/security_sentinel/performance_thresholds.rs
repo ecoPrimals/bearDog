@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Performance Thresholds
 //!
 //! This module provides threshold types for performance monitoring

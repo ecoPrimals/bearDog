@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Training configuration types for the hybrid intelligence system
 //!
 //! This module contains all training-related configuration types including

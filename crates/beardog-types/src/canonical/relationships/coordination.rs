@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Symbiotic Coordination - Collaborative Relationship Models
 //
 // This module implements SymbioticCoordination patterns that replace hierarchical

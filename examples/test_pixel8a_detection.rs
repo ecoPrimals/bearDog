@@ -6,9 +6,9 @@
     clippy::all
 )]
 
-//! Pixel 8a StrongBox Detection Test
+//! Pixel 8a `StrongBox` Detection Test
 //!
-//! This example detects and reports on Pixel 8a StrongBox capabilities.
+//! This example detects and reports on Pixel 8a `StrongBox` capabilities.
 //! It demonstrates the device information that would be available via JNI.
 
 use beardog_errors::BearDogError;

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Zero-Cost Architecture Module
 //
 // This module demonstrates zero-cost abstraction patterns and compile-time

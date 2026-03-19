@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core Domain Configuration Modules
 //!
 //! This module contains the essential configuration domains for BearDog:

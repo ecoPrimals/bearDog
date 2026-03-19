@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Unified Service Health Status Definitions
 //!
 //! This module provides consolidated health status types for service monitoring,

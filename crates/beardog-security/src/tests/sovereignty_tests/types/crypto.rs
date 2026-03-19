@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Cryptographic Sovereignty Types
 //!
 //! Test helper types for crypto sovereignty policies.

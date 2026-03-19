@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Canonical Provider Traits (DEPRECATED - LEGACY)
 //!
 //! ⚠️ **MIGRATION NOTICE**: These traits are **DEPRECATED** and maintained only for

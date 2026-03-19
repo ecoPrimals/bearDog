@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Mobile HSM Capability Prober
 //!
 //! Provides capability detection for mobile platform HSMs (iOS Secure Enclave, Android StrongBox)

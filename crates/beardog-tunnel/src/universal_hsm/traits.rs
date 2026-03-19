@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Universal HSM Trait Definitions
 //!
 //! Core trait definitions for the universal HSM system.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Platform-specific socket implementations for BearDog
 //!
 //! This module provides platform-agnostic IPC through compile-time platform detection.
@@ -118,9 +120,8 @@ pub fn default_socket_endpoint() -> SocketEndpoint {
     // Linux/macOS: Use filesystem Unix sockets
     // These provide best performance on traditional Unix systems
     // Use primal name from environment for self-knowledge pattern
-    let primal_name = std::env::var("PRIMAL_NAME")
-        .or_else(|_| std::env::var("BEARDOG_NAME"))
-        .unwrap_or_else(|_| "beardog".to_string());
+    let primal_name =
+        std::env::var("PRIMAL_NAME").unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string());
     SocketEndpoint::Filesystem(PathBuf::from(format!("/tmp/{}.sock", primal_name)))
 }
 
@@ -139,9 +140,8 @@ pub fn default_socket_endpoint() -> SocketEndpoint {
 #[cfg(target_family = "wasm")]
 pub fn default_socket_endpoint() -> SocketEndpoint {
     // WASM: Use in-process channels (no true IPC in browser)
-    let primal_name = std::env::var("PRIMAL_NAME")
-        .or_else(|_| std::env::var("BEARDOG_NAME"))
-        .unwrap_or_else(|_| "beardog".to_string());
+    let primal_name =
+        std::env::var("PRIMAL_NAME").unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string());
     SocketEndpoint::InProcess(primal_name)
 }
 

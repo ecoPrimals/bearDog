@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Quantum-resistant cryptography types
 //!
 //! Core types for post-quantum cryptographic operations.

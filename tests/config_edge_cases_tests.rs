@@ -1,8 +1,8 @@
 //! Configuration Edge Case Tests
 //!
-//! TEST_CATEGORY: integration
-//! TEST_DOMAIN: config/edge_cases
-//! TEST_PRIORITY: high
+//! `TEST_CATEGORY`: integration
+//! `TEST_DOMAIN`: `config/edge_cases`
+//! `TEST_PRIORITY`: high
 
 use std::env;
 
@@ -67,7 +67,7 @@ async fn test_config_special_characters() {
     ];
 
     for (i, value) in special_chars.iter().enumerate() {
-        let key = format!("BEARDOG_TEST_SPECIAL_{}", i);
+        let key = format!("BEARDOG_TEST_SPECIAL_{i}");
         env::set_var(&key, value);
 
         let retrieved = env::var(&key).expect("Should get value");
@@ -117,7 +117,7 @@ async fn test_config_invalid_numeric_values() {
 
         let result: Result<u64, _> = env::var("BEARDOG_TEST_INVALID").unwrap_or_default().parse();
 
-        assert!(result.is_err(), "Should reject invalid value: {}", value);
+        assert!(result.is_err(), "Should reject invalid value: {value}");
 
         env::remove_var("BEARDOG_TEST_INVALID");
     }

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Ecosystem integration and migration utilities
 //!
 //! This module handles integration with the broader ecosystem genetics

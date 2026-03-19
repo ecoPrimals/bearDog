@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Comprehensive validation tests for crypto service types
 //
 // Testing validation logic, edge cases, and error handling for:

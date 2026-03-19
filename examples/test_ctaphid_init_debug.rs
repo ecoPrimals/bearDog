@@ -1,6 +1,6 @@
-//! Debug CTAPHID_INIT Communication - Pure Rust Implementation
+//! Debug `CTAPHID_INIT` Communication - Pure Rust Implementation
 //!
-//! This is a minimal test to debug the CTAPHID_INIT handshake.
+//! This is a minimal test to debug the `CTAPHID_INIT` handshake.
 //! Uses Pure Rust beardog-hid for HID communication (ecoBin compliant).
 
 #[cfg(feature = "fido2")]
@@ -50,7 +50,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
 
         let hid_devices = beardog_hid::discover()
             .await
-            .map_err(|e| beardog_errors::BearDogError::system(format!("HID discovery: {}", e)))?;
+            .map_err(|e| beardog_errors::BearDogError::system(format!("HID discovery: {e}")))?;
 
         let hid_info = hid_devices
             .iter()
@@ -64,7 +64,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
 
         let mut hid_device = beardog_hid::open_device(&hid_info.path)
             .await
-            .map_err(|e| beardog_errors::BearDogError::system(format!("Device open: {}", e)))?;
+            .map_err(|e| beardog_errors::BearDogError::system(format!("Device open: {e}")))?;
 
         println!("✅ Device opened\n");
 
@@ -98,10 +98,10 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
         println!("📤 Sending CTAPHID_INIT...");
         match hid_device.write(&packet).await {
             Ok(bytes_written) => {
-                println!("✅ Sent {} bytes", bytes_written);
+                println!("✅ Sent {bytes_written} bytes");
             }
             Err(e) => {
-                println!("❌ Write failed: {}", e);
+                println!("❌ Write failed: {e}");
                 return Ok(());
             }
         }
@@ -111,7 +111,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
         println!("📥 Attempting to read response...");
 
         for attempt in 1..=5 {
-            println!("   Attempt {}/5...", attempt);
+            println!("   Attempt {attempt}/5...");
 
             let mut response = vec![0u8; 64];
 
@@ -124,7 +124,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
 
             match read_result {
                 Ok(Ok(bytes_read)) if bytes_read > 0 => {
-                    println!("   ✅ Got {} bytes!", bytes_read);
+                    println!("   ✅ Got {bytes_read} bytes!");
                     println!("   Response hex: {:02x?}", &response[..bytes_read.min(32)]);
                     println!();
 
@@ -140,14 +140,14 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
                         let len = (usize::from(response[5]) << 8) | usize::from(response[6]);
 
                         println!("📊 Parsed response:");
-                        println!("   CID: 0x{:08X}", cid);
-                        println!("   CMD: 0x{:02X}", cmd);
-                        println!("   LEN: {} bytes", len);
+                        println!("   CID: 0x{cid:08X}");
+                        println!("   CMD: 0x{cmd:02X}");
+                        println!("   LEN: {len} bytes");
 
                         if cmd == 0x86 && bytes_read >= 19 {
                             // Verify nonce
                             let echoed_nonce = &response[7..15];
-                            println!("   Echoed nonce: {:02x?}", echoed_nonce);
+                            println!("   Echoed nonce: {echoed_nonce:02x?}");
 
                             if echoed_nonce == nonce {
                                 println!("   ✅ Nonce matches!");
@@ -162,7 +162,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
                                 response[17],
                                 response[18],
                             ]);
-                            println!("   New CID: 0x{:08X}", new_cid);
+                            println!("   New CID: 0x{new_cid:08X}");
 
                             if bytes_read >= 20 {
                                 println!("   Protocol version: {}", response[19]);
@@ -177,7 +177,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
                         } else if cmd == 0xBF && bytes_read >= 8 {
                             // Error response
                             let error_code = response[7];
-                            println!("   ❌ Device returned error: 0x{:02X}", error_code);
+                            println!("   ❌ Device returned error: 0x{error_code:02X}");
                         }
                     }
 
@@ -187,7 +187,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
                     println!("   ⏱️  Timeout (no data)");
                 }
                 Ok(Err(e)) => {
-                    println!("   ❌ Read error: {}", e);
+                    println!("   ❌ Read error: {e}");
                     return Ok(());
                 }
                 Err(_) => {

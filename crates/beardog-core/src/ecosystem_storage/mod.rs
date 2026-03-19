@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Ecosystem Storage System
 //!
 //! Provides comprehensive ecosystem storage capabilities enabling distributed, scalable,

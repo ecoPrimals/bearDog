@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Cloud HSM Discoverer
 //!
 //! Provides discovery functionality for cloud-based HSMs

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Module documentation
 //
 // This module provides functionality for the BearDog ecosystem.
@@ -315,7 +317,8 @@ impl Default for PrometheusConfig {
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(9090), // Prometheus standard port
-            prefix: "beardog".to_string(),
+            prefix: std::env::var("PRIMAL_NAME")
+                .unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string()),
         }
     }
 }

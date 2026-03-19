@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Canonical Provider System - Unified Provider Hierarchy
 //
 // This module consolidates ALL provider trait definitions from across BearDog

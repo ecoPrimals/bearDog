@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core System State Tracking
 //!
 //! Maintains the current state of all `BearDog` system components.

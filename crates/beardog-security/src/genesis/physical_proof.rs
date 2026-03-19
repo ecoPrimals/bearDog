@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Physical proximity proof verification
 //!
 //! Verifies that genesis ceremony occurred over a physical channel

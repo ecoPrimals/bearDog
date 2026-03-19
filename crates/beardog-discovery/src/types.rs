@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core types for service discovery
 
 use serde::{Deserialize, Serialize};

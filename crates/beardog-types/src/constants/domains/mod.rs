@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Domain-Specific Constants
 //
 // This module provides domain-organized constants that replace the large monolithic

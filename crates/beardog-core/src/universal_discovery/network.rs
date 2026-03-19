@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Network Configuration Module
 //
 // This module contains network configuration, addressing, and communication settings.
@@ -170,53 +172,80 @@ impl Default for CacheConfig {
     }
 }
 
+/// Authentication sub-config (present = enabled)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthConfig {
+    /// Authentication method
+    pub method: AuthenticationMethod,
+    /// API keys for key-based auth
+    pub api_keys: Vec<String>,
+    /// JWT secret for token-based auth
+    pub jwt_secret: Option<String>,
+}
+
+/// Rate-limiting sub-config (present = enabled)
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct RateLimitConfig {
+    /// Requests per minute
+    pub rpm: u32,
+}
+
+/// Encryption sub-config (present = enabled)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EncryptionConfig {
+    /// Algorithm identifier (e.g. `"AES-256-GCM"`)
+    pub algorithm: String,
+}
+
 /// Security configuration for network service discovery
 ///
-/// Defines authentication, authorization, and encryption settings for secure
-/// communication between services in the discovery system.
+/// Uses `Option`-based toggling: `None` = disabled, `Some(cfg)` = enabled.
+/// This avoids boolean flags and makes the type system enforce valid states.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityConfig {
-    /// Enable authentication
-    /// Whether `enable_auth` is enabled
-    pub enable_auth: bool,
-    /// The auth method value
-    pub auth_method: AuthenticationMethod,
-    /// Collection of api keys
-    pub api_keys: Vec<String>,
-    /// Optional jwt secret
-    pub jwt_secret: Option<String>,
-    /// Enable rate limiting
-    /// Whether `enable_rate_limiting` is enabled
-    pub enable_rate_limiting: bool,
-    /// Rate limit: requests per minute
-    /// Number of `rate_limit_rpm`
-    pub rate_limit_rpm: u32,
-    /// Enable IP allowlisting
-    /// Whether `enable_ip_allowlist` is enabled
-    pub enable_ip_allowlist: bool,
-    /// Allowed IP addresses
-    /// Collection of allowed ips
-    pub allowed_ips: Vec<IpAddr>,
-    /// Whether `enable_encryption` is enabled
-    pub enable_encryption: bool,
-    /// Encryption algorithm
-    /// The encryption algorithm value
-    pub encryption_algorithm: String,
+    /// Authentication settings (`None` = auth disabled)
+    pub auth: Option<AuthConfig>,
+    /// Rate limiting settings (`None` = rate limiting disabled)
+    pub rate_limit: Option<RateLimitConfig>,
+    /// IP allowlist (`None` = allowlist disabled)
+    pub ip_allowlist: Option<Vec<IpAddr>>,
+    /// Encryption settings (`None` = encryption disabled)
+    pub encryption: Option<EncryptionConfig>,
+}
+
+impl SecurityConfig {
+    /// Backward-compatible accessors
+    #[must_use]
+    pub fn enable_auth(&self) -> bool {
+        self.auth.is_some()
+    }
+
+    /// Whether rate limiting is active
+    #[must_use]
+    pub fn enable_rate_limiting(&self) -> bool {
+        self.rate_limit.is_some()
+    }
+
+    /// Whether IP allowlist is active
+    #[must_use]
+    pub fn enable_ip_allowlist(&self) -> bool {
+        self.ip_allowlist.is_some()
+    }
+
+    /// Whether encryption is active
+    #[must_use]
+    pub fn enable_encryption(&self) -> bool {
+        self.encryption.is_some()
+    }
 }
 
 impl Default for SecurityConfig {
     fn default() -> Self {
         Self {
-            enable_auth: false,
-            auth_method: AuthenticationMethod::ApiKey,
-            api_keys: vec![],
-            jwt_secret: None,
-            enable_rate_limiting: true,
-            rate_limit_rpm: 1000,
-            enable_ip_allowlist: false,
-            allowed_ips: vec![],
-            enable_encryption: false,
-            encryption_algorithm: "AES-256-GCM".to_string(),
+            auth: None,
+            rate_limit: Some(RateLimitConfig { rpm: 1000 }),
+            ip_allowlist: None,
+            encryption: None,
         }
     }
 }

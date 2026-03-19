@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Network Discovery Configuration
 //! 
 //! Eliminates hardcoded network endpoints by providing dynamic service discovery

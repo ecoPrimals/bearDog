@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Incident Response and Security Events
 //!
 //! This module provides types for incident response management, security events,

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Binary installer - Core installation logic
 //!
 //! Handles the actual installation of genomeBin binaries:
@@ -12,7 +14,7 @@
 //! - Platform-agnostic (works everywhere)
 //! - Atomic operations (all-or-nothing)
 
-use crate::{platform::BiomeOSPaths, types::Primal, Architecture, OperatingSystem};
+use crate::{platform::BiomeOSPaths, types::PrimalName, Architecture, OperatingSystem};
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 use tokio::fs;
@@ -43,7 +45,7 @@ impl BinaryInstaller {
     /// # Examples
     /// ```no_run
     /// # use beardog_installer::installer::BinaryInstaller;
-    /// # use beardog_installer::{BiomeOSPaths, Architecture, OperatingSystem, Primal};
+    /// # use beardog_installer::{BiomeOSPaths, Architecture, OperatingSystem, PrimalName};
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let paths = BiomeOSPaths::discover()?;
     /// let source = std::path::PathBuf::from("./target/release");
@@ -51,13 +53,13 @@ impl BinaryInstaller {
     ///
     /// let arch = Architecture::X86_64;
     /// let os = OperatingSystem::Linux;
-    /// let binary = installer.locate_binary(Primal::BearDog, &arch, &os)?;
+    /// let binary = installer.locate_binary(PrimalName::new(PrimalName::BEARDOG), &arch, &os)?;
     /// # Ok(())
     /// # }
     /// ```
     pub fn locate_binary(
         &self,
-        primal: Primal,
+        primal: PrimalName,
         arch: &Architecture,
         os: &OperatingSystem,
     ) -> Result<PathBuf, InstallerError> {
@@ -106,7 +108,7 @@ impl BinaryInstaller {
     /// - Copy operation fails
     pub async fn install_binary(
         &self,
-        primal: Primal,
+        primal: PrimalName,
         source: &Path,
     ) -> Result<PathBuf, InstallerError> {
         // Ensure bin directory exists
@@ -158,7 +160,7 @@ impl BinaryInstaller {
     /// Uninstall binary
     ///
     /// Removes the primal's binary from the installation directory.
-    pub async fn uninstall_binary(&self, primal: Primal) -> Result<(), InstallerError> {
+    pub async fn uninstall_binary(&self, primal: PrimalName) -> Result<(), InstallerError> {
         let binary_path = self.paths.bin_dir.join(primal.name());
 
         if !binary_path.exists() {
@@ -188,13 +190,13 @@ impl BinaryInstaller {
     }
 
     /// Check if binary is installed
-    pub async fn is_installed(&self, primal: Primal) -> bool {
+    pub async fn is_installed(&self, primal: PrimalName) -> bool {
         let binary_path = self.paths.bin_dir.join(primal.name());
         binary_path.exists()
     }
 
     /// Get installed binary path
-    pub fn binary_path(&self, primal: Primal) -> PathBuf {
+    pub fn binary_path(&self, primal: PrimalName) -> PathBuf {
         self.paths.bin_dir.join(primal.name())
     }
 }
@@ -206,7 +208,7 @@ pub enum InstallerError {
     #[error("Binary not found for {primal:?} (target: {target}). Searched:\n{}", searched.join("\n"))]
     BinaryNotFound {
         /// The primal being installed
-        primal: Primal,
+        primal: PrimalName,
         /// Target triple (e.g., x86_64-unknown-linux-gnu)
         target: String,
         /// Paths that were searched
@@ -265,7 +267,7 @@ mod tests {
 
         // Install
         let installed = installer
-            .install_binary(Primal::BearDog, &fake_binary)
+            .install_binary(PrimalName::new(PrimalName::BEARDOG), &fake_binary)
             .await
             .unwrap();
 
@@ -305,7 +307,10 @@ mod tests {
         assert!(binary_path.exists());
 
         // Uninstall
-        installer.uninstall_binary(Primal::BearDog).await.unwrap();
+        installer
+            .uninstall_binary(PrimalName::new(PrimalName::BEARDOG))
+            .await
+            .unwrap();
 
         assert!(!binary_path.exists());
     }
@@ -328,13 +333,21 @@ mod tests {
         let installer = BinaryInstaller::new(paths, temp.path().to_path_buf());
 
         // Not installed initially
-        assert!(!installer.is_installed(Primal::BearDog).await);
+        assert!(
+            !installer
+                .is_installed(PrimalName::new(PrimalName::BEARDOG))
+                .await
+        );
 
         // Create binary
         fs::write(bin_dir.join("beardog"), b"test").await.unwrap();
 
         // Now installed
-        assert!(installer.is_installed(Primal::BearDog).await);
+        assert!(
+            installer
+                .is_installed(PrimalName::new(PrimalName::BEARDOG))
+                .await
+        );
     }
 
     #[test]
@@ -353,7 +366,7 @@ mod tests {
         let installer = BinaryInstaller::new(paths, temp.path().to_path_buf());
 
         assert_eq!(
-            installer.binary_path(Primal::BearDog),
+            installer.binary_path(PrimalName::new(PrimalName::BEARDOG)),
             bin_dir.join("beardog")
         );
     }

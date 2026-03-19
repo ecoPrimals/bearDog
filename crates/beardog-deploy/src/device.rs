@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Device management and deployment system
 //
 // This module provides comprehensive device management capabilities including

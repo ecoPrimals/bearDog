@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! FIDO2 Multi-Credential HSM Provider Implementation
 //!
 //! This module implements the `MultiCredentialHsmProvider` trait for FIDO2-compliant

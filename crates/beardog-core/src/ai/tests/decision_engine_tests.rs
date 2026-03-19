@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Comprehensive tests for the Decision Engine module
 
 use crate::ai::hybrid_intelligence::decision_engine::*;

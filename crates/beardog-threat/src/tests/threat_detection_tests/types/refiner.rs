@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Pattern Refinement Test Types
 
 use super::pattern::ThreatPattern;

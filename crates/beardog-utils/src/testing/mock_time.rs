@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Mock Time Source for Deterministic Testing
 //!
 //! Provides a mockable time source that enables **instant time travel** in tests,

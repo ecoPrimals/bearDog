@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Health Monitoring Comprehensive Tests
 //!
 //! Tests for system health tracking and monitoring

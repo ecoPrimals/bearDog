@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Mobile Ephemeral Key Integration
 //!
 //! This module integrates mobile hardware security with ephemeral key generation

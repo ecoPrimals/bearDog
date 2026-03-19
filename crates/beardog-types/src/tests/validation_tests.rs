@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Configuration validation tests for beardog-types
 //!
 //! Tests validation logic for various configuration types

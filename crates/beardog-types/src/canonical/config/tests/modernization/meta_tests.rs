@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Meta Tests for Configuration Modernization
 //!
 //! These tests verify that the modernization pattern is correctly implemented:

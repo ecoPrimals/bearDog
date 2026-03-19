@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Type-Safe ID Newtypes
 //!
 //! This module provides strongly-typed ID wrappers to prevent mixing different

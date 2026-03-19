@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tests for canonical types
 //!
 //! This module contains comprehensive tests for all canonical type implementations,

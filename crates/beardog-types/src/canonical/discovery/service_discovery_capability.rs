@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Service Discovery Capability Trait
 //!
 //! Vendor-agnostic service discovery abstraction that eliminates hardcoded
@@ -733,8 +735,7 @@ pub struct DnsHttpDiscovery {
     /// Search domains for SRV queries
     search_domains: Vec<String>,
     /// DNS timeout in seconds
-    #[allow(dead_code)] // Reserved for future timeout implementation
-    timeout_secs: u64,
+    _timeout_secs: u64,
 }
 
 impl DnsHttpDiscovery {
@@ -747,7 +748,7 @@ impl DnsHttpDiscovery {
     pub fn with_domains(domains: Vec<String>) -> Self {
         Self {
             search_domains: domains,
-            timeout_secs: 5,
+            _timeout_secs: 5,
         }
     }
 
@@ -800,7 +801,7 @@ impl Default for DnsHttpDiscovery {
                 "cluster.local".to_string(),
                 "service.consul".to_string(),
             ],
-            timeout_secs: 5,
+            _timeout_secs: 5,
         }
     }
 }
@@ -940,8 +941,11 @@ impl ServiceDiscoveryCapability for DnsHttpDiscovery {
 /// - KUBERNETES_SERVICE_HOST environment variable
 /// - Service account token at /var/run/secrets/kubernetes.io/
 /// - Accessible API server endpoint
-#[allow(dead_code)]
-async fn detect_kubernetes() -> Result<KubernetesDiscovery, DiscoveryError> {
+#[deprecated(
+    since = "0.1.0",
+    note = "Phase 2 stub: Implement Kubernetes auto-detection. Use KubernetesDiscovery::try_create() instead."
+)]
+async fn _detect_kubernetes() -> Result<KubernetesDiscovery, DiscoveryError> {
     Err(DiscoveryError::BackendUnavailable {
         provider: "kubernetes".to_string(),
         reason: "Kubernetes auto-detection not yet implemented (Phase 2)".to_string(),
@@ -956,8 +960,11 @@ async fn detect_kubernetes() -> Result<KubernetesDiscovery, DiscoveryError> {
 /// - CONSUL_HTTP_ADDR environment variable
 /// - Local agent at 127.0.0.1:8500
 /// - DNS-based agent discovery
-#[allow(dead_code)]
-async fn detect_consul() -> Result<ConsulDiscovery, DiscoveryError> {
+#[deprecated(
+    since = "0.1.0",
+    note = "Phase 2 stub: Implement Consul auto-detection. Implement ConsulDiscovery::try_create() first."
+)]
+async fn _detect_consul() -> Result<ConsulDiscovery, DiscoveryError> {
     Err(DiscoveryError::BackendUnavailable {
         provider: "consul".to_string(),
         reason: "Consul auto-detection not yet implemented (Phase 2)".to_string(),
@@ -972,8 +979,11 @@ async fn detect_consul() -> Result<ConsulDiscovery, DiscoveryError> {
 /// - ETCD_ENDPOINTS environment variable
 /// - Standard etcd ports (2379, 4001)
 /// - Cluster member discovery
-#[allow(dead_code)]
-async fn detect_etcd() -> Result<EtcdDiscovery, DiscoveryError> {
+#[deprecated(
+    since = "0.1.0",
+    note = "Phase 2 stub: Implement etcd auto-detection. Implement EtcdDiscovery::try_create() first."
+)]
+async fn _detect_etcd() -> Result<EtcdDiscovery, DiscoveryError> {
     Err(DiscoveryError::BackendUnavailable {
         provider: "etcd".to_string(),
         reason: "etcd auto-detection not yet implemented (Phase 2)".to_string(),

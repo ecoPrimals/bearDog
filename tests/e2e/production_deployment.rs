@@ -119,8 +119,7 @@ pub async fn run_production_deployment_test(
         if !integrity_ok {
             metrics.failed_requests += 1;
             return Err(BearDogError::internal(format!(
-                "Data integrity check failed for: {}",
-                data_id
+                "Data integrity check failed for: {data_id}"
             )));
         }
         metrics.total_requests += 1;

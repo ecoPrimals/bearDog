@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Provider Integration Tests - Modern Concurrent Edition
 //!
 //! Substantive integration tests that exercise real production paths

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Universal Adapter for Primal-to-Primal Communication
 //!
 //! **Core Principle**: "Primals only know themselves, discover others by capability"
@@ -40,7 +42,7 @@
 //!
 //! # async fn example() -> Result<(), beardog_errors::BearDogError> {
 //! // Create adapter with zero initial knowledge
-//! let adapter = UniversalAdapter::new().await?;
+//! let adapter = UniversalAdapter::new()?;
 //!
 //! // Find ANY primal providing AI capability (don't care who!)
 //! let ai_primal = adapter
@@ -100,7 +102,7 @@ impl CachedPrimal {
 ///
 /// # async fn example() -> Result<(), beardog_errors::BearDogError> {
 /// // 1. Start with zero knowledge
-/// let adapter = UniversalAdapter::new().await?;
+/// let adapter = UniversalAdapter::new()?;
 ///
 /// // 2. Need AI analysis (don't know who provides it)
 /// let ai_primals = adapter
@@ -152,7 +154,7 @@ impl UniversalAdapter {
     ///
     /// # async fn example() -> Result<(), beardog_errors::BearDogError> {
     /// // Start with zero knowledge about other primals
-    /// let adapter = UniversalAdapter::new().await?;
+    /// let adapter = UniversalAdapter::new()?;
     ///
     /// // Now adapter knows:
     /// // - Self (from environment)
@@ -161,7 +163,7 @@ impl UniversalAdapter {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn new() -> Result<Self, BearDogError> {
+    pub fn new() -> Result<Self, BearDogError> {
         info!("🧒 Initializing Universal Adapter (Infant Discovery Mode)");
 
         // Step 1: Discover self (who am I?)
@@ -211,7 +213,7 @@ impl UniversalAdapter {
     /// use beardog_core::self_knowledge::SimpleCapability;
     ///
     /// # async fn example() -> Result<(), beardog_errors::BearDogError> {
-    /// let adapter = UniversalAdapter::new().await?;
+    /// let adapter = UniversalAdapter::new()?;
     ///
     /// // Find ALL primals with AI capability
     /// let ai_primals = adapter
@@ -264,7 +266,7 @@ impl UniversalAdapter {
     /// use beardog_core::self_knowledge::SimpleCapability;
     ///
     /// # async fn example() -> Result<(), beardog_errors::BearDogError> {
-    /// let adapter = UniversalAdapter::new().await?;
+    /// let adapter = UniversalAdapter::new()?;
     ///
     /// // Get BEST AI provider (by trust score, load, latency)
     /// let best_ai = adapter
@@ -402,7 +404,7 @@ mod tests {
         std::env::set_var("PRIMAL_NAME", "BearDog");
         std::env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
 
-        let adapter = UniversalAdapter::new().await.unwrap();
+        let adapter = UniversalAdapter::new().unwrap();
 
         assert_eq!(adapter.self_knowledge().my_name(), "BearDog");
         assert_eq!(adapter.cached_capabilities().await.len(), 0); // Empty cache initially
@@ -418,7 +420,7 @@ mod tests {
         std::env::set_var("PRIMAL_TESTPRIMAL_ADDR", "http://127.0.0.1:9999");
         std::env::set_var("PRIMAL_TESTPRIMAL_CAPABILITIES", "Discovery,Query"); // Multiple capabilities
 
-        let adapter = UniversalAdapter::new().await.unwrap();
+        let adapter = UniversalAdapter::new().unwrap();
 
         // Discover any capability (will find TestPrimal from env)
         let primals = adapter
@@ -451,7 +453,7 @@ mod tests {
             "Discovery,SecureTunneling",
         );
 
-        let adapter = UniversalAdapter::new().await.unwrap();
+        let adapter = UniversalAdapter::new().unwrap();
 
         // Initially no cached capabilities
         assert_eq!(adapter.cached_capabilities().await.len(), 0);
@@ -504,7 +506,7 @@ mod tests {
 
         let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async {
-            let adapter = UniversalAdapter::new().await.unwrap();
+            let adapter = UniversalAdapter::new().unwrap();
 
             let sk = adapter.self_knowledge();
             assert_eq!(sk.my_name(), "beardog"); // actual primal name is lowercase

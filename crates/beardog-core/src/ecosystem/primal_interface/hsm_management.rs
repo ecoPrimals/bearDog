@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Simplified hsm_management.rs to resolve compilation issues
 use crate::BearDogCore;
 use beardog_errors::BearDogError;
@@ -57,4 +59,35 @@ impl BearDogCore {
 
     // Note: get_hsm_metrics() removed as unused. Metrics collection can be
     // re-implemented when monitoring integration is activated.
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::BearDogCore;
+
+    fn make_core() -> BearDogCore {
+        BearDogCore::with_default_config().expect("core creation")
+    }
+
+    #[test]
+    fn test_initialize_hsm_providers() {
+        let core = make_core();
+        let result = core.initialize_hsm_providers();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_shutdown_hsm_providers() {
+        let core = make_core();
+        let result = core.shutdown_hsm_providers();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_check_hsm_health() {
+        let core = make_core();
+        let status = core.check_hsm_health();
+        assert_eq!(status, HealthStatus::Healthy);
+    }
 }

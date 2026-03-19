@@ -25,7 +25,7 @@ async fn test_complete_auth_workflow_success() {
     assert!(registration.is_ok(), "User registration should succeed");
 
     // Step 3: Authenticate with valid credentials
-    let credentials = format!("{}:{}", user_id, password);
+    let credentials = format!("{user_id}:{password}");
     let auth_result = auth_handler.authenticate(&credentials).await;
 
     assert!(
@@ -104,12 +104,12 @@ async fn test_auth_workflow_with_rate_limiting() {
 
     for attempt in 1..=3 {
         let result = auth_handler.authenticate(&wrong_credentials).await;
-        assert!(result.is_err(), "Attempt {} should fail", attempt);
+        assert!(result.is_err(), "Attempt {attempt} should fail");
 
         if let Err(BearDogError::Security { message, .. }) = result {
             if attempt < 3 {
                 assert!(message.contains("Authentication failed"));
-                assert!(message.contains(&format!("{} of 3 attempts", attempt)));
+                assert!(message.contains(&format!("{attempt} of 3 attempts")));
             } else {
                 assert!(message.contains("Account locked"));
             }
@@ -117,7 +117,7 @@ async fn test_auth_workflow_with_rate_limiting() {
     }
 
     // Step 4: Verify account is now locked even with correct password
-    let correct_credentials = format!("{}:{}", user_id, password);
+    let correct_credentials = format!("{user_id}:{password}");
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
@@ -159,7 +159,7 @@ async fn test_session_lifecycle() {
     // Step 3: Authenticate all users and collect sessions
     let mut sessions = Vec::new();
     for (user_id, password, _) in &users {
-        let credentials = format!("{}:{}", user_id, password);
+        let credentials = format!("{user_id}:{password}");
         let session = auth_handler.authenticate(&credentials).await.unwrap();
         sessions.push(session);
     }
@@ -194,8 +194,8 @@ async fn test_concurrent_user_authentication() {
 
     // Step 2: Register users
     for i in 1..=5 {
-        let user_id = format!("concurrent_user_{}", i);
-        let password = format!("Password{}!", i);
+        let user_id = format!("concurrent_user_{i}");
+        let password = format!("Password{i}!");
         auth_handler
             .register_user(&user_id, &password, vec!["read".to_string()])
             .unwrap();
@@ -204,9 +204,9 @@ async fn test_concurrent_user_authentication() {
     // Step 3: Authenticate all users
     let mut successful_auths = 0;
     for i in 1..=5 {
-        let user_id = format!("concurrent_user_{}", i);
-        let password = format!("Password{}!", i);
-        let credentials = format!("{}:{}", user_id, password);
+        let user_id = format!("concurrent_user_{i}");
+        let password = format!("Password{i}!");
+        let credentials = format!("{user_id}:{password}");
 
         let result = auth_handler.authenticate(&credentials).await;
         if result.is_ok() {
@@ -299,7 +299,7 @@ async fn test_session_token_uniqueness_across_logins() {
         .unwrap();
 
     // Step 3: Authenticate multiple times with same credentials
-    let credentials = format!("{}:{}", user_id, password);
+    let credentials = format!("{user_id}:{password}");
 
     let session1 = auth_handler.authenticate(&credentials).await.unwrap();
 
@@ -349,8 +349,7 @@ async fn test_invalid_credential_formats() {
         let result = auth_handler.authenticate(invalid_creds).await;
         assert!(
             result.is_err(),
-            "Invalid format '{}' should fail",
-            invalid_creds
+            "Invalid format '{invalid_creds}' should fail"
         );
     }
 }
@@ -458,7 +457,7 @@ async fn test_password_not_stored_plaintext() {
         .unwrap();
 
     // Authenticate to ensure password is working
-    let credentials = format!("{}:{}", user_id, password);
+    let credentials = format!("{user_id}:{password}");
     let result = auth_handler.authenticate(&credentials).await;
 
     assert!(result.is_ok(), "Correct password should work");
@@ -520,7 +519,7 @@ async fn test_mixed_success_and_failure_attempts() {
     assert!(auth_handler.authenticate(&wrong).await.is_err());
 
     // Attempt 2: Correct password (should reset counter)
-    let correct = format!("{}:{}", user_id, password);
+    let correct = format!("{user_id}:{password}");
     assert!(auth_handler.authenticate(&correct).await.is_ok());
 
     // Attempt 3: Wrong password again (counter should restart from 0)
@@ -567,15 +566,15 @@ async fn test_complete_multi_user_workflow() {
 
     for (user_id, password, permissions) in &users {
         let result = auth_handler.register_user(user_id, password, permissions.clone());
-        assert!(result.is_ok(), "User {} registration failed", user_id);
+        assert!(result.is_ok(), "User {user_id} registration failed");
     }
 
     // Step 3: Authenticate all users successfully
     let mut sessions = Vec::new();
     for (user_id, password, _) in &users {
-        let credentials = format!("{}:{}", user_id, password);
+        let credentials = format!("{user_id}:{password}");
         let session = auth_handler.authenticate(&credentials).await;
-        assert!(session.is_ok(), "User {} authentication failed", user_id);
+        assert!(session.is_ok(), "User {user_id} authentication failed");
         sessions.push(session.unwrap());
     }
 

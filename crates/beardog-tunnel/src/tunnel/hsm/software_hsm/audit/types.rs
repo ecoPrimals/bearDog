@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Audit types and traits
 
 use chrono::{DateTime, Utc};

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Production Integration Tests - Week 2 Day 3 (October 26, 2025)
 //!
 //! Comprehensive integration tests for production ecosystem including:

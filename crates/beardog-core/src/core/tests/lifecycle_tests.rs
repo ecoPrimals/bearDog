@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Lifecycle Tests
 //!
 //! Comprehensive testing of `BearDog` Core lifecycle operations including:

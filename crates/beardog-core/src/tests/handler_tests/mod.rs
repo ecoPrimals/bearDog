@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Handler Comprehensive Test Suite
 //!
 //! `TEST_CATEGORY`: unit + integration

@@ -140,11 +140,14 @@ workspace = true
 [package.authors]
 workspace = true
 
+# Platform-specific FFI: Android/iOS dependencies fall outside ecoBin scope.
+# ecoBin covers cross-platform Unix/Linux/WASM builds; mobile platform support is a separate concern.
 [target."cfg(target_os = \"android\")".dependencies]
 ndk = "0.8"
 ndk-sys = "0.5"
 jni = "0.21"
 
+# Platform-specific FFI: iOS dependencies fall outside ecoBin scope.
 [target."cfg(target_os = \"ios\")".dependencies]
 security-framework = "2.9"
 security-framework-sys = "2.9"

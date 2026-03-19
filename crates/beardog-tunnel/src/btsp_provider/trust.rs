@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Trust Management - TOFU, Peer Trust, and mTLS
 //!
 //! This module documents trust concepts for BTSP tunnels.

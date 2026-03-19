@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // # Coordination Configuration - Evolved from Primary/Replica Patterns
 //
 // This module implements the evolved coordination configuration system that replaces

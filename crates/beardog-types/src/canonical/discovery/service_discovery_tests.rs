@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Service Discovery Capability Tests
 //!
 //! Tests for service descriptor creation and discovery error display.

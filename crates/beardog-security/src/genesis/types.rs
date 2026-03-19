@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core types for genesis ceremony
 //!
 //! Defines the fundamental types used in physical genesis bootstrap.

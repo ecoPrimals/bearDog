@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Tier Types
 //!
 //! Type definitions for HSM tiers and platform-specific implementations.

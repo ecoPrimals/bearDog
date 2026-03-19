@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Manager Tests
 //!
 //! Comprehensive test suite for HSM Manager functionality including:

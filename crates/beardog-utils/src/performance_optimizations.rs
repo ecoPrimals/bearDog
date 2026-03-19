@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Performance optimization utilities for BearDog
 // Provides zero-copy patterns, memory management, and SIMD acceleration
 

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Modular Timeout Configuration
 //!
 //! This module provides centralized timeout configuration for all BearDog operations.

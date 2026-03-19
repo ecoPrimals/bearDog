@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Encryption RPC Handler
 //!
 //! Handles generic encryption and decryption operations.

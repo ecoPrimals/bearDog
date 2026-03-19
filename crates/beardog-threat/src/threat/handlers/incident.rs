@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Incident Response Handlers
 //
 // This module provides incident response functionality for the BearDog threat detection system.

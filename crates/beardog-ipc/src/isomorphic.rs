@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Isomorphic IPC Client Discovery
 //!
 //! This module provides automatic discovery of BearDog IPC endpoints,
@@ -267,6 +269,14 @@ mod tests {
     }
 
     #[test]
+    fn test_endpoint_clone_debug() {
+        let ep = IpcEndpoint::UnixSocket(PathBuf::from("/tmp/x.sock"));
+        let cloned = ep.clone();
+        assert_eq!(ep.display(), cloned.display());
+        assert!(format!("{:?}", ep).contains("UnixSocket"));
+    }
+
+    #[test]
     fn test_unix_socket_paths() {
         let paths = get_unix_socket_paths();
         assert!(!paths.is_empty());
@@ -276,11 +286,38 @@ mod tests {
     }
 
     #[test]
+    fn test_unix_socket_paths_env_override() {
+        std::env::set_var("BEARDOG_SOCKET", "/custom/beardog.sock");
+        let paths = get_unix_socket_paths();
+        std::env::remove_var("BEARDOG_SOCKET");
+        assert!(!paths.is_empty());
+        assert!(paths[0].to_string_lossy().contains("custom"));
+    }
+
+    #[test]
     fn test_tcp_discovery_files() {
         let files = get_tcp_discovery_file_candidates();
         assert!(!files.is_empty());
 
         // Should always have /tmp fallback
         assert!(files.iter().any(|f| f.starts_with("/tmp")));
+    }
+
+    #[test]
+    fn test_async_stream_trait_objects() {
+        fn assert_send_sync<T: Send + Sync>() {}
+        assert_send_sync::<UnixStream>();
+        assert_send_sync::<TcpStream>();
+    }
+
+    #[tokio::test]
+    async fn test_discover_beardog_endpoint_fails_without_service() {
+        std::env::remove_var("BEARDOG_SOCKET");
+        let result = discover_beardog_endpoint().await;
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Could not discover"));
     }
 }

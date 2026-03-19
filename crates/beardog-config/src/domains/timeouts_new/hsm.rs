@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM (Hardware Security Module) timeout configuration
 //!
 //! Provides timeout settings for HSM operations.

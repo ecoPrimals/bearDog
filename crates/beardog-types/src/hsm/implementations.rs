@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Implementation Types
 //!
 //! Provides placeholder and simple implementation types for HSM systems.

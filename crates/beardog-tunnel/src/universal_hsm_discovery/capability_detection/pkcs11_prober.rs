@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! PKCS#11 Capability Prober
 //!
 //! Provides capability detection for PKCS#11 HSMs

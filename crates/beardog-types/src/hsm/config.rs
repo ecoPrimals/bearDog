@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM configuration types
 //!
 //! Provides production-ready configuration types for HSM operations,

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! System Monitoring and Health Tracking
 //!
 //! Provides continuous monitoring of system resources, component health,
@@ -484,6 +486,155 @@ impl SystemMonitor {
         // The original code had a borrow checker issue here, as `self.monitoring_task` was removed.
         // Since the task is no longer stored, this function is effectively a no-op.
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(Debug)]
+    struct TestAlertHandler {
+        received_alerts: std::sync::Arc<std::sync::Mutex<Vec<SystemAlert>>>,
+    }
+
+    impl AlertHandler for TestAlertHandler {
+        fn handle_alert(&self, alert: SystemAlert) -> Result<(), BearDogError> {
+            self.received_alerts.lock().expect("lock").push(alert);
+            Ok(())
+        }
+    }
+
+    #[tokio::test]
+    async fn test_monitoring_system_metrics_default() {
+        let metrics = SystemMetrics::default();
+        assert_eq!(metrics.cpu_usage_percent, 0.0);
+        assert_eq!(metrics.memory_usage_percent, 0.0);
+        assert_eq!(metrics.disk_usage_percent, 0.0);
+        assert_eq!(metrics.network_bytes_in, 0);
+        assert_eq!(metrics.network_bytes_out, 0);
+        assert_eq!(metrics.uptime_seconds, 0);
+        assert!(metrics.last_updated.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_monitoring_config_default() {
+        let config = SystemMonitorConfig::default();
+        assert_eq!(config.check_interval_ms, 5000);
+        assert_eq!(config.alert_threshold_cpu, 80.0);
+        assert_eq!(config.alert_threshold_memory, 85.0);
+        assert_eq!(config.alert_threshold_disk, 90.0);
+        assert_eq!(config.max_alert_history, 1000);
+    }
+
+    #[tokio::test]
+    async fn test_monitoring_with_config() {
+        let config = SystemMonitorConfig {
+            check_interval_ms: 1000,
+            alert_threshold_cpu: 90.0,
+            alert_threshold_memory: 95.0,
+            alert_threshold_disk: 99.0,
+            max_alert_history: 500,
+        };
+        let monitor = SystemMonitor::with_config(config).expect("valid config");
+        let metrics = monitor.get_system_metrics().await;
+        assert_eq!(metrics.cpu_usage_percent, 0.0);
+    }
+
+    #[tokio::test]
+    async fn test_monitoring_get_component_health_none() {
+        let monitor = SystemMonitor::new().expect("valid");
+        let health = monitor.get_component_health("nonexistent").await;
+        assert!(health.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_monitoring_add_alert_handler() {
+        let monitor = SystemMonitor::new().expect("valid");
+        let handler = TestAlertHandler {
+            received_alerts: std::sync::Arc::new(std::sync::Mutex::new(Vec::new())),
+        };
+        let result = monitor.add_alert_handler(Box::new(handler)).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_monitoring_stop() {
+        let mut monitor = SystemMonitor::new().expect("valid");
+        let result = monitor.stop();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_alert_type_variants() {
+        let _ = AlertType::HighCpuUsage;
+        let _ = AlertType::HighMemoryUsage;
+        let _ = AlertType::HighDiskUsage;
+        let _ = AlertType::ComponentDown;
+        let _ = AlertType::HighErrorRate;
+        let _ = AlertType::SlowResponse;
+    }
+
+    #[test]
+    fn test_alert_severity_variants() {
+        assert_eq!(AlertSeverity::Info, AlertSeverity::Info);
+        assert_eq!(AlertSeverity::Warning, AlertSeverity::Warning);
+        assert_eq!(AlertSeverity::Critical, AlertSeverity::Critical);
+        assert_eq!(AlertSeverity::Emergency, AlertSeverity::Emergency);
+    }
+
+    #[test]
+    fn test_component_health_creation() {
+        let health = ComponentHealth {
+            component_name: "test".to_string(),
+            status: HealthStatus::Healthy,
+            last_check: chrono::Utc::now(),
+            response_time_ms: 10,
+            error_count: 0,
+            uptime_percent: 99.9,
+        };
+        assert_eq!(health.component_name, "test");
+        assert_eq!(health.status, HealthStatus::Healthy);
+    }
+
+    #[test]
+    fn test_system_alert_creation() {
+        let alert = SystemAlert {
+            alert_type: AlertType::HighCpuUsage,
+            message: "test".to_string(),
+            severity: AlertSeverity::Warning,
+            timestamp: chrono::Utc::now(),
+            component: None,
+            metric_value: Some(85.0),
+        };
+        assert_eq!(alert.message, "test");
+        assert_eq!(alert.metric_value, Some(85.0));
+    }
+
+    #[test]
+    fn test_system_monitor_with_config() {
+        let config = SystemMonitorConfig {
+            check_interval_ms: 1000,
+            alert_threshold_cpu: 90.0,
+            alert_threshold_memory: 95.0,
+            alert_threshold_disk: 95.0,
+            max_alert_history: 500,
+        };
+        let monitor = SystemMonitor::with_config(config).unwrap();
+        assert!(std::mem::size_of_val(&monitor) > 0);
+    }
+
+    #[test]
+    fn test_system_monitor_default() {
+        let monitor = SystemMonitor::default();
+        assert!(std::mem::size_of_val(&monitor) > 0);
+    }
+
+    #[tokio::test]
+    async fn test_system_monitor_get_metrics() {
+        let monitor = SystemMonitor::new().unwrap();
+        let metrics = monitor.get_system_metrics().await;
+        assert!(metrics.cpu_usage_percent >= 0.0);
     }
 }
 

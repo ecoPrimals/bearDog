@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Production monitoring and alerting system
 //
 // This module provides comprehensive production monitoring capabilities including

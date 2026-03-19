@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Unix socket IPC server - core server logic
 //!
 //! This module contains the main `UnixSocketIpcServer` struct and its core
@@ -245,9 +247,9 @@ impl UnixSocketIpcServer {
     async fn handle_connection(&self, stream: Box<dyn PlatformStream>) -> Result<()> {
         debug!("📥 New IPC connection (universal platform)");
 
-        // TODO: Full universal stream refactoring in Phase 3
-        // For now, we need to downcast to UnixStream on Unix platforms
-        // This is temporary until we refactor handlers to use AsyncRead/AsyncWrite traits
+        // Phase 3 plan: Full universal stream refactoring. Handlers will be refactored to use
+        // AsyncRead/AsyncWrite traits directly, eliminating platform-specific downcasting.
+        // Until then, we use platform-specific handling on Unix.
 
         #[cfg(unix)]
         {
@@ -420,7 +422,7 @@ impl UnixSocketIpcServer {
     /// Process one JSON-RPC request and return response string
     async fn handle_one_jsonrpc_request_universal(&self, line: &str) -> Result<String> {
         // Parse JSON-RPC request
-        let request: JsonRpcRequest = match serde_json::from_str(line.trim()) {
+        let mut request: JsonRpcRequest = match serde_json::from_str(line.trim()) {
             Ok(req) => req,
             Err(e) => {
                 warn!("⚠️  Invalid JSON-RPC request: {}", e);
@@ -440,6 +442,9 @@ impl UnixSocketIpcServer {
 
         debug!("📨 JSON-RPC request: {}", request.method);
 
+        // Take id to avoid clone (zero-copy: wateringHole standard)
+        let id = request.id.take().unwrap_or(serde_json::Value::Null);
+
         // Validate JSON-RPC version
         if request.jsonrpc != "2.0" {
             let error_response = JsonRpcResponse {
@@ -450,7 +455,7 @@ impl UnixSocketIpcServer {
                     message: "Invalid JSON-RPC version (must be 2.0)".to_string(),
                     data: None,
                 }),
-                id: request.id.clone().unwrap_or(serde_json::Value::Null),
+                id,
             };
             return Ok(serde_json::to_string(&error_response)?);
         }
@@ -469,7 +474,7 @@ impl UnixSocketIpcServer {
                 jsonrpc: "2.0".to_string(),
                 result: Some(result),
                 error: None,
-                id: request.id.clone().unwrap_or(serde_json::Value::Null),
+                id,
             },
             Err(error_msg) => JsonRpcResponse {
                 jsonrpc: "2.0".to_string(),
@@ -479,7 +484,7 @@ impl UnixSocketIpcServer {
                     message: error_msg,
                     data: None,
                 }),
-                id: request.id.clone().unwrap_or(serde_json::Value::Null),
+                id,
             },
         };
 

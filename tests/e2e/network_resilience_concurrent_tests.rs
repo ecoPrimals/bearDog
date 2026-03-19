@@ -191,15 +191,13 @@ async fn test_concurrent_failover_with_circuit_breaker() {
     // Should have high success rate due to failover
     assert!(
         successes > 90,
-        "Should have >90% success with failover, got {}",
-        successes
+        "Should have >90% success with failover, got {successes}"
     );
 
     // Circuit breaker should open, forcing use of secondary
     assert!(
         from_secondary > 80,
-        "Circuit breaker should force secondary use, got {}",
-        from_secondary
+        "Circuit breaker should force secondary use, got {from_secondary}"
     );
 }
 
@@ -260,13 +258,11 @@ async fn test_connection_pool_under_concurrent_load() {
     let max_concurrent_val = max_concurrent.load(Ordering::SeqCst);
     assert!(
         max_concurrent_val <= max_connections,
-        "Should never exceed pool limit, got {}",
-        max_concurrent_val
+        "Should never exceed pool limit, got {max_concurrent_val}"
     );
     assert!(
         max_concurrent_val >= max_connections / 2,
-        "Should achieve good concurrency, got {}",
-        max_concurrent_val
+        "Should achieve good concurrency, got {max_concurrent_val}"
     );
 }
 
@@ -396,23 +392,19 @@ async fn test_concurrent_retry_coordination() {
     // With 70% failure rate and retries, should achieve reasonable success
     assert!(
         final_successes > concurrent_clients / 4,
-        "Should have >25% final success with retries, got {}",
-        final_successes
+        "Should have >25% final success with retries, got {final_successes}"
     );
 
     // Should have retried many times
     assert!(
         retries > concurrent_clients,
-        "Should have many retries, got {}",
-        retries
+        "Should have many retries, got {retries}"
     );
 
     // Total requests should be more than clients due to retries
     assert!(
         requests > concurrent_clients as usize,
-        "Should have retried, got {} requests for {} clients",
-        requests,
-        concurrent_clients
+        "Should have retried, got {requests} requests for {concurrent_clients} clients"
     );
 }
 
@@ -455,17 +447,17 @@ async fn test_load_balancer_concurrent_distribution() {
     assert_eq!(total_success, concurrent_requests, "All should succeed");
 
     // Check distribution
-    let counts: Vec<_> = connections.iter().map(|c| c.get_call_count()).collect();
+    let counts: Vec<_> = connections
+        .iter()
+        .map(MockConnection::get_call_count)
+        .collect();
 
     // Each server should handle roughly equal load
     let expected_per_server = concurrent_requests / connections.len();
     for (i, count) in counts.iter().enumerate() {
         assert!(
             *count >= expected_per_server - 20 && *count <= expected_per_server + 20,
-            "Server {} should have ~{} requests, got {}",
-            i,
-            expected_per_server,
-            count
+            "Server {i} should have ~{expected_per_server} requests, got {count}"
         );
     }
 }
@@ -504,14 +496,12 @@ async fn test_timeout_handling_concurrent() {
     // Fast connection should not timeout
     assert_eq!(
         timeouts, 0,
-        "Fast connections should not timeout, got {} timeouts",
-        timeouts
+        "Fast connections should not timeout, got {timeouts} timeouts"
     );
 
     assert_eq!(
         successes, concurrent_requests,
-        "All requests should succeed, got {}",
-        successes
+        "All requests should succeed, got {successes}"
     );
 }
 
@@ -599,15 +589,13 @@ async fn test_connection_recovery_after_mass_failure() {
     // Should have successes after recovery (>= 40 allows for timing variations)
     assert!(
         after >= 40,
-        "Should recover and succeed, got {} after recovery",
-        after
+        "Should recover and succeed, got {after} after recovery"
     );
 
     // Overall success rate should be decent after recovery (>= 40 for CI tolerance)
     assert!(
         final_successes >= 40,
-        "Should have >=40 total successes with recovery, got {}",
-        final_successes
+        "Should have >=40 total successes with recovery, got {final_successes}"
     );
 }
 
@@ -658,15 +646,13 @@ async fn test_extreme_concurrent_load_stress() {
     // Should handle extreme load
     assert_eq!(
         success_count, concurrent_requests,
-        "All 1000 requests should succeed, got {}",
-        success_count
+        "All 1000 requests should succeed, got {success_count}"
     );
 
     // Should complete quickly (all concurrent, no blocking)
     assert!(
         elapsed < Duration::from_secs(2),
-        "Should complete in <2s with extreme concurrency, took {:?}",
-        elapsed
+        "Should complete in <2s with extreme concurrency, took {elapsed:?}"
     );
 
     // Verify distribution
@@ -675,10 +661,7 @@ async fn test_extreme_concurrent_load_stress() {
         let expected = concurrent_requests / connections.len();
         assert!(
             count >= expected - 50 && count <= expected + 50,
-            "Server {} should have ~{} requests, got {}",
-            i,
-            expected,
-            count
+            "Server {i} should have ~{expected} requests, got {count}"
         );
     }
 }

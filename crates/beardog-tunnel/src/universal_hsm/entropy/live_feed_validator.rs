@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Live Feed Entropy Validator - MANDATORY for Human Keys
 // Enforces that all human entropy MUST come from live feed sources.
 // Simulated entropy is COMPLETELY DISALLOWED for human key creation.

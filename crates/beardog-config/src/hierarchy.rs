@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Configuration hierarchy resolution
 //!
 //! Implements the zero-hardcoding configuration hierarchy:

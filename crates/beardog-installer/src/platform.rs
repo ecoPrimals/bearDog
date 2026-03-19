@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Platform detection and path discovery
 //!
 //! Zero hardcoded paths - uses XDG Base Directory spec (Linux),

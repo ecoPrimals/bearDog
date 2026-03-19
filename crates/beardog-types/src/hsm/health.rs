@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Provider Health and Information Types
 //!
 //! Provides types for tracking HSM provider status, health, and capabilities.

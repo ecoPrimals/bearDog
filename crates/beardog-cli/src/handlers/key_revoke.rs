@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Key Revocation Handler
 // Sovereign revocation system (no phone home required)
 

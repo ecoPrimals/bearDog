@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Resource Management Configuration
 //
 // This module contains system resource management configuration including

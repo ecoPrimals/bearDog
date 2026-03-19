@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Safe operation utilities for error-free data access and manipulation
 //!
 //! This module provides comprehensive safe wrappers around common operations

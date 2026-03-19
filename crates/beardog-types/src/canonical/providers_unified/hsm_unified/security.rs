@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM security levels and cryptographic algorithms
 //!
 //! This module defines the security levels and cryptographic algorithms

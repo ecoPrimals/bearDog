@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Ecosystem Monitor Tests
 //
 // Comprehensive test coverage for ecosystem monitoring functionality

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Unified Configuration System - Single Source of Truth
 //!
 //! This module provides the **PRIMARY** configuration system for BearDog that eliminates

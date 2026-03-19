@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Hybrid Intelligence Core Types Tests
 //!
 //! Comprehensive testing of hybrid intelligence core types including:

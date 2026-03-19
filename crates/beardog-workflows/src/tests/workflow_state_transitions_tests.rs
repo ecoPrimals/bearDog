@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Workflow State Transition Tests
 //!
 //! Tests for workflow state machine transitions and lifecycle management

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Component Lifecycle Comprehensive Tests
 //!
 //! Tests for component initialization, management, and lifecycle

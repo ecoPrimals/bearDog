@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Connection Management for Universal Adapter
 
 use super::types::ConnectionInfo;
@@ -50,4 +52,39 @@ pub struct PoolStats {
     pub idle_connections: u32,
     /// Number of `max_connections`
     pub max_connections: u32,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_connection_pool_new() {
+        let config = ConnectionPoolConfig::default();
+        let pool = ConnectionPool::new(config);
+        assert!(std::mem::size_of_val(&pool) > 0);
+    }
+
+    #[tokio::test]
+    async fn test_connection_pool_stats() {
+        let config = ConnectionPoolConfig::default();
+        let pool = ConnectionPool::new(config);
+        let stats = pool.stats().await;
+        assert_eq!(stats.total_connections, 0);
+        assert_eq!(stats.active_connections, 0);
+        assert_eq!(stats.idle_connections, 0);
+    }
+
+    #[test]
+    fn test_pool_stats_serialization() {
+        let stats = PoolStats {
+            total_connections: 10,
+            active_connections: 5,
+            idle_connections: 5,
+            max_connections: 20,
+        };
+        let json = serde_json::to_string(&stats).unwrap();
+        let decoded: PoolStats = serde_json::from_str(&json).unwrap();
+        assert_eq!(decoded.total_connections, 10);
+    }
 }

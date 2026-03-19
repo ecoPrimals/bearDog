@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Universal Primal Registry Client
 //!
 //! Generic client for registering with ANY primal registry that speaks JSON-RPC 2.0

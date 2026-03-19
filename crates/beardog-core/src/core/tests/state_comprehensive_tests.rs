@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Tests for Core State Management
 //!
 //! Tests for `CoreState` including:

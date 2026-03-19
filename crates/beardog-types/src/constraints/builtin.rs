@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Built-in Constraints - Refactored from hardcoded implementations
 //
 // These are the constraints we shipped with (time, CPU, memory, weekday),

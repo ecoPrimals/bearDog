@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Threat detection for graph security
 //!
 //! This module detects malicious patterns and anomalies in graphs and modifications.

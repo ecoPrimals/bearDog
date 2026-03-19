@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Comprehensive Metrics System Tests
 //
 // Extensive test coverage for production metrics collection and reporting

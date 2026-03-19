@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM provider implementations
 //!
 //! This module contains the main HSM provider enum and implementations.

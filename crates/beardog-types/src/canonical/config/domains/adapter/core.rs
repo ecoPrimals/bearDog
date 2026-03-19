@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core adapter configuration types and implementations
 
 use serde::{Deserialize, Serialize};

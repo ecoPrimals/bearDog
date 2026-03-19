@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Removed unuse crate::ecosystem_integration::universal_compute_client::{UniversalComputeClient, UniversalComputeRequest, UniversalComputeResponse};
 
 // Module documentation

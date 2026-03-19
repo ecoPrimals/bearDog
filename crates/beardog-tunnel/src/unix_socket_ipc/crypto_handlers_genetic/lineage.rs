@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Lineage Key Derivation, Beacon Keys, Verification, and Entropy Mixing
 //!
 //! Handles genetic lineage-based key derivation, proof generation/verification,

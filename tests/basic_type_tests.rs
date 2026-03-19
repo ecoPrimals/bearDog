@@ -1,11 +1,11 @@
 //! Basic type tests for canonical types
 //!
-//! These tests validate fundamental BearDog types including health status
+//! These tests validate fundamental `BearDog` types including health status
 //! and component status enums.
 
 use beardog_types::canonical::{ComponentStatus, HealthStatus};
 
-/// Tests that HealthStatus::Healthy can be instantiated and compared
+/// Tests that `HealthStatus::Healthy` can be instantiated and compared
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -16,7 +16,7 @@ fn test_health_status_healthy() {
     assert_eq!(status, HealthStatus::Healthy);
 }
 
-/// Tests that HealthStatus::Degraded can be instantiated and compared
+/// Tests that `HealthStatus::Degraded` can be instantiated and compared
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -27,7 +27,7 @@ fn test_health_status_degraded() {
     assert_eq!(status, HealthStatus::Degraded);
 }
 
-/// Tests that HealthStatus::Unhealthy can be instantiated and compared
+/// Tests that `HealthStatus::Unhealthy` can be instantiated and compared
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -38,7 +38,7 @@ fn test_health_status_unhealthy() {
     assert_eq!(status, HealthStatus::Unhealthy);
 }
 
-/// Tests that identical HealthStatus values are equal
+/// Tests that identical `HealthStatus` values are equal
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -50,7 +50,7 @@ fn test_health_status_equality() {
     assert_eq!(s1, s2);
 }
 
-/// Tests that different HealthStatus values are not equal
+/// Tests that different `HealthStatus` values are not equal
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -62,7 +62,7 @@ fn test_health_status_inequality() {
     assert_ne!(s1, s2);
 }
 
-/// Tests that HealthStatus implements Copy trait correctly
+/// Tests that `HealthStatus` implements Copy trait correctly
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -74,7 +74,7 @@ fn test_health_status_clone() {
     assert_eq!(status, cloned);
 }
 
-/// Tests that ComponentStatus::Starting can be instantiated
+/// Tests that `ComponentStatus::Starting` can be instantiated
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -85,7 +85,7 @@ fn test_component_status_starting() {
     assert_eq!(status, ComponentStatus::Starting);
 }
 
-/// Tests that ComponentStatus::Running can be instantiated
+/// Tests that `ComponentStatus::Running` can be instantiated
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -96,7 +96,7 @@ fn test_component_status_running() {
     assert_eq!(status, ComponentStatus::Running);
 }
 
-/// Tests that ComponentStatus::Stopping can be instantiated
+/// Tests that `ComponentStatus::Stopping` can be instantiated
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -107,7 +107,7 @@ fn test_component_status_stopping() {
     assert_eq!(status, ComponentStatus::Stopping);
 }
 
-/// Tests that ComponentStatus::Active can be instantiated
+/// Tests that `ComponentStatus::Active` can be instantiated
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -118,7 +118,7 @@ fn test_component_status_active() {
     assert_eq!(status, ComponentStatus::Active);
 }
 
-/// Tests that ComponentStatus::Inactive can be instantiated
+/// Tests that `ComponentStatus::Inactive` can be instantiated
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -129,7 +129,7 @@ fn test_component_status_inactive() {
     assert_eq!(status, ComponentStatus::Inactive);
 }
 
-/// Tests that identical ComponentStatus values are equal
+/// Tests that identical `ComponentStatus` values are equal
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -141,7 +141,7 @@ fn test_component_status_equality() {
     assert_eq!(s1, s2);
 }
 
-/// Tests that different ComponentStatus values are not equal
+/// Tests that different `ComponentStatus` values are not equal
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -153,7 +153,7 @@ fn test_component_status_inequality() {
     assert_ne!(s1, s2);
 }
 
-/// Tests that ComponentStatus implements Clone trait correctly
+/// Tests that `ComponentStatus` implements Clone trait correctly
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -165,7 +165,7 @@ fn test_component_status_clone() {
     assert_eq!(status, cloned);
 }
 
-/// Tests that HealthStatus implements Debug trait
+/// Tests that `HealthStatus` implements Debug trait
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -173,11 +173,11 @@ fn test_component_status_clone() {
 #[test]
 fn test_health_status_debug() {
     let status = HealthStatus::Healthy;
-    let debug_str = format!("{:?}", status);
+    let debug_str = format!("{status:?}");
     assert!(!debug_str.is_empty());
 }
 
-/// Tests that ComponentStatus implements Debug trait
+/// Tests that `ComponentStatus` implements Debug trait
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -185,11 +185,11 @@ fn test_health_status_debug() {
 #[test]
 fn test_component_status_debug() {
     let status = ComponentStatus::Running;
-    let debug_str = format!("{:?}", status);
+    let debug_str = format!("{status:?}");
     assert!(!debug_str.is_empty());
 }
 
-/// Tests that HealthStatus can be stored in collections
+/// Tests that `HealthStatus` can be stored in collections
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -204,7 +204,7 @@ fn test_health_status_in_vec() {
     assert_eq!(statuses.len(), 3);
 }
 
-/// Tests that ComponentStatus can be stored in collections
+/// Tests that `ComponentStatus` can be stored in collections
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -219,7 +219,7 @@ fn test_component_status_in_vec() {
     assert_eq!(statuses.len(), 3);
 }
 
-/// Tests that HealthStatus can be used in Option types
+/// Tests that `HealthStatus` can be used in Option types
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -230,7 +230,7 @@ fn test_health_status_in_option() {
     assert!(maybe_status.is_some());
 }
 
-/// Tests that ComponentStatus can be used in Option types
+/// Tests that `ComponentStatus` can be used in Option types
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core

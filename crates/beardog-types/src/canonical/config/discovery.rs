@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Discovery Configuration Module - DEPRECATED
 //!
-//! ⚠️ **DEPRECATED** (November 8, 2025)
+//! ⚠️ **DEPRECATED** — Use canonical config system instead
 //! 
 //! This module is deprecated and will be removed in a future version.
 //! Please use `discovery_unified` instead:

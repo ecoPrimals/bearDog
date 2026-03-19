@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Monitoring Migration Utilities
 
 use super::CanonicalMonitoringConfig;

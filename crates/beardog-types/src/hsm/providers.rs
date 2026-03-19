@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM crypto provider configurations and capabilities
 
 use serde::{Deserialize, Serialize};

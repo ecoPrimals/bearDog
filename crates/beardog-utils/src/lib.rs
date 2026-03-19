@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # `BearDog` Utilities Crate
 //!
 //! Essential utilities and optimizations for the `BearDog` platform, providing

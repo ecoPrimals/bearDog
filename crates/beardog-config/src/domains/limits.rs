@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! System limits and buffer sizes configuration
 //!
 //! This module provides configuration for system-wide limits, buffer sizes,

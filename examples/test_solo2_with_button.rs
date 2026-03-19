@@ -58,7 +58,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
         // Discover and open device
         let hid_devices = beardog_hid::discover()
             .await
-            .map_err(|e| beardog_errors::BearDogError::system(format!("HID discovery: {}", e)))?;
+            .map_err(|e| beardog_errors::BearDogError::system(format!("HID discovery: {e}")))?;
 
         let hid_info = hid_devices
             .iter()
@@ -72,7 +72,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
 
         let mut hid_device = beardog_hid::open_device(&hid_info.path)
             .await
-            .map_err(|e| beardog_errors::BearDogError::system(format!("Device open: {}", e)))?;
+            .map_err(|e| beardog_errors::BearDogError::system(format!("Device open: {e}")))?;
 
         println!("✅ Device opened\n");
 
@@ -103,14 +103,14 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
 
                 println!("   🔹 Supported Versions:");
                 for version in &info.versions {
-                    println!("      - {}", version);
+                    println!("      - {version}");
                 }
                 println!();
 
                 if !info.extensions.is_empty() {
                     println!("   🔹 Supported Extensions:");
                     for ext in &info.extensions {
-                        println!("      - {}", ext);
+                        println!("      - {ext}");
                         if ext == "hmac-secret" {
                             println!("         └─ ✅ Can generate hardware entropy!");
                         }
@@ -140,7 +140,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
             }
             Err(e) => {
                 println!();
-                println!("❌ GetInfo still failed: {}", e);
+                println!("❌ GetInfo still failed: {e}");
                 println!();
                 println!("💡 Possibilities:");
                 println!("   1. Button press not required (try other approach)");

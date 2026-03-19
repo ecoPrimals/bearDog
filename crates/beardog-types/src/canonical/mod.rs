@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical Types for BearDog
 //!
 //! This module provides the **single source of truth** for all canonical types across
@@ -212,7 +214,7 @@ pub use providers_unified::{
 pub use monitoring::MonitoringConfig;
 
 // Backward compatibility aliases
-// DEPRECATED: Old monitoring config - use canonical::monitoring::MonitoringConfig
+// ecoPrimals: Migration plan - use canonical::monitoring::MonitoringConfig directly. Remove in v4.
 #[allow(deprecated)]
 pub use monitoring_unified::CanonicalMonitoringConfig;
 

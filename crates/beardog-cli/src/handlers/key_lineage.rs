@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Key Lineage Handler
 // Query and display key parent-child relationships
 

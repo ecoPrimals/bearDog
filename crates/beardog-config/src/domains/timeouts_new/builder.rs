@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Timeout Configuration Builder
 //!
 //! Provides a fluent builder pattern for constructing TimeoutConfig.

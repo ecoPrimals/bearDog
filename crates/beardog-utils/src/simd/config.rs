@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! SIMD Configuration
 //! 
 //! Configuration structures for safe SIMD operations.

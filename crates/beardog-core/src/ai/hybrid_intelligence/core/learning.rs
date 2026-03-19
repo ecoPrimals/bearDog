@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Online Learning and Adaptation
 //!
 //! This module handles online learning, adaptation strategies, and performance

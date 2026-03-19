@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Concurrent-Safe Configuration Loader
 //!
 //! Provides hierarchical configuration loading with explicit environment variable handling.

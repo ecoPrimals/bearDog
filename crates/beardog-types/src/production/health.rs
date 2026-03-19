@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Health Checking System
 //
 // This module provides comprehensive health checking capabilities

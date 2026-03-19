@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Engine Conditions - Modern Implementation
 //
 // **MODERNIZED**: Clean, production-ready condition types for the BearDog threat detection engine.

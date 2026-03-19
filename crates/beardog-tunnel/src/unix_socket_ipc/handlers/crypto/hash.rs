@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Hashing and MAC operations
 //!
 //! This module provides cryptographic hashing and message authentication code

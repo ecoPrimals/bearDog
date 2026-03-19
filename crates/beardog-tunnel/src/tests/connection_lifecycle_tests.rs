@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tunnel Connection Lifecycle Tests
 //!
 //! Comprehensive tests for tunnel connection lifecycle management:

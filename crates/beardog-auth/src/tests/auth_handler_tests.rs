@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Temporarily disable these tests until AuthenticationHandler is properly implemented
 // use crate::auth::handlers::{AuthenticationHandler, SessionData};
 // use beardog_errors::BearDogError;

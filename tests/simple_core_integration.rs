@@ -123,7 +123,7 @@ fn test_config_version_format() {
     assert!(!config.version.is_empty(), "Version should not be empty");
     // Version should contain digits
     assert!(
-        config.version.chars().any(|c| c.is_numeric()),
+        config.version.chars().any(char::is_numeric),
         "Version should contain numbers"
     );
 }
@@ -137,7 +137,7 @@ fn test_error_creation() {
     let error = BearDogError::validation("Test validation error");
 
     // Error should be created successfully
-    assert!(format!("{:?}", error).contains("validation"));
+    assert!(format!("{error:?}").contains("validation"));
 }
 
 #[test]
@@ -149,7 +149,7 @@ fn test_error_system_creation() {
     let error = BearDogError::system("System error".to_string());
 
     // Error should be created successfully
-    assert!(format!("{:?}", error).contains("System"));
+    assert!(format!("{error:?}").contains("System"));
 }
 
 #[test]
@@ -219,7 +219,7 @@ fn test_health_status_debug() {
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     let status = HealthStatus::Healthy;
-    let debug_str = format!("{:?}", status);
+    let debug_str = format!("{status:?}");
 
     assert!(debug_str.contains("Healthy"));
 }
@@ -231,7 +231,7 @@ fn test_health_status_debug() {
 fn test_error_context_preservation() {
     // Test that errors preserve context
     let error = BearDogError::validation("Field validation failed");
-    let error_str = format!("{:?}", error);
+    let error_str = format!("{error:?}");
 
     assert!(error_str.contains("validation") || error_str.contains("Field"));
 }

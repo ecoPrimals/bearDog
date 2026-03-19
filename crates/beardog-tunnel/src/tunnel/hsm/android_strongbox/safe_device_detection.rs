@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Safe Android Device Detection
 //!
 //! Platform-safe detection of Android device capabilities and StrongBox implementation

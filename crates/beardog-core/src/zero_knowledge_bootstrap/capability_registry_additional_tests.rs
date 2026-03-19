@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Additional tests for capability registry
 //!
 //! These tests supplement the existing comprehensive tests with additional

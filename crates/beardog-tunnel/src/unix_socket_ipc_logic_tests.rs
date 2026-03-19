@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Logic Tests for Capability-Based IPC
 //!
 //! Tests the JSON-RPC parsing, routing, and response generation WITHOUT requiring actual Unix sockets.

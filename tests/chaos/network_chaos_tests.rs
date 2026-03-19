@@ -62,10 +62,10 @@ async fn test_network_packet_loss() {
                 let mut dropped_packets = 0;
 
                 for _ in 0..100 {
-                    if !chaos.should_drop_packet() {
-                        successful_ops += 1;
-                    } else {
+                    if chaos.should_drop_packet() {
                         dropped_packets += 1;
+                    } else {
+                        successful_ops += 1;
                     }
                 }
 
@@ -80,8 +80,7 @@ async fn test_network_packet_loss() {
                 if successful_ops < 40 {
                     // This is >4 sigma from expected 70, indicates real problem
                     return Err(format!(
-                        "Too many packets lost ({}/100) - retry mechanism may be broken",
-                        dropped_packets
+                        "Too many packets lost ({dropped_packets}/100) - retry mechanism may be broken"
                     ));
                 }
 
@@ -146,10 +145,10 @@ async fn test_cascading_network_failures() {
                     // Both high latency AND high packet loss
                     high_latency.inject_latency().await;
 
-                    if !high_loss.should_drop_packet() {
-                        // Operation succeeded despite chaos
-                    } else {
+                    if high_loss.should_drop_packet() {
                         // No sleep needed - testing retry logic, not timing
+                    } else {
+                        // Operation succeeded despite chaos
                     }
                 }
 

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # BearDog Tunnel - Secure Communication and HSM Integration
 //!
 //! Provides secure communication tunnels and Hardware Security Module (HSM) integration

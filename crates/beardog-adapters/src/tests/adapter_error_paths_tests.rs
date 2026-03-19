@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Adapter error path coverage tests
 //!
 //! This module tests error handling and recovery in the adapter system,

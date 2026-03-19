@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Zero Hardcoding Configuration Infrastructure
 //!
 //! Modern, idiomatic Rust configuration system that eliminates ALL hardcoding:

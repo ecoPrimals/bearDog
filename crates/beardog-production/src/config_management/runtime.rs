@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Runtime Configuration Management
 //!
 //! This module contains the runtime logic for loading and managing production configurations.

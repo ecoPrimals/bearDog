@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical Testing Configuration Module
 //!
 //! This module consolidates ALL test configuration types from scattered locations

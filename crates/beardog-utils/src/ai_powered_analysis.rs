@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # AI-Powered Code Analysis and Optimization
 //!
 //! This module implements **advanced AI-powered code analysis** that provides

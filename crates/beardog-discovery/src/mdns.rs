@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! mDNS-based service discovery
 //!
 //! Complete production implementation using mdns-sd crate for zero-configuration

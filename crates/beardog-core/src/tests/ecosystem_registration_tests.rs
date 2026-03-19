@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Ecosystem Registration Tests
 //!
 //! Tests for service registration and ecosystem integration

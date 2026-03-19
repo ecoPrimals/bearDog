@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Performance Optimization for Zero-Knowledge Bootstrap
 //
 // This module implements advanced performance optimizations to achieve sub-100ms

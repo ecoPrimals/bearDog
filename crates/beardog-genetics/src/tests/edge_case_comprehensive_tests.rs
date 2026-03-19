@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Edge Case Tests for beardog-genetics
 //!
 //! These tests target boundary conditions and edge cases to ensure

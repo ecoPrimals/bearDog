@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Type-Safe Newtypes for BearDog
 //!
 //! This module provides strongly-typed wrappers around primitive types

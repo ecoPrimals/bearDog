@@ -10,7 +10,7 @@
 
 //! End-to-End (E2E) Testing Framework
 //!
-//! This module provides comprehensive E2E testing infrastructure for BearDog,
+//! This module provides comprehensive E2E testing infrastructure for `BearDog`,
 //! validating complete production scenarios from API requests through to
 //! persistence and recovery.
 //!
@@ -98,8 +98,8 @@ pub struct E2ETestResult {
 /// E2E metrics
 /// E2E test metrics
 ///
-/// Modern pattern: Explicit Default implementation to control data_verified semantics
-/// Design: data_verified=true by default (innocent until proven guilty)
+/// Modern pattern: Explicit Default implementation to control `data_verified` semantics
+/// Design: `data_verified=true` by default (innocent until proven guilty)
 #[derive(Debug, Clone)]
 pub struct E2EMetrics {
     pub total_requests: u64,
@@ -113,7 +113,7 @@ pub struct E2EMetrics {
 impl Default for E2EMetrics {
     /// Modern pattern: Explicit default implementation
     ///
-    /// Design: data_verified starts as true (innocent until proven guilty)
+    /// Design: `data_verified` starts as true (innocent until proven guilty)
     /// Rationale: Scenarios that don't touch data shouldn't fail verification
     fn default() -> Self {
         Self {
@@ -336,9 +336,9 @@ pub fn print_e2e_report(results: &[E2ETestResult]) {
     let failed = total - passed;
 
     println!("📊 Overall Results:");
-    println!("   Total Scenarios:    {}", total);
-    println!("   Passed:             {} ✅", passed);
-    println!("   Failed:             {} ❌", failed);
+    println!("   Total Scenarios:    {total}");
+    println!("   Passed:             {passed} ✅");
+    println!("   Failed:             {failed} ❌");
     println!(
         "   Success Rate:       {:.1}%",
         (passed as f64 / total as f64) * 100.0
@@ -355,7 +355,7 @@ pub fn print_e2e_report(results: &[E2ETestResult]) {
         );
 
         if let Some(error) = &result.error_message {
-            println!("      Error: {}", error);
+            println!("      Error: {error}");
         }
 
         if result.success {

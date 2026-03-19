@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Main implementation and system orchestration for hybrid intelligence
 
 use super::config::{HybridIntelligenceConfig, IntelligenceMode, LearningAlgorithm};

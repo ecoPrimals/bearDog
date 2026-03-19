@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Coverage extension tests for Network Configuration
 //!
 //! Added December 8, 2025 to increase coverage from 72.41% to 90%+

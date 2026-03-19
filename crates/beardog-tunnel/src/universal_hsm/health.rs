@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Universal HSM Health Module
 //!
 //! Health monitoring for universal HSM providers

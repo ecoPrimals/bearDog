@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Genetics configuration types for BearDog
 // Provides structured definitions for genetic algorithms, entropy, and evolutionary processes
 

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Environment variable utilities for BearDog
 //
 // Provides safe, type-checked access to environment variables with validation.

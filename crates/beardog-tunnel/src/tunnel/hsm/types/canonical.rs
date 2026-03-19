@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical HSM Types
 //!
 //! Universal type definitions for HSM operations across all platforms.

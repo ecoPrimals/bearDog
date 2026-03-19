@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Hybrid Intelligence Configuration
 //!
 //! Modern, type-safe configuration for human-AI collaboration with builder pattern.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Error Path Tests for HSM Providers
 //!
 //! Tests error handling across all HSM provider implementations

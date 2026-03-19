@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Property-Based Testing Types - Canonical Location
 //!
 //! **Unified type definitions** for property-based testing framework.

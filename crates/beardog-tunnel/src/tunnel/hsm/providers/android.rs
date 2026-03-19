@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Android HSM Provider
 //!
 //! Universal provider implementation for Android HSM capabilities,

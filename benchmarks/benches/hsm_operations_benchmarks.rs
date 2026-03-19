@@ -446,10 +446,16 @@ fn benchmark_key_lifecycle(c: &mut Criterion) {
 
 criterion_group! {
     name = hsm_benches;
-    config = Criterion::default()
-        .with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)))
-        .measurement_time(Duration::from_secs(10))
-        .warm_up_time(Duration::from_secs(3));
+    config = {
+        let mut c = Criterion::default()
+            .measurement_time(Duration::from_secs(10))
+            .warm_up_time(Duration::from_secs(3));
+        #[cfg(feature = "profiling")]
+        {
+            c = c.with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
+        }
+        c
+    };
     targets =
         benchmark_key_generation,
         benchmark_symmetric_encryption,

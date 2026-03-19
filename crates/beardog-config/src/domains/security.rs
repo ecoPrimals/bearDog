@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Concurrent-Safe Security Configuration Module
 //!
 //! Security configuration and policies for BearDog.

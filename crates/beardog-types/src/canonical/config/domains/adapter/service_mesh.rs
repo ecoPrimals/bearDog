@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Service mesh and handoff configuration
 
 use serde::{Deserialize, Serialize};

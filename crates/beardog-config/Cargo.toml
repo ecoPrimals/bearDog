@@ -4,11 +4,14 @@ version.workspace = true
 edition = "2021"
 authors = ["BearDog Team"]
 description = "Configuration management for BearDog with zero hardcoding"
-license = "MIT OR Apache-2.0"
+license = "AGPL-3.0-only"
 repository = "https://github.com/ecoprimals/beardog"
 readme = "../README.md"
 keywords = ["config", "configuration", "beardog", "security", "hsm"]
 categories = ["config", "cryptography"]
+
+[lints]
+workspace = true
 
 [dependencies]
 # Error handling

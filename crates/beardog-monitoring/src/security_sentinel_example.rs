@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 use crate::security_sentinel::{SecuritySentinel, SecuritySentinelConfig};
 use beardog_errors::BearDogError;
 use std::collections::HashMap;

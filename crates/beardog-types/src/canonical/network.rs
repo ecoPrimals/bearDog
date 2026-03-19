@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Network configuration types for BearDog
 // Provides network-related configuration structures and utilities
 

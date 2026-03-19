@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Workflow validation tests
 //!
 //! These tests cover workflow validation logic and edge cases

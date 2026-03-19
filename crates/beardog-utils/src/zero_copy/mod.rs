@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Zero-copy utilities for BearDog
 //
 // This module provides zero-copy abstractions using safe Rust patterns.

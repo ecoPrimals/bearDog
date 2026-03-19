@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Extended Workflow Validation Tests
 //!
 //! Comprehensive test coverage for workflow validation and state management

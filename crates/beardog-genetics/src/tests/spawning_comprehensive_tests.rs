@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Spawning Engine Tests
 //!
 //! Exhaustive tests for genetic spawning engine functionality

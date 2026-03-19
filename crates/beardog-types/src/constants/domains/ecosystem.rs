@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Ecosystem Domain Constants
 //!
 //! Constants related to ecosystem services, primal identifiers,

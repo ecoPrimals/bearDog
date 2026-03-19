@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Infant Discovery Patterns for Zero-Knowledge Bootstrap
 //!
 //! This module implements "infant" discovery patterns - starting from minimal

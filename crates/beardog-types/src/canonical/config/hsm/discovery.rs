@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // HSM Discovery Configuration
 
 use super::HsmConfigValidation;

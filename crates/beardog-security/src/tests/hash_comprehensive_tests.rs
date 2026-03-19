@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Hash Function Comprehensive Tests
 //!
 //! Extensive test coverage for SHA-256 and SHA-512 hashing operations

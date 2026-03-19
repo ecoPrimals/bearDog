@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Production Domain Types
 //!
 //! Core domain types for production environments, including environment classification,

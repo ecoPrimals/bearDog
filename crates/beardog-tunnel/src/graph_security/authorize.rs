@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Authorization of graph modifications
 //!
 //! This module implements the `graph.authorize_modification` JSON-RPC method.

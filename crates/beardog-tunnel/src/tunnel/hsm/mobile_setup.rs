@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Mobile HSM Setup
 //!
 //! This module provides setup and initialization for mobile HSMs (Android StrongBox, iOS Secure Enclave).

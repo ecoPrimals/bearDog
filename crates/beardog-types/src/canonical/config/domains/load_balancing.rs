@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical Load Balancing Configuration
 //!
 //! This module provides the unified, canonical load balancing configuration

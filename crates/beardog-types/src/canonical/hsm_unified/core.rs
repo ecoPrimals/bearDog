@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core HSM Types and Configuration
 //!
 //! Hardware Security Module integration types supporting multiple HSM backends

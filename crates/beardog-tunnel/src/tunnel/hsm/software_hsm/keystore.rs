@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 use super::types::*;
 use beardog_errors::BearDogError;
 use beardog_types::hsm::KeyStoreConfig;

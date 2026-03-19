@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Key Management Tests
 //!
 //! Comprehensive testing of key lifecycle management including:

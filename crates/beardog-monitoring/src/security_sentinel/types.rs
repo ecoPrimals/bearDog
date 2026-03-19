@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Security Sentinel Types
 //!
 //! This module provides types for security monitoring and threat assessment

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Behavioral Analysis Test Types
 
 use super::pattern::ThreatSeverity;

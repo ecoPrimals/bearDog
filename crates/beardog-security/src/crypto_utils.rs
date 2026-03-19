@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Cryptographic utility functions for the BearDog security system
 //!
 //! This module provides core cryptographic operations including:
@@ -12,7 +14,8 @@
 //
 // This module provides functionality for the BearDog ecosystem.
 
-// Temporary: Allow deprecated generic-array until aes-gcm 0.11 is stable
+// ecoPrimals: Migration plan - aes-gcm 0.10 uses deprecated generic-array.
+// When aes-gcm 0.11 is stable, upgrade and remove this allow.
 #![allow(deprecated)]
 
 use aes_gcm::{

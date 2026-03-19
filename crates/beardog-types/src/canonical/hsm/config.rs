@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Hardware Security Module configuration types
 // Provides structured configuration definitions for HSM providers and settings
 

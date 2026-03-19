@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive tests for CapabilityType enum
 //!
 //! Tests the core CapabilityType enum and its methods.

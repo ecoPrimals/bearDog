@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 use crate::core::BearDogCore;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::CapabilityType;
@@ -206,5 +208,71 @@ impl BearDogCore {
         } else {
             Ok(HealthStatus::Unhealthy)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::BearDogCore;
+    use beardog_types::canonical::capabilities::CapabilityType;
+
+    fn make_core() -> BearDogCore {
+        BearDogCore::with_default_config().expect("core creation")
+    }
+
+    #[tokio::test]
+    async fn test_coordinate_ecosystem_operation_insufficient_services() {
+        let core = make_core();
+        let required = vec![
+            CapabilityType::ComputeIntelligence,
+            CapabilityType::DistributedIntelligence,
+        ];
+        let result = core
+            .coordinate_ecosystem_operation(uuid::Uuid::new_v4(), required)
+            .await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_coordinate_ecosystem_operation_with_registered_services() {
+        let core = make_core();
+        core.universal_adapter
+            .register_capability(
+                CapabilityType::Security,
+                "https://security.example.com".to_string(),
+            )
+            .await
+            .unwrap();
+        core.universal_adapter
+            .register_capability(
+                CapabilityType::ServiceMesh,
+                "https://mesh.example.com".to_string(),
+            )
+            .await
+            .unwrap();
+        let required = vec![CapabilityType::Security, CapabilityType::ServiceMesh];
+        let result = core
+            .coordinate_ecosystem_operation(uuid::Uuid::new_v4(), required)
+            .await;
+        assert!(result.is_ok());
+        let value = result.unwrap();
+        assert!(value.get("operation_id").is_some());
+        assert_eq!(
+            value.get("status").and_then(|v| v.as_str()),
+            Some("completed")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_get_ecosystem_integration_health() {
+        let core = make_core();
+        let result = core.get_ecosystem_integration_health().await;
+        assert!(result.is_ok());
+        let status = result.unwrap();
+        assert!(matches!(
+            status,
+            HealthStatus::Healthy | HealthStatus::Degraded | HealthStatus::Unhealthy
+        ));
     }
 }

@@ -35,7 +35,7 @@ fn test_error_validation_with_context() {
     let error = BearDogError::validation("Field 'email' must be a valid email address");
 
     // Then: error should contain field name and requirement
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(
         error_str.contains("email"),
         "Error should mention field name"
@@ -57,7 +57,7 @@ fn test_error_configuration_with_details() {
     let error = BearDogError::configuration("Port 99999 is out of valid range (1-65535)");
 
     // Then: error should contain port number and range
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(
         error_str.contains("99999"),
         "Error should contain invalid port"
@@ -68,7 +68,7 @@ fn test_error_configuration_with_details() {
     );
 }
 
-/// Tests not_found error with resource ID and type
+/// Tests `not_found` error with resource ID and type
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: errors
@@ -78,12 +78,11 @@ fn test_error_not_found_with_id() {
     // Given: a not found error with resource ID
     let resource_id = "hsm-provider-abc123";
     let error = BearDogError::not_found(format!(
-        "HSM provider '{}' not found in registry",
-        resource_id
+        "HSM provider '{resource_id}' not found in registry"
     ));
 
     // Then: error should contain ID and resource type
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(
         error_str.contains("abc123"),
         "Error should contain resource ID"
@@ -103,10 +102,10 @@ fn test_error_not_found_with_id() {
 fn test_error_network_with_endpoint() {
     // Given: a network error with endpoint
     let endpoint = "https://api.example.com:8080";
-    let error = BearDogError::network(format!("Failed to connect to endpoint: {}", endpoint));
+    let error = BearDogError::network(format!("Failed to connect to endpoint: {endpoint}"));
 
     // Then: error should contain host and port
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(
         error_str.contains("example.com"),
         "Error should contain hostname"
@@ -123,10 +122,10 @@ fn test_error_network_with_endpoint() {
 fn test_error_internal_with_state_info() {
     // Given: an internal error with state info
     let state = "ShuttingDown";
-    let error = BearDogError::internal(format!("Operation rejected: system in {} state", state));
+    let error = BearDogError::internal(format!("Operation rejected: system in {state} state"));
 
     // Then: error should contain state information
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(
         error_str.contains("ShuttingDown"),
         "Error should contain state"
@@ -144,7 +143,7 @@ fn test_error_security_with_reason() {
     let error = BearDogError::security("Authentication token expired".to_string());
 
     // Then: error should contain security issue details
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(error_str.contains("token"), "Error should mention token");
     assert!(
         error_str.contains("expired"),
@@ -161,10 +160,10 @@ fn test_error_security_with_reason() {
 fn test_error_system_with_timeout_info() {
     // Given: a system error with timeout
     let timeout_secs = 30;
-    let error = BearDogError::system(format!("Operation timed out after {}s", timeout_secs));
+    let error = BearDogError::system(format!("Operation timed out after {timeout_secs}s"));
 
     // Then: error should contain timeout value
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(
         error_str.contains("30"),
         "Error should contain timeout value"
@@ -184,18 +183,17 @@ fn test_error_system_with_timeout_info() {
 fn test_error_unavailable_with_service() {
     // Given: an unavailable error for a service
     let service = "discovery-service";
-    let error =
-        BearDogError::unavailable(format!("Service '{}' is currently unavailable", service));
+    let error = BearDogError::unavailable(format!("Service '{service}' is currently unavailable"));
 
     // Then: error should contain service name
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(
         error_str.contains("discovery-service"),
         "Error should contain service name"
     );
 }
 
-/// Tests invalid_input error with field name
+/// Tests `invalid_input` error with field name
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: errors
@@ -206,7 +204,7 @@ fn test_error_invalid_input_with_field() {
     let error = BearDogError::invalid_input("Field 'primal_id' contains invalid characters");
 
     // Then: error should contain field name
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(
         error_str.contains("primal_id"),
         "Error should contain field name"
@@ -224,7 +222,7 @@ fn test_error_debug_format() {
     let error = BearDogError::validation("Test error");
 
     // When: formatting with debug
-    let debug_str = format!("{:?}", error);
+    let debug_str = format!("{error:?}");
 
     // Then: should produce meaningful output
     assert!(!debug_str.is_empty(), "Debug output should not be empty");
@@ -287,7 +285,7 @@ fn test_error_propagation_with_context() {
     // Then: error should propagate with context preserved
     assert!(result.is_err());
     if let Err(e) = result {
-        let msg = format!("{}", e);
+        let msg = format!("{e}");
         assert!(
             msg.contains("not found"),
             "Original error context should be preserved"
@@ -336,7 +334,7 @@ fn test_error_propagation_through_match() {
     assert_eq!(process(10).unwrap(), 20, "Positive should succeed");
 }
 
-/// Tests error transformation with map_err
+/// Tests error transformation with `map_err`
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: errors
@@ -392,7 +390,7 @@ fn test_error_early_return() {
     // Then: should return early with error
     assert!(result.is_err(), "Should fail at step2");
     if let Err(e) = result {
-        let msg = format!("{}", e);
+        let msg = format!("{e}");
         assert!(msg.contains("Step 2"), "Should identify failing step");
     }
 }
@@ -455,7 +453,7 @@ fn test_error_in_nested_results() {
     }
 }
 
-/// Tests error creation with ok_or_else
+/// Tests error creation with `ok_or_else`
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: errors
@@ -477,7 +475,7 @@ fn test_error_with_ok_or_else() {
     assert!(get_value(false).is_err(), "Absent value should fail");
 }
 
-/// Tests error handling with and_then chains
+/// Tests error handling with `and_then` chains
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: errors
@@ -517,7 +515,7 @@ fn test_error_and_then_chain() {
 // Error Recovery Tests (6 tests)
 // ============================================================================
 
-/// Tests error recovery with unwrap_or
+/// Tests error recovery with `unwrap_or`
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: errors
@@ -536,7 +534,7 @@ fn test_error_recovery_with_unwrap_or() {
     assert_eq!(value, 42, "Should recover with default value");
 }
 
-/// Tests error recovery with unwrap_or_else
+/// Tests error recovery with `unwrap_or_else`
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: errors
@@ -555,7 +553,7 @@ fn test_error_recovery_with_unwrap_or_else() {
     assert_eq!(value, "default", "Should recover with computed default");
 }
 
-/// Tests error recovery with unwrap_or_default
+/// Tests error recovery with `unwrap_or_default`
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: errors
@@ -664,7 +662,7 @@ mod error_helpers {
 
     /// Check if error message contains text
     pub fn error_contains(error: &BearDogError, text: &str) -> bool {
-        format!("{}", error).contains(text)
+        format!("{error}").contains(text)
     }
 }
 

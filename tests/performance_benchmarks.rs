@@ -1,4 +1,4 @@
-//! Performance Benchmarking Infrastructure for BearDog
+//! Performance Benchmarking Infrastructure for `BearDog`
 //!
 //! Provides infrastructure for tracking performance metrics,
 //! detecting regressions, and generating performance reports.
@@ -48,6 +48,7 @@ pub struct BenchmarkStats {
 
 impl BenchmarkStats {
     /// Create from samples
+    #[must_use]
     pub fn from_samples(name: String, samples: &[Duration]) -> Self {
         let mut sorted = samples.to_vec();
         sorted.sort();
@@ -71,7 +72,7 @@ impl BenchmarkStats {
     }
 
     fn calculate_mean(samples: &[Duration]) -> Duration {
-        let total: u128 = samples.iter().map(|d| d.as_nanos()).sum();
+        let total: u128 = samples.iter().map(std::time::Duration::as_nanos).sum();
         Duration::from_nanos((total / samples.len() as u128) as u64)
     }
 
@@ -90,10 +91,11 @@ impl BenchmarkStats {
     }
 
     /// Format for display
+    #[must_use]
     pub fn format_duration(d: Duration) -> String {
         let nanos = d.as_nanos();
         if nanos < 1_000 {
-            format!("{}ns", nanos)
+            format!("{nanos}ns")
         } else if nanos < 1_000_000 {
             format!("{:.2}µs", nanos as f64 / 1_000.0)
         } else if nanos < 1_000_000_000 {
@@ -121,6 +123,7 @@ pub struct BenchmarkSuite {
 }
 
 impl BenchmarkSuite {
+    #[must_use]
     pub fn new(config: BenchmarkConfig) -> Self {
         Self {
             benchmarks: HashMap::new(),
@@ -140,6 +143,7 @@ impl BenchmarkSuite {
         self.baselines.insert(name.to_string(), stats);
     }
 
+    #[must_use]
     pub fn run_benchmark(&self, name: &str) -> Option<BenchmarkResult> {
         let benchmark = self.benchmarks.get(name)?;
 
@@ -171,6 +175,7 @@ impl BenchmarkSuite {
         Some(BenchmarkResult { stats, comparison })
     }
 
+    #[must_use]
     pub fn run_all(&self) -> Vec<BenchmarkResult> {
         let mut results = Vec::new();
         for name in self.benchmarks.keys() {
@@ -217,7 +222,7 @@ impl BenchmarkSuite {
                 } else {
                     "⚠️ Regression"
                 };
-                println!("   {} Comparison: {:+.2}% ({})", symbol, comparison, status);
+                println!("   {symbol} Comparison: {comparison:+.2}% ({status})");
             }
             println!();
         }
@@ -285,7 +290,7 @@ mod tests {
         assert!(BenchmarkStats::format_duration(Duration::from_nanos(500)).contains("ns"));
         assert!(BenchmarkStats::format_duration(Duration::from_micros(500)).contains("µs"));
         assert!(BenchmarkStats::format_duration(Duration::from_millis(500)).contains("ms"));
-        assert!(BenchmarkStats::format_duration(Duration::from_secs(2)).contains("s"));
+        assert!(BenchmarkStats::format_duration(Duration::from_secs(2)).contains('s'));
     }
 
     #[test]

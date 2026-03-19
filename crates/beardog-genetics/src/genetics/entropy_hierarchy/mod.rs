@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Entropy Hierarchy Module
 //
 // This module provides entropy hierarchy management and validation capabilities,

@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### March 19, 2026 -- Deep Compliance & Coverage Wave 2
+
+- SPDX license headers (`AGPL-3.0-only`) added to 1,634 .rs files
+- Removed ~130 production `#[allow(dead_code)]` — idiomatic underscore prefixes
+- Removed redundant `#[allow]` from beardog-types (workspace config handles them)
+- Removed `sysinfo` C dependency (ecoBin violation) — was unused in beardog-deploy
+- blake3 `pure` feature enforced across all 13 showcase crates
+- `pprof` made optional behind `profiling` feature flag in benchmarks
+- Platform FFI (Android NDK, iOS Security.framework) documented as out-of-ecoBin-scope
+- IPC hot path optimized: `take()` replaces triple `clone()` on request IDs
+- Added ~250 new tests: beardog-core 60%→74%, beardog-ipc 30%→41%
+- Prefixed unused struct fields with `_` instead of `#[allow(dead_code)]`
+- Migration plan comments added to all `#[allow(deprecated)]` usage sites
+- 8,542+ tests passing across 29 crates (0 failures)
+
+### March 19, 2026 -- Deep Compliance & Coverage Wave 1
+
+- Fixed 46 clippy errors in beardog-core (struct_excessive_bools, items_after_statements, etc.)
+- Standardized AGPL-3.0-only license across all 29 Cargo.toml files
+- Workspace lint inheritance (`[lints] workspace = true`) applied to all crates
+- Refactored `ProductionConfig` (5 bools → enum) and `SecurityConfig` (4 bools → Option sub-configs)
+- Removed `async` from 14 functions that had no `.await`
+- Hardcoded primal names evolved to `PRIMAL_NAME` env var + `CARGO_PKG_NAME` fallback
+- Zero-key HSM stub replaced with HKDF-SHA256 derived from `BEARDOG_HSM_MASTER_KEY`
+- Smart-refactored 3 oversize files (canonical_examples, enforcement, genesis) into submodules
+- Replaced 15 production TODOs with doc comments and tracing warnings
+- Platform stubs deprecated with `#[deprecated]` guidance
+
 ### February 11, 2026 -- Deep Debt Evolution Session
 
 - Smart refactored `quantum_crypto.rs` (1000+ LOC) into modular structure:

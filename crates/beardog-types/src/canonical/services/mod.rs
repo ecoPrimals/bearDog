@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Unified Service Definitions for BearDog
 //!
 //! This module provides the single source of truth for all service-related types across

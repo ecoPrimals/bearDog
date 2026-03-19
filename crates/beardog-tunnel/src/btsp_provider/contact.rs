@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Contact Exchange - Genetic Lineage-Based NAT Traversal
 //!
 //! This module defines types for decentralized NAT traversal using genetic lineage

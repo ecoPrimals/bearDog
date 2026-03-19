@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core crypto service implementation
 //!
 //! Contains the main `BearDogCryptoService` struct and initialization logic.

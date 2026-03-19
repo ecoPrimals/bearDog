@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Crypto operation handlers organized by domain
 //!
 //! This module provides cryptographic operations via JSON-RPC, organized

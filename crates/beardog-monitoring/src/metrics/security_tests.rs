@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Security Metrics Engine Tests
 //
 // Comprehensive test coverage for security monitoring functionality

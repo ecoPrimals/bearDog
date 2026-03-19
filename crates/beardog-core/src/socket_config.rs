@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Unix Socket Configuration
 //!
 //! This module provides a robust, Primal IPC Protocol compliant socket path configuration
@@ -340,7 +342,9 @@ mod tests {
     #[test]
     fn test_env_var_override_takes_priority() {
         // Lock to prevent concurrent env var modification
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK
+            .lock()
+            .expect("ENV_TEST_LOCK should not be poisoned");
 
         // Clean slate - remove any existing variables
         std::env::remove_var("BEARDOG_SOCKET");
@@ -377,7 +381,9 @@ mod tests {
     #[test]
     fn test_empty_socket_path_rejected() {
         // Lock to prevent concurrent env var modification
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK
+            .lock()
+            .expect("ENV_TEST_LOCK should not be poisoned");
 
         // Test: Empty socket paths should fall through to next tier
         // This prevents production hangs discovered in integration testing
@@ -413,7 +419,9 @@ mod tests {
     #[test]
     fn test_empty_biomeos_socket_rejected() {
         // Lock to prevent concurrent env var modification
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK
+            .lock()
+            .expect("ENV_TEST_LOCK should not be poisoned");
 
         // Test: Empty BIOMEOS_SOCKET_PATH should also be rejected
 
@@ -447,7 +455,9 @@ mod tests {
     #[test]
     fn test_biomeos_socket_path_tier2() {
         // Lock to prevent concurrent env var modification
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK
+            .lock()
+            .expect("ENV_TEST_LOCK should not be poisoned");
 
         // Clean slate - IMPORTANT: Remove ALL relevant env vars for concurrent test safety
         std::env::remove_var("BEARDOG_SOCKET");
@@ -482,7 +492,9 @@ mod tests {
     #[test]
     fn test_beardog_socket_overrides_biomeos_socket_path() {
         // Lock to prevent concurrent env var modification
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK
+            .lock()
+            .expect("ENV_TEST_LOCK should not be poisoned");
         // Clean slate
         std::env::remove_var("BEARDOG_SOCKET");
         std::env::remove_var("BIOMEOS_SOCKET_PATH");
@@ -511,7 +523,9 @@ mod tests {
 
     #[test]
     fn test_xdg_runtime_preferred_over_tmp() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK
+            .lock()
+            .expect("ENV_TEST_LOCK should not be poisoned");
         std::env::remove_var("BEARDOG_SOCKET");
         std::env::remove_var("BIOMEOS_SOCKET_PATH");
         std::env::set_var("BEARDOG_FAMILY_ID", "xdg-test");
@@ -539,7 +553,9 @@ mod tests {
 
     #[test]
     fn test_fallback_to_tmp_with_node_id() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK
+            .lock()
+            .expect("ENV_TEST_LOCK should not be poisoned");
         std::env::remove_var("BEARDOG_SOCKET");
         std::env::set_var("BEARDOG_FAMILY_ID", "fallback");
         std::env::set_var("BEARDOG_NODE_ID", "node123");
@@ -563,7 +579,9 @@ mod tests {
 
     #[test]
     fn test_default_family_and_node_ids() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK
+            .lock()
+            .expect("ENV_TEST_LOCK should not be poisoned");
         std::env::remove_var("BEARDOG_SOCKET");
         std::env::remove_var("BEARDOG_FAMILY_ID");
         std::env::remove_var("FAMILY_ID");
@@ -589,7 +607,9 @@ mod tests {
 
     #[test]
     fn test_description_format() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
+        let _lock = ENV_TEST_LOCK
+            .lock()
+            .expect("ENV_TEST_LOCK should not be poisoned");
         std::env::set_var("BEARDOG_SOCKET", "/custom/socket.sock");
         let config = SocketConfig::from_env();
 
@@ -617,19 +637,19 @@ mod tests {
     fn test_prepare_removes_old_socket() {
         // Create a temporary directory for testing
         let test_dir = std::env::temp_dir().join("beardog-socket-test");
-        fs::create_dir_all(&test_dir).unwrap();
+        fs::create_dir_all(&test_dir).expect("Failed to create test directory");
 
         let socket_path = test_dir.join("test-socket.sock");
 
         // Create an old socket file
-        fs::write(&socket_path, b"old socket").unwrap();
+        fs::write(&socket_path, b"old socket").expect("Failed to write test socket file");
         assert!(socket_path.exists());
 
         let config =
             SocketConfig::custom(socket_path.clone(), "test".to_string(), "test".to_string());
 
         // Prepare should remove the old socket
-        config.prepare().unwrap();
+        config.prepare().expect("prepare() should succeed for test");
         assert!(!socket_path.exists());
 
         // Cleanup
@@ -648,8 +668,13 @@ mod tests {
             SocketConfig::custom(socket_path.clone(), "test".to_string(), "test".to_string());
 
         // Prepare should create parent directory
-        config.prepare().unwrap();
-        assert!(socket_path.parent().unwrap().exists());
+        config
+            .prepare()
+            .expect("prepare() should succeed for nested test");
+        assert!(socket_path
+            .parent()
+            .expect("socket path should have parent")
+            .exists());
 
         // Cleanup
         let _ = fs::remove_dir_all(&test_dir);

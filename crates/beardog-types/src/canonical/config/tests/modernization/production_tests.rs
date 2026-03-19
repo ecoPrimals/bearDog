@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tests for Production Configuration
 //!
 //! Tests production-related configs including application, storage, operations,

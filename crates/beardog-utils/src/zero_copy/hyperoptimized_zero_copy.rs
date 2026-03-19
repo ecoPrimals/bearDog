@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Hyperoptimized Zero-Copy Memory Management - 100% Safe Implementation
 //
 // This module provides SIMD-aligned memory management with zero unsafe code,

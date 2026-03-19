@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Primal Sovereignty Monitoring System
 //
 // This module continuously monitors and validates that the system maintains

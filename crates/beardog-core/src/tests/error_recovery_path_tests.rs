@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Error Recovery Path Tests
 // December 7, 2025 - Test Coverage Expansion Phase 2
 //

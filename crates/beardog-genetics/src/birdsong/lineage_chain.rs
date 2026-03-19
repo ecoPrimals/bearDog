@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Lineage chain management for parent-child relationships
 
 use std::collections::HashMap;

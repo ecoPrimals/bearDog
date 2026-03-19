@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Client Configuration Module
 //!
 //! This module contains client-side network configuration structs and implementations.

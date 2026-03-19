@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Device Manager Tests
 //!
 //! Exhaustive tests for device discovery, management, and deployment

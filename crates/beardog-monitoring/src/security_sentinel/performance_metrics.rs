@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Performance Metrics
 //!
 //! This module provides types for collecting and analyzing

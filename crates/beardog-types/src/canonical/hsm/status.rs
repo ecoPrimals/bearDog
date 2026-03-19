@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // HSM status and health monitoring types
 // Provides structures for tracking HSM operational status and health metrics
 

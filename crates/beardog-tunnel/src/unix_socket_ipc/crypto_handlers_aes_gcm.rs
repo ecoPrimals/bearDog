@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! AES-GCM Handlers (Phase 6 - CRITICAL! 90%+ of HTTPS!)
 //!
 //! Provides AES-GCM (Galois/Counter Mode) authenticated encryption for TLS/HTTPS.

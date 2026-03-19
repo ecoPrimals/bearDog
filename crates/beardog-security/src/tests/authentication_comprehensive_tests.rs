@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Authentication Comprehensive Tests
 //!
 //! Comprehensive test coverage for authentication operations

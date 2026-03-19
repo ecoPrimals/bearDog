@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Solo V2 HSM Provider Implementation
 
 use super::types::{KeyType, PinConfig, SoloV2Config, SoloV2DeviceInfo, SoloV2KeyHandle};
@@ -25,7 +27,6 @@ pub struct SoloV2Provider {
     /// Device information
     device_info: SoloV2DeviceInfo,
     /// Configuration (used in Phase 2 CTAP2 implementation)
-    #[allow(dead_code)]
     config: SoloV2Config,
     /// PIN configuration (protected)
     pin_config: Arc<RwLock<PinConfig>>,

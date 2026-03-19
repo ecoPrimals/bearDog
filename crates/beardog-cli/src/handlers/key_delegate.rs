@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Key Delegation Handler
 // Create delegated keys with time/resource constraints
 //

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Monitoring Test Types
 
 use super::pattern::ThreatSeverity;

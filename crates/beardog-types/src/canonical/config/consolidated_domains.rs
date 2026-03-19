@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Consolidated Domain Configurations
 //!
 //! This module provides a unified interface to all domain-specific configurations.

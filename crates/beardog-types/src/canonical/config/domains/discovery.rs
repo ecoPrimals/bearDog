@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Discovery Configuration
 //!
 //! Canonical discovery configuration for all discovery types across the BearDog ecosystem.

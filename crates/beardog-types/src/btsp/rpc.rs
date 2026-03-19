@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! RPC Parameter Types for BTSP Unified
 //!
 //! This module defines request/response parameters for BTSP RPC methods.

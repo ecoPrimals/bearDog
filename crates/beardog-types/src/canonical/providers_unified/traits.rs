@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // **UNIFIED PROVIDER TRAIT SYSTEM**
 //
 // This module consolidates all provider trait definitions across BearDog into a single,

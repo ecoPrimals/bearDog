@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # BearDog-Songbird Integration
 //!
 //! Phase 3 integration layer providing UPA registration, heartbeat monitoring,

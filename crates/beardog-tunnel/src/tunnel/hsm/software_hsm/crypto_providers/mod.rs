@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /// Crypto provider factory and capability detection
 pub mod factory;
 /// Genetic crypto provider (100% Pure Rust, zero FFI)

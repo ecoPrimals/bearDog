@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Performance Configuration
 //
 // Provider performance tuning, rate limiting, caching, and optimization settings.

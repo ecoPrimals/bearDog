@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Module documentation
 //
 // This module provides functionality for the BearDog ecosystem.
@@ -416,4 +418,110 @@ pub enum CorporateAccessLevel {
     RestrictedAccess,
     /// Corporate entities can only purchase compute resources
     PaidComputeOnly,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_privacy_protection_settings_default() {
+        let settings = PrivacyProtectionSettings::default();
+        assert!(settings.uses_zero_knowledge_proofs());
+        assert!(settings.uses_data_minimization());
+        assert!(!settings.uses_homomorphic_encryption());
+        assert!(!settings.uses_secure_multiparty_computation());
+        assert!(!settings.uses_anonymous_credentials());
+    }
+
+    #[test]
+    fn test_privacy_mechanism_variants() {
+        let _ = PrivacyMechanism::ZeroKnowledgeProofs;
+        let _ = PrivacyMechanism::HomomorphicEncryption;
+        let _ = PrivacyMechanism::SecureMultipartyComputation;
+    }
+
+    #[test]
+    fn test_platform_verification_default() {
+        let pv = PlatformVerification::default();
+        assert_eq!(pv.platform_name, "Unknown");
+        assert_eq!(pv.verified_boot_state, "unverified");
+        assert!(!pv.bootloader_locked);
+    }
+
+    #[test]
+    fn test_sovereignty_level_serialization() {
+        let levels = [
+            SovereigntyLevel::Minimal,
+            SovereigntyLevel::Standard,
+            SovereigntyLevel::Enhanced,
+            SovereigntyLevel::Maximum,
+        ];
+        for level in levels {
+            let json = serde_json::to_string(&level).unwrap();
+            let _: SovereigntyLevel = serde_json::from_str(&json).unwrap();
+        }
+    }
+
+    #[test]
+    fn test_corporate_access_level_variants() {
+        assert_eq!(CorporateAccessLevel::None, CorporateAccessLevel::None);
+        assert_ne!(
+            CorporateAccessLevel::None,
+            CorporateAccessLevel::PaymentRequired
+        );
+    }
+
+    #[test]
+    fn test_diversity_config_construction() {
+        let config = DiversityConfig {
+            min_diversity: 0.5,
+            diversity_metric: "shannon".to_string(),
+            adaptive_mutation: true,
+            immigration_rate: 0.1,
+        };
+        assert_eq!(config.min_diversity, 0.5);
+        assert!(config.adaptive_mutation);
+    }
+
+    #[test]
+    fn test_partnership_config_construction() {
+        let config = PartnershipConfig {
+            max_partners: 5,
+            min_trust_score: 0.8,
+            partnership_duration_secs: 3600,
+            auto_discovery: true,
+        };
+        assert_eq!(config.max_partners, 5);
+    }
+
+    #[test]
+    fn test_genetic_evolution_config_construction() {
+        let config = GeneticEvolutionConfig {
+            evolution_speed: 1.0,
+            environmental_adaptation: true,
+            strength_evolution: true,
+        };
+        assert_eq!(config.evolution_speed, 1.0);
+    }
+
+    #[test]
+    fn test_crossover_preferences_construction() {
+        let prefs = CrossoverPreferences {
+            enabled: true,
+            crossover_rates: vec![0.5, 0.7],
+            heritage_preservation: vec!["lineage".to_string()],
+        };
+        assert!(prefs.enabled);
+    }
+
+    #[test]
+    fn test_fitness_criterion_construction() {
+        let criterion = FitnessCriterion {
+            name: "security".to_string(),
+            weight: 0.5,
+            measurement_method: "score".to_string(),
+        };
+        assert_eq!(criterion.weight, 0.5);
+    }
 }

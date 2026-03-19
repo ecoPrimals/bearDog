@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Zero-Cost Provider Registry
 //!
 //! This module provides a zero-cost alternative to the Arc<dyn> patterns in the

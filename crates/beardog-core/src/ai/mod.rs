@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! AI-Powered Hybrid Intelligence System
 //!
 //! This module provides the AI capabilities for the BearDog ecosystem, including:

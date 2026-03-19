@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HID Types - Core data structures
 //!
 //! Defines the platform-agnostic HID device interface.

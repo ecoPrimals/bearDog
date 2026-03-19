@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Crypto Primitives Tests
 //!
 //! Comprehensive testing of core cryptographic operations including:

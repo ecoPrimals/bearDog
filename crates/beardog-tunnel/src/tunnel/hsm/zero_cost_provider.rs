@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Zero-cost HSM provider abstraction
 //!
 //! Provides compile-time verified HSM operations with zero runtime overhead

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Threat Response Handlers - SIMPLIFIED FOR COMPILATION
 //
 // **MODERNIZED**: Simplified implementation to resolve compilation issues

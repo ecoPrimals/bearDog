@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Unix Socket IPC Server for BearDog
 //!
 //! PRIMARY inter-primal communication interface (not HTTP!)

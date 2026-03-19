@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # iOS Secure Enclave Types
 //!
 //! This module provides types for iOS Secure Enclave integration,

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Configuration Tests
 //!
 //! High-coverage tests for canonical configuration types and validation

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Consolidated Security Configuration Domain
 //!
 //! This module consolidates ALL security-related configuration structs across the `BearDog`

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Universal HSM Discovery System
 //!
 //! This module provides automatic discovery and classification of Hardware Security Modules
@@ -27,7 +29,6 @@ pub use universal_adapter::UniversalAdapter;
 ///
 /// Provides automatic discovery and classification of Hardware Security Modules
 /// across different platforms, vendors, and interfaces.
-#[allow(dead_code)] // Fields used in implementation
 pub struct UniversalHsmDiscovery {
     /// Map of discovered HSMs by their unique identifier
     discovered_hsms: HashMap<String, DiscoveredHsm>,

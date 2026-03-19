@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Security and trust evaluation handlers
 //!
 //! Provides core security capabilities including:
@@ -427,7 +429,7 @@ mod tests {
             .await;
 
         assert!(result.is_ok());
-        let response = result.unwrap();
+        let response = result.expect("trust evaluation should succeed in test");
 
         assert_eq!(response["decision"], "auto_accept");
         assert_eq!(response["trust_level"], 1);
@@ -453,7 +455,7 @@ mod tests {
             .await;
 
         assert!(result.is_ok());
-        let response = result.unwrap();
+        let response = result.expect("trust evaluation should succeed in test");
 
         assert_eq!(response["decision"], "reject");
         assert_eq!(response["trust_level"], 0);
@@ -462,6 +464,15 @@ mod tests {
 
     #[tokio::test]
     async fn test_lineage_information() {
+        struct CleanupGuard;
+        impl Drop for CleanupGuard {
+            fn drop(&mut self) {
+                std::env::remove_var("PRIMAL_NAME");
+            }
+        }
+        std::env::set_var("PRIMAL_NAME", "beardog");
+        let _guard = CleanupGuard;
+
         let identity = Arc::new(PrimalIdentity::for_test("lineage-family", "lineage-node"));
         let handler = SecurityHandler::new(identity);
 
@@ -471,7 +482,7 @@ mod tests {
             .await;
 
         assert!(result.is_ok());
-        let response = result.unwrap();
+        let response = result.expect("lineage info should succeed in test");
 
         assert_eq!(response["primal"], "beardog");
         assert_eq!(response["family"], "lineage-family");
@@ -499,16 +510,23 @@ mod tests {
             .await;
 
         assert!(result.is_ok());
-        let response = result.unwrap();
+        let response = result.expect("JWT secret generation should succeed in test");
 
         assert!(response["secret"].is_string());
         assert_eq!(response["purpose"], "testing");
         assert_eq!(response["strength"], "high");
         assert_eq!(response["byte_length"], 64);
-        assert!(response["encoded_length"].as_u64().unwrap() >= 88);
+        assert!(
+            response["encoded_length"]
+                .as_u64()
+                .expect("encoded_length should be number")
+                >= 88
+        );
 
         // Verify secret is valid base64
-        let secret = response["secret"].as_str().unwrap();
+        let secret = response["secret"]
+            .as_str()
+            .expect("secret should be string");
         assert!(base64::engine::general_purpose::STANDARD
             .decode(secret)
             .is_ok());
@@ -529,7 +547,7 @@ mod tests {
                 &btsp_provider,
             )
             .await
-            .unwrap();
+            .expect("JWT high strength should succeed");
         assert_eq!(result["byte_length"], 64);
 
         // Test medium strength
@@ -541,7 +559,7 @@ mod tests {
                 &btsp_provider,
             )
             .await
-            .unwrap();
+            .expect("JWT medium strength should succeed");
         assert_eq!(result["byte_length"], 48);
 
         // Test low strength
@@ -553,7 +571,7 @@ mod tests {
                 &btsp_provider,
             )
             .await
-            .unwrap();
+            .expect("JWT low strength should succeed");
         assert_eq!(result["byte_length"], 32);
     }
 }

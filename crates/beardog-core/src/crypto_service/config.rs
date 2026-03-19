@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Configuration types for the crypto service
 //!
 //! Defines configuration and runtime state for cryptographic operations.

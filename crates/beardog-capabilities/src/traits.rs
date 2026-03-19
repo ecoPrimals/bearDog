@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Generic capability trait definitions
 //!
 //! These traits define capabilities without any primal-specific knowledge.

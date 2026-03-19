@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Genetic Crypto Provider Tests
 //!
 //! Comprehensive test suite for 100% Pure Rust genetic cryptography provider.

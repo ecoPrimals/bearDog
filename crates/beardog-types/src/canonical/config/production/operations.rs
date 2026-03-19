@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Operations Configuration
 //
 // This module contains operational configuration including health checks,

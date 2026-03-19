@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Logging Configuration (DEPRECATED - use canonical system config)
 //
 // **MIGRATION**: Use `crate::canonical::config::domains::system::LoggingConfig` instead.

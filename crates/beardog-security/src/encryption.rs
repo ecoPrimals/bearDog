@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Encryption Service Implementation
 //!
 //! Provides secure encryption and decryption capabilities using modern cryptographic algorithms.

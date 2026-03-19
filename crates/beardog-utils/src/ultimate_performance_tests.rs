@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Tests for ultimate_performance module
 // Created: October 23, 2025
 // Purpose: Increase test coverage for 0% coverage ultimate_performance.rs

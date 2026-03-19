@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Federation RPC Handler
 //!
 //! Handles genetic lineage verification and sub-federation key derivation.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Health Checker Tests
 //!
 //! Real-world scenario tests for health checking system with proper error paths,

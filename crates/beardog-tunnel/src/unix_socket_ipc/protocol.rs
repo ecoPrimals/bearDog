@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Protocol Detection for Unix Socket IPC
 //!
 //! Detects which protocol a client is using based on initial bytes.

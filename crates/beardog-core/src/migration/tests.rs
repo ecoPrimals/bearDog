@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Tests for sovereign entropy migration module
 //
 // Comprehensive tests for migration configuration, phases, statistics,

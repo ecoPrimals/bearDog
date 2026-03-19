@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical Workflow Configuration
 //!
 //! Configuration for the BearDog workflow orchestration engine.

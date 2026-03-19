@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Unified Canonical HSM Configuration
 //
 // This module provides a comprehensive HSM (Hardware Security Module) configuration system that

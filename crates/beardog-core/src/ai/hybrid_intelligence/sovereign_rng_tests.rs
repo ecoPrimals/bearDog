@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive tests for Sovereign RNG module
 //! Testing coverage for human entropy-driven randomization
 

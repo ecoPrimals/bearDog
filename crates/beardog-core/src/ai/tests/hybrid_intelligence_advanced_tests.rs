@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! AI Hybrid Intelligence - Advanced Test Coverage
 //! December 6, 2025 - Phase 2 Coverage Expansion
 //!

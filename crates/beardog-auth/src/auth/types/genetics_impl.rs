@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Implementation of self-enforcing constraint methods for BearDogGenetics
 //
 // This module implements the cryptographic verification and enforcement

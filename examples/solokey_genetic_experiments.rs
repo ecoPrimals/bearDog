@@ -6,7 +6,7 @@
     clippy::all
 )]
 
-//! SoloKey Genetic Experiments
+//! `SoloKey` Genetic Experiments
 //!
 //! Experiments with:
 //! 1. Multi-credential storage (multiple roles on one key)

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 use super::primal_types::{
     PrimalCapability, PrimalError, PrimalHealth, PrimalMetadata, PrimalRequest, PrimalResponse,
     UniversalIntegrationConfig,

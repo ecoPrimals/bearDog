@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Comprehensive tests for crypto algorithms
 //
 // This module provides comprehensive test coverage for all algorithm enums, display traits, and conversions.

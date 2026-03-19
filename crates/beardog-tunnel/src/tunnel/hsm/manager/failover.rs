@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Failover Management
 //!
 //! Handles failover logic for HSM providers.

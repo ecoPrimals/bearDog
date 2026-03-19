@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Genetic Algorithm Error Path Tests
 //!
 //! Comprehensive error testing for genetic algorithm operations.

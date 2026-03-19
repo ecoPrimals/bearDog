@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Threat Detection Engine Types - Modernized
 //
 // **MODERNIZED**: Clean, production-ready engine types using canonical definitions

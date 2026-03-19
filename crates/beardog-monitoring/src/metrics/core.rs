@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Core Metrics System
 //
 // Fundamental metrics storage, management, and processing functionality.

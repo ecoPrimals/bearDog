@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Entropy and Seed Types
 //!
 //! Provides types for managing entropy sources and ephemeral seeds.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Additional comprehensive tests for ComplianceHandler
 //!
 //! These tests target previously uncovered code paths to increase coverage

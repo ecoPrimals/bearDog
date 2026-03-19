@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Composite Threat Test Types
 
 use super::behavior::Threat;

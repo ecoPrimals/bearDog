@@ -1,12 +1,16 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 use aes_gcm::{
     aead::generic_array::GenericArray,
     aead::{Aead, KeyInit},
     Aes256Gcm, Key,
 };
+use hkdf::Hkdf;
+use sha2::Sha256;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 // Type alias for nonce size (96 bits / 12 bytes for AES-GCM)
 type NonceSize = aes_gcm::aead::consts::U12;
@@ -240,29 +244,75 @@ impl MemoryHsmStorage {
     }
 }
 
+/// Sentinel value for uninitialized keys. Using a zero key for encryption is a CRITICAL security
+/// vulnerability. This marker forces explicit key setup via `from_env()`, `from_master_secret()`,
+/// or `new()` before any encrypt/decrypt operations.
+const UNINITIALIZED_KEY_MARKER: [u8; 32] = [0; 32];
+
 /// Default encryption key implementation
 pub struct DefaultEncryptionKey {
     cipher: Aes256Gcm,
+    /// True if key was properly derived; false for Default (uninitialized marker)
+    initialized: bool,
 }
 
 impl Default for DefaultEncryptionKey {
+    /// Returns an uninitialized marker. Encrypt/decrypt will panic if called.
+    /// Use `from_env()`, `from_master_secret()`, or `new()` for production.
     fn default() -> Self {
-        let key_bytes: [u8; 32] = [0; 32]; // Stub default key
-        let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
+        let key = Key::<Aes256Gcm>::from_slice(&UNINITIALIZED_KEY_MARKER);
         Self {
             cipher: Aes256Gcm::new(key),
+            initialized: false,
         }
     }
 }
 
 impl DefaultEncryptionKey {
-    /// Create new encryption key
+    /// Derive key from `BEARDOG_HSM_MASTER_KEY` env var or generate random (dev/test).
+    /// Production deployments MUST set `BEARDOG_HSM_MASTER_KEY` for deterministic key derivation.
+    pub fn from_env() -> Result<Self, BearDogError> {
+        if let Ok(master) = std::env::var("BEARDOG_HSM_MASTER_KEY") {
+            Self::from_master_secret(master.as_bytes())
+        } else {
+            warn!("BEARDOG_HSM_MASTER_KEY not set; using random key (dev/test only)");
+            Self::new()
+        }
+    }
+
+    /// Derive 256-bit key from master secret using HKDF-SHA256.
+    pub fn from_master_secret(master_secret: &[u8]) -> Result<Self, BearDogError> {
+        let hk = Hkdf::<Sha256>::new(None, master_secret);
+        let mut key_bytes = [0u8; 32];
+        hk.expand(b"beardog-hsm-storage-v1", &mut key_bytes)
+            .map_err(|e| BearDogError::Cryptographic {
+                message: format!("HKDF key derivation failed: {e}"),
+            })?;
+        let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
+        Ok(Self {
+            cipher: Aes256Gcm::new(key),
+            initialized: true,
+        })
+    }
+
+    /// Create new encryption key with random material (dev/test). Prefer `from_env()` for production.
     pub fn new() -> Result<Self, BearDogError> {
         let key_bytes: [u8; 32] = rand::random();
         let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
-        let cipher = Aes256Gcm::new(key);
+        Ok(Self {
+            cipher: Aes256Gcm::new(key),
+            initialized: true,
+        })
+    }
 
-        Ok(Self { cipher })
+    fn ensure_initialized(&self) {
+        if !self.initialized {
+            panic!(
+                "DefaultEncryptionKey used before initialization. \
+                 Call from_env(), from_master_secret(), or new() before encrypt/decrypt. \
+                 Set BEARDOG_HSM_MASTER_KEY for production."
+            );
+        }
     }
 
     /// Initialize the encryption key
@@ -272,6 +322,7 @@ impl DefaultEncryptionKey {
 
     /// Encrypt data
     pub async fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        self.ensure_initialized();
         let nonce_bytes = rand::random::<[u8; 12]>();
         let nonce = GenericArray::<u8, NonceSize>::from_slice(&nonce_bytes);
 
@@ -291,6 +342,7 @@ impl DefaultEncryptionKey {
 
     /// Decrypt data
     pub async fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        self.ensure_initialized();
         if ciphertext.len() < 12 {
             return Err(BearDogError::Cryptographic {
                 message: "Ciphertext too short".to_string(),

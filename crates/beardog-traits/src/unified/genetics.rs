@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Unified Genetics Trait System
 //
 // This module provides a comprehensive, unified trait system for genetics and evolution

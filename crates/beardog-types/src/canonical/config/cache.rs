@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Unified Cache Configuration - CONSOLIDATED
 //!
 //! **CANONICAL CACHE CONFIGURATION** - Single source of truth for all caching.

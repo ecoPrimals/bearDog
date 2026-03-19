@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive USB Discoverer Tests
 //!
 //! Extended test coverage for USB HSM discovery including:

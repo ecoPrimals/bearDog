@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive BTSP JSON-RPC Tests
 //!
 //! This test module provides extensive coverage for BTSP methods exposed via JSON-RPC:

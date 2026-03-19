@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! DNS Service Discovery (DNS-SD) implementation
 //!
 //! Complete production implementation using trust-dns-resolver for standards-compliant

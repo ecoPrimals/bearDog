@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Entropy Collection Handler
 // Vendor-agnostic: Works with ANY compatible HSM (PKCS#11, FIDO2, Mobile, etc.)
 

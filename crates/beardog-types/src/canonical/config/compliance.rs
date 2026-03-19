@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical Compliance Configuration
 //!
 //! Regulatory compliance configuration for GDPR, HIPAA, PCI-DSS and other frameworks.

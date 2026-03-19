@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Async deployment orchestration
 //!
 //! Manages concurrent deployment of multiple primals with:
@@ -15,7 +17,7 @@
 use crate::{
     installer::{BinaryInstaller, InstallerError},
     platform::BiomeOSPaths,
-    types::{DeploymentProgress, DeploymentReport, DeploymentStatus, Primal},
+    types::{DeploymentProgress, DeploymentReport, DeploymentStatus, PrimalName},
     Architecture, OperatingSystem,
 };
 use std::sync::Arc;
@@ -78,7 +80,7 @@ impl DeploymentManager {
     /// # }
     /// ```
     pub async fn deploy_all(&self) -> Result<DeploymentReport, DeploymentError> {
-        let primals = Primal::all();
+        let primals = PrimalName::well_known();
         self.deploy_primals(&primals).await
     }
 
@@ -91,7 +93,7 @@ impl DeploymentManager {
     /// Deployment report with success/failure details
     pub async fn deploy_primals(
         &self,
-        primals: &[Primal],
+        primals: &[PrimalName],
     ) -> Result<DeploymentReport, DeploymentError> {
         info!(
             "Starting deployment of {} primals (arch: {}, os: {:?})",
@@ -105,19 +107,19 @@ impl DeploymentManager {
             let mut progress = self.progress.write().await;
             progress.clear();
             for primal in primals {
-                progress.push(DeploymentProgress::pending(*primal));
+                progress.push(DeploymentProgress::pending(primal.clone()));
             }
         }
 
         // Deploy concurrently (async tasks)
         let mut tasks = Vec::new();
         for primal in primals {
-            let primal = *primal;
+            let primal_clone = primal.clone();
             let manager_clone = self.clone_for_task();
 
-            let task = tokio::spawn(async move { manager_clone.deploy_single(primal).await });
+            let task = tokio::spawn(async move { manager_clone.deploy_single(primal_clone).await });
 
-            tasks.push((primal, task));
+            tasks.push((primal.clone(), task));
         }
 
         // Wait for all deployments to complete
@@ -131,11 +133,11 @@ impl DeploymentManager {
                     info!("✅ {} deployment complete", primal.display_name());
                 }
                 Ok(Err(e)) => {
-                    failures.push((primal, e.to_string()));
+                    failures.push((primal.clone(), e.to_string()));
                     error!("❌ {} deployment failed: {}", primal.display_name(), e);
                 }
                 Err(e) => {
-                    failures.push((primal, format!("Task panic: {}", e)));
+                    failures.push((primal.clone(), format!("Task panic: {}", e)));
                     error!("❌ {} task panicked: {}", primal.display_name(), e);
                 }
             }
@@ -162,22 +164,36 @@ impl DeploymentManager {
     }
 
     /// Deploy single primal (async)
-    async fn deploy_single(&self, primal: Primal) -> Result<(), DeploymentError> {
+    async fn deploy_single(&self, primal: PrimalName) -> Result<(), DeploymentError> {
         // 1. Update status: Downloading
-        self.update_progress(primal, DeploymentStatus::Downloading, 10, "Locating binary")
-            .await;
+        self.update_progress(
+            primal.clone(),
+            DeploymentStatus::Downloading,
+            10,
+            "Locating binary",
+        )
+        .await;
 
-        let binary_path = self.installer.locate_binary(primal, &self.arch, &self.os)?;
+        let binary_path = self
+            .installer
+            .locate_binary(primal.clone(), &self.arch, &self.os)?;
 
         // 2. Update status: Installing
-        self.update_progress(primal, DeploymentStatus::Installing, 40, "Copying binary")
-            .await;
+        self.update_progress(
+            primal.clone(),
+            DeploymentStatus::Installing,
+            40,
+            "Copying binary",
+        )
+        .await;
 
-        self.installer.install_binary(primal, &binary_path).await?;
+        self.installer
+            .install_binary(primal.clone(), &binary_path)
+            .await?;
 
         // 3. Update status: Validating
         self.update_progress(
-            primal,
+            primal.clone(),
             DeploymentStatus::Validating,
             70,
             "Validating installation",
@@ -185,7 +201,7 @@ impl DeploymentManager {
         .await;
 
         // Basic validation: check binary exists and is executable
-        let installed_path = self.installer.binary_path(primal);
+        let installed_path = self.installer.binary_path(primal.clone());
         if !installed_path.exists() {
             return Err(DeploymentError::ValidationFailed {
                 primal,
@@ -195,7 +211,7 @@ impl DeploymentManager {
 
         // 4. Update status: Complete
         self.update_progress(
-            primal,
+            primal.clone(),
             DeploymentStatus::Complete,
             100,
             "Deployment successful",
@@ -206,18 +222,18 @@ impl DeploymentManager {
     }
 
     /// Rollback all deployments
-    async fn rollback_all(&self, primals: &[Primal]) -> Result<(), DeploymentError> {
+    async fn rollback_all(&self, primals: &[PrimalName]) -> Result<(), DeploymentError> {
         info!("Rolling back {} primals", primals.len());
 
         for primal in primals {
             self.update_progress(
-                *primal,
+                primal.clone(),
                 DeploymentStatus::RolledBack,
                 0,
                 "Rollback initiated",
             )
             .await;
-            self.installer.uninstall_binary(*primal).await?;
+            self.installer.uninstall_binary(primal.clone()).await?;
         }
 
         Ok(())
@@ -226,7 +242,7 @@ impl DeploymentManager {
     /// Update deployment progress (real-time)
     async fn update_progress(
         &self,
-        primal: Primal,
+        primal: PrimalName,
         status: DeploymentStatus,
         percent: u8,
         message: &str,
@@ -276,7 +292,7 @@ pub enum DeploymentError {
     #[error("Validation failed for {primal:?}: {reason}")]
     ValidationFailed {
         /// The primal that failed validation
-        primal: Primal,
+        primal: PrimalName,
         /// Reason for validation failure
         reason: String,
     },
@@ -294,7 +310,7 @@ mod tests {
         fs::create_dir_all(&source_dir).await.unwrap();
 
         // Create fake binaries for all primals
-        for primal in Primal::all() {
+        for primal in PrimalName::well_known() {
             let binary = source_dir.join(primal.name());
             fs::write(&binary, format!("#!/bin/sh\necho {}", primal.name()))
                 .await
@@ -324,7 +340,9 @@ mod tests {
         let (_temp, source_dir) = setup_test_env().await;
         let manager = DeploymentManager::new(source_dir).await.unwrap();
 
-        let result = manager.deploy_primals(&[Primal::BearDog]).await;
+        let result = manager
+            .deploy_primals(&[PrimalName::new(PrimalName::BEARDOG)])
+            .await;
         assert!(result.is_ok());
 
         let report = result.unwrap();
@@ -373,7 +391,10 @@ mod tests {
         let report = DeploymentReport {
             total: 5,
             successes: 4,
-            failures: vec![(Primal::Squirrel, "test error".to_string())],
+            failures: vec![(
+                PrimalName::new(PrimalName::SQUIRREL),
+                "test error".to_string(),
+            )],
             arch: Architecture::X86_64,
             os: OperatingSystem::Linux,
         };

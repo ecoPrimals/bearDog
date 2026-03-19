@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // iOS Secure Enclave cryptographic operations
 
 use super::keychain::TypeSafeSecureEnclave;

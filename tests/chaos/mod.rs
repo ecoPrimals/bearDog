@@ -6,7 +6,7 @@
     clippy::all
 )]
 
-//! Chaos Testing Framework for BearDog
+//! Chaos Testing Framework for `BearDog`
 //!
 //! This module provides comprehensive chaos testing capabilities to validate
 //! system behavior under adverse conditions including:
@@ -18,7 +18,7 @@
 //!
 //! # Philosophy
 //!
-//! Chaos testing validates that BearDog maintains sovereignty and security
+//! Chaos testing validates that `BearDog` maintains sovereignty and security
 //! even when the environment is hostile or failing. This ensures production
 //! readiness and fault tolerance.
 
@@ -125,6 +125,7 @@ pub struct ChaosMetrics {
 
 impl ChaosMetrics {
     /// Calculate success rate
+    #[must_use]
     pub fn success_rate(&self) -> f64 {
         if self.operations_attempted == 0 {
             return 0.0;
@@ -141,6 +142,7 @@ pub struct ChaosEngine {
 
 impl ChaosEngine {
     /// Create a new chaos engine with configuration
+    #[must_use]
     pub fn new(config: ChaosConfig) -> Self {
         Self {
             config,
@@ -149,6 +151,7 @@ impl ChaosEngine {
     }
 
     /// Create a chaos engine with default configuration
+    #[must_use]
     pub fn default_engine() -> Self {
         Self::new(ChaosConfig::default())
     }
@@ -238,6 +241,7 @@ pub struct NetworkChaos {
 
 impl NetworkChaos {
     /// Create network chaos with specified parameters
+    #[must_use]
     pub fn new(latency_ms: u64, packet_loss_rate: f64, disconnect_probability: f64) -> Self {
         Self {
             latency_ms,
@@ -254,6 +258,7 @@ impl NetworkChaos {
     }
 
     /// Simulate packet loss
+    #[must_use]
     pub fn should_drop_packet(&self) -> bool {
         use rand::Rng;
         let mut rng = rand::thread_rng();
@@ -261,6 +266,7 @@ impl NetworkChaos {
     }
 
     /// Simulate connection drop
+    #[must_use]
     pub fn should_disconnect(&self) -> bool {
         use rand::Rng;
         let mut rng = rand::thread_rng();
@@ -277,6 +283,7 @@ pub struct HsmChaos {
 
 impl HsmChaos {
     /// Create HSM chaos with specified parameters
+    #[must_use]
     pub fn new(failure_rate: f64, timeout_rate: f64, timeout_duration: Duration) -> Self {
         Self {
             failure_rate,
@@ -286,6 +293,7 @@ impl HsmChaos {
     }
 
     /// Simulate HSM failure
+    #[must_use]
     pub fn should_fail(&self) -> bool {
         use rand::Rng;
         let mut rng = rand::thread_rng();
@@ -315,6 +323,7 @@ pub struct ResourceChaos {
 
 impl ResourceChaos {
     /// Create resource chaos with specified parameters
+    #[must_use]
     pub fn new(memory_pressure_mb: usize, cpu_cores_to_saturate: usize) -> Self {
         Self {
             memory_pressure_mb,
@@ -323,6 +332,7 @@ impl ResourceChaos {
     }
 
     /// Create memory pressure
+    #[must_use]
     pub fn create_memory_pressure(&self) -> Vec<Vec<u8>> {
         let mut pressure = Vec::new();
         for _ in 0..self.memory_pressure_mb {

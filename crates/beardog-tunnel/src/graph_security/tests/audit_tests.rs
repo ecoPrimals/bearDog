@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Unit tests for origin audit
 
 use crate::graph_security::{audit::audit_origin, types::RiskLevel};

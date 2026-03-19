@@ -30,7 +30,7 @@ anyhow = "1.0"
 clap = { version = "4.4", features = ["derive"] }
 
 # Hashing
-blake3 = "1.5"
+blake3 = { version = "1.5", features = ["pure"] }
 
 # UUID for key IDs
 uuid = { version = "1.11", features = ["v4", "serde"] }

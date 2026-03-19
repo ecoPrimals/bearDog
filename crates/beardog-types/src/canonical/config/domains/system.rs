@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! System Domain Configuration
 //!
 //! Core system configuration including logging, threading, resource management,

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Concurrency Tests
 //!
 //! Tests for concurrency, thread-safety, and concurrent access patterns

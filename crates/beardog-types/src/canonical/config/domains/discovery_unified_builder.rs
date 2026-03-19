@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Builder pattern for UnifiedDiscoveryConfig
 //!
 //! This module provides a flexible builder for constructing UnifiedDiscoveryConfig

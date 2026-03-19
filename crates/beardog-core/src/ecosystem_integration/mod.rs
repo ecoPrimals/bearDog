@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Ecosystem Integration Module
 //!
 //! Provides comprehensive integration capabilities for BearDog to interact

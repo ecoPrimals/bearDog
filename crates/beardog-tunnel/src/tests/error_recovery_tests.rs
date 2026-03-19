@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tunnel error recovery and resilience tests
 //!
 //! This module tests error recovery scenarios for tunnel connections,

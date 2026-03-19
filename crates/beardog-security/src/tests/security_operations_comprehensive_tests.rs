@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Security Operations Tests
 //!
 //! Tests for core security operations including encryption, decryption, signing,

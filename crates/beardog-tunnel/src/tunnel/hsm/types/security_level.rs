@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical Security Level Definitions
 //!
 //! Unified security level enumeration for all HSM operations across BearDog.

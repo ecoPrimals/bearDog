@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Test modules for beardog-utils
 
 mod ai_optimization_comprehensive_tests;

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Provider Migration Utilities
 //
 // This module provides migration functions to transition from legacy provider

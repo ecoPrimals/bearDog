@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Retry strategy trait interface
 //!
 //! Provides a common interface for different retry implementations,

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Health Check Traits
 //!
 //! Core trait definitions for health checking functionality across the system.

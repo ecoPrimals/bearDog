@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Mathematical Constants
 //!
 //! Pre-computed mathematical values, lookup tables, and

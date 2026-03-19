@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Network Configuration
 //!
 //! Centralized network configuration for the BearDog ecosystem eliminating hardcoded values.

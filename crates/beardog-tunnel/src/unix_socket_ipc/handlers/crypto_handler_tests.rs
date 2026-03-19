@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Crypto Handler Tests
 //!
 //! Tests for the CryptoHandler method registration and routing.

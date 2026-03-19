@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Adapter Unlock Certificates
 //!
 //! Cryptographically signed certificates that unlock external adapters.

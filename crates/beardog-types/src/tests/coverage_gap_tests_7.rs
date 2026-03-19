@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Coverage gap tests Part 7: Discovery unified, production, security, testing, adapter certs,
 //! ai_config, receipt, workflow engine
 

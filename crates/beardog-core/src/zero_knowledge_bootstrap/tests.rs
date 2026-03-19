@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tests for Zero-Knowledge Bootstrap System
 //!
 //! This module contains comprehensive tests for the zero-knowledge bootstrap
@@ -10,7 +12,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_zero_knowledge_bootstrap() -> Result<(), Box<dyn std::error::Error>> {
-        let mut bootstrap = ZeroKnowledgeBootstrap::new().await?;
+        let mut bootstrap = ZeroKnowledgeBootstrap::new()?;
 
         // Should start with zero ecosystem knowledge
         assert!(bootstrap.discovered_capabilities.read().await.is_empty());
@@ -32,7 +34,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_infant_learning_pattern() -> Result<(), Box<dyn std::error::Error>> {
-        let bootstrap = ZeroKnowledgeBootstrap::new().await?;
+        let bootstrap = ZeroKnowledgeBootstrap::new()?;
 
         // Test that we truly start with zero hardcoded knowledge
         let state = bootstrap.get_ecosystem_state().await;
@@ -72,7 +74,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_self_identity_generation() -> Result<(), Box<dyn std::error::Error>> {
-        let bootstrap = ZeroKnowledgeBootstrap::new().await?;
+        let bootstrap = ZeroKnowledgeBootstrap::new()?;
 
         // Self-identity should be generated automatically
         assert!(!bootstrap.self_identity.primal_id.is_empty());
@@ -89,8 +91,8 @@ use super::*;
     #[tokio::test]
     async fn test_unique_primal_ids() -> Result<(), Box<dyn std::error::Error>> {
         // Create multiple bootstrap instances
-        let bootstrap1 = ZeroKnowledgeBootstrap::new().await?;
-        let bootstrap2 = ZeroKnowledgeBootstrap::new().await?;
+        let bootstrap1 = ZeroKnowledgeBootstrap::new()?;
+        let bootstrap2 = ZeroKnowledgeBootstrap::new()?;
 
         // Each should have unique primal ID
         assert_ne!(
@@ -103,7 +105,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_ecosystem_state_structure() -> Result<(), Box<dyn std::error::Error>> {
-        let bootstrap = ZeroKnowledgeBootstrap::new().await?;
+        let bootstrap = ZeroKnowledgeBootstrap::new()?;
         let state = bootstrap.get_ecosystem_state().await;
 
         // Verify EcosystemState structure
@@ -118,7 +120,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_bootstrap_metrics_initialization() -> Result<(), Box<dyn std::error::Error>> {
-        let bootstrap = ZeroKnowledgeBootstrap::new().await?;
+        let bootstrap = ZeroKnowledgeBootstrap::new()?;
 
         // Metrics should start at zero
         assert_eq!(bootstrap.metrics.bootstrap_duration_ms, 0);
@@ -134,7 +136,7 @@ use super::*;
     #[tokio::test]
     async fn test_ecosystem_health_calculation_zero_discoveries(
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let bootstrap = ZeroKnowledgeBootstrap::new().await?;
+        let bootstrap = ZeroKnowledgeBootstrap::new()?;
         let state = bootstrap.get_ecosystem_state().await;
 
         // Health should be reasonable even with zero discoveries (self-identity exists)
@@ -146,7 +148,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_bootstrap_config_defaults() -> Result<(), Box<dyn std::error::Error>> {
-        let bootstrap = ZeroKnowledgeBootstrap::new().await?;
+        let bootstrap = ZeroKnowledgeBootstrap::new()?;
 
         // Config should have reasonable defaults
         assert!(bootstrap.config.core.discovery_timeout_ms > 0);
@@ -159,7 +161,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_capability_registry_initialization() -> Result<(), Box<dyn std::error::Error>> {
-        let bootstrap = ZeroKnowledgeBootstrap::new().await?;
+        let bootstrap = ZeroKnowledgeBootstrap::new()?;
 
         // Capability registry should be initialized
         let stats = bootstrap.capability_registry.statistics().await?;
@@ -170,7 +172,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_discovered_capabilities_starts_empty() -> Result<(), Box<dyn std::error::Error>> {
-        let bootstrap = ZeroKnowledgeBootstrap::new().await?;
+        let bootstrap = ZeroKnowledgeBootstrap::new()?;
 
         let capabilities = bootstrap.discovered_capabilities.read().await;
         assert_eq!(capabilities.len(), 0);
@@ -180,7 +182,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_discovered_primals_starts_empty() -> Result<(), Box<dyn std::error::Error>> {
-        let bootstrap = ZeroKnowledgeBootstrap::new().await?;
+        let bootstrap = ZeroKnowledgeBootstrap::new()?;
 
         let primals = bootstrap.discovered_primals.read().await;
         assert_eq!(primals.len(), 0);
@@ -315,7 +317,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_ecosystem_state_clone() -> Result<(), Box<dyn std::error::Error>> {
-        let bootstrap = ZeroKnowledgeBootstrap::new().await?;
+        let bootstrap = ZeroKnowledgeBootstrap::new()?;
         let state = bootstrap.get_ecosystem_state().await;
 
         let cloned = state.clone();
@@ -382,7 +384,7 @@ use super::*;
         // Create multiple bootstrap instances concurrently
         let mut tasks = vec![];
         for _ in 0..3 {
-            let task = tokio::spawn(async { ZeroKnowledgeBootstrap::new().await });
+            let task = tokio::spawn(async { ZeroKnowledgeBootstrap::new() });
             tasks.push(task);
         }
 

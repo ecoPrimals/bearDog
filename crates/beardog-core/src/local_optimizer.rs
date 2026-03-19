@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // **MODERNIZED**: Local Optimization Engine for BearDog
 //
 // This module provides local optimization capabilities for performance tuning,

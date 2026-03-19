@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive tests for timeout constants
 //!
 //! This module provides exhaustive testing for all timeout duration constants,

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Safe SIMD Operations for BearDog
 //
 // This module provides SIMD-accelerated operations without unsafe code,

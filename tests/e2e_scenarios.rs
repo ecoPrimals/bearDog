@@ -1,4 +1,4 @@
-//! End-to-End Test Scenarios for BearDog
+//! End-to-End Test Scenarios for `BearDog`
 //!
 //! Comprehensive E2E tests covering multi-component interactions,
 //! real network operations, and production-like scenarios.
@@ -67,13 +67,14 @@ pub struct FullStackAuthScenario {
 }
 
 impl FullStackAuthScenario {
+    #[must_use]
     pub fn new(config: E2ETestConfig) -> Self {
         Self { config }
     }
 }
 
 impl E2EScenario for FullStackAuthScenario {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "Full Stack Authentication"
     }
 
@@ -113,6 +114,7 @@ pub struct MultiNodeConsensusScenario {
 }
 
 impl MultiNodeConsensusScenario {
+    #[must_use]
     pub fn new(config: E2ETestConfig) -> Self {
         let node_count = config.node_count;
         Self { config, node_count }
@@ -120,7 +122,7 @@ impl MultiNodeConsensusScenario {
 }
 
 impl E2EScenario for MultiNodeConsensusScenario {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "Multi-Node Consensus"
     }
 
@@ -158,6 +160,7 @@ pub struct E2ETestRunner {
 }
 
 impl E2ETestRunner {
+    #[must_use]
     pub fn new(config: E2ETestConfig) -> Self {
         Self {
             scenarios: Vec::new(),
@@ -194,7 +197,7 @@ impl E2ETestRunner {
                         name: scenario.name().to_string(),
                         success: false,
                         duration: Duration::from_secs(0),
-                        error: Some(format!("Setup failed: {}", e)),
+                        error: Some(format!("Setup failed: {e}")),
                         metrics: Vec::new(),
                     });
                 }
@@ -215,12 +218,12 @@ impl E2ETestRunner {
             println!("{} {}", status, result.name);
             println!("   Duration: {:?}", result.duration);
             if let Some(error) = &result.error {
-                println!("   Error: {}", error);
+                println!("   Error: {error}");
             }
             if !result.metrics.is_empty() {
                 println!("   Metrics:");
                 for (name, value) in &result.metrics {
-                    println!("      {}: {}", name, value);
+                    println!("      {name}: {value}");
                 }
             }
             println!();

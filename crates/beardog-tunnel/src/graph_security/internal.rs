@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Internal helpers for graph security operations
 //!
 //! This module provides internal helper functions that use the module-level

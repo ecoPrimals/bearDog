@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Biome Sovereignty and Human-Centric Key Management
 //!
 //! This module implements the core principles of biome sovereignty, ensuring

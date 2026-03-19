@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Windows named pipe implementation for BearDog
 //!
 //! **Platform:** Windows (x86_64, ARM64, all architectures)
@@ -132,7 +134,7 @@ mod tests {
                 assert!(name.contains(r"pipe\biomeos_beardog") || name.contains("biomeos_beardog"));
                 println!("✅ Named pipe format: {}", name);
             }
-            _ => panic!("Expected NamedPipe endpoint"),
+            _ => panic!("Expected NamedPipe endpoint, got {:?}", endpoint),
         }
     }
 
@@ -148,7 +150,7 @@ mod tests {
                 assert_eq!(name, r"\\.\pipe\test_override");
                 println!("✅ BEARDOG_PIPE override works");
             }
-            _ => panic!("Expected NamedPipe endpoint"),
+            _ => panic!("Expected NamedPipe endpoint, got {:?}", endpoint),
         }
     }
 
@@ -168,7 +170,7 @@ mod tests {
                 assert!(name.contains("beardog"));
                 println!("✅ BIOMEOS_PIPE_DIR works: {}", name);
             }
-            _ => panic!("Expected NamedPipe endpoint"),
+            _ => panic!("Expected NamedPipe endpoint, got {:?}", endpoint),
         }
     }
 
@@ -181,7 +183,7 @@ mod tests {
                     assert!(name.contains(primal));
                     println!("✅ {} → {}", primal, name);
                 }
-                _ => panic!("Expected NamedPipe endpoint"),
+                _ => panic!("Expected NamedPipe endpoint, got {:?}", endpoint),
             }
         }
     }

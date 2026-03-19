@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Ecosystem Genetic Spawning Module
 //
 // This module provides genetic spawning capabilities specifically designed

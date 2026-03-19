@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Adapter Integration Comprehensive Tests
 //! Created: October 26, 2025
 //! Purpose: Week 2 Day 4 - Comprehensive adapter integration, error handling, and edge cases

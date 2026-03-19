@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Primal discovery via Unix socket paths
 
 use crate::error::{Error, Result};

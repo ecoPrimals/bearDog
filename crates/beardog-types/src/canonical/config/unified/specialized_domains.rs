@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Specialized Domain Configuration Modules
 //!
 //! This module contains configuration structures for specialized domains:

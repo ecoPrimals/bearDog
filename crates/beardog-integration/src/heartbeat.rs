@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Heartbeat Service
 //!
 //! Continuous health monitoring and status reporting to Songbird UPA.

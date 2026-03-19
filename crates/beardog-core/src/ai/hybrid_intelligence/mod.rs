@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Hybrid Intelligence System
 //!
 //! Provides advanced AI capabilities with human-in-the-loop intelligence,

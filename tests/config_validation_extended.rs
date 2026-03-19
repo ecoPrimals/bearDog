@@ -120,7 +120,7 @@ fn test_config_modification_immutability() {
 fn test_config_debug_format() {
     // Test that config can be debug-formatted without panics
     let config = BearDogConfig::default();
-    let debug_str = format!("{:?}", config);
+    let debug_str = format!("{config:?}");
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
@@ -136,7 +136,7 @@ fn test_config_display_or_string_conversion() {
     // TEST_PRIORITY: normal
     // Test that config has meaningful string representation
     let config = BearDogConfig::default();
-    let node_id_str = config.node_id.to_string();
+    let node_id_str = config.node_id.clone();
 
     assert!(!node_id_str.is_empty());
     assert_eq!(node_id_str.len(), 36); // UUID format

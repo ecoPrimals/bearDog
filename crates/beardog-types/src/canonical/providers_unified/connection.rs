@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Connection Configuration
 //
 // Provider connection management, pooling, and authentication configuration.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Module documentation
 //
 // This module provides functionality for the BearDog ecosystem.
@@ -333,5 +335,111 @@ impl GeneticOptimizer {
 impl Default for GeneticOptimizer {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_genetic_optimizer_config_default() {
+        let config = GeneticOptimizerConfig::default();
+        assert_eq!(config.population_size, 50);
+        assert!((config.mutation_rate - 0.01).abs() < 1e-10);
+        assert!((config.crossover_rate - 0.8).abs() < 1e-10);
+        assert_eq!(config.max_generations, 100);
+        assert!((config.convergence_threshold - 0.001).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_optimization_state_default() {
+        let state = OptimizationState::default();
+        assert_eq!(state.current_generation, 0);
+        assert_eq!(state.best_fitness, 0.0);
+        assert_eq!(state.convergence_count, 0);
+        assert!(!state.is_converged);
+    }
+
+    #[test]
+    fn test_performance_metric_creation() {
+        let metric = PerformanceMetric {
+            timestamp: chrono::Utc::now(),
+            fitness_score: 0.95,
+            generation: 5,
+            improvement_rate: 0.01,
+        };
+        assert!((metric.fitness_score - 0.95).abs() < 1e-10);
+        assert_eq!(metric.generation, 5);
+    }
+
+    #[test]
+    fn test_genetic_optimizer_new() {
+        let optimizer = GeneticOptimizer::new();
+        assert!(std::mem::size_of_val(&optimizer) > 0);
+    }
+
+    #[test]
+    fn test_genetic_optimizer_with_config() {
+        let config = GeneticOptimizerConfig {
+            population_size: 20,
+            mutation_rate: 0.05,
+            crossover_rate: 0.9,
+            max_generations: 50,
+            convergence_threshold: 0.0001,
+        };
+        let optimizer = GeneticOptimizer::with_config(config);
+        assert!(std::mem::size_of_val(&optimizer) > 0);
+    }
+
+    #[tokio::test]
+    async fn test_genetic_optimizer_initialize() {
+        let optimizer = GeneticOptimizer::new();
+        let result = optimizer.initialize().await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_genetic_optimizer_optimize() {
+        let config = GeneticOptimizerConfig {
+            population_size: 10,
+            mutation_rate: 0.1,
+            crossover_rate: 0.8,
+            max_generations: 5,
+            convergence_threshold: 0.001,
+        };
+        let optimizer = GeneticOptimizer::with_config(config);
+        let _ = optimizer.initialize().await.unwrap();
+        // Simple fitness: sum of squares (maximize)
+        let result = optimizer
+            .optimize(|x| x.iter().map(|v| v * v).sum::<f64>())
+            .await;
+        assert!(result.is_ok());
+        let solution = result.unwrap();
+        assert_eq!(solution.len(), 10);
+    }
+
+    #[tokio::test]
+    async fn test_get_optimization_state() {
+        let optimizer = GeneticOptimizer::new();
+        let _ = optimizer.initialize().await.unwrap();
+        let state = optimizer.get_optimization_state().await;
+        assert_eq!(state.current_generation, 0);
+    }
+
+    #[tokio::test]
+    async fn test_get_performance_history() {
+        let config = GeneticOptimizerConfig {
+            population_size: 5,
+            mutation_rate: 0.1,
+            crossover_rate: 0.8,
+            max_generations: 2,
+            convergence_threshold: 0.001,
+        };
+        let optimizer = GeneticOptimizer::with_config(config);
+        let _ = optimizer.initialize().await.unwrap();
+        let _ = optimizer.optimize(|x| x.iter().sum::<f64>()).await.unwrap();
+        let history = optimizer.get_performance_history().await;
+        assert!(!history.is_empty());
     }
 }

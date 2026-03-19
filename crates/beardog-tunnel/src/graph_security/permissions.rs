@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Permission and authorization logic for graph operations
 //!
 //! This module implements RBAC (Role-Based Access Control) for graph modifications.

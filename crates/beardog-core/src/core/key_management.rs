@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Key Persistence and Public Key Management (Phase 2)
 //!
 //! Provides secure key storage, retrieval, and lifecycle management for cryptographic keys.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Coverage gap tests for beardog-monitoring
 //!
 //! Targets uncovered lines in:

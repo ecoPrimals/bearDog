@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Modern Concurrent Testing Utilities
 //!
 //! Zero-sleep, zero-serial primitives for robust concurrent testing.

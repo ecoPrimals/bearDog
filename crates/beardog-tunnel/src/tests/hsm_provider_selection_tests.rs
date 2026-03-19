@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Provider Selection Tests
 //!
 //! Tests for HSM provider selection logic, tier-based selection,

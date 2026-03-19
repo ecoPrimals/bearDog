@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Safe ID management utilities
 //
 // This module provides ID generation and management using safe Rust patterns.

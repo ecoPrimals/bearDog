@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core domain types for ecosystem evolution
 //!
 //! This module defines the fundamental types that represent ecosystem relationships,

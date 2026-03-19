@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Workflow Execution Comprehensive Tests
 //! Created: October 26, 2025
 //! Purpose: Week 2 Day 5 - FINAL 12 tests for workflow state, execution, and error handling

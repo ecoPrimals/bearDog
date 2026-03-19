@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Threat Enrichment Handlers
 //
 // This module provides threat enrichment functionality for the BearDog threat detection system.

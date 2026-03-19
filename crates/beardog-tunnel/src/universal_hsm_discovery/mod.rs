@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Universal HSM Discovery Module
 //!
 //! Provides functionality for discovering and classifying Hardware Security Modules

@@ -128,11 +128,7 @@ async fn chaos_test_connection_storm() {
     let successes = success_count.load(Ordering::SeqCst);
 
     // Should handle most connections gracefully
-    assert!(
-        successes >= 90,
-        "Expected >= 90 successes, got {}",
-        successes
-    );
+    assert!(successes >= 90, "Expected >= 90 successes, got {successes}");
 
     server.stop().await.unwrap();
     server_handle.abort();
@@ -328,8 +324,7 @@ async fn chaos_test_concurrent_request_flood() {
     let success_rate = (successful as f64) / (total as f64);
     assert!(
         success_rate >= 0.95,
-        "Success rate {} below 95%",
-        success_rate
+        "Success rate {success_rate} below 95%"
     );
 
     server.stop().await.unwrap();

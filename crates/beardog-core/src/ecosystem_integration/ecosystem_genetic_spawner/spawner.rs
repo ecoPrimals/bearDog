@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Module documentation
 //
 // This module provides functionality for the BearDog ecosystem.
@@ -431,5 +433,141 @@ impl EcosystemGeneticSpawner {
     pub async fn get_hybrid_nodes(&self) -> Result<Vec<EcosystemHybridNode>, BearDogError> {
         let nodes = self.hybrid_nodes.read().await;
         Ok(nodes.values().cloned().collect())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ecosystem_integration::ecosystem_genetic_spawner::types::{
+        AuditLevel, AuditRequirements, EcosystemCapability, EcosystemPerformanceRequirements,
+        EcosystemResourceConstraints, EcosystemSecurityRequirements, EncryptionRequirements,
+    };
+
+    fn make_spawning_requirements(high_availability: bool) -> EcosystemSpawningRequirements {
+        EcosystemSpawningRequirements {
+            required_capabilities: vec![EcosystemCapability::SecureKeyManagement],
+            resource_constraints: EcosystemResourceConstraints {
+                max_cpu_cores: Some(16),
+                max_memory_gb: Some(64),
+                max_storage_gb: Some(500),
+                max_cost_per_hour: Some(10.0),
+            },
+            security_requirements: EcosystemSecurityRequirements {
+                min_security_level: SecurityLevel::Development,
+                required_compliance: vec![],
+                encryption_requirements: EncryptionRequirements {
+                    data_at_rest: true,
+                    data_in_transit: true,
+                    key_rotation_days: 90,
+                },
+                audit_requirements: AuditRequirements {
+                    audit_level: AuditLevel::Basic,
+                    log_retention_days: 90,
+                    real_time_alerting: false,
+                },
+            },
+            performance_requirements: EcosystemPerformanceRequirements {
+                min_throughput_rps: 100,
+                max_latency_ms: 500,
+                min_uptime_percentage: 99.0,
+            },
+            high_availability,
+            geographic_preferences: vec![],
+        }
+    }
+
+    #[test]
+    fn test_universal_hsm_manager_default() {
+        let manager = UniversalHsmManager::default();
+        assert!(manager.get_ecosystem_status().is_ok());
+    }
+
+    #[test]
+    fn test_universal_hsm_manager_new() {
+        let manager = UniversalHsmManager::new();
+        let status = manager.get_ecosystem_status().unwrap();
+        assert_eq!(
+            status.get("status").and_then(|v| v.as_str()),
+            Some("healthy")
+        );
+        assert_eq!(
+            status.get("hsm_available").and_then(|v| v.as_bool()),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn test_ecosystem_genetic_spawner_default() {
+        let spawner = EcosystemGeneticSpawner::default();
+        assert!(spawner.universal_hsm.get_ecosystem_status().is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_ecosystem_genetic_spawner_register_primal_client() {
+        let spawner = EcosystemGeneticSpawner::default();
+        let client =
+            crate::ecosystem_integration::universal_compute_client::UniversalComputeClient::new(
+                vec![],
+            )
+            .unwrap();
+        let result = spawner.register_primal_client("primal-1", client).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_spawn_ecosystem_hybrid_node_success() {
+        let spawner = EcosystemGeneticSpawner::default();
+        let requirements = make_spawning_requirements(false);
+        let result = spawner.spawn_ecosystem_hybrid_node(requirements).await;
+        assert!(result.is_ok());
+        let node = result.unwrap();
+        assert!(!node.node_id.is_empty());
+        assert_eq!(node.health_status, NodeHealthStatus::Initializing);
+        assert!(node.last_heartbeat.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_spawn_ecosystem_hybrid_node_high_availability() {
+        let spawner = EcosystemGeneticSpawner::default();
+        let requirements = make_spawning_requirements(true);
+        let result = spawner.spawn_ecosystem_hybrid_node(requirements).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_get_spawning_statistics() {
+        let spawner = EcosystemGeneticSpawner::default();
+        let stats = spawner.get_spawning_statistics().await.unwrap();
+        assert_eq!(stats.total_spawns, 0);
+        assert_eq!(stats.successful_spawns, 0);
+        assert_eq!(stats.failed_spawns, 0);
+    }
+
+    #[tokio::test]
+    async fn test_get_active_spawns() {
+        let spawner = EcosystemGeneticSpawner::default();
+        let spawns = spawner.get_active_spawns().await.unwrap();
+        assert!(spawns.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_get_hybrid_nodes() {
+        let spawner = EcosystemGeneticSpawner::default();
+        let nodes = spawner.get_hybrid_nodes().await.unwrap();
+        assert!(nodes.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_spawn_updates_statistics() {
+        let spawner = EcosystemGeneticSpawner::default();
+        let requirements = make_spawning_requirements(false);
+        let _ = spawner
+            .spawn_ecosystem_hybrid_node(requirements)
+            .await
+            .unwrap();
+        let stats = spawner.get_spawning_statistics().await.unwrap();
+        assert_eq!(stats.successful_spawns, 1);
+        assert_eq!(stats.total_hybrid_nodes, 1);
     }
 }

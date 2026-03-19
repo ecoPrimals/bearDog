@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Incident management types for threat handling
 
 use serde::{Deserialize, Serialize};

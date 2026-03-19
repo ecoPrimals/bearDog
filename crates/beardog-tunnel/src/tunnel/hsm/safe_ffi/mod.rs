@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Safe FFI Platform Security Layer
 //!
 //! This module provides a safe abstraction over platform-specific security features

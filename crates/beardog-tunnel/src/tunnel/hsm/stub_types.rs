@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Stub Types for beardog-tunnel
 //!
 //! These were temporary stub types to get the crate compiling.

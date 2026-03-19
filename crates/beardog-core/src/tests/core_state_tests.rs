@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core State Management Tests
 //!
 //! Tests for `BearDog` system state tracking and component management

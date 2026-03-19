@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Primal Self-Knowledge & Runtime Discovery
 //!
 //! **Core Principle**: Primals know ONLY themselves, discover others at runtime.
@@ -138,7 +140,7 @@ impl PrimalIdentity {
         }
 
         // Endpoints where THIS primal listens (from config, not hardcoded)
-        let endpoints = Self::discover_my_endpoints()?;
+        let endpoints = Self::discover_my_endpoints();
 
         let mut metadata = HashMap::new();
         metadata.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());
@@ -155,11 +157,10 @@ impl PrimalIdentity {
         })
     }
 
-    /// Discover MY endpoints (introspection, not hardcoding)
-    fn discover_my_endpoints() -> Result<Vec<Endpoint>> {
+    /// Discover this primal's own endpoints (introspection, not hardcoding)
+    fn discover_my_endpoints() -> Vec<Endpoint> {
         let mut endpoints = Vec::new();
 
-        // API endpoint (from config/env)
         if let Ok(api_host) = std::env::var("BEARDOG_API_HOST") {
             let api_port = std::env::var("BEARDOG_API_PORT")
                 .ok()
@@ -174,7 +175,6 @@ impl PrimalIdentity {
             });
         }
 
-        // gRPC endpoint (if enabled)
         if let Ok(grpc_port) = std::env::var("BEARDOG_GRPC_PORT") {
             if let Ok(port) = grpc_port.parse() {
                 let host =
@@ -189,7 +189,7 @@ impl PrimalIdentity {
             }
         }
 
-        Ok(endpoints)
+        endpoints
     }
 
     /// Check if this primal provides a capability
@@ -271,7 +271,7 @@ impl PrimalDiscovery {
 
         // 3. Service registry (if configured)
         if primals.is_empty() {
-            if let Ok(registry_primals) = self.discover_via_registry(capability) {
+            if let Ok(registry_primals) = Self::discover_via_registry(capability) {
                 primals.extend(registry_primals);
             }
         }
@@ -357,16 +357,14 @@ impl PrimalDiscovery {
     }
 
     /// Discover via service registry (if configured)
-    fn discover_via_registry(&self, _capability: &str) -> Result<Vec<DiscoveredPrimal>> {
-        // Service registry URL from environment (not hardcoded)
+    fn discover_via_registry(_capability: &str) -> Result<Vec<DiscoveredPrimal>> {
         let registry_url = std::env::var("BEARDOG_SERVICE_REGISTRY_URL").ok();
 
         if registry_url.is_none() {
-            // No registry configured, return empty (no hardcoded fallback)
             return Ok(Vec::new());
         }
 
-        // Future: Query service registry (will become async when registry client is implemented)
+        // Will become async when registry client is implemented
         Ok(Vec::new())
     }
 
@@ -375,7 +373,7 @@ impl PrimalDiscovery {
     /// # Errors
     ///
     /// Returns an error if announcement to discovery services fails.
-    pub async fn announce_self(&self) -> Result<()> {
+    pub fn announce_self(&self) -> Result<()> {
         // Announce via configured mechanisms only
         // NO hardcoded announcement targets
 
@@ -648,5 +646,57 @@ mod tests {
             // Verify endpoints are from environment, not literals
             assert!(!endpoint.host.is_empty());
         }
+    }
+
+    #[test]
+    fn test_endpoint_url() {
+        let endpoint = Endpoint {
+            protocol: Protocol::Http,
+            host: "localhost".to_string(),
+            port: 8080,
+            path: Some("/api".to_string()),
+        };
+        assert_eq!(endpoint.url(), "http://localhost:8080/api");
+    }
+
+    #[test]
+    fn test_endpoint_url_no_path() {
+        let endpoint = Endpoint {
+            protocol: Protocol::Https,
+            host: "example.com".to_string(),
+            port: 443,
+            path: None,
+        };
+        assert_eq!(endpoint.url(), "https://example.com:443");
+    }
+
+    #[test]
+    fn test_primal_self_knowledge_new() {
+        let psk = PrimalSelfKnowledge::new();
+        let identity = psk.get_self_identity().unwrap();
+        assert!(!identity.is_empty());
+        assert_eq!(psk.get_known_primal_count(), 1);
+    }
+
+    #[test]
+    fn test_primal_self_knowledge_default() {
+        let psk = PrimalSelfKnowledge::default();
+        let _ = psk.get_discovery();
+    }
+
+    #[test]
+    fn test_capability_has_capability() {
+        let mut caps = HashSet::new();
+        caps.insert(Capability::Hsm);
+        caps.insert(Capability::Encryption);
+        let identity = PrimalIdentity {
+            name: "test".to_string(),
+            primal_type: "beardog".to_string(),
+            capabilities: caps,
+            endpoints: vec![],
+            metadata: HashMap::new(),
+        };
+        assert!(identity.has_capability(&Capability::Hsm));
+        assert!(!identity.has_capability(&Capability::Networking));
     }
 }

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! FIDO2 HSM Type Definitions
 
 use serde::{Deserialize, Serialize};

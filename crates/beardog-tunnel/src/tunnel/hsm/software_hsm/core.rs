@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Software HSM core implementation
 //!
 //! Provides a pure Rust implementation of HSM functionality for development,
@@ -96,7 +98,6 @@ use tracing::{debug, info};
 /// This implementation follows cryptographic best practices and can support
 /// various compliance requirements (FIPS 140-2, PCI-DSS, etc.) depending on
 /// the chosen crypto backend and operational configuration.
-#[allow(dead_code)] // Fields used in implementation
 pub struct RustSoftwareHsm {
     config: CanonicalSoftwareHsmConfig,
     key_store: Arc<RwLock<SoftwareKeyStore>>,

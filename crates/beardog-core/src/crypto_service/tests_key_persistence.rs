@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tests for key persistence in crypto service
 //!
 //! Validates that public keys are properly stored and retrieved

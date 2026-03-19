@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Cryptographic Configuration
 //!
 //! This module provides encryption, key management, and cryptographic provider

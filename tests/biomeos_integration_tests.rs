@@ -1,8 +1,8 @@
 //! Integration tests for biomeOS Federation APIs
 //!
 //! Tests the 4 Unix socket JSON-RPC methods required for biomeOS spore federation:
-//! 1. verify_family_member - Genetic lineage verification
-//! 2. derive_subfed_key - Sub-federation key derivation
+//! 1. `verify_family_member` - Genetic lineage verification
+//! 2. `derive_subfed_key` - Sub-federation key derivation
 //! 3. encrypt - AES-256-GCM encryption
 //! 4. decrypt - AES-256-GCM decryption
 
@@ -260,8 +260,7 @@ async fn test_encrypt_decrypt_roundtrip() {
 
     assert!(
         encrypt_response["result"].is_object(),
-        "Expected result object, got: {:?}",
-        encrypt_response
+        "Expected result object, got: {encrypt_response:?}"
     );
     assert!(encrypt_response["result"]["encrypted_data"].is_string());
     assert!(encrypt_response["result"]["nonce"].is_string());

@@ -31,29 +31,28 @@ documentation = "https://docs.beardog.dev"
 [workspace.lints.rust]
 unsafe_code = "forbid"
 missing_docs = "warn"
-# Transition period - BearDogResult is being migrated
-deprecated = "allow"
+deprecated = "warn"
 
 [workspace.lints.clippy]
-# Pedantic allowlist - to be addressed in polish phase (Week 3-4)
-struct_excessive_bools = { level = "allow", priority = 1 }  # Refactor to enums (tracked)
-unused_async = { level = "allow", priority = 1 }  # Async infrastructure, may be used later
-trivially_copy_pass_by_ref = { level = "allow", priority = 1 }  # Optimization pass later
-cast_possible_truncation = { level = "allow", priority = 1 }  # Address with proper validation
-cast_precision_loss = { level = "allow", priority = 1 }  # Address with proper validation
-unnecessary_wraps = { level = "allow", priority = 1 }  # API consistency over optimization
-items_after_statements = { level = "allow", priority = 1 }  # Style preference
-if_same_then_else = { level = "allow", priority = 1 }  # May have different semantics
+# Pedantic allowlist - lower priority or addressed case-by-case
+struct_excessive_bools = "warn"  # Prefer enums over structs with many bool fields
+unused_async = "warn"  # Detects async functions that don't need to be async
+trivially_copy_pass_by_ref = { level = "allow", priority = 1 }  # Small types passed by ref; optimization pass later
+cast_possible_truncation = { level = "allow", priority = 1 }  # Casting may truncate; address with proper validation
+cast_precision_loss = { level = "allow", priority = 1 }  # Casting may lose precision; address case-by-case
+unnecessary_wraps = "warn"  # Functions that only wrap another function call
+items_after_statements = "warn"  # Items (fn, struct) defined after statements in block
+if_same_then_else = { level = "allow", priority = 1 }  # Branches return same value; may have different semantics
 
 # Additional pedantic allows for test code patterns
-field_reassign_with_default = { level = "allow", priority = 1 }  # Common test pattern
-default_trait_access = { level = "allow", priority = 1 }  # Style consistency
-needless_borrows_for_generic_args = { level = "allow", priority = 1 }  # Will fix in cleanup
-useless_format = { level = "allow", priority = 1 }  # Minor optimization
-print_literal = { level = "allow", priority = 1 }  # Allowed in CLIs
-vec_init_then_push = { level = "allow", priority = 1 }  # Performance is acceptable for clarity
-unnecessary_literal_unwrap = { level = "allow", priority = 1 }  # Test code pattern
-assertions_on_constants = { level = "allow", priority = 1 }  # Test scaffolding
+field_reassign_with_default = { level = "allow", priority = 1 }  # Reassigning fields with Default::default()
+default_trait_access = { level = "allow", priority = 1 }  # Prefer Type::default() over Default::default()
+needless_borrows_for_generic_args = { level = "allow", priority = 1 }  # Unnecessary & in generic arguments
+useless_format = { level = "allow", priority = 1 }  # format! with no format args
+print_literal = { level = "allow", priority = 1 }  # print! with literal string; allowed in CLIs
+vec_init_then_push = { level = "allow", priority = 1 }  # Vec::new() then push; clarity over micro-opt
+unnecessary_literal_unwrap = { level = "allow", priority = 1 }  # unwrap on known-success; test pattern
+assertions_on_constants = { level = "allow", priority = 1 }  # assert! on const; test scaffolding
 # doc_tests = { level = "allow", priority = 1 }  # NOTE: This lint doesn't exist in clippy - removed Dec 10, 2025
 
 # Lint groups (priority 0, lower than individual lints)
@@ -61,9 +60,8 @@ all = "warn"
 pedantic = "warn"
 perf = "warn"
 
-# Disabled for transition period - will be re-enabled in Week 3
-expect_used = { level = "allow", priority = 2 }  # Tests only
-unwrap_used = { level = "allow", priority = 2 }  # Tests only
+expect_used = { level = "allow", priority = 2 }  # Production code should use ? operator; enforced per-crate
+unwrap_used = { level = "allow", priority = 2 }  # Production code should use ? operator; enforced per-crate
 
 [workspace.dependencies]
 # Core dependencies
@@ -198,6 +196,9 @@ repository.workspace = true
 # [[bin]]
 # name = "beardog-server"
 # path = "src/main.rs"
+
+[lints]
+workspace = true
 
 [dependencies]
 beardog-core = { workspace = true }

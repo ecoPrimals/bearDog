@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Ecosystem Error Path Tests
 //!
 //! Comprehensive error handling and edge case testing for ecosystem functionality.

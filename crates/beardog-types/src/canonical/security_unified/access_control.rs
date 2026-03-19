@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Access Control Configuration
 
 use beardog_errors::BearDogError;

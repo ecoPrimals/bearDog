@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Security Metrics Engine
 //
 // Security event tracking, threat detection, and compliance monitoring.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Software HSM Implementation - Secure Cryptographic Operations
 //!
 //! Modern, idiomatic Rust implementation using the RustCrypto ecosystem.
@@ -58,7 +60,6 @@ pub struct SecureSoftwareHsm {
     /// Encrypted key store (keys are encrypted at rest)
     key_store: Arc<RwLock<HashMap<String, KeyMaterial>>>,
     /// Primary encryption key (derived from secure source, root of key hierarchy)
-    #[allow(dead_code)]
     primary_key: Zeroizing<[u8; 32]>,
 }
 
@@ -91,7 +92,6 @@ impl SecureSoftwareHsm {
     }
 
     /// Derive a key-specific encryption key from primary key
-    #[allow(dead_code)]
     #[allow(clippy::expect_used)] // HKDF expand cannot fail with correct length
     fn derive_key_encryption_key(&self, key_id: &str) -> Zeroizing<[u8; 32]> {
         let hkdf = Hkdf::<Sha256>::new(None, &self.primary_key[..]);

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Native Device Detection
 //!
 //! This module provides native device detection for mobile platforms.

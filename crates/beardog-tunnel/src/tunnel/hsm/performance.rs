@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Performance Tracking
 //!
 //! This module provides performance monitoring and metrics for HSM operations.

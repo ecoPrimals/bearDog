@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! TLS 1.3 cryptographic operations for HTTPS
 //!
 //! This module provides TLS 1.3 key derivation, signatures, and certificate

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Network timeout configuration
 //!
 //! Provides comprehensive timeout settings for all network operations including

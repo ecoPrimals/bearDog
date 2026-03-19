@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Ecosystem Genetic Engine - Core evolution engine
 //!
 //! This module contains the main `EcosystemGeneticEngine` that orchestrates

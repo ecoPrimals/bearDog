@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Configuration for Advanced Metrics System
 
 use super::types::{AnomalyAlgorithm, TrendAlgorithm};

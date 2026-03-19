@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Workflow Integration Tests
 //!
 //! Extended test coverage for workflow integration including:

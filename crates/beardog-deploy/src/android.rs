@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Android deployment and build verification
 //
 // This module provides comprehensive Android deployment capabilities including

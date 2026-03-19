@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Unified Identity Trait System
 //
 // This module provides identity-related traits for the BearDog ecosystem,

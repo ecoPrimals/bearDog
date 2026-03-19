@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Primal Interface Module
 //!
 //! Provides the standard interface for primal-to-primal communication

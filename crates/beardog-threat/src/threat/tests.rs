@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Threat Detection Tests - Modern Implementation
 //
 // **MODERNIZED**: Clean, comprehensive test suite for the BearDog threat detection system.

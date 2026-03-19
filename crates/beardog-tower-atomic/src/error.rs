@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Error types for Tower Atomic
 
 use serde_json::Value;

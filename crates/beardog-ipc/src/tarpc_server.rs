@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # 🚀 tarpc Server for BearDog Crypto Operations
 //!
 //! **HIGH-PERFORMANCE CRYPTO RPC SERVER** (v1.0.0)
@@ -49,7 +51,8 @@ impl BearDogCryptoServer {
     pub fn new() -> Self {
         Self {
             start_time: std::time::Instant::now(),
-            primal_name: std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "BearDog".to_string()),
+            primal_name: std::env::var("PRIMAL_NAME")
+                .unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string()),
             version: env!("CARGO_PKG_VERSION").to_string(),
         }
     }
@@ -802,9 +805,9 @@ mod tests {
 
     #[test]
     fn test_default_primal_name() {
-        // Without PRIMAL_NAME env var, should default to "BearDog"
+        // Without PRIMAL_NAME env var, should default to compile-time package name
         std::env::remove_var("PRIMAL_NAME");
         let server = BearDogCryptoServer::new();
-        assert_eq!(server.primal_name, "BearDog");
+        assert_eq!(server.primal_name, env!("CARGO_PKG_NAME"));
     }
 }

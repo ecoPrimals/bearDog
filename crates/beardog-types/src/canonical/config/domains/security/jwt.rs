@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! JWT Token Configuration
 //!
 //! Comprehensive JWT configuration including token generation, validation, and refresh tokens.

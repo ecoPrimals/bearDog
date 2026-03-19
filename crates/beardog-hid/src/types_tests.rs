@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive tests for HID types
 //!
 //! Tests `VendorId`, `ProductId`, `HidDeviceInfo`, and FIDO2 device detection.

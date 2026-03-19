@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Key Derivation Handler
 // Derives new keys from existing master keys using HKDF
 

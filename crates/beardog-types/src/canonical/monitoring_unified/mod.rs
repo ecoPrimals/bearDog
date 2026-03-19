@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Unified Monitoring Configuration
 //
 // ⚠️  DEPRECATED: This module is deprecated. Use `beardog_types::canonical::monitoring` instead.

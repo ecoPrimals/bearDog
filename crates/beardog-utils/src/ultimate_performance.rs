@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Ultimate Performance Optimization Module
 //!
 //! This module implements **cutting-edge performance optimizations** that push
@@ -49,7 +51,6 @@ struct CacheAlignedStats {
 }
 
 /// SIMD-optimized buffer pool for vectorized operations
-#[allow(dead_code)]
 pub struct SIMDOptimizedBufferPool {
     /// Aligned buffers for SIMD operations (32-byte alignment for AVX2)
     aligned_buffers: Vec<AlignedBuffer>,
@@ -68,7 +69,6 @@ struct AlignedBuffer {
 }
 
 /// Lock-free queue implementation for maximum concurrency
-#[allow(dead_code)]
 pub struct LockFreeQueue<T> {
     head: AtomicUsize,
     tail: AtomicUsize,
@@ -78,7 +78,6 @@ pub struct LockFreeQueue<T> {
 
 /// Processing operation for the ultimate performance system
 #[derive(Debug)]
-#[allow(dead_code)]
 pub struct ProcessingOperation {
     /// Operation type for dispatch optimization
     op_type: OperationType,
@@ -104,7 +103,6 @@ pub enum OperationType {
 }
 
 /// Memory prefetch controller for reduced latency
-#[allow(dead_code)]
 pub struct MemoryPrefetchController {
     /// Prefetch patterns learned from access history
     access_patterns: Vec<MemoryAccessPattern>,
@@ -114,7 +112,6 @@ pub struct MemoryPrefetchController {
 
 /// Memory access pattern for intelligent prefetching
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 struct MemoryAccessPattern {
     base_address: usize,
     stride: usize,
@@ -123,7 +120,6 @@ struct MemoryAccessPattern {
 }
 
 /// SIMD capability detection and optimization
-#[allow(dead_code)]
 pub struct SIMDCapabilities {
     has_avx2: bool,
     has_avx512: bool,
@@ -185,8 +181,7 @@ impl UltimatePerformanceProcessor {
     ///
     /// For operations more complex than simple map, use this pattern.
     /// LLVM still auto-vectorizes, but with better instruction selection.
-    #[allow(dead_code)]
-    fn safe_process_chunked(&self, data: &[u8]) -> Vec<u8> {
+    fn _safe_process_chunked(&self, data: &[u8]) -> Vec<u8> {
         let mut result = Vec::with_capacity(data.len());
 
         // Process in 32-byte chunks - LLVM vectorizes this!

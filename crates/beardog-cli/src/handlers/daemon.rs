@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Daemon mode handler - background service
 //!
 //! This handler runs the server in daemon mode (background process).

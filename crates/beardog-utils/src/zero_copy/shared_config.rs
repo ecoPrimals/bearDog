@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Safe shared configuration utilities
 //
 // This module provides shared configuration management using safe Rust patterns.

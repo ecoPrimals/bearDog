@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Unified Service Endpoint Definitions
 //!
 //! This module provides consolidated endpoint types for service communication,

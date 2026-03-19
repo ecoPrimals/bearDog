@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Discovery Module
 //!
 //! Provides functionality for discovering HSMs across different platforms and protocols

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Security configuration types for BearDog
 // Provides comprehensive security settings, authentication, and access control
 

@@ -17,7 +17,7 @@ use serde_json::json;
 #[tokio::test]
 async fn test_e2e_trust_evaluation_decision_field_present() {
     // Simulate JSON-RPC request
-    let request = json!({
+    let _request = json!({
         "jsonrpc": "2.0",
         "method": "trust.evaluate_peer",
         "params": {
@@ -57,7 +57,7 @@ async fn test_e2e_trust_evaluation_decision_auto_accept() {
     let our_family = "nat0";
     let peer_family = "nat0";
 
-    let trust_level = if peer_family == our_family { 1 } else { 0 };
+    let trust_level = i32::from(peer_family == our_family);
     let decision = if trust_level == 0 {
         "reject"
     } else {
@@ -74,7 +74,7 @@ async fn test_e2e_trust_evaluation_decision_reject() {
     let our_family = "nat0";
     let peer_family = "other-family";
 
-    let trust_level = if peer_family == our_family { 1 } else { 0 };
+    let trust_level = i32::from(peer_family == our_family);
     let decision = if trust_level == 0 {
         "reject"
     } else {
@@ -133,7 +133,7 @@ async fn test_e2e_identity_method_with_env_fallback() {
     let family = "test-family";
     let node = "test-node";
 
-    let request = json!({
+    let _request = json!({
         "jsonrpc": "2.0",
         "method": "identity.get_family",
         "id": 1
@@ -180,7 +180,7 @@ async fn test_e2e_complete_trust_evaluation_same_family() {
     let peer_family = request["params"]["peer_family"].as_str().unwrap();
     let peer_id = request["params"]["peer_id"].as_str().unwrap();
 
-    let trust_level = if peer_family == our_family { 1 } else { 0 };
+    let trust_level = i32::from(peer_family == our_family);
     let decision = if trust_level == 0 {
         "reject"
     } else {
@@ -230,7 +230,7 @@ async fn test_e2e_complete_trust_evaluation_different_family() {
     // Process request (simulated)
     let peer_family = request["params"]["peer_family"].as_str().unwrap();
 
-    let trust_level = if peer_family == our_family { 1 } else { 0 };
+    let trust_level = i32::from(peer_family == our_family);
     let decision = if trust_level == 0 {
         "reject"
     } else {
@@ -334,11 +334,7 @@ async fn test_e2e_dual_tower_federation() {
     let tower_b_family = "nat0";
 
     // Tower A evaluates Tower B
-    let trust_level = if tower_b_family == tower_a_family {
-        1
-    } else {
-        0
-    };
+    let trust_level = i32::from(tower_b_family == tower_a_family);
     let decision = if trust_level == 0 {
         "reject"
     } else {
@@ -349,11 +345,7 @@ async fn test_e2e_dual_tower_federation() {
     assert_eq!(trust_level, 1);
 
     // Verify symmetric trust
-    let reverse_trust_level = if tower_a_family == tower_b_family {
-        1
-    } else {
-        0
-    };
+    let reverse_trust_level = i32::from(tower_a_family == tower_b_family);
 
     assert_eq!(reverse_trust_level, trust_level);
 }

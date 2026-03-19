@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Audit Configuration
 //
 // Canonical audit configuration for logging, compliance, and security event tracking.

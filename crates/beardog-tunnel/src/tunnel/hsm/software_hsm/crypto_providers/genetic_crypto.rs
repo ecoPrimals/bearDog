@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Genetic Crypto Provider - 100% Pure Rust Cryptography
 //!
 //! This provider eliminates ALL FFI boundaries by using only Pure Rust cryptography.
@@ -388,8 +390,7 @@ impl GeneticCryptoProvider {
     /// # Performance
     ///
     /// Blake3 is 10x faster than SHA-256 and provides better security margins.
-    #[allow(dead_code)]
-    async fn derive_key_blake3(
+    async fn _derive_key_blake3(
         &self,
         root_key: &[u8],
         derivation_data: &[u8],

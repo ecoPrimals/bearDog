@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Workflow Persistence Configuration
 //!
 //! Configuration for workflow persistence, storage, retention, and archival.

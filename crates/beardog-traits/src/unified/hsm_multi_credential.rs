@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Universal Multi-Credential HSM Provider Trait
 //!
 //! This module defines vendor-agnostic traits for hardware security modules that support

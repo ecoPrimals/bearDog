@@ -21,14 +21,14 @@ use tracing::{debug, info, warn};
 /// This E2E test validates:
 /// 1. Device detection via adb
 /// 2. Device property queries
-/// 3. Capability detection (StrongBox, biometrics)
+/// 3. Capability detection (`StrongBox`, biometrics)
 /// 4. App deployment (if APK available)
 /// 5. Log retrieval
 ///
 /// `TEST_CATEGORY`: e2e
-/// `TEST_DOMAIN`: device_deployment
+/// `TEST_DOMAIN`: `device_deployment`
 /// `TEST_PRIORITY`: high
-/// TEST_REQUIRES: adb, android_device
+/// `TEST_REQUIRES`: adb, `android_device`
 pub async fn run_device_deployment_test(
     _config: &E2ETestConfig,
 ) -> Result<E2EMetrics, BearDogError> {
@@ -159,7 +159,7 @@ async fn detect_android_devices() -> Result<usize, BearDogError> {
     let output = std::process::Command::new("adb")
         .args(["devices", "-l"])
         .output()
-        .map_err(|e| BearDogError::system(format!("adb devices failed: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("adb devices failed: {e}")))?;
 
     if !output.status.success() {
         return Err(BearDogError::system(
@@ -187,7 +187,7 @@ async fn query_device_properties() -> Result<DeviceProperties, BearDogError> {
     let api_output = std::process::Command::new("adb")
         .args(["shell", "getprop", "ro.build.version.sdk"])
         .output()
-        .map_err(|e| BearDogError::system(format!("Failed to get API level: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to get API level: {e}")))?;
 
     let api_level = String::from_utf8_lossy(&api_output.stdout)
         .trim()
@@ -198,7 +198,7 @@ async fn query_device_properties() -> Result<DeviceProperties, BearDogError> {
     let model_output = std::process::Command::new("adb")
         .args(["shell", "getprop", "ro.product.model"])
         .output()
-        .map_err(|e| BearDogError::system(format!("Failed to get model: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to get model: {e}")))?;
 
     let model = String::from_utf8_lossy(&model_output.stdout)
         .trim()
@@ -208,7 +208,7 @@ async fn query_device_properties() -> Result<DeviceProperties, BearDogError> {
     let manufacturer_output = std::process::Command::new("adb")
         .args(["shell", "getprop", "ro.product.manufacturer"])
         .output()
-        .map_err(|e| BearDogError::system(format!("Failed to get manufacturer: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to get manufacturer: {e}")))?;
 
     let manufacturer = String::from_utf8_lossy(&manufacturer_output.stdout)
         .trim()
@@ -229,7 +229,7 @@ async fn check_device_capabilities() -> Result<DeviceCapabilities, BearDogError>
     let feature_output = std::process::Command::new("adb")
         .args(["shell", "pm", "list", "features"])
         .output()
-        .map_err(|e| BearDogError::system(format!("Failed to list features: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to list features: {e}")))?;
 
     let features = String::from_utf8_lossy(&feature_output.stdout);
 
@@ -249,7 +249,7 @@ async fn test_log_access() -> Result<bool, BearDogError> {
     let output = std::process::Command::new("adb")
         .args(["logcat", "-d", "-t", "1"]) // Dump mode, last 1 line
         .output()
-        .map_err(|e| BearDogError::system(format!("Failed to access logs: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to access logs: {e}")))?;
 
     Ok(output.status.success())
 }
@@ -257,7 +257,7 @@ async fn test_log_access() -> Result<bool, BearDogError> {
 /// Test device connectivity
 ///
 /// `TEST_CATEGORY`: e2e
-/// `TEST_DOMAIN`: device_deployment
+/// `TEST_DOMAIN`: `device_deployment`
 /// `TEST_PRIORITY`: normal
 pub async fn test_device_connectivity() -> Result<E2EMetrics, BearDogError> {
     info!("🔌 Testing device connectivity");
@@ -268,8 +268,8 @@ pub async fn test_device_connectivity() -> Result<E2EMetrics, BearDogError> {
     info!("Test 1: Checking adb server status");
     let server_ok = check_adb_server().await?;
     metrics.total_requests += 1;
-    metrics.successful_requests += if server_ok { 1 } else { 0 };
-    metrics.failed_requests += if server_ok { 0 } else { 1 };
+    metrics.successful_requests += u64::from(server_ok);
+    metrics.failed_requests += u64::from(!server_ok);
 
     // Test 2: Device list refresh
     info!("Test 2: Refreshing device list");
@@ -288,7 +288,7 @@ async fn check_adb_server() -> Result<bool, BearDogError> {
     let output = std::process::Command::new("adb")
         .args(["start-server"])
         .output()
-        .map_err(|e| BearDogError::system(format!("Failed to start adb server: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to start adb server: {e}")))?;
 
     Ok(output.status.success())
 }

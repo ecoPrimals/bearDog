@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Extended Core Operations Tests
 //!
 //! Comprehensive test coverage for core BearDog operations

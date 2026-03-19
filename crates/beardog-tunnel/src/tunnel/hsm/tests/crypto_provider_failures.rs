@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Crypto Provider Failure Tests
 //!
 //! Tests error handling and fallback mechanisms for crypto providers

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /// Core component implementations and lifecycle management
 ///
 /// Provides component registration, health checking, and lifecycle management

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! FIDO2 Cryptographic Operations
 //!
 //! Low-level CTAP2 protocol operations for FIDO2 devices.
@@ -6,7 +8,6 @@ use beardog_errors::BearDogError;
 
 /// CTAP2 command codes
 #[repr(u8)]
-#[allow(dead_code)]
 pub enum Ctap2Command {
     MakeCredential = 0x01,
     GetAssertion = 0x02,
@@ -31,7 +32,6 @@ pub enum Ctap2Command {
 ///
 /// Note: Phase 2 implementation pending
 #[cfg(feature = "fido2")]
-#[allow(dead_code)]
 pub async fn send_ctap2_command(
     _device: &mut Box<dyn beardog_hid::HidDevice>,
     _command: Ctap2Command,
@@ -53,7 +53,6 @@ pub async fn send_ctap2_command(
 ///
 /// Note: Phase 2 implementation pending
 #[cfg(feature = "fido2")]
-#[allow(dead_code)]
 pub async fn get_device_info(
     _device: &mut Box<dyn beardog_hid::HidDevice>,
 ) -> Result<super::types::Fido2DeviceInfo, BearDogError> {
@@ -70,7 +69,6 @@ pub async fn get_device_info(
 ///
 /// Note: Phase 2 implementation pending
 #[cfg(feature = "fido2")]
-#[allow(dead_code)]
 pub async fn generate_entropy_via_hmac_secret(
     _device: &mut Box<dyn beardog_hid::HidDevice>,
     _size: usize,

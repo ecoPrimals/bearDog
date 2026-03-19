@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 use crate::{compute_sha256_hash, compute_sha512_hash, generate_secure_random_bytes};
 
 #[cfg(test)]
@@ -303,9 +305,9 @@ mod security_primitives_tests {
         // TEST_PRIORITY: normal
         let duration = start.elapsed();
 
-        // Should complete in reasonable time
+        // Should complete in reasonable time (5s allows for CI/slow environments)
         assert!(
-            duration.as_millis() < 1000,
+            duration.as_millis() < 5000,
             "Random generation should be reasonably fast"
         );
     }

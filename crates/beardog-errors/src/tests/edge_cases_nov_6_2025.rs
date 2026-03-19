@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Edge Case Tests for BearDog Errors - November 6, 2025
 //!
 //! Comprehensive edge case and boundary condition tests to improve code coverage.

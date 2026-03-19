@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Data Replication Module
 
 use super::types::ReplicationHealth;

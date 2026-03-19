@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Audit and Compliance Types
 //!
 //! Test helper types for audit events, trails, and compliance reporting.

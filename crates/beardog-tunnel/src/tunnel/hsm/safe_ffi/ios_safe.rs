@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Safe iOS Provider Implementation
 //!
 //! This module provides a safe interface to iOS Secure Enclave

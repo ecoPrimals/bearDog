@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # beardog-ipc - Primal IPC Protocol Implementation
 //!
 //! This crate implements the ecoPrimals Primal IPC Protocol for BearDog,

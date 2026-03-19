@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Core Threat Types - Modern Implementation
 //
 // **MODERNIZED**: Clean, production-ready core types for the BearDog threat detection system.

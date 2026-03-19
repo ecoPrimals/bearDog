@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Safe SIMD Cryptography Implementation
 //!
 //! This module provides optimized cryptographic operations with automatic SIMD
@@ -59,8 +61,7 @@ pub struct SafeCryptoStats {
 /// # Safety
 /// This engine uses ZERO unsafe code. All operations are memory-safe.
 pub struct SafeCryptoEngine {
-    #[allow(dead_code)]
-    config: SafeCryptoConfig,
+    _config: SafeCryptoConfig,
     stats: SafeCryptoStats,
 }
 
@@ -70,7 +71,7 @@ impl SafeCryptoEngine {
     pub fn new(config: SafeCryptoConfig) -> Self {
         info!("🛡️ Initializing SafeCryptoEngine - ZERO UNSAFE CODE");
         Self {
-            config,
+            _config: config,
             stats: SafeCryptoStats::default(),
         }
     }

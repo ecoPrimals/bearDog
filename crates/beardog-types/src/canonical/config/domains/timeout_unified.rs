@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Unified Timeout Configuration (DEPRECATED)
 //!
 //! **⚠️ DEPRECATION NOTICE**: This module has been unified into `timeout.rs`

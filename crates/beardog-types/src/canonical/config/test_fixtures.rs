@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Test Fixtures for Configuration
 //!
 //! Provides reusable test fixtures and helpers for testing code that uses

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive tests for Linux HID implementation
 //!
 //! Tests Pure Rust HID access via /dev/hidraw and sysfs

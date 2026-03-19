@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Unified Monitoring Trait System
 
 pub use super::core::{HealthMonitored, MetricsCollector};

@@ -49,7 +49,7 @@ async fn test_retry_with_jitter() {
 
         // Calculate jittered backoff (0.5x to 1.5x of base)
         let base_backoff_ms = 2_u64.pow(attempt) * 100;
-        let jitter = (attempt * 25) as u64; // Simulated jitter
+        let jitter = u64::from(attempt * 25); // Simulated jitter
         let backoff_with_jitter = base_backoff_ms.saturating_sub(jitter);
 
         if attempt < 3 {
@@ -440,7 +440,7 @@ async fn test_degraded_mode_activation() {
     for i in 0..10 {
         metrics.total_attempts += 1;
 
-        if (i as f64 / 10.0) < error_rate {
+        if (f64::from(i) / 10.0) < error_rate {
             metrics.failed_connections += 1;
         } else {
             metrics.successful_connections += 1;

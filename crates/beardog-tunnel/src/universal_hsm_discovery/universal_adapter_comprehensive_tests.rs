@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Universal Adapter Tests
 //!
 //! Extended test coverage for universal HSM adapter including:

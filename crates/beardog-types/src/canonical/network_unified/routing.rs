@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Network Routing Configuration
 
 use beardog_errors::BearDogError;

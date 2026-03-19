@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Encryption Configuration
 //
 // Canonical encryption configuration for algorithms, key management, and HSM integration.

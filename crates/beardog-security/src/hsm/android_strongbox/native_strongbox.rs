@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Pure Rust StrongBox Access - Zero JNI!
 //!
 //! This module provides **DIRECT** access to Android StrongBox/Titan M2

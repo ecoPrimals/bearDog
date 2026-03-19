@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! PKCS#11 Constants
 //!
 //! Standard PKCS#11 (Cryptoki) return codes and constants.

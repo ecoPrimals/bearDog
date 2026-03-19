@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Modern Trait Implementations for Type Conversions
 //!
 //! This module provides idiomatic Rust trait implementations (From/Into, Display, etc.)

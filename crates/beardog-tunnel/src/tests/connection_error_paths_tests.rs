@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Connection Error Path Tests
 //!
 //! Comprehensive error path testing for tunnel connections.

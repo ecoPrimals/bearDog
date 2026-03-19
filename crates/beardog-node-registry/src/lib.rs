@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # `BearDog` Node Registry
 //!
 //! This crate provides decentralized node registry functionality for the `BearDog` ecosystem.

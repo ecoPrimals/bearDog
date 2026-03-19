@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Consolidated HSM Configuration Domain
 //!
 //! This module consolidates ALL HSM-related configuration structs across the BearDog

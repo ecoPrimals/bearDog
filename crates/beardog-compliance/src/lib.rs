@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # `BearDog` Compliance Framework
 //!
 //! Comprehensive compliance and auditing capabilities for `BearDog` applications,

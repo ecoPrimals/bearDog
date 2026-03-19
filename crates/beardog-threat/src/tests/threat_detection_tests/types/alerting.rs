@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Alert Handling Test Types
 
 use super::behavior::ThreatType;

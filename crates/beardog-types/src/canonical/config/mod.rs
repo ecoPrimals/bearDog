@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical Configuration System
 //!
 //! This module provides the **single source of truth** for all configuration types

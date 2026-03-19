@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Universal Compute Client
 //
 // This module provides universal capability-based compute integration

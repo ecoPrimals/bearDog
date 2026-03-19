@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! `BearDogCryptoService` implementation
 //!
 //! Orchestrates cryptographic operations by delegating to algorithm modules
@@ -157,10 +159,7 @@ impl BearDogCryptoService {
                 );
                 self.generate_and_store_rsa_key(key_id)
             }
-            "generate" | _ => {
-                // Development mode: generate on-demand
-                self.generate_and_store_rsa_key(key_id)
-            }
+            _ => self.generate_and_store_rsa_key(key_id),
         }
     }
 

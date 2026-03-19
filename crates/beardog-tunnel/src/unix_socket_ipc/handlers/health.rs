@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Health check handler
 //!
 //! Provides universal health/status/ping endpoints that work across all primals.
@@ -49,6 +51,7 @@ impl MethodHandler for HealthHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[tokio::test]
     async fn test_health_handler_methods() {
@@ -63,7 +66,11 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_health_check_response() {
+        let prev = std::env::var("PRIMAL_NAME").ok();
+        std::env::set_var("PRIMAL_NAME", "beardog");
+
         let handler = HealthHandler;
 
         // Use safe mock provider (health handler doesn't actually use it)
@@ -79,6 +86,12 @@ mod tests {
         assert_eq!(response["protocol"], "JSON-RPC");
         assert!(response["version"].is_string());
         assert!(response["timestamp"].is_string());
+
+        if let Some(p) = prev {
+            std::env::set_var("PRIMAL_NAME", p);
+        } else {
+            std::env::remove_var("PRIMAL_NAME");
+        }
     }
 
     #[tokio::test]

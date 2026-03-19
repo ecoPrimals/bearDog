@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // BearDog CLI - Main Entry Point
 // Vendor-agnostic, primal-agnostic, algorithm-agnostic, transport-agnostic
 

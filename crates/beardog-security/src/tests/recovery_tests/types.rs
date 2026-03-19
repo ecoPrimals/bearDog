@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Recovery Test Helper Types
 
 use beardog_errors::BearDogError;

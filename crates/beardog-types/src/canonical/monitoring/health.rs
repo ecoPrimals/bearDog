@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Unified Health Monitoring Configuration
 //
 // This module consolidates all health monitoring configuration patterns from across

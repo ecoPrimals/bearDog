@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Self-Discovery Engine
 //
 // This module implements the core self-discovery functionality for zero-knowledge bootstrap.
@@ -374,8 +376,8 @@ impl SelfDiscoveryEngine {
         let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
         let port = network_config.service_ports.api_port;
 
-        // Use configured host from network config (respects BEARDOG_SERVICE_HOST)
         use beardog_types::constants::domains::network::config;
+
         let host =
             std::env::var("BEARDOG_LOCALHOST").unwrap_or_else(|_| config::default_service_host());
 
@@ -407,28 +409,21 @@ impl SelfDiscoveryEngine {
 
     /// Discover service mesh endpoint
     fn discover_mesh_endpoint() -> UniversalEndpoint {
-        let _network_config = beardog_types::canonical::config::network::NetworkConfig::default();
-
-        // ✅ MODERN IDIOMATIC: Use config system for mesh port
-        // Priority: ENV → Admin Port → Default Mesh Port (8002)
         use beardog_config::domains::network_ports;
+        use beardog_config::global::BEARDOG_CONFIG;
+
         let mesh_port = std::env::var("BEARDOG_MESH_PORT")
             .ok()
             .and_then(|p| p.parse().ok())
             .or_else(|| {
-                // Try admin port as fallback
                 std::env::var("BEARDOG_ADMIN_PORT")
                     .ok()
                     .and_then(|p| p.parse().ok())
             })
             .unwrap_or(network_ports::DEFAULT_MESH_PORT);
 
-        // ✅ MODERN IDIOMATIC: Use reference instead of clone for efficiency
-        // Get bind address from centralized config
-        let bind_address = std::env::var("BEARDOG_MESH_BIND_ADDRESS").unwrap_or_else(|_| {
-            use beardog_config::global::BEARDOG_CONFIG;
-            BEARDOG_CONFIG.network.addresses.bind_address.clone()
-        });
+        let bind_address = std::env::var("BEARDOG_MESH_BIND_ADDRESS")
+            .unwrap_or_else(|_| BEARDOG_CONFIG.network.addresses.bind_address.clone());
 
         UniversalEndpoint {
             url: format!("https://{bind_address}:{mesh_port}"),

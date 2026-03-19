@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Android Hardware Security Module configuration types
 // Provides structured definitions for Android HSM capabilities and configurations
 

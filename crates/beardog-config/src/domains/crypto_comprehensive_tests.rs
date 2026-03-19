@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive tests for CryptoConfig
 //!
 //! Added December 8, 2025 to increase coverage toward 90% target

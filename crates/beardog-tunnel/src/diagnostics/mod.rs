@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Production Diagnostics Module
 //!
 //! **Philosophy**: MOVE diagnostic logging here (not REMOVE) - fossil record principle

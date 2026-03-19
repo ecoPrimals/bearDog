@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Zero-Copy Optimization Framework
 //
 // This module provides comprehensive zero-copy optimizations to achieve

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! TLS Certificate Verification (X.509)
 //!
 //! This module implements X.509 certificate chain verification for TLS connections.

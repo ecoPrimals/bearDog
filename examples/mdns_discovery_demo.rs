@@ -30,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt::init();
 
     let args: Vec<String> = env::args().collect();
-    let mode = args.get(1).map(|s| s.as_str()).unwrap_or("discover");
+    let mode = args.get(1).map_or("discover", std::string::String::as_str);
 
     match mode {
         "announce" => {
@@ -80,7 +80,7 @@ async fn announce_service() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         // Announce
-        announcer.announce().await?;
+        announcer.announce()?;
 
         println!("\n✅ mDNS service announced!");
         println!("   Service Type: _beardog._tcp.local.");
@@ -123,15 +123,12 @@ async fn discover_primals() -> Result<(), Box<dyn std::error::Error>> {
     let capabilities_to_find = vec!["crypto", "hsm", "storage"];
 
     for capability in capabilities_to_find {
-        println!(
-            "🔍 Searching for primals with '{}' capability...",
-            capability
-        );
+        println!("🔍 Searching for primals with '{capability}' capability...");
 
         match discovery.discover_by_capability(capability).await {
             Ok(primals) => {
                 if primals.is_empty() {
-                    println!("   No primals found with '{}' capability", capability);
+                    println!("   No primals found with '{capability}' capability");
                 } else {
                     println!("   Found {} primal(s):", primals.len());
                     for primal in primals {
@@ -145,7 +142,7 @@ async fn discover_primals() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             Err(e) => {
-                println!("   ⚠️  Discovery failed: {}", e);
+                println!("   ⚠️  Discovery failed: {e}");
             }
         }
         println!();

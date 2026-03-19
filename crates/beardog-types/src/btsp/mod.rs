@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # BTSP Unified - Secure Protocol Provider Types
 //!
 //! **BearDog Tunnel Security Protocol (BTSP) - Unified Architecture**

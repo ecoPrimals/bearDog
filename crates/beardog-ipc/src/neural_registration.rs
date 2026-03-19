@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Neural API Auto-Registration for BearDog
 //!
 //! Registers BearDog's crypto capabilities with Neural API on startup.

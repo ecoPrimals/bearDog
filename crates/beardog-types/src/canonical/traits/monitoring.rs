@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Monitoring Configuration Trait
 //!
 //! This module provides a polymorphic interface for monitoring configurations across different

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Tests for Integration Engine
 //!
 //! Tests the core integration engine that coordinates ecosystem service integration.

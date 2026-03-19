@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Safety checking for external functions
 
 use super::types::{ExternalFunction, FunctionParameter, FunctionValue, SecurityClearance};
@@ -154,6 +156,127 @@ impl SafetyChecker {
             return Err(BearDogError::validation("Policy not found"));
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::external_functions::types::{
+        ExternalFunction, FunctionMetadata, FunctionParameter, FunctionSignature, FunctionValue,
+        ParameterType, PerformanceInfo, ReturnType, SecurityClearance, SecurityInfo,
+    };
+
+    fn make_function(clearance: SecurityClearance) -> ExternalFunction {
+        ExternalFunction {
+            id: "test-id".to_string(),
+            name: "test_func".to_string(),
+            signature: FunctionSignature {
+                parameters: vec![],
+                return_type: ReturnType::Type(ParameterType::Int32),
+                calling_convention: crate::external_functions::types::CallingConvention::C,
+                attributes: vec![],
+            },
+            metadata: FunctionMetadata {
+                description: "test".to_string(),
+                safety_level: crate::external_functions::types::SafetyLevel::Safe,
+                performance: PerformanceInfo::default(),
+                security: SecurityInfo {
+                    clearance_required: clearance,
+                    audit_required: false,
+                    sandbox_required: false,
+                    access_restrictions: vec![],
+                },
+                custom: std::collections::HashMap::new(),
+            },
+            library_id: "lib".to_string(),
+        }
+    }
+
+    #[test]
+    fn test_safety_checker_insufficient_clearance() {
+        let checker = SafetyChecker::new(SecurityClearance::Public);
+        let function = make_function(SecurityClearance::Secret);
+        let param_values = vec![];
+        let result = checker.check_function_call(&function, &param_values);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_safety_checker_sufficient_clearance() {
+        let checker = SafetyChecker::new(SecurityClearance::Secret);
+        let function = make_function(SecurityClearance::Public);
+        let param_values = vec![];
+        let result = checker.check_function_call(&function, &param_values);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_safety_checker_required_param_null() {
+        let checker = SafetyChecker::new(SecurityClearance::Public);
+        let function = make_function(SecurityClearance::Public);
+        let param_values = vec![ParameterValue {
+            parameter: FunctionParameter {
+                name: "req".to_string(),
+                param_type: ParameterType::Int32,
+                required: true,
+                default_value: None,
+            },
+            value: FunctionValue::Null,
+        }];
+        let result = checker.check_function_call(&function, &param_values);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_safety_checker_load_policy_empty_id() {
+        let mut checker = SafetyChecker::new(SecurityClearance::Public);
+        let policy = SafetyPolicy {
+            policy_id: "".to_string(),
+            function_patterns: vec!["*".to_string()],
+            required_clearance: SecurityClearance::Public,
+            parameter_validation: true,
+        };
+        let result = checker.load_policy(policy);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_safety_checker_load_policy_empty_patterns() {
+        let mut checker = SafetyChecker::new(SecurityClearance::Public);
+        let policy = SafetyPolicy {
+            policy_id: "test".to_string(),
+            function_patterns: vec![],
+            required_clearance: SecurityClearance::Public,
+            parameter_validation: true,
+        };
+        let result = checker.load_policy(policy);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_safety_checker_remove_policy_not_found() {
+        let mut checker = SafetyChecker::new(SecurityClearance::Public);
+        let result = checker.remove_policy("nonexistent");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_safety_checker_list_and_remove_policy() {
+        let mut checker = SafetyChecker::new(SecurityClearance::Public);
+        let policy = SafetyPolicy {
+            policy_id: "p1".to_string(),
+            function_patterns: vec!["f*".to_string()],
+            required_clearance: SecurityClearance::Public,
+            parameter_validation: true,
+        };
+        checker.load_policy(policy).unwrap();
+        let policies = checker.list_policies().unwrap();
+        assert!(policies.contains(&"p1".to_string()));
+        let result = checker.remove_policy("p1");
+        assert!(result.is_ok());
+        let policies = checker.list_policies().unwrap();
+        assert!(!policies.contains(&"p1".to_string()));
     }
 }
 

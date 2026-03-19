@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Client Mode - Interactive BearDog client
 //!
 //! Connect to BearDog server and perform operations.

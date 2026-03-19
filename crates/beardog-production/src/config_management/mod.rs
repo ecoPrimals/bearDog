@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Production Configuration Management
 //!
 //! This module provides production-grade configuration management for BearDog.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 use super::base::{BaseProvider, ServiceHealth};
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};

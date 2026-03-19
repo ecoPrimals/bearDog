@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Error message constants to avoid Rust 1.89.0 string parsing issues
 //
 // This module provides constant error messages that can be used throughout

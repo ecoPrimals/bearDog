@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! BearDog UniBin - Modern Idiomatic Rust Architecture
 //!
 //! **UniBin Architecture**: One binary, multiple modes (ecosystem standard)

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Statistics for safe SIMD operations
 
 #[derive(Debug, Clone, Default)]

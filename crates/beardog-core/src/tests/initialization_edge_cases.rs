@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Initialization edge case tests for beardog-core
 //!
 //! Tests edge cases and error conditions during system initialization

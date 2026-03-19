@@ -126,19 +126,18 @@ async fn test_authorization_throughput() {
     }
 
     let elapsed = start.elapsed();
-    let throughput = num_requests as f64 / elapsed.as_secs_f64();
+    let throughput = f64::from(num_requests) / elapsed.as_secs_f64();
 
-    println!("Authorization throughput: {:.2} req/sec", throughput);
+    println!("Authorization throughput: {throughput:.2} req/sec");
     println!(
         "Average latency: {:.2} ms",
-        elapsed.as_millis() as f64 / num_requests as f64
+        elapsed.as_millis() as f64 / f64::from(num_requests)
     );
 
     // Verify we can handle at least 50 req/sec
     assert!(
         throughput > 50.0,
-        "Throughput should be > 50 req/sec, got {:.2}",
-        throughput
+        "Throughput should be > 50 req/sec, got {throughput:.2}"
     );
 
     // Cleanup
@@ -206,19 +205,18 @@ async fn test_validation_throughput() {
     }
 
     let elapsed = start.elapsed();
-    let throughput = num_requests as f64 / elapsed.as_secs_f64();
+    let throughput = f64::from(num_requests) / elapsed.as_secs_f64();
 
-    println!("Validation throughput: {:.2} req/sec", throughput);
+    println!("Validation throughput: {throughput:.2} req/sec");
     println!(
         "Average latency: {:.2} ms",
-        elapsed.as_millis() as f64 / num_requests as f64
+        elapsed.as_millis() as f64 / f64::from(num_requests)
     );
 
     // Verify we can handle at least 50 req/sec
     assert!(
         throughput > 50.0,
-        "Throughput should be > 50 req/sec, got {:.2}",
-        throughput
+        "Throughput should be > 50 req/sec, got {throughput:.2}"
     );
 
     // Cleanup
@@ -297,12 +295,12 @@ async fn test_authorization_latency_p95() {
     let p99 = latencies[99].as_millis();
 
     println!("Authorization latency:");
-    println!("  p50: {} ms", p50);
-    println!("  p95: {} ms", p95);
-    println!("  p99: {} ms", p99);
+    println!("  p50: {p50} ms");
+    println!("  p95: {p95} ms");
+    println!("  p99: {p99} ms");
 
     // Verify p95 is under 100ms (reasonable for development)
-    assert!(p95 < 100, "p95 latency should be < 100ms, got {} ms", p95);
+    assert!(p95 < 100, "p95 latency should be < 100ms, got {p95} ms");
 
     // Cleanup
     server_task.abort();
@@ -393,11 +391,10 @@ async fn test_concurrent_authorization_requests() {
 
     let elapsed = start.elapsed();
     let total_requests = num_clients * requests_per_client;
-    let throughput = total_requests as f64 / elapsed.as_secs_f64();
+    let throughput = f64::from(total_requests) / elapsed.as_secs_f64();
 
     println!(
-        "Concurrent throughput: {:.2} req/sec ({} clients, {} req each)",
-        throughput, num_clients, requests_per_client
+        "Concurrent throughput: {throughput:.2} req/sec ({num_clients} clients, {requests_per_client} req each)"
     );
 
     // Verify concurrent requests work
@@ -475,7 +472,7 @@ async fn test_sustained_load() {
     }
 
     let elapsed = start.elapsed();
-    let throughput = request_count as f64 / elapsed.as_secs_f64();
+    let throughput = f64::from(request_count) / elapsed.as_secs_f64();
 
     println!(
         "Sustained load throughput: {:.2} req/sec over {} seconds",

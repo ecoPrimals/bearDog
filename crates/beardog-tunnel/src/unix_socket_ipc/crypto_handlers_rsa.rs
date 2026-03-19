@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! RSA Crypto Handlers
 //!
 //! Pure Rust RSA signature operations using RustCrypto's rsa crate.

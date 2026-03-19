@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Cross-Primal Communication Handler
 //!
 //! Implements Workflow 3 from PHASE_1_INTEGRATION_REQUIREMENTS.md:

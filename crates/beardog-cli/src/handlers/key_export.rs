@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Key Export/Import Handler
 // Enables inter-primal key sharing (ToadStool integration!)
 

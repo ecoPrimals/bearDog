@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Ecosystem Evolution Genetics
 //!
 //! This module implements horizontal gene transfer integration across ecosystem primals'

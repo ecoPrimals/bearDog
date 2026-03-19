@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # AI Configuration Domain - Modular Structure
 //!
 //! This module contains all AI/ML related configuration types, now properly

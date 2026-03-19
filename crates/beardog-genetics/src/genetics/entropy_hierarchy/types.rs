@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Entropy Hierarchy Types
 //
 // This module defines the core types for the entropy hierarchy system,

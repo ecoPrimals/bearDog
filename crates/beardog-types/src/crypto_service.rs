@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Crypto Service Types
 //!
 //! Protocol-agnostic types for crypto service operations.

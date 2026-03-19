@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Hashing algorithms
 //!
 //! Provides implementations of cryptographic hash functions including:

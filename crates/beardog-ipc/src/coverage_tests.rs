@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Coverage expansion tests for beardog-ipc
 //!
 //! Comprehensive tests for protocol detection, routing, types, discovery,

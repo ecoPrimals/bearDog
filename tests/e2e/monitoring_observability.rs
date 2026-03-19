@@ -45,7 +45,7 @@ pub async fn test_metrics_collection() -> Result<MonitoringMetrics, BearDogError
 
     info!("Collecting histogram metrics");
     for i in 0..10 {
-        simulate_histogram_metric("request_duration_ms", (i * 10) as f64).await?;
+        simulate_histogram_metric("request_duration_ms", f64::from(i * 10)).await?;
         metrics.metrics_collected += 1;
     }
 
@@ -226,17 +226,17 @@ pub async fn test_log_aggregation() -> Result<MonitoringMetrics, BearDogError> {
     info!("Generating log entries");
 
     for i in 0..20 {
-        simulate_log_entry("INFO", &format!("Processing request {}", i)).await?;
+        simulate_log_entry("INFO", &format!("Processing request {i}")).await?;
         metrics.log_entries += 1;
     }
 
     for i in 0..5 {
-        simulate_log_entry("WARN", &format!("Warning condition {}", i)).await?;
+        simulate_log_entry("WARN", &format!("Warning condition {i}")).await?;
         metrics.log_entries += 1;
     }
 
     for i in 0..2 {
-        simulate_log_entry("ERROR", &format!("Error condition {}", i)).await?;
+        simulate_log_entry("ERROR", &format!("Error condition {i}")).await?;
         metrics.log_entries += 1;
     }
 
@@ -332,7 +332,7 @@ async fn simulate_end_trace(_trace_id: &str) -> Result<(), BearDogError> {
 
 async fn simulate_query_trace(_trace_id: &str) -> Result<String, BearDogError> {
     // Simulate trace query (instant in tests)
-    Ok(format!("trace_data_{}", _trace_id))
+    Ok(format!("trace_data_{_trace_id}"))
 }
 
 async fn simulate_log_entry(_level: &str, _message: &str) -> Result<(), BearDogError> {
@@ -347,12 +347,12 @@ async fn simulate_query_logs(level: &str) -> Result<Vec<String>, BearDogError> {
         "WARN" => 5,
         _ => 20,
     };
-    Ok((0..count).map(|i| format!("{} log {}", level, i)).collect())
+    Ok((0..count).map(|i| format!("{level} log {i}")).collect())
 }
 
 async fn simulate_search_logs(_query: &str) -> Result<Vec<String>, BearDogError> {
     // Simulate log search (instant in tests)
-    Ok((0..20).map(|i| format!("log entry {}", i)).collect())
+    Ok((0..20).map(|i| format!("log entry {i}")).collect())
 }
 
 #[cfg(test)]

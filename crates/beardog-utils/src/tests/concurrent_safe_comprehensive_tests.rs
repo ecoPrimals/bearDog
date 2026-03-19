@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Concurrent Safe Operations Tests
 //!
 //! Tests for `BearDog`'s safe concurrent primitives and patterns,

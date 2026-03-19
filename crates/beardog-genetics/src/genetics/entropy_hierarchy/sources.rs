@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Entropy Sources Management
 //
 // This module provides entropy source management and mixing capabilities

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive core tests for Universal HSM Discovery
 //!
 //! This module contains extensive test coverage for:

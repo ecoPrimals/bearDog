@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Neural network architectures and configurations
 //
 // ⚠️ DEPRECATED: This module is being migrated to the canonical location.

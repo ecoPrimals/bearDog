@@ -1,8 +1,8 @@
 //! Error Recovery Path Tests
 //!
-//! TEST_CATEGORY: integration
-//! TEST_DOMAIN: error_recovery
-//! TEST_PRIORITY: high
+//! `TEST_CATEGORY`: integration
+//! `TEST_DOMAIN`: `error_recovery`
+//! `TEST_PRIORITY`: high
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -233,7 +233,7 @@ async fn test_recovery_from_deadlock_prevention() {
         })
         .await
         {
-            Ok(_) => Ok(()),
+            Ok(()) => Ok(()),
             Err(_) => Err("timeout"),
         }
     });

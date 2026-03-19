@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Production Ecosystem Orchestration
 //!
 //! Core orchestrator for production deployments, managing the lifecycle of all

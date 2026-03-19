@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Cache Strategy Trait
 //!
 //! This module provides a polymorphic interface for cache configurations across different

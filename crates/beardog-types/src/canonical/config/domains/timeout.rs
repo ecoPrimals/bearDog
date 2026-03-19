@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Canonical Timeout Configuration
 //
 // Unified timeout configuration for all BearDog operations.

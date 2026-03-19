@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Production Ecosystem Builder
 //!
 //! Fluent builder API for constructing `ProductionEcosystem` instances with

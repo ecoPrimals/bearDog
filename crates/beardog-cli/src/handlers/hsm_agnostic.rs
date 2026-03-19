@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Agnostic HSM Discovery
 // Uses beardog-tunnel universal discovery - NO hardcoded paths or vendor IDs
 

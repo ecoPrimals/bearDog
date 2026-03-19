@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Define WorkflowConfig locally until it's available in beardog_types
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 // Module documentation

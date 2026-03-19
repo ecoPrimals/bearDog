@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Comprehensive Tests for Performance Optimizer
 //
 // Tests the ecosystem performance optimization system including connection pooling,

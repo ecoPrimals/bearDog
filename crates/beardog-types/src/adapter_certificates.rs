@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Adapter Unlock Certificates (Phase 2)
 //!
 //! Cryptographically enforced adapter usage based on genetic keys.

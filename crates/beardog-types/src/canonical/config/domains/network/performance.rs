@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Network Performance Configuration Module
 //!
 //! This module contains network performance and optimization configurations.

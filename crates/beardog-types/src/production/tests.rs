@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tests for Production Module
 //!
 //! Comprehensive tests for production ecosystem.

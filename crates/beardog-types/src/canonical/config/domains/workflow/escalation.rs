@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Workflow Escalation Configuration
 //!
 //! Configuration for workflow escalation policies, rules, and notifications.

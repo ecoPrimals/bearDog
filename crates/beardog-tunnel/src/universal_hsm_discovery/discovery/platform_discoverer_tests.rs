@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive tests for Platform HSM Discoverer
 //!
 //! Test coverage for TPM, TEE, Android StrongBox, and iOS Secure Enclave discovery

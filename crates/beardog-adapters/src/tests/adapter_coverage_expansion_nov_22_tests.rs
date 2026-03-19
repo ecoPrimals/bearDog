@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Adapter Coverage Expansion Tests
 //!
 //! Additional test coverage for universal adapters and capability-based operations.

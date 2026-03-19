@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // AI Ecosystem Coordination Module
 //
 // This module provides AI-powered ecosystem coordination capabilities

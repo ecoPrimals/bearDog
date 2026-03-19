@@ -39,8 +39,7 @@ impl HardwareCapabilities {
             .output()
             .ok()
             .and_then(|output| String::from_utf8(output.stdout).ok())
-            .map(|s| s.to_lowercase().contains("solo"))
-            .unwrap_or(false)
+            .is_some_and(|s| s.to_lowercase().contains("solo"))
     }
 
     fn check_adb() -> bool {
@@ -57,8 +56,7 @@ impl HardwareCapabilities {
             .output()
             .ok()
             .and_then(|output| String::from_utf8(output.stdout).ok())
-            .map(|s| s.contains("device") && s.lines().count() > 1)
-            .unwrap_or(false)
+            .is_some_and(|s| s.contains("device") && s.lines().count() > 1)
     }
 
     fn print_status(&self) {

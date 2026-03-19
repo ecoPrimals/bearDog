@@ -23,7 +23,7 @@ fn test_production_validation() {
     ];
 
     for (check_name, should_pass) in production_checks {
-        assert!(should_pass, "Production check '{}' should pass", check_name);
+        assert!(should_pass, "Production check '{check_name}' should pass");
     }
 
     // Verify production mode is detectable

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Ecosystem Integration and Primal Service Coordination
 //!
 //! This module provides the core functionality for BearDog to interact with

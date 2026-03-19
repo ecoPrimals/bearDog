@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Unified Type Aliases - Single Source of Truth
 //!
 //! This module provides the **ultimate unified type system** that consolidates ALL

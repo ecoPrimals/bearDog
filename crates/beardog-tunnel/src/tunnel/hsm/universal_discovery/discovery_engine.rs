@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Discovery Engine
 //!
 //! This module implements automatic discovery of Hardware Security Modules
@@ -32,25 +34,20 @@ pub struct Pkcs11Discoverer {
 }
 
 /// Cloud KMS discoverer
-#[allow(dead_code)] // Fields used in implementation
 pub struct CloudKmsDiscoverer {
     enabled_providers: Vec<String>,
 }
 
 /// Network HSM discoverer  
 pub struct NetworkHsmDiscoverer {
-    #[allow(dead_code)] // Future implementation
-    common_ports: Vec<u16>,
-    #[allow(dead_code)] // Future implementation
-    scan_config: NetworkScanConfig,
+    _common_ports: Vec<u16>,
+    _scan_config: NetworkScanConfig,
 }
 
 /// USB HSM discoverer
 pub struct UsbHsmDiscoverer {
-    #[allow(dead_code)] // Future implementation
-    hsm_vendor_ids: Vec<u16>,
-    #[allow(dead_code)] // Future implementation
-    enum_config: UsbEnumerationConfig,
+    _hsm_vendor_ids: Vec<u16>,
+    _enum_config: UsbEnumerationConfig,
 }
 
 /// Software HSM discoverer
@@ -60,22 +57,18 @@ pub struct SoftwareHsmDiscoverer {
 
 /// Mobile HSM discoverer
 pub struct MobileHsmDiscoverer {
-    #[allow(dead_code)] // Future implementation
-    android_discoverer: AndroidStrongBoxDiscoverer,
-    #[allow(dead_code)] // Future implementation
-    ios_discoverer: IosSecureEnclaveDiscoverer,
+    _android_discoverer: AndroidStrongBoxDiscoverer,
+    _ios_discoverer: IosSecureEnclaveDiscoverer,
 }
 
 /// TPM discoverer
 pub struct TpmDiscoverer {
-    #[allow(dead_code)] // Future implementation
-    interface_types: Vec<TpmInterfaceType>,
+    _interface_types: Vec<TpmInterfaceType>,
 }
 
 /// Smart card discoverer
 pub struct SmartCardDiscoverer {
-    #[allow(dead_code)] // Future implementation
-    readers: Vec<String>,
+    _readers: Vec<String>,
 }
 
 /// Network scanning configuration
@@ -364,8 +357,8 @@ impl NetworkHsmDiscoverer {
     /// Creates a new Network HSM discoverer
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
-            common_ports: vec![1792, 7000, 9000, 443],
-            scan_config: NetworkScanConfig {
+            _common_ports: vec![1792, 7000, 9000, 443],
+            _scan_config: NetworkScanConfig {
                 // Example IP ranges for documentation and testing purposes.
                 // In production, these would be loaded from network discovery configuration.
                 ip_ranges: vec!["192.168.1.0/24".to_string()], // Example: local network
@@ -386,8 +379,8 @@ impl UsbHsmDiscoverer {
     /// Creates a new USB HSM discoverer
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
-            hsm_vendor_ids: vec![0x1050, 0x20a0, 0x04e6], // YubiKey, Nitrokey, etc.
-            enum_config: UsbEnumerationConfig {
+            _hsm_vendor_ids: vec![0x1050, 0x20a0, 0x04e6], // YubiKey, Nitrokey, etc.
+            _enum_config: UsbEnumerationConfig {
                 scan_interval_ms: 1000,
                 auto_detect: true,
             },
@@ -495,8 +488,8 @@ impl MobileHsmDiscoverer {
     /// Creates a new Mobile HSM discoverer
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
-            android_discoverer: AndroidStrongBoxDiscoverer,
-            ios_discoverer: IosSecureEnclaveDiscoverer,
+            _android_discoverer: AndroidStrongBoxDiscoverer,
+            _ios_discoverer: IosSecureEnclaveDiscoverer,
         })
     }
 
@@ -511,7 +504,7 @@ impl TpmDiscoverer {
     /// Creates a new TPM discoverer
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
-            interface_types: vec![TpmInterfaceType::Tpm20, TpmInterfaceType::Tpm12],
+            _interface_types: vec![TpmInterfaceType::Tpm20, TpmInterfaceType::Tpm12],
         })
     }
 
@@ -526,7 +519,7 @@ impl SmartCardDiscoverer {
     /// Creates a new Smart Card discoverer
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
-            readers: Vec::new(),
+            _readers: Vec::new(),
         })
     }
 
@@ -729,7 +722,7 @@ mod tests {
         let discoverer = NetworkHsmDiscoverer::new()?;
 
         // Verify discoverer has common ports configured
-        assert!(!discoverer.common_ports.is_empty());
+        assert!(!discoverer._common_ports.is_empty());
 
         Ok(())
     }
@@ -739,7 +732,7 @@ mod tests {
         let discoverer = UsbHsmDiscoverer::new()?;
 
         // Verify discoverer has vendor IDs configured
-        assert!(!discoverer.hsm_vendor_ids.is_empty());
+        assert!(!discoverer._hsm_vendor_ids.is_empty());
 
         Ok(())
     }
@@ -759,7 +752,7 @@ mod tests {
         let discoverer = TpmDiscoverer::new()?;
 
         // Verify discoverer has interface types configured
-        assert!(!discoverer.interface_types.is_empty());
+        assert!(!discoverer._interface_types.is_empty());
 
         Ok(())
     }

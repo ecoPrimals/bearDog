@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core Error Types - `BearDogError` Taxonomy
 //!
 //! Provides the primary error type for the BearDog ecosystem with comprehensive

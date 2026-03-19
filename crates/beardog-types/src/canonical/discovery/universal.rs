@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Universal Discovery Types - Zero Hardcoding Architecture
 //
 // This module defines discovery types that work with any service, vendor, or primal

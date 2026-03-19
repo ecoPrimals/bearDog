@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Telemetry Collection System
 //
 // This module provides comprehensive telemetry collection for

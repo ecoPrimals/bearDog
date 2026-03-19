@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Production Configuration
 //!
 //! Configuration structures for production deployments, including core settings,

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Chaos Engineering Tests
 //!
 //! Extended test coverage for chaos scenarios including:

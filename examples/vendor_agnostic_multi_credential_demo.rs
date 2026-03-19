@@ -8,14 +8,14 @@
 
 //! # Vendor-Agnostic Multi-Credential HSM Demo
 //!
-//! This example demonstrates BearDog's vendor-agnostic multi-credential HSM support.
+//! This example demonstrates `BearDog`'s vendor-agnostic multi-credential HSM support.
 //! The **exact same code** works with:
 //!
-//! - **SoloKeys Solo 2** (FIDO2)
-//! - **YubiKey 5 Series** (FIDO2 or PKCS#11 mode)
+//! - **`SoloKeys` Solo 2** (FIDO2)
+//! - **`YubiKey` 5 Series** (FIDO2 or PKCS#11 mode)
 //! - **Nitrokey FIDO2**
 //! - **TPM 2.0 modules** (future)
-//! - **Android StrongBox** (Pixel Titan M2) (future)
+//! - **Android `StrongBox`** (Pixel Titan M2) (future)
 //! - **Any FIDO2-compliant security key**
 //!
 //! ## What This Demo Shows
@@ -254,7 +254,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                             println!("      Permissions: {:?}", cred.permissions);
                                             println!("      Use Count: {}", cred.use_count);
                                             if let Some(parent) = &cred.parent_credential_id {
-                                                println!("      Parent: {}", parent);
+                                                println!("      Parent: {parent}");
                                             }
                                             println!();
                                         }
@@ -287,15 +287,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                                 println!();
                                             }
                                             Err(e) => {
-                                                println!("   ⚠️  Could not get hierarchy: {}", e)
+                                                println!("   ⚠️  Could not get hierarchy: {e}");
                                             }
                                         }
                                     }
-                                    Err(e) => println!("   ⚠️  Could not list credentials: {}", e),
+                                    Err(e) => println!("   ⚠️  Could not list credentials: {e}"),
                                 }
                             }
                             Err(e) => {
-                                println!("      ⚠️  Phase 2 not yet implemented: {}", e);
+                                println!("      ⚠️  Phase 2 not yet implemented: {e}");
                                 println!(
                                     "         (This is expected - CTAP2 commands coming soon!)"
                                 );
@@ -303,13 +303,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }
                     }
                     Err(e) => {
-                        println!("      ⚠️  Phase 2 not yet implemented: {}", e);
+                        println!("      ⚠️  Phase 2 not yet implemented: {e}");
                         println!("         (This is expected - CTAP2 commands coming soon!)");
                     }
                 }
             }
             Err(e) => {
-                println!("      ⚠️  Phase 2 not yet implemented: {}", e);
+                println!("      ⚠️  Phase 2 not yet implemented: {e}");
                 println!("         (This is expected - CTAP2 commands coming soon!)");
                 println!();
                 println!("📝 What WOULD happen in Phase 2:");
@@ -344,7 +344,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("      (This can be used for key derivation, salts, IVs, etc.)");
                 }
                 Err(e) => {
-                    println!("   ⚠️  Phase 2 not yet implemented: {}", e);
+                    println!("   ⚠️  Phase 2 not yet implemented: {e}");
                     println!("      (CTAP2 hmac-secret coming soon!)");
                 }
             }

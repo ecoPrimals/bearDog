@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! BTSP Internal Types
 //!
 //! Internal type definitions for BTSP implementation.

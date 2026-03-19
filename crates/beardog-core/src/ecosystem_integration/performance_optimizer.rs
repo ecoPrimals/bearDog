@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // # Ecosystem Performance Optimizer
 //
 // Advanced performance optimizations for cross-primal communication and integration.

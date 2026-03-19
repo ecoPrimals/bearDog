@@ -37,7 +37,7 @@ fn test_fault_types() {
     // Verify each fault type can be represented
     for fault in faults {
         assert!(
-            !format!("{:?}", fault).is_empty(),
+            !format!("{fault:?}").is_empty(),
             "Fault type should have debug representation"
         );
     }

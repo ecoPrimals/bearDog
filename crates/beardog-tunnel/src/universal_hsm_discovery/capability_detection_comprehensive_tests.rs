@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Capability Detection Tests
 //!
 //! Extended test coverage for capability detection including:

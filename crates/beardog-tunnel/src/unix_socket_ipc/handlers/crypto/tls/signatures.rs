@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! TLS 1.3 Signature Operations and Finished MAC
 //!
 //! This module implements cryptographic signature operations for TLS 1.3 handshakes,

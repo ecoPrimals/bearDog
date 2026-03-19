@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tests for Network Configuration
 //!
 //! Tests network-related configs including connection pools, timeouts,

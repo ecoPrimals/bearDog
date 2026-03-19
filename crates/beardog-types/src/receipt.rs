@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Universal Operation Receipt System
 // Provides verifiable proof of operation execution for all BearDog operations
 

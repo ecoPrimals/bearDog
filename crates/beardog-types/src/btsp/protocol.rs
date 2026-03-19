@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Protocol Types for BTSP Unified
 //!
 //! This module defines communication protocols for tunnels:

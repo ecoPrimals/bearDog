@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Production metrics collection and monitoring
 //
 // This module provides comprehensive metrics collection for production environments,

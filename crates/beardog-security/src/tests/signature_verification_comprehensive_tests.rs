@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive signature verification tests
 //!
 //! This module provides extensive test coverage for signature verification operations

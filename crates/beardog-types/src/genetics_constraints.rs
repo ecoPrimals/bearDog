@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Key Constraints - Cryptographic Self-Enforcement
 //!
 //! This module implements self-enforcing cryptographic constraints for BearDog keys.

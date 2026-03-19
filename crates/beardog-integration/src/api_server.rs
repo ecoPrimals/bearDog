@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Integration API Server
 //!
 //! Expanded REST API with 17 endpoints for BTSP, BirdSong, and Lineage operations.

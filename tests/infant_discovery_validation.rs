@@ -48,9 +48,7 @@ async fn test_no_hardcoded_primal_names() {
         for forbidden in &forbidden_names {
             assert!(
                 !discovered.to_lowercase().contains(forbidden),
-                "Discovered name '{}' should not contain hardcoded primal name '{}'",
-                discovered,
-                forbidden // TEST_CATEGORY: unit
+                "Discovered name '{discovered}' should not contain hardcoded primal name '{forbidden}'" // TEST_CATEGORY: unit
                           // TEST_DOMAIN: core
                           // TEST_PRIORITY: important
             );
@@ -76,7 +74,7 @@ async fn test_capability_based_discovery() {
     // This test validates the principle
 
     // Verify the capability type is properly defined
-    let capability_str = format!("{:?}", requested_capability);
+    let capability_str = format!("{requested_capability:?}");
     assert!(
         capability_str.contains("Compute"),
         "Capability-based discovery uses capability types, not primal names"
@@ -105,9 +103,7 @@ fn test_universal_adapter_complexity() {
     // THEN: Universal adapter should scale linearly, not quadratically
     assert!(
         connections_with_adapter < connections_without_adapter,
-        "Universal adapter ({} connections) scales better than direct connections ({} connections)",
-        connections_with_adapter,
-        connections_without_adapter
+        "Universal adapter ({connections_with_adapter} connections) scales better than direct connections ({connections_without_adapter} connections)"
     );
 
     // Verify O(1) scaling: 10 primals
@@ -116,17 +112,15 @@ fn test_universal_adapter_complexity() {
     let direct_connections = large_scale * (large_scale - 1);
 
     // Ratio gets worse as scale increases (validates O(n²) problem)
-    let small_ratio = connections_without_adapter as f64 / connections_with_adapter as f64;
+    let small_ratio = f64::from(connections_without_adapter) / f64::from(connections_with_adapter);
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    let large_ratio = direct_connections as f64 / adapter_connections as f64;
+    let large_ratio = f64::from(direct_connections) / f64::from(adapter_connections);
 
     assert!(
         large_ratio > small_ratio,
-        "Direct connection overhead grows quadratically: {:.1}x → {:.1}x",
-        small_ratio,
-        large_ratio
+        "Direct connection overhead grows quadratically: {small_ratio:.1}x → {large_ratio:.1}x"
     );
 }
 
@@ -149,8 +143,7 @@ fn test_environment_aware_configuration() {
     for var in env_vars {
         assert!(
             var.starts_with("BEARDOG_"),
-            "Configuration variable '{}' follows BEARDOG_ prefix convention",
-            var
+            "Configuration variable '{var}' follows BEARDOG_ prefix convention"
         );
     }
 }
@@ -181,12 +174,7 @@ fn test_generic_naming_convention() {
         for pattern in &forbidden_patterns {
             assert!(
                 !name.to_lowercase().contains(pattern),
-                "Generic name '{}' should not contain specific pattern '{}'",
-                name,
-                // TEST_CATEGORY: unit
-                // TEST_DOMAIN: core
-                // TEST_PRIORITY: normal
-                pattern
+                "Generic name '{name}' should not contain specific pattern '{pattern}'"
             );
         }
     }
@@ -283,8 +271,7 @@ fn test_file_size_compliance() {
     let max_lines = 1000;
     assert!(
         max_lines == 1000,
-        "Files should not exceed {} lines for maintainability",
-        max_lines
+        "Files should not exceed {max_lines} lines for maintainability"
     );
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
@@ -293,7 +280,7 @@ fn test_file_size_compliance() {
 
 /// Test: Zero Unsafe Code Principle
 ///
-/// Validates that BearDog maintains zero unsafe code.
+/// Validates that `BearDog` maintains zero unsafe code.
 #[test]
 fn test_zero_unsafe_code_principle() {
     // BearDog has achieved zero unsafe code across the entire codebase
@@ -367,14 +354,12 @@ mod integration_tests {
         let connections_20 = primals_20; // Still O(1) per primal
 
         // Verify linear scaling
-        let ratio = connections_20 as f64 / connections_5 as f64;
-        let primal_ratio = primals_20 as f64 / primals_5 as f64;
+        let ratio = f64::from(connections_20) / f64::from(connections_5);
+        let primal_ratio = f64::from(primals_20) / f64::from(primals_5);
 
         assert!(
             (ratio - primal_ratio).abs() < 0.1,
-            "Connection growth ({:.1}x) matches primal growth ({:.1}x) - validates O(1)",
-            ratio,
-            primal_ratio
+            "Connection growth ({ratio:.1}x) matches primal growth ({primal_ratio:.1}x) - validates O(1)"
         );
     }
 }
@@ -400,8 +385,7 @@ mod performance_tests {
         // Discovery should complete in < 100ms (principle validation)
         assert!(
             duration.as_millis() < 100,
-            "Discovery should be fast (took {:?})",
-            duration
+            "Discovery should be fast (took {duration:?})"
         );
     }
 }

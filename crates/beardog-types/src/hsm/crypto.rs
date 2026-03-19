@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Cryptographic Provider Traits
 //!
 //! Defines the core cryptographic provider interface for HSM operations.

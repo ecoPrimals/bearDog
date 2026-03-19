@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Hardware Security Module capabilities and feature definitions
 // Provides structured capability types for HSM functionality
 

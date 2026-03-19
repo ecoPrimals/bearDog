@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Crypto Operation Diagnostics
 //!
 //! Preserved diagnostic logging for cryptographic operations.

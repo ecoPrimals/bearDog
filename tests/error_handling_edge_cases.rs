@@ -1,6 +1,6 @@
 //! Error Handling Edge Cases Tests
 //!
-//! This module contains edge case tests for BearDog's error handling system,
+//! This module contains edge case tests for `BearDog`'s error handling system,
 //! focusing on boundary conditions, unusual inputs, and extreme scenarios that
 //! might not be covered in standard tests.
 
@@ -21,7 +21,7 @@ fn test_empty_error_message() {
     let error = BearDogError::validation("");
 
     // Then: should still create valid error
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(
         !error_str.is_empty(),
         "Error string should not be empty even with empty message"
@@ -41,9 +41,9 @@ fn test_whitespace_only_message() {
     let error3 = BearDogError::configuration("     ");
 
     // Then: all should format without panicking
-    let _ = format!("{}", error1);
-    let _ = format!("{}", error2);
-    let _ = format!("{}", error3);
+    let _ = format!("{error1}");
+    let _ = format!("{error2}");
+    let _ = format!("{error3}");
 }
 
 /// Tests error construction with very long messages
@@ -60,7 +60,7 @@ fn test_very_long_error_message() {
     let error = BearDogError::internal(long_message.clone());
 
     // Then: should handle it without truncation or panic
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(error_str.len() > 5000, "Long message should be preserved");
 }
 
@@ -85,8 +85,8 @@ fn test_special_characters_in_message() {
         let error = BearDogError::validation(msg);
 
         // Then: should format without panicking
-        let _ = format!("{}", error);
-        let _ = format!("{:?}", error);
+        let _ = format!("{error}");
+        let _ = format!("{error:?}");
     }
 }
 
@@ -199,7 +199,7 @@ fn test_result_with_unit_type() {
 fn test_rapid_error_creation() {
     // When: creating thousands of errors rapidly
     let errors: Vec<BearDogError> = (0..10000)
-        .map(|i| BearDogError::internal(format!("Error {}", i)))
+        .map(|i| BearDogError::internal(format!("Error {i}")))
         .collect();
 
     // Then: all should be created successfully
@@ -249,9 +249,9 @@ fn test_error_with_max_numeric_values() {
     let error3 = BearDogError::validation(&format!("Maximum value: {}", i64::MAX));
 
     // Then: all should format correctly
-    let _ = format!("{}", error1);
-    let _ = format!("{}", error2);
-    let _ = format!("{}", error3);
+    let _ = format!("{error1}");
+    let _ = format!("{error2}");
+    let _ = format!("{error3}");
 }
 
 /// Tests error with zero-length string operations
@@ -390,7 +390,7 @@ async fn test_concurrent_async_errors() {
         if id % 2 == 0 {
             Ok(id)
         } else {
-            Err(BearDogError::validation(&format!("Task {} failed", id)))
+            Err(BearDogError::validation(&format!("Task {id} failed")))
         }
     }
 
@@ -476,14 +476,14 @@ fn test_all_error_variants_edge_cases() {
         BearDogError::validation(""),
         BearDogError::configuration(""),
         BearDogError::invalid_input(""),
-        BearDogError::not_found("".to_string()),
-        BearDogError::network("".to_string()),
-        BearDogError::internal("".to_string()),
+        BearDogError::not_found(String::new()),
+        BearDogError::network(String::new()),
+        BearDogError::internal(String::new()),
     ];
 
     // Then: all should be valid
     for error in errors {
-        let _ = format!("{}", error);
-        let _ = format!("{:?}", error);
+        let _ = format!("{error}");
+        let _ = format!("{error:?}");
     }
 }

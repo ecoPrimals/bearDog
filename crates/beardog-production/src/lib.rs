@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # BearDog Production Utilities
 //!
 //! Production-ready utilities and configuration for deploying BearDog in production environments,

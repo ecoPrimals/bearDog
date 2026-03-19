@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Capability Types and Configurations
 //
 // This module provides capability-related types and configurations for the BearDog ecosystem.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Migration Module
 //!
 //! Handles migrations and upgrades across BearDog systems, including the revolutionary

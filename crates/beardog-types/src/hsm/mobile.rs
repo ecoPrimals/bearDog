@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Mobile Platform Types
 //!
 //! Provides types for mobile platform HSM integration (Android, iOS).

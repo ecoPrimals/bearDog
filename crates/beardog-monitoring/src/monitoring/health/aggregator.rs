@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Health Check Aggregator
 //!
 //! Aggregates health checks from multiple components and provides overall system health status.

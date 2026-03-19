@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Crypto Types
 //!
 //! This module provides cryptographic types for key management,

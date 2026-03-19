@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Unix filesystem socket implementation for BearDog  
 //!
 //! **Platform:** Linux, BSD, Solaris (all Unix-like systems)
@@ -84,7 +86,9 @@ impl PlatformSocket for UnixSocket {
         // 1. It runs only during initialization (not in hot path)
         // 2. Directory creation is infrequent (usually already exists)
         // 3. Making the trait async would require larger refactoring
-        // TODO(Phase 3): Consider making PlatformSocket trait async for full non-blocking operation
+        //
+        // Phase 3 plan: Consider making PlatformSocket trait async for full non-blocking operation,
+        // allowing create_endpoint to use async filesystem APIs.
 
         // Priority 1: Environment variable (operator control)
         if let Ok(custom_socket) = std::env::var("BEARDOG_SOCKET") {

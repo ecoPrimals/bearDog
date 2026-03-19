@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Audit Event Types
 //!
 //! Provides audit logging types for HSM operations.

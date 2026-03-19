@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Health check timeout configuration
 //!
 //! Provides timeout settings for health check operations.

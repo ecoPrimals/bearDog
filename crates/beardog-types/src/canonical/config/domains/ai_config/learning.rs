@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Learning Algorithms Configuration
 //!
 //! This module contains configuration types for various learning algorithms

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Error Context Tests
 //!
 //! Tests for error handling, context, and propagation.

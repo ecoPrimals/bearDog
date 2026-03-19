@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Device Enrollment - Seed Derivation and Lineage Certificates
 //!
 //! Handles device enrollment into a family via HKDF seed derivation

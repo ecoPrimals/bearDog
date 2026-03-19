@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Pure Rust system metrics collection via /proc filesystem.
 //!
 //! Reads CPU and memory stats directly from the Linux procfs without

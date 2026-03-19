@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Production-Grade BearDog Ecosystem
 //!
 //! This module provides advanced production capabilities including comprehensive

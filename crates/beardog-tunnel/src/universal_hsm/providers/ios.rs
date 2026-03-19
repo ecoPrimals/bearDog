@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // iOS HSM Provider with Secure Enclave Support  
 // CRITICAL: NO SIMULATED ENTROPY ALLOWED FOR HUMAN KEYS
 

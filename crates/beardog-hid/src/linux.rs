@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Pure Rust HID for Linux via `/dev/hidraw`
 //!
 //! Direct access to HID devices without libusb or libhidapi (C libraries).

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Capability registry
 //!
 //! Manages capability registration and advertisement for a primal instance.
@@ -30,8 +32,7 @@ struct RegisteredCapability {
 
     /// Type-erased capability provider (Box<dyn Trait>)
     /// Note: Currently unused but reserved for future runtime capability queries
-    #[allow(dead_code)]
-    provider: Box<dyn Any + Send + Sync>,
+    _provider: Box<dyn Any + Send + Sync>,
 }
 
 impl CapabilityRegistry {
@@ -95,7 +96,7 @@ impl CapabilityRegistry {
 
         let registered = RegisteredCapability {
             metadata,
-            provider: Box::new(provider),
+            _provider: Box::new(provider),
         };
 
         self.capabilities

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Strategic Test Coverage - CoreSecurityProvider Real Crypto
 //
 // Tests for the newly evolved real cryptographic operations

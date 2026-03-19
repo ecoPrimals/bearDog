@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Solo V2 type definitions
 
 use serde::{Deserialize, Serialize};

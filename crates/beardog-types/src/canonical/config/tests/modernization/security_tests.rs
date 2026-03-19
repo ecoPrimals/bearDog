@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tests for Security and Advanced System Configuration
 //!
 //! Tests security-related configs including rate limiting, authentication,

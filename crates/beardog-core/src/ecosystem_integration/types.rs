@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // **MODERNIZED**: Ecosystem integration types for BearDog
 //
 // This module provides comprehensive types for ecosystem integration,
@@ -211,5 +213,109 @@ impl EcosystemNode {
     pub fn update_health(&mut self, status: HealthStatus) {
         self.health_status = status;
         self.last_seen = Utc::now();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_ecosystem_event_default() {
+        let event = EcosystemEvent::default();
+        assert_eq!(event.event_type, "unknown");
+        assert_eq!(event.source, "system");
+        assert_eq!(event.priority, EventPriority::Medium);
+        assert_eq!(event.status, EventStatus::Pending);
+    }
+
+    #[test]
+    fn test_ecosystem_event_new() {
+        let event = EcosystemEvent::new("test.type".to_string(), "source".to_string());
+        assert_eq!(event.event_type, "test.type");
+        assert_eq!(event.source, "source");
+    }
+
+    #[test]
+    fn test_ecosystem_event_with_target() {
+        let event =
+            EcosystemEvent::new("t".to_string(), "s".to_string()).with_target("target".to_string());
+        assert_eq!(event.target, Some("target".to_string()));
+    }
+
+    #[test]
+    fn test_ecosystem_event_with_priority() {
+        let event = EcosystemEvent::new("t".to_string(), "s".to_string())
+            .with_priority(EventPriority::Critical);
+        assert_eq!(event.priority, EventPriority::Critical);
+    }
+
+    #[test]
+    fn test_ecosystem_event_with_data() {
+        let event = EcosystemEvent::new("t".to_string(), "s".to_string())
+            .with_data("key".to_string(), serde_json::json!("value"));
+        assert_eq!(event.data.get("key"), Some(&serde_json::json!("value")));
+    }
+
+    #[test]
+    fn test_event_priority_ordering() {
+        assert!(EventPriority::Critical > EventPriority::High);
+        assert!(EventPriority::High > EventPriority::Medium);
+        assert!(EventPriority::Medium > EventPriority::Low);
+    }
+
+    #[test]
+    fn test_ecosystem_node_default() {
+        let node = EcosystemNode::default();
+        assert_eq!(node.name, "unnamed-node");
+        assert_eq!(node.node_type, NodeType::Service);
+        assert!(node.capabilities.contains(&"security".to_string()));
+    }
+
+    #[test]
+    fn test_ecosystem_node_new() {
+        let node = EcosystemNode::new(
+            "my-node".to_string(),
+            NodeType::Compute,
+            "https://node.example.com".to_string(),
+        );
+        assert_eq!(node.name, "my-node");
+        assert_eq!(node.node_type, NodeType::Compute);
+        assert_eq!(node.endpoint, "https://node.example.com");
+    }
+
+    #[test]
+    fn test_ecosystem_node_with_capability() {
+        let node = EcosystemNode::new("n".to_string(), NodeType::Service, "ep".to_string())
+            .with_capability("storage".to_string());
+        assert!(node.capabilities.contains(&"storage".to_string()));
+    }
+
+    #[test]
+    fn test_ecosystem_node_with_metadata() {
+        let node = EcosystemNode::new("n".to_string(), NodeType::Service, "ep".to_string())
+            .with_metadata("k".to_string(), "v".to_string());
+        assert_eq!(node.metadata.get("k"), Some(&"v".to_string()));
+    }
+
+    #[test]
+    fn test_ecosystem_node_update_health() {
+        let mut node = EcosystemNode::default();
+        node.update_health(HealthStatus::Degraded);
+        assert_eq!(node.health_status, HealthStatus::Degraded);
+    }
+
+    #[test]
+    fn test_node_type_variants() {
+        let _ = NodeType::Service;
+        let _ = NodeType::Hsm;
+        let _ = NodeType::Custom("custom".to_string());
+    }
+
+    #[test]
+    fn test_event_status_variants() {
+        let _ = EventStatus::Pending;
+        let _ = EventStatus::Completed;
+        let _ = EventStatus::Failed;
     }
 }

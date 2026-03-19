@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Security Error Handling Tests
 //!
 //! Comprehensive tests for security error handling, validation, and edge cases.

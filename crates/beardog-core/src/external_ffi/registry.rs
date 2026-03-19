@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # External Function Registry
 //!
 //! Implementation of the FFI registry for managing external libraries and functions.

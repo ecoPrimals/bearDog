@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // BearDog Core Ecosystem Coordination Methods
 //
 // This module extends BearDogCore with ecosystem coordination capabilities

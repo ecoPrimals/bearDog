@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # beardog-installer CLI
 //!
 //! Universal genomeBin installer command-line interface.
@@ -23,7 +25,7 @@
 
 use anyhow::Result;
 use beardog_installer::{
-    deployment::DeploymentManager, validator::BinaryValidator, BiomeOSPaths, Primal,
+    deployment::DeploymentManager, validator::BinaryValidator, BiomeOSPaths, PrimalName,
 };
 use clap::{Parser, Subcommand};
 use std::path::{Path, PathBuf};
@@ -141,25 +143,25 @@ async fn main() -> Result<()> {
 }
 
 /// Parse primal names from comma-separated string
-fn parse_primals(primals_str: Option<String>) -> Result<Vec<Primal>> {
+fn parse_primals(primals_str: Option<String>) -> Result<Vec<PrimalName>> {
     match primals_str {
         Some(s) => {
             let mut primals = Vec::new();
             for name in s.split(',') {
                 let name = name.trim();
-                match Primal::parse_name(name) {
+                match PrimalName::parse_name(name) {
                     Some(primal) => primals.push(primal),
                     None => anyhow::bail!("Unknown primal: {}", name),
                 }
             }
             Ok(primals)
         }
-        None => Ok(Primal::all()),
+        None => Ok(PrimalName::well_known()),
     }
 }
 
 /// Convert primals list to display string
-fn primals_to_string(primals: &[Primal]) -> String {
+fn primals_to_string(primals: &[PrimalName]) -> String {
     primals
         .iter()
         .map(|p| p.display_name())
@@ -168,7 +170,7 @@ fn primals_to_string(primals: &[Primal]) -> String {
 }
 
 /// Install primals
-async fn install_primals(source_dir: &Path, primals: &[Primal]) -> Result<()> {
+async fn install_primals(source_dir: &Path, primals: &[PrimalName]) -> Result<()> {
     println!("🧬 Installing {} primals...", primals.len());
     println!("   Source: {}", source_dir.display());
     println!("   Primals: {}\n", primals_to_string(primals));
@@ -188,7 +190,7 @@ async fn install_primals(source_dir: &Path, primals: &[Primal]) -> Result<()> {
 }
 
 /// Validate primals
-async fn validate_primals(primals: &[Primal]) -> Result<()> {
+async fn validate_primals(primals: &[PrimalName]) -> Result<()> {
     println!("🔍 Validating {} primals...\n", primals.len());
 
     let paths = BiomeOSPaths::discover()?;
@@ -196,7 +198,7 @@ async fn validate_primals(primals: &[Primal]) -> Result<()> {
 
     let binaries: Vec<_> = primals
         .iter()
-        .map(|p| (*p, paths.bin_dir.join(p.name())))
+        .map(|p| (p.clone(), paths.bin_dir.join(p.name())))
         .collect();
 
     let reports = validator.validate_all(binaries).await;
@@ -220,14 +222,14 @@ async fn validate_primals(primals: &[Primal]) -> Result<()> {
 }
 
 /// Uninstall primals
-async fn uninstall_primals(source_dir: &Path, primals: &[Primal]) -> Result<()> {
+async fn uninstall_primals(source_dir: &Path, primals: &[PrimalName]) -> Result<()> {
     println!("🗑️  Uninstalling {} primals...", primals.len());
     println!("   Primals: {}\n", primals_to_string(primals));
 
     let manager = DeploymentManager::new(source_dir.to_path_buf()).await?;
 
     for primal in primals {
-        manager.installer.uninstall_binary(*primal).await?;
+        manager.installer.uninstall_binary(primal.clone()).await?;
     }
 
     println!("✅ Uninstallation complete!");

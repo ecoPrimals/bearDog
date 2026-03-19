@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Human Entropy Collection Module
 //
 // This module provides comprehensive human entropy collection capabilities,

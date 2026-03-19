@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Key Rotation and Lifecycle Tests
 // Tests critical key rotation scenarios for security
 

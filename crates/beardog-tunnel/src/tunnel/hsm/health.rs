@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Health Monitoring
 //!
 //! This module provides health checking and monitoring for HSMs.

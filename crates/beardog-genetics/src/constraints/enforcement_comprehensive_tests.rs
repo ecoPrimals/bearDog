@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive tests for constraint enforcement
 //!
 //! These tests cover edge cases, error paths, and complex scenarios

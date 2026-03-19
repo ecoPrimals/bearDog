@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Observability Configuration
 //
 // This module contains production observability configuration including

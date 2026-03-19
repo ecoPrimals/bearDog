@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Simplified Configuration System
 //!
 //! This module provides a lightweight alternative to the full unified configuration

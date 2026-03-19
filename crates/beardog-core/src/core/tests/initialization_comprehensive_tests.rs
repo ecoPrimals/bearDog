@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core Initialization Comprehensive Tests
 //!
 //! Comprehensive testing of `BearDog` Core initialization including:

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Comprehensive tests for Neural Network module
 
 use crate::ai::hybrid_intelligence::neural_networks::*;

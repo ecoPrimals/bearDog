@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Biometric Authentication Module
 //!
 //! Provides safe interfaces for biometric authentication (Touch ID/Face ID) on iOS

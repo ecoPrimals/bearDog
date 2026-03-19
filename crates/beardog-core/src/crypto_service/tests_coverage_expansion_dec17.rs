@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Additional Test Coverage for Crypto Service - December 17, 2025
 //!
 //! This module adds comprehensive tests to expand coverage from 78% to 90%.

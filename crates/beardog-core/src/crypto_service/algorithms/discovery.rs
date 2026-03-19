@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Runtime algorithm discovery
 //!
 //! Enables primals to discover available cryptographic algorithms at runtime

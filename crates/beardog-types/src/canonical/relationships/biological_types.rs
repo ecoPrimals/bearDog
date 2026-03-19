@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Biological Relationship Types - Ecosystem Symbiosis Patterns
 //
 // This module implements biological relationship patterns that enable rich

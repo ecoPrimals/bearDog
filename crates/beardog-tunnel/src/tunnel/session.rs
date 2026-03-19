@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Secure Session Management for BearDog Tunnels
 //!
 //! This module provides secure session lifecycle management including:

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Context-Aware Licensing Module
 //!
 //! Provides intelligent licensing and usage classification based on deployment

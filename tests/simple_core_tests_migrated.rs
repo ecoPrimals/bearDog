@@ -39,7 +39,7 @@ fn test_error_conversion() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: important
-    let error_string = format!("{}", error);
+    let error_string = format!("{error}");
     assert!(error_string.contains("Internal test error"));
 }
 

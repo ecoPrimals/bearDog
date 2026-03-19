@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Software HSM key storage
 
 use beardog_errors::BearDogError;

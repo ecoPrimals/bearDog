@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! AI Hybrid Intelligence Comprehensive Tests
 //!
 //! Comprehensive testing of AI hybrid intelligence system including:

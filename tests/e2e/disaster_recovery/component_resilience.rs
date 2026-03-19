@@ -118,7 +118,7 @@ impl ComponentFailureScenario {
         // Send requests during failover
         for i in 0..5 {
             match send_component_request("api-server", "test-data").await {
-                Ok(_) => {
+                Ok(()) => {
                     metrics.successful_requests += 1;
                 }
                 Err(e) => {
@@ -188,8 +188,7 @@ async fn send_component_request(component: &str, _data: &str) -> Result<(), Bear
     match status.as_str() {
         "healthy" => Ok(()),
         "crashed" => Err(BearDogError::unavailable(format!(
-            "Component {} is crashed",
-            component
+            "Component {component} is crashed"
         ))),
         _ => Ok(()), // Degraded but functional
     }

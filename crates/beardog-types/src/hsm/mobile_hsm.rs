@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Mobile HSM Type Definitions
 //!
 //! Canonical types for mobile Hardware Security Modules including
@@ -52,13 +54,29 @@ impl AndroidStrongBoxHsm {
     }
 }
 
+/// Default implementation. On Android, this uses real StrongBox when available.
+/// On non-Android platforms, this is a mock for testing/desktop development only.
+#[cfg(not(target_os = "android"))]
 impl Default for AndroidStrongBoxHsm {
     fn default() -> Self {
-        // Mock implementation: construct directly to avoid panic paths (Deep Debt Principle #3)
+        // Mock implementation for non-Android (desktop, CI, etc.): construct directly to avoid
+        // panic paths. On Android, use AndroidStrongBoxHsm::with_defaults() or platform-specific
+        // initialization for real StrongBox hardware.
         Self {
-            id: "android-strongbox".to_string(),
+            id: "android-strongbox-mock".to_string(),
             device_info: super::AndroidDeviceInfo::default(),
         }
+    }
+}
+
+#[cfg(target_os = "android")]
+impl Default for AndroidStrongBoxHsm {
+    fn default() -> Self {
+        // On Android: attempt real StrongBox; fallback to mock if unavailable
+        Self::with_defaults().unwrap_or_else(|_| Self {
+            id: "android-strongbox".to_string(),
+            device_info: super::AndroidDeviceInfo::default(),
+        })
     }
 }
 
@@ -143,7 +161,11 @@ mod tests {
     #[test]
     fn test_android_strongbox_default() {
         let hsm = AndroidStrongBoxHsm::default();
+        // On Android: "android-strongbox"; on other platforms: mock id
+        #[cfg(target_os = "android")]
         assert_eq!(hsm.id, "android-strongbox");
+        #[cfg(not(target_os = "android"))]
+        assert_eq!(hsm.id, "android-strongbox-mock");
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: types
         // TEST_PRIORITY: normal

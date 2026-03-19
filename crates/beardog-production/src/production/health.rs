@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Production Health Monitoring
 //!
 //! This module provides types for production health monitoring,

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Expanded access control tests
 //!
 //! Tests permissions, roles, policies, and access control enforcement.

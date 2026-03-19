@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Capability-Based Port Discovery
 //!
 //! Evolves hardcoded ports to runtime discovery with primal awareness.

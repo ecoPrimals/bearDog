@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Safe utility functions for parallel processing
 
 use beardog_errors::BearDogError;

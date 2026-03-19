@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Consolidated Genetics Configuration Domain
 //!
 //! This module consolidates ALL genetics-related configuration structs across the BearDog

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! FIDO2 Device Discovery
 //!
 //! Discovers FIDO2/CTAP2 security keys on the system.
@@ -118,8 +120,10 @@ async fn convert_to_fido2_info(hid_dev: HidDeviceInfo) -> Result<Fido2DeviceInfo
 
 #[cfg(feature = "fido2")]
 async fn probe_capabilities(_hid_dev: &HidDeviceInfo) -> Fido2Capabilities {
-    // Default capabilities for FIDO2 devices
-    // TODO: Query actual capabilities via CTAP2 getInfo command
+    // Assumes default FIDO2 capabilities until CTAP2 getInfo is implemented (Phase 2).
+    tracing::info!(
+        "FIDO2 capabilities: using assumed defaults (CTAP2 getInfo query pending Phase 2)"
+    );
     Fido2Capabilities {
         resident_keys: true,
         user_presence: true,

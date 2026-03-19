@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // **ULTRA-PEDANTIC**: External Functions Interface for BearDog Ecosystem
 //
 // This module provides comprehensive Foreign Function Interface FFI capabilities

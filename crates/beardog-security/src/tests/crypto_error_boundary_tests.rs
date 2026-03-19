@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Crypto Error Boundary Tests
 //!
 //! Comprehensive tests for error handling in cryptographic operations.

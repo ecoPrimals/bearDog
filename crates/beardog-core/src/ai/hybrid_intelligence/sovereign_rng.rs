@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Sovereign Entropy-Driven Randomization for Neural Networks
 //!
 //! Implements a revolutionary approach to AI randomization by utilizing BearDog's
@@ -512,5 +514,87 @@ mod tests {
             EntropyDistribution::He,
         ];
         assert_eq!(distributions.len(), 4);
+    }
+
+    #[test]
+    fn test_sovereign_rng_config_default() {
+        let config = SovereignRngConfig::default();
+        assert_eq!(config.min_entropy_tier, 2);
+        assert!(config.cache_entropy);
+        assert!(config.allow_machine_fallback);
+        assert!(config.audit_entropy_usage);
+    }
+
+    #[test]
+    fn test_sovereign_rng_initialize_weights() {
+        let entropy_manager = EntropyHierarchyManager::default();
+        let config = SovereignRngConfig::default();
+        let mut rng = SovereignRng::new(entropy_manager, config);
+        let initializer = HumanEntropyWeightInitializer {
+            entropy_tier: 2,
+            human_identity_id: "test".to_string(),
+            distribution: EntropyDistribution::Xavier,
+            layer_shape: (4, 8),
+        };
+        let result = rng.initialize_weights(&initializer);
+        assert!(result.is_ok());
+        let weights = result.unwrap();
+        assert_eq!(weights.len(), 4);
+        assert_eq!(weights[0].len(), 8);
+    }
+
+    #[test]
+    fn test_sovereign_rng_generate_entropy_bytes() {
+        let entropy_manager = EntropyHierarchyManager::default();
+        let config = SovereignRngConfig::default();
+        let mut rng = SovereignRng::new(entropy_manager, config);
+        let identity = beardog_genetics::HumanIdentity {
+            identity_id: "test".to_string(),
+            identity_hash: vec![0u8; 32],
+            verification_level: beardog_genetics::VerificationLevel::Maximum,
+            verified_at: chrono::Utc::now(),
+        };
+        let result = rng.generate_entropy_bytes(&identity, 2, 64);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().len(), 64);
+    }
+
+    #[test]
+    fn test_sovereign_rng_get_entropy_stats() {
+        let entropy_manager = EntropyHierarchyManager::default();
+        let config = SovereignRngConfig::default();
+        let rng = SovereignRng::new(entropy_manager, config);
+        let stats = rng.get_entropy_stats();
+        assert_eq!(stats.cached_seeds, 0);
+    }
+
+    #[test]
+    fn test_neural_network_entropy_integration() {
+        use crate::ai::hybrid_intelligence::neural_networks::{
+            EntropyDistribution, WeightInitialization,
+        };
+        let init = WeightInitialization::HumanEntropyInitialization {
+            required_entropy_tier: 2,
+            human_identity_id: "user".to_string(),
+            distribution: EntropyDistribution::Xavier,
+            fallback_to_machine: true,
+        };
+        let result =
+            NeuralNetworkEntropyIntegration::create_human_entropy_initializer(&init, (10, 20));
+        assert!(result.is_some());
+        let initializer = result.unwrap();
+        assert_eq!(initializer.entropy_tier, 2);
+        assert_eq!(initializer.layer_shape, (10, 20));
+        assert!(NeuralNetworkEntropyIntegration::uses_human_entropy(&init));
+    }
+
+    #[test]
+    fn test_neural_network_entropy_integration_non_human_returns_none() {
+        use crate::ai::hybrid_intelligence::neural_networks::WeightInitialization;
+        let init = WeightInitialization::GlorotUniform;
+        let result =
+            NeuralNetworkEntropyIntegration::create_human_entropy_initializer(&init, (10, 20));
+        assert!(result.is_none());
+        assert!(!NeuralNetworkEntropyIntegration::uses_human_entropy(&init));
     }
 }

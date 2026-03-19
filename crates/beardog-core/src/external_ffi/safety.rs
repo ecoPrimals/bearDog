@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Safety checking for external functions
 
 use super::types::{ExternalFunction, FunctionParameter, FunctionValue, SecurityClearance};

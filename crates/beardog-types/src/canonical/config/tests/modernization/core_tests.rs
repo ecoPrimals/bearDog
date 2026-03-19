@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // ! Tests for Core Configuration (Bootstrap, Database, System)
 //!
 //! Tests configs that have been modernized to follow the pattern:

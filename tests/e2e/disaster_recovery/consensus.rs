@@ -159,7 +159,7 @@ async fn achieve_consensus(nodes: &[String], _round: usize) -> Result<bool, Bear
 
     let consensus = nodes
         .iter()
-        .all(|node| map.get(node).map(|r| *r > 0.6).unwrap_or(false));
+        .all(|node| map.get(node).is_some_and(|r| *r > 0.6));
 
     Ok(consensus)
 }

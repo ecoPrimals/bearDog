@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Universal HSM registry for managing multiple HSM providers
 
 use beardog_errors::BearDogError;

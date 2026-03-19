@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! BirdSong Lineage & Encryption System
 //!
 //! Privacy-preserving federation through lineage-based broadcast encryption.

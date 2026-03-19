@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Ultimate Safety Module
 //!
 //! This module provides **ultimate safety guarantees** by eliminating all unsafe

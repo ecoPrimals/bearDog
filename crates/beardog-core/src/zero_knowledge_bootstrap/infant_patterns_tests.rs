@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Tests for Infant Discovery Patterns
 //!
 //! Tests the "infant" discovery pattern engine that starts with minimal knowledge

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Universal HSM Configuration
 //
 // This module provides universal HSM configuration patterns that replace

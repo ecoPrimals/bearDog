@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Genetic Crypto RPC Types
 //!
 //! Request and response types for genetic lineage-based cryptographic operations.

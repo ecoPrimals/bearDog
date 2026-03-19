@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Unified Universal Adapter System
 //!
 //! Provides a comprehensive universal adapter architecture enabling seamless

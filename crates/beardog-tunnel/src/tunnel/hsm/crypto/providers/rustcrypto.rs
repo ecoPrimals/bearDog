@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! RustCrypto Provider
 //!
 //! Implementation of UniversalCryptoProvider using the RustCrypto ecosystem.

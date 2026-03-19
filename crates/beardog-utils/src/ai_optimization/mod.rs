@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # AI Optimization Module
 //!
 //! **Ultra-pedantic AI-driven performance optimization for the `BearDog` ecosystem.**

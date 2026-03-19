@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical Genetics Configuration
 //!
 //! Configuration for genetic algorithms in the BearDog ecosystem.

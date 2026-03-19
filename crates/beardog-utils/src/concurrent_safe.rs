@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Safe Concurrent Data Structures for BearDog
 //
 // This module provides high-performance concurrent data structures without unsafe code,

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! mDNS-based Primal Discovery
 //!
 //! Runtime discovery of other primals using mDNS/DNS-SD.
@@ -313,7 +315,7 @@ impl MdnsServiceAnnouncer {
     /// # Errors
     /// Returns error if mDNS registration fails
     #[cfg(feature = "mdns")]
-    pub async fn announce(&self) -> Result<(), BearDogError> {
+    pub fn announce(&self) -> Result<(), BearDogError> {
         use mdns_sd::{ServiceDaemon, ServiceInfo};
         use std::collections::HashMap;
 
@@ -360,7 +362,7 @@ impl MdnsServiceAnnouncer {
 
     /// Graceful fallback when mDNS feature is not enabled
     #[cfg(not(feature = "mdns"))]
-    pub async fn announce(&self) -> Result<(), BearDogError> {
+    pub fn announce(&self) -> Result<(), BearDogError> {
         warn!(
             "mDNS feature not enabled. Service {} will not be advertised on local network.",
             self.instance_name
@@ -418,13 +420,35 @@ mod tests {
         assert!(result.is_ok());
     }
 
+    #[test]
+    fn test_service_type_constants() {
+        assert!(!BEARDOG_SERVICE_TYPE.is_empty());
+        assert!(!CRYPTO_SERVICE_TYPE.is_empty());
+        assert!(BEARDOG_SERVICE_TYPE.contains("beardog"));
+    }
+
+    #[test]
+    fn test_mdns_discovered_primal_structure() {
+        let primal = MdnsDiscoveredPrimal {
+            instance_name: "test-node".to_string(),
+            addresses: vec![],
+            port: 8080,
+            capabilities: vec!["crypto".to_string()],
+            version: Some("1.0".to_string()),
+            primal_type: Some("beardog".to_string()),
+        };
+        assert_eq!(primal.instance_name, "test-node");
+        assert_eq!(primal.port, 8080);
+        assert_eq!(primal.capabilities.len(), 1);
+    }
+
     #[tokio::test]
     async fn test_announce_graceful_without_feature() {
         // This test verifies graceful handling regardless of feature state
         // When mdns feature is enabled, it will try to announce (may succeed or fail based on network)
         // When mdns feature is disabled, it will log a warning and return Ok
         let announcer = MdnsServiceAnnouncer::new(8080, vec!["crypto".to_string()]);
-        let result = announcer.announce().await;
+        let result = announcer.announce();
 
         // We expect either:
         // - Ok(()) if announcement succeeds or feature is disabled

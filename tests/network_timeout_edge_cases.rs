@@ -1,8 +1,8 @@
 //! Network Timeout Edge Case Tests
 //!
-//! TEST_CATEGORY: integration
-//! TEST_DOMAIN: network/timeouts
-//! TEST_PRIORITY: high
+//! `TEST_CATEGORY`: integration
+//! `TEST_DOMAIN`: network/timeouts
+//! `TEST_PRIORITY`: high
 
 use std::time::Duration;
 use tokio::time::timeout;
@@ -51,8 +51,7 @@ async fn test_timeout_during_operation() {
     assert!(result.is_err(), "Should timeout");
     assert!(
         elapsed < Duration::from_millis(75),
-        "Should timeout around 50ms, got {:?}",
-        elapsed
+        "Should timeout around 50ms, got {elapsed:?}"
     );
 }
 
@@ -100,10 +99,10 @@ async fn test_multiple_concurrent_timeouts() {
     for (i, is_ok) in final_results.iter() {
         if *i <= 5 {
             // 0-50ms should complete
-            assert!(*is_ok, "Operation {} should succeed", i);
+            assert!(*is_ok, "Operation {i} should succeed");
         } else {
             // 60-90ms should timeout
-            assert!(!*is_ok, "Operation {} should timeout", i);
+            assert!(!*is_ok, "Operation {i} should timeout");
         }
     }
 }
@@ -119,10 +118,10 @@ async fn test_timeout_with_cancellation() {
 
     let result = timeout(Duration::from_millis(10), async move {
         tokio::select! {
-            _ = tokio::time::sleep(Duration::from_millis(100)) => {
+            () = tokio::time::sleep(Duration::from_millis(100)) => {
                 "completed"
             }
-            _ = tokio::time::sleep(Duration::from_millis(5)) => {
+            () = tokio::time::sleep(Duration::from_millis(5)) => {
                 was_cancelled_clone.store(true, Ordering::Relaxed);
                 "partial"
             }
@@ -173,10 +172,8 @@ async fn test_timeout_accuracy() {
         let upper = expected_ms + tolerance;
 
         assert!(
-            elapsed >= lower as u128 && elapsed <= upper as u128,
-            "Timeout should be close to {}ms, got {}ms",
-            expected_ms,
-            elapsed
+            elapsed >= u128::from(lower) && elapsed <= u128::from(upper),
+            "Timeout should be close to {expected_ms}ms, got {elapsed}ms"
         );
     }
 }
@@ -198,7 +195,7 @@ async fn test_timeout_with_panic_safety() {
 async fn test_timeout_with_select() {
     // Test timeout in combination with tokio::select!
     let result = tokio::select! {
-        _ = tokio::time::sleep(Duration::from_millis(100)) => {
+        () = tokio::time::sleep(Duration::from_millis(100)) => {
             "sleep"
         }
         _ = timeout(Duration::from_millis(50), async {

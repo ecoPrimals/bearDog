@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Path Configuration Module
 //!
 //! Centralized path configuration to eliminate hardcoded paths throughout the codebase.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! System Metadata and Environment Configuration
 //!
 //! This module contains metadata types for system identification, versioning,

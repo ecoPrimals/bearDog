@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Ecosystem Integration Comprehensive Tests
 //!
 //! Comprehensive testing of ecosystem integration, coordination, and inter-primal communication.

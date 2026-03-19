@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Discovery Configuration Module
 //!
 //! Domain-driven organization of discovery configuration components.

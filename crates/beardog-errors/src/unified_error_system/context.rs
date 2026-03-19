@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Error Context Module
 //!
 //! This module contains error context types and contextual information for enhanced error handling.

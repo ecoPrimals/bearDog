@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Symmetric encryption algorithms
 //!
 //! Provides implementations of symmetric encryption algorithms including:

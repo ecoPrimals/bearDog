@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core coordination configuration types
 //!
 //! This module contains the fundamental coordination models and configuration

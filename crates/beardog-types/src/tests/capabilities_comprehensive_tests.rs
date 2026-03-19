@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Capabilities Comprehensive Tests
 //!
 //! Extensive test coverage for capability types and operations

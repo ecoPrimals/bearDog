@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Security Domain Constants
 //
 // This module provides security-related constants consolidated from the large unified.rs file.

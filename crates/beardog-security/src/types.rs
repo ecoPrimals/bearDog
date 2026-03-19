@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Security Types - Authentication and Authorization
 //!
 //! Provides security-related types including:

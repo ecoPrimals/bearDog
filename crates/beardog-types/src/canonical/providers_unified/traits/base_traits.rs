@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // **BASE PROVIDER TRAITS**
 //
 // Core provider trait definitions that form the foundation of the unified provider system.

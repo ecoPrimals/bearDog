@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Processing configuration types for the hybrid intelligence system
 //!
 //! This module contains all processing-related configuration types including

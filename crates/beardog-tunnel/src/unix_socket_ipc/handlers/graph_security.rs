@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Graph Security Handler for JSON-RPC
 //!
 //! Implements JSON-RPC methods for graph security validation, authorization, and audit.

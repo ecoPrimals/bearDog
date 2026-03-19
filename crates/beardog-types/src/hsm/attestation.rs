@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Attestation Types
 //!
 //! Provides types for hardware attestation and verification.

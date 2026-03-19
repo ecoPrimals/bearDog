@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Health Monitoring Module
 //
 // This module contains health checking, monitoring, and status management functionality.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Ecosystem Module Tests
 
 // November 22, 2025: Ecosystem error path tests for coverage expansion

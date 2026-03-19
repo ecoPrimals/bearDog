@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Unified Metrics Configuration
 //
 // This module consolidates all metrics configuration patterns from across the codebase

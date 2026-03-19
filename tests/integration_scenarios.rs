@@ -1,8 +1,8 @@
 //! Integration Scenario Tests
 //!
-//! TEST_CATEGORY: integration
-//! TEST_DOMAIN: multi_component
-//! TEST_PRIORITY: high
+//! `TEST_CATEGORY`: integration
+//! `TEST_DOMAIN`: `multi_component`
+//! `TEST_PRIORITY`: high
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Quantum-Resistant Cryptography Module
 //!
 //! Provides post-quantum cryptographic operations following NIST PQC standards:

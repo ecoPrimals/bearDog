@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Capabilities handler
 //!
 //! Provides self-description and identity endpoints for service discovery.
@@ -202,6 +204,7 @@ impl CapabilitiesHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[tokio::test]
     async fn test_capabilities_handler_methods() {
@@ -219,7 +222,10 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_capabilities_response() {
+        let prev = std::env::var("PRIMAL_NAME").ok();
+        std::env::set_var("PRIMAL_NAME", "beardog");
         let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
         let handler = CapabilitiesHandler::new(identity);
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
@@ -234,10 +240,19 @@ mod tests {
         assert!(response["family_id"].is_string());
         assert!(response["node_id"].is_string());
         assert!(response["btsp_enabled"].as_bool().unwrap());
+
+        if let Some(p) = prev {
+            std::env::set_var("PRIMAL_NAME", p);
+        } else {
+            std::env::remove_var("PRIMAL_NAME");
+        }
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_identity_response() {
+        let prev = std::env::var("PRIMAL_NAME").ok();
+        std::env::set_var("PRIMAL_NAME", "beardog");
         let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
         let handler = CapabilitiesHandler::new(identity);
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
@@ -251,6 +266,12 @@ mod tests {
         assert!(response["family"].is_string());
         assert!(response["node"].is_string());
         assert!(response["encryption_tag"].is_string());
+
+        if let Some(p) = prev {
+            std::env::set_var("PRIMAL_NAME", p);
+        } else {
+            std::env::remove_var("PRIMAL_NAME");
+        }
     }
 
     #[tokio::test]

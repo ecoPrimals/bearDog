@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 #![allow(
     unused_imports,
     clippy::float_cmp,
@@ -100,28 +102,28 @@ fn test_cache_config_creation() {
 fn test_security_config_default() {
     let config = SecurityConfig::default();
 
-    assert!(!config.enable_auth);
-    assert!(config.enable_rate_limiting);
+    assert!(!config.enable_auth());
+    assert!(config.enable_rate_limiting());
 }
 
 #[test]
 fn test_security_config_creation() {
     let config = SecurityConfig {
-        enable_auth: true,
-        auth_method: AuthenticationMethod::JWT,
-        api_keys: vec!["key1".to_string(), "key2".to_string()],
-        jwt_secret: Some("secret".to_string()),
-        enable_rate_limiting: true,
-        rate_limit_rpm: 5000,
-        enable_ip_allowlist: true,
-        allowed_ips: vec!["127.0.0.1".parse().unwrap()],
-        enable_encryption: true,
-        encryption_algorithm: "AES-256-GCM".to_string(),
+        auth: Some(AuthConfig {
+            method: AuthenticationMethod::JWT,
+            api_keys: vec!["key1".to_string(), "key2".to_string()],
+            jwt_secret: Some("secret".to_string()),
+        }),
+        rate_limit: Some(RateLimitConfig { rpm: 5000 }),
+        ip_allowlist: Some(vec!["127.0.0.1".parse().unwrap()]),
+        encryption: Some(EncryptionConfig {
+            algorithm: "AES-256-GCM".to_string(),
+        }),
     };
 
-    assert!(config.enable_auth);
-    assert_eq!(config.api_keys.len(), 2);
-    assert!(config.enable_encryption);
+    assert!(config.enable_auth());
+    assert_eq!(config.auth.as_ref().unwrap().api_keys.len(), 2);
+    assert!(config.enable_encryption());
 }
 
 #[test]
@@ -204,23 +206,17 @@ fn test_cache_config_serialization() {
 #[test]
 fn test_security_config_serialization() {
     let config = SecurityConfig {
-        enable_auth: false,
-        auth_method: AuthenticationMethod::None,
-        api_keys: vec![],
-        jwt_secret: None,
-        enable_rate_limiting: false,
-        rate_limit_rpm: 0,
-        enable_ip_allowlist: false,
-        allowed_ips: vec![],
-        enable_encryption: false,
-        encryption_algorithm: "NONE".to_string(),
+        auth: None,
+        rate_limit: None,
+        ip_allowlist: None,
+        encryption: None,
     };
 
     let serialized = serde_json::to_string(&config).unwrap();
     let deserialized: SecurityConfig = serde_json::from_str(&serialized).unwrap();
 
-    assert_eq!(config.enable_auth, deserialized.enable_auth);
-    assert_eq!(config.enable_encryption, deserialized.enable_encryption);
+    assert_eq!(config.enable_auth(), deserialized.enable_auth());
+    assert_eq!(config.enable_encryption(), deserialized.enable_encryption());
 }
 
 #[test]

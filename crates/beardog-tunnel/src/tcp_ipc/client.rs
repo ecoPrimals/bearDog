@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! TCP IPC Client for BearDog
 //!
 //! Universal JSON-RPC client over TCP.

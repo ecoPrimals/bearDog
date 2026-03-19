@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Testing Utilities for Truly Concurrent Tests
 //!
 //! This module provides infrastructure for writing **deterministic, concurrent tests**

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Safe Android Provider Implementation
 //!
 //! This module provides a safe interface to Android security features

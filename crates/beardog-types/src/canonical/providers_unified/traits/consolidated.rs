@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Consolidated Provider Trait System - CANONICAL LOCATION
 //!
 //! This module provides the **single source of truth** for all provider traits across

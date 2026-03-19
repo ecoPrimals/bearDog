@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // async_trait no longer needed - using native fn
 // Module documentation
 //

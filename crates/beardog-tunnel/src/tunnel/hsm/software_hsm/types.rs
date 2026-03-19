@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Software HSM Types
 //!
 //! Core type definitions for the Software HSM implementation.

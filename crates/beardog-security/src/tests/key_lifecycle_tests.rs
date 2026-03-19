@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Comprehensive Key Lifecycle Tests - Day 3 Expansion
 // Tests key generation, rotation, storage, and destruction
 

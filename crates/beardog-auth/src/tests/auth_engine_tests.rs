@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 use crate::auth::node_registry::InMemoryNodeRegistry;
 use crate::auth::proof_verifier::DefaultProofVerifier;
 use crate::auth::types::*;

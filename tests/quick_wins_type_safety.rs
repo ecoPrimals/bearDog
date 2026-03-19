@@ -2,10 +2,10 @@
 //!
 //! This module contains unit tests focused on verifying type safety, trait implementations,
 //! and core type behavior for canonical configuration types. These tests ensure that
-//! Environment, LogLevel, and UnifiedBearDogConfig types implement expected traits
+//! Environment, `LogLevel`, and `UnifiedBearDogConfig` types implement expected traits
 //! and behave correctly.
 //!
-//! Coverage: Environment enum (5 tests), LogLevel enum (3 tests), Config traits (3 tests)
+//! Coverage: Environment enum (5 tests), `LogLevel` enum (3 tests), Config traits (3 tests)
 
 use beardog_types::canonical::config::unified::{Environment, LogLevel, UnifiedBearDogConfig};
 
@@ -27,12 +27,12 @@ fn test_environment_enum_variants() {
     let prod = Environment::Production;
 
     // Then: all variants should be distinct when formatted
-    let dev_str = format!("{:?}", dev);
-    let prod_str = format!("{:?}", prod);
+    let dev_str = format!("{dev:?}");
+    let prod_str = format!("{prod:?}");
     assert_ne!(dev_str, prod_str, "Dev and Prod should be different");
 
-    let test_str = format!("{:?}", test);
-    let staging_str = format!("{:?}", staging);
+    let test_str = format!("{test:?}");
+    let staging_str = format!("{staging:?}");
     assert_ne!(
         test_str, staging_str,
         "Test and Staging should be different"
@@ -50,7 +50,7 @@ fn test_environment_default() {
     let default_env = Environment::default();
 
     // Then: should default to Development
-    assert_eq!(format!("{:?}", default_env), "Development");
+    assert_eq!(format!("{default_env:?}"), "Development");
 }
 
 /// Tests that Environment can be serialized to JSON
@@ -84,12 +84,12 @@ fn test_environment_equality() {
 
     // Then: same variants should be equal, different variants should differ
     assert_eq!(
-        format!("{:?}", env1),
+        format!("{env1:?}"),
         format!("{:?}", env2),
         "Same variants should be equal"
     );
     assert_ne!(
-        format!("{:?}", env1),
+        format!("{env1:?}"),
         format!("{:?}", env3),
         "Different variants should differ"
     );
@@ -99,7 +99,7 @@ fn test_environment_equality() {
 // LogLevel Enum Tests
 // ============================================================================
 
-/// Tests that all LogLevel enum variants are distinct
+/// Tests that all `LogLevel` enum variants are distinct
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: config
@@ -118,7 +118,7 @@ fn test_log_level_enum_variants() {
     assert_eq!(levels.len(), 5, "Should have 5 distinct log levels");
 }
 
-/// Tests that LogLevel has a correct default value
+/// Tests that `LogLevel` has a correct default value
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: config
@@ -129,10 +129,10 @@ fn test_log_level_default() {
     let default_level = LogLevel::default();
 
     // Then: should default to Info
-    assert_eq!(format!("{:?}", default_level), "Info");
+    assert_eq!(format!("{default_level:?}"), "Info");
 }
 
-/// Tests that LogLevel can be serialized to JSON
+/// Tests that `LogLevel` can be serialized to JSON
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: config
@@ -149,7 +149,7 @@ fn test_log_level_serializable() {
     assert!(json.is_ok(), "LogLevel should be serializable");
 }
 
-/// Tests that LogLevel can be cloned correctly
+/// Tests that `LogLevel` can be cloned correctly
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: config
@@ -165,7 +165,7 @@ fn test_log_level_clone() {
 
     // Then: clones should be identical
     assert_eq!(
-        format!("{:?}", level2),
+        format!("{level2:?}"),
         format!("{:?}", level3),
         "Clones should be identical"
     );
@@ -175,7 +175,7 @@ fn test_log_level_clone() {
 // UnifiedBearDogConfig Trait Tests
 // ============================================================================
 
-/// Tests that UnifiedBearDogConfig implements Clone trait
+/// Tests that `UnifiedBearDogConfig` implements Clone trait
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: config
@@ -195,7 +195,7 @@ fn test_config_implements_clone() {
     );
 }
 
-/// Tests that UnifiedBearDogConfig implements Debug trait
+/// Tests that `UnifiedBearDogConfig` implements Debug trait
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: config
@@ -206,13 +206,13 @@ fn test_config_implements_debug() {
     let config = UnifiedBearDogConfig::default();
 
     // When: formatting with Debug
-    let debug_output = format!("{:?}", config);
+    let debug_output = format!("{config:?}");
 
     // Then: should produce non-empty output
     assert!(!debug_output.is_empty(), "Debug output should not be empty");
 }
 
-/// Tests that UnifiedBearDogConfig implements Default trait
+/// Tests that `UnifiedBearDogConfig` implements Default trait
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: config

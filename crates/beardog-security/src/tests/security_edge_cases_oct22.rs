@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Security Edge Cases Tests - October 22, 2025
 //!
 //! High-value tests focusing on edge cases, error paths, and security-critical scenarios

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Configuration Validation Tests
 //!
 //! Tests for secure configuration loading, validation, and error handling.

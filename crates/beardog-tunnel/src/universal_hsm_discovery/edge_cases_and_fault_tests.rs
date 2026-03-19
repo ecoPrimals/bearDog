@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Edge Cases and Fault Injection Tests
 //!
 //! Comprehensive testing for:

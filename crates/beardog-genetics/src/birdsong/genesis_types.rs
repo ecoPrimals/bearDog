@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Genesis Bootstrap Types
 //!
 //! Core data structures for physical genesis ceremonies where new nodes

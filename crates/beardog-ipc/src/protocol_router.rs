@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # 🔀 Protocol Router for BearDog IPC
 //!
 //! **AUTOMATIC PROTOCOL DETECTION AND ROUTING** (v1.0.0)
@@ -491,5 +493,57 @@ mod tests {
         assert_eq!(format!("{}", Protocol::Tarpc), "tarpc");
         assert_eq!(format!("{}", Protocol::JsonRpc), "json-rpc");
         assert_eq!(format!("{}", Protocol::Http), "http");
+    }
+
+    #[tokio::test]
+    async fn test_prefixed_stream_new() {
+        use tokio::net::{TcpListener, TcpStream};
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let (client_stream, _) = tokio::join!(TcpStream::connect(addr), listener.accept());
+        let client_stream = client_stream.unwrap();
+        let prefixed = PrefixedStream::new(vec![1, 2, 3], client_stream);
+        assert!(!prefixed.prefix_exhausted());
+    }
+
+    #[tokio::test]
+    async fn test_prefixed_stream_prefix_exhausted_empty() {
+        use tokio::net::{TcpListener, TcpStream};
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let (client_stream, _) = tokio::join!(TcpStream::connect(addr), listener.accept());
+        let client_stream = client_stream.unwrap();
+        let prefixed = PrefixedStream::new(vec![], client_stream);
+        assert!(prefixed.prefix_exhausted());
+    }
+
+    #[tokio::test]
+    async fn test_prefixed_stream_read_from_prefix() {
+        use tokio::io::AsyncReadExt;
+        use tokio::net::TcpListener;
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let (client_stream, _) = tokio::join!(TcpStream::connect(addr), listener.accept());
+        let client_stream = client_stream.unwrap();
+        let prefix = vec![0x01, 0x02, 0x03];
+        let mut prefixed = PrefixedStream::new(prefix, client_stream);
+        let mut buf = [0u8; 3];
+        let n = prefixed.read(&mut buf).await.unwrap();
+        assert_eq!(n, 3);
+        assert_eq!(buf, [0x01, 0x02, 0x03]);
+        assert!(prefixed.prefix_exhausted());
+    }
+
+    #[test]
+    fn test_protocol_detector_with_peek_size() {
+        let d = ProtocolDetector::with_peek_size(64);
+        assert!(format!("{:?}", d).contains("64"));
+    }
+
+    #[test]
+    fn test_detect_tarpc_ascii_graphic_fifth_byte() {
+        let bytes = vec![0x10, 0x00, 0x00, 0x00, b'{'];
+        let protocol = ProtocolDetector::detect_from_bytes(&bytes);
+        assert_ne!(protocol, Protocol::Tarpc);
     }
 }

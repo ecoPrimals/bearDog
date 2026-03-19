@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Safe SIMD optimizer using only safe Rust constructs
 
 use super::{SafeSimdConfig, SafeSimdStats};

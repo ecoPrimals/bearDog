@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Cryptographic property testing implementations
 
 use super::{info, BearDogError, PropertyBasedTestFramework, TestCase};

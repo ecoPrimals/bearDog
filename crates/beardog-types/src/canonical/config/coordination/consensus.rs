@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Consensus mechanisms and decision protocols
 //!
 //! This module contains the decision-making and collaboration structures

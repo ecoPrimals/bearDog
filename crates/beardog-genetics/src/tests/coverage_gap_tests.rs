@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Coverage gap tests for beardog-genetics
 //!
 //! Targets the largest uncovered regions to push from 80.3% → 90%

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! JSON-RPC 2.0 Types and Protocol Detection
 //!
 //! Type definitions for JSON-RPC 2.0 protocol used in Unix socket IPC.

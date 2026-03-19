@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Edge case tests for HSM provider operations
 //!
 //! These tests cover boundary conditions and error paths for HSM provider selection and operations

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Safe Android StrongBox HSM Implementation
 //!
 //! This module provides a memory-safe interface to Android StrongBox hardware security.

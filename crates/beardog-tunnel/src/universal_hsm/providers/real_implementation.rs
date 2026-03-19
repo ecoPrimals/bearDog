@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Production HSM Implementation
 //
 // Provides real HSM functionality for production use, replacing mock implementations

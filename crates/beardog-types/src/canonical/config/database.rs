@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Database Configuration
 //!
 //! Canonical database configuration for managing database connections and operations.

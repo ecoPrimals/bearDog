@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Runtime Configuration Management
 //!
 //! Centralized configuration for network endpoints, ports, and other runtime values

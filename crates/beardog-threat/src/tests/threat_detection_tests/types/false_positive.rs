@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! False Positive Handling Test Types
 
 use std::collections::{HashMap, HashSet};

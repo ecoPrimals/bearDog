@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Capability Types
 //!
 //! Type definitions for HSM capability requirements and feature support.

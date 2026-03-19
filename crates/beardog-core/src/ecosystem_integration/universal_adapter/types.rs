@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Core Types for Universal Adapter System
 
 use beardog_types::canonical::HealthStatus;

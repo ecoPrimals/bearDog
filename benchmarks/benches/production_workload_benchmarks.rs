@@ -24,6 +24,7 @@
 //! - Validates performance under stress
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+#[cfg(feature = "profiling")]
 use pprof::criterion::{Output, PProfProfiler};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -556,10 +557,16 @@ fn benchmark_metrics_collection(c: &mut Criterion) {
 
 criterion_group! {
     name = production_benches;
-    config = Criterion::default()
-        .with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)))
-        .measurement_time(Duration::from_secs(10))
-        .warm_up_time(Duration::from_secs(3));
+    config = {
+        let mut c = Criterion::default()
+            .measurement_time(Duration::from_secs(10))
+            .warm_up_time(Duration::from_secs(3));
+        #[cfg(feature = "profiling")]
+        {
+            c = c.with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
+        }
+        c
+    };
     targets =
         benchmark_api_request_handling,
         benchmark_multitenant_operations,

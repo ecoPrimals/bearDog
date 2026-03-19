@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Implementation Blocks for Unified Configuration
 //!
 //! This module contains the implementation methods for `UnifiedBearDogConfig`.

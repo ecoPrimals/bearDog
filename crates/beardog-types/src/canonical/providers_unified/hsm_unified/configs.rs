@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Platform-specific HSM configurations
 //!
 //! This module contains configuration structures for different HSM platforms

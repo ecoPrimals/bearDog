@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! SIMD optimizations module
 //
 // This module provides functionality for the BearDog ecosystem.

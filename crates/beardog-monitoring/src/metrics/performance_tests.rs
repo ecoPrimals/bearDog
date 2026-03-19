@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Performance Metrics Engine Tests
 //
 // Comprehensive test coverage for performance monitoring functionality

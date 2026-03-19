@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Performance Domain Configuration
 
 use beardog_errors::BearDogError;

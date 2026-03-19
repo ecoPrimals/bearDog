@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Runtime Network Discovery
 //!
 //! Evolution from hardcoded network addresses to runtime capability-based discovery.

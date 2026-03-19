@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive tests for timeout validation
 //!
 //! Added December 8, 2025 to increase coverage from 57.89% to 90%+

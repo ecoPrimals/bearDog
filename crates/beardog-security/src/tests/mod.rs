@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! BearDog Security Tests Module
 //!
 //! Comprehensive test coverage for security functionality

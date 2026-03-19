@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Health Status Types and Configurations
 //
 // This module provides health status types and configurations for the BearDog ecosystem.

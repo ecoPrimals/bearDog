@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Consolidated Network Configuration Domain
 //!
 //! This module consolidates ALL network-related configuration structs across the BearDog

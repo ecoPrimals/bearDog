@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # E2E Cross-Primal Integration Tests
 //!
 //! End-to-end tests for cross-primal secure messaging.

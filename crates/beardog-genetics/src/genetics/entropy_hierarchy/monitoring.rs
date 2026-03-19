@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Entropy Hierarchy Monitoring
 //
 // This module provides monitoring and analytics capabilities for entropy hierarchy operations.

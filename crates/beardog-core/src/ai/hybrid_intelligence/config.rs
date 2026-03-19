@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Configuration types for hybrid intelligence system
 
 use super::{IntelligenceCapability, MachineLearningConfig};

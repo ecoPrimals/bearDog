@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Interactive Entropy Capture - Keyboard and Mouse
 //
 // This module provides live interaction capture for human entropy collection.

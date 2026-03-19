@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tor Protocol Crypto Handlers (Phase 2 - Pure Rust Tor)
 //!
 //! Provides cryptographic operations for Tor protocol implementation:

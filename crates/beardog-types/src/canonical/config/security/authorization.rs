@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Authorization Configuration
 //
 // Canonical authorization configuration for RBAC, permissions, and access control policies.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Constant-Time Operations Comprehensive Tests
 //!
 //! Tests for timing-attack resistant operations

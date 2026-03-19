@@ -1,13 +1,14 @@
 # BearDog
 
 [![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)](STATUS.md)
-[![Tests](https://img.shields.io/badge/tests-12,751+-brightgreen.svg)](STATUS.md)
-[![Coverage](https://img.shields.io/badge/coverage-78.6%25-yellow.svg)](STATUS.md)
+[![Tests](https://img.shields.io/badge/tests-8,542+-brightgreen.svg)](STATUS.md)
+[![Coverage](https://img.shields.io/badge/coverage-74%25--92%25-yellow.svg)](STATUS.md)
 [![Pure Rust](https://img.shields.io/badge/rust-100%25_pure-orange.svg)](STATUS.md)
+[![License](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](LICENSE)
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Crates**: 30 | **Tests**: 12,751+
+**Status**: Production Ready | **Crates**: 29 | **Tests**: 8,542+ (lib)
 
 ---
 
@@ -159,20 +160,23 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | Metric | Value |
 |--------|-------|
 | **Build** | Clean, 0 errors |
-| **Tests** | 12,751+ passing (30 crates) |
-| **Coverage** | 78.6% line coverage (llvm-cov) |
+| **Tests** | 8,542+ passing (29 crates, lib only) |
+| **Coverage** | 74–92% line coverage (llvm-cov) |
 | **Pure Rust** | 100% — zero C dependencies |
-| **Unsafe Code** | 0 production blocks |
+| **Unsafe Code** | 0 production blocks (`#![forbid(unsafe_code)]`) |
 | **Clippy** | 0 errors (pedantic level) |
 | **Production panics** | 0 — all `Result<T, E>` |
+| **License** | AGPL-3.0-only (SPDX headers on all .rs files) |
 
 ### Standards
 
-- **Pure Rust** — No C dependencies anywhere
+- **Pure Rust** — No C dependencies anywhere (ecoBin compliant)
 - **Zero Hardcoding** — Environment variables and capability discovery
+- **Zero `#[allow()]`** — No lint suppression in production code
 - **Result<T, E>** — No `unwrap()`/`expect()` in production code
 - **< 1000 LOC** — File size discipline (exceptions justified)
 - **std over external** — `std::sync::LazyLock` over `once_cell`, etc.
+- **SPDX headers** — Every `.rs` file has `// SPDX-License-Identifier: AGPL-3.0-only`
 
 ---
 

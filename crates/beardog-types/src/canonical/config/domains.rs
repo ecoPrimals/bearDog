@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Configuration Domains Module
 //!
 //! This module organizes configuration types by functional domain, extracted from
@@ -24,14 +26,14 @@ pub mod discovery_modules; // Domain-driven refactored components (Dec 18, 2025)
 pub mod discovery_unified;
 pub mod monitoring_config;
 pub mod network;
-pub mod retry; // ✅ Canonical RetryConfig (Nov 8, 2025)
+pub mod retry;
 pub mod security;
 pub mod system;
 pub mod testing;
 pub mod threat;
-pub mod timeout; // ⚠️  DEPRECATED - Use timeout_unified (Nov 8, 2025)
-pub mod timeout_unified; // ✅ Unified TimeoutConfig (Nov 8, 2025)
-pub mod workflow; // ✅ Modular Workflow Config (Nov 22, 2025)
+pub mod timeout; // ⚠️ DEPRECATED — Use timeout_unified
+pub mod timeout_unified;
+pub mod workflow;
 
 // Re-export all domain configurations for easy access
 pub use ai_config::*;
@@ -68,7 +70,7 @@ pub use workflow::{
     WorkflowEscalationConfig,
 };
 
-// Re-export canonical configs (Nov 8, 2025 unification)
+// Re-export canonical configs
 pub use retry::CanonicalRetryConfig;
 pub use timeout::CanonicalTimeoutConfig;
 

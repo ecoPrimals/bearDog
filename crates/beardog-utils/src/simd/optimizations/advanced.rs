@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Advanced SIMD optimizer with buffer pooling and metrics
 
 use std::collections::{HashMap, VecDeque};

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Zero-Copy Optimization Patterns for BearDog
 //!
 //! This module provides zero-copy patterns and utilities to minimize allocations

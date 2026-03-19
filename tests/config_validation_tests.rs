@@ -18,7 +18,7 @@ use beardog_types::canonical::HealthStatus;
 // Configuration Default Tests
 // ============================================================================
 
-/// Tests that BearDogConfig::default() creates a valid configuration with non-empty fields
+/// Tests that `BearDogConfig::default()` creates a valid configuration with non-empty fields
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: config
@@ -67,7 +67,7 @@ fn test_config_version_default() {
     assert_eq!(config.version, "3.0.0");
 }
 
-/// Tests that each config instance gets a unique node_id
+/// Tests that each config instance gets a unique `node_id`
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: config
@@ -85,7 +85,7 @@ fn test_config_node_id_unique() {
     );
 }
 
-/// Tests that the node_id follows UUID v4 format (36 chars with dashes)
+/// Tests that the `node_id` follows UUID v4 format (36 chars with dashes)
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: config
@@ -138,7 +138,7 @@ fn test_config_custom_version() {
     assert_eq!(config.version, "4.0.0");
 }
 
-/// Tests that BearDogConfig can be cloned and maintains all field values
+/// Tests that `BearDogConfig` can be cloned and maintains all field values
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: config
@@ -164,7 +164,7 @@ fn test_config_clone() {
 // HealthStatus Enum Tests
 // ============================================================================
 
-/// Tests that HealthStatus::Healthy can be instantiated and compared
+/// Tests that `HealthStatus::Healthy` can be instantiated and compared
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: types
@@ -175,7 +175,7 @@ fn test_health_status_healthy() {
     assert_eq!(status, HealthStatus::Healthy);
 }
 
-/// Tests that HealthStatus::Degraded can be instantiated and compared
+/// Tests that `HealthStatus::Degraded` can be instantiated and compared
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: types
@@ -186,7 +186,7 @@ fn test_health_status_degraded() {
     assert_eq!(status, HealthStatus::Degraded);
 }
 
-/// Tests that HealthStatus::Unhealthy can be instantiated and compared
+/// Tests that `HealthStatus::Unhealthy` can be instantiated and compared
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: types
@@ -201,7 +201,7 @@ fn test_health_status_unhealthy() {
 // ServiceCapabilityType Enum Tests
 // ============================================================================
 
-/// Tests that ServiceCapabilityType::KeyManagement can be instantiated and compared
+/// Tests that `ServiceCapabilityType::KeyManagement` can be instantiated and compared
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: capabilities
@@ -212,7 +212,7 @@ fn test_service_capability_key_management() {
     assert_eq!(cap, ServiceCapabilityType::KeyManagement);
 }
 
-/// Tests that ServiceCapabilityType::HardwareSecurityModule can be instantiated and compared
+/// Tests that `ServiceCapabilityType::HardwareSecurityModule` can be instantiated and compared
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: capabilities
@@ -223,7 +223,7 @@ fn test_service_capability_hsm() {
     assert_eq!(cap, ServiceCapabilityType::HardwareSecurityModule);
 }
 
-/// Tests that ServiceCapabilityType::DatabaseService can be instantiated and compared
+/// Tests that `ServiceCapabilityType::DatabaseService` can be instantiated and compared
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: capabilities
@@ -234,7 +234,7 @@ fn test_service_capability_database() {
     assert_eq!(cap, ServiceCapabilityType::DatabaseService);
 }
 
-/// Tests that ServiceCapabilityType::Authentication can be instantiated and compared
+/// Tests that `ServiceCapabilityType::Authentication` can be instantiated and compared
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: capabilities
@@ -245,7 +245,7 @@ fn test_service_capability_authentication() {
     assert_eq!(cap, ServiceCapabilityType::Authentication);
 }
 
-/// Tests that ServiceCapabilityType::CloudStorage can be instantiated and compared
+/// Tests that `ServiceCapabilityType::CloudStorage` can be instantiated and compared
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: capabilities

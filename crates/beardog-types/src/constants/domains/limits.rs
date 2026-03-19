@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Limits & Constraints Constants - UNIFIED
 //!
 //! **CANONICAL LIMIT CONSTANTS** - Single source of truth for all system limits.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Unified HSM Configuration System
 //
 // This module consolidates ALL HSM configuration patterns from across the BearDog

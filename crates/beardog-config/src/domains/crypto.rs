@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Concurrent-Safe Cryptographic Configuration Module
 //!
 //! Cryptographic parameters configuration for `BearDog`.

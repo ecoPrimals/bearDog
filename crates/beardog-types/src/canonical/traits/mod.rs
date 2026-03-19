@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Configuration trait interfaces
 //!
 //! Provides common interfaces for config families to enable polymorphic usage

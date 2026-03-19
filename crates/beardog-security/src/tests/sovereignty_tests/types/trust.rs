@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Trust Domain Types
 //!
 //! Test helper types for trust domains and certificate chains.

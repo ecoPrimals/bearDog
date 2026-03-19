@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Safe zero-copy string utilities
 //
 // This module provides string optimizations using safe Rust patterns.

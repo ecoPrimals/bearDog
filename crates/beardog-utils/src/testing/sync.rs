@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Synchronization Primitives for Concurrent Testing
 //!
 //! Provides event-driven synchronization to replace `sleep()`-based waiting in tests.

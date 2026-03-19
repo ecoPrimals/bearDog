@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 #![allow(async_fn_in_trait)]
 
 use crate::ecosystem::primal_types::ServiceDependency;

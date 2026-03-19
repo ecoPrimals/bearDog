@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Additional Unified Service Types
 //!
 //! This module contains supplementary unified service types that don't fit

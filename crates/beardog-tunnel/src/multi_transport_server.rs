@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Multi-Transport Server - Universal IPC Binding
 //!
 //! **Deep Debt Principles #4 & #5**: Agnostic + Runtime Discovery

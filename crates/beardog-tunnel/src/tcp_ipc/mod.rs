@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! TCP IPC Transport for BearDog
 //!
 //! **Purpose**: Universal IPC transport that works on ALL platforms

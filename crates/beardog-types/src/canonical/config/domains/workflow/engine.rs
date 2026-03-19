@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Workflow Engine Configuration
 //!
 //! Configuration for workflow execution engines, queues, and timeouts.

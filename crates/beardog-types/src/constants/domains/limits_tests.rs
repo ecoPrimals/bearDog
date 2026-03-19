@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive tests for limit constants
 //!
 //! This module provides exhaustive testing for all system limit constants,

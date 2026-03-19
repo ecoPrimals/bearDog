@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Coverage gap tests 11 - HSM, monitoring, and config subsystems
 //! Targets top uncovered files: hsm/mod, hsm/keys, hsm/capabilities,
 //! monitoring/core, monitoring/health, config/trait validation,

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Unified Crypto Utils System
 //!
 //! This module consolidates ALL scattered crypto utility modules across the BearDog ecosystem

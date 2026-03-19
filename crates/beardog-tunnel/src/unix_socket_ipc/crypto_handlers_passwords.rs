@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Password Hashing Handlers (Phase 6 - Final Critical Piece!)
 //!
 //! Provides secure password hashing for authentication systems.

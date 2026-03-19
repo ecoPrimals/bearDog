@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Primal Self-Knowledge Validation Tests
 //!
 //! Tests that validate:

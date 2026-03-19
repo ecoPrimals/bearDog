@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Core Production Configuration
 //
 // This module contains essential production settings, service identification,

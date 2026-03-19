@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Enhanced Error Constructor Examples
 // Demonstrates real-world usage of enhanced error constructors with remediation hints
 

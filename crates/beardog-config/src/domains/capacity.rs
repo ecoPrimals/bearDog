@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Capacity Configuration
 //!
 //! Configuration for buffer sizes, connection pools, and resource limits.

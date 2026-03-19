@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Streaming Encryption/Decryption for Large Files
 //!
 //! Handles large files (100GB+) without loading into memory.

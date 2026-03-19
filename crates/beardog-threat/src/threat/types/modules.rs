@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Threat Detection Types - Modular Architecture
 //!
 //! This module provides comprehensive threat detection types organized into focused,

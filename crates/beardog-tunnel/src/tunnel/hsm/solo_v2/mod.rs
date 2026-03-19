@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Solo V2 USB Security Key HSM Provider
 //!
 //! Provides hardware-backed cryptographic operations using SoloKeys Solo V2

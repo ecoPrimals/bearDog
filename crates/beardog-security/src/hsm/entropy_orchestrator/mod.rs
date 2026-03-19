@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Universal HSM Entropy Orchestrator
 //!
 //! This module connects BearDog's entropy hierarchy with all available

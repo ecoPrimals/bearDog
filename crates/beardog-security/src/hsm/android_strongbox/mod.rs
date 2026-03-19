@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Android StrongBox HSM Module
 //!
 //! Support for Android hardware-backed keystore (StrongBox) including:

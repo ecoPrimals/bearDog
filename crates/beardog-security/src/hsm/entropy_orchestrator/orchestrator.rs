@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Universal HSM Entropy Orchestrator Implementation
 
 use super::types::{
@@ -50,8 +52,7 @@ pub struct HsmEntropyOrchestrator {
     ios_provider: Option<Arc<RwLock<()>>>, // PHASE-2(iOS): Replace with actual iOS provider once types.rs fixed
 
     /// Configuration - used for Phase 2 orchestration logic
-    #[allow(dead_code)]
-    config: OrchestratorConfig,
+    _config: OrchestratorConfig,
 }
 
 /// Orchestrator configuration
@@ -163,7 +164,7 @@ impl HsmEntropyOrchestrator {
             android_provider,
             #[cfg(target_os = "ios")]
             ios_provider,
-            config,
+            _config: config,
         })
     }
 

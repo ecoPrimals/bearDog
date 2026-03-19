@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Safe request caching utilities
 //
 // This module provides request caching using safe Rust patterns.

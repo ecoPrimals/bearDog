@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tests for Modernized Configuration Structs
 //!
 //! This module tests all configs that have been modernized to follow the pattern:

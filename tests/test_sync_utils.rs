@@ -7,9 +7,9 @@
 //! - Never use `sleep` for coordination (only for simulating real delays)
 //! - Tests should be deterministic and concurrent-safe
 //!
-//! TEST_CATEGORY: utility
-//! TEST_DOMAIN: testing
-//! TEST_PRIORITY: high
+//! `TEST_CATEGORY`: utility
+//! `TEST_DOMAIN`: testing
+//! `TEST_PRIORITY`: high
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -41,6 +41,7 @@ use tokio::time::timeout;
 pub type ReadySignal = watch::Receiver<bool>;
 
 /// Create a ready signal pair
+#[must_use]
 pub fn ready_signal() -> (watch::Sender<bool>, ReadySignal) {
     watch::channel(false)
 }
@@ -119,6 +120,7 @@ where
 pub type TaskBarrier = Arc<Barrier>;
 
 /// Create a barrier for N tasks
+#[must_use]
 pub fn task_barrier(n: usize) -> TaskBarrier {
     Arc::new(Barrier::new(n))
 }
@@ -178,6 +180,7 @@ pub fn state_notifier<T: Clone>(initial: T) -> StateNotifier<T> {
 pub type EventNotify = Arc<Notify>;
 
 /// Create an event notifier
+#[must_use]
 pub fn event_notify() -> EventNotify {
     Arc::new(Notify::new())
 }

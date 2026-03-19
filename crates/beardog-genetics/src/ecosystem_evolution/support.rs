@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Supporting types for ecosystem evolution genetics
 //!
 //! This module contains helper types, enums, and structs used throughout

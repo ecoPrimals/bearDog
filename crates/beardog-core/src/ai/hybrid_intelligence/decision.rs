@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Decision making components for hybrid intelligence
 //! 
 //! This module contains decision confidence levels and related logic.

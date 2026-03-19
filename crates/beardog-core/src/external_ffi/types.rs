@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # External FFI Types
 //!
 //! Type definitions for the External Function Interface (FFI) system.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Bootstrap error scenario coverage tests
 //!
 //! This module tests error handling during the bootstrap process,

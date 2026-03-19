@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Unified Adapter Configuration Module
 //!
 //! This module provides unified configuration for all adapter-related functionality,

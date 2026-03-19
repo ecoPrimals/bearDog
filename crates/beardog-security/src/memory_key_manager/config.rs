@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Configuration for memory-based key manager
 //!
 //! This module provides configuration structures for in-memory key management.

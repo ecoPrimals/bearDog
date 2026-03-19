@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Software HSM Capability Prober
 //!
 //! Provides capability detection for software-based HSMs

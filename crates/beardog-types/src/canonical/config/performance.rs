@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical Performance Configuration
 //!
 //! Performance tuning configuration for the BearDog security ecosystem.

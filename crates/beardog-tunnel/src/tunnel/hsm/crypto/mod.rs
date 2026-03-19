@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Universal Crypto Provider System
 //!
 //! Provides vendor-agnostic cryptographic operations through a trait-based

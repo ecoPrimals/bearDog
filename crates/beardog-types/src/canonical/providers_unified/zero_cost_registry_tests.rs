@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Zero-Cost Registry Tests
 //!
 //! Comprehensive tests for the zero-cost provider registry implementation.

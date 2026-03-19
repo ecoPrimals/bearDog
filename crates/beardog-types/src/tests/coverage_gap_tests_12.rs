@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // coverage_gap_tests_12.rs - Targeting methods in top gap files for beardog-types
 // Focus: Exercising methods (not just Default) to maximize line coverage
 

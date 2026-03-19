@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Tier Manager
 //!
 //! This module manages HSM tier assignments based on capabilities and requirements.

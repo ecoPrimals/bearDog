@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 use super::base::BaseProvider;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::crypto::{CryptoKeyPair, HashAlgorithm, KeyPairAlgorithm};

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Database and connection pool timeout configuration
 //!
 //! Provides timeout settings for database connections and pool management.

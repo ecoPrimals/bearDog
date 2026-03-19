@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Workflow State Management Tests
 //!
 //! Comprehensive tests for workflow state transitions, validation, and persistence.

@@ -122,7 +122,7 @@ async fn test_e2e_socket_path_construction() {
     let family_id = "nat0";
     let node_id = "tower1";
 
-    let socket_path = format!("/tmp/beardog-{}-{}.sock", family_id, node_id);
+    let socket_path = format!("/tmp/beardog-{family_id}-{node_id}.sock");
     assert_eq!(socket_path, "/tmp/beardog-nat0-tower1.sock");
 
     // Test with different values

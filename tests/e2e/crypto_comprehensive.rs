@@ -139,7 +139,7 @@ pub async fn test_complete_key_generation_lifecycle(
 
     // Calculate metrics
     metrics.average_latency_ms = latencies.iter().sum::<f64>() / latencies.len() as f64;
-    metrics.peak_latency_ms = latencies.iter().cloned().fold(0.0, f64::max);
+    metrics.peak_latency_ms = latencies.iter().copied().fold(0.0, f64::max);
     metrics.data_verified = true;
 
     info!("✅ E2E-CRYPTO-001: Complete Key Generation & Management PASSED");
@@ -250,7 +250,7 @@ pub async fn test_data_encryption_decryption_flow(
 
     // Calculate metrics
     metrics.average_latency_ms = latencies.iter().sum::<f64>() / latencies.len() as f64;
-    metrics.peak_latency_ms = latencies.iter().cloned().fold(0.0, f64::max);
+    metrics.peak_latency_ms = latencies.iter().copied().fold(0.0, f64::max);
     metrics.data_verified = true;
 
     info!("✅ E2E-CRYPTO-002: Data Encryption & Decryption Flow PASSED");
@@ -349,7 +349,7 @@ pub async fn test_digital_signature_workflow(
 
     // Calculate metrics
     metrics.average_latency_ms = latencies.iter().sum::<f64>() / latencies.len() as f64;
-    metrics.peak_latency_ms = latencies.iter().cloned().fold(0.0, f64::max);
+    metrics.peak_latency_ms = latencies.iter().copied().fold(0.0, f64::max);
     metrics.data_verified = true;
 
     info!("✅ E2E-CRYPTO-003: Digital Signature Workflow PASSED");
@@ -448,7 +448,7 @@ pub async fn test_hash_and_integrity_verification(
 
     // Calculate metrics
     metrics.average_latency_ms = latencies.iter().sum::<f64>() / latencies.len() as f64;
-    metrics.peak_latency_ms = latencies.iter().cloned().fold(0.0, f64::max);
+    metrics.peak_latency_ms = latencies.iter().copied().fold(0.0, f64::max);
     metrics.data_verified = true;
 
     info!("✅ E2E-CRYPTO-004: Hash & Integrity Verification PASSED");
@@ -559,7 +559,7 @@ pub async fn test_key_derivation_hierarchy(
 
     // Calculate metrics
     metrics.average_latency_ms = latencies.iter().sum::<f64>() / latencies.len() as f64;
-    metrics.peak_latency_ms = latencies.iter().cloned().fold(0.0, f64::max);
+    metrics.peak_latency_ms = latencies.iter().copied().fold(0.0, f64::max);
     metrics.data_verified = true;
 
     info!("✅ E2E-CRYPTO-005: Key Derivation & Hierarchical Keys PASSED");

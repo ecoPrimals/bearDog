@@ -173,10 +173,10 @@ async fn test_e2e_search_depth_limits() {
 async fn test_e2e_complete_contact_exchange_flow() {
     // ✅ CONCURRENT-SAFE: Use explicit values, no env vars
     let our_family = "nat0";
-    let our_node_id = "tower-a";
+    let _our_node_id = "tower-a";
 
     // Step 1: Tower A sends request
-    let request = json!({
+    let _request = json!({
         "target_peer_id": "tower-b",
         "requester_lineage": "tower-a-lineage",
         "max_hops": 3
@@ -311,7 +311,7 @@ async fn test_e2e_nat_traversal_contact_discovery() {
     env::set_var("BEARDOG_FAMILY_ID", "nat0");
 
     // Step 1: Tower A requests Tower B's contact info
-    let request = json!({
+    let _request = json!({
         "target_peer_id": "tower-b",
         "requester_lineage": "tower-a",
         "max_hops": 3
@@ -352,7 +352,7 @@ async fn test_e2e_nat_traversal_contact_discovery() {
 #[tokio::test]
 async fn test_e2e_songbird_contact_exchange_integration() {
     // Songbird client will call POST /btsp/contact/exchange
-    let songbird_request = json!({
+    let _songbird_request = json!({
         "target_peer_id": "tower2",
         "requester_lineage": "tower1-lineage",
         "max_hops": 3
@@ -459,7 +459,7 @@ async fn test_e2e_genetic_family_verification() {
         .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
         .unwrap();
 
-    let peer_family = "nat0";
+    let _peer_family = "nat0";
     let peer_lineage_path = [our_family.clone(), "tower-b".to_string()];
 
     // Verify peer is in same genetic family

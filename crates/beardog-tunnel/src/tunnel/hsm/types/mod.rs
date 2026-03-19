@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Types Module
 //!
 //! Core type definitions for Hardware Security Module (HSM) functionality.

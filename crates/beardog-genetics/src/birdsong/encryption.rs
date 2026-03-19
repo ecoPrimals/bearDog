@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! BirdSong broadcast encryption and decryption
 
 use chacha20poly1305::{

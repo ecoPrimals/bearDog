@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Concurrent-Safe Monitoring Configuration Module
 //!
 //! Monitoring, logging, and metrics configuration for BearDog.

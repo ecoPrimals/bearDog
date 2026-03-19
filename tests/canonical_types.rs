@@ -1,9 +1,9 @@
 //! Canonical Types Comprehensive Tests
 //!
-//! This module contains unit tests for canonical types, specifically HealthStatus
-//! and ComponentStatus enums. Tests verify instantiation, equality, and cloning behavior.
+//! This module contains unit tests for canonical types, specifically `HealthStatus`
+//! and `ComponentStatus` enums. Tests verify instantiation, equality, and cloning behavior.
 //!
-//! Coverage: HealthStatus (5 tests), ComponentStatus (7 tests)
+//! Coverage: `HealthStatus` (5 tests), `ComponentStatus` (7 tests)
 
 use beardog_types::canonical::{ComponentStatus, HealthStatus};
 
@@ -11,7 +11,7 @@ use beardog_types::canonical::{ComponentStatus, HealthStatus};
 // HealthStatus Tests
 // ============================================================================
 
-/// Tests that HealthStatus::Healthy can be instantiated
+/// Tests that `HealthStatus::Healthy` can be instantiated
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: types
@@ -25,7 +25,7 @@ fn test_health_healthy() {
     assert_eq!(h, HealthStatus::Healthy, "Healthy status should match");
 }
 
-/// Tests that HealthStatus::Degraded can be instantiated
+/// Tests that `HealthStatus::Degraded` can be instantiated
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: types
@@ -39,7 +39,7 @@ fn test_health_degraded() {
     assert_eq!(h, HealthStatus::Degraded, "Degraded status should match");
 }
 
-/// Tests that HealthStatus::Unhealthy can be instantiated
+/// Tests that `HealthStatus::Unhealthy` can be instantiated
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: types
@@ -53,7 +53,7 @@ fn test_health_unhealthy() {
     assert_eq!(h, HealthStatus::Unhealthy, "Unhealthy status should match");
 }
 
-/// Tests that different HealthStatus values are not equal
+/// Tests that different `HealthStatus` values are not equal
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: types
@@ -68,7 +68,7 @@ fn test_health_ne() {
     );
 }
 
-/// Tests that HealthStatus can be cloned/copied
+/// Tests that `HealthStatus` can be cloned/copied
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: types
@@ -89,7 +89,7 @@ fn test_health_clone() {
 // ComponentStatus Tests
 // ============================================================================
 
-/// Tests that ComponentStatus::Starting can be instantiated
+/// Tests that `ComponentStatus::Starting` can be instantiated
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: types
@@ -103,7 +103,7 @@ fn test_component_starting() {
     assert_eq!(c, ComponentStatus::Starting, "Starting status should match");
 }
 
-/// Tests that ComponentStatus::Running can be instantiated
+/// Tests that `ComponentStatus::Running` can be instantiated
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: types
@@ -117,7 +117,7 @@ fn test_component_running() {
     assert_eq!(c, ComponentStatus::Running, "Running status should match");
 }
 
-/// Tests that ComponentStatus::Stopping can be instantiated
+/// Tests that `ComponentStatus::Stopping` can be instantiated
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: types
@@ -131,7 +131,7 @@ fn test_component_stopping() {
     assert_eq!(c, ComponentStatus::Stopping, "Stopping status should match");
 }
 
-/// Tests that ComponentStatus::Active can be instantiated
+/// Tests that `ComponentStatus::Active` can be instantiated
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: types
@@ -145,7 +145,7 @@ fn test_component_active() {
     assert_eq!(c, ComponentStatus::Active, "Active status should match");
 }
 
-/// Tests that ComponentStatus::Inactive can be instantiated
+/// Tests that `ComponentStatus::Inactive` can be instantiated
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: types
@@ -159,7 +159,7 @@ fn test_component_inactive() {
     assert_eq!(c, ComponentStatus::Inactive, "Inactive status should match");
 }
 
-/// Tests that different ComponentStatus values are not equal
+/// Tests that different `ComponentStatus` values are not equal
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: types
@@ -174,7 +174,7 @@ fn test_component_ne() {
     );
 }
 
-/// Tests that ComponentStatus can be cloned
+/// Tests that `ComponentStatus` can be cloned
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: types

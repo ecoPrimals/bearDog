@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Secure Cross-Primal Messaging (Capability-Based)
 //!
 //! This module enables BearDog to securely communicate with ANY primal
@@ -198,7 +200,7 @@ impl SecureCrossPrimalMessenger {
         );
 
         // Encrypt payload with primal's public key (genetic crypto)
-        let ciphertext = self.encrypt_for_primal(plaintext, primal).await?;
+        let ciphertext = self.encrypt_for_primal(plaintext, primal)?;
 
         let message = SecurePrimalMessage {
             ciphertext,
@@ -435,7 +437,7 @@ impl SecureCrossPrimalMessenger {
     /// - Integrated with genetic key exchange engine
     /// - Uses evolving key lineages for encryption
     /// - Maintains zero-knowledge of peer internals
-    async fn encrypt_for_primal(
+    fn encrypt_for_primal(
         &self,
         plaintext: &[u8],
         primal: &UniversalServiceDescriptor,

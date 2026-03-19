@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Audit logger implementation for software HSM
 
 use super::super::types::{AuditLogEntry, AuditLogFilter, AuditLogger, OperationResult};

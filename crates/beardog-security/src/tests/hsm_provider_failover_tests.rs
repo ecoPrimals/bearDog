@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Provider Failover Tests
 //!
 //! Tests for HSM provider failover scenarios, cascading failures, and recovery.

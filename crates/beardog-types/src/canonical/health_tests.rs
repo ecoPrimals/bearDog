@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Health Status Tests
 //!
 //! Tests for health status types and health checking logic.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Core Monitoring Configuration Types
 //
 // This module provides the foundational configuration types that are shared

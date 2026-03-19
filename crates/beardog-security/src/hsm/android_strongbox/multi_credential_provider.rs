@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Android StrongBox Multi-Credential HSM Provider
 //!
 //! This module implements the `MultiCredentialHsmProvider` trait for Android StrongBox

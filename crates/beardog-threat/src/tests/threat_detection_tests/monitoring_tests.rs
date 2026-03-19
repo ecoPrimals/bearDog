@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Real-Time Monitoring and Classification Tests
 //!
 //! `TEST_CATEGORY`: unit

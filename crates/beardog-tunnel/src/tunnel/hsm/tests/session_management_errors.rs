@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Session Management Error Tests
 //!
 //! Tests error handling in key sessions and lifecycle management

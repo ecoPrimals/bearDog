@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # `BearDog` Core Library
 //!
 //! Core functionality for the `BearDog` ecosystem including AI-powered hybrid intelligence,

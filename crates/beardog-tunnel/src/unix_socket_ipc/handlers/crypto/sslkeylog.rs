@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! SSLKEYLOGFILE export utility for Wireshark TLS decryption
 //!
 //! This module provides functionality to export TLS 1.3 session keys in the

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tunnel edge cases and boundary conditions tests
 //!
 //! This module tests edge cases, boundary conditions, and unusual

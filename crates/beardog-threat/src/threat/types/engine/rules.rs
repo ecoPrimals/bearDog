@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Detection Rules - Modern Implementation
 //
 // **MODERNIZED**: Clean, production-ready detection rule types for the BearDog threat detection engine.

@@ -21,6 +21,9 @@ workspace = true
 [package.authors]
 workspace = true
 
+[lints]
+workspace = true
+
 [dependencies.beardog-errors]
 workspace = true
 

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Connection Error Path Tests
 //!
 //! Tests error handling in connection lifecycle and management

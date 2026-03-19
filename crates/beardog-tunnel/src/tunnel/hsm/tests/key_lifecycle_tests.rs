@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Key lifecycle integration tests for HSM operations
 //!
 //! Tests the complete lifecycle of cryptographic keys from generation

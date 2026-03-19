@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! FIDO2/CTAP2 HSM Provider
 //!
 //! Support for modern security keys using the FIDO2/CTAP2 protocol.
@@ -51,5 +53,6 @@ pub mod types;
 pub use constants::*;
 pub use discovery::*;
 pub use multi_credential_provider::*;
+pub use operations::Ctap2Command;
 pub use provider::Fido2HsmProvider;
 pub use types::*;

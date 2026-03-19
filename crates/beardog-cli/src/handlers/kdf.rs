@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Key Derivation Functions Module
 // Wraps beardog-security KDF implementations for CLI use
 

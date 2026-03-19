@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Connection Configuration Module
 //!
 //! This module contains connection management configurations including connection pooling,

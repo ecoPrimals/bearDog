@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Unified Discovery Configuration
 //!
 //! This module provides a single, comprehensive discovery configuration struct

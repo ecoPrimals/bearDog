@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -427,4 +429,114 @@ pub enum RecommendationPriority {
     High,
     /// Critical priority requiring immediate action
     Critical,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct MockLocalOptimizer;
+
+    impl LocalOptimizer for MockLocalOptimizer {
+        fn local_genetic_optimization(
+            &self,
+            request: OptimizationRequest,
+        ) -> Result<OptimizationResult, BearDogError> {
+            let _ = request;
+            Ok(OptimizationResult {
+                improvement_factor: 1.5,
+                metrics: PerformanceMetrics {
+                    throughput_ops_per_sec: 100.0,
+                    cpu_utilization: 50.0,
+                    memory_utilization: 60.0,
+                    network_utilization: 40.0,
+                    error_rate: 0.01,
+                },
+            })
+        }
+
+        fn local_performance_optimization(
+            &self,
+            request: OptimizationRequest,
+        ) -> Result<OptimizationResult, BearDogError> {
+            let _ = request;
+            Ok(OptimizationResult {
+                improvement_factor: 1.2,
+                metrics: PerformanceMetrics {
+                    throughput_ops_per_sec: 80.0,
+                    cpu_utilization: 45.0,
+                    memory_utilization: 55.0,
+                    network_utilization: 35.0,
+                    error_rate: 0.02,
+                },
+            })
+        }
+
+        fn local_crypto_optimization(
+            &self,
+            request: OptimizationRequest,
+        ) -> Result<OptimizationResult, BearDogError> {
+            let _ = request;
+            Ok(OptimizationResult {
+                improvement_factor: 1.1,
+                metrics: PerformanceMetrics {
+                    throughput_ops_per_sec: 50.0,
+                    cpu_utilization: 30.0,
+                    memory_utilization: 40.0,
+                    network_utilization: 20.0,
+                    error_rate: 0.0,
+                },
+            })
+        }
+    }
+
+    #[test]
+    fn test_ecosystem_optimization_service_request() {
+        let service: EcosystemOptimizationService<(), MockLocalOptimizer> =
+            EcosystemOptimizationService::new((), MockLocalOptimizer);
+        let request = OptimizationRequest::GeneticAlgorithm {
+            optimization_target: GeneticTarget {
+                max_generations: 100,
+                convergence_threshold: 0.001,
+            },
+            quality_requirements: GeneticQualityRequirements {
+                min_fitness: 0.8,
+                diversity_threshold: 0.2,
+            },
+        };
+        let result = service.request_optimization(request);
+        assert!(result.is_ok());
+        let response = result.unwrap();
+        assert!(response.success);
+        assert!((response.improvement_factor - 1.5).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_ecosystem_optimization_service_capabilities() {
+        let service: EcosystemOptimizationService<(), MockLocalOptimizer> =
+            EcosystemOptimizationService::new((), MockLocalOptimizer);
+        let caps = service.get_available_capabilities().unwrap();
+        assert!(caps.contains(&"Genetic".to_string()));
+        assert!(caps.contains(&"Performance".to_string()));
+        assert!(caps.contains(&"Cryptographic".to_string()));
+    }
+
+    #[test]
+    fn test_ecosystem_optimization_service_health() {
+        let service: EcosystemOptimizationService<(), MockLocalOptimizer> =
+            EcosystemOptimizationService::new((), MockLocalOptimizer);
+        let health = service.check_optimization_health().unwrap();
+        assert_eq!(health.get("status"), Some(&"healthy".to_string()));
+    }
+
+    #[test]
+    fn test_optimization_request_variants() {
+        let _ = WorkloadType::Computational;
+        let _ = WorkloadType::Network;
+        let _ = CryptoAlgorithmType::Aes256;
+        let _ = GameType::Fps;
+        let _ = MLModelType::NeuralNetwork;
+        let _ = EffortLevel::Low;
+        let _ = RecommendationPriority::Critical;
+    }
 }

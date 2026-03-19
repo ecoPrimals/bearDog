@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Unified HSM Provider
 //!
 //! This module provides a unified interface for accessing different HSM providers.

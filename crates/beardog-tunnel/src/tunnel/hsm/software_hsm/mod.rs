@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 use crate::tunnel::hsm::types::{KeyStorageType, KeyType, MemoryProtectionLevel};
 use beardog_errors::BearDogError;
 use beardog_types::hsm::DatabaseConfig;

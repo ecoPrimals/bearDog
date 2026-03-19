@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Core Network Types
 
 use serde::{Deserialize, Serialize};

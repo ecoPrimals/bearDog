@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Configuration Constants Domain
 //!
 //! Centralized constants for configuration values to eliminate string allocations

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Key derivation from lineage using HKDF
 
 use chrono::{Duration as ChronoDuration, Utc};

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Software HSM Provider
 //!
 //! Universal provider implementation for software-based HSM functionality.

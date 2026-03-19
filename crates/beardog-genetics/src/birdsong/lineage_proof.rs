@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Lineage proof generation and verification
 
 use chrono::Utc;

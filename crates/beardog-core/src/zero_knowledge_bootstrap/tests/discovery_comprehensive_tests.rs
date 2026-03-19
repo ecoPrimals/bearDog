@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Zero-Knowledge Discovery Comprehensive Tests
 //!
 //! Comprehensive testing of zero-knowledge bootstrap and discovery including:
@@ -120,7 +122,7 @@ fn test_self_metadata_building() {
 #[tokio::test]
 async fn test_ecosystem_listener_creation() {
     // Ecosystem listener should be created as part of zero-knowledge bootstrap
-    let result = ZeroKnowledgeBootstrap::new().await;
+    let result = ZeroKnowledgeBootstrap::new();
     assert!(result.is_ok(), "ZeroKnowledgeBootstrap creation failed: {:?}", result.err());
     
     let bootstrap = result.unwrap();
@@ -135,7 +137,7 @@ async fn test_passive_discovery_initialization() {
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     // Passive listening should initialize without requiring hardcoded knowledge
-    let bootstrap = ZeroKnowledgeBootstrap::new().await
+    let bootstrap = ZeroKnowledgeBootstrap::new()
         .expect("Failed to create bootstrap");
     
     // Bootstrap should start with empty ecosystem knowledge
@@ -154,7 +156,7 @@ async fn test_announcement_detection() {
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     // Should be able to detect and process primal announcements
-    let mut bootstrap = ZeroKnowledgeBootstrap::new().await
+    let mut bootstrap = ZeroKnowledgeBootstrap::new()
         .expect("Failed to create bootstrap");
     
     // Announce self to ecosystem
@@ -173,7 +175,7 @@ async fn test_primal_registration() {
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     // Should register discovered primals dynamically
-    let mut bootstrap = ZeroKnowledgeBootstrap::new().await
+    let mut bootstrap = ZeroKnowledgeBootstrap::new()
         .expect("Failed to create bootstrap");
     
     // Before announcement, no primals registered
@@ -198,7 +200,7 @@ async fn test_duplicate_primal_handling() {
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     // Should handle duplicate primal announcements gracefully
-    let mut bootstrap = ZeroKnowledgeBootstrap::new().await
+    let mut bootstrap = ZeroKnowledgeBootstrap::new()
         .expect("Failed to create bootstrap");
     
     // Announce self twice

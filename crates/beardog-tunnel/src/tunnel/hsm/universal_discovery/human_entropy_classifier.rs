@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Human Entropy Classifier
 //!
 //! This module classifies HSMs based on their human entropy capabilities
@@ -20,10 +22,8 @@ pub struct HumanEntropyClassifier {
 
 /// Entropy quality assessor
 pub struct EntropyQualityAssessor {
-    #[allow(dead_code)] // Future implementation
-    min_entropy_bits: f64,
-    #[allow(dead_code)] // Future implementation
-    scoring_algorithms: Vec<EntropyQualityAlgorithm>,
+    _min_entropy_bits: f64,
+    _scoring_algorithms: Vec<EntropyQualityAlgorithm>,
 }
 
 /// Human entropy method evaluator
@@ -310,8 +310,8 @@ impl EntropyQualityAssessor {
     /// Creates a new EntropyQualityAssessor
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
-            min_entropy_bits: 128.0,
-            scoring_algorithms: vec![
+            _min_entropy_bits: 128.0,
+            _scoring_algorithms: vec![
                 EntropyQualityAlgorithm::Shannon,
                 EntropyQualityAlgorithm::MinEntropy,
                 EntropyQualityAlgorithm::Behavioral,

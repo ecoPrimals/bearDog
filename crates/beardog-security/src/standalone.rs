@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Standalone Security Mode
 //!
 //! Conservative security policies when federation is unavailable.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Provider Registry Configuration
 
 use serde::{Deserialize, Serialize};

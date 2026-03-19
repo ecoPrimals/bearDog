@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Pure Rust HID Interface - ecoBin Compliant
 //!
 //! Provides universal HID (Human Interface Device) access without C dependencies.
@@ -141,8 +143,8 @@ pub async fn discover() -> Result<Vec<HidDeviceInfo>, beardog_errors::BearDogErr
 
     #[cfg(target_os = "android")]
     {
-        // TODO: Integrate with existing Android StrongBox code
-        // crates/beardog-tunnel/src/tunnel/hsm/android_strongbox/
+        // Planned: Integrate with crates/beardog-tunnel/src/tunnel/hsm/android_strongbox/ for
+        // Pure Rust JNI HID access on Android. Phase 2 work.
         compile_error!(
             "Android support: integrate with existing android_strongbox module (Pure Rust JNI)"
         );

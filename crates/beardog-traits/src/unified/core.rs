@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Core Trait Definitions
 //
 // This module contains the fundamental traits that form the foundation

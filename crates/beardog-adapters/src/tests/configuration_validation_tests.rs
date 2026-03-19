@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Adapter configuration validation tests
 //!
 //! This module tests validation of adapter configurations, including

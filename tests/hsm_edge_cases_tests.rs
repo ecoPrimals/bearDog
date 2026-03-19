@@ -1,8 +1,8 @@
 //! HSM Provider Edge Case Tests
 //!
-//! TEST_CATEGORY: integration
-//! TEST_DOMAIN: hsm/edge_cases
-//! TEST_PRIORITY: high
+//! `TEST_CATEGORY`: integration
+//! `TEST_DOMAIN`: `hsm/edge_cases`
+//! `TEST_PRIORITY`: high
 
 use std::time::Duration;
 
@@ -278,7 +278,6 @@ async fn test_hsm_performance_under_load() {
     // Real concurrent work should complete quickly (no artificial sleeps)
     assert!(
         elapsed < Duration::from_secs(2),
-        "100 operations should complete in <2s, took {:?}",
-        elapsed
+        "100 operations should complete in <2s, took {elapsed:?}"
     );
 }

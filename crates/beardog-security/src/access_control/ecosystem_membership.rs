@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // # Ecosystem Membership Access Control
 //
 // This module implements the evolved access control system based on ecosystem membership

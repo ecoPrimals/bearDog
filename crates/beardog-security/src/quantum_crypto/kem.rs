@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Kyber Key Encapsulation Mechanism (KEM)
 //!
 //! Implements ML-KEM (formerly Kyber) for quantum-resistant key exchange.

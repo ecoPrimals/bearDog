@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Mobile HSM Configuration
 //
 // Consolidates mobile HSM configurations for Android and iOS platforms.

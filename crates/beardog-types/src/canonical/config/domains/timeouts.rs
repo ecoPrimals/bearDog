@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Timeout Configuration Module  
 //!
 //! Centralized timeout configuration to eliminate hardcoded timeout values.

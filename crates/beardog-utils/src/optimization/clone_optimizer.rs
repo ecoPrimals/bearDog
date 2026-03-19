@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Clone optimization strategies for BearDog
 // Implements zero-copy and memory-efficient patterns
 

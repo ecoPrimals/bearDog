@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Self Identity Tests
 //!
 //! Tests for primal self-identity and discovery

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Dark Forest Challenge-Response Protocol
 //!
 //! Handles cryptographic challenge generation and verification for

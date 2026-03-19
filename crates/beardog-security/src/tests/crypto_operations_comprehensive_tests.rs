@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Cryptographic Operations Tests
 //!
 //! High-value security tests covering core cryptographic operations

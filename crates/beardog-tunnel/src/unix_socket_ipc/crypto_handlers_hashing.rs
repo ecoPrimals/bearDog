@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! SHA Hashing Handlers (Phase 6 - Critical Production Gaps)
 //!
 //! Provides standalone SHA-256, SHA-384, and SHA-512 hashing for universal compatibility.

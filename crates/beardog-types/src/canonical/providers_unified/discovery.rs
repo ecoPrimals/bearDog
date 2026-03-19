@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Discovery Configuration (DEPRECATED)
 //!
 //! This module is deprecated. Use the canonical discovery configuration instead:

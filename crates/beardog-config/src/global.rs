@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Global Configuration Singleton
 //!
 //! Provides thread-safe access to the global BearDog configuration.

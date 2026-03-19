@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # TLS Configuration Trait Implementations
 //!
 //! This module provides `TlsConfiguration` trait implementations for various

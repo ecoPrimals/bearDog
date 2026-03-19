@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # `BearDog` Universal Adapters
 //!
 //! Provides capability-based adapters for ecosystem integration, enabling

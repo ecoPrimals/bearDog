@@ -1,8 +1,8 @@
 //! Chaos Engineering Tests - Fault Injection
 //!
-//! TEST_CATEGORY: chaos
-//! TEST_DOMAIN: fault_injection
-//! TEST_PRIORITY: high
+//! `TEST_CATEGORY`: chaos
+//! `TEST_DOMAIN`: `fault_injection`
+//! `TEST_PRIORITY`: high
 
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -128,9 +128,7 @@ async fn test_chaos_delayed_responses() {
         // Should handle various delays
         assert!(
             elapsed >= *delay,
-            "Operation {} should take at least {:?}",
-            i,
-            delay
+            "Operation {i} should take at least {delay:?}"
         );
     }
 }
@@ -166,8 +164,8 @@ async fn test_chaos_data_corruption_detection() {
     let corrupted_data = [1u8, 2, 255, 4, 5]; // Byte 2 corrupted
 
     // Simple checksum
-    let valid_sum: u32 = valid_data.iter().map(|&x| x as u32).sum();
-    let corrupted_sum: u32 = corrupted_data.iter().map(|&x| x as u32).sum();
+    let valid_sum: u32 = valid_data.iter().map(|&x| u32::from(x)).sum();
+    let corrupted_sum: u32 = corrupted_data.iter().map(|&x| u32::from(x)).sum();
 
     assert_ne!(valid_sum, corrupted_sum, "Corruption should be detected");
 }

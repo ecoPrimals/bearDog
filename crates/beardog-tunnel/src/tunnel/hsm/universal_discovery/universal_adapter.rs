@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Universal HSM Adapter
 //!
 //! This module provides a universal adapter for HSM discovery and integration.

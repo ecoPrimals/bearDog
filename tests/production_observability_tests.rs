@@ -197,7 +197,7 @@ async fn test_concurrent_metrics_access() -> Result<(), BearDogError> {
         let metrics_clone = Arc::clone(&metrics);
         let handle = tokio::spawn(async move {
             let mut m = metrics_clone.write().await;
-            m.insert(format!("metric_{}", i), i as u64);
+            m.insert(format!("metric_{i}"), i as u64);
         });
         handles.push(handle);
     }
@@ -206,7 +206,7 @@ async fn test_concurrent_metrics_access() -> Result<(), BearDogError> {
     for handle in handles {
         handle
             .await
-            .map_err(|e| beardog_errors::BearDogError::internal(format!("Task failed: {}", e)))?;
+            .map_err(|e| beardog_errors::BearDogError::internal(format!("Task failed: {e}")))?;
     }
 
     // Verify all metrics were recorded
@@ -286,7 +286,7 @@ fn test_time_series_data_concept() {
     for i in 0..5 {
         time_series.push_back(DataPoint {
             timestamp: Instant::now(),
-            value: (i * 10) as f64,
+            value: f64::from(i * 10),
         });
     }
 

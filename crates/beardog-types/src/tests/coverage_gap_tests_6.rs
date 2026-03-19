@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Coverage gap tests Part 6: Config utils, providers, network, system, timeout, retry, cache
 
 // ===========================================================================

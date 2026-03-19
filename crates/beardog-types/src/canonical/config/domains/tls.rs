@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical TLS Configuration
 //!
 //! This module provides the unified, canonical TLS/SSL configuration

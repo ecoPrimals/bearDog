@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Registry edge cases and stress tests
 //!
 //! This module tests edge cases, capacity limits, and stress scenarios

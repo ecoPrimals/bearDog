@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Comprehensive Authentication Flow Tests - Day 3 Expansion
 // Tests authentication mechanisms, credential validation, and security flows
 

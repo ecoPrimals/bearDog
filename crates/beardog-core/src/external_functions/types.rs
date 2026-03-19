@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Type definitions for External Functions Interface
 
 use serde::{Deserialize, Serialize};

@@ -10,8 +10,8 @@
 //!
 //! ## **The Ultimate Proof**: Same Code, Different Planets
 //!
-//! This example demonstrates BearDog's vendor-agnostic HSM architecture at its finest:
-//! - **SoloKeys** (USB, FIDO2/CTAP2 protocol) 🔑
+//! This example demonstrates `BearDog`'s vendor-agnostic HSM architecture at its finest:
+//! - **`SoloKeys`** (USB, FIDO2/CTAP2 protocol) 🔑
 //! - **Pixel 8a** (Mobile, Android Keystore/StrongBox) 📱
 //!
 //! **The exact same application code works with both!**
@@ -73,19 +73,16 @@ use std::collections::HashMap;
 /// Generic function that works with ANY HSM provider
 ///
 /// This function is vendor-agnostic and works identically with:
-/// - SoloKeys (FIDO2)
-/// - Pixel 8a (Android StrongBox)
-/// - YubiKey (FIDO2 or PKCS#11)
+/// - `SoloKeys` (FIDO2)
+/// - Pixel 8a (Android `StrongBox`)
+/// - `YubiKey` (FIDO2 or PKCS#11)
 /// - TPM 2.0 (future)
 /// - Any other hardware!
 async fn demonstrate_multi_credential_operations<P: MultiCredentialHsmProvider>(
     provider: &P,
     device_name: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!(
-        "\n🔐 Testing Multi-Credential Operations on: {}",
-        device_name
-    );
+    println!("\n🔐 Testing Multi-Credential Operations on: {device_name}");
     println!("═══════════════════════════════════════════════════════");
 
     // Get device capabilities
@@ -107,7 +104,7 @@ async fn demonstrate_multi_credential_operations<P: MultiCredentialHsmProvider>(
     println!("   Creating ADMIN credential...");
     let admin_request = CredentialRequest {
         role: "admin".to_string(),
-        display_name: Some(format!("{} Administrator", device_name)),
+        display_name: Some(format!("{device_name} Administrator")),
         permissions: vec!["read".to_string(), "write".to_string(), "admin".to_string()],
         require_user_presence: true,
         require_user_verification: false,
@@ -128,7 +125,7 @@ async fn demonstrate_multi_credential_operations<P: MultiCredentialHsmProvider>(
             println!("   Creating OPERATOR credential (child of admin)...");
             let operator_request = CredentialRequest {
                 role: "operator".to_string(),
-                display_name: Some(format!("{} Operator", device_name)),
+                display_name: Some(format!("{device_name} Operator")),
                 permissions: vec!["read".to_string(), "write".to_string()],
                 require_user_presence: false,
                 require_user_verification: false,
@@ -168,11 +165,11 @@ async fn demonstrate_multi_credential_operations<P: MultiCredentialHsmProvider>(
                                 );
                                 println!("         Permissions: {:?}", cred.permissions);
                                 if let Some(parent) = &cred.parent_credential_id {
-                                    println!("         Parent: {}", parent);
+                                    println!("         Parent: {parent}");
                                 }
                             }
                         }
-                        Err(e) => println!("   ⚠️  Phase 2: {}", e),
+                        Err(e) => println!("   ⚠️  Phase 2: {e}"),
                     }
 
                     // Test hardware entropy
@@ -186,7 +183,7 @@ async fn demonstrate_multi_credential_operations<P: MultiCredentialHsmProvider>(
                                 );
                                 println!("      (This is TRUE random from hardware chip!)");
                             }
-                            Err(e) => println!("   ⚠️  Phase 2: {}", e),
+                            Err(e) => println!("   ⚠️  Phase 2: {e}"),
                         }
                     }
 
@@ -209,13 +206,13 @@ async fn demonstrate_multi_credential_operations<P: MultiCredentialHsmProvider>(
                                 print_tree(root, 0);
                             }
                         }
-                        Err(e) => println!("   ⚠️  {}", e),
+                        Err(e) => println!("   ⚠️  {e}"),
                     }
                 }
-                Err(e) => println!("      ⚠️  Phase 2: {}", e),
+                Err(e) => println!("      ⚠️  Phase 2: {e}"),
             }
         }
-        Err(e) => println!("      ⚠️  Phase 2: {}", e),
+        Err(e) => println!("      ⚠️  Phase 2: {e}"),
     }
 
     Ok(())
@@ -251,7 +248,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         if device.capabilities.resident_keys {
                             let device_name = format!("{} {}", device.manufacturer, device.product);
 
-                            println!("\n📱 Device: {}", device_name);
+                            println!("\n📱 Device: {device_name}");
                             println!("   Path: {}", device.device_path.display());
                             println!("   Protocol: {:?}", device.protocol_versions);
 
@@ -264,13 +261,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     )
                                     .await?;
                                 }
-                                Err(e) => println!("   ❌ Failed to create provider: {}", e),
+                                Err(e) => println!("   ❌ Failed to create provider: {e}"),
                             }
                         }
                     }
                 }
             }
-            Err(e) => println!("   ❌ Discovery failed: {}", e),
+            Err(e) => println!("   ❌ Discovery failed: {e}"),
         }
     }
 

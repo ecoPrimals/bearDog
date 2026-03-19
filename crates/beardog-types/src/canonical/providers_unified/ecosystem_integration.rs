@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Ecosystem Integration Module
 //!
 //! This module provides **ecosystem integration adapters** that enable seamless migration

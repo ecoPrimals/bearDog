@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Advanced Genetic Algorithms
 //!
 //! This module provides advanced genetic algorithm implementations for

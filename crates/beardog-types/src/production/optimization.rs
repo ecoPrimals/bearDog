@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Performance Optimization Engine
 //
 // This module provides advanced performance optimization capabilities

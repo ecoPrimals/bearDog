@@ -51,7 +51,7 @@ fn test_unified_config_defaults() {
 #[test]
 fn test_error_handling() {
     let error = BearDogError::configuration("Test configuration error");
-    let error_string = format!("{}", error);
+    let error_string = format!("{error}");
 
     assert!(error_string.contains("Test configuration error"));
 }
@@ -59,7 +59,7 @@ fn test_error_handling() {
 #[test]
 fn test_security_error_types() {
     let error = BearDogError::security("Test security issue".to_string());
-    assert!(format!("{:?}", error).contains("Test security issue"));
+    assert!(format!("{error:?}").contains("Test security issue"));
 }
 // TEST_CATEGORY: unit
 // TEST_DOMAIN: core
@@ -182,7 +182,7 @@ fn test_error_conversion_patterns() {
     let io_error = io::Error::other("Test IO error");
     let beardog_error: BearDogError = io_error.into();
 
-    assert!(format!("{:?}", beardog_error).contains("Test IO error"));
+    assert!(format!("{beardog_error:?}").contains("Test IO error"));
 }
 // TEST_CATEGORY: unit
 // TEST_DOMAIN: core
@@ -216,7 +216,7 @@ fn test_config_serialization() -> Result<(), BearDogError> {
 
     // Test that config can be serialized
     let json = serde_json::to_string(&config)
-        .map_err(|e| BearDogError::internal(format!("Serialization failed: {}", e)))?;
+        .map_err(|e| BearDogError::internal(format!("Serialization failed: {e}")))?;
 
     assert!(!json.is_empty());
 
@@ -225,7 +225,7 @@ fn test_config_serialization() -> Result<(), BearDogError> {
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
-        .map_err(|e| BearDogError::internal(format!("Deserialization failed: {}", e)))?;
+        .map_err(|e| BearDogError::internal(format!("Deserialization failed: {e}")))?;
 
     Ok(())
 }
@@ -245,7 +245,7 @@ fn test_multiple_error_types() {
     assert_eq!(errors.len(), 4);
 
     for error in errors {
-        let error_str = format!("{}", error);
+        let error_str = format!("{error}");
         assert!(!error_str.is_empty());
     }
 }

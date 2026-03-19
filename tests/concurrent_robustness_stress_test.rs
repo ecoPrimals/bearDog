@@ -3,9 +3,9 @@
 //! **Purpose**: Verify system behaves correctly under high concurrent load
 //! **Philosophy**: Test issues ARE production issues - no sleeps, fully concurrent
 //!
-//! TEST_CATEGORY: stress
-//! TEST_DOMAIN: concurrent_safety
-//! TEST_PRIORITY: critical
+//! `TEST_CATEGORY`: stress
+//! `TEST_DOMAIN`: `concurrent_safety`
+//! `TEST_PRIORITY`: critical
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
@@ -170,13 +170,11 @@ async fn test_semaphore_resource_limiting() {
     let max = max_observed.load(Ordering::Relaxed);
     assert!(
         max <= max_concurrent as u64,
-        "Max concurrent should not exceed limit: {} > {}",
-        max,
-        max_concurrent
+        "Max concurrent should not exceed limit: {max} > {max_concurrent}"
     );
 }
 
-/// Test Arc/Mutex under contention (compare with RwLock)
+/// Test Arc/Mutex under contention (compare with `RwLock`)
 #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
 async fn test_mutex_contention_scalability() {
     let counter = Arc::new(Mutex::new(0u64));

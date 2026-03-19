@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Metrics Types and Configurations
 //
 // This module provides metrics-related types and configurations for the BearDog ecosystem.

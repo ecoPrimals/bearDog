@@ -1,14 +1,14 @@
 //! Hardware-Agnostic HSM Test Infrastructure
 //!
 //! This module provides test infrastructure that works with ANY HSM hardware
-//! that BearDog discovers. The code remains 100% hardware-agnostic.
+//! that `BearDog` discovers. The code remains 100% hardware-agnostic.
 //!
 //! ## Supported Hardware (Auto-Detected)
-//! - SoftHSM2 (software)
-//! - Android StrongBox (Pixel 8a, etc.)
+//! - `SoftHSM2` (software)
+//! - Android `StrongBox` (Pixel 8a, etc.)
 //! - Solo 2 Security Keys (FIDO2/U2F)
 //! - TPM 2.0 (when available)
-//! - YubiKeys (when available)
+//! - `YubiKeys` (when available)
 //! - Cloud KMS (when configured)
 //!
 //! ## Usage
@@ -43,8 +43,7 @@ pub async fn discover_any_available_hsm() -> Result<String, BearDogError> {
         .output()
         .ok()
         .and_then(|output| String::from_utf8(output.stdout).ok())
-        .map(|features| features.contains("strongbox_keystore"))
-        .unwrap_or(false)
+        .is_some_and(|features| features.contains("strongbox_keystore"))
     {
         info!("✅ Found Android StrongBox via ADB");
         return Ok("AndroidStrongBox".to_string());
@@ -67,7 +66,7 @@ pub async fn discover_any_available_hsm() -> Result<String, BearDogError> {
 
 /// Run universal test suite on any HSM
 ///
-/// This test suite works with ANY HSM that BearDog discovers.
+/// This test suite works with ANY HSM that `BearDog` discovers.
 /// The tests adapt to the hardware's capabilities.
 pub async fn run_universal_hsm_test_suite(hsm_type: &str) -> Result<(), BearDogError> {
     info!("🧪 Running universal HSM test suite on {}", hsm_type);

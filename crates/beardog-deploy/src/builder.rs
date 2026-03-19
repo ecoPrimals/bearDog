@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Rust build system for Android deployment
 //
 // This module provides comprehensive Rust build capabilities for Android targets

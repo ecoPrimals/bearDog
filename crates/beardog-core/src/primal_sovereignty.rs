@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Primal Sovereignty Implementation
 //
 // This module implements the core sovereignty mechanisms that ensure

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Trust Mode Types for BTSP Unified
 //!
 //! This module defines trust verification modes for tunnel establishment:

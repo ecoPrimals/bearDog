@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Workflow Scheduling Configuration
 //!
 //! Configuration for workflow scheduling policies and execution timing.

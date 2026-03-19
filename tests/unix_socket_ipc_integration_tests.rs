@@ -1,6 +1,6 @@
 //! Integration tests for Unix Socket IPC
 //!
-//! These tests verify the complete IPC flow for BearDog's Unix socket server:
+//! These tests verify the complete IPC flow for `BearDog`'s Unix socket server:
 //! 1. Server startup and socket creation
 //! 2. Atomic readiness flag functionality
 //! 3. Client connection and JSON-RPC communication

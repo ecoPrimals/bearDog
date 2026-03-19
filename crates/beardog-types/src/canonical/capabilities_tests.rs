@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical Capabilities Tests
 //!
 //! Comprehensive testing of capability-based architecture including:

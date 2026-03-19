@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Utility functions for crypto handlers
 //!
 //! This module contains shared helper functions used across multiple

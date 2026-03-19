@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Discovery Configuration
 //!
 //! HSM-specific discovery configuration that extends the canonical base.

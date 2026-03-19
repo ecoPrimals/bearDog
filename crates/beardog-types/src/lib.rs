@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # 🏆 `BearDog` Types - Canonical Type System
 //!
 //! [![Rust](https://img.shields.io/badge/rust-1.75%2B-orange.svg)](https://www.rust-lang.org)
@@ -383,8 +385,7 @@
 #![warn(clippy::all)]
 #![warn(clippy::pedantic)]
 #![warn(clippy::cargo)]
-// Pedantic lints allowed during active development
-#![allow(clippy::struct_excessive_bools)]
+// ecoPrimals: beardog-types lint debt — tracked for Phase 2 cleanup
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::multiple_crate_versions)]
 #![allow(clippy::must_use_candidate)]
@@ -394,20 +395,16 @@
 #![allow(clippy::return_self_not_must_use)]
 #![allow(clippy::doc_markdown)] // Missing backticks in docs
 #![allow(clippy::uninlined_format_args)] // Direct variable usage in format!
-#![allow(clippy::field_reassign_with_default)] // Field assignment outside initializer
 #![allow(clippy::cast_possible_truncation)] // usize to u32/u64 casts
 #![allow(clippy::derivable_impls)] // Impl can be derived
 #![allow(clippy::float_cmp)] // Strict f32/f64 comparison
 #![allow(clippy::empty_docs)] // Empty doc comments
-#![allow(clippy::trivially_copy_pass_by_ref)] // Pass small types by value
 #![allow(clippy::match_same_arms)] // Identical match arms
 #![allow(clippy::redundant_closure)] // Redundant closures
 #![allow(clippy::doc_link_with_quotes)] // Doc list item indentation
 #![allow(clippy::bool_assert_comparison)] // assert_eq with bool literal
 #![allow(clippy::unused_self)] // Unused self argument
-#![allow(clippy::unnecessary_wraps)] // Unnecessary Result return
 #![allow(clippy::cast_lossless)] // Unnecessary same-type cast
-#![allow(clippy::unused_async)] // Async without await
 #![allow(clippy::ref_option)] // &Option<T> instead of Option<&T>
 #![allow(clippy::doc_lazy_continuation)] // Doc list item indentation
 

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Protocol-agnostic `CryptoService` trait
 //!
 //! This trait defines all cryptographic operations in a transport-neutral way.

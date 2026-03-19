@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Rate Limiting Test Types
 
 use std::collections::HashMap;

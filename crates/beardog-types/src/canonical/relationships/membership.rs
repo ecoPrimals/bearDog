@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Ecosystem Membership - Spectrum-based Access Control
 //
 // This module implements the EcosystemMembership pattern from the parent reference,

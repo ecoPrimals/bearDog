@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Capability-Based Routing Module
 //!
 //! **Core Principle**: "Route requests by capability, not by hardcoded service names"
@@ -143,7 +145,6 @@ pub struct CapabilityRouter {
     rr_counters: HashMap<SimpleCapability, usize>,
 
     /// Default selection strategy
-    #[allow(dead_code)] // Reserved for future load balancing strategies
     default_strategy: SelectionStrategy,
 }
 
@@ -296,7 +297,11 @@ impl CapabilityRouter {
                 self.load_tracker
                     .get(&p.name)
                     .and_then(|load| load.avg_latency_ms)
-                    .map_or(true, |latency| latency <= max_latency as f64) // Keep if no latency data
+                    .map_or(true, |latency| {
+                        // Truncate f64 latency to u64 for integer comparison
+                        // Safe: latency values are practical millisecond ranges
+                        (latency.round() as u64) <= max_latency
+                    })
             });
         }
 
@@ -393,8 +398,9 @@ impl CapabilityRouter {
                 use std::hash::BuildHasher;
 
                 let s = RandomState::new();
-
-                let idx = (s.hash_one(&Instant::now()) as usize) % primals.len();
+                let hash = s.hash_one(&Instant::now());
+                // Truncation is fine: we only need a uniform index into a small slice
+                let idx = usize::try_from(hash % primals.len() as u64).unwrap_or(0);
                 (idx, "random selection".to_string())
             }
 
@@ -525,5 +531,87 @@ mod tests {
         let load = router.load_tracker.get("test-primal").unwrap();
         assert_eq!(load.total_requests, 2);
         assert!(load.avg_latency_ms.is_some());
+    }
+
+    #[test]
+    fn test_selection_strategy_round_robin() {
+        use crate::primal_discovery::DiscoveredPrimal;
+        use std::time::SystemTime;
+
+        let mut primals = vec![
+            DiscoveredPrimal {
+                name: "first".to_string(),
+                endpoints: vec![],
+                capabilities: vec![],
+                trust_score: Some(0.9),
+                discovered_at: SystemTime::now(),
+            },
+            DiscoveredPrimal {
+                name: "second".to_string(),
+                endpoints: vec![],
+                capabilities: vec![],
+                trust_score: Some(0.9),
+                discovered_at: SystemTime::now(),
+            },
+        ];
+
+        let mut router = CapabilityRouter {
+            discovery: PrimalDiscovery::from_env().unwrap(),
+            load_tracker: HashMap::new(),
+            rr_counters: HashMap::new(),
+            default_strategy: SelectionStrategy::HighestTrust,
+        };
+        let context = RequestContext::new(SimpleCapability::Cryptography)
+            .with_strategy(SelectionStrategy::RoundRobin);
+        let (selected1, _) = router.select_primal(&mut primals, &context).unwrap();
+        let (selected2, _) = router.select_primal(&mut primals, &context).unwrap();
+        assert_eq!(selected1.name, "first");
+        assert_eq!(selected2.name, "second");
+    }
+
+    #[test]
+    fn test_selection_strategy_first_available() {
+        use crate::primal_discovery::DiscoveredPrimal;
+        use std::time::SystemTime;
+
+        let mut primals = vec![
+            DiscoveredPrimal {
+                name: "first".to_string(),
+                endpoints: vec![],
+                capabilities: vec![],
+                trust_score: Some(0.5),
+                discovered_at: SystemTime::now(),
+            },
+            DiscoveredPrimal {
+                name: "second".to_string(),
+                endpoints: vec![],
+                capabilities: vec![],
+                trust_score: Some(0.9),
+                discovered_at: SystemTime::now(),
+            },
+        ];
+
+        let mut router = CapabilityRouter {
+            discovery: PrimalDiscovery::from_env().unwrap(),
+            load_tracker: HashMap::new(),
+            rr_counters: HashMap::new(),
+            default_strategy: SelectionStrategy::HighestTrust,
+        };
+        let context = RequestContext::new(SimpleCapability::Cryptography)
+            .with_strategy(SelectionStrategy::FirstAvailable);
+        let (selected, _) = router.select_primal(&mut primals, &context).unwrap();
+        assert_eq!(selected.name, "first");
+    }
+
+    #[test]
+    fn test_record_failure() {
+        let mut router = CapabilityRouter {
+            discovery: PrimalDiscovery::from_env().unwrap(),
+            load_tracker: HashMap::new(),
+            rr_counters: HashMap::new(),
+            default_strategy: SelectionStrategy::HighestTrust,
+        };
+        router.record_failure("failed-primal");
+        // No panic - failure recorded
     }
 }

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! TPM (Trusted Platform Module) HSM provider implementation
 //!
 //! **OPEN STANDARD**: TCG (Trusted Computing Group) TPM 2.0 specification

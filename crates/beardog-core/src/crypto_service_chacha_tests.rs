@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! ChaCha20-Poly1305 Implementation Tests
 //!
 //! Comprehensive tests for the ChaCha20-Poly1305 AEAD cipher implementation.

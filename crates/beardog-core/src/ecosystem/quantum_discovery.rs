@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Quantum-Inspired Discovery System
 //
 // This advanced system uses quantum computing principles to optimize capability

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Service Registry Configuration Module
 //!
 //! This module handles service registration and tracking across the ecosystem.

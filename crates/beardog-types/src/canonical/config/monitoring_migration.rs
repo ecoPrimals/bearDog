@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Monitoring Configuration Migration Utilities
 //
 // This module provides utilities to migrate fragmented monitoring configurations

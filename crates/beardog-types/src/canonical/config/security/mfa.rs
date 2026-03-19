@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Multi-Factor Authentication Configuration
 //
 // Canonical MFA configuration for TOTP, SMS, and other authentication factors.

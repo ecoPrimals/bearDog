@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Performance Benchmark Tests
 //!
 //! Extended test coverage for performance benchmarks including:

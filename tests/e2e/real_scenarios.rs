@@ -8,16 +8,16 @@
 // Real E2E Scenarios - Using Actual BearDog Components
 // Created November 1, 2025 - Corrected Implementation
 
-//! Real End-to-End test scenarios using actual BearDog Core components
+//! Real End-to-End test scenarios using actual `BearDog` Core components
 //!
 //! These tests validate complete production workflows using real:
-//! - BearDog Core initialization and state management
+//! - `BearDog` Core initialization and state management
 //! - Configuration loading and validation
 //! - Health monitoring and state transitions
 //! - Component registration and management
 //! - Concurrent access patterns
 //!
-//! Unlike simulated E2E tests, these use actual BearDog components
+//! Unlike simulated E2E tests, these use actual `BearDog` components
 //! to validate real-world behavior and integration.
 
 use super::helpers::*;
@@ -34,7 +34,7 @@ use tracing::info;
 // TEST_CATEGORY: e2e
 // TEST_DOMAIN: core
 // TEST_PRIORITY: critical
-/// Test real BearDog Core initialization, operation, and shutdown lifecycle
+/// Test real `BearDog` Core initialization, operation, and shutdown lifecycle
 pub async fn run_real_core_lifecycle_test(
     _config: &E2ETestConfig,
 ) -> Result<E2EMetrics, BearDogError> {
@@ -298,7 +298,7 @@ pub async fn run_real_concurrency_test(
     for handle in handles {
         handle
             .await
-            .map_err(|e| BearDogError::internal(format!("Task join error: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Task join error: {e}")))?;
     }
 
     metrics.total_requests += 40; // 3 readers x 10 + 2 writers x 5
@@ -360,7 +360,7 @@ pub async fn run_real_component_management_test(
         {
             let mut state = core.state.write().await;
             state.components.insert(
-                component_name.to_string(),
+                (*component_name).to_string(),
                 beardog_types::canonical::ComponentStatus::Running,
             );
         }

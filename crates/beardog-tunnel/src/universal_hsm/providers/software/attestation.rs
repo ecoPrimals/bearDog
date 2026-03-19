@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Software HSM attestation functionality
 //!
 //! Provides software-based attestation for HSM implementations.

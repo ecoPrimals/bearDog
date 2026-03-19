@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Constraint System - Universal, extensible constraint evaluation
 //
 // Philosophy: Users define their own rules. We provide the framework, not the limits.

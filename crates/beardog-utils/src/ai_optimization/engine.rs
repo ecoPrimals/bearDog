@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! AI-powered performance optimization engine
 //!
 //! This module provides an intelligent optimization engine that uses machine learning
@@ -61,8 +63,7 @@ pub struct AIOptimizationEngine {
     /// Whether the engine should learn from results and adapt
     is_learning_enabled: bool,
     /// Neural network for advanced pattern recognition (future use)
-    #[allow(dead_code)] // Future AI functionality - neural network integration planned
-    neural_network: Arc<Mutex<SimpleNeuralNetwork>>,
+    _neural_network: Arc<Mutex<SimpleNeuralNetwork>>,
 }
 
 impl AIOptimizationEngine {
@@ -100,7 +101,7 @@ impl AIOptimizationEngine {
             optimization_history,
             optimization_interval,
             is_learning_enabled: true,
-            neural_network,
+            _neural_network: neural_network,
         })
     }
 

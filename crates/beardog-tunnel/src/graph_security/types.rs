@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Common types for graph security operations
 //!
 //! This module defines the core data structures used across all graph security APIs.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! BearDog - Privacy-Preserving Biometric Security
 //!
 //! The main entry point for the BearDog ecosystem, providing a unified interface

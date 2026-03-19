@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Certificate issuance for adapter unlocking
 //!
 //! This module implements the core certificate issuance logic that determines

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Canonical Relationship System - Ecosystem Evolution Patterns
 //
 // This module implements the horizontal gene transfer patterns from the parent

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Comprehensive HSM Edge Cases Tests - Day 2 Expansion
 // Tests Hardware Security Module edge cases, error paths, and resilience
 

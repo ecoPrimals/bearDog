@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Hybrid Intelligence System Orchestration
 //!
 //! This module handles the main system orchestration and coordination for the

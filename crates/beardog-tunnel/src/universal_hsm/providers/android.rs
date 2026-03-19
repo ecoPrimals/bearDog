@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Android HSM Provider with StrongBox Support
 // CRITICAL: NO SIMULATED ENTROPY ALLOWED FOR HUMAN KEYS
 

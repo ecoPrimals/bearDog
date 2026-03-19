@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // HSM key management types and structures
 // Provides definitions for HSM keys, metadata, and lifecycle management
 

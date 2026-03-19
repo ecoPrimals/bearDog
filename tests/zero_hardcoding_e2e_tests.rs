@@ -1,6 +1,6 @@
 //! E2E Integration Test for Zero-Hardcoding
 //!
-//! Validates that BearDog works with ANY registry implementation
+//! Validates that `BearDog` works with ANY registry implementation
 
 use beardog_core::capabilities::BearDogCapabilities;
 use beardog_ipc::{JsonRpcRequest, PrimalRegistryClient};
@@ -122,7 +122,7 @@ fn test_e2e_environment_driven_discovery() {
 
     for (family, socket_path) in scenarios {
         let capabilities =
-            BearDogCapabilities::new(Some(family.to_string()), format!("beardog_{}", family));
+            BearDogCapabilities::new(Some(family.to_string()), format!("beardog_{family}"));
 
         let _client = PrimalRegistryClient::new(PathBuf::from(socket_path));
 
@@ -144,7 +144,7 @@ fn test_e2e_multi_vendor_compatibility() {
     ];
 
     for vendor in vendors {
-        let socket_path = format!("/tmp/{}-nat0.sock", vendor);
+        let socket_path = format!("/tmp/{vendor}-nat0.sock");
         let _client = PrimalRegistryClient::new(PathBuf::from(&socket_path));
 
         // Same client code works with all vendors

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Core Types for Advanced Metrics System
 
 // Removed unused import: use beardog_errors::BearDogError;

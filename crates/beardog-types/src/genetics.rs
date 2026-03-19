@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Genetics Types and Configurations
 //
 // This module provides genetics-related types and configurations for the BearDog ecosystem.

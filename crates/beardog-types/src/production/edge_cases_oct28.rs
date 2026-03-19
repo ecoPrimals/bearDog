@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Production Edge Case Tests - October 28, 2025
 //!
 //! Comprehensive edge case tests to boost coverage from 33.77% to 40%+

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Enhanced Unified Error System - Modular Architecture
 //!
 //! This module provides the **ultimate unified error system** split into

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Training Configuration
 //!
 //! This module contains configuration types for ML model training,

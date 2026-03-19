@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Types for ecosystem membership access control
 //
 // This module contains all the data structures and enums used by the

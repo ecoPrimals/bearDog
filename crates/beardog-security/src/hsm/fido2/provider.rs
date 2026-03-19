@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! FIDO2 HSM Provider Implementation
 //!
 //! # Pure Rust Implementation
@@ -157,8 +159,8 @@ impl Fido2HsmProvider {
         {
             self.ensure_device_open().await?;
 
-            // TODO: Implement CTAP2 hmac-secret entropy generation
-            // Universal CTAP2 hmac-secret protocol works with any compliant device
+            // Phase 2: Implement CTAP2 hmac-secret entropy generation. Universal CTAP2
+            // hmac-secret protocol works with any compliant device.
             Err(BearDogError::not_implemented(
                 "FIDO2 entropy generation: hmac-secret extension ready, CTAP2 protocol pending (Phase 2)"
             ))
@@ -198,8 +200,7 @@ impl Fido2HsmProvider {
         {
             self.ensure_device_open().await?;
 
-            // TODO: Implement CTAP2 makeCredential command
-            // Works with any CTAP2-compliant device
+            // Phase 2: Implement CTAP2 makeCredential command. Works with any CTAP2-compliant device.
             Err(BearDogError::not_implemented(
                 "FIDO2 key generation: Universal CTAP2 makeCredential pending (Phase 2)",
             ))
@@ -229,7 +230,7 @@ impl Fido2HsmProvider {
         {
             self.ensure_device_open().await?;
 
-            // TODO: Implement CTAP2 getAssertion command
+            // Phase 2: Implement CTAP2 getAssertion command for signing.
             Err(BearDogError::not_implemented(
                 "FIDO2 signing: Universal CTAP2 getAssertion pending (Phase 2)",
             ))
@@ -256,7 +257,7 @@ impl Fido2HsmProvider {
         {
             self.ensure_device_open().await?;
 
-            // TODO: Implement CTAP2 getAssertion for presence
+            // Phase 2: Implement CTAP2 getAssertion for user presence proof.
             Err(BearDogError::not_implemented(
                 "FIDO2 presence: Universal CTAP2 pending (Phase 2)",
             ))

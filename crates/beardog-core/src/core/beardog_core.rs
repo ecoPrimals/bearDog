@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Main BearDog Core System
 //!
 //! This module provides the central BearDogCore struct that coordinates all

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive tests for `GeneticsManager`
 //!
 //! Tests all core functionality of the genetics system including:

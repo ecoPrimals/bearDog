@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Integration Engine Coverage Tests
 // December 7, 2025 - Test Coverage Expansion Phase 3
 //

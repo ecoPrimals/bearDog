@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // **SECURITY PROVIDER TRAITS**
 //
 // Security-focused provider traits including HSM, authentication, and encryption capabilities.

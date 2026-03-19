@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Algorithm Abstractions
 //!
 //! Vendor-agnostic algorithm definitions that can be implemented by any crypto library.

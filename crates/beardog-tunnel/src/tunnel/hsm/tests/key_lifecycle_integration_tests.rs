@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Key Lifecycle Integration Tests
 //!
 //! Substantive tests that exercise real production paths:

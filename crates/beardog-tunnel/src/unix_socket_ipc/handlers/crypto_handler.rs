@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Crypto RPC Handler
 //!
 //! Handles all cryptographic operations exposed via JSON-RPC.

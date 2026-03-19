@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Genesis witness verification
 //!
 //! Verifies witness signatures using Ed25519 cryptography and validates

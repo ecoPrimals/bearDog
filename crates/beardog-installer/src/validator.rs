@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Binary validator - Health checks and validation
 //!
 //! Validates installed genomeBin binaries:
@@ -13,7 +15,7 @@
 //! - Comprehensive validation
 //! - Clear error reporting
 
-use crate::types::Primal;
+use crate::types::PrimalName;
 use sha2::{Digest, Sha256};
 use std::path::Path;
 use std::process::Command;
@@ -28,7 +30,7 @@ use tracing::{debug, info};
 #[derive(Debug, Clone)]
 pub struct ValidationReport {
     /// Primal being validated
-    pub primal: Primal,
+    pub primal: PrimalName,
     /// Binary exists
     pub file_exists: bool,
     /// Binary is executable
@@ -47,7 +49,7 @@ pub struct ValidationReport {
 
 impl ValidationReport {
     /// Create new validation report
-    pub fn new(primal: Primal) -> Self {
+    pub fn new(primal: PrimalName) -> Self {
         Self {
             primal,
             file_exists: false,
@@ -124,7 +126,7 @@ impl BinaryValidator {
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let validator = BinaryValidator::new();
     /// let binary_path = std::path::Path::new("/usr/local/bin/beardog");
-    /// let report = validator.validate_binary(Primal::BearDog, binary_path).await?;
+    /// let report = validator.validate_binary(PrimalName::new(PrimalName::BEARDOG), binary_path).await?;
     ///
     /// if report.is_healthy() {
     ///     println!("Binary is healthy!");
@@ -134,10 +136,10 @@ impl BinaryValidator {
     /// ```
     pub async fn validate_binary(
         &self,
-        primal: Primal,
+        primal: PrimalName,
         path: &Path,
     ) -> Result<ValidationReport, ValidationError> {
-        let mut report = ValidationReport::new(primal);
+        let mut report = ValidationReport::new(primal.clone());
 
         // 1. Check file exists
         report.file_exists = path.exists();
@@ -236,15 +238,15 @@ impl BinaryValidator {
     /// Validate multiple binaries
     pub async fn validate_all(
         &self,
-        binaries: Vec<(Primal, std::path::PathBuf)>,
+        binaries: Vec<(PrimalName, std::path::PathBuf)>,
     ) -> Vec<ValidationReport> {
         let mut reports = Vec::new();
 
         for (primal, path) in binaries {
-            match self.validate_binary(primal, &path).await {
+            match self.validate_binary(primal.clone(), &path).await {
                 Ok(report) => reports.push(report),
                 Err(e) => {
-                    let mut report = ValidationReport::new(primal);
+                    let mut report = ValidationReport::new(primal.clone());
                     report.healthy = false;
                     debug!("Validation failed for {}: {}", primal.display_name(), e);
                     reports.push(report);
@@ -299,7 +301,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_validation_report_display() {
-        let mut report = ValidationReport::new(Primal::BearDog);
+        let mut report = ValidationReport::new(PrimalName::new(PrimalName::BEARDOG));
         report.file_exists = true;
         report.is_executable = true;
         report.size_bytes = 5_000_000;
@@ -318,7 +320,7 @@ mod tests {
         let path = Path::new("/nonexistent/binary");
 
         let report = validator
-            .validate_binary(Primal::BearDog, path)
+            .validate_binary(PrimalName::new(PrimalName::BEARDOG), path)
             .await
             .unwrap();
 
@@ -346,7 +348,7 @@ mod tests {
 
         let validator = BinaryValidator::new();
         let report = validator
-            .validate_binary(Primal::BearDog, &binary_path)
+            .validate_binary(PrimalName::new(PrimalName::BEARDOG), &binary_path)
             .await
             .unwrap();
 
@@ -376,8 +378,14 @@ mod tests {
 
         // Create multiple fake binaries
         let binaries = vec![
-            (Primal::BearDog, temp.path().join("beardog")),
-            (Primal::Songbird, temp.path().join("songbird")),
+            (
+                PrimalName::new(PrimalName::BEARDOG),
+                temp.path().join("beardog"),
+            ),
+            (
+                PrimalName::new(PrimalName::SONGBIRD),
+                temp.path().join("songbird"),
+            ),
         ];
 
         for (_, path) in &binaries {
@@ -401,7 +409,7 @@ mod tests {
 
     #[test]
     fn test_validation_report_is_healthy() {
-        let mut report = ValidationReport::new(Primal::BearDog);
+        let mut report = ValidationReport::new(PrimalName::new(PrimalName::BEARDOG));
         assert!(!report.is_healthy());
 
         report.file_exists = true;

@@ -1,12 +1,12 @@
 //! Simple core integration tests
 //!
-//! These tests validate basic functionality of core BearDog types and errors.
+//! These tests validate basic functionality of core `BearDog` types and errors.
 
 use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::ServiceCapabilityType;
 use beardog_types::canonical::config::WorkingUnifiedConfig;
 
-/// Tests that BearDogError::configuration creates errors with correct messages
+/// Tests that `BearDogError::configuration` creates errors with correct messages
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -20,7 +20,7 @@ fn test_basic_error_types() {
     assert!(format!("{error:?}").contains("Test rejection"));
 }
 
-/// Tests that ServiceCapabilityType variants can be instantiated and matched
+/// Tests that `ServiceCapabilityType` variants can be instantiated and matched
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -34,7 +34,7 @@ fn test_trust_levels() {
     assert!(matches!(capability, ServiceCapabilityType::Compute));
 }
 
-/// Tests that WorkingUnifiedConfig can be created with defaults
+/// Tests that `WorkingUnifiedConfig` can be created with defaults
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -49,7 +49,7 @@ fn test_configuration_defaults() {
     assert!(config.version.is_empty() || !config.version.is_empty());
 }
 
-/// Tests that BearDogError::internal creates errors that display correctly
+/// Tests that `BearDogError::internal` creates errors that display correctly
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: core
@@ -60,7 +60,7 @@ fn test_error_conversion() {
     let error = BearDogError::internal("Internal test error".to_string());
 
     // When: formatting the error as a string
-    let error_string = format!("{}", error);
+    let error_string = format!("{error}");
 
     // Then: the string contains the error message
     assert!(error_string.contains("Internal test error"));

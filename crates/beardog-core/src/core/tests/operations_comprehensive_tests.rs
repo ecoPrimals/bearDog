@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Operations Tests for Core System Operations
 //!
 //! Tests for core system operations, lifecycle management, and operational state transitions.

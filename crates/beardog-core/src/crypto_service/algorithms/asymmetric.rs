@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Asymmetric cryptography algorithms
 //!
 //! Provides implementations of public-key cryptography including:

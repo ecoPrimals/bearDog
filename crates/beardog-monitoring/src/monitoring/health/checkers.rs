@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Health Checker Implementations
 //!
 //! Concrete implementations of health checkers for different system components.

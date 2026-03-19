@@ -9,7 +9,7 @@
 //! # Zero-Hardcoding Migration Example
 //!
 //! This example demonstrates how to migrate from hardcoded values to the
-//! BearDog configuration system, eliminating all hardcoding from the codebase.
+//! `BearDog` configuration system, eliminating all hardcoding from the codebase.
 //!
 //! ## Problem: Hardcoded Values
 //!
@@ -21,7 +21,7 @@
 //!
 //! ## Solution: Configuration System
 //!
-//! BearDog provides a zero-hardcoding configuration system with:
+//! `BearDog` provides a zero-hardcoding configuration system with:
 //! - Environment variable support
 //! - Configuration file support (TOML/JSON/YAML)
 //! - Builder pattern for programmatic configuration
@@ -56,16 +56,13 @@ mod bad_hardcoded {
     pub const CONFIG_PATH: &str = "/etc/beardog/config.toml";
 
     pub fn start_api_server() {
-        println!("❌ BAD: Starting API server on hardcoded port {}", API_PORT);
-        println!("❌ BAD: Request timeout: {:?}", REQUEST_TIMEOUT);
-        println!("❌ BAD: Max connections: {}", MAX_CONNECTIONS);
+        println!("❌ BAD: Starting API server on hardcoded port {API_PORT}");
+        println!("❌ BAD: Request timeout: {REQUEST_TIMEOUT:?}");
+        println!("❌ BAD: Max connections: {MAX_CONNECTIONS}");
     }
 
     pub fn load_config() {
-        println!(
-            "❌ BAD: Loading config from hardcoded path: {}",
-            CONFIG_PATH
-        );
+        println!("❌ BAD: Loading config from hardcoded path: {CONFIG_PATH}");
     }
 }
 
@@ -81,18 +78,15 @@ mod good_configuration {
         let port = BEARDOG_CONFIG.network.api.port;
         let max_conn = BEARDOG_CONFIG.network.api.max_connections;
 
-        println!("✅ GOOD: Starting API server on configured port {}", port);
-        println!("✅ GOOD: Max connections from config: {}", max_conn);
+        println!("✅ GOOD: Starting API server on configured port {port}");
+        println!("✅ GOOD: Max connections from config: {max_conn}");
         println!("💡 TIP: Set BEARDOG_API_PORT=9000 to change port without code changes");
     }
 
     pub fn make_http_request() {
         // ✅ GOOD: Use configured timeout
         let timeout_secs = BEARDOG_CONFIG.limits.operation_timeout_secs;
-        println!(
-            "✅ GOOD: Operation timeout from config: {} seconds",
-            timeout_secs
-        );
+        println!("✅ GOOD: Operation timeout from config: {timeout_secs} seconds");
         println!("💡 TIP: Set BEARDOG_OPERATION_TIMEOUT_SECS=60 to adjust timeout");
     }
 
@@ -119,9 +113,9 @@ mod good_convenience {
         let discovery_port = global::discovery_port();
         let admin_port = global::admin_port();
 
-        println!("✅ API port: {}", api_port);
-        println!("✅ Discovery port: {}", discovery_port);
-        println!("✅ Admin port: {}", admin_port);
+        println!("✅ API port: {api_port}");
+        println!("✅ Discovery port: {discovery_port}");
+        println!("✅ Admin port: {admin_port}");
     }
 
     pub fn full_config_access() {

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical Types Tests - Working tests for actual types
 
 use crate::canonical::capabilities::CapabilityType;

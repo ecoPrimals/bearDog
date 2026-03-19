@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Performance & Safety Comprehensive Tests
 //
 // Comprehensive test suite for performance optimization and ultimate safety modules.

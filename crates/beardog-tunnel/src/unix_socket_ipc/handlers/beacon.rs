@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Dark Forest Beacon RPC Handlers
 //!
 //! Implements beacon.* JSON-RPC methods for Dark Forest discovery.

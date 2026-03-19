@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Anomaly Detection and Pattern Matching Tests
 //!
 //! `TEST_CATEGORY`: unit

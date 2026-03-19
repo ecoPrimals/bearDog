@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Comprehensive Crypto Edge Cases Tests - Day 2 Expansion
 // Tests advanced cryptographic edge cases and boundary conditions
 

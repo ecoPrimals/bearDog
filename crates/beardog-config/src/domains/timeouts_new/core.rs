@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core Timeout Configuration Types
 //!
 //! Defines the main `TimeoutConfig` struct and its primary methods.

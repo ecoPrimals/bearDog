@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Storage Domain Constants
 //!
 //! Canonical storage-related constants for the BearDog ecosystem.

@@ -52,7 +52,7 @@ async fn test_hsm_provider_concurrent_operations() -> Result<(), BearDogError> {
 
     for op in operations {
         op.await.map_err(|e| BearDogError::System {
-            message: format!("Task join error: {}", e),
+            message: format!("Task join error: {e}"),
             category: beardog_errors::SystemErrorCategory::Resource,
         })??;
     }
@@ -153,7 +153,7 @@ async fn test_multi_provider_coordination_load_balancing() -> Result<(), BearDog
 
     // Verify all providers would be healthy
     for idx in 0..provider_count {
-        assert!(true, "Provider {} is healthy", idx);
+        assert!(true, "Provider {idx} is healthy");
     }
 
     Ok(())

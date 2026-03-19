@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Canonical constants - Single source of truth
 // **MODERNIZED**: All constants consolidated using domain-organized system
 

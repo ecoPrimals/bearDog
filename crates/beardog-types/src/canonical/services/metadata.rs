@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Service Metadata Definitions
 //!
 //! This module provides metadata types for services, consolidating metadata

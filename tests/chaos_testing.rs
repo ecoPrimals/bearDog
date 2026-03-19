@@ -1,4 +1,4 @@
-//! Chaos Engineering Test Framework for BearDog
+//! Chaos Engineering Test Framework for `BearDog`
 //!
 //! Implements chaos testing scenarios to validate system resilience
 //! under adverse conditions including network failures, resource exhaustion,
@@ -98,6 +98,7 @@ pub struct NetworkPartitionScenario {
 }
 
 impl NetworkPartitionScenario {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             partitioned: false,
@@ -113,7 +114,7 @@ impl Default for NetworkPartitionScenario {
 }
 
 impl ChaosScenario for NetworkPartitionScenario {
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "Network Partition"
     }
 
@@ -147,6 +148,7 @@ pub struct ResourceExhaustionScenario {
 }
 
 impl ResourceExhaustionScenario {
+    #[must_use]
     pub fn new(resource_type: ChaosType) -> Self {
         Self {
             resource_type,
@@ -193,6 +195,7 @@ pub struct ChaosTestRunner {
 }
 
 impl ChaosTestRunner {
+    #[must_use]
     pub fn new(config: ChaosTestConfig) -> Self {
         Self {
             scenarios: Vec::new(),
@@ -262,20 +265,20 @@ impl ChaosTestRunner {
             println!("{} {} ({:?})", status, result.name, result.chaos_type);
 
             if let Some(recovery) = result.recovery_time {
-                println!("   Recovery: {:?}", recovery);
+                println!("   Recovery: {recovery:?}");
             }
 
             if !result.errors.is_empty() {
                 println!("   Errors:");
                 for error in &result.errors {
-                    println!("      {}", error);
+                    println!("      {error}");
                 }
             }
 
             if !result.metrics.is_empty() {
                 println!("   Metrics:");
                 for (name, value) in &result.metrics {
-                    println!("      {}: {}", name, value);
+                    println!("      {name}: {value}");
                 }
             }
             println!();

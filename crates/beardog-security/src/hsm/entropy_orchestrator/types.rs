@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Types for Universal HSM Entropy Orchestration
 
 use serde::{Deserialize, Serialize};

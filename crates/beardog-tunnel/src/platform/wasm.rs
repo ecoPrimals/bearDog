@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! WASM (WebAssembly) platform implementation for BearDog
 //!
 //! **Platform:** WebAssembly (browser, Node.js, Deno, embedded WASM runtimes)
@@ -118,7 +120,7 @@ mod tests {
                 assert!(channel.starts_with("beardog_channel_"));
                 println!("✅ WASM channel: {}", channel);
             }
-            _ => panic!("Expected InProcess endpoint for WASM"),
+            _ => panic!("Expected InProcess endpoint for WASM, got {:?}", endpoint),
         }
     }
 
@@ -131,7 +133,7 @@ mod tests {
                     assert!(channel.contains(primal));
                     println!("✅ WASM {} → {}", primal, channel);
                 }
-                _ => panic!("Expected InProcess endpoint for WASM"),
+                _ => panic!("Expected InProcess endpoint for WASM, got {:?}", endpoint),
             }
         }
     }

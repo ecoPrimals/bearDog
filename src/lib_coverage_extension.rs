@@ -1,7 +1,7 @@
 //! Coverage extension tests for root lib.rs
 //!
 //! Added December 8, 2025 to increase coverage from 75.17% to 90%+
-//! Targets: error paths, edge cases, ServiceInfo, all BearDogError variants
+//! Targets: error paths, edge cases, `ServiceInfo`, all `BearDogError` variants
 
 #[cfg(test)]
 mod root_lib_coverage_extension_tests {
@@ -49,7 +49,7 @@ mod root_lib_coverage_extension_tests {
     #[test]
     fn test_framework_config_debug() {
         let config = FrameworkConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
 
         assert!(debug_str.contains("FrameworkConfig"));
         assert!(debug_str.contains("confidence_level"));
@@ -88,7 +88,7 @@ mod root_lib_coverage_extension_tests {
     #[test]
     fn test_framework_stats_debug() {
         let stats = FrameworkStats::default();
-        let debug_str = format!("{:?}", stats);
+        let debug_str = format!("{stats:?}");
 
         assert!(debug_str.contains("FrameworkStats"));
     }
@@ -138,7 +138,7 @@ mod root_lib_coverage_extension_tests {
             endpoint: "http://test:8080".to_string(),
             metadata: HashMap::new(),
         };
-        let debug_str = format!("{:?}", service);
+        let debug_str = format!("{service:?}");
 
         assert!(debug_str.contains("ServiceInfo"));
         assert!(debug_str.contains("test"));
@@ -151,7 +151,7 @@ mod root_lib_coverage_extension_tests {
     #[test]
     fn test_beardog_error_configuration() {
         let error = BearDogError::Configuration("test config error".to_string());
-        let error_str = format!("{}", error);
+        let error_str = format!("{error}");
 
         assert!(error_str.contains("Configuration error"));
         assert!(error_str.contains("test config error"));
@@ -160,7 +160,7 @@ mod root_lib_coverage_extension_tests {
     #[test]
     fn test_beardog_error_discovery() {
         let error = BearDogError::Discovery("test discovery error".to_string());
-        let error_str = format!("{}", error);
+        let error_str = format!("{error}");
 
         assert!(error_str.contains("Discovery error"));
         assert!(error_str.contains("test discovery error"));
@@ -169,7 +169,7 @@ mod root_lib_coverage_extension_tests {
     #[test]
     fn test_beardog_error_performance() {
         let error = BearDogError::Performance("test performance error".to_string());
-        let error_str = format!("{}", error);
+        let error_str = format!("{error}");
 
         assert!(error_str.contains("Performance error"));
         assert!(error_str.contains("test performance error"));
@@ -178,7 +178,7 @@ mod root_lib_coverage_extension_tests {
     #[test]
     fn test_beardog_error_general() {
         let error = BearDogError::General("test general error".to_string());
-        let error_str = format!("{}", error);
+        let error_str = format!("{error}");
 
         assert!(error_str.contains("BearDog error"));
         assert!(error_str.contains("test general error"));
@@ -187,7 +187,7 @@ mod root_lib_coverage_extension_tests {
     #[test]
     fn test_beardog_error_debug() {
         let error = BearDogError::Configuration("test".to_string());
-        let debug_str = format!("{:?}", error);
+        let debug_str = format!("{error:?}");
 
         assert!(debug_str.contains("Configuration"));
     }

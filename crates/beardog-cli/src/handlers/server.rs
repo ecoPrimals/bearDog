@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Server mode handler - long-running service for Tower Atomic
 //!
 //! This handler wires the existing Unix socket IPC server from beardog-tunnel

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Ecosystem Listener
 //
 // This module implements passive listening for ecosystem announcements from other primals.
@@ -335,7 +337,7 @@ impl EcosystemListener {
                 interval.tick().await;
 
                 // Check environment variables for primal announcements
-                match Self::check_environment_announcements().await {
+                match Self::check_environment_announcements() {
                     Ok(announcements) => {
                         for announcement in announcements {
                             if let Err(e) = Self::process_primal_announcement(
@@ -481,7 +483,7 @@ impl EcosystemListener {
                         .and_then(|s| s.parse().ok())
                         .unwrap_or(5),
                 ),
-                Self::make_discovery_request(&endpoint),
+                std::future::ready(Self::make_discovery_request(&endpoint)),
             )
             .await
             {
@@ -501,7 +503,7 @@ impl EcosystemListener {
     }
 
     #[allow(clippy::cognitive_complexity)]
-    async fn check_environment_announcements() -> Result<Vec<PrimalAnnouncement>, BearDogError> {
+    fn check_environment_announcements() -> Result<Vec<PrimalAnnouncement>, BearDogError> {
         debug!("🔧 Checking environment for primal announcements...");
 
         let mut announcements = Vec::new();
@@ -740,9 +742,7 @@ impl Drop for EcosystemListener {
 
 impl EcosystemListener {
     /// Make HTTP discovery request to endpoint
-    async fn make_discovery_request(
-        endpoint: &str,
-    ) -> Result<Vec<PrimalAnnouncement>, BearDogError> {
+    fn make_discovery_request(endpoint: &str) -> Result<Vec<PrimalAnnouncement>, BearDogError> {
         debug!("Making discovery request to: {}", endpoint);
 
         // Use tokio's HTTP client implementation instead of external dependency
@@ -804,7 +804,7 @@ mod tests {
         // Simulate an environment-based announcement discovery
         std::env::set_var("COMPUTE_ENDPOINT", "http://discovered-compute-service:8081");
 
-        let announcements = EcosystemListener::check_environment_announcements().await?;
+        let announcements = EcosystemListener::check_environment_announcements()?;
 
         // Note: In unit test environment without actual environment variables set,
         // announcements may be empty. This is expected behavior for unit tests.

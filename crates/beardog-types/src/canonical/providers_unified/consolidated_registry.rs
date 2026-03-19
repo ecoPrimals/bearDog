@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Consolidated Provider Registry - Single Source of Truth
 //!
 //! This module provides the **unified provider registry** that consolidates all scattered

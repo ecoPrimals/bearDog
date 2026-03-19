@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Endpoints Configuration Module
 //!
 //! This module contains endpoint configuration and management.

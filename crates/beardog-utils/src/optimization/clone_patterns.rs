@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Clone Optimization Patterns for BearDog
 //!
 //! This module provides patterns and utilities for optimizing clone operations

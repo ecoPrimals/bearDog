@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Advanced Security Features Configuration
 //!
 //! This module provides genetic security, ecosystem membership, and trust computation

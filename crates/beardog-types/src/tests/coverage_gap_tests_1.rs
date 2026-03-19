@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Coverage gap tests Part 1: 0%-coverage canonical types
 //! Targets: monitoring_config, hsm/config, hsm/capabilities, hsm/keys,
 //!          hsm/android, hsm/status, hsm/discovery, network, metrics,

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Key Management Capability Trait
 //!
 //! Vendor-agnostic HSM/KMS abstraction that eliminates hardcoded cloud provider

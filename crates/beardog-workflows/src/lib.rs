@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # `BearDog` Workflows - Process Orchestration
 //!
 //! Comprehensive workflow orchestration and process management for `BearDog` applications,

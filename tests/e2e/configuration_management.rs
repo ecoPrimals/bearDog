@@ -70,18 +70,13 @@ pub async fn test_config_validation_errors() -> Result<ConfigE2EMetrics, BearDog
     ];
 
     for config_type in invalid_configs {
-        match simulate_invalid_config_load(config_type).await {
-            Ok(_) => {
-                return Err(BearDogError::internal(format!(
-                    "Expected validation error for: {}",
-                    config_type
-                )));
-            }
-            Err(_) => {
-                info!("✅ Correctly rejected invalid config: {}", config_type);
-                metrics.validation_errors += 1;
-            }
+        if let Ok(()) = simulate_invalid_config_load(config_type).await {
+            return Err(BearDogError::internal(format!(
+                "Expected validation error for: {config_type}"
+            )));
         }
+        info!("✅ Correctly rejected invalid config: {}", config_type);
+        metrics.validation_errors += 1;
     }
 
     info!("✅ Configuration validation errors handled correctly");

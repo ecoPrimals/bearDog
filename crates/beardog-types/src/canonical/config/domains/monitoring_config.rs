@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Monitoring Configuration Domain
 //!
 //! ⚠️  DEPRECATED: This domain-specific monitoring config is being consolidated.

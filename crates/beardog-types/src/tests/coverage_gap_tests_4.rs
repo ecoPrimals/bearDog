@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Coverage gap tests Part 4: Remaining gaps in partially-covered files
 //! Targets: config/monitoring_migration, hsm_unified/migration,
 //!          config/domains/testing, discovery/key_management_capability,

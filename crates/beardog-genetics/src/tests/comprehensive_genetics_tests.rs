@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Genetics Tests
 //!
 //! Tests for genetic algorithms, key evolution, and mutation strategies

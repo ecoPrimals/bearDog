@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Consensus authorization implementation
 
 use super::types::*;

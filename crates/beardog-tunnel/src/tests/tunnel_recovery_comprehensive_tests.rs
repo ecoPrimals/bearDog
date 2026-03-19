@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Tunnel Recovery Tests
 //!
 //! Tests all network failure, reconnection, and state recovery scenarios

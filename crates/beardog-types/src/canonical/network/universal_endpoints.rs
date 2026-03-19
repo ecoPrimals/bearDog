@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Universal Endpoint Configuration
 //
 // This module provides universal endpoint patterns that replace hardcoded localhost

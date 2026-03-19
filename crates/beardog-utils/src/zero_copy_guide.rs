@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Zero-copy pattern usage guide and examples
 //!
 //! This module provides examples and helpers for adopting zero-copy patterns

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Collaboration Service - Runtime Capability Discovery
 //!
 //! **Principle**: "Primals only have self-knowledge"

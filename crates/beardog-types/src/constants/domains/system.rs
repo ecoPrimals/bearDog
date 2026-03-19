@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // System Domain Constants
 //
 // This module provides system-level constants consolidated from the large unified.rs file.

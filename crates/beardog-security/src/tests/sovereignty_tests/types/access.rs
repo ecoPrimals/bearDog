@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Access Control Types
 //!
 //! Test helper types for identity, access policies, and ABAC.

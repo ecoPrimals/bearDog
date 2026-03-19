@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // **MODERNIZED**: Universal HSM Provider for BearDog Ecosystem
 //
 // This module provides a unified interface for Hardware Security Module (HSM) operations

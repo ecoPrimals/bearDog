@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Transition management and health monitoring
 //!
 //! This module handles coordination model transitions and health monitoring

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Authentication and Authorization Configuration
 //!
 //! This module provides authentication, authorization, consensus, and access control

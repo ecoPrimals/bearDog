@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Primal Introspection Handler
 //!
 //! Provides JSON-RPC methods for primal self-description and discovery:
@@ -204,9 +206,14 @@ impl IntrospectionHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[tokio::test]
+    #[serial]
     async fn test_primal_info_structure() {
+        let prev = std::env::var("PRIMAL_NAME").ok();
+        std::env::set_var("PRIMAL_NAME", "beardog");
+
         let registry = HandlerRegistry::default();
         let handler = IntrospectionHandler::new(registry);
 
@@ -219,6 +226,12 @@ mod tests {
         assert!(result["capabilities"].is_array());
         assert!(result["protocol"].is_object());
         assert!(result["features"].is_object());
+
+        if let Some(p) = prev {
+            std::env::set_var("PRIMAL_NAME", p);
+        } else {
+            std::env::remove_var("PRIMAL_NAME");
+        }
     }
 
     #[tokio::test]

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Universal Discovery Service - Modular Architecture
 //!
 //! This module provides comprehensive service discovery capabilities
@@ -231,8 +233,7 @@ pub struct UniversalServiceDiscovery {
     /// Service discovery protocol handlers
     discovery_instances: HashMap<DiscoveryProtocol, Box<dyn ProtocolHandler>>,
 
-    #[allow(dead_code)]
-    service_registry: ServiceRegistry,
+    _service_registry: ServiceRegistry,
 
     health_monitor: HealthMonitor,
 
@@ -347,7 +348,7 @@ impl UniversalServiceDiscovery {
     /// # Errors
     /// Returns an error if protocol handlers fail to initialize, if the configuration is invalid,
     /// or if any of the internal components (registry, health monitor, load balancer) fail to start.
-    pub async fn new(config: UniversalDiscoveryConfig) -> Result<Self, BearDogError> {
+    pub fn new(config: UniversalDiscoveryConfig) -> Result<Self, BearDogError> {
         // Create event broadcasting channel
         let (event_tx, _event_rx) = broadcast::channel(1000);
 
@@ -357,14 +358,14 @@ impl UniversalServiceDiscovery {
         // Initialize protocol handlers
         let mut discovery_instances = HashMap::new();
         for protocol in &config.enabled_protocols {
-            let handler = create_modern_discovery(protocol).await?;
+            let handler = create_modern_discovery(protocol)?;
             discovery_instances.insert(protocol.clone(), handler);
         }
 
         Ok(Self {
             config: config.clone(),
             discovery_instances,
-            service_registry: ServiceRegistry::new(&config.registry_config)?,
+            _service_registry: ServiceRegistry::new(&config.registry_config)?,
             health_monitor: HealthMonitor::new(&config.health_config)?,
             load_balancer: LoadBalancer::new(&config.load_balancing_config)?,
             event_tx,
@@ -620,8 +621,7 @@ impl UniversalServiceDiscovery {
     }
 
     /// Gets `protocol_statistics`
-    #[allow(dead_code)]
-    fn get_protocol_statistics(
+    fn _get_protocol_statistics(
         &self,
     ) -> Result<HashMap<DiscoveryProtocol, ProtocolStatistics>, BearDogError> {
         let mut stats = HashMap::new();
@@ -796,8 +796,7 @@ impl ProtocolHandler for MinimalProtocolHandler {
 pub struct MdnsProtocolHandler {
     client: crate::primal_discovery_mdns::MdnsDiscoveryClient,
     service_type: String,
-    #[allow(dead_code)]
-    id: String,
+    _id: String,
     stats: std::sync::Arc<std::sync::Mutex<ProtocolStatistics>>,
 }
 
@@ -812,7 +811,7 @@ impl MdnsProtocolHandler {
         Self {
             client,
             service_type,
-            id: Uuid::new_v4().to_string(),
+            _id: Uuid::new_v4().to_string(),
             stats: std::sync::Arc::new(std::sync::Mutex::new(ProtocolStatistics {
                 services_discovered: 0,
                 discovery_requests: 0,
@@ -912,7 +911,7 @@ impl ProtocolHandler for MdnsProtocolHandler {
     }
 }
 
-async fn create_modern_discovery(
+fn create_modern_discovery(
     protocol: &DiscoveryProtocol,
 ) -> Result<Box<dyn ProtocolHandler>, BearDogError> {
     match protocol {

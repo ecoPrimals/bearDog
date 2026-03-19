@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Songbird IPC Client
 //!
 //! Client for communicating with Songbird discovery orchestrator via Unix socket

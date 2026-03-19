@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Unified Alerting Configuration
 //
 // This module consolidates all alerting configuration patterns from across the codebase.

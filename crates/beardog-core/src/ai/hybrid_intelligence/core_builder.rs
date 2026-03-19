@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Builder pattern for Hybrid Intelligence System
 //!
 //! Provides a fluent interface for constructing `HybridIntelligenceSystem` instances

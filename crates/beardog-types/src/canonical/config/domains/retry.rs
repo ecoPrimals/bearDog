@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical Retry Configuration
 //!
 //! **UNIFIED CONFIGURATION** - Single source of truth for all retry configurations.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Safe Android StrongBox Native Wrapper
 //
 // Provides safe Rust interface to Android StrongBox hardware security module.

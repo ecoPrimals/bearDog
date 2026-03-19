@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Configuration for Universal Adapter System
 
 use super::types::ProtocolType;
@@ -58,34 +60,76 @@ impl Default for UniversalAdapterConfig {
     }
 }
 
-/// Production configuration
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+/// Individual production features that can be enabled/disabled
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum ProductionFeature {
+    /// Full production mode (stricter validation, real crypto)
+    ProductionMode,
+    /// Enhanced structured logging with trace correlation
+    EnhancedLogging,
+    /// Prometheus/OpenTelemetry metrics collection
+    MetricsCollection,
+    /// Circuit breaker for failing downstream services
+    CircuitBreaker,
+    /// Rate limiting on incoming requests
+    RateLimiting,
+}
+
+/// Production configuration using a feature-flag set
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProductionConfig {
-    /// Enable production features
-    /// Whether `production_mode` is enabled
-    pub production_mode: bool,
-    /// Enhanced logging
-    /// Whether `enhanced_logging` is enabled
-    pub enhanced_logging: bool,
-    /// Metrics collection
-    /// Whether metrics is enabled
-    pub metrics_enabled: bool,
-    /// Circuit breaker enabled
-    /// Whether `circuit_breaker` is enabled
-    pub circuit_breaker_enabled: bool,
-    /// Rate limiting enabled
-    /// Whether `rate_limiting` is enabled
-    pub rate_limiting_enabled: bool,
+    /// Set of enabled production features
+    pub enabled_features: Vec<ProductionFeature>,
+}
+
+impl ProductionConfig {
+    /// Check whether a specific feature is enabled
+    #[must_use]
+    pub fn is_enabled(&self, feature: ProductionFeature) -> bool {
+        self.enabled_features.contains(&feature)
+    }
+
+    /// Check whether production mode is active
+    #[must_use]
+    pub fn production_mode(&self) -> bool {
+        self.is_enabled(ProductionFeature::ProductionMode)
+    }
+
+    /// Check whether enhanced logging is active
+    #[must_use]
+    pub fn enhanced_logging(&self) -> bool {
+        self.is_enabled(ProductionFeature::EnhancedLogging)
+    }
+
+    /// Check whether metrics collection is active
+    #[must_use]
+    pub fn metrics_enabled(&self) -> bool {
+        self.is_enabled(ProductionFeature::MetricsCollection)
+    }
+
+    /// Check whether circuit breaker is active
+    #[must_use]
+    pub fn circuit_breaker_enabled(&self) -> bool {
+        self.is_enabled(ProductionFeature::CircuitBreaker)
+    }
+
+    /// Check whether rate limiting is active
+    #[must_use]
+    pub fn rate_limiting_enabled(&self) -> bool {
+        self.is_enabled(ProductionFeature::RateLimiting)
+    }
 }
 
 impl Default for ProductionConfig {
     fn default() -> Self {
         Self {
-            production_mode: true,
-            enhanced_logging: true,
-            metrics_enabled: true,
-            circuit_breaker_enabled: true,
-            rate_limiting_enabled: true,
+            enabled_features: vec![
+                ProductionFeature::ProductionMode,
+                ProductionFeature::EnhancedLogging,
+                ProductionFeature::MetricsCollection,
+                ProductionFeature::CircuitBreaker,
+                ProductionFeature::RateLimiting,
+            ],
         }
     }
 }

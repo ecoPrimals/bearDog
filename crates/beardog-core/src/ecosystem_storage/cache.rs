@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Cache Management Module
 
 use super::types::{CacheEntry, CacheEvictionPolicy};

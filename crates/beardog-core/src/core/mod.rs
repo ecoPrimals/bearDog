@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core Module - System Components and Lifecycle Management
 //!
 //! The core module provides foundational system components for BearDog including:

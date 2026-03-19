@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Crypto Requirements
 //!
 //! Defines requirements for selecting a crypto provider, similar to HSM requirements.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Modular Advanced Metrics System
 //
 // This module provides a comprehensive, modular metrics collection and analysis system

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Sovereign Entropy Migration System
 //
 // This module provides a comprehensive migration framework to replace ALL existing
@@ -76,15 +78,13 @@ pub struct MigrationStatistics {
 pub struct SovereignEntropyMigrationManager {
     sovereign_rng: Arc<RwLock<SovereignRng>>,
     /// Entropy hierarchy manager (reserved for future hierarchical entropy management)
-    #[allow(dead_code)]
-    entropy_manager: Arc<EntropyHierarchyManager>,
+    _entropy_manager: Arc<EntropyHierarchyManager>,
     /// Migration configuration
     config: SovereignEntropyMigrationConfig,
     /// Migration statistics
     statistics: Arc<RwLock<MigrationStatistics>>,
     /// Legacy RNG backup (reserved for fallback scenarios)
-    #[allow(dead_code)]
-    legacy_rng_backup: Arc<RwLock<HashMap<String, Vec<u8>>>>,
+    _legacy_rng_backup: Arc<RwLock<HashMap<String, Vec<u8>>>>,
 }
 
 impl Default for SovereignEntropyMigrationConfig {
@@ -140,7 +140,7 @@ impl SovereignEntropyMigrationManager {
     /// Returns an error if:
     /// - Sovereign RNG initialization fails
     /// - Entropy manager is unavailable
-    pub async fn new(
+    pub fn new(
         entropy_manager: Arc<EntropyHierarchyManager>,
         config: SovereignEntropyMigrationConfig,
     ) -> Result<Self, BearDogError> {
@@ -170,10 +170,10 @@ impl SovereignEntropyMigrationManager {
 
         Ok(Self {
             sovereign_rng,
-            entropy_manager,
+            _entropy_manager: entropy_manager,
             config,
             statistics: Arc::new(RwLock::new(MigrationStatistics::default())),
-            legacy_rng_backup: Arc::new(RwLock::new(HashMap::new())),
+            _legacy_rng_backup: Arc::new(RwLock::new(HashMap::new())),
         })
     }
 
@@ -254,7 +254,7 @@ impl SovereignEntropyMigrationManager {
         human_identity: Option<&str>,
     ) -> Result<Vec<Vec<f64>>, BearDogError> {
         if !self.is_phase_enabled(&MigrationPhase::NeuralNetworkWeights) {
-            return Self::fallback_to_legacy_neural_weights(layer_shape);
+            return Ok(Self::fallback_to_legacy_neural_weights(layer_shape));
         }
 
         let identity = human_identity
@@ -323,7 +323,7 @@ impl SovereignEntropyMigrationManager {
         human_identity: Option<&str>,
     ) -> Result<Vec<u8>, BearDogError> {
         if !self.is_phase_enabled(&MigrationPhase::RandomDataGeneration) {
-            return Self::fallback_to_legacy_random(data_size_bytes);
+            return Ok(Self::fallback_to_legacy_random(data_size_bytes));
         }
 
         let identity = human_identity
@@ -457,12 +457,10 @@ impl SovereignEntropyMigrationManager {
         Ok(bytes)
     }
 
-    fn fallback_to_legacy_neural_weights(
-        layer_shape: (usize, usize),
-    ) -> Result<Vec<Vec<f64>>, BearDogError> {
-        warn!("⚠️  Falling back to legacy neural weight initialization");
-
+    fn fallback_to_legacy_neural_weights(layer_shape: (usize, usize)) -> Vec<Vec<f64>> {
         use rand::Rng;
+
+        warn!("⚠️  Falling back to legacy neural weight initialization");
         let mut rng = rand::thread_rng();
         let (rows, cols) = layer_shape;
 
@@ -470,25 +468,24 @@ impl SovereignEntropyMigrationManager {
         for _ in 0..rows {
             let mut row = Vec::with_capacity(cols);
             for _ in 0..cols {
-                // Xavier initialization
                 let limit = (6.0 / (rows + cols) as f64).sqrt();
                 row.push(rng.gen_range(-limit..limit));
             }
             weights.push(row);
         }
 
-        Ok(weights)
+        weights
     }
 
-    fn fallback_to_legacy_random(data_size_bytes: usize) -> Result<Vec<u8>, BearDogError> {
-        warn!("⚠️  Falling back to legacy random data generation");
-
+    fn fallback_to_legacy_random(data_size_bytes: usize) -> Vec<u8> {
         use rand::RngCore;
+
+        warn!("⚠️  Falling back to legacy random data generation");
         let mut rng = rand::thread_rng();
         let mut bytes = vec![0u8; data_size_bytes];
         rng.fill_bytes(&mut bytes);
 
-        Ok(bytes)
+        bytes
     }
 
     /// Get migration statistics
@@ -510,5 +507,79 @@ impl SovereignEntropyMigrationManager {
     pub fn disable_migration_phase(&mut self, phase: MigrationPhase) {
         self.config.enabled_phases.retain(|p| p != &phase);
         info!("❌ Disabled migration phase: {:?}", phase);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Arc;
+
+    #[test]
+    fn test_migration_config_default() {
+        let config = SovereignEntropyMigrationConfig::default();
+        assert!(config.enable_migration);
+        assert_eq!(config.default_system_identity, "beardog_system");
+        assert!(config.enable_rollback);
+        assert!(!config.enabled_phases.is_empty());
+    }
+
+    #[test]
+    fn test_migration_statistics_default() {
+        let stats = MigrationStatistics::default();
+        assert_eq!(stats.total_calls_migrated, 0);
+        assert!(stats.calls_by_tier.is_empty());
+        assert!((stats.success_rate - 0.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_migration_phase_variants() {
+        let _ = MigrationPhase::CryptographicKeys;
+        let _ = MigrationPhase::NeuralNetworkWeights;
+        let _ = MigrationPhase::RandomDataGeneration;
+        let _ = MigrationPhase::GeneticOperations;
+        let _ = MigrationPhase::UniversalAdapterOperations;
+        let _ = MigrationPhase::FullEcosystemMigration;
+    }
+
+    #[tokio::test]
+    async fn test_migration_manager_creation() {
+        let entropy_manager = Arc::new(beardog_genetics::EntropyHierarchyManager::default());
+        let config = SovereignEntropyMigrationConfig::default();
+        let result = SovereignEntropyMigrationManager::new(entropy_manager, config);
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_migration_manager_fallback_crypto_when_disabled() {
+        let mut config = SovereignEntropyMigrationConfig::default();
+        config.enabled_phases = vec![]; // Disable all phases
+        let entropy_manager = Arc::new(beardog_genetics::EntropyHierarchyManager::default());
+        let manager = SovereignEntropyMigrationManager::new(entropy_manager, config).unwrap();
+        let result = manager
+            .migrate_crypto_key_generation("key_generation", 32, None)
+            .await;
+        assert!(result.is_ok());
+        let bytes = result.unwrap();
+        assert_eq!(bytes.len(), 32);
+    }
+
+    #[tokio::test]
+    async fn test_migration_manager_get_statistics() {
+        let entropy_manager = Arc::new(beardog_genetics::EntropyHierarchyManager::default());
+        let config = SovereignEntropyMigrationConfig::default();
+        let manager = SovereignEntropyMigrationManager::new(entropy_manager, config).unwrap();
+        let stats = manager.get_migration_statistics().await;
+        assert_eq!(stats.total_calls_migrated, 0);
+    }
+
+    #[tokio::test]
+    async fn test_migration_manager_enable_disable_phase() {
+        let entropy_manager = Arc::new(beardog_genetics::EntropyHierarchyManager::default());
+        let config = SovereignEntropyMigrationConfig::default();
+        let mut manager = SovereignEntropyMigrationManager::new(entropy_manager, config).unwrap();
+        manager.enable_migration_phase(MigrationPhase::GeneticOperations);
+        manager.disable_migration_phase(MigrationPhase::GeneticOperations);
+        // Verify no panic - phases modified successfully
     }
 }

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Crypto Provider Capabilities
 //!
 //! Defines what capabilities a crypto provider has, similar to HSM capabilities.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Startup and Error Handling Tests for `BearDog` Core
 //!
 //! Tests critical error scenarios during startup and lifecycle operations

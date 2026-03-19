@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Unified error constructors for BearDog
 // Provides consistent error creation patterns across the ecosystem
 

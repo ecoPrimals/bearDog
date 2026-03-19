@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Context-Aware Licensing Tests
 //!
 //! Comprehensive test suite for context-aware licensing functionality,

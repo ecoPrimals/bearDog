@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive tests for AI learning configurations
 //!
 //! These tests ensure learning configuration types are correctly implemented

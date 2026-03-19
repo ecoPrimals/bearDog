@@ -1,6 +1,6 @@
 //! Integration Tests for Authentication and Security
 //!
-//! This module contains comprehensive integration tests for BearDog's authentication
+//! This module contains comprehensive integration tests for `BearDog`'s authentication
 //! and security subsystems, including:
 //! - Password hashing and verification
 //! - Secure token generation and entropy
@@ -416,7 +416,7 @@ fn test_batch_session_encryption() {
     // When: encrypting 100 simulated sessions
     let mut encrypted_sessions = Vec::new();
     for i in 0..100 {
-        let session = format!("session_data_{}", i);
+        let session = format!("session_data_{i}");
         let result = BearDogCrypto::encrypt_aes_gcm(&key, session.as_bytes(), None);
         assert!(result.is_ok());
         encrypted_sessions.push(result.unwrap());

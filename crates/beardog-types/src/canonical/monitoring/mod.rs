@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Unified Monitoring Configuration System
 //
 // This module consolidates ALL monitoring configuration patterns from across the BearDog

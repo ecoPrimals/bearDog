@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Service announcement - how this primal announces itself
 
 pub use crate::config::AnnouncementConfig;

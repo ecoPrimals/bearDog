@@ -76,18 +76,15 @@ pub async fn test_hsm_failover_scenario() -> Result<HsmE2EMetrics, BearDogError>
     let mut metrics = HsmE2EMetrics::default();
 
     // 1. Attempt hardware HSM (may fail)
-    match simulate_key_generation("hardware").await {
-        Ok(_) => {
-            metrics.key_generations += 1;
-        }
-        Err(_) => {
-            warn!("Hardware HSM unavailable, testing fallback");
-            metrics.fallback_triggers += 1;
+    if let Ok(()) = simulate_key_generation("hardware").await {
+        metrics.key_generations += 1;
+    } else {
+        warn!("Hardware HSM unavailable, testing fallback");
+        metrics.fallback_triggers += 1;
 
-            // 2. Fallback to software HSM
-            simulate_key_generation("software").await?;
-            metrics.key_generations += 1;
-        }
+        // 2. Fallback to software HSM
+        simulate_key_generation("software").await?;
+        metrics.key_generations += 1;
     }
 
     info!("✅ HSM failover scenario complete");
@@ -134,20 +131,20 @@ pub async fn test_hsm_load_performance() -> Result<HsmE2EMetrics, BearDogError> 
 
     // Generate multiple keys
     for i in 0..10 {
-        simulate_key_generation(&format!("software_key_{}", i)).await?;
+        simulate_key_generation(&format!("software_key_{i}")).await?;
         metrics.key_generations += 1;
     }
 
     // Perform many signing operations
     for i in 0..50 {
-        let data = format!("data_{}", i);
+        let data = format!("data_{i}");
         simulate_signing("software", data.as_bytes()).await?;
         metrics.signing_operations += 1;
     }
 
     // Verify signatures
     for i in 0..50 {
-        let data = format!("data_{}", i);
+        let data = format!("data_{i}");
         simulate_verification("software", data.as_bytes()).await?;
         metrics.verification_operations += 1;
     }
@@ -342,7 +339,7 @@ mod tests {
         for hsm in &discovered_hsms {
             let capabilities = detect_hsm_capabilities(hsm).await;
             info!("  - {}: {} capabilities", hsm, capabilities.len());
-            detected_capabilities.push((hsm.to_string(), capabilities));
+            detected_capabilities.push(((*hsm).to_string(), capabilities));
         }
 
         assert!(
@@ -385,7 +382,7 @@ mod tests {
         info!("✅ E2E-HSM-001: PASSED - Hardware HSM detection and initialization successful");
     }
 
-    /// E2E-HSM-002: SoftHSM2 Fallback & Operations
+    /// E2E-HSM-002: `SoftHSM2` Fallback & Operations
     ///
     /// Tests automatic fallback to Software HSM when hardware is unavailable
     ///
@@ -454,7 +451,7 @@ mod tests {
 
         // Perform 10 operations to measure throughput
         for i in 0..10 {
-            let data = format!("perf test {}", i);
+            let data = format!("perf test {i}");
             simulate_signing(active_hsm, data.as_bytes()).await.unwrap();
         }
 
@@ -580,7 +577,7 @@ mod tests {
 
         for i in 0..10 {
             let start = std::time::Instant::now();
-            simulate_key_generation(&format!("perf_key_{}", i))
+            simulate_key_generation(&format!("perf_key_{i}"))
                 .await
                 .unwrap();
             key_gen_times.push(start.elapsed());
@@ -591,8 +588,7 @@ mod tests {
         info!("Average key generation time: {:?}", avg_key_gen);
         assert!(
             avg_key_gen.as_millis() < 100,
-            "Key generation should be < 100ms (got {:?})",
-            avg_key_gen
+            "Key generation should be < 100ms (got {avg_key_gen:?})"
         );
 
         // Step 3: Signing Throughput
@@ -600,7 +596,7 @@ mod tests {
         let sign_start = std::time::Instant::now();
 
         for i in 0..100 {
-            let data = format!("sign_data_{}", i);
+            let data = format!("sign_data_{i}");
             simulate_signing("software", data.as_bytes()).await.unwrap();
         }
 
@@ -617,7 +613,7 @@ mod tests {
         let verify_start = std::time::Instant::now();
 
         for i in 0..1000 {
-            let data = format!("verify_data_{}", i);
+            let data = format!("verify_data_{i}");
             simulate_verification("software", data.as_bytes())
                 .await
                 .unwrap();
@@ -638,7 +634,7 @@ mod tests {
         let mut handles = vec![];
         for i in 0..10 {
             let handle = tokio::spawn(async move {
-                let data = format!("concurrent_{}", i);
+                let data = format!("concurrent_{i}");
                 simulate_signing("software", data.as_bytes()).await
             });
             handles.push(handle);

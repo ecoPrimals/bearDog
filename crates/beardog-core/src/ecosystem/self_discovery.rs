@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Self-Discovery Module
 //
 // Implements the core principle: "Each primal only knows itself and discovers others via universal adapter"

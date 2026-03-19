@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Metrics for Universal Adapter System
 
 use serde::{Deserialize, Serialize};

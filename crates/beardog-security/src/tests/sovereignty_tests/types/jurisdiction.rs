@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Jurisdiction and Policy Types
 //!
 //! Test helper types for jurisdiction-based sovereignty policies.

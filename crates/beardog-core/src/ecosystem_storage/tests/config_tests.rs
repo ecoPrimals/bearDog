@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tests for ecosystem storage configuration
 
 use crate::ecosystem_storage::config::EcosystemStorageConfig;

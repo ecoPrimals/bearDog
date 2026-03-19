@@ -2,7 +2,7 @@
 //!
 //! This module contains high-value unit tests designed to boost test coverage with minimal effort.
 //! It focuses on basic config validation, serialization, and accessibility of config fields
-//! for the UnifiedBearDogConfig type.
+//! for the `UnifiedBearDogConfig` type.
 //!
 //! Coverage: Config creation (2 tests), Serialization (1 test), Field access (6 tests), Traits (4 tests)
 
@@ -231,7 +231,7 @@ fn test_config_debug_format() {
     let config = UnifiedBearDogConfig::default();
 
     // When: formatting with Debug
-    let debug_str = format!("{:?}", config);
+    let debug_str = format!("{config:?}");
 
     // Then: should contain type name
     assert!(

@@ -98,7 +98,7 @@ async fn test_e2e_recommend_tarpc_for_known_primals() {
 #[tokio::test]
 async fn test_e2e_recommend_jsonrpc_for_unknown_primals() {
     // For unknown primals, recommend JSON-RPC as fallback
-    let primal = "UnknownPrimal";
+    let _primal = "UnknownPrimal";
     let recommended_protocol = "json-rpc";
 
     assert_eq!(recommended_protocol, "json-rpc");

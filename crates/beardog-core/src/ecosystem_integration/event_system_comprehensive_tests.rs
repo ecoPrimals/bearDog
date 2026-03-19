@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive tests for Event System
 //!
 //! Added December 8, 2025 for 90% coverage milestone

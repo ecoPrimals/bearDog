@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Key Types
 //!
 //! Type definitions for cryptographic keys managed by the HSM.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! TLS 1.2 cryptographic operations
 //!
 //! This module provides TLS 1.2-specific cryptographic operations for Songbird

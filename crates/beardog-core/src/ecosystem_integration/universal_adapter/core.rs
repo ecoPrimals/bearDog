@@ -1,8 +1,12 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Core Universal Adapter Implementation
 
 use super::config::UniversalAdapterConfig;
 use super::metrics::AdapterMetrics;
-use super::types::{AdapterRequest, AdapterResponse, ConnectionInfo, ServiceEndpoint};
+use super::types::{
+    AdapterRequest, AdapterResponse, ConnectionInfo, ResponseStatus, ServiceEndpoint,
+};
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -63,7 +67,7 @@ impl UniversalAdapter {
             super::types::AdapterOperation::Disconnect => {
                 self.handle_disconnect_request(request).await
             }
-            super::types::AdapterOperation::Request => self.handle_generic_request(request).await,
+            super::types::AdapterOperation::Request => self.handle_generic_request(request),
             super::types::AdapterOperation::HealthCheck => {
                 self.handle_health_check_request(request).await
             }
@@ -102,7 +106,7 @@ impl UniversalAdapter {
         // Create response
         Ok(AdapterResponse {
             request_id: request.request_id,
-            status: super::types::ResponseStatus::Success,
+            status: ResponseStatus::Success,
             headers: HashMap::new(),
             payload: Some({
                 use serde_json::{Map, Value};
@@ -133,7 +137,7 @@ impl UniversalAdapter {
         // Create response
         Ok(AdapterResponse {
             request_id: request.request_id,
-            status: super::types::ResponseStatus::Success,
+            status: ResponseStatus::Success,
             headers: HashMap::new(),
             payload: Some({
                 use serde_json::{Map, Value};
@@ -149,7 +153,7 @@ impl UniversalAdapter {
 
     /// Handle generic request
     /// Handles `generic_request`
-    async fn handle_generic_request(
+    fn handle_generic_request(
         &self,
         request: AdapterRequest,
     ) -> Result<AdapterResponse, BearDogError> {
@@ -161,7 +165,7 @@ impl UniversalAdapter {
         // Create response
         Ok(AdapterResponse {
             request_id: request.request_id,
-            status: super::types::ResponseStatus::Success,
+            status: ResponseStatus::Success,
             headers: HashMap::new(),
             payload: request.payload,
             metadata: HashMap::new(),
@@ -199,7 +203,7 @@ impl UniversalAdapter {
 
         Ok(AdapterResponse {
             request_id: request.request_id,
-            status: super::types::ResponseStatus::Success,
+            status: ResponseStatus::Success,
             headers: HashMap::new(),
             payload: Some(health_status),
             metadata: HashMap::new(),
@@ -227,5 +231,133 @@ impl UniversalAdapter {
     /// Get endpoint count
     pub async fn endpoint_count(&self) -> usize {
         self.endpoints.read().await.len()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ecosystem_integration::universal_adapter::types::{
+        AdapterOperation, ProtocolType, ResponseStatus,
+    };
+
+    fn make_config() -> UniversalAdapterConfig {
+        UniversalAdapterConfig {
+            adapter_id: "test-adapter".to_string(),
+            adapter_name: "Test Adapter".to_string(),
+            supported_protocols: vec![ProtocolType::Http],
+            connection_timeout_ms: 5000,
+            request_timeout_ms: 3000,
+            max_retries: 2,
+            auto_reconnect: true,
+            health_check_interval_secs: 10,
+            custom_config: std::collections::HashMap::new(),
+        }
+    }
+
+    #[test]
+    fn test_universal_adapter_new() {
+        let config = make_config();
+        let adapter = UniversalAdapter::new(config);
+        assert_eq!(adapter.config().adapter_id, "test-adapter");
+    }
+
+    #[tokio::test]
+    async fn test_process_request_connect() {
+        let config = make_config();
+        let adapter = UniversalAdapter::new(config);
+        let request =
+            AdapterRequest::new(AdapterOperation::Connect, "https://example.com".to_string());
+        let response = adapter.process_request(request).await.unwrap();
+        assert_eq!(response.status, ResponseStatus::Success);
+        assert!(response.payload.is_some());
+        let payload = response.payload.unwrap();
+        assert_eq!(
+            payload.get("connected").and_then(|v| v.as_bool()),
+            Some(true)
+        );
+    }
+
+    #[tokio::test]
+    async fn test_process_request_disconnect() {
+        let config = make_config();
+        let adapter = UniversalAdapter::new(config);
+        let request = AdapterRequest::new(
+            AdapterOperation::Disconnect,
+            "https://example.com".to_string(),
+        );
+        let response = adapter.process_request(request).await.unwrap();
+        assert_eq!(response.status, ResponseStatus::Success);
+        assert_eq!(
+            response
+                .payload
+                .unwrap()
+                .get("disconnected")
+                .and_then(|v| v.as_bool()),
+            Some(true)
+        );
+    }
+
+    #[tokio::test]
+    async fn test_process_request_health_check() {
+        let config = make_config();
+        let adapter = UniversalAdapter::new(config);
+        let request = AdapterRequest::new(
+            AdapterOperation::HealthCheck,
+            "https://example.com".to_string(),
+        );
+        let response = adapter.process_request(request).await.unwrap();
+        assert_eq!(response.status, ResponseStatus::Success);
+        let payload = response.payload.unwrap();
+        assert_eq!(
+            payload.get("status").and_then(|v| v.as_str()),
+            Some("healthy")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_process_request_generic() {
+        let config = make_config();
+        let adapter = UniversalAdapter::new(config);
+        let request =
+            AdapterRequest::new(AdapterOperation::Request, "https://example.com".to_string())
+                .with_payload(serde_json::json!({"key": "value"}));
+        let response = adapter.process_request(request).await.unwrap();
+        assert_eq!(response.status, ResponseStatus::Success);
+        assert_eq!(response.payload, Some(serde_json::json!({"key": "value"})));
+    }
+
+    #[tokio::test]
+    async fn test_process_request_unsupported_operation() {
+        let config = make_config();
+        let adapter = UniversalAdapter::new(config);
+        let request = AdapterRequest::new(
+            AdapterOperation::Subscribe,
+            "https://example.com".to_string(),
+        );
+        let result = adapter.process_request(request).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_connection_count() {
+        let config = make_config();
+        let adapter = UniversalAdapter::new(config);
+        assert_eq!(adapter.connection_count().await, 0);
+        let request =
+            AdapterRequest::new(AdapterOperation::Connect, "https://example.com".to_string());
+        let _ = adapter.process_request(request).await.unwrap();
+        assert_eq!(adapter.connection_count().await, 1);
+    }
+
+    #[tokio::test]
+    async fn test_metrics() {
+        let config = make_config();
+        let adapter = UniversalAdapter::new(config);
+        let request =
+            AdapterRequest::new(AdapterOperation::Connect, "https://example.com".to_string());
+        let _ = adapter.process_request(request).await.unwrap();
+        let metrics = adapter.metrics().await;
+        assert!(metrics.total_requests >= 1);
     }
 }

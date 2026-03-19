@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core enumeration types for hybrid intelligence system
 //!
 //! This module contains the fundamental enum types used throughout the

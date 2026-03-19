@@ -1,4 +1,4 @@
-//! BearDog Core Health Check Tests
+//! `BearDog` Core Health Check Tests
 //!
 //! This module contains unit tests for core health checking functionality,
 //! including config creation, health status types, and basic error handling.
@@ -159,7 +159,7 @@ fn test_error_system_sync() {
 
     // Then: should contain message
     assert!(
-        format!("{:?}", error).contains("sync test"),
+        format!("{error:?}").contains("sync test"),
         "System error should contain message"
     );
 }
@@ -176,7 +176,7 @@ fn test_error_validation_sync() {
 
     // Then: should contain message
     assert!(
-        format!("{:?}", error).contains("validation test"),
+        format!("{error:?}").contains("validation test"),
         "Validation error should contain message"
     );
 }
@@ -193,7 +193,7 @@ fn test_error_security_sync() {
 
     // Then: should contain message
     assert!(
-        format!("{:?}", error).contains("security test"),
+        format!("{error:?}").contains("security test"),
         "Security error should contain message"
     );
 }
@@ -210,7 +210,7 @@ fn test_error_network_sync() {
 
     // Then: should contain message
     assert!(
-        format!("{:?}", error).contains("network test"),
+        format!("{error:?}").contains("network test"),
         "Network error should contain message"
     );
 }
@@ -227,12 +227,12 @@ fn test_error_configuration_sync() {
 
     // Then: should contain message
     assert!(
-        format!("{:?}", error).contains("config test"),
+        format!("{error:?}").contains("config test"),
         "Configuration error should contain message"
     );
 }
 
-/// Tests not_found error in sync context
+/// Tests `not_found` error in sync context
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: errors
@@ -244,7 +244,7 @@ fn test_error_not_found_sync() {
 
     // Then: should contain message
     assert!(
-        format!("{:?}", error).contains("not found"),
+        format!("{error:?}").contains("not found"),
         "NotFound error should contain message"
     );
 }
@@ -261,12 +261,12 @@ fn test_error_unauthorized_sync() {
 
     // Then: should contain message
     assert!(
-        format!("{:?}", error).contains("unauthorized"),
+        format!("{error:?}").contains("unauthorized"),
         "Unauthorized error should contain message"
     );
 }
 
-/// Tests invalid_input error in sync context
+/// Tests `invalid_input` error in sync context
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: errors
@@ -278,7 +278,7 @@ fn test_error_invalid_input_sync() {
 
     // Then: should contain message
     assert!(
-        format!("{:?}", error).contains("invalid input"),
+        format!("{error:?}").contains("invalid input"),
         "InvalidInput error should contain message"
     );
 }
@@ -295,7 +295,7 @@ fn test_error_unavailable_sync() {
 
     // Then: should contain message
     assert!(
-        format!("{:?}", error).contains("unavailable"),
+        format!("{error:?}").contains("unavailable"),
         "Unavailable error should contain message"
     );
 }
@@ -312,7 +312,7 @@ fn test_error_internal_sync() {
 
     // Then: should contain message
     assert!(
-        format!("{:?}", error).contains("internal"),
+        format!("{error:?}").contains("internal"),
         "Internal error should contain message"
     );
 }
@@ -329,7 +329,7 @@ fn test_error_business_sync() {
 
     // Then: should contain message
     assert!(
-        format!("{:?}", error).contains("business"),
+        format!("{error:?}").contains("business"),
         "Business error should contain message"
     );
 }
@@ -346,7 +346,7 @@ fn test_error_api_sync() {
 
     // Then: should contain message
     assert!(
-        format!("{:?}", error).contains("api"),
+        format!("{error:?}").contains("api"),
         "API error should contain message"
     );
 }
@@ -363,7 +363,7 @@ fn test_error_workflow_sync() {
 
     // Then: should contain message
     assert!(
-        format!("{:?}", error).contains("workflow"),
+        format!("{error:?}").contains("workflow"),
         "Workflow error should contain message"
     );
 }

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Unit Tests for Schema Fix (Decision Field & Environment Variable Fallback)
 //!
 //! These tests verify the January 7, 2026 schema fix that added:

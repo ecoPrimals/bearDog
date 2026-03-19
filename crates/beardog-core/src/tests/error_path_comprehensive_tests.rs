@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Error Path Tests for beardog-core
 //!
 //! Tests focusing on error handling, edge cases, and failure scenarios

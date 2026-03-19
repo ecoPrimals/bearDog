@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! iOS/macOS platform implementation for BearDog
 //!
 //! **Platform:** iOS, macOS (Apple platforms)
@@ -175,7 +177,7 @@ mod tests {
                 assert!(path_str.ends_with(".sock"));
                 println!("✅ macOS socket: {}", path.display());
             }
-            _ => panic!("Expected Filesystem endpoint on macOS"),
+            _ => panic!("Expected Filesystem endpoint on macOS, got {:?}", endpoint),
         }
     }
 
@@ -189,7 +191,7 @@ mod tests {
                 assert!(service.starts_with("org.biomeos."));
                 println!("✅ iOS XPC service: {}", service);
             }
-            _ => panic!("Expected XPC endpoint on iOS"),
+            _ => panic!("Expected XPC endpoint on iOS, got {:?}", endpoint),
         }
     }
 
@@ -204,7 +206,7 @@ mod tests {
                     assert!(path.to_string_lossy().contains(primal));
                     println!("✅ macOS {} → {}", primal, path.display());
                 }
-                _ => panic!("Expected Filesystem endpoint on macOS"),
+                _ => panic!("Expected Filesystem endpoint on macOS, got {:?}", endpoint),
             }
 
             #[cfg(target_os = "ios")]
@@ -214,7 +216,7 @@ mod tests {
                     assert!(service.starts_with("org.biomeos."));
                     println!("✅ iOS {} → {}", primal, service);
                 }
-                _ => panic!("Expected XPC endpoint on iOS"),
+                _ => panic!("Expected XPC endpoint on iOS, got {:?}", endpoint),
             }
         }
     }

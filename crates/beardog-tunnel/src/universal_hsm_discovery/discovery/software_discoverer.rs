@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Software HSM Discoverer
 //!
 //! Provides discovery functionality for software-based HSMs

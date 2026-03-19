@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // **PEDANTIC TYPE ALIASES**
 //
 // This module provides comprehensive type aliases to resolve all missing type references

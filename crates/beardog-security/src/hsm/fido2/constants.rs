@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! FIDO2/CTAP2 Protocol Constants
 //!
 //! This module defines constants for the FIDO2 CTAP2 protocol implementation.

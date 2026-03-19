@@ -6,9 +6,9 @@
     clippy::all
 )]
 
-//! SoloKey Testing Suite
+//! `SoloKey` Testing Suite
 //!
-//! Comprehensive testing for SoloKey FIDO2 devices.
+//! Comprehensive testing for `SoloKey` FIDO2 devices.
 //!
 //! **NOTE**: This example requires FIDO2 feature and updated API.
 //! It's currently disabled pending FIDO2 Phase 2 implementation.
@@ -110,7 +110,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
         Err(e) => {
-            println!("❌ Discovery failed: {}", e);
+            println!("❌ Discovery failed: {e}");
             println!("   Make sure:");
             println!("   1. SoloKeys are inserted");
             println!("   2. You have USB access permissions");

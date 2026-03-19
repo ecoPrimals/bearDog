@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive tests for performance_optimizations module
 //! Goal: Boost coverage from 28% to 90%+
 

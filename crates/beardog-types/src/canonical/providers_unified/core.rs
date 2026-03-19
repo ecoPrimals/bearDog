@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Core Provider Types
 //
 // Fundamental provider configuration types and enums.

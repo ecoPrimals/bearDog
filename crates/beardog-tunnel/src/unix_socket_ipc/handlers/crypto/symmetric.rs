@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Symmetric cryptography operations
 //!
 //! This module provides symmetric (shared-key) cryptographic operations for

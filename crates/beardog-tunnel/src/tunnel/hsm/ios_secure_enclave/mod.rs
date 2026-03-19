@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! iOS Secure Enclave HSM Module
 //!
 //! This module provides safe, zero-unsafe-code access to iOS Secure Enclave

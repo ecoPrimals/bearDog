@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Comprehensive tests for zero-cost type abstractions
 
 use beardog_errors::BearDogError;

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Safe SIMD optimizations using compiler auto-vectorization
 //!
 //! This module provides high-performance data processing using only safe Rust,

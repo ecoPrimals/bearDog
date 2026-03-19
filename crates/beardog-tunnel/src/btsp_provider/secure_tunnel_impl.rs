@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Generic `SecureTunnelProvider` Implementation
 //!
 //! This is the primary interface for BearDog's secure tunnel capability.

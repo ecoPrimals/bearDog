@@ -8,7 +8,7 @@ version = "1.0.0"
 edition = "2021"
 description = "Pure Rust deployment tool for BearDog on Android devices"
 repository = "https://github.com/eastgate-software/beardog"
-license = "MIT OR Apache-2.0"
+license = "AGPL-3.0-only"
 rust-version = "1.75"
 authors = [ "BearDog Team <team@beardog.dev>",]
 homepage = "https://beardog.dev"
@@ -16,6 +16,9 @@ documentation = "https://docs.rs/beardog"
 keywords = [ "deployment", "automation", "beardog", "orchestration", "devops",]
 categories = [ "development-tools", "deployment", "automation",]
 readme = "README.md"
+
+[lints]
+workspace = true
 
 [dependencies]
 tracing = "0.1"
@@ -27,7 +30,7 @@ serde_json = "1.0"
 path-absolutize = "3.0"
 console = "0.15"
 indicatif = "0.17"
-sysinfo = "0.29"
+# REMOVED: sysinfo (C-dependency) - ecoBin compliance; device metadata uses env vars / adb
 
 [dependencies.clap]
 version = "4.0"

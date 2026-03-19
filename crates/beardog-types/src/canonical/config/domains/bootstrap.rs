@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Bootstrap Configuration Domain
 //!
 //! Configuration for BearDog's revolutionary **zero-knowledge bootstrap system** that

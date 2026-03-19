@@ -11,7 +11,7 @@
 //! This example discovers FIDO2/CTAP2 security keys connected to the system.
 //!
 //! Usage:
-//!     cargo run --example test_fido2_hardware --features fido2
+//!     cargo run --example `test_fido2_hardware` --features fido2
 
 #[cfg(feature = "fido2")]
 use beardog_security::hsm::fido2::discovery::discover_fido2_devices;
@@ -55,17 +55,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     );
 
                     if let Some(serial) = &device.serial {
-                        println!("  Serial:       {}", serial);
+                        println!("  Serial:       {serial}");
                     }
 
                     println!("\n  Protocols:");
                     for proto in &device.protocol_versions {
-                        println!("    - {}", proto);
+                        println!("    - {proto}");
                     }
 
                     println!("\n  Extensions:");
                     for ext in &device.extensions {
-                        println!("    - {}", ext);
+                        println!("    - {ext}");
                     }
 
                     println!("\n  Capabilities:");
@@ -99,7 +99,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
         Err(e) => {
-            eprintln!("❌ Error during discovery: {}", e);
+            eprintln!("❌ Error during discovery: {e}");
             eprintln!("\nThis might be due to:");
             eprintln!("  - Insufficient permissions to access HID devices");
             eprintln!("  - No FIDO2 devices connected");

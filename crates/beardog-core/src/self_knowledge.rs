@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Primal Self-Knowledge Module
 //!
 //! **Core Principle**: "Primals only know themselves, discover others at runtime"
@@ -131,7 +133,7 @@ impl PrimalSelfKnowledge {
     pub fn discover() -> Result<Self, BearDogError> {
         info!("🔍 Discovering primal self-knowledge...");
 
-        let identity = PrimalIdentity::discover()?;
+        let identity = PrimalIdentity::discover();
         debug!("Identity discovered: {}", identity.name);
 
         let capabilities = discover_capabilities();
@@ -213,8 +215,7 @@ pub struct PrimalIdentity {
 
 impl PrimalIdentity {
     /// Discover identity from environment/config
-    fn discover() -> Result<Self, BearDogError> {
-        // Try PRIMAL_NAME first
+    fn discover() -> Self {
         let name = env::var("PRIMAL_NAME")
             .or_else(|_| env::var("BEARDOG_NAME"))
             .unwrap_or_else(|_| {
@@ -222,7 +223,6 @@ impl PrimalIdentity {
                 "beardog".to_string()
             });
 
-        // Generate unique instance ID (hostname + process ID)
         let hostname = std::env::var("HOSTNAME")
             .or_else(|_| std::env::var("HOST"))
             .unwrap_or_else(|_| "unknown".to_string());
@@ -230,7 +230,7 @@ impl PrimalIdentity {
         let pid = std::process::id();
         let instance_id = format!("{hostname}-{pid}");
 
-        Ok(Self { name, instance_id })
+        Self { name, instance_id }
     }
 }
 
@@ -424,7 +424,7 @@ mod tests {
     fn test_identity_from_env() {
         env::set_var("PRIMAL_NAME", "test-primal");
 
-        let identity = PrimalIdentity::discover().unwrap();
+        let identity = PrimalIdentity::discover();
         assert_eq!(identity.name, "test-primal");
         assert!(identity
             .instance_id
@@ -438,7 +438,7 @@ mod tests {
         env::remove_var("PRIMAL_NAME");
         env::remove_var("BEARDOG_NAME");
 
-        let identity = PrimalIdentity::discover().unwrap();
+        let identity = PrimalIdentity::discover();
         assert_eq!(identity.name, "beardog");
     }
 

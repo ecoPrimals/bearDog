@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Core Metrics System Tests
 //
 // Comprehensive test coverage for core metrics functionality

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Shared Handler Utilities
 //!
 //! Common utilities used across multiple JSON-RPC handlers.
@@ -23,9 +25,8 @@
 ///
 /// # Priority Order
 ///
-/// 1. `PRIMAL_NAME` - Universal primal identifier
-/// 2. `BEARDOG_NAME` - BearDog-specific fallback
-/// 3. `"beardog"` - Default when no env var is set
+/// 1. `PRIMAL_NAME` - Universal primal identifier (runtime)
+/// 2. `env!("CARGO_PKG_NAME")` - Compile-time package name fallback
 ///
 /// # Examples
 ///
@@ -33,8 +34,8 @@
 /// // When PRIMAL_NAME=songbird
 /// // get_primal_name() returns "songbird"
 ///
-/// // When no env vars are set
-/// // get_primal_name() returns "beardog"
+/// // When no env var is set
+/// // get_primal_name() returns the crate's package name (e.g. "beardog-tunnel")
 /// ```
 ///
 /// # See Also
@@ -42,9 +43,7 @@
 /// - `get_family_id()` - Genetic lineage family discovery
 /// - `get_node_id()` - Unique node identifier discovery
 pub fn get_primal_name() -> String {
-    std::env::var("PRIMAL_NAME")
-        .or_else(|_| std::env::var("BEARDOG_NAME"))
-        .unwrap_or_else(|_| "beardog".to_string())
+    std::env::var("PRIMAL_NAME").unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string())
 }
 
 /// Get the family ID using self-knowledge pattern.
@@ -83,11 +82,10 @@ mod tests {
 
     #[test]
     fn test_get_primal_name_default() {
-        // Remove env vars to test default
+        // Remove env var to test compile-time fallback
         std::env::remove_var("PRIMAL_NAME");
-        std::env::remove_var("BEARDOG_NAME");
 
-        assert_eq!(get_primal_name(), "beardog");
+        assert_eq!(get_primal_name(), env!("CARGO_PKG_NAME"));
     }
 
     #[test]
@@ -95,14 +93,6 @@ mod tests {
         std::env::set_var("PRIMAL_NAME", "test_primal");
         assert_eq!(get_primal_name(), "test_primal");
         std::env::remove_var("PRIMAL_NAME");
-    }
-
-    #[test]
-    fn test_get_primal_name_beardog_fallback() {
-        std::env::remove_var("PRIMAL_NAME");
-        std::env::set_var("BEARDOG_NAME", "custom_beardog");
-        assert_eq!(get_primal_name(), "custom_beardog");
-        std::env::remove_var("BEARDOG_NAME");
     }
 
     #[test]

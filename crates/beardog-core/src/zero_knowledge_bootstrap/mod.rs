@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Zero-Knowledge Bootstrap System
 //!
 //! This module implements the revolutionary "infant discovery pattern" where BearDog starts
@@ -117,7 +119,7 @@ pub mod self_discovery;
 ///
 /// # async fn example() -> Result<(), beardog_errors::BearDogError> {
 /// // Create bootstrap engine with zero ecosystem knowledge
-/// let mut bootstrap = ZeroKnowledgeBootstrap::new().await.expect("Test: create bootstrap should succeed");
+/// let mut bootstrap = ZeroKnowledgeBootstrap::new().expect("Test: create bootstrap should succeed");
 ///
 /// // Start zero-knowledge bootstrap process
 /// bootstrap.bootstrap().await.expect("Test: bootstrap should succeed");
@@ -141,8 +143,7 @@ pub struct ZeroKnowledgeBootstrap {
     metrics: BootstrapMetrics,
     ecosystem_listener: Option<ecosystem_listener::EcosystemListener>,
     /// Self-discovery engine
-    #[allow(dead_code)]
-    self_discovery: self_discovery::SelfDiscoveryEngine,
+    _self_discovery: self_discovery::SelfDiscoveryEngine,
 
     /// Dynamic capability registry for discovered services
     capability_registry: capability_registry::CapabilityRegistry,
@@ -250,6 +251,7 @@ pub struct BootstrapMetrics {
     pub protocols_used: Vec<String>,
 }
 
+// ecoPrimals: Migration plan - BootstrapConfig → UnifiedBootstrapConfig. Remove when callers migrate.
 #[allow(deprecated)]
 impl Default for BootstrapConfig {
     fn default() -> Self {
@@ -277,7 +279,7 @@ impl Default for BootstrapConfig {
     }
 }
 
-// Migration helper: Convert old BootstrapConfig to new UnifiedBootstrapConfig
+// ecoPrimals: Migration helper - remove when all callers use UnifiedBootstrapConfig directly.
 #[allow(deprecated)]
 impl From<BootstrapConfig> for UnifiedBootstrapConfig {
     fn from(old: BootstrapConfig) -> Self {
@@ -313,7 +315,7 @@ impl ZeroKnowledgeBootstrap {
     /// # Errors
     /// Returns an error if initialization fails, if self-discovery encounters issues,
     /// or if internal component creation fails.
-    pub async fn new() -> Result<Self, BearDogError> {
+    pub fn new() -> Result<Self, BearDogError> {
         info!("🌱 Initializing Zero-Knowledge Bootstrap - starting with zero ecosystem knowledge");
 
         let config = UnifiedBootstrapConfig::default();
@@ -345,7 +347,7 @@ impl ZeroKnowledgeBootstrap {
             config,
             metrics: BootstrapMetrics::default(),
             ecosystem_listener: None,
-            self_discovery,
+            _self_discovery: self_discovery,
             capability_registry,
         })
     }
@@ -721,7 +723,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_zero_knowledge_bootstrap() -> Result<(), Box<dyn std::error::Error>> {
-        let mut bootstrap = ZeroKnowledgeBootstrap::new().await?;
+        let mut bootstrap = ZeroKnowledgeBootstrap::new()?;
 
         // Should start with zero ecosystem knowledge
         assert!(bootstrap.discovered_capabilities.read().await.is_empty());
@@ -743,7 +745,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_infant_learning_pattern() -> Result<(), Box<dyn std::error::Error>> {
-        let bootstrap = ZeroKnowledgeBootstrap::new().await?;
+        let bootstrap = ZeroKnowledgeBootstrap::new()?;
 
         // Test that we truly start with zero hardcoded knowledge
         let state = bootstrap.get_ecosystem_state().await;

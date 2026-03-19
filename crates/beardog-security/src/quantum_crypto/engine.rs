@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Quantum Crypto Engine
 //!
 //! Main orchestrator for quantum-resistant cryptographic operations.

@@ -34,7 +34,7 @@ thiserror = "1.0"
 clap = { version = "4.4", features = ["derive"] }
 
 # Cryptography
-blake3 = "1.5"
+blake3 = { version = "1.5", features = ["pure"] }
 zeroize = "1.8"
 
 # Concurrency

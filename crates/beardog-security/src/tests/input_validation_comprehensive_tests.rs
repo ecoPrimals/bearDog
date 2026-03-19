@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Comprehensive Input Validation Tests for Sovereign Science Grade
 // Tests boundary conditions, malformed inputs, and validation logic
 

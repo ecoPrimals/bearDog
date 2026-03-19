@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tests for Timeout Configuration
 //!
 //! Comprehensive test suite for all timeout functionality.

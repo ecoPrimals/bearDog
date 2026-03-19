@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Coverage gap tests for beardog-threat
 //!
 //! Targets the identified coverage gaps across multiple modules.

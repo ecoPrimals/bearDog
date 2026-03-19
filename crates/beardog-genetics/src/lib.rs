@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # `BearDog` Genetics - Advanced Genetic Algorithms and Entropy Management
 //!
 //! Comprehensive genetic algorithms, entropy hierarchy management, and ecosystem evolution

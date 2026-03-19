@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! BTSP Metrics
 //!
 //! Lock-free atomic metrics collection for BTSP operations.

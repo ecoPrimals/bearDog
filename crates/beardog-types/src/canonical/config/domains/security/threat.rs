@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Threat Response Configuration
 //!
 //! This module provides automated threat response configuration

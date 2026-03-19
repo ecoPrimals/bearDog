@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Metrics for memory-based key manager
 //!
 //! This module provides metrics and monitoring structures for key management operations.

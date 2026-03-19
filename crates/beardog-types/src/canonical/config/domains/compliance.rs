@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Consolidated Compliance Configuration Domain
 //!
 //! This module consolidates ALL compliance-related configuration structs across the `BearDog`

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Enhanced tests for crypto_utils
 //!
 //! Coverage boost: Tests hash functions, key derivation, and edge cases

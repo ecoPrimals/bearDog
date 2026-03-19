@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Security Monitoring and Auditing Configuration
 //!
 //! This module provides audit, security monitoring, and SIEM integration

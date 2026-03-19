@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Provider Capability Enumerations
 //!
 //! This module defines the capability enums and types used by the unified provider system.

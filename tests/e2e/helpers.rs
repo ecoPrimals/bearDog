@@ -9,7 +9,7 @@
 // Created October 7, 2025
 
 //! Helper functions and utilities for E2E testing
-//! Now includes real BearDog component integration
+//! Now includes real `BearDog` component integration
 
 use beardog_core::BearDogCore;
 use beardog_errors::BearDogError;
@@ -102,7 +102,7 @@ pub async fn simulate_api_request(
 
     Ok(SimulatedResponse {
         status_code: 200,
-        body: format!("Response from {}", endpoint),
+        body: format!("Response from {endpoint}"),
         latency_ms: 10.0,
     })
 }
@@ -194,7 +194,7 @@ pub fn calculate_peak_latency(latencies: &[f64]) -> f64 {
 // REAL BEARDOG CORE INTEGRATION HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 
-/// Initialize a real BearDog Core instance for E2E testing
+/// Initialize a real `BearDog` Core instance for E2E testing
 pub async fn initialize_real_beardog_core() -> Result<Arc<BearDogCore>, BearDogError> {
     info!("🚀 Initializing real BearDog Core for E2E testing");
 
@@ -206,7 +206,7 @@ pub async fn initialize_real_beardog_core() -> Result<Arc<BearDogCore>, BearDogE
     Ok(core_arc)
 }
 
-/// Verify real health status of BearDog Core
+/// Verify real health status of `BearDog` Core
 pub async fn verify_real_health_status(
     core: &Arc<BearDogCore>,
 ) -> Result<HealthStatus, BearDogError> {
@@ -297,7 +297,7 @@ pub async fn test_real_component_registration(core: &Arc<BearDogCore>) -> Result
     }
 }
 
-/// Test concurrent access to real BearDog Core
+/// Test concurrent access to real `BearDog` Core
 pub async fn test_real_concurrent_access(core: &Arc<BearDogCore>) -> Result<(), BearDogError> {
     info!("⚡ Testing real concurrent access");
 
@@ -321,14 +321,14 @@ pub async fn test_real_concurrent_access(core: &Arc<BearDogCore>) -> Result<(), 
     for handle in handles {
         handle
             .await
-            .map_err(|e| BearDogError::internal(format!("Task join error: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Task join error: {e}")))?;
     }
 
     info!("  ✅ Concurrent access verified");
     Ok(())
 }
 
-/// Shutdown real BearDog Core
+/// Shutdown real `BearDog` Core
 pub async fn shutdown_real_beardog_core(_core: Arc<BearDogCore>) -> Result<(), BearDogError> {
     info!("🛑 Shutting down BearDog Core");
     // Core cleanup happens via Arc drop

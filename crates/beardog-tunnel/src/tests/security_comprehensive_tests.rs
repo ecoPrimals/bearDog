@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tunnel Security Comprehensive Tests
 //! Created: October 25, 2025
 //! Purpose: Week 2 test expansion - Security and encryption comprehensive coverage

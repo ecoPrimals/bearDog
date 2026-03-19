@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Deployment Configuration
 //
 // This module contains deployment and release management configuration

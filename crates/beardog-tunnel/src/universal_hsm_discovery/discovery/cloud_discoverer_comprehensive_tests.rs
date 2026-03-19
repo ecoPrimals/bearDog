@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Cloud Discoverer Tests
 //!
 //! Extended test coverage for cloud HSM discovery including:

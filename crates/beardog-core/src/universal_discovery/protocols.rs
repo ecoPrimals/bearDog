@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Discovery Protocols Module
 //
 // This module contains discovery protocol implementations and configuration

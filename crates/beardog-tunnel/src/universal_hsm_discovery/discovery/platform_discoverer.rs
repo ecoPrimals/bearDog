@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Platform HSM Discoverer
 //!
 //! Provides discovery functionality for platform-specific HSMs (TPM, TEE, etc.)

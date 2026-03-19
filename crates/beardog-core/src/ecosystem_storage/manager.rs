@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Ecosystem Storage Manager Implementation
 
 use super::backends::StorageBackend;

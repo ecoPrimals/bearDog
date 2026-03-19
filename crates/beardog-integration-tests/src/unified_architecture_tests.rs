@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Unified Architecture Integration Tests
 //!
 //! This module provides **comprehensive integration tests** for the unified BearDog

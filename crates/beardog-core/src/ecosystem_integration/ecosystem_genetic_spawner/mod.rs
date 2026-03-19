@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Ecosystem Genetic Spawner Module
 //!
 //! Provides genetic spawning capabilities for creating new primal instances

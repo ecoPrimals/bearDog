@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Comprehensive Error Recovery Tests for Sovereign Science Grade
 // Tests error handling, recovery mechanisms, and resilience
 

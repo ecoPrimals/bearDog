@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Asymmetric cryptography operations
 //!
 //! This module provides asymmetric cryptographic operations for ecoPrimals,

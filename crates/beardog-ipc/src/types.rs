@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Type definitions for Primal IPC Protocol
 
 use serde::{Deserialize, Serialize};
@@ -144,6 +146,33 @@ mod tests {
     }
 
     #[test]
+    fn test_capability_all_as_str() {
+        assert_eq!(Capability::Crypto.as_str(), "crypto");
+        assert_eq!(Capability::BTSP.as_str(), "btsp");
+        assert_eq!(Capability::Ed25519.as_str(), "ed25519");
+        assert_eq!(Capability::X25519.as_str(), "x25519");
+        assert_eq!(Capability::ChaCha20Poly1305.as_str(), "chacha20poly1305");
+        assert_eq!(Capability::AesGcm.as_str(), "aesgcm");
+        assert_eq!(Capability::Storage.as_str(), "storage");
+        assert_eq!(Capability::AI.as_str(), "ai");
+        assert_eq!(Capability::Discovery.as_str(), "discovery");
+        assert_eq!(Capability::Custom("mycap".to_string()).as_str(), "mycap");
+    }
+
+    #[test]
+    fn test_capability_roundtrip() {
+        for cap in [
+            Capability::Crypto,
+            Capability::BTSP,
+            Capability::Custom("custom".to_string()),
+        ] {
+            let json = serde_json::to_string(&cap).unwrap();
+            let restored: Capability = serde_json::from_str(&json).unwrap();
+            assert_eq!(cap, restored);
+        }
+    }
+
+    #[test]
     fn test_discovery_query_builder() {
         let query =
             DiscoveryQuery::capability(Capability::Crypto).with_capability(Capability::Ed25519);
@@ -151,5 +180,78 @@ mod tests {
         assert_eq!(query.capabilities.len(), 2);
         assert!(query.capabilities.contains(&"crypto".to_string()));
         assert!(query.capabilities.contains(&"ed25519".to_string()));
+    }
+
+    #[test]
+    fn test_discovery_query_new() {
+        let q = DiscoveryQuery::new();
+        assert!(q.primal.is_none());
+        assert!(q.capabilities.is_empty());
+        assert!(q.filters.is_empty());
+    }
+
+    #[test]
+    fn test_discovery_query_primal() {
+        let q = DiscoveryQuery::primal("beardog");
+        assert_eq!(q.primal.as_deref(), Some("beardog"));
+    }
+
+    #[test]
+    fn test_discovery_query_with_filter() {
+        let q =
+            DiscoveryQuery::new().with_filter("region".to_string(), serde_json::json!("us-east"));
+        assert_eq!(q.filters.len(), 1);
+    }
+
+    #[test]
+    fn test_discovery_query_default() {
+        let q = DiscoveryQuery::default();
+        assert!(q.primal.is_none());
+    }
+
+    #[test]
+    fn test_service_info_serialization() {
+        let info = ServiceInfo {
+            name: "beardog".to_string(),
+            endpoint: "/primal/beardog".to_string(),
+            capabilities: vec!["crypto".to_string()],
+            version: "1.0".to_string(),
+            available: true,
+            metadata: HashMap::new(),
+        };
+        let json = serde_json::to_string(&info).unwrap();
+        let restored: ServiceInfo = serde_json::from_str(&json).unwrap();
+        assert_eq!(info.name, restored.name);
+        assert!(restored.available);
+    }
+
+    #[test]
+    fn test_service_info_default_available() {
+        let json = r#"{"name":"x","endpoint":"/x","capabilities":[],"version":"1.0"}"#;
+        let info: ServiceInfo = serde_json::from_str(json).unwrap();
+        assert!(info.available);
+    }
+
+    #[test]
+    fn test_service_info_with_metadata() {
+        let mut meta = HashMap::new();
+        meta.insert("desc".to_string(), serde_json::json!("test"));
+        let info = ServiceInfo {
+            name: "x".to_string(),
+            endpoint: "/x".to_string(),
+            capabilities: vec![],
+            version: "1.0".to_string(),
+            available: false,
+            metadata: meta,
+        };
+        let json = serde_json::to_string(&info).unwrap();
+        assert!(json.contains("desc"));
+    }
+
+    #[test]
+    fn test_default_true() {
+        let json = r#"{"name":"x","endpoint":"/x","capabilities":[],"version":"1.0"}"#;
+        let info: ServiceInfo = serde_json::from_str(json).unwrap();
+        assert!(info.available);
     }
 }

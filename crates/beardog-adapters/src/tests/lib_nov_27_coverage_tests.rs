@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Additional coverage tests for beardog-adapters lib.rs
 //!
 //! Focus on testing UniversalAdapter, AdapterConfig, and related types that may

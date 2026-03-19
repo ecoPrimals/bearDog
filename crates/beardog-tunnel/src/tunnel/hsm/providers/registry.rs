@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Universal HSM Provider Registry
 //!
 //! Central registry for managing and selecting HSM providers across platforms.

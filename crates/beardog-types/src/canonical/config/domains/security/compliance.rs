@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Security Compliance and Data Sovereignty Configuration
 //!
 //! This module provides compliance validation, reporting, and data sovereignty

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Zero-Knowledge Bootstrap System Tests
 // Focus: Bootstrap process, discovery, configuration, metrics
 

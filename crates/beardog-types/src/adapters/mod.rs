@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Adapter Types - External Integration Support
 //!
 //! This module contains types for adapter locking and external integration support.

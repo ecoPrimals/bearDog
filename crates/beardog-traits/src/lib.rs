@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # `BearDog` Traits - Unified Trait System
 //!
 //! Unified trait system for the `BearDog` ecosystem, providing consistent interfaces

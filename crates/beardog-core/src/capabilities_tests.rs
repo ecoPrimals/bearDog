@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive tests for capability system
 //!
 //! Covers: Unit, E2E, Chaos, and Fault testing

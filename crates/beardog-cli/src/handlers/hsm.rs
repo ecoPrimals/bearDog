@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // HSM Discovery Handler
 // Vendor-agnostic: Discovers ANY PKCS#11, FIDO2, or platform keystore
 // FULLY WIRED to beardog-tunnel universal discovery - NO HARDCODING!

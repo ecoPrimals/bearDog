@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Observability Engine for Production
 //
 // This module provides comprehensive observability capabilities including

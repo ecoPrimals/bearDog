@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Cryptographic algorithms
 
 // Allow pedantic lints for algorithm implementations

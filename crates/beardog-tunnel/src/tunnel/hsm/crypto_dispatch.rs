@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Zero-Cost Crypto Provider Dispatch
 //!
 //! This module provides zero-cost enum-based dispatch for crypto providers,

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # 🌐 Multi-Transport Server for BearDog
 //!
 //! **CONCURRENT PROTOCOL BINDING** (v1.0.0)

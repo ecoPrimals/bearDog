@@ -1,7 +1,7 @@
 // Real E2E Scenario Tests - Test File
 // Created November 1, 2025
 
-//! Test file for running real E2E scenarios using actual BearDog components
+//! Test file for running real E2E scenarios using actual `BearDog` components
 
 mod e2e;
 
@@ -125,7 +125,7 @@ async fn test_all_real_scenarios_sequential() {
                 metrics.successful_requests, metrics.failed_requests
             );
         }
-        Err(e) => panic!("❌ 1. Core Lifecycle failed: {}", e),
+        Err(e) => panic!("❌ 1. Core Lifecycle failed: {e}"),
     }
 
     // Scenario 2: Config Validation
@@ -139,7 +139,7 @@ async fn test_all_real_scenarios_sequential() {
                 metrics.successful_requests, metrics.failed_requests
             );
         }
-        Err(e) => panic!("❌ 2. Config Validation failed: {}", e),
+        Err(e) => panic!("❌ 2. Config Validation failed: {e}"),
     }
 
     // Scenario 3: Health Monitoring
@@ -153,7 +153,7 @@ async fn test_all_real_scenarios_sequential() {
                 metrics.successful_requests, metrics.failed_requests
             );
         }
-        Err(e) => panic!("❌ 3. Health Monitoring failed: {}", e),
+        Err(e) => panic!("❌ 3. Health Monitoring failed: {e}"),
     }
 
     // Scenario 4: Concurrency
@@ -167,7 +167,7 @@ async fn test_all_real_scenarios_sequential() {
                 metrics.successful_requests, metrics.failed_requests
             );
         }
-        Err(e) => panic!("❌ 4. Concurrency failed: {}", e),
+        Err(e) => panic!("❌ 4. Concurrency failed: {e}"),
     }
 
     // Scenario 5: Component Management
@@ -181,15 +181,15 @@ async fn test_all_real_scenarios_sequential() {
                 metrics.successful_requests, metrics.failed_requests
             );
         }
-        Err(e) => panic!("❌ 5. Component Management failed: {}", e),
+        Err(e) => panic!("❌ 5. Component Management failed: {e}"),
     }
 
     println!("\n═══════════════════════════════════════════════════════════");
     println!("🎯 All Real E2E Scenarios Complete");
     println!("═══════════════════════════════════════════════════════════");
-    println!("   Total Requests:  {}", total_requests);
-    println!("   Total Success:   {}", total_success);
-    println!("   Total Failed:    {}", total_failed);
+    println!("   Total Requests:  {total_requests}");
+    println!("   Total Success:   {total_success}");
+    println!("   Total Failed:    {total_failed}");
     println!(
         "   Success Rate:    {:.1}%",
         (total_success as f64 / total_requests as f64) * 100.0

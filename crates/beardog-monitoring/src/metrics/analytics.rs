@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Analytics Engine
 //
 // Statistical analysis, trend detection, and reporting for metrics data.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! TLS 1.3 Key Derivation Helper Functions
 //!
 //! Internal helper functions for deriving TLS 1.3 handshake and application

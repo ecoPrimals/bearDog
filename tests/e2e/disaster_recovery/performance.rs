@@ -108,7 +108,7 @@ impl ResourceExhaustionScenario {
         // System should still function under constraints
         for i in 0..5 {
             match send_component_request("api-server", "test").await {
-                Ok(_) => {
+                Ok(()) => {
                     metrics.successful_requests += 1;
                 }
                 Err(e) => {
@@ -173,8 +173,8 @@ async fn measure_system_performance() -> Result<SystemMetrics, BearDogError> {
 
     // Simulate metrics based on available capacity
     let metrics = SystemMetrics {
-        cpu_usage: 100.0 - capacity as f64,
-        memory_usage: 100.0 - capacity as f64,
+        cpu_usage: 100.0 - f64::from(capacity),
+        memory_usage: 100.0 - f64::from(capacity),
         latency_ms: if capacity > 50 { 20 } else { 200 },
     };
 

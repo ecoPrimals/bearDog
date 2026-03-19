@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Biome Discovery Configuration
 //!
 //! Biome sovereignty-specific discovery configuration that extends the canonical base.

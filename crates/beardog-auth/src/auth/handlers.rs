@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Authentication handlers for BearDog
 // Provides secure authentication and session management
 

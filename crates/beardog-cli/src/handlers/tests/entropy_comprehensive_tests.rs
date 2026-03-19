@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Entropy Handler Tests
 //!
 //! Real-world scenario tests for entropy collection, quality assessment,

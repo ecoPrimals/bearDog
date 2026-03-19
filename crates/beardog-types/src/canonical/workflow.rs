@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Workflow configuration types for BearDog
 // Provides workflow definition, execution, and management types
 

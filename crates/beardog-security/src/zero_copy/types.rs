@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Zero-Copy Types
 //!
 //! This module provides types for zero-copy streaming operations,

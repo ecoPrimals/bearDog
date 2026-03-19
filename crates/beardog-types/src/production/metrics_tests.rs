@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Comprehensive unit tests for production metrics
 //
 // This test suite achieves >90% coverage of the metrics module,

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Test Helpers for BTSP and Unix Socket Testing
 //!
 //! This module provides mock implementations and test utilities for testing

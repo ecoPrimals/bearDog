@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive HSM Error Path Tests
 //!
 //! Tests all error paths, device failures, and recovery scenarios

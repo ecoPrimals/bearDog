@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Production management for the BearDog ecosystem
 //!
 //! This module provides production-ready management capabilities including
@@ -115,16 +117,14 @@ impl ProductionManager {
     }
 
     /// Shutdown the production manager
-    #[allow(dead_code)]
-    fn shutdown(&self) -> Result<(), BearDogError> {
+    fn _shutdown(&self) -> Result<(), BearDogError> {
         info!("🛑 Shutting down production system ");
         info!("✅ Production system shutdown complete ");
         Ok(())
     }
 
     /// Initializes logging
-    #[allow(dead_code)]
-    fn init_logging() -> Result<(), BearDogError> {
+    fn _init_logging() -> Result<(), BearDogError> {
         // Logging initialization would go here
         info!("📝 Logging initialized");
         Ok(())
@@ -145,29 +145,25 @@ impl ProductionManager {
     }
 
     /// Check database connectivity
-    #[allow(dead_code)]
-    fn check_database_connectivity(&self) -> Result<(), BearDogError> {
+    fn _check_database_connectivity(&self) -> Result<(), BearDogError> {
         debug!("✅ Database connectivity check passed");
         Ok(())
     }
     
     /// Check disk space
-    #[allow(dead_code)]
-    fn check_disk_space(&self) -> Result<(), BearDogError> {
+    fn _check_disk_space(&self) -> Result<(), BearDogError> {
         debug!("✅ Disk space check passed");
         Ok(())
     }
 
     /// Check network connectivity
-    #[allow(dead_code)]
-    fn check_network_connectivity(&self) -> Result<(), BearDogError> {
+    fn _check_network_connectivity(&self) -> Result<(), BearDogError> {
         debug!("✅ Network connectivity check passed");
         Ok(())
     }
 
     /// Wait for shutdown signal
-    #[allow(dead_code)]
-    fn wait_for_sigterm() -> Result<(), BearDogError> {
+    fn _wait_for_sigterm() -> Result<(), BearDogError> {
         info!("⏳ Waiting for shutdown signal...");
         #[cfg(unix)]
         {
@@ -183,14 +179,12 @@ impl ProductionManager {
     }
 
     /// Should run backup
-    #[allow(dead_code)]
-    fn should_run_backup(_schedule: &str) -> bool {
+    fn _should_run_backup(_schedule: &str) -> bool {
         false
     }
 
     /// Run backup
-    #[allow(dead_code)]
-    fn run_backup(_config: &BackupConfig) -> Result<(), BearDogError> {
+    fn _run_backup(_config: &BackupConfig) -> Result<(), BearDogError> {
         info!("💾 Running backup");
         Ok(())
     }

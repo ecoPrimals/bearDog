@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # beardog-discovery
 //!
 //! Capability-based service discovery for BearDog.

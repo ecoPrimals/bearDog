@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Tests for Performance Optimization Module
 //!
 //! Tests the performance optimization features for zero-knowledge bootstrap,

@@ -1,6 +1,6 @@
 //! Comprehensive Error Handling Tests
 //!
-//! This module contains extensive tests for BearDog's error handling system,
+//! This module contains extensive tests for `BearDog`'s error handling system,
 //! including error construction, propagation, recovery, and transformation patterns.
 //! Tests cover validation, configuration, network, internal, and not-found error types.
 
@@ -10,7 +10,7 @@ use beardog_errors::BearDogError;
 // Basic Error Construction Tests
 // ============================================================================
 
-/// Tests that BearDogError::validation creates errors with correct messages
+/// Tests that `BearDogError::validation` creates errors with correct messages
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: errors
@@ -21,11 +21,11 @@ fn test_error_validation() {
     let error = BearDogError::validation("Field cannot be empty");
 
     // Then: the error should contain the expected message
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(error_str.contains("Field cannot be empty"));
 }
 
-/// Tests that BearDogError::configuration creates errors with correct messages
+/// Tests that `BearDogError::configuration` creates errors with correct messages
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: errors
@@ -36,11 +36,11 @@ fn test_error_configuration() {
     let error = BearDogError::configuration("Invalid port number");
 
     // Then: the error should contain the expected message
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(error_str.contains("Invalid port number"));
 }
 
-/// Tests that BearDogError::not_found creates errors with resource identifiers
+/// Tests that `BearDogError::not_found` creates errors with resource identifiers
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: errors
@@ -51,11 +51,11 @@ fn test_error_not_found() {
     let error = BearDogError::not_found("Resource 'test-id-123' not found".to_string());
 
     // Then: the error should contain the resource ID
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(error_str.contains("test-id-123"));
 }
 
-/// Tests that BearDogError::network creates errors for network failures
+/// Tests that `BearDogError::network` creates errors for network failures
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: errors
@@ -66,11 +66,11 @@ fn test_error_network() {
     let error = BearDogError::network("Connection timeout".to_string());
 
     // Then: the error should contain the network issue description
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(error_str.contains("Connection timeout"));
 }
 
-/// Tests that BearDogError::internal creates errors for internal failures
+/// Tests that `BearDogError::internal` creates errors for internal failures
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: errors
@@ -81,11 +81,11 @@ fn test_error_internal() {
     let error = BearDogError::internal("Unexpected state".to_string());
 
     // Then: the error should contain the state description
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(error_str.contains("Unexpected state"));
 }
 
-/// Tests that BearDogError::invalid_input creates errors for input validation
+/// Tests that `BearDogError::invalid_input` creates errors for input validation
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: errors
@@ -96,7 +96,7 @@ fn test_error_invalid_input() {
     let error = BearDogError::invalid_input("Input must be a positive number");
 
     // Then: the error should contain the validation requirement
-    let error_str = format!("{}", error);
+    let error_str = format!("{error}");
     assert!(error_str.contains("Input must be a positive number"));
 }
 
@@ -130,7 +130,7 @@ fn test_error_chain_validation() {
     assert!(result.is_ok());
 }
 
-/// Tests error chaining with not_found errors
+/// Tests error chaining with `not_found` errors
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: errors
@@ -141,11 +141,10 @@ fn test_error_chain_not_found() {
     fn find_resource(id: &str) -> Result<String, BearDogError> {
         if id == "missing" {
             return Err(BearDogError::not_found(format!(
-                "Resource '{}' not found",
-                id
+                "Resource '{id}' not found"
             )));
         }
-        Ok(format!("Resource: {}", id))
+        Ok(format!("Resource: {id}"))
     }
 
     // When: finding a missing resource
@@ -191,7 +190,7 @@ fn test_error_propagation() {
 // Error Recovery and Transformation Tests
 // ============================================================================
 
-/// Tests error recovery patterns with unwrap_or
+/// Tests error recovery patterns with `unwrap_or`
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: errors
@@ -247,7 +246,7 @@ fn test_error_map() {
     assert_eq!(value, 100);
 }
 
-/// Tests error recovery with or_else for fallback logic
+/// Tests error recovery with `or_else` for fallback logic
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: errors
@@ -285,7 +284,7 @@ fn test_error_or_else() {
 fn test_error_context_preservation() {
     // Given: an error with specific context
     let error = BearDogError::validation("Invalid email format for field 'email'");
-    let error_string = format!("{}", error);
+    let error_string = format!("{error}");
 
     // Then: context should be preserved in the error message
     assert!(error_string.contains("email"));
@@ -349,7 +348,7 @@ fn test_error_debug_format() {
     let error = BearDogError::internal("Test error".to_string());
 
     // When: formatting with debug
-    let debug_str = format!("{:?}", error);
+    let debug_str = format!("{error:?}");
 
     // Then: debug format should contain information
     assert!(!debug_str.is_empty());
@@ -359,7 +358,7 @@ fn test_error_debug_format() {
 // Result<T, BearDogError> Type Tests
 // ============================================================================
 
-/// Tests that Result<T, BearDogError> type works correctly for success and failure cases
+/// Tests that Result<T, `BearDogError`> type works correctly for success and failure cases
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: errors
@@ -469,7 +468,7 @@ fn test_option_to_result_conversion() {
 
     // Helper function converting Option to Result
     fn get_item(id: u32) -> Result<String, BearDogError> {
-        find_item(id).ok_or_else(|| BearDogError::not_found(format!("Item '{}' not found", id)))
+        find_item(id).ok_or_else(|| BearDogError::not_found(format!("Item '{id}' not found")))
     }
 
     // When: item exists

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Unit Tests for BearDog Compliance/Audit
 //!
 //! Created: October 27, 2025

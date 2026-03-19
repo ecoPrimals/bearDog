@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Enhanced Error Module
 //!
 //! This module contains the main EnhancedBearDogError type and core error handling functionality.

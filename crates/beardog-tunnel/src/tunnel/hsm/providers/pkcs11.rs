@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! PKCS#11 HSM Provider
 //!
 //! Universal provider implementation for PKCS#11 hardware security modules.

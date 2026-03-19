@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Genetic Key Exchange Module
 //!
 //! Implements cryptographic key exchange with genetic evolution capabilities for

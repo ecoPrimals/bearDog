@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Network Discoverer Tests
 //!
 //! Extended test coverage for network HSM discovery including:

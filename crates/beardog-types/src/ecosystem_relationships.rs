@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Ecosystem Relationship Evolution
 //! 
 //! Implementation of spectrum-based relationship patterns that replace binary

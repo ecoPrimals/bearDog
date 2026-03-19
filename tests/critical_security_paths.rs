@@ -47,7 +47,7 @@ async fn test_critical_hsm_key_generation_security() {
     );
 
     // Test 4: Verify key material is protected (not visible in debug output)
-    let debug_output = format!("{:?}", key);
+    let debug_output = format!("{key:?}");
     // Check that actual key bytes are not exposed (encrypted_data should be hidden or obfuscated)
     // The field name "key_material" is fine, but the content should be protected
     assert!(
@@ -314,7 +314,7 @@ async fn test_critical_memory_protection() {
         .expect("Key generation failed");
 
     // Test 1: Debug output should not expose raw key bytes
-    let debug_str = format!("{:?}", key);
+    let debug_str = format!("{key:?}");
     // The field name is fine, but actual key bytes should be protected
     assert!(
         !debug_str.contains("plaintext"),
@@ -345,7 +345,7 @@ async fn test_critical_entropy_validation() {
     let mut keys = Vec::new();
     for i in 0..10 {
         let request = GenerateKeyRequest {
-            key_id: format!("entropy-test-key-{}", i),
+            key_id: format!("entropy-test-key-{i}"),
             key_type: KeyType::Ed25519,
         };
         let key = hsm

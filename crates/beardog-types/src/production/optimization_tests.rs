@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Performance Optimization Engine Comprehensive Tests
 // Created: October 24, 2025
 // Purpose: Achieve 100% coverage for production/optimization.rs

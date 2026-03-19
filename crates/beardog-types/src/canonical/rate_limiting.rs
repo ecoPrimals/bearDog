@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Canonical Rate Limiting Configuration
 //!
 //! This module provides the canonical rate limiting configuration used across the BearDog ecosystem.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Certificate storage and management
 //!
 //! Manages active certificates and handles expiry checking.

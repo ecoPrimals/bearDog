@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # `BearDog` Authentication and Authorization
 //!
 //! Secure authentication and authorization capabilities for `BearDog` applications,

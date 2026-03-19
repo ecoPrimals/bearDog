@@ -68,7 +68,7 @@ fn test_health_status_unknown() {
     assert_eq!(status, HealthStatus::Unknown);
 }
 
-/// Tests equality comparison between HealthStatus variants
+/// Tests equality comparison between `HealthStatus` variants
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -83,7 +83,7 @@ fn test_health_status_equality() {
     assert_ne!(status1, status3, "Different variants should not be equal");
 }
 
-/// Tests Clone trait implementation for HealthStatus
+/// Tests Clone trait implementation for `HealthStatus`
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -96,7 +96,7 @@ fn test_health_status_clone() {
     assert_eq!(status1, status2, "Cloned status should equal original");
 }
 
-/// Tests Debug trait implementation for HealthStatus
+/// Tests Debug trait implementation for `HealthStatus`
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -104,7 +104,7 @@ fn test_health_status_clone() {
 #[test]
 fn test_health_status_debug() {
     let status = HealthStatus::Healthy;
-    let debug_str = format!("{:?}", status);
+    let debug_str = format!("{status:?}");
 
     assert!(!debug_str.is_empty(), "Debug string should not be empty");
     assert!(
@@ -113,7 +113,7 @@ fn test_health_status_debug() {
     );
 }
 
-/// Tests pattern matching on HealthStatus variants
+/// Tests pattern matching on `HealthStatus` variants
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -180,7 +180,7 @@ fn test_security_level_critical() {
     assert_eq!(level, SecurityLevel::Critical);
 }
 
-/// Tests equality comparison between SecurityLevel variants
+/// Tests equality comparison between `SecurityLevel` variants
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -195,7 +195,7 @@ fn test_security_level_equality() {
     assert_ne!(level1, level3, "Different levels should not be equal");
 }
 
-/// Tests Clone trait implementation for SecurityLevel
+/// Tests Clone trait implementation for `SecurityLevel`
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -208,7 +208,7 @@ fn test_security_level_clone() {
     assert_eq!(level1, level2, "Cloned level should equal original");
 }
 
-/// Tests Debug trait implementation for SecurityLevel
+/// Tests Debug trait implementation for `SecurityLevel`
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -216,7 +216,7 @@ fn test_security_level_clone() {
 #[test]
 fn test_security_level_debug() {
     let level = SecurityLevel::High;
-    let debug_str = format!("{:?}", level);
+    let debug_str = format!("{level:?}");
 
     assert!(!debug_str.is_empty(), "Debug string should not be empty");
     assert!(
@@ -225,7 +225,7 @@ fn test_security_level_debug() {
     );
 }
 
-/// Tests pattern matching on SecurityLevel variants
+/// Tests pattern matching on `SecurityLevel` variants
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -259,7 +259,7 @@ fn test_workflow_status_pending() {
     assert_eq!(status, WorkflowStatus::Pending);
 }
 
-/// Tests construction of InProgress workflow status
+/// Tests construction of `InProgress` workflow status
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -292,7 +292,7 @@ fn test_workflow_status_failed() {
     assert_eq!(status, WorkflowStatus::Failed);
 }
 
-/// Tests equality comparison between WorkflowStatus variants
+/// Tests equality comparison between `WorkflowStatus` variants
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -307,7 +307,7 @@ fn test_workflow_status_equality() {
     assert_ne!(status1, status3, "Different statuses should not be equal");
 }
 
-/// Tests Clone trait implementation for WorkflowStatus
+/// Tests Clone trait implementation for `WorkflowStatus`
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -320,7 +320,7 @@ fn test_workflow_status_clone() {
     assert_eq!(status1, status2, "Cloned status should equal original");
 }
 
-/// Tests Debug trait implementation for WorkflowStatus
+/// Tests Debug trait implementation for `WorkflowStatus`
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -328,7 +328,7 @@ fn test_workflow_status_clone() {
 #[test]
 fn test_workflow_status_debug() {
     let status = WorkflowStatus::InProgress;
-    let debug_str = format!("{:?}", status);
+    let debug_str = format!("{status:?}");
 
     assert!(!debug_str.is_empty(), "Debug string should not be empty");
     assert!(
@@ -359,7 +359,7 @@ fn test_workflow_status_lifecycle() {
 // CanonicalTestConfig Tests (10 tests)
 // ============================================================================
 
-/// Tests default CanonicalTestConfig construction
+/// Tests default `CanonicalTestConfig` construction
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -390,7 +390,7 @@ fn test_canonical_test_config_environment() {
     assert_eq!(config.environment, "test");
 }
 
-/// Tests max_threads field has reasonable default value
+/// Tests `max_threads` field has reasonable default value
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -476,7 +476,7 @@ fn test_canonical_test_config_test_data_dir() {
     assert_eq!(config.test_data_dir.to_str().unwrap(), "test-data");
 }
 
-/// Tests Clone trait implementation for CanonicalTestConfig
+/// Tests Clone trait implementation for `CanonicalTestConfig`
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -490,7 +490,7 @@ fn test_canonical_test_config_clone() {
     assert_eq!(config1.max_threads, config2.max_threads);
 }
 
-/// Tests Debug trait implementation for CanonicalTestConfig
+/// Tests Debug trait implementation for `CanonicalTestConfig`
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -498,7 +498,7 @@ fn test_canonical_test_config_clone() {
 #[test]
 fn test_canonical_test_config_debug() {
     let config = CanonicalTestConfig::default();
-    let debug_str = format!("{:?}", config);
+    let debug_str = format!("{config:?}");
 
     assert!(!debug_str.is_empty(), "Debug string should not be empty");
     assert!(
@@ -511,7 +511,7 @@ fn test_canonical_test_config_debug() {
 // Type Conversion Tests (5 tests)
 // ============================================================================
 
-/// Tests HealthStatus debug string representation
+/// Tests `HealthStatus` debug string representation
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -519,12 +519,12 @@ fn test_canonical_test_config_debug() {
 #[test]
 fn test_health_status_to_string() {
     let status = HealthStatus::Healthy;
-    let s = format!("{:?}", status);
+    let s = format!("{status:?}");
 
     assert!(!s.is_empty(), "String representation should not be empty");
 }
 
-/// Tests SecurityLevel logical ordering
+/// Tests `SecurityLevel` logical ordering
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -537,7 +537,7 @@ fn test_security_level_ordering() {
     assert_ne!(basic, high, "Different security levels should not be equal");
 }
 
-/// Tests valid WorkflowStatus transitions
+/// Tests valid `WorkflowStatus` transitions
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -569,22 +569,19 @@ fn test_type_size_reasonable() {
     // Enums should be small (typically 1-8 bytes)
     assert!(
         health_size <= 16,
-        "HealthStatus too large: {} bytes",
-        health_size
+        "HealthStatus too large: {health_size} bytes"
     );
     assert!(
         security_size <= 16,
-        "SecurityLevel too large: {} bytes",
-        security_size
+        "SecurityLevel too large: {security_size} bytes"
     );
     assert!(
         workflow_size <= 16,
-        "WorkflowStatus too large: {} bytes",
-        workflow_size
+        "WorkflowStatus too large: {workflow_size} bytes"
     );
 }
 
-/// Tests that CanonicalTestConfig has reasonable memory size
+/// Tests that `CanonicalTestConfig` has reasonable memory size
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -598,8 +595,7 @@ fn test_config_size_reasonable() {
     // Config should be under 1KB
     assert!(
         config_size < 1024,
-        "CanonicalTestConfig too large: {} bytes",
-        config_size
+        "CanonicalTestConfig too large: {config_size} bytes"
     );
 }
 
@@ -607,7 +603,7 @@ fn test_config_size_reasonable() {
 // Edge Case Tests (5 tests)
 // ============================================================================
 
-/// Tests multiple levels of cloning for HealthStatus
+/// Tests multiple levels of cloning for `HealthStatus`
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -622,7 +618,7 @@ fn test_health_status_multiple_clones() {
     assert_eq!(status1, status4, "Multiple clones should equal original");
 }
 
-/// Tests SecurityLevel types in vectors
+/// Tests `SecurityLevel` types in vectors
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -641,7 +637,7 @@ fn test_security_level_in_vec() {
     assert_eq!(levels[3], SecurityLevel::Critical);
 }
 
-/// Tests WorkflowStatus in Option types
+/// Tests `WorkflowStatus` in Option types
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -657,7 +653,7 @@ fn test_workflow_status_in_option() {
     }
 }
 
-/// Tests HealthStatus in Result types
+/// Tests `HealthStatus` in Result types
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -673,7 +669,7 @@ fn test_health_status_in_result() {
     }
 }
 
-/// Tests that CanonicalTestConfig can be modified
+/// Tests that `CanonicalTestConfig` can be modified
 ///
 /// `TEST_CATEGORY`: integration
 /// `TEST_DOMAIN`: types
@@ -783,8 +779,10 @@ mod type_helpers {
             || matches!(
                 (level, required),
                 (SecurityLevel::Critical, _)
-                    | (SecurityLevel::High, SecurityLevel::Standard)
-                    | (SecurityLevel::High, SecurityLevel::Basic)
+                    | (
+                        SecurityLevel::High,
+                        SecurityLevel::Standard | SecurityLevel::Basic
+                    )
                     | (SecurityLevel::Standard, SecurityLevel::Basic)
             )
     }

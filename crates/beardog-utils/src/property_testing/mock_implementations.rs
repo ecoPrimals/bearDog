@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Mock implementations for property-based testing
 //!
 //! This module provides test-only mock implementations of cryptographic

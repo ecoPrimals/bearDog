@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Security types and authentication structures
 //
 // This module provides comprehensive security types for authentication, authorization,

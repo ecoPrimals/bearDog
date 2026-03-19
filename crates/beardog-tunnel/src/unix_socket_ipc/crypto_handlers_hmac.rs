@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HMAC (Hash-based Message Authentication Code) Handlers
 //!
 //! Phase 7: Additional HMAC variants for universal compatibility

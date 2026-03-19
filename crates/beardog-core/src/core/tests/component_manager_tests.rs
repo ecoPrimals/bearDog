@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Component Manager Tests
 //!
 //! Comprehensive testing of `ComponentManager` functionality including:

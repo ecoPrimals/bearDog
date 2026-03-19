@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Handler module exports
 
 pub mod birdsong; // BirdSong lineage-based encryption

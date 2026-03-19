@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Crypto Service Edge Cases Tests - December 18, 2025
 //!
 //! Deep testing of edge cases, boundary conditions, and error paths

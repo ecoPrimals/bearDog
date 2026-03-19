@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Unified Trait System for BearDog
 //
 // This module provides a comprehensive, unified trait hierarchy that eliminates fragmentation

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tests for universal adapter components
 
 #![allow(clippy::unwrap_used, clippy::expect_used)]
@@ -189,18 +191,18 @@ mod config_tests {
     #[test]
     fn test_production_config_default() {
         let config = config::ProductionConfig::default();
-        assert!(config.production_mode);
-        assert!(config.enhanced_logging);
-        assert!(config.metrics_enabled);
-        assert!(config.circuit_breaker_enabled);
-        assert!(config.rate_limiting_enabled);
+        assert!(config.production_mode());
+        assert!(config.enhanced_logging());
+        assert!(config.metrics_enabled());
+        assert!(config.circuit_breaker_enabled());
+        assert!(config.rate_limiting_enabled());
     }
 
     #[test]
     fn test_production_config_clone() {
         let config = config::ProductionConfig::default();
-        let cloned = config;
-        assert_eq!(config.production_mode, cloned.production_mode);
+        let cloned = config.clone();
+        assert_eq!(config.production_mode(), cloned.production_mode());
     }
 }
 

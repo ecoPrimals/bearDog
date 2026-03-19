@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Zero Knowledge Bootstrap Comprehensive Tests
 //!
 //! Comprehensive test coverage for zero-knowledge bootstrap functionality
@@ -126,7 +128,7 @@ mod bootstrap_initialization_tests {
 
     #[tokio::test]
     async fn test_bootstrap_creation() {
-        let bootstrap = ZeroKnowledgeBootstrap::new().await;
+        let bootstrap = ZeroKnowledgeBootstrap::new();
         assert!(bootstrap.is_ok(), "Bootstrap creation should succeed");
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: core
@@ -135,7 +137,7 @@ mod bootstrap_initialization_tests {
 
     #[tokio::test]
     async fn test_bootstrap_starts_with_zero_knowledge() {
-        let bootstrap = ZeroKnowledgeBootstrap::new().await.unwrap();
+        let bootstrap = ZeroKnowledgeBootstrap::new().unwrap();
 
         // Should start with zero discovered capabilities
         let state = bootstrap.get_ecosystem_state().await;
@@ -150,7 +152,7 @@ mod bootstrap_initialization_tests {
 
     #[tokio::test]
     async fn test_bootstrap_has_self_identity() {
-        let bootstrap = ZeroKnowledgeBootstrap::new().await.unwrap();
+        let bootstrap = ZeroKnowledgeBootstrap::new().unwrap();
 
         // Should have discovered self-identity
         let state = bootstrap.get_ecosystem_state().await;
@@ -163,7 +165,7 @@ mod bootstrap_initialization_tests {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
-        let bootstrap = ZeroKnowledgeBootstrap::new().await.unwrap();
+        let bootstrap = ZeroKnowledgeBootstrap::new().unwrap();
 
         // Should be able to get ecosystem state
         // TEST_CATEGORY: integration
@@ -183,7 +185,7 @@ mod bootstrap_execution_tests {
     // TEST_PRIORITY: normal
     #[tokio::test]
     async fn test_bootstrap_execution_succeeds() {
-        let mut bootstrap = ZeroKnowledgeBootstrap::new().await.unwrap();
+        let mut bootstrap = ZeroKnowledgeBootstrap::new().unwrap();
 
         // Bootstrap should execute without error
         let result = bootstrap.bootstrap().await;
@@ -195,7 +197,7 @@ mod bootstrap_execution_tests {
 
     #[tokio::test]
     async fn test_bootstrap_discovers_ecosystem() {
-        let mut bootstrap = ZeroKnowledgeBootstrap::new().await.unwrap();
+        let mut bootstrap = ZeroKnowledgeBootstrap::new().unwrap();
 
         // After bootstrap, should have attempted ecosystem discovery
         let _ = bootstrap.bootstrap().await;
@@ -217,7 +219,7 @@ mod bootstrap_execution_tests {
 
     #[tokio::test]
     async fn test_multiple_bootstrap_calls_safe() {
-        let mut bootstrap = ZeroKnowledgeBootstrap::new().await.unwrap();
+        let mut bootstrap = ZeroKnowledgeBootstrap::new().unwrap();
 
         // Multiple bootstrap calls should be safe
         let result1 = bootstrap.bootstrap().await;
@@ -274,7 +276,7 @@ mod integration_tests {
         // TEST_PRIORITY: important
 
         // 1. Create bootstrap
-        let mut bootstrap = ZeroKnowledgeBootstrap::new().await.unwrap();
+        let mut bootstrap = ZeroKnowledgeBootstrap::new().unwrap();
 
         // 2. Verify zero initial knowledge
         let initial_state = bootstrap.get_ecosystem_state().await;

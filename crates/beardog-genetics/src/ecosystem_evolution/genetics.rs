@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Genetics modules for ecosystem evolution
 //!
 //! This module contains the specialized genetics structures that handle different

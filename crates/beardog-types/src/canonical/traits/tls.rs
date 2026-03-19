@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # TLS Configuration Trait
 //!
 //! This module provides a polymorphic interface for TLS configurations across different

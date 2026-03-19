@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Key Storage Module
 // Simple JSON-based key persistence for CLI operations
 // NOTE: This is a simplified version for testing. Production should use HSM-backed storage.

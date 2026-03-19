@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Transport Types for BTSP Unified
 //!
 //! This module defines transport layers for tunnel communication:

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! BTSP Provider Tests
 //!
 //! Comprehensive test suite for BearDog Tunnel Security Protocol provider.

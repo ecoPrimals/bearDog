@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # BearDog Capability Framework
 //!
 //! **"Primals know only themselves. Capabilities are discovered at runtime."**

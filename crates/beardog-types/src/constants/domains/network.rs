@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Network Domain Constants
 //
 // This module provides network-related constants consolidated from the large unified.rs file.

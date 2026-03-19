@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Secret Storage Handler
 //!
 //! Provides encrypted secret storage with family-scoped key derivation.
@@ -346,7 +348,7 @@ mod tests {
         });
         let store_result = handler.handle_store(Some(&store_params)).await;
         assert!(store_result.is_ok());
-        let store_resp = store_result.unwrap();
+        let store_resp = store_result.expect("secrets.store should succeed in test");
         assert_eq!(store_resp["stored"], true);
         assert_eq!(store_resp["name"], "api-key");
 
@@ -354,7 +356,7 @@ mod tests {
         let retrieve_params = serde_json::json!({ "name": "api-key" });
         let retrieve_result = handler.handle_retrieve(Some(&retrieve_params)).await;
         assert!(retrieve_result.is_ok());
-        let retrieve_resp = retrieve_result.unwrap();
+        let retrieve_resp = retrieve_result.expect("secrets.retrieve should succeed in test");
         assert_eq!(retrieve_resp["value"], "sk-secret-12345-abcdef");
         assert_eq!(retrieve_resp["name"], "api-key");
         assert!(retrieve_resp["stored_at"].is_string());
@@ -383,11 +385,18 @@ mod tests {
             "name": "shared-key",
             "value": "secret-from-alpha"
         });
-        handler_a.handle_store(Some(&store_params)).await.unwrap();
+        handler_a
+            .handle_store(Some(&store_params))
+            .await
+            .expect("store should succeed in family isolation test");
 
         // Derive keys for the same name - they should differ between families
-        let key_a = handler_a.derive_secret_key("shared-key").unwrap();
-        let key_b = handler_b.derive_secret_key("shared-key").unwrap();
+        let key_a = handler_a
+            .derive_secret_key("shared-key")
+            .expect("key derivation should succeed");
+        let key_b = handler_b
+            .derive_secret_key("shared-key")
+            .expect("key derivation should succeed");
         assert_ne!(
             key_a, key_b,
             "Different families must derive different keys"
@@ -404,17 +413,25 @@ mod tests {
                 "name": name,
                 "value": format!("value-{}", name)
             });
-            handler.handle_store(Some(&params)).await.unwrap();
+            handler
+                .handle_store(Some(&params))
+                .await
+                .expect("store should succeed in list test");
         }
 
         // List
         let list_result = handler.handle_list().await;
         assert!(list_result.is_ok());
-        let resp = list_result.unwrap();
+        let resp = list_result.expect("secrets.list should succeed in test");
         assert_eq!(resp["count"], 2);
 
-        let names = resp["secrets"].as_array().unwrap();
-        let name_strs: Vec<&str> = names.iter().map(|v| v.as_str().unwrap()).collect();
+        let names = resp["secrets"]
+            .as_array()
+            .expect("secrets list should be array");
+        let name_strs: Vec<&str> = names
+            .iter()
+            .map(|v| v.as_str().expect("secret name should be string"))
+            .collect();
         assert!(name_strs.contains(&"key-1"));
         assert!(name_strs.contains(&"key-2"));
     }
@@ -428,13 +445,16 @@ mod tests {
             "name": "to-delete",
             "value": "temporary"
         });
-        handler.handle_store(Some(&params)).await.unwrap();
+        handler
+            .handle_store(Some(&params))
+            .await
+            .expect("store should succeed in delete test");
 
         // Delete
         let del_params = serde_json::json!({ "name": "to-delete" });
         let del_result = handler.handle_delete(Some(&del_params)).await;
         assert!(del_result.is_ok());
-        assert_eq!(del_result.unwrap()["deleted"], true);
+        assert_eq!(del_result.expect("delete should succeed")["deleted"], true);
 
         // Verify it's gone
         let retrieve_params = serde_json::json!({ "name": "to-delete" });
@@ -449,7 +469,10 @@ mod tests {
         let params = serde_json::json!({ "name": "never-stored" });
         let result = handler.handle_delete(Some(&params)).await;
         assert!(result.is_ok());
-        assert_eq!(result.unwrap()["deleted"], false);
+        assert_eq!(
+            result.expect("delete nonexistent should return Ok")["deleted"],
+            false
+        );
     }
 
     #[tokio::test]
@@ -461,21 +484,27 @@ mod tests {
             "name": "mutable-key",
             "value": "version-1"
         });
-        handler.handle_store(Some(&params)).await.unwrap();
+        handler
+            .handle_store(Some(&params))
+            .await
+            .expect("initial store should succeed");
 
         // Overwrite with new value
         let params = serde_json::json!({
             "name": "mutable-key",
             "value": "version-2"
         });
-        handler.handle_store(Some(&params)).await.unwrap();
+        handler
+            .handle_store(Some(&params))
+            .await
+            .expect("overwrite store should succeed");
 
         // Retrieve should return latest value
         let retrieve_params = serde_json::json!({ "name": "mutable-key" });
         let result = handler
             .handle_retrieve(Some(&retrieve_params))
             .await
-            .unwrap();
+            .expect("retrieve after overwrite should succeed");
         assert_eq!(result["value"], "version-2");
     }
 }

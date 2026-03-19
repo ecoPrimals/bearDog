@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Quantum-Resistant Digital Signatures
 //!
 //! Implements ML-DSA (formerly Dilithium) and SPHINCS+ for quantum-resistant signatures.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Extended Adapter Validation Tests
 //!
 //! Comprehensive test coverage for adapter integration and validation

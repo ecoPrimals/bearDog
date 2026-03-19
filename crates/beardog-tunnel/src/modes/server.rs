@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Server Mode - Primary BearDog operational mode
 //!
 //! Modern async/concurrent Rust architecture with clean error handling.
@@ -270,7 +272,7 @@ async fn register_with_discovery_service(socket_config: &SocketConfig) -> anyhow
 
     // PHASE 2: Fallback to legacy Songbird (DEPRECATED)
     // This will be removed after full Neural API adoption
-    // Intentional use of deprecated function for backward compatibility
+    // ecoPrimals: Migration plan - migrate to Neural API when Songbird exposes it.
     #[allow(deprecated)]
     match register_with_legacy_songbird().await {
         Ok(_) => {
@@ -314,7 +316,8 @@ async fn register_with_legacy_songbird() -> anyhow::Result<()> {
         Capability::ChaCha20Poly1305,
     ];
 
-    client.register("beardog", capabilities).await?;
+    let primal_name = crate::unix_socket_ipc::handlers::utils::get_primal_name();
+    client.register(&primal_name, capabilities).await?;
 
     // Start heartbeat to maintain registration
     // Songbird expects heartbeats every 30-60 seconds

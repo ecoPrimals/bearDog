@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Protocol-Agnostic Crypto Service
 //!
 //! Core cryptographic service that can be exposed via any protocol

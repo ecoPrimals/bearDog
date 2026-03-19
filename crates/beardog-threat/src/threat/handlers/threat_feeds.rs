@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Threat Intelligence Feeds - Modern Implementation
 //
 // **MODERNIZED**: Clean, production-ready threat intelligence feed processing.

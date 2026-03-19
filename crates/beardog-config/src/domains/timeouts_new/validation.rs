@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Timeout Configuration Validation
 //!
 //! Validates timeout values are within acceptable ranges.

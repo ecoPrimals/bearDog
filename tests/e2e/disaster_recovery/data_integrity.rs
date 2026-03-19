@@ -123,7 +123,7 @@ impl DataIntegrityScenario {
 
         for data_id in corrupted_ids {
             match recover_from_backup(&data_id).await {
-                Ok(_) => {
+                Ok(()) => {
                     info!("  ✅ Recovered data: {}", data_id);
                     metrics.successful_requests += 1;
                 }

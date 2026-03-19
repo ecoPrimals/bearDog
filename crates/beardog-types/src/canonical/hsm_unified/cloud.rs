@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Cloud Provider Types - Canonical Definition
 //!
 //! This module provides the single source of truth for cloud provider identifications

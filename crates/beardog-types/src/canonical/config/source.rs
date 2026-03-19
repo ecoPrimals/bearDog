@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Configuration Source Abstraction
 //!
 //! Provides a modern, thread-safe approach to configuration that eliminates

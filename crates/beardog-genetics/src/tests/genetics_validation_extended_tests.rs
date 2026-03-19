@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Extended Genetics Validation Tests
 //!
 //! Comprehensive test coverage for genetics algorithm validation and evolution

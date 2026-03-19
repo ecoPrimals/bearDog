@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Network Host Configuration
 //!
 //! Centralized configuration for all network hosts/IPs used by BearDog.

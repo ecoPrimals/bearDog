@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # BearDog Tower Atomic
 //!
 //! **Tower Atomic** = Unix socket-based JSON-RPC for inter-primal communication
@@ -229,15 +231,14 @@ impl Client {
 /// JSON-RPC 2.0 Response
 #[derive(Debug, Deserialize)]
 struct JsonRpcResponse {
-    #[allow(dead_code)]
-    jsonrpc: String,
+    #[serde(rename = "jsonrpc")]
+    _jsonrpc: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[allow(dead_code)]
     result: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     error: Option<JsonRpcError>,
-    #[allow(dead_code)]
-    id: Value,
+    #[serde(rename = "id")]
+    _id: Value,
 }
 
 /// JSON-RPC 2.0 Error

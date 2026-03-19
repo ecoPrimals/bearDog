@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Edge Cases Tests for Encryption Operations
 //!
 //! Tests various edge cases and boundary conditions for cryptographic operations

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Hash Validation Tests
 //!
 //! Tests for hash operations, validation, and security properties.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Mobile HSM Discoverer
 //!
 //! Provides discovery functionality for mobile platform HSMs

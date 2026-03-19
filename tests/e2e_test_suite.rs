@@ -1,9 +1,9 @@
 // E2E Test Suite - Top Level
 // Created October 7, 2025
 
-//! BearDog End-to-End Test Suite
+//! `BearDog` End-to-End Test Suite
 //!
-//! This test suite provides comprehensive end-to-end testing for BearDog,
+//! This test suite provides comprehensive end-to-end testing for `BearDog`,
 //! validating complete production scenarios.
 //!
 //! # Test Scenarios

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Audit Types
 //!
 //! This module provides types for security auditing and event logging.

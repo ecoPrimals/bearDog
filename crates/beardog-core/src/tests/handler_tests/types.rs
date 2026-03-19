@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Handler Test Helper Types
 //!
 //! This module contains all the shared test helper types used across

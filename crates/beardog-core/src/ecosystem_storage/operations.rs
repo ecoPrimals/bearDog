@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Storage Operations Module
 
 use super::types::{StorageOperation, StorageStatus};

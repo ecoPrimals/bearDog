@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Relay Authorization Handler
 //!
 //! Provides lineage-gated relay authorization for the relay-assisted coordinated

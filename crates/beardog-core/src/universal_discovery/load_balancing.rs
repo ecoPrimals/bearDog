@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Load Balancing Module
 //
 // This module contains load balancing algorithms and traffic distribution functionality.

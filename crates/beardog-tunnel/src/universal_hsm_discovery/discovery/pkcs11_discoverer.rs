@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! PKCS#11 HSM Discoverer
 //!
 //! Provides discovery functionality for PKCS#11-based HSMs

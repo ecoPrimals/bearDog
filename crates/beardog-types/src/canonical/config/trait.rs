@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Unified Configuration Trait System
 //!
 //! This module defines the unified `BearDogConfig` trait and comprehensive validation

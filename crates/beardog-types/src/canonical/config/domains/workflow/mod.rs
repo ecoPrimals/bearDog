@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Workflow Configuration Domain
 //!
 //! This module contains all workflow-related configuration types, organized into

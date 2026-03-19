@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # 🚀 tarpc Types and Service Trait for BearDog
 //!
 //! **HIGH-PERFORMANCE CRYPTO RPC** (v1.0.0)
@@ -359,12 +361,35 @@ mod tests {
     }
 
     #[test]
+    fn test_keypair_roundtrip() {
+        let kp = KeyPair {
+            public_key: vec![1, 2, 3],
+            private_key: vec![4, 5, 6],
+        };
+        let json = serde_json::to_string(&kp).unwrap();
+        let restored: KeyPair = serde_json::from_str(&json).unwrap();
+        assert_eq!(kp.public_key, restored.public_key);
+        assert_eq!(kp.private_key, restored.private_key);
+    }
+
+    #[test]
     fn test_crypto_error() {
         let err = CryptoError {
             code: -32000,
             message: "Invalid key".to_string(),
         };
         assert_eq!(err.code, -32000);
+    }
+
+    #[test]
+    fn test_crypto_error_serialization() {
+        let err = CryptoError {
+            code: -32600,
+            message: "Bad request".to_string(),
+        };
+        let json = serde_json::to_string(&err).unwrap();
+        let restored: CryptoError = serde_json::from_str(&json).unwrap();
+        assert_eq!(err.code, restored.code);
     }
 
     #[test]
@@ -377,5 +402,146 @@ mod tests {
         };
         assert!(req.nonce.is_none());
         assert!(req.aad.is_none());
+    }
+
+    #[test]
+    fn test_sign_request_serialization() {
+        let req = SignRequest {
+            data: vec![1, 2, 3],
+            private_key: vec![4, 5, 6],
+        };
+        let json = serde_json::to_string(&req).unwrap();
+        let restored: SignRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(req.data, restored.data);
+    }
+
+    #[test]
+    fn test_verify_request_serialization() {
+        let req = VerifyRequest {
+            data: vec![1],
+            signature: vec![2],
+            public_key: vec![3],
+        };
+        let json = serde_json::to_string(&req).unwrap();
+        let restored: VerifyRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(req.public_key, restored.public_key);
+    }
+
+    #[test]
+    fn test_key_exchange_request_serialization() {
+        let req = KeyExchangeRequest {
+            our_private_key: vec![1; 32],
+            their_public_key: vec![2; 32],
+        };
+        let json = serde_json::to_string(&req).unwrap();
+        let restored: KeyExchangeRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(req.our_private_key.len(), restored.our_private_key.len());
+    }
+
+    #[test]
+    fn test_decrypt_request_serialization() {
+        let req = DecryptRequest {
+            ciphertext: vec![1],
+            key: vec![0; 32],
+            nonce: vec![0; 12],
+            tag: vec![0; 16],
+            aad: None,
+        };
+        let json = serde_json::to_string(&req).unwrap();
+        let restored: DecryptRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(req.ciphertext, restored.ciphertext);
+    }
+
+    #[test]
+    fn test_hmac_request_serialization() {
+        let req = HmacRequest {
+            data: vec![1, 2, 3],
+            key: vec![4, 5, 6],
+        };
+        let json = serde_json::to_string(&req).unwrap();
+        let restored: HmacRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(req.key, restored.key);
+    }
+
+    #[test]
+    fn test_primal_info_serialization() {
+        let info = PrimalInfo {
+            name: "beardog".to_string(),
+            version: "1.0".to_string(),
+            family: "ecoPrimals".to_string(),
+            capabilities: vec!["crypto".to_string()],
+        };
+        let json = serde_json::to_string(&info).unwrap();
+        let restored: PrimalInfo = serde_json::from_str(&json).unwrap();
+        assert_eq!(info.name, restored.name);
+    }
+
+    #[test]
+    fn test_health_status_serialization() {
+        let status = HealthStatus {
+            status: "healthy".to_string(),
+            version: "1.0".to_string(),
+            uptime_seconds: 42,
+        };
+        let json = serde_json::to_string(&status).unwrap();
+        let restored: HealthStatus = serde_json::from_str(&json).unwrap();
+        assert_eq!(status.uptime_seconds, restored.uptime_seconds);
+    }
+
+    #[test]
+    fn test_protocol_info_serialization() {
+        let mut meta = HashMap::new();
+        meta.insert("port".to_string(), "9901".to_string());
+        let info = ProtocolInfo {
+            name: "tarpc".to_string(),
+            port: 9901,
+            enabled: true,
+            metadata: meta,
+        };
+        let json = serde_json::to_string(&info).unwrap();
+        let restored: ProtocolInfo = serde_json::from_str(&json).unwrap();
+        assert_eq!(info.port, restored.port);
+    }
+
+    #[test]
+    fn test_protocol_info_default_metadata() {
+        let json = r#"{"name":"tarpc","port":9901,"enabled":true}"#;
+        let info: ProtocolInfo = serde_json::from_str(json).unwrap();
+        assert!(info.metadata.is_empty());
+    }
+
+    #[test]
+    fn test_lineage_request_serialization() {
+        let req = LineageRequest {
+            family_seed: vec![1, 2, 3],
+            generation: 1,
+            context: "test".to_string(),
+        };
+        let json = serde_json::to_string(&req).unwrap();
+        let restored: LineageRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(req.generation, restored.generation);
+    }
+
+    #[test]
+    fn test_tls_secrets_request_serialization() {
+        let req = TlsSecretsRequest {
+            shared_secret: vec![1; 32],
+            transcript_hash: vec![2; 32],
+            cipher_suite: "TLS_AES_256_GCM_SHA384".to_string(),
+        };
+        let json = serde_json::to_string(&req).unwrap();
+        let restored: TlsSecretsRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(req.cipher_suite, restored.cipher_suite);
+    }
+
+    #[test]
+    fn test_capability_serialization() {
+        let cap = Capability {
+            name: "crypto.signatures".to_string(),
+            version: "1.0".to_string(),
+        };
+        let json = serde_json::to_string(&cap).unwrap();
+        let restored: Capability = serde_json::from_str(&json).unwrap();
+        assert_eq!(cap.name, restored.name);
     }
 }

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Core Types - BearDog Configuration
 //!
 //! Provides legacy configuration types for backward compatibility.

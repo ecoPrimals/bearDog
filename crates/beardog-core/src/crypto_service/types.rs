@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Types for crypto service configuration and state
 //!
 //! This module contains all internal types used by the crypto service,

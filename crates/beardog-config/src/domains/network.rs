@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Concurrent-Safe Network Configuration Module
 //!
 //! Network configuration for API, service discovery, and admin interfaces.

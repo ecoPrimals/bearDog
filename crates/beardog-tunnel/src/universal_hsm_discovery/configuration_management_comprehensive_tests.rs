@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Configuration Management Tests
 //!
 //! Extended test coverage for configuration management including:

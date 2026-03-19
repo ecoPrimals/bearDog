@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Crypto Provider Tests
 //!
 //! This module contains extensive tests for crypto provider selection,

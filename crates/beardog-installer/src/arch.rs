@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Architecture detection and Rust target mapping
 //!
 //! Provides compile-time architecture detection with zero runtime overhead.

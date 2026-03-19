@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! TLS 1.3 Key Derivation Functions
 //!
 //! This module implements the complete TLS 1.3 key schedule according to RFC 8446 Section 7.1.

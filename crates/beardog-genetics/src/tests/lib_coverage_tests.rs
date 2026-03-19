@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Coverage tests for `beardog-genetics` lib.rs
 //!
 //! These tests target functions in the top-level lib.rs that may have incomplete coverage.

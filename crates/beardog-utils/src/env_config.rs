@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Environment-based configuration utilities
 //!
 //! This module provides utilities for loading configuration from environment variables

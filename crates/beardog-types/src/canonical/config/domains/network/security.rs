@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Network Security Configuration Module
 //!
 //! This module contains network security configurations including TLS, endpoint security, and DDoS protection.

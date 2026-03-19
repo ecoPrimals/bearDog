@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Primal Discovery Module
 //!
 //! **Core Principle**: "Discover other primals at runtime, never hardcode"
@@ -125,12 +127,10 @@ pub struct PrimalDiscovery {
     method: DiscoveryMethod,
 
     /// Cached discoveries (for future use)
-    #[allow(dead_code)]
-    cache: HashMap<String, DiscoveredPrimal>,
+    _cache: HashMap<String, DiscoveredPrimal>,
 
     /// Cache TTL (for future use)
-    #[allow(dead_code)]
-    cache_ttl: Duration,
+    _cache_ttl: Duration,
 }
 
 // =============================================================================
@@ -193,8 +193,8 @@ impl PrimalDiscovery {
         debug!("🔍 Initializing primal discovery with method: {:?}", method);
         Self {
             method,
-            cache: HashMap::new(),
-            cache_ttl,
+            _cache: HashMap::new(),
+            _cache_ttl: cache_ttl,
         }
     }
 
@@ -215,8 +215,8 @@ impl PrimalDiscovery {
 
         Ok(Self {
             method,
-            cache: HashMap::new(),
-            cache_ttl,
+            _cache: HashMap::new(),
+            _cache_ttl: cache_ttl,
         })
     }
 
@@ -312,9 +312,9 @@ impl PrimalDiscovery {
                 self.discover_from_upa(&query, &registry_addr).await
             }
             DiscoveryMethod::Mdns { service_type } => {
-                self.discover_from_mdns(&query, &service_type).await
+                self.discover_from_mdns(&query, &service_type)
             }
-            DiscoveryMethod::DnsSd { domain } => self.discover_from_dns_sd(&query, &domain).await,
+            DiscoveryMethod::DnsSd { domain } => self.discover_from_dns_sd(&query, &domain),
             DiscoveryMethod::Multi(methods) => self.discover_multi(&query, &methods).await,
         }
     }
@@ -335,7 +335,7 @@ impl PrimalDiscovery {
     /// This method accepts an explicit environment map, making it concurrent-safe
     /// for testing while maintaining the same logic as `discover_from_env()`.
     fn discover_from_env_vars(
-        &mut self,
+        &self,
         env_vars: &HashMap<String, String>,
         query: &DiscoveryQuery,
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
@@ -419,8 +419,7 @@ impl PrimalDiscovery {
     /// Parse capabilities from environment variable
     ///
     /// Expected format: Comma-separated list like "SecureTunneling,GeneticLineage,Discovery"
-    #[allow(dead_code)] // Used in capability-based discovery (future)
-    fn parse_capabilities_from_env(env_key: &str) -> Vec<SimpleCapability> {
+    fn _parse_capabilities_from_env(env_key: &str) -> Vec<SimpleCapability> {
         env::var(env_key)
             .ok()
             .map(|caps_str| Self::parse_capabilities_str(&caps_str, env_key))
@@ -553,7 +552,7 @@ impl PrimalDiscovery {
     ///
     /// Production deployments should use Unix socket discovery (via beardog-ipc)
     /// or HTTP-based service registries until mDNS integration is complete.
-    async fn discover_from_mdns(
+    fn discover_from_mdns(
         &mut self,
         _query: &DiscoveryQuery,
         service_type: &str,
@@ -594,9 +593,9 @@ impl PrimalDiscovery {
     }
 
     /// Discover from DNS-SD (COMPLETE IMPLEMENTATION)
-    async fn discover_from_dns_sd(
+    fn discover_from_dns_sd(
         &mut self,
-        _query: &DiscoveryQuery, // TODO: Use for capability filtering
+        _query: &DiscoveryQuery, // Planned: Use for capability filtering in discovery results
         domain: &str,
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
         info!("🔍 DNS-SD discovery in domain: {}", domain);
@@ -644,9 +643,9 @@ impl PrimalDiscovery {
                     self.discover_from_upa(query, registry_addr).await
                 }
                 DiscoveryMethod::Mdns { service_type } => {
-                    self.discover_from_mdns(query, service_type).await
+                    self.discover_from_mdns(query, service_type)
                 }
-                DiscoveryMethod::DnsSd { domain } => self.discover_from_dns_sd(query, domain).await,
+                DiscoveryMethod::DnsSd { domain } => self.discover_from_dns_sd(query, domain),
                 DiscoveryMethod::Multi(_) => {
                     // Prevent infinite recursion
                     continue;

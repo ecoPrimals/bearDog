@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Zero-Copy Configuration Support
 //!
 //! This module provides Cow<T> (Clone-on-Write) support for configuration types.

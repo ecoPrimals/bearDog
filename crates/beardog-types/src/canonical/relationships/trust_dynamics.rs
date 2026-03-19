@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Trust Evolution Dynamics - Dynamic Trust Building and Healing
 //
 // This module implements TrustEvolution patterns that replace binary trusted/untrusted

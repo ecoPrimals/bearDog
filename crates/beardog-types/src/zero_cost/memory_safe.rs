@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Safe Zero-Cost Memory Management for BearDog Types
 //
 // This module provides memory-efficient operations without unsafe code,

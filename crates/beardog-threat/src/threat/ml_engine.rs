@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Machine Learning Engine - Modern Implementation
 //
 // **MODERNIZED**: Clean, production-ready ML engine for threat detection.

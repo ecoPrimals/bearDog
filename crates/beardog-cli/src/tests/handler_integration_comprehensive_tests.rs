@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Handler Integration Tests
 //!
 //! Tests integration paths and error handling for CLI handlers.

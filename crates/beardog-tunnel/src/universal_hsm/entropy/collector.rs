@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Entropy collection implementation
 //!
 //! **EVOLUTION NOTE (Dec 7, 2025)**: Migrated from mock implementation (returning zeros)

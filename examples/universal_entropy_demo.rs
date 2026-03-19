@@ -9,11 +9,11 @@
 //! Universal HSM Entropy Orchestrator Demo
 //!
 //! Demonstrates the unified entropy system that connects:
-//! - FIDO2 devices (SoloKeys, YubiKey)
-//! - Android StrongBox (Pixel Titan M2)
+//! - FIDO2 devices (`SoloKeys`, `YubiKey`)
+//! - Android `StrongBox` (Pixel Titan M2)
 //! - iOS Secure Enclave (iPhone)
 //!
-//! All feeding into BearDog's 3-tier entropy hierarchy.
+//! All feeding into `BearDog`'s 3-tier entropy hierarchy.
 
 use beardog_security::hsm::entropy_orchestrator::{
     EntropyGenerationRequest, HsmEntropyOrchestrator, HumanEntropyInput,
@@ -60,7 +60,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
     // Step 3: Generate entropy (basic - no human input)
     println!("🌱 Step 3: Generating Tier 2 entropy (hardware RNG only)...");
     let seed_id_basic = orchestrator.generate_human_entropy(256, None).await?;
-    println!("✅ Generated seed: {}", seed_id_basic);
+    println!("✅ Generated seed: {seed_id_basic}");
     println!("   Quality Tier: 2 (Human Supervised Machine)");
     println!();
 

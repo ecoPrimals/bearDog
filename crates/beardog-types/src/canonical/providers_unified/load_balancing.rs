@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Load Balancing Configuration
 //
 // Load balancing strategies and configuration for providers.

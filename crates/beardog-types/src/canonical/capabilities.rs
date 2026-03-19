@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Canonical Capability Definitions for BearDog
 //!
 //! Provides structured capability types for security, performance, compliance,

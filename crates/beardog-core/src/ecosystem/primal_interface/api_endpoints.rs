@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! API Endpoints for Primal Interface
 //!
 //! This module provides the public API endpoints that `BearDogCore` exposes
@@ -140,5 +142,28 @@ impl BearDogCore {
             serde_json::Value::Object(serde_json::Map::new()),
         )?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_start_ai_first_api_server_returns_error() {
+        let result = BearDogCore::start_ai_first_api_server();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_start_universal_api_gateway_returns_error() {
+        let result = BearDogCore::start_universal_api_gateway();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_initialize_service_mesh_returns_error() {
+        let result = BearDogCore::initialize_service_mesh();
+        assert!(result.is_err());
     }
 }

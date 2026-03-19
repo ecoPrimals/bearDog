@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tunnel event system
 //!
 //! Event types, capabilities, and compliance tracking for BearDog tunnels.

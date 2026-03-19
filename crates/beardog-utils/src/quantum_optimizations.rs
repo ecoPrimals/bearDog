@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Quantum-Inspired Optimization Algorithms
 //!
 //! This module implements **quantum-inspired optimization techniques** that transcend

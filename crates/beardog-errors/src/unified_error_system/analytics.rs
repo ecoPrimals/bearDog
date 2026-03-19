@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Error Analytics Module
 //!
 //! This module contains error analytics and pattern analysis functionality.

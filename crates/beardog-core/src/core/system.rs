@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! `BearDog` Core System Implementation
 //!
 //! The main entry point for the `BearDog` security and cryptography platform.
@@ -356,5 +358,50 @@ impl BearDogCore {
 
         info!("✅ Successfully registered with AI coordination services");
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use beardog_types::canonical::config::UnifiedBearDogConfig;
+
+    #[test]
+    fn test_system_new_with_config() {
+        let config = UnifiedBearDogConfig::default();
+        let _core = BearDogCore::new(config);
+    }
+
+    #[test]
+    fn test_system_with_default_config() {
+        let result = BearDogCore::with_default_config();
+        assert!(result.is_ok());
+        let _core = result.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_system_initialize() {
+        let mut core = BearDogCore::with_default_config().expect("config");
+        let result = core.initialize().await;
+        assert!(result.is_ok());
+        let state = core.state.read().await;
+        assert_eq!(
+            state.overall_health,
+            beardog_types::canonical::HealthStatus::Healthy
+        );
+    }
+
+    #[tokio::test]
+    async fn test_system_initialize_hsm_management() {
+        let core = BearDogCore::with_default_config().expect("config");
+        let result = core.initialize_hsm_management().await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_system_register_with_ai_service_alt() {
+        let core = BearDogCore::with_default_config().expect("config");
+        let result = core.register_with_ai_service_alt().await;
+        assert!(result.is_ok());
     }
 }

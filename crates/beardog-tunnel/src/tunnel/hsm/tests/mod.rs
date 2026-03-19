@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Integration tests for HSM functionality
 
 pub mod key_lifecycle_tests;

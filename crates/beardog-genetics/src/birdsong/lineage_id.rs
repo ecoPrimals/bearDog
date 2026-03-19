@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // ! Lineage ID wrapper for biomeOS integration
 //!
 //! Provides a simplified LineageID type that wraps chain_id + node_id

@@ -23,6 +23,7 @@
 //! - Profiles memory allocation during discovery
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+#[cfg(feature = "profiling")]
 use pprof::criterion::{Output, PProfProfiler};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -488,10 +489,16 @@ fn benchmark_mdns_discovery(c: &mut Criterion) {
 
 criterion_group! {
     name = discovery_benches;
-    config = Criterion::default()
-        .with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)))
-        .measurement_time(Duration::from_secs(10))
-        .warm_up_time(Duration::from_secs(3));
+    config = {
+        let mut c = Criterion::default()
+            .measurement_time(Duration::from_secs(10))
+            .warm_up_time(Duration::from_secs(3));
+        #[cfg(feature = "profiling")]
+        {
+            c = c.with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
+        }
+        c
+    };
     targets =
         benchmark_endpoint_probing,
         benchmark_concurrent_probing,

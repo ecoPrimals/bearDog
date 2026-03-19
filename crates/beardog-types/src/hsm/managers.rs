@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Manager Types
 //!
 //! Provides placeholder types for HSM health monitoring and failover management.

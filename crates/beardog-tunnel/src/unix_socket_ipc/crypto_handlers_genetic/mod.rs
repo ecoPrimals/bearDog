@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Genetic Crypto RPC Handlers - Phase 5
 //!
 //! Handlers for genetic lineage-based cryptographic operations, organized

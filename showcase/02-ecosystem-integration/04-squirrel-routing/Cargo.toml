@@ -29,7 +29,7 @@ anyhow = "1.0"
 clap = { version = "4.4", features = ["derive"] }
 
 # Hashing
-blake3 = "1.5"
+blake3 = { version = "1.5", features = ["pure"] }
 
 # Regex for PII detection
 regex = "1.10"

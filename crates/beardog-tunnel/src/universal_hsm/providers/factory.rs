@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Provider factory for creating HSM provider instances
 //!
 //! This module provides a factory pattern for creating HSM providers based on

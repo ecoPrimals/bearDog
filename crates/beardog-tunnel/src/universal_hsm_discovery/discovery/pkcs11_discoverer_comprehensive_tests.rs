@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive PKCS#11 Discoverer Tests
 //!
 //! Extended test coverage for PKCS#11 HSM discovery including:

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Coverage gap tests Part 10: Remaining config domains, security, workflow, production,
 //! discovery, providers, network, runtime, traits, config/utils file operations
 

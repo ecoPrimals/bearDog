@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Sovereign Crypto Utils
 //
 // This module replaces traditional crypto utilities with human-owned entropy.

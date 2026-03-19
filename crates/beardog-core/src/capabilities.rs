@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! BearDog Capability Manifest
 //!
 //! Defines what BearDog provides to the ecosystem without coupling to specific primals

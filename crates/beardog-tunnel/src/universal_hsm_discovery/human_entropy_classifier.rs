@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Human Entropy Classifier
 //!
 //! Classifies and evaluates human entropy sources for HSMs

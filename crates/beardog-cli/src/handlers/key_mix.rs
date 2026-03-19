@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Key Mixing Handler
 // Cryptographically mix two keys for shared access scenarios
 

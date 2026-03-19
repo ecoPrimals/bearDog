@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Graph Security Module for Collaborative Intelligence
 //!
 //! This module provides security validation for graph modifications, templates,

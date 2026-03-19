@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Hardware HSM Configuration
 //
 // Consolidates hardware HSM configurations from beardog-tunnel and other locations.

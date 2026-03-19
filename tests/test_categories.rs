@@ -98,6 +98,7 @@ pub mod requires {
 }
 
 /// Helper to check if running specific test categories
+#[must_use]
 pub fn should_run_category(category: &str) -> bool {
     // Check environment variables for test filtering
     if let Ok(filter) = std::env::var("TEST_CATEGORY") {
@@ -107,6 +108,7 @@ pub fn should_run_category(category: &str) -> bool {
 }
 
 /// Helper to check if running specific test domains
+#[must_use]
 pub fn should_run_domain(domain: &str) -> bool {
     if let Ok(filter) = std::env::var("TEST_DOMAIN") {
         return filter.split(',').any(|d| d.trim() == domain);

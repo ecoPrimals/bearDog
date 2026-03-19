@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Additional Key Derivation Function (KDF) handlers for BearDog RPC
 //!
 //! This module implements legacy and memory-hard KDF/password hashing algorithms:

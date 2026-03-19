@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Android abstract socket implementation for BearDog
 //!
 //! **Platform:** Android (ARM64, x86_64, all architectures)
@@ -150,7 +152,7 @@ mod tests {
                 assert!(name.starts_with('@'));
                 println!("✅ Abstract socket format correct: {}", name);
             }
-            _ => panic!("Expected Abstract endpoint"),
+            _ => panic!("Expected Abstract endpoint, got {:?}", endpoint),
         }
     }
 
@@ -164,7 +166,7 @@ mod tests {
                     assert!(name.contains(primal));
                     println!("✅ {} → {}", primal, name);
                 }
-                _ => panic!("Expected Abstract endpoint"),
+                _ => panic!("Expected Abstract endpoint, got {:?}", endpoint),
             }
         }
     }

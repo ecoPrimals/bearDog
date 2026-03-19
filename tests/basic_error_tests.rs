@@ -1,6 +1,6 @@
 //! Basic Error Creation and Handling Tests
 //!
-//! This module contains unit tests for basic error type creation across all BearDogError variants.
+//! This module contains unit tests for basic error type creation across all `BearDogError` variants.
 //! Tests verify that each error type can be instantiated correctly and contains expected messages.
 //!
 //! Coverage: Error type creation (17 tests), Display/Debug (2 tests), Result handling (5 tests)
@@ -23,7 +23,7 @@ fn test_system_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("system error"),
+        format!("{error:?}").contains("system error"),
         "System error should contain message"
     );
 }
@@ -40,7 +40,7 @@ fn test_security_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("security issue"),
+        format!("{error:?}").contains("security issue"),
         "Security error should contain message"
     );
 }
@@ -57,7 +57,7 @@ fn test_validation_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("invalid input"),
+        format!("{error:?}").contains("invalid input"),
         "Validation error should contain message"
     );
 }
@@ -74,7 +74,7 @@ fn test_network_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("connection failed"),
+        format!("{error:?}").contains("connection failed"),
         "Network error should contain message"
     );
 }
@@ -91,12 +91,12 @@ fn test_configuration_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("bad config"),
+        format!("{error:?}").contains("bad config"),
         "Configuration error should contain message"
     );
 }
 
-/// Tests that not_found errors can be created with correct message
+/// Tests that `not_found` errors can be created with correct message
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: errors
@@ -108,7 +108,7 @@ fn test_not_found_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("resource not found"),
+        format!("{error:?}").contains("resource not found"),
         "NotFound error should contain message"
     );
 }
@@ -125,12 +125,12 @@ fn test_unauthorized_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("access denied"),
+        format!("{error:?}").contains("access denied"),
         "Unauthorized error should contain message"
     );
 }
 
-/// Tests that invalid_input errors can be created with correct message
+/// Tests that `invalid_input` errors can be created with correct message
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: errors
@@ -142,7 +142,7 @@ fn test_invalid_input_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("bad input"),
+        format!("{error:?}").contains("bad input"),
         "InvalidInput error should contain message"
     );
 }
@@ -159,7 +159,7 @@ fn test_unavailable_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("service unavailable"),
+        format!("{error:?}").contains("service unavailable"),
         "Unavailable error should contain message"
     );
 }
@@ -176,7 +176,7 @@ fn test_internal_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("internal error"),
+        format!("{error:?}").contains("internal error"),
         "Internal error should contain message"
     );
 }
@@ -193,7 +193,7 @@ fn test_business_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("business rule"),
+        format!("{error:?}").contains("business rule"),
         "Business error should contain message"
     );
 }
@@ -214,7 +214,7 @@ fn test_api_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("API error"),
+        format!("{error:?}").contains("API error"),
         "API error should contain message"
     );
 }
@@ -231,7 +231,7 @@ fn test_workflow_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("workflow failed"),
+        format!("{error:?}").contains("workflow failed"),
         "Workflow error should contain message"
     );
 }
@@ -248,7 +248,7 @@ fn test_genetics_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("genetic error"),
+        format!("{error:?}").contains("genetic error"),
         "Genetics error should contain message"
     );
 }
@@ -265,7 +265,7 @@ fn test_initialization_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("init failed"),
+        format!("{error:?}").contains("init failed"),
         "Initialization error should contain message"
     );
 }
@@ -282,7 +282,7 @@ fn test_hsm_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("HSM error"),
+        format!("{error:?}").contains("HSM error"),
         "HSM error should contain message"
     );
 }
@@ -299,7 +299,7 @@ fn test_testing_error_creation() {
 
     // Then: error should contain the message
     assert!(
-        format!("{:?}", error).contains("test error"),
+        format!("{error:?}").contains("test error"),
         "Testing error should contain message"
     );
 }
@@ -319,7 +319,7 @@ fn test_error_display() {
     let error = BearDogError::validation("test");
 
     // When: formatting with Display
-    let display_str = format!("{}", error);
+    let display_str = format!("{error}");
 
     // Then: should produce non-empty output
     assert!(
@@ -339,7 +339,7 @@ fn test_error_debug() {
     let error = BearDogError::system("test".to_string());
 
     // When: formatting with Debug
-    let debug_str = format!("{:?}", error);
+    let debug_str = format!("{error:?}");
 
     // Then: should produce non-empty output
     assert!(!debug_str.is_empty(), "Debug output should not be empty");
@@ -349,7 +349,7 @@ fn test_error_debug() {
 // Result Handling Tests
 // ============================================================================
 
-/// Tests that Result<(), BearDogError> can return Ok
+/// Tests that Result<(), `BearDogError`> can return Ok
 ///
 /// `TEST_CATEGORY`: unit
 /// `TEST_DOMAIN`: errors

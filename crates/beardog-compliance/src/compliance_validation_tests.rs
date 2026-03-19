@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Compliance Validation Tests
 //!
 //! `TEST_CATEGORY`: unit

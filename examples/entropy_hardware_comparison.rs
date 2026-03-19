@@ -1,8 +1,8 @@
 //! Hardware Entropy Comparison Suite
 //!
 //! Compare entropy generation across multiple hardware platforms:
-//! 1. SoloKey FIDO2 hardware
-//! 2. Pixel 8a Titan M (StrongBox)
+//! 1. `SoloKey` FIDO2 hardware
+//! 2. Pixel 8a Titan M (`StrongBox`)
 //! 3. Software HSM (baseline)
 //! 4. Human entropy (keyboard/mouse timing)
 //!
@@ -142,8 +142,8 @@ fn calculate_serial_correlation(data: &[u8]) -> f64 {
     let mut sum_y2 = 0.0;
 
     for i in 0..n {
-        let x = data[i] as f64;
-        let y = data[i + 1] as f64;
+        let x = f64::from(data[i]);
+        let y = f64::from(data[i + 1]);
 
         sum_x += x;
         sum_y += y;
@@ -207,7 +207,7 @@ fn test_software_hsm(size: usize) -> Result<EntropyTestResult, BearDogError> {
     })
 }
 
-/// Test SoloKey FIDO2 hardware entropy
+/// Test `SoloKey` FIDO2 hardware entropy
 #[cfg(feature = "fido2")]
 async fn test_solokey_entropy(size: usize) -> Result<EntropyTestResult, BearDogError> {
     use beardog_security::hsm::fido2::discovery::discover_fido2_devices;
@@ -380,7 +380,7 @@ async fn run_comparison() -> Result<(), BearDogError> {
             result.print_report();
             results.push(result);
         }
-        Err(e) => println!("⚠️  Software HSM test failed: {}\n", e),
+        Err(e) => println!("⚠️  Software HSM test failed: {e}\n"),
     }
 
     // Test 2: SoloKey FIDO2
@@ -389,7 +389,7 @@ async fn run_comparison() -> Result<(), BearDogError> {
             result.print_report();
             results.push(result);
         }
-        Err(e) => println!("⚠️  SoloKey test skipped: {}\n", e),
+        Err(e) => println!("⚠️  SoloKey test skipped: {e}\n"),
     }
 
     // Test 3: Pixel 8a Titan M
@@ -398,7 +398,7 @@ async fn run_comparison() -> Result<(), BearDogError> {
             result.print_report();
             results.push(result);
         }
-        Err(e) => println!("⚠️  Pixel Titan M test skipped: {}\n", e),
+        Err(e) => println!("⚠️  Pixel Titan M test skipped: {e}\n"),
     }
 
     // Test 4: Human entropy (optional, interactive)
@@ -417,7 +417,7 @@ async fn run_comparison() -> Result<(), BearDogError> {
                 result.print_report();
                 results.push(result);
             }
-            Err(e) => println!("⚠️  Human entropy test failed: {}\n", e),
+            Err(e) => println!("⚠️  Human entropy test failed: {e}\n"),
         }
     } else {
         println!("⏭️  Skipping human entropy test\n");

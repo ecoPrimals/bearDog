@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Production Monitoring Advanced Comprehensive Tests
 // Created: October 24, 2025
 // Purpose: Advanced coverage for production/monitoring.rs - AlertManager, SystemMonitor, edge cases

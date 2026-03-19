@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Threat Detection Configuration - Canonical Location
 //!
 //! **Unified threat detection configuration** - consolidates scattered threat configs.

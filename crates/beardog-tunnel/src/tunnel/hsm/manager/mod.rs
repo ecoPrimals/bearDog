@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Manager Module
 //!
 //! Central coordinator for Hardware Security Module operations in the BearDog ecosystem.
@@ -219,15 +221,14 @@ pub struct HsmProviderSelection {
 /// * [`HsmProvider`] - HSM provider trait
 /// * [`HsmTier`] - Security tiers
 /// * [`HsmManagerConfig`] - Configuration options
-#[allow(dead_code)] // Fields used in implementation
 pub struct HsmManager {
     hsm_providers: HashMap<String, Arc<dyn HsmProvider>>,
-    config: HsmManagerConfig,
-    health_monitor: Arc<DefaultHsmHealthMonitor>,
-    failover_manager: Arc<DefaultHsmFailoverManager>,
-    capability_detector: Arc<DefaultHsmCapabilityDetector>,
+    _config: HsmManagerConfig,
+    _health_monitor: Arc<DefaultHsmHealthMonitor>,
+    _failover_manager: Arc<DefaultHsmFailoverManager>,
+    _capability_detector: Arc<DefaultHsmCapabilityDetector>,
     performance_tracker: Arc<HsmPerformanceTracker>,
-    operation_router: Arc<RwLock<HsmOperationRouter>>,
+    _operation_router: Arc<RwLock<HsmOperationRouter>>,
 }
 
 impl Default for HsmManager {
@@ -263,13 +264,12 @@ impl HsmManager {
     pub fn new() -> Self {
         Self {
             hsm_providers: HashMap::new(),
-            config: HsmManagerConfig::default(),
-            health_monitor: Arc::new(DefaultHsmHealthMonitor::default()),
-            failover_manager: Arc::new(DefaultHsmFailoverManager::default()),
-            // DefaultHsmCapabilityDetector::default() is infallible (only allocates a HashMap)
-            capability_detector: Arc::new(DefaultHsmCapabilityDetector::default()),
+            _config: HsmManagerConfig::default(),
+            _health_monitor: Arc::new(DefaultHsmHealthMonitor::default()),
+            _failover_manager: Arc::new(DefaultHsmFailoverManager::default()),
+            _capability_detector: Arc::new(DefaultHsmCapabilityDetector::default()),
             performance_tracker: Arc::new(HsmPerformanceTracker::default()),
-            operation_router: Arc::new(RwLock::new(HsmOperationRouter::default())),
+            _operation_router: Arc::new(RwLock::new(HsmOperationRouter::default())),
         }
     }
 

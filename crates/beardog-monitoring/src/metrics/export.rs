@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Export Engine
 //
 // Metrics export, integration, and external system connectivity.

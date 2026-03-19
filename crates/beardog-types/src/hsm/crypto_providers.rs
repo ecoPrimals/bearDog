@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM Cryptographic Provider Types
 //!
 //! Canonical type definitions for cryptographic providers.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Tunnel Tests
 //!
 //! Tests for secure tunnel creation, management, and encryption

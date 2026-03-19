@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Service Registry Module
 //
 // This module contains service registration, tracking, and management functionality.
@@ -191,5 +193,79 @@ impl ServiceRegistry {
         }
 
         Ok(expired_services)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use beardog_types::canonical::providers_unified::traits::ServiceInfo;
+    use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
+    fn make_extended_service_info(name: &str) -> ExtendedServiceInfo {
+        ExtendedServiceInfo {
+            service_info: ServiceInfo {
+                name: name.to_string(),
+                service_type: "http".to_string(),
+                address: "127.0.0.1".to_string(),
+                port: 8080,
+                metadata: std::collections::HashMap::new(),
+            },
+            address: SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080),
+            tags: std::collections::HashMap::new(),
+            metadata: std::collections::HashMap::new(),
+            health_status: HealthStatus::Healthy,
+            registered_at: Utc::now(),
+            last_heartbeat: Utc::now(),
+        }
+    }
+
+    #[test]
+    fn test_registry_new() {
+        let config = ServiceRegistryConfig::default();
+        let registry = ServiceRegistry::new(&config).unwrap();
+        assert_eq!(registry.get_service_count().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_registry_register_and_find() {
+        let config = ServiceRegistryConfig::default();
+        let mut registry = ServiceRegistry::new(&config).unwrap();
+        let service = make_extended_service_info("svc1");
+        registry.register_service(service).unwrap();
+        let found = registry.find_services_by_name("svc1").unwrap();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].service_info.name, "svc1");
+    }
+
+    #[test]
+    fn test_registry_deregister() {
+        let config = ServiceRegistryConfig::default();
+        let mut registry = ServiceRegistry::new(&config).unwrap();
+        let service = make_extended_service_info("svc1");
+        registry.register_service(service).unwrap();
+        let removed = registry.deregister_service("svc1").unwrap();
+        assert!(removed.is_some());
+        assert_eq!(registry.get_service_count().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_registry_update_health() {
+        let config = ServiceRegistryConfig::default();
+        let mut registry = ServiceRegistry::new(&config).unwrap();
+        let service = make_extended_service_info("svc1");
+        registry.register_service(service).unwrap();
+        registry
+            .update_service_health("svc1", HealthStatus::Degraded)
+            .unwrap();
+        let found = registry.get_service("svc1").unwrap().unwrap();
+        assert_eq!(found.health_status, HealthStatus::Degraded);
+    }
+
+    #[test]
+    fn test_registry_config_default() {
+        let config = ServiceRegistryConfig::default();
+        assert!(config.max_services >= 100);
+        assert!(config.enable_health_checks);
     }
 }

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Live Feed Validator
 //!
 //! Validates that entropy comes from live human sources only, not simulation.

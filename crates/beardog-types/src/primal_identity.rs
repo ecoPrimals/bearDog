@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Primal Identity - Self-knowledge configuration
 //!
 //! Following TRUE PRIMAL pattern: each primal only knows itself.

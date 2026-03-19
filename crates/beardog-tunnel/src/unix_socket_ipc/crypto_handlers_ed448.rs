@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Ed448 Crypto Handlers
 //!
 //! **STATUS**: FOSSIL RECORD - Not currently integrated into handler registry

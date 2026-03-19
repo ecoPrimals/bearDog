@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # beardog-installer
 //!
 //! **Universal genomeBin Installer** - Pure Rust, async, platform-agnostic
@@ -41,7 +43,7 @@ pub use arch::{ArchError, Architecture};
 pub use deployment::{DeploymentError, DeploymentManager};
 pub use installer::{BinaryInstaller, InstallerError};
 pub use platform::{BiomeOSPaths, OperatingSystem, PlatformError};
-pub use types::{DeploymentProgress, DeploymentReport, DeploymentStatus, Primal};
+pub use types::{DeploymentProgress, DeploymentReport, DeploymentStatus, PrimalName};
 pub use validator::{BinaryValidator, ValidationError, ValidationReport};
 
 /// Installer version

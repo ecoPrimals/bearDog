@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Coverage expansion tests for beardog-deploy
 //!
 //! These tests exercise actual production code paths that were previously

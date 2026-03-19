@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // Authorization types for BearDog Security
 //
 // This module provides authorization-related types for the BearDog ecosystem.

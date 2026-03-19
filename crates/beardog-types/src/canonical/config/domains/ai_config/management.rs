@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! AI Management and Security Configuration
 //!
 //! This module contains configuration types for AI model management,

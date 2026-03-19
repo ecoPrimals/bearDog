@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Key Lifecycle Management Types
 //!
 //! Comprehensive types for managing cryptographic key lifecycle states,

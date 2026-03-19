@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Threat Intelligence and ML Types
 //!
 //! This module provides types for threat intelligence feeds, machine learning models,

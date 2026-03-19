@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // ML Models - Modern Implementation
 //
 // **MODERNIZED**: Clean, production-ready ML model types for the BearDog threat detection engine.

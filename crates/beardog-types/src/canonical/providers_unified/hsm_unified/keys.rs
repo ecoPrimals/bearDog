@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! HSM key management and specifications
 //!
 //! This module contains HSM key types and key management functionality.

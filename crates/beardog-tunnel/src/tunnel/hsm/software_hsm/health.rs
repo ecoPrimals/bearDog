@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 use crate::tunnel::hsm::types::canonical::PerformanceMetrics as CanonicalPerformanceMetrics;
 use crate::tunnel::hsm::types::*;
 use beardog_errors::BearDogError;

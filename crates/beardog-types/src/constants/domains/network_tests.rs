@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Tests for Network Constants
 //!
 //! Comprehensive tests for all network constants, ports, timeouts, and limits.

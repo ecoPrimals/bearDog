@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Universal Crypto Provider Trait
 //!
 //! Defines the interface all crypto providers must implement, similar to UniversalHsmProvider.

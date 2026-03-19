@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! BearDog CLI Library
 //!
 //! This library provides the core functionality for the BearDog CLI,

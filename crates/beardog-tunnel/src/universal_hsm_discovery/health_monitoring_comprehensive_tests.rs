@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Comprehensive Health Monitoring Tests
 //!
 //! Extended test coverage for HSM health monitoring including:

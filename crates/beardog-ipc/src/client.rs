@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Songbird IPC Client
 //!
 //! Implements the client side of the Primal IPC Protocol for communicating with Songbird.
@@ -18,6 +20,7 @@ use tokio::time::{interval, Duration};
 use tracing::{debug, info, warn};
 
 /// Client for communicating with Songbird service registry
+#[derive(Debug)]
 pub struct SongbirdClient {
     /// Songbird socket path
     socket_path: String,
@@ -324,10 +327,45 @@ mod tests {
     }
 
     #[test]
+    fn test_client_default() {
+        let client = SongbirdClient::default();
+        assert_eq!(client.socket_path, DISCOVERY_SOCKET_FALLBACK);
+    }
+
+    #[test]
     fn test_request_id_increment() {
         let client = SongbirdClient::new();
         assert_eq!(client.next_request_id(), 1);
         assert_eq!(client.next_request_id(), 2);
         assert_eq!(client.next_request_id(), 3);
+    }
+
+    #[tokio::test]
+    async fn test_heartbeat_handle_creation_and_drop() {
+        let client = SongbirdClient::new();
+        let handle = client.start_heartbeat(Duration::from_secs(3600));
+        drop(handle);
+    }
+
+    #[tokio::test]
+    async fn test_connect_requires_socket() {
+        let result = SongbirdClient::connect().await;
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(
+            matches!(err, IpcError::Connection(_) | IpcError::Io(_)),
+            "Expected Connection or Io error, got {:?}",
+            err
+        );
+    }
+
+    #[test]
+    fn test_request_id_unique_per_client() {
+        let c1 = SongbirdClient::new();
+        let c2 = SongbirdClient::new();
+        let id1 = c1.next_request_id();
+        let id2 = c2.next_request_id();
+        assert_eq!(id1, 1);
+        assert_eq!(id2, 1);
     }
 }

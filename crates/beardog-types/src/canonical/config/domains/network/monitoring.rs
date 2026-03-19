@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! # Network Monitoring Configuration Module
 //!
 //! This module contains network monitoring and health check configurations.
