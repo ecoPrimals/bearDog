@@ -61,3 +61,4 @@ session-reports-*/
 # Showcase demo build artifacts
 showcase/**/target/
 showcase/**/Cargo.lock
+cobertura.xml
