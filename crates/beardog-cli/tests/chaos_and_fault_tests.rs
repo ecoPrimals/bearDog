@@ -12,8 +12,8 @@
 
 #[cfg(test)]
 mod chaos_tests {
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
     use tokio::sync::{RwLock, Semaphore};
 
     // ========================================================================

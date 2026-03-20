@@ -36,7 +36,7 @@
 use beardog_errors::BearDogError;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::{oneshot, watch, Barrier, Notify};
+use tokio::sync::{Barrier, Notify, oneshot, watch};
 
 /// Signal for one-time completion events
 ///

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Clone strategy helpers, copy-on-write patterns, and string interning.
 
 pub mod clone_optimizer;
 pub mod clone_patterns;
 pub mod string_interner;
 
+/// Re-exports for clone analysis helpers.
 pub use clone_optimizer::{CloneOptimizationStrategy, CloneOptimizer};
-pub use string_interner::{global_interner, intern_string, StringInterner};
+/// Global [`StringInterner`] accessors used from hot paths.
+pub use string_interner::{StringInterner, global_interner, intern_string};

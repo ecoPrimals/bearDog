@@ -22,7 +22,7 @@
 //! - Tests realistic data sizes (100B, 1KB, 10KB, 1MB)
 //! - Compares enum dispatch vs Box<dyn> for zero-cost validation
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, criterion_main};
 use pprof::criterion::{Output, PProfProfiler};
 use std::time::Duration;
 

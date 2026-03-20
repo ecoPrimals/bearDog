@@ -21,8 +21,8 @@
 //! - Improper cleanup
 
 use beardog_errors::BearDogError;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 use tokio::time::{sleep, timeout};
 
@@ -337,8 +337,8 @@ async fn chaos_memory_pressure() -> Result<(), BearDogError> {
 /// Simulates many concurrent crypto operations with random failures
 #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
 async fn chaos_concurrent_crypto_operations() -> Result<(), BearDogError> {
-    use beardog_tunnel::tunnel::hsm::software_hsm::crypto_providers::GeneticCryptoProvider;
     use beardog_tunnel::tunnel::hsm::software_hsm::CryptoProvider;
+    use beardog_tunnel::tunnel::hsm::software_hsm::crypto_providers::GeneticCryptoProvider;
     use rand::Rng;
 
     let operations = 200;

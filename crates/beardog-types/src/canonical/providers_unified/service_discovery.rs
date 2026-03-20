@@ -27,9 +27,10 @@ impl Default for ServiceDiscoveryConfig {
 }
 
 /// Discovery types for service registries
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum DiscoveryType {
     /// Key-value service discovery (Consul, etcd)
+    #[default]
     KeyValueRegistry,
     /// Container orchestration discovery (Kubernetes)
     ContainerOrchestrationRegistry,
@@ -39,10 +40,4 @@ pub enum DiscoveryType {
     Zookeeper,
     /// Custom discovery mechanism
     Custom(String),
-}
-
-impl Default for DiscoveryType {
-    fn default() -> Self {
-        DiscoveryType::KeyValueRegistry
-    }
 }

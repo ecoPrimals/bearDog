@@ -13,8 +13,10 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Snapshot of a peer primal used for trust scoring, routing, and capability discovery.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeInfo {
+    /// Unique node identifier within the mesh or registry namespace.
     pub node_id: String,
     /// The address value
     pub address: String,
@@ -28,10 +30,12 @@ pub struct NodeInfo {
     pub genetics: Option<BearDogGenetics>,
 }
 
+/// Abstraction over directory services that track participating BearDog nodes.
 pub trait NodeRegistry: Send + Sync {
-    /// Gets `node_info`
+    /// Looks up metadata previously registered for `node_id`.
     fn get_node_info(&self, node_id: &str) -> Result<NodeInfo, BearDogError>;
 
+    /// Persists or replaces registration details for a node.
     fn register_node(&mut self, node_info: NodeInfo) -> Result<(), BearDogError>;
 
     /// Gets `trust_level`
@@ -41,9 +45,12 @@ pub trait NodeRegistry: Send + Sync {
     fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> Result<(), BearDogError>;
 }
 
+/// Validates or mints [`AuthorizationProof`] values for cross-node calls.
 pub trait ProofVerifier: Send + Sync {
+    /// Returns `Ok(true)` when `proof` is well-formed, fresh, and cryptographically acceptable.
     fn verify_authorization_proof(&self, proof: &AuthorizationProof) -> Result<bool, BearDogError>;
 
+    /// Constructs a new proof binding `operation` to `authorization`.
     fn generate_proof(
         &self,
         authorization: &CrossNodeAuthorization,
@@ -51,35 +58,39 @@ pub trait ProofVerifier: Send + Sync {
     ) -> Result<AuthorizationProof, BearDogError>;
 }
 
+/// Orchestrates long-running cross-node workflows that require authorization context.
 pub trait WorkflowEngine: Send + Sync {
+    /// Enqueues a workflow and returns an opaque `workflow_id` for status polling.
     fn submit_workflow(
         &mut self,
         request: CrossNodeWorkflowRequest,
     ) -> Result<String, BearDogError>;
 
-    /// Gets `workflow_status`
+    /// Retrieves the latest [`WorkflowStatus`] for a previously submitted workflow.
     fn get_workflow_status(&self, workflow_id: &str) -> Result<WorkflowStatus, BearDogError>;
 }
 
+/// Composes policy config, registries, and verifiers used to authorize mesh-wide operations.
 pub struct CrossNodeAuthEngine {
+    /// Static policy loaded at startup governing proofs, spawning, and approvals.
     pub config: super::authorization::CrossNodeAuthConfig,
 
-    /// Mapping of active authorizations
+    /// Authorizations keyed by request id (or similar) that are still valid.
     pub active_authorizations: HashMap<String, CrossNodeAuthorization>,
 
-    /// Mapping of spawned beardogs
+    /// Active child primals spawned through this engine, keyed by spawn id.
     pub spawned_beardogs: HashMap<String, SpawnedBearDog>,
 
-    /// Mapping of genetics registry
+    /// Known genomes or key material metadata indexed by genetics id.
     pub genetics_registry: HashMap<String, BearDogGenetics>,
 
-    /// The node registry value
+    /// Pluggable directory of mesh nodes (memory, Consul, etc.).
     pub node_registry: Box<dyn NodeRegistry + Send + Sync>,
 
-    /// The proof verifier value
+    /// Cryptographic proof implementation (HSM-backed or software test double).
     pub proof_verifier: Box<dyn ProofVerifier + Send + Sync>,
 
-    /// Optional workflow engine
+    /// Optional workflow orchestrator for multi-step approvals.
     pub workflow_engine: Option<Box<dyn WorkflowEngine + Send + Sync>>,
 }
 
@@ -375,13 +386,15 @@ mod comprehensive_tests {
         ];
 
         assert_eq!(node.capabilities.len(), 3);
-        assert!(node
-            .capabilities
-            .contains(&NodeCapability::SecurityAnalysis));
+        assert!(
+            node.capabilities
+                .contains(&NodeCapability::SecurityAnalysis)
+        );
         assert!(node.capabilities.contains(&NodeCapability::ThreatDetection));
-        assert!(node
-            .capabilities
-            .contains(&NodeCapability::CryptographicAuditing));
+        assert!(
+            node.capabilities
+                .contains(&NodeCapability::CryptographicAuditing)
+        );
     }
 
     // Test removed due to struct field mismatches - needs proper mock setup

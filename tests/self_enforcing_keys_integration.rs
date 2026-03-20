@@ -14,7 +14,7 @@ use beardog_genetics::{
 };
 use chrono::{Duration, Utc};
 use ed25519_dalek::SigningKey;
-use rand::{rngs::OsRng, Rng};
+use rand::{Rng, rngs::OsRng};
 
 // ============================================================================
 // Test Helpers
@@ -22,7 +22,7 @@ use rand::{rngs::OsRng, Rng};
 
 fn create_test_keypair() -> SigningKey {
     let mut rng = OsRng;
-    let secret_bytes: [u8; 32] = rng.gen();
+    let secret_bytes: [u8; 32] = rng.r#gen();
     SigningKey::from_bytes(&secret_bytes)
 }
 

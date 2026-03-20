@@ -44,7 +44,7 @@
 // Modern Android system property access via std::env (100% safe)
 #![forbid(unsafe_code)]
 
-use beardog_errors::{phase2_not_implemented, BearDogError};
+use beardog_errors::{BearDogError, phase2_not_implemented};
 use tracing::{debug, info};
 
 // ============================================================================

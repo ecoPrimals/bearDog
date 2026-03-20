@@ -38,8 +38,10 @@ use std::time::Duration;
 )]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 /// Types of hsm provider
+#[derive(Default)]
 pub enum LegacyHsmProviderType {
     /// Software-based HSM implementation
+    #[default]
     Software,
     /// Hardware-based HSM
     Hardware,
@@ -57,12 +59,6 @@ pub enum LegacyHsmProviderType {
 }
 
 #[allow(deprecated)] // Allow implementation for backward compatibility
-impl Default for LegacyHsmProviderType {
-    fn default() -> Self {
-        Self::Software
-    }
-}
-
 #[allow(deprecated)] // Allow implementation for backward compatibility
 impl fmt::Display for LegacyHsmProviderType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -163,10 +159,11 @@ impl Default for SecurityConfig {
 
 /// `AuthMethod`
 ///
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum AuthMethod {
     /// No authentication (testing only)
     /// None
+    #[default]
     None,
     /// Password-based authentication
     Password {
@@ -184,6 +181,7 @@ pub enum AuthMethod {
     Token {
         /// Unique token identifier
         token_id: u32,
+        /// Optional user PIN or secondary secret presented with the token handle.
         pin: Option<String>,
     },
     /// Biometric authentication
@@ -191,12 +189,6 @@ pub enum AuthMethod {
         /// Biometric authentication method (fingerprint, face, etc.)
         method: String,
     },
-}
-
-impl Default for AuthMethod {
-    fn default() -> Self {
-        Self::None
-    }
 }
 
 /// Base HSM configuration
@@ -269,7 +261,7 @@ impl Default for SoftwareHsmConfig {
         Self {
             base: HsmConfig::default(),
             storage_path: std::env::var("BEARDOG_HSM_STORAGE_PATH")
-                .unwrap_or_else(|_| format!("{}/hsm", DEFAULT_TEMP_DIR)),
+                .unwrap_or_else(|_| format!("{DEFAULT_TEMP_DIR}/hsm")),
             kek: None,
             memory_protection: true,
         }
@@ -506,7 +498,7 @@ impl Default for HsmProviderConfig {
 impl HsmProviderConfig {
     /// Get the base HSM configuration
     #[must_use]
-    pub fn base_config(&self) -> &HsmConfig {
+    pub const fn base_config(&self) -> &HsmConfig {
         match self {
             Self::Software(config) => &config.base,
             Self::Hardware(config) => &config.base,
@@ -601,6 +593,7 @@ impl HsmProviderConfig {
     }
 }
 
+/// Fluent builder for [`HsmProviderConfig`] variants (software, hardware, network, cloud).
 pub struct HsmConfigBuilder {
     config: HsmProviderConfig,
 }

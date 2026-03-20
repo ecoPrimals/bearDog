@@ -78,12 +78,14 @@ mod tests {
         assert_eq!(info.id, "core_security");
         assert_eq!(info.name, "Core Security Provider");
         assert_eq!(info.version, "1.0.0");
-        assert!(info
-            .supported_capabilities
-            .contains(&"authentication".to_string()));
-        assert!(info
-            .supported_capabilities
-            .contains(&"authorization".to_string()));
+        assert!(
+            info.supported_capabilities
+                .contains(&"authentication".to_string())
+        );
+        assert!(
+            info.supported_capabilities
+                .contains(&"authorization".to_string())
+        );
     }
 
     #[tokio::test]
@@ -327,15 +329,21 @@ mod tests {
 
         // Updated to reflect production-grade crypto (Dec 7, 2025)
         assert_eq!(context.security_level, "production");
-        assert!(context
-            .encryption_algorithms
-            .contains(&"aes-256-gcm".to_string()));
-        assert!(context
-            .signature_algorithms
-            .contains(&"ed25519".to_string()));
-        assert!(context
-            .key_derivation_functions
-            .contains(&"hkdf-sha256".to_string()));
+        assert!(
+            context
+                .encryption_algorithms
+                .contains(&"aes-256-gcm".to_string())
+        );
+        assert!(
+            context
+                .signature_algorithms
+                .contains(&"ed25519".to_string())
+        );
+        assert!(
+            context
+                .key_derivation_functions
+                .contains(&"hkdf-sha256".to_string())
+        );
         assert!(context.random_generators.contains(&"os_csprng".to_string()));
     }
 

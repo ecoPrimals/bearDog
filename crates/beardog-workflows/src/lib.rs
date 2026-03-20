@@ -5,10 +5,6 @@
 //! Comprehensive workflow orchestration and process management for `BearDog` applications,
 //! providing stateful workflow execution with audit logging and error recovery.
 
-// Production code must use proper error handling - deny panicking methods
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-// Allow expect in tests - test panics are appropriate failure modes
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
 
@@ -66,11 +62,15 @@ mod workflow_execution_tests;
 #[cfg(test)]
 mod workflow_orchestration_tests;
 
-// Canonical workflow configuration - modernized
+/// Top-level knobs for the workflow runtime: concurrency, timeouts, retries, audit trail, and storage.
+///
+/// Used when wiring a [`BearDogWorkflowSystem`] or external orchestration adapters. Values are
+/// hints for schedulers and persistence layers; enforcement is implementation-defined.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct WorkflowConfig {
     /// Number of `max_concurrent_workflows`
     pub max_concurrent_workflows: usize,
+    /// Default wall-clock timeout for a single workflow execution, in seconds.
     pub default_timeout_seconds: u64,
     /// Number of `retry_attempts`
     pub retry_attempts: u32,

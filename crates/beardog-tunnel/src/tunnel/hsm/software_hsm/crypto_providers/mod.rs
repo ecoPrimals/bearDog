@@ -13,9 +13,9 @@ pub mod rust_crypto;
 mod comprehensive_tests;
 
 pub use factory::{
-    create_crypto_provider, get_crypto_backend_by_name, get_crypto_provider_capabilities,
-    get_recommended_crypto_backend, get_supported_crypto_backends, get_supported_storage_backends,
-    is_crypto_backend_supported, CryptoProviderCapabilities,
+    CryptoProviderCapabilities, create_crypto_provider, get_crypto_backend_by_name,
+    get_crypto_provider_capabilities, get_recommended_crypto_backend,
+    get_supported_crypto_backends, get_supported_storage_backends, is_crypto_backend_supported,
 };
 
 // Use canonical CryptoProvider trait from beardog-types
@@ -23,14 +23,14 @@ pub use beardog_types::hsm::CryptoProvider;
 
 // ✅ Export all crypto provider implementations (ordered by recommendation)
 pub use genetic_crypto::GeneticCryptoProvider; // RECOMMENDED (100% Pure Rust)
-                                               // OpenSslCryptoProvider removed - pure Rust alternatives available
-                                               // pub use ring_crypto::RingCryptoProvider;  // REMOVED: C dependencies, use RustCryptoProvider instead!
+// OpenSslCryptoProvider removed - pure Rust alternatives available
+// pub use ring_crypto::RingCryptoProvider;  // REMOVED: C dependencies, use RustCryptoProvider instead!
 pub use rust_crypto::RustCryptoProvider;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tunnel::hsm::types::config::CryptoBackend;
     use crate::tunnel::hsm::types::KeyType;
+    use crate::tunnel::hsm::types::config::CryptoBackend;
     use beardog_errors::BearDogError;
 
     #[tokio::test]
@@ -115,8 +115,8 @@ mod tests {
 
         assert!(!rust_caps.supports_hardware_acceleration);
         assert!(genetic_caps.supports_hardware_acceleration); // GeneticCrypto uses AES-NI, AVX2 CPU intrinsics
-                                                              // assert!(ring_caps.supports_hardware_acceleration);
-                                                              // assert!(openssl_caps.supports_hardware_acceleration);
+        // assert!(ring_caps.supports_hardware_acceleration);
+        // assert!(openssl_caps.supports_hardware_acceleration);
         Ok(())
     }
 

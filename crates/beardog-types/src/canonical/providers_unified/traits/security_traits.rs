@@ -215,10 +215,12 @@ pub trait UnifiedHsmProvider: UnifiedSecurityProvider {
         &self,
     ) -> impl std::future::Future<Output = Result<Vec<KeyInfo>, BearDogError>> + Send;
 
+    /// Vendor/model/firmware metadata for attestation and inventory.
     fn device_info(
         &self,
     ) -> impl std::future::Future<Output = Result<HsmDeviceInfo, BearDogError>> + Send;
 
+    /// Runs a fresh hardware attestation challenge/response exchange.
     fn attest(
         &self,
     ) -> impl std::future::Future<Output = Result<AttestationResponse, BearDogError>> + Send;
@@ -314,6 +316,7 @@ pub struct KeyGenerationSpec {
     pub extractable: bool,
 }
 
+/// Metadata returned for a resident HSM key handle.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyInfo {
     /// Key identifier
@@ -392,6 +395,7 @@ pub struct AuthenticationContext {
     pub metadata: HashMap<String, String>,
 }
 
+/// Static device identity block used for compliance and pairing.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmDeviceInfo {
     /// Device manufacturer
@@ -453,12 +457,14 @@ pub struct KeyBackupSpec {
     /// Backup encryption key
     /// Optional backup key
     pub backup_key: Option<String>,
+    /// Serialization format (`jwk`, `pkcs8`, vendor-specific).
     pub format: String,
     /// Include metadata
     /// Whether `include_metadata` is enabled
     pub include_metadata: bool,
 }
 
+/// Resulting blob + checksum after a backup operation completes.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackupInfo {
     /// Backup identifier

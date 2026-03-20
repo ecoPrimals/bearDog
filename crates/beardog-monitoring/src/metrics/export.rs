@@ -27,6 +27,7 @@ impl ExportEngine {
         Ok(())
     }
 
+    /// Serializes or forwards the given system metrics to configured external sinks.
     pub const fn export_metrics(
         &self,
         _metrics: &super::SystemMetrics,
@@ -36,11 +37,12 @@ impl ExportEngine {
     }
 }
 
+/// Controls which external observability sinks are active and how often batches flush.
 #[derive(Debug, Clone)]
 pub struct ExportConfig {
     /// Whether `enable_prometheus` is enabled
     pub enable_prometheus: bool,
-    /// Whether `enable_grafana` is enabled
+    /// When true, push or expose metrics in a Grafana-friendly form (alongside Prometheus if enabled).
     pub enable_grafana: bool,
     /// Number of `export_interval_secs`
     pub export_interval_secs: u64,

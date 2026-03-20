@@ -61,7 +61,12 @@ pub enum ConfigError {
 
     /// Invalid value
     #[error("Invalid value for '{field}': {message}")]
-    InvalidValue { field: String, message: String },
+    InvalidValue {
+        /// Configuration key or dotted path that was rejected (e.g. `BEARDOG_API_PORT`).
+        field: String,
+        /// Explanation suitable for operators or API consumers.
+        message: String,
+    },
 }
 
 impl ConfigError {

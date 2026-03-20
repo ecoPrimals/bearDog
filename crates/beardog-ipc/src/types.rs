@@ -35,16 +35,16 @@ impl Capability {
     /// Convert capability to string representation
     pub fn as_str(&self) -> &str {
         match self {
-            Capability::Crypto => "crypto",
-            Capability::BTSP => "btsp",
-            Capability::Ed25519 => "ed25519",
-            Capability::X25519 => "x25519",
-            Capability::ChaCha20Poly1305 => "chacha20poly1305",
-            Capability::AesGcm => "aesgcm",
-            Capability::Storage => "storage",
-            Capability::AI => "ai",
-            Capability::Discovery => "discovery",
-            Capability::Custom(s) => s,
+            Self::Crypto => "crypto",
+            Self::BTSP => "btsp",
+            Self::Ed25519 => "ed25519",
+            Self::X25519 => "x25519",
+            Self::ChaCha20Poly1305 => "chacha20poly1305",
+            Self::AesGcm => "aesgcm",
+            Self::Storage => "storage",
+            Self::AI => "ai",
+            Self::Discovery => "discovery",
+            Self::Custom(s) => s,
         }
     }
 }
@@ -68,7 +68,7 @@ pub struct ServiceInfo {
     pub metadata: HashMap<String, serde_json::Value>,
 }
 
-fn default_true() -> bool {
+const fn default_true() -> bool {
     true
 }
 

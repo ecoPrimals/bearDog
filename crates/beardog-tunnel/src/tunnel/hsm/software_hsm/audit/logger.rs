@@ -94,8 +94,8 @@ impl DefaultAuditLogger {
     ) -> Result<(), BearDogError> {
         self.log_detailed_operation(
             operation.to_string(),
-            user_id.map(|s| s.to_string()),
-            key_id.map(|s| s.to_string()),
+            user_id.map(std::string::ToString::to_string),
+            key_id.map(std::string::ToString::to_string),
             true,
             None,
             std::collections::HashMap::new(),
@@ -113,8 +113,8 @@ impl DefaultAuditLogger {
     ) -> Result<(), BearDogError> {
         self.log_detailed_operation(
             operation.to_string(),
-            user_id.map(|s| s.to_string()),
-            key_id.map(|s| s.to_string()),
+            user_id.map(std::string::ToString::to_string),
+            key_id.map(std::string::ToString::to_string),
             false,
             Some(error.to_string()),
             std::collections::HashMap::new(),
@@ -157,7 +157,7 @@ impl DefaultAuditLogger {
             None,
             Some(key_id.to_string()),
             success,
-            error_message.map(|s| s.to_string()),
+            error_message.map(std::string::ToString::to_string),
             std::collections::HashMap::new(),
         )
         .await

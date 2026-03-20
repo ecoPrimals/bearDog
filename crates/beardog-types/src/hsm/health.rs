@@ -39,7 +39,7 @@ impl ProviderInfo {
 
     /// Sets availability
     #[must_use]
-    pub fn with_availability(mut self, available: bool) -> Self {
+    pub const fn with_availability(mut self, available: bool) -> Self {
         self.is_available = available;
         self
     }

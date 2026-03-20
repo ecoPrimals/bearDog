@@ -152,18 +152,18 @@ impl From<Algorithm> for KeyType {
     fn from(algo: Algorithm) -> Self {
         match algo {
             Algorithm::EcdsaP256 | Algorithm::EccP256 | Algorithm::EcdsaSha256 => {
-                KeyType::EllipticCurve
+                Self::EllipticCurve
             }
-            Algorithm::EcdsaP384 | Algorithm::EccP384 => KeyType::EllipticCurve,
+            Algorithm::EcdsaP384 | Algorithm::EccP384 => Self::EllipticCurve,
             Algorithm::RsaPss2048
             | Algorithm::RsaPss3072
             | Algorithm::RsaPss4096
-            | Algorithm::RsaSha256 => KeyType::Rsa,
-            Algorithm::Aes256Gcm => KeyType::Aes,
-            Algorithm::ChaCha20Poly1305 => KeyType::ChaCha20,
-            Algorithm::Ed25519 => KeyType::Ed25519,
-            Algorithm::X25519 => KeyType::X25519,
-            Algorithm::HkdfSha256 => KeyType::Generic, // KDF doesn't map directly to key type
+            | Algorithm::RsaSha256 => Self::Rsa,
+            Algorithm::Aes256Gcm => Self::Aes,
+            Algorithm::ChaCha20Poly1305 => Self::ChaCha20,
+            Algorithm::Ed25519 => Self::Ed25519,
+            Algorithm::X25519 => Self::X25519,
+            Algorithm::HkdfSha256 => Self::Generic, // KDF doesn't map directly to key type
         }
     }
 }
@@ -384,7 +384,7 @@ impl AndroidKeystore {
     ///
     /// # Errors
     /// Returns an error if initialization fails
-    pub fn new(config: AndroidHsmConfig) -> Result<Self, BearDogError> {
+    pub const fn new(config: AndroidHsmConfig) -> Result<Self, BearDogError> {
         let capabilities = AndroidDeviceCapabilities {
             strongbox_available: true,
             key_attestation_available: true,
@@ -503,7 +503,7 @@ impl AndroidKeystore {
     }
 
     /// Check if StrongBox is available on this device
-    pub fn is_strongbox_available(&self) -> bool {
+    pub const fn is_strongbox_available(&self) -> bool {
         self.capabilities.strongbox_available
     }
 
@@ -572,7 +572,7 @@ pub struct AndroidAttestationService {
 
 impl AndroidAttestationService {
     /// Create new attestation service
-    pub fn new(attestation_level: AttestationLevel) -> Self {
+    pub const fn new(attestation_level: AttestationLevel) -> Self {
         Self {
             enabled: true,
             attestation_level,
@@ -608,7 +608,7 @@ pub struct AndroidHealthMonitor {
 
 impl AndroidHealthMonitor {
     /// Create new health monitor
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             check_interval_seconds: 60,
         }

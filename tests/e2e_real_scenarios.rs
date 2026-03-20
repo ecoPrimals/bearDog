@@ -5,8 +5,8 @@
 
 mod e2e;
 
-use e2e::real_scenarios::*;
 use e2e::E2ETestConfig;
+use e2e::real_scenarios::*;
 
 // TEST_CATEGORY: e2e
 // TEST_DOMAIN: core

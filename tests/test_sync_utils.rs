@@ -13,7 +13,7 @@
 
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::{watch, Barrier, Notify, RwLock};
+use tokio::sync::{Barrier, Notify, RwLock, watch};
 use tokio::time::timeout;
 
 /// Signal for component readiness

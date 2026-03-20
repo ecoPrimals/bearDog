@@ -37,7 +37,7 @@ pub async fn run(endpoint: Option<String>, command: Option<String>) -> anyhow::R
         println!("║                                                                    ║");
         println!("╚════════════════════════════════════════════════════════════════════╝\n");
 
-        println!("Endpoint: {}", endpoint);
+        println!("Endpoint: {endpoint}");
         println!("\nAvailable commands:");
         println!("  • tunnel establish <peer>   - Establish BTSP tunnel");
         println!("  • tunnel status <id>        - Check tunnel status");

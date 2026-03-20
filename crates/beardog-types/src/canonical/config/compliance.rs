@@ -300,4 +300,5 @@ impl CanonicalComplianceConfig {
     }
 }
 
+/// Back-compat alias for [`CanonicalComplianceConfig`]; prefer the canonical name in new code.
 pub type ComplianceConfig = CanonicalComplianceConfig;

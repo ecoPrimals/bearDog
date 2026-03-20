@@ -4,8 +4,8 @@
 // **MODERNIZED**: All constants consolidated using domain-organized system
 
 // MODERNIZED: Use domain-organized constants instead of deprecated unified system
-pub use crate::constants::domains::system::timeouts::default_timeout_ms;
 pub use crate::constants::domains::system::ConstantRegistry as UnifiedConstantRegistry;
+pub use crate::constants::domains::system::timeouts::default_timeout_ms;
 
 // **MODERNIZED MODULE ACCESS** - Domain-organized constants
 /// Api module
@@ -23,6 +23,7 @@ pub mod security {
     pub use crate::constants::domains::security::*;
 }
 
+/// Performance-related canonical constants (timeouts, throughput defaults, etc.).
 pub mod performance {
     pub use crate::constants::domains::system::performance::*;
 }

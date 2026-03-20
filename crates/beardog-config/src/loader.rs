@@ -15,9 +15,9 @@
 //!
 //! See `hierarchy` module for implementation details.
 
+use crate::BearDogConfig;
 use crate::error::ConfigResult;
 use crate::hierarchy::ConfigHierarchy;
-use crate::BearDogConfig;
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -38,7 +38,7 @@ impl ConfigLoader {
     }
 
     /// Apply defaults (already applied in new())
-    pub fn with_defaults(self) -> Self {
+    pub const fn with_defaults(self) -> Self {
         self
     }
 

@@ -21,13 +21,17 @@ use std::sync::Arc;
 use tokio::sync::broadcast;
 
 // Domain-specific metrics modules
+/// Trend detection and summarized reporting over recorded events.
 pub mod analytics;
-/// Core functionality
-/// Core functionality
+/// Minimal metrics core (intervals, enablement).
 pub mod core;
+/// Cross-primal interaction and integration health metrics.
 pub mod ecosystem;
+/// Optional export to Prometheus/Grafana and similar systems.
 pub mod export;
+/// CPU, latency, throughput, and related performance signals.
 pub mod performance;
+/// Authentication failures, threat level, and compliance-style scores.
 pub mod security;
 
 pub use core::{MetricsCore, MetricsCoreConfig};
@@ -164,6 +168,7 @@ pub struct UnifiedMetricsConfig {
     /// The core value
     pub core: MetricsCoreConfig,
 
+    /// Sampling and retention settings for the performance engine.
     pub performance: PerformanceConfig,
 
     /// Security metrics configuration
@@ -201,6 +206,7 @@ impl Default for UnifiedMetricsConfig {
     }
 }
 
+/// Typed metric observation routed through the unified system and broadcast channel.
 #[derive(Debug, Clone)]
 pub struct MetricEvent {
     /// Event category
@@ -223,8 +229,10 @@ pub struct MetricEvent {
     pub timestamp: std::time::SystemTime,
 }
 
+/// Routes a [`MetricEvent`] to the performance, security, ecosystem, or custom pipeline.
 #[derive(Debug, Clone)]
 pub enum MetricCategory {
+    /// Latency, throughput, resource usage, etc.
     Performance,
     /// Represents security variant
     Security,
@@ -243,13 +251,19 @@ pub enum MetricValue {
     Gauge(f64),
     /// Represents histogram variant
     Histogram(Vec<f64>),
-    /// Represents summary variant
-    Summary { sum: f64, count: u64 },
+    /// Pre-aggregated sum and observation count (Prometheus-style summary).
+    Summary {
+        /// Sum of observed values.
+        sum: f64,
+        /// Number of observations included in `sum`.
+        count: u64,
+    },
 }
 
 /// Comprehensive system metrics
 #[derive(Debug, Clone)]
 pub struct SystemMetrics {
+    /// Engine-reported performance metrics (CPU, latency, errors, etc.).
     pub performance: PerformanceMetrics,
     /// The security value
     pub security: SecurityMetrics,
@@ -257,6 +271,7 @@ pub struct SystemMetrics {
     pub ecosystem: EcosystemMetrics,
     /// The analytics value
     pub analytics: AnalyticsSummary,
+    /// Wall-clock time when this aggregate snapshot was assembled.
     pub timestamp: std::time::SystemTime,
 }
 

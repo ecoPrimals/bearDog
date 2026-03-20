@@ -33,10 +33,10 @@ pub fn init_test_env() {
     INIT.call_once(|| {
         // Set test environment variables
         // Using sensible defaults to avoid breaking validation tests
-        std::env::set_var("BEARDOG_ENVIRONMENT", "test");
-        std::env::set_var("BEARDOG_API_HOST", "127.0.0.1");
-        std::env::set_var("BEARDOG_API_PORT", "8080"); // Valid port for tests
-        std::env::set_var("BEARDOG_ENABLE_TLS", "true"); // TLS enabled by default for security
+        beardog_errors::process_env::set_var("BEARDOG_ENVIRONMENT", "test");
+        beardog_errors::process_env::set_var("BEARDOG_API_HOST", "127.0.0.1");
+        beardog_errors::process_env::set_var("BEARDOG_API_PORT", "8080"); // Valid port for tests
+        beardog_errors::process_env::set_var("BEARDOG_ENABLE_TLS", "true"); // TLS enabled by default for security
     });
 }
 
@@ -220,7 +220,7 @@ pub fn test_api_host() -> String {
 }
 
 /// Get test API port
-pub fn test_api_port() -> u16 {
+pub const fn test_api_port() -> u16 {
     8080
 }
 

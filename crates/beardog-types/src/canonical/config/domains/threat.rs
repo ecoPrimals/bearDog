@@ -118,11 +118,12 @@ impl Default for CanonicalThreatDetectionConfig {
 }
 
 /// Sensitivity level for threat detection (categorical)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum SensitivityLevel {
     /// Low sensitivity - fewer false positives, may miss threats
     Low,
     /// Normal sensitivity - balanced approach
+    #[default]
     Normal,
     /// High sensitivity - more false positives, catches more threats
     High,
@@ -130,15 +131,9 @@ pub enum SensitivityLevel {
     Maximum,
 }
 
-impl Default for SensitivityLevel {
-    fn default() -> Self {
-        Self::Normal
-    }
-}
-
 impl SensitivityLevel {
     /// Convert sensitivity level to numeric value (0.0 - 1.0)
-    pub fn to_numeric(&self) -> f64 {
+    pub const fn to_numeric(&self) -> f64 {
         match self {
             Self::Low => 0.5,
             Self::Normal => 0.7,

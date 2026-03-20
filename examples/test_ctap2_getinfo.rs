@@ -37,7 +37,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
 
 #[cfg(feature = "fido2")]
 async fn run_ctap2_test() -> Result<(), beardog_errors::BearDogError> {
-    use beardog_hid::{discover, open_device, HidDevice};
+    use beardog_hid::{HidDevice, discover, open_device};
 
     // Step 1: Discover HID devices using Pure Rust
     println!("Step 1: Discovering HID devices (Pure Rust /dev/hidraw)...");

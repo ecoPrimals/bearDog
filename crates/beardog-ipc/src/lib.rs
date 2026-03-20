@@ -70,7 +70,7 @@ pub use types::{Capability, DiscoveryQuery, ServiceInfo};
 pub use neural_registration::{discover_neural_api_socket, register_with_neural_api};
 
 // Isomorphic IPC discovery (automatic Unix or TCP)
-pub use isomorphic::{connect_beardog, discover_beardog_endpoint, AsyncStream, IpcEndpoint};
+pub use isomorphic::{AsyncStream, IpcEndpoint, connect_beardog, discover_beardog_endpoint};
 
 // Registry client for JSON-RPC registration
 pub use protocol::JsonRpcRequest as ProtocolJsonRpcRequest;
@@ -102,6 +102,12 @@ pub const PROTOCOL_VERSION: &str = "1.0";
 /// The fallback uses a generic "/primal/discovery" endpoint that any discovery
 /// service can bind to, rather than hardcoding a specific primal name.
 pub const DISCOVERY_SOCKET_FALLBACK: &str = "/primal/discovery";
+
+/// Development-only Unix socket path when no registry is present (local dev).
+///
+/// Override with `BEARDOG_DEV_DISCOVERY_SOCKET`. Not used in production when
+/// discovery is capability-based (mDNS, registry, Neural API).
+pub const DISCOVERY_SOCKET_DEV_FALLBACK: &str = "/tmp/beardog-discovery";
 
 /// Discover IPC socket path via capability-based discovery
 ///
@@ -144,6 +150,23 @@ pub async fn discover_ipc_socket() -> String {
         DISCOVERY_SOCKET_FALLBACK
     );
     DISCOVERY_SOCKET_FALLBACK.to_string()
+}
+
+/// JSON-RPC `ipc.resolve` params key for the target service instance id (legacy wire name).
+/// The value is an opaque id from capability discovery, not a fixed peer product name.
+pub const IPC_RESOLVE_TARGET_PARAM_KEY: &str = "primal";
+
+/// Override [`IPC_RESOLVE_TARGET_PARAM_KEY`] for registries that use a different field name.
+pub const ENV_IPC_RESOLVE_TARGET_PARAM_KEY: &str = "BEARDOG_IPC_RESOLVE_TARGET_PARAM_KEY";
+
+/// Returns the JSON-RPC parameter name used for `ipc.resolve` targets.
+///
+/// Reads [`ENV_IPC_RESOLVE_TARGET_PARAM_KEY`] from the environment, or defaults to
+/// [`IPC_RESOLVE_TARGET_PARAM_KEY`] so registries can rename the field without recompiling clients.
+#[must_use]
+pub fn ipc_resolve_target_param_key() -> String {
+    std::env::var(ENV_IPC_RESOLVE_TARGET_PARAM_KEY)
+        .unwrap_or_else(|_| IPC_RESOLVE_TARGET_PARAM_KEY.to_string())
 }
 
 /// Default heartbeat interval (30 seconds)

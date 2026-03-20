@@ -335,10 +335,12 @@ mod compliance_handler_tests {
         let result = handler.evaluate_compliance(&event).unwrap();
 
         assert!(result.recommendations.len() >= 3);
-        assert!(result
-            .recommendations
-            .iter()
-            .any(|r| r.contains("audit trail") || r.contains("approval")));
+        assert!(
+            result
+                .recommendations
+                .iter()
+                .any(|r| r.contains("audit trail") || r.contains("approval"))
+        );
     }
 
     #[test]
@@ -350,10 +352,12 @@ mod compliance_handler_tests {
         let result = handler.evaluate_compliance(&event).unwrap();
 
         assert!(result.recommendations.len() >= 3);
-        assert!(result
-            .recommendations
-            .iter()
-            .any(|r| r.contains("incident")));
+        assert!(
+            result
+                .recommendations
+                .iter()
+                .any(|r| r.contains("incident"))
+        );
     }
 
     #[test]
@@ -658,12 +662,16 @@ mod compliance_handler_tests {
 
         let metrics = handler.generate_metrics();
 
-        assert!(metrics
-            .standards_compliance
-            .contains_key(&ComplianceStandard::Gdpr));
-        assert!(metrics
-            .standards_compliance
-            .contains_key(&ComplianceStandard::Hipaa));
+        assert!(
+            metrics
+                .standards_compliance
+                .contains_key(&ComplianceStandard::Gdpr)
+        );
+        assert!(
+            metrics
+                .standards_compliance
+                .contains_key(&ComplianceStandard::Hipaa)
+        );
         assert_eq!(metrics.overall_score, 95.0);
     }
 

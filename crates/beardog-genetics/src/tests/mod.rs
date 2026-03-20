@@ -32,6 +32,20 @@ mod population_evolution_integration_tests;
 #[cfg(test)]
 mod genetics_advanced_coverage_tests;
 
-// February 2026: Coverage gap tests targeting 90% threshold
+// February 2026: Coverage gap tests targeting 90% threshold (split for file-size policy)
 #[cfg(test)]
-mod coverage_gap_tests;
+mod coverage_birdsong_manager_tests;
+#[cfg(test)]
+mod coverage_constraints_enforcement_tests;
+#[cfg(test)]
+mod coverage_constraints_evolution_tests;
+#[cfg(test)]
+mod coverage_constraints_types_tests;
+#[cfg(test)]
+mod coverage_ecosystem_evolution_tests;
+#[cfg(test)]
+mod coverage_entropy_hierarchy_tests;
+#[cfg(test)]
+mod coverage_genesis_provider_tests;
+#[cfg(test)]
+mod coverage_genesis_types_tests;

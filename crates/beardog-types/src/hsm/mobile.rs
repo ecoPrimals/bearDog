@@ -42,34 +42,34 @@ impl AndroidDeviceInfo {
 
     /// Sets StrongBox availability
     #[must_use]
-    pub fn with_strongbox(mut self, available: bool) -> Self {
+    pub const fn with_strongbox(mut self, available: bool) -> Self {
         self.strongbox_available = available;
         self
     }
 
     /// Sets TEE availability
     #[must_use]
-    pub fn with_tee(mut self, available: bool) -> Self {
+    pub const fn with_tee(mut self, available: bool) -> Self {
         self.tee_available = available;
         self
     }
 
     /// Sets hardware attestation support
     #[must_use]
-    pub fn with_hardware_attestation(mut self, supported: bool) -> Self {
+    pub const fn with_hardware_attestation(mut self, supported: bool) -> Self {
         self.hardware_attestation_supported = supported;
         self
     }
 
     /// Checks if device has any hardware security
     #[must_use]
-    pub fn has_hardware_security(&self) -> bool {
+    pub const fn has_hardware_security(&self) -> bool {
         self.strongbox_available || self.tee_available
     }
 
     /// Gets the security level of the device
     #[must_use]
-    pub fn security_level(&self) -> SecurityLevel {
+    pub const fn security_level(&self) -> SecurityLevel {
         if self.strongbox_available {
             SecurityLevel::StrongBox
         } else if self.tee_available {
@@ -108,7 +108,7 @@ pub enum SecurityLevel {
 impl SecurityLevel {
     /// Returns a human-readable name
     #[must_use]
-    pub fn name(&self) -> &'static str {
+    pub const fn name(&self) -> &'static str {
         match self {
             Self::Software => "Software",
             Self::TrustedExecutionEnvironment => "TEE",
@@ -118,7 +118,7 @@ impl SecurityLevel {
 
     /// Returns whether this level has hardware backing
     #[must_use]
-    pub fn is_hardware_backed(&self) -> bool {
+    pub const fn is_hardware_backed(&self) -> bool {
         matches!(self, Self::TrustedExecutionEnvironment | Self::StrongBox)
     }
 }

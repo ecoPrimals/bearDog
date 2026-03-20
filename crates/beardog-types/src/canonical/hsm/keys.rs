@@ -165,6 +165,7 @@ pub struct KeyMetadata {
     /// Key version
     /// Number of version
     pub version: u32,
+    /// Optional lineage link to a wrapping or predecessor key in hierarchical schemes.
     pub parent_key_id: Option<String>,
 }
 
@@ -282,13 +283,14 @@ impl Default for BackupInfo {
 /// Key lifecycle states
 /// `KeyLifecycleState`
 ///
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum KeyLifecycleState {
     /// Key is being generated
     /// Generating
     Generating,
     /// Key is active and can be used
     /// Active
+    #[default]
     Active,
     /// Key is suspended (temporarily disabled)
     /// Suspended
@@ -302,12 +304,6 @@ pub enum KeyLifecycleState {
     /// Key is destroyed
     /// Destroyed
     Destroyed,
-}
-
-impl Default for KeyLifecycleState {
-    fn default() -> Self {
-        Self::Active
-    }
 }
 
 /// Key operation request
@@ -326,6 +322,7 @@ pub struct KeyOperationRequest {
     /// Additional parameters
     /// Mapping of parameters
     pub parameters: HashMap<String, String>,
+    /// Idempotency / tracing token echoed in HSM audit logs.
     pub request_id: String,
 }
 
@@ -416,8 +413,7 @@ impl HsmKey {
     /// Checks if active
     /// Checks if active
     pub fn is_active(&self) -> bool {
-        self.health.status == "healthy"
-            && self.expires_at.map_or(true, |exp| exp > SystemTime::now())
+        self.health.status == "healthy" && self.expires_at.is_none_or(|exp| exp > SystemTime::now())
     }
 
     /// Check if the key supports a specific usage
@@ -518,7 +514,7 @@ impl KeyManager {
     #[must_use]
     /// Validates `key_id`
     /// Validates `key_id`
-    pub fn validate_key_id(key_id: &str) -> bool {
+    pub const fn validate_key_id(key_id: &str) -> bool {
         !key_id.is_empty() && key_id.len() <= 255
     }
 
@@ -533,9 +529,8 @@ impl KeyManager {
         )
     }
 
+    /// Returns whether `key_size` is a conventional length for `algorithm` (AES/RSA/ECC/etc.).
     #[must_use]
-    /// Checks if key size valid
-    /// Checks if key size valid
     pub fn is_key_size_valid(algorithm: &str, key_size: u32) -> bool {
         match algorithm {
             "AES" => matches!(key_size, 128 | 192 | 256),
@@ -547,6 +542,7 @@ impl KeyManager {
         }
     }
 
+    /// Conservative default key size in bits for `algorithm`, if one exists.
     #[must_use]
     pub fn recommended_key_size(algorithm: &str) -> Option<u32> {
         match algorithm {

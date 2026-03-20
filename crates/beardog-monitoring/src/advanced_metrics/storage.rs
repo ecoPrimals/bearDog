@@ -11,6 +11,7 @@ use std::collections::HashMap;
 /// Comprehensive metrics storage
 #[derive(Debug, Default)]
 pub struct MetricsStore {
+    /// Latest snapshot per named performance metric (counter, gauge, histogram, etc.).
     pub performance: HashMap<String, PerformanceMetric>,
     /// Security event metrics
     /// Mapping of security
@@ -34,11 +35,13 @@ impl MetricsStore {
         Self::default()
     }
 
+    /// Returns the stored [`PerformanceMetric`] for `name`, if any.
     #[must_use]
     pub fn get_performance_metric(&self, name: &str) -> Option<&PerformanceMetric> {
         self.performance.get(name)
     }
 
+    /// Inserts or replaces a performance metric and bumps aggregate metadata counts.
     pub fn store_performance_metric(&mut self, metric: PerformanceMetric) {
         self.performance.insert(metric.name.clone(), metric);
         self.metadata.total_metrics += 1;

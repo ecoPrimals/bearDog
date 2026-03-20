@@ -106,7 +106,7 @@ impl PlatformSocket for UnixSocket {
                 std::fs::create_dir_all(&biomeos_dir)?;
             }
 
-            biomeos_dir.join(format!("{}.sock", primal_name))
+            biomeos_dir.join(format!("{primal_name}.sock"))
         } else {
             // Priority 3: /tmp fallback (compatibility)
             let tmp_dir = std::path::PathBuf::from("/tmp/biomeos");
@@ -116,7 +116,7 @@ impl PlatformSocket for UnixSocket {
                 std::fs::create_dir_all(&tmp_dir)?;
             }
 
-            tmp_dir.join(format!("{}.sock", primal_name))
+            tmp_dir.join(format!("{primal_name}.sock"))
         };
 
         debug!("Creating Unix filesystem socket: {}", socket_path.display());
@@ -172,11 +172,11 @@ mod tests {
         std::fs::create_dir_all(&xdg_runtime).ok();
 
         // Set XDG_RUNTIME_DIR to our temp directory
-        std::env::set_var("XDG_RUNTIME_DIR", xdg_runtime.to_str().unwrap());
+        beardog_errors::process_env::set_var("XDG_RUNTIME_DIR", xdg_runtime.to_str().unwrap());
 
         let endpoint = UnixSocket::create_endpoint("beardog").unwrap();
 
-        std::env::remove_var("XDG_RUNTIME_DIR");
+        beardog_errors::process_env::remove_var("XDG_RUNTIME_DIR");
 
         match endpoint {
             SocketEndpoint::Filesystem(path) => {
@@ -194,11 +194,11 @@ mod tests {
 
     #[test]
     fn test_environment_override() {
-        std::env::set_var("BEARDOG_SOCKET", "/custom/path/beardog.sock");
+        beardog_errors::process_env::set_var("BEARDOG_SOCKET", "/custom/path/beardog.sock");
 
         let endpoint = UnixSocket::create_endpoint("beardog").unwrap();
 
-        std::env::remove_var("BEARDOG_SOCKET");
+        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
 
         match endpoint {
             SocketEndpoint::Filesystem(path) => {

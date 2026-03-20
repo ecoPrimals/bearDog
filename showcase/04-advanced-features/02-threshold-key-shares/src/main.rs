@@ -443,7 +443,7 @@ async fn generate_master_key(
     
     // Generate a random 32-byte secret
     let mut rng = rand::thread_rng();
-    let secret: Vec<u8> = (0..32).map(|_| rng.gen()).collect();
+    let secret: Vec<u8> = (0..32).map(|_| rng.r#gen()).collect();
     
     let key_id = format!("genetic-key-{}-{}", 
                          scenario.operation,

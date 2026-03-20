@@ -6,8 +6,8 @@
 //! These tests ensure our implementation is cryptographically correct and
 //! interoperable with other RFC-compliant implementations.
 
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_tunnel::unix_socket_ipc::crypto_handlers_aes_gcm::{
     handle_aes128_gcm_decrypt, handle_aes128_gcm_encrypt, handle_aes256_gcm_decrypt,
     handle_aes256_gcm_encrypt,

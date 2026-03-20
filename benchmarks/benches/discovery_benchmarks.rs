@@ -22,7 +22,7 @@
 //! - Measures caching effectiveness
 //! - Profiles memory allocation during discovery
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 #[cfg(feature = "profiling")]
 use pprof::criterion::{Output, PProfProfiler};
 use std::collections::HashMap;

@@ -447,7 +447,7 @@ impl SafeAndroidKeystore {
         // bindings to Android Keystore API.
         warn!("Android StrongBox signature verification not yet implemented (JNI Phase 2)");
         Err(BearDogError::not_implemented(
-            "Android StrongBox signature verification requires JNI integration (not yet implemented)"
+            "Android StrongBox signature verification requires JNI integration (not yet implemented)",
         ))
     }
 

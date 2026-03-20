@@ -11,8 +11,8 @@
 )]
 
 use beardog_core::BearDogConfig;
-use beardog_types::canonical::capabilities::ServiceCapabilityType;
 use beardog_types::canonical::HealthStatus;
+use beardog_types::canonical::capabilities::ServiceCapabilityType;
 
 // ============================================================================
 // Configuration Default Tests

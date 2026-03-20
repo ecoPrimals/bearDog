@@ -29,7 +29,7 @@ pub use service_mesh::{
 };
 pub use vendor::{CloudProviderConfig, KmsConfig, VendorConfig};
 
-use crate::canonical::config::r#trait::{validation, BearDogConfig};
+use crate::canonical::config::r#trait::{BearDogConfig, validation};
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

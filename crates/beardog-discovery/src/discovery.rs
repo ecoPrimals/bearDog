@@ -134,9 +134,9 @@ impl CapabilityDiscovery {
             );
 
             services.push(DiscoveredService {
-                id: format!("env-{}", capability),
+                id: format!("env-{capability}"),
                 service_type: "unknown".to_string(),
-                display_name: format!("Environment-discovered {} service", capability),
+                display_name: format!("Environment-discovered {capability} service"),
                 endpoint: crate::types::ServiceEndpoint {
                     primary_url: endpoint,
                     fallback_urls: vec![],
@@ -168,7 +168,7 @@ impl CapabilityDiscovery {
                     let primal_name = parts[1..parts.len() - 1].join("_");
 
                     // Check if this primal provides the capability we need
-                    let cap_key = format!("PRIMAL_{}_CAPABILITIES", primal_name);
+                    let cap_key = format!("PRIMAL_{primal_name}_CAPABILITIES");
                     if let Ok(caps) = env::var(&cap_key) {
                         if caps.split(',').any(|c| c.trim() == capability) {
                             debug!("Found primal {} providing {}", primal_name, capability);
@@ -176,7 +176,7 @@ impl CapabilityDiscovery {
                             services.push(DiscoveredService {
                                 id: format!("primal-{}", primal_name.to_lowercase()),
                                 service_type: primal_name.to_lowercase(),
-                                display_name: format!("{} Primal", primal_name),
+                                display_name: format!("{primal_name} Primal"),
                                 endpoint: crate::types::ServiceEndpoint {
                                     primary_url: value.clone(),
                                     fallback_urls: vec![],
@@ -345,7 +345,7 @@ struct ServiceCache {
 }
 
 impl ServiceCache {
-    fn new() -> Self {
+    const fn new() -> Self {
         Self {
             services: Vec::new(),
         }

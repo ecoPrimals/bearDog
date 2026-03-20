@@ -182,9 +182,9 @@ pub use database::*;
 pub use genetics::*;
 pub use hsm::{UnifiedHsmConfig as ConfigHsmConfig, UnifiedHsmConfig as ConfigHsm};
 pub use monitoring_migration::{
-    create_configuration_legacy_monitoring, migrate_monitoring_configurations,
     LegacyMonitoringConfig, MonitoringMigrationReport, MonitoringMigrationResult,
-    MonitoringMigrationService,
+    MonitoringMigrationService, create_configuration_legacy_monitoring,
+    migrate_monitoring_configurations,
 };
 pub use network::{CanonicalNetworkConfig as ConfigNetworkConfig, NetworkConfig as ConfigNetwork};
 pub use performance::*;
@@ -202,8 +202,8 @@ pub use security::CanonicalSecurityConfig;
 
 // Re-export the UNIFIED CONFIGURATION TRAIT SYSTEM
 pub use r#trait::{
-    validation, BearDogConfig, ConfigBuilder, ConfigLoader, ConfigMetadata, ConfigSource,
-    ValidationStatus,
+    BearDogConfig, ConfigBuilder, ConfigLoader, ConfigMetadata, ConfigSource, ValidationStatus,
+    validation,
 };
 
 // Re-export the UNIFIED CONFIGURATION SYSTEM as primary interface
@@ -235,8 +235,8 @@ pub use unified::{
 };
 
 // Backward compatibility aliases
-pub use unified::SimplifiedBearDogConfig as WorkingUnifiedConfig;
 pub use UnifiedBearDogConfig as PrimaryUnifiedBearDogConfig;
+pub use unified::SimplifiedBearDogConfig as WorkingUnifiedConfig;
 
 // NOTE: unified_simple module removed in Phase 2 cleanup (October 2025)
 // All functionality migrated to unified.rs
@@ -244,6 +244,7 @@ pub use UnifiedBearDogConfig as PrimaryUnifiedBearDogConfig;
 // REMOVED: Deprecated legacy config types (337 lines)
 // Migrated to UnifiedBearDogConfig - October 2025
 
+/// High-level flags describing which major subsystems are enabled for the loaded configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigurationSummary {
     /// Current deployment environment (dev, staging, prod)

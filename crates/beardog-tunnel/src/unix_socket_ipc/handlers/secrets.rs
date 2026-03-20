@@ -41,16 +41,16 @@
 //! - Random nonce per encryption (never reused)
 //! - Family-scoped: different families derive different keys for the same secret name
 
-use super::utils::get_primal_name;
 use super::MethodHandler;
+use super::utils::get_primal_name;
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_types::primal_identity::PrimalIdentity;
 use chacha20poly1305::{
-    aead::{Aead, AeadCore, KeyInit, OsRng},
     ChaCha20Poly1305,
+    aead::{Aead, AeadCore, KeyInit, OsRng},
 };
 use hkdf::Hkdf;
 use parking_lot::RwLock;
@@ -108,7 +108,7 @@ impl SecretsHandler {
         let mut okm = [0u8; 32];
         // info field provides per-secret key isolation
         hk.expand(secret_name.as_bytes(), &mut okm)
-            .map_err(|e| format!("HKDF-SHA256 key derivation failed: {}", e))?;
+            .map_err(|e| format!("HKDF-SHA256 key derivation failed: {e}"))?;
 
         Ok(okm)
     }
@@ -149,7 +149,7 @@ impl SecretsHandler {
         // Encrypt the secret value
         let ciphertext = cipher
             .encrypt(&nonce, value.as_bytes())
-            .map_err(|e| format!("Encryption failed: {}", e))?;
+            .map_err(|e| format!("Encryption failed: {e}"))?;
 
         // Store the encrypted entry
         let entry = EncryptedSecret {
@@ -202,16 +202,16 @@ impl SecretsHandler {
             store.get(name).cloned()
         };
 
-        let entry = entry.ok_or_else(|| format!("Secret '{}' not found", name))?;
+        let entry = entry.ok_or_else(|| format!("Secret '{name}' not found"))?;
 
         // Decode stored ciphertext and nonce
         let ciphertext = BASE64
             .decode(&entry.ciphertext)
-            .map_err(|e| format!("Corrupt ciphertext: {}", e))?;
+            .map_err(|e| format!("Corrupt ciphertext: {e}"))?;
 
         let nonce_bytes = BASE64
             .decode(&entry.nonce)
-            .map_err(|e| format!("Corrupt nonce: {}", e))?;
+            .map_err(|e| format!("Corrupt nonce: {e}"))?;
 
         if nonce_bytes.len() != 12 {
             return Err(format!(
@@ -228,10 +228,10 @@ impl SecretsHandler {
         // Decrypt
         let plaintext = cipher
             .decrypt(nonce, ciphertext.as_ref())
-            .map_err(|e| format!("Decryption failed (key mismatch or tampering): {}", e))?;
+            .map_err(|e| format!("Decryption failed (key mismatch or tampering): {e}"))?;
 
         let value = String::from_utf8(plaintext)
-            .map_err(|e| format!("Decrypted value is not valid UTF-8: {}", e))?;
+            .map_err(|e| format!("Decrypted value is not valid UTF-8: {e}"))?;
 
         info!("🔓 Secret '{}' retrieved successfully", name);
 
@@ -312,7 +312,7 @@ impl MethodHandler for SecretsHandler {
             "secrets.retrieve" => self.handle_retrieve(params).await,
             "secrets.list" => self.handle_list().await,
             "secrets.delete" => self.handle_delete(params).await,
-            _ => Err(format!("Unknown secrets method: {}", method)),
+            _ => Err(format!("Unknown secrets method: {method}")),
         }
     }
 }

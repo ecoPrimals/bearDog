@@ -492,6 +492,7 @@ pub struct LoadBalancingConfig {
     pub strategy: LoadBalancingStrategy,
 }
 
+/// Strategy for spreading outbound or inbound work across peers in this legacy network config.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum LoadBalancingStrategy {
     /// Round-robin distribution strategy

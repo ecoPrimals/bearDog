@@ -61,12 +61,12 @@ impl TcpIpcServer {
         // Bind TCP listener
         let listener = TcpListener::bind(self.bind_addr)
             .await
-            .map_err(|e| BearDogError::system(format!("Failed to bind TCP: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to bind TCP: {e}")))?;
 
         // Get actual bound address (important if port was 0)
         let bound_addr = listener
             .local_addr()
-            .map_err(|e| BearDogError::system(format!("Failed to get local address: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to get local address: {e}")))?;
 
         *self.bound_addr.write().await = Some(bound_addr);
 
@@ -105,7 +105,7 @@ impl TcpIpcServer {
     ) -> Result<(), BearDogError> {
         let peer_addr = stream
             .peer_addr()
-            .map_err(|e| BearDogError::system(format!("Failed to get peer address: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to get peer address: {e}")))?;
 
         debug!("🔌 Handling connection from: {}", peer_addr);
 

@@ -106,7 +106,7 @@ impl MethodHandler for BtspHandler {
         } else if method == "btsp.tunnel_send_http" {
             self.handle_tunnel_send_http(params, btsp_provider).await
         } else {
-            Err(format!("Unknown BTSP method: {}", method))
+            Err(format!("Unknown BTSP method: {method}"))
         }
     }
 }
@@ -136,7 +136,10 @@ impl BtspHandler {
             .and_then(|v| v.as_str())
             .ok_or("Missing requester_lineage")?;
 
-        let max_hops = params.get("max_hops").and_then(|v| v.as_u64()).unwrap_or(3) as usize;
+        let max_hops = params
+            .get("max_hops")
+            .and_then(serde_json::Value::as_u64)
+            .unwrap_or(3) as usize;
 
         match btsp_provider
             .contact_exchange(target_peer_id, requester_lineage, max_hops)
@@ -148,11 +151,11 @@ impl BtspHandler {
                     target_peer_id
                 );
                 Ok(serde_json::to_value(contact_info)
-                    .map_err(|e| format!("Serialization error: {}", e))?)
+                    .map_err(|e| format!("Serialization error: {e}"))?)
             }
             Err(e) => {
                 warn!("⚠️  Contact exchange failed: {}", e);
-                Err(format!("Contact exchange failed: {}", e))
+                Err(format!("Contact exchange failed: {e}"))
             }
         }
     }
@@ -195,17 +198,19 @@ impl BtspHandler {
         info!("📋 Falling back to legacy BTSP format (backward compat)");
         let peer: beardog_capabilities::traits::PeerEndpoint =
             serde_json::from_value(params_value.clone())
-                .map_err(|e| format!("Invalid peer endpoint (legacy format): {}", e))?;
+                .map_err(|e| format!("Invalid peer endpoint (legacy format): {e}"))?;
 
         match btsp_provider.establish_tunnel(peer).await {
             Ok(handle) => {
                 info!("✅ BTSP tunnel established (legacy): {}", handle.id);
-                Ok(serde_json::to_value(handle)
-                    .map_err(|e| format!("Serialization error: {}", e))?)
+                Ok(
+                    serde_json::to_value(handle)
+                        .map_err(|e| format!("Serialization error: {e}"))?,
+                )
             }
             Err(e) => {
                 warn!("⚠️  Tunnel establish failed: {}", e);
-                Err(format!("Tunnel establish failed: {}", e))
+                Err(format!("Tunnel establish failed: {e}"))
             }
         }
     }
@@ -265,15 +270,15 @@ impl BtspHandler {
                     peer_id: handle.peer_id.clone(),
                     mode: "internal".into(),
                     protocol: "btsp_native".into(),
-                    established_at: handle.established_at.clone(),
+                    established_at: handle.established_at,
                 };
 
                 Ok(serde_json::to_value(response)
-                    .map_err(|e| format!("Serialization error: {}", e))?)
+                    .map_err(|e| format!("Serialization error: {e}"))?)
             }
             Err(e) => {
                 warn!("⚠️  Internal tunnel establish failed: {}", e);
-                Err(format!("Internal tunnel establish failed: {}", e))
+                Err(format!("Internal tunnel establish failed: {e}"))
             }
         }
     }
@@ -330,7 +335,7 @@ impl BtspHandler {
 
         let tunnel: beardog_capabilities::traits::TunnelHandle =
             serde_json::from_value(params.get("tunnel").ok_or("Missing tunnel handle")?.clone())
-                .map_err(|e| format!("Invalid tunnel handle: {}", e))?;
+                .map_err(|e| format!("Invalid tunnel handle: {e}"))?;
 
         let data_b64 = params
             .get("data")
@@ -339,7 +344,7 @@ impl BtspHandler {
 
         let data = base64::engine::general_purpose::STANDARD
             .decode(data_b64)
-            .map_err(|e| format!("Invalid base64 data: {}", e))?;
+            .map_err(|e| format!("Invalid base64 data: {e}"))?;
 
         match btsp_provider.tunnel_encrypt(&tunnel, &data).await {
             Ok(ciphertext) => {
@@ -351,7 +356,7 @@ impl BtspHandler {
             }
             Err(e) => {
                 warn!("⚠️  Tunnel encrypt failed: {}", e);
-                Err(format!("Tunnel encrypt failed: {}", e))
+                Err(format!("Tunnel encrypt failed: {e}"))
             }
         }
     }
@@ -370,7 +375,7 @@ impl BtspHandler {
 
         let tunnel: beardog_capabilities::traits::TunnelHandle =
             serde_json::from_value(params.get("tunnel").ok_or("Missing tunnel handle")?.clone())
-                .map_err(|e| format!("Invalid tunnel handle: {}", e))?;
+                .map_err(|e| format!("Invalid tunnel handle: {e}"))?;
 
         let data_b64 = params
             .get("data")
@@ -379,7 +384,7 @@ impl BtspHandler {
 
         let data = base64::engine::general_purpose::STANDARD
             .decode(data_b64)
-            .map_err(|e| format!("Invalid base64 data: {}", e))?;
+            .map_err(|e| format!("Invalid base64 data: {e}"))?;
 
         match btsp_provider.tunnel_decrypt(&tunnel, &data).await {
             Ok(plaintext) => {
@@ -391,7 +396,7 @@ impl BtspHandler {
             }
             Err(e) => {
                 warn!("⚠️  Tunnel decrypt failed: {}", e);
-                Err(format!("Tunnel decrypt failed: {}", e))
+                Err(format!("Tunnel decrypt failed: {e}"))
             }
         }
     }
@@ -410,7 +415,7 @@ impl BtspHandler {
 
         let tunnel_handle = if let Some(tunnel) = params.get("tunnel") {
             serde_json::from_value(tunnel.clone())
-                .map_err(|e| format!("Invalid tunnel handle: {}", e))?
+                .map_err(|e| format!("Invalid tunnel handle: {e}"))?
         } else {
             let tunnel_id = params
                 .get("tunnel_id")
@@ -428,12 +433,14 @@ impl BtspHandler {
         match btsp_provider.tunnel_status(&tunnel_handle).await {
             Ok(status) => {
                 info!("✅ Tunnel status retrieved: {}", tunnel_handle.id);
-                Ok(serde_json::to_value(status)
-                    .map_err(|e| format!("Serialization error: {}", e))?)
+                Ok(
+                    serde_json::to_value(status)
+                        .map_err(|e| format!("Serialization error: {e}"))?,
+                )
             }
             Err(e) => {
                 warn!("⚠️  Tunnel status failed: {}", e);
-                Err(format!("Tunnel status failed: {}", e))
+                Err(format!("Tunnel status failed: {e}"))
             }
         }
     }
@@ -452,7 +459,7 @@ impl BtspHandler {
 
         let tunnel_handle = if let Some(tunnel) = params.get("tunnel") {
             serde_json::from_value(tunnel.clone())
-                .map_err(|e| format!("Invalid tunnel handle: {}", e))?
+                .map_err(|e| format!("Invalid tunnel handle: {e}"))?
         } else {
             let tunnel_id = params
                 .get("tunnel_id")
@@ -468,7 +475,7 @@ impl BtspHandler {
         };
 
         match btsp_provider.close_tunnel(&tunnel_handle).await {
-            Ok(_) => {
+            Ok(()) => {
                 info!("✅ Tunnel closed: {}", tunnel_handle.id);
                 Ok(serde_json::json!({
                     "success": true,
@@ -478,7 +485,7 @@ impl BtspHandler {
             }
             Err(e) => {
                 warn!("⚠️  Tunnel close failed: {}", e);
-                Err(format!("Tunnel close failed: {}", e))
+                Err(format!("Tunnel close failed: {e}"))
             }
         }
     }
@@ -506,7 +513,7 @@ impl BtspHandler {
         // Parse parameters for validation
         let _config_params =
             serde_json::from_value::<beardog_types::btsp::ConfigureTlsParams>(params_value.clone())
-                .map_err(|e| format!("Invalid configure_tls params: {}", e))?;
+                .map_err(|e| format!("Invalid configure_tls params: {e}"))?;
 
         Err(
             "btsp.configure_tls is part of external mode (HTTPS), handled by Songbird.\n\
@@ -537,7 +544,7 @@ impl BtspHandler {
         // Parse parameters
         let verify_params =
             serde_json::from_value::<beardog_types::btsp::VerifyPeerParams>(params_value.clone())
-                .map_err(|e| format!("Invalid verify_peer params: {}", e))?;
+                .map_err(|e| format!("Invalid verify_peer params: {e}"))?;
 
         // Route based on trust mode
         match verify_params.trust_mode.as_str() {
@@ -550,39 +557,36 @@ impl BtspHandler {
                 // Get peer trust record
                 let trust_record = btsp_provider.get_peer_trust_record(&peer_id);
 
-                match trust_record {
-                    Some(record) => {
-                        use crate::btsp_provider::types::TrustLevel;
-                        let is_trusted = record.trust_level == TrustLevel::Verified
-                            || record.trust_level == TrustLevel::Trusted;
+                if let Some(record) = trust_record {
+                    use crate::btsp_provider::types::TrustLevel;
+                    let is_trusted = record.trust_level == TrustLevel::Verified
+                        || record.trust_level == TrustLevel::Trusted;
 
-                        let trust_level_str = format!("{:?}", record.trust_level);
+                    let trust_level_str = format!("{:?}", record.trust_level);
 
-                        info!(
-                            "✅ Peer {} trust evaluation: {} (level: {})",
-                            peer_id,
-                            if is_trusted { "TRUSTED" } else { "NOT TRUSTED" },
-                            trust_level_str
-                        );
+                    info!(
+                        "✅ Peer {} trust evaluation: {} (level: {})",
+                        peer_id,
+                        if is_trusted { "TRUSTED" } else { "NOT TRUSTED" },
+                        trust_level_str
+                    );
 
-                        Ok(serde_json::json!({
-                            "valid": is_trusted,
-                            "trust_level": trust_level_str.to_lowercase(),
-                            "peer_id": peer_id,
-                            "connection_count": record.connection_count,
-                            "first_seen": record.first_seen.to_rfc3339(),
-                            "last_seen": record.last_seen.to_rfc3339(),
-                        }))
-                    }
-                    None => {
-                        warn!("⚠️  No trust record found for peer: {}", peer_id);
-                        Ok(serde_json::json!({
-                            "valid": false,
-                            "trust_level": "unknown",
-                            "peer_id": peer_id,
-                            "error": "No trust record found for peer",
-                        }))
-                    }
+                    Ok(serde_json::json!({
+                        "valid": is_trusted,
+                        "trust_level": trust_level_str.to_lowercase(),
+                        "peer_id": peer_id,
+                        "connection_count": record.connection_count,
+                        "first_seen": record.first_seen.to_rfc3339(),
+                        "last_seen": record.last_seen.to_rfc3339(),
+                    }))
+                } else {
+                    warn!("⚠️  No trust record found for peer: {}", peer_id);
+                    Ok(serde_json::json!({
+                        "valid": false,
+                        "trust_level": "unknown",
+                        "peer_id": peer_id,
+                        "error": "No trust record found for peer",
+                    }))
                 }
             }
             "certificate" => {
@@ -616,7 +620,7 @@ impl BtspHandler {
         let _http_params = serde_json::from_value::<beardog_types::btsp::TunnelSendHttpParams>(
             params_value.clone(),
         )
-        .map_err(|e| format!("Invalid tunnel_send_http params: {}", e))?;
+        .map_err(|e| format!("Invalid tunnel_send_http params: {e}"))?;
 
         Err(
             "btsp.tunnel_send_http is part of external mode (HTTPS), handled by Songbird.\n\

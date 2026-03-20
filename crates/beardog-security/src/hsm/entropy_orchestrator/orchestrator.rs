@@ -389,7 +389,7 @@ impl HsmEntropyOrchestrator {
     }
 
     /// Calculate quality tier based on HSM source and data
-    fn calculate_quality_tier(&self, source: &HsmSource, _data_length: usize) -> u8 {
+    const fn calculate_quality_tier(&self, source: &HsmSource, _data_length: usize) -> u8 {
         match source {
             #[cfg(target_os = "android")]
             HsmSource::Android => 3, // StrongBox = Tier 3
@@ -406,7 +406,7 @@ impl HsmEntropyOrchestrator {
     }
 
     /// Calculate quality score from tier
-    fn calculate_quality_score(&self, tier: u8) -> f64 {
+    const fn calculate_quality_score(&self, tier: u8) -> f64 {
         match tier {
             3 => 0.95,
             2 => 0.75,

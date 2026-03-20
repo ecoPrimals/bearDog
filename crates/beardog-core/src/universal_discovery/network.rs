@@ -216,25 +216,25 @@ pub struct SecurityConfig {
 impl SecurityConfig {
     /// Backward-compatible accessors
     #[must_use]
-    pub fn enable_auth(&self) -> bool {
+    pub const fn enable_auth(&self) -> bool {
         self.auth.is_some()
     }
 
     /// Whether rate limiting is active
     #[must_use]
-    pub fn enable_rate_limiting(&self) -> bool {
+    pub const fn enable_rate_limiting(&self) -> bool {
         self.rate_limit.is_some()
     }
 
     /// Whether IP allowlist is active
     #[must_use]
-    pub fn enable_ip_allowlist(&self) -> bool {
+    pub const fn enable_ip_allowlist(&self) -> bool {
         self.ip_allowlist.is_some()
     }
 
     /// Whether encryption is active
     #[must_use]
-    pub fn enable_encryption(&self) -> bool {
+    pub const fn enable_encryption(&self) -> bool {
         self.encryption.is_some()
     }
 }

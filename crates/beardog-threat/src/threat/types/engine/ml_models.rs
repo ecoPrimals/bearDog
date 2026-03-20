@@ -8,8 +8,10 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Full-fidelity ML model record including metrics, features, and lifecycle timestamps.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MlModel {
+    /// Stable model id used in registries and predictions.
     pub id: String,
     /// Name of the item
     /// Name of the item
@@ -59,6 +61,7 @@ pub struct MlModel {
     /// Whether `is_active` is enabled
     /// Whether `is_active` is enabled
     pub is_active: bool,
+    /// Latest offline evaluation metrics for this artifact.
     pub performance_metrics: ModelPerformanceMetrics,
     /// Mapping of metadata
     /// Mapping of metadata
@@ -98,6 +101,7 @@ pub enum MlModelType {
     Custom(String),
 }
 
+/// Offline evaluation metrics bundled with [`MlModel::performance_metrics`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelPerformanceMetrics {
     /// The accuracy value
@@ -124,14 +128,18 @@ pub struct ModelPerformanceMetrics {
     /// The confusion matrix value
     /// The confusion matrix value
     pub confusion_matrix: ConfusionMatrix,
+    /// Mean cross-validation score from the last training run.
     pub cross_validation_score: f64,
+    /// Wall-clock time spent training the most recent artifact.
     pub training_time_ms: u64,
+    /// Typical single-sample inference latency measured during validation.
     pub inference_time_ms: u64,
     /// Number of `model_size_bytes`
     /// Number of `model_size_bytes`
     pub model_size_bytes: u64,
 }
 
+/// Standard TP/TN/FP/FN counts for classifier evaluation.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ConfusionMatrix {
     /// Number of `true_positives`
@@ -151,10 +159,12 @@ pub struct ConfusionMatrix {
 /// Model prediction result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelPrediction {
+    /// Id of the model that produced this output.
     pub model_id: String,
     /// The prediction value
     /// The prediction value
     pub prediction: PredictionValue,
+    /// Normalized confidence for the top prediction or marginal.
     pub confidence: f64,
     /// Mapping of probability scores
     /// Mapping of probability scores
@@ -162,10 +172,12 @@ pub struct ModelPrediction {
     /// Mapping of feature importance
     /// Mapping of feature importance
     pub feature_importance: HashMap<String, f64>,
+    /// Time spent computing this prediction on the serving path.
     pub prediction_time_ms: u64,
     /// The model version value
     /// The model version value
     pub model_version: String,
+    /// When the prediction was emitted.
     pub timestamp: DateTime<Utc>,
 }
 
@@ -187,6 +199,7 @@ pub enum PredictionValue {
     /// Anomaly score
     AnomalyScore(f64),
 
+    /// Opaque JSON payload for user-defined model heads.
     Custom(serde_json::Value),
 }
 
@@ -202,11 +215,15 @@ pub struct ModelTrainingConfig {
     /// The training data path value
     /// The training data path value
     pub training_data_path: String,
+    /// Fraction of data reserved for validation (0.0–1.0).
     pub validation_split: f64,
     /// The test split value
     /// The test split value
+    /// Holdout fraction for final testing.
     pub test_split: f64,
+    /// Number of folds when cross-validation is enabled.
     pub cross_validation_folds: u32,
+    /// Hard cap on training duration to bound operational cost.
     pub max_training_time_minutes: u32,
     /// Number of `early_stopping_patience`
     /// Number of `early_stopping_patience`
@@ -329,8 +346,10 @@ impl MlModel {
     }
 }
 
+/// Compact dashboard view of a deployed model.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelSummary {
+    /// Model id matching [`MlModel::id`].
     pub id: String,
     /// Name of the item
     /// Name of the item
@@ -447,6 +466,7 @@ impl ModelPrediction {
         self.confidence > 0.8
     }
 
+    /// Inserts or replaces a class label’s marginal probability.
     pub fn add_probability_score(&mut self, class: &str, score: f64) {
         self.probability_scores.insert(class.to_string(), score);
     }

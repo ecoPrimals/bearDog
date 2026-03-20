@@ -9,11 +9,9 @@ use serde::{Deserialize, Serialize};
 /// Core functionality
 pub mod core;
 
+/// Unified security settings for BearDog components and services.
 ///
-/// Provides unified security settings and policies that apply across
-/// all components and services within the `BearDog` system.
-/// This configuration ensures consistent security posture and compliance
-/// with organizational security requirements.
+/// Ensures consistent security posture and compliance with organizational requirements.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CanonicalSecurityConfig {
     /// Core security settings

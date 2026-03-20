@@ -112,7 +112,7 @@ impl SafeBiometricAuthenticator {
     }
 
     /// Check if biometric hardware is available
-    pub fn is_available(&self) -> bool {
+    pub const fn is_available(&self) -> bool {
         self.hardware_available
     }
 
@@ -177,12 +177,12 @@ impl SafeBiometricAuthenticator {
                 }
             }
             BiometricPolicy::Either | BiometricPolicy::DeviceDefault => {
-                if !self.available_types.is_empty() {
-                    Ok(())
-                } else {
+                if self.available_types.is_empty() {
                     Err(BearDogError::security(
                         "No biometric authentication available on this device".to_string(),
                     ))
+                } else {
+                    Ok(())
                 }
             }
         }
@@ -269,9 +269,11 @@ mod tests {
         let authenticator = SafeBiometricAuthenticator::default();
 
         // None policy should always be valid
-        assert!(authenticator
-            .validate_policy(&BiometricPolicy::None)
-            .is_ok());
+        assert!(
+            authenticator
+                .validate_policy(&BiometricPolicy::None)
+                .is_ok()
+        );
     }
 
     #[tokio::test]

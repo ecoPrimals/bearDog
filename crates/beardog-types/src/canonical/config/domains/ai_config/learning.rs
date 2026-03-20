@@ -57,7 +57,7 @@ pub enum UpdateFrequency {
 }
 
 /// Transfer learning configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct TransferLearningConfig {
     /// Enable transfer learning
     pub enabled: bool,
@@ -67,17 +67,6 @@ pub struct TransferLearningConfig {
     pub frozen_layers: Vec<String>,
     /// Fine-tuning configuration
     pub fine_tuning: FineTuningConfig,
-}
-
-impl Default for TransferLearningConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            source_model: String::new(),
-            frozen_layers: vec![],
-            fine_tuning: FineTuningConfig::default(),
-        }
-    }
 }
 
 /// Fine-tuning configuration

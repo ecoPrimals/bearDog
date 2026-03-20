@@ -18,9 +18,11 @@ use tokio::sync::RwLock;
 /// `MonitoringSnapshot` provides a point-in-time view of system monitoring data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringSnapshot {
+    /// Unique identifier for this snapshot (typically a UUID).
     pub id: String,
     /// Timestamp when the snapshot was taken
     pub timestamp: DateTime<Utc>,
+    /// CPU, memory, disk, network, and uptime figures at snapshot time.
     pub performance: SystemPerformanceMetrics,
     /// Overall system health status
     /// The health value
@@ -35,6 +37,7 @@ pub struct MonitoringSnapshot {
     pub resource_usage: ResourceUsage,
 }
 
+/// Point-in-time OS-level performance figures backing a [`MonitoringSnapshot`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemPerformanceMetrics {
     /// CPU usage as a percentage (0.0 to 100.0)
@@ -82,6 +85,7 @@ pub struct HealthSummary {
     pub last_check: DateTime<Utc>,
 }
 
+/// Live monitoring facade: metrics collection, optional Prometheus export, snapshots, and alerts.
 #[derive(Debug)]
 pub struct MonitoringService {
     config: MonitoringConfig,
@@ -582,7 +586,7 @@ mod tests {
         let service = MonitoringService::new(MonitoringConfig::default());
         let result = service.get_health_status();
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), HealthStatus::Healthy);
+        assert_eq!(result.expect("health status"), HealthStatus::Healthy);
     }
 
     #[tokio::test]
@@ -590,7 +594,7 @@ mod tests {
         let service = MonitoringService::new(MonitoringConfig::default());
         let result = service.get_snapshots().await;
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().len(), 0);
+        assert_eq!(result.expect("snapshots").len(), 0);
     }
 
     #[tokio::test]
@@ -598,7 +602,7 @@ mod tests {
         let service = MonitoringService::new(MonitoringConfig::default());
         let result = service.get_latest_snapshot().await;
         assert!(result.is_ok());
-        assert!(result.unwrap().is_none());
+        assert!(result.expect("latest snapshot").is_none());
     }
 
     #[test]
@@ -665,21 +669,21 @@ mod tests {
         let service = MonitoringService::new(MonitoringConfig::default());
 
         for _ in 0..3 {
-            service.take_snapshot().await.unwrap();
+            service.take_snapshot().await.expect("snapshot");
         }
 
-        let snapshots = service.get_snapshots().await.unwrap();
+        let snapshots = service.get_snapshots().await.expect("snapshots");
         assert_eq!(snapshots.len(), 3);
     }
 
     #[tokio::test]
     async fn test_get_latest_snapshot_some() {
         let service = MonitoringService::new(MonitoringConfig::default());
-        service.take_snapshot().await.unwrap();
+        service.take_snapshot().await.expect("snapshot");
 
         let result = service.get_latest_snapshot().await;
         assert!(result.is_ok());
-        assert!(result.unwrap().is_some());
+        assert!(result.expect("latest snapshot").is_some());
     }
 
     #[tokio::test]

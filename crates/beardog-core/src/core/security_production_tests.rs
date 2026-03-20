@@ -287,12 +287,16 @@ async fn test_security_context_reflects_production() {
     assert_eq!(context.security_level, "production");
 
     // Should list real algorithms (not mock)
-    assert!(context
-        .encryption_algorithms
-        .contains(&"aes-256-gcm".to_string()));
-    assert!(context
-        .signature_algorithms
-        .contains(&"ed25519".to_string()));
+    assert!(
+        context
+            .encryption_algorithms
+            .contains(&"aes-256-gcm".to_string())
+    );
+    assert!(
+        context
+            .signature_algorithms
+            .contains(&"ed25519".to_string())
+    );
     assert!(context.random_generators.contains(&"os_csprng".to_string()));
 
     // Should not list mock generators

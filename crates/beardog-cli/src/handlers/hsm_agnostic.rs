@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Agnostic HSM Discovery
-// Uses beardog-tunnel universal discovery - NO hardcoded paths or vendor IDs
+//! Universal HSM discovery via `beardog-tunnel` (no hardcoded vendor paths).
 
 use beardog_errors::BearDogError;
 use beardog_tunnel::tunnel::hsm::types::HsmTier;
@@ -10,13 +9,21 @@ use beardog_tunnel::{DiscoveredHsm, DiscoveryEngine};
 /// Convert discovered HSM to CLI-friendly format
 #[derive(Debug, Clone)]
 pub struct CliHsmInfo {
+    /// Stable short id (hash-derived) for CLI references
     pub id: String,
+    /// Display name (`vendor` + `model`)
     pub name: String,
+    /// Vendor or manufacturer label from discovery
     pub vendor: String,
+    /// Model name from discovery
     pub model: String,
+    /// Tier label: Hardware, Software, Mobile, Cloud, …
     pub tier: String,
+    /// High-level interface kind (USB, TPM, Software, …)
     pub hsm_type: String,
-    pub path: String,
+    /// Endpoint or device path detail (reserved for diagnostics)
+    pub _path: String,
+    /// Single-line description of interface and path
     pub interface_detail: String,
 }
 
@@ -79,8 +86,8 @@ impl From<DiscoveredHsm> for CliHsmInfo {
             model: hsm.model,
             tier: tier_str.to_string(),
             hsm_type: hsm_type.clone(),
-            path: path.clone(),
-            interface_detail: format!("{} via {}", hsm_type, path),
+            _path: path.clone(),
+            interface_detail: format!("{hsm_type} via {path}"),
         }
     }
 }
@@ -126,6 +133,7 @@ pub async fn discover_all_hsms() -> Result<Vec<CliHsmInfo>, BearDogError> {
 }
 
 /// Select best HSM based on user preference
+#[allow(dead_code)] // Used in tests, planned for interactive HSM selection
 pub fn select_hsm<'a>(
     hsms: &'a [CliHsmInfo],
     preference: &str,
@@ -220,7 +228,7 @@ mod tests {
                 model: "SoftHSM".to_string(),
                 tier: "Software".to_string(),
                 hsm_type: "PKCS#11".to_string(),
-                path: "/usr/lib/softhsm/libsofthsm2.so".to_string(),
+                _path: "/usr/lib/softhsm/libsofthsm2.so".to_string(),
                 interface_detail: "PKCS#11 Software HSM".to_string(),
             },
             CliHsmInfo {
@@ -230,7 +238,7 @@ mod tests {
                 model: "Solo 2".to_string(),
                 tier: "Hardware".to_string(),
                 hsm_type: "USB Token".to_string(),
-                path: "USB".to_string(),
+                _path: "USB".to_string(),
                 interface_detail: "FIDO2/CTAP2 Hardware Token".to_string(),
             },
         ];
@@ -251,7 +259,7 @@ mod tests {
             model: "Software HSM".to_string(),
             tier: "Software".to_string(),
             hsm_type: "PKCS#11".to_string(),
-            path: "discovered-via-pkcs11-scan".to_string(),
+            _path: "discovered-via-pkcs11-scan".to_string(),
             interface_detail: "PKCS#11".to_string(),
         }];
 

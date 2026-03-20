@@ -11,8 +11,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
+/// Executable detection rule with auditing metadata and MITRE tagging.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DetectionRule {
+    /// Unique rule id for APIs and metrics.
     pub id: String,
     /// Name of the item
     /// Name of the item
@@ -63,6 +65,7 @@ pub struct DetectionRule {
     /// Number of `false_positive`
     /// Number of `false_positive`
     pub false_positive_count: u64,
+    /// Estimated precision prior used when fusing with ML or intel signals.
     pub confidence_score: f64,
     /// The detection logic value
     /// The detection logic value
@@ -154,6 +157,7 @@ pub enum ThreatRuleType {
 /// Rule execution result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RuleExecutionResult {
+    /// Id of the evaluated rule.
     pub rule_id: String,
     /// Name of the rule
     /// Name of the rule
@@ -161,7 +165,9 @@ pub struct RuleExecutionResult {
     /// Whether matched is enabled
     /// Whether matched is enabled
     pub matched: bool,
+    /// Confidence assigned by the rule engine when `matched` is true.
     pub confidence: f64,
+    /// Time spent evaluating the rule predicate.
     pub execution_time_ms: u64,
     /// Collection of matched conditions
     /// Collection of matched conditions
@@ -172,15 +178,19 @@ pub struct RuleExecutionResult {
     /// The severity value
     /// The severity value
     pub severity: ThreatSeverity,
+    /// Human-readable strings explaining why the rule fired or did not.
     pub evidence: Vec<String>,
+    /// Evaluation time in UTC.
     pub timestamp: DateTime<Utc>,
     /// Mapping of metadata
     /// Mapping of metadata
     pub metadata: HashMap<String, String>,
 }
 
+/// Rolling quality and latency metrics for a single rule id.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RulePerformanceMetrics {
+    /// Rule these metrics summarize.
     pub rule_id: String,
     /// Number of `total_executions`
     /// Number of `total_executions`
@@ -197,6 +207,7 @@ pub struct RulePerformanceMetrics {
     /// Number of `false_negatives`
     /// Number of `false_negatives`
     pub false_negatives: u64,
+    /// Mean wall time per `execute` call, updated incrementally.
     pub avg_execution_time_ms: f64,
     /// The accuracy value
     /// The accuracy value
@@ -215,9 +226,10 @@ pub struct RulePerformanceMetrics {
     pub last_updated: DateTime<Utc>,
 }
 
-/// Rule validation result
+/// Outcome of static checks on a [`DetectionRule`] definition.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RuleValidationResult {
+    /// True when there are no blocking errors in `errors`.
     pub is_valid: bool,
     /// Collection of errors
     /// Collection of errors
@@ -497,6 +509,7 @@ impl RulePerformanceMetrics {
         }
     }
 
+    /// Heuristic check that accuracy and both precision and recall exceed policy floors.
     #[must_use]
     pub fn is_performing_well(&self) -> bool {
         self.accuracy > 0.8 && self.precision > 0.7 && self.recall > 0.7
@@ -609,9 +622,9 @@ mod tests {
             condition,
         );
         rule.priority = 150; // Invalid priority
-                             // TEST_CATEGORY: unit
-                             // TEST_DOMAIN: core
-                             // TEST_PRIORITY: important
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: important
 
         let validation = rule.validate();
         assert!(!validation.is_valid);
@@ -627,9 +640,9 @@ mod tests {
         metrics.update_with_result(15, true, false); // True negative
         metrics.update_with_result(12, false, true); // False positive
         metrics.update_with_result(8, false, false); // False negative
-                                                     // TEST_CATEGORY: unit
-                                                     // TEST_DOMAIN: core
-                                                     // TEST_PRIORITY: normal
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
 
         assert_eq!(metrics.total_executions, 4);
         assert_eq!(metrics.true_positives, 1);

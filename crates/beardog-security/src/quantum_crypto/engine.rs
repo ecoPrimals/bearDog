@@ -11,8 +11,8 @@ use super::types::{
     SignatureAlgorithm,
 };
 use beardog_errors::BearDogError;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 /// Quantum-resistant cryptographic engine
 ///
@@ -187,7 +187,7 @@ impl QuantumCryptoEngine {
 
     /// Check if hybrid mode is enabled
     #[must_use]
-    pub fn is_hybrid_mode(&self) -> bool {
+    pub const fn is_hybrid_mode(&self) -> bool {
         self.hybrid_mode
     }
 
@@ -217,6 +217,9 @@ impl QuantumCryptoEngine {
 impl std::fmt::Debug for QuantumCryptoEngine {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("QuantumCryptoEngine")
+            .field("kyber_engine", &self.kyber_engine)
+            .field("dilithium_engine", &self.dilithium_engine)
+            .field("sphincs_engine", &self.sphincs_engine)
             .field("security_level", &self.security_level())
             .field("hybrid_mode", &self.hybrid_mode)
             .field("operations_count", &self.operations_count())

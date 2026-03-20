@@ -5,8 +5,8 @@
 //!
 //! This test validates the SHA-384 evolution that enables 100% TLS validation.
 
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_tunnel::unix_socket_ipc::handlers::crypto::{
     handle_hash_for_cipher, handle_tls_derive_application_secrets,
     handle_tls_derive_handshake_secrets,

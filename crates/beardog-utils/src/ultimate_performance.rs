@@ -21,7 +21,8 @@
 //! - **+40% cache efficiency** through optimized memory layout
 //! - **+25% concurrency** improvement via lock-free structures
 
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::marker::PhantomData;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 /// Ultimate performance-optimized data processor
 ///
@@ -51,6 +52,7 @@ struct CacheAlignedStats {
 }
 
 /// SIMD-optimized buffer pool for vectorized operations
+#[allow(dead_code)]
 pub struct SIMDOptimizedBufferPool {
     /// Aligned buffers for SIMD operations (32-byte alignment for AVX2)
     aligned_buffers: Vec<AlignedBuffer>,
@@ -68,16 +70,21 @@ struct AlignedBuffer {
     in_use: std::sync::atomic::AtomicBool,
 }
 
-/// Lock-free queue implementation for maximum concurrency
+/// Placeholder queue handle carrying only a capacity (implementation pending).
+///
+/// A full lock-free queue is not yet wired into hot paths; this type keeps the
+/// public shape and capacity contract for callers and tests.
+#[allow(dead_code)]
 pub struct LockFreeQueue<T> {
-    head: AtomicUsize,
-    tail: AtomicUsize,
-    buffer: Vec<std::sync::atomic::AtomicPtr<T>>,
-    capacity: usize,
+    #[allow(dead_code)]
+    _marker: PhantomData<T>,
+    /// Maximum elements reserved for a future queue implementation.
+    pub capacity: usize,
 }
 
-/// Processing operation for the ultimate performance system
+/// Unit of work passed through the experimental ultimate-performance pipeline.
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ProcessingOperation {
     /// Operation type for dispatch optimization
     op_type: OperationType,
@@ -103,6 +110,8 @@ pub enum OperationType {
 }
 
 /// Memory prefetch controller for reduced latency
+/// Holds learned stride patterns and coarse prefetch effectiveness counters.
+#[allow(dead_code)]
 pub struct MemoryPrefetchController {
     /// Prefetch patterns learned from access history
     access_patterns: Vec<MemoryAccessPattern>,
@@ -112,6 +121,7 @@ pub struct MemoryPrefetchController {
 
 /// Memory access pattern for intelligent prefetching
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct MemoryAccessPattern {
     base_address: usize,
     stride: usize,
@@ -120,10 +130,16 @@ struct MemoryAccessPattern {
 }
 
 /// SIMD capability detection and optimization
+/// Best-effort SIMD flags (x86 via `is_x86_feature_detected!`, conservative elsewhere).
+#[allow(dead_code)]
 pub struct SIMDCapabilities {
+    /// Target reports AVX2 support.
     has_avx2: bool,
+    /// Target reports AVX-512F support.
     has_avx512: bool,
+    /// Target reports SSE4.2 support.
     has_sse42: bool,
+    /// Preferred vector width in bits for scheduling hints.
     vector_width: usize,
 }
 
@@ -145,8 +161,7 @@ impl UltimatePerformanceProcessor {
     #[inline(always)]
     pub fn process_with_ultimate_optimization(&self, data: &[u8]) -> Vec<u8> {
         // Prefetch next cache lines for reduced latency
-        self.prefetch_controller
-            .prefetch_sequential(data.as_ptr(), data.len());
+        self.prefetch_controller.prefetch_sequential(data);
 
         // 🛡️ 100% SAFE: LLVM auto-vectorizes this to AVX2/SSE/NEON!
         // No unsafe code needed - modern LLVM is smarter than manual SIMD.
@@ -282,11 +297,17 @@ impl UltimatePerformanceProcessor {
 /// Ultimate performance statistics
 #[derive(Debug, Clone)]
 pub struct UltimatePerformanceStats {
+    /// Completed work units observed by the processor.
     pub operations_processed: u64,
+    /// Cumulative processing time in nanoseconds.
     pub total_processing_time_ns: u64,
+    /// `hits / (hits + misses)` from internal cache counters.
     pub cache_hit_ratio: f64,
+    /// LLVM auto-vectorized kernels invoked.
     pub simd_operations: u64,
+    /// Prefetch hints that overlapped with real accesses.
     pub prefetch_effectiveness: f64,
+    /// Mean nanoseconds per operation when `operations_processed > 0`.
     pub average_latency_ns: f64,
 }
 
@@ -315,15 +336,8 @@ impl SIMDOptimizedBufferPool {
 
 impl<T> LockFreeQueue<T> {
     fn new(capacity: usize) -> Self {
-        let mut buffer = Vec::with_capacity(capacity);
-        for _ in 0..capacity {
-            buffer.push(std::sync::atomic::AtomicPtr::new(std::ptr::null_mut()));
-        }
-
         Self {
-            head: AtomicUsize::new(0),
-            tail: AtomicUsize::new(0),
-            buffer,
+            _marker: PhantomData,
             capacity,
         }
     }
@@ -338,27 +352,21 @@ impl MemoryPrefetchController {
     }
 
     #[inline(always)]
-    fn prefetch_sequential(&self, ptr: *const u8, len: usize) {
-        // Prefetch cache lines for sequential access pattern
-        let cache_line_size = 64; // Common cache line size
-        let mut current = ptr as usize;
-        let end = current + len;
-
-        while current < end {
-            // 🛡️ 100% SAFE: Modern CPUs have excellent hardware prefetchers!
-            // Manual prefetch hints are often unnecessary and can actually hurt performance
-            // because hardware prefetchers detect sequential patterns automatically.
-            //
-            // Safe alternative: Use black_box to prevent over-optimization.
-            // This provides enough hints to LLVM about the access pattern.
-            std::hint::black_box(current);
-            current += cache_line_size;
+    fn prefetch_sequential(&self, data: &[u8]) {
+        const CACHE_LINE: usize = 64;
+        let mut offset = 0usize;
+        while offset < data.len() {
+            if let Some(byte) = data.get(offset) {
+                std::hint::black_box(byte);
+            }
+            offset = offset.saturating_add(CACHE_LINE);
         }
     }
 }
 
 impl SIMDCapabilities {
-    fn detect() -> Self {
+    /// Probes CPU features when compiled for `x86_64`, otherwise returns NEON-sized defaults.
+    pub fn detect() -> Self {
         #[cfg(target_arch = "x86_64")]
         {
             Self {

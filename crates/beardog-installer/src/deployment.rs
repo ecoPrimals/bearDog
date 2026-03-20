@@ -15,10 +15,10 @@
 //! - Observable (real-time progress updates)
 
 use crate::{
+    Architecture, OperatingSystem,
     installer::{BinaryInstaller, InstallerError},
     platform::BiomeOSPaths,
     types::{DeploymentProgress, DeploymentReport, DeploymentStatus, PrimalName},
-    Architecture, OperatingSystem,
 };
 use std::sync::Arc;
 use thiserror::Error;
@@ -128,7 +128,7 @@ impl DeploymentManager {
 
         for (primal, task) in tasks {
             match task.await {
-                Ok(Ok(_)) => {
+                Ok(Ok(())) => {
                     successes += 1;
                     info!("✅ {} deployment complete", primal.display_name());
                 }
@@ -137,7 +137,7 @@ impl DeploymentManager {
                     error!("❌ {} deployment failed: {}", primal.display_name(), e);
                 }
                 Err(e) => {
-                    failures.push((primal.clone(), format!("Task panic: {}", e)));
+                    failures.push((primal.clone(), format!("Task panic: {e}")));
                     error!("❌ {} task panicked: {}", primal.display_name(), e);
                 }
             }
@@ -305,23 +305,27 @@ mod tests {
     use tokio::fs;
 
     async fn setup_test_env() -> (TempDir, std::path::PathBuf) {
-        let temp = TempDir::new().unwrap();
+        let temp = TempDir::new().expect("tempdir");
         let source_dir = temp.path().join("source");
-        fs::create_dir_all(&source_dir).await.unwrap();
+        fs::create_dir_all(&source_dir)
+            .await
+            .expect("create source dir");
 
         // Create fake binaries for all primals
         for primal in PrimalName::well_known() {
             let binary = source_dir.join(primal.name());
             fs::write(&binary, format!("#!/bin/sh\necho {}", primal.name()))
                 .await
-                .unwrap();
+                .expect("write fake binary");
 
             #[cfg(unix)]
             {
                 use std::os::unix::fs::PermissionsExt;
-                let mut perms = fs::metadata(&binary).await.unwrap().permissions();
+                let mut perms = fs::metadata(&binary).await.expect("metadata").permissions();
                 perms.set_mode(0o755);
-                fs::set_permissions(&binary, perms).await.unwrap();
+                fs::set_permissions(&binary, perms)
+                    .await
+                    .expect("set_permissions");
             }
         }
 
@@ -338,14 +342,16 @@ mod tests {
     #[tokio::test]
     async fn test_deploy_single_primal() {
         let (_temp, source_dir) = setup_test_env().await;
-        let manager = DeploymentManager::new(source_dir).await.unwrap();
+        let manager = DeploymentManager::new(source_dir)
+            .await
+            .expect("deployment manager");
 
         let result = manager
             .deploy_primals(&[PrimalName::new(PrimalName::BEARDOG)])
             .await;
         assert!(result.is_ok());
 
-        let report = result.unwrap();
+        let report = result.expect("deploy result");
         assert_eq!(report.total, 1);
         assert_eq!(report.successes, 1);
         assert!(report.is_success());
@@ -354,12 +360,14 @@ mod tests {
     #[tokio::test]
     async fn test_deploy_all_primals() {
         let (_temp, source_dir) = setup_test_env().await;
-        let manager = DeploymentManager::new(source_dir).await.unwrap();
+        let manager = DeploymentManager::new(source_dir)
+            .await
+            .expect("deployment manager");
 
         let result = manager.deploy_all().await;
         assert!(result.is_ok());
 
-        let report = result.unwrap();
+        let report = result.expect("deploy_all result");
         assert_eq!(report.total, 5); // All 5 primals
         assert_eq!(report.successes, 5);
         assert!(report.is_success());
@@ -369,7 +377,9 @@ mod tests {
     #[tokio::test]
     async fn test_progress_tracking() {
         let (_temp, source_dir) = setup_test_env().await;
-        let manager = DeploymentManager::new(source_dir).await.unwrap();
+        let manager = DeploymentManager::new(source_dir)
+            .await
+            .expect("deployment manager");
 
         // Start deployment (don't await yet)
         let deploy_handle = tokio::spawn({
@@ -383,7 +393,10 @@ mod tests {
         assert_eq!(progress.len(), 5); // All primals tracked
 
         // Wait for completion
-        deploy_handle.await.unwrap().unwrap();
+        deploy_handle
+            .await
+            .expect("deploy task join")
+            .expect("deploy_all");
     }
 
     #[tokio::test]

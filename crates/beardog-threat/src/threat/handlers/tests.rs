@@ -420,13 +420,17 @@ mod incident_tests {
     #[test]
     fn test_assign_incident_different_teams() {
         let engine = CoreEngine::new(ThreatDetectionConfig::default()).unwrap();
-        assert!(engine
-            .assign_incident_to_team("INC-1", "team_alpha")
-            .is_ok());
+        assert!(
+            engine
+                .assign_incident_to_team("INC-1", "team_alpha")
+                .is_ok()
+        );
         assert!(engine.assign_incident_to_team("INC-2", "team_beta").is_ok());
-        assert!(engine
-            .assign_incident_to_team("INC-3", "team_gamma")
-            .is_ok());
+        assert!(
+            engine
+                .assign_incident_to_team("INC-3", "team_gamma")
+                .is_ok()
+        );
     }
 
     #[test]

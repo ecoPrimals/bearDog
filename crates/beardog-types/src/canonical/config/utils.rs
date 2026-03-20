@@ -22,7 +22,7 @@
 //! - **File System Safe**: Proper permissions and path handling
 
 use beardog_errors::BearDogError;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -59,17 +59,17 @@ impl UnifiedConfigUtils {
 
         // Read and parse file
         let content = fs::read_to_string(path)
-            .map_err(|e| BearDogError::io_error(&format!("Failed to read config file: {}", e)))?;
+            .map_err(|e| BearDogError::io_error(&format!("Failed to read config file: {e}")))?;
 
         let config = match path.extension().and_then(|ext| ext.to_str()) {
             Some("toml") => toml::from_str(&content)
-                .map_err(|e| BearDogError::validation(&format!("Invalid TOML config: {}", e)))?,
+                .map_err(|e| BearDogError::validation(&format!("Invalid TOML config: {e}")))?,
             Some("json") => serde_json::from_str(&content)
-                .map_err(|e| BearDogError::validation(&format!("Invalid JSON config: {}", e)))?,
+                .map_err(|e| BearDogError::validation(&format!("Invalid JSON config: {e}")))?,
             Some("yaml" | "yml") => serde_yaml::from_str(&content)
-                .map_err(|e| BearDogError::validation(&format!("Invalid YAML config: {}", e)))?,
+                .map_err(|e| BearDogError::validation(&format!("Invalid YAML config: {e}")))?,
             _ => toml::from_str(&content)
-                .map_err(|e| BearDogError::validation(&format!("Invalid config format: {}", e)))?,
+                .map_err(|e| BearDogError::validation(&format!("Invalid config format: {e}")))?,
         };
 
         info!("✅ Successfully loaded config from: {}", path.display());
@@ -100,8 +100,7 @@ impl UnifiedConfigUtils {
         }
 
         Err(BearDogError::validation(&format!(
-            "No valid configuration file found. Tried: {} and fallbacks: {:?}",
-            primary, fallbacks
+            "No valid configuration file found. Tried: {primary} and fallbacks: {fallbacks:?}"
         )))
     }
 
@@ -117,29 +116,29 @@ impl UnifiedConfigUtils {
         // Create directory if it doesn't exist
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent).map_err(|e| {
-                BearDogError::io_error(&format!("Failed to create config directory: {}", e))
+                BearDogError::io_error(&format!("Failed to create config directory: {e}"))
             })?;
         }
 
         // Serialize based on file extension
         let content = match path.extension().and_then(|ext| ext.to_str()) {
             Some("toml") => toml::to_string_pretty(config).map_err(|e| {
-                BearDogError::validation(&format!("Failed to serialize to TOML: {}", e))
+                BearDogError::validation(&format!("Failed to serialize to TOML: {e}"))
             })?,
             Some("json") => serde_json::to_string_pretty(config).map_err(|e| {
-                BearDogError::validation(&format!("Failed to serialize to JSON: {}", e))
+                BearDogError::validation(&format!("Failed to serialize to JSON: {e}"))
             })?,
             Some("yaml" | "yml") => serde_yaml::to_string(config).map_err(|e| {
-                BearDogError::validation(&format!("Failed to serialize to YAML: {}", e))
+                BearDogError::validation(&format!("Failed to serialize to YAML: {e}"))
             })?,
             _ => toml::to_string_pretty(config).map_err(|e| {
-                BearDogError::validation(&format!("Failed to serialize config: {}", e))
+                BearDogError::validation(&format!("Failed to serialize config: {e}"))
             })?,
         };
 
         // Write file
         fs::write(path, content)
-            .map_err(|e| BearDogError::io_error(&format!("Failed to write config file: {}", e)))?;
+            .map_err(|e| BearDogError::io_error(&format!("Failed to write config file: {e}")))?;
 
         // Set secure permissions
         Self::set_secure_permissions(path)?;
@@ -163,11 +162,11 @@ impl UnifiedConfigUtils {
         let mut paths = Vec::new();
 
         // Current directory
-        paths.push(PathBuf::from(format!("./{}.toml", app_name)));
+        paths.push(PathBuf::from(format!("./{app_name}.toml")));
         paths.push(PathBuf::from("./config.toml"));
 
         // Local config directory
-        paths.push(PathBuf::from(format!("./config/{}.toml", app_name)));
+        paths.push(PathBuf::from(format!("./config/{app_name}.toml")));
         paths.push(PathBuf::from("./configs/config.toml"));
 
         // User config directory (commented out - dirs crate not available)
@@ -185,11 +184,8 @@ impl UnifiedConfigUtils {
         }
 
         // System config directory
-        paths.push(PathBuf::from(format!(
-            "/etc/{}/{}.toml",
-            app_name, app_name
-        )));
-        paths.push(PathBuf::from(format!("/etc/{}/config.toml", app_name)));
+        paths.push(PathBuf::from(format!("/etc/{app_name}/{app_name}.toml")));
+        paths.push(PathBuf::from(format!("/etc/{app_name}/config.toml")));
 
         // BearDog specific paths
         if app_name == "beardog" {
@@ -227,8 +223,7 @@ impl UnifiedConfigUtils {
             Self::load_from_file(path)
         } else {
             Err(BearDogError::validation(&format!(
-                "No configuration file found for '{}' in standard locations",
-                app_name
+                "No configuration file found for '{app_name}' in standard locations"
             )))
         }
     }
@@ -246,11 +241,11 @@ impl UnifiedConfigUtils {
 
         // Serialize both configs to JSON for merging
         let base_json = serde_json::to_value(base).map_err(|e| {
-            BearDogError::validation(&format!("Failed to serialize base config: {}", e))
+            BearDogError::validation(&format!("Failed to serialize base config: {e}"))
         })?;
 
         let override_json = serde_json::to_value(override_config).map_err(|e| {
-            BearDogError::validation(&format!("Failed to serialize override config: {}", e))
+            BearDogError::validation(&format!("Failed to serialize override config: {e}"))
         })?;
 
         // Merge JSON values
@@ -258,7 +253,7 @@ impl UnifiedConfigUtils {
 
         // Deserialize back to target type
         let result = serde_json::from_value(merged).map_err(|e| {
-            BearDogError::validation(&format!("Failed to deserialize merged config: {}", e))
+            BearDogError::validation(&format!("Failed to deserialize merged config: {e}"))
         })?;
 
         debug!("✅ Successfully merged configurations");
@@ -329,7 +324,7 @@ impl UnifiedConfigUtils {
             use std::os::unix::fs::PermissionsExt;
 
             let metadata = fs::metadata(path).map_err(|e| {
-                BearDogError::io_error(&format!("Failed to read file metadata: {}", e))
+                BearDogError::io_error(&format!("Failed to read file metadata: {e}"))
             })?;
 
             let permissions = metadata.permissions();
@@ -373,16 +368,14 @@ impl UnifiedConfigUtils {
             use std::os::unix::fs::PermissionsExt;
 
             let mut perms = fs::metadata(path)
-                .map_err(|e| {
-                    BearDogError::io_error(&format!("Failed to read file metadata: {}", e))
-                })?
+                .map_err(|e| BearDogError::io_error(&format!("Failed to read file metadata: {e}")))?
                 .permissions();
 
             // Set permissions to 600 (owner read/write only)
             perms.set_mode(0o600);
 
             fs::set_permissions(path, perms).map_err(|e| {
-                BearDogError::io_error(&format!("Failed to set file permissions: {}", e))
+                BearDogError::io_error(&format!("Failed to set file permissions: {e}"))
             })?;
 
             debug!("🔒 Set secure permissions (600) on: {}", path.display());
@@ -437,18 +430,17 @@ impl UnifiedConfigUtils {
     {
         // Convert config to JSON for manipulation
         let mut config_json = serde_json::to_value(&*config)
-            .map_err(|e| BearDogError::validation(&format!("Failed to serialize config: {}", e)))?;
+            .map_err(|e| BearDogError::validation(&format!("Failed to serialize config: {e}")))?;
 
         // Apply environment overrides
         for (key, value) in std::env::vars() {
-            let prefix_with_underscore = format!("{}_", env_prefix);
+            let prefix_with_underscore = format!("{env_prefix}_");
             if key.starts_with(&prefix_with_underscore) {
                 let config_key = key
                     .strip_prefix(&prefix_with_underscore)
                     .ok_or_else(|| {
                         BearDogError::validation(&format!(
-                            "Failed to strip prefix from env var: {}",
-                            key
+                            "Failed to strip prefix from env var: {key}"
                         ))
                     })?
                     .to_lowercase()
@@ -460,9 +452,8 @@ impl UnifiedConfigUtils {
         }
 
         // Convert back to target type
-        *config = serde_json::from_value(config_json).map_err(|e| {
-            BearDogError::validation(&format!("Failed to deserialize config: {}", e))
-        })?;
+        *config = serde_json::from_value(config_json)
+            .map_err(|e| BearDogError::validation(&format!("Failed to deserialize config: {e}")))?;
 
         Ok(())
     }
@@ -479,7 +470,7 @@ impl UnifiedConfigUtils {
         for (i, part) in parts.iter().enumerate() {
             if i == parts.len() - 1 {
                 // Last part - set the value
-                if let serde_json::Value::Object(ref mut map) = current {
+                if let serde_json::Value::Object(map) = current {
                     map.insert(
                         (*part).to_string(),
                         serde_json::Value::String(value.to_string()),
@@ -487,7 +478,7 @@ impl UnifiedConfigUtils {
                 }
             } else {
                 // Navigate deeper
-                if let serde_json::Value::Object(ref mut map) = current {
+                if let serde_json::Value::Object(map) = current {
                     current = map
                         .entry((*part).to_string())
                         .or_insert_with(|| serde_json::Value::Object(serde_json::Map::new()));
@@ -522,7 +513,7 @@ impl UnifiedConfigUtils {
 /// Global shared configuration manager
 #[allow(clippy::incompatible_msrv)] // LazyLock requires 1.80.0, but worth it for thread safety
 static SHARED_CONFIG_MANAGER: LazyLock<SharedConfigManager> =
-    LazyLock::new(|| SharedConfigManager::new());
+    LazyLock::new(SharedConfigManager::new);
 
 /// Shared configuration manager implementation
 pub struct SharedConfigManager {
@@ -646,18 +637,26 @@ impl SharedConfigManager {
 /// **CONFIG PERFORMANCE METRICS** - Performance tracking for consolidation
 #[derive(Debug, Clone)]
 pub struct ConfigPerformanceMetrics {
+    /// Estimated speedup or cost reduction from sharing merged config views (implementation-defined scale).
     pub consolidation_benefit: f64,
+    /// Heap saved by deduplicating config blobs versus per-consumer copies (MB).
     pub memory_reduction_mb: f64,
+    /// Measured nanoseconds of overhead for a typical read through the consolidated accessor path.
     pub function_call_overhead_ns: u64,
+    /// Fraction of reads satisfied from cache without re-parsing or locking (`0.0`–`1.0`).
     pub cache_hit_rate: f64,
+    /// Sustained config read/update operations per second observed in benchmarks.
     pub config_operations_per_second: f64,
+    /// Number of distinct logical configs currently materialized in the shared manager.
     pub shared_configs_active: usize,
 }
 
 /// Shared configuration statistics
 #[derive(Debug, Clone)]
 pub struct SharedConfigStats {
+    /// Count of configs tracked as “active” by the shared manager.
     pub active_configs: usize,
+    /// Rough working-set estimate for those configs (KB), for telemetry only.
     pub memory_usage_estimate_kb: usize,
 }
 
@@ -806,14 +805,18 @@ mod tests {
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: types
         // TEST_PRIORITY: normal
-        assert!(paths
-            .iter()
-            .any(|p| p.to_string_lossy().contains("./myapp.toml")));
+        assert!(
+            paths
+                .iter()
+                .any(|p| p.to_string_lossy().contains("./myapp.toml"))
+        );
 
         // Should include config directory
-        assert!(paths
-            .iter()
-            .any(|p| p.to_string_lossy().contains("./config/myapp.toml")));
+        assert!(
+            paths
+                .iter()
+                .any(|p| p.to_string_lossy().contains("./config/myapp.toml"))
+        );
     }
 
     #[test]

@@ -40,7 +40,7 @@
 //! This module is optimized for:
 //! - **Zero-allocation patterns** in hot paths
 //! - **Const evaluation** for compile-time optimizations
-//! - **Inline assembly** for critical performance sections
+//! - **Iterator and chunk patterns** that LLVM can auto-vectorize on hot paths
 //! - **SIMD vectorization** where applicable
 //!
 //! ## Security
@@ -51,10 +51,15 @@
 //! - **Resource bounds** to prevent `DoS` attacks
 //! - **Privacy preservation** in ML model training
 
+/// Core scheduling loop and integration glue for the AI optimizer.
 pub mod engine;
+/// Past decisions and outcomes used for simple learning adjustments.
 pub mod history;
+/// Minimal feed-forward net for experimentation (not production ML).
 pub mod neural_network;
+/// Heuristic forecasting from recent samples.
 pub mod predictor;
+/// Shared structs and enums for the AI optimization pipeline.
 pub mod types;
 
 #[allow(unused_imports, clippy::nonminimal_bool, dead_code)]

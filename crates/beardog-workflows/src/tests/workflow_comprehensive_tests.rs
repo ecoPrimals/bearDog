@@ -6,7 +6,7 @@
 //!
 //! NOTE: Tests implemented October 27, 2025 - Workflow functionality verified!
 
-use crate::{workflows::types::enums::WorkflowStatus, WorkflowConfig};
+use crate::{WorkflowConfig, workflows::types::enums::WorkflowStatus};
 
 #[cfg(test)]
 mod workflow_creation_tests {

@@ -123,7 +123,7 @@ pub struct EnvConfigSource;
 
 impl EnvConfigSource {
     /// Create a new environment configuration source
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 }
@@ -291,7 +291,7 @@ mod tests {
     #[test]
     fn test_env_source_reads_actual_env() {
         // Set an actual env var for this test
-        std::env::set_var("BEARDOG_TEST_VAR_UNIQUE", "test_value");
+        beardog_errors::process_env::set_var("BEARDOG_TEST_VAR_UNIQUE", "test_value");
 
         let source = EnvConfigSource::new();
         assert_eq!(
@@ -300,7 +300,7 @@ mod tests {
         );
 
         // Cleanup
-        std::env::remove_var("BEARDOG_TEST_VAR_UNIQUE");
+        beardog_errors::process_env::remove_var("BEARDOG_TEST_VAR_UNIQUE");
     }
 
     #[test]

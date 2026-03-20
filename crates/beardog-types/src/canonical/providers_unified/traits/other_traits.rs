@@ -369,6 +369,7 @@ pub enum NetworkStatus {
     NetworkUnreachable,
 }
 
+/// Lightweight descriptor for a discovered network service endpoint.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceInfo {
     /// Service name
@@ -488,6 +489,7 @@ pub struct ModelSpec {
     pub config: HashMap<String, serde_json::Value>,
 }
 
+/// Published metadata for a loadable AI/ML model asset.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelInfo {
     /// Model ID

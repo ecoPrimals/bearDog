@@ -346,16 +346,16 @@ use super::*;
     #[test]
     #[allow(deprecated)]
     fn test_bootstrap_config_environment_override() {
-        std::env::set_var("BEARDOG_ZK_DISCOVERY_TIMEOUT_MS", "60000");
-        std::env::set_var("BEARDOG_ZK_MAX_DISCOVERY_ATTEMPTS", "5");
+        beardog_errors::process_env::set_var("BEARDOG_ZK_DISCOVERY_TIMEOUT_MS", "60000");
+        beardog_errors::process_env::set_var("BEARDOG_ZK_MAX_DISCOVERY_ATTEMPTS", "5");
 
         let config = BootstrapConfig::default();
 
         assert_eq!(config.discovery_timeout_ms, 60000);
         assert_eq!(config.max_discovery_attempts, 5);
 
-        std::env::remove_var("BEARDOG_ZK_DISCOVERY_TIMEOUT_MS");
-        std::env::remove_var("BEARDOG_ZK_MAX_DISCOVERY_ATTEMPTS");
+        beardog_errors::process_env::remove_var("BEARDOG_ZK_DISCOVERY_TIMEOUT_MS");
+        beardog_errors::process_env::remove_var("BEARDOG_ZK_MAX_DISCOVERY_ATTEMPTS");
     }
 
     #[test]

@@ -176,6 +176,7 @@ impl MonitoringConfigValidation for CoreMonitoringConfig {
     }
 }
 
+/// Persistence target for metric buffers, traces, or log archives.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum StorageBackend {
     /// In-memory storage with configurable limits
@@ -187,6 +188,7 @@ pub enum StorageBackend {
     File {
         /// Path to the storage file
         path: String,
+        /// Max on-disk size of the active file before rotation.
         rotation_size: u64,
         /// Maximum number of rotated files to keep
         max_files: u32,
@@ -195,12 +197,14 @@ pub enum StorageBackend {
     Database {
         /// Database connection string
         connection_string: String,
+        /// Destination table or collection for metric rows.
         table_name: String,
     },
     /// Remote storage backend
     Remote {
         /// Remote endpoint URL
         endpoint: String,
+        /// Optional bearer/API key for SaaS backends.
         api_key: Option<String>,
         /// Request timeout duration
         timeout: Duration,
@@ -244,8 +248,11 @@ pub enum FilterAction {
     Include,
     /// Exclude variant
     Exclude,
+    /// Apply a named transform pipeline to matching series or log lines.
     Transform {
+        /// Built-in transform name (e.g. `drop_labels`, `sample`).
         operation: String,
+        /// Transform-specific JSON parameters.
         parameters: HashMap<String, serde_json::Value>,
     },
 }
@@ -264,6 +271,7 @@ pub struct FilterCondition {
     pub value: serde_json::Value,
 }
 
+/// Operators used when evaluating [`FilterCondition`] predicates.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ComparisonOperator {
     /// Equals variant
@@ -340,6 +348,7 @@ impl Default for RetentionPolicy {
     }
 }
 
+/// Long-term archival settings applied after [`RetentionPolicy`] trimming.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ArchivePolicy {
     /// Enabled
@@ -413,6 +422,7 @@ impl Default for BatchConfig {
     }
 }
 
+/// Exponential backoff for failed metric export batches.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RetryPolicy {
     /// Enabled

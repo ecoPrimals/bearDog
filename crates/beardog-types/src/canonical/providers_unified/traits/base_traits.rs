@@ -9,10 +9,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
 
-///
-/// This is the base trait that all providers must implement, providing
-///
+/// Root capability implemented by every Beardog provider (security, HSM, monitoring, etc.).
 pub trait UnifiedProvider: Send + Sync {
+    /// Static identity and version metadata for dashboards and discovery.
     fn provider_info(&self) -> ProviderInfo;
 
     /// Get current provider health status
@@ -20,6 +19,7 @@ pub trait UnifiedProvider: Send + Sync {
         &self,
     ) -> impl std::future::Future<Output = Result<ProviderHealth, BearDogError>> + Send;
 
+    /// Counters, histograms, and saturation signals exposed for observability.
     fn metrics(
         &self,
     ) -> impl std::future::Future<Output = Result<ProviderMetrics, BearDogError>> + Send;
@@ -38,6 +38,7 @@ pub trait UnifiedProvider: Send + Sync {
     fn shutdown(&mut self) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
 }
 
+/// Identity block surfaced to registries and UIs.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderInfo {
     /// Unique provider identifier
@@ -48,7 +49,7 @@ pub struct ProviderInfo {
     /// Provider version
     /// The version value
     pub version: String,
-    /// Provider type
+    /// Logical class (security, storage, AI, …) used for routing.
     pub provider_type: ProviderType,
     /// Supported capabilities
     /// Collection of supported capabilities
@@ -72,10 +73,12 @@ pub struct ProviderHealth {
     pub last_error: Option<String>,
 }
 
+/// Point-in-time telemetry blob scraped from a running provider.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderMetrics {
     /// Metrics collection timestamp
     pub timestamp: SystemTime,
+    /// Scalar performance gauges (latency p99, QPS, error rate, etc.).
     pub performance: HashMap<String, f64>,
     /// Custom metrics
     /// Collection of custom metrics
@@ -85,6 +88,7 @@ pub struct ProviderMetrics {
     pub system_metrics: SystemMetrics,
 }
 
+/// CPU/memory/IO snapshot accompanying a health check.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceUsage {
     /// CPU usage percentage (0.0 - 100.0)
@@ -133,6 +137,7 @@ pub struct ProviderConfiguration {
     /// Security configuration
     /// The security value
     pub security: SecurityConfiguration,
+    /// Batching, concurrency, and timeout knobs for this provider instance.
     pub performance: PerformanceConfiguration,
 }
 
@@ -277,6 +282,7 @@ pub struct SecurityConfiguration {
     pub key_path: Option<String>,
 }
 
+/// Runtime tuning for a provider instance (metrics cadence, optimization preset).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceConfiguration {
     /// Whether monitoring is enabled

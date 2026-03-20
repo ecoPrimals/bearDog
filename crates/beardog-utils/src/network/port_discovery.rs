@@ -331,24 +331,24 @@ mod tests {
 
         let result = discover_port("test", &config).await;
         assert!(result.is_ok());
-        
-        let port = result.unwrap();
+
+        let port = result.expect("discover_port should succeed with preferred range");
         assert!(port.port >= 50000 || port.source == PortSource::PlatformDefault);
     }
 
     #[tokio::test]
     async fn test_environment_override() {
-        std::env::set_var("BEARDOG_TEST_PORT", "12345");
+        beardog_errors::process_env::set_var("BEARDOG_TEST_PORT", "12345");
         
         let config = PortDiscoveryConfig::default();
         let result = discover_port("test", &config).await;
         
         assert!(result.is_ok());
-        let port = result.unwrap();
+        let port = result.expect("discover_port should succeed with BEARDOG_TEST_PORT set");
         assert_eq!(port.port, 12345);
         assert!(matches!(port.source, PortSource::Environment(_)));
         
-        std::env::remove_var("BEARDOG_TEST_PORT");
+        beardog_errors::process_env::remove_var("BEARDOG_TEST_PORT");
     }
 
     #[tokio::test]
@@ -360,8 +360,8 @@ mod tests {
 
         let result = discover_port("http", &config).await;
         assert!(result.is_ok());
-        
-        let port = result.unwrap();
+
+        let port = result.expect("discover_port should resolve well-known http port");
         assert_eq!(port.port, 80);
         assert!(matches!(port.source, PortSource::WellKnown { .. }));
     }

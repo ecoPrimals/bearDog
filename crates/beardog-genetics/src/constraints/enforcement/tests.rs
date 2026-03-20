@@ -257,45 +257,45 @@ fn test_co_signers_empty() {
 
 #[test]
 fn test_co_signers_permissionless() {
-    std::env::set_var("BEARDOG_MULTISIG_MODE", "permissionless");
+    beardog_errors::process_env::set_var("BEARDOG_MULTISIG_MODE", "permissionless");
     let op = KeyOperation::Sign { domain: None };
     let co_signers = vec!["alice".to_string(), "bob".to_string()];
     let result = ConstraintEnforcer::check_co_signers(&co_signers, &op);
-    std::env::remove_var("BEARDOG_MULTISIG_MODE");
+    beardog_errors::process_env::remove_var("BEARDOG_MULTISIG_MODE");
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_co_signers_full_mode() {
-    std::env::set_var("BEARDOG_MULTISIG_MODE", "full");
+    beardog_errors::process_env::set_var("BEARDOG_MULTISIG_MODE", "full");
     let op = KeyOperation::Sign { domain: None };
     let co_signers = vec!["alice".to_string(), "bob".to_string()];
     let result = ConstraintEnforcer::check_co_signers(&co_signers, &op);
-    std::env::remove_var("BEARDOG_MULTISIG_MODE");
+    beardog_errors::process_env::remove_var("BEARDOG_MULTISIG_MODE");
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_co_signers_threshold_mode() {
-    std::env::set_var("BEARDOG_MULTISIG_MODE", "threshold");
-    std::env::set_var("BEARDOG_MULTISIG_THRESHOLD", "2");
+    beardog_errors::process_env::set_var("BEARDOG_MULTISIG_MODE", "threshold");
+    beardog_errors::process_env::set_var("BEARDOG_MULTISIG_THRESHOLD", "2");
     let op = KeyOperation::Sign { domain: None };
     let co_signers = vec!["alice".to_string(), "bob".to_string()];
     let result = ConstraintEnforcer::check_co_signers(&co_signers, &op);
-    std::env::remove_var("BEARDOG_MULTISIG_MODE");
-    std::env::remove_var("BEARDOG_MULTISIG_THRESHOLD");
+    beardog_errors::process_env::remove_var("BEARDOG_MULTISIG_MODE");
+    beardog_errors::process_env::remove_var("BEARDOG_MULTISIG_THRESHOLD");
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_co_signers_threshold_insufficient() {
-    std::env::set_var("BEARDOG_MULTISIG_MODE", "threshold");
-    std::env::set_var("BEARDOG_MULTISIG_THRESHOLD", "5");
+    beardog_errors::process_env::set_var("BEARDOG_MULTISIG_MODE", "threshold");
+    beardog_errors::process_env::set_var("BEARDOG_MULTISIG_THRESHOLD", "5");
     let op = KeyOperation::Sign { domain: None };
     let co_signers = vec!["alice".to_string(), "bob".to_string()];
     let result = ConstraintEnforcer::check_co_signers(&co_signers, &op);
-    std::env::remove_var("BEARDOG_MULTISIG_MODE");
-    std::env::remove_var("BEARDOG_MULTISIG_THRESHOLD");
+    beardog_errors::process_env::remove_var("BEARDOG_MULTISIG_MODE");
+    beardog_errors::process_env::remove_var("BEARDOG_MULTISIG_THRESHOLD");
     assert!(result.is_err());
     assert!(matches!(
         result.unwrap_err(),
@@ -305,11 +305,11 @@ fn test_co_signers_threshold_insufficient() {
 
 #[test]
 fn test_co_signers_unknown_mode() {
-    std::env::set_var("BEARDOG_MULTISIG_MODE", "unknown_mode");
+    beardog_errors::process_env::set_var("BEARDOG_MULTISIG_MODE", "unknown_mode");
     let op = KeyOperation::Sign { domain: None };
     let co_signers = vec!["alice".to_string()];
     let result = ConstraintEnforcer::check_co_signers(&co_signers, &op);
-    std::env::remove_var("BEARDOG_MULTISIG_MODE");
+    beardog_errors::process_env::remove_var("BEARDOG_MULTISIG_MODE");
     assert!(result.is_ok());
 }
 
@@ -317,7 +317,7 @@ fn test_co_signers_unknown_mode() {
 
 #[test]
 fn test_behavioral_permissionless() {
-    std::env::set_var("BEARDOG_BEHAVIORAL_MODE", "permissionless");
+    beardog_errors::process_env::set_var("BEARDOG_BEHAVIORAL_MODE", "permissionless");
     let behavioral = BehavioralConstraint {
         requires_biometric: true,
         requires_mfa: true,
@@ -325,13 +325,13 @@ fn test_behavioral_permissionless() {
         min_entropy_quality: None,
     };
     let result = ConstraintEnforcer::check_behavioral(&behavioral);
-    std::env::remove_var("BEARDOG_BEHAVIORAL_MODE");
+    beardog_errors::process_env::remove_var("BEARDOG_BEHAVIORAL_MODE");
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_behavioral_strict() {
-    std::env::set_var("BEARDOG_BEHAVIORAL_MODE", "strict");
+    beardog_errors::process_env::set_var("BEARDOG_BEHAVIORAL_MODE", "strict");
     let behavioral = BehavioralConstraint {
         requires_biometric: true,
         requires_mfa: true,
@@ -339,13 +339,13 @@ fn test_behavioral_strict() {
         min_entropy_quality: None,
     };
     let result = ConstraintEnforcer::check_behavioral(&behavioral);
-    std::env::remove_var("BEARDOG_BEHAVIORAL_MODE");
+    beardog_errors::process_env::remove_var("BEARDOG_BEHAVIORAL_MODE");
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_behavioral_relaxed() {
-    std::env::set_var("BEARDOG_BEHAVIORAL_MODE", "relaxed");
+    beardog_errors::process_env::set_var("BEARDOG_BEHAVIORAL_MODE", "relaxed");
     let behavioral = BehavioralConstraint {
         requires_biometric: true,
         requires_mfa: true,
@@ -353,13 +353,13 @@ fn test_behavioral_relaxed() {
         min_entropy_quality: None,
     };
     let result = ConstraintEnforcer::check_behavioral(&behavioral);
-    std::env::remove_var("BEARDOG_BEHAVIORAL_MODE");
+    beardog_errors::process_env::remove_var("BEARDOG_BEHAVIORAL_MODE");
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_behavioral_unknown_mode() {
-    std::env::set_var("BEARDOG_BEHAVIORAL_MODE", "unknown_mode");
+    beardog_errors::process_env::set_var("BEARDOG_BEHAVIORAL_MODE", "unknown_mode");
     let behavioral = BehavioralConstraint {
         requires_biometric: true,
         requires_mfa: true,
@@ -367,7 +367,7 @@ fn test_behavioral_unknown_mode() {
         min_entropy_quality: None,
     };
     let result = ConstraintEnforcer::check_behavioral(&behavioral);
-    std::env::remove_var("BEARDOG_BEHAVIORAL_MODE");
+    beardog_errors::process_env::remove_var("BEARDOG_BEHAVIORAL_MODE");
     assert!(result.is_ok());
 }
 

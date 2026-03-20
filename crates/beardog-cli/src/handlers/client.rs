@@ -33,7 +33,7 @@ fn discover_socket_path() -> String {
         .or_else(|_| std::env::var("BEARDOG_NAME"))
         .unwrap_or_else(|_| "beardog".to_string());
 
-    format!("/tmp/{}.sock", primal_name)
+    format!("/tmp/{primal_name}.sock")
 }
 
 /// Handle client command - interactive REPL
@@ -49,7 +49,7 @@ pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
     let stream = UnixStream::connect(&args.socket)
         .await
         .map_err(|e| BearDogError::Network {
-            message: format!("Failed to connect to server: {}", e),
+            message: format!("Failed to connect to server: {e}"),
             category: Default::default(),
         })?;
 
@@ -108,9 +108,9 @@ pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
                 match send_command(&mut writer, &mut reader, input).await {
                     Ok(response) => {
                         let output = serde_json::to_string_pretty(&response).unwrap_or_else(|e| {
-                            format!("{{\"error\": \"JSON serialization failed: {}\"}}", e)
+                            format!("{{\"error\": \"JSON serialization failed: {e}\"}}")
                         });
-                        println!("{}", output);
+                        println!("{output}");
                     }
                     Err(e) => {
                         error!("❌ Error: {}", e);
@@ -135,7 +135,7 @@ async fn execute_command(_stream: &UnixStream, command: &str) -> Result<(), Bear
         UnixStream::connect(&socket_path)
             .await
             .map_err(|e| BearDogError::Network {
-                message: format!("Failed to connect for command: {}", e),
+                message: format!("Failed to connect for command: {e}"),
                 category: Default::default(),
             })?;
 
@@ -144,8 +144,8 @@ async fn execute_command(_stream: &UnixStream, command: &str) -> Result<(), Bear
 
     let response = send_command(&mut writer, &mut reader, command).await?;
     let output = serde_json::to_string_pretty(&response)
-        .unwrap_or_else(|e| format!("{{\"error\": \"JSON serialization failed: {}\"}}", e));
-    println!("{}", output);
+        .unwrap_or_else(|e| format!("{{\"error\": \"JSON serialization failed: {e}\"}}"));
+    println!("{output}");
 
     Ok(())
 }
@@ -180,7 +180,7 @@ async fn send_command(
 
     // Send request
     let request_str = serde_json::to_string(&request).map_err(|e| BearDogError::System {
-        message: format!("Failed to serialize request: {}", e),
+        message: format!("Failed to serialize request: {e}"),
         category: Default::default(),
     })?;
 
@@ -188,14 +188,14 @@ async fn send_command(
         .write_all(request_str.as_bytes())
         .await
         .map_err(|e| BearDogError::Network {
-            message: format!("Failed to write request: {}", e),
+            message: format!("Failed to write request: {e}"),
             category: Default::default(),
         })?;
     writer
         .write_all(b"\n")
         .await
         .map_err(|e| BearDogError::Network {
-            message: format!("Failed to write newline: {}", e),
+            message: format!("Failed to write newline: {e}"),
             category: Default::default(),
         })?;
 
@@ -205,19 +205,19 @@ async fn send_command(
         .read_line(&mut response_line)
         .await
         .map_err(|e| BearDogError::Network {
-            message: format!("Failed to read response: {}", e),
+            message: format!("Failed to read response: {e}"),
             category: Default::default(),
         })?;
 
     let response: serde_json::Value =
         serde_json::from_str(&response_line).map_err(|e| BearDogError::System {
-            message: format!("Failed to parse response: {}", e),
+            message: format!("Failed to parse response: {e}"),
             category: Default::default(),
         })?;
 
     if let Some(error) = response.get("error") {
         return Err(BearDogError::Api {
-            message: format!("Server error: {}", error),
+            message: format!("Server error: {error}"),
             category: Default::default(),
             status_code: None,
             endpoint: None,

@@ -8,6 +8,7 @@ use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use tracing::{error, info, warn};
 
+/// [`WorkflowObserver`] that emits structured tracing events for each lifecycle transition.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct LoggingWorkflowObserver {
     /// Name of the item

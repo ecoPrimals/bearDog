@@ -8,6 +8,7 @@ use beardog_auth::auth::{BearDogGenetics, NodeCapability, SecurityClearance};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Inputs for spawning: desired capabilities, clearance, and optional parent genomes.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpawnRequest {
     /// Collection of required capabilities

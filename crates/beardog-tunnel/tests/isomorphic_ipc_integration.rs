@@ -7,7 +7,7 @@
 // These tests focus on the client-side discovery APIs.
 
 use anyhow::Result;
-use beardog_ipc::{discover_beardog_endpoint, IpcEndpoint};
+use beardog_ipc::{IpcEndpoint, discover_beardog_endpoint};
 
 #[tokio::test]
 async fn test_isomorphic_discovery_apis() -> Result<()> {

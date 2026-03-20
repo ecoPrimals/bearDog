@@ -5,10 +5,10 @@
 //! These tests exercise actual production code paths that were previously
 //! untested. All tests are concurrent-safe — no sleeps, no serialization.
 
+use crate::DeploymentConfig;
 use crate::android::AndroidDeployment;
 use crate::builder::RustBuilder;
 use crate::device::{DeviceInfo, DeviceManager, DeviceStatus, DeviceType};
-use crate::DeploymentConfig;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::thread;

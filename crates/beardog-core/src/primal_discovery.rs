@@ -86,7 +86,7 @@ pub enum DiscoveryMethod {
     },
 
     /// Multiple methods in priority order
-    Multi(Vec<DiscoveryMethod>),
+    Multi(Vec<Self>),
 }
 
 /// Query for discovering primals
@@ -167,7 +167,7 @@ impl DiscoveryQuery {
 
     /// Set discovery timeout
     #[must_use]
-    pub fn with_timeout(mut self, timeout: Duration) -> Self {
+    pub const fn with_timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;
         self
     }

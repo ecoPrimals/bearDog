@@ -29,7 +29,7 @@ pub struct CircuitBreaker {
 }
 
 /// Circuit breaker state
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum CircuitBreakerState {
     /// Normal operation — requests flow through
     Closed,
@@ -41,7 +41,7 @@ pub enum CircuitBreakerState {
 
 impl CircuitBreaker {
     /// Creates a new circuit breaker
-    pub fn new(max_failures: u32, timeout: Duration) -> Self {
+    pub const fn new(max_failures: u32, timeout: Duration) -> Self {
         Self {
             max_failures,
             timeout,
@@ -109,7 +109,7 @@ impl HsmFailoverManager {
     }
 
     /// Checks if primary HSM is available
-    pub fn is_primary_available(&self) -> bool {
+    pub const fn is_primary_available(&self) -> bool {
         self.primary_available
     }
 

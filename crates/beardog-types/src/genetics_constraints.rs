@@ -106,7 +106,7 @@ impl Default for KeyConstraints {
 // ============================================================================
 
 /// Defines what scope the key can operate in
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ScopeConstraint {
     /// No scope restrictions
     Unrestricted,
@@ -141,7 +141,7 @@ pub enum ScopeConstraint {
 // ============================================================================
 
 /// Defines when a key expires and how it can be renewed
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct LifetimeConstraint {
     /// Hard expiration - key becomes invalid (self-destructs)
     pub expires_at: DateTime<Utc>,
@@ -180,7 +180,7 @@ impl Default for LifetimeConstraint {
 // ============================================================================
 
 /// Defines what data operations are allowed
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct DataAccessConstraint {
     /// Paths that cannot be deleted (cryptographically enforced)
     pub immutable_paths: Vec<String>,
@@ -195,23 +195,12 @@ pub struct DataAccessConstraint {
     pub metadata: HashMap<String, String>,
 }
 
-impl Default for DataAccessConstraint {
-    fn default() -> Self {
-        Self {
-            immutable_paths: Vec::new(),
-            mandatory_encryption: Vec::new(),
-            audit_required: false,
-            metadata: HashMap::new(),
-        }
-    }
-}
-
 // ============================================================================
 // BEHAVIORAL CONSTRAINTS
 // ============================================================================
 
 /// Defines behavioral requirements for key usage
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct BehavioralConstraint {
     /// Biometric verification required?
     pub biometric_required: bool,
@@ -226,19 +215,8 @@ pub struct BehavioralConstraint {
     pub network_constraints: Option<NetworkConstraint>,
 }
 
-impl Default for BehavioralConstraint {
-    fn default() -> Self {
-        Self {
-            biometric_required: false,
-            expected_patterns: Vec::new(),
-            challenge_on_anomaly: false,
-            network_constraints: None,
-        }
-    }
-}
-
 /// Expected usage pattern for anomaly detection
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct UsagePattern {
     /// Time pattern (e.g., "business hours")
     pub time_pattern: Option<String>,
@@ -385,7 +363,7 @@ impl KeyConstraints {
 
         // Serialize constraints to deterministic format
         let serialized = serde_json::to_vec(self).map_err(|e| {
-            BearDogError::serialization(&format!("Failed to serialize constraints: {}", e))
+            BearDogError::serialization(&format!("Failed to serialize constraints: {e}"))
         })?;
 
         // Hash the serialized form
@@ -408,7 +386,7 @@ impl KeyConstraints {
         match &self.scope {
             ScopeConstraint::Unrestricted => {}
             ScopeConstraint::Project { name, .. } => {
-                parts.push(format!("Project: {}", name));
+                parts.push(format!("Project: {name}"));
             }
             ScopeConstraint::Resources {
                 allow_read,
@@ -416,17 +394,17 @@ impl KeyConstraints {
                 deny_delete,
             } => {
                 if !deny_delete.is_empty() {
-                    parts.push(format!("Protected from deletion: {:?}", deny_delete));
+                    parts.push(format!("Protected from deletion: {deny_delete:?}"));
                 }
                 if !allow_read.is_empty() {
-                    parts.push(format!("Read access: {:?}", allow_read));
+                    parts.push(format!("Read access: {allow_read:?}"));
                 }
                 if !allow_write.is_empty() {
-                    parts.push(format!("Write access: {:?}", allow_write));
+                    parts.push(format!("Write access: {allow_write:?}"));
                 }
             }
             ScopeConstraint::Operations { allowed_operations } => {
-                parts.push(format!("Allowed ops: {:?}", allowed_operations));
+                parts.push(format!("Allowed ops: {allowed_operations:?}"));
             }
         }
 
@@ -505,8 +483,7 @@ impl KeyConstraints {
                 if let Some(op_proj) = op_project {
                     if op_proj != name {
                         return Err(BearDogError::unauthorized(format!(
-                            "Key scoped to project '{}', cannot access '{}'",
-                            name, op_proj
+                            "Key scoped to project '{name}', cannot access '{op_proj}'"
                         )));
                     }
                 }
@@ -530,8 +507,7 @@ impl KeyConstraints {
                 KeyOperation::Read { path, .. } => {
                     if !allow_read.iter().any(|p| Self::path_matches(path, p)) {
                         return Err(BearDogError::unauthorized(format!(
-                            "Key not authorized to read path: {}",
-                            path
+                            "Key not authorized to read path: {path}"
                         )));
                     }
                     Ok(())
@@ -539,8 +515,7 @@ impl KeyConstraints {
                 KeyOperation::Write { path, .. } => {
                     if !allow_write.iter().any(|p| Self::path_matches(path, p)) {
                         return Err(BearDogError::unauthorized(format!(
-                            "Key not authorized to write path: {}",
-                            path
+                            "Key not authorized to write path: {path}"
                         )));
                     }
                     Ok(())
@@ -559,8 +534,7 @@ impl KeyConstraints {
 
                 if !allowed_operations.iter().any(|op| op == op_name) {
                     return Err(BearDogError::unauthorized(format!(
-                        "Operation '{}' not allowed by key constraints",
-                        op_name
+                        "Operation '{op_name}' not allowed by key constraints"
                     )));
                 }
                 Ok(())
@@ -577,8 +551,7 @@ impl KeyConstraints {
                 .any(|p| Self::path_matches(path, p))
             {
                 return Err(BearDogError::unauthorized(format!(
-                    "cannot delete protected path: {} (cryptographically enforced)",
-                    path
+                    "cannot delete protected path: {path} (cryptographically enforced)"
                 )));
             }
         }

@@ -173,7 +173,7 @@ impl HandlerRegistry {
                 // Secret Storage (Feb 2026 - Evolution)
                 Arc::new(secrets::SecretsHandler::new(identity.clone())),
                 // Relay Authorization (Feb 2026 - Coordinated Punch)
-                Arc::new(relay::RelayHandler::new(identity.clone())),
+                Arc::new(relay::RelayHandler::new(identity)),
             ]),
         });
 
@@ -236,7 +236,7 @@ impl HandlerRegistry {
         }
 
         // No handler found (JSON-RPC 2.0 error message)
-        Err(format!("Method not found: {}", method))
+        Err(format!("Method not found: {method}"))
     }
 
     /// Get all methods from all handlers
@@ -247,7 +247,7 @@ impl HandlerRegistry {
         let handlers = self.handlers.read().await;
         let mut methods = Vec::new();
         for handler in handlers.iter() {
-            methods.extend(handler.methods().iter().map(|s| s.to_string()));
+            methods.extend(handler.methods().iter().map(|s| (*s).to_string()));
         }
         methods.sort();
         methods

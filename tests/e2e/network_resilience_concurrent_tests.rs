@@ -15,8 +15,8 @@
 #![allow(clippy::unwrap_used)] // Test code
 
 use beardog_errors::BearDogError;
-use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 use tokio::sync::{Barrier, RwLock, Semaphore};
 

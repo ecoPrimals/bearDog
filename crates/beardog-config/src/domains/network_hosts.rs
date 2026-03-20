@@ -2,14 +2,17 @@
 
 //! Network Host Configuration
 //!
-//! Centralized configuration for all network hosts/IPs used by BearDog.
-//! This eliminates hardcoded IP addresses and hostnames throughout the codebase.
+//! **Self-knowledge and explicit configuration** for hosts BearDog uses to bind or connect when
+//! no higher layer (URLs, discovery) has supplied a value. Per `ZERO_HARDCODING_SPECIFICATION` and
+//! capability-based discovery, string literals below are **documented fallbacks**, not peer
+//! definitions: **other primals** are reached via runtime discovery (mDNS, registry, mesh)—not
+//! fixed hostnames here.
 //!
 //! # Design Philosophy
 //!
-//! - **Configuration over Hardcoding**: All hosts configurable via ENV or config file
-//! - **Secure Defaults**: localhost for development, 0.0.0.0 for binding
-//! - **Environment-First**: `BEARDOG_*` environment variables take precedence
+//! - **Configuration over fallbacks**: Prefer `DATABASE_URL`, `REDIS_URL`, `BEARDOG_*_HOST`, and discovery
+//! - **Documented dev fallbacks**: A single infrastructure loopback fallback when nothing else is set
+//! - **Environment-First**: `BEARDOG_*` and standard URL env vars take precedence
 //! - **Platform Agnostic**: Works across development, staging, and production
 //!
 //! # Usage
@@ -31,88 +34,49 @@ use serde::{Deserialize, Serialize};
 use std::env;
 
 // ============================================================================
-// Default Host Constants
+// Documented fallbacks (single source; overridable via env / config / discovery)
 // ============================================================================
 
-/// Default localhost address for client connections
-///
-/// Use for connecting TO services. Prefer this over "127.0.0.1" for better
-/// IPv6 compatibility (localhost resolves to ::1 on IPv6 systems).
+/// **Fallback** hostname for client connections when `BEARDOG_CLIENT_HOST` is unset (loopback name).
 pub const DEFAULT_HOST: &str = "localhost";
 
-/// Default bind address for server listening
-///
-/// Use for binding services to listen on all interfaces.
-/// 0.0.0.0 means "listen on all IPv4 interfaces"
+/// **Fallback** IPv4 bind-all when `BEARDOG_API_HOST` is unset for this config shape (server bind).
 pub const DEFAULT_BIND_HOST: &str = "0.0.0.0";
 
-/// Default IPv4 loopback address
-///
-/// Use when you specifically need the IPv4 loopback interface.
-/// Prefer DEFAULT_HOST for client connections.
+/// **Fallback** IPv4 loopback literal (prefer hostname `DEFAULT_HOST` for clients when possible).
 pub const DEFAULT_LOOPBACK_IPV4: &str = "127.0.0.1";
 
-/// Default IPv6 loopback address
-///
-/// Use when you specifically need the IPv6 loopback interface.
+/// **Fallback** IPv6 loopback literal.
 pub const DEFAULT_LOOPBACK_IPV6: &str = "::1";
 
-/// Default IPv6 bind address
-///
-/// Use for binding services to listen on all IPv6 interfaces.
+/// **Fallback** IPv6 bind-all.
 pub const DEFAULT_BIND_HOST_IPV6: &str = "::";
 
-// ============================================================================
-// Service Discovery Hints (NOT hardcoded requirements)
-// ============================================================================
+// ---------------------------------------------------------------------------
+// Infrastructure / legacy fields — NOT other-primal endpoints
+// ---------------------------------------------------------------------------
 //
-// These are DISCOVERY HINTS for development/fallback only.
-// Production systems MUST use runtime discovery via:
-// - mDNS/DNS-SD for local networks
-// - Service mesh/registry for production
-// - Environment variables for explicit configuration
-//
-// See: runtime_network_discovery.rs for capability-based discovery
+// Production must use `DATABASE_URL`, `REDIS_URL`, monitoring URLs, or capability/registry
+// discovery. When none are present, a single dev-only loopback fallback applies (overridable via
+// `BEARDOG_INFRASTRUCTURE_HOST_FALLBACK`). See `runtime_network_discovery.rs`.
 
-/// PostgreSQL discovery hint
-///
-/// NOT a hardcoded requirement. Use service discovery:
-/// - Environment: `DATABASE_URL` or `POSTGRES_HOST`
-/// - Discovery: Query service mesh/registry
-/// - Fallback: localhost (development only)
-pub const POSTGRES_DISCOVERY_HINT: &str = "localhost";
+/// **Dev-only fallback** host for infrastructure URLs when no env URL or explicit host is set.
+pub const FALLBACK_DEV_INFRASTRUCTURE_HOST: &str = "localhost";
 
-/// Redis discovery hint
-///
-/// NOT a hardcoded requirement. Use service discovery:
-/// - Environment: `REDIS_URL` or `REDIS_HOST`
-/// - Discovery: Query service mesh/registry via capability
-/// - Fallback: localhost (development only)
-pub const REDIS_DISCOVERY_HINT: &str = "localhost";
+/// Legacy alias: prefer `DATABASE_URL` / `BEARDOG_DATABASE_HOST` / discovery.
+pub const POSTGRES_DISCOVERY_HINT: &str = FALLBACK_DEV_INFRASTRUCTURE_HOST;
 
-/// Grafana discovery hint
-///
-/// NOT a hardcoded requirement. Use service discovery:
-/// - Environment: `GRAFANA_URL`
-/// - Discovery: Query monitoring services
-/// - Fallback: localhost (development only)
-pub const GRAFANA_DISCOVERY_HINT: &str = "localhost";
+/// Legacy alias: prefer `REDIS_URL` / `BEARDOG_REDIS_HOST` / discovery.
+pub const REDIS_DISCOVERY_HINT: &str = FALLBACK_DEV_INFRASTRUCTURE_HOST;
 
-/// Jaeger discovery hint
-///
-/// NOT a hardcoded requirement. Use service discovery:
-/// - Environment: `JAEGER_ENDPOINT`
-/// - Discovery: Query tracing services
-/// - Fallback: localhost (development only)
-pub const JAEGER_DISCOVERY_HINT: &str = "localhost";
+/// Legacy alias: prefer `GRAFANA_URL` / `BEARDOG_METRICS_HOST` / discovery.
+pub const GRAFANA_DISCOVERY_HINT: &str = FALLBACK_DEV_INFRASTRUCTURE_HOST;
 
-/// External API discovery hint (for production)
-///
-/// NEVER hardcode production endpoints. Use:
-/// - Environment: `BEARDOG_EXTERNAL_HOST`
-/// - Discovery: DNS, service mesh, or capability registry
-/// - Fallback: localhost (DEVELOPMENT ONLY - will fail in production)
-pub const EXTERNAL_DISCOVERY_HINT: &str = "localhost";
+/// Prefer `JAEGER_ENDPOINT` / tracing discovery.
+pub const JAEGER_DISCOVERY_HINT: &str = FALLBACK_DEV_INFRASTRUCTURE_HOST;
+
+/// Prefer `BEARDOG_EXTERNAL_HOST` / DNS / capability discovery (never rely on this in production).
+pub const EXTERNAL_DISCOVERY_HINT: &str = FALLBACK_DEV_INFRASTRUCTURE_HOST;
 
 // ============================================================================
 // Network Hosts Configuration
@@ -120,12 +84,12 @@ pub const EXTERNAL_DISCOVERY_HINT: &str = "localhost";
 
 /// Network hosts configuration
 ///
-/// **Design Philosophy**: Runtime Discovery Over Hardcoding
+/// **Design Philosophy**: Runtime discovery and explicit config over fallbacks
 ///
 /// This configuration provides:
-/// 1. **Environment Variables**: Explicit configuration (highest priority)
-/// 2. **Discovery Hints**: Suggestions for discovery systems
-/// 3. **Development Fallbacks**: localhost for local development
+/// 1. **Environment / URL variables**: Explicit configuration (highest priority)
+/// 2. **Capability-based discovery**: Peer endpoints from mDNS/registry (not stored here)
+/// 3. **Documented dev fallback**: `FALLBACK_DEV_INFRASTRUCTURE_HOST` unless `BEARDOG_INFRASTRUCTURE_HOST_FALLBACK` is set
 ///
 /// **Production Usage**:
 /// - MUST use environment variables or service discovery
@@ -139,50 +103,45 @@ pub const EXTERNAL_DISCOVERY_HINT: &str = "localhost";
 pub struct NetworkHostsConfig {
     /// Primary API host
     ///
-    /// Host for API server binding. Defaults to "0.0.0.0" (all interfaces).
-    /// Override with `BEARDOG_API_HOST` environment variable.
+    /// Host for API server binding. **Fallback**: all-interfaces IPv4 (`DEFAULT_BIND_HOST`).
+    /// Override with `BEARDOG_API_HOST`.
     #[serde(default = "default_api_host")]
     pub api_host: String,
 
     /// Client connection host
     ///
-    /// Host for clients to connect to. Defaults to "localhost".
-    /// Override with `BEARDOG_CLIENT_HOST` environment variable.
+    /// **Fallback**: loopback hostname (`DEFAULT_HOST`). Override with `BEARDOG_CLIENT_HOST`.
     #[serde(default = "default_client_host")]
     pub client_host: String,
 
-    /// Discovery service host
+    /// Discovery service host (legacy / local tooling)
     ///
-    /// Host for service discovery. Defaults to "localhost".
-    /// Override with `BEARDOG_DISCOVERY_HOST` environment variable.
+    /// **Not** a peer primal address. Use runtime capability discovery for other primals.
+    /// **Fallback**: `DEFAULT_HOST`. Override with `BEARDOG_DISCOVERY_HOST`.
     #[serde(default = "default_discovery_host")]
     pub discovery_host: String,
 
     /// Database host
     ///
-    /// PostgreSQL database host. Defaults to "localhost".
-    /// Override with `BEARDOG_DATABASE_HOST` environment variable.
+    /// Prefer `DATABASE_URL` or `BEARDOG_DATABASE_HOST`. **Fallback**: infrastructure dev host (see `FALLBACK_DEV_INFRASTRUCTURE_HOST`).
     #[serde(default = "default_database_host")]
     pub database_host: String,
 
     /// Redis cache host
     ///
-    /// Redis server host. Defaults to "localhost".
-    /// Override with `BEARDOG_REDIS_HOST` environment variable.
+    /// Prefer `REDIS_URL` or `BEARDOG_REDIS_HOST`. **Fallback**: infrastructure dev host.
     #[serde(default = "default_redis_host")]
     pub redis_host: String,
 
     /// Metrics/monitoring host
     ///
-    /// Prometheus/Grafana host. Defaults to "localhost".
-    /// Override with `BEARDOG_METRICS_HOST` environment variable.
+    /// Prefer `GRAFANA_URL` or `BEARDOG_METRICS_HOST`. **Fallback**: infrastructure dev host.
     #[serde(default = "default_metrics_host")]
     pub metrics_host: String,
 
     /// External/public host
     ///
-    /// Public-facing hostname for production. Defaults to "localhost".
-    /// Override with `BEARDOG_EXTERNAL_HOST` environment variable.
+    /// **Fallback**: infrastructure dev host. Production: set `BEARDOG_EXTERNAL_HOST` or discovery-derived name.
     #[serde(default = "default_external_host")]
     pub external_host: String,
 }
@@ -190,6 +149,12 @@ pub struct NetworkHostsConfig {
 // ============================================================================
 // Default Functions (with Environment Variable Support)
 // ============================================================================
+
+/// Last-resort infrastructure hostname when no URL or specific `BEARDOG_*_HOST` is set.
+fn infrastructure_fallback_host() -> String {
+    env::var("BEARDOG_INFRASTRUCTURE_HOST_FALLBACK")
+        .unwrap_or_else(|_| FALLBACK_DEV_INFRASTRUCTURE_HOST.to_string())
+}
 
 fn default_api_host() -> String {
     env::var("BEARDOG_API_HOST").unwrap_or_else(|_| DEFAULT_BIND_HOST.to_string())
@@ -206,23 +171,23 @@ fn default_discovery_host() -> String {
 fn default_database_host() -> String {
     env::var("BEARDOG_DATABASE_HOST")
         .or_else(|_| env::var("DATABASE_URL").map(|url| extract_host_from_url(&url)))
-        .unwrap_or_else(|_| POSTGRES_DISCOVERY_HINT.to_string())
+        .unwrap_or_else(|_| infrastructure_fallback_host())
 }
 
 fn default_redis_host() -> String {
     env::var("BEARDOG_REDIS_HOST")
         .or_else(|_| env::var("REDIS_URL").map(|url| extract_host_from_url(&url)))
-        .unwrap_or_else(|_| REDIS_DISCOVERY_HINT.to_string())
+        .unwrap_or_else(|_| infrastructure_fallback_host())
 }
 
 fn default_metrics_host() -> String {
     env::var("BEARDOG_METRICS_HOST")
         .or_else(|_| env::var("GRAFANA_URL").map(|url| extract_host_from_url(&url)))
-        .unwrap_or_else(|_| GRAFANA_DISCOVERY_HINT.to_string())
+        .unwrap_or_else(|_| infrastructure_fallback_host())
 }
 
 fn default_external_host() -> String {
-    env::var("BEARDOG_EXTERNAL_HOST").unwrap_or_else(|_| EXTERNAL_DISCOVERY_HINT.to_string())
+    env::var("BEARDOG_EXTERNAL_HOST").unwrap_or_else(|_| infrastructure_fallback_host())
 }
 
 /// Extract host from URL (simple extraction, not full parsing)
@@ -260,10 +225,10 @@ impl NetworkHostsConfig {
     /// # Example
     ///
     /// ```rust
-    /// use beardog_config::domains::network_hosts::NetworkHostsConfig;
+    /// use beardog_config::domains::network_hosts::{NetworkHostsConfig, DEFAULT_HOST};
     ///
     /// let hosts = NetworkHostsConfig::with_defaults();
-    /// assert_eq!(hosts.client_host, "localhost");
+    /// assert_eq!(hosts.client_host, DEFAULT_HOST);
     /// ```
     #[must_use]
     pub fn with_defaults() -> Self {
@@ -348,10 +313,19 @@ mod tests {
 
     #[test]
     fn test_default_constants() {
-        assert_eq!(DEFAULT_HOST, "localhost");
-        assert_eq!(DEFAULT_BIND_HOST, "0.0.0.0");
-        assert_eq!(DEFAULT_LOOPBACK_IPV4, "127.0.0.1");
-        assert_eq!(DEFAULT_LOOPBACK_IPV6, "::1");
+        assert_eq!(DEFAULT_HOST, FALLBACK_DEV_INFRASTRUCTURE_HOST);
+        assert_eq!(
+            DEFAULT_BIND_HOST,
+            crate::domains::network_addresses::WILDCARD_IPV4
+        );
+        assert_eq!(
+            DEFAULT_LOOPBACK_IPV4,
+            crate::domains::network_addresses::LOCALHOST_IPV4
+        );
+        assert_eq!(
+            DEFAULT_LOOPBACK_IPV6,
+            crate::domains::network_addresses::LOCALHOST_IPV6
+        );
     }
 
     #[test]
@@ -361,9 +335,9 @@ mod tests {
         assert_eq!(config.api_host, DEFAULT_BIND_HOST);
         assert_eq!(config.client_host, DEFAULT_HOST);
         assert_eq!(config.discovery_host, DEFAULT_HOST);
-        assert_eq!(config.database_host, POSTGRES_DISCOVERY_HINT);
-        assert_eq!(config.redis_host, REDIS_DISCOVERY_HINT);
-        assert_eq!(config.metrics_host, GRAFANA_DISCOVERY_HINT);
+        assert_eq!(config.database_host, FALLBACK_DEV_INFRASTRUCTURE_HOST);
+        assert_eq!(config.redis_host, FALLBACK_DEV_INFRASTRUCTURE_HOST);
+        assert_eq!(config.metrics_host, FALLBACK_DEV_INFRASTRUCTURE_HOST);
     }
 
     #[test]
@@ -447,10 +421,10 @@ mod tests {
 
     #[test]
     fn test_service_host_constants() {
-        assert_eq!(POSTGRES_DISCOVERY_HINT, "localhost");
-        assert_eq!(REDIS_DISCOVERY_HINT, "localhost");
-        assert_eq!(GRAFANA_DISCOVERY_HINT, "localhost");
-        assert_eq!(JAEGER_DISCOVERY_HINT, "localhost");
+        assert_eq!(POSTGRES_DISCOVERY_HINT, FALLBACK_DEV_INFRASTRUCTURE_HOST);
+        assert_eq!(REDIS_DISCOVERY_HINT, FALLBACK_DEV_INFRASTRUCTURE_HOST);
+        assert_eq!(GRAFANA_DISCOVERY_HINT, FALLBACK_DEV_INFRASTRUCTURE_HOST);
+        assert_eq!(JAEGER_DISCOVERY_HINT, FALLBACK_DEV_INFRASTRUCTURE_HOST);
     }
 
     #[test]

@@ -71,7 +71,9 @@ pub struct GcTuningConfig {
 pub enum GcStrategy {
     /// Use system default GC
     Default,
+    /// Optimize for maximal mutator CPU time (may increase pause times).
     Throughput,
+    /// Optimize for shortest stop-the-world pauses (may reduce throughput).
     LowLatency,
     /// Balanced approach
     Balanced,
@@ -131,7 +133,7 @@ impl NetworkResourceConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             max_connections: Self::DEFAULT_MAX_CONNECTIONS,
             connection_timeout: Duration::from_secs(Self::DEFAULT_CONNECTION_TIMEOUT_SECS),
@@ -230,7 +232,7 @@ impl StorageResourceConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             max_disk_usage_percent: Self::DEFAULT_MAX_DISK_USAGE_PERCENT,
             temp_dir_cleanup_interval: Duration::from_secs(
@@ -291,7 +293,7 @@ impl ConnectionConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             pool_size: Self::DEFAULT_POOL_SIZE,
             max_idle_connections: Self::DEFAULT_MAX_IDLE_CONNECTIONS,
@@ -337,7 +339,7 @@ impl ConnectionConfig {
 
 impl GcTuningConfig {
     /// Create GcTuningConfig with hardcoded defaults
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             strategy: GcStrategy::Default,
             target_pause_ms: None,
@@ -387,13 +389,13 @@ impl Default for ConnectionConfig {
 }
 
 impl ResourceManagementConfig {
-    /// Create a new resource management configuration
+    /// Returns [`Default`] materialized values (safe for tests).
     #[must_use]
-    /// Creates a new instance
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Aggressive limits and profiling-friendly defaults suitable for large production clusters.
     #[must_use]
     pub fn production() -> Self {
         Self {

@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 /// `MemoryProtectionLevel`
 ///
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum MemoryProtectionLevel {
     /// None variant
     /// None
@@ -20,6 +20,7 @@ pub enum MemoryProtectionLevel {
 
     /// Medium variant
     /// Medium
+    #[default]
     Medium,
 
     /// High variant
@@ -29,12 +30,6 @@ pub enum MemoryProtectionLevel {
     /// Maximum variant
     /// Maximum
     Maximum,
-}
-
-impl Default for MemoryProtectionLevel {
-    fn default() -> Self {
-        Self::Medium
-    }
 }
 
 /// `HsmType`
@@ -84,7 +79,11 @@ pub enum SmartphoneType {
     /// Ios
     Ios,
 
-    Other(String),
+    /// Vendor-specific handset class not covered by [`Self::Android`] / [`Self::Ios`].
+    Other(
+        /// Human-readable vendor or SKU label.
+        String,
+    ),
 }
 
 /// `SecureEnclaveType`
@@ -136,7 +135,7 @@ pub enum SoftwareHsmType {
 
 /// `EntropyQualityRating`
 ///
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum EntropyQualityRating {
     /// None variant
     /// None
@@ -152,6 +151,7 @@ pub enum EntropyQualityRating {
 
     /// Basic variant
     /// Basic
+    #[default]
     Basic,
 
     /// Medium variant
@@ -173,12 +173,6 @@ pub enum EntropyQualityRating {
     /// Premium variant
     /// Premium
     Premium,
-}
-
-impl Default for EntropyQualityRating {
-    fn default() -> Self {
-        Self::Basic
-    }
 }
 
 /// `EntropyCollectionMethod`
@@ -286,6 +280,7 @@ pub enum StrongBoxImplementation {
     Generic,
 }
 
+/// Point-in-time throughput and resource snapshot for mobile or soft-HSM runtimes.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PerformanceMetrics {
     /// Operations Per Second
@@ -306,7 +301,7 @@ pub struct PerformanceMetrics {
     /// Error Count
     /// Number of error
     pub error_count: u64,
-    /// Uptime Seconds
+    /// Seconds since the HSM worker or soft-token service started.
     pub uptime_seconds: u64,
 }
 

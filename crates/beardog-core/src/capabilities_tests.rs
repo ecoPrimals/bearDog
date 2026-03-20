@@ -284,7 +284,7 @@ mod capability_unit_tests {
 
     #[test]
     fn test_capability_matching_same_type() {
-        let provided = Capability::Encryption {
+        let _provided = Capability::Encryption {
             algorithms: vec!["ChaCha20".to_string()],
             key_types: vec!["X25519".to_string()],
         };
@@ -727,14 +727,17 @@ mod capability_fault_tests {
         let caps = BearDogCapabilities::new(None, "node1".to_string());
 
         // BearDog requires Discovery but doesn't provide it
-        assert!(caps
-            .requires
-            .iter()
-            .any(|c| matches!(c, Capability::Discovery { .. })));
-        assert!(!caps
-            .provides
-            .iter()
-            .any(|c| matches!(c, Capability::Discovery { .. })));
+        assert!(
+            caps.requires
+                .iter()
+                .any(|c| matches!(c, Capability::Discovery { .. }))
+        );
+        assert!(
+            !caps
+                .provides
+                .iter()
+                .any(|c| matches!(c, Capability::Discovery { .. }))
+        );
     }
 
     #[test]

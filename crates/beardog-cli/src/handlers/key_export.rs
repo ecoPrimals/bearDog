@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Key Export/Import Handler
-// Enables inter-primal key sharing (ToadStool integration!)
+//! Export and import keys for inter-primal sharing (JSON [`ExportedKey`] format).
 
 use super::key_store::{self, StoredKey};
 use beardog_errors::BearDogError;
@@ -72,14 +71,14 @@ pub async fn handle_key_export(
     println!();
 
     // Load the key from storage
-    println!("🔍 Loading key: {}", key_id);
+    println!("🔍 Loading key: {key_id}");
     let stored_key = key_store::load_key(key_id)?;
 
     println!("✅ Key found");
     println!("   Algorithm: {}", stored_key.algorithm);
     println!("   Generation: {}", stored_key.generation);
     if let Some(parent) = &stored_key.parent_key_id {
-        println!("   Parent: {}", parent);
+        println!("   Parent: {parent}");
     }
     println!();
 
@@ -103,7 +102,7 @@ pub async fn handle_key_export(
     // Add metadata
     exported
         .metadata
-        .insert("hsm_name".to_string(), stored_key.hsm_name.clone());
+        .insert("hsm_name".to_string(), stored_key.hsm_name);
     exported
         .metadata
         .insert("exported_at".to_string(), chrono::Utc::now().to_rfc3339());
@@ -119,7 +118,7 @@ pub async fn handle_key_export(
 
         // Get password from user
         let password = rpassword::prompt_password("Enter encryption password: ")
-            .map_err(|e| BearDogError::system(format!("Failed to read password: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to read password: {e}")))?;
 
         if password.is_empty() {
             return Err(BearDogError::validation("Password cannot be empty"));
@@ -127,7 +126,7 @@ pub async fn handle_key_export(
 
         // Confirm password
         let password_confirm = rpassword::prompt_password("Confirm password: ")
-            .map_err(|e| BearDogError::system(format!("Failed to read password: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to read password: {e}")))?;
 
         if password != password_confirm {
             return Err(BearDogError::validation("Passwords do not match"));
@@ -156,7 +155,7 @@ pub async fn handle_key_export(
     println!("✅ Key exported successfully!");
     println!();
     println!("📋 Export Details:");
-    println!("   File: {}", output_path);
+    println!("   File: {output_path}");
     println!("   Key ID: {}", exported.key_id);
     println!("   Algorithm: {}", exported.algorithm);
     println!(
@@ -179,14 +178,8 @@ pub async fn handle_key_export(
     }
 
     println!("💡 Next steps:");
-    println!(
-        "   1. Securely transmit {} to the destination tower",
-        output_path
-    );
-    println!(
-        "   2. Import on the other tower: beardog key import --input {}",
-        output_path
-    );
+    println!("   1. Securely transmit {output_path} to the destination tower");
+    println!("   2. Import on the other tower: beardog key import --input {output_path}");
     if exported.encrypted {
         println!("   3. Provide the same password during import");
     }
@@ -206,11 +199,11 @@ pub async fn handle_key_import(
     println!();
 
     // Read the exported key file
-    println!("🔍 Reading key file: {}", input_path);
+    println!("🔍 Reading key file: {input_path}");
     let json = fs::read_to_string(input_path)?;
 
     let mut exported: ExportedKey = serde_json::from_str(&json)
-        .map_err(|e| BearDogError::serialization(&format!("Invalid key file format: {}", e)))?;
+        .map_err(|e| BearDogError::serialization(&format!("Invalid key file format: {e}")))?;
 
     println!("✅ Key file loaded");
     println!("   Key ID: {}", exported.key_id);
@@ -237,13 +230,13 @@ pub async fn handle_key_import(
     if exported.encrypted {
         if !decrypt {
             return Err(BearDogError::validation(
-                "Key is encrypted but --decrypt flag not provided. Use --decrypt and provide password."
+                "Key is encrypted but --decrypt flag not provided. Use --decrypt and provide password.",
             ));
         }
 
         println!("🔐 Decrypting key material...");
         let password = rpassword::prompt_password("Enter decryption password: ")
-            .map_err(|e| BearDogError::system(format!("Failed to read password: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to read password: {e}")))?;
 
         if password.is_empty() {
             return Err(BearDogError::validation("Password cannot be empty"));
@@ -263,7 +256,7 @@ pub async fn handle_key_import(
 
     // Check if key already exists
     if key_store::load_key(final_key_id).is_ok() {
-        println!("⚠️  WARNING: Key '{}' already exists!", final_key_id);
+        println!("⚠️  WARNING: Key '{final_key_id}' already exists!");
         println!("   Import will overwrite the existing key.");
         println!();
 
@@ -308,31 +301,24 @@ pub async fn handle_key_import(
     println!("✅ Key imported successfully!");
     println!();
     println!("📋 Import Details:");
-    println!("   Key ID: {}", final_key_id);
+    println!("   Key ID: {final_key_id}");
     println!("   Algorithm: {}", stored_key.algorithm);
     println!("   Generation: {}", stored_key.generation);
     if let Some(parent) = &stored_key.parent_key_id {
-        println!("   Parent: {}", parent);
+        println!("   Parent: {parent}");
     }
     if let Some(expires) = &stored_key.expires_at {
-        println!("   Expires: {}", expires);
+        println!("   Expires: {expires}");
     }
     println!();
 
     println!("💡 Next steps:");
+    println!("   1. Verify key: beardog key info --key-id {final_key_id}");
     println!(
-        "   1. Verify key: beardog key info --key-id {}",
-        final_key_id
-    );
-    println!(
-        "   2. Use key: beardog encrypt --key {} --input data.txt --output data.enc",
-        final_key_id
+        "   2. Use key: beardog encrypt --key {final_key_id} --input data.txt --output data.enc"
     );
     if exported.parent.is_some() {
-        println!(
-            "   3. Check lineage: beardog key lineage --key-id {}",
-            final_key_id
-        );
+        println!("   3. Check lineage: beardog key lineage --key-id {final_key_id}");
     }
     println!();
 
@@ -342,13 +328,13 @@ pub async fn handle_key_import(
 /// Encrypt key material using Argon2 + ChaCha20-Poly1305
 fn encrypt_key_material(key_material_b64: &str, password: &str) -> Result<String, BearDogError> {
     use argon2::{
-        password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
         Argon2,
+        password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
     };
-    use base64::{engine::general_purpose::STANDARD, Engine};
+    use base64::{Engine, engine::general_purpose::STANDARD};
     use chacha20poly1305::{
-        aead::{Aead, KeyInit, OsRng as ChaChaRng},
         ChaCha20Poly1305, Nonce,
+        aead::{Aead, KeyInit, OsRng as ChaChaRng},
     };
 
     // Generate salt for Argon2
@@ -359,7 +345,7 @@ fn encrypt_key_material(key_material_b64: &str, password: &str) -> Result<String
     let password_hash = argon2
         .hash_password(password.as_bytes(), &salt)
         .map_err(|e| BearDogError::Cryptographic {
-            message: format!("Argon2 key derivation failed: {}", e),
+            message: format!("Argon2 key derivation failed: {e}"),
         })?;
 
     // Extract the hash bytes (32 bytes for ChaCha20-Poly1305)
@@ -381,19 +367,19 @@ fn encrypt_key_material(key_material_b64: &str, password: &str) -> Result<String
 
     // Generate random nonce
     let mut rng = ChaChaRng;
-    let nonce_bytes: [u8; 12] = rand::Rng::gen(&mut rng);
+    let nonce_bytes: [u8; 12] = rand::Rng::r#gen(&mut rng);
     let nonce = Nonce::from(nonce_bytes);
 
     // Encrypt the key material
     let plaintext = STANDARD
         .decode(key_material_b64)
-        .map_err(|e| BearDogError::serialization(&format!("Invalid base64: {}", e)))?;
+        .map_err(|e| BearDogError::serialization(&format!("Invalid base64: {e}")))?;
 
     let ciphertext =
         cipher
             .encrypt(&nonce, plaintext.as_ref())
             .map_err(|e| BearDogError::Cryptographic {
-                message: format!("ChaCha20-Poly1305 encryption failed: {}", e),
+                message: format!("ChaCha20-Poly1305 encryption failed: {e}"),
             })?;
 
     // Package: salt || nonce || ciphertext (all base64 encoded)
@@ -409,15 +395,15 @@ fn encrypt_key_material(key_material_b64: &str, password: &str) -> Result<String
 /// Decrypt key material using Argon2 + ChaCha20-Poly1305
 fn decrypt_key_material(encrypted_package: &str, password: &str) -> Result<String, BearDogError> {
     use argon2::{
-        password_hash::{PasswordHasher, SaltString},
         Argon2,
+        password_hash::{PasswordHasher, SaltString},
     };
-    use base64::{engine::general_purpose::STANDARD, Engine};
-    use chacha20poly1305::{aead::Aead, ChaCha20Poly1305, KeyInit, Nonce};
+    use base64::{Engine, engine::general_purpose::STANDARD};
+    use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce, aead::Aead};
 
     // Parse the encrypted package
     let package: serde_json::Value = serde_json::from_str(encrypted_package)
-        .map_err(|e| BearDogError::serialization(&format!("Invalid encrypted package: {}", e)))?;
+        .map_err(|e| BearDogError::serialization(&format!("Invalid encrypted package: {e}")))?;
 
     let salt_str = package["salt"]
         .as_str()
@@ -431,14 +417,14 @@ fn decrypt_key_material(encrypted_package: &str, password: &str) -> Result<Strin
 
     // Reconstruct salt
     let salt = SaltString::from_b64(salt_str)
-        .map_err(|e| BearDogError::serialization(&format!("Invalid salt: {}", e)))?;
+        .map_err(|e| BearDogError::serialization(&format!("Invalid salt: {e}")))?;
 
     // Derive encryption key from password using Argon2
     let argon2 = Argon2::default();
     let password_hash = argon2
         .hash_password(password.as_bytes(), &salt)
         .map_err(|e| BearDogError::Cryptographic {
-            message: format!("Argon2 key derivation failed (wrong password?): {}", e),
+            message: format!("Argon2 key derivation failed (wrong password?): {e}"),
         })?;
 
     let hash_bytes = password_hash
@@ -460,7 +446,7 @@ fn decrypt_key_material(encrypted_package: &str, password: &str) -> Result<Strin
     // Decode nonce and ciphertext
     let nonce_bytes = STANDARD
         .decode(nonce_b64)
-        .map_err(|e| BearDogError::serialization(&format!("Invalid nonce: {}", e)))?;
+        .map_err(|e| BearDogError::serialization(&format!("Invalid nonce: {e}")))?;
     let nonce: [u8; 12] = nonce_bytes
         .try_into()
         .map_err(|_| BearDogError::serialization("Invalid nonce length"))?;
@@ -468,7 +454,7 @@ fn decrypt_key_material(encrypted_package: &str, password: &str) -> Result<Strin
 
     let ciphertext = STANDARD
         .decode(ciphertext_b64)
-        .map_err(|e| BearDogError::serialization(&format!("Invalid ciphertext: {}", e)))?;
+        .map_err(|e| BearDogError::serialization(&format!("Invalid ciphertext: {e}")))?;
 
     // Decrypt
     let plaintext =

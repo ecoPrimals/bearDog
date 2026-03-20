@@ -51,7 +51,7 @@ impl UnifiedHumanEntropyClassifier {
     }
 
     /// Creates classifier with custom criteria
-    pub fn with_criteria(criteria: TierElevationCriteria) -> Result<Self, BearDogError> {
+    pub const fn with_criteria(criteria: TierElevationCriteria) -> Result<Self, BearDogError> {
         Ok(Self {
             tier_criteria: criteria,
         })
@@ -90,7 +90,7 @@ impl UnifiedHumanEntropyClassifier {
     }
 
     /// Checks if capabilities support ephemeral seeds
-    pub fn supports_ephemeral_seeds(
+    pub const fn supports_ephemeral_seeds(
         &self,
         capabilities: &HsmCapabilities,
     ) -> Result<bool, BearDogError> {

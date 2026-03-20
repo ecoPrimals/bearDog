@@ -315,10 +315,12 @@ mod tests {
 
         assert!(error_response["error"].is_object());
         assert_eq!(error_response["error"]["code"], -32601);
-        assert!(error_response["error"]["message"]
-            .as_str()
-            .unwrap()
-            .contains("Method not found"));
+        assert!(
+            error_response["error"]["message"]
+                .as_str()
+                .unwrap()
+                .contains("Method not found")
+        );
     }
 
     #[test]
@@ -333,10 +335,12 @@ mod tests {
         });
 
         assert_eq!(error_response["error"]["code"], -32602);
-        assert!(error_response["error"]["message"]
-            .as_str()
-            .unwrap()
-            .contains("Invalid params"));
+        assert!(
+            error_response["error"]["message"]
+                .as_str()
+                .unwrap()
+                .contains("Invalid params")
+        );
     }
 
     #[test]
@@ -351,10 +355,12 @@ mod tests {
         });
 
         assert_eq!(error_response["error"]["code"], -32700);
-        assert!(error_response["error"]["message"]
-            .as_str()
-            .unwrap()
-            .contains("Parse error"));
+        assert!(
+            error_response["error"]["message"]
+                .as_str()
+                .unwrap()
+                .contains("Parse error")
+        );
     }
 
     // ========================================================================

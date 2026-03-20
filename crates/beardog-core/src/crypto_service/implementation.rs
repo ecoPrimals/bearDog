@@ -5,10 +5,10 @@
 //! Orchestrates cryptographic operations by delegating to algorithm modules
 //! and managing keys, state, and audit logging.
 
+use super::Result;
 use super::algorithms::{asymmetric, discovery, hashing, symmetric};
 use super::r#trait::CryptoService;
 use super::types::{CryptoServiceConfig, CryptoServiceState};
-use super::Result;
 use async_trait::async_trait;
 use beardog_errors::BearDogError;
 use beardog_types::crypto_service::{
@@ -16,8 +16,8 @@ use beardog_types::crypto_service::{
     HealthStatus, KeyAlgorithm, KeyGenOptions, KeyInfo, KeyMetadata, ServiceCapabilities,
     SignOptions, Signature, SignatureAlgorithm, SignatureMetadata, VerifyOptions,
 };
-use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 use std::time::SystemTime;
 
 /// `BearDog` implementation of `CryptoService`

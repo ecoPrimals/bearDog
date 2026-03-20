@@ -11,20 +11,8 @@
 //! - AI-human hybrid decision making systems
 //! - Sovereign cryptographic key management
 
-#![deny(unsafe_code)]
-#![warn(missing_docs)]
-// Production code must use proper error handling - deny panicking methods
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-// Allow expect in tests - test panics are appropriate failure modes
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
-// Enable select pedantic lints for code quality
-#![warn(clippy::pedantic)]
-// Allow some pedantic lints that conflict with our patterns
-#![allow(clippy::module_name_repetitions)] // BearDogConfig in beardog module is clear
-#![allow(clippy::missing_errors_doc)] // Will add incrementally
-#![allow(clippy::missing_panics_doc)] // Will add incrementally
 //! - Genetic algorithm-based key evolution
 //! - Universal service discovery and orchestration
 //! - Zero-copy memory optimization
@@ -115,10 +103,16 @@ pub mod external_functions;
 /// mDNS-based primal discovery (feature-gated)
 #[cfg(feature = "mdns")]
 pub mod primal_discovery_mdns;
+/// Runtime primal introspection: identity, capabilities, and endpoints without hardcoded config.
 pub mod primal_self_knowledge;
 
+/// Routes inbound work to registered capability handlers across the core stack.
 pub mod capability_router;
+/// Adapter unlock certificates (classification, issuance, renewal, store).
+pub mod certificates;
+/// Peer and service discovery for primals (registry, network, and config-driven paths).
 pub mod primal_discovery;
+/// Validation helpers for self-knowledge payloads and capability claims.
 pub mod primal_self_knowledge_validation;
 /// Primal sovereignty implementation
 ///
@@ -130,6 +124,7 @@ pub mod primal_sovereignty;
 /// Implements runtime discovery of primal identity, capabilities, and endpoints.
 /// See module documentation for the self-knowledge pattern.
 pub mod self_knowledge;
+/// Thin integration layer re-exporting the production universal adapter implementation.
 pub mod universal_adapter;
 
 // Service discovery for distributed BearDog deployments

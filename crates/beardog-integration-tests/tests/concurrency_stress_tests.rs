@@ -5,8 +5,8 @@
 //!
 //! Philosophy: If it fails under stress, it will fail in production.
 
-use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::time::Duration;
 
 // ============================================================================

@@ -17,9 +17,9 @@
 mod monitoring_error_tests {
     use beardog_errors::BearDogError;
     use std::collections::HashMap;
-    use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
     use std::sync::Arc;
     use std::sync::Mutex;
+    use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
     #[test]
     fn test_metrics_collection_with_invalid_source() {
@@ -583,7 +583,7 @@ mod monitoring_error_tests {
             let components = self.components.lock().unwrap();
             let failed: Vec<String> = components
                 .iter()
-                .filter(|(_, &healthy)| !healthy)
+                .filter(|(_, healthy)| !*healthy)
                 .map(|(name, _)| name.clone())
                 .collect();
 

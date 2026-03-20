@@ -4,6 +4,7 @@
 //! Created: October 26, 2025
 //! Purpose: Week 2 Day 5 - FINAL 12 tests for workflow state, execution, and error handling
 
+use crate::WorkflowConfig;
 use crate::workflows::canonical_traits::{
     DefaultWorkflowStatus, WorkflowStatus as WorkflowStatusTrait,
 };
@@ -11,7 +12,6 @@ use crate::workflows::types::enums::{
     ApprovalDecision, ExecutionStatus, NotificationStatus, WorkflowIdentifier, WorkflowPriority,
     WorkflowStatus as WorkflowStatusEnum, WorkflowTarget, WorkflowType,
 };
-use crate::WorkflowConfig;
 
 // ============================================================================
 // Test 1: WorkflowStatus State Variants

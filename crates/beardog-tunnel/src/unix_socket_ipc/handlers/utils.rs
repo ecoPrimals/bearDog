@@ -83,28 +83,28 @@ mod tests {
     #[test]
     fn test_get_primal_name_default() {
         // Remove env var to test compile-time fallback
-        std::env::remove_var("PRIMAL_NAME");
+        beardog_errors::process_env::remove_var("PRIMAL_NAME");
 
         assert_eq!(get_primal_name(), env!("CARGO_PKG_NAME"));
     }
 
     #[test]
     fn test_get_primal_name_from_env() {
-        std::env::set_var("PRIMAL_NAME", "test_primal");
+        beardog_errors::process_env::set_var("PRIMAL_NAME", "test_primal");
         assert_eq!(get_primal_name(), "test_primal");
-        std::env::remove_var("PRIMAL_NAME");
+        beardog_errors::process_env::remove_var("PRIMAL_NAME");
     }
 
     #[test]
     fn test_get_family_id_default() {
-        std::env::remove_var("FAMILY_ID");
-        std::env::remove_var("BIOMEOS_FAMILY");
+        beardog_errors::process_env::remove_var("FAMILY_ID");
+        beardog_errors::process_env::remove_var("BIOMEOS_FAMILY");
         assert_eq!(get_family_id(), "unknown");
     }
 
     #[test]
     fn test_get_node_id_default() {
-        std::env::remove_var("NODE_ID");
+        beardog_errors::process_env::remove_var("NODE_ID");
         // HOSTNAME might be set by the system, so just verify it returns something
         let node_id = get_node_id();
         assert!(!node_id.is_empty());

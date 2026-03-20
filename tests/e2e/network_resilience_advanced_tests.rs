@@ -13,8 +13,8 @@
 #![allow(clippy::unwrap_used)] // Allow in tests
 
 use beardog_errors::BearDogError;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 use tokio::time::{sleep, timeout};
 

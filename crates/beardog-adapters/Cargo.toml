@@ -1,10 +1,10 @@
 [package]
 name = "beardog-adapters"
 version.workspace = true
-edition = "2021"
+edition = "2024"
 description = "BearDog adapters module"
 repository = "https://github.com/eastgate-software/beardog"
-rust-version = "1.75"
+rust-version = "1.85.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "adapters", "integration", "beardog", "ecosystem", "universal",]
@@ -15,6 +15,9 @@ readme = "README.md"
 default = []
 advanced-nestgate = []
 mdns-discovery = ["mdns-sd"]
+
+[lints]
+workspace = true
 
 [dependencies]
 async-trait = "0.1"

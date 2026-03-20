@@ -86,6 +86,7 @@ pub struct ModernSecretsConfig {
     /// Optional preferred capabilities
     pub preferred_capabilities: Option<Vec<CapabilityType>>,
 
+    /// Opaque JSON blob used when no discovered provider matches the capability lists.
     pub fallback_config: Option<serde_json::Value>,
 }
 
@@ -137,7 +138,7 @@ impl EnvironmentConfig {
     /// Set secrets rotation settings
     #[must_use]
     /// Creates instance with secrets rotation
-    pub fn with_secrets_rotation(self, _enabled: bool, _interval: Duration) -> Self {
+    pub const fn with_secrets_rotation(self, _enabled: bool, _interval: Duration) -> Self {
         // This functionality is now handled by the ModernSecretsConfig struct
         // and its required_capabilities.
         // For now, we'll keep it as a placeholder or remove if not directly applicable.
@@ -180,13 +181,14 @@ impl EnvironmentConfig {
 
     /// Check if this is a production-like environment
     #[must_use]
-    pub fn is_production_like(&self) -> bool {
+    pub const fn is_production_like(&self) -> bool {
         matches!(
             self.environment_type,
             EnvironmentType::Production | EnvironmentType::Staging | EnvironmentType::Disaster
         )
     }
 
+    /// Builds opinionated defaults (validation cadence, secrets posture) for each [`EnvironmentType`].
     #[must_use]
     pub fn recommended_for_type(env_type: EnvironmentType) -> Self {
         let mut config = Self::new(env_type);
@@ -282,12 +284,13 @@ impl Default for EnvironmentValidation {
 impl EnvironmentType {
     /// Check if this environment type requires high availability
     #[must_use]
-    pub fn requires_high_availability(&self) -> bool {
+    pub const fn requires_high_availability(&self) -> bool {
         matches!(self, Self::Production | Self::Staging | Self::Disaster)
     }
 
+    /// Suggested root log level string for typical operators of this environment tier.
     #[must_use]
-    pub fn recommended_log_level(&self) -> &'static str {
+    pub const fn recommended_log_level(&self) -> &'static str {
         match self {
             Self::Development | Self::Local => "debug",
             Self::Staging | Self::Testing => "info",
@@ -358,8 +361,9 @@ impl ModernSecretsConfig {
     }
 
     #[deprecated(note = "Use universal adapter to discover backup capabilities")]
+    /// Legacy hook for backup-oriented secrets profiles; always returns `None` in modern flows.
     #[must_use]
-    pub fn recommended_backup(&self) -> Option<Self> {
+    pub const fn recommended_backup(&self) -> Option<Self> {
         // This logic is now handled by required_capabilities and preferred_capabilities
         // For now, we'll return a placeholder or remove if not directly applicable.
         // The ModernSecretsConfig struct manages fallback_config.
@@ -402,7 +406,7 @@ impl ModernSecretsConfig {
             .contains(&CapabilityType::SecretsManagement)
         {
             Some(
-                "🚨 MIGRATION: Secrets management is now handled by required_capabilities. This struct is deprecated."
+                "🚨 MIGRATION: Secrets management is now handled by required_capabilities. This struct is deprecated.",
             )
         } else {
             None

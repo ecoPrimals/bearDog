@@ -63,7 +63,7 @@ async fn determine_user_role(user_id: &UserId, graph: &Graph) -> Result<UserRole
 }
 
 /// Check if a role allows a specific action
-fn is_action_allowed(role: UserRole, action: &ModificationAction) -> bool {
+const fn is_action_allowed(role: UserRole, action: &ModificationAction) -> bool {
     match role {
         UserRole::Owner => true, // Owner can do everything
         UserRole::Collaborator => {

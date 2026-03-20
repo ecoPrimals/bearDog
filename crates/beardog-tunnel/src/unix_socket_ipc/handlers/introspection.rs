@@ -13,7 +13,7 @@ use super::utils::get_primal_name;
 use super::{HandlerRegistry, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::sync::Arc;
 
 /// Handler for primal introspection methods
@@ -24,7 +24,7 @@ pub struct IntrospectionHandler {
 
 impl IntrospectionHandler {
     /// Create new introspection handler
-    pub fn new(registry: Arc<HandlerRegistry>) -> Self {
+    pub const fn new(registry: Arc<HandlerRegistry>) -> Self {
         Self { registry }
     }
 }
@@ -45,7 +45,7 @@ impl MethodHandler for IntrospectionHandler {
             "primal.info" => self.handle_primal_info().await,
             "rpc.methods" => self.handle_rpc_methods().await,
             "primal.capabilities" => self.handle_primal_capabilities().await,
-            _ => Err(format!("Unknown introspection method: {}", method)),
+            _ => Err(format!("Unknown introspection method: {method}")),
         }
     }
 }
@@ -116,7 +116,7 @@ impl IntrospectionHandler {
             by_namespace
                 .entry(namespace)
                 .or_default()
-                .push(method.to_string());
+                .push(method.clone());
         }
 
         Ok(json!({
@@ -212,7 +212,7 @@ mod tests {
     #[serial]
     async fn test_primal_info_structure() {
         let prev = std::env::var("PRIMAL_NAME").ok();
-        std::env::set_var("PRIMAL_NAME", "beardog");
+        beardog_errors::process_env::set_var("PRIMAL_NAME", "beardog");
 
         let registry = HandlerRegistry::default();
         let handler = IntrospectionHandler::new(registry);
@@ -228,9 +228,9 @@ mod tests {
         assert!(result["features"].is_object());
 
         if let Some(p) = prev {
-            std::env::set_var("PRIMAL_NAME", p);
+            beardog_errors::process_env::set_var("PRIMAL_NAME", p);
         } else {
-            std::env::remove_var("PRIMAL_NAME");
+            beardog_errors::process_env::remove_var("PRIMAL_NAME");
         }
     }
 

@@ -17,13 +17,13 @@ impl CrossNodeAuthEngine {
     }
 
     /// Get consensus threshold
-    pub fn get_consensus_threshold(&self) -> usize {
+    pub const fn get_consensus_threshold(&self) -> usize {
         // Require 2/3 majority for consensus
         2
     }
 
     /// Validate consensus reached
-    pub fn validate_consensus(&self, approvals: usize) -> Result<bool, BearDogError> {
+    pub const fn validate_consensus(&self, approvals: usize) -> Result<bool, BearDogError> {
         let threshold = self.get_consensus_threshold();
         Ok(approvals >= threshold)
     }

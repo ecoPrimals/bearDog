@@ -36,8 +36,8 @@ pub fn encrypt_aes_256_gcm(
     aad: Option<&[u8]>,
 ) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>)> {
     use aes_gcm::{
-        aead::{Aead, KeyInit, Payload},
         Aes256Gcm, Nonce,
+        aead::{Aead, KeyInit, Payload},
     };
 
     let cipher = Aes256Gcm::new_from_slice(key)
@@ -93,8 +93,8 @@ pub fn decrypt_aes_256_gcm(
     aad: Option<&[u8]>,
 ) -> Result<Vec<u8>> {
     use aes_gcm::{
-        aead::{Aead, KeyInit, Payload},
         Aes256Gcm, Nonce,
+        aead::{Aead, KeyInit, Payload},
     };
 
     let cipher = Aes256Gcm::new_from_slice(key)
@@ -130,8 +130,8 @@ pub fn encrypt_aes_128_gcm(
     aad: Option<&[u8]>,
 ) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>)> {
     use aes_gcm::{
-        aead::{Aead, KeyInit, Payload},
         Aes128Gcm, Nonce,
+        aead::{Aead, KeyInit, Payload},
     };
 
     let cipher = Aes128Gcm::new_from_slice(key)
@@ -164,8 +164,8 @@ pub fn decrypt_aes_128_gcm(
     aad: Option<&[u8]>,
 ) -> Result<Vec<u8>> {
     use aes_gcm::{
-        aead::{Aead, KeyInit, Payload},
         Aes128Gcm, Nonce,
+        aead::{Aead, KeyInit, Payload},
     };
 
     let cipher = Aes128Gcm::new_from_slice(key)
@@ -201,8 +201,8 @@ pub fn encrypt_chacha20_poly1305(
     aad: Option<&[u8]>,
 ) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>)> {
     use chacha20poly1305::{
-        aead::{Aead, KeyInit, Payload},
         ChaCha20Poly1305, Nonce,
+        aead::{Aead, KeyInit, Payload},
     };
 
     let cipher = ChaCha20Poly1305::new_from_slice(key).map_err(|e| {
@@ -237,8 +237,8 @@ pub fn decrypt_chacha20_poly1305(
     aad: Option<&[u8]>,
 ) -> Result<Vec<u8>> {
     use chacha20poly1305::{
-        aead::{Aead, KeyInit, Payload},
         ChaCha20Poly1305, Nonce,
+        aead::{Aead, KeyInit, Payload},
     };
 
     let cipher = ChaCha20Poly1305::new_from_slice(key).map_err(|e| {

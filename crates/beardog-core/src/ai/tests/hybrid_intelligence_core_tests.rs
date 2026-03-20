@@ -16,11 +16,11 @@
 #![allow(clippy::default_trait_access, clippy::used_underscore_binding)]
 
 use crate::ai::hybrid_intelligence::{
+    HybridIntelligenceConfig,
     core::{
         DecisionContext, HybridIntelligenceSystem, IntelligenceEvent, IntelligenceEventType,
         IntelligenceMetrics, PredictionResult, SystemCommand,
     },
-    HybridIntelligenceConfig,
 };
 use chrono::Utc;
 use std::collections::HashMap;

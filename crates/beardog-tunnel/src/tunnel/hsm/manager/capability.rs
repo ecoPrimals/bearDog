@@ -84,7 +84,7 @@ pub trait HsmCapabilityDetector: Send + Sync {
     /// # Errors
     /// Returns an error if selection fails
     fn select_hsm_tier(&self, requirements: &SecurityRequirements)
-        -> Result<HsmTier, BearDogError>;
+    -> Result<HsmTier, BearDogError>;
 }
 
 /// Default HSM capability detector implementation
@@ -111,19 +111,19 @@ impl DefaultHsmCapabilityDetector {
     }
 
     /// Check hardware HSM availability
-    fn check_hardware_hsm_availability(&self) -> Result<bool, BearDogError> {
+    const fn check_hardware_hsm_availability(&self) -> Result<bool, BearDogError> {
         // In production, this would check for actual hardware HSM presence
         Ok(false)
     }
 
     /// Check smart card availability
-    fn check_smartcard_availability(&self) -> Result<bool, BearDogError> {
+    const fn check_smartcard_availability(&self) -> Result<bool, BearDogError> {
         // In production, this would check for smart card readers
         Ok(false)
     }
 
     /// Check cloud HSM availability
-    fn check_cloud_hsm_availability(&self) -> Result<bool, BearDogError> {
+    const fn check_cloud_hsm_availability(&self) -> Result<bool, BearDogError> {
         // In production, this would check cloud HSM connectivity
         Ok(false)
     }

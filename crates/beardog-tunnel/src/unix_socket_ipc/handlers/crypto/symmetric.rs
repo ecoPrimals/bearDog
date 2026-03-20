@@ -264,18 +264,22 @@ mod tests {
         let result = handle_chacha20_poly1305_encrypt(Some(&params)).await;
         assert!(result.is_ok());
 
-        let value = result.unwrap();
+        let value = result.expect("chacha20 encrypt should succeed");
         assert_eq!(value["algorithm"], "ChaCha20-Poly1305");
         assert!(value["ciphertext"].is_string());
         assert!(value["nonce"].is_string());
         assert!(value["tag"].is_string());
 
         // Verify nonce is 12 bytes
-        let nonce = BASE64.decode(value["nonce"].as_str().unwrap()).unwrap();
+        let nonce_str = value["nonce"].as_str().expect("nonce should be string");
+        let nonce = BASE64
+            .decode(nonce_str)
+            .expect("nonce should decode as base64");
         assert_eq!(nonce.len(), 12);
 
         // Verify tag is 16 bytes
-        let tag = BASE64.decode(value["tag"].as_str().unwrap()).unwrap();
+        let tag_str = value["tag"].as_str().expect("tag should be string");
+        let tag = BASE64.decode(tag_str).expect("tag should decode as base64");
         assert_eq!(tag.len(), 16);
     }
 
@@ -299,10 +303,11 @@ mod tests {
         let result = handle_chacha20_poly1305_encrypt(Some(&params)).await;
         assert!(result.is_ok());
 
-        let value = result.unwrap();
-        let ciphertext = BASE64
-            .decode(value["ciphertext"].as_str().unwrap())
-            .unwrap();
+        let value = result.expect("encrypt empty plaintext should succeed");
+        let ct_str = value["ciphertext"]
+            .as_str()
+            .expect("ciphertext should be string");
+        let ciphertext = BASE64.decode(ct_str).expect("ciphertext base64");
         assert_eq!(ciphertext.len(), 0); // Empty plaintext = empty ciphertext
     }
 
@@ -365,9 +370,10 @@ mod tests {
             .expect("decryption failed");
 
         // Verify roundtrip
-        let result = BASE64
-            .decode(decrypted["plaintext"].as_str().unwrap())
-            .unwrap();
+        let pt_str = decrypted["plaintext"]
+            .as_str()
+            .expect("plaintext should be string");
+        let result = BASE64.decode(pt_str).expect("plaintext base64");
         assert_eq!(result, original);
     }
 
@@ -396,9 +402,10 @@ mod tests {
             .await
             .expect("decryption failed");
 
-        let result = BASE64
-            .decode(decrypted["plaintext"].as_str().unwrap())
-            .unwrap();
+        let pt_str = decrypted["plaintext"]
+            .as_str()
+            .expect("plaintext should be string");
+        let result = BASE64.decode(pt_str).expect("plaintext base64");
         assert_eq!(result, original);
     }
 
@@ -437,9 +444,8 @@ mod tests {
             .expect("encryption failed");
 
         // Modify ciphertext
-        let mut ciphertext = BASE64
-            .decode(encrypted["ciphertext"].as_str().unwrap())
-            .unwrap();
+        let ct_str = encrypted["ciphertext"].as_str().expect("ciphertext string");
+        let mut ciphertext = BASE64.decode(ct_str).expect("ciphertext base64");
         if !ciphertext.is_empty() {
             ciphertext[0] ^= 0xFF; // Flip bits
         }

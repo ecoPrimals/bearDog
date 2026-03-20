@@ -16,7 +16,7 @@ use super::types::{
 use beardog_errors::BearDogError;
 use std::sync::Arc;
 use std::time::SystemTime;
-use tokio::sync::{broadcast, RwLock};
+use tokio::sync::{RwLock, broadcast};
 
 /// Advanced metrics collector and analyzer
 #[derive(Debug)]
@@ -52,6 +52,8 @@ impl AdvancedMetricsSystem {
         }
     }
 
+    /// Records a performance sample: persists it, updates aggregates, and broadcasts
+    /// [`MetricEventType::MetricUpdated`] to subscribers.
     pub async fn record_performance_metric(
         &self,
         name: String,
@@ -330,7 +332,7 @@ mod tests {
         system
             .record_performance_metric("test".to_string(), 100.0, MetricType::Counter)
             .await
-            .unwrap();
+            .expect("record performance");
 
         // Add security event
         let event = SecurityEvent {
@@ -341,7 +343,10 @@ mod tests {
             source: "test".to_string(),
             context: std::collections::HashMap::new(),
         };
-        system.record_security_event(event).await.unwrap();
+        system
+            .record_security_event(event)
+            .await
+            .expect("record security event");
 
         let summary = system.get_metrics_summary().await;
 
@@ -362,7 +367,7 @@ mod tests {
             system
                 .record_performance_metric("test".to_string(), 50.0, MetricType::Gauge)
                 .await
-                .unwrap();
+                .expect("record performance");
         });
 
         // Try to receive the event
@@ -370,9 +375,9 @@ mod tests {
             tokio::time::timeout(std::time::Duration::from_millis(100), receiver.recv()).await;
 
         assert!(result.is_ok());
-        let event = result.unwrap();
+        let event = result.expect("timeout");
         assert!(event.is_ok());
-        let metric_event = event.unwrap();
+        let metric_event = event.expect("recv");
         assert_eq!(metric_event.event_type, MetricEventType::MetricUpdated);
         assert_eq!(metric_event.metric_name, "test");
     }
@@ -390,7 +395,7 @@ mod tests {
             system_clone
                 .record_performance_metric("broadcast_test".to_string(), 75.0, MetricType::Counter)
                 .await
-                .unwrap();
+                .expect("record performance");
         });
 
         // Both receivers should get the event
@@ -430,7 +435,7 @@ mod tests {
         for handle in handles {
             let result = handle.await;
             assert!(result.is_ok());
-            assert!(result.unwrap().is_ok());
+            assert!(result.expect("join").is_ok());
         }
 
         let store = system.metrics_store.read().await;
@@ -445,7 +450,7 @@ mod tests {
         system
             .record_performance_metric("stats_test".to_string(), 100.0, MetricType::Gauge)
             .await
-            .unwrap();
+            .expect("record performance");
 
         let store = system.metrics_store.read().await;
 
@@ -453,7 +458,10 @@ mod tests {
         assert_eq!(store.performance.len(), 1);
 
         // Get the metric (performance is a HashMap<String, PerformanceMetric>)
-        let metric = store.performance.get("stats_test").unwrap();
+        let metric = store
+            .performance
+            .get("stats_test")
+            .expect("stats_test metric");
 
         // Verify statistics are initialized
         assert_eq!(metric.stats.min, 100.0);
@@ -483,18 +491,18 @@ mod tests {
                     MetricType::Histogram,
                 )
                 .await
-                .unwrap();
+                .expect("record performance");
         });
 
         let result =
             tokio::time::timeout(std::time::Duration::from_millis(100), receiver.recv()).await;
 
         assert!(result.is_ok());
-        let event = result.unwrap().unwrap();
+        let event = result.expect("timeout").expect("recv");
 
         // Verify data field contains value
         assert!(event.data.is_object());
-        let obj = event.data.as_object().unwrap();
+        let obj = event.data.as_object().expect("object payload");
         assert!(obj.contains_key("value"));
     }
 
@@ -515,14 +523,17 @@ mod tests {
                 source: "test".to_string(),
                 context: std::collections::HashMap::new(),
             };
-            system_clone.record_security_event(event).await.unwrap();
+            system_clone
+                .record_security_event(event)
+                .await
+                .expect("record security event");
         });
 
         let result =
             tokio::time::timeout(std::time::Duration::from_millis(100), receiver.recv()).await;
 
         assert!(result.is_ok());
-        let metric_event = result.unwrap().unwrap();
+        let metric_event = result.expect("timeout").expect("recv");
         assert_eq!(metric_event.event_type, MetricEventType::SecurityAlert);
     }
 }

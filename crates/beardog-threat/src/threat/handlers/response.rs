@@ -14,12 +14,14 @@ use tokio::sync::RwLock;
 /// Automated threat response handler - SIMPLIFIED
 #[derive(Debug)]
 pub struct AutomatedThreatResponseHandler {
+    /// Feature flags and severity caps for automated playbooks.
     pub config: ThreatResponseConfig,
     /// The event history value
     /// The event history value
     pub event_history: Arc<RwLock<Vec<ThreatEvent>>>,
 }
 
+/// Tunables for [`AutomatedThreatResponseHandler`].
 #[derive(Debug)]
 pub struct ThreatResponseConfig {
     /// Whether feature is enabled
@@ -83,6 +85,7 @@ impl AutomatedThreatResponseHandler {
         Ok(())
     }
 
+    /// Placeholder that would gather forensic artifacts for a threat; currently returns an empty list.
     pub const fn collect_forensics(
         &self,
         threat_event: &ThreatEvent,

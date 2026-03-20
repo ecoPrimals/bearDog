@@ -211,7 +211,7 @@ impl Default for RuntimeNetworkConfig {
 
         Self {
             discovery_endpoint: env::var("BEARDOG_DISCOVERY_ENDPOINT").unwrap_or_else(|_| {
-                format!("http://{}:{}/discover", default_api_host, default_api_port)
+                format!("http://{default_api_host}:{default_api_port}/discover")
             }),
             api_host: env::var("BEARDOG_API_HOST").unwrap_or_else(|_| default_api_host.to_string()),
             api_port: env::var("BEARDOG_API_PORT")

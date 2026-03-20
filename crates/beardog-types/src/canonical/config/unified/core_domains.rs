@@ -249,6 +249,7 @@ pub enum PasswordSource {
     File(PathBuf),
     /// Password from vault service
     Vault(String),
+    /// Inline secret material (testing only; never commit or log this variant).
     Inline(String), // Not recommended for production
 }
 

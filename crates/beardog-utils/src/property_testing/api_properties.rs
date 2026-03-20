@@ -2,7 +2,7 @@
 
 // API property testing implementations
 
-use super::{info, BearDogError, PropertyBasedTestFramework, TestCase};
+use super::{BearDogError, PropertyBasedTestFramework, TestCase, info};
 
 impl PropertyBasedTestFramework {
     /// Test API validation properties
@@ -21,6 +21,7 @@ impl PropertyBasedTestFramework {
         Ok(())
     }
 
+    /// Synthesizes [`TestCase`] rows using [`PropertyBasedTestFramework::generate_api_input_data`].
     pub fn generate_api_test_cases(&mut self) -> Result<(), BearDogError> {
         info!("🎲 Generating API test cases");
 

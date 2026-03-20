@@ -353,7 +353,7 @@ impl QuantumOptimizationEngine {
                 .calculate_tunneling_probability(qubit, temperature);
             
             // Apply quantum tunneling if probability threshold met
-            if thread_rng().gen::<f64>() < tunneling_prob {
+            if thread_rng().r#gen::<f64>() < tunneling_prob {
                 qubit.apply_tunneling_transformation();
                 self.quantum_stats.tunneling_events.fetch_add(1, Ordering::Relaxed);
             }
@@ -373,7 +373,7 @@ impl QuantumOptimizationEngine {
             
             // Partial collapse based on measurement strength
             let measurement_strength = 0.1; // Weak measurement
-            let measured_value = if thread_rng().gen::<f64>() < prob_1 {
+            let measured_value = if thread_rng().r#gen::<f64>() < prob_1 {
                 1.0 - measurement_strength * prob_0
             } else {
                 measurement_strength * prob_1

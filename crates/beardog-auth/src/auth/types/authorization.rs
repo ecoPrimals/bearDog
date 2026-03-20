@@ -8,13 +8,16 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Policy bundle governing cross-node proof checks, spawning, and optional quorum approval.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrossNodeAuthConfig {
-    /// The verification mode value
+    /// Whether incoming proofs must be validated before honoring cross-node calls.
     pub verification_mode: VerificationMode,
+    /// Maximum age of a cryptographic proof before it is rejected as stale.
     pub max_proof_validity_minutes: u32,
-    /// The spawning mode value
+    /// Whether child primals may be spawned automatically or must remain disabled.
     pub spawning_mode: SpawningMode,
+    /// Parameters for optional multi-node agreement on sensitive operations.
     pub consensus_config: ConsensusConfig,
     /// Number of `max_spawns_per_node`
     pub max_spawns_per_node: u32,
@@ -22,11 +25,12 @@ pub struct CrossNodeAuthConfig {
     pub approval_mode: ApprovalMode,
 }
 
+/// Tunable quorum rules applied when [`CrossNodeAuthConfig`] enables consensus-gated actions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsensusConfig {
-    /// Whether required is enabled
+    /// When true, participating nodes must affirm high-risk operations before they proceed.
     pub required: bool,
-    /// The threshold value
+    /// Fraction of votes (0.0–1.0) required to consider consensus satisfied.
     pub threshold: f64,
 }
 
@@ -46,11 +50,16 @@ impl Default for CrossNodeAuthConfig {
     }
 }
 
+/// Signed grant describing who may act on a remote resource and under which constraints.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrossNodeAuthorization {
+    /// Correlates logs, proofs, and workflow steps for this authorization request.
     pub request_id: String,
+    /// Node initiating the cross-node operation.
     pub requester_node_id: String,
+    /// Node that owns the target resource being accessed.
     pub resource_owner_node_id: String,
+    /// Opaque resource identifier interpreted by the owner’s policy engine.
     pub resource_id: String,
     /// Collection of permissions
     pub permissions: Vec<ResourcePermission>,
@@ -84,6 +93,7 @@ impl CrossNodeAuthorization {
     }
 }
 
+/// Fine-grained verbs that may appear on a [`CrossNodeAuthorization::permissions`] list.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ResourcePermission {
     /// Represents read variant
@@ -133,7 +143,7 @@ pub enum ResourcePermission {
 }
 
 impl ResourcePermission {
-    /// Implies operation.
+    /// Returns true if possessing `self` is sufficient to satisfy a requirement for `other`.
     #[must_use]
     pub fn implies(&self, other: &Self) -> bool {
         match (self, other) {
@@ -145,6 +155,7 @@ impl ResourcePermission {
         }
     }
 
+    /// Relative sensitivity rank used for ordering and UI; higher means more privileged.
     #[must_use]
     pub const fn security_level(&self) -> u8 {
         match self {
@@ -167,23 +178,33 @@ impl ResourcePermission {
     }
 }
 
+/// Additional predicates that must hold before an authorization is considered valid.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AccessCondition {
-    /// Represents time window variant
+    /// Access is only valid between `start` and `end` (inclusive/exclusive per enforcement layer).
     TimeWindow {
+        /// Inclusive lower bound of the validity window.
         start: DateTime<Utc>,
+        /// Exclusive or inclusive upper bound of the validity window.
         end: DateTime<Utc>,
     },
+    /// Restricts callers to a specific IPv4 address observed within `window_seconds`.
     IpAddress {
+        /// IPv4 address in host-endian `u32` form (e.g. `0x7F000001` for `127.0.0.1`).
         address: u32,
+        /// Sliding window, in seconds, for recent IP verification.
         window_seconds: u32,
     },
+    /// Requires a quorum of listed nodes to approve before the grant activates.
     RequireConsensus {
+        /// Fraction of `nodes` that must approve (interpreted by the consensus engine).
         threshold: f64,
+        /// Participant node identifiers eligible to vote.
         nodes: Vec<String>,
     },
 }
 
+/// Supported strong-authentication mechanisms when binding identities to authorizations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuthMethod {
     /// Represents signature variant
@@ -196,7 +217,8 @@ pub enum AuthMethod {
     MutualTls,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Toggles whether cryptographic proof verification runs on the hot path.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum VerificationMode {
     /// Active or enabled state
     Enabled,
@@ -204,6 +226,7 @@ pub enum VerificationMode {
     Disabled,
 }
 
+/// Enables or disables automatic primal spawning flows tied to authorization decisions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SpawningMode {
     /// Active or enabled state
@@ -212,6 +235,7 @@ pub enum SpawningMode {
     Disabled,
 }
 
+/// Determines whether sensitive operations proceed automatically or await human approval.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ApprovalMode {
     /// State indicating automated
@@ -220,8 +244,8 @@ pub enum ApprovalMode {
     Manual,
 }
 
+/// Verb applied to `target_resource` inside a [`CrossNodeOperation`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Types of operation
 pub enum OperationType {
     /// Represents read variant
     Read,
@@ -233,6 +257,7 @@ pub enum OperationType {
     Delete,
 }
 
+/// Concrete action a requester intends to perform against `target_resource`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrossNodeOperation {
     /// The operation type value
@@ -256,26 +281,33 @@ impl Default for CrossNodeOperation {
     }
 }
 
+/// Proof object bound to a [`CrossNodeOperation`] prior to full authorization issuance.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthProof {
+    /// Identifier linking this proof to audit logs and replay caches.
     pub proof_id: String,
     /// The operation value
     pub operation: CrossNodeOperation,
+    /// Time at which the proof was produced (used for freshness checks).
     pub timestamp: DateTime<Utc>,
     /// The proof signature value
     pub proof_signature: String,
 }
 
+/// Evidence that a specific [`CrossNodeAuthorization`] authorized `operation` at `timestamp`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthorizationProof {
+    /// Matches [`CrossNodeAuthorization::request_id`] or another stable authorization key.
     pub authorization_id: String,
     /// The operation value
     pub operation: CrossNodeOperation,
+    /// Time at which this proof was issued; verifiers compare against max age policy.
     pub timestamp: DateTime<Utc>,
     /// The proof signature value
     pub proof_signature: String,
 }
 
+/// Outcome of a quorum vote among participating nodes for a gated operation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsensusResult {
     /// Whether `consensus_reached` is enabled

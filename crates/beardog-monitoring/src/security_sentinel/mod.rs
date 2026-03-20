@@ -9,10 +9,11 @@ use beardog_types::canonical::HealthStatus;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use tokio::sync::RwLock;
 
+/// Configuration for the security sentinel's buffering, logging, and alert cadence.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecuritySentinelConfig {
     /// Whether security monitoring is enabled
@@ -27,9 +28,9 @@ pub struct SecuritySentinelConfig {
     /// Whether to log security events
     /// Whether `log_events` is enabled
     pub log_events: bool,
-    /// Number of `alert_threshold`
+    /// Count of concurrent high-severity events that triggers an alert escalation.
     pub alert_threshold: u32,
-    /// Whether to enable real-time monitoring
+    /// When true, evaluates signals on the hot path instead of batch-only modes.
     pub real_time_monitoring: bool,
     /// Monitoring interval in seconds
     /// Number of `monitoring_interval_seconds`

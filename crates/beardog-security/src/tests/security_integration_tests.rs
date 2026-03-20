@@ -3,7 +3,7 @@
 // Security Integration Tests
 // Testing integration between security components
 
-use crate::memory_key_manager::{config::MemoryKeyConfig, MemoryKeyManager};
+use crate::memory_key_manager::{MemoryKeyManager, config::MemoryKeyConfig};
 use crate::*;
 
 #[test]

@@ -4,9 +4,9 @@
 // Demonstrates real-world usage of enhanced error constructors with remediation hints
 
 use crate::{
-    authentication_error_with_hint, authorization_error_with_hint, configuration_error_with_docs,
-    crypto_error_with_details, network_error_with_context, validation_error_with_suggestion,
-    BearDogError,
+    BearDogError, authentication_error_with_hint, authorization_error_with_hint,
+    configuration_error_with_docs, crypto_error_with_details, network_error_with_context,
+    validation_error_with_suggestion,
 };
 
 /// Example: Authentication with helpful hints
@@ -20,7 +20,7 @@ pub fn example_authentication_with_hint() -> Result<(), BearDogError> {
     // Simulate JWT verification failure
     Err(authentication_error_with_hint(
         "JWT token signature verification failed",
-        "Verify the token was signed with the correct key. Check configuration: beardog.auth.jwt_secret"
+        "Verify the token was signed with the correct key. Check configuration: beardog.auth.jwt_secret",
     ))
 }
 
@@ -36,7 +36,7 @@ pub fn example_authorization_with_hint() -> Result<(), BearDogError> {
     Err(authorization_error_with_hint(
         "/api/admin/users",
         "DELETE",
-        "Requires 'admin' role or 'users:delete' permission. Contact your administrator to request access."
+        "Requires 'admin' role or 'users:delete' permission. Contact your administrator to request access.",
     ))
 }
 
@@ -134,7 +134,7 @@ pub fn api_endpoint_example(token: &str, resource_id: &str) -> Result<String, Be
         return Err(authorization_error_with_hint(
             resource_id,
             "READ",
-            "This resource requires 'admin' role. Your current role is 'user'. Contact support@beardog.dev to request elevated access."
+            "This resource requires 'admin' role. Your current role is 'user'. Contact support@beardog.dev to request elevated access.",
         ));
     }
 
@@ -185,7 +185,7 @@ pub fn encrypt_data(data: &[u8], key_size: usize) -> Result<Vec<u8>, BearDogErro
         return Err(crypto_error_with_details(
             "AES-256-GCM encryption",
             &format!("Key size is {key_size} bits, expected 256 bits"),
-            "Use HsmProvider::generate_key_256() or KeyDerivation::derive_256bit_key() to create a properly sized key"
+            "Use HsmProvider::generate_key_256() or KeyDerivation::derive_256bit_key() to create a properly sized key",
         ));
     }
 

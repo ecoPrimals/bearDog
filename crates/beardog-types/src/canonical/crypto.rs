@@ -56,7 +56,10 @@ impl Default for CryptoAlgorithm {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum KeyDerivationFunction {
     /// PBKDF2 with specified iterations
-    Pbkdf2 { iterations: u32 },
+    Pbkdf2 {
+        /// Iteration count; must be tuned to your threat model and backend latency budget.
+        iterations: u32,
+    },
     /// Argon2 memory-hard function
     Argon2 {
         /// Argon2 variant (Argon2d, Argon2i, or Argon2id)
@@ -179,10 +182,11 @@ impl Default for KeyUsage {
 /// Encryption mode configuration
 /// `EncryptionMode`
 ///
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum EncryptionMode {
     /// Galois/Counter Mode (authenticated encryption)
     /// Gcm
+    #[default]
     Gcm,
     /// Counter Mode
     /// Ctr
@@ -198,18 +202,13 @@ pub enum EncryptionMode {
     ChaCha20Poly1305,
 }
 
-impl Default for EncryptionMode {
-    fn default() -> Self {
-        Self::Gcm
-    }
-}
-
 /// `PaddingScheme`
 ///
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum PaddingScheme {
     /// PKCS#7 padding
     /// Pkcs7
+    #[default]
     Pkcs7,
     /// ANSI X9.23 padding
     /// `AnsiX923`
@@ -220,12 +219,6 @@ pub enum PaddingScheme {
     /// No padding (stream ciphers)
     /// None
     None,
-}
-
-impl Default for PaddingScheme {
-    fn default() -> Self {
-        Self::Pkcs7
-    }
 }
 
 /// Hash algorithm configuration
@@ -271,6 +264,7 @@ pub struct SignatureConfig {
     pub hash_algorithm: HashAlgorithm,
     /// Key configuration
     pub key_config: KeyConfig,
+    /// Serialized signature container format (e.g. `DER`, `P1363`) understood by verifiers.
     pub format: String,
 }
 
@@ -466,7 +460,7 @@ impl Default for RngConfig {
 
 /// `KeyPairAlgorithm`
 ///
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum KeyPairAlgorithm {
     /// RSA key pair with specified key size
     Rsa {
@@ -480,13 +474,8 @@ pub enum KeyPairAlgorithm {
     },
     /// Ed25519 signature key pair
     /// Ed25519
+    #[default]
     Ed25519,
-}
-
-impl Default for KeyPairAlgorithm {
-    fn default() -> Self {
-        Self::Ed25519
-    }
 }
 
 /// Cryptographic key pair structure
@@ -508,7 +497,11 @@ impl CryptoKeyPair {
     /// Create a new key pair
     #[must_use]
     /// Creates a new instance
-    pub fn new(public_key: Vec<u8>, private_key: Vec<u8>, algorithm: KeyPairAlgorithm) -> Self {
+    pub const fn new(
+        public_key: Vec<u8>,
+        private_key: Vec<u8>,
+        algorithm: KeyPairAlgorithm,
+    ) -> Self {
         Self {
             public_key,
             private_key,
@@ -524,7 +517,7 @@ impl CryptoKeyPair {
 
     /// Get the algorithm
     #[must_use]
-    pub fn algorithm(&self) -> &KeyPairAlgorithm {
+    pub const fn algorithm(&self) -> &KeyPairAlgorithm {
         &self.algorithm
     }
 
@@ -575,17 +568,16 @@ impl CryptoConfig {
         Ok(())
     }
 
-    /// Check if the configuration uses post-quantum cryptography
+    /// Heuristic: returns true when the active algorithms are labeled or classified as post-quantum ready.
     #[must_use]
-    /// Checks if post quantum
-    /// Checks if post quantum
-    pub fn is_post_quantum(&self) -> bool {
+    pub const fn is_post_quantum(&self) -> bool {
         // This would be extended with actual post-quantum algorithms
         matches!(self.encryption.algorithm, CryptoAlgorithm::Ed25519)
     }
 
+    /// Best-effort symmetric-equivalent key size in bits for policy comparisons.
     #[must_use]
-    pub fn effective_key_size(&self) -> u32 {
+    pub const fn effective_key_size(&self) -> u32 {
         match &self.encryption.algorithm {
             CryptoAlgorithm::Aes { key_size } | CryptoAlgorithm::Rsa { key_size } => *key_size,
             CryptoAlgorithm::ChaCha20 | CryptoAlgorithm::Ed25519 | CryptoAlgorithm::Ecc { .. } => {

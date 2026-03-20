@@ -467,9 +467,11 @@ fn test_universal_adapter_register_capability() {
     adapter.register_capability("signing".to_string(), "http://signing.svc".to_string());
 
     assert_eq!(adapter.get_capabilities().len(), 2);
-    assert!(adapter
-        .get_capabilities()
-        .contains(&"encryption".to_string()));
+    assert!(
+        adapter
+            .get_capabilities()
+            .contains(&"encryption".to_string())
+    );
     assert!(adapter.get_capabilities().contains(&"signing".to_string()));
 }
 // TEST_CATEGORY: unit

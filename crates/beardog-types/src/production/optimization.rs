@@ -8,18 +8,20 @@
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
+/// Knobs for automatic scaling, profiling, and periodic optimization passes.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct OptimizationConfig {
     /// Enable auto-scaling
     /// Whether `enable_auto_scaling` is enabled
     pub enable_auto_scaling: bool,
-    /// Whether `enable_profiling` is enabled
+    /// Whether continuous or sampled CPU/memory profiling is enabled
     pub enable_profiling: bool,
     /// Optimization interval in seconds
     /// Number of `optimization_interval_seconds`
     pub optimization_interval_seconds: u64,
 }
 
+/// Placeholder optimizer handle; hooks accept [`OptimizationConfig`] for future engines.
 #[derive(Debug)]
 pub struct PerformanceOptimizer {
     #[allow(dead_code)]
@@ -43,7 +45,7 @@ impl PerformanceOptimizer {
     }
 
     /// Evaluate Scaling Needs
-    pub fn evaluate_scaling_needs(
+    pub const fn evaluate_scaling_needs(
         &self,
         _state: &super::ProductionState,
     ) -> Result<(), BearDogError> {

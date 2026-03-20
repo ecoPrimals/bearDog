@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Key Revocation Handler
-// Sovereign revocation system (no phone home required)
+//! Sovereign key revocation: local revocation list in `~/.beardog/revocation_list.json`.
 
 use beardog_errors::BearDogError;
 use chrono::Utc;
@@ -13,20 +12,29 @@ use std::path::PathBuf;
 /// Revocation list entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RevocationEntry {
+    /// Revoked key id
     pub key_id: String,
+    /// When the revocation was recorded (RFC 3339)
     pub revoked_at: String,
-    pub effective_at: Option<String>, // When revocation becomes effective (future revocation)
+    /// When the revocation becomes effective, if scheduled for the future
+    pub effective_at: Option<String>,
+    /// Optional human-readable reason
     pub reason: Option<String>,
-    pub revoked_by: String, // Who revoked it
-    #[serde(default)] // Default to false if not present (backward compatibility)
-    pub cascade: bool, // Whether to cascade to child keys
+    /// Local username that performed the revocation
+    pub revoked_by: String,
+    /// Whether child keys should be treated as revoked
+    #[serde(default)]
+    pub cascade: bool,
 }
 
 /// Revocation list
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RevocationList {
+    /// Map of key id → revocation entry
     pub revoked_keys: HashMap<String, RevocationEntry>,
+    /// Last modification time (RFC 3339)
     pub last_updated: String,
+    /// Monotonic schema / merge generation
     pub version: u32,
 }
 
@@ -49,8 +57,8 @@ impl RevocationList {
         }
 
         let json = fs::read_to_string(path)?;
-        let list: RevocationList = serde_json::from_str(&json).map_err(|e| {
-            BearDogError::serialization(&format!("Failed to parse revocation list: {}", e))
+        let list: Self = serde_json::from_str(&json).map_err(|e| {
+            BearDogError::serialization(&format!("Failed to parse revocation list: {e}"))
         })?;
 
         Ok(list)
@@ -66,7 +74,7 @@ impl RevocationList {
         }
 
         let json = serde_json::to_string_pretty(self).map_err(|e| {
-            BearDogError::serialization(&format!("Failed to serialize revocation list: {}", e))
+            BearDogError::serialization(&format!("Failed to serialize revocation list: {e}"))
         })?;
 
         fs::write(path, json)?;
@@ -101,25 +109,28 @@ impl RevocationList {
     }
 
     /// Export revocation list to file
+    #[allow(dead_code)] // Used by handle_revocation_export (planned CLI command)
     pub fn export(&self, path: &str) -> Result<(), BearDogError> {
         let json = serde_json::to_string_pretty(self).map_err(|e| {
-            BearDogError::serialization(&format!("Failed to serialize revocation list: {}", e))
+            BearDogError::serialization(&format!("Failed to serialize revocation list: {e}"))
         })?;
         fs::write(path, json)?;
         Ok(())
     }
 
     /// Import revocation list from file
+    #[allow(dead_code)] // Used by handle_revocation_import (planned CLI command)
     pub fn import(path: &str) -> Result<Self, BearDogError> {
         let json = fs::read_to_string(path)?;
-        let list: RevocationList = serde_json::from_str(&json).map_err(|e| {
-            BearDogError::serialization(&format!("Failed to parse revocation list: {}", e))
+        let list: Self = serde_json::from_str(&json).map_err(|e| {
+            BearDogError::serialization(&format!("Failed to parse revocation list: {e}"))
         })?;
         Ok(list)
     }
 
     /// Merge another revocation list into this one
-    pub fn merge(&mut self, other: &RevocationList) {
+    #[allow(dead_code)] // Used by handle_revocation_import (planned CLI command)
+    pub fn merge(&mut self, other: &Self) {
         for (key_id, entry) in &other.revoked_keys {
             // Only add if not already present or if other entry is newer
             if !self.revoked_keys.contains_key(key_id) {
@@ -136,6 +147,7 @@ impl RevocationList {
     }
 
     /// Unrevoke a key (for testing or if revocation was mistake)
+    #[allow(dead_code)] // Admin/testing use
     pub fn unrevoke(&mut self, key_id: &str) -> bool {
         let removed = self.revoked_keys.remove(key_id).is_some();
         if removed {
@@ -177,22 +189,22 @@ pub async fn handle_key_revoke(
 
     // Check if already revoked
     if revocation_list.is_revoked(key_id) {
-        println!("⚠️  Key '{}' is already revoked", key_id);
+        println!("⚠️  Key '{key_id}' is already revoked");
         if let Some(entry) = revocation_list.revoked_keys.get(key_id) {
             println!("   Revoked at: {}", entry.revoked_at);
             if let Some(r) = &entry.reason {
-                println!("   Reason: {}", r);
+                println!("   Reason: {r}");
             }
         }
         return Ok(());
     }
 
     // Revoke the key
-    println!("🔒 Revoking key: {}", key_id);
+    println!("🔒 Revoking key: {key_id}");
     revocation_list.revoke(
         key_id.to_string(),
-        reason.map(|s| s.to_string()),
-        effective_at.map(|s| s.to_string()),
+        reason.map(std::string::ToString::to_string),
+        effective_at.map(std::string::ToString::to_string),
         cascade,
     );
 
@@ -205,11 +217,11 @@ pub async fn handle_key_revoke(
                 child_keys.len()
             );
             for child_key in &child_keys {
-                println!("   • {}", child_key);
+                println!("   • {child_key}");
                 revocation_list.revoke(
                     child_key.clone(),
-                    Some(format!("Cascaded from parent: {}", key_id)),
-                    effective_at.map(|s| s.to_string()),
+                    Some(format!("Cascaded from parent: {key_id}")),
+                    effective_at.map(std::string::ToString::to_string),
                     false, // Don't cascade recursively (already handled)
                 );
             }
@@ -222,16 +234,16 @@ pub async fn handle_key_revoke(
     println!("\n✅ Key revoked successfully!\n");
 
     println!("📋 Revocation Details:");
-    println!("   Key ID: {}", key_id);
+    println!("   Key ID: {key_id}");
     println!(
         "   Revoked At: {}",
         Utc::now().format("%Y-%m-%d %H:%M:%S UTC")
     );
     if let Some(eff) = effective_at {
-        println!("   Effective At: {}", eff);
+        println!("   Effective At: {eff}");
     }
     if let Some(r) = reason {
-        println!("   Reason: {}", r);
+        println!("   Reason: {r}");
     }
     println!("   Revoked By: {}", whoami::username());
     println!("   Cascade: {}", if cascade { "Yes" } else { "No" });
@@ -263,6 +275,7 @@ fn get_child_keys(parent_key_id: &str) -> Result<Vec<String>, BearDogError> {
 }
 
 /// Handle revocation list export
+#[allow(dead_code)] // Planned for CLI: beardog key revoke --export
 pub async fn handle_revocation_export(output_path: &str) -> Result<(), BearDogError> {
     println!("📤 BearDog Revocation List Export");
     println!("==================================\n");
@@ -275,13 +288,14 @@ pub async fn handle_revocation_export(output_path: &str) -> Result<(), BearDogEr
     );
     revocation_list.export(output_path)?;
 
-    println!("✅ Revocation list exported to: {}", output_path);
+    println!("✅ Revocation list exported to: {output_path}");
     println!("\n💡 Share this file with other towers to propagate revocations");
 
     Ok(())
 }
 
 /// Handle revocation list import
+#[allow(dead_code)] // Planned for CLI: beardog key revoke --import
 pub async fn handle_revocation_import(input_path: &str) -> Result<(), BearDogError> {
     println!("📥 BearDog Revocation List Import");
     println!("==================================\n");
@@ -305,8 +319,8 @@ pub async fn handle_revocation_import(input_path: &str) -> Result<(), BearDogErr
     current_list.save()?;
 
     println!("✅ Revocation list merged successfully!");
-    println!("   Before: {} revoked keys", before_count);
-    println!("   After: {} revoked keys", after_count);
+    println!("   Before: {before_count} revoked keys");
+    println!("   After: {after_count} revoked keys");
     println!("   Added: {} new revocations", after_count - before_count);
 
     Ok(())
@@ -319,7 +333,7 @@ pub async fn handle_key_check_revocation(key_id: &str) -> Result<(), BearDogErro
 
     let revocation_list = RevocationList::load()?;
 
-    println!("Checking key: {}\n", key_id);
+    println!("Checking key: {key_id}\n");
 
     if revocation_list.is_revoked(key_id) {
         if let Some(entry) = revocation_list.revoked_keys.get(key_id) {
@@ -328,7 +342,7 @@ pub async fn handle_key_check_revocation(key_id: &str) -> Result<(), BearDogErro
             println!("   Revoked At: {}", entry.revoked_at);
             println!("   Revoked By: {}", entry.revoked_by);
             if let Some(reason) = &entry.reason {
-                println!("   Reason: {}", reason);
+                println!("   Reason: {reason}");
             }
 
             println!("\n⚠️  This key should NOT be used!");
@@ -361,11 +375,11 @@ pub async fn handle_key_list_revocations() -> Result<(), BearDogError> {
     println!("🚫 Revoked Keys: {}\n", revocation_list.revoked_keys.len());
 
     for (key_id, entry) in &revocation_list.revoked_keys {
-        println!("  • {}", key_id);
+        println!("  • {key_id}");
         println!("    Revoked: {}", entry.revoked_at);
         println!("    By: {}", entry.revoked_by);
         if let Some(reason) = &entry.reason {
-            println!("    Reason: {}", reason);
+            println!("    Reason: {reason}");
         }
         println!();
     }

@@ -19,8 +19,5 @@
 pub mod certificates;
 
 pub use certificates::{
-    AdapterUnlockCertificate,
-    CertificateClassification,
-    CertificateStatus,
+    AdapterUnlockCertificate, CertificateClassification, CertificateStatus, ExtractionRisk,
 };
-

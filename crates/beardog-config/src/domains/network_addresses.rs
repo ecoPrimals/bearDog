@@ -2,14 +2,16 @@
 
 //! Network Address Configuration
 //!
-//! Centralized configuration for network addresses and hostnames used by BearDog.
-//! This eliminates hardcoded IP addresses throughout the codebase.
+//! Centralized configuration for **self-knowledge** bind/connect addresses used by BearDog.
+//! Aligns with `ZERO_HARDCODING_SPECIFICATION` and capability-based discovery: literals here are
+//! **documented fallbacks only**—production must set env vars, config files, or discovery-derived
+//! values. Peer / other-primal endpoints are **never** defined here; use runtime discovery.
 //!
 //! # Design Philosophy
 //!
-//! - **Configuration over Hardcoding**: All addresses configurable via ENV or config file
-//! - **Secure Defaults**: Localhost (127.0.0.1) for development, configurable for production
-//! - **Environment-First**: `BEARDOG_*` environment variables take precedence
+//! - **Configuration over Hardcoding**: All fallbacks overridable via ENV or config file
+//! - **Fallback loopback**: Default bind/API strings favor loopback for local dev only
+//! - **Environment-First**: `BEARDOG_*` environment variables take precedence over fallbacks
 //! - **Platform Agnostic**: Works across development, staging, and production
 //!
 //! # Usage
@@ -27,7 +29,8 @@
 //! - `BEARDOG_API_HOST` - API server hostname (default: 127.0.0.1)
 //! - `BEARDOG_BIND_ADDRESS` - Server bind address (default: 127.0.0.1)
 //! - `BEARDOG_EXTERNAL_HOST` - External/public hostname (default: localhost)
-//! - `BEARDOG_MULTICAST_ADDRESS` - Multicast address for discovery (default: 239.255.0.1)
+//! - `BEARDOG_MULTICAST_ADDRESS` - Multicast address for discovery (fallback: see `DEFAULT_MULTICAST_ADDRESS`)
+//! - `BEARDOG_LOCALHOST_IPV4` / `BEARDOG_LOCALHOST_IPV6` / `BEARDOG_WILDCARD_IPV4` - Override standard IP literals used in config (optional)
 
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr};
@@ -69,45 +72,46 @@ pub struct NetworkAddressesConfig {
 
     /// Localhost IPv4 address
     ///
-    /// Standard IPv4 localhost. Always 127.0.0.1.
+    /// **Fallback**: IANA IPv4 loopback. Override with `BEARDOG_LOCALHOST_IPV4` or config.
     #[serde(default = "default_localhost_ipv4")]
     pub localhost_ipv4: IpAddr,
 
     /// Localhost IPv6 address
     ///
-    /// Standard IPv6 localhost. Always ::1.
+    /// **Fallback**: IANA IPv6 loopback. Override with `BEARDOG_LOCALHOST_IPV6` or config.
     #[serde(default = "default_localhost_ipv6")]
     pub localhost_ipv6: IpAddr,
 
     /// Wildcard IPv4 address
     ///
-    /// Bind to all interfaces. Always 0.0.0.0.
+    /// **Fallback**: unspecified IPv4 (all interfaces). Override with `BEARDOG_WILDCARD_IPV4` or config.
     #[serde(default = "default_wildcard_ipv4")]
     pub wildcard_ipv4: IpAddr,
 }
 
-// Default address constants (documented fallbacks)
-// These are ONLY used when no environment variable or config file value is provided
+// ---------------------------------------------------------------------------
+// Documented fallbacks (ZERO_HARDCODING: single source; never the only option in production)
+// ---------------------------------------------------------------------------
 
-/// Default API host (127.0.0.1 for security)
+/// **Fallback** API host when `BEARDOG_API_HOST` and config omit a value (loopback, dev-oriented).
 pub const DEFAULT_API_HOST: &str = "127.0.0.1";
 
-/// Default bind address (127.0.0.1 for security)
+/// **Fallback** bind address when `BEARDOG_BIND_ADDRESS` and config omit a value (loopback, dev-oriented).
 pub const DEFAULT_BIND_ADDRESS: &str = "127.0.0.1";
 
-/// Default external host (localhost)
+/// **Fallback** external hostname when `BEARDOG_EXTERNAL_HOST` is unset.
 pub const DEFAULT_EXTERNAL_HOST: &str = "localhost";
 
-/// Default multicast address (239.255.0.1)
+/// **Fallback** multicast group when `BEARDOG_MULTICAST_ADDRESS` is unset (discovery transport; not a peer address).
 pub const DEFAULT_MULTICAST_ADDRESS: &str = "239.255.0.1";
 
-/// Standard localhost IPv4 (127.0.0.1)
+/// **Fallback** loopback IPv4 string (self-knowledge / parsing); prefer config or `localhost_ipv4`.
 pub const LOCALHOST_IPV4: &str = "127.0.0.1";
 
-/// Standard localhost IPv6 (::1)
+/// **Fallback** loopback IPv6 string (self-knowledge / parsing).
 pub const LOCALHOST_IPV6: &str = "::1";
 
-/// Standard wildcard IPv4 (0.0.0.0 - all interfaces)
+/// **Fallback** IPv4 “all interfaces” string for production-style bind when explicitly chosen.
 pub const WILDCARD_IPV4: &str = "0.0.0.0";
 
 fn default_api_host() -> String {
@@ -127,16 +131,26 @@ fn default_multicast_address() -> String {
         .unwrap_or_else(|_| DEFAULT_MULTICAST_ADDRESS.to_string())
 }
 
+fn parse_ip_env(key: &str, fallback: IpAddr) -> IpAddr {
+    std::env::var(key)
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(fallback)
+}
+
 fn default_localhost_ipv4() -> IpAddr {
-    IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))
+    parse_ip_env("BEARDOG_LOCALHOST_IPV4", IpAddr::V4(Ipv4Addr::LOCALHOST))
 }
 
 fn default_localhost_ipv6() -> IpAddr {
-    IpAddr::V6(std::net::Ipv6Addr::LOCALHOST)
+    parse_ip_env(
+        "BEARDOG_LOCALHOST_IPV6",
+        IpAddr::V6(std::net::Ipv6Addr::LOCALHOST),
+    )
 }
 
 fn default_wildcard_ipv4() -> IpAddr {
-    IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0))
+    parse_ip_env("BEARDOG_WILDCARD_IPV4", IpAddr::V4(Ipv4Addr::UNSPECIFIED))
 }
 
 impl Default for NetworkAddressesConfig {
@@ -149,15 +163,16 @@ impl NetworkAddressesConfig {
     /// Creates configuration with secure defaults
     ///
     /// Reads from environment variables if set, otherwise uses documented defaults.
-    /// Default bind address is 127.0.0.1 (localhost only) for security.
+    /// Default bind address uses the **fallback** loopback string (see `DEFAULT_BIND_ADDRESS`).
     ///
     /// # Example
     ///
     /// ```rust
     /// use beardog_config::NetworkAddressesConfig;
+    /// use beardog_config::domains::network_addresses::DEFAULT_API_HOST;
     ///
     /// let addresses = NetworkAddressesConfig::with_defaults();
-    /// assert_eq!(addresses.api_host, "127.0.0.1");
+    /// assert_eq!(addresses.api_host, DEFAULT_API_HOST);
     /// ```
     #[must_use]
     pub fn with_defaults() -> Self {
@@ -192,7 +207,7 @@ impl NetworkAddressesConfig {
     /// Creates production-ready configuration
     ///
     /// Suitable for production environments:
-    /// - Bind address: 0.0.0.0 (all interfaces)
+    /// - Bind address: **fallback** all-interfaces IPv4 (`WILDCARD_IPV4`) unless `BEARDOG_BIND_ADDRESS` is set
     /// - API host: resolved from environment or kept as configured
     /// - External host: resolved from environment
     ///
@@ -200,9 +215,10 @@ impl NetworkAddressesConfig {
     ///
     /// ```rust
     /// use beardog_config::NetworkAddressesConfig;
+    /// use beardog_config::domains::network_addresses::WILDCARD_IPV4;
     ///
     /// let addresses = NetworkAddressesConfig::for_production();
-    /// assert_eq!(addresses.bind_address, "0.0.0.0");
+    /// assert_eq!(addresses.bind_address, WILDCARD_IPV4);
     /// ```
     #[must_use]
     pub fn for_production() -> Self {
@@ -286,16 +302,19 @@ mod tests {
     fn test_localhost_addresses() {
         let config = NetworkAddressesConfig::with_defaults();
 
-        assert_eq!(config.localhost_ipv4.to_string(), "127.0.0.1");
-        assert_eq!(config.localhost_ipv6.to_string(), "::1");
+        assert_eq!(config.localhost_ipv4, IpAddr::V4(Ipv4Addr::LOCALHOST));
+        assert_eq!(
+            config.localhost_ipv6,
+            IpAddr::V6(std::net::Ipv6Addr::LOCALHOST)
+        );
     }
 
     #[test]
     fn test_wildcard_address() {
         let config = NetworkAddressesConfig::with_defaults();
 
-        assert_eq!(config.wildcard_ipv4.to_string(), "0.0.0.0");
-        assert_eq!(config.wildcard_bind(), "0.0.0.0");
+        assert_eq!(config.wildcard_ipv4, IpAddr::V4(Ipv4Addr::UNSPECIFIED));
+        assert_eq!(config.wildcard_bind(), WILDCARD_IPV4);
     }
 
     #[test]
@@ -303,7 +322,7 @@ mod tests {
         let config = NetworkAddressesConfig::for_production();
 
         // Production should bind to all interfaces
-        assert_eq!(config.bind_address, "0.0.0.0");
+        assert_eq!(config.bind_address, WILDCARD_IPV4);
     }
 
     #[test]
@@ -351,7 +370,7 @@ mod tests {
     #[test]
     fn test_localhost_bind_helper() {
         let config = NetworkAddressesConfig::with_defaults();
-        assert_eq!(config.localhost_bind(), "127.0.0.1");
+        assert_eq!(config.localhost_bind(), LOCALHOST_IPV4);
     }
 
     #[test]

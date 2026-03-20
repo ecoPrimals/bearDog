@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+//! Shared workflow configuration, API DTOs, and taxonomy enums for orchestration.
+//!
+//! [`WorkflowRequest`] / [`WorkflowResponse`] model RPC-style workflow submission and status.
+//! [`enums`] defines lifecycle, audit, approval, and execution states used by policies and logs.
+
 // Define WorkflowConfig locally until it's available in beardog_types
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+/// Local mirror of workflow runtime limits until a single source exists in `beardog_types`.
 pub struct WorkflowConfig {
     /// Number of `max_concurrent_workflows`
     pub max_concurrent_workflows: usize,
+    /// Default timeout applied to workflow operations when none is specified, in seconds.
     pub default_timeout_seconds: u64,
     /// Whether `enable_logging` is enabled
     pub enable_logging: bool,
@@ -27,6 +30,7 @@ impl Default for WorkflowConfig {
 // Re-export WorkflowType from enums module
 pub use enums::WorkflowType;
 
+/// Enumerations and structs for workflow classification, execution telemetry, and approvals.
 pub mod enums;
 
 pub use enums::{
@@ -34,8 +38,10 @@ pub use enums::{
     WorkflowTarget,
 };
 
+/// Client- or gateway-submitted workflow invocation: correlation id, logical type, and opaque payload.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct WorkflowRequest {
+    /// Correlation or request identifier (often echoed in [`WorkflowResponse`]).
     pub id: String,
     /// The workflow type value
     pub workflow_type: String,
@@ -43,8 +49,10 @@ pub struct WorkflowRequest {
     pub data: serde_json::Value,
 }
 
+/// Outcome envelope for a workflow request: same correlation id, human-readable status, optional structured result.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct WorkflowResponse {
+    /// Correlation id matching the originating [`WorkflowRequest::id`].
     pub id: String,
     /// Current status of the component
     pub status: String,

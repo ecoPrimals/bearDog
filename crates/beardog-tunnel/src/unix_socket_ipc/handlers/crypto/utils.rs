@@ -13,8 +13,8 @@
 //! - `extract_str_param()` - Extract optional string parameter from JSON
 //! - `deserialize_request()` - Deserialize JSON params with method-specific errors
 
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_core::crypto_service::algorithms::hashing;
 use beardog_errors::BearDogError;
 use serde::de::DeserializeOwned;
@@ -53,7 +53,7 @@ pub(super) fn derive_key_from_id(key_id: &str, purpose: &str) -> Result<[u8; 32]
         .unwrap_or_else(|_| "beardog_default_master_key_v1".to_string());
 
     // Derive key using BLAKE3 KDF
-    let context = format!("beardog_crypto_v1:{}:{}", key_id, purpose);
+    let context = format!("beardog_crypto_v1:{key_id}:{purpose}");
     let derived = hashing::derive_key_blake3(&context, master_key.as_bytes());
 
     let key: [u8; 32] = derived
@@ -77,7 +77,7 @@ pub(super) fn derive_key_from_id(key_id: &str, purpose: &str) -> Result<[u8; 32]
 /// ```
 pub fn decode_base64_field(field_name: &str, input: &str) -> Result<Vec<u8>, BearDogError> {
     BASE64.decode(input).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid {} (not valid base64): {}", field_name, e))
+        BearDogError::invalid_input(&format!("Invalid {field_name} (not valid base64): {e}"))
     })
 }
 
@@ -87,7 +87,7 @@ pub fn decode_base64_field(field_name: &str, input: &str) -> Result<Vec<u8>, Bea
 pub fn decode_base64_field_str(field_name: &str, input: &str) -> Result<Vec<u8>, String> {
     BASE64
         .decode(input)
-        .map_err(|e| format!("Invalid {} (not valid base64): {}", field_name, e))
+        .map_err(|e| format!("Invalid {field_name} (not valid base64): {e}"))
 }
 
 // ============================================================================
@@ -118,12 +118,12 @@ pub fn extract_str_param<'a>(params: &'a Value, field: &str) -> Option<&'a str> 
 /// Returns an error if the field doesn't exist or isn't a string.
 pub fn require_str_param<'a>(params: &'a Value, field: &str) -> Result<&'a str, String> {
     extract_str_param(params, field)
-        .ok_or_else(|| format!("Missing or invalid '{}' parameter", field))
+        .ok_or_else(|| format!("Missing or invalid '{field}' parameter"))
 }
 
 /// Extract an optional integer parameter from JSON
 pub fn extract_u64_param(params: &Value, field: &str) -> Option<u64> {
-    params.get(field).and_then(|v| v.as_u64())
+    params.get(field).and_then(serde_json::Value::as_u64)
 }
 
 // ============================================================================
@@ -142,7 +142,7 @@ pub fn deserialize_request<T: DeserializeOwned>(
     method_name: &str,
 ) -> Result<T, BearDogError> {
     serde_json::from_value(params)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid {} params: {}", method_name, e)))
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid {method_name} params: {e}")))
 }
 
 /// Deserialize with String error (transition helper)
@@ -150,7 +150,7 @@ pub fn deserialize_request_str<T: DeserializeOwned>(
     params: Value,
     method_name: &str,
 ) -> Result<T, String> {
-    serde_json::from_value(params).map_err(|e| format!("Invalid {} params: {}", method_name, e))
+    serde_json::from_value(params).map_err(|e| format!("Invalid {method_name} params: {e}"))
 }
 
 // ============================================================================
@@ -165,12 +165,12 @@ pub fn deserialize_request_str<T: DeserializeOwned>(
 /// let result = operation().map_err(|e| to_security_error("encryption", e))?;
 /// ```
 pub fn to_security_error<E: std::fmt::Display>(operation: &str, error: E) -> BearDogError {
-    BearDogError::security(format!("{} failed: {}", operation, error))
+    BearDogError::security(format!("{operation} failed: {error}"))
 }
 
 /// Convert any Display error to String with context (transition helper)
 pub fn to_error_string<E: std::fmt::Display>(operation: &str, error: E) -> String {
-    format!("{} failed: {}", operation, error)
+    format!("{operation} failed: {error}")
 }
 
 #[cfg(test)]

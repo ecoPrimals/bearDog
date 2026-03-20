@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Clone optimization strategies for BearDog
-// Implements zero-copy and memory-efficient patterns
+//! Heuristic [`CloneOptimizer`], [`SharedOwnership`], and [`CopyOnWrite`] helpers.
 
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+/// Counters for analysis passes and estimated bytes saved.
 #[derive(Debug, Clone, Default)]
 pub struct OptimizationStats {
     /// Number of types_analyzed
@@ -17,15 +17,19 @@ pub struct OptimizationStats {
     pub memory_saved: u64,
 }
 
+/// Maps type names to the last inferred [`CloneOptimizationStrategy`].
 #[derive(Debug, Clone)]
 pub struct CloneOptimizer {
     strategies: HashMap<String, CloneOptimizationStrategy>,
     stats: OptimizationStats,
 }
 
+/// High-level clone-avoidance tactic chosen from usage pattern strings.
 #[derive(Debug, Clone)]
 pub enum CloneOptimizationStrategy {
+    /// Prefer [`Arc`] for cross-thread sharing.
     SharedOwnership,
+    /// Prefer [`Cow`] when mutation is rare.
     CopyOnWrite,
     /// Use references instead of cloning
     BorrowInstead,
@@ -34,8 +38,7 @@ pub enum CloneOptimizationStrategy {
 }
 
 impl CloneOptimizer {
-    /// New operation.
-    /// Creates a new instance
+    /// Empty strategy map and zeroed stats.
     pub fn new() -> Self {
         Self {
             strategies: HashMap::with_capacity(16),
@@ -43,7 +46,7 @@ impl CloneOptimizer {
         }
     }
 
-    /// Analyze Type operation.
+    /// Records and returns a strategy from a coarse `usage_pattern` label.
     pub fn analyze_type(
         &mut self,
         type_name: &str,
@@ -64,16 +67,12 @@ impl CloneOptimizer {
         strategy
     }
 
-    /// Get Optimization operation.
-    /// Gets optimization
-    /// Gets optimization
+    /// Looks up the last strategy chosen for `type_name`.
     pub fn get_optimization(&self, type_name: &str) -> Option<&CloneOptimizationStrategy> {
         self.strategies.get(type_name)
     }
 
-    /// Get Stats operation.
-    /// Gets stats
-    /// Gets stats
+    /// Borrow aggregate statistics.
     pub fn get_stats(&self) -> &OptimizationStats {
         &self.stats
     }
@@ -85,22 +84,21 @@ impl Default for CloneOptimizer {
     }
 }
 
+/// Newtype around [`Arc<T>`] with cheap [`Clone`] via refcounting.
 #[derive(Debug)]
 pub struct SharedOwnership<T> {
     inner: Arc<T>,
 }
 
 impl<T> SharedOwnership<T> {
-    /// New operation.
-    /// Creates a new instance
+    /// Wraps `value` in a fresh [`Arc`].
     pub fn new(value: T) -> Self {
         Self {
             inner: Arc::new(value),
         }
     }
 
-    /// From Arc operation.
-    /// Creates instance from arc
+    /// Adopts an existing [`Arc`].
     pub fn from_arc(arc: Arc<T>) -> Self {
         Self { inner: arc }
     }
@@ -122,31 +120,28 @@ impl<T> std::ops::Deref for SharedOwnership<T> {
     }
 }
 
-/// Copy-on-write wrapper
+/// [`Cow`]-backed cell that clones lazily on mutation.
 #[derive(Debug, Clone)]
 pub struct CopyOnWrite<T: Clone + 'static> {
     inner: Cow<'static, T>,
 }
 
 impl<T: Clone + 'static> CopyOnWrite<T> {
-    /// New operation.
-    /// Creates a new instance
+    /// Starts in fully owned mode.
     pub fn new(value: T) -> Self {
         Self {
             inner: Cow::Owned(value),
         }
     }
 
-    /// From borrowed operation.
-    /// Creates instance from borrowed
+    /// Borrows a `'static` value until mutation forces a clone.
     pub fn from_borrowed(value: &'static T) -> Self {
         Self {
             inner: Cow::Borrowed(value),
         }
     }
 
-    /// Get mutable access (triggers copy if borrowed).
-    /// Converts to mut
+    /// Ensures unique ownership, cloning if currently borrowed.
     pub fn to_mut(&mut self) -> &mut T {
         self.inner.to_mut()
     }
@@ -160,6 +155,7 @@ impl<T: Clone + 'static> std::ops::Deref for CopyOnWrite<T> {
     }
 }
 
+/// Small composable functions demonstrating each strategy.
 pub mod patterns {
     use super::*;
 
@@ -173,9 +169,7 @@ pub mod patterns {
         SharedOwnership::new(config.clone())
     }
 
-    /// Create Copy On Write operation.
-    /// Creates copy_on_write
-    /// Creates copy_on_write
+    /// Clones `value` into an owned [`CopyOnWrite`] container.
     pub fn create_copy_on_write<T: Clone + 'static>(value: &'static T) -> CopyOnWrite<T> {
         CopyOnWrite::new(value.clone())
     }

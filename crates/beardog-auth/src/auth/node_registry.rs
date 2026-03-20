@@ -9,6 +9,7 @@ use beardog_errors::BearDogError;
 use parking_lot::RwLock;
 use std::collections::HashMap;
 
+/// Thread-safe [`NodeRegistry`] backed by an in-memory map for tests and single-process deployments.
 pub struct InMemoryNodeRegistry {
     nodes: RwLock<HashMap<String, NodeInfo>>,
 }
@@ -30,7 +31,7 @@ impl InMemoryNodeRegistry {
 }
 
 impl NodeRegistry for InMemoryNodeRegistry {
-    /// Gets `node_info`
+    /// Returns a clone of the stored [`NodeInfo`] for `node_id`, or `not_found` if absent.
     fn get_node_info(&self, node_id: &str) -> Result<NodeInfo, BearDogError> {
         // parking_lot::RwLock never panics - cleaner API!
         let nodes = self.nodes.read();
@@ -41,6 +42,7 @@ impl NodeRegistry for InMemoryNodeRegistry {
             .ok_or_else(|| BearDogError::not_found(format!("Node {node_id} not found")))
     }
 
+    /// Registers or replaces a node keyed by [`NodeInfo::node_id`].
     fn register_node(&mut self, node_info: NodeInfo) -> Result<(), BearDogError> {
         // parking_lot::RwLock never panics - cleaner API!
         let mut nodes = self.nodes.write();
@@ -49,13 +51,13 @@ impl NodeRegistry for InMemoryNodeRegistry {
         Ok(())
     }
 
-    /// Gets `trust_level`
+    /// Returns the cached trust score for `node_id` (see [`NodeInfo::trust_level`]).
     fn get_trust_level(&self, node_id: &str) -> Result<f64, BearDogError> {
         let node_info = self.get_node_info(node_id)?;
         Ok(node_info.trust_level)
     }
 
-    /// Updates `trust_level`
+    /// Overwrites [`NodeInfo::trust_level`] for an existing `node_id`.
     fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> Result<(), BearDogError> {
         // parking_lot::RwLock never panics - cleaner API!
         let mut nodes = self.nodes.write();

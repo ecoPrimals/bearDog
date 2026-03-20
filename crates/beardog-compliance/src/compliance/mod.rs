@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Runtime compliance evaluation: [`handlers`] orchestrate checks; [`types`] define events and results.
 
 pub use handlers::*;
 pub use types::*;

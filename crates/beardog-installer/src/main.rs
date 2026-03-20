@@ -25,7 +25,7 @@
 
 use anyhow::Result;
 use beardog_installer::{
-    deployment::DeploymentManager, validator::BinaryValidator, BiomeOSPaths, PrimalName,
+    BiomeOSPaths, PrimalName, deployment::DeploymentManager, validator::BinaryValidator,
 };
 use clap::{Parser, Subcommand};
 use std::path::{Path, PathBuf};
@@ -151,7 +151,7 @@ fn parse_primals(primals_str: Option<String>) -> Result<Vec<PrimalName>> {
                 let name = name.trim();
                 match PrimalName::parse_name(name) {
                     Some(primal) => primals.push(primal),
-                    None => anyhow::bail!("Unknown primal: {}", name),
+                    None => anyhow::bail!("Unknown primal: {name}"),
                 }
             }
             Ok(primals)
@@ -164,7 +164,7 @@ fn parse_primals(primals_str: Option<String>) -> Result<Vec<PrimalName>> {
 fn primals_to_string(primals: &[PrimalName]) -> String {
     primals
         .iter()
-        .map(|p| p.display_name())
+        .map(beardog_installer::PrimalName::display_name)
         .collect::<Vec<_>>()
         .join(", ")
 }
@@ -178,7 +178,7 @@ async fn install_primals(source_dir: &Path, primals: &[PrimalName]) -> Result<()
     let manager = DeploymentManager::new(source_dir.to_path_buf()).await?;
     let report = manager.deploy_primals(primals).await?;
 
-    println!("\n{}", report);
+    println!("\n{report}");
 
     if report.is_success() {
         println!("✅ Installation complete!");
@@ -204,13 +204,13 @@ async fn validate_primals(primals: &[PrimalName]) -> Result<()> {
     let reports = validator.validate_all(binaries).await;
 
     for report in &reports {
-        println!("{}", report);
+        println!("{report}");
     }
 
     let healthy_count = reports.iter().filter(|r| r.healthy).count();
     let total = reports.len();
 
-    println!("\n📊 Summary: {}/{} primals healthy", healthy_count, total);
+    println!("\n📊 Summary: {healthy_count}/{total} primals healthy");
 
     if healthy_count == total {
         println!("✅ All primals validated successfully!");

@@ -179,9 +179,9 @@ fn test_memory_pool_reuse() {
     let stats = pool.get_stats();
     assert!(stats.pool_hits > 0);
     assert_eq!(stats.total_created, 1); // Only one object created
-                                        // TEST_CATEGORY: integration
-                                        // TEST_DOMAIN: core
-                                        // TEST_PRIORITY: normal
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]

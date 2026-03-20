@@ -57,6 +57,7 @@ impl SafeSimdOptimizer {
         Ok(result)
     }
 
+    /// Maps `transform` across `input_slice` on the current thread (LLVM may vectorize).
     pub fn safe_vectorized_transform<T, F>(
         &mut self,
         input_slice: &[T],
@@ -211,6 +212,7 @@ impl SafeSimdOptimizer {
         &self.stats
     }
 
+    /// Marketing-style safety/performance strings for reports.
     #[must_use]
     pub fn get_performance_info(&self) -> HashMap<String, String> {
         let mut info = HashMap::with_capacity(8);

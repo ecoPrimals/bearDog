@@ -133,7 +133,7 @@ pub enum Ctap2Status {
 
 impl Ctap2Status {
     /// Convert byte to status code
-    pub fn from_byte(byte: u8) -> Self {
+    pub const fn from_byte(byte: u8) -> Self {
         match byte {
             0x00 => Self::Success,
             0x01 => Self::InvalidCommand,
@@ -152,12 +152,12 @@ impl Ctap2Status {
     }
 
     /// Check if status indicates success
-    pub fn is_success(&self) -> bool {
+    pub const fn is_success(&self) -> bool {
         matches!(self, Self::Success)
     }
 
     /// Convert to error message
-    pub fn to_error_message(&self) -> &'static str {
+    pub const fn to_error_message(&self) -> &'static str {
         match self {
             Self::Success => "Success",
             Self::InvalidCommand => "Invalid command",
@@ -347,8 +347,7 @@ pub async fn ctaphid_init(
     // Format: [CID (4)] [CMD] [LEN_H] [LEN_L] [NONCE (8)] [NEW_CID (4)] [PROTOCOL_VERSION] [...]
     if bytes_read < 17 {
         return Err(BearDogError::system(format!(
-            "CTAPHID_INIT response too short: {} bytes",
-            bytes_read
+            "CTAPHID_INIT response too short: {bytes_read} bytes"
         )));
     }
 
@@ -482,8 +481,7 @@ pub async fn send_ctap2_command(
                 if bytes_read >= 8 {
                     let error_code = response_buf[7];
                     return Err(BearDogError::system(format!(
-                        "Device error: 0x{:02X}",
-                        error_code
+                        "Device error: 0x{error_code:02X}"
                     )));
                 }
             }
@@ -512,8 +510,7 @@ pub async fn send_ctap2_command(
     // Format: [CID (4)] [CMD] [LEN_H] [LEN_L] [DATA...]
     if bytes_read < 7 {
         return Err(BearDogError::system(format!(
-            "Response too short: {} bytes",
-            bytes_read
+            "Response too short: {bytes_read} bytes"
         )));
     }
 
@@ -569,13 +566,10 @@ pub async fn ctap2_get_info(
         .map_err(|e| BearDogError::system(format!("CBOR parse error: {e}")))?;
 
     // GetInfo response is a CBOR map
-    let map = match cbor_value {
-        CborValue::Map(m) => m,
-        _ => {
-            return Err(BearDogError::system(
-                "GetInfo response not a CBOR map".to_string(),
-            ))
-        }
+    let CborValue::Map(map) = cbor_value else {
+        return Err(BearDogError::system(
+            "GetInfo response not a CBOR map".to_string(),
+        ));
     };
 
     // Extract fields from CBOR map

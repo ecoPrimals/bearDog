@@ -282,7 +282,7 @@ impl UnixSocketIpcServer {
                     }
                     Err(e) => {
                         error!("❌ Failed to read from stream: {}", e);
-                        return Err(anyhow::anyhow!("Failed to read: {}", e));
+                        return Err(anyhow::anyhow!("Failed to read: {e}"));
                     }
                 }
             }
@@ -376,7 +376,7 @@ impl UnixSocketIpcServer {
                     }
                     Err(e) => {
                         error!("❌ Read error: {}", e);
-                        return Err(anyhow::anyhow!("Read failed: {}", e));
+                        return Err(anyhow::anyhow!("Read failed: {e}"));
                     }
                 }
             }
@@ -431,7 +431,7 @@ impl UnixSocketIpcServer {
                     result: None,
                     error: Some(JsonRpcError {
                         code: -32700,
-                        message: format!("Parse error: {}", e),
+                        message: format!("Parse error: {e}"),
                         data: None,
                     }),
                     id: serde_json::Value::Null,

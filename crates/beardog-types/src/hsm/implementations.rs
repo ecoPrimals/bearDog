@@ -48,7 +48,7 @@ pub struct InMemoryStorageBackend;
 impl InMemoryStorageBackend {
     /// Creates a new in-memory storage backend
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 }

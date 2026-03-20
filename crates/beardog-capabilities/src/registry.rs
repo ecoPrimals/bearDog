@@ -8,6 +8,8 @@ use crate::metadata::{CapabilityAdvertisement, CapabilityMetadata, DiscoveryConf
 use parking_lot::RwLock;
 use std::any::Any;
 use std::collections::HashMap;
+#[cfg(not(feature = "mdns"))]
+use tracing::warn;
 use tracing::{debug, info};
 
 /// Capability registry
@@ -36,33 +38,66 @@ struct RegisteredCapability {
 }
 
 impl CapabilityRegistry {
-    /// Create a new capability registry
+    /// Create a new capability registry using runtime discovery defaults.
+    ///
+    /// HTTP and mDNS advertisement targets are resolved from environment variables
+    /// (see [`crate::metadata::resolve_capability_http_discovery_url`] and
+    /// [`crate::metadata::resolve_capability_mdns_full_name`]). For explicit URLs in
+    /// tests or integrations, use [`Self::with_http_base`].
     ///
     /// # Arguments
-    /// * `primal_id` - Unique identifier for this primal instance
-    /// * `primal_type` - Type of primal (e.g., "cryptographic_services")
-    /// * `base_url` - Base URL for HTTP endpoints
-    pub fn new(
-        primal_id: impl Into<String>,
-        primal_type: impl Into<String>,
-        base_url: impl Into<String>,
-    ) -> Self {
-        let primal_id = primal_id.into();
-        let base_url = base_url.into();
+    /// * `instance_id` - Sovereign instance identifier (UUID or operator-assigned), not a hardcoded primal name
+    /// * `capability_profile` - Declared service profile (e.g. `cryptographic_services`) for advertisement
+    pub fn new(instance_id: impl Into<String>, capability_profile: impl Into<String>) -> Self {
+        let instance_id = instance_id.into();
+        let discovery_http = crate::metadata::resolve_capability_http_discovery_url();
+        Self::from_discovery_http(instance_id, capability_profile.into(), discovery_http)
+    }
 
-        info!("Creating capability registry for primal: {}", primal_id);
+    /// Create a registry with an explicit HTTP base URL; capability path still follows
+    /// `BEARDOG_CAPABILITY_HTTP_PATH` or [`crate::metadata::DEFAULT_CAPABILITY_HTTP_PATH`].
+    ///
+    /// Prefer this in tests and when the HTTP base is known from configuration rather than env defaults.
+    pub fn with_http_base(
+        instance_id: impl Into<String>,
+        capability_profile: impl Into<String>,
+        http_base: impl Into<String>,
+    ) -> Self {
+        let instance_id = instance_id.into();
+        let base = http_base.into().trim_end_matches('/').to_string();
+        let path = std::env::var(crate::metadata::ENV_CAPABILITY_HTTP_PATH)
+            .unwrap_or_else(|_| crate::metadata::DEFAULT_CAPABILITY_HTTP_PATH.to_string());
+        let discovery_http = if path.starts_with('/') {
+            format!("{base}{path}")
+        } else {
+            format!("{base}/{path}")
+        };
+        Self::from_discovery_http(instance_id, capability_profile.into(), discovery_http)
+    }
+
+    fn from_discovery_http(
+        instance_id: String,
+        capability_profile: String,
+        discovery_http: String,
+    ) -> Self {
+        info!("Creating capability registry for instance: {}", instance_id);
 
         let primal_info = PrimalInfo {
-            id: primal_id.clone(),
-            primal_type: primal_type.into(),
-            description: format!("BearDog instance: {}", primal_id),
+            id: instance_id.clone(),
+            primal_type: capability_profile,
+            description: format!("Capability provider instance {instance_id}"),
             version: env!("CARGO_PKG_VERSION").to_string(),
         };
 
         let discovery_config = DiscoveryConfig {
-            mdns: Some(format!("_beardog_{}._tcp.local", primal_id)),
-            http: format!("{}/capabilities", base_url),
-            ttl: 300,
+            mdns: Some(crate::metadata::resolve_capability_mdns_full_name(
+                &instance_id,
+            )),
+            http: discovery_http,
+            ttl: std::env::var("BEARDOG_CAPABILITY_DISCOVERY_TTL")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(crate::metadata::DEFAULT_DISCOVERY_TTL_SECS),
         };
 
         Self {
@@ -236,12 +271,12 @@ impl CapabilityRegistry {
     }
 
     /// Get primal information
-    pub fn primal_info(&self) -> &PrimalInfo {
+    pub const fn primal_info(&self) -> &PrimalInfo {
         &self.primal_info
     }
 
     /// Get discovery configuration
-    pub fn discovery_config(&self) -> &DiscoveryConfig {
+    pub const fn discovery_config(&self) -> &DiscoveryConfig {
         &self.discovery_config
     }
 }
@@ -250,31 +285,39 @@ impl CapabilityRegistry {
 mod tests {
     use super::*;
 
+    /// Test-scoped HTTP base only; production URLs come from env / discovery.
+    const TEST_HTTP_BASE: &str = "http://127.0.0.1:54321";
+    const TEST_ALT_HTTP_BASE: &str = "http://127.0.0.1:59000";
+
+    /// Type-erased placeholder provider for registry API tests only (not a real capability).
     struct MockCapability;
 
     #[test]
     fn test_registry_creation() {
-        let registry = CapabilityRegistry::new(
-            "test-primal-1",
+        let registry = CapabilityRegistry::with_http_base(
+            "550e8400-e29b-41d4-a716-446655440000",
             "cryptographic_services",
-            "http://localhost:8080",
+            TEST_HTTP_BASE,
         );
 
-        assert_eq!(registry.primal_info().id, "test-primal-1");
+        assert_eq!(
+            registry.primal_info().id,
+            "550e8400-e29b-41d4-a716-446655440000"
+        );
         assert_eq!(registry.primal_info().primal_type, "cryptographic_services");
     }
 
     #[test]
     fn test_register_capability() {
-        let registry = CapabilityRegistry::new(
-            "test-primal-1",
+        let registry = CapabilityRegistry::with_http_base(
+            "550e8400-e29b-41d4-a716-446655440000",
             "cryptographic_services",
-            "http://localhost:8080",
+            TEST_HTTP_BASE,
         );
 
         let metadata = CapabilityMetadata::new("test_capability", "1.0")
             .with_interface("TestCapability")
-            .with_endpoint("http://localhost:8080/capabilities/test");
+            .with_endpoint(format!("{TEST_HTTP_BASE}/capabilities/test"));
 
         registry.register("test_capability", MockCapability, metadata);
 
@@ -284,10 +327,10 @@ mod tests {
 
     #[test]
     fn test_unregister_capability() {
-        let registry = CapabilityRegistry::new(
-            "test-primal-1",
+        let registry = CapabilityRegistry::with_http_base(
+            "550e8400-e29b-41d4-a716-446655440000",
             "cryptographic_services",
-            "http://localhost:8080",
+            TEST_HTTP_BASE,
         );
 
         let metadata = CapabilityMetadata::new("test_capability", "1.0");
@@ -301,10 +344,10 @@ mod tests {
 
     #[test]
     fn test_list_capabilities() {
-        let registry = CapabilityRegistry::new(
-            "test-primal-1",
+        let registry = CapabilityRegistry::with_http_base(
+            "550e8400-e29b-41d4-a716-446655440000",
             "cryptographic_services",
-            "http://localhost:8080",
+            TEST_HTTP_BASE,
         );
 
         let metadata1 = CapabilityMetadata::new("capability1", "1.0");
@@ -321,10 +364,10 @@ mod tests {
 
     #[test]
     fn test_build_advertisement() {
-        let registry = CapabilityRegistry::new(
-            "test-primal-1",
+        let registry = CapabilityRegistry::with_http_base(
+            "550e8400-e29b-41d4-a716-446655440000",
             "cryptographic_services",
-            "http://localhost:8080",
+            TEST_HTTP_BASE,
         );
 
         let metadata1 =
@@ -337,24 +380,31 @@ mod tests {
 
         let advertisement = registry.build_advertisement();
 
-        assert_eq!(advertisement.primal.id, "test-primal-1");
+        assert_eq!(
+            advertisement.primal.id,
+            "550e8400-e29b-41d4-a716-446655440000"
+        );
         assert_eq!(advertisement.capabilities.len(), 2);
-        assert!(advertisement
-            .capabilities
-            .iter()
-            .any(|c| c.id == "secure_tunnel"));
-        assert!(advertisement
-            .capabilities
-            .iter()
-            .any(|c| c.id == "lineage_signing"));
+        assert!(
+            advertisement
+                .capabilities
+                .iter()
+                .any(|c| c.id == "secure_tunnel")
+        );
+        assert!(
+            advertisement
+                .capabilities
+                .iter()
+                .any(|c| c.id == "lineage_signing")
+        );
     }
 
     #[test]
     fn test_get_metadata() {
-        let registry = CapabilityRegistry::new(
-            "test-primal-1",
+        let registry = CapabilityRegistry::with_http_base(
+            "550e8400-e29b-41d4-a716-446655440000",
             "cryptographic_services",
-            "http://localhost:8080",
+            TEST_HTTP_BASE,
         );
 
         let metadata = CapabilityMetadata::new("test_cap", "2.0")
@@ -377,29 +427,51 @@ mod tests {
 
     #[test]
     fn test_discovery_config() {
-        let registry = CapabilityRegistry::new("my-primal", "storage", "http://localhost:9000");
+        let registry = CapabilityRegistry::with_http_base(
+            "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+            "storage",
+            TEST_ALT_HTTP_BASE,
+        );
 
         let config = registry.discovery_config();
-        assert_eq!(config.http, "http://localhost:9000/capabilities");
-        assert_eq!(config.ttl, 300);
+        assert_eq!(config.http, format!("{TEST_ALT_HTTP_BASE}/capabilities"));
+        assert_eq!(config.ttl, crate::metadata::DEFAULT_DISCOVERY_TTL_SECS);
         assert!(config.mdns.is_some());
-        assert!(config.mdns.as_ref().unwrap().contains("my-primal"));
+        let mdns = config.mdns.as_ref().unwrap();
+        assert!(
+            mdns.contains("7c9e6679-7425-40de-944b-e07fc1f90ae7"),
+            "mDNS name should include sovereign instance id: {mdns}"
+        );
+        assert!(
+            mdns.contains("_beardog-cap._tcp"),
+            "mDNS should use capability service type: {mdns}"
+        );
     }
 
     #[test]
     fn test_empty_registry() {
-        let registry = CapabilityRegistry::new("empty-primal", "test", "http://localhost:8080");
+        let registry = CapabilityRegistry::with_http_base(
+            "b0000000-0000-4000-8000-000000000001",
+            "test",
+            TEST_HTTP_BASE,
+        );
 
         assert!(registry.list_capabilities().is_empty());
         let advertisement = registry.build_advertisement();
         assert!(advertisement.capabilities.is_empty());
-        assert_eq!(advertisement.primal.id, "empty-primal");
+        assert_eq!(
+            advertisement.primal.id,
+            "b0000000-0000-4000-8000-000000000001"
+        );
     }
 
     #[test]
     fn test_register_multiple_and_query() {
-        let registry =
-            CapabilityRegistry::new("multi-cap-primal", "compute", "http://localhost:8080");
+        let registry = CapabilityRegistry::with_http_base(
+            "a0000000-0000-4000-8000-000000000002",
+            "compute",
+            TEST_HTTP_BASE,
+        );
 
         for i in 1..=5 {
             let id = format!("capability_{}", i);
@@ -416,7 +488,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_advertise() {
-        let registry = CapabilityRegistry::new("advertise-test", "test", "http://localhost:8080");
+        let registry = CapabilityRegistry::with_http_base(
+            "c0000000-0000-4000-8000-000000000003",
+            "test",
+            TEST_HTTP_BASE,
+        );
 
         let metadata = CapabilityMetadata::new("test", "1.0");
         registry.register("test", MockCapability, metadata);

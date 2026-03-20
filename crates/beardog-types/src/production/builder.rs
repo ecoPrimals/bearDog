@@ -146,14 +146,14 @@ impl ProductionEcosystemBuilder {
     ///     .with_environment(EnvironmentLevel::Production);
     /// ```
     #[must_use]
-    pub fn with_environment(mut self, environment: EnvironmentLevel) -> Self {
+    pub const fn with_environment(mut self, environment: EnvironmentLevel) -> Self {
         self.config.core.environment_level = environment;
         self
     }
 
     /// Alias for `with_environment` (backwards compatibility)
     #[must_use]
-    pub fn environment_level(self, level: EnvironmentLevel) -> Self {
+    pub const fn environment_level(self, level: EnvironmentLevel) -> Self {
         self.with_environment(level)
     }
 
@@ -236,7 +236,7 @@ impl ProductionEcosystemBuilder {
 
     /// Enable advanced features (backwards compatibility)
     #[must_use]
-    pub fn enable_advanced_features(mut self) -> Self {
+    pub const fn enable_advanced_features(mut self) -> Self {
         self.config.core.flags.enable_advanced_monitoring = true;
         self.config.core.flags.enable_distributed_tracing = true;
         self.config.core.flags.enable_performance_profiling = true;
@@ -259,7 +259,7 @@ impl ProductionEcosystemBuilder {
     ///     .with_monitoring_enabled(true);
     /// ```
     #[must_use]
-    pub fn with_monitoring_enabled(mut self, enabled: bool) -> Self {
+    pub const fn with_monitoring_enabled(mut self, enabled: bool) -> Self {
         self.config.core.flags.enable_advanced_monitoring = enabled;
         self
     }
@@ -279,7 +279,7 @@ impl ProductionEcosystemBuilder {
     ///     .with_auto_scaling(true);
     /// ```
     #[must_use]
-    pub fn with_auto_scaling(mut self, enabled: bool) -> Self {
+    pub const fn with_auto_scaling(mut self, enabled: bool) -> Self {
         self.config.core.flags.enable_auto_scaling = enabled;
         self
     }
@@ -299,7 +299,7 @@ impl ProductionEcosystemBuilder {
     ///     .with_distributed_tracing(true);
     /// ```
     #[must_use]
-    pub fn with_distributed_tracing(mut self, enabled: bool) -> Self {
+    pub const fn with_distributed_tracing(mut self, enabled: bool) -> Self {
         self.config.core.flags.enable_distributed_tracing = enabled;
         self
     }
@@ -323,7 +323,7 @@ impl ProductionEcosystemBuilder {
     ///     .with_flags(flags);
     /// ```
     #[must_use]
-    pub fn with_flags(mut self, flags: ProductionFlags) -> Self {
+    pub const fn with_flags(mut self, flags: ProductionFlags) -> Self {
         self.config.core.flags = flags;
         self
     }

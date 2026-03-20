@@ -114,10 +114,15 @@ pub enum CapabilityType {
     WorkflowOrchestration,
 
     // === COMPATIBILITY ALIASES ===
+    /// Legacy alias for storage-related capability discovery (prefer [`Self::DataStorage`] in new code).
     Storage,
+    /// Legacy alias for general compute capability (prefer [`Self::ComputeIntelligence`] where applicable).
     Compute,
+    /// Legacy alias for network capability (maps to the same discovery class as [`Self::Network`]).
     Networking,
+    /// Legacy alias for AI / ML capability surfaces.
     ArtificialIntelligence,
+    /// Legacy alias for orchestration platforms (containers, workflows).
     Orchestration,
 
     // === SPECIALIZED CAPABILITIES ===
@@ -139,6 +144,7 @@ pub enum CapabilityType {
 }
 
 impl CapabilityType {
+    /// Returns a short human-readable label for this capability (not the stable wire id).
     #[must_use]
     pub fn name(&self) -> String {
         match self {
@@ -180,8 +186,8 @@ impl CapabilityType {
         }
     }
 
+    /// Stable capability identifier string for registries, ACLs, and serialized manifests.
     #[must_use]
-    /// Returns as capability id
     pub fn as_capability_id(&self) -> String {
         match self {
             Self::Security => "capability:security".to_string(),
@@ -203,10 +209,8 @@ impl CapabilityType {
         }
     }
 
-    /// Check if this is a vendor capability (external service)
+    /// Returns `true` if this capability class is typically fulfilled by an external vendor API.
     #[must_use]
-    /// Checks if vendor capability
-    /// Checks if vendor capability
     #[inline]
     pub const fn is_vendor_capability(&self) -> bool {
         matches!(
@@ -222,10 +226,8 @@ impl CapabilityType {
         )
     }
 
-    /// Check if this is a primal capability (ecosystem service)
+    /// Returns `true` if this capability class is typically fulfilled by another primal in the mesh.
     #[must_use]
-    /// Checks if primal capability
-    /// Checks if primal capability
     #[inline]
     pub const fn is_primal_capability(&self) -> bool {
         matches!(
@@ -267,11 +269,16 @@ impl From<CapabilityType> for String {
 /// Use `CapabilityType` directly in new code
 pub type ServiceCapabilityType = CapabilityType;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+/// Coarse security posture tier used when advertising or filtering discovered capabilities.
+///
+/// Higher tiers imply stricter controls (audit, crypto, isolation). Callers should treat this as
+/// advisory unless paired with concrete policy checks.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Default)]
 pub enum SecurityLevel {
     /// Basic security level
     Basic,
     /// Standard security level
+    #[default]
     Standard,
     /// High security level
     High,
@@ -279,17 +286,13 @@ pub enum SecurityLevel {
     Critical,
 }
 
-impl Default for SecurityLevel {
-    fn default() -> Self {
-        Self::Standard
-    }
-}
-
+/// A single discoverable capability advertisement: who provides it, how to reach it, and health.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalCapability {
     /// The capability type
     /// The capability type value
     pub capability_type: CapabilityType,
+    /// Identity and classification of the provider offering this capability.
     pub provider: ProviderInfo,
     /// Endpoint configuration
     /// The endpoint value
@@ -299,6 +302,7 @@ pub struct UniversalCapability {
     /// Health status
     /// Current status of the health
     pub health_status: HealthStatus,
+    /// Observed latency, success rate, and load for this endpoint (best-effort, may be stale).
     pub performance: PerformanceMetrics,
     /// Security level
     /// The security level value
@@ -308,6 +312,7 @@ pub struct UniversalCapability {
     pub metadata: HashMap<String, serde_json::Value>,
 }
 
+/// Describes who is advertising a capability (vendor, primal, or custom integration).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderInfo {
     /// Provider identifier (discovered dynamically via capability-based discovery)
@@ -324,10 +329,8 @@ pub struct ProviderInfo {
     pub region: Option<String>,
 }
 
-/// Type of capability provider
+/// Connection parameters for reaching a capability provider (base URL, timeouts, retries).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-// Removed duplicate derive - using the one above
-/// `EndpointConfig` data structure
 pub struct EndpointConfig {
     /// The base url value
     pub base_url: String,
@@ -349,6 +352,7 @@ pub struct EndpointConfig {
 pub struct CircuitBreakerConfig {
     /// Number of `failure_threshold`
     pub failure_threshold: u32,
+    /// Open-circuit dwell time in milliseconds before a half-open trial is allowed.
     pub timeout_ms: u64,
     /// Number of `success_threshold`
     pub success_threshold: u32,
@@ -386,6 +390,7 @@ impl CircuitBreakerConfig {
     }
 }
 
+/// Client-side authentication material and method for calling a capability provider.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthConfig {
     /// Authentication type
@@ -423,6 +428,7 @@ pub enum AuthType {
     Custom(String),
 }
 
+/// Liveness classification for a capability endpoint as observed by discovery or health checks.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HealthStatus {
     /// Capability is healthy and available
@@ -435,6 +441,7 @@ pub enum HealthStatus {
     Unknown,
 }
 
+/// Rolling operational metrics for a capability provider (used for ranking and circuit breaking).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
     /// Average response time in milliseconds
@@ -465,6 +472,7 @@ impl Default for PerformanceMetrics {
     }
 }
 
+/// Security-related feature flags and certifications advertised by a provider or system profile.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityCapabilities {
     /// Authentication methods supported
@@ -524,9 +532,10 @@ pub struct ComplianceCapabilities {
 }
 
 /// Compliance level classification
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Default)]
 pub enum ComplianceLevel {
     /// Basic compliance
+    #[default]
     Basic,
     /// Standard compliance (SOC 2 Type I)
     Standard,
@@ -536,12 +545,7 @@ pub enum ComplianceLevel {
     Critical,
 }
 
-impl Default for ComplianceLevel {
-    fn default() -> Self {
-        Self::Basic
-    }
-}
-
+/// Cryptographic policy constraints demanded by compliance or workload classification.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct EncryptionRequirements {
     /// Minimum encryption strength in bits
@@ -708,6 +712,7 @@ impl Default for ComputeCapabilities {
     }
 }
 
+/// Throughput and latency characteristics used to match workloads to infrastructure.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceCapabilities {
     /// Maximum operations per second
@@ -771,6 +776,7 @@ impl Default for EnvironmentalCapabilities {
     }
 }
 
+/// Aggregated capability vectors for a node or deployment (security, network, compute, etc.).
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SystemCapabilities {
     /// Security capabilities
@@ -788,6 +794,7 @@ pub struct SystemCapabilities {
     /// Compute capabilities
     /// The compute capabilities value
     pub compute_capabilities: ComputeCapabilities,
+    /// Advertised throughput, latency, and scaling features for this system profile.
     pub performance_capabilities: PerformanceCapabilities,
     /// Environmental capabilities
     /// The environmental capabilities value
@@ -795,16 +802,15 @@ pub struct SystemCapabilities {
 }
 
 impl SystemCapabilities {
-    /// Create new system capabilities with default values
+    /// Builds a [`SystemCapabilities`] populated from [`Default`] (suitable for tests and bootstrapping).
     #[must_use]
-    /// Creates a new instance
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Get the overall security level of the system
     #[must_use]
-    pub fn security_level(&self) -> &SecurityLevel {
+    pub const fn security_level(&self) -> &SecurityLevel {
         &self.security_capabilities.security_level
     }
 
@@ -818,20 +824,19 @@ impl SystemCapabilities {
 
     /// Get total storage capacity
     #[must_use]
-    pub fn total_storage_capacity(&self) -> f64 {
+    pub const fn total_storage_capacity(&self) -> f64 {
         self.storage_capabilities.max_capacity
     }
 
-    /// Check if environmental optimization is enabled
+    /// Returns `true` when carbon and renewable-energy optimizations are both enabled in the profile.
     #[must_use]
-    /// Checks if environmentally optimized
-    /// Checks if environmentally optimized
-    pub fn is_environmentally_optimized(&self) -> bool {
+    pub const fn is_environmentally_optimized(&self) -> bool {
         self.environmental_capabilities.carbon_optimization
             && self.environmental_capabilities.renewable_energy
     }
 }
 
+/// Hard and soft requirements a consumer states when requesting capability discovery.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityRequirements {
     /// Minimum security level required
@@ -840,6 +845,7 @@ pub struct CapabilityRequirements {
     /// Required security capabilities
     /// The security requirements value
     pub security_requirements: SecurityCapabilities,
+    /// Minimum performance envelope (ops/s, latency) the selected provider must satisfy.
     pub performance_requirements: PerformanceCapabilities,
     /// Required compliance standards
     /// Collection of compliance requirements
@@ -879,7 +885,9 @@ pub struct HumanEntropyCapabilities {
     /// Supported input methods
     /// Collection of input methods
     pub input_methods: Vec<String>,
+    /// Minimum user interaction duration (ms) before entropy samples are considered valid.
     pub min_interaction_time_ms: u32,
+    /// Upper bound (ms) on collection window; longer sessions may be truncated or re-sampled.
     pub max_interaction_time_ms: u32,
     /// Entropy quality scoring
     /// Whether `quality_scoring` is enabled

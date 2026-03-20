@@ -268,7 +268,7 @@ pub struct TunnelSendHttpResponse {
     pub body: String,
 }
 
-fn default_true() -> bool {
+const fn default_true() -> bool {
     true
 }
 

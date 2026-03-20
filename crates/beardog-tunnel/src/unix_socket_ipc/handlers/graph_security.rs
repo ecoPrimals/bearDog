@@ -50,16 +50,10 @@ impl MethodHandler for GraphSecurityHandler {
         debug!("🔒 Graph security handler: {}", method);
 
         match method {
-            "graph.validate_template" => self
-                .validate_template(params)
-                .await
-                .map_err(|e| e.to_string()),
-            "graph.audit_origin" => self.audit_origin(params).await.map_err(|e| e.to_string()),
-            "graph.authorize_modification" => self
-                .authorize_modification(params)
-                .await
-                .map_err(|e| e.to_string()),
-            _ => Err(format!("Method not found: {}", method)),
+            "graph.validate_template" => self.validate_template(params).await,
+            "graph.audit_origin" => self.audit_origin(params).await,
+            "graph.authorize_modification" => self.authorize_modification(params).await,
+            _ => Err(format!("Method not found: {method}")),
         }
     }
 }
@@ -82,7 +76,7 @@ impl GraphSecurityHandler {
                 .cloned()
                 .ok_or("Missing 'template' in params")?,
         )
-        .map_err(|e| format!("Invalid template: {}", e))?;
+        .map_err(|e| format!("Invalid template: {e}"))?;
 
         info!("🔍 Validating template: {}", template.id);
 
@@ -99,7 +93,7 @@ impl GraphSecurityHandler {
 
         // Convert to JSON-RPC response
         serde_json::to_value(report)
-            .map_err(|e| format!("Failed to serialize validation report: {}", e))
+            .map_err(|e| format!("Failed to serialize validation report: {e}"))
     }
 
     /// Audit the origin and provenance of a template
@@ -132,7 +126,7 @@ impl GraphSecurityHandler {
         );
 
         // Convert to JSON-RPC response
-        serde_json::to_value(audit).map_err(|e| format!("Failed to serialize audit: {}", e))
+        serde_json::to_value(audit).map_err(|e| format!("Failed to serialize audit: {e}"))
     }
 
     /// Authorize a graph modification in real-time
@@ -160,7 +154,7 @@ impl GraphSecurityHandler {
                 .cloned()
                 .ok_or("Missing 'graph' in params")?,
         )
-        .map_err(|e| format!("Invalid graph: {}", e))?;
+        .map_err(|e| format!("Invalid graph: {e}"))?;
 
         // Parse modification
         let modification: GraphModification = serde_json::from_value(
@@ -169,7 +163,7 @@ impl GraphSecurityHandler {
                 .cloned()
                 .ok_or("Missing 'modification' in params")?,
         )
-        .map_err(|e| format!("Invalid modification: {}", e))?;
+        .map_err(|e| format!("Invalid modification: {e}"))?;
 
         info!(
             "🔐 Authorizing modification: user={}, graph={}, action={:?}",
@@ -192,8 +186,7 @@ impl GraphSecurityHandler {
         );
 
         // Convert to JSON-RPC response
-        serde_json::to_value(result)
-            .map_err(|e| format!("Failed to serialize authorization: {}", e))
+        serde_json::to_value(result).map_err(|e| format!("Failed to serialize authorization: {e}"))
     }
 }
 

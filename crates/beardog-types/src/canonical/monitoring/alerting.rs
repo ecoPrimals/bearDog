@@ -103,6 +103,7 @@ pub enum AlertCondition {
     MetricThreshold {
         /// Name of the metric to monitor
         metric: String,
+        /// Comparison applied to the sampled metric vs [`threshold`].
         operator: ComparisonOperator,
         /// Threshold value to compare against
         threshold: f64,
@@ -111,10 +112,12 @@ pub enum AlertCondition {
     HealthCheckFailure {
         /// Service name that failed health checks
         service: String,
+        /// Consecutive failures required before firing.
         failure_count: u32,
     },
     /// Error rate threshold configuration
     ErrorRate {
+        /// Service or dependency whose error budget is tracked.
         service: String,
         /// Error rate threshold (0.0 to 1.0) that triggers alert
         rate_threshold: f64,
@@ -123,7 +126,9 @@ pub enum AlertCondition {
     },
     /// Custom alert condition with user-defined parameters
     Custom {
+        /// Expression language snippet evaluated by the alerting engine.
         expression: String,
+        /// Bound parameters for the expression.
         parameters: HashMap<String, serde_json::Value>,
     },
 }
@@ -254,6 +259,7 @@ pub struct NotificationTemplate {
     pub format: TemplateFormat,
 }
 
+/// Formatting mode for outbound alert bodies.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TemplateFormat {
     /// `PlainText` variant

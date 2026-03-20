@@ -79,10 +79,16 @@ impl TierManager {
         let availability_score = self.calculate_availability_score(hsm);
         let compliance_score = self.calculate_compliance_score(hsm);
 
-        let weighted_score: f64 = security_score * self.tier_scoring_weights.security_weight
-            + performance_score * self.tier_scoring_weights.performance_weight
-            + availability_score * self.tier_scoring_weights.availability_weight
-            + compliance_score * self.tier_scoring_weights.compliance_weight;
+        let weighted_score: f64 = compliance_score.mul_add(
+            self.tier_scoring_weights.compliance_weight,
+            availability_score.mul_add(
+                self.tier_scoring_weights.availability_weight,
+                security_score.mul_add(
+                    self.tier_scoring_weights.security_weight,
+                    performance_score * self.tier_scoring_weights.performance_weight,
+                ),
+            ),
+        );
 
         weighted_score.min(1.0_f64)
     }
@@ -118,11 +124,11 @@ impl TierManager {
         let ops_score = (ops_per_sec / 10000.0).min(1.0);
         let latency_score = (1.0 - (latency / 1000.0).min(1.0)).max(0.0);
 
-        (ops_score + latency_score) / 2.0
+        f64::midpoint(ops_score, latency_score)
     }
 
     /// Calculates availability score
-    fn calculate_availability_score(&self, hsm: &DiscoveredHsm) -> f64 {
+    const fn calculate_availability_score(&self, hsm: &DiscoveredHsm) -> f64 {
         match hsm.health_status {
             super::HsmHealthStatus::Healthy => 1.0,
             super::HsmHealthStatus::Warning => 0.7,

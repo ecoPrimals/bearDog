@@ -73,13 +73,13 @@
 //! let _err = BearDogError::network("Connection timeout".to_string());
 //! ```
 
-#![deny(unsafe_code)]
-#![warn(missing_docs)]
 #![warn(rust_2018_idioms)]
 
 /// Core error types and definitions
 ///
 /// The main `BearDogError` enum and core error handling functionality.
+pub mod process_env;
+
 pub mod core;
 
 /// Android-specific structured errors
@@ -116,7 +116,7 @@ pub mod examples_enhanced;
 #[cfg(test)]
 mod tests;
 
-pub use android::{phase2_not_implemented, AndroidError, Phase};
+pub use android::{AndroidError, Phase, phase2_not_implemented};
 pub use categories::*;
 pub use constructors_unified::{
     authentication_error, authentication_error_with_hint, authorization_error,

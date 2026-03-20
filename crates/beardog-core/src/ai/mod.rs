@@ -43,4 +43,5 @@ pub use hybrid_intelligence::{
 
 // Day 2: AI Comprehensive Tests - October 17, 2025
 #[cfg(test)]
+/// Unit and integration tests for hybrid intelligence modules.
 pub mod tests;

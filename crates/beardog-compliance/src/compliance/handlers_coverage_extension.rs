@@ -7,11 +7,11 @@
 
 #[cfg(test)]
 mod handlers_coverage_extension_tests {
+    use crate::ComplianceHandler;
     use crate::compliance::types::{
         ComplianceConfig, ComplianceEvent, ComplianceEventType, ComplianceSeverity,
         ComplianceStandard,
     };
-    use crate::ComplianceHandler;
     use chrono::Utc;
     use uuid::Uuid;
 
@@ -44,15 +44,19 @@ mod handlers_coverage_extension_tests {
         let result = handler.evaluate_compliance(&event).unwrap();
 
         assert!(!result.recommendations.is_empty());
-        assert!(result
-            .recommendations
-            .iter()
-            .any(|r| r.contains("access logging")));
+        assert!(
+            result
+                .recommendations
+                .iter()
+                .any(|r| r.contains("access logging"))
+        );
         assert!(result.recommendations.iter().any(|r| r.contains("review")));
-        assert!(result
-            .recommendations
-            .iter()
-            .any(|r| r.contains("permissions")));
+        assert!(
+            result
+                .recommendations
+                .iter()
+                .any(|r| r.contains("permissions"))
+        );
     }
 
     #[test]
@@ -67,18 +71,24 @@ mod handlers_coverage_extension_tests {
         let result = handler.evaluate_compliance(&event).unwrap();
 
         assert!(!result.recommendations.is_empty());
-        assert!(result
-            .recommendations
-            .iter()
-            .any(|r| r.contains("dual approval")));
-        assert!(result
-            .recommendations
-            .iter()
-            .any(|r| r.contains("audit trail")));
-        assert!(result
-            .recommendations
-            .iter()
-            .any(|r| r.contains("financial controls")));
+        assert!(
+            result
+                .recommendations
+                .iter()
+                .any(|r| r.contains("dual approval"))
+        );
+        assert!(
+            result
+                .recommendations
+                .iter()
+                .any(|r| r.contains("audit trail"))
+        );
+        assert!(
+            result
+                .recommendations
+                .iter()
+                .any(|r| r.contains("financial controls"))
+        );
     }
 
     #[test]
@@ -93,18 +103,24 @@ mod handlers_coverage_extension_tests {
         let result = handler.evaluate_compliance(&event).unwrap();
 
         assert!(!result.recommendations.is_empty());
-        assert!(result
-            .recommendations
-            .iter()
-            .any(|r| r.contains("incident response")));
-        assert!(result
-            .recommendations
-            .iter()
-            .any(|r| r.contains("post-incident")));
-        assert!(result
-            .recommendations
-            .iter()
-            .any(|r| r.contains("security controls")));
+        assert!(
+            result
+                .recommendations
+                .iter()
+                .any(|r| r.contains("incident response"))
+        );
+        assert!(
+            result
+                .recommendations
+                .iter()
+                .any(|r| r.contains("post-incident"))
+        );
+        assert!(
+            result
+                .recommendations
+                .iter()
+                .any(|r| r.contains("security controls"))
+        );
     }
 
     #[test]
@@ -116,18 +132,24 @@ mod handlers_coverage_extension_tests {
         let result = handler.evaluate_compliance(&event).unwrap();
 
         assert!(!result.recommendations.is_empty());
-        assert!(result
-            .recommendations
-            .iter()
-            .any(|r| r.contains("access logging")));
-        assert!(result
-            .recommendations
-            .iter()
-            .any(|r| r.contains("permissions")));
-        assert!(result
-            .recommendations
-            .iter()
-            .any(|r| r.contains("unusual access")));
+        assert!(
+            result
+                .recommendations
+                .iter()
+                .any(|r| r.contains("access logging"))
+        );
+        assert!(
+            result
+                .recommendations
+                .iter()
+                .any(|r| r.contains("permissions"))
+        );
+        assert!(
+            result
+                .recommendations
+                .iter()
+                .any(|r| r.contains("unusual access"))
+        );
     }
 
     #[test]
@@ -143,14 +165,18 @@ mod handlers_coverage_extension_tests {
 
         // Default recommendations for unhandled event types
         assert!(!result.recommendations.is_empty());
-        assert!(result
-            .recommendations
-            .iter()
-            .any(|r| r.contains("compliance policies")));
-        assert!(result
-            .recommendations
-            .iter()
-            .any(|r| r.contains("monitoring")));
+        assert!(
+            result
+                .recommendations
+                .iter()
+                .any(|r| r.contains("compliance policies"))
+        );
+        assert!(
+            result
+                .recommendations
+                .iter()
+                .any(|r| r.contains("monitoring"))
+        );
     }
 
     #[test]

@@ -255,9 +255,9 @@ fn test_circuit_breaker_config_environment_override() {
     // Modern pattern: Use from_env() explicitly for environment-based config
     // Default::default() is now pure (no env access) for concurrent safety
 
-    std::env::set_var("BEARDOG_CIRCUIT_BREAKER_FAILURE_THRESHOLD", "8");
-    std::env::set_var("BEARDOG_CIRCUIT_BREAKER_TIMEOUT_MS", "45000");
-    std::env::set_var("BEARDOG_CIRCUIT_BREAKER_SUCCESS_THRESHOLD", "4");
+    beardog_errors::process_env::set_var("BEARDOG_CIRCUIT_BREAKER_FAILURE_THRESHOLD", "8");
+    beardog_errors::process_env::set_var("BEARDOG_CIRCUIT_BREAKER_TIMEOUT_MS", "45000");
+    beardog_errors::process_env::set_var("BEARDOG_CIRCUIT_BREAKER_SUCCESS_THRESHOLD", "4");
 
     let config = CircuitBreakerConfig::from_env(); // Use from_env() not default()
 
@@ -265,9 +265,9 @@ fn test_circuit_breaker_config_environment_override() {
     assert_eq!(config.timeout_ms, 45000);
     assert_eq!(config.success_threshold, 4);
 
-    std::env::remove_var("BEARDOG_CIRCUIT_BREAKER_FAILURE_THRESHOLD");
-    std::env::remove_var("BEARDOG_CIRCUIT_BREAKER_TIMEOUT_MS");
-    std::env::remove_var("BEARDOG_CIRCUIT_BREAKER_SUCCESS_THRESHOLD");
+    beardog_errors::process_env::remove_var("BEARDOG_CIRCUIT_BREAKER_FAILURE_THRESHOLD");
+    beardog_errors::process_env::remove_var("BEARDOG_CIRCUIT_BREAKER_TIMEOUT_MS");
+    beardog_errors::process_env::remove_var("BEARDOG_CIRCUIT_BREAKER_SUCCESS_THRESHOLD");
 }
 
 #[test]

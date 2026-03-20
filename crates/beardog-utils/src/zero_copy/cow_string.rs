@@ -83,6 +83,7 @@ impl From<Arc<str>> for ZeroCopyString {
     }
 }
 
+/// Frequently used literals interned as enum variants for cheap comparisons.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CommonString {
     /// Represents get variant

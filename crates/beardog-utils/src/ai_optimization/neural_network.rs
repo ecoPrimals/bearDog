@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Tiny fully-connected network with sigmoid activations (educational / prototyping).
 
 use beardog_errors::BearDogError;
 
+/// Single hidden layer MLP stored as dense `f64` matrices.
 pub struct SimpleNeuralNetwork {
     input_layer: Vec<f64>,
     hidden_layer: Vec<f64>,
@@ -49,6 +48,7 @@ impl SimpleNeuralNetwork {
         })
     }
 
+    /// Runs one forward pass, mutating internal layer buffers.
     pub fn forward(&mut self, inputs: &[f64]) -> Result<Vec<f64>, BearDogError> {
         if inputs.len() != self.input_layer.len() {
             return Err(BearDogError::invalid_input(&format!(
@@ -87,6 +87,7 @@ impl SimpleNeuralNetwork {
         1.0 / (1.0 + (-input).exp())
     }
 
+    /// Single gradient-style update from `expected_outputs` (simplified backprop).
     pub fn train(
         &mut self,
         inputs: &[f64],

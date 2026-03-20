@@ -15,12 +15,12 @@
 #![allow(clippy::field_reassign_with_default)]
 #![allow(unused_variables)] // Some variables used conditionally
 
-use crate::tunnel::hsm::manager::implementation::{DefaultHsmManager, HsmProvider};
+use crate::tunnel::hsm::GenerateKeyRequest;
 use crate::tunnel::hsm::manager::HsmManager;
+use crate::tunnel::hsm::manager::implementation::{DefaultHsmManager, HsmProvider};
 use crate::tunnel::hsm::software_hsm::SoftwareHsm;
 use crate::tunnel::hsm::types::key::KeyType;
 use crate::tunnel::hsm::types::tier::HsmTier;
-use crate::tunnel::hsm::GenerateKeyRequest;
 use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tokio::sync::{Barrier, Semaphore};

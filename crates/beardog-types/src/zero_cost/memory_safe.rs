@@ -8,9 +8,10 @@
 use crossbeam::queue::SegQueue;
 use parking_lot::RwLock;
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
+/// Thread-safe size-classed buffer pool with alignment and allocation metrics.
 pub struct SafeZeroCopyMemoryPool {
     pools: Arc<RwLock<HashMap<usize, SegQueue<Vec<u8>>>>>,
     alignment: usize,
@@ -19,6 +20,7 @@ pub struct SafeZeroCopyMemoryPool {
     stats: SafeMemoryPoolMetrics,
 }
 
+/// Atomic counters mirroring [`SafeZeroCopyMemoryPool`] hit/miss statistics.
 #[derive(Debug, Default)]
 pub struct SafeMemoryPoolMetrics {
     /// Total number of memory allocations
@@ -37,6 +39,7 @@ pub struct SafeMemoryPoolMetrics {
     pub peak_memory_usage: AtomicUsize,
 }
 
+/// Fixed-capacity `SegQueue`-backed ring for producer/consumer workloads.
 pub struct SafeRingBuffer<T>
 where
     T: Send + Sync,
@@ -99,6 +102,7 @@ impl SafeZeroCopyMemoryPool {
         vec![0u8; size]
     }
 
+    /// Return a buffer to the pool for reuse, or drop it if the pool is full.
     pub fn deallocate(&self, buffer: Vec<u8>) {
         let capacity = buffer.capacity();
         let aligned_size = self.align_size(capacity);
@@ -201,6 +205,7 @@ where
         )
     }
 
+    /// Non-blocking pop; equivalent to [`Self::pop`] for API symmetry.
     pub fn try_pop(&self) -> Option<T> {
         self.pop()
     }
@@ -243,6 +248,7 @@ pub struct SafeSimdCapabilities {
     /// Whether SSE4.2 instructions are available
     /// Whether `sse42_available` is enabled
     pub sse42_available: bool,
+    /// Native vector register width in bytes used for chunking
     pub vector_width: usize,
 }
 
@@ -342,11 +348,13 @@ impl SafeSimdCapabilities {
         self.sse42_available
     }
 
+    /// SIMD vector width in bytes (e.g. 16 for SSE, 32 for AVX2).
     #[must_use]
     pub const fn get_vector_width(&self) -> usize {
         self.vector_width
     }
 
+    /// Suggested input chunk size for [`Self::vectorized_hash`] and similar.
     #[must_use]
     pub const fn optimal_chunk_size(&self) -> usize {
         self.vector_width

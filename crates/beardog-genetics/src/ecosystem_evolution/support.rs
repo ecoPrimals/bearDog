@@ -14,6 +14,7 @@ use std::time::Duration;
 // Supporting Types and Enums
 // ============================================================================
 
+/// Area of responsibility a node or operator stewards (security, health, knowledge, etc.).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum StewardshipArea {
     /// Currently securitymonitoring
@@ -32,8 +33,8 @@ pub enum StewardshipArea {
     KnowledgeSharing,
 }
 
+/// Kinds of contributions that strengthen the ecosystem and affect trust evolution.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Types of contribution
 pub enum ContributionType {
     /// Represents code contribution variant
     CodeContribution,
@@ -49,9 +50,11 @@ pub enum ContributionType {
     EcosystemTesting,
     /// Currently securityauditing
     SecurityAuditing,
+    /// Performance tuning or optimization work that benefits shared infrastructure.
     PerformanceOptimization,
 }
 
+/// Rolling summary of how two actors have interacted—feeds trust and coordination models.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InteractionSummary {
     /// Number of `total_interactions`
@@ -70,6 +73,7 @@ pub struct InteractionSummary {
     pub relationship_quality: f64,
 }
 
+/// Direction of change in relationship quality derived from recent interactions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum InteractionTrend {
     /// Represents improving variant
@@ -80,6 +84,7 @@ pub enum InteractionTrend {
     Declining,
 }
 
+/// Typed tag with expression strength—analogous to a genetic marker in the trust genome.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticMarker {
     /// The marker type value
@@ -88,6 +93,7 @@ pub struct GeneticMarker {
     pub expression_level: f64,
 }
 
+/// Suggested progression for an actor to deepen capability or trust within the ecosystem.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LearningPath {
     /// The current stage value
@@ -98,8 +104,10 @@ pub struct LearningPath {
     pub learning_resources: Vec<String>,
 }
 
+/// Active mentorship edge: who guides whom and how strongly that bond influences trust.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MentorConnection {
+    /// Stable identifier of the mentoring party.
     pub mentor_id: String,
     /// The mentorship type value
     pub mentorship_type: String,
@@ -107,6 +115,7 @@ pub struct MentorConnection {
     pub connection_strength: f64,
 }
 
+/// Declared scope of a collaboration: where partners work together and how success is judged.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CollaborationScope {
     /// Collection of areas
@@ -117,6 +126,7 @@ pub struct CollaborationScope {
     pub success_metrics: Vec<String>,
 }
 
+/// Contract-like obligations and exit criteria for a collaboration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CollaborationTerms {
     /// Collection of mutual obligations
@@ -127,6 +137,7 @@ pub struct CollaborationTerms {
     pub termination_conditions: Vec<String>,
 }
 
+/// Reasons an actor or interaction may be flagged for heightened review.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ConcernFactor {
     /// Represents unknown entity variant
@@ -141,6 +152,7 @@ pub enum ConcernFactor {
     TrustViolation,
 }
 
+/// How closely the ecosystem observes an actor after risk signals.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MonitoringLevel {
     /// Represents basic variant
@@ -153,6 +165,7 @@ pub enum MonitoringLevel {
     Quarantine,
 }
 
+/// When the next relationship or trust review occurs and how often reviews repeat.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReviewSchedule {
     /// The next review value
@@ -161,6 +174,7 @@ pub struct ReviewSchedule {
     pub review_frequency: Duration,
 }
 
+/// Named steps and success signals to recover trust or operational health after an incident.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealingProtocol {
     /// Name of the protocol
@@ -171,6 +185,7 @@ pub struct HealingProtocol {
     pub success_indicators: Vec<String>,
 }
 
+/// Justification for placing an actor or resource under protective constraints.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ProtectionReason {
     /// Represents previous concerns variant
@@ -183,6 +198,7 @@ pub enum ProtectionReason {
     EcosystemHealth,
 }
 
+/// Strength of safeguards applied (rate limits, isolation) under protection policy.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ProtectionLevel {
     /// Represents minimal variant
@@ -195,10 +211,12 @@ pub enum ProtectionLevel {
     Maximum,
 }
 
+/// Planned sequence to restore normal operation after degradation or quarantine.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RestorationPath {
     /// Collection of steps
     pub steps: Vec<String>,
+    /// Expected duration to complete the restoration plan.
     pub timeline: Duration,
     /// Collection of success criteria
     pub success_criteria: Vec<String>,
@@ -210,6 +228,7 @@ pub struct RestorationPath {
 
 use beardog_types::canonical::HealthStatus;
 
+/// Snapshot of ecosystem vitality: load, open relationships, and recent notable events.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemContext {
     /// The current health value
@@ -222,6 +241,7 @@ pub struct EcosystemContext {
     pub recent_events: Vec<String>,
 }
 
+/// Aggregated health view across relationships, trust, coordination, and emergent behavior.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemHealthReport {
     /// The overall health value
@@ -238,6 +258,7 @@ pub struct EcosystemHealthReport {
     pub recommendations: Vec<String>,
 }
 
+/// Behavior that arises from many actors—positive or risky—used for adaptive policy.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EmergentBehavior {
     /// The behavior type value
@@ -254,6 +275,7 @@ pub struct EmergentBehavior {
 // Input Pattern Types
 // ============================================================================
 
+/// Legacy allow/block/simple patterns migrated into richer [`EcosystemMembership`] models.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BinaryAccessPattern {
     /// Represents allowlist variant
@@ -273,6 +295,7 @@ pub enum BinaryAccessPattern {
     },
 }
 
+/// Coarse trust bit used when migrating from binary trust lists to graduated models.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BinaryTrust {
     /// State indicating trusted
@@ -281,6 +304,7 @@ pub enum BinaryTrust {
     Untrusted,
 }
 
+/// Time series of interactions, trust deltas, and collaboration outcomes between actors.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RelationshipHistory {
     /// Collection of interactions
@@ -291,6 +315,7 @@ pub struct RelationshipHistory {
     pub collaboration_outcomes: Vec<String>,
 }
 
+/// Topology of dependence between nodes (primary/replica, client/server, etc.).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HierarchicalPattern {
     /// Primary-replica database pattern
@@ -320,6 +345,7 @@ pub enum HierarchicalPattern {
 // Supporting Structs for Genetics Modules
 // ============================================================================
 
+/// Rules and triggers that move members between ecosystem roles over time.
 #[derive(Debug, Clone, Default)]
 pub struct MembershipEvolution {
     /// Collection of evolution rules
@@ -330,6 +356,7 @@ pub struct MembershipEvolution {
     pub transition_triggers: Vec<String>,
 }
 
+/// Algorithms and decay that turn raw signals into a scalar or vector trust score.
 #[derive(Debug, Clone, Default)]
 pub struct TrustComputation {
     /// Collection of trust metrics
@@ -340,6 +367,7 @@ pub struct TrustComputation {
     pub temporal_decay: f64,
 }
 
+/// Valid transitions between membership states, cool-downs, and validation gates.
 #[derive(Debug, Clone, Default)]
 pub struct MembershipTransitions {
     /// Transition rules
@@ -350,6 +378,7 @@ pub struct MembershipTransitions {
     pub cooldown_periods: HashMap<String, u64>,
 }
 
+/// How coordination strategies mutate under load, failure, or trust shifts.
 #[derive(Debug, Clone, Default)]
 pub struct CoordinationEvolution {
     /// Collection of evolution patterns
@@ -360,6 +389,7 @@ pub struct CoordinationEvolution {
     pub optimization_goals: HashMap<String, f64>,
 }
 
+/// Criteria and rotation for emergent leaders without a fixed centralized appointee.
 #[derive(Debug, Clone, Default)]
 pub struct LeadershipEmergence {
     /// Collection of emergence criteria
@@ -370,6 +400,7 @@ pub struct LeadershipEmergence {
     pub selection_algorithms: Vec<String>,
 }
 
+/// Mediation and prevention patterns when symbiotic partners disagree or compete.
 #[derive(Debug, Clone, Default)]
 pub struct ConflictResolution {
     /// Collection of resolution strategies
@@ -380,6 +411,7 @@ pub struct ConflictResolution {
     pub prevention_measures: Vec<String>,
 }
 
+/// Metrics and calibration used to keep trust scores comparable across nodes.
 #[derive(Debug, Clone, Default)]
 pub struct TrustMeasurement {
     /// Collection of measurement metrics
@@ -390,6 +422,7 @@ pub struct TrustMeasurement {
     pub validation_techniques: Vec<String>,
 }
 
+/// Voting, consensus, and aggregation models for group decisions in the ecosystem.
 #[derive(Debug, Clone, Default)]
 pub struct CollectiveDecisionMaking {
     /// Collection of decision models
@@ -400,6 +433,7 @@ pub struct CollectiveDecisionMaking {
     pub consensus_algorithms: Vec<String>,
 }
 
+/// Retention and recall policies so the ecosystem learns without unsafe hoarding.
 #[derive(Debug, Clone, Default)]
 pub struct EcosystemMemory {
     /// The retention policies value
@@ -410,6 +444,7 @@ pub struct EcosystemMemory {
     pub learning_integration: f64,
 }
 
+/// Forecasting models that anticipate load, risk, or opportunity from historical signals.
 #[derive(Debug, Clone, Default)]
 pub struct PredictiveCapabilities {
     /// Collection of prediction models
@@ -420,6 +455,7 @@ pub struct PredictiveCapabilities {
     pub adaptation_mechanisms: Vec<String>,
 }
 
+/// Detects collective anomalies or beneficial swarm behaviors from telemetry.
 #[derive(Debug, Clone, Default)]
 pub struct EmergentBehaviorDetection {
     /// Collection of detection algorithms
@@ -430,6 +466,7 @@ pub struct EmergentBehaviorDetection {
     pub response_protocols: HashMap<String, String>,
 }
 
+/// Tunes relationship parameters to maximize quality metrics under constraints.
 #[derive(Debug, Clone, Default)]
 pub struct RelationshipOptimization {
     /// The optimization algorithms value
@@ -440,6 +477,7 @@ pub struct RelationshipOptimization {
     pub improvement_strategies: Vec<String>,
 }
 
+/// Weights contextual factors (load, locality, risk) when evaluating interactions.
 #[derive(Debug, Clone, Default)]
 pub struct ContextAwareness {
     /// Collection of context factors
@@ -450,6 +488,7 @@ pub struct ContextAwareness {
     pub adaptation_triggers: Vec<String>,
 }
 
+/// Protocols to rebuild trust and operational coupling after a breach or drift.
 #[derive(Debug, Clone, Default)]
 pub struct RelationshipRepair {
     /// Collection of repair protocols
@@ -460,6 +499,7 @@ pub struct RelationshipRepair {
     pub success_criteria: Vec<String>,
 }
 
+/// Scores a situation before action—feeds contextual decision genetics.
 #[derive(Debug, Clone, Default)]
 pub struct ContextEvaluationEngine {
     /// Collection of evaluation criteria
@@ -470,6 +510,7 @@ pub struct ContextEvaluationEngine {
     pub decision_factors: Vec<String>,
 }
 
+/// Feedback loop that adjusts decision rules as outcomes and trust evolve.
 #[derive(Debug, Clone, Default)]
 pub struct DecisionAdaptation {
     /// Collection of adaptation rules

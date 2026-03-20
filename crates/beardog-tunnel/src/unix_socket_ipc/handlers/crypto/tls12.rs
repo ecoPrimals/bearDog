@@ -70,11 +70,11 @@
 //!
 //! # Created
 //!
-//! January 27, 2026 - Deep Debt Evolution Session  
+//! January 27, 2026 - Deep Debt Evolution Session\
 //! Requested by: Songbird team for TLS 1.2 backward compatibility
 
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use serde_json::Value;
 use tracing::{debug, info};
 
@@ -106,7 +106,7 @@ pub async fn handle_ecdhe_p256_generate(params: Option<&Value>) -> Result<Value,
         purpose
     );
 
-    use p256::elliptic_curve::{rand_core::RngCore, SecretKey};
+    use p256::elliptic_curve::{SecretKey, rand_core::RngCore};
     use rand::rngs::OsRng;
     use zeroize::Zeroizing;
 
@@ -177,8 +177,8 @@ pub async fn handle_ecdhe_p256_compute_shared(params: Option<&Value>) -> Result<
         .map_err(|e| format!("Invalid their_public base64: {e}"))?;
 
     // Parse keys
-    use p256::elliptic_curve::SecretKey;
     use p256::PublicKey;
+    use p256::elliptic_curve::SecretKey;
 
     let secret_key: SecretKey<p256::NistP256> = SecretKey::from_slice(&our_secret_bytes)
         .map_err(|e| format!("Invalid P-256 secret key: {e}"))?;
@@ -229,7 +229,7 @@ pub async fn handle_ecdhe_p384_generate(params: Option<&Value>) -> Result<Value,
         purpose
     );
 
-    use p384::elliptic_curve::{rand_core::RngCore, SecretKey};
+    use p384::elliptic_curve::{SecretKey, rand_core::RngCore};
     use rand::rngs::OsRng;
     use zeroize::Zeroizing;
 
@@ -300,8 +300,8 @@ pub async fn handle_ecdhe_p384_compute_shared(params: Option<&Value>) -> Result<
         .map_err(|e| format!("Invalid their_public base64: {e}"))?;
 
     // Parse keys
-    use p384::elliptic_curve::SecretKey;
     use p384::PublicKey;
+    use p384::elliptic_curve::SecretKey;
 
     let secret_key: SecretKey<p384::NistP384> = SecretKey::from_slice(&our_secret_bytes)
         .map_err(|e| format!("Invalid P-384 secret key: {e}"))?;
@@ -406,7 +406,7 @@ pub async fn handle_aes_128_gcm_encrypt(params: Option<&Value>) -> Result<Value,
     };
 
     // Perform encryption
-    use aes_gcm::{aead::Aead, Aes128Gcm, KeyInit, Nonce};
+    use aes_gcm::{Aes128Gcm, KeyInit, Nonce, aead::Aead};
 
     let key = aes_gcm::Key::<Aes128Gcm>::from_slice(&key_bytes);
     let cipher = Aes128Gcm::new(key);
@@ -517,7 +517,7 @@ pub async fn handle_aes_128_gcm_decrypt(params: Option<&Value>) -> Result<Value,
     ciphertext_with_tag.extend_from_slice(&tag_bytes);
 
     // Perform decryption
-    use aes_gcm::{aead::Aead, Aes128Gcm, KeyInit, Nonce};
+    use aes_gcm::{Aes128Gcm, KeyInit, Nonce, aead::Aead};
 
     let key = aes_gcm::Key::<Aes128Gcm>::from_slice(&key_bytes);
     let cipher = Aes128Gcm::new(key);
@@ -616,7 +616,7 @@ pub async fn handle_aes_256_gcm_encrypt(params: Option<&Value>) -> Result<Value,
     };
 
     // Perform encryption
-    use aes_gcm::{aead::Aead, Aes256Gcm, KeyInit, Nonce};
+    use aes_gcm::{Aes256Gcm, KeyInit, Nonce, aead::Aead};
 
     let key = aes_gcm::Key::<Aes256Gcm>::from_slice(&key_bytes);
     let cipher = Aes256Gcm::new(key);
@@ -721,7 +721,7 @@ pub async fn handle_aes_256_gcm_decrypt(params: Option<&Value>) -> Result<Value,
     ciphertext_with_tag.extend_from_slice(&tag_bytes);
 
     // Perform decryption
-    use aes_gcm::{aead::Aead, Aes256Gcm, KeyInit, Nonce};
+    use aes_gcm::{Aes256Gcm, KeyInit, Nonce, aead::Aead};
 
     let key = aes_gcm::Key::<Aes256Gcm>::from_slice(&key_bytes);
     let cipher = Aes256Gcm::new(key);
@@ -805,7 +805,7 @@ pub async fn handle_tls12_prf(params: Option<&Value>) -> Result<Value, String> {
 
     let output_len = params
         .get("output_len")
-        .and_then(|v| v.as_u64())
+        .and_then(serde_json::Value::as_u64)
         .ok_or("Missing or invalid 'output_len' parameter")? as usize;
 
     let hash_alg = params
@@ -833,9 +833,8 @@ pub async fn handle_tls12_prf(params: Option<&Value>) -> Result<Value, String> {
         "sha384" => tls12_prf_sha384(&secret, label.as_bytes(), &seed, output_len)?,
         _ => {
             return Err(format!(
-                "Unsupported hash algorithm: {} (use 'sha256' or 'sha384')",
-                hash_alg
-            ))
+                "Unsupported hash algorithm: {hash_alg} (use 'sha256' or 'sha384')"
+            ));
         }
     };
 

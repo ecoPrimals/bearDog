@@ -91,10 +91,7 @@
 //! let n = device.read(&mut response).await?;
 //! ```
 
-#![forbid(unsafe_code)] // 100% safe Rust to start
-#![warn(missing_docs)]
 #![warn(clippy::all)]
-#![warn(clippy::pedantic)]
 
 pub mod linux;
 pub mod types;

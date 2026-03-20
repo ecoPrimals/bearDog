@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// HSM status and health monitoring types
-// Provides structures for tracking HSM operational status and health metrics
+//! Runtime HSM health snapshots, error rollups, and operation results.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -13,10 +12,11 @@ pub struct HsmStatus {
     /// Current health status
     /// The health value
     pub health: HsmHealthStatus,
+    /// Live throughput/latency counters for dashboards and autoscale hints.
     pub performance: PerformanceMetrics,
-    /// The errors value
+    /// Rolling error telemetry (recent messages, rates, last failure time).
     pub errors: ErrorInfo,
-    /// Configuration status
+    /// Thresholds and probe list used by the health checker for this HSM.
     pub config: HsmHealthCheckConfig,
     /// Last status update
     /// The last updated value
@@ -40,7 +40,7 @@ impl Default for HsmStatus {
 }
 
 /// HSM health status enumeration
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum HsmHealthStatus {
     /// HSM is healthy and operational
     Healthy,
@@ -49,15 +49,11 @@ pub enum HsmHealthStatus {
     /// HSM is unhealthy
     Unhealthy,
     /// HSM status is unknown
+    #[default]
     Unknown,
 }
 
-impl Default for HsmHealthStatus {
-    fn default() -> Self {
-        Self::Unknown
-    }
-}
-
+/// Rolling performance counters for a single HSM instance.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
     /// Operations per second
@@ -96,6 +92,7 @@ impl Default for PerformanceMetrics {
     }
 }
 
+/// Aggregated error telemetry (recent strings + rates) for an HSM.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorInfo {
     /// Total error count
@@ -207,30 +204,25 @@ impl Default for HealthThresholds {
 }
 
 impl HsmStatus {
-    /// Create a new HSM status with current timestamp
+    /// Returns a fresh [`Default`] snapshot with [`SystemTime::now`] as [`Self::last_updated`].
     #[must_use]
-    /// Creates a new instance
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Check if HSM is healthy
+    /// True when [`HsmHealthStatus::Healthy`] (not merely unknown or degraded).
     #[must_use]
-    /// Checks if healthy
-    /// Checks if healthy
-    pub fn is_healthy(&self) -> bool {
+    pub const fn is_healthy(&self) -> bool {
         matches!(self.health, HsmHealthStatus::Healthy)
     }
 
-    /// Update health status
-    /// Updates health
-    /// Updates health
+    /// Sets [`Self::health`] and refreshes [`Self::last_updated`].
     pub fn update_health(&mut self, status: HsmHealthStatus) {
         self.health = status;
         self.last_updated = SystemTime::now();
     }
 
-    /// Record an error
+    /// Appends an error string, increments counters, and trims history to the last ten entries.
     pub fn record_error(&mut self, error: impl Into<String>) {
         self.errors.total_errors += 1;
         self.errors.recent_errors.push(error.into());
@@ -242,6 +234,7 @@ impl HsmStatus {
         }
     }
 
+    /// Replaces [`Self::performance`] and bumps [`Self::last_updated`].
     pub fn update_performance(&mut self, metrics: PerformanceMetrics) {
         self.performance = metrics;
         self.last_updated = SystemTime::now();
@@ -287,7 +280,7 @@ impl<T> HsmOperationResult<T> {
     /// Set processing time
     #[must_use]
     /// Creates instance with processing time
-    pub fn with_processing_time(mut self, time_ms: u64) -> Self {
+    pub const fn with_processing_time(mut self, time_ms: u64) -> Self {
         self.processing_time_ms = time_ms;
         self
     }
@@ -301,6 +294,7 @@ impl<T> HsmOperationResult<T> {
     }
 }
 
+/// Fine-grained vitals collected during deep health probes (fan, thermals, etc.).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthMetrics {
     /// Overall health score (0-100)
@@ -347,6 +341,7 @@ impl Default for HealthMetrics {
     }
 }
 
+/// Composite view combining [`HsmHealthStatus`], [`HealthMetrics`], and per-component breakdowns.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmHealth {
     /// Overall health status

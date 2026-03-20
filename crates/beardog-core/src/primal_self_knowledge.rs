@@ -231,7 +231,7 @@ impl PrimalDiscovery {
 
     /// Get this primal's identity (self-knowledge)
     #[must_use]
-    pub fn identity(&self) -> &PrimalIdentity {
+    pub const fn identity(&self) -> &PrimalIdentity {
         &self.identity
     }
 
@@ -460,13 +460,13 @@ pub enum Protocol {
 }
 
 impl Protocol {
-    fn scheme(&self) -> &str {
+    const fn scheme(&self) -> &str {
         match self {
-            Protocol::Http => "http",
-            Protocol::Https => "https",
-            Protocol::Grpc => "grpc",
-            Protocol::Tcp => "tcp",
-            Protocol::Udp => "udp",
+            Self::Http => "http",
+            Self::Https => "https",
+            Self::Grpc => "grpc",
+            Self::Tcp => "tcp",
+            Self::Udp => "udp",
         }
     }
 }
@@ -539,7 +539,7 @@ impl PrimalSelfKnowledge {
     ///
     /// Uses the discovery system to validate primal self-knowledge principle
     #[must_use]
-    pub fn get_known_primal_count(&self) -> usize {
+    pub const fn get_known_primal_count(&self) -> usize {
         // Primals only know themselves at initialization
         // Other primals are discovered at runtime via self.discovery
         1
@@ -550,7 +550,7 @@ impl PrimalSelfKnowledge {
     /// This method ensures the discovery field is used and provides
     /// access to the [`PrimalDiscovery`] system for capability-based queries
     #[must_use]
-    pub fn get_discovery(&self) -> &Arc<PrimalDiscovery> {
+    pub const fn get_discovery(&self) -> &Arc<PrimalDiscovery> {
         &self.discovery
     }
 
@@ -559,7 +559,7 @@ impl PrimalSelfKnowledge {
     /// # Errors
     ///
     /// Returns error if capabilities cannot be retrieved or converted.
-    pub fn get_self_capabilities(&self) -> Result<Vec<UniversalCapabilityType>> {
+    pub const fn get_self_capabilities(&self) -> Result<Vec<UniversalCapabilityType>> {
         // Convert string capabilities to UniversalCapabilityType
         // This is a simplified mapping - real implementation would be more comprehensive
         Ok(vec![]) // Placeholder - capabilities are stored as strings in PrimalIdentity
@@ -611,8 +611,8 @@ mod tests {
     #[test]
     fn test_primal_identity_self_knowledge_only() {
         // Primal knows only itself, no hardcoded peers
-        std::env::set_var("BEARDOG_PRIMAL_NAME", "test-primal");
-        std::env::set_var("BEARDOG_PRIMAL_TYPE", "beardog");
+        beardog_errors::process_env::set_var("BEARDOG_PRIMAL_NAME", "test-primal");
+        beardog_errors::process_env::set_var("BEARDOG_PRIMAL_TYPE", "beardog");
 
         let identity = PrimalIdentity::from_environment().unwrap();
 

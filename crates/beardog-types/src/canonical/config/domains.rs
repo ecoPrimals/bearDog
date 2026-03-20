@@ -31,6 +31,7 @@ pub mod security;
 pub mod system;
 pub mod testing;
 pub mod threat;
+/// **Deprecated**: legacy timeout keys; use [`timeout_unified`] instead.
 pub mod timeout; // ⚠️ DEPRECATED — Use timeout_unified
 pub mod timeout_unified;
 pub mod workflow;

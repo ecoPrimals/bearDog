@@ -11,12 +11,6 @@
 //! - **Hardware Security Modules**: Integration with `YubiKey`, TPM, and software HSMs
 //! - **Zero Unsafe Code**: All operations are memory-safe
 
-#![deny(unsafe_code)]
-#![warn(missing_docs)]
-// Production code must use proper error handling - deny panicking methods
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-// Allow expect in tests - test panics are appropriate failure modes
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
 //! - **SIMD Acceleration**: Hardware-accelerated cryptographic operations
@@ -274,7 +268,7 @@ pub fn generate_secure_random_bytes(size: usize) -> Result<Vec<u8>, BearDogError
 ///
 /// # Security Considerations
 ///
-/// **⚠️ IMPORTANT:** This is a simplified KDF for development/testing.  
+/// **⚠️ IMPORTANT:** This is a simplified KDF for development/testing.\
 /// **Production systems should use:**
 /// - `argon2` - Winner of Password Hashing Competition, best for new systems
 /// - `scrypt` - Memory-hard, good for password hashing

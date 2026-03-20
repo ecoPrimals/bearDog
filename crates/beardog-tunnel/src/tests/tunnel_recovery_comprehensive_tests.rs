@@ -15,9 +15,9 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use beardog_errors::BearDogError;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
-use tokio::sync::{mpsc, RwLock};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use tokio::sync::{RwLock, mpsc};
 
 type Result<T> = std::result::Result<T, BearDogError>;
 

@@ -99,13 +99,13 @@ impl Transport {
     /// - Port number is invalid
     pub fn from_endpoint(endpoint: &str) -> Result<Self, String> {
         if let Some(path) = endpoint.strip_prefix("unix://") {
-            Ok(Transport::UnixSocket {
+            Ok(Self::UnixSocket {
                 path: PathBuf::from(path),
             })
         } else if let Some(rest) = endpoint.strip_prefix("tcp://") {
             // Find the last colon to handle IPv6 addresses (e.g., ::1:8080)
             let colon_pos = rest.rfind(':').ok_or_else(|| {
-                format!("Invalid TCP endpoint format (expected host:port): {}", rest)
+                format!("Invalid TCP endpoint format (expected host:port): {rest}")
             })?;
 
             let host = &rest[..colon_pos];
@@ -117,62 +117,61 @@ impl Transport {
 
             let port = port_str
                 .parse::<u16>()
-                .map_err(|e| format!("Invalid port number '{}': {}", port_str, e))?;
+                .map_err(|e| format!("Invalid port number '{port_str}': {e}"))?;
 
-            Ok(Transport::TcpSocket {
+            Ok(Self::TcpSocket {
                 host: host.to_string(),
                 port,
             })
         } else {
             Err(format!(
-                "Unknown endpoint scheme (expected unix:// or tcp://): {}",
-                endpoint
+                "Unknown endpoint scheme (expected unix:// or tcp://): {endpoint}"
             ))
         }
     }
 
     /// Check if this is a Unix socket transport
-    pub fn is_unix_socket(&self) -> bool {
-        matches!(self, Transport::UnixSocket { .. })
+    pub const fn is_unix_socket(&self) -> bool {
+        matches!(self, Self::UnixSocket { .. })
     }
 
     /// Check if this is a TCP socket transport
-    pub fn is_tcp_socket(&self) -> bool {
-        matches!(self, Transport::TcpSocket { .. })
+    pub const fn is_tcp_socket(&self) -> bool {
+        matches!(self, Self::TcpSocket { .. })
     }
 
     /// Get the socket path (for Unix sockets)
-    pub fn socket_path(&self) -> Option<&PathBuf> {
+    pub const fn socket_path(&self) -> Option<&PathBuf> {
         match self {
-            Transport::UnixSocket { path } => Some(path),
-            Transport::TcpSocket { .. } => None,
+            Self::UnixSocket { path } => Some(path),
+            Self::TcpSocket { .. } => None,
         }
     }
 
     /// Get the host (for TCP sockets)
     pub fn host(&self) -> Option<&str> {
         match self {
-            Transport::TcpSocket { host, .. } => Some(host),
-            Transport::UnixSocket { .. } => None,
+            Self::TcpSocket { host, .. } => Some(host),
+            Self::UnixSocket { .. } => None,
         }
     }
 
     /// Get the port (for TCP sockets)
-    pub fn port(&self) -> Option<u16> {
+    pub const fn port(&self) -> Option<u16> {
         match self {
-            Transport::TcpSocket { port, .. } => Some(*port),
-            Transport::UnixSocket { .. } => None,
+            Self::TcpSocket { port, .. } => Some(*port),
+            Self::UnixSocket { .. } => None,
         }
     }
 
     /// Convert to endpoint URI string
     pub fn to_endpoint(&self) -> String {
         match self {
-            Transport::UnixSocket { path } => {
+            Self::UnixSocket { path } => {
                 format!("unix://{}", path.display())
             }
-            Transport::TcpSocket { host, port } => {
-                format!("tcp://{}:{}", host, port)
+            Self::TcpSocket { host, port } => {
+                format!("tcp://{host}:{port}")
             }
         }
     }

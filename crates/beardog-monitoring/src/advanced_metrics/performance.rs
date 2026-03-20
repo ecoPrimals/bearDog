@@ -4,6 +4,7 @@
 
 use super::types::PerformanceMetric;
 
+/// Placeholder performance analyzer; reserved for deeper inspection of stored metrics.
 #[derive(Debug)]
 pub struct PerformanceAnalyzer {
     // Performance analysis state
@@ -22,6 +23,7 @@ impl PerformanceAnalyzer {
         Self {}
     }
 
+    /// Runs analysis logic on a single metric (currently a no-op success path).
     pub const fn analyze_metric(
         &self,
         _metric: &PerformanceMetric,

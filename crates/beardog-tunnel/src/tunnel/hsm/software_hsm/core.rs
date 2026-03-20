@@ -21,10 +21,10 @@ use crate::tunnel::hsm::software_hsm::crypto_providers::{
 };
 // RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust, ARM-ready!)
 // OpenSslCryptoProvider removed - evolved to pure Rust alternatives
+use crate::tunnel::hsm::types::HsmKey;
 use crate::tunnel::hsm::types::config::{
     CryptoBackendType, SoftwareHsmConfig as CanonicalSoftwareHsmConfig,
 };
-use crate::tunnel::hsm::types::HsmKey;
 use crate::tunnel::hsm::types::*;
 use crate::tunnel::hsm::{GenerateKeyRequest, HsmConfig};
 use beardog_errors::BearDogError;
@@ -99,7 +99,7 @@ use tracing::{debug, info};
 /// various compliance requirements (FIPS 140-2, PCI-DSS, etc.) depending on
 /// the chosen crypto backend and operational configuration.
 pub struct RustSoftwareHsm {
-    config: CanonicalSoftwareHsmConfig,
+    _config: CanonicalSoftwareHsmConfig,
     key_store: Arc<RwLock<SoftwareKeyStore>>,
     crypto_provider: Arc<dyn CryptoProvider<KeyType> + Send + Sync>,
     crypto_manager: Arc<CryptoProviderManager>, // NEW: Universal Crypto Provider
@@ -117,7 +117,7 @@ impl RustSoftwareHsm {
     /// # Returns
     ///
     /// `true` if HSM is initialized and healthy, `false` otherwise
-    pub fn is_initialized(&self) -> bool {
+    pub const fn is_initialized(&self) -> bool {
         // Check if health monitor reports healthy state
         // HSM is considered initialized if it was successfully constructed
         // and all components are present
@@ -194,7 +194,7 @@ impl RustSoftwareHsm {
         crypto_manager.register_provider(rust_crypto).await?;
 
         let hsm = Self {
-            config,
+            _config: config,
             key_store,
             crypto_provider,
             crypto_manager, // NEW: Universal Crypto Provider Manager
@@ -249,7 +249,7 @@ impl RustSoftwareHsm {
         // Protect key material
         let protected_bytes = self.memory_protector.protect(&key_material).await?;
         let protected_material = ProtectedMemory::new(protected_bytes.clone(), true);
-        let encrypted_data = protected_bytes.to_vec(); // Clone for HSM key before moving
+        let encrypted_data = protected_bytes.clone(); // Clone for HSM key before moving
 
         // Create software key
         let software_key = SoftwareKey {

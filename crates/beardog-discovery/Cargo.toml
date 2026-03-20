@@ -1,7 +1,7 @@
 [package]
 name = "beardog-discovery"
 version.workspace = true
-edition = "2021"
+edition = "2024"
 authors = ["BearDog Team"]
 description = "Capability-based service discovery for BearDog - zero hardcoded knowledge"
 license = "AGPL-3.0-only"

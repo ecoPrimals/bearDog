@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Universal Discovery Types - Zero Hardcoding Architecture
-//
-// This module defines discovery types that work with any service, vendor, or primal
-// through capability-based interfaces. No hardcoded names, endpoints, or assumptions.
+//! Universal discovery request/response types (capability-based, no hardcoded vendors).
+//!
+//! Used by the canonical discovery layer so primals can express needs as capabilities
+//! and match services without embedding infrastructure-specific names.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Universal capability that any service can provide
+/// Capability bucket advertised or requested in universal discovery (compute, storage, etc.).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-/// Types of universal capability
 pub enum UniversalCapabilityType {
     /// Compute capabilities (AI, processing, analysis)
     Compute {
@@ -77,6 +76,7 @@ pub enum StorageCharacteristic {
     Encrypted,
     /// Distributed storage
     Distributed,
+    /// Optimized for low latency and high IOPS (e.g. NVMe-backed tiers).
     HighPerformance,
     /// Archival storage
     Archival,
@@ -162,12 +162,14 @@ pub struct UniversalDiscoveryRequest {
     /// Optional capabilities that would be nice to have
     /// Collection of optional capabilities
     pub optional_capabilities: Vec<UniversalCapabilityType>,
+    /// Latency, throughput, and availability targets for matching services.
     pub performance_requirements: PerformanceRequirements,
     /// Security requirements
     /// The security requirements value
     pub security_requirements: SecurityRequirements,
 }
 
+/// Performance SLO hints for universal discovery (optional fields; see [`Default`]).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceRequirements {
     /// Maximum acceptable latency (ms)
@@ -191,6 +193,7 @@ impl Default for PerformanceRequirements {
     }
 }
 
+/// Minimum security posture required for discovered endpoints.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityRequirements {
     /// Require encrypted communication
@@ -241,12 +244,14 @@ pub struct UniversalServiceDescriptor {
     /// Authentication method
     /// The auth method value
     pub auth_method: AuthenticationMethod,
+    /// Observed or advertised performance metrics used to rank candidates.
     pub performance_profile: PerformanceProfile,
     /// Trust score (earned through interaction)
     /// The trust score value
     pub trust_score: f64,
 }
 
+/// Resolved connection target (protocol, host, port) without hardcoded vendor names.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceEndpoint {
     /// Protocol (http, grpc, websocket, etc.)
@@ -266,6 +271,7 @@ pub struct ServiceEndpoint {
     pub parameters: HashMap<String, String>,
 }
 
+/// How a client authenticates to a discovered [`UniversalServiceDescriptor`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuthenticationMethod {
     /// No authentication required
@@ -276,7 +282,10 @@ pub enum AuthenticationMethod {
         key_location: String,
     },
     /// JWT token authentication
-    JwtToken { token_source: String },
+    JwtToken {
+        /// Where to obtain the token (file path, env var name, or provider id).
+        token_source: String,
+    },
     /// Mutual TLS authentication
     MutualTls {
         /// Path to certificate file
@@ -293,6 +302,7 @@ pub enum AuthenticationMethod {
     },
 }
 
+/// Snapshot of service quality used when ranking discovery results.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceProfile {
     /// Average response time (ms)
@@ -339,6 +349,7 @@ pub struct UniversalDiscoveryResponse {
 /// Metadata about the discovery process
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiscoveryMetadata {
+    /// Wall-clock seconds since UNIX epoch when discovery completed.
     pub discovery_timestamp: u64,
     /// How long discovery took (ms)
     /// Number of `discovery_duration_ms`

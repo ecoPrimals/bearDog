@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+//! `deploy-pixel8` — CLI entrypoint for BearDog Android deployment (check, build, deploy, run, logs).
+
 use beardog_errors::BearDogError;
 mod android;
 mod builder;
@@ -8,7 +10,7 @@ mod error;
 
 use crate::{android::AndroidDeployment, builder::RustBuilder, device::DeviceManager};
 use clap::{Parser, Subcommand};
-use console::{style, Term};
+use console::{Term, style};
 use std::path::PathBuf;
 use tracing::Level;
 
@@ -95,11 +97,10 @@ async fn main() -> Result<(), BearDogError> {
     term.write_line("")?;
 
     let project_root = cli.project_root.unwrap_or_else(|| {
-        let default_dir = std::env::current_dir().unwrap_or_else(|e| {
+        std::env::current_dir().unwrap_or_else(|e| {
             eprintln!("Failed to get current directory: {e}");
             std::process::exit(1);
-        });
-        default_dir
+        })
     });
 
     let android_deployment = AndroidDeployment::new(None, 33); // Default API level 33

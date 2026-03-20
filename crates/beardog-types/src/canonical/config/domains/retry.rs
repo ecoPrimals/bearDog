@@ -107,7 +107,7 @@ pub struct CanonicalRetryConfig {
     pub enable_exponential_backoff: bool,
 }
 
-fn default_exponential_backoff() -> bool {
+const fn default_exponential_backoff() -> bool {
     true
 }
 
@@ -184,7 +184,7 @@ impl CanonicalRetryConfig {
     ///
     /// Suitable for critical operations where you want to retry many times
     /// with short delays.
-    pub fn aggressive() -> Self {
+    pub const fn aggressive() -> Self {
         Self {
             max_attempts: 10,
             initial_delay: Duration::from_millis(50),
@@ -197,7 +197,7 @@ impl CanonicalRetryConfig {
     /// Create a conservative retry configuration
     ///
     /// Suitable for operations where you want to avoid overloading systems.
-    pub fn conservative() -> Self {
+    pub const fn conservative() -> Self {
         Self {
             max_attempts: 2,
             initial_delay: Duration::from_secs(1),
@@ -210,7 +210,7 @@ impl CanonicalRetryConfig {
     /// Create a no-retry configuration
     ///
     /// The operation will only be attempted once with no retries.
-    pub fn no_retry() -> Self {
+    pub const fn no_retry() -> Self {
         Self {
             max_attempts: 1,
             initial_delay: Duration::from_millis(0),

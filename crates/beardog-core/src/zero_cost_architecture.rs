@@ -212,8 +212,8 @@ pub mod examples {
     ///
     /// # Errors
     /// Returns an error if the builder fails to construct the system or if component initialization fails.
-    pub fn development_config(
-    ) -> Result<ZeroCostBearDog<MemoryCache, SoftwareSecurity>, BearDogError> {
+    pub fn development_config()
+    -> Result<ZeroCostBearDog<MemoryCache, SoftwareSecurity>, BearDogError> {
         ZeroCostBuilder::new()
             .with_cache(MemoryCache::new())
             .with_security(SoftwareSecurity::new())
@@ -224,8 +224,8 @@ pub mod examples {
     ///
     /// # Errors
     /// Returns an error if the builder fails to construct the system or if hardware component initialization fails.
-    pub fn production_config(
-    ) -> Result<ZeroCostBearDog<HardwareCache, HardwareSecurity>, BearDogError> {
+    pub fn production_config()
+    -> Result<ZeroCostBearDog<HardwareCache, HardwareSecurity>, BearDogError> {
         ZeroCostBuilder::new()
             .with_cache(HardwareCache::new())
             .with_security(HardwareSecurity::new())

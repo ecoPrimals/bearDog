@@ -77,7 +77,7 @@ impl CryptoRequirements {
     }
 
     /// Determine algorithm from key type
-    fn algorithm_from_key_type(
+    const fn algorithm_from_key_type(
         key_type: &crate::tunnel::hsm::types::key::KeyType,
     ) -> (CryptoOperation, CryptoAlgorithm) {
         use crate::tunnel::hsm::types::key::KeyType;

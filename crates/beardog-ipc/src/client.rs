@@ -5,18 +5,18 @@
 //! Implements the client side of the Primal IPC Protocol for communicating with Songbird.
 
 use crate::{
+    DISCOVERY_SOCKET_FALLBACK,
     error::{IpcError, IpcResult},
     protocol::{JsonRpcRequest, JsonRpcResponse},
     types::{Capability, ServiceInfo},
-    DISCOVERY_SOCKET_FALLBACK,
 };
 use serde_json::json;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::UnixStream;
 use tokio::sync::RwLock;
-use tokio::time::{interval, Duration};
+use tokio::time::{Duration, interval};
 use tracing::{debug, info, warn};
 
 /// Client for communicating with Songbird service registry
@@ -89,7 +89,7 @@ impl SongbirdClient {
             params: json!({
                 "name": primal_name,
                 "endpoint": format!("/primal/{}", primal_name),
-                "capabilities": capabilities.iter().map(|c| c.as_str()).collect::<Vec<_>>(),
+                "capabilities": capabilities.iter().map(super::types::Capability::as_str).collect::<Vec<_>>(),
                 "version": env!("CARGO_PKG_VERSION"),
                 "metadata": {
                     "description": "BearDog - Cryptographic Security Primal"
@@ -103,7 +103,7 @@ impl SongbirdClient {
         if let Some(result) = response.result {
             if result
                 .get("registered")
-                .and_then(|v| v.as_bool())
+                .and_then(serde_json::Value::as_bool)
                 .unwrap_or(false)
             {
                 *self.primal_name.write().await = Some(primal_name.to_string());
@@ -113,10 +113,7 @@ impl SongbirdClient {
                 Err(IpcError::Protocol("Registration failed".to_string()))
             }
         } else if let Some(error) = response.error {
-            Err(IpcError::Protocol(format!(
-                "Registration error: {:?}",
-                error
-            )))
+            Err(IpcError::Protocol(format!("Registration error: {error:?}")))
         } else {
             Err(IpcError::Protocol(
                 "Invalid registration response".to_string(),
@@ -172,8 +169,7 @@ impl SongbirdClient {
             Ok(service_infos)
         } else if let Some(error) = response.error {
             Err(IpcError::Protocol(format!(
-                "Find capability error: {:?}",
-                error
+                "Find capability error: {error:?}"
             )))
         } else {
             Err(IpcError::Protocol(
@@ -186,12 +182,13 @@ impl SongbirdClient {
     pub async fn resolve(&self, primal_name: &str) -> IpcResult<ServiceInfo> {
         debug!("🔍 Resolving primal: {}", primal_name);
 
+        let key = crate::ipc_resolve_target_param_key();
+        let mut params = serde_json::Map::new();
+        params.insert(key, serde_json::Value::String(primal_name.to_string()));
         let request = JsonRpcRequest {
             jsonrpc: "2.0".to_string(),
             method: "ipc.resolve".to_string(),
-            params: json!({
-                "primal": primal_name
-            }),
+            params: serde_json::Value::Object(params),
             id: self.next_request_id(),
         };
 
@@ -199,9 +196,9 @@ impl SongbirdClient {
 
         if let Some(result) = response.result {
             serde_json::from_value(result)
-                .map_err(|e| IpcError::Protocol(format!("Invalid service info: {}", e)))
+                .map_err(|e| IpcError::Protocol(format!("Invalid service info: {e}")))
         } else if let Some(error) = response.error {
-            Err(IpcError::Protocol(format!("Resolve error: {:?}", error)))
+            Err(IpcError::Protocol(format!("Resolve error: {error:?}")))
         } else {
             Err(IpcError::Protocol("Invalid resolve response".to_string()))
         }
@@ -230,7 +227,7 @@ impl SongbirdClient {
             Ok(())
         } else if let Some(error) = response.error {
             warn!("⚠️ Heartbeat error: {:?}", error);
-            Err(IpcError::Protocol(format!("Heartbeat error: {:?}", error)))
+            Err(IpcError::Protocol(format!("Heartbeat error: {error:?}")))
         } else {
             Err(IpcError::Protocol("Invalid heartbeat response".to_string()))
         }
@@ -276,7 +273,7 @@ impl SongbirdClient {
     async fn send_request(&self, request: JsonRpcRequest) -> IpcResult<JsonRpcResponse> {
         let mut stream = UnixStream::connect(&self.socket_path)
             .await
-            .map_err(|e| IpcError::Connection(format!("Failed to connect: {}", e)))?;
+            .map_err(|e| IpcError::Connection(format!("Failed to connect: {e}")))?;
 
         // Serialize and send request
         let request_json =

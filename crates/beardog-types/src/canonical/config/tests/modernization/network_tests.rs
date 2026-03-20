@@ -15,7 +15,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &str, value: &str) -> Self {
-        std::env::set_var(key, value);
+        beardog_errors::process_env::set_var(key, value);
         Self {
             key: key.to_string(),
         }
@@ -24,7 +24,7 @@ impl EnvGuard {
 
 impl Drop for EnvGuard {
     fn drop(&mut self) {
-        std::env::remove_var(&self.key);
+        beardog_errors::process_env::remove_var(&self.key);
     }
 }
 

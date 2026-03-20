@@ -128,8 +128,8 @@ async fn test_hsm_operation_cancellation() {
 #[tokio::test]
 async fn test_hsm_memory_cleanup_on_error() {
     // Test that resources are cleaned up on error
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     let allocations = Arc::new(AtomicUsize::new(0));
     let deallocations = Arc::new(AtomicUsize::new(0));
@@ -218,8 +218,8 @@ async fn test_hsm_key_lifecycle_edge_cases() {
 #[tokio::test]
 async fn test_hsm_operation_retry_logic() {
     // ✅ MODERNIZED: Test retry without sleeps
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
     use tokio::task;
 
     let attempt_count = Arc::new(AtomicUsize::new(0));
@@ -250,8 +250,8 @@ async fn test_hsm_operation_retry_logic() {
 #[tokio::test]
 async fn test_hsm_performance_under_load() {
     // ✅ MODERNIZED: Test real concurrent load without sleeps
-    use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicU64, Ordering};
     use tokio::task;
 
     let start = tokio::time::Instant::now();

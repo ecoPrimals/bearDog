@@ -123,7 +123,7 @@ impl BearDogCrypto for BearDogCryptoServer {
 
     async fn generate_ed25519(self, _: Context) -> CryptoResult<KeyPair> {
         use ed25519_dalek::SigningKey;
-        use rand::{rngs::OsRng, RngCore};
+        use rand::{RngCore, rngs::OsRng};
 
         // Generate 32 random bytes for the signing key
         let mut secret_bytes = [0u8; 32];
@@ -139,7 +139,7 @@ impl BearDogCrypto for BearDogCryptoServer {
     }
 
     async fn generate_x25519_ephemeral(self, _: Context) -> CryptoResult<KeyPair> {
-        use rand::{rngs::OsRng, RngCore};
+        use rand::{RngCore, rngs::OsRng};
         use x25519_dalek::{PublicKey, StaticSecret};
 
         // Generate 32 random bytes for the secret key
@@ -216,7 +216,7 @@ impl BearDogCrypto for BearDogCryptoServer {
 
         let verifying_key = VerifyingKey::from_bytes(&key_bytes).map_err(|e| CryptoError {
             code: -32000,
-            message: format!("Invalid public key: {}", e),
+            message: format!("Invalid public key: {e}"),
         })?;
 
         let signature = Signature::from_bytes(&sig_bytes);
@@ -224,7 +224,7 @@ impl BearDogCrypto for BearDogCryptoServer {
     }
 
     async fn sign_ecdsa_p256(self, _: Context, request: SignRequest) -> CryptoResult<SignResponse> {
-        use p256::ecdsa::{signature::Signer, Signature, SigningKey};
+        use p256::ecdsa::{Signature, SigningKey, signature::Signer};
 
         let key_bytes: [u8; 32] = request.private_key.try_into().map_err(|_| CryptoError {
             code: -32000,
@@ -233,7 +233,7 @@ impl BearDogCrypto for BearDogCryptoServer {
 
         let signing_key = SigningKey::from_bytes(&key_bytes.into()).map_err(|e| CryptoError {
             code: -32000,
-            message: format!("Invalid P-256 private key: {}", e),
+            message: format!("Invalid P-256 private key: {e}"),
         })?;
 
         let signature: Signature = signing_key.sign(&request.data);
@@ -244,7 +244,7 @@ impl BearDogCrypto for BearDogCryptoServer {
     }
 
     async fn sign_ecdsa_p384(self, _: Context, request: SignRequest) -> CryptoResult<SignResponse> {
-        use p384::ecdsa::{signature::Signer, Signature, SigningKey};
+        use p384::ecdsa::{Signature, SigningKey, signature::Signer};
 
         let key_bytes: [u8; 48] = request.private_key.try_into().map_err(|_| CryptoError {
             code: -32000,
@@ -253,7 +253,7 @@ impl BearDogCrypto for BearDogCryptoServer {
 
         let signing_key = SigningKey::from_bytes(&key_bytes.into()).map_err(|e| CryptoError {
             code: -32000,
-            message: format!("Invalid P-384 private key: {}", e),
+            message: format!("Invalid P-384 private key: {e}"),
         })?;
 
         let signature: Signature = signing_key.sign(&request.data);
@@ -306,7 +306,7 @@ impl BearDogCrypto for BearDogCryptoServer {
         _: Context,
         request: KeyExchangeRequest,
     ) -> CryptoResult<SharedSecret> {
-        use p256::{ecdh::diffie_hellman, PublicKey, SecretKey};
+        use p256::{PublicKey, SecretKey, ecdh::diffie_hellman};
 
         let key_bytes: [u8; 32] = request
             .our_private_key
@@ -318,13 +318,13 @@ impl BearDogCrypto for BearDogCryptoServer {
 
         let our_secret = SecretKey::from_bytes(&key_bytes.into()).map_err(|e| CryptoError {
             code: -32000,
-            message: format!("Invalid P-256 private key: {}", e),
+            message: format!("Invalid P-256 private key: {e}"),
         })?;
 
         let their_public =
             PublicKey::from_sec1_bytes(&request.their_public_key).map_err(|e| CryptoError {
                 code: -32000,
-                message: format!("Invalid P-256 public key: {}", e),
+                message: format!("Invalid P-256 public key: {e}"),
             })?;
 
         let shared = diffie_hellman(our_secret.to_nonzero_scalar(), their_public.as_affine());
@@ -344,8 +344,8 @@ impl BearDogCrypto for BearDogCryptoServer {
         request: EncryptRequest,
     ) -> CryptoResult<EncryptResponse> {
         use chacha20poly1305::{
-            aead::{Aead, KeyInit},
             ChaCha20Poly1305, Nonce,
+            aead::{Aead, KeyInit},
         };
         use rand::RngCore;
 
@@ -374,7 +374,7 @@ impl BearDogCrypto for BearDogCryptoServer {
             .encrypt(nonce, request.plaintext.as_ref())
             .map_err(|e| CryptoError {
                 code: -32000,
-                message: format!("Encryption failed: {}", e),
+                message: format!("Encryption failed: {e}"),
             })?;
 
         // ChaCha20-Poly1305 appends the 16-byte tag to ciphertext
@@ -393,8 +393,8 @@ impl BearDogCrypto for BearDogCryptoServer {
         request: DecryptRequest,
     ) -> CryptoResult<DecryptResponse> {
         use chacha20poly1305::{
-            aead::{Aead, KeyInit},
             ChaCha20Poly1305, Nonce,
+            aead::{Aead, KeyInit},
         };
 
         let key: [u8; 32] = request.key.try_into().map_err(|_| CryptoError {
@@ -418,7 +418,7 @@ impl BearDogCrypto for BearDogCryptoServer {
             .decrypt(nonce, ciphertext_with_tag.as_ref())
             .map_err(|e| CryptoError {
                 code: -32000,
-                message: format!("Decryption failed: {}", e),
+                message: format!("Decryption failed: {e}"),
             })?;
 
         Ok(DecryptResponse { plaintext })
@@ -430,8 +430,8 @@ impl BearDogCrypto for BearDogCryptoServer {
         request: EncryptRequest,
     ) -> CryptoResult<EncryptResponse> {
         use aes_gcm::{
-            aead::{Aead, KeyInit},
             Aes256Gcm, Nonce,
+            aead::{Aead, KeyInit},
         };
         use rand::RngCore;
 
@@ -459,7 +459,7 @@ impl BearDogCrypto for BearDogCryptoServer {
             .encrypt(nonce, request.plaintext.as_ref())
             .map_err(|e| CryptoError {
                 code: -32000,
-                message: format!("Encryption failed: {}", e),
+                message: format!("Encryption failed: {e}"),
             })?;
 
         let (ct, tag) = ciphertext.split_at(ciphertext.len() - 16);
@@ -477,8 +477,8 @@ impl BearDogCrypto for BearDogCryptoServer {
         request: DecryptRequest,
     ) -> CryptoResult<DecryptResponse> {
         use aes_gcm::{
-            aead::{Aead, KeyInit},
             Aes256Gcm, Nonce,
+            aead::{Aead, KeyInit},
         };
 
         let key: [u8; 32] = request.key.try_into().map_err(|_| CryptoError {
@@ -501,7 +501,7 @@ impl BearDogCrypto for BearDogCryptoServer {
             .decrypt(nonce, ciphertext_with_tag.as_ref())
             .map_err(|e| CryptoError {
                 code: -32000,
-                message: format!("Decryption failed: {}", e),
+                message: format!("Decryption failed: {e}"),
             })?;
 
         Ok(DecryptResponse { plaintext })
@@ -538,7 +538,7 @@ impl BearDogCrypto for BearDogCryptoServer {
 
         let mut mac = HmacSha256::new_from_slice(&request.key).map_err(|e| CryptoError {
             code: -32000,
-            message: format!("Invalid HMAC key: {}", e),
+            message: format!("Invalid HMAC key: {e}"),
         })?;
 
         mac.update(&request.data);
@@ -578,13 +578,13 @@ impl BearDogCrypto for BearDogCryptoServer {
         hkdf.expand(client_info.as_bytes(), &mut client_secret)
             .map_err(|e| CryptoError {
                 code: -32000,
-                message: format!("HKDF expand failed: {}", e),
+                message: format!("HKDF expand failed: {e}"),
             })?;
 
         hkdf.expand(server_info.as_bytes(), &mut server_secret)
             .map_err(|e| CryptoError {
                 code: -32000,
-                message: format!("HKDF expand failed: {}", e),
+                message: format!("HKDF expand failed: {e}"),
             })?;
 
         Ok(TlsSecrets {
@@ -618,13 +618,13 @@ impl BearDogCrypto for BearDogCryptoServer {
         hkdf.expand(client_info.as_bytes(), &mut client_secret)
             .map_err(|e| CryptoError {
                 code: -32000,
-                message: format!("HKDF expand failed: {}", e),
+                message: format!("HKDF expand failed: {e}"),
             })?;
 
         hkdf.expand(server_info.as_bytes(), &mut server_secret)
             .map_err(|e| CryptoError {
                 code: -32000,
-                message: format!("HKDF expand failed: {}", e),
+                message: format!("HKDF expand failed: {e}"),
             })?;
 
         Ok(TlsSecrets {
@@ -671,7 +671,7 @@ impl BearDogCrypto for BearDogCryptoServer {
         hkdf.expand(info.as_bytes(), &mut key)
             .map_err(|e| CryptoError {
                 code: -32000,
-                message: format!("Lineage derivation failed: {}", e),
+                message: format!("Lineage derivation failed: {e}"),
             })?;
 
         Ok(LineageKey {
@@ -707,7 +707,7 @@ impl BearDogCrypto for BearDogCryptoServer {
     async fn primal_info(self, _: Context) -> PrimalInfo {
         PrimalInfo {
             name: self.primal_name.clone(),
-            version: self.version.clone(),
+            version: self.version,
             family: std::env::var("PRIMAL_FAMILY").unwrap_or_else(|_| "ecoPrimals".to_string()),
             capabilities: vec![
                 "crypto".to_string(),
@@ -806,7 +806,7 @@ mod tests {
     #[test]
     fn test_default_primal_name() {
         // Without PRIMAL_NAME env var, should default to compile-time package name
-        std::env::remove_var("PRIMAL_NAME");
+        beardog_errors::process_env::remove_var("PRIMAL_NAME");
         let server = BearDogCryptoServer::new();
         assert_eq!(server.primal_name, env!("CARGO_PKG_NAME"));
     }

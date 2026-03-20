@@ -21,7 +21,7 @@ where
     P: HsmProviderTrait,
 {
     /// Creates a new zero-cost HSM provider wrapper
-    pub fn new(provider: P) -> Self {
+    pub const fn new(provider: P) -> Self {
         Self {
             provider,
             _phantom: PhantomData,
@@ -160,7 +160,7 @@ impl KeyAlgorithm for EcdsaP256 {
 pub type ZeroCostHsmManager<P> = ZeroCostHsmProvider<P>;
 
 /// Migrate an existing HSM provider to the zero-cost abstraction
-pub fn migrate_to_zero_cost<P>(provider: P) -> ZeroCostHsmProvider<P>
+pub const fn migrate_to_zero_cost<P>(provider: P) -> ZeroCostHsmProvider<P>
 where
     P: HsmProviderTrait,
 {

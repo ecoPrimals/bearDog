@@ -12,11 +12,11 @@
 //! - Key lifecycle management
 //! - Performance under load
 
+use crate::tunnel::hsm::GenerateKeyRequest;
 use crate::tunnel::hsm::manager::HsmProvider;
 use crate::tunnel::hsm::software_hsm::core::RustSoftwareHsm;
-use crate::tunnel::hsm::types::config::{CryptoBackendType, SoftwareHsmConfig};
 use crate::tunnel::hsm::types::KeyType;
-use crate::tunnel::hsm::GenerateKeyRequest;
+use crate::tunnel::hsm::types::config::{CryptoBackendType, SoftwareHsmConfig};
 use beardog_errors::BearDogError;
 use std::sync::Arc;
 

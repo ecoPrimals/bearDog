@@ -5,8 +5,8 @@
 //! Provides universal health/status/ping endpoints that work across all primals.
 //! These methods are essential for service discovery, load balancing, and monitoring.
 
-use super::utils::get_primal_name;
 use super::MethodHandler;
+use super::utils::get_primal_name;
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
 use chrono::Utc;
@@ -69,7 +69,7 @@ mod tests {
     #[serial]
     async fn test_health_check_response() {
         let prev = std::env::var("PRIMAL_NAME").ok();
-        std::env::set_var("PRIMAL_NAME", "beardog");
+        beardog_errors::process_env::set_var("PRIMAL_NAME", "beardog");
 
         let handler = HealthHandler;
 
@@ -88,9 +88,9 @@ mod tests {
         assert!(response["timestamp"].is_string());
 
         if let Some(p) = prev {
-            std::env::set_var("PRIMAL_NAME", p);
+            beardog_errors::process_env::set_var("PRIMAL_NAME", p);
         } else {
-            std::env::remove_var("PRIMAL_NAME");
+            beardog_errors::process_env::remove_var("PRIMAL_NAME");
         }
     }
 

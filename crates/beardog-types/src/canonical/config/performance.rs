@@ -154,6 +154,7 @@ pub struct ResourceLimits {
     pub max_connections: u32,
 }
 
+/// Historical alias for [`CanonicalPerformanceConfig`]; prefer the canonical struct in new modules.
 pub type PerformanceConfig = CanonicalPerformanceConfig;
 
 #[cfg(test)]

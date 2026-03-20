@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Android Hardware Security Module configuration types
-// Provides structured definitions for Android HSM capabilities and configurations
+//! Android Keystore, StrongBox, and attestation-facing configuration types.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Snapshot of the handset capabilities relevant to hardware-backed keys.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AndroidDeviceInfo {
     /// Device model
@@ -49,6 +49,7 @@ impl Default for AndroidDeviceInfo {
     }
 }
 
+/// Play Integrity / SafetyNet style verdict flags used when gating key creation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeviceIntegrity {
     /// Basic integrity verdict
@@ -124,6 +125,7 @@ pub struct StrongBoxConfig {
     /// `StrongBox` available
     /// Whether available is enabled
     pub available: bool,
+    /// When true, high-value keys must be created in StrongBox if present. **Default:** `false`.
     pub required_for_sensitive: bool,
     /// Supported key types in `StrongBox`
     /// Collection of supported key types
@@ -208,7 +210,7 @@ pub struct SafetyNetConfig {
     /// `SafetyNet` attestation enabled
     /// Whether feature is enabled
     pub enabled: bool,
-    /// Optional api key
+    /// Vendor API key for server-side attestation verification (never log or persist in plaintext).
     pub api_key: Option<String>,
     /// Accepted attestation levels
     /// Collection of accepted attestation levels
@@ -236,11 +238,12 @@ impl Default for SafetyNetConfig {
     }
 }
 
+/// How attestation nonces are derived for replay resistance.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum NonceStrategy {
-    /// Generate random nonce
+    /// Generate a fresh cryptographically random nonce per attestation challenge.
     Random,
-    /// Use timestamp-based nonce
+    /// Derive nonce from a time-bounded value (weaker replay resistance; prefer [`Self::Random`]).
     Timestamp,
     /// Custom nonce generation
     Custom {
@@ -307,9 +310,11 @@ pub struct AndroidHsmConfig {
     /// Security requirements
     /// The security requirements value
     pub security_requirements: SecurityRequirements,
+    /// Concurrency, caching, and batching for Android crypto sessions. **Default:** [`PerformanceSettings::default()`].
     pub performance: PerformanceSettings,
 }
 
+/// Policy floor before Android keys are considered trustworthy for Beardog workloads.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityRequirements {
     /// Minimum Android API level required
@@ -345,6 +350,7 @@ impl Default for SecurityRequirements {
     }
 }
 
+/// Tunable performance envelope for Android HSM-backed crypto calls.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceSettings {
     /// Maximum concurrent operations
@@ -436,7 +442,7 @@ impl AndroidHsmConfig {
 
     /// Get the effective security level
     #[must_use]
-    pub fn security_level(&self) -> SecurityLevel {
+    pub const fn security_level(&self) -> SecurityLevel {
         if self.strongbox.available && self.strongbox.required_for_sensitive {
             SecurityLevel::StrongBox
         } else if self.keystore.hardware_backed_required {
@@ -460,18 +466,13 @@ impl AndroidHsmConfig {
 }
 
 /// Android HSM security levels
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum SecurityLevel {
     /// Software-only implementation
     Software,
     /// Hardware-backed security
+    #[default]
     HardwareBacked,
     /// `StrongBox` security module
     StrongBox,
-}
-
-impl Default for SecurityLevel {
-    fn default() -> Self {
-        Self::HardwareBacked
-    }
 }

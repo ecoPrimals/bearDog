@@ -6,8 +6,8 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::domains::timeouts_new::defaults::default_timeouts;
     use crate::domains::timeouts_new::TimeoutConfigBuilder;
+    use crate::domains::timeouts_new::defaults::default_timeouts;
     use std::sync::Mutex;
 
     // Mutex to serialize environment variable tests
@@ -213,15 +213,15 @@ mod tests {
         let _lock = ENV_TEST_LOCK.lock().unwrap();
 
         // Cleanup any leftover environment variables from other tests
-        std::env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS");
-        std::env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_DECISION_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_AI_REQUEST_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_AI_BATCH_TIMEOUT_MS");
-        std::env::remove_var("BEARDOG_POOL_IDLE_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_MAX_CONNECTION_AGE_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS");
+        beardog_errors::process_env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_DECISION_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_AI_REQUEST_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_AI_BATCH_TIMEOUT_MS");
+        beardog_errors::process_env::remove_var("BEARDOG_POOL_IDLE_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONNECTION_AGE_SECS");
 
         // No environment variables set
         let config = TimeoutConfigBuilder::new().from_env().build();
@@ -242,13 +242,13 @@ mod tests {
         let _lock = ENV_TEST_LOCK.lock().unwrap();
 
         // Cleanup any leftover environment variables first
-        std::env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS");
+        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS");
 
-        std::env::set_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS", "15");
-        std::env::set_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS", "25");
-        std::env::set_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS", "750");
+        beardog_errors::process_env::set_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS", "15");
+        beardog_errors::process_env::set_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS", "25");
+        beardog_errors::process_env::set_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS", "750");
 
         let config = TimeoutConfigBuilder::new().from_env().build();
 
@@ -257,9 +257,9 @@ mod tests {
         assert_eq!(config.hsm_probe_millis, 750);
 
         // Cleanup
-        std::env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS");
+        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS");
     }
 
     #[test]
@@ -267,11 +267,11 @@ mod tests {
         let _lock = ENV_TEST_LOCK.lock().unwrap();
 
         // Cleanup any leftover environment variables first
-        std::env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
 
-        std::env::set_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS", "not_a_number");
-        std::env::set_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS", "invalid");
+        beardog_errors::process_env::set_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS", "not_a_number");
+        beardog_errors::process_env::set_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS", "invalid");
 
         let config = TimeoutConfigBuilder::new().from_env().build();
 
@@ -286,8 +286,8 @@ mod tests {
         );
 
         // Cleanup
-        std::env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
     }
 
     #[test]
@@ -295,25 +295,25 @@ mod tests {
         let _lock = ENV_TEST_LOCK.lock().unwrap();
 
         // Cleanup any leftover environment variables first
-        std::env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS");
-        std::env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_DECISION_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_AI_REQUEST_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_AI_BATCH_TIMEOUT_MS");
-        std::env::remove_var("BEARDOG_POOL_IDLE_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_MAX_CONNECTION_AGE_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS");
+        beardog_errors::process_env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_DECISION_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_AI_REQUEST_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_AI_BATCH_TIMEOUT_MS");
+        beardog_errors::process_env::remove_var("BEARDOG_POOL_IDLE_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONNECTION_AGE_SECS");
 
-        std::env::set_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS", "1");
-        std::env::set_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS", "2");
-        std::env::set_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS", "100");
-        std::env::set_var("BEARDOG_DISCOVERY_TIMEOUT_SECS", "3");
-        std::env::set_var("BEARDOG_DECISION_TIMEOUT_SECS", "4");
-        std::env::set_var("BEARDOG_AI_REQUEST_TIMEOUT_SECS", "5");
-        std::env::set_var("BEARDOG_AI_BATCH_TIMEOUT_MS", "1000");
-        std::env::set_var("BEARDOG_POOL_IDLE_TIMEOUT_SECS", "600");
-        std::env::set_var("BEARDOG_MAX_CONNECTION_AGE_SECS", "1200");
+        beardog_errors::process_env::set_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS", "1");
+        beardog_errors::process_env::set_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS", "2");
+        beardog_errors::process_env::set_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS", "100");
+        beardog_errors::process_env::set_var("BEARDOG_DISCOVERY_TIMEOUT_SECS", "3");
+        beardog_errors::process_env::set_var("BEARDOG_DECISION_TIMEOUT_SECS", "4");
+        beardog_errors::process_env::set_var("BEARDOG_AI_REQUEST_TIMEOUT_SECS", "5");
+        beardog_errors::process_env::set_var("BEARDOG_AI_BATCH_TIMEOUT_MS", "1000");
+        beardog_errors::process_env::set_var("BEARDOG_POOL_IDLE_TIMEOUT_SECS", "600");
+        beardog_errors::process_env::set_var("BEARDOG_MAX_CONNECTION_AGE_SECS", "1200");
 
         let config = TimeoutConfigBuilder::new().from_env().build();
 
@@ -328,15 +328,15 @@ mod tests {
         assert_eq!(config.max_connection_age_secs, 1200);
 
         // Cleanup
-        std::env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS");
-        std::env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_DECISION_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_AI_REQUEST_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_AI_BATCH_TIMEOUT_MS");
-        std::env::remove_var("BEARDOG_POOL_IDLE_TIMEOUT_SECS");
-        std::env::remove_var("BEARDOG_MAX_CONNECTION_AGE_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS");
+        beardog_errors::process_env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_DECISION_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_AI_REQUEST_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_AI_BATCH_TIMEOUT_MS");
+        beardog_errors::process_env::remove_var("BEARDOG_POOL_IDLE_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONNECTION_AGE_SECS");
     }
 
     #[test]
@@ -344,9 +344,9 @@ mod tests {
         let _lock = ENV_TEST_LOCK.lock().unwrap();
 
         // Cleanup any leftover environment variables first
-        std::env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
 
-        std::env::set_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS", "99");
+        beardog_errors::process_env::set_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS", "99");
 
         let config = TimeoutConfigBuilder::new()
             .health_check_secs(10) // Set explicitly
@@ -357,7 +357,7 @@ mod tests {
         assert_eq!(config.health_check_secs, 99);
 
         // Cleanup
-        std::env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
     }
 
     #[test]
@@ -365,9 +365,9 @@ mod tests {
         let _lock = ENV_TEST_LOCK.lock().unwrap();
 
         // Cleanup any leftover environment variables first
-        std::env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
 
-        std::env::set_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS", "99");
+        beardog_errors::process_env::set_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS", "99");
 
         let config = TimeoutConfigBuilder::new()
             .from_env() // Load from env first
@@ -378,7 +378,7 @@ mod tests {
         assert_eq!(config.health_check_secs, 10);
 
         // Cleanup
-        std::env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
     }
 
     #[test]

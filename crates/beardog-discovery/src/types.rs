@@ -64,7 +64,7 @@ impl ServiceEndpoint {
     pub fn full_url(&self, path: &str) -> String {
         let base = &self.primary_url;
         let prefix = self.path_prefix.as_deref().unwrap_or("");
-        format!("{}{}{}", base, prefix, path)
+        format!("{base}{prefix}{path}")
     }
 }
 
@@ -126,19 +126,31 @@ impl QoSMetrics {
 
         // Availability and reliability already 0.0-1.0
 
-        weights.latency * latency_score
-            + weights.throughput * throughput_score
-            + weights.availability * self.availability
-            + weights.reliability * self.reliability
+        weights.reliability.mul_add(
+            self.reliability,
+            weights.availability.mul_add(
+                self.availability,
+                weights
+                    .latency
+                    .mul_add(latency_score, weights.throughput * throughput_score),
+            ),
+        )
     }
 }
 
-/// QoS weight configuration
+/// Relative weights used when ranking discovered services by [`QoSMetrics::calculate_score`].
+///
+/// Weights should reflect policy (e.g. favor low latency vs high availability). They are not
+/// required to sum to `1.0`; the score is a weighted blend of normalized metrics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QoSWeights {
+    /// Weight for latency score (lower observed latency yields a higher contribution).
     pub latency: f64,
+    /// Weight for throughput score (higher ops/sec yields a higher contribution).
     pub throughput: f64,
+    /// Weight for availability (0.0–1.0 scale).
     pub availability: f64,
+    /// Weight for reliability (0.0–1.0 scale).
     pub reliability: f64,
 }
 
@@ -154,7 +166,7 @@ impl Default for QoSWeights {
 }
 
 /// Health status of a service
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum HealthStatus {
     /// Service is healthy
     Healthy,

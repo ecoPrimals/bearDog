@@ -93,7 +93,7 @@ impl Fido2MultiCredentialProvider {
     }
 
     /// Get device information
-    pub fn device_info(&self) -> &Fido2DeviceInfo {
+    pub const fn device_info(&self) -> &Fido2DeviceInfo {
         &self.device_info
     }
 
@@ -247,8 +247,7 @@ impl MultiCredentialHsmProvider for Fido2MultiCredentialProvider {
                 }
             } else {
                 return Err(BearDogError::system(format!(
-                    "Parent credential '{}' not found",
-                    parent_id
+                    "Parent credential '{parent_id}' not found"
                 )));
             }
         }
@@ -344,8 +343,7 @@ impl MultiCredentialHsmProvider for Fido2MultiCredentialProvider {
         let max_size = self.device_info.capabilities.max_entropy_size.unwrap_or(64);
         if size > max_size {
             return Err(BearDogError::system(format!(
-                "Requested {} bytes exceeds device maximum of {} bytes",
-                size, max_size
+                "Requested {size} bytes exceeds device maximum of {max_size} bytes"
             )));
         }
 
@@ -485,11 +483,11 @@ impl beardog_traits::unified::BearDogProvider for Fido2MultiCredentialProvider {
     type Error = BearDogError;
     type Config = Fido2ProviderConfig;
 
-    fn provider_id(&self) -> &str {
+    fn provider_id(&self) -> &'static str {
         "fido2_multi_credential"
     }
 
-    fn provider_version(&self) -> &str {
+    fn provider_version(&self) -> &'static str {
         env!("CARGO_PKG_VERSION")
     }
 

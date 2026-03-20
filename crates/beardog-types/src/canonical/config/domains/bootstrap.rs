@@ -198,7 +198,7 @@ impl CoreBootstrapConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             discovery_timeout_ms: Self::DEFAULT_DISCOVERY_TIMEOUT_MS,
             max_discovery_attempts: Self::DEFAULT_MAX_DISCOVERY_ATTEMPTS,
@@ -344,7 +344,7 @@ impl InfantPatternConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             min_observations: Self::DEFAULT_MIN_OBSERVATIONS,
             confidence_threshold: Self::DEFAULT_CONFIDENCE_THRESHOLD,
@@ -577,7 +577,7 @@ impl BootstrapPerformanceConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             enable_caching: true,
             cache_duration: Duration::from_secs(Self::DEFAULT_CACHE_DURATION_SECS),
@@ -694,9 +694,8 @@ impl BearDogConfig for UnifiedBootstrapConfig {
     }
 
     fn to_toml(&self) -> Result<String, BearDogError> {
-        toml::to_string_pretty(self).map_err(|e| {
-            BearDogError::configuration(&format!("Failed to serialize to TOML: {}", e))
-        })
+        toml::to_string_pretty(self)
+            .map_err(|e| BearDogError::configuration(&format!("Failed to serialize to TOML: {e}")))
     }
 
     fn domain() -> &'static str {

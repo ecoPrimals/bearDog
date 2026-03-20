@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Enumerations and records for workflow lifecycle, audit trails, approvals, and execution metrics.
 
 use serde::{Deserialize, Serialize};
 
 // Canonical workflow types - modernized and unified
+/// High-level audit verb attached to workflow or policy events (who did what).
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AuditAction {
     /// Represents create variant
@@ -25,6 +24,7 @@ pub enum AuditAction {
     Cancel,
 }
 
+/// Business-level state of a workflow instance from creation through terminal outcomes.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum WorkflowStatus {
     /// State indicating created
@@ -43,6 +43,7 @@ pub enum WorkflowStatus {
     Suspended,
 }
 
+/// Scheduler/runner view of a single execution attempt (queue → run → finish).
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ExecutionStatus {
     /// State indicating queued
@@ -57,6 +58,7 @@ pub enum ExecutionStatus {
     Cancelled,
 }
 
+/// Fine-grained engine state while a workflow graph is driven from start to completion or failure.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum WorkflowExecutionState {
     /// State indicating initialized
@@ -71,6 +73,7 @@ pub enum WorkflowExecutionState {
     Cancelled,
 }
 
+/// Relative urgency for scheduling and resource allocation (break-glass vs routine).
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum WorkflowPriority {
     /// Represents low variant
@@ -85,6 +88,7 @@ pub enum WorkflowPriority {
     Emergency,
 }
 
+/// Subject or scope a workflow applies to (system-wide, user, service, etc.).
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum WorkflowTarget {
     /// Represents system variant
@@ -127,6 +131,7 @@ pub enum WorkflowType {
     ComplianceAudit,
 }
 
+/// Outcome of an approval step, including optional rejection rationale.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ApprovalDecision {
     /// State indicating granted
@@ -153,6 +158,7 @@ impl std::fmt::Display for ApprovalDecision {
     }
 }
 
+/// Imperative operation requested on a workflow (CRUD, validate, gate, or flow control).
 pub enum WorkflowAction {
     /// Represents create variant
     Create,
@@ -185,12 +191,22 @@ pub enum WorkflowAction {
     Resume,
 }
 
+/// Correlation handle for a workflow: either a stable external name or a runtime-generated UUID.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum WorkflowIdentifier {
-    Named { identifier: String },
-    Generated { uuid: String },
+    /// Caller-supplied stable identifier (e.g. ticket id or business key).
+    Named {
+        /// External or human-chosen workflow id string.
+        identifier: String,
+    },
+    /// Runtime-generated unique id (typically UUID text).
+    Generated {
+        /// Newly minted unique id for this workflow instance.
+        uuid: String,
+    },
 }
 
+/// Delivery state for asynchronous notifications tied to workflow milestones.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum NotificationStatus {
     /// Operation in progress
@@ -224,6 +240,7 @@ impl std::fmt::Display for WorkflowType {
     }
 }
 
+/// Machine-oriented outcome of a completed step or whole workflow run.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExecutionResult {
     /// Whether success is enabled
@@ -236,6 +253,7 @@ pub struct ExecutionResult {
     pub data: Option<serde_json::Value>,
 }
 
+/// Pairing of runner [`ExecutionStatus`] with the structured [`ExecutionResult`] payload.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowExecution {
     /// Current status of the component
@@ -244,20 +262,27 @@ pub struct WorkflowExecution {
     pub result: ExecutionResult,
 }
 
+/// Resource and timing telemetry captured around a workflow execution for observability.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExecutionMetrics {
+    /// Wall-clock start of the execution window (UTC).
     pub start_time: chrono::DateTime<chrono::Utc>,
+    /// Wall-clock end when the run finished, if it has finished.
     pub end_time: Option<chrono::DateTime<chrono::Utc>>,
     /// Number of `duration_ms`
     pub duration_ms: u64,
     /// Number of `memory_used`
     pub memory_used: u64,
+    /// CPU time attributed to the workflow process, in milliseconds.
     pub cpu_time_ms: u64,
 }
 
+/// Immutable record of a single approval decision in a multi-step or policy-gated workflow.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApprovalRecord {
+    /// Unique id for this approval record (for audit and idempotency).
     pub approval_id: String,
+    /// Principal or role id of the approver.
     pub approver_id: String,
     /// The decision value
     pub decision: ApprovalDecision,
@@ -265,13 +290,16 @@ pub struct ApprovalRecord {
     pub signature: String,
     /// Optional comments
     pub comments: Option<String>,
+    /// When the decision was recorded (UTC).
     pub timestamp: chrono::DateTime<chrono::Utc>,
     /// The reason value
     pub reason: String,
 }
 
+/// Parameters for time-bounded escalation when approvals stall (tiers, expiry, notifications).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EscalationConfig {
+    /// Identifier of this escalation rule or instance.
     pub escalation_id: String,
     /// Number of `tier_level`
     pub tier_level: u32,
@@ -281,6 +309,7 @@ pub struct EscalationConfig {
     pub notification_sent: bool,
 }
 
+/// Coarse state of an approval request in a workflow gate (pending through terminal).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ApprovalStatus {
     /// Operation in progress

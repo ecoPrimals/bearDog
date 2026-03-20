@@ -1,7 +1,7 @@
 # BearDog Pedantic Rustfmt Configuration (Stable Features Only)
 # Maximum code quality with stable Rust features
 
-edition = "2021"
+edition = "2024"
 max_width = 100
 hard_tabs = false
 tab_spaces = 4

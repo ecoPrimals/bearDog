@@ -1,13 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Zero-copy utilities for BearDog
-//
-// This module provides zero-copy abstractions using safe Rust patterns.
+//! Shared [`Arc`] strings/configs with weak-cache eviction and capability helpers.
+//!
+//! **Ownership:** [`ZeroCopyManager`] stores [`Weak`] handles to strings so dropping all
+//! strong refs allows cleanup; typed configs use [`Arc<dyn Any + Send + Sync>`] clones.
 
+/// Copy-on-write string utilities layered on shared buffers.
 pub mod cow_string;
+/// Experimental higher-throughput paths built on this module’s primitives.
 pub mod hyperoptimized_zero_copy;
+/// Identifier pools that reuse allocations for hot IDs.
 pub mod id_manager;
+/// Request-scoped caches that avoid cloning response bodies.
 pub mod request_cache;
+/// Sharable configuration snapshots with stable [`Arc`] handles.
 pub mod shared_config;
 
 pub use cow_string::*;
@@ -60,16 +66,20 @@ pub fn get_all_standard_capabilities() -> Vec<&'static str> {
     ]
 }
 
+/// Atomic counters exposed for metrics exporters.
 #[derive(Debug, Default)]
 pub struct ZeroCopyStats {
     /// The string cache hits value
     pub string_cache_hits: std::sync::atomic::AtomicUsize,
     /// The string cache misses value
     pub string_cache_misses: std::sync::atomic::AtomicUsize,
+    /// Successful typed-config lookups.
     pub config_cache_hits: std::sync::atomic::AtomicUsize,
+    /// Typed-config factory invocations.
     pub config_cache_misses: std::sync::atomic::AtomicUsize,
 }
 
+/// Process-wide intern tables guarded by `RwLock`s; safe for concurrent readers.
 pub struct ZeroCopyManager {
     string_cache: RwLock<HashMap<String, Weak<str>>>,
     config_cache: RwLock<HashMap<String, Arc<dyn std::any::Any + Send + Sync>>>,
@@ -89,8 +99,7 @@ impl ZeroCopyManager {
         }
     }
 
-    /// Gets `shared_string`
-    /// Gets `shared_string`
+    /// Returns a strong [`Arc<str>`], reusing an existing allocation when possible.
     pub fn get_shared_string<S: AsRef<str>>(&self, s: S) -> Arc<str> {
         let s_ref = s.as_ref();
 
@@ -128,8 +137,7 @@ impl ZeroCopyManager {
         arc_str
     }
 
-    /// Gets `shared_config`
-    /// Gets `shared_config`
+    /// Memoizes `factory()` per `(T::type_name, key)` and hands out [`Arc<T>`] clones.
     pub fn get_shared_config<T, F>(&self, key: &str, factory: F) -> Arc<T>
     where
         T: Send + Sync + 'static,
@@ -171,8 +179,7 @@ impl ZeroCopyManager {
         config
     }
 
-    /// Cleans up expired
-    /// Cleans up expired
+    /// Removes dead weak string entries no more often than once per minute.
     pub fn cleanup_expired(&self) {
         let mut last_cleanup = self.last_cleanup.write().unwrap_or_else(|poisoned| {
             tracing::warn!("Last cleanup lock poisoned on write, recovering");
@@ -205,8 +212,7 @@ impl ZeroCopyManager {
         *last_cleanup = now;
     }
 
-    /// Gets stats
-    /// Gets stats
+    /// Shared pointer to the live statistics bundle.
     pub fn get_stats(&self) -> Arc<ZeroCopyStats> {
         self.stats.clone()
     }
@@ -220,14 +226,17 @@ impl Default for ZeroCopyManager {
 
 static GLOBAL_ZERO_COPY_MANAGER: std::sync::OnceLock<ZeroCopyManager> = std::sync::OnceLock::new();
 
+/// Lazily constructs the singleton [`ZeroCopyManager`] for crate-wide reuse.
 pub fn global_zero_copy_manager() -> &'static ZeroCopyManager {
     GLOBAL_ZERO_COPY_MANAGER.get_or_init(ZeroCopyManager::new)
 }
 
+/// [`ZeroCopyManager::get_shared_string`] on the global singleton.
 pub fn shared_string<S: AsRef<str>>(s: S) -> Arc<str> {
     global_zero_copy_manager().get_shared_string(s)
 }
 
+/// [`ZeroCopyManager::get_shared_config`] on the global singleton.
 pub fn shared_config<T, F>(key: &str, factory: F) -> Arc<T>
 where
     T: Send + Sync + 'static,
@@ -236,14 +245,14 @@ where
     global_zero_copy_manager().get_shared_config(key, factory)
 }
 
-/// Zero-copy optimization builder
+/// Fluent wrapper marking whether placeholder optimizations ran (API compatibility shim).
 pub struct ZeroCopyBuilder<T> {
     inner: T,
     optimized: bool,
 }
 
 impl<T> ZeroCopyBuilder<T> {
-    /// Creates a new instance
+    /// Wraps `inner` with `optimized = false`.
     pub const fn new(inner: T) -> Self {
         Self {
             inner,
@@ -251,6 +260,7 @@ impl<T> ZeroCopyBuilder<T> {
         }
     }
 
+    /// Marks the builder as having applied best-effort optimizations (no clone elision yet).
     pub const fn optimize(mut self) -> Self
     where
         T: Clone,
@@ -260,14 +270,12 @@ impl<T> ZeroCopyBuilder<T> {
         self
     }
 
-    /// Builds component
-    /// Builds component
+    /// Consumes the builder and returns the wrapped value.
     pub fn build(self) -> T {
         self.inner
     }
 
-    /// Checks if optimized
-    /// Checks if optimized
+    /// Whether [`Self::optimize`] has been called.
     pub const fn is_optimized(&self) -> bool {
         self.optimized
     }

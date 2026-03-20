@@ -38,13 +38,13 @@
 //!   |    Use it for TLS 1.3 key derivation (HKDF)    |
 //! ```
 
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
 use p256::PublicKey as P256PublicKey;
 use p384::PublicKey as P384PublicKey;
 use rand::rngs::OsRng;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use zeroize::Zeroizing;
 
 /// Handle `crypto.ecdh_p256_generate` - Generate P-256 ECDH keypair
@@ -78,7 +78,7 @@ pub fn handle_ecdh_p256_generate(_params: &Value) -> Result<Value, BearDogError>
     // Create secret from bytes
     use p256::elliptic_curve::SecretKey;
     let secret_key: SecretKey<p256::NistP256> = SecretKey::from_slice(&private_key_bytes[..])
-        .map_err(|e| BearDogError::system(format!("Failed to create P-256 secret key: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to create P-256 secret key: {e}")))?;
 
     // Derive public key from secret using scalar multiplication
     let public_key = secret_key.public_key();
@@ -136,21 +136,21 @@ pub fn handle_ecdh_p256_derive(params: &Value) -> Result<Value, BearDogError> {
     // Decode private key
     let private_key_bytes = BASE64
         .decode(private_key_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 private_key: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 private_key: {e}")))?;
 
     // Decode peer public key
     let peer_public_key_bytes = BASE64.decode(peer_public_key_b64).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid base64 peer_public_key: {}", e))
+        BearDogError::invalid_input(&format!("Invalid base64 peer_public_key: {e}"))
     })?;
 
     // Parse private key (convert Vec to slice, which works with from_slice)
     use p256::elliptic_curve::SecretKey;
     let secret_key: SecretKey<p256::NistP256> = SecretKey::from_slice(&private_key_bytes)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid P-256 private key: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid P-256 private key: {e}")))?;
 
     // Parse peer public key
     let peer_public_key = P256PublicKey::from_sec1_bytes(&peer_public_key_bytes)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid P-256 public key: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid P-256 public key: {e}")))?;
 
     // Perform ECDH
     use p256::ecdh::diffie_hellman;
@@ -202,7 +202,7 @@ pub fn handle_ecdh_p384_generate(_params: &Value) -> Result<Value, BearDogError>
     // Create secret from bytes
     use p384::elliptic_curve::SecretKey;
     let secret_key: SecretKey<p384::NistP384> = SecretKey::from_slice(&private_key_bytes[..])
-        .map_err(|e| BearDogError::system(format!("Failed to create P-384 secret key: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to create P-384 secret key: {e}")))?;
 
     // Derive public key from secret using scalar multiplication
     let public_key = secret_key.public_key();
@@ -259,21 +259,21 @@ pub fn handle_ecdh_p384_derive(params: &Value) -> Result<Value, BearDogError> {
     // Decode private key
     let private_key_bytes = BASE64
         .decode(private_key_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 private_key: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 private_key: {e}")))?;
 
     // Decode peer public key
     let peer_public_key_bytes = BASE64.decode(peer_public_key_b64).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid base64 peer_public_key: {}", e))
+        BearDogError::invalid_input(&format!("Invalid base64 peer_public_key: {e}"))
     })?;
 
     // Parse private key (convert Vec to slice)
     use p384::elliptic_curve::SecretKey;
     let secret_key: SecretKey<p384::NistP384> = SecretKey::from_slice(&private_key_bytes)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid P-384 private key: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid P-384 private key: {e}")))?;
 
     // Parse peer public key
     let peer_public_key = P384PublicKey::from_sec1_bytes(&peer_public_key_bytes)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid P-384 public key: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid P-384 public key: {e}")))?;
 
     // Perform ECDH
     use p384::ecdh::diffie_hellman;
@@ -303,196 +303,145 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    #[test]
-    fn test_ecdh_p256_generate() {
-        // Test keypair generation
-        let params = json!({});
-        let result = handle_ecdh_p256_generate(&params).unwrap();
+    fn json_str<'a>(v: &'a Value, key: &'static str) -> Result<&'a str, BearDogError> {
+        v.get(key)
+            .and_then(|x| x.as_str())
+            .ok_or_else(|| BearDogError::invalid_input("missing JSON string field"))
+    }
 
-        // Verify response structure
-        assert!(result.get("private_key").is_some());
-        assert!(result.get("public_key").is_some());
-        assert_eq!(result.get("curve").unwrap().as_str().unwrap(), "P-256");
-        assert_eq!(result.get("key_size_bits").unwrap().as_u64().unwrap(), 256);
+    fn json_u64(v: &Value, key: &'static str) -> Result<u64, BearDogError> {
+        v.get(key)
+            .and_then(|x| x.as_u64())
+            .ok_or_else(|| BearDogError::invalid_input("missing JSON u64 field"))
+    }
 
-        // Verify key lengths (base64-encoded)
-        let private_b64 = result.get("private_key").unwrap().as_str().unwrap();
-        let public_b64 = result.get("public_key").unwrap().as_str().unwrap();
-
-        let private_bytes = BASE64.decode(private_b64).unwrap();
-        let public_bytes = BASE64.decode(public_b64).unwrap();
-
-        assert_eq!(private_bytes.len(), 32); // 256 bits / 8
-        assert!(public_bytes.len() == 65 || public_bytes.len() == 33); // Uncompressed (65) or compressed (33)
+    fn b64_decode(s: &str) -> Result<Vec<u8>, BearDogError> {
+        BASE64
+            .decode(s)
+            .map_err(|e| BearDogError::invalid_input(&format!("base64: {e}")))
     }
 
     #[test]
-    fn test_ecdh_p256_roundtrip() {
-        // Test full ECDH flow: Alice and Bob exchange keys
+    fn test_ecdh_p256_generate() -> Result<(), BearDogError> {
+        let params = json!({});
+        let result = handle_ecdh_p256_generate(&params)?;
+        assert!(result.get("private_key").is_some());
+        assert!(result.get("public_key").is_some());
+        assert_eq!(json_str(&result, "curve")?, "P-256");
+        assert_eq!(json_u64(&result, "key_size_bits")?, 256);
+        let private_bytes = b64_decode(json_str(&result, "private_key")?)?;
+        let public_bytes = b64_decode(json_str(&result, "public_key")?)?;
+        assert_eq!(private_bytes.len(), 32);
+        assert!(public_bytes.len() == 65 || public_bytes.len() == 33);
+        Ok(())
+    }
 
-        // Alice generates keypair
-        let alice_result = handle_ecdh_p256_generate(&json!({})).unwrap();
-        let alice_private = alice_result.get("private_key").unwrap().as_str().unwrap();
-        let alice_public = alice_result.get("public_key").unwrap().as_str().unwrap();
+    #[test]
+    fn test_ecdh_p256_roundtrip() -> Result<(), BearDogError> {
+        let alice_result = handle_ecdh_p256_generate(&json!({}))?;
+        let alice_private = json_str(&alice_result, "private_key")?;
+        let alice_public = json_str(&alice_result, "public_key")?;
 
-        // Bob generates keypair
-        let bob_result = handle_ecdh_p256_generate(&json!({})).unwrap();
-        let bob_private = bob_result.get("private_key").unwrap().as_str().unwrap();
-        let bob_public = bob_result.get("public_key").unwrap().as_str().unwrap();
+        let bob_result = handle_ecdh_p256_generate(&json!({}))?;
+        let bob_private = json_str(&bob_result, "private_key")?;
+        let bob_public = json_str(&bob_result, "public_key")?;
 
-        // Alice derives shared secret using Bob's public key
         let alice_derive_result = handle_ecdh_p256_derive(&json!({
             "private_key": alice_private,
             "peer_public_key": bob_public
-        }))
-        .unwrap();
-        let alice_shared = alice_derive_result
-            .get("shared_secret")
-            .unwrap()
-            .as_str()
-            .unwrap();
+        }))?;
+        let alice_shared = json_str(&alice_derive_result, "shared_secret")?;
 
-        // Bob derives shared secret using Alice's public key
         let bob_derive_result = handle_ecdh_p256_derive(&json!({
             "private_key": bob_private,
             "peer_public_key": alice_public
-        }))
-        .unwrap();
-        let bob_shared = bob_derive_result
-            .get("shared_secret")
-            .unwrap()
-            .as_str()
-            .unwrap();
+        }))?;
+        let bob_shared = json_str(&bob_derive_result, "shared_secret")?;
 
-        // Verify both derived the SAME shared secret!
         assert_eq!(
             alice_shared, bob_shared,
             "ECDH failed: shared secrets don't match!"
         );
-
-        // Verify shared secret is 32 bytes
-        let shared_bytes = BASE64.decode(alice_shared).unwrap();
-        assert_eq!(shared_bytes.len(), 32);
+        assert_eq!(b64_decode(alice_shared)?.len(), 32);
+        Ok(())
     }
 
     #[test]
-    fn test_ecdh_p384_generate() {
-        // Test P-384 keypair generation
+    fn test_ecdh_p384_generate() -> Result<(), BearDogError> {
         let params = json!({});
-        let result = handle_ecdh_p384_generate(&params).unwrap();
-
-        // Verify response structure
+        let result = handle_ecdh_p384_generate(&params)?;
         assert!(result.get("private_key").is_some());
         assert!(result.get("public_key").is_some());
-        assert_eq!(result.get("curve").unwrap().as_str().unwrap(), "P-384");
-        assert_eq!(result.get("key_size_bits").unwrap().as_u64().unwrap(), 384);
-
-        // Verify key lengths (base64-encoded)
-        let private_b64 = result.get("private_key").unwrap().as_str().unwrap();
-        let public_b64 = result.get("public_key").unwrap().as_str().unwrap();
-
-        let private_bytes = BASE64.decode(private_b64).unwrap();
-        let public_bytes = BASE64.decode(public_b64).unwrap();
-
-        assert_eq!(private_bytes.len(), 48); // 384 bits / 8
-        assert!(public_bytes.len() == 97 || public_bytes.len() == 49); // Uncompressed (97) or compressed (49)
+        assert_eq!(json_str(&result, "curve")?, "P-384");
+        assert_eq!(json_u64(&result, "key_size_bits")?, 384);
+        let private_bytes = b64_decode(json_str(&result, "private_key")?)?;
+        let public_bytes = b64_decode(json_str(&result, "public_key")?)?;
+        assert_eq!(private_bytes.len(), 48);
+        assert!(public_bytes.len() == 97 || public_bytes.len() == 49);
+        Ok(())
     }
 
     #[test]
-    fn test_ecdh_p384_roundtrip() {
-        // Test full ECDH flow with P-384
+    fn test_ecdh_p384_roundtrip() -> Result<(), BearDogError> {
+        let alice_result = handle_ecdh_p384_generate(&json!({}))?;
+        let alice_private = json_str(&alice_result, "private_key")?;
+        let alice_public = json_str(&alice_result, "public_key")?;
 
-        // Alice generates P-384 keypair
-        let alice_result = handle_ecdh_p384_generate(&json!({})).unwrap();
-        let alice_private = alice_result.get("private_key").unwrap().as_str().unwrap();
-        let alice_public = alice_result.get("public_key").unwrap().as_str().unwrap();
+        let bob_result = handle_ecdh_p384_generate(&json!({}))?;
+        let bob_private = json_str(&bob_result, "private_key")?;
+        let bob_public = json_str(&bob_result, "public_key")?;
 
-        // Bob generates P-384 keypair
-        let bob_result = handle_ecdh_p384_generate(&json!({})).unwrap();
-        let bob_private = bob_result.get("private_key").unwrap().as_str().unwrap();
-        let bob_public = bob_result.get("public_key").unwrap().as_str().unwrap();
-
-        // Alice derives shared secret
         let alice_derive_result = handle_ecdh_p384_derive(&json!({
             "private_key": alice_private,
             "peer_public_key": bob_public
-        }))
-        .unwrap();
-        let alice_shared = alice_derive_result
-            .get("shared_secret")
-            .unwrap()
-            .as_str()
-            .unwrap();
+        }))?;
+        let alice_shared = json_str(&alice_derive_result, "shared_secret")?;
 
-        // Bob derives shared secret
         let bob_derive_result = handle_ecdh_p384_derive(&json!({
             "private_key": bob_private,
             "peer_public_key": alice_public
-        }))
-        .unwrap();
-        let bob_shared = bob_derive_result
-            .get("shared_secret")
-            .unwrap()
-            .as_str()
-            .unwrap();
+        }))?;
+        let bob_shared = json_str(&bob_derive_result, "shared_secret")?;
 
-        // Verify both derived the SAME shared secret!
         assert_eq!(
             alice_shared, bob_shared,
             "P-384 ECDH failed: shared secrets don't match!"
         );
-
-        // Verify shared secret is 48 bytes
-        let shared_bytes = BASE64.decode(alice_shared).unwrap();
-        assert_eq!(shared_bytes.len(), 48);
+        assert_eq!(b64_decode(alice_shared)?.len(), 48);
+        Ok(())
     }
 
     #[test]
     fn test_ecdh_p256_invalid_private_key() {
-        // Test with invalid private key
         let params = json!({
             "private_key": "invalid_base64!!!",
             "peer_public_key": BASE64.encode([0u8; 65])
         });
-
-        let result = handle_ecdh_p256_derive(&params);
-        assert!(result.is_err());
+        assert!(handle_ecdh_p256_derive(&params).is_err());
     }
 
     #[test]
     fn test_ecdh_p256_missing_parameters() {
-        // Test with missing private_key
         let params = json!({
             "peer_public_key": BASE64.encode([0u8; 65])
         });
-
         let result = handle_ecdh_p256_derive(&params);
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Missing 'private_key'"));
+        let msg = result.err().map(|e| e.to_string()).unwrap_or_default();
+        assert!(msg.contains("Missing 'private_key'"));
     }
 
     #[test]
-    fn test_ecdh_different_curves_incompatible() {
-        // Verify P-256 and P-384 keys are NOT compatible
-
-        // Generate P-256 keypair
-        let p256_result = handle_ecdh_p256_generate(&json!({})).unwrap();
-        let p256_private = p256_result.get("private_key").unwrap().as_str().unwrap();
-
-        // Generate P-384 keypair
-        let p384_result = handle_ecdh_p384_generate(&json!({})).unwrap();
-        let p384_public = p384_result.get("public_key").unwrap().as_str().unwrap();
-
-        // Try to derive with mismatched curves (should fail)
+    fn test_ecdh_different_curves_incompatible() -> Result<(), BearDogError> {
+        let p256_result = handle_ecdh_p256_generate(&json!({}))?;
+        let p256_private = json_str(&p256_result, "private_key")?;
+        let p384_result = handle_ecdh_p384_generate(&json!({}))?;
+        let p384_public = json_str(&p384_result, "public_key")?;
         let result = handle_ecdh_p256_derive(&json!({
             "private_key": p256_private,
             "peer_public_key": p384_public
         }));
-
-        // Should fail because key sizes don't match
         assert!(result.is_err());
+        Ok(())
     }
 }

@@ -159,47 +159,55 @@ pub struct CryptoConfigBuilder {
 }
 
 impl CryptoConfigBuilder {
+    /// Starts a builder with no overrides; unset fields use [`CryptoConfig::const_defaults`].
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Sets the RSA modulus size in bits for generated or validated keys.
     #[must_use]
-    pub fn rsa_key_size(mut self, size: u32) -> Self {
+    pub const fn rsa_key_size(mut self, size: u32) -> Self {
         self.rsa_key_size = Some(size);
         self
     }
 
+    /// Names the preferred elliptic curve (e.g. `P-256`) for EC operations.
     #[must_use]
     pub fn ec_curve(mut self, curve: String) -> Self {
         self.ec_curve = Some(curve);
         self
     }
 
+    /// AES key length in bits (typically 128, 192, or 256).
     #[must_use]
-    pub fn aes_key_size(mut self, size: u32) -> Self {
+    pub const fn aes_key_size(mut self, size: u32) -> Self {
         self.aes_key_size = Some(size);
         self
     }
 
+    /// Preferred hash function identifier for signatures and KDFs (e.g. `SHA-256`).
     #[must_use]
     pub fn hash_algorithm(mut self, algorithm: String) -> Self {
         self.hash_algorithm = Some(algorithm);
         self
     }
 
+    /// PBKDF2 iteration count; must meet minimum policy in [`CryptoConfig::validate`].
     #[must_use]
-    pub fn pbkdf2_iterations(mut self, iterations: u32) -> Self {
+    pub const fn pbkdf2_iterations(mut self, iterations: u32) -> Self {
         self.pbkdf2_iterations = Some(iterations);
         self
     }
 
+    /// When true, restricts algorithms to FIPS-approved sets where the stack supports it.
     #[must_use]
-    pub fn fips_mode(mut self, enabled: bool) -> Self {
+    pub const fn fips_mode(mut self, enabled: bool) -> Self {
         self.fips_mode = Some(enabled);
         self
     }
 
+    /// Materializes a [`CryptoConfig`], filling any unset fields from static defaults.
     #[must_use]
     pub fn build(self) -> CryptoConfig {
         let defaults = CryptoConfig::const_defaults();

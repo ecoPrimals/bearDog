@@ -178,7 +178,7 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
 
             // Verify signature using Ed25519.
             // Planned: Replace with actual public key from CollaborationService for full verification.
-            if let Some(public_key_b64) = version.created_by.as_ref().and({ None::<String> }) {
+            if let Some(public_key_b64) = version.created_by.as_ref().and(None::<String>) {
                 // Decode public key (when available)
                 let public_key_bytes = base64::engine::general_purpose::STANDARD
                     .decode(public_key_b64)
@@ -314,7 +314,7 @@ fn calculate_trust_score(
 }
 
 /// Calculate risk level for audit
-fn calculate_audit_risk_level(
+const fn calculate_audit_risk_level(
     creator: &CreatorInfo,
     security: &SecurityAssessment,
     chain_valid: bool,

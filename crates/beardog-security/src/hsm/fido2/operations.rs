@@ -3,18 +3,26 @@
 //! FIDO2 Cryptographic Operations
 //!
 //! Low-level CTAP2 protocol operations for FIDO2 devices.
+//! Phase 2 stubs - implementations pending.
 
 use beardog_errors::BearDogError;
 
-/// CTAP2 command codes
+/// CTAP2 command codes (protocol layer, distinct from [`crate::hsm::fido2::ctap2::Ctap2Command`]).
 #[repr(u8)]
 pub enum Ctap2Command {
+    /// Create a new credential (attestation)
     MakeCredential = 0x01,
+    /// Authenticate with an existing credential
     GetAssertion = 0x02,
+    /// Read authenticator metadata
     GetInfo = 0x04,
+    /// PIN setup / verification
     ClientPin = 0x06,
+    /// Factory reset
     Reset = 0x07,
+    /// Next assertion in multi-credential authentication
     GetNextAssertion = 0x08,
+    /// Credential management (resident keys)
     CredentialManagement = 0x0A,
 }
 
@@ -32,6 +40,7 @@ pub enum Ctap2Command {
 ///
 /// Note: Phase 2 implementation pending
 #[cfg(feature = "fido2")]
+#[allow(dead_code)]
 pub async fn send_ctap2_command(
     _device: &mut Box<dyn beardog_hid::HidDevice>,
     _command: Ctap2Command,
@@ -53,6 +62,7 @@ pub async fn send_ctap2_command(
 ///
 /// Note: Phase 2 implementation pending
 #[cfg(feature = "fido2")]
+#[allow(dead_code)]
 pub async fn get_device_info(
     _device: &mut Box<dyn beardog_hid::HidDevice>,
 ) -> Result<super::types::Fido2DeviceInfo, BearDogError> {
@@ -69,6 +79,7 @@ pub async fn get_device_info(
 ///
 /// Note: Phase 2 implementation pending
 #[cfg(feature = "fido2")]
+#[allow(dead_code)]
 pub async fn generate_entropy_via_hmac_secret(
     _device: &mut Box<dyn beardog_hid::HidDevice>,
     _size: usize,

@@ -48,12 +48,11 @@
 //!
 //! All operations target < 1ms for TLS compatibility.
 
-use anyhow::Result;
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use p256::ecdsa::{
-    signature::{Signer as P256Signer, Verifier as P256Verifier},
     Signature as P256Signature, SigningKey as P256SigningKey, VerifyingKey as P256VerifyingKey,
+    signature::{Signer as P256Signer, Verifier as P256Verifier},
 };
 // Removed unused: ToEncodedPoint (not needed for DER signature format)
 use p384::ecdsa::{
@@ -124,7 +123,7 @@ pub async fn handle_sign_ecdsa_secp256r1(
     // Decode input data
     let data = BASE64
         .decode(data_b64)
-        .map_err(|e| format!("Invalid base64 data: {}", e))?;
+        .map_err(|e| format!("Invalid base64 data: {e}"))?;
 
     debug!("📝 Data to sign: {} bytes", data.len());
 
@@ -136,7 +135,7 @@ pub async fn handle_sign_ecdsa_secp256r1(
     // Sign data (Pure Rust, constant-time)
     let signature: P256Signature = signing_key
         .try_sign(&data)
-        .map_err(|e| format!("ECDSA signing failed: {}", e))?;
+        .map_err(|e| format!("ECDSA signing failed: {e}"))?;
 
     // Encode signature as ASN.1 DER (standard TLS format)
     let signature_der = signature.to_der();
@@ -224,17 +223,17 @@ pub async fn handle_verify_ecdsa_secp256r1(
     // Decode inputs
     let data = BASE64
         .decode(data_b64)
-        .map_err(|e| format!("Invalid base64 data: {}", e))?;
+        .map_err(|e| format!("Invalid base64 data: {e}"))?;
 
     let signature_der = Zeroizing::new(
         BASE64
             .decode(signature_b64)
-            .map_err(|e| format!("Invalid base64 signature: {}", e))?,
+            .map_err(|e| format!("Invalid base64 signature: {e}"))?,
     );
 
     let public_key_bytes = BASE64
         .decode(public_key_b64)
-        .map_err(|e| format!("Invalid base64 public key: {}", e))?;
+        .map_err(|e| format!("Invalid base64 public key: {e}"))?;
 
     debug!(
         "📝 Verifying: data={} bytes, signature={} bytes, pubkey={} bytes",
@@ -245,11 +244,11 @@ pub async fn handle_verify_ecdsa_secp256r1(
 
     // Parse signature (ASN.1 DER format)
     let signature = P256Signature::from_der(&signature_der)
-        .map_err(|e| format!("Invalid ECDSA signature format: {}", e))?;
+        .map_err(|e| format!("Invalid ECDSA signature format: {e}"))?;
 
     // Parse public key
     let verifying_key = P256VerifyingKey::from_sec1_bytes(&public_key_bytes)
-        .map_err(|e| format!("Invalid ECDSA public key: {}", e))?;
+        .map_err(|e| format!("Invalid ECDSA public key: {e}"))?;
 
     // Verify signature (constant-time, timing attack resistant)
     let valid = verifying_key.verify(&data, &signature).is_ok();
@@ -322,7 +321,7 @@ pub async fn handle_sign_ecdsa_secp384r1(
     // Decode input data
     let data = BASE64
         .decode(data_b64)
-        .map_err(|e| format!("Invalid base64 data: {}", e))?;
+        .map_err(|e| format!("Invalid base64 data: {e}"))?;
 
     debug!("📝 Data to sign: {} bytes", data.len());
 
@@ -333,7 +332,7 @@ pub async fn handle_sign_ecdsa_secp384r1(
     // Sign data (Pure Rust, constant-time)
     let signature: P384Signature = signing_key
         .try_sign(&data)
-        .map_err(|e| format!("ECDSA signing failed: {}", e))?;
+        .map_err(|e| format!("ECDSA signing failed: {e}"))?;
 
     // Encode signature as ASN.1 DER (standard TLS format)
     let signature_der = signature.to_der();
@@ -421,17 +420,17 @@ pub async fn handle_verify_ecdsa_secp384r1(
     // Decode inputs
     let data = BASE64
         .decode(data_b64)
-        .map_err(|e| format!("Invalid base64 data: {}", e))?;
+        .map_err(|e| format!("Invalid base64 data: {e}"))?;
 
     let signature_der = Zeroizing::new(
         BASE64
             .decode(signature_b64)
-            .map_err(|e| format!("Invalid base64 signature: {}", e))?,
+            .map_err(|e| format!("Invalid base64 signature: {e}"))?,
     );
 
     let public_key_bytes = BASE64
         .decode(public_key_b64)
-        .map_err(|e| format!("Invalid base64 public key: {}", e))?;
+        .map_err(|e| format!("Invalid base64 public key: {e}"))?;
 
     debug!(
         "📝 Verifying: data={} bytes, signature={} bytes, pubkey={} bytes",
@@ -442,11 +441,11 @@ pub async fn handle_verify_ecdsa_secp384r1(
 
     // Parse signature (ASN.1 DER format)
     let signature = P384Signature::from_der(&signature_der)
-        .map_err(|e| format!("Invalid ECDSA signature format: {}", e))?;
+        .map_err(|e| format!("Invalid ECDSA signature format: {e}"))?;
 
     // Parse public key
     let verifying_key = P384VerifyingKey::from_sec1_bytes(&public_key_bytes)
-        .map_err(|e| format!("Invalid ECDSA public key: {}", e))?;
+        .map_err(|e| format!("Invalid ECDSA public key: {e}"))?;
 
     // Verify signature (constant-time, timing attack resistant)
     let valid = verifying_key.verify(&data, &signature).is_ok();
@@ -514,8 +513,12 @@ mod tests {
             .await
             .expect("Signing should succeed");
 
-        let signature_b64 = sign_result["signature"].as_str().unwrap();
-        let public_key_b64 = sign_result["public_key"].as_str().unwrap();
+        let signature_b64 = sign_result["signature"]
+            .as_str()
+            .expect("p256 signature string");
+        let public_key_b64 = sign_result["public_key"]
+            .as_str()
+            .expect("p256 public key string");
 
         // Verify
         let verify_params = serde_json::json!({
@@ -548,8 +551,12 @@ mod tests {
             .await
             .expect("Signing should succeed");
 
-        let signature_b64 = sign_result["signature"].as_str().unwrap();
-        let public_key_b64 = sign_result["public_key"].as_str().unwrap();
+        let signature_b64 = sign_result["signature"]
+            .as_str()
+            .expect("p256 signature string");
+        let public_key_b64 = sign_result["public_key"]
+            .as_str()
+            .expect("p256 public key string");
 
         // Tamper with data
         let tampered_data = b"Tampered data!";
@@ -620,8 +627,12 @@ mod tests {
             .await
             .expect("Signing should succeed");
 
-        let signature_b64 = sign_result["signature"].as_str().unwrap();
-        let public_key_b64 = sign_result["public_key"].as_str().unwrap();
+        let signature_b64 = sign_result["signature"]
+            .as_str()
+            .expect("p384 signature string");
+        let public_key_b64 = sign_result["public_key"]
+            .as_str()
+            .expect("p384 public key string");
 
         // Verify
         let verify_params = serde_json::json!({
@@ -654,8 +665,12 @@ mod tests {
             .await
             .expect("Signing should succeed");
 
-        let signature_b64 = sign_result["signature"].as_str().unwrap();
-        let public_key_b64 = sign_result["public_key"].as_str().unwrap();
+        let signature_b64 = sign_result["signature"]
+            .as_str()
+            .expect("p384 signature string");
+        let public_key_b64 = sign_result["public_key"]
+            .as_str()
+            .expect("p384 public key string");
 
         // Tamper with data
         let tampered_data = b"Tampered data!";

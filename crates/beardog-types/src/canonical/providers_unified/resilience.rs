@@ -309,7 +309,7 @@ impl TimeoutPolicy for TimeoutConfig {
         }
         for (op, timeout) in &self.operation_timeouts {
             if timeout.is_zero() {
-                return Err(format!("Timeout for operation '{}' cannot be zero", op));
+                return Err(format!("Timeout for operation '{op}' cannot be zero"));
             }
         }
         Ok(())

@@ -263,7 +263,7 @@ async fn scan_vulnerabilities(
                     issues.push(ValidationIssue {
                         severity: IssueSeverity::Medium,
                         category: ThreatCategory::ResourceAbuse,
-                        description: format!("Excessive CPU request: {}", cpu_val),
+                        description: format!("Excessive CPU request: {cpu_val}"),
                         location: Some(format!("node {}", node.id)),
                     });
                 }
@@ -277,7 +277,7 @@ async fn scan_vulnerabilities(
                     issues.push(ValidationIssue {
                         severity: IssueSeverity::High,
                         category: ThreatCategory::ResourceAbuse,
-                        description: format!("Excessive memory request: {}", mem_str),
+                        description: format!("Excessive memory request: {mem_str}"),
                         location: Some(format!("node {}", node.id)),
                     });
                 }
@@ -432,10 +432,12 @@ mod tests {
         let report = validate_template(&template).await.unwrap();
 
         assert!(!report.valid);
-        assert!(report
-            .issues
-            .iter()
-            .any(|i| i.category == ThreatCategory::Structure));
+        assert!(
+            report
+                .issues
+                .iter()
+                .any(|i| i.category == ThreatCategory::Structure)
+        );
     }
 
     #[tokio::test]
@@ -453,9 +455,11 @@ mod tests {
         let template = create_test_template(vec![node], vec![]);
         let report = validate_template(&template).await.unwrap();
 
-        assert!(report
-            .issues
-            .iter()
-            .any(|i| i.category == ThreatCategory::ResourceAbuse));
+        assert!(
+            report
+                .issues
+                .iter()
+                .any(|i| i.category == ThreatCategory::ResourceAbuse)
+        );
     }
 }

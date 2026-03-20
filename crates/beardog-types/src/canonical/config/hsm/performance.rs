@@ -6,6 +6,7 @@ use super::HsmConfigValidation;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
+/// Throughput, concurrency, and batching knobs shared across HSM backends.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedHsmPerformanceConfig {
     /// Max Operations Per Second

@@ -8,9 +8,9 @@ use super::genetic_crypto::GeneticCryptoProvider;
 // OpenSslCryptoProvider removed - evolved to 100% Pure Rust
 // RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust, no C deps!)
 use super::rust_crypto::RustCryptoProvider;
+use crate::tunnel::hsm::types::KeyType;
 use crate::tunnel::hsm::types::config::CryptoBackend;
 use crate::tunnel::hsm::types::tier::KeyStorageType;
-use crate::tunnel::hsm::types::KeyType;
 use beardog_types::hsm::CryptoProvider; // Import KeyType for generic trait
 
 /// Create Crypto Provider operation.
@@ -88,7 +88,9 @@ pub struct CryptoProviderCapabilities {
 /// Get Crypto Provider Capabilities operation.
 ///
 /// **TRUE PRIMAL**: Only 100% Pure Rust backends! 🦀
-pub fn get_crypto_provider_capabilities(backend: &CryptoBackend) -> CryptoProviderCapabilities {
+pub const fn get_crypto_provider_capabilities(
+    backend: &CryptoBackend,
+) -> CryptoProviderCapabilities {
     match backend {
         CryptoBackend::GeneticCrypto => CryptoProviderCapabilities {
             supports_aes: true,
@@ -132,7 +134,7 @@ pub fn get_crypto_provider_capabilities(backend: &CryptoBackend) -> CryptoProvid
 /// - RustCrypto: ✅ Standard (100% Pure Rust)
 /// - Ring: ✅ Supported (auto-fallback to RustCrypto for ARM compatibility)
 /// - OpenSsl: ✅ Supported (auto-fallback to RustCrypto for Pure Rust sovereignty)
-pub fn is_crypto_backend_supported(backend: &CryptoBackend) -> bool {
+pub const fn is_crypto_backend_supported(backend: &CryptoBackend) -> bool {
     // Only Pure Rust backends supported - Ring and OpenSsl evolved out! 🦀
     matches!(
         backend,
@@ -150,7 +152,7 @@ pub fn is_crypto_backend_supported(backend: &CryptoBackend) -> bool {
 /// - Hardware acceleration (AES-NI, AVX2)
 /// - Single language audit (no C code)
 /// - Genetic crypto enhancements (future)
-pub fn get_recommended_crypto_backend() -> CryptoBackend {
+pub const fn get_recommended_crypto_backend() -> CryptoBackend {
     CryptoBackend::GeneticCrypto // Changed from Ring!
 }
 

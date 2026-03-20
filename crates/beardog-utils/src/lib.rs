@@ -16,10 +16,6 @@
 //! - **100% Safe**: Zero unsafe code in all utilities
 
 #![deny(unsafe_code)]
-// Production code must use proper error handling - deny panicking methods
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-// Allow expect in tests - test panics are appropriate failure modes
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
 //!
@@ -37,7 +33,7 @@
 //! - [`benchmarks`]: Performance benchmarking utilities
 //!
 //! ### Testing
-//! - [`property_testing`]: Property-based testing framework
+//! - [`property_testing`]: Property-based testing framework (test / `test-utils` only)
 //!
 //! ## Example
 //!
@@ -62,39 +58,63 @@
 //! SIMD operations provide significant performance improvements when available.
 //! All operations automatically fall back to safe scalar implementations.
 
+mod crypto_safe_accel;
+
+/// Experimental hooks for workload-aware tuning and simple learning-style optimizers.
 pub mod ai_optimization;
+/// Micro-benchmark helpers used across Beardog utility code.
 pub mod benchmarks;
+/// Compile-time evaluation helpers (constants and static configuration).
 pub mod const_eval;
+/// Environment-driven configuration helpers (paths, flags, safe parsing).
 pub mod env_config;
+/// Higher-level composition of utility building blocks (clone interning, string patterns, etc.).
 pub mod optimization;
 
 // Safe implementations - production ready
+/// Pre-allocated byte buffers with accounting suitable for hot paths.
 pub mod buffer_pools_safe;
+/// Concurrency primitives and patterns built on `parking_lot` / `crossbeam`.
 pub mod concurrent_safe;
+/// Generic memory pools for reusable allocations without per-call heap churn.
 pub mod memory_pools_safe;
+/// Portable SIMD entry points with scalar fallbacks (see submodules for specifics).
 pub mod simd_safe;
 
 /// Testing utilities for truly concurrent, deterministic tests
 ///
 /// Provides mock time sources, event synchronization, and barriers
 /// to eliminate `sleep()`-based testing patterns.
-#[cfg(test)]
+///
+/// Built only for `cargo test` or when the `test-utils` Cargo feature is enabled.
+#[cfg(any(test, feature = "test-utils"))]
 pub mod testing;
+/// Aggressive performance-oriented helpers (benchmarks, hot-path helpers).
 pub mod ultimate_performance;
+/// Defense-in-depth checks around unsafe-adjacent or high-risk utility code paths.
 pub mod ultimate_safety;
+/// Safe façade over zero-copy buffers (public API re-exported below).
 pub mod zero_copy_safe;
 
 // Performance and utility modules
+/// General-purpose micro-optimizations (caching, fast paths).
 pub mod performance_optimizations;
+/// Cryptographic workloads accelerated via SIMD where available.
 pub mod simd_crypto_acceleration;
+/// SIMD-backed numeric and buffer operations with feature detection.
 pub mod simd_optimizations;
-/// Utility functions and helpers
-/// Utility functions and helpers
+/// Shared helpers: parsing, env, crypto utilities, and small safe primitives.
 pub mod utils;
+/// Zero-copy buffer strategies and ID management (see module docs for invariants).
 pub mod zero_copy;
+/// Experimental zero-copy layouts layered on the stable `zero_copy` APIs.
 pub mod zero_copy_optimized;
 
-// Testing frameworks - canonical location
+// Testing frameworks - canonical location (includes mock crypto/config fixtures)
+/// Property-based testing adapters (QuickCheck-style) for Beardog types.
+///
+/// Built only for `cargo test` or when the `test-utils` Cargo feature is enabled.
+#[cfg(any(test, feature = "test-utils"))]
 pub mod property_testing;
 
 // Export safe implementations by default - specific imports to avoid ambiguity

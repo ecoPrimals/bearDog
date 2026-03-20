@@ -119,8 +119,10 @@ use serde::{Deserialize, Serialize};
 /// ```
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum EnvironmentLevel {
     /// Development environment - verbose logging, relaxed validation
+    #[default]
     Development,
     /// Staging environment - production-like with additional debugging
     Staging,
@@ -131,12 +133,6 @@ pub enum EnvironmentLevel {
     Production,
     /// Critical production - highest reliability, strictest validation
     Critical,
-}
-
-impl Default for EnvironmentLevel {
-    fn default() -> Self {
-        Self::Development
-    }
 }
 
 impl std::fmt::Display for EnvironmentLevel {
@@ -239,8 +235,10 @@ impl EnvironmentLevel {
 /// ```
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum OperationalStatus {
     /// System is starting up and not yet ready to serve traffic
+    #[default]
     Initializing,
     /// System is fully operational with all health checks passing
     Healthy,
@@ -252,12 +250,6 @@ pub enum OperationalStatus {
     Critical,
     /// System is gracefully shutting down
     Shutdown,
-}
-
-impl Default for OperationalStatus {
-    fn default() -> Self {
-        Self::Initializing
-    }
 }
 
 impl std::fmt::Display for OperationalStatus {

@@ -5,8 +5,8 @@
 // This module provides migration functions to transition from legacy provider
 // configurations to the new canonical unified structure.
 
-use super::core::ProviderType as CoreProviderType;
 use super::CanonicalProviderConfig;
+use super::core::ProviderType as CoreProviderType;
 use beardog_errors::BearDogError;
 
 /// Migrate from legacy provider config
@@ -45,6 +45,7 @@ pub fn migrate_from_legacy_with_settings(
 }
 
 #[must_use]
+/// Heuristic: empty provider name or disabled health checks imply legacy layouts.
 pub fn needs_migration(config: &CanonicalProviderConfig) -> bool {
     // Check for legacy patterns that indicate migration is needed
     config.core.name.is_empty() || !config.health.enabled

@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Performance Configuration
-//
-// Provider performance tuning, rate limiting, caching, and optimization settings.
+//! Provider-side performance tuning: caching, compression, buffers, and rate limits.
 
 use crate::canonical::traits::CacheStrategy;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
+/// Aggregated tuning block referenced from [`super::CanonicalProviderConfig`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceConfig {
     /// Maximum concurrent requests
@@ -178,6 +177,7 @@ pub enum CacheType {
     Redis,
     /// Memcached variant
     Memcached,
+    /// Plug-in cache backend identified by name.
     Custom(String),
 }
 
@@ -279,6 +279,7 @@ impl Default for BufferConfig {
     }
 }
 
+/// Scrapes latency/error signals and raises alerts when [`PerformanceThresholds`] are breached.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMonitoringConfig {
     /// Whether feature is enabled
@@ -312,9 +313,11 @@ impl Default for PerformanceMonitoringConfig {
     }
 }
 
+/// SLO-style ceilings used by [`PerformanceMonitoringConfig`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceThresholds {
     /// Maximum response time (milliseconds)
+    /// **Default:** `5000` (`BEARDOG_PROVIDER_MAX_RESPONSE_TIME_MS`).
     pub max_response_time_ms: u64,
 
     /// Maximum error rate (percentage)
@@ -363,6 +366,7 @@ impl Default for PerformanceThresholds {
     }
 }
 
+/// Rate-limits alert noise via cooldown and escalation counts.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceAlertingConfig {
     /// Alerting enabled

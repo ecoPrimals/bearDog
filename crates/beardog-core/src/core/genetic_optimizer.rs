@@ -257,14 +257,14 @@ impl GeneticOptimizer {
             let parent2 = &population[parent2_idx];
 
             // Crossover
-            let mut offspring = if rng.gen::<f64>() < self.config.crossover_rate {
+            let mut offspring = if rng.r#gen::<f64>() < self.config.crossover_rate {
                 Self::crossover(parent1, parent2, &mut rng)
             } else {
                 parent1.clone()
             };
 
             // Mutation
-            if rng.gen::<f64>() < self.config.mutation_rate {
+            if rng.r#gen::<f64>() < self.config.mutation_rate {
                 Self::mutate(&mut offspring, &mut rng);
             }
 
@@ -307,7 +307,7 @@ impl GeneticOptimizer {
 
     fn mutate(individual: &mut [f64], rng: &mut impl Rng) {
         for gene in individual.iter_mut() {
-            if rng.gen::<f64>() < 0.1 {
+            if rng.r#gen::<f64>() < 0.1 {
                 // 10% chance to mutate each gene
                 *gene += rng.gen_range(-0.1..0.1);
                 *gene = gene.clamp(-1.0, 1.0);

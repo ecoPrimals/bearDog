@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Key Management Handler
-// Vendor-agnostic: Works with ANY HSM
+//! Key lifecycle handlers: generate, list, info, delete (wired to local key store).
 
 use super::hsm_agnostic;
 use super::key_store::{self, StoredKey};
@@ -48,6 +47,7 @@ fn generate_aes_key() -> Result<Vec<u8>, BearDogError> {
 }
 
 /// Handle key generation command
+#[allow(dead_code)] // Legacy; main uses handle_key_generate_v2
 pub async fn handle_key_generate(
     key_id: &str,
     algorithm: &str,
@@ -60,11 +60,11 @@ pub async fn handle_key_generate(
 
     // Parse algorithm (vendor-agnostic algorithm names)
     println!("📋 Configuration:");
-    println!("   Key ID: {}", key_id);
-    println!("   Algorithm: {}", algorithm);
-    println!("   HSM Preference: {}", hsm_preference);
+    println!("   Key ID: {key_id}");
+    println!("   Algorithm: {algorithm}");
+    println!("   HSM Preference: {hsm_preference}");
     if let Some(seed) = seed_path {
-        println!("   Entropy Seed: {}", seed);
+        println!("   Entropy Seed: {seed}");
     }
     println!();
 
@@ -100,7 +100,7 @@ pub async fn handle_key_generate(
             .find(|h| h.tier == "Mobile")
             .ok_or_else(|| BearDogError::not_found("No mobile HSM found".to_string()))?,
         _ => {
-            let msg = format!("Unknown HSM preference: {}", hsm_preference);
+            let msg = format!("Unknown HSM preference: {hsm_preference}");
             return Err(BearDogError::invalid_input(&msg));
         }
     };
@@ -122,7 +122,7 @@ pub async fn handle_key_generate(
     };
 
     // Generate key (implementation-agnostic)
-    println!("🔐 Generating {} key...", algorithm);
+    println!("🔐 Generating {algorithm} key...");
 
     // For now, use simplified key generation
     // Will wire to HsmManager in next iteration
@@ -155,7 +155,7 @@ pub async fn handle_key_generate(
     key_store::save_key(&stored_key)?;
 
     // Generate operation receipt
-    use beardog_types::receipt::{generate_receipt_filename, HsmInfo, KeyInfo, OperationReceipt};
+    use beardog_types::receipt::{HsmInfo, KeyInfo, OperationReceipt, generate_receipt_filename};
     use serde_json::json;
 
     let receipt = OperationReceipt::new("key-generate")
@@ -192,8 +192,8 @@ pub async fn handle_key_generate(
     println!("✅ Key generated successfully!");
     println!();
     println!("📋 Key Details:");
-    println!("   ID: {}", key_id);
-    println!("   Algorithm: {}", algorithm);
+    println!("   ID: {key_id}");
+    println!("   Algorithm: {algorithm}");
     println!("   HSM: {}", selected_hsm.name);
     println!("   Status: Active");
     println!();
@@ -202,10 +202,7 @@ pub async fn handle_key_generate(
     println!();
     println!("💡 Next steps:");
     println!("   • List keys: beardog key list");
-    println!(
-        "   • Encrypt: beardog encrypt --key {} --input data.txt --output data.enc",
-        key_id
-    );
+    println!("   • Encrypt: beardog encrypt --key {key_id} --input data.txt --output data.enc");
 
     Ok(())
 }
@@ -219,7 +216,7 @@ pub async fn handle_key_list(hsm_filter: Option<&str>, _verbose: bool) -> Result
     let keys = key_store::list_keys()?;
 
     let filtered_keys: Vec<_> = if let Some(filter) = hsm_filter {
-        println!("📌 Filtering by HSM: {}", filter);
+        println!("📌 Filtering by HSM: {filter}");
         println!();
         keys.into_iter()
             .filter(|k| k.hsm_name.to_lowercase().contains(&filter.to_lowercase()))
@@ -255,7 +252,7 @@ pub async fn handle_key_info(key_id: &str) -> Result<(), BearDogError> {
     println!("🔍 Key Information");
     println!("=================");
     println!();
-    println!("Key ID: {}", key_id);
+    println!("Key ID: {key_id}");
     println!();
     println!("🔨 Coming soon in next iteration!");
 
@@ -269,7 +266,7 @@ pub async fn handle_key_delete(key_id: &str, skip_confirm: bool) -> Result<(), B
     println!();
 
     if !skip_confirm {
-        println!("⚠️  Are you sure you want to delete key '{}'?", key_id);
+        println!("⚠️  Are you sure you want to delete key '{key_id}'?");
         println!("   This action CANNOT be undone!");
         println!();
         println!("   Run with --yes to skip this prompt.");
@@ -277,7 +274,7 @@ pub async fn handle_key_delete(key_id: &str, skip_confirm: bool) -> Result<(), B
     }
 
     key_store::delete_key(key_id)?;
-    println!("✅ Key '{}' deleted successfully", key_id);
+    println!("✅ Key '{key_id}' deleted successfully");
 
     Ok(())
 }
@@ -303,21 +300,21 @@ pub async fn handle_key_generate_v2(
 
     // Parse algorithm (vendor-agnostic algorithm names)
     println!("📋 Configuration:");
-    println!("   Key ID: {}", key_id);
-    println!("   Algorithm: {}", algorithm);
-    println!("   HSM Preference: {}", hsm_preference);
-    println!("   KDF: {}", kdf_type);
+    println!("   Key ID: {key_id}");
+    println!("   Algorithm: {algorithm}");
+    println!("   HSM Preference: {hsm_preference}");
+    println!("   KDF: {kdf_type}");
     if let Some(seed) = seed_path {
-        println!("   Entropy Seed: {}", seed);
+        println!("   Entropy Seed: {seed}");
     }
     if let Some(purp) = purpose {
-        println!("   Purpose: {}", purp);
+        println!("   Purpose: {purp}");
     }
     if let Some(exp) = expires_in {
-        println!("   Expires In: {}", exp);
+        println!("   Expires In: {exp}");
     }
     if let Some(use_restrict) = usage {
-        println!("   Usage: {}", use_restrict);
+        println!("   Usage: {use_restrict}");
     }
     println!();
 
@@ -353,7 +350,7 @@ pub async fn handle_key_generate_v2(
             .find(|h| h.tier == "Mobile")
             .ok_or_else(|| BearDogError::not_found("No mobile HSM found".to_string()))?,
         _ => {
-            let msg = format!("Unknown HSM preference: {}", hsm_preference);
+            let msg = format!("Unknown HSM preference: {hsm_preference}");
             return Err(BearDogError::invalid_input(&msg));
         }
     };
@@ -419,14 +416,14 @@ pub async fn handle_key_generate_v2(
             depth: 0,
         }),
         expires_at: expires_at_str.clone(),
-        usage: usage.map(|s| s.to_string()),
-        purpose: purpose.map(|s| s.to_string()),
+        usage: usage.map(std::string::ToString::to_string),
+        purpose: purpose.map(std::string::ToString::to_string),
     };
 
     key_store::save_key(&stored_key)?;
 
     // Generate operation receipt
-    use beardog_types::receipt::{generate_receipt_filename, HsmInfo, KeyInfo, OperationReceipt};
+    use beardog_types::receipt::{HsmInfo, KeyInfo, OperationReceipt, generate_receipt_filename};
     use serde_json::json;
 
     let receipt = OperationReceipt::new("key-generate")
@@ -436,8 +433,8 @@ pub async fn handle_key_generate_v2(
             generation: 0,
             parent_key_id: None,
             expires_at: expires_at_str.clone(),
-            usage: usage.map(|s| s.to_string()),
-            purpose: purpose.map(|s| s.to_string()),
+            usage: usage.map(std::string::ToString::to_string),
+            purpose: purpose.map(std::string::ToString::to_string),
         })
         .with_hsm_info(HsmInfo {
             name: selected_hsm.name.clone(),
@@ -464,24 +461,24 @@ pub async fn handle_key_generate_v2(
     println!("✅ Key generated successfully!");
     println!();
     println!("📋 Key Details:");
-    println!("   ID: {}", key_id);
-    println!("   Algorithm: {}", algorithm);
+    println!("   ID: {key_id}");
+    println!("   Algorithm: {algorithm}");
     println!("   HSM: {}", selected_hsm.name);
-    println!("   KDF: {}", kdf_type);
+    println!("   KDF: {kdf_type}");
     println!("   Generation: 0 (root key)");
     println!("   Status: Active");
 
     if let Some(exp) = expires_at_str {
         println!();
-        println!("⏰ Expiry: {}", exp);
+        println!("⏰ Expiry: {exp}");
     }
 
     if let Some(use_restrict) = usage {
-        println!("   Usage: {}", use_restrict);
+        println!("   Usage: {use_restrict}");
     }
 
     if let Some(purp) = purpose {
-        println!("   Purpose: {}", purp);
+        println!("   Purpose: {purp}");
     }
 
     println!();
@@ -491,10 +488,7 @@ pub async fn handle_key_generate_v2(
     println!();
     println!("💡 Next steps:");
     println!("   • List keys: beardog key list");
-    println!(
-        "   • Encrypt: beardog encrypt --key {} --input data.txt --output data.enc",
-        key_id
-    );
+    println!("   • Encrypt: beardog encrypt --key {key_id} --input data.txt --output data.enc");
 
     Ok(())
 }

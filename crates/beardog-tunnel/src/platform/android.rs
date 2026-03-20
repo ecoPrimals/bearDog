@@ -99,7 +99,7 @@ impl PlatformSocket for AndroidSocket {
     fn create_endpoint(primal_name: &str) -> std::io::Result<SocketEndpoint> {
         // Abstract socket naming: @biomeos_{primal_name}
         // The @ prefix tells UnixListener to use abstract namespace
-        let abstract_name = format!("@biomeos_{}", primal_name);
+        let abstract_name = format!("@biomeos_{primal_name}");
 
         debug!(
             "Creating abstract socket endpoint for '{}': {}",

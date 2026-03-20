@@ -44,9 +44,11 @@ async fn test_owner_can_add_node() {
 
     assert!(result.authorized, "Owner should be authorized");
     assert_eq!(result.risk_level, RiskLevel::Low);
-    assert!(result
-        .checks_performed
-        .contains(&"permission_check".to_string()));
+    assert!(
+        result
+            .checks_performed
+            .contains(&"permission_check".to_string())
+    );
 }
 
 #[tokio::test]
@@ -322,15 +324,21 @@ async fn test_authorization_includes_checks_performed() {
         .await
         .expect("Authorization should succeed");
 
-    assert!(result
-        .checks_performed
-        .contains(&"permission_check".to_string()));
-    assert!(result
-        .checks_performed
-        .contains(&"structure_validation".to_string()));
-    assert!(result
-        .checks_performed
-        .contains(&"threat_detection".to_string()));
+    assert!(
+        result
+            .checks_performed
+            .contains(&"permission_check".to_string())
+    );
+    assert!(
+        result
+            .checks_performed
+            .contains(&"structure_validation".to_string())
+    );
+    assert!(
+        result
+            .checks_performed
+            .contains(&"threat_detection".to_string())
+    );
 }
 
 #[tokio::test]

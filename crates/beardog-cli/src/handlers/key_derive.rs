@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Key Derivation Handler
-// Derives new keys from existing master keys using HKDF
+//! Derive child keys from a master key using HKDF-SHA256.
 
 use super::key_store::{self, StoredKey};
 use beardog_errors::BearDogError;
@@ -18,7 +17,7 @@ pub async fn handle_key_derive(
     println!("========================\n");
 
     // Load master key
-    println!("📥 Loading master key: {}", master_key_id);
+    println!("📥 Loading master key: {master_key_id}");
     let master_key = key_store::load_key(master_key_id)?;
 
     println!("✅ Master key loaded");
@@ -31,7 +30,7 @@ pub async fn handle_key_derive(
 
     // Derive new key using HKDF
     println!("\n🔐 Deriving new key...");
-    println!("   Purpose: {}", purpose);
+    println!("   Purpose: {purpose}");
 
     let derived_material = derive_key_hkdf(&master_key_material, purpose.as_bytes())?;
 
@@ -54,7 +53,7 @@ pub async fn handle_key_derive(
     let expires_at_str = expires_at.map(|dt| dt.to_rfc3339());
 
     // Create derived key metadata
-    let parent_depth = master_key.lineage.as_ref().map(|l| l.depth).unwrap_or(0);
+    let parent_depth = master_key.lineage.as_ref().map_or(0, |l| l.depth);
 
     let derived_key = StoredKey {
         key_id: output_key_id.to_string(),
@@ -84,7 +83,7 @@ pub async fn handle_key_derive(
     key_store::save_key(&updated_master)?;
 
     // Generate operation receipt
-    use beardog_types::receipt::{generate_receipt_filename, KeyInfo, OperationReceipt};
+    use beardog_types::receipt::{KeyInfo, OperationReceipt, generate_receipt_filename};
     use serde_json::json;
 
     let receipt = OperationReceipt::new("key-derive")
@@ -108,14 +107,14 @@ pub async fn handle_key_derive(
 
     println!("\n✅ Key derived successfully!");
     println!("\n📋 Derived Key Details:");
-    println!("   ID: {}", output_key_id);
+    println!("   ID: {output_key_id}");
     println!("   Algorithm: {}", derived_key.algorithm);
     println!("   HSM: {}", derived_key.hsm_name);
     println!(
         "   Generation: {} (derived from Gen {})",
         derived_key.generation, master_key.generation
     );
-    println!("   Parent: {}", master_key_id);
+    println!("   Parent: {master_key_id}");
     println!("   Status: Active");
 
     if let Some(expiry) = expires_at {
@@ -134,17 +133,10 @@ pub async fn handle_key_derive(
 
     println!("\n💡 Next steps:");
     println!(
-        "   • Encrypt: beardog encrypt --key {} --input data.txt --output data.enc",
-        output_key_id
+        "   • Encrypt: beardog encrypt --key {output_key_id} --input data.txt --output data.enc"
     );
-    println!(
-        "   • View info: beardog key info --key-id {}",
-        output_key_id
-    );
-    println!(
-        "   • View lineage: beardog key lineage --key-id {}",
-        output_key_id
-    );
+    println!("   • View info: beardog key info --key-id {output_key_id}");
+    println!("   • View lineage: beardog key lineage --key-id {output_key_id}");
 
     Ok(())
 }
@@ -160,12 +152,12 @@ fn derive_key_hkdf(master_key: &[u8], context: &[u8]) -> Result<Vec<u8>, BearDog
     // Expand to 32 bytes (256 bits)
     let mut okm = vec![0u8; 32];
     hk.expand(context, &mut okm)
-        .map_err(|e| BearDogError::crypto_error(format!("HKDF expansion failed: {}", e)))?;
+        .map_err(|e| BearDogError::crypto_error(format!("HKDF expansion failed: {e}")))?;
 
     Ok(okm)
 }
 
-/// Parse duration string to DateTime (public for use by key.rs)
+/// Parse a duration like `24h`, `30d`, or `1y` into an absolute UTC expiry.
 pub fn parse_duration(duration_str: &str) -> Result<chrono::DateTime<Utc>, BearDogError> {
     let duration_str = duration_str.trim().to_lowercase();
 
@@ -191,9 +183,8 @@ pub fn parse_duration(duration_str: &str) -> Result<chrono::DateTime<Utc>, BearD
         "y" | "year" | "years" => Duration::days(num * 365),  // Approximate
         _ => {
             return Err(BearDogError::validation(&format!(
-                "Unknown duration unit '{}'. Use h (hours), d (days), w (weeks), m (months), or y (years)",
-                unit
-            )))
+                "Unknown duration unit '{unit}'. Use h (hours), d (days), w (weeks), m (months), or y (years)"
+            )));
         }
     };
 

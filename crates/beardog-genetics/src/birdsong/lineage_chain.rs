@@ -75,7 +75,7 @@ impl LineageChainManager {
         // Create lineage chain
         let chain_id = Uuid::new_v4().to_string();
         let mut nodes = HashMap::new();
-        nodes.insert(root_node_id.clone(), root_node.clone());
+        nodes.insert(root_node_id, root_node.clone());
 
         let chain = LineageChain {
             chain_id: chain_id.clone(),
@@ -136,12 +136,12 @@ impl LineageChainManager {
             let chains = self.chains.read();
             let chain = chains
                 .get(chain_id)
-                .ok_or_else(|| BearDogError::system(format!("Chain not found: {}", chain_id)))?;
+                .ok_or_else(|| BearDogError::system(format!("Chain not found: {chain_id}")))?;
 
             let parent = chain
                 .nodes
                 .get(parent_id)
-                .ok_or_else(|| BearDogError::system(format!("Parent not found: {}", parent_id)))?;
+                .ok_or_else(|| BearDogError::system(format!("Parent not found: {parent_id}")))?;
 
             parent.depth
         };
@@ -171,13 +171,12 @@ impl LineageChainManager {
         let mut chains = self.chains.write();
         let chain = chains
             .get_mut(chain_id)
-            .ok_or_else(|| BearDogError::system(format!("Chain not found: {}", chain_id)))?;
+            .ok_or_else(|| BearDogError::system(format!("Chain not found: {chain_id}")))?;
 
         // Check if child already exists
         if chain.nodes.contains_key(&child_id) {
             return Err(BearDogError::system(format!(
-                "Child already exists: {}",
-                child_id
+                "Child already exists: {child_id}"
             )));
         }
 
@@ -199,7 +198,7 @@ impl LineageChainManager {
     ) -> Result<Vec<u8>, BearDogError> {
         let signing_keys = self.signing_keys.read();
         let signing_key = signing_keys.get(parent_id).ok_or_else(|| {
-            BearDogError::system(format!("Signing key not found for: {}", parent_id))
+            BearDogError::system(format!("Signing key not found for: {parent_id}"))
         })?;
 
         // Create message to sign
@@ -235,7 +234,7 @@ impl LineageChainManager {
                 .try_into()
                 .map_err(|_| BearDogError::system("Invalid parent public key".to_string()))?,
         )
-        .map_err(|e| BearDogError::system(format!("Failed to parse parent public key: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to parse parent public key: {e}")))?;
 
         // Parse signature
         let signature = Signature::from_bytes(
@@ -275,9 +274,8 @@ impl LineageChainManager {
     /// Get all descendants of a node
     pub fn get_descendants(&self, chain_id: &str, node_id: &str) -> Vec<LineageNode> {
         let chains = self.chains.read();
-        let chain = match chains.get(chain_id) {
-            Some(c) => c,
-            None => return Vec::new(),
+        let Some(chain) = chains.get(chain_id) else {
+            return Vec::new();
         };
 
         let mut descendants = Vec::new();
@@ -453,9 +451,11 @@ mod tests {
             .generate_root_chain("root".to_string(), None)
             .await
             .unwrap();
-        assert!(manager
-            .get_path_from_root(&chain.chain_id, "nonexistent")
-            .is_none());
+        assert!(
+            manager
+                .get_path_from_root(&chain.chain_id, "nonexistent")
+                .is_none()
+        );
     }
 
     #[tokio::test]

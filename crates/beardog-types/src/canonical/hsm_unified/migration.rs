@@ -70,9 +70,10 @@ pub struct MigrationReport {
     pub migrated_at: chrono::DateTime<chrono::Utc>,
 }
 
+/// Single non-fatal issue observed while parsing a legacy HSM configuration fragment.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MigrationWarning {
-    /// Config Type
+    /// Legacy config family that triggered the warning (e.g. `tunnel`, `configuration`).
     pub config_type: String,
     /// Message
     /// The message value
@@ -82,6 +83,7 @@ pub struct MigrationWarning {
     pub recommendation: Option<String>,
 }
 
+/// Blocking problem that prevented automatic migration for a given legacy component.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MigrationError {
     /// Config Type
@@ -110,7 +112,9 @@ pub enum LegacyHsmConfig {
     ConfigurationHsm {
         /// List of HSM provider configurations
         providers: Vec<HashMap<String, serde_json::Value>>,
+        /// Legacy monitoring hooks serialized as loose JSON.
         monitoring: Option<HashMap<String, serde_json::Value>>,
+        /// Legacy throughput or latency caps serialized as loose JSON.
         performance: Option<HashMap<String, serde_json::Value>>,
     },
     /// Legacy zero-cost HSM config
@@ -120,7 +124,7 @@ pub enum LegacyHsmConfig {
     },
 }
 
-/// HSM Configuration Migration Service
+/// Orchestrates conversion from [`LegacyHsmConfig`] into [`CanonicalHsmConfig`].
 pub struct HsmMigrationService {
     /// Migration options
     options: MigrationOptions,
@@ -136,7 +140,7 @@ impl HsmMigrationService {
     /// Create a new migration service with options
     #[must_use]
     /// Creates a new instance
-    pub fn new(options: MigrationOptions) -> Self {
+    pub const fn new(options: MigrationOptions) -> Self {
         Self { options }
     }
 
@@ -393,7 +397,7 @@ impl HsmMigrationService {
     /// Validate the unified configuration
     #[allow(clippy::unused_self, clippy::unnecessary_wraps)]
     /// Validates `unified_config`
-    fn validate_unified_config(
+    const fn validate_unified_config(
         &self,
         _unified_config: &CanonicalHsmConfig,
     ) -> Result<(), BearDogError> {

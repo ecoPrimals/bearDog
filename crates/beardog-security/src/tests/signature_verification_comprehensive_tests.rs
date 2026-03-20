@@ -153,9 +153,9 @@ mod signature_tests {
         // Truncate the signature - ed25519 signatures are exactly 64 bytes
         // Creating a signature from truncated bytes will fail
         let truncated = &sig_bytes[..54]; // 10 bytes shorter
-                                          // TEST_CATEGORY: integration
-                                          // TEST_DOMAIN: security
-                                          // TEST_PRIORITY: normal
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         // Try to create signature from truncated bytes (should fail at construction)
         assert_eq!(

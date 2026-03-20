@@ -25,6 +25,7 @@ pub struct GenesisLineageProvider {
     lineage_store: Arc<RwLock<HashMap<String, GeneticLineage>>>,
     pub(crate) trusted_witnesses: Arc<RwLock<HashMap<String, Vec<u8>>>>,
     _hardware_entropy: Option<HardwareEntropyFn>,
+    /// Minimum [`TrustLevel`] a [`GenesisWitness`] must meet for lineage to be accepted.
     pub min_trust_level: TrustLevel,
 }
 
@@ -259,24 +260,20 @@ impl GenesisLineageProvider {
                             witness.device_id
                         )))
                     }
+                } else if witnesses.is_empty() {
+                    warn!("No trusted witnesses configured - falling back to permissionless mode");
+                    warn!("Configure trusted witnesses via BEARDOG_TRUSTED_WITNESSES or HSM");
+                    Ok(())
                 } else {
-                    if witnesses.is_empty() {
-                        warn!(
-                            "No trusted witnesses configured - falling back to permissionless mode"
-                        );
-                        warn!("Configure trusted witnesses via BEARDOG_TRUSTED_WITNESSES or HSM");
-                        Ok(())
-                    } else {
-                        warn!(
-                            "Witness {} not found in trusted witness list ({} trusted witnesses)",
-                            witness.device_id,
-                            witnesses.len()
-                        );
-                        Err(BearDogError::security(format!(
-                            "Witness {} not found in trusted witness list",
-                            witness.device_id
-                        )))
-                    }
+                    warn!(
+                        "Witness {} not found in trusted witness list ({} trusted witnesses)",
+                        witness.device_id,
+                        witnesses.len()
+                    );
+                    Err(BearDogError::security(format!(
+                        "Witness {} not found in trusted witness list",
+                        witness.device_id
+                    )))
                 }
             }
             _ => {
@@ -340,7 +337,7 @@ impl GenesisLineageProvider {
         let hk = Hkdf::<Sha256>::new(Some(salt), &ikm);
         let mut genetic_id = vec![0u8; 32];
         hk.expand(info, &mut genetic_id)
-            .map_err(|e| BearDogError::security(format!("HKDF expand failed: {}", e)))?;
+            .map_err(|e| BearDogError::security(format!("HKDF expand failed: {e}")))?;
 
         Ok(genetic_id)
     }

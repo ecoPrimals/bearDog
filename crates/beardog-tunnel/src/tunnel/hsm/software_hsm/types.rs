@@ -151,22 +151,22 @@ impl SoftwareKey {
     }
 
     /// Get key type
-    pub fn key_type(&self) -> &KeyType {
+    pub const fn key_type(&self) -> &KeyType {
         &self.key_type
     }
 
     /// Get key material
-    pub fn key_material(&self) -> &ProtectedMemory {
+    pub const fn key_material(&self) -> &ProtectedMemory {
         &self.key_material
     }
 
     /// Get metadata
-    pub fn metadata(&self) -> &KeyMetadata {
+    pub const fn metadata(&self) -> &KeyMetadata {
         &self.metadata
     }
 
     /// Get creation timestamp
-    pub fn created_at(&self) -> DateTime<Utc> {
+    pub const fn created_at(&self) -> DateTime<Utc> {
         self.created_at
     }
 }
@@ -182,7 +182,7 @@ pub struct ProtectedMemory {
 
 impl ProtectedMemory {
     /// Create new protected memory
-    pub fn new(data: Vec<u8>, protected: bool) -> Self {
+    pub const fn new(data: Vec<u8>, protected: bool) -> Self {
         Self { data, protected }
     }
 
@@ -192,7 +192,7 @@ impl ProtectedMemory {
     }
 
     /// Check if memory is protected
-    pub fn is_protected(&self) -> bool {
+    pub const fn is_protected(&self) -> bool {
         self.protected
     }
 }
@@ -457,7 +457,7 @@ pub struct DatabaseStorageBackend;
 impl DatabaseStorageBackend {
     /// Create new database storage backend
     pub async fn new(_config: &KeyStoreConfig) -> Result<Self, BearDogError> {
-        Ok(DatabaseStorageBackend)
+        Ok(Self)
     }
 }
 
@@ -631,7 +631,7 @@ impl Default for DefaultEncryptionKey {
 #[async_trait::async_trait]
 impl EncryptionKeyTrait for DefaultEncryptionKey {
     async fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        use aes_gcm::{aead::Aead, Aes256Gcm, Key, KeyInit, Nonce};
+        use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce, aead::Aead};
         use rand::RngCore;
 
         let key = Key::<Aes256Gcm>::from_slice(&self.root_key);
@@ -652,7 +652,7 @@ impl EncryptionKeyTrait for DefaultEncryptionKey {
     }
 
     async fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        use aes_gcm::{aead::Aead, Aes256Gcm, Key, KeyInit, Nonce};
+        use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce, aead::Aead};
 
         if ciphertext.len() < 12 {
             return Err(BearDogError::crypto_error(
@@ -770,8 +770,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_default_encryption_key_invalid_ciphertext(
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_default_encryption_key_invalid_ciphertext()
+    -> Result<(), Box<dyn std::error::Error>> {
         let config = SoftwareHsmConfig {
             storage: StorageBackend::InMemory,
             memory_protection: MemoryProtectionLevel::Medium,

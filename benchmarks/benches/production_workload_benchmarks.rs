@@ -23,7 +23,7 @@
 //! - Measures percentile latencies (p50, p95, p99)
 //! - Validates performance under stress
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, criterion_main};
 #[cfg(feature = "profiling")]
 use pprof::criterion::{Output, PProfProfiler};
 use std::collections::HashMap;

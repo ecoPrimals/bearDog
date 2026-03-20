@@ -29,7 +29,7 @@ pub enum PhysicalProofError {
 
 impl From<PhysicalProofError> for BearDogError {
     fn from(err: PhysicalProofError) -> Self {
-        BearDogError::security(format!("Physical proof verification failed: {err}"))
+        Self::security(format!("Physical proof verification failed: {err}"))
     }
 }
 
@@ -55,17 +55,17 @@ impl PhysicalProximityVerifier {
     /// # Arguments
     ///
     /// * `minimum_trust` - Minimum trust level required for genesis
-    pub fn new(minimum_trust: TrustLevel) -> Self {
+    pub const fn new(minimum_trust: TrustLevel) -> Self {
         Self { minimum_trust }
     }
 
     /// Create verifier with default settings (Medium trust minimum)
-    pub fn default_genesis_config() -> Self {
+    pub const fn default_genesis_config() -> Self {
         Self::new(TrustLevel::Medium)
     }
 
     /// Create verifier requiring maximum trust (Hardware key only)
-    pub fn maximum_security() -> Self {
+    pub const fn maximum_security() -> Self {
         Self::new(TrustLevel::Maximum)
     }
 
@@ -110,9 +110,9 @@ impl PhysicalProximityVerifier {
 
     /// Verify channel-specific attestation
     ///
-    /// For Phase 1 (Week 1-2): Basic validation  
+    /// For Phase 1 (Week 1-2): Basic validation\
     /// For Phase 2 (Week 5): Add hardware attestation verification
-    fn verify_channel_attestation(
+    const fn verify_channel_attestation(
         &self,
         channel: PhysicalChannelType,
     ) -> Result<(), PhysicalProofError> {
@@ -146,7 +146,7 @@ impl PhysicalProximityVerifier {
     }
 
     /// Get minimum trust level required
-    pub fn minimum_trust_level(&self) -> TrustLevel {
+    pub const fn minimum_trust_level(&self) -> TrustLevel {
         self.minimum_trust
     }
 }

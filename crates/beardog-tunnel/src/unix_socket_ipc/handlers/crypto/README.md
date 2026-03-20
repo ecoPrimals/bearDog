@@ -189,7 +189,7 @@ let hash = handle_blake3_hash(params).await?;
 All handlers have comprehensive test coverage:
 
 - **Unit Tests**: In-module `#[cfg(test)]` blocks
-- **Integration Tests**: `tests/crypto_api_comprehensive_tests.rs`
+- **Integration Tests**: `tests/crypto_api/` (asymmetric, symmetric AEAD, hash/MAC, E2E, chaos, fault)
 - **E2E Tests**: Full JSON-RPC request/response cycle
 - **RFC Validation**: `tests/rfc8448_validation_test.rs`, `tests/aes_gcm_rfc5116_validation.rs`
 - **HTTPS Tests**: `tests/phase8_https_comprehensive_tests.rs`

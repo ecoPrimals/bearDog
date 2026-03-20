@@ -15,8 +15,11 @@ pub enum Error {
     /// JSON-RPC error from remote primal
     #[error("JSON-RPC error (code {code}): {message}")]
     JsonRpcError {
+        /// JSON-RPC error code (e.g. `-32601` method not found).
         code: i32,
+        /// Human-readable error message from the remote primal.
         message: String,
+        /// Optional structured error payload from the peer, when provided.
         data: Option<Value>,
     },
 

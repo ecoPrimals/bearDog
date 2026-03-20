@@ -75,7 +75,7 @@ async fn test_e2e_capabilities_query() {
 #[tokio::test]
 async fn test_e2e_zero_http_ports_by_default() {
     // Verify that HTTP is disabled by default
-    std::env::remove_var("BEARDOG_HTTP_ENABLED");
+    beardog_errors::process_env::remove_var("BEARDOG_HTTP_ENABLED");
 
     let http_enabled = std::env::var("BEARDOG_HTTP_ENABLED")
         .unwrap_or_else(|_| "false".to_string())
@@ -87,7 +87,7 @@ async fn test_e2e_zero_http_ports_by_default() {
 
 #[tokio::test]
 async fn test_e2e_http_only_when_explicitly_enabled() {
-    std::env::set_var("BEARDOG_HTTP_ENABLED", "true");
+    beardog_errors::process_env::set_var("BEARDOG_HTTP_ENABLED", "true");
 
     let http_enabled = std::env::var("BEARDOG_HTTP_ENABLED")
         .unwrap_or_else(|_| "false".to_string())
@@ -97,18 +97,18 @@ async fn test_e2e_http_only_when_explicitly_enabled() {
     assert!(http_enabled, "HTTP should be enabled when explicitly set");
 
     // Cleanup
-    std::env::remove_var("BEARDOG_HTTP_ENABLED");
+    beardog_errors::process_env::remove_var("BEARDOG_HTTP_ENABLED");
 }
 
 #[tokio::test]
 async fn test_e2e_port_zero_for_random_assignment() {
-    std::env::set_var("BEARDOG_BIND_ADDR", "0.0.0.0:0");
+    beardog_errors::process_env::set_var("BEARDOG_BIND_ADDR", "0.0.0.0:0");
 
     let bind_addr = std::env::var("BEARDOG_BIND_ADDR").unwrap();
     assert!(bind_addr.contains(":0"), "Should support port 0 (random)");
 
     // Cleanup
-    std::env::remove_var("BEARDOG_BIND_ADDR");
+    beardog_errors::process_env::remove_var("BEARDOG_BIND_ADDR");
 }
 
 // ============================================================================
@@ -132,13 +132,13 @@ async fn test_e2e_socket_path_construction() {
 
 #[tokio::test]
 async fn test_e2e_socket_path_override() {
-    std::env::set_var("BEARDOG_SOCKET_PATH", "/tmp/custom-beardog.sock");
+    beardog_errors::process_env::set_var("BEARDOG_SOCKET_PATH", "/tmp/custom-beardog.sock");
 
     let socket_path = std::env::var("BEARDOG_SOCKET_PATH").unwrap();
     assert_eq!(socket_path, "/tmp/custom-beardog.sock");
 
     // Cleanup
-    std::env::remove_var("BEARDOG_SOCKET_PATH");
+    beardog_errors::process_env::remove_var("BEARDOG_SOCKET_PATH");
 }
 
 // ============================================================================
@@ -365,19 +365,19 @@ async fn test_e2e_architecture_zero_vendor_hardcoding() {
     ];
 
     for socket in registry_sockets {
-        std::env::set_var("PRIMAL_REGISTRY_SOCKET", socket);
+        beardog_errors::process_env::set_var("PRIMAL_REGISTRY_SOCKET", socket);
         let var = std::env::var("PRIMAL_REGISTRY_SOCKET").unwrap();
         assert_eq!(var, socket);
     }
 
-    std::env::remove_var("PRIMAL_REGISTRY_SOCKET");
+    beardog_errors::process_env::remove_var("PRIMAL_REGISTRY_SOCKET");
 }
 
 #[tokio::test]
 async fn test_e2e_architecture_unix_socket_primary() {
     // Verify Unix socket is always created (primary interface)
-    std::env::set_var("BEARDOG_FAMILY_ID", "nat0");
-    std::env::set_var("BEARDOG_NODE_ID", "tower1");
+    beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");
+    beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "tower1");
 
     let socket_path = format!(
         "/tmp/beardog-{}-{}.sock",
@@ -389,8 +389,8 @@ async fn test_e2e_architecture_unix_socket_primary() {
     assert!(!socket_path.is_empty());
     assert!(socket_path.starts_with("/tmp/beardog-"));
 
-    std::env::remove_var("BEARDOG_FAMILY_ID");
-    std::env::remove_var("BEARDOG_NODE_ID");
+    beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
+    beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
 }
 
 // ============================================================================

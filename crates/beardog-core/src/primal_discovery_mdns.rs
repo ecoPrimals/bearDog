@@ -44,7 +44,7 @@ pub struct MdnsDiscoveryClient {
 impl MdnsDiscoveryClient {
     /// Create new mDNS discovery client
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             timeout: Duration::from_secs(2),
         }
@@ -52,7 +52,7 @@ impl MdnsDiscoveryClient {
 
     /// Set discovery timeout
     #[must_use]
-    pub fn with_timeout(mut self, timeout: Duration) -> Self {
+    pub const fn with_timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;
         self
     }

@@ -38,12 +38,12 @@ impl DefaultMemoryProtector {
     }
 
     /// Get configuration
-    pub fn get_config(&self) -> &MemoryProtectionConfig {
+    pub const fn get_config(&self) -> &MemoryProtectionConfig {
         &self.config
     }
 
     /// Check if protection is enabled
-    pub fn is_protection_enabled(&self) -> bool {
+    pub const fn is_protection_enabled(&self) -> bool {
         self.config.enable_protection
     }
 

@@ -6,6 +6,7 @@
 
 use serde::{Deserialize, Serialize};
 
+/// Feature flags and nested optimization settings applied when building artifacts for deployment.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BuildFeatures {
     /// Enable parallel compilation
@@ -19,6 +20,7 @@ pub struct BuildFeatures {
     pub optimization: OptimizationSettings,
 }
 
+/// Fine-grained rustc-oriented options (LTO and symbol stripping) grouped under [`BuildFeatures`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizationSettings {
     /// Enable Link Time Optimization
@@ -60,6 +62,7 @@ pub struct DeploymentOptimizationConfig {
     pub optimization_level: OptimizationLevel,
 }
 
+/// Preset optimization tier used to derive `rustc` and `cargo` flag lines for a deployment build.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum OptimizationLevel {
     /// Debug build with no optimizations

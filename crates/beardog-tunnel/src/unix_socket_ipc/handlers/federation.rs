@@ -59,14 +59,14 @@ impl MethodHandler for FederationHandler {
         match method {
             "federation.verify_family_member" => self.handle_verify_family_member(params).await,
             "federation.derive_subfed_key" => self.handle_derive_subfed_key(params).await,
-            _ => Err(format!("Unknown federation method: {}", method)),
+            _ => Err(format!("Unknown federation method: {method}")),
         }
     }
 }
 
 impl FederationHandler {
     /// Create a new FederationHandler with explicit identity injection
-    pub fn new(identity: Arc<PrimalIdentity>) -> Self {
+    pub const fn new(identity: Arc<PrimalIdentity>) -> Self {
         Self { identity }
     }
 
@@ -176,7 +176,7 @@ impl FederationHandler {
 
         // Generate key reference (HSM-backed)
         let key_ref = format!("beardog-hsm-key-{}-{}", subfed_name, uuid::Uuid::new_v4());
-        let key_id = format!("subfed:{}:{}:v1", parent_family, subfed_name);
+        let key_id = format!("subfed:{parent_family}:{subfed_name}:v1");
 
         info!(
             "🔑 Derived subfed key: parent={}, subfed={}, purpose={}, key_ref={}",
@@ -219,7 +219,7 @@ mod tests {
         let handler = FederationHandler::new(identity);
 
         // Set our family ID
-        std::env::set_var("FAMILY_ID", "test-family");
+        beardog_errors::process_env::set_var("FAMILY_ID", "test-family");
 
         let params = serde_json::json!({
             "family_id": "test-family",
@@ -237,7 +237,7 @@ mod tests {
         assert_eq!(result["trust_level"], "limited");
 
         // Cleanup
-        std::env::remove_var("FAMILY_ID");
+        beardog_errors::process_env::remove_var("FAMILY_ID");
     }
 
     #[tokio::test]
@@ -246,7 +246,7 @@ mod tests {
         let handler = FederationHandler::new(identity);
 
         // Set our family ID
-        std::env::set_var("FAMILY_ID", "our-family");
+        beardog_errors::process_env::set_var("FAMILY_ID", "our-family");
 
         let params = serde_json::json!({
             "family_id": "other-family",
@@ -263,7 +263,7 @@ mod tests {
         assert_eq!(result["trust_level"], "none");
 
         // Cleanup
-        std::env::remove_var("FAMILY_ID");
+        beardog_errors::process_env::remove_var("FAMILY_ID");
     }
 
     #[tokio::test]
@@ -283,10 +283,12 @@ mod tests {
             .await
             .unwrap();
 
-        assert!(result["key_ref"]
-            .as_str()
-            .unwrap()
-            .contains("beardog-hsm-key-"));
+        assert!(
+            result["key_ref"]
+                .as_str()
+                .unwrap()
+                .contains("beardog-hsm-key-")
+        );
         assert_eq!(result["key_id"], "subfed:parent-fam:test-subfed:v1");
         assert_eq!(result["algorithm"], "AES-256-GCM");
         assert_eq!(result["derivation_method"], "HKDF-SHA256");

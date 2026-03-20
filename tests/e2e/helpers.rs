@@ -13,8 +13,8 @@
 
 use beardog_core::BearDogCore;
 use beardog_errors::BearDogError;
-use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 use beardog_types::canonical::HealthStatus;
+use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 use std::sync::Arc;
 use std::time::Duration;
 use tracing::{info, warn};

@@ -181,7 +181,7 @@ impl BearDogConfig for ConsolidatedAiConfig {
 
     fn to_toml(&self) -> Result<String, BearDogError> {
         toml::to_string_pretty(self)
-            .map_err(|e| BearDogError::validation(&format!("Failed to serialize to TOML: {}", e)))
+            .map_err(|e| BearDogError::validation(&format!("Failed to serialize to TOML: {e}")))
     }
 
     fn domain() -> &'static str {

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Primary async [`ThreatDetectionEngine`] with feeds, rules, ML hooks, and incident tracking.
 
 use crate::threat::ml_engine::SmartThreatMLEngine;
 use crate::threat::types::engine::threat_engine::ThreatDetectionStats;
@@ -17,7 +15,9 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::info;
 
+/// Production-oriented engine surface extended across `handlers::*` impl blocks.
 pub struct ThreatDetectionEngine {
+    /// Loaded [`ThreatDetectionConfig`].
     pub config: ThreatDetectionConfig,
 
     /// Mapping of active threats
@@ -56,6 +56,7 @@ pub struct ThreatDetectionEngine {
     /// The event history value
     pub event_history: Arc<RwLock<Vec<ThreatEvent>>>,
 
+    /// Open incidents keyed by incident id, shared with async maintenance tasks.
     pub active_incidents: Arc<RwLock<HashMap<String, IncidentResponse>>>,
 }
 impl ThreatDetectionEngine {

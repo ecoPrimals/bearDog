@@ -38,15 +38,15 @@
 //! **Not recommended for new systems** - use Argon2id instead!
 
 use argon2::{
-    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
 };
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
 use pbkdf2::pbkdf2_hmac;
 use rand::rngs::OsRng;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sha2::Sha256;
 
 /// Handle `crypto.argon2id_hash` - Argon2id password hashing
@@ -100,7 +100,7 @@ pub fn handle_argon2id_hash(params: &Value) -> Result<Value, BearDogError> {
     // Hash password
     let password_hash = argon2
         .hash_password(password.as_bytes(), &salt)
-        .map_err(|e| BearDogError::system(format!("Argon2id hashing failed: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Argon2id hashing failed: {e}")))?;
 
     // Get PHC string format (includes algorithm, version, params, salt, and hash)
     let hash_string = password_hash.to_string();
@@ -155,7 +155,7 @@ pub fn handle_argon2id_verify(params: &Value) -> Result<Value, BearDogError> {
 
     // Parse the PHC string
     let parsed_hash = PasswordHash::new(hash_string)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid Argon2 hash format: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid Argon2 hash format: {e}")))?;
 
     // Verify password (constant-time comparison)
     let argon2 = Argon2::default();
@@ -212,12 +212,12 @@ pub fn handle_pbkdf2_sha256(params: &Value) -> Result<Value, BearDogError> {
 
     let salt = BASE64
         .decode(salt_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 salt: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 salt: {e}")))?;
 
     // Extract iterations (default to 100,000 minimum)
     let iterations = params
         .get("iterations")
-        .and_then(|v| v.as_u64())
+        .and_then(serde_json::Value::as_u64)
         .unwrap_or(100_000) as u32;
 
     if iterations < 100_000 {
@@ -229,7 +229,7 @@ pub fn handle_pbkdf2_sha256(params: &Value) -> Result<Value, BearDogError> {
     // Extract output length (default to 32 bytes)
     let output_length = params
         .get("output_length")
-        .and_then(|v| v.as_u64())
+        .and_then(serde_json::Value::as_u64)
         .unwrap_or(32) as usize;
 
     if output_length == 0 || output_length > 1024 {
@@ -262,222 +262,181 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    #[test]
-    fn test_argon2id_hash_and_verify() {
-        // Test hash -> verify roundtrip
-        let password = "SuperSecretPassword123!";
+    fn json_str<'a>(v: &'a Value, key: &'static str) -> Result<&'a str, BearDogError> {
+        v.get(key)
+            .and_then(|x| x.as_str())
+            .ok_or_else(|| BearDogError::invalid_input("missing JSON string field"))
+    }
 
-        // Hash password
-        let hash_params = json!({
-            "password": password
-        });
+    fn json_bool(v: &Value, key: &'static str) -> Result<bool, BearDogError> {
+        v.get(key)
+            .and_then(|x| x.as_bool())
+            .ok_or_else(|| BearDogError::invalid_input("missing JSON bool field"))
+    }
 
-        let hash_result = handle_argon2id_hash(&hash_params).unwrap();
-        let hash = hash_result.get("hash").unwrap().as_str().unwrap();
+    fn json_u64(v: &Value, key: &'static str) -> Result<u64, BearDogError> {
+        v.get(key)
+            .and_then(|x| x.as_u64())
+            .ok_or_else(|| BearDogError::invalid_input("missing JSON u64 field"))
+    }
 
-        // Verify hash structure
-        assert!(hash.starts_with("$argon2id$"));
-        assert_eq!(
-            hash_result.get("algorithm").unwrap().as_str().unwrap(),
-            "argon2id"
-        );
-
-        // Verify correct password
-        let verify_params = json!({
-            "password": password,
-            "hash": hash
-        });
-
-        let verify_result = handle_argon2id_verify(&verify_params).unwrap();
-        assert!(verify_result.get("valid").unwrap().as_bool().unwrap());
+    fn b64_decode(s: &str) -> Result<Vec<u8>, BearDogError> {
+        BASE64
+            .decode(s)
+            .map_err(|e| BearDogError::invalid_input(&format!("base64: {e}")))
     }
 
     #[test]
-    fn test_argon2id_verify_wrong_password() {
-        // Test that wrong password fails verification
+    fn test_argon2id_hash_and_verify() -> Result<(), BearDogError> {
+        let password = "SuperSecretPassword123!";
+        let hash_params = json!({ "password": password });
+        let hash_result = handle_argon2id_hash(&hash_params)?;
+        let hash = json_str(&hash_result, "hash")?;
+        assert!(hash.starts_with("$argon2id$"));
+        assert_eq!(json_str(&hash_result, "algorithm")?, "argon2id");
+        let verify_params = json!({ "password": password, "hash": hash });
+        let verify_result = handle_argon2id_verify(&verify_params)?;
+        assert!(json_bool(&verify_result, "valid")?);
+        Ok(())
+    }
+
+    #[test]
+    fn test_argon2id_verify_wrong_password() -> Result<(), BearDogError> {
         let correct_password = "Correct123!";
         let wrong_password = "Wrong456!";
-
-        // Hash correct password
-        let hash_params = json!({
-            "password": correct_password
-        });
-
-        let hash_result = handle_argon2id_hash(&hash_params).unwrap();
-        let hash = hash_result.get("hash").unwrap().as_str().unwrap();
-
-        // Verify with WRONG password
+        let hash_params = json!({ "password": correct_password });
+        let hash_result = handle_argon2id_hash(&hash_params)?;
+        let hash = json_str(&hash_result, "hash")?;
         let verify_params = json!({
             "password": wrong_password,
             "hash": hash
         });
-
-        let verify_result = handle_argon2id_verify(&verify_params).unwrap();
-        assert!(!verify_result.get("valid").unwrap().as_bool().unwrap());
+        let verify_result = handle_argon2id_verify(&verify_params)?;
+        assert!(!json_bool(&verify_result, "valid")?);
+        Ok(())
     }
 
     #[test]
-    fn test_argon2id_different_hashes_for_same_password() {
-        // Test that same password produces different hashes (due to random salt)
+    fn test_argon2id_different_hashes_for_same_password() -> Result<(), BearDogError> {
         let password = "TestPassword";
-
-        let hash_params = json!({
-            "password": password
-        });
-
-        let hash1 = handle_argon2id_hash(&hash_params).unwrap();
-        let hash2 = handle_argon2id_hash(&hash_params).unwrap();
-
-        let hash1_str = hash1.get("hash").unwrap().as_str().unwrap();
-        let hash2_str = hash2.get("hash").unwrap().as_str().unwrap();
-
-        // Hashes should be different (different salts)
+        let hash_params = json!({ "password": password });
+        let hash1 = handle_argon2id_hash(&hash_params)?;
+        let hash2 = handle_argon2id_hash(&hash_params)?;
+        let hash1_str = json_str(&hash1, "hash")?;
+        let hash2_str = json_str(&hash2, "hash")?;
         assert_ne!(hash1_str, hash2_str);
-
-        // But both should verify correctly
         let verify1 = handle_argon2id_verify(&json!({
             "password": password,
             "hash": hash1_str
-        }))
-        .unwrap();
-
+        }))?;
         let verify2 = handle_argon2id_verify(&json!({
             "password": password,
             "hash": hash2_str
-        }))
-        .unwrap();
-
-        assert!(verify1.get("valid").unwrap().as_bool().unwrap());
-        assert!(verify2.get("valid").unwrap().as_bool().unwrap());
+        }))?;
+        assert!(json_bool(&verify1, "valid")?);
+        assert!(json_bool(&verify2, "valid")?);
+        Ok(())
     }
 
     #[test]
     fn test_argon2id_empty_password() {
-        // Test that empty password is rejected
-        let params = json!({
-            "password": ""
-        });
-
+        let params = json!({ "password": "" });
         let result = handle_argon2id_hash(&params);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("cannot be empty"));
+        let msg = result.err().map(|e| e.to_string()).unwrap_or_default();
+        assert!(msg.contains("cannot be empty"));
     }
 
     #[test]
-    fn test_pbkdf2_sha256_basic() {
-        // Test PBKDF2 with known test vector
+    fn test_pbkdf2_sha256_basic() -> Result<(), BearDogError> {
         let password = "password";
         let salt = b"salt";
-        let iterations = 100_000;
-
+        let iterations = 100_000u64;
         let params = json!({
             "password": password,
             "salt": BASE64.encode(salt),
             "iterations": iterations,
             "output_length": 32
         });
-
-        let result = handle_pbkdf2_sha256(&params).unwrap();
-        let derived_key_b64 = result.get("derived_key").unwrap().as_str().unwrap();
-        let derived_key = BASE64.decode(derived_key_b64).unwrap();
-
+        let result = handle_pbkdf2_sha256(&params)?;
+        let derived_key = b64_decode(json_str(&result, "derived_key")?)?;
         assert_eq!(derived_key.len(), 32);
-        assert_eq!(
-            result.get("algorithm").unwrap().as_str().unwrap(),
-            "pbkdf2-hmac-sha256"
-        );
-        assert_eq!(
-            result.get("iterations").unwrap().as_u64().unwrap(),
-            iterations as u64
-        );
+        assert_eq!(json_str(&result, "algorithm")?, "pbkdf2-hmac-sha256");
+        assert_eq!(json_u64(&result, "iterations")?, iterations);
+        Ok(())
     }
 
     #[test]
-    fn test_pbkdf2_sha256_deterministic() {
-        // Test that PBKDF2 is deterministic (same inputs = same output)
+    fn test_pbkdf2_sha256_deterministic() -> Result<(), BearDogError> {
         let password = "TestPass";
         let salt = b"TestSalt";
         let iterations = 100_000;
-
         let params = json!({
             "password": password,
             "salt": BASE64.encode(salt),
             "iterations": iterations,
             "output_length": 32
         });
-
-        let result1 = handle_pbkdf2_sha256(&params).unwrap();
-        let result2 = handle_pbkdf2_sha256(&params).unwrap();
-
-        let key1 = result1.get("derived_key").unwrap().as_str().unwrap();
-        let key2 = result2.get("derived_key").unwrap().as_str().unwrap();
-
-        // Should be identical (deterministic)
-        assert_eq!(key1, key2);
+        let result1 = handle_pbkdf2_sha256(&params)?;
+        let result2 = handle_pbkdf2_sha256(&params)?;
+        assert_eq!(
+            json_str(&result1, "derived_key")?,
+            json_str(&result2, "derived_key")?
+        );
+        Ok(())
     }
 
     #[test]
-    fn test_pbkdf2_sha256_different_salts() {
-        // Test that different salts produce different keys
+    fn test_pbkdf2_sha256_different_salts() -> Result<(), BearDogError> {
         let password = "SamePassword";
-        let salt1 = b"salt1";
-        let salt2 = b"salt2";
         let iterations = 100_000;
-
         let params1 = json!({
             "password": password,
-            "salt": BASE64.encode(salt1),
+            "salt": BASE64.encode(b"salt1"),
             "iterations": iterations,
             "output_length": 32
         });
-
         let params2 = json!({
             "password": password,
-            "salt": BASE64.encode(salt2),
+            "salt": BASE64.encode(b"salt2"),
             "iterations": iterations,
             "output_length": 32
         });
-
-        let result1 = handle_pbkdf2_sha256(&params1).unwrap();
-        let result2 = handle_pbkdf2_sha256(&params2).unwrap();
-
-        let key1 = result1.get("derived_key").unwrap().as_str().unwrap();
-        let key2 = result2.get("derived_key").unwrap().as_str().unwrap();
-
-        // Should be different (different salts)
-        assert_ne!(key1, key2);
+        let result1 = handle_pbkdf2_sha256(&params1)?;
+        let result2 = handle_pbkdf2_sha256(&params2)?;
+        assert_ne!(
+            json_str(&result1, "derived_key")?,
+            json_str(&result2, "derived_key")?
+        );
+        Ok(())
     }
 
     #[test]
     fn test_pbkdf2_sha256_low_iterations_rejected() {
-        // Test that low iteration count is rejected
         let params = json!({
             "password": "password",
             "salt": BASE64.encode(b"salt"),
-            "iterations": 10_000  // Too low!
+            "iterations": 10_000
         });
-
         let result = handle_pbkdf2_sha256(&params);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("100,000"));
+        let msg = result.err().map(|e| e.to_string()).unwrap_or_default();
+        assert!(msg.contains("100,000"));
     }
 
     #[test]
-    fn test_pbkdf2_sha256_custom_output_length() {
-        // Test with different output lengths
-        for output_length in [16, 32, 48, 64] {
+    fn test_pbkdf2_sha256_custom_output_length() -> Result<(), BearDogError> {
+        for output_length in [16u64, 32, 48, 64] {
             let params = json!({
                 "password": "test",
                 "salt": BASE64.encode(b"salt"),
                 "iterations": 100_000,
                 "output_length": output_length
             });
-
-            let result = handle_pbkdf2_sha256(&params).unwrap();
-            let derived_key_b64 = result.get("derived_key").unwrap().as_str().unwrap();
-            let derived_key = BASE64.decode(derived_key_b64).unwrap();
-
-            assert_eq!(derived_key.len(), output_length);
+            let result = handle_pbkdf2_sha256(&params)?;
+            let derived_key = b64_decode(json_str(&result, "derived_key")?)?;
+            assert_eq!(derived_key.len(), output_length as usize);
         }
+        Ok(())
     }
 }

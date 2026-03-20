@@ -13,10 +13,11 @@
 //!
 //! Pure Rust implementation using RustCrypto (zero C dependencies).
 
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
+use beardog_errors::BearDogError;
 use hmac::{Hmac, Mac};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sha2::Sha256;
 use x25519_dalek::{EphemeralSecret, PublicKey, StaticSecret};
 
@@ -67,41 +68,41 @@ const NTOR_SERVER: &[u8] = b"Server";
 /// ```
 ///
 /// **Reference**: tor-spec section 5.1.4
-pub async fn handle_tor_ntor_client_init(params: Option<&Value>) -> Result<Value, String> {
-    let params = params.ok_or("Missing parameters")?;
+pub async fn handle_tor_ntor_client_init(params: Option<&Value>) -> Result<Value, BearDogError> {
+    let params = params.ok_or_else(|| BearDogError::invalid_input("Missing parameters"))?;
 
     // Extract node_id (20 bytes - SHA1 hash of node identity key)
     let node_id_b64 = params
         .get("node_id")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'node_id' parameter")?;
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'node_id' parameter"))?;
 
     let node_id = BASE64
         .decode(node_id_b64)
-        .map_err(|e| format!("Invalid base64 node_id: {}", e))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 node_id: {e}")))?;
 
     if node_id.len() != 20 {
-        return Err(format!(
+        return Err(BearDogError::invalid_input(&format!(
             "node_id must be 20 bytes (SHA1 hash), got {}",
             node_id.len()
-        ));
+        )));
     }
 
     // Extract node_onion_key (32 bytes - X25519 public key B)
     let onion_key_b64 = params
         .get("node_onion_key")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'node_onion_key' parameter")?;
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'node_onion_key' parameter"))?;
 
     let onion_key_bytes = BASE64
         .decode(onion_key_b64)
-        .map_err(|e| format!("Invalid base64 node_onion_key: {}", e))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 node_onion_key: {e}")))?;
 
     if onion_key_bytes.len() != 32 {
-        return Err(format!(
+        return Err(BearDogError::invalid_input(&format!(
             "node_onion_key must be 32 bytes, got {}",
             onion_key_bytes.len()
-        ));
+        )));
     }
 
     // Generate ephemeral X25519 keypair for this handshake
@@ -153,72 +154,75 @@ pub async fn handle_tor_ntor_client_init(params: Option<&Value>) -> Result<Value
 ///   "backward_key": "base64_Kb_16_bytes"
 /// }
 /// ```
-pub async fn handle_tor_ntor_client_finish(params: Option<&Value>) -> Result<Value, String> {
-    let params = params.ok_or("Missing parameters")?;
+pub async fn handle_tor_ntor_client_finish(params: Option<&Value>) -> Result<Value, BearDogError> {
+    let params = params.ok_or_else(|| BearDogError::invalid_input("Missing parameters"))?;
 
     // Extract and decrypt client state
     let state_b64 = params
         .get("client_state")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'client_state' parameter")?;
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'client_state' parameter"))?;
 
     let encrypted_state = BASE64
         .decode(state_b64)
-        .map_err(|e| format!("Invalid base64 client_state: {}", e))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 client_state: {e}")))?;
 
     // Decrypt state (XOR is symmetric with same key)
     let client_state = xor_encrypt(&encrypted_state, &STATE_ENCRYPTION_KEY)?;
 
     if client_state.len() != 84 {
-        return Err("Invalid client_state length".to_string());
+        return Err(BearDogError::invalid_input("Invalid client_state length"));
     }
 
     // Parse client state: x (32) || node_id (20) || B (32)
     let x_bytes: [u8; 32] = client_state[0..32]
         .try_into()
-        .map_err(|_| "Invalid ephemeral secret")?;
+        .map_err(|_| BearDogError::crypto_error("Invalid ephemeral secret in ntor client state"))?;
     let node_id = &client_state[32..52];
     let b_bytes: [u8; 32] = client_state[52..84]
         .try_into()
-        .map_err(|_| "Invalid onion key")?;
+        .map_err(|_| BearDogError::crypto_error("Invalid onion key in ntor client state"))?;
 
     // Extract server response
     let server_public_b64 = params
         .get("server_public")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'server_public' parameter")?;
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'server_public' parameter"))?;
 
     let y_bytes = BASE64
         .decode(server_public_b64)
-        .map_err(|e| format!("Invalid base64 server_public: {}", e))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 server_public: {e}")))?;
 
     if y_bytes.len() != 32 {
-        return Err(format!(
+        return Err(BearDogError::invalid_input(&format!(
             "server_public must be 32 bytes, got {}",
             y_bytes.len()
-        ));
+        )));
     }
 
     let server_auth_b64 = params
         .get("server_auth")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'server_auth' parameter")?;
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'server_auth' parameter"))?;
 
     let server_auth = BASE64
         .decode(server_auth_b64)
-        .map_err(|e| format!("Invalid base64 server_auth: {}", e))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 server_auth: {e}")))?;
 
     if server_auth.len() != 32 {
-        return Err(format!(
+        return Err(BearDogError::invalid_input(&format!(
             "server_auth must be 32 bytes, got {}",
             server_auth.len()
-        ));
+        )));
     }
 
     // Reconstruct keys for computation
     let x = StaticSecret::from(x_bytes);
     let x_public = PublicKey::from(&x);
-    let y_arr: [u8; 32] = y_bytes.clone().try_into().map_err(|_| "Invalid Y bytes")?;
+    let y_arr: [u8; 32] = y_bytes
+        .clone()
+        .try_into()
+        .map_err(|_| BearDogError::invalid_input("server_public must be exactly 32 bytes"))?;
     let y = PublicKey::from(y_arr);
     let b = PublicKey::from(b_bytes);
 
@@ -305,79 +309,84 @@ pub async fn handle_tor_ntor_client_finish(params: Option<&Value>) -> Result<Val
 ///   "backward_key": "base64_Kb"
 /// }
 /// ```
-pub async fn handle_tor_ntor_server_respond(params: Option<&Value>) -> Result<Value, String> {
-    let params = params.ok_or("Missing parameters")?;
+pub async fn handle_tor_ntor_server_respond(params: Option<&Value>) -> Result<Value, BearDogError> {
+    let params = params.ok_or_else(|| BearDogError::invalid_input("Missing parameters"))?;
 
     // Extract client's ephemeral public key X
     let x_public_b64 = params
         .get("client_public")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'client_public' parameter")?;
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'client_public' parameter"))?;
 
     let x_bytes = BASE64
         .decode(x_public_b64)
-        .map_err(|e| format!("Invalid base64 client_public: {}", e))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 client_public: {e}")))?;
 
     if x_bytes.len() != 32 {
-        return Err(format!(
+        return Err(BearDogError::invalid_input(&format!(
             "client_public must be 32 bytes, got {}",
             x_bytes.len()
-        ));
+        )));
     }
     // Clone before consuming to preserve bytes for later use in secret_input/auth_input
-    let x_arr: [u8; 32] = x_bytes.clone().try_into().map_err(|_| "Invalid X bytes")?;
+    let x_arr: [u8; 32] = x_bytes
+        .try_into()
+        .map_err(|_| BearDogError::invalid_input("client_public must be exactly 32 bytes"))?;
     let x = PublicKey::from(x_arr);
 
     // Extract node_id
     let node_id_b64 = params
         .get("node_id")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'node_id' parameter")?;
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'node_id' parameter"))?;
 
     let node_id = BASE64
         .decode(node_id_b64)
-        .map_err(|e| format!("Invalid base64 node_id: {}", e))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 node_id: {e}")))?;
 
     if node_id.len() != 20 {
-        return Err(format!("node_id must be 20 bytes, got {}", node_id.len()));
+        return Err(BearDogError::invalid_input(&format!(
+            "node_id must be 20 bytes, got {}",
+            node_id.len()
+        )));
     }
 
     // Extract onion secret key (b)
     let b_secret_b64 = params
         .get("onion_secret_key")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'onion_secret_key' parameter")?;
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'onion_secret_key' parameter"))?;
 
-    let b_secret_bytes = BASE64
-        .decode(b_secret_b64)
-        .map_err(|e| format!("Invalid base64 onion_secret_key: {}", e))?;
+    let b_secret_bytes = BASE64.decode(b_secret_b64).map_err(|e| {
+        BearDogError::invalid_input(&format!("Invalid base64 onion_secret_key: {e}"))
+    })?;
 
     if b_secret_bytes.len() != 32 {
-        return Err(format!(
+        return Err(BearDogError::invalid_input(&format!(
             "onion_secret_key must be 32 bytes, got {}",
             b_secret_bytes.len()
-        ));
+        )));
     }
     let b_secret_arr: [u8; 32] = b_secret_bytes
         .try_into()
-        .map_err(|_| "Invalid onion secret key")?;
+        .map_err(|_| BearDogError::crypto_error("Invalid onion secret key length"))?;
     let b = StaticSecret::from(b_secret_arr);
 
     // Extract onion public key (B)
     let b_public_b64 = params
         .get("onion_public_key")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'onion_public_key' parameter")?;
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'onion_public_key' parameter"))?;
 
-    let b_public_bytes = BASE64
-        .decode(b_public_b64)
-        .map_err(|e| format!("Invalid base64 onion_public_key: {}", e))?;
+    let b_public_bytes = BASE64.decode(b_public_b64).map_err(|e| {
+        BearDogError::invalid_input(&format!("Invalid base64 onion_public_key: {e}"))
+    })?;
 
     if b_public_bytes.len() != 32 {
-        return Err(format!(
+        return Err(BearDogError::invalid_input(&format!(
             "onion_public_key must be 32 bytes, got {}",
             b_public_bytes.len()
-        ));
+        )));
     }
 
     // Generate server ephemeral keypair
@@ -454,38 +463,41 @@ pub async fn handle_tor_ntor_server_respond(params: Option<&Value>) -> Result<Va
 ///   "next_counter": 1
 /// }
 /// ```
-pub async fn handle_tor_cell_encrypt(params: Option<&Value>) -> Result<Value, String> {
-    let params = params.ok_or("Missing parameters")?;
+pub async fn handle_tor_cell_encrypt(params: Option<&Value>) -> Result<Value, BearDogError> {
+    let params = params.ok_or_else(|| BearDogError::invalid_input("Missing parameters"))?;
 
     // Extract key (32 bytes for ChaCha20)
     let key_b64 = params
         .get("key")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'key' parameter")?;
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'key' parameter"))?;
 
     let key = BASE64
         .decode(key_b64)
-        .map_err(|e| format!("Invalid base64 key: {}", e))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 key: {e}")))?;
 
     if key.len() != 32 {
-        return Err(format!("key must be 32 bytes, got {}", key.len()));
+        return Err(BearDogError::invalid_input(&format!(
+            "key must be 32 bytes, got {}",
+            key.len()
+        )));
     }
 
     // Extract counter
     let counter = params
         .get("counter")
-        .and_then(|v| v.as_u64())
-        .ok_or("Missing 'counter' parameter")?;
+        .and_then(serde_json::Value::as_u64)
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'counter' parameter"))?;
 
     // Extract data
     let data_b64 = params
         .get("data")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'data' parameter")?;
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'data' parameter"))?;
 
     let mut data = BASE64
         .decode(data_b64)
-        .map_err(|e| format!("Invalid base64 data: {}", e))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 data: {e}")))?;
 
     // Apply ChaCha20 keystream
     chacha20_counter_mode(&key, counter, &mut data)?;
@@ -500,38 +512,41 @@ pub async fn handle_tor_cell_encrypt(params: Option<&Value>) -> Result<Value, St
 /// Handle `beardog.crypto.tor_cell_decrypt` - Decrypt Tor relay cell
 ///
 /// Same as encrypt (ChaCha20 is symmetric).
-pub async fn handle_tor_cell_decrypt(params: Option<&Value>) -> Result<Value, String> {
-    let params = params.ok_or("Missing parameters")?;
+pub async fn handle_tor_cell_decrypt(params: Option<&Value>) -> Result<Value, BearDogError> {
+    let params = params.ok_or_else(|| BearDogError::invalid_input("Missing parameters"))?;
 
     // Extract key
     let key_b64 = params
         .get("key")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'key' parameter")?;
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'key' parameter"))?;
 
     let key = BASE64
         .decode(key_b64)
-        .map_err(|e| format!("Invalid base64 key: {}", e))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 key: {e}")))?;
 
     if key.len() != 32 {
-        return Err(format!("key must be 32 bytes, got {}", key.len()));
+        return Err(BearDogError::invalid_input(&format!(
+            "key must be 32 bytes, got {}",
+            key.len()
+        )));
     }
 
     // Extract counter
     let counter = params
         .get("counter")
-        .and_then(|v| v.as_u64())
-        .ok_or("Missing 'counter' parameter")?;
+        .and_then(serde_json::Value::as_u64)
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'counter' parameter"))?;
 
     // Extract ciphertext
     let ciphertext_b64 = params
         .get("ciphertext")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'ciphertext' parameter")?;
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'ciphertext' parameter"))?;
 
     let mut data = BASE64
         .decode(ciphertext_b64)
-        .map_err(|e| format!("Invalid base64 ciphertext: {}", e))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 ciphertext: {e}")))?;
 
     // Apply ChaCha20 keystream (XOR is symmetric)
     chacha20_counter_mode(&key, counter, &mut data)?;
@@ -566,28 +581,28 @@ pub async fn handle_tor_cell_decrypt(params: Option<&Value>) -> Result<Value, St
 ///   "keys": ["base64_key1", "base64_key2", ...]
 /// }
 /// ```
-pub async fn handle_tor_kdf(params: Option<&Value>) -> Result<Value, String> {
-    let params = params.ok_or("Missing parameters")?;
+pub async fn handle_tor_kdf(params: Option<&Value>) -> Result<Value, BearDogError> {
+    let params = params.ok_or_else(|| BearDogError::invalid_input("Missing parameters"))?;
 
     // Extract key_seed
     let seed_b64 = params
         .get("key_seed")
         .and_then(|v| v.as_str())
-        .ok_or("Missing 'key_seed' parameter")?;
+        .ok_or_else(|| BearDogError::invalid_input("Missing 'key_seed' parameter"))?;
 
     let key_seed = BASE64
         .decode(seed_b64)
-        .map_err(|e| format!("Invalid base64 key_seed: {}", e))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 key_seed: {e}")))?;
 
     // Extract key count and length
     let key_count = params
         .get("key_count")
-        .and_then(|v| v.as_u64())
+        .and_then(serde_json::Value::as_u64)
         .unwrap_or(4) as usize;
 
     let key_length = params
         .get("key_length")
-        .and_then(|v| v.as_u64())
+        .and_then(serde_json::Value::as_u64)
         .unwrap_or(20) as usize;
 
     // Use HKDF to derive keys
@@ -627,30 +642,30 @@ struct CircuitKeys {
 /// Derive circuit keys from KEY_SEED using HKDF
 ///
 /// Returns an error if HKDF expansion produces unexpected output length.
-fn derive_circuit_keys(key_seed: &[u8]) -> Result<CircuitKeys, String> {
+fn derive_circuit_keys(key_seed: &[u8]) -> Result<CircuitKeys, BearDogError> {
     // Expand to get: Df (20) + Db (20) + Kf (16) + Kb (16) = 72 bytes
     let expanded = hkdf_expand(key_seed, NTOR_T_EXPAND, 72)?;
 
     if expanded.len() != 72 {
-        return Err(format!(
+        return Err(BearDogError::crypto_error(format!(
             "HKDF expansion produced {} bytes, expected 72",
             expanded.len()
-        ));
+        )));
     }
 
     Ok(CircuitKeys {
         df: expanded[0..20]
             .try_into()
-            .map_err(|_| "Failed to convert Df slice to [u8; 20]".to_string())?,
+            .map_err(|_| BearDogError::crypto_error("Failed to convert Df slice to [u8; 20]"))?,
         db: expanded[20..40]
             .try_into()
-            .map_err(|_| "Failed to convert Db slice to [u8; 20]".to_string())?,
+            .map_err(|_| BearDogError::crypto_error("Failed to convert Db slice to [u8; 20]"))?,
         kf: expanded[40..56]
             .try_into()
-            .map_err(|_| "Failed to convert Kf slice to [u8; 16]".to_string())?,
+            .map_err(|_| BearDogError::crypto_error("Failed to convert Kf slice to [u8; 16]"))?,
         kb: expanded[56..72]
             .try_into()
-            .map_err(|_| "Failed to convert Kb slice to [u8; 16]".to_string())?,
+            .map_err(|_| BearDogError::crypto_error("Failed to convert Kb slice to [u8; 16]"))?,
     })
 }
 
@@ -658,17 +673,17 @@ fn derive_circuit_keys(key_seed: &[u8]) -> Result<CircuitKeys, String> {
 ///
 /// HMAC accepts keys of any size, so `new_from_slice` is infallible in practice.
 /// We still propagate the error for correctness.
-fn hmac_sha256(key: &[u8], data: &[u8]) -> Result<[u8; 32], String> {
+fn hmac_sha256(key: &[u8], data: &[u8]) -> Result<[u8; 32], BearDogError> {
     type HmacSha256 = Hmac<Sha256>;
-    let mut mac =
-        HmacSha256::new_from_slice(key).map_err(|e| format!("HMAC-SHA256 key error: {}", e))?;
+    let mut mac = HmacSha256::new_from_slice(key)
+        .map_err(|e| BearDogError::crypto_error(format!("HMAC-SHA256 key error: {e}")))?;
     mac.update(data);
     let result = mac.finalize();
     Ok(result.into_bytes().into())
 }
 
 /// HKDF-Expand (simplified - uses HMAC iteratively)
-fn hkdf_expand(prk: &[u8], info: &[u8], length: usize) -> Result<Vec<u8>, String> {
+fn hkdf_expand(prk: &[u8], info: &[u8], length: usize) -> Result<Vec<u8>, BearDogError> {
     let mut output = Vec::with_capacity(length);
     let mut t = Vec::new();
     let mut counter = 1u8;
@@ -690,14 +705,17 @@ fn hkdf_expand(prk: &[u8], info: &[u8], length: usize) -> Result<Vec<u8>, String
 /// ChaCha20 counter mode (for cell encryption)
 ///
 /// Returns an error if `key` is not exactly 32 bytes.
-fn chacha20_counter_mode(key: &[u8], counter: u64, data: &mut [u8]) -> Result<(), String> {
-    use chacha20::cipher::{KeyIvInit, StreamCipher};
+fn chacha20_counter_mode(key: &[u8], counter: u64, data: &mut [u8]) -> Result<(), BearDogError> {
     use chacha20::ChaCha20;
+    use chacha20::cipher::{KeyIvInit, StreamCipher};
 
     // Validate key length
-    let key_arr: [u8; 32] = key
-        .try_into()
-        .map_err(|_| format!("ChaCha20 requires exactly 32-byte key, got {}", key.len()))?;
+    let key_arr: [u8; 32] = key.try_into().map_err(|_| {
+        BearDogError::invalid_input(&format!(
+            "ChaCha20 requires exactly 32-byte key, got {}",
+            key.len()
+        ))
+    })?;
 
     // Construct nonce from counter (12 bytes)
     let mut nonce = [0u8; 12];
@@ -721,7 +739,7 @@ const STATE_ENCRYPTION_KEY: [u8; 32] = [
 ];
 
 /// Simple XOR encryption (used with derived key for state protection)
-fn xor_encrypt(data: &[u8], key: &[u8; 32]) -> Result<Vec<u8>, String> {
+fn xor_encrypt(data: &[u8], key: &[u8; 32]) -> Result<Vec<u8>, BearDogError> {
     // Expand key using HKDF to match data length
     let expanded_key = hkdf_expand(key, b"state-encryption", data.len())?;
     Ok(data
@@ -751,12 +769,15 @@ fn constant_time_compare(a: &[u8], b: &[u8]) -> bool {
 mod tests {
     use super::*;
 
-    #[tokio::test]
-    async fn test_ntor_client_init_basic() {
-        // Create test node_id (20 bytes)
-        let node_id = [0u8; 20];
+    fn json_str<'a>(v: &'a Value, key: &'static str) -> Result<&'a str, BearDogError> {
+        v.get(key)
+            .and_then(|x| x.as_str())
+            .ok_or_else(|| BearDogError::invalid_input("missing JSON string field"))
+    }
 
-        // Create test onion key (32 bytes)
+    #[tokio::test]
+    async fn test_ntor_client_init_basic() -> Result<(), BearDogError> {
+        let node_id = [0u8; 20];
         let onion_key = [1u8; 32];
 
         let params = json!({
@@ -764,44 +785,33 @@ mod tests {
             "node_onion_key": BASE64.encode(&onion_key)
         });
 
-        let result = handle_tor_ntor_client_init(Some(&params)).await.unwrap();
+        let result = handle_tor_ntor_client_init(Some(&params)).await?;
 
-        // Verify we got ephemeral public key
         assert!(result.get("ephemeral_public").is_some());
-        let ephem_b64 = result.get("ephemeral_public").unwrap().as_str().unwrap();
-        let ephem = BASE64.decode(ephem_b64).unwrap();
+        let ephem_b64 = json_str(&result, "ephemeral_public")?;
+        let ephem = BASE64
+            .decode(ephem_b64)
+            .map_err(|e| BearDogError::invalid_input(&format!("base64: {e}")))?;
         assert_eq!(ephem.len(), 32);
-
-        // Verify we got client state
         assert!(result.get("client_state").is_some());
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_ntor_full_handshake() {
-        // Generate server's long-term ntor keypair
+    async fn test_ntor_full_handshake() -> Result<(), BearDogError> {
         let server_secret = StaticSecret::random_from_rng(rand::thread_rng());
         let server_public = PublicKey::from(&server_secret);
-
-        // Node ID (normally SHA1 of identity key)
         let node_id = [42u8; 20];
 
-        // Client init
         let init_params = json!({
             "node_id": BASE64.encode(&node_id),
             "node_onion_key": BASE64.encode(server_public.as_bytes())
         });
 
-        let init_result = handle_tor_ntor_client_init(Some(&init_params))
-            .await
-            .unwrap();
-        let client_state = init_result.get("client_state").unwrap().as_str().unwrap();
-        let client_public = init_result
-            .get("ephemeral_public")
-            .unwrap()
-            .as_str()
-            .unwrap();
+        let init_result = handle_tor_ntor_client_init(Some(&init_params)).await?;
+        let client_state = json_str(&init_result, "client_state")?;
+        let client_public = json_str(&init_result, "ephemeral_public")?;
 
-        // Server respond
         let server_params = json!({
             "client_public": client_public,
             "node_id": BASE64.encode(&node_id),
@@ -809,76 +819,69 @@ mod tests {
             "onion_public_key": BASE64.encode(server_public.as_bytes())
         });
 
-        let server_result = handle_tor_ntor_server_respond(Some(&server_params))
-            .await
-            .unwrap();
-        let server_ephem = server_result
-            .get("ephemeral_public")
-            .unwrap()
-            .as_str()
-            .unwrap();
-        let server_auth = server_result.get("server_auth").unwrap().as_str().unwrap();
+        let server_result = handle_tor_ntor_server_respond(Some(&server_params)).await?;
+        let server_ephem = json_str(&server_result, "ephemeral_public")?;
+        let server_auth = json_str(&server_result, "server_auth")?;
 
-        // Client finish
         let finish_params = json!({
             "client_state": client_state,
             "server_public": server_ephem,
             "server_auth": server_auth
         });
 
-        let finish_result = handle_tor_ntor_client_finish(Some(&finish_params))
-            .await
-            .unwrap();
+        let finish_result = handle_tor_ntor_client_finish(Some(&finish_params)).await?;
 
-        // Verify handshake succeeded
-        assert_eq!(finish_result.get("valid").unwrap().as_bool().unwrap(), true);
+        assert_eq!(
+            finish_result
+                .get("valid")
+                .and_then(|v| v.as_bool())
+                .ok_or_else(|| BearDogError::invalid_input("missing valid"))?,
+            true
+        );
 
-        // Verify both sides derived same keys
-        let client_kf = finish_result.get("forward_key").unwrap().as_str().unwrap();
-        let server_kf = server_result.get("forward_key").unwrap().as_str().unwrap();
+        let client_kf = json_str(&finish_result, "forward_key")?;
+        let server_kf = json_str(&server_result, "forward_key")?;
         assert_eq!(client_kf, server_kf);
 
-        let client_kb = finish_result.get("backward_key").unwrap().as_str().unwrap();
-        let server_kb = server_result.get("backward_key").unwrap().as_str().unwrap();
+        let client_kb = json_str(&finish_result, "backward_key")?;
+        let server_kb = json_str(&server_result, "backward_key")?;
         assert_eq!(client_kb, server_kb);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_cell_encrypt_decrypt_roundtrip() {
+    async fn test_cell_encrypt_decrypt_roundtrip() -> Result<(), BearDogError> {
         let key = [0xABu8; 32];
         let plaintext = b"Hello, Tor cell encryption!";
         let counter = 0u64;
 
-        // Encrypt
         let encrypt_params = json!({
             "key": BASE64.encode(&key),
             "counter": counter,
             "data": BASE64.encode(plaintext)
         });
 
-        let encrypt_result = handle_tor_cell_encrypt(Some(&encrypt_params))
-            .await
-            .unwrap();
-        let ciphertext = encrypt_result.get("ciphertext").unwrap().as_str().unwrap();
+        let encrypt_result = handle_tor_cell_encrypt(Some(&encrypt_params)).await?;
+        let ciphertext = json_str(&encrypt_result, "ciphertext")?;
 
-        // Decrypt
         let decrypt_params = json!({
             "key": BASE64.encode(&key),
             "counter": counter,
             "ciphertext": ciphertext
         });
 
-        let decrypt_result = handle_tor_cell_decrypt(Some(&decrypt_params))
-            .await
-            .unwrap();
-        let decrypted_b64 = decrypt_result.get("plaintext").unwrap().as_str().unwrap();
-        let decrypted = BASE64.decode(decrypted_b64).unwrap();
+        let decrypt_result = handle_tor_cell_decrypt(Some(&decrypt_params)).await?;
+        let decrypted_b64 = json_str(&decrypt_result, "plaintext")?;
+        let decrypted = BASE64
+            .decode(decrypted_b64)
+            .map_err(|e| BearDogError::invalid_input(&format!("base64: {e}")))?;
 
         assert_eq!(decrypted, plaintext);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn test_tor_kdf() {
+    async fn test_tor_kdf() -> Result<(), BearDogError> {
         let key_seed = [0x42u8; 32];
 
         let params = json!({
@@ -887,16 +890,24 @@ mod tests {
             "key_length": 20
         });
 
-        let result = handle_tor_kdf(Some(&params)).await.unwrap();
+        let result = handle_tor_kdf(Some(&params)).await?;
 
-        let keys = result.get("keys").unwrap().as_array().unwrap();
+        let keys = result
+            .get("keys")
+            .and_then(|v| v.as_array())
+            .ok_or_else(|| BearDogError::invalid_input("missing keys array"))?;
         assert_eq!(keys.len(), 4);
 
-        // Each key should be 20 bytes
         for key in keys {
-            let key_bytes = BASE64.decode(key.as_str().unwrap()).unwrap();
+            let s = key
+                .as_str()
+                .ok_or_else(|| BearDogError::invalid_input("key entry not a string"))?;
+            let key_bytes = BASE64
+                .decode(s)
+                .map_err(|e| BearDogError::invalid_input(&format!("base64: {e}")))?;
             assert_eq!(key_bytes.len(), 20);
         }
+        Ok(())
     }
 
     #[test]

@@ -46,7 +46,7 @@ pub enum WitnessVerificationError {
 
 impl From<WitnessVerificationError> for BearDogError {
     fn from(err: WitnessVerificationError) -> Self {
-        BearDogError::security(format!("Witness verification failed: {err}"))
+        Self::security(format!("Witness verification failed: {err}"))
     }
 }
 
@@ -75,7 +75,7 @@ impl GenesisWitness {
     /// * `physical_channel` - Type of physical channel used
     /// * `timestamp` - Unix timestamp of ceremony
     /// * `signature` - Ed25519 signature (64 bytes)
-    pub fn new(
+    pub const fn new(
         device_id: String,
         public_key: Vec<u8>,
         physical_channel: PhysicalChannelType,
@@ -92,7 +92,7 @@ impl GenesisWitness {
     }
 
     /// Get the trust level for this witness based on physical channel
-    pub fn trust_level(&self) -> TrustLevel {
+    pub const fn trust_level(&self) -> TrustLevel {
         self.physical_channel.trust_level()
     }
 }
@@ -119,17 +119,17 @@ impl GenesisWitnessVerifier {
     ///
     /// * `trusted_witnesses` - Optional list of trusted witness device IDs.
     ///   If None, all witnesses are accepted (use for development).
-    pub fn new(trusted_witnesses: Option<Vec<String>>) -> Self {
+    pub const fn new(trusted_witnesses: Option<Vec<String>>) -> Self {
         Self { trusted_witnesses }
     }
 
     /// Create verifier that accepts all witnesses (development mode)
-    pub fn permissive() -> Self {
+    pub const fn permissive() -> Self {
         Self::new(None)
     }
 
     /// Create verifier with specific trusted witnesses (production mode)
-    pub fn with_trusted_witnesses(witness_ids: Vec<String>) -> Self {
+    pub const fn with_trusted_witnesses(witness_ids: Vec<String>) -> Self {
         Self::new(Some(witness_ids))
     }
 

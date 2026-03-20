@@ -288,7 +288,7 @@ pub async fn test_discovery_with_configuration() -> Result<E2EMetrics, BearDogEr
 
     // Test 2: Custom timeout configuration
     info!("Test 2: Discovery with custom timeout");
-    std::env::set_var("BEARDOG_HSM_PROBE_TIMEOUT_SECS", "10");
+    beardog_errors::process_env::set_var("BEARDOG_HSM_PROBE_TIMEOUT_SECS", "10");
     let custom_count = discover_with_custom_timeout().await?;
     metrics.total_requests += 1;
     metrics.successful_requests += 1;
@@ -296,7 +296,7 @@ pub async fn test_discovery_with_configuration() -> Result<E2EMetrics, BearDogEr
 
     // Test 3: With known endpoints
     info!("Test 3: Discovery with known endpoints");
-    std::env::set_var(
+    beardog_errors::process_env::set_var(
         "BEARDOG_HSM_KNOWN_ENDPOINTS",
         "https://test.example.com:8443",
     );
@@ -306,8 +306,8 @@ pub async fn test_discovery_with_configuration() -> Result<E2EMetrics, BearDogEr
     info!("   ✅ Processed {} known endpoint(s)", endpoint_count);
 
     // Cleanup environment
-    std::env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_SECS");
-    std::env::remove_var("BEARDOG_HSM_KNOWN_ENDPOINTS");
+    beardog_errors::process_env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_SECS");
+    beardog_errors::process_env::remove_var("BEARDOG_HSM_KNOWN_ENDPOINTS");
 
     metrics.data_verified = true;
     info!("✅ Configuration-based discovery test complete");

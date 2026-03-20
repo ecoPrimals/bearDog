@@ -11,6 +11,7 @@ use uuid::Uuid;
 /// Canonical audit severity levels
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AuditSeverity {
+    /// Routine or informational; no immediate action required.
     Low,
     /// Medium severity - notable events requiring attention
     Medium,
@@ -20,9 +21,8 @@ pub enum AuditSeverity {
     Critical,
 }
 
-/// Types of audit events
+/// Categories of audit events for filtering and compliance tagging.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Types of audit event
 pub enum AuditEventType {
     /// Authentication-related events (login, logout, etc.)
     Authentication,
@@ -38,9 +38,10 @@ pub enum AuditEventType {
     ComplianceCheck,
 }
 
-/// Audit event record
+/// One append-only audit record suitable for compliance exports and security monitoring.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditEvent {
+    /// Unique id for correlation, deduplication, and export bundles.
     pub id: Uuid,
     /// Type of audit event
     /// The event type value
@@ -153,7 +154,7 @@ impl AuditEvent {
     }
 }
 
-/// Audit trail storage and management
+/// In-memory audit trail with FIFO rotation when the configured capacity is exceeded.
 pub struct AuditEngine {
     events: Vec<AuditEvent>,
     max_events: usize,
@@ -246,6 +247,7 @@ impl AuditEngine {
         self.events.len()
     }
 
+    /// Serializes the retained event buffer to JSON for archival or SIEM forwarding.
     pub fn export_events(&self) -> Result<String, BearDogError> {
         serde_json::to_string(&self.events)
             .map_err(|e| BearDogError::system(format!("Failed to serialize audit events: {e}")))

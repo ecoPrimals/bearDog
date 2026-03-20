@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Unified Performance Monitoring Configuration
+//! CPU/memory/network/profiling switches for [`super::MonitoringConfig`].
 
 use super::MonitoringConfigValidation;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
+/// Resource and profiler instrumentation toggles.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedPerformanceMonitoringConfig {
     /// Enabled

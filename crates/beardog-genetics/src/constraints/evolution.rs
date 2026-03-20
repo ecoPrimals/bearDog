@@ -42,13 +42,22 @@ pub struct UsageStatistics {
 #[derive(Debug, Clone)]
 pub enum EvolutionTrigger {
     /// Time-based evolution
-    TimeElapsed { months: u32 },
+    TimeElapsed {
+        /// Months since key creation after which policy may renew or tighten.
+        months: u32,
+    },
 
     /// Trust score reached threshold
-    TrustThreshold { threshold: f64 },
+    TrustThreshold {
+        /// Trust score boundary that was crossed (e.g. high-trust relaxation).
+        threshold: f64,
+    },
 
     /// Usage pattern detected
-    UsagePattern { pattern: String },
+    UsagePattern {
+        /// Named pattern label (e.g. consistent compliance) driving policy change.
+        pattern: String,
+    },
 
     /// Manual evolution request
     ManualRequest,
@@ -198,12 +207,12 @@ impl ConstraintEvolutionEngine {
     }
 
     /// Get current trust score
-    pub fn trust_score(&self) -> f64 {
+    pub const fn trust_score(&self) -> f64 {
         self.trust_score
     }
 
     /// Get usage statistics
-    pub fn usage_stats(&self) -> &UsageStatistics {
+    pub const fn usage_stats(&self) -> &UsageStatistics {
         &self.usage_stats
     }
 }

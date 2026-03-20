@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Generic relational-style [`DatabaseProvider`] with stringly-typed rows and transactions.
 
 use super::base::BaseProvider;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// Temporary type definitions
+/// Result set and write-affected row count from [`DatabaseProvider::execute_query`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QueryResult {
     /// Collection of rows
@@ -19,6 +17,7 @@ pub struct QueryResult {
 }
 
 #[allow(clippy::type_complexity)]
+/// CRUD, listing, transactions, and backup hooks for embedded or remote databases.
 pub trait DatabaseProvider: BaseProvider {
     /// Executes query
     fn execute_query(
@@ -26,6 +25,7 @@ pub trait DatabaseProvider: BaseProvider {
         params: Option<HashMap<&str, &str>>,
     ) -> impl std::future::Future<Output = Result<QueryResult, BearDogError>> + Send;
 
+    /// Inserts a row and returns a generated id when applicable.
     fn insert_record(
         table: &str,
         data: HashMap<&str, &str>,
@@ -50,20 +50,24 @@ pub trait DatabaseProvider: BaseProvider {
         id: &str,
     ) -> impl std::future::Future<Output = Result<Option<HashMap<String, String>>, BearDogError>> + Send;
 
+    /// Paginated scan with optional equality filters.
     fn list_records(
         table: &str,
         filter: Option<HashMap<&str, &str>>,
         limit: Option<usize>,
     ) -> impl std::future::Future<Output = Result<Vec<HashMap<String, String>>, BearDogError>> + Send;
 
+    /// Opens a transaction; returns an opaque handle for commit/rollback.
     fn begin_transaction(
         &self,
     ) -> impl std::future::Future<Output = Result<String, BearDogError>> + Send;
 
+    /// Persists all operations in the transaction identified by `transaction_id`.
     fn commit_transaction(
         transaction_id: &str,
     ) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
 
+    /// Discards all operations in the transaction identified by `transaction_id`.
     fn rollback_transaction(
         transaction_id: &str,
     ) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
@@ -73,6 +77,7 @@ pub trait DatabaseProvider: BaseProvider {
         location: &str,
     ) -> impl std::future::Future<Output = Result<String, BearDogError>> + Send;
 
+    /// Restores from a backup created by [`Self::create_backup`].
     fn restore_backup(
         backup_id: &str,
     ) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;

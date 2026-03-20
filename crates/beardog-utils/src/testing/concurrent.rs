@@ -6,10 +6,10 @@
 //! Philosophy: Test issues ARE production issues - build it right the first time.
 
 use std::future::Future;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
-use tokio::sync::{broadcast, oneshot, Notify, Semaphore};
+use tokio::sync::{Notify, Semaphore, broadcast, oneshot};
 use tokio::time::{sleep, timeout};
 
 // ============================================================================
@@ -178,8 +178,10 @@ where
     .map_err(|_| WaitError::Timeout(timeout_duration))
 }
 
+/// Errors surfaced by [`wait_for`] and [`with_timeout`].
 #[derive(Debug, thiserror::Error)]
 pub enum WaitError {
+    /// Predicate or future did not complete before the deadline.
     #[error("Timeout after {0:?}")]
     Timeout(Duration),
 }
@@ -231,6 +233,7 @@ pub struct Barrier {
 }
 
 impl Barrier {
+    /// `total` tasks must call [`Self::wait`] before any proceed.
     pub fn new(total: usize) -> Self {
         Self {
             count: Arc::new(AtomicBool::new(false)),
@@ -240,6 +243,7 @@ impl Barrier {
         }
     }
 
+    /// Decrements the arrival count; last arriver wakes everyone else.
     pub async fn wait(&self) {
         {
             let mut remaining = self.remaining.write().await;
@@ -300,6 +304,7 @@ pub struct RateLimiter {
 }
 
 impl RateLimiter {
+    /// Spawns a background task that tops up the [`Semaphore`] every `refill_interval`.
     pub fn new(permits_per_interval: usize, refill_interval: Duration) -> Self {
         let semaphore = Arc::new(Semaphore::new(permits_per_interval));
 
@@ -330,14 +335,15 @@ impl RateLimiter {
         }
     }
 
+    /// Waits for a permit and intentionally leaks it (test-only burst pattern).
     pub async fn acquire(&self) {
-        self.semaphore
-            .acquire()
-            .await
-            .expect("Semaphore closed")
-            .forget();
+        match self.semaphore.acquire().await {
+            Ok(permit) => permit.forget(),
+            Err(_) => unreachable!("Semaphore closed"),
+        }
     }
 
+    /// Current free permits in the underlying semaphore.
     pub fn available(&self) -> usize {
         self.semaphore.available_permits()
     }
@@ -382,7 +388,7 @@ where
 {
     match wait_for(condition, timeout_duration).await {
         Ok(()) => {}
-        Err(_) => panic!("{} (timeout after {:?})", message, timeout_duration),
+        Err(_) => panic!("{message} (timeout after {timeout_duration:?})"),
     }
 }
 

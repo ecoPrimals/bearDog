@@ -1,28 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Unified HSM Configuration System
-//
-// This module consolidates ALL HSM configuration patterns from across the BearDog
-// ecosystem into a single, canonical, maintainable system. It replaces fragmented configs
-// from multiple locations.
-//
-// ## Consolidation Strategy
-//
-// This unifies HSM configs from:
-// - `beardog-tunnel/src/tunnel/hsm/types/config.rs` (HardwareHsmConfig, AndroidHsmConfig, etc.)
-// - `beardog-tunnel/src/tunnel/hsm/software_hsm/mod.rs` (SoftwareHsmConfig)
-// - `beardog-types/src/canonical/hsm/config.rs` (Multiple HSM configs)
-// - `beardog-types/src/canonical/crypto.rs` (HsmConfig)
-// - `beardog-core/src/ecosystem_integration/universal_hsm_provider.rs` (UniversalHsmConfig)
-// - Various other HSM configs scattered across crates
-//
-// ## Architecture Principles
-//
-// - **Single Source of Truth**: All HSM config in one canonical place
-// - **Platform Organization**: Logical grouping by HSM platform/type
-// - **Zero Fragmentation**: No duplicate HSM config types
-// - **Extensible Design**: Easy addition of new HSM platforms
-// - **Security First**: Comprehensive security configuration options
+//! Unified HSM configuration for Beardog (hardware, software, mobile, cloud).
+//!
+//! Consolidates fragmented HSM settings from tunnel, core, and adapter crates into one
+//! serde-friendly tree with validation hooks ([`HsmConfigValidation`]).
 
 use crate::canonical::traits::RetryStrategy;
 use beardog_errors::BearDogError;
@@ -43,6 +24,7 @@ pub mod discovery;
 pub mod hardware;
 /// Mobile module
 pub mod mobile;
+/// Latency, throughput, and benchmarking knobs applied across HSM backends.
 pub mod performance;
 /// Security module
 pub mod security;
@@ -59,14 +41,14 @@ pub use performance::*;
 pub use security::*;
 pub use software::*;
 
-///
-/// This configuration consolidates all HSM concerns into a unified, hierarchical
+/// Root HSM configuration: platforms, discovery, security, monitoring, and DR.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedHsmConfig {
     /// **GLOBAL SETTINGS**
     /// Whether HSM functionality is globally enabled
     /// Whether feature is enabled
     pub enabled: bool,
+    /// Default RPC/session timeout for HSM operations. **Default:** `30s`, overridable via `BEARDOG_HSM_DEFAULT_TIMEOUT_SECS`.
     pub default_timeout: Duration,
     /// Size of the HSM connection pool
     /// Number of `connection_pool_size`
@@ -105,11 +87,12 @@ pub struct UnifiedHsmConfig {
     pub compliance: HsmComplianceConfig,
 
     /// **PERFORMANCE AND MONITORING**
+    /// Provider throughput limits, batching, and cost controls. **Default:** [`UnifiedHsmPerformanceConfig::default()`].
     pub performance: UnifiedHsmPerformanceConfig,
     /// HSM monitoring and metrics configuration
     /// The monitoring value
     pub monitoring: HsmMonitoringConfig,
-    /// The health checks value
+    /// Periodic probes and thresholds marking an HSM unhealthy. **Default:** [`HsmHealthCheckConfig::default()`].
     pub health_checks: HsmHealthCheckConfig,
 
     /// **INTEGRATION SETTINGS**
@@ -321,6 +304,7 @@ impl Default for HsmTierManagementConfig {
 pub struct TierCriteria {
     /// The security level value
     pub security_level: SecurityLevel,
+    /// Minimum throughput/latency/availability gates for this tier.
     pub performance_requirements: PerformanceRequirements,
     /// Collection of compliance requirements
     pub compliance_requirements: Vec<ComplianceStandard>,
@@ -328,15 +312,22 @@ pub struct TierCriteria {
     pub availability_requirements: AvailabilityRequirements,
 }
 
+/// Minimum assurance band used when assigning HSMs to tiers.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SecurityLevel {
+    /// Software-only or relaxed policy environments.
     Basic,
+    /// Production default for general-purpose keys.
     Standard,
+    /// Stricter key handling and audit expectations.
     High,
+    /// Hardware-backed or equivalent controls required.
     Critical,
+    /// Highest tier (regulated / mission-critical workloads).
     UltraHigh,
 }
 
+/// Throughput and latency targets for tier assignment.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceRequirements {
     /// Minimum operations per second required
@@ -359,9 +350,13 @@ pub enum ComplianceStandard {
     CommonCriteria(CcEvaluationLevel),
     /// NIST compliance standards
     NIST,
+    /// ISO/IEC 27001 controls mapping.
     ISO27001,
+    /// SOC 2 Trust Services criteria.
     SOC2,
+    /// PCI DSS payment-card requirements.
     PciDss,
+    /// HIPAA safeguards for health data.
     HIPAA,
     /// Custom compliance standard with description
     Custom(String),
@@ -391,8 +386,11 @@ pub enum CcEvaluationLevel {
     EAL3,
     /// Evaluation Assurance Level 4 (methodically designed, tested, and reviewed)
     EAL4,
+    /// EAL5 — semiformally designed and tested.
     EAL5,
+    /// EAL6 — semiformally verified design and tested.
     EAL6,
+    /// EAL7 — formally verified design and tested.
     EAL7,
 }
 
@@ -453,6 +451,7 @@ pub struct HsmMonitoringConfig {
     /// Whether to collect HSM metrics
     /// Whether `metrics_collection` is enabled
     pub metrics_collection: bool,
+    /// When true, record latency histograms and saturation for HSM operations. **Default:** `true`.
     pub performance_monitoring: bool,
     /// Whether to monitor HSM security events
     /// Whether `security_monitoring` is enabled
@@ -487,6 +486,7 @@ pub struct HsmAlertingConfig {
     /// Whether to alert on HSM failures
     /// Whether `alert_on_failure` is enabled
     pub alert_on_failure: bool,
+    /// Fire alerts when latency or error budgets exceed configured thresholds. **Default:** `true`.
     pub alert_on_degraded_performance: bool,
     /// Whether to alert on HSM security events
     /// Whether `alert_on_security_events` is enabled
@@ -517,6 +517,7 @@ pub struct HsmHealthCheckConfig {
     /// Interval between health checks
     /// The check interval value
     pub check_interval: Duration,
+    /// Maximum wait for a single health probe. **Default:** `10s` (`BEARDOG_HSM_HEALTH_CHECK_TIMEOUT_SECS`).
     pub timeout: Duration,
     /// Number of `failure_threshold`
     pub failure_threshold: u32,
@@ -570,6 +571,7 @@ pub enum HealthCheckType {
     Authentication,
     /// Check basic HSM operations (encrypt/decrypt)
     BasicOperations,
+    /// Optional crypto micro-benchmark to detect severe performance regression.
     PerformanceBenchmark,
     /// Validate HSM security configurations
     SecurityValidation,
@@ -638,6 +640,7 @@ pub enum LoadBalancingStrategy {
     LeastConnections,
     /// Round-robin with weighted distribution
     WeightedRoundRobin,
+    /// Prefer endpoints with the best recent benchmark scores.
     PerformanceBased,
     /// Random distribution of requests
     Random,
@@ -652,6 +655,7 @@ pub struct FailoverConfig {
     /// Whether to automatically failover on HSM failure
     /// Whether `automatic_failover` is enabled
     pub automatic_failover: bool,
+    /// Max time to wait before declaring primary dead and promoting secondary. **Default:** `30s` (`BEARDOG_HSM_FAILOVER_TIMEOUT_SECS`).
     pub failover_timeout: Duration,
     /// Whether to automatically failback when primary recovers
     /// Whether failback is enabled
@@ -688,6 +692,7 @@ pub struct SessionManagementConfig {
     /// Whether session management is enabled
     /// Whether feature is enabled
     pub enabled: bool,
+    /// Idle time before an HSM session is recycled. **Default:** `3600s` (`BEARDOG_HSM_SESSION_TIMEOUT_SECS`).
     pub session_timeout: Duration,
     /// Maximum number of concurrent HSM sessions
     /// Number of `max_concurrent_sessions`
@@ -765,6 +770,7 @@ impl Default for HsmBackupConfig {
     }
 }
 
+/// Validates canonical HSM configuration trees before use in production paths.
 pub trait HsmConfigValidation {
     /// Validate the HSM configuration
     /// Validates input

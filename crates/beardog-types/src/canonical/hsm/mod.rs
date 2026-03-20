@@ -15,6 +15,7 @@ pub mod config;
 pub mod discovery;
 /// Keys module
 pub mod keys;
+/// Platform-specific HSM classifications (device types, algorithms, storage backends).
 pub mod platform_types;
 /// Status module
 pub mod status;

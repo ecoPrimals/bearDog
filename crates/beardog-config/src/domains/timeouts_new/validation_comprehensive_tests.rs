@@ -6,8 +6,8 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::domains::timeouts_new::validation::validate_config;
     use crate::domains::timeouts_new::TimeoutConfigBuilder;
+    use crate::domains::timeouts_new::validation::validate_config;
 
     #[test]
     fn test_validate_config_all_valid() {

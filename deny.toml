@@ -1,80 +1,178 @@
-# 🔒 BearDog Cargo Deny Configuration
-# Enforces dependency security and quality standards
+# BearDog Cargo Deny Configuration
+# Enforces dependency security, ecoBin purity, and quality standards
 
-# ═══════════════════════════════════════════════════════════════════
-# Security Advisories
-# ═══════════════════════════════════════════════════════════════════
 [advisories]
-# Fail build on security vulnerabilities
 vulnerability = "deny"
-# Warn on unmaintained crates
 unmaintained = "warn"
-# Warn on yanked crates
 yanked = "warn"
-# Deny specific advisories (none currently)
 ignore = []
 
-# ═══════════════════════════════════════════════════════════════════
-# License Policy
-# ═══════════════════════════════════════════════════════════════════
 [licenses]
-# Fail build on unlicensed dependencies
 unlicensed = "deny"
-# Allow common permissive licenses
 allow = [
     "MIT",
     "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
     "BSD-3-Clause",
     "BSD-2-Clause",
     "ISC",
     "Zlib",
+    "Unicode-3.0",
     "Unicode-DFS-2016",
+    "BSL-1.0",
+    "CC0-1.0",
 ]
-# Deny copyleft licenses (GPL, AGPL, etc.)
 deny = [
     "GPL-2.0",
     "GPL-3.0",
-    "AGPL-3.0",
     "LGPL-2.1",
     "LGPL-3.0",
 ]
-# Confidence threshold for license detection
 confidence-threshold = 0.8
 
-# ═══════════════════════════════════════════════════════════════════
-# Dependency Sources
-# ═══════════════════════════════════════════════════════════════════
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-core"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-types"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-tunnel"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-security"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-ipc"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-auth"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-genetics"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-adapters"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-monitoring"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-utils"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-traits"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-config"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-errors"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-cli"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-workflows"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-compliance"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-capabilities"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-discovery"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-threat"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-hid"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-installer"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-deploy"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-production"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-node-registry"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-tower-atomic"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-client"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-integration-tests"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "beardog-mixed-entropy-showcase"
+
+[[licenses.exceptions]]
+allow = ["AGPL-3.0-only"]
+crate = "benchmarks"
+
 [sources]
-# Only allow crates from crates.io
 unknown-registry = "deny"
 unknown-git = "deny"
-# Allow git dependencies for development (warn in production)
 allow-git = []
 
-# ═══════════════════════════════════════════════════════════════════
-# Banned Dependencies (Known Issues)
-# ═══════════════════════════════════════════════════════════════════
 [bans]
-# Fail on multiple versions of the same crate
-multiple-versions = "warn"
-# Warn on wildcard dependencies
-wildcards = "warn"
-# Allow specific duplicate versions (if needed for compatibility)
+multiple-versions = "deny"
+wildcards = "deny"
 skip = []
-# Deny specific crates
 deny = [
-    # Deny outdated crypto libraries
-    # { name = "md5", wrappers = [] },
-    # { name = "sha1", wrappers = [] },
+    { crate = "openssl", wrappers = [] },
+    { crate = "openssl-sys", wrappers = [] },
+    { crate = "ring", wrappers = [] },
+    { crate = "aws-lc-rs", wrappers = [] },
+    { crate = "aws-lc-sys", wrappers = [] },
+    { crate = "native-tls", wrappers = [] },
+    { crate = "libsodium-sys", wrappers = [] },
+    { crate = "hidapi", wrappers = [] },
+    { crate = "bindgen", wrappers = [] },
 ]
-# Allowed duplicate versions (empty = strict)
 skip-tree = []
 
-# ═══════════════════════════════════════════════════════════════════
-# Dependency Tree Depth (prevent bloat)
-# ═══════════════════════════════════════════════════════════════════
 [graph]
-# Warn on dependencies with many transitive dependencies
 targets = [
     "x86_64-unknown-linux-gnu",
     "aarch64-unknown-linux-gnu",

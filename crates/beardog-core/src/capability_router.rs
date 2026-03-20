@@ -143,9 +143,6 @@ pub struct CapabilityRouter {
 
     /// Round-robin counters by capability
     rr_counters: HashMap<SimpleCapability, usize>,
-
-    /// Default selection strategy
-    default_strategy: SelectionStrategy,
 }
 
 // =============================================================================
@@ -155,7 +152,7 @@ pub struct CapabilityRouter {
 impl RequestContext {
     /// Create a new request context
     #[must_use]
-    pub fn new(capability: SimpleCapability) -> Self {
+    pub const fn new(capability: SimpleCapability) -> Self {
         Self {
             capability,
             strategy: SelectionStrategy::HighestTrust,
@@ -168,21 +165,21 @@ impl RequestContext {
 
     /// Set selection strategy
     #[must_use]
-    pub fn with_strategy(mut self, strategy: SelectionStrategy) -> Self {
+    pub const fn with_strategy(mut self, strategy: SelectionStrategy) -> Self {
         self.strategy = strategy;
         self
     }
 
     /// Set maximum acceptable latency
     #[must_use]
-    pub fn with_max_latency(mut self, latency_ms: u64) -> Self {
+    pub const fn with_max_latency(mut self, latency_ms: u64) -> Self {
         self.max_latency_ms = Some(latency_ms);
         self
     }
 
     /// Set minimum required trust score
     #[must_use]
-    pub fn with_min_trust(mut self, trust_score: f64) -> Self {
+    pub const fn with_min_trust(mut self, trust_score: f64) -> Self {
         self.min_trust_score = Some(trust_score);
         self
     }
@@ -196,7 +193,7 @@ impl RequestContext {
 
     /// Set request timeout
     #[must_use]
-    pub fn with_timeout(mut self, timeout: Duration) -> Self {
+    pub const fn with_timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;
         self
     }
@@ -230,7 +227,6 @@ impl CapabilityRouter {
             discovery,
             load_tracker: HashMap::new(),
             rr_counters: HashMap::new(),
-            default_strategy: SelectionStrategy::HighestTrust,
         })
     }
 
@@ -297,7 +293,7 @@ impl CapabilityRouter {
                 self.load_tracker
                     .get(&p.name)
                     .and_then(|load| load.avg_latency_ms)
-                    .map_or(true, |latency| {
+                    .is_none_or(|latency| {
                         // Truncate f64 latency to u64 for integer comparison
                         // Safe: latency values are practical millisecond ranges
                         (latency.round() as u64) <= max_latency
@@ -428,7 +424,7 @@ impl CapabilityRouter {
 
         // Update rolling average latency
         load.avg_latency_ms = Some(match load.avg_latency_ms {
-            Some(avg) => (avg * 0.9) + (latency_ms * 0.1), // Exponential moving average
+            Some(avg) => avg.mul_add(0.9, latency_ms * 0.1), // Exponential moving average
             None => latency_ms,
         });
     }
@@ -467,14 +463,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_router_initialization() {
-        std::env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
+        beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
 
         let router = CapabilityRouter::new().unwrap();
-        assert_eq!(router.default_strategy, SelectionStrategy::HighestTrust);
         assert!(router.load_tracker.is_empty());
         assert!(router.rr_counters.is_empty());
 
-        std::env::remove_var("PRIMAL_DISCOVERY_METHOD");
+        beardog_errors::process_env::remove_var("PRIMAL_DISCOVERY_METHOD");
     }
 
     #[test]
@@ -504,7 +499,6 @@ mod tests {
             discovery: PrimalDiscovery::from_env().unwrap(),
             load_tracker: HashMap::new(),
             rr_counters: HashMap::new(),
-            default_strategy: SelectionStrategy::HighestTrust,
         };
 
         let context = RequestContext::new(SimpleCapability::Cryptography)
@@ -522,7 +516,6 @@ mod tests {
             discovery: PrimalDiscovery::from_env().unwrap(),
             load_tracker: HashMap::new(),
             rr_counters: HashMap::new(),
-            default_strategy: SelectionStrategy::HighestTrust,
         };
 
         router.record_success("test-primal", 50.0);
@@ -559,7 +552,6 @@ mod tests {
             discovery: PrimalDiscovery::from_env().unwrap(),
             load_tracker: HashMap::new(),
             rr_counters: HashMap::new(),
-            default_strategy: SelectionStrategy::HighestTrust,
         };
         let context = RequestContext::new(SimpleCapability::Cryptography)
             .with_strategy(SelectionStrategy::RoundRobin);
@@ -595,7 +587,6 @@ mod tests {
             discovery: PrimalDiscovery::from_env().unwrap(),
             load_tracker: HashMap::new(),
             rr_counters: HashMap::new(),
-            default_strategy: SelectionStrategy::HighestTrust,
         };
         let context = RequestContext::new(SimpleCapability::Cryptography)
             .with_strategy(SelectionStrategy::FirstAvailable);
@@ -609,7 +600,6 @@ mod tests {
             discovery: PrimalDiscovery::from_env().unwrap(),
             load_tracker: HashMap::new(),
             rr_counters: HashMap::new(),
-            default_strategy: SelectionStrategy::HighestTrust,
         };
         router.record_failure("failed-primal");
         // No panic - failure recorded

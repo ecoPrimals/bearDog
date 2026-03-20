@@ -99,7 +99,7 @@ impl EndpointConfig {
     /// - Testing (no port conflicts!)
     /// - Development (multiple instances)
     /// - Cloud environments (dynamic allocation)
-    pub fn auto() -> Self {
+    pub const fn auto() -> Self {
         Self {
             http_port: 0,
             rpc_port: 0,
@@ -121,22 +121,22 @@ impl EndpointConfig {
     }
 
     /// Get HTTP socket address
-    pub fn http_socket_addr(&self) -> SocketAddr {
+    pub const fn http_socket_addr(&self) -> SocketAddr {
         SocketAddr::new(self.bind_addr, self.http_port)
     }
 
     /// Get RPC socket address
-    pub fn rpc_socket_addr(&self) -> SocketAddr {
+    pub const fn rpc_socket_addr(&self) -> SocketAddr {
         SocketAddr::new(self.bind_addr, self.rpc_port)
     }
 
     /// Get WebSocket socket address
-    pub fn ws_socket_addr(&self) -> SocketAddr {
+    pub const fn ws_socket_addr(&self) -> SocketAddr {
         SocketAddr::new(self.bind_addr, self.ws_port)
     }
 
     /// Get metrics socket address
-    pub fn metrics_socket_addr(&self) -> SocketAddr {
+    pub const fn metrics_socket_addr(&self) -> SocketAddr {
         SocketAddr::new(self.bind_addr, self.metrics_port)
     }
 
@@ -236,7 +236,7 @@ impl ZeroHardcodingTimeouts {
     }
 
     /// Aggressive timeouts (for fast-fail scenarios)
-    pub fn aggressive() -> Self {
+    pub const fn aggressive() -> Self {
         Self {
             connect: Duration::from_secs(2),
             request: Duration::from_secs(5),
@@ -249,7 +249,7 @@ impl ZeroHardcodingTimeouts {
     }
 
     /// Relaxed timeouts (for slow networks)
-    pub fn relaxed() -> Self {
+    pub const fn relaxed() -> Self {
         Self {
             connect: Duration::from_secs(30),
             request: Duration::from_secs(120),
@@ -266,8 +266,7 @@ impl ZeroHardcodingTimeouts {
         std::env::var(var)
             .ok()
             .and_then(|s| s.parse::<u64>().ok())
-            .map(Duration::from_secs)
-            .unwrap_or_else(|| Duration::from_secs(default_secs))
+            .map_or_else(|| Duration::from_secs(default_secs), Duration::from_secs)
     }
 }
 

@@ -234,7 +234,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     #[cfg(feature = "fido2")]
     {
-        use beardog_security::hsm::fido2::{discover_fido2_devices, Fido2MultiCredentialProvider};
+        use beardog_security::hsm::fido2::{Fido2MultiCredentialProvider, discover_fido2_devices};
 
         println!("🔍 Discovering FIDO2 devices (SoloKeys, YubiKey, etc.)...");
         match discover_fido2_devices().await {

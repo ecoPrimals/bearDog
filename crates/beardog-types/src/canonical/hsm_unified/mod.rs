@@ -24,6 +24,7 @@ pub mod migration;
 pub mod mobile;
 /// Monitoring module
 pub mod monitoring;
+/// Throughput ceilings, batching, and latency SLOs for the unified HSM stack.
 pub mod performance;
 /// Platform module
 pub mod platform;
@@ -63,6 +64,7 @@ pub struct CanonicalHsmConfig {
     /// The security value
     pub security: HsmSecurityConfig,
 
+    /// Performance envelope (QPS, concurrency, caching) for crypto operations.
     pub performance: HsmPerformanceConfig,
 
     /// Monitoring configuration

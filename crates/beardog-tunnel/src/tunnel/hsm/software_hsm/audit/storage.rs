@@ -17,8 +17,8 @@ pub struct PersistentAuditStorage {
     file_path: std::path::PathBuf,
     cache: Arc<RwLock<VecDeque<AuditLogEntry>>>,
     max_cache_size: usize,
-    stats_cache: Arc<RwLock<Option<StorageStats>>>,
-    stats_cache_timestamp: Arc<RwLock<chrono::DateTime<chrono::Utc>>>,
+    _stats_cache: Arc<RwLock<Option<StorageStats>>>,
+    _stats_cache_timestamp: Arc<RwLock<chrono::DateTime<chrono::Utc>>>,
     /// Time-to-live for statistics cache in seconds
     pub stats_cache_ttl: u64,
 }
@@ -46,8 +46,8 @@ impl PersistentAuditStorage {
             file_path,
             cache: Arc::new(RwLock::new(VecDeque::new())),
             max_cache_size,
-            stats_cache: Arc::new(RwLock::new(None)),
-            stats_cache_timestamp: Arc::new(RwLock::new(chrono::Utc::now())),
+            _stats_cache: Arc::new(RwLock::new(None)),
+            _stats_cache_timestamp: Arc::new(RwLock::new(chrono::Utc::now())),
             stats_cache_ttl: 300, // 5 minutes
         };
 
@@ -62,12 +62,9 @@ impl PersistentAuditStorage {
     async fn load_cache(&self) -> Result<(), BearDogError> {
         debug!("📥 Loading recent audit entries into cache");
 
-        let mut file = match File::open(&self.file_path).await {
-            Ok(file) => file,
-            Err(_) => {
-                debug!("Audit file does not exist yet, starting with empty cache");
-                return Ok(());
-            }
+        let Ok(mut file) = File::open(&self.file_path).await else {
+            debug!("Audit file does not exist yet, starting with empty cache");
+            return Ok(());
         };
 
         let mut contents = String::new();

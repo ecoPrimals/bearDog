@@ -162,7 +162,8 @@ pub struct SecurityConfig {
 impl Default for SecurityConfig {
     fn default() -> Self {
         Self {
-            key_storage_path: String::from("/secure/keys"),
+            key_storage_path: std::env::var("BEARDOG_TUNNEL_KEY_STORAGE_PATH")
+                .unwrap_or_else(|_| String::from("/secure/keys")),
             key_escrow_threshold: 10,
         }
     }
@@ -202,7 +203,9 @@ pub struct GamingConfig {
 impl Default for GamingConfig {
     fn default() -> Self {
         Self {
-            anti_cheat_provider: String::from("default"),
+            // Empty: resolve anti-cheat provider by capability id at runtime when wired
+            anti_cheat_provider: std::env::var("BEARDOG_GAMING_ANTI_CHEAT_CAPABILITY")
+                .unwrap_or_default(),
             max_latency_ms: 50,
         }
     }
@@ -358,24 +361,25 @@ impl Default for AlertThresholds {
 
 impl Default for TunnelMonitoringConfig {
     fn default() -> Self {
-        // ✅ MIGRATED: Load ports from global configuration instead of hardcoded values
-        // This allows runtime configuration via environment variables
+        // Ports and log level: `BEARDOG_CONFIG` (from_env) — see `BEARDOG_METRICS_PORT`,
+        // `BEARDOG_HEALTH_PORT`, `BEARDOG_LOG_LEVEL`, `BEARDOG_PROFILING_PORT`.
+        use beardog_config::domains::network_ports::DEFAULT_PROFILING_PORT;
         use beardog_config::global::BEARDOG_CONFIG;
 
         Self {
             enable_metrics: true,
-            metrics_port: BEARDOG_CONFIG.network.discovery.port, // Was: 9090
+            metrics_port: BEARDOG_CONFIG.network.ports.metrics_port,
             enable_tracing: true,
             trace_sample_rate: 0.1,
             enable_logging: true,
-            log_level: "info".to_string(),
+            log_level: BEARDOG_CONFIG.monitoring.log_level.clone(),
             enable_health_endpoint: true,
-            health_endpoint_port: BEARDOG_CONFIG.network.api.port, // Was: 8080
+            health_endpoint_port: BEARDOG_CONFIG.network.ports.health_port,
             enable_profiling: false,
             profiling_port: std::env::var("BEARDOG_PROFILING_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(6060), // Was: 6060 (no standard config for profiling yet)
+                .unwrap_or(DEFAULT_PROFILING_PORT),
             enable_alerts: true,
             alert_thresholds: AlertThresholds::default(),
             aggregation_window: Duration::from_secs(300),
@@ -514,7 +518,9 @@ mod tests {
     #[test]
     fn test_security_config_defaults() {
         let config = SecurityConfig::default();
-        assert_eq!(config.key_storage_path, "/secure/keys");
+        let expected = std::env::var("BEARDOG_TUNNEL_KEY_STORAGE_PATH")
+            .unwrap_or_else(|_| "/secure/keys".to_string());
+        assert_eq!(config.key_storage_path, expected);
         assert_eq!(config.key_escrow_threshold, 10);
     }
 
@@ -522,7 +528,8 @@ mod tests {
     fn test_gaming_config_defaults() {
         let config = GamingConfig::default();
         assert_eq!(config.max_latency_ms, 50);
-        assert_eq!(config.anti_cheat_provider, "default");
+        let expected = std::env::var("BEARDOG_GAMING_ANTI_CHEAT_CAPABILITY").unwrap_or_default();
+        assert_eq!(config.anti_cheat_provider, expected);
     }
 
     #[test]
@@ -536,15 +543,21 @@ mod tests {
 
     #[test]
     fn test_tunnel_monitoring_config_defaults() {
+        use beardog_config::global::BEARDOG_CONFIG;
+
         let config = TunnelMonitoringConfig::default();
         assert!(config.enable_metrics);
         assert_eq!(
             config.metrics_port,
-            beardog_config::domains::network_ports::DEFAULT_DISCOVERY_PORT
+            BEARDOG_CONFIG.network.ports.metrics_port
+        );
+        assert_eq!(
+            config.health_endpoint_port,
+            BEARDOG_CONFIG.network.ports.health_port
         );
         assert!(config.enable_tracing);
         assert!(config.enable_logging);
-        assert_eq!(config.log_level, "info");
+        assert_eq!(config.log_level, BEARDOG_CONFIG.monitoring.log_level);
     }
 
     #[test]

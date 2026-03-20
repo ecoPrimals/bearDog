@@ -6,8 +6,8 @@
 
 #[cfg(test)]
 mod tunnel_creation_tests {
-    use crate::tunnel::session::{GamingSecurityProfile, SecurityGenetics, SessionManager};
     use crate::BStpConfig;
+    use crate::tunnel::session::{GamingSecurityProfile, SecurityGenetics, SessionManager};
 
     #[tokio::test]
     async fn test_tunnel_initialization() {

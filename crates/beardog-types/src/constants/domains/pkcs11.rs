@@ -80,7 +80,7 @@ pub mod return_codes {
 }
 
 /// Helper function to get human-readable description of return code
-pub fn return_code_description(code: u32) -> &'static str {
+pub const fn return_code_description(code: u32) -> &'static str {
     use return_codes::{
         CKR_ARGUMENTS_BAD, CKR_ATTRIBUTE_TYPE_INVALID, CKR_ATTRIBUTE_VALUE_INVALID, CKR_CANCEL,
         CKR_CANT_LOCK, CKR_FUNCTION_FAILED, CKR_GENERAL_ERROR, CKR_HOST_MEMORY,

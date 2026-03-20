@@ -42,9 +42,8 @@
 //!
 //! ## Safety
 //!
-//! All traits enforce memory safety with `#![deny(unsafe_code)]`.
+//! All traits enforce memory safety with workspace `unsafe_code = "forbid"`.
 
-#![deny(unsafe_code)]
 #![warn(rust_2018_idioms)]
 
 /// Modern unified trait system (primary)
@@ -62,6 +61,8 @@ pub use unified::*;
 
 // Modern prelude focused on unified traits
 pub mod prelude {
+    //! Re-exports the unified trait hierarchy for typical consumer crates.
+
     /// Modern unified traits (primary)
     pub use crate::unified::*;
 

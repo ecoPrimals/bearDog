@@ -6,7 +6,7 @@
 
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
-use crate::{assess_genetics_health, GeneticsConfig, GeneticsManager};
+use crate::{GeneticsConfig, GeneticsManager, assess_genetics_health};
 
 // TEST_CATEGORY: unit
 // TEST_DOMAIN: genetics

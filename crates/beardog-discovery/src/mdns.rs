@@ -103,7 +103,6 @@ impl MdnsDiscovery {
                         }
                         Ok(_) => {
                             // Other events (SearchStarted, etc.)
-                            continue;
                         }
                         Err(e) => {
                             warn!("mDNS event error: {}", e);
@@ -111,7 +110,7 @@ impl MdnsDiscovery {
                         }
                     }
                 }
-                _ = &mut timeout => {
+                () = &mut timeout => {
                     debug!("mDNS discovery timeout reached");
                     break;
                 }
@@ -147,12 +146,12 @@ impl MdnsDiscovery {
     ) -> Result<DiscoveredService> {
         // Extract addresses - prefer IPv4, include IPv6 if enabled
         let addresses: Vec<IpAddr> = if self.config.enable_ipv6 {
-            info.get_addresses().iter().cloned().collect()
+            info.get_addresses().iter().copied().collect()
         } else {
             info.get_addresses()
                 .iter()
                 .filter(|addr| addr.is_ipv4())
-                .cloned()
+                .copied()
                 .collect()
         };
 
@@ -279,7 +278,7 @@ impl MdnsDiscovery {
         let service_type = Self::capability_to_service_type(capability);
         let hostname = Self::get_hostname()?;
 
-        let fullname = format!("{}.{}", hostname, service_type);
+        let fullname = format!("{hostname}.{service_type}");
 
         let service_info =
             ServiceInfo::new(&service_type, &hostname, &hostname, "", port, properties)
@@ -296,13 +295,13 @@ impl MdnsDiscovery {
     /// Get local hostname
     fn get_hostname() -> Result<String> {
         let hostname = hostname::get()
-            .map_err(|e| DiscoveryError::SystemError(format!("Failed to get hostname: {}", e)))?;
+            .map_err(|e| DiscoveryError::SystemError(format!("Failed to get hostname: {e}")))?;
 
         hostname
             .to_string_lossy()
             .split('.')
             .next()
-            .map(|s| s.to_string())
+            .map(std::string::ToString::to_string)
             .ok_or_else(|| DiscoveryError::SystemError("Invalid hostname".to_string()))
     }
 }

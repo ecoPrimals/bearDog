@@ -46,28 +46,28 @@ pub enum Protocol {
 
 impl Protocol {
     /// Protocol priority (higher = preferred)
-    pub fn priority(&self) -> u8 {
+    pub const fn priority(&self) -> u8 {
         match self {
-            Protocol::Tarpc => 3, // Highest
-            Protocol::JsonRpc => 2,
-            Protocol::Http => 1,
-            Protocol::Unknown => 0,
+            Self::Tarpc => 3, // Highest
+            Self::JsonRpc => 2,
+            Self::Http => 1,
+            Self::Unknown => 0,
         }
     }
 
     /// Human-readable name
-    pub fn name(&self) -> &'static str {
+    pub const fn name(&self) -> &'static str {
         match self {
-            Protocol::Tarpc => "tarpc",
-            Protocol::JsonRpc => "json-rpc",
-            Protocol::Http => "http",
-            Protocol::Unknown => "unknown",
+            Self::Tarpc => "tarpc",
+            Self::JsonRpc => "json-rpc",
+            Self::Http => "http",
+            Self::Unknown => "unknown",
         }
     }
 
     /// Is this a high-performance protocol?
-    pub fn is_high_performance(&self) -> bool {
-        matches!(self, Protocol::Tarpc)
+    pub const fn is_high_performance(&self) -> bool {
+        matches!(self, Self::Tarpc)
     }
 }
 
@@ -88,12 +88,12 @@ pub struct ProtocolDetector {
 
 impl ProtocolDetector {
     /// Create a new protocol detector
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self { peek_size: 16 }
     }
 
     /// Create with custom peek size
-    pub fn with_peek_size(peek_size: usize) -> Self {
+    pub const fn with_peek_size(peek_size: usize) -> Self {
         Self { peek_size }
     }
 
@@ -223,7 +223,7 @@ impl Default for RouterConfig {
 
 impl RouterConfig {
     /// Create config with only tarpc enabled
-    pub fn tarpc_only() -> Self {
+    pub const fn tarpc_only() -> Self {
         Self {
             enable_tarpc: true,
             enable_jsonrpc: false,
@@ -233,7 +233,7 @@ impl RouterConfig {
     }
 
     /// Create config with only JSON-RPC enabled
-    pub fn jsonrpc_only() -> Self {
+    pub const fn jsonrpc_only() -> Self {
         Self {
             enable_tarpc: false,
             enable_jsonrpc: true,
@@ -243,7 +243,7 @@ impl RouterConfig {
     }
 
     /// Create config for development (all protocols, prefer JSON-RPC for debugging)
-    pub fn development() -> Self {
+    pub const fn development() -> Self {
         Self {
             enable_tarpc: true,
             enable_jsonrpc: true,
@@ -275,7 +275,7 @@ impl RouterConfig {
     }
 
     /// Check if a protocol is supported
-    pub fn is_supported(&self, protocol: Protocol) -> bool {
+    pub const fn is_supported(&self, protocol: Protocol) -> bool {
         match protocol {
             Protocol::Tarpc => self.enable_tarpc,
             Protocol::JsonRpc => self.enable_jsonrpc,
@@ -350,7 +350,7 @@ pub struct PrefixedStream {
 
 impl PrefixedStream {
     /// Create a new prefixed stream
-    pub fn new(prefix: Vec<u8>, inner: TcpStream) -> Self {
+    pub const fn new(prefix: Vec<u8>, inner: TcpStream) -> Self {
         Self {
             prefix,
             prefix_pos: 0,
@@ -428,7 +428,8 @@ mod tests {
 
     #[test]
     fn test_detect_http_get() {
-        let bytes = b"GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
+        // Host header is arbitrary; detection keys off request line only
+        let bytes = b"GET / HTTP/1.1\r\nHost: discarded.test\r\n\r\n";
         assert_eq!(ProtocolDetector::detect_from_bytes(bytes), Protocol::Http);
     }
 
@@ -498,6 +499,7 @@ mod tests {
     #[tokio::test]
     async fn test_prefixed_stream_new() {
         use tokio::net::{TcpListener, TcpStream};
+        // Ephemeral loopback — test-only
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
         let (client_stream, _) = tokio::join!(TcpStream::connect(addr), listener.accept());
@@ -509,6 +511,7 @@ mod tests {
     #[tokio::test]
     async fn test_prefixed_stream_prefix_exhausted_empty() {
         use tokio::net::{TcpListener, TcpStream};
+        // Ephemeral loopback — test-only
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
         let (client_stream, _) = tokio::join!(TcpStream::connect(addr), listener.accept());
@@ -521,6 +524,7 @@ mod tests {
     async fn test_prefixed_stream_read_from_prefix() {
         use tokio::io::AsyncReadExt;
         use tokio::net::TcpListener;
+        // Ephemeral loopback — test-only
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
         let (client_stream, _) = tokio::join!(TcpStream::connect(addr), listener.accept());

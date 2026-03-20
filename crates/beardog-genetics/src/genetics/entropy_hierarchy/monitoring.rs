@@ -9,6 +9,7 @@ use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 use uuid::Uuid;
 
+/// Tracks aggregate statistics and performs scheduled cleanup of expired seeds.
 #[derive(Debug, Clone, Default)]
 pub struct EntropyMonitor {
     #[allow(dead_code)] // Used for configuration but not yet fully implemented
@@ -180,6 +181,7 @@ impl EntropyMonitor {
         self.metrics = metrics;
     }
 
+    /// Last-recorded performance counters mirrored from the hierarchy manager.
     #[must_use]
     pub const fn get_performance_metrics(&self) -> &PerformanceMetrics {
         &self.metrics
@@ -203,7 +205,7 @@ pub struct EntropyHierarchyStats {
     pub self_sovereign_seeds: u32,
 }
 
-/// Entropy analytics data
+/// Derived analytics: averages and histograms over active seeds.
 #[derive(Debug, Clone)]
 pub struct EntropyAnalytics {
     /// The stats value
@@ -216,17 +218,20 @@ pub struct EntropyAnalytics {
     pub age_distribution: HashMap<String, u32>,
 }
 
+/// Human-readable health rollup plus the numeric metrics it was derived from.
 #[derive(Debug, Clone)]
 pub struct EntropyHealthStatus {
     /// The overall health value
     pub overall_health: String,
     /// The quality score value
     pub quality_score: f64,
+    /// Underlying counters backing the health summary.
     pub performance_metrics: PerformanceMetrics,
     /// The last updated value
     pub last_updated: DateTime<Utc>,
 }
 
+/// Counters and timing placeholders exported for dashboards and adaptive tuning.
 #[derive(Debug, Clone, Default)]
 pub struct PerformanceMetrics {
     /// Number of `active_seeds`
@@ -235,8 +240,11 @@ pub struct PerformanceMetrics {
     pub total_entropy_generated: u64,
     /// The average quality score value
     pub average_quality_score: f64,
+    /// Rolling average time to create a seed (ms); placeholder until instrumented.
     pub seed_creation_time_ms: f64,
+    /// Rolling average mixing time (ms); placeholder until instrumented.
     pub entropy_mixing_time_ms: f64,
+    /// Rolling average validation time (ms); placeholder until instrumented.
     pub validation_time_ms: f64,
     /// Number of `total_operations`
     pub total_operations: u64,

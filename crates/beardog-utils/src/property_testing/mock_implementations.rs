@@ -168,6 +168,7 @@ impl PropertyBasedTestFramework {
         Ok(sanitized)
     }
 
+    /// Simulates business validation: empty input yields a [`BearDogError::Business`] error.
     pub fn mock_process_with_errors(&self, _data: &[u8]) -> Result<String, BearDogError> {
         // Simulate processing that might fail
         if _data.is_empty() {
@@ -179,6 +180,7 @@ impl PropertyBasedTestFramework {
         Ok("Processed successfully".to_string())
     }
 
+    /// Minimal `key = "value"` line parser for property tests (not a full TOML implementation).
     pub fn mock_parse_toml(
         &self,
         toml_data: &str,
@@ -202,6 +204,7 @@ impl PropertyBasedTestFramework {
         Ok(config)
     }
 
+    /// [`Self::mock_parse_toml`] plus injected defaults for `default_value` and `timeout`.
     pub fn mock_parse_config_with_defaults(
         &self,
         config_data: &str,
@@ -219,6 +222,7 @@ impl PropertyBasedTestFramework {
         Ok(config)
     }
 
+    /// Deterministic pseudo-random bytes from time + `length` (not suitable for crypto).
     pub fn generate_random_bytes(&self, length: usize) -> Result<Vec<u8>, BearDogError> {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
@@ -247,6 +251,7 @@ impl PropertyBasedTestFramework {
         Ok(bytes)
     }
 
+    /// Rotates through benign, XSS, SQLi, path-traversal, large, and empty API payloads.
     pub fn generate_api_input_data(&self, index: usize) -> Result<Vec<u8>, BearDogError> {
         let test_inputs = [
             b"valid_input".to_vec(),
@@ -260,6 +265,7 @@ impl PropertyBasedTestFramework {
         Ok(test_inputs[index % test_inputs.len()].clone())
     }
 
+    /// Rotates through valid, multi-key, broken, comment-only, and empty config snippets.
     pub fn generate_config_data(&self, index: usize) -> Result<Vec<u8>, BearDogError> {
         const TEST_PORT: u16 = 8080;
         let test_configs = [

@@ -47,28 +47,34 @@
 //! These traits will be maintained for backward compatibility through v3.6.x
 //! but will be removed in v3.7.0.
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+/// Connection status, provider info, and the legacy [`BaseProvider`] surface.
 pub mod base;
 
+/// Authentication- and policy-oriented canonical provider hooks.
 pub mod security;
 
+/// Hardware-backed key operations in the legacy trait layer.
 pub mod hsm;
 
+/// Encryption, signing, and digest helpers for canonical providers.
 pub mod crypto;
 
+/// Orchestration hooks for multi-step security workflows.
 pub mod workflow;
 
+/// Cache-oriented provider contracts retained for compatibility.
 pub mod cache;
 
+/// Metrics and health probes in the canonical naming scheme.
 pub mod monitoring;
 
+/// Persistence and query abstractions for canonical integrations.
 pub mod database;
 
+/// AI/ML provider hooks predating the unified module.
 pub mod ai;
 
+/// Catch-all “universal” provider capabilities.
 pub mod universal;
 
 pub use ai::AiProvider;

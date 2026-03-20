@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+//! Metrics, events, service health, and alerting for canonical monitors.
+
 use super::base::{BaseProvider, ServiceHealth};
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// Temporary type definitions
+/// Priority bucket for operator notifications.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AlertSeverity {
     /// Represents low variant
@@ -19,7 +21,9 @@ pub enum AlertSeverity {
 }
 
 #[allow(clippy::type_complexity)]
+/// Records time-series metrics and raises simple threshold alerts.
 pub trait MonitoringProvider: BaseProvider {
+    /// Ingests a single named gauge/counter with optional tags.
     fn record_metric(
         name: &str,
         value: f64,
@@ -32,6 +36,7 @@ pub trait MonitoringProvider: BaseProvider {
         time_range: Option<(chrono::DateTime<chrono::Utc>, chrono::DateTime<chrono::Utc>)>,
     ) -> impl std::future::Future<Output = Result<HashMap<String, f64>, BearDogError>> + Send;
 
+    /// Structured log-style event for tracing pipelines.
     fn record_event(
         event_type: &str,
         data: HashMap<&str, &str>,
@@ -54,6 +59,7 @@ pub trait MonitoringProvider: BaseProvider {
         alert_id: &str,
     ) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
 
+    /// Lists configured alerts as loose key/value maps.
     fn list_alerts(
         &self,
     ) -> impl std::future::Future<Output = Result<Vec<HashMap<String, String>>, BearDogError>> + Send;

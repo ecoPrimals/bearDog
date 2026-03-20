@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Human Entropy Collection Module
-//
-// This module provides comprehensive human entropy collection capabilities,
-// including interactive keyboard/mouse capture, multi-modal sensors, and
-// extensible architecture for future sensor types (DNA, EKG, wearables, etc.)
+//! Human entropy collection: live terminal interaction and legacy multi-modal collectors.
 
-pub mod interaction_capture; // Interactive keyboard and mouse entropy
-pub mod legacy; // Legacy entropy collection (system-based)
+/// Blocking keyboard/mouse capture with timing-derived entropy (no simulated input).
+pub mod interaction_capture;
+/// System-sourced and multi-modal collectors used where live TTY capture is unavailable.
+pub mod legacy;
 
 // Re-export main types
 pub use interaction_capture::{

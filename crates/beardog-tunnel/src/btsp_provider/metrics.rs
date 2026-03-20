@@ -50,7 +50,7 @@ impl BtspMetrics {
     }
 
     /// Check if any operations have been performed
-    pub fn has_activity(&self) -> bool {
+    pub const fn has_activity(&self) -> bool {
         self.tunnels_established > 0
             || self.encryption_operations > 0
             || self.decryption_operations > 0
@@ -58,7 +58,7 @@ impl BtspMetrics {
     }
 
     /// Get total cryptographic operations (encryption + decryption)
-    pub fn total_crypto_ops(&self) -> u64 {
+    pub const fn total_crypto_ops(&self) -> u64 {
         self.encryption_operations
             .saturating_add(self.decryption_operations)
     }

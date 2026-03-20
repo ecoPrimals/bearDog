@@ -49,7 +49,7 @@ pub struct ValidationReport {
 
 impl ValidationReport {
     /// Create new validation report
-    pub fn new(primal: PrimalName) -> Self {
+    pub const fn new(primal: PrimalName) -> Self {
         Self {
             primal,
             file_exists: false,
@@ -63,7 +63,7 @@ impl ValidationReport {
     }
 
     /// Check if binary is healthy
-    pub fn is_healthy(&self) -> bool {
+    pub const fn is_healthy(&self) -> bool {
         self.file_exists && self.is_executable && self.size_reasonable && self.runs
     }
 }
@@ -88,7 +88,12 @@ impl std::fmt::Display for ValidationReport {
             if self.size_reasonable { "✓" } else { "✗" }
         )?;
         if let Some(ref checksum) = self.checksum {
-            writeln!(f, "  SHA-256:        {}...", &checksum[..16])?;
+            let prefix_len = checksum.len().min(16);
+            writeln!(
+                f,
+                "  SHA-256:        {}...",
+                &checksum.as_str()[..prefix_len]
+            )?;
         }
         writeln!(f, "  Runs:           {}", if self.runs { "✓" } else { "✗" })?;
         writeln!(
@@ -111,7 +116,7 @@ pub struct BinaryValidator;
 
 impl BinaryValidator {
     /// Create new validator
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 
@@ -122,7 +127,7 @@ impl BinaryValidator {
     /// # Examples
     /// ```no_run
     /// # use beardog_installer::validator::BinaryValidator;
-    /// # use beardog_installer::Primal;
+    /// # use beardog_installer::PrimalName;
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let validator = BinaryValidator::new();
     /// let binary_path = std::path::Path::new("/usr/local/bin/beardog");
@@ -204,7 +209,7 @@ impl BinaryValidator {
         hasher.update(&bytes);
         let result = hasher.finalize();
 
-        Ok(format!("{:x}", result))
+        Ok(format!("{result:x}"))
     }
 
     /// Test binary execution
@@ -322,7 +327,7 @@ mod tests {
         let report = validator
             .validate_binary(PrimalName::new(PrimalName::BEARDOG), path)
             .await
-            .unwrap();
+            .expect("validate missing binary should return Ok(report)");
 
         assert!(!report.file_exists);
         assert!(!report.is_healthy());
@@ -330,27 +335,32 @@ mod tests {
 
     #[tokio::test]
     async fn test_validate_binary_exists() {
-        let temp = TempDir::new().unwrap();
+        let temp = TempDir::new().expect("tempdir");
         let binary_path = temp.path().join("beardog");
 
         // Create a fake binary
         fs::write(&binary_path, b"#!/bin/sh\necho 'BearDog v1.0.0'")
             .await
-            .unwrap();
+            .expect("write fake binary");
 
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            let mut perms = fs::metadata(&binary_path).await.unwrap().permissions();
+            let mut perms = fs::metadata(&binary_path)
+                .await
+                .expect("metadata")
+                .permissions();
             perms.set_mode(0o755);
-            fs::set_permissions(&binary_path, perms).await.unwrap();
+            fs::set_permissions(&binary_path, perms)
+                .await
+                .expect("set_permissions");
         }
 
         let validator = BinaryValidator::new();
         let report = validator
             .validate_binary(PrimalName::new(PrimalName::BEARDOG), &binary_path)
             .await
-            .unwrap();
+            .expect("validate existing binary");
 
         assert!(report.file_exists);
         assert!(report.is_executable);
@@ -360,12 +370,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_compute_sha256() {
-        let temp = TempDir::new().unwrap();
+        let temp = TempDir::new().expect("tempdir");
         let file_path = temp.path().join("test.txt");
-        fs::write(&file_path, b"test content").await.unwrap();
+        fs::write(&file_path, b"test content")
+            .await
+            .expect("write test file");
 
         let validator = BinaryValidator::new();
-        let checksum = validator.compute_sha256(&file_path).await.unwrap();
+        let checksum = validator
+            .compute_sha256(&file_path)
+            .await
+            .expect("checksum");
 
         // SHA-256 of "test content"
         assert_eq!(checksum.len(), 64); // SHA-256 is 64 hex characters
@@ -374,7 +389,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_validate_all() {
-        let temp = TempDir::new().unwrap();
+        let temp = TempDir::new().expect("tempdir");
 
         // Create multiple fake binaries
         let binaries = vec![
@@ -389,14 +404,18 @@ mod tests {
         ];
 
         for (_, path) in &binaries {
-            fs::write(path, b"#!/bin/sh\necho test").await.unwrap();
+            fs::write(path, b"#!/bin/sh\necho test")
+                .await
+                .expect("write fake binary");
 
             #[cfg(unix)]
             {
                 use std::os::unix::fs::PermissionsExt;
-                let mut perms = fs::metadata(path).await.unwrap().permissions();
+                let mut perms = fs::metadata(path).await.expect("metadata").permissions();
                 perms.set_mode(0o755);
-                fs::set_permissions(path, perms).await.unwrap();
+                fs::set_permissions(path, perms)
+                    .await
+                    .expect("set_permissions");
             }
         }
 

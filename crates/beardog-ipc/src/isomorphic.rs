@@ -46,14 +46,14 @@ impl IpcEndpoint {
     /// Get display string for logging
     pub fn display(&self) -> String {
         match self {
-            IpcEndpoint::UnixSocket(path) => format!("unix:{}", path.display()),
-            IpcEndpoint::TcpLocal(addr) => format!("tcp:{}", addr),
+            Self::UnixSocket(path) => format!("unix:{}", path.display()),
+            Self::TcpLocal(addr) => format!("tcp:{addr}"),
         }
     }
 
     /// Check if this is the optimal transport (Unix socket)
-    pub fn is_optimal(&self) -> bool {
-        matches!(self, IpcEndpoint::UnixSocket(_))
+    pub const fn is_optimal(&self) -> bool {
+        matches!(self, Self::UnixSocket(_))
     }
 }
 
@@ -142,10 +142,7 @@ fn get_unix_socket_paths() -> Vec<PathBuf> {
 
     // 2. XDG runtime directory (standard)
     if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
-        paths.push(PathBuf::from(format!(
-            "{}/biomeos/beardog.sock",
-            runtime_dir
-        )));
+        paths.push(PathBuf::from(format!("{runtime_dir}/biomeos/beardog.sock")));
     }
 
     // 3. /tmp fallback (compatibility)
@@ -156,7 +153,7 @@ fn get_unix_socket_paths() -> Vec<PathBuf> {
 
 /// Discover TCP endpoint from discovery file
 ///
-/// **Discovery File Format**: `tcp:127.0.0.1:PORT`
+/// **Discovery File Format**: `tcp:<host>:<port>` (parsed as [`SocketAddr`]; typically loopback from the daemon’s written discovery file)
 ///
 /// **Search Paths** (XDG-compliant):
 /// 1. `$XDG_RUNTIME_DIR/beardog-ipc-port`
@@ -169,7 +166,7 @@ async fn discover_tcp_endpoint() -> Result<IpcEndpoint> {
 
     for file in discovery_files {
         if let Ok(contents) = tokio::fs::read_to_string(&file).await {
-            // Parse format: tcp:127.0.0.1:PORT
+            // Parse format: tcp:<SocketAddr>
             if let Some(addr_str) = contents.trim().strip_prefix("tcp:") {
                 if let Ok(addr) = addr_str.parse::<SocketAddr>() {
                     debug!("📁 Found TCP discovery file: {} -> {}", file, addr);
@@ -188,12 +185,12 @@ fn get_tcp_discovery_file_candidates() -> Vec<String> {
 
     // 1. XDG runtime directory (preferred)
     if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
-        files.push(format!("{}/beardog-ipc-port", runtime_dir));
+        files.push(format!("{runtime_dir}/beardog-ipc-port"));
     }
 
     // 2. Home directory .local/share (standard)
     if let Ok(home) = std::env::var("HOME") {
-        files.push(format!("{}/.local/share/beardog-ipc-port", home));
+        files.push(format!("{home}/.local/share/beardog-ipc-port"));
     }
 
     // 3. /tmp (last resort)
@@ -245,7 +242,7 @@ pub async fn connect_beardog() -> Result<Box<dyn AsyncStream>> {
         IpcEndpoint::TcpLocal(addr) => {
             let stream = TcpStream::connect(addr)
                 .await
-                .context(format!("Failed to connect to TCP: {}", addr))?;
+                .context(format!("Failed to connect to TCP: {addr}"))?;
 
             info!("✅ Connected via TCP (isomorphic fallback)");
             Ok(Box::new(stream) as Box<dyn AsyncStream>)
@@ -263,8 +260,9 @@ mod tests {
         assert_eq!(unix.display(), "unix:/tmp/test.sock");
         assert!(unix.is_optimal());
 
-        let tcp = IpcEndpoint::TcpLocal("127.0.0.1:8080".parse().unwrap());
-        assert_eq!(tcp.display(), "tcp:127.0.0.1:8080");
+        // Test-only: arbitrary loopback port for display string shape
+        let tcp = IpcEndpoint::TcpLocal("127.0.0.1:65000".parse().unwrap());
+        assert_eq!(tcp.display(), "tcp:127.0.0.1:65000");
         assert!(!tcp.is_optimal());
     }
 
@@ -286,10 +284,11 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_unix_socket_paths_env_override() {
-        std::env::set_var("BEARDOG_SOCKET", "/custom/beardog.sock");
+        beardog_errors::process_env::set_var("BEARDOG_SOCKET", "/custom/beardog.sock");
         let paths = get_unix_socket_paths();
-        std::env::remove_var("BEARDOG_SOCKET");
+        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
         assert!(!paths.is_empty());
         assert!(paths[0].to_string_lossy().contains("custom"));
     }
@@ -312,12 +311,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_discover_beardog_endpoint_fails_without_service() {
-        std::env::remove_var("BEARDOG_SOCKET");
+        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
         let result = discover_beardog_endpoint().await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Could not discover"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Could not discover")
+        );
     }
 }

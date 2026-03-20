@@ -7,6 +7,7 @@
 
 use std::time::Duration;
 
+/// Released component versions, protocol versions, and build target metadata.
 pub mod versions {
     /// Primary `BearDog` version from Cargo.toml
     pub const BEARDOG_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -30,6 +31,7 @@ pub mod versions {
     /// Compatibility versions
     /// Minimum supported client version
     pub const MIN_SUPPORTED_CLIENT_VERSION: &str = "1.0.0";
+    /// Minimum supported Rust toolchain for building BearDog
     pub const MIN_RUST_VERSION: &str = "1.70.0";
     /// Maximum supported `BearDog` version
     pub const MAX_SUPPORTED_VERSION: &str = "4.0.0";
@@ -42,8 +44,11 @@ pub mod versions {
     /// Configuration schema version
     pub const CONFIG_SCHEMA_VERSION: &str = "1.0.0";
 
+    /// Target CPU architecture at compile time (`std::env::consts::ARCH`)
     pub const BUILD_TARGET: &str = std::env::consts::ARCH;
+    /// Target operating system at compile time (`std::env::consts::OS`)
     pub const BUILD_OS: &str = std::env::consts::OS;
+    /// Target OS family at compile time (`std::env::consts::FAMILY`)
     pub const BUILD_FAMILY: &str = std::env::consts::FAMILY;
 }
 
@@ -58,6 +63,7 @@ pub mod defaults {
     pub const DEFAULT_CACHE_SIZE: usize = 512;
     /// Default connection pool size
     pub const DEFAULT_POOL_SIZE: usize = 10;
+    /// Default bounded queue depth for async or worker pipelines
     pub const DEFAULT_QUEUE_SIZE: usize = 1000;
 
     /// Connection defaults
@@ -73,6 +79,7 @@ pub mod defaults {
     pub const DEFAULT_IDLE_TIMEOUT: Duration = Duration::from_secs(300);
 
     /// Thread and concurrency defaults
+    /// Default size for generic worker / blocking thread pools
     pub const DEFAULT_THREAD_POOL_SIZE: usize = 4;
     /// Configuration constant: default max concurrent tasks
     pub const DEFAULT_MAX_CONCURRENT_TASKS: usize = 100;
@@ -80,7 +87,9 @@ pub mod defaults {
     pub const DEFAULT_TASK_TIMEOUT: Duration = Duration::from_secs(300);
 
     /// Logging and monitoring defaults
+    /// Default log verbosity (`tracing` / env filter style)
     pub const DEFAULT_LOG_LEVEL: &str = "info";
+    /// Default structured log encoding (`json`, etc.)
     pub const DEFAULT_LOG_FORMAT: &str = "json";
     /// Configuration constant: default metrics interval
     pub const DEFAULT_METRICS_INTERVAL: Duration = Duration::from_secs(30);
@@ -213,30 +222,42 @@ pub mod compile_time {
     pub const ENABLE_MONITORING: bool = true;
 }
 
+/// Throughput, latency, and resource targets for runtime tuning.
 pub mod performance {
     use super::Duration;
 
     /// CPU and processing
     pub const DEFAULT_CPU_CORES: usize = 4;
+    /// Upper bound CPU utilization before throttling or alerts (%)
     pub const MAX_CPU_UTILIZATION: f64 = 90.0;
+    /// Desired steady-state CPU utilization for schedulers (%)
     pub const TARGET_CPU_UTILIZATION: f64 = 70.0;
+    /// Interval between CPU metric samples
     pub const CPU_SAMPLING_INTERVAL: Duration = Duration::from_secs(1);
 
     /// Memory optimization
     pub const MEMORY_PRESSURE_THRESHOLD: f64 = 85.0;
     /// Garbage collection pressure threshold
     pub const GC_PRESSURE_THRESHOLD: f64 = 80.0;
+    /// Interval between memory pressure samples
     pub const MEMORY_SAMPLING_INTERVAL: Duration = Duration::from_secs(5);
 
     /// I/O optimization
     pub const IO_BUFFER_SIZE: usize = 8192;
+    /// Read-ahead buffer size for sequential I/O
     pub const READ_AHEAD_SIZE: usize = 65536;
+    /// Write buffer size before flush
     pub const WRITE_BUFFER_SIZE: usize = 65536;
+    /// How often to flush buffered I/O
     pub const FLUSH_INTERVAL: Duration = Duration::from_secs(1);
 
+    /// Default TCP_NODELAY (disable Nagle)
     pub const TCP_NODELAY: bool = true;
+    /// Default SO_KEEPALIVE
     pub const TCP_KEEPALIVE: bool = true;
+    /// Default socket send/receive buffer size
     pub const SOCKET_BUFFER_SIZE: usize = 65536;
+    /// Typical Ethernet MTU-sized upper bound for packet sizing
     pub const MAX_PACKET_SIZE: usize = 1500;
 
     /// Concurrency optimization
@@ -246,6 +267,7 @@ pub mod performance {
     /// Size of the blocking task thread pool
     pub const BLOCKING_POOL_SIZE: usize = 512;
 
+    /// Target cache hit ratio for admission/eviction policies
     pub const CACHE_HIT_RATIO_TARGET: f64 = 0.95;
     /// Cache eviction threshold (90% full)
     pub const CACHE_EVICTION_THRESHOLD: f64 = 0.90;
@@ -261,19 +283,25 @@ pub mod timeouts {
     pub const CONNECTION_TIMEOUT: Duration = Duration::from_secs(30);
     /// TLS handshake timeout duration
     pub const HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(10);
+    /// TCP or HTTP keep-alive timeout
     pub const KEEP_ALIVE_TIMEOUT: Duration = Duration::from_secs(60);
+    /// Idle connection reclamation timeout
     pub const IDLE_CONNECTION_TIMEOUT: Duration = Duration::from_secs(300);
 
     /// Request/Response timeouts
     pub const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
     /// Standard API response timeout
     pub const RESPONSE_TIMEOUT: Duration = Duration::from_secs(30);
+    /// Upper bound for long-running jobs (exports, migrations)
     pub const LONG_RUNNING_TIMEOUT: Duration = Duration::from_secs(300);
+    /// Timeout for batched RPC or bulk operations
     pub const BATCH_TIMEOUT: Duration = Duration::from_secs(60);
 
     /// Health check timeouts
     pub const HEALTH_CHECK_TIMEOUT: Duration = Duration::from_secs(5);
+    /// Kubernetes-style readiness probe budget
     pub const READINESS_TIMEOUT: Duration = Duration::from_secs(30);
+    /// Kubernetes-style liveness probe budget
     pub const LIVENESS_TIMEOUT: Duration = Duration::from_secs(10);
 
     /// System operation timeouts
@@ -282,6 +310,7 @@ pub mod timeouts {
     pub const SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(30);
     /// Graceful shutdown timeout allowing cleanup
     pub const GRACEFUL_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(60);
+    /// Hard kill deadline after graceful shutdown stalls
     pub const FORCE_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(10);
 
     /// **LEGACY COMPATIBILITY FUNCTION** - For migration from deprecated unified constants
@@ -300,23 +329,32 @@ pub mod intervals {
     pub const METRICS_COLLECTION_INTERVAL: Duration = Duration::from_secs(15);
     /// Interval between health check executions
     pub const HEALTH_CHECK_INTERVAL: Duration = Duration::from_secs(30);
+    /// How often log rotation is evaluated
     pub const LOG_ROTATION_INTERVAL: Duration = Duration::from_secs(3600);
+    /// Background cleanup sweep interval
     pub const CLEANUP_INTERVAL: Duration = Duration::from_secs(300);
 
     /// Maintenance intervals
     pub const GC_INTERVAL: Duration = Duration::from_secs(60);
+    /// Periodic cache eviction / TTL sweep
     pub const CACHE_CLEANUP_INTERVAL: Duration = Duration::from_secs(300);
+    /// Stale connection pool purge interval
     pub const CONNECTION_CLEANUP_INTERVAL: Duration = Duration::from_secs(60);
+    /// Temp directory scrub interval
     pub const TEMP_FILE_CLEANUP_INTERVAL: Duration = Duration::from_secs(3600);
 
     /// Backup and persistence intervals
     pub const CHECKPOINT_INTERVAL: Duration = Duration::from_secs(300);
+    /// Scheduled backup cadence
     pub const BACKUP_INTERVAL: Duration = Duration::from_secs(3600);
+    /// Cross-node or disk sync interval
     pub const SYNC_INTERVAL: Duration = Duration::from_secs(30);
 
     /// Heartbeat and keep-alive intervals
     pub const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(30);
+    /// Liveness ping interval between peers
     pub const PING_INTERVAL: Duration = Duration::from_secs(60);
+    /// TCP or application keep-alive interval
     pub const KEEP_ALIVE_INTERVAL: Duration = Duration::from_secs(30);
 }
 
@@ -333,9 +371,13 @@ pub mod errors {
 
     /// Error categories
     pub const ERROR_CATEGORY_SYSTEM: &str = "SYSTEM";
+    /// Security-related error bucket
     pub const ERROR_CATEGORY_SECURITY: &str = "SECURITY";
+    /// Network-related error bucket
     pub const ERROR_CATEGORY_NETWORK: &str = "NETWORK";
+    /// Domain or business-rule error bucket
     pub const ERROR_CATEGORY_BUSINESS: &str = "BUSINESS";
+    /// Input validation error bucket
     pub const ERROR_CATEGORY_VALIDATION: &str = "VALIDATION";
 }
 
@@ -343,19 +385,27 @@ pub mod errors {
 pub mod environment {
     /// Environment types
     pub const ENV_DEVELOPMENT: &str = "development";
+    /// Automated test environment label
     pub const ENV_TESTING: &str = "testing";
+    /// Pre-production staging label
     pub const ENV_STAGING: &str = "staging";
+    /// Production deployment label
     pub const ENV_PRODUCTION: &str = "production";
 
     /// Environment variable prefixes
     pub const ENV_PREFIX: &str = "BEARDOG_";
+    /// Prefix for layered config overrides from the environment
     pub const CONFIG_ENV_PREFIX: &str = "BEARDOG_CONFIG_";
+    /// Prefix for secret material injected via environment
     pub const SECRET_ENV_PREFIX: &str = "BEARDOG_SECRET_";
 
     /// Configuration file names
     pub const CONFIG_FILE_NAME: &str = "beardog-config.toml";
+    /// Default filename for secret key material
     pub const SECRETS_FILE_NAME: &str = "beardog-secrets.toml";
+    /// Single-instance lock file
     pub const LOCK_FILE_NAME: &str = "beardog.lock";
+    /// PID file for service managers
     pub const PID_FILE_NAME: &str = "beardog.pid";
 }
 
@@ -363,9 +413,13 @@ pub mod environment {
 pub mod application {
     /// Application identity
     pub const APP_NAME: &str = "BearDog";
+    /// Short product blurb for banners and `--version` output
     pub const APP_DESCRIPTION: &str = "Enterprise-grade security provider for ecoPrimals ecosystem";
+    /// Owning organization name
     pub const ORGANIZATION: &str = "ecoPrimals";
+    /// Copyright string for binaries and docs
     pub const COPYRIGHT: &str = "Copyright (c) 2024 ecoPrimals";
+    /// SPDX license identifier
     pub const LICENSE: &str = "AGPL-3.0";
 
     /// Application metadata
@@ -392,16 +446,19 @@ pub use limits::{MAX_CONNECTIONS, MAX_MEMORY_USAGE};
 pub use timeouts::{CONNECTION_TIMEOUT, REQUEST_TIMEOUT};
 pub use versions::BEARDOG_VERSION;
 
+/// Aggregated snapshot of version, performance, and security defaults for tooling.
 #[derive(Debug, Clone)]
 pub struct ConstantRegistry {
     /// The version info value
     pub version_info: VersionInfo,
+    /// Derived thread, memory, and cache tuning hints
     pub performance_tuning: PerformanceTuning,
     /// Security settings
     /// The security settings value
     pub security_settings: SecuritySettings,
 }
 
+/// Build-time and release identity strings.
 #[derive(Debug, Clone)]
 pub struct VersionInfo {
     /// `BearDog` version
@@ -414,6 +471,7 @@ pub struct VersionInfo {
     pub git_commit: Option<String>,
 }
 
+/// Suggested runtime sizing derived from [`limits`] and [`defaults`].
 #[derive(Debug, Clone)]
 pub struct PerformanceTuning {
     /// Number of worker threads
@@ -430,7 +488,7 @@ pub struct PerformanceTuning {
 /// Security settings configuration
 #[derive(Debug, Clone)]
 pub struct SecuritySettings {
-    /// Session timeout duration
+    /// Maximum idle time before session invalidation
     pub session_timeout: Duration,
     /// Maximum login attempts
     /// Number of `max_login_attempts`
@@ -463,6 +521,7 @@ impl Default for ConstantRegistry {
     }
 }
 
+/// Re-exports for cache sizing defaults used by storage layers.
 pub mod cache {
     /// Cache-related constants
     pub use super::defaults::{DEFAULT_CACHE_SIZE, DEFAULT_POOL_SIZE};
@@ -487,8 +546,12 @@ pub mod testing {
 
 /// States module
 pub mod states {
+    /// Entity is running and accepting work
     pub const ACTIVE: &str = "active";
+    /// Entity is stopped or disabled
     pub const INACTIVE: &str = "inactive";
+    /// Entity is scheduled but not yet active
     pub const PENDING: &str = "pending";
+    /// Entity terminated after an error
     pub const FAILED: &str = "failed ";
 }

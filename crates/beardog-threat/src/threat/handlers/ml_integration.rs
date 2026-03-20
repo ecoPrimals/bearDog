@@ -7,8 +7,8 @@ use crate::threat::types::{
 };
 use beardog_errors::BearDogError;
 
-use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
+use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 // SystemTime is imported via mod.rs
 

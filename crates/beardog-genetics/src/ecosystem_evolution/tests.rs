@@ -5,8 +5,8 @@
 //! Comprehensive test suite covering all ecosystem evolution functionality:
 //! engine initialization, pattern evolution, migration utilities, and defaults.
 
-use super::engine::{migrate_from_binary_patterns, EcosystemGeneticEngine};
 use super::engine::{AdaptiveSecurity, EvolutionAlgorithms, TraitInheritance};
+use super::engine::{EcosystemGeneticEngine, migrate_from_binary_patterns};
 use super::support::*;
 use super::types::{CoordinationModel, EcosystemMembership, TrustEvolution};
 use beardog_types::canonical::HealthStatus;

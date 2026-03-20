@@ -13,11 +13,11 @@
 //! - Error handling and edge cases
 
 use super::*;
+use crate::tunnel::hsm::GenerateKeyRequest;
 use crate::tunnel::hsm::manager::HsmProvider;
+use crate::tunnel::hsm::types::KeyType;
 use crate::tunnel::hsm::types::config::CryptoBackendType;
 use crate::tunnel::hsm::types::config::SoftwareHsmConfig;
-use crate::tunnel::hsm::types::KeyType;
-use crate::tunnel::hsm::GenerateKeyRequest;
 use std::sync::Arc;
 
 #[cfg(test)]

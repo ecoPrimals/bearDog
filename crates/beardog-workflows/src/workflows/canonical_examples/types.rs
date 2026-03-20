@@ -5,6 +5,7 @@
 use crate::workflows::canonical_traits::{Workflow, WorkflowId, WorkflowStatus};
 use serde::{Deserialize, Serialize};
 
+/// Newtype wrapper for example workflow ids (string-backed, hashable, serde-friendly).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct ExampleWorkflowId(pub String);
 
@@ -21,6 +22,7 @@ impl WorkflowId for ExampleWorkflowId {
     }
 }
 
+/// Example lifecycle states from creation through terminal success, failure, or cancel.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ExampleWorkflowStatus {
     /// State indicating created
@@ -37,8 +39,10 @@ pub enum ExampleWorkflowStatus {
     Cancelled,
 }
 
+/// Reference workflow aggregate used in tests and samples: id, display name, status, optional JSON payload, timestamps.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ExampleWorkflow {
+    /// Stable instance identifier ([`ExampleWorkflowId`]).
     pub id: ExampleWorkflowId,
     /// Name of the item
     pub name: String,
@@ -116,9 +120,12 @@ impl ExampleWorkflow {
     }
 }
 
+/// Inputs passed into the example processor: acting principal, deadline hint, and retry budget.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ProcessingContext {
+    /// Logical user or service account driving this run (`"system"` when unspecified).
     pub user_id: String,
+    /// Soft timeout hint for the processor or wrappers, in seconds.
     pub timeout_seconds: u64,
     /// Number of retry
     pub retry_count: u32,

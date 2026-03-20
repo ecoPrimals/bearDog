@@ -27,6 +27,7 @@ impl EcosystemMonitor {
         Ok(())
     }
 
+    /// Records an ecosystem-scoped metric event (routing hook for future logic).
     pub const fn record_event(&self, _event: &super::MetricEvent) -> Result<(), BearDogError> {
         // Ecosystem event processing logic
         Ok(())
@@ -45,6 +46,7 @@ impl EcosystemMonitor {
     }
 }
 
+/// Point-in-time ecosystem throughput and integration health snapshot.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemMetrics {
     /// Number of `active_connections`
@@ -59,10 +61,12 @@ pub struct EcosystemMetrics {
     pub integration_status: String,
 }
 
+/// Polling and timeout settings for [`EcosystemMonitor`].
 #[derive(Debug, Clone)]
 pub struct EcosystemConfig {
     /// Number of `monitor_interval_secs`
     pub monitor_interval_secs: u64,
+    /// Maximum time to wait for a dependency health probe before marking it failed.
     pub health_check_timeout_secs: u64,
 }
 

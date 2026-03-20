@@ -119,7 +119,7 @@ pub trait BearDogCrypto {
 
     /// Derive TLS 1.3 application secrets
     async fn tls_derive_application_secrets(request: TlsSecretsRequest)
-        -> CryptoResult<TlsSecrets>;
+    -> CryptoResult<TlsSecrets>;
 
     /// Sign TLS handshake
     async fn tls_sign_handshake(request: TlsSignRequest) -> CryptoResult<SignResponse>;
@@ -161,186 +161,247 @@ pub type CryptoResult<T> = Result<T, CryptoError>;
 /// Crypto operation error
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptoError {
+    /// Application-defined error code (mirrors JSON-RPC style semantics).
     pub code: i32,
+    /// Human-readable failure reason.
     pub message: String,
 }
 
 /// Keypair (public + private)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyPair {
+    /// Encoded public key bytes for the selected algorithm.
     pub public_key: Vec<u8>,
+    /// Encoded private key bytes (handle as secret material).
     pub private_key: Vec<u8>,
 }
 
 /// Sign request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignRequest {
+    /// Message or digest to sign.
     pub data: Vec<u8>,
+    /// Private key bytes in the server's expected encoding.
     pub private_key: Vec<u8>,
 }
 
 /// Sign response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignResponse {
+    /// Raw signature bytes.
     pub signature: Vec<u8>,
 }
 
 /// Verify request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VerifyRequest {
+    /// Original signed payload.
     pub data: Vec<u8>,
+    /// Signature produced by [`SignResponse::signature`].
     pub signature: Vec<u8>,
+    /// Public key bytes matching the signer.
     pub public_key: Vec<u8>,
 }
 
 /// Key exchange request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyExchangeRequest {
+    /// Local ephemeral or static private key.
     pub our_private_key: Vec<u8>,
+    /// Remote party's public key.
     pub their_public_key: Vec<u8>,
 }
 
 /// Shared secret from key exchange
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SharedSecret {
+    /// Derived shared secret (e.g. DH output).
     pub secret: Vec<u8>,
 }
 
 /// Encrypt request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptRequest {
+    /// Plaintext to protect.
     pub plaintext: Vec<u8>,
+    /// Symmetric key bytes.
     pub key: Vec<u8>,
+    /// Optional nonce/IV; generated server-side when omitted for algorithms that allow it.
     pub nonce: Option<Vec<u8>>,
+    /// Optional associated authenticated data for AEAD modes.
     pub aad: Option<Vec<u8>>,
 }
 
 /// Encrypt response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptResponse {
+    /// Ciphertext without tag when tag is separate (implementation-defined packing).
     pub ciphertext: Vec<u8>,
+    /// Nonce/IV used for decryption.
     pub nonce: Vec<u8>,
+    /// Authentication tag for AEAD schemes.
     pub tag: Vec<u8>,
 }
 
 /// Decrypt request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecryptRequest {
+    /// Ciphertext from [`EncryptResponse::ciphertext`].
     pub ciphertext: Vec<u8>,
+    /// Symmetric key bytes.
     pub key: Vec<u8>,
+    /// Nonce/IV matching encryption.
     pub nonce: Vec<u8>,
+    /// Authentication tag from [`EncryptResponse::tag`].
     pub tag: Vec<u8>,
+    /// Optional AAD matching encryption.
     pub aad: Option<Vec<u8>>,
 }
 
 /// Decrypt response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecryptResponse {
+    /// Recovered plaintext.
     pub plaintext: Vec<u8>,
 }
 
 /// Hash response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HashResponse {
+    /// Digest output bytes.
     pub hash: Vec<u8>,
 }
 
 /// HMAC request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HmacRequest {
+    /// Message input to MAC.
     pub data: Vec<u8>,
+    /// Symmetric MAC key.
     pub key: Vec<u8>,
 }
 
 /// TLS secrets derivation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TlsSecretsRequest {
+    /// Handshake shared secret (e.g. ECDH output).
     pub shared_secret: Vec<u8>,
+    /// Transcript hash covering negotiated messages.
     pub transcript_hash: Vec<u8>,
+    /// TLS cipher suite identifier (IANA or internal string token).
     pub cipher_suite: String,
 }
 
 /// TLS derived secrets
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TlsSecrets {
+    /// Client traffic protection secret (TLS 1.3 style labeling).
     pub client_traffic_secret: Vec<u8>,
+    /// Server traffic protection secret.
     pub server_traffic_secret: Vec<u8>,
 }
 
 /// TLS sign request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TlsSignRequest {
+    /// Transcript hash to sign (handshake context).
     pub transcript_hash: Vec<u8>,
+    /// Private key for the certificate key pair.
     pub private_key: Vec<u8>,
+    /// Signature algorithm name (e.g. `ed25519`, `ecdsa_p256`).
     pub algorithm: String,
 }
 
 /// Lineage key derivation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LineageRequest {
+    /// High-entropy family seed material.
     pub family_seed: Vec<u8>,
+    /// Generation counter within the lineage chain.
     pub generation: u32,
+    /// Domain separation string for KDF context.
     pub context: String,
 }
 
 /// Lineage key response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LineageKey {
+    /// Derived lineage key bytes.
     pub key: Vec<u8>,
+    /// Echo of the requested generation.
     pub generation: u32,
 }
 
 /// Entropy mixing request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EntropyMixRequest {
+    /// Independent entropy sources to combine.
     pub sources: Vec<Vec<u8>>,
+    /// Context string binding the mix to a purpose.
     pub context: String,
 }
 
 /// Mixed entropy response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MixedEntropy {
+    /// Fixed-length mixed output suitable for downstream KDFs.
     pub entropy: Vec<u8>,
 }
 
 /// Primal information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalInfo {
+    /// Process or primal display name.
     pub name: String,
+    /// Semantic version of the running binary.
     pub version: String,
+    /// Deployment family or tenant grouping.
     pub family: String,
+    /// Advertised capability identifiers.
     pub capabilities: Vec<String>,
 }
 
 /// Method information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MethodInfo {
+    /// RPC method name.
     pub name: String,
+    /// Short human description for introspection UIs.
     pub description: String,
+    /// Parameter names or type hints as strings.
     pub params: Vec<String>,
 }
 
 /// Capability
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Capability {
+    /// Capability identifier (stable string).
     pub name: String,
+    /// Capability contract version.
     pub version: String,
 }
 
 /// Health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthStatus {
+    /// Coarse status (`ok`, `degraded`, etc.).
     pub status: String,
+    /// Software version reporting health.
     pub version: String,
+    /// Seconds since process start.
     pub uptime_seconds: u64,
 }
 
 /// Protocol information for negotiation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProtocolInfo {
+    /// Transport or RPC protocol label (`tarpc`, `jsonrpc`, `http`, ...).
     pub name: String,
+    /// Listening TCP/UDP port when applicable.
     pub port: u16,
+    /// Whether this protocol endpoint is currently accepting work.
     pub enabled: bool,
+    /// Optional key/value metadata (TLS requirements, paths, feature flags).
     #[serde(default)]
     pub metadata: HashMap<String, String>,
 }

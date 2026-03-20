@@ -93,7 +93,7 @@ impl MaintenanceConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             enabled: false,
             window_duration: Duration::from_secs(Self::DEFAULT_WINDOW_DURATION_SECS),
@@ -127,7 +127,7 @@ impl BackupConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             enabled: true,
             interval: Duration::from_secs(Self::DEFAULT_INTERVAL_SECS),
@@ -161,7 +161,7 @@ impl DisasterRecoveryConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             enabled: false,
             rto: Duration::from_secs(Self::DEFAULT_RTO_SECS),
@@ -209,7 +209,7 @@ impl OperationalConfig {
     /// Validate
     /// Validates input
     /// Validates input
-    pub fn validate(&self) -> Result<(), BearDogError> {
+    pub const fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }
 }

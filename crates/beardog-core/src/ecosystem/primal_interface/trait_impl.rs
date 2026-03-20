@@ -2,6 +2,7 @@
 
 #![allow(async_fn_in_trait)]
 
+use crate::BearDogCore;
 use crate::ecosystem::primal_types::ServiceDependency;
 use crate::ecosystem::primal_types::{
     PrimalError,
@@ -11,7 +12,6 @@ use crate::ecosystem::primal_types::{
     PrimalResponse, // PrimalType removed
     UniversalIntegrationConfig,
 };
-use crate::BearDogCore;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{CapabilityType, ServiceCapabilityType};
 use tracing::{debug, info, warn};

@@ -47,7 +47,7 @@ impl CrossNodeAuthEngine {
     }
 
     /// Check if engine is initialized
-    pub fn is_initialized(&self) -> bool {
+    pub const fn is_initialized(&self) -> bool {
         true // Engine is initialized when created
     }
 
@@ -143,7 +143,7 @@ impl CrossNodeAuthEngine {
             .retain(|_, auth| auth.expires_at > now);
 
         self.spawned_beardogs
-            .retain(|_, spawn| spawn.expected_lifetime.map_or(true, |exp| exp > now));
+            .retain(|_, spawn| spawn.expected_lifetime.is_none_or(|exp| exp > now));
 
         Ok(())
     }

@@ -80,7 +80,7 @@ async fn check_code_injection(node: &GraphNode) -> Result<Option<ThreatDetails>,
                     return Ok(Some(ThreatDetails {
                         category: ThreatCategory::CodeInjection,
                         location: format!("node {}, config.{}", node.id, key),
-                        pattern: format!("{} call detected", pattern),
+                        pattern: format!("{pattern} call detected"),
                     }));
                 }
             }

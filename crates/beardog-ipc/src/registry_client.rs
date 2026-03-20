@@ -31,29 +31,40 @@ use tracing::{debug, error, info, warn};
 /// JSON-RPC 2.0 Request (Universal)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcRequest {
+    /// Protocol version; must be `"2.0"` for compliant servers.
     pub jsonrpc: String,
+    /// Method name (e.g. `primal.register`, `primal.get_provider`).
     pub method: String,
+    /// Positional or object parameters; omitted when empty.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub params: Option<serde_json::Value>,
+    /// Correlation id matching the corresponding [`JsonRpcResponse::id`].
     pub id: u64,
 }
 
 /// JSON-RPC 2.0 Response (Universal)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcResponse {
+    /// Protocol version; must be `"2.0"`.
     pub jsonrpc: String,
+    /// Successful result payload; mutually exclusive with [`JsonRpcResponse::error`].
     #[serde(skip_serializing_if = "Option::is_none")]
     pub result: Option<serde_json::Value>,
+    /// Error object when the call failed; mutually exclusive with `result`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<JsonRpcError>,
+    /// Id echoing the originating [`JsonRpcRequest::id`].
     pub id: u64,
 }
 
 /// JSON-RPC 2.0 Error (Universal)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcError {
+    /// Integer error code (JSON-RPC reserved + application-defined ranges).
     pub code: i32,
+    /// Short human-readable error summary.
     pub message: String,
+    /// Optional structured details (stack traces, validation hints, etc.).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub data: Option<serde_json::Value>,
 }
@@ -61,11 +72,17 @@ pub struct JsonRpcError {
 /// Primal information (Universal format)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalInfo {
+    /// Stable primal identifier assigned by the registry.
     pub primal_id: String,
+    /// Optional lineage or deployment family id.
     pub family_id: Option<String>,
+    /// Host or cluster node identifier.
     pub node_id: String,
+    /// Capability names this primal advertises (e.g. `encryption`, `discovery`).
     pub capabilities: Vec<String>,
+    /// Filesystem path to this primal's IPC socket (Unix) or equivalent endpoint.
     pub socket_path: String,
+    /// RFC3339 or registry-specific last-seen timestamp, if tracked.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_seen: Option<String>,
 }
@@ -99,7 +116,7 @@ impl PrimalRegistryClient {
     ///
     /// We don't know or care what's on the other end of this socket.
     /// Could be Songbird, could be Consul, could be anything.
-    pub fn new(socket_path: PathBuf) -> Self {
+    pub const fn new(socket_path: PathBuf) -> Self {
         Self {
             socket_path,
             stream: None,
@@ -115,8 +132,9 @@ impl PrimalRegistryClient {
 
         let stream = UnixStream::connect(&self.socket_path).await.map_err(|e| {
             BearDogError::system(format!(
-                "Failed to connect to registry at {:?}: {}",
-                self.socket_path, e
+                "Failed to connect to registry at {}: {}",
+                self.socket_path.display(),
+                e
             ))
         })?;
 
@@ -211,7 +229,7 @@ impl PrimalRegistryClient {
 
         let primal_info: PrimalInfo =
             serde_json::from_value(response.result.unwrap_or_default())
-                .map_err(|e| BearDogError::system(format!("Failed to parse primal info: {}", e)))?;
+                .map_err(|e| BearDogError::system(format!("Failed to parse primal info: {e}")))?;
 
         debug!("✅ Found provider: {}", primal_info.primal_id);
         Ok(primal_info)
@@ -231,7 +249,7 @@ impl PrimalRegistryClient {
         }
 
         let primals: Vec<PrimalInfo> = serde_json::from_value(response.result.unwrap_or_default())
-            .map_err(|e| BearDogError::system(format!("Failed to parse primals list: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to parse primals list: {e}")))?;
 
         debug!("✅ Found {} primals", primals.len());
         Ok(primals)
@@ -291,19 +309,19 @@ impl PrimalRegistryClient {
 
         // Serialize and send request
         let request_json = serde_json::to_string(&request)
-            .map_err(|e| BearDogError::system(format!("Failed to serialize request: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to serialize request: {e}")))?;
 
         debug!("→ Sending: {}", request_json);
 
         stream
             .write_all(request_json.as_bytes())
             .await
-            .map_err(|e| BearDogError::system(format!("Failed to write request: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to write request: {e}")))?;
 
         stream
             .write_all(b"\n")
             .await
-            .map_err(|e| BearDogError::system(format!("Failed to write newline: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to write newline: {e}")))?;
 
         // Read response
         let mut reader = BufReader::new(stream);
@@ -312,12 +330,12 @@ impl PrimalRegistryClient {
         reader
             .read_line(&mut response_line)
             .await
-            .map_err(|e| BearDogError::system(format!("Failed to read response: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to read response: {e}")))?;
 
         debug!("← Received: {}", response_line.trim());
 
         let response: JsonRpcResponse = serde_json::from_str(&response_line)
-            .map_err(|e| BearDogError::system(format!("Failed to parse response: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to parse response: {e}")))?;
 
         Ok(response)
     }

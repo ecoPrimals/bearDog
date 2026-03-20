@@ -282,7 +282,7 @@ impl HumanEntropyClassifier {
             })
             .count();
 
-        let biometric_score = (biometric_methods as f64 / 3.0) * 0.6 + 0.4;
+        let biometric_score = (biometric_methods as f64 / 3.0).mul_add(0.6, 0.4);
         Ok(biometric_score.min(1.0))
     }
 
@@ -358,7 +358,7 @@ impl EntropyQualityAssessor {
     }
 
     /// Gets method weight
-    fn get_method_weight(&self, method: &HumanEntropyMethod) -> f64 {
+    const fn get_method_weight(&self, method: &HumanEntropyMethod) -> f64 {
         match method {
             HumanEntropyMethod::BiometricVariations => 0.9,
             HumanEntropyMethod::KeystrokeDynamics => 0.8,
@@ -426,7 +426,7 @@ pub mod policies {
     use super::*;
 
     /// High security policy
-    pub fn high_security_policy() -> TierElevationCriteria {
+    pub const fn high_security_policy() -> TierElevationCriteria {
         TierElevationCriteria {
             min_quality_score: 0.85,
             require_realtime: true,
@@ -436,7 +436,7 @@ pub mod policies {
     }
 
     /// Balanced policy
-    pub fn balanced_policy() -> TierElevationCriteria {
+    pub const fn balanced_policy() -> TierElevationCriteria {
         TierElevationCriteria {
             min_quality_score: 0.65,
             require_realtime: true,
@@ -446,7 +446,7 @@ pub mod policies {
     }
 
     /// Permissive policy
-    pub fn permissive_policy() -> TierElevationCriteria {
+    pub const fn permissive_policy() -> TierElevationCriteria {
         TierElevationCriteria {
             min_quality_score: 0.5,
             require_realtime: false,

@@ -117,7 +117,10 @@ mod tests {
         // Explicitly test SoftHSM2 by checking SOFTHSM2_CONF directly
         // (bypass auto-discovery which might find other hardware)
         if std::env::var("SOFTHSM2_CONF").is_err() {
-            std::env::set_var("SOFTHSM2_CONF", "~/.config/softhsm2/softhsm2.conf");
+            beardog_errors::process_env::set_var(
+                "SOFTHSM2_CONF",
+                "~/.config/softhsm2/softhsm2.conf",
+            );
         }
 
         // For this test, we directly verify SoftHSM2 works
@@ -133,7 +136,7 @@ mod tests {
     #[ignore = "Requires Android device connected via ADB"]
     async fn validate_on_android_strongbox() {
         // Set environment to enable StrongBox detection
-        std::env::set_var("ANDROID_STRONGBOX_AVAILABLE", "true");
+        beardog_errors::process_env::set_var("ANDROID_STRONGBOX_AVAILABLE", "true");
 
         let hsm_type = discover_any_available_hsm()
             .await

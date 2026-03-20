@@ -20,7 +20,7 @@ use tokio::sync::Mutex;
 use tracing::{debug, info};
 
 #[cfg(feature = "fido2")]
-use beardog_hid::{open_device, HidDevice};
+use beardog_hid::{HidDevice, open_device};
 
 /// FIDO2/CTAP2 HSM Provider (Pure Rust)
 ///
@@ -110,7 +110,7 @@ impl Fido2HsmProvider {
     }
 
     /// Get device information
-    pub fn device_info(&self) -> &Fido2DeviceInfo {
+    pub const fn device_info(&self) -> &Fido2DeviceInfo {
         &self.device_info
     }
 
@@ -125,12 +125,12 @@ impl Fido2HsmProvider {
     }
 
     /// Check if device supports hmac-secret extension
-    pub fn supports_hmac_secret(&self) -> bool {
+    pub const fn supports_hmac_secret(&self) -> bool {
         self.device_info.capabilities.hmac_secret
     }
 
     /// Check if device supports resident keys
-    pub fn supports_resident_keys(&self) -> bool {
+    pub const fn supports_resident_keys(&self) -> bool {
         self.device_info.capabilities.resident_keys
     }
 
@@ -162,7 +162,7 @@ impl Fido2HsmProvider {
             // Phase 2: Implement CTAP2 hmac-secret entropy generation. Universal CTAP2
             // hmac-secret protocol works with any compliant device.
             Err(BearDogError::not_implemented(
-                "FIDO2 entropy generation: hmac-secret extension ready, CTAP2 protocol pending (Phase 2)"
+                "FIDO2 entropy generation: hmac-secret extension ready, CTAP2 protocol pending (Phase 2)",
             ))
         }
 

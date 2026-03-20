@@ -11,10 +11,10 @@
 //!
 //! Pure Rust implementation using RustCrypto `sha2` crate (zero C dependencies).
 
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sha1::Sha1; // Phase 7: Legacy Git compatibility (INSECURE for crypto!)
 use sha2::{Digest, Sha256, Sha384, Sha512};
 use sha3::Sha3_256; // Phase 7: Modern quantum-resistant hashing
@@ -53,7 +53,7 @@ pub fn handle_sha256(params: &Value) -> Result<Value, BearDogError> {
     // Decode base64 data
     let data = BASE64
         .decode(data_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 data: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 data: {e}")))?;
 
     // Compute SHA-256 hash
     let mut hasher = Sha256::new();
@@ -106,7 +106,7 @@ pub fn handle_sha384(params: &Value) -> Result<Value, BearDogError> {
     // Decode base64 data
     let data = BASE64
         .decode(data_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 data: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 data: {e}")))?;
 
     // Compute SHA-384 hash
     let mut hasher = Sha384::new();
@@ -159,7 +159,7 @@ pub fn handle_sha512(params: &Value) -> Result<Value, BearDogError> {
     // Decode base64 data
     let data = BASE64
         .decode(data_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 data: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 data: {e}")))?;
 
     // Compute SHA-512 hash
     let mut hasher = Sha512::new();
@@ -211,7 +211,7 @@ pub fn handle_sha1(params: &Value) -> Result<Value, BearDogError> {
 
     let data = BASE64
         .decode(data_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 data: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 data: {e}")))?;
 
     // Compute SHA-1 hash
     let mut hasher = Sha1::new();
@@ -263,7 +263,7 @@ pub fn handle_sha3_256(params: &Value) -> Result<Value, BearDogError> {
 
     let data = BASE64
         .decode(data_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 data: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 data: {e}")))?;
 
     // Compute SHA3-256 hash
     let mut hasher = Sha3_256::new();
@@ -325,7 +325,7 @@ pub fn handle_derive_onion_address(params: &Value) -> Result<Value, BearDogError
     // Decode public key (must be 32 bytes for Ed25519)
     let public_key = BASE64
         .decode(pubkey_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 public_key: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 public_key: {e}")))?;
 
     if public_key.len() != 32 {
         return Err(BearDogError::invalid_input(&format!(
@@ -357,7 +357,7 @@ pub fn handle_derive_onion_address(params: &Value) -> Result<Value, BearDogError
         .to_lowercase();
 
     // Full onion address
-    let onion_address = format!("{}.onion", onion_base32);
+    let onion_address = format!("{onion_base32}.onion");
 
     Ok(json!({
         "onion_address": onion_address,
@@ -414,7 +414,7 @@ pub async fn handle_generate_onion_identity(params: Option<&Value>) -> Result<Va
         "public_key": BASE64.encode(public_bytes)
     });
     let onion_result = handle_derive_onion_address(&onion_params)
-        .map_err(|e| format!("Failed to derive onion address: {}", e))?;
+        .map_err(|e| format!("Failed to derive onion address: {e}"))?;
 
     let onion_address = onion_result
         .get("onion_address")
@@ -583,10 +583,12 @@ mod tests {
 
         let result = handle_sha256(&params);
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Invalid base64 data"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid base64 data")
+        );
     }
 
     #[test]
@@ -749,10 +751,12 @@ mod tests {
         let params = json!({});
         let result = handle_derive_onion_address(&params);
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Missing 'public_key'"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Missing 'public_key'")
+        );
     }
 
     #[test]
@@ -768,8 +772,10 @@ mod tests {
 
         // Remove ".onion" suffix and verify lowercase
         let addr_part = &onion_address[..56];
-        assert!(addr_part
-            .chars()
-            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit()));
+        assert!(
+            addr_part
+                .chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+        );
     }
 }

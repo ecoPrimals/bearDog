@@ -91,21 +91,31 @@ pub type ValidationResult<T> = Result<T, ValidationError>;
 pub enum ValidationError {
     /// Value is below minimum threshold
     BelowMinimum {
+        /// Rejected value (stringified)
         value: String,
+        /// Minimum allowed (stringified)
         minimum: String,
+        /// Configuration or request field name
         field: String,
     },
     /// Value exceeds maximum threshold
     AboveMaximum {
+        /// Rejected value (stringified)
         value: String,
+        /// Maximum allowed (stringified)
         maximum: String,
+        /// Configuration or request field name
         field: String,
     },
     /// Value is outside valid range
     OutOfRange {
+        /// Rejected value (stringified)
         value: String,
+        /// Inclusive or effective minimum (stringified)
         min: String,
+        /// Inclusive or effective maximum (stringified)
         max: String,
+        /// Configuration or request field name
         field: String,
     },
 }
@@ -120,8 +130,7 @@ impl std::fmt::Display for ValidationError {
             } => {
                 write!(
                     f,
-                    "Field '{}' value {} is below minimum {}",
-                    field, value, minimum
+                    "Field '{field}' value {value} is below minimum {minimum}"
                 )
             }
             Self::AboveMaximum {
@@ -129,11 +138,7 @@ impl std::fmt::Display for ValidationError {
                 maximum,
                 field,
             } => {
-                write!(
-                    f,
-                    "Field '{}' value {} exceeds maximum {}",
-                    field, value, maximum
-                )
+                write!(f, "Field '{field}' value {value} exceeds maximum {maximum}")
             }
             Self::OutOfRange {
                 value,
@@ -143,8 +148,7 @@ impl std::fmt::Display for ValidationError {
             } => {
                 write!(
                     f,
-                    "Field '{}' value {} is outside valid range [{}, {}]",
-                    field, value, min, max
+                    "Field '{field}' value {value} is outside valid range [{min}, {max}]"
                 )
             }
         }
@@ -167,14 +171,14 @@ mod tests {
     fn test_ttl_constants() {
         assert_eq!(MAX_CACHE_TTL_SECS, 3600); // 1 hour
         assert_eq!(MAX_PERFORMANCE_TTL_SECS, 86400); // 24 hours
-                                                     // Compile-time constant relationship verified at declaration
+        // Compile-time constant relationship verified at declaration
     }
 
     #[test]
     fn test_flush_interval_constants() {
         assert_eq!(MIN_FLUSH_INTERVAL_SECS, 10);
         assert_eq!(MAX_FLUSH_INTERVAL_SECS, 300); // 5 minutes
-                                                  // Compile-time constant relationship verified at declaration
+        // Compile-time constant relationship verified at declaration
     }
 
     #[test]

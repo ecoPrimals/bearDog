@@ -99,7 +99,7 @@ impl Pkcs11HsmProvider {
         warn!("🎰 Slot ID: {}", self.slot_id);
 
         let mut rng = rand::thread_rng();
-        self.session_handle = Some(rng.gen::<u64>());
+        self.session_handle = Some(rng.r#gen::<u64>());
 
         info!("✅ PKCS#11 session initialized successfully");
         Ok(())

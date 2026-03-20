@@ -4,10 +4,10 @@
 //! Created: October 25, 2025
 //! Purpose: Week 2 test expansion - Security and encryption comprehensive coverage
 
+use crate::tunnel::hsm::types::SecurityLevel;
 use crate::tunnel::hsm::types::config::{
     AuthMethod, CryptoBackendType, MemoryConfig, MemoryProtectionLevel, SoftwareHsmConfig,
 };
-use crate::tunnel::hsm::types::SecurityLevel;
 
 #[cfg(test)]
 #[allow(clippy::module_inception)]

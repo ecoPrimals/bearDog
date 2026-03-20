@@ -532,6 +532,7 @@ pub enum DeploymentMode {
     Hybrid,
 }
 
+/// Semantic version tuple used by legacy manifests before [`crate::canonical::config::unified::metadata::UnifiedVersionInfo`].
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UnifiedVersionInfo {
     /// Major
@@ -569,6 +570,7 @@ pub struct RolloutConfig {
 }
 
 // Additional enums needed
+/// Minimal log-level enum carried in older serialized configs.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum LogLevel {
     #[default]
@@ -584,6 +586,7 @@ pub enum LogLevel {
     Trace,
 }
 
+/// Where credential material should be loaded from in legacy unified configs.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum PasswordSource {
     /// Read password from environment variables (default)

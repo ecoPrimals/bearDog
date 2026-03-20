@@ -171,11 +171,11 @@ pub enum ParameterType {
     /// 64-bit floating point number
     Float64,
     /// Pointer types
-    Pointer(Box<ParameterType>),
+    Pointer(Box<Self>),
     /// String types
     CString,
     /// Array types
-    Array(Box<ParameterType>, usize),
+    Array(Box<Self>, usize),
     /// Custom types
     Custom(String),
 }
@@ -188,7 +188,7 @@ pub enum ReturnType {
     /// Parameter type return
     Type(ParameterType),
     /// Result type
-    Result(Box<ReturnType>, Box<ReturnType>),
+    Result(Box<Self>, Box<Self>),
 }
 
 /// Calling convention
@@ -357,7 +357,7 @@ pub enum FunctionValue {
     /// Binary data
     Binary(Vec<u8>),
     /// Array of values
-    Array(Vec<FunctionValue>),
+    Array(Vec<Self>),
     /// Custom binary data
     Custom(Vec<u8>),
     /// Null/empty value

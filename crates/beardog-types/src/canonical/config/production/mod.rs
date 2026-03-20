@@ -118,18 +118,17 @@ impl UnifiedProductionConfig {
 
     /// Get the production environment level
     #[must_use]
-    pub fn environment_level(&self) -> &EnvironmentLevel {
+    pub const fn environment_level(&self) -> &EnvironmentLevel {
         &self.core.environment_level
     }
 
-    /// Check if this is a production environment
+    /// Returns true when [`EnvironmentLevel::Production`] is selected in core config.
     #[must_use]
-    /// Checks if production
-    /// Checks if production
-    pub fn is_production(&self) -> bool {
+    pub const fn is_production(&self) -> bool {
         matches!(self.core.environment_level, EnvironmentLevel::Production)
     }
 
+    /// Tuple of `(service_name, service_version, deployment_id)` for telemetry registration.
     #[must_use]
     pub fn service_info(&self) -> (&str, &str, &str) {
         (

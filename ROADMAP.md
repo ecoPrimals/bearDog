@@ -1,18 +1,25 @@
 # BearDog Roadmap
 
-**Updated**: March 19, 2026
+**Updated**: March 20, 2026
 **Status**: Production Ready
+**Edition**: 2024 | **MSRV**: 1.85.0
 
 ---
 
 ## Current State
 
-BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. All core evolution is complete.
+BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2024, zero clippy warnings, zero missing docs, zero unsafe code.
 
 ### Completed
 
+- Rust edition 2024 (MSRV 1.85.0)
 - 100% Pure Rust (zero C dependencies, RustCrypto suite)
 - 91+ JSON-RPC crypto methods (semantic naming)
+- 0 clippy warnings (pedantic + nursery, workspace-centralized)
+- 0 missing documentation warnings (all public items documented)
+- 0 unsafe code blocks (`deny(unsafe_code)` via workspace)
+- 0 TODO/FIXME/HACK in codebase
+- 0 files exceeding 1000 lines of code
 - Multi-family socket support (`--family-id` flag)
 - Encrypted secret storage (family-scoped ChaCha20-Poly1305)
 - `discover_capabilities` introspection method
@@ -21,15 +28,13 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. All core 
 - Universal IPC (Unix sockets, abstract sockets, TCP)
 - Android StrongBox integration (complete)
 - HSM abstraction (software, PKCS#11, StrongBox)
-- `once_cell` migrated to `std::sync::LazyLock`
 - All production `unwrap()`/`expect()` eliminated (zero panic paths)
-- 8,542+ tests across 29 crates (0 failures)
-- Deep debt evolution (20/20 rounds)
-- SPDX license headers on all 1,634 .rs files
-- Zero `#[allow()]` in production code
+- SPDX license headers on all .rs files
 - ecoBin C-dependency compliance (sysinfo removed, blake3 pure, pprof optional)
 - Smart refactoring of oversized files into submodule directories
-- Deprecated usage tracked with migration plans
+- All mocks isolated behind `cfg(test)` / `test-utils` feature
+- Hardcoding eliminated — capability-based discovery throughout
+- `deny.toml` hardened — C deps banned, duplicate versions denied
 
 ### Platform Coverage
 
@@ -47,34 +52,42 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. All core 
 
 ### Test Coverage to 90%
 
-Coverage improved significantly in March 2026 wave. Targeting 90% across all crates.
+Coverage measured via `cargo-llvm-cov`. Top crates at or above target; lower crates need integration tests.
 
-**Crates at or above target**: beardog-workflows (97%), beardog-utils (92%), beardog-genetics (90%).
-
-**Crates in progress**: beardog-types (82%), beardog-core (74%), beardog-tunnel (73%), beardog-security (64% — much code is behind platform feature gates), beardog-ipc (41%).
+| Crate | Line Coverage | Status |
+|-------|-------------|--------|
+| beardog-utils | 92.3% | Above target |
+| beardog-genetics | 89.9% | At target |
+| beardog-types | 82.0% | In progress |
+| beardog-core | 75.1% | In progress |
+| beardog-tunnel | 74.2% | In progress |
+| beardog-security | 63.8% | Platform-gated code |
+| beardog-ipc | 54.7% | Needs integration tests |
 
 ### primalSpring Capability Audit Fixes
 
-Three quick fixes from the [primalSpring capability audit](../primalSpring/wateringHole/handoffs/BEARDOG_CAPABILITY_AUDIT_MAR18_2026.md):
+Three quick fixes from the primalSpring capability audit:
 1. Register `health.liveness` and `health.readiness` method aliases
 2. Register `capabilities.list` method alias
 3. Register bare crypto method aliases for Songbird TLS 1.3 compatibility
-
-### Relay-Assisted Coordinated Punch (BearDog Step 3 — Complete)
-
-BearDog now provides `relay.authorize` for lineage-gated relay authorization. When Songbird's relay server receives an allocation request, it calls BearDog to verify the requester's family membership before forwarding traffic. This is BearDog's role in the relay-assisted coordinated punch protocol that improves symmetric-NAT-to-symmetric-NAT success rates from ~5% to 60-80%.
-
-**What BearDog owns**: `relay.authorize` (identity verification). **What BearDog does NOT own**: UDP sockets, relay forwarding, STUN probes, punch timing (all Songbird).
 
 ---
 
 ## Future Work
 
-These items are enhancements -- nothing is blocking production use.
+These items are enhancements — nothing is blocking production use.
+
+### Zero-Copy Hot Path Evolution
+
+Deferred pending profiling to identify actual hot paths. `bytes::Bytes` and `Arc<str>` ready for adoption where measurements justify it.
+
+### Fault Injection Tests
+
+Stub framework exists. Needs fleshing out with chaos engineering scenarios for crypto operations under adverse conditions.
 
 ### Secret Storage Evolution (when NestGate available)
 
-Current in-memory storage backend evolves to persistent NestGate-backed storage via capability discovery. BearDog discovers NestGate's `storage.store` / `storage.retrieve` at runtime. No code changes needed in BearDog -- the discovery pattern is already implemented.
+Current in-memory storage backend evolves to persistent NestGate-backed storage via capability discovery. BearDog discovers NestGate's `storage.store` / `storage.retrieve` at runtime. No code changes needed — the discovery pattern is already implemented.
 
 ### Graph Security Phase 2-3 (optional)
 
@@ -85,23 +98,19 @@ Current in-memory storage backend evolves to persistent NestGate-backed storage 
 
 Fully generic methods: `crypto.encrypt` + `{"algorithm": "aes-256-gcm"}` instead of algorithm-specific method names. Requires coordination across Songbird, Squirrel, NestGate.
 
-### Performance Benchmarks
-
-Comprehensive benchmark suite comparing BearDog crypto latency with OpenSSL/BoringSSL for key operations.
-
 ---
 
 ## Design Principles
 
 These guide all BearDog evolution:
 
-1. **Pure Rust** -- No C dependencies, ever
-2. **Smart Refactoring** -- Domain-driven module boundaries, not arbitrary splits
-3. **Safe Code** -- Zero `unsafe`, zero production panics
-4. **Agnostic Config** -- Environment variables and capability discovery, no hardcoding
-5. **Runtime Discovery** -- Primals discover each other at runtime, never hardcode names
-6. **Honest Code** -- No production mocks, clear capability boundaries
+1. **Pure Rust** — No C dependencies, ever
+2. **Smart Refactoring** — Domain-driven module boundaries, not arbitrary splits
+3. **Safe Code** — Zero `unsafe`, zero production panics
+4. **Agnostic Config** — Environment variables and capability discovery, no hardcoding
+5. **Runtime Discovery** — Primals discover each other at runtime, never hardcode names
+6. **Honest Code** — No production mocks, clear capability boundaries
 
 ---
 
-**Last Updated**: March 19, 2026
+**Last Updated**: March 20, 2026

@@ -184,9 +184,11 @@ mod authorization_comprehensive_tests {
         // Test empty role
         let empty_role = Role::new("empty_role");
         assert!(empty_role.permissions().is_empty());
-        assert!(!empty_role
-            .permissions()
-            .contains(&Permission::new("any:permission")));
+        assert!(
+            !empty_role
+                .permissions()
+                .contains(&Permission::new("any:permission"))
+        );
 
         // Test permission with special characters
         let special_perm = Permission::new("resource:read:*:admin");

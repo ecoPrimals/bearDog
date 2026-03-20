@@ -11,8 +11,8 @@
 use anyhow::Result;
 use serde_json::json;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::Duration;
 use tempfile::TempDir;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -33,7 +33,7 @@ fn test_socket() -> (TempDir, PathBuf) {
 
 // Helper to create test BTSP provider
 async fn create_test_btsp_provider() -> Arc<BeardogBtspProvider> {
-    std::env::set_var("BEARDOG_HSM_MODE", "software");
+    beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "software");
     let hsm = Arc::new(HsmManager::auto_initialize().await.expect("HSM init"));
     let genetics = Arc::new(EcosystemGeneticEngine::new().expect("Genetics init"));
     Arc::new(

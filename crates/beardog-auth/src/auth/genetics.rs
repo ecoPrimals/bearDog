@@ -31,7 +31,7 @@ impl CrossNodeAuthEngine {
             capabilities: vec![],
             spawn_restrictions: vec![],
             generation: 1,
-            parent_genetics: Some(parent_ids.iter().map(|s| s.to_string()).collect()),
+            parent_genetics: Some(parent_ids.iter().map(|s| (*s).to_string()).collect()),
             mutations: vec![],
             fitness_score: 0.8,
             security_clearance: SecurityClearance::Medium,

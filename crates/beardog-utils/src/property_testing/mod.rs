@@ -2,6 +2,10 @@
 
 //! Property-Based Testing Framework - Canonical Location
 //!
+//! **Build gating:** the `property_testing` module (including [`mock_implementations`]) is
+//! compiled only under `cfg(test)` or the `test-utils` Cargo feature on `beardog-utils`.
+//! It must not be relied on from production dependency graphs without that feature.
+//!
 //! **Unified property-based testing framework** - consolidated from scattered implementations.
 //!
 //! This module provides comprehensive property-based testing capabilities for `BearDog`,
@@ -27,9 +31,12 @@ use tracing::{debug, info, warn};
 // Core types and configuration
 pub mod types;
 
-// Property implementations - Re-enabled and testing
+// Property implementations (mock fixtures in `mock_implementations`; crate gated in lib.rs)
+/// REST-style validation properties built on [`PropertyBasedTestFramework`].
 pub mod api_properties;
+/// TOML/config parsing and defaulting properties.
 pub mod config_properties;
+/// Mock crypto round-trip and error properties.
 pub mod crypto_properties;
 pub mod mock_implementations;
 

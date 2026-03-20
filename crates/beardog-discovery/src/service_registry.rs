@@ -208,7 +208,7 @@ impl ServiceRegistryDiscovery {
                 _capabilities: service
                     .capabilities
                     .iter()
-                    .map(|c| format!("{:?}", c))
+                    .map(|c| format!("{c:?}"))
                     .collect(),
                 _endpoint: service.endpoint.primary_url.clone(),
                 _discovered_at: SystemTime::now(),

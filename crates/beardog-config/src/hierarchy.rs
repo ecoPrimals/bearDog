@@ -52,12 +52,15 @@ pub enum ConfigSource {
 /// Configuration value with source tracking
 #[derive(Debug, Clone)]
 pub struct ConfigValue<T> {
+    /// Resolved value after applying the configuration hierarchy up to this layer.
     pub value: T,
+    /// Which layer supplied `value`, used by [`Self::merge`] to pick the higher-precedence source.
     pub source: ConfigSource,
 }
 
 impl<T> ConfigValue<T> {
-    pub fn new(value: T, source: ConfigSource) -> Self {
+    /// Wraps `value` and records which configuration layer it came from.
+    pub const fn new(value: T, source: ConfigSource) -> Self {
         Self { value, source }
     }
 
@@ -96,7 +99,7 @@ impl ConfigHierarchy {
     }
 
     /// Apply platform-specific defaults
-    pub fn with_platform_defaults(self) -> Self {
+    pub const fn with_platform_defaults(self) -> Self {
         // Platform-specific path detection happens in PathConfig::default()
         // which is already called in BearDogConfig::default()
         // This is a no-op but kept for API clarity
@@ -109,17 +112,17 @@ impl ConfigHierarchy {
 
         // Read file contents
         let contents = std::fs::read_to_string(path).map_err(|e| {
-            ConfigError::invalid_value("config_file", format!("Failed to read: {}", e))
+            ConfigError::invalid_value("config_file", format!("Failed to read: {e}"))
         })?;
 
         // Parse based on extension
         let config: BearDogConfig = if path.extension().and_then(|s| s.to_str()) == Some("toml") {
             toml::from_str(&contents).map_err(|e| {
-                ConfigError::invalid_value("config_file", format!("Invalid TOML: {}", e))
+                ConfigError::invalid_value("config_file", format!("Invalid TOML: {e}"))
             })?
         } else if path.extension().and_then(|s| s.to_str()) == Some("json") {
             serde_json::from_str(&contents).map_err(|e| {
-                ConfigError::invalid_value("config_file", format!("Invalid JSON: {}", e))
+                ConfigError::invalid_value("config_file", format!("Invalid JSON: {e}"))
             })?
         } else {
             return Err(ConfigError::invalid_value(
@@ -226,42 +229,42 @@ fn merge_configs(
 ) -> BearDogConfig {
     // Field-by-field merge strategy for partial overrides
     BearDogConfig {
-        network: if override_cfg.network != base.network {
-            override_cfg.network
-        } else {
+        network: if override_cfg.network == base.network {
             base.network
+        } else {
+            override_cfg.network
         },
         paths: override_cfg.paths, // No PartialEq - always use override
         hsm: override_cfg.hsm,     // No PartialEq - always use override
-        timeouts: if override_cfg.timeouts != base.timeouts {
-            override_cfg.timeouts
-        } else {
+        timeouts: if override_cfg.timeouts == base.timeouts {
             base.timeouts
-        },
-        security: if override_cfg.security != base.security {
-            override_cfg.security
         } else {
+            override_cfg.timeouts
+        },
+        security: if override_cfg.security == base.security {
             base.security
-        },
-        crypto: if override_cfg.crypto != base.crypto {
-            override_cfg.crypto
         } else {
+            override_cfg.security
+        },
+        crypto: if override_cfg.crypto == base.crypto {
             base.crypto
-        },
-        limits: if override_cfg.limits != base.limits {
-            override_cfg.limits
         } else {
+            override_cfg.crypto
+        },
+        limits: if override_cfg.limits == base.limits {
             base.limits
-        },
-        monitoring: if override_cfg.monitoring != base.monitoring {
-            override_cfg.monitoring
         } else {
+            override_cfg.limits
+        },
+        monitoring: if override_cfg.monitoring == base.monitoring {
             base.monitoring
-        },
-        capacity: if override_cfg.capacity != base.capacity {
-            override_cfg.capacity
         } else {
+            override_cfg.monitoring
+        },
+        capacity: if override_cfg.capacity == base.capacity {
             base.capacity
+        } else {
+            override_cfg.capacity
         },
     }
 }
@@ -275,25 +278,25 @@ fn apply_env_overrides(
     // Network
     if let Some(port) = env_vars.get("BEARDOG_API_PORT") {
         config.network.api.port = port.parse().map_err(|_| {
-            ConfigError::invalid_value("BEARDOG_API_PORT", format!("Invalid port: {}", port))
+            ConfigError::invalid_value("BEARDOG_API_PORT", format!("Invalid port: {port}"))
         })?;
     }
     if let Some(addr) = env_vars.get("BEARDOG_API_BIND_ADDRESS") {
         config.network.api.bind_address = addr.parse().map_err(|_| {
             ConfigError::invalid_value(
                 "BEARDOG_API_BIND_ADDRESS",
-                format!("Invalid address: {}", addr),
+                format!("Invalid address: {addr}"),
             )
         })?;
     }
     if let Some(port) = env_vars.get("BEARDOG_DISCOVERY_PORT") {
         config.network.discovery.port = port.parse().map_err(|_| {
-            ConfigError::invalid_value("BEARDOG_DISCOVERY_PORT", format!("Invalid port: {}", port))
+            ConfigError::invalid_value("BEARDOG_DISCOVERY_PORT", format!("Invalid port: {port}"))
         })?;
     }
     if let Some(port) = env_vars.get("BEARDOG_ADMIN_PORT") {
         config.network.admin.port = port.parse().map_err(|_| {
-            ConfigError::invalid_value("BEARDOG_ADMIN_PORT", format!("Invalid port: {}", port))
+            ConfigError::invalid_value("BEARDOG_ADMIN_PORT", format!("Invalid port: {port}"))
         })?;
     }
 
@@ -311,20 +314,14 @@ fn apply_env_overrides(
     // Timeouts
     if let Some(timeout) = env_vars.get("BEARDOG_HSM_TIMEOUT") {
         config.timeouts.hsm_operation_secs = timeout.parse().map_err(|_| {
-            ConfigError::invalid_value(
-                "BEARDOG_HSM_TIMEOUT",
-                format!("Invalid timeout: {}", timeout),
-            )
+            ConfigError::invalid_value("BEARDOG_HSM_TIMEOUT", format!("Invalid timeout: {timeout}"))
         })?;
     }
 
     // Security
     if let Some(strict) = env_vars.get("BEARDOG_STRICT_MODE") {
         config.security.strict_mode = strict.parse().map_err(|_| {
-            ConfigError::invalid_value(
-                "BEARDOG_STRICT_MODE",
-                format!("Invalid boolean: {}", strict),
-            )
+            ConfigError::invalid_value("BEARDOG_STRICT_MODE", format!("Invalid boolean: {strict}"))
         })?;
     }
 
@@ -347,11 +344,11 @@ fn apply_cli_overrides(
     if let Some(port) = cli_args.get("port").or_else(|| cli_args.get("api-port")) {
         config.network.api.port = port
             .parse()
-            .map_err(|_| ConfigError::invalid_value("port", format!("Invalid port: {}", port)))?;
+            .map_err(|_| ConfigError::invalid_value("port", format!("Invalid port: {port}")))?;
     }
     if let Some(addr) = cli_args.get("bind-address") {
         config.network.api.bind_address = addr.parse().map_err(|_| {
-            ConfigError::invalid_value("bind-address", format!("Invalid address: {}", addr))
+            ConfigError::invalid_value("bind-address", format!("Invalid address: {addr}"))
         })?;
     }
     if let Some(config_file) = cli_args.get("config") {

@@ -52,7 +52,7 @@
 //! ```
 
 use serde::Deserialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 use tracing::{debug, info, warn};
@@ -106,8 +106,8 @@ impl Client {
         // Connect to Unix socket
         let stream = UnixStream::connect(&socket_path).await.map_err(|e| {
             Error::ConnectionFailed(format!(
-                "Failed to connect to {} at {:?}: {}",
-                primal_name, socket_path, e
+                "Failed to connect to {primal_name} at {}: {e}",
+                socket_path.display()
             ))
         })?;
 
@@ -165,19 +165,18 @@ impl Client {
         });
 
         // Serialize request
-        let request_str = serde_json::to_string(&request).map_err(|e| {
-            Error::SerializationFailed(format!("Failed to serialize request: {}", e))
-        })?;
+        let request_str = serde_json::to_string(&request)
+            .map_err(|e| Error::SerializationFailed(format!("Failed to serialize request: {e}")))?;
 
         // Send request (newline-delimited JSON)
         self.stream
             .write_all(request_str.as_bytes())
             .await
-            .map_err(|e| Error::ConnectionFailed(format!("Failed to write request: {}", e)))?;
+            .map_err(|e| Error::ConnectionFailed(format!("Failed to write request: {e}")))?;
         self.stream
             .write_all(b"\n")
             .await
-            .map_err(|e| Error::ConnectionFailed(format!("Failed to write newline: {}", e)))?;
+            .map_err(|e| Error::ConnectionFailed(format!("Failed to write newline: {e}")))?;
 
         debug!("📤 Sent: {}", request_str);
 
@@ -187,13 +186,13 @@ impl Client {
         reader
             .read_line(&mut response_str)
             .await
-            .map_err(|e| Error::ConnectionFailed(format!("Failed to read response: {}", e)))?;
+            .map_err(|e| Error::ConnectionFailed(format!("Failed to read response: {e}")))?;
 
         debug!("📥 Received: {}", response_str.trim());
 
         // Parse response
         let response: JsonRpcResponse = serde_json::from_str(&response_str)
-            .map_err(|e| Error::SerializationFailed(format!("Failed to parse response: {}", e)))?;
+            .map_err(|e| Error::SerializationFailed(format!("Failed to parse response: {e}")))?;
 
         // Check for JSON-RPC error
         if let Some(error) = response.error {

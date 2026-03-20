@@ -4,8 +4,8 @@
 // Created: October 24, 2025
 // Purpose: Advanced coverage for production/monitoring.rs - AlertManager, SystemMonitor, edge cases
 
-use super::monitoring::*;
 use super::PerformanceMetrics;
+use super::monitoring::*;
 
 // ============================================================================
 // AlertManager Advanced Tests

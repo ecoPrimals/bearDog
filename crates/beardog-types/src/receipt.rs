@@ -54,6 +54,7 @@ pub enum OperationResult {
     Success,
     /// Operation failed with error message
     Failure {
+        /// Human-readable or serialized error description
         #[serde(rename = "error")]
         error: String,
     },
@@ -210,7 +211,7 @@ impl OperationReceipt {
     }
 
     /// Check if operation was successful
-    pub fn is_success(&self) -> bool {
+    pub const fn is_success(&self) -> bool {
         matches!(self.result, OperationResult::Success)
     }
 

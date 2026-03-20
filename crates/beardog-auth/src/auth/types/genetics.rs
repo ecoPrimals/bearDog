@@ -6,8 +6,10 @@
 
 use serde::{Deserialize, Serialize};
 
+/// Genetic envelope describing cryptographic posture, capabilities, and optional signed constraints.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BearDogGenetics {
+    /// Stable identifier for this genetics blob (UUID, key id, or lineage node id).
     pub id: String,
     /// Collection of crypto chromosomes
     pub crypto_chromosomes: Vec<CryptoChromosome>,
@@ -255,19 +257,22 @@ impl BearDogGenetics {
     */ // End placeholder - real impl in genetics_impl.rs
 }
 
+/// Describes one cryptographic primitive family and its relative cost/security posture.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptoChromosome {
-    /// The algorithm family value
+    /// Broad algorithm class (elliptic curve, PQ, symmetric, …).
     pub algorithm_family: AlgorithmFamily,
-    /// Number of `strength_bits`
+    /// Effective security parameter size in bits for this primitive.
     pub strength_bits: u32,
-    /// The compatibility score value
+    /// Heuristic 0.0–1.0 score for interoperability with peer chromosomes.
     pub compatibility_score: f64,
+    /// Normalized throughput/latency score used when ranking algorithm choices.
     pub performance_factor: f64,
     /// Number of `security_level`
     pub security_level: u8,
 }
 
+/// High-level taxonomy of cryptographic algorithms referenced by [`CryptoChromosome`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AlgorithmFamily {
     /// Represents elliptic curve variant
@@ -352,6 +357,7 @@ pub enum NodeCapability {
     BasicOperations,
 }
 
+/// Behavioral security knobs (trust thresholds, auditing cadence) accompanying genetics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityTraits {
     /// The trust threshold value
@@ -378,12 +384,14 @@ impl Default for SecurityTraits {
     }
 }
 
+/// Limits applied when evaluating whether a child primal may be spawned from this genome.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SpawnRestriction {
     /// Represents max concurrent spawns variant
     MaxConcurrentSpawns(u32),
     /// Represents required capabilities variant
     RequiredCapabilities(Vec<NodeCapability>),
+    /// Capabilities that must **not** be present on spawned children (policy deny-list).
     ForbiddenCapabilities(Vec<NodeCapability>),
     /// Represents minimum trust level variant
     MinimumTrustLevel(f64),
@@ -393,6 +401,7 @@ pub enum SpawnRestriction {
     ResourceLimits(crate::auth::types::spawning::ResourceLimits),
 }
 
+/// Recorded change to capabilities, fitness, or specialization after a triggering event.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityMutation {
     /// The mutation trigger value
@@ -405,12 +414,14 @@ pub struct CapabilityMutation {
     pub fitness_impact: f64,
 }
 
+/// Reasons the ecosystem may apply a [`CapabilityMutation`] to a genome.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MutationTrigger {
     /// Represents environmental stress variant
     EnvironmentalStress,
     /// Represents security threat variant
     SecurityThreat,
+    /// Tuning pass triggered by measured performance headroom or regressions.
     PerformanceOptimization,
     /// Represents ecosystem integration variant
     EcosystemIntegration,
@@ -418,6 +429,7 @@ pub enum MutationTrigger {
     UserRequirement,
 }
 
+/// Ordered clearance ladder used for coarse-grained authorization pre-checks.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum SecurityClearance {
     /// Represents basic variant
@@ -430,10 +442,12 @@ pub enum SecurityClearance {
     Maximum,
 }
 
+/// Deployment profile hints (hardware tuning goals) associated with a node genome.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord)]
 pub enum NodeSpecialization {
     /// Represents general purpose variant
     GeneralPurpose,
+    /// Prioritizes low-latency, high-throughput cryptographic workloads (HSM, kernel crypto, etc.).
     HighPerformanceCrypto,
     /// State indicating gamingoptimized
     GamingOptimized,

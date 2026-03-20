@@ -16,13 +16,18 @@ pub struct AdvancedSIMDOptimizer {
     metrics: SIMDMetrics,
 }
 
+/// 32-byte aligned backing store for SIMD-friendly copies (logical `capacity` ≥ `data.len()`).
 #[repr(align(32))] // 256-bit alignment for AVX2
 pub struct AlignedBuffer {
+    /// Active bytes (zeroed on release).
     pub data: Vec<u8>,
+    /// Allocated capacity tracked for pooling decisions.
     pub capacity: usize,
+    /// Whether this slot is checked out from the optimizer.
     pub in_use: bool,
 }
 
+/// Rolling counters for pooled buffer traffic and mean kernel time.
 #[derive(Debug, Default)]
 pub struct SIMDMetrics {
     /// Number of operations
@@ -35,6 +40,7 @@ pub struct SIMDMetrics {
     pub buffer_reuses: u64,
     /// Number of `total_bytes_processed`
     pub total_bytes_processed: u64,
+    /// Mean nanoseconds per [`AdvancedSIMDOptimizer`] kernel invocation.
     pub avg_operation_time_ns: f64,
 }
 
@@ -52,9 +58,7 @@ impl AdvancedSIMDOptimizer {
         }
     }
 
-    /// ⚡ PERFORMANCE: Get optimized buffer with SIMD alignment
-    /// Gets `aligned_buffer`
-    /// Gets `aligned_buffer`
+    /// Returns a reusable [`AlignedBuffer`] with `capacity >= size`, or allocates up to 16 slots.
     pub fn get_aligned_buffer(&mut self, size: usize) -> Option<&mut AlignedBuffer> {
         // First, try to find an available buffer
         for (index, buffer) in self.aligned_buffers.iter_mut().enumerate() {
@@ -90,9 +94,7 @@ impl AdvancedSIMDOptimizer {
         }
     }
 
-    /// ⚡ PERFORMANCE: Fast buffer from pool with zero-copy when possible
-    /// Gets `fast_buffer`
-    /// Gets `fast_buffer`
+    /// Pops from [`Self::fast_pool`] or [`Self::buffer_pool`], otherwise allocates a fresh [`Vec`].
     pub fn get_fast_buffer(&mut self, size: usize) -> Vec<u8> {
         self.metrics.operations_count += 1;
 
@@ -245,8 +247,7 @@ impl AdvancedSIMDOptimizer {
             / total_ops;
     }
 
-    /// Gets metrics
-    /// Gets metrics
+    /// Borrow live [`SIMDMetrics`].
     #[must_use]
     pub const fn get_metrics(&self) -> &SIMDMetrics {
         &self.metrics
@@ -288,6 +289,7 @@ impl AdvancedSIMDOptimizer {
         );
     }
 
+    /// String map suitable for logging or snapshot tests.
     #[must_use]
     pub fn performance_report(&self) -> HashMap<String, String> {
         let mut report = HashMap::new();
@@ -325,7 +327,7 @@ impl AdvancedSIMDOptimizer {
     }
 }
 
-/// SIMD operation types
+/// Scalar kernels chunked like SIMD widths for future intrinsics wiring.
 #[derive(Debug, Clone)]
 pub enum SIMDOperation {
     /// Represents xor with pattern variant
@@ -338,7 +340,7 @@ pub enum SIMDOperation {
     Checksum,
 }
 
-/// Thread-safe SIMD optimizer
+/// Shareable handle wrapping [`AdvancedSIMDOptimizer`] behind a [`Mutex`].
 pub type SharedSIMDOptimizer = Arc<Mutex<AdvancedSIMDOptimizer>>;
 
 impl Default for AdvancedSIMDOptimizer {

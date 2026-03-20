@@ -23,10 +23,10 @@
 //! - scrypt: ~50-100ms (N=16384, r=8, p=1)
 //! - Both are CPU/memory intensive by design (brute-force protection)
 
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use zeroize::Zeroizing;
 
 /// Handle bcrypt password hashing
@@ -62,16 +62,19 @@ pub fn handle_bcrypt_hash(params: &Value) -> Result<Value, BearDogError> {
 
     let password_bytes = BASE64
         .decode(password_b64)
-        .map_err(|e| BearDogError::business(format!("Invalid base64 password: {}", e)))?;
+        .map_err(|e| BearDogError::business(format!("Invalid base64 password: {e}")))?;
 
     // Use Zeroizing to protect password in memory
     let password = Zeroizing::new(
         String::from_utf8(password_bytes)
-            .map_err(|e| BearDogError::business(format!("Invalid UTF-8 password: {}", e)))?,
+            .map_err(|e| BearDogError::business(format!("Invalid UTF-8 password: {e}")))?,
     );
 
     // Parse cost (default: 12, range: 4-31)
-    let cost = params.get("cost").and_then(|v| v.as_u64()).unwrap_or(12) as u32;
+    let cost = params
+        .get("cost")
+        .and_then(serde_json::Value::as_u64)
+        .unwrap_or(12) as u32;
 
     if !(4..=31).contains(&cost) {
         return Err(BearDogError::business(
@@ -81,7 +84,7 @@ pub fn handle_bcrypt_hash(params: &Value) -> Result<Value, BearDogError> {
 
     // Hash the password
     let hash = bcrypt::hash(&password, cost)
-        .map_err(|e| BearDogError::security(format!("bcrypt hash failed: {}", e)))?;
+        .map_err(|e| BearDogError::security(format!("bcrypt hash failed: {e}")))?;
 
     Ok(json!({
         "hash": hash,
@@ -121,11 +124,11 @@ pub fn handle_bcrypt_verify(params: &Value) -> Result<Value, BearDogError> {
 
     let password_bytes = BASE64
         .decode(password_b64)
-        .map_err(|e| BearDogError::business(format!("Invalid base64 password: {}", e)))?;
+        .map_err(|e| BearDogError::business(format!("Invalid base64 password: {e}")))?;
 
     let password = Zeroizing::new(
         String::from_utf8(password_bytes)
-            .map_err(|e| BearDogError::business(format!("Invalid UTF-8 password: {}", e)))?,
+            .map_err(|e| BearDogError::business(format!("Invalid UTF-8 password: {e}")))?,
     );
 
     // Parse hash
@@ -136,7 +139,7 @@ pub fn handle_bcrypt_verify(params: &Value) -> Result<Value, BearDogError> {
 
     // Verify password (constant-time)
     let valid = bcrypt::verify(&password, hash)
-        .map_err(|e| BearDogError::security(format!("bcrypt verify failed: {}", e)))?;
+        .map_err(|e| BearDogError::security(format!("bcrypt verify failed: {e}")))?;
 
     Ok(json!({
         "valid": valid
@@ -175,7 +178,7 @@ pub fn handle_bcrypt_verify(params: &Value) -> Result<Value, BearDogError> {
 /// - Use random salt (min 8 bytes, 16+ recommended)
 /// - OWASP recommends Argon2id over scrypt
 pub fn handle_scrypt(params: &Value) -> Result<Value, BearDogError> {
-    use scrypt::{scrypt, Params};
+    use scrypt::{Params, scrypt};
 
     // Parse password
     let password_b64 = params
@@ -188,7 +191,7 @@ pub fn handle_scrypt(params: &Value) -> Result<Value, BearDogError> {
     let password_bytes = Zeroizing::new(
         BASE64
             .decode(password_b64)
-            .map_err(|e| BearDogError::business(format!("Invalid base64 password: {}", e)))?,
+            .map_err(|e| BearDogError::business(format!("Invalid base64 password: {e}")))?,
     );
 
     // Parse salt
@@ -199,7 +202,7 @@ pub fn handle_scrypt(params: &Value) -> Result<Value, BearDogError> {
 
     let salt = BASE64
         .decode(salt_b64)
-        .map_err(|e| BearDogError::business(format!("Invalid base64 salt: {}", e)))?;
+        .map_err(|e| BearDogError::business(format!("Invalid base64 salt: {e}")))?;
 
     if salt.len() < 8 {
         return Err(BearDogError::business(
@@ -208,12 +211,21 @@ pub fn handle_scrypt(params: &Value) -> Result<Value, BearDogError> {
     }
 
     // Parse scrypt parameters
-    let log_n = params.get("log_n").and_then(|v| v.as_u64()).unwrap_or(14) as u8;
-    let r = params.get("r").and_then(|v| v.as_u64()).unwrap_or(8) as u32;
-    let p = params.get("p").and_then(|v| v.as_u64()).unwrap_or(1) as u32;
+    let log_n = params
+        .get("log_n")
+        .and_then(serde_json::Value::as_u64)
+        .unwrap_or(14) as u8;
+    let r = params
+        .get("r")
+        .and_then(serde_json::Value::as_u64)
+        .unwrap_or(8) as u32;
+    let p = params
+        .get("p")
+        .and_then(serde_json::Value::as_u64)
+        .unwrap_or(1) as u32;
     let key_length = params
         .get("key_length")
-        .and_then(|v| v.as_u64())
+        .and_then(serde_json::Value::as_u64)
         .unwrap_or(32) as usize;
 
     // Validate parameters
@@ -231,12 +243,12 @@ pub fn handle_scrypt(params: &Value) -> Result<Value, BearDogError> {
 
     // Create scrypt params
     let scrypt_params = Params::new(log_n, r, p)
-        .map_err(|e| BearDogError::security(format!("Invalid scrypt params: {}", e)))?;
+        .map_err(|e| BearDogError::security(format!("Invalid scrypt params: {e}")))?;
 
     // Derive key
     let mut derived_key = Zeroizing::new(vec![0u8; key_length]);
     scrypt(&password_bytes, &salt, &scrypt_params, &mut derived_key)
-        .map_err(|e| BearDogError::security(format!("scrypt derivation failed: {}", e)))?;
+        .map_err(|e| BearDogError::security(format!("scrypt derivation failed: {e}")))?;
 
     Ok(json!({
         "derived_key": BASE64.encode(&*derived_key),
@@ -256,100 +268,67 @@ mod tests {
     use super::*;
     use serde_json::json;
 
+    fn json_str<'a>(v: &'a Value, key: &'static str) -> Result<&'a str, BearDogError> {
+        v.get(key)
+            .and_then(|x| x.as_str())
+            .ok_or_else(|| BearDogError::invalid_input("missing JSON string field"))
+    }
+
+    fn json_bool(v: &Value, key: &'static str) -> Result<bool, BearDogError> {
+        v.get(key)
+            .and_then(|x| x.as_bool())
+            .ok_or_else(|| BearDogError::invalid_input("missing JSON bool field"))
+    }
+
+    fn b64_decode(s: &str) -> Result<Vec<u8>, BearDogError> {
+        BASE64
+            .decode(s)
+            .map_err(|e| BearDogError::invalid_input(&format!("base64: {e}")))
+    }
+
     #[test]
-    fn test_bcrypt_hash_and_verify() {
+    fn test_bcrypt_hash_and_verify() -> Result<(), BearDogError> {
         let password = BASE64.encode(b"test_password_123");
-        let params = json!({
-            "password": password,
-            "cost": 10  // Lower cost for faster tests
-        });
-
-        // Hash password
-        let result = handle_bcrypt_hash(&params).unwrap();
-        let hash = result.get("hash").unwrap().as_str().unwrap();
+        let params = json!({ "password": password, "cost": 10 });
+        let result = handle_bcrypt_hash(&params)?;
+        let hash = json_str(&result, "hash")?;
         assert!(hash.starts_with("$2b$10$"));
-
-        // Verify correct password
-        let verify_params = json!({
-            "password": password,
-            "hash": hash
-        });
-        let verify_result = handle_bcrypt_verify(&verify_params).unwrap();
-        assert!(verify_result.get("valid").unwrap().as_bool().unwrap());
-
-        // Verify wrong password
+        let verify_params = json!({ "password": password, "hash": hash });
+        let verify_result = handle_bcrypt_verify(&verify_params)?;
+        assert!(json_bool(&verify_result, "valid")?);
         let wrong_password = BASE64.encode(b"wrong_password");
         let wrong_verify_params = json!({
             "password": wrong_password,
             "hash": hash
         });
-        let wrong_result = handle_bcrypt_verify(&wrong_verify_params).unwrap();
-        assert!(!wrong_result.get("valid").unwrap().as_bool().unwrap());
+        let wrong_result = handle_bcrypt_verify(&wrong_verify_params)?;
+        assert!(!json_bool(&wrong_result, "valid")?);
+        Ok(())
     }
 
     #[test]
-    fn test_bcrypt_different_costs() {
+    fn test_bcrypt_different_costs() -> Result<(), BearDogError> {
         let password = BASE64.encode(b"password");
-
-        // Cost 4 (fast)
         let params_4 = json!({"password": password, "cost": 4});
-        let result_4 = handle_bcrypt_hash(&params_4).unwrap();
-        assert!(result_4
-            .get("hash")
-            .unwrap()
-            .as_str()
-            .unwrap()
-            .starts_with("$2b$04$"));
-
-        // Cost 12 (default)
+        let result_4 = handle_bcrypt_hash(&params_4)?;
+        assert!(json_str(&result_4, "hash")?.starts_with("$2b$04$"));
         let params_12 = json!({"password": password});
-        let result_12 = handle_bcrypt_hash(&params_12).unwrap();
-        assert!(result_12
-            .get("hash")
-            .unwrap()
-            .as_str()
-            .unwrap()
-            .starts_with("$2b$12$"));
+        let result_12 = handle_bcrypt_hash(&params_12)?;
+        assert!(json_str(&result_12, "hash")?.starts_with("$2b$12$"));
+        Ok(())
     }
 
     #[test]
     fn test_bcrypt_invalid_cost() {
         let password = BASE64.encode(b"password");
-
-        // Cost too low
-        let params_low = json!({"password": password, "cost": 3});
-        assert!(handle_bcrypt_hash(&params_low).is_err());
-
-        // Cost too high
-        let params_high = json!({"password": password, "cost": 32});
-        assert!(handle_bcrypt_hash(&params_high).is_err());
+        assert!(handle_bcrypt_hash(&json!({"password": password, "cost": 3})).is_err());
+        assert!(handle_bcrypt_hash(&json!({"password": password, "cost": 32})).is_err());
     }
 
     #[test]
-    fn test_scrypt_derivation() {
+    fn test_scrypt_derivation() -> Result<(), BearDogError> {
         let password = BASE64.encode(b"my_password");
         let salt = BASE64.encode(b"random_salt_12345");
-
-        let params = json!({
-            "password": password,
-            "salt": salt,
-            "log_n": 10,  // Low for fast tests (N=1024)
-            "r": 8,
-            "p": 1,
-            "key_length": 32
-        });
-
-        let result = handle_scrypt(&params).unwrap();
-        let derived_key = result.get("derived_key").unwrap().as_str().unwrap();
-        let decoded = BASE64.decode(derived_key).unwrap();
-        assert_eq!(decoded.len(), 32);
-    }
-
-    #[test]
-    fn test_scrypt_deterministic() {
-        let password = BASE64.encode(b"password123");
-        let salt = BASE64.encode(b"fixed_salt_value");
-
         let params = json!({
             "password": password,
             "salt": salt,
@@ -358,75 +337,82 @@ mod tests {
             "p": 1,
             "key_length": 32
         });
-
-        // Derive twice with same params
-        let result1 = handle_scrypt(&params).unwrap();
-        let result2 = handle_scrypt(&params).unwrap();
-
-        // Should produce identical keys
-        assert_eq!(
-            result1.get("derived_key").unwrap(),
-            result2.get("derived_key").unwrap()
-        );
+        let result = handle_scrypt(&params)?;
+        let decoded = b64_decode(json_str(&result, "derived_key")?)?;
+        assert_eq!(decoded.len(), 32);
+        Ok(())
     }
 
     #[test]
-    fn test_scrypt_different_salts() {
-        let password = BASE64.encode(b"password");
+    fn test_scrypt_deterministic() -> Result<(), BearDogError> {
+        let password = BASE64.encode(b"password123");
+        let salt = BASE64.encode(b"fixed_salt_value");
+        let params = json!({
+            "password": password,
+            "salt": salt,
+            "log_n": 10,
+            "r": 8,
+            "p": 1,
+            "key_length": 32
+        });
+        let result1 = handle_scrypt(&params)?;
+        let result2 = handle_scrypt(&params)?;
+        assert_eq!(
+            json_str(&result1, "derived_key")?,
+            json_str(&result2, "derived_key")?
+        );
+        Ok(())
+    }
 
+    #[test]
+    fn test_scrypt_different_salts() -> Result<(), BearDogError> {
+        let password = BASE64.encode(b"password");
         let params1 = json!({
             "password": password,
-            "salt": BASE64.encode(b"salt1234"),  // 8 bytes minimum for scrypt
+            "salt": BASE64.encode(b"salt1234"),
             "log_n": 10
         });
-
         let params2 = json!({
             "password": password,
-            "salt": BASE64.encode(b"salt5678"),  // 8 bytes minimum for scrypt
+            "salt": BASE64.encode(b"salt5678"),
             "log_n": 10
         });
-
-        let result1 = handle_scrypt(&params1).unwrap();
-        let result2 = handle_scrypt(&params2).unwrap();
-
-        // Different salts should produce different keys
+        let result1 = handle_scrypt(&params1)?;
+        let result2 = handle_scrypt(&params2)?;
         assert_ne!(
-            result1.get("derived_key").unwrap(),
-            result2.get("derived_key").unwrap()
+            json_str(&result1, "derived_key")?,
+            json_str(&result2, "derived_key")?
         );
+        Ok(())
     }
 
     #[test]
-    fn test_scrypt_variable_key_length() {
+    fn test_scrypt_variable_key_length() -> Result<(), BearDogError> {
         let password = BASE64.encode(b"password");
         let salt = BASE64.encode(b"salt12345678");
-
-        for key_length in [16, 32, 64, 128] {
+        for key_length in [16u64, 32, 64, 128] {
             let params = json!({
                 "password": password,
                 "salt": salt,
                 "log_n": 10,
                 "key_length": key_length
             });
-
-            let result = handle_scrypt(&params).unwrap();
-            let derived_key = result.get("derived_key").unwrap().as_str().unwrap();
-            let decoded = BASE64.decode(derived_key).unwrap();
-            assert_eq!(decoded.len(), key_length);
+            let result = handle_scrypt(&params)?;
+            let decoded = b64_decode(json_str(&result, "derived_key")?)?;
+            assert_eq!(decoded.len(), key_length as usize);
         }
+        Ok(())
     }
 
     #[test]
     fn test_scrypt_invalid_salt() {
         let password = BASE64.encode(b"password");
-        let short_salt = BASE64.encode(b"short"); // Only 5 bytes
-
+        let short_salt = BASE64.encode(b"short");
         let params = json!({
             "password": password,
             "salt": short_salt,
             "log_n": 10
         });
-
         assert!(handle_scrypt(&params).is_err());
     }
 }

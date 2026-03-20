@@ -14,7 +14,7 @@
 //! - Platform-agnostic (works everywhere)
 //! - Atomic operations (all-or-nothing)
 
-use crate::{platform::BiomeOSPaths, types::PrimalName, Architecture, OperatingSystem};
+use crate::{Architecture, OperatingSystem, platform::BiomeOSPaths, types::PrimalName};
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 use tokio::fs;
@@ -34,7 +34,7 @@ impl BinaryInstaller {
     /// # Arguments
     /// - `paths`: Installation paths
     /// - `source_dir`: Directory containing compiled binaries
-    pub fn new(paths: BiomeOSPaths, source_dir: PathBuf) -> Self {
+    pub const fn new(paths: BiomeOSPaths, source_dir: PathBuf) -> Self {
         Self { paths, source_dir }
     }
 
@@ -243,17 +243,19 @@ mod tests {
 
     #[tokio::test]
     async fn test_install_binary() {
-        let temp = TempDir::new().unwrap();
+        let temp = TempDir::new().expect("tempdir");
         let source_dir = temp.path().join("source");
         let bin_dir = temp.path().join("bin");
 
-        fs::create_dir_all(&source_dir).await.unwrap();
+        fs::create_dir_all(&source_dir)
+            .await
+            .expect("create source dir");
 
         // Create a fake binary
         let fake_binary = source_dir.join("beardog");
         fs::write(&fake_binary, b"#!/bin/sh\necho test")
             .await
-            .unwrap();
+            .expect("write fake binary");
 
         let paths = BiomeOSPaths {
             bin_dir: bin_dir.clone(),
@@ -269,7 +271,7 @@ mod tests {
         let installed = installer
             .install_binary(PrimalName::new(PrimalName::BEARDOG), &fake_binary)
             .await
-            .unwrap();
+            .expect("install binary");
 
         assert!(installed.exists());
         assert_eq!(installed, bin_dir.join("beardog"));
@@ -278,21 +280,26 @@ mod tests {
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            let perms = fs::metadata(&installed).await.unwrap().permissions();
+            let perms = fs::metadata(&installed)
+                .await
+                .expect("metadata")
+                .permissions();
             assert_eq!(perms.mode() & 0o111, 0o111); // Executable
         }
     }
 
     #[tokio::test]
     async fn test_uninstall_binary() {
-        let temp = TempDir::new().unwrap();
+        let temp = TempDir::new().expect("tempdir");
         let bin_dir = temp.path().join("bin");
 
-        fs::create_dir_all(&bin_dir).await.unwrap();
+        fs::create_dir_all(&bin_dir).await.expect("create bin dir");
 
         // Create installed binary
         let binary_path = bin_dir.join("beardog");
-        fs::write(&binary_path, b"test").await.unwrap();
+        fs::write(&binary_path, b"test")
+            .await
+            .expect("write binary");
 
         let paths = BiomeOSPaths {
             bin_dir: bin_dir.clone(),
@@ -310,17 +317,17 @@ mod tests {
         installer
             .uninstall_binary(PrimalName::new(PrimalName::BEARDOG))
             .await
-            .unwrap();
+            .expect("uninstall");
 
         assert!(!binary_path.exists());
     }
 
     #[tokio::test]
     async fn test_is_installed() {
-        let temp = TempDir::new().unwrap();
+        let temp = TempDir::new().expect("tempdir");
         let bin_dir = temp.path().join("bin");
 
-        fs::create_dir_all(&bin_dir).await.unwrap();
+        fs::create_dir_all(&bin_dir).await.expect("create bin dir");
 
         let paths = BiomeOSPaths {
             bin_dir: bin_dir.clone(),
@@ -340,7 +347,9 @@ mod tests {
         );
 
         // Create binary
-        fs::write(bin_dir.join("beardog"), b"test").await.unwrap();
+        fs::write(bin_dir.join("beardog"), b"test")
+            .await
+            .expect("write binary");
 
         // Now installed
         assert!(
@@ -352,7 +361,7 @@ mod tests {
 
     #[test]
     fn test_binary_path() {
-        let temp = TempDir::new().unwrap();
+        let temp = TempDir::new().expect("tempdir");
         let bin_dir = temp.path().join("bin");
 
         let paths = BiomeOSPaths {

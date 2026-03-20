@@ -19,7 +19,7 @@
 //!
 //! ## Original Purpose
 //! This module consolidated service discovery configuration types from across the codebase.
-//! This functionality is now in `discovery_unified.rs` with enhanced features.
+//! This functionality is now in the `discovery_unified` module with enhanced features.
 
 use crate::canonical::traits::CacheStrategy;
 use serde::{Deserialize, Serialize};

@@ -212,7 +212,7 @@ mod self_discovery_extended_tests {
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
         // Set environment variable for display name
-        std::env::set_var("BEARDOG_DISPLAY_NAME", "Test BearDog Instance");
+        beardog_errors::process_env::set_var("BEARDOG_DISPLAY_NAME", "Test BearDog Instance");
 
         let mut engine = SelfDiscoveryEngine::new().unwrap();
         let identity = engine.discover_self_identity().unwrap();
@@ -226,7 +226,7 @@ mod self_discovery_extended_tests {
         }
 
         // Cleanup
-        std::env::remove_var("BEARDOG_DISPLAY_NAME");
+        beardog_errors::process_env::remove_var("BEARDOG_DISPLAY_NAME");
     }
 
     #[tokio::test]

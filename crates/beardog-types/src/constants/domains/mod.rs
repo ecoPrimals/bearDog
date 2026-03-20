@@ -20,10 +20,13 @@ pub mod config;
 pub mod ecosystem;
 pub mod limits; // NEW - Nov 11, 2025
 pub mod math;
+/// Network ports, addresses, timeouts, headers, and protocol-related defaults.
 pub mod network;
 pub mod pkcs11;
+/// Authentication, crypto, HSM, and TLS security constants.
 pub mod security;
 pub mod storage;
+/// Versions, defaults, limits, timeouts, and registry snapshots for system-wide settings.
 pub mod system;
 pub mod timeouts; // NEW - Nov 11, 2025
 pub mod validation;

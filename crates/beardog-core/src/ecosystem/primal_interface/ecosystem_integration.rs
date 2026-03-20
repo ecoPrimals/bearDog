@@ -2,8 +2,8 @@
 
 use crate::core::BearDogCore;
 use beardog_errors::BearDogError;
-use beardog_types::canonical::capabilities::CapabilityType;
 use beardog_types::canonical::HealthStatus;
+use beardog_types::canonical::capabilities::CapabilityType;
 use serde_json::Value;
 use tracing::{debug, info, warn};
 use uuid::Uuid;

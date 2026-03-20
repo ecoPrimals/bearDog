@@ -222,14 +222,14 @@ impl SoftwareHealthMonitor {
         let mut metrics = self.metrics.write().await;
 
         // Update operations per second (simple moving average)
-        metrics.operations_per_second = metrics.operations_per_second * 0.9 + 0.1;
+        metrics.operations_per_second = metrics.operations_per_second.mul_add(0.9, 0.1);
 
         // Update average latency
-        metrics.average_latency_ms = metrics.average_latency_ms * 0.9 + latency_ms * 0.1;
+        metrics.average_latency_ms = metrics.average_latency_ms.mul_add(0.9, latency_ms * 0.1);
 
         // Update success rate
         if success {
-            metrics.success_rate = metrics.success_rate * 0.99 + 1.0 * 0.01;
+            metrics.success_rate = metrics.success_rate.mul_add(0.99, 1.0 * 0.01);
         } else {
             metrics.error_count += 1;
             metrics.success_rate *= 0.99;

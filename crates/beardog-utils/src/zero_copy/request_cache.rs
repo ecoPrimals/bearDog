@@ -13,6 +13,7 @@ use std::time::{Duration, Instant};
 pub struct CacheEntry<T> {
     /// The data value
     pub data: T,
+    /// Wall time when this entry was inserted or refreshed.
     pub timestamp: Instant,
     /// The ttl value
     pub ttl: Duration,

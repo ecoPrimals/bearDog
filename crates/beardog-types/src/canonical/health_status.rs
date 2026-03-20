@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Health status of a system component or service
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum HealthStatus {
     /// Healthy variant
     Healthy,
@@ -15,6 +15,7 @@ pub enum HealthStatus {
     Unhealthy,
 
     /// Unknown variant
+    #[default]
     Unknown,
 
     /// Starting variant
@@ -31,11 +32,6 @@ pub enum HealthStatus {
 
     /// Warning variant
     Warning,
-}
-impl Default for HealthStatus {
-    fn default() -> Self {
-        Self::Unknown
-    }
 }
 
 impl std::fmt::Display for HealthStatus {
@@ -55,7 +51,7 @@ impl std::fmt::Display for HealthStatus {
 }
 
 /// Status of an individual system component
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 pub enum ComponentStatus {
     /// Starting variant
     Starting,
@@ -66,6 +62,7 @@ pub enum ComponentStatus {
     /// Active variant
     Active,
     /// Inactive variant
+    #[default]
     Inactive,
     /// Failed variant
     Failed,
@@ -73,12 +70,6 @@ pub enum ComponentStatus {
     Maintenance,
     /// Error state with error message
     Error(String),
-}
-
-impl Default for ComponentStatus {
-    fn default() -> Self {
-        Self::Inactive
-    }
 }
 
 impl ComponentStatus {
@@ -90,9 +81,10 @@ impl ComponentStatus {
 }
 
 /// Status of a system operation or task
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 pub enum OperationStatus {
     /// Pending variant
+    #[default]
     Pending,
     /// `InProgress` variant
     InProgress,
@@ -104,16 +96,11 @@ pub enum OperationStatus {
     Cancelled,
 }
 
-impl Default for OperationStatus {
-    fn default() -> Self {
-        Self::Pending
-    }
-}
-
 /// Status of a workflow or process chain
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 pub enum WorkflowStatus {
     /// Created variant
+    #[default]
     Created,
     /// Running variant
     Running,
@@ -129,25 +116,15 @@ pub enum WorkflowStatus {
     Expired,
 }
 
-impl Default for WorkflowStatus {
-    fn default() -> Self {
-        Self::Created
-    }
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 /// Status of cryptographic keys in the system
+#[derive(Default)]
 pub enum KeyStatus {
     /// Compromised variant
     Compromised,
     /// Revoked variant
     Revoked,
     /// `PendingActivation` variant
+    #[default]
     PendingActivation,
-}
-
-impl Default for KeyStatus {
-    fn default() -> Self {
-        Self::PendingActivation
-    }
 }

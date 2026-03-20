@@ -152,8 +152,10 @@ mod tests {
         };
 
         assert!(validation.is_valid);
-        assert!(validation
-            .capabilities_granted
-            .contains(&"test".to_string()));
+        assert!(
+            validation
+                .capabilities_granted
+                .contains(&"test".to_string())
+        );
     }
 }

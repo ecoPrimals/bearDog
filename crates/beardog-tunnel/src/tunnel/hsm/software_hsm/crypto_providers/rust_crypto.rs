@@ -4,8 +4,8 @@ use crate::tunnel::hsm::types::*;
 use beardog_errors::BearDogError;
 use beardog_types::hsm::CryptoProvider; // Import the canonical trait
 use chacha20poly1305::{
-    aead::{Aead, AeadCore, KeyInit, OsRng},
     ChaCha20Poly1305,
+    aead::{Aead, AeadCore, KeyInit, OsRng},
 };
 use ed25519_dalek::{Signer, SigningKey, Verifier, VerifyingKey};
 use hkdf::Hkdf;
@@ -169,15 +169,12 @@ impl CryptoProvider<KeyType> for RustCryptoProvider {
             .try_into()
             .map_err(|_| BearDogError::crypto_error("Invalid signature length".to_string()))?;
 
-        match verifying_key.verify(data, &sig.into()) {
-            Ok(()) => {
-                debug!("Signature valid");
-                Ok(true)
-            }
-            Err(_) => {
-                debug!("Signature invalid");
-                Ok(false)
-            }
+        if matches!(verifying_key.verify(data, &sig.into()), Ok(())) {
+            debug!("Signature valid");
+            Ok(true)
+        } else {
+            debug!("Signature invalid");
+            Ok(false)
         }
     }
 

@@ -6,8 +6,8 @@
 //! external dependencies. Falls back to NotImplemented on non-Linux.
 
 use beardog_errors::BearDogError;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use tracing::debug;
 
 /// Snapshot of /proc/stat CPU counters.
@@ -24,7 +24,7 @@ struct CpuSnapshot {
 }
 
 impl CpuSnapshot {
-    fn total(&self) -> u64 {
+    const fn total(&self) -> u64 {
         self.user
             + self.nice
             + self.system
@@ -35,7 +35,7 @@ impl CpuSnapshot {
             + self.steal
     }
 
-    fn busy(&self) -> u64 {
+    const fn busy(&self) -> u64 {
         self.total() - self.idle - self.iowait
     }
 }
@@ -278,7 +278,7 @@ mod tests {
     #[test]
     fn test_collect_response_time_no_requests() {
         let metrics = SystemMetrics::new();
-        let rt = metrics.collect_response_time().unwrap();
+        let rt = metrics.collect_response_time().expect("response time");
         assert_eq!(rt, 0.0);
     }
 
@@ -287,7 +287,7 @@ mod tests {
         let metrics = SystemMetrics::new();
         metrics.record_request(std::time::Duration::from_millis(100), false);
         metrics.record_request(std::time::Duration::from_millis(200), false);
-        let rt = metrics.collect_response_time().unwrap();
+        let rt = metrics.collect_response_time().expect("response time");
         // Average should be ~150ms (some atomic timing variance)
         assert!(rt > 100.0 && rt < 250.0, "Expected ~150ms, got {rt}");
     }
@@ -295,7 +295,7 @@ mod tests {
     #[test]
     fn test_collect_error_rate_no_requests() {
         let metrics = SystemMetrics::new();
-        let rate = metrics.collect_error_rate().unwrap();
+        let rate = metrics.collect_error_rate().expect("error rate");
         assert_eq!(rate, 0.0);
     }
 
@@ -304,7 +304,7 @@ mod tests {
         let metrics = SystemMetrics::new();
         metrics.record_request(std::time::Duration::from_millis(10), false);
         metrics.record_request(std::time::Duration::from_millis(10), true);
-        let rate = metrics.collect_error_rate().unwrap();
+        let rate = metrics.collect_error_rate().expect("error rate");
         assert!((rate - 50.0).abs() < 1.0, "Expected ~50%, got {rate}");
     }
 
@@ -316,7 +316,7 @@ mod tests {
         metrics.record_request(std::time::Duration::from_millis(1), false);
         // Small sleep so elapsed > 0
         std::thread::sleep(std::time::Duration::from_millis(10));
-        let throughput = metrics.collect_throughput().unwrap();
+        let throughput = metrics.collect_throughput().expect("throughput");
         assert!(
             throughput > 0.0,
             "Expected positive throughput, got {throughput}"
@@ -328,11 +328,11 @@ mod tests {
     fn test_collect_cpu_usage_linux() {
         let metrics = SystemMetrics::new();
         // First call establishes baseline
-        let first = metrics.collect_cpu_usage().unwrap();
+        let first = metrics.collect_cpu_usage().expect("cpu first");
         assert_eq!(first, 0.0, "First call should be 0.0 (no baseline)");
         // Brief delay for CPU delta
         std::thread::sleep(std::time::Duration::from_millis(50));
-        let second = metrics.collect_cpu_usage().unwrap();
+        let second = metrics.collect_cpu_usage().expect("cpu second");
         assert!(
             second >= 0.0 && second <= 100.0,
             "CPU should be 0-100, got {second}"
@@ -343,7 +343,7 @@ mod tests {
     #[test]
     fn test_collect_memory_usage_linux() {
         let metrics = SystemMetrics::new();
-        let usage = metrics.collect_memory_usage().unwrap();
+        let usage = metrics.collect_memory_usage().expect("memory usage");
         assert!(
             usage > 0.0 && usage < 100.0,
             "Memory should be 0-100, got {usage}"
@@ -353,7 +353,7 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn test_read_cpu_snapshot() {
-        let snap = read_cpu_snapshot().unwrap();
+        let snap = read_cpu_snapshot().expect("cpu snapshot");
         assert!(snap.total() > 0, "Total CPU time should be > 0");
         assert!(snap.idle > 0, "Idle time should be > 0");
     }
@@ -361,7 +361,7 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn test_read_memory_usage_reasonable() {
-        let usage = read_memory_usage().unwrap();
+        let usage = read_memory_usage().expect("read memory");
         // On any real system, memory usage should be between 1% and 99%
         assert!(
             usage > 1.0 && usage < 99.0,

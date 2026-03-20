@@ -7,9 +7,10 @@ use crate::workflows::canonical_examples::types::{
 };
 use crate::workflows::canonical_traits::{Workflow, WorkflowId, WorkflowProcessor};
 use beardog_errors::BearDogError;
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 use tracing::info;
 
+/// Sample [`WorkflowProcessor`] that validates ids, simulates work, and completes with annotated JSON data.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
 pub struct ExampleWorkflowProcessor {
     /// Name of the item

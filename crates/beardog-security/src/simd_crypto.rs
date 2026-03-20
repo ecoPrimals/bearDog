@@ -19,8 +19,8 @@
 //! - Fallback to scalar on other platforms
 
 use beardog_errors::BearDogError;
-use chacha20::cipher::{KeyIvInit, StreamCipher};
 use chacha20::ChaCha20;
+use chacha20::cipher::{KeyIvInit, StreamCipher};
 use std::collections::HashMap;
 use tracing::{debug, info};
 

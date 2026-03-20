@@ -201,7 +201,7 @@ impl UniversalProviderRegistry {
     }
 
     /// Get registry statistics
-    pub fn stats(&self) -> &RegistryStats {
+    pub const fn stats(&self) -> &RegistryStats {
         &self.stats
     }
 

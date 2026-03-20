@@ -10,6 +10,7 @@ use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
+/// Command that transitions an [`ExampleWorkflow`] from [`ExampleWorkflowStatus::Created`] to `Started`.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct StartWorkflowCommand {
     /// The context value

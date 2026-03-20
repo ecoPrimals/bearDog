@@ -380,13 +380,18 @@ mod tests {
         let result = handle_sign_ed25519(Some(&params)).await;
         assert!(result.is_ok());
 
-        let value = result.unwrap();
+        let value = result.expect("ed25519 sign should succeed");
         assert_eq!(value["algorithm"], "Ed25519");
         assert!(value["signature"].is_string());
         assert!(value["key_id"].is_string());
 
         // Verify signature is 64 bytes
-        let signature = BASE64.decode(value["signature"].as_str().unwrap()).unwrap();
+        let sig_str = value["signature"]
+            .as_str()
+            .expect("signature should be a string");
+        let signature = BASE64
+            .decode(sig_str)
+            .expect("signature should be valid base64");
         assert_eq!(signature.len(), 64);
     }
 
@@ -398,7 +403,7 @@ mod tests {
         let result = handle_sign_ed25519(Some(&params)).await;
         assert!(result.is_ok());
 
-        let value = result.unwrap();
+        let value = result.expect("ed25519 sign with key_id should succeed");
         assert_eq!(value["key_id"], "my-custom-key");
     }
 
@@ -407,8 +412,12 @@ mod tests {
         let message = BASE64.encode(b"Same message");
         let params = json!({ "message": message, "key_id": "test-key-1" });
 
-        let result1 = handle_sign_ed25519(Some(&params)).await.unwrap();
-        let result2 = handle_sign_ed25519(Some(&params)).await.unwrap();
+        let result1 = handle_sign_ed25519(Some(&params))
+            .await
+            .expect("first deterministic sign should succeed");
+        let result2 = handle_sign_ed25519(Some(&params))
+            .await
+            .expect("second deterministic sign should succeed");
 
         // Same key, same message = same signature
         assert_eq!(result1["signature"], result2["signature"]);
@@ -421,8 +430,12 @@ mod tests {
         let params1 = json!({ "message": message, "key_id": "key-a" });
         let params2 = json!({ "message": message, "key_id": "key-b" });
 
-        let result1 = handle_sign_ed25519(Some(&params1)).await.unwrap();
-        let result2 = handle_sign_ed25519(Some(&params2)).await.unwrap();
+        let result1 = handle_sign_ed25519(Some(&params1))
+            .await
+            .expect("sign with key-a should succeed");
+        let result2 = handle_sign_ed25519(Some(&params2))
+            .await
+            .expect("sign with key-b should succeed");
 
         // Different keys = different signatures
         assert_ne!(result1["signature"], result2["signature"]);
@@ -479,26 +492,32 @@ mod tests {
         let result = handle_x25519_generate_ephemeral(None).await;
         assert!(result.is_ok());
 
-        let value = result.unwrap();
+        let value = result.expect("x25519 ephemeral should succeed");
         assert_eq!(value["algorithm"], "X25519");
         assert!(value["public_key"].is_string());
         assert!(value["secret_key"].is_string());
 
         // Verify key sizes (32 bytes each)
-        let public_key = BASE64
-            .decode(value["public_key"].as_str().unwrap())
-            .unwrap();
-        let secret_key = BASE64
-            .decode(value["secret_key"].as_str().unwrap())
-            .unwrap();
+        let pk_str = value["public_key"]
+            .as_str()
+            .expect("public_key should be a string");
+        let sk_str = value["secret_key"]
+            .as_str()
+            .expect("secret_key should be a string");
+        let public_key = BASE64.decode(pk_str).expect("public_key base64");
+        let secret_key = BASE64.decode(sk_str).expect("secret_key base64");
         assert_eq!(public_key.len(), 32);
         assert_eq!(secret_key.len(), 32);
     }
 
     #[tokio::test]
     async fn test_x25519_generate_unique_keys() {
-        let result1 = handle_x25519_generate_ephemeral(None).await.unwrap();
-        let result2 = handle_x25519_generate_ephemeral(None).await.unwrap();
+        let result1 = handle_x25519_generate_ephemeral(None)
+            .await
+            .expect("first x25519 ephemeral");
+        let result2 = handle_x25519_generate_ephemeral(None)
+            .await
+            .expect("second x25519 ephemeral");
 
         // Each generation should produce unique keys
         assert_ne!(result1["public_key"], result2["public_key"]);
@@ -508,10 +527,14 @@ mod tests {
     #[tokio::test]
     async fn test_x25519_key_exchange_roundtrip() {
         // Alice generates her keypair
-        let alice_keypair = handle_x25519_generate_ephemeral(None).await.unwrap();
+        let alice_keypair = handle_x25519_generate_ephemeral(None)
+            .await
+            .expect("alice x25519 keypair");
 
         // Bob generates his keypair
-        let bob_keypair = handle_x25519_generate_ephemeral(None).await.unwrap();
+        let bob_keypair = handle_x25519_generate_ephemeral(None)
+            .await
+            .expect("bob x25519 keypair");
 
         // Alice derives shared secret with Bob's public key
         let alice_params = json!({

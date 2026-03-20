@@ -74,11 +74,7 @@ impl PlatformSocket for IOSSocket {
                 .ok()
                 .and_then(|d| {
                     let path = std::path::PathBuf::from(d);
-                    if path.exists() {
-                        Some(path)
-                    } else {
-                        None
-                    }
+                    if path.exists() { Some(path) } else { None }
                 })
                 .unwrap_or_else(|| std::path::PathBuf::from("/var/tmp/biomeos"));
 
@@ -150,7 +146,10 @@ impl PlatformSocket for IOSSocket {
 
                 Err(std::io::Error::new(
                     std::io::ErrorKind::Unsupported,
-                    format!("iOS XPC transport not yet implemented ({}). Use TCP localhost fallback or wait for Pure Rust XPC bindings.", service),
+                    format!(
+                        "iOS XPC transport not yet implemented ({}). Use TCP localhost fallback or wait for Pure Rust XPC bindings.",
+                        service
+                    ),
                 ))
             }
 
@@ -228,7 +227,7 @@ mod tests {
 
         // Use temp directory for test
         let test_dir = env::temp_dir().join("beardog_ios_test");
-        env::set_var("BIOMEOS_SOCKET_DIR", &test_dir);
+        beardog_errors::process_env::set_var("BIOMEOS_SOCKET_DIR", &test_dir);
 
         let test_name = format!("test_beardog_{}", std::process::id());
         let endpoint = IOSSocket::create_endpoint(&test_name).unwrap();
@@ -246,7 +245,7 @@ mod tests {
             }
         }
 
-        env::remove_var("BIOMEOS_SOCKET_DIR");
+        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_DIR");
         let _ = std::fs::remove_dir_all(&test_dir);
     }
 }

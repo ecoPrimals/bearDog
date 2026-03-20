@@ -60,7 +60,7 @@ mod tests;
 mod engine_comprehensive_tests;
 
 // Re-export key types for convenience
-pub use engine::{migrate_from_binary_patterns, EcosystemGeneticEngine};
+pub use engine::{EcosystemGeneticEngine, migrate_from_binary_patterns};
 pub use support::{
     BinaryAccessPattern, BinaryTrust, EcosystemContext, EcosystemHealthReport, HierarchicalPattern,
     RelationshipHistory,

@@ -270,8 +270,8 @@ fn test_connection_state_consistency() -> Result<(), Box<dyn std::error::Error>>
 }
 
 #[test]
-fn test_connection_error_on_authenticate_when_disconnected(
-) -> Result<(), Box<dyn std::error::Error>> {
+fn test_connection_error_on_authenticate_when_disconnected()
+-> Result<(), Box<dyn std::error::Error>> {
     let mut conn = MockConnection::new();
 
     let result = conn.authenticate();

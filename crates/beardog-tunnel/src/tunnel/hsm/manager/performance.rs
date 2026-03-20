@@ -123,8 +123,10 @@ impl HsmPerformanceTracker {
 
         // Update latency stats
         let total_ops = provider_metrics.total_operations as f64;
-        provider_metrics.average_latency_ms =
-            ((provider_metrics.average_latency_ms * (total_ops - 1.0)) + latency_ms) / total_ops;
+        provider_metrics.average_latency_ms = provider_metrics
+            .average_latency_ms
+            .mul_add(total_ops - 1.0, latency_ms)
+            / total_ops;
 
         if latency_ms < provider_metrics.min_latency_ms {
             provider_metrics.min_latency_ms = latency_ms;
@@ -160,7 +162,7 @@ impl HsmPerformanceTracker {
     }
 
     /// Get configuration
-    pub fn config(&self) -> &PerformanceConfig {
+    pub const fn config(&self) -> &PerformanceConfig {
         &self.config
     }
 }
@@ -215,7 +217,10 @@ mod tests {
             .record_operation("provider-1".to_string(), false, 30.0)
             .await;
 
-        let metrics = tracker.get_metrics("provider-1").await.unwrap();
+        let metrics = tracker
+            .get_metrics("provider-1")
+            .await
+            .expect("metrics should exist after record_operation");
         assert_eq!(metrics.total_operations, 3);
         assert_eq!(metrics.successful_operations, 2);
         assert_eq!(metrics.failed_operations, 1);
@@ -232,7 +237,10 @@ mod tests {
             .record_operation("provider-1".to_string(), true, 30.0)
             .await;
 
-        let metrics = tracker.get_metrics("provider-1").await.unwrap();
+        let metrics = tracker
+            .get_metrics("provider-1")
+            .await
+            .expect("metrics should exist after record_operation");
         assert_eq!(metrics.min_latency_ms, 10.0);
         assert_eq!(metrics.max_latency_ms, 30.0);
         assert_eq!(metrics.average_latency_ms, 20.0);
@@ -386,7 +394,10 @@ mod tests {
                 .await;
         }
 
-        let metrics = tracker.get_metrics("provider-1").await.unwrap();
+        let metrics = tracker
+            .get_metrics("provider-1")
+            .await
+            .expect("metrics should exist after record_operation loop");
         assert_eq!(metrics.total_operations, 100);
         assert_eq!(metrics.successful_operations, 90);
         assert_eq!(metrics.failed_operations, 10);
@@ -409,7 +420,9 @@ mod tests {
         }
 
         for handle in handles {
-            handle.await.unwrap();
+            handle
+                .await
+                .expect("concurrent record_operation task should complete");
         }
 
         let all_metrics = tracker.get_all_metrics().await;
@@ -432,10 +445,15 @@ mod tests {
         }
 
         for handle in handles {
-            handle.await.unwrap();
+            handle
+                .await
+                .expect("concurrent record_operation task should complete");
         }
 
-        let metrics = tracker.get_metrics("provider-1").await.unwrap();
+        let metrics = tracker
+            .get_metrics("provider-1")
+            .await
+            .expect("metrics should exist after concurrent writes");
         assert_eq!(metrics.total_operations, 20);
         assert_eq!(metrics.successful_operations, 20);
     }
@@ -454,7 +472,10 @@ mod tests {
             .record_operation("provider-1".to_string(), true, 15.7)
             .await;
 
-        let metrics = tracker.get_metrics("provider-1").await.unwrap();
+        let metrics = tracker
+            .get_metrics("provider-1")
+            .await
+            .expect("metrics should exist after record_operation");
         assert_eq!(metrics.min_latency_ms, 10.5);
         assert_eq!(metrics.max_latency_ms, 20.3);
 
@@ -490,9 +511,18 @@ mod tests {
             .record_operation("provider-3".to_string(), true, 30.0)
             .await;
 
-        let metrics1 = tracker.get_metrics("provider-1").await.unwrap();
-        let metrics2 = tracker.get_metrics("provider-2").await.unwrap();
-        let metrics3 = tracker.get_metrics("provider-3").await.unwrap();
+        let metrics1 = tracker
+            .get_metrics("provider-1")
+            .await
+            .expect("provider-1 metrics should exist");
+        let metrics2 = tracker
+            .get_metrics("provider-2")
+            .await
+            .expect("provider-2 metrics should exist");
+        let metrics3 = tracker
+            .get_metrics("provider-3")
+            .await
+            .expect("provider-3 metrics should exist");
 
         assert_eq!(metrics1.average_latency_ms, 10.0);
         assert_eq!(metrics2.average_latency_ms, 20.0);
@@ -538,7 +568,10 @@ mod tests {
             .record_operation("provider-1".to_string(), true, 5000.0)
             .await;
 
-        let metrics = tracker.get_metrics("provider-1").await.unwrap();
+        let metrics = tracker
+            .get_metrics("provider-1")
+            .await
+            .expect("metrics should exist after record_operation");
         assert_eq!(metrics.max_latency_ms, 5000.0);
     }
 
@@ -550,7 +583,10 @@ mod tests {
             .record_operation("provider-1".to_string(), true, 0.001)
             .await;
 
-        let metrics = tracker.get_metrics("provider-1").await.unwrap();
+        let metrics = tracker
+            .get_metrics("provider-1")
+            .await
+            .expect("metrics should exist after record_operation");
         assert_eq!(metrics.min_latency_ms, 0.001);
     }
 
@@ -565,7 +601,10 @@ mod tests {
                 .await;
         }
 
-        let metrics = tracker.get_metrics("provider-1").await.unwrap();
+        let metrics = tracker
+            .get_metrics("provider-1")
+            .await
+            .expect("metrics should exist after record_operation loop");
         assert_eq!(metrics.total_operations, 10);
         assert_eq!(metrics.successful_operations, 5);
         assert_eq!(metrics.failed_operations, 5);

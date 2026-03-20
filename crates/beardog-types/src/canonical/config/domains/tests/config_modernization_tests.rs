@@ -23,7 +23,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &str, value: &str) -> Self {
-        std::env::set_var(key, value);
+        beardog_errors::process_env::set_var(key, value);
         Self {
             key: key.to_string(),
         }
@@ -32,7 +32,7 @@ impl EnvGuard {
 
 impl Drop for EnvGuard {
     fn drop(&mut self) {
-        std::env::remove_var(&self.key);
+        beardog_errors::process_env::remove_var(&self.key);
     }
 }
 
@@ -400,8 +400,8 @@ fn test_constants_match_defaults() {
 fn test_from_env_fallbacks_to_defaults() {
     // Ensure from_env() uses defaults when env vars not set
     // Clear any existing env vars first
-    std::env::remove_var("BEARDOG_PATTERN_MAX_AGE_SECS");
-    std::env::remove_var("BEARDOG_PATTERN_CONSOLIDATION_INTERVAL_SECS");
+    beardog_errors::process_env::remove_var("BEARDOG_PATTERN_MAX_AGE_SECS");
+    beardog_errors::process_env::remove_var("BEARDOG_PATTERN_CONSOLIDATION_INTERVAL_SECS");
     
     let config = bootstrap::InfantPatternConfig::from_env();
     let defaults = bootstrap::InfantPatternConfig::with_defaults();

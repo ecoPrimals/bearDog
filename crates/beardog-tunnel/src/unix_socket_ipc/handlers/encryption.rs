@@ -40,8 +40,8 @@ use crate::unix_socket_ipc::handlers::MethodHandler;
 use async_trait::async_trait;
 use base64::engine::Engine;
 use chacha20poly1305::{
-    aead::{Aead, AeadCore, KeyInit, OsRng},
     ChaCha20Poly1305, Nonce,
+    aead::{Aead, AeadCore, KeyInit, OsRng},
 };
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
@@ -67,7 +67,7 @@ impl MethodHandler for EncryptionHandler {
         match method {
             "encryption.encrypt" => self.handle_encrypt(params).await,
             "encryption.decrypt" => self.handle_decrypt(params).await,
-            _ => Err(format!("Unknown encryption method: {}", method)),
+            _ => Err(format!("Unknown encryption method: {method}")),
         }
     }
 }
@@ -111,7 +111,7 @@ impl EncryptionHandler {
         // Decode input data
         let plaintext = base64::engine::general_purpose::STANDARD
             .decode(data_b64)
-            .map_err(|e| format!("Invalid base64 input: {}", e))?;
+            .map_err(|e| format!("Invalid base64 input: {e}"))?;
 
         // REAL IMPLEMENTATION: Use ChaCha20-Poly1305 (faster and safer than AES-GCM)
         // This uses the same encryption that BTSP uses
@@ -130,7 +130,7 @@ impl EncryptionHandler {
 
         let ciphertext = cipher
             .encrypt(&nonce, plaintext.as_ref())
-            .map_err(|e| format!("Encryption failed: {}", e))?;
+            .map_err(|e| format!("Encryption failed: {e}"))?;
 
         // Encode results
         let ciphertext_b64 = base64::engine::general_purpose::STANDARD.encode(&ciphertext);
@@ -207,11 +207,11 @@ impl EncryptionHandler {
         // Decode inputs
         let ciphertext = base64::engine::general_purpose::STANDARD
             .decode(ciphertext_b64)
-            .map_err(|e| format!("Invalid base64 ciphertext: {}", e))?;
+            .map_err(|e| format!("Invalid base64 ciphertext: {e}"))?;
 
         let nonce_bytes = base64::engine::general_purpose::STANDARD
             .decode(nonce_b64)
-            .map_err(|e| format!("Invalid base64 nonce: {}", e))?;
+            .map_err(|e| format!("Invalid base64 nonce: {e}"))?;
 
         if nonce_bytes.len() != 12 {
             return Err(format!(
@@ -235,7 +235,7 @@ impl EncryptionHandler {
 
         let plaintext = cipher
             .decrypt(nonce, ciphertext.as_ref())
-            .map_err(|e| format!("Decryption failed: {}", e))?;
+            .map_err(|e| format!("Decryption failed: {e}"))?;
 
         // Encode result
         let plaintext_b64 = base64::engine::general_purpose::STANDARD.encode(&plaintext);
@@ -285,7 +285,10 @@ mod tests {
             "algorithm": "ChaCha20-Poly1305"
         });
 
-        let encrypted = handler.handle_encrypt(Some(&encrypt_params)).await.unwrap();
+        let encrypted = handler
+            .handle_encrypt(Some(&encrypt_params))
+            .await
+            .expect("encrypt roundtrip");
 
         assert!(encrypted["ciphertext"].is_string());
         assert!(encrypted["nonce"].is_string());
@@ -300,17 +303,26 @@ mod tests {
             "key_ref": key_ref
         });
 
-        let decrypted = handler.handle_decrypt(Some(&decrypt_params)).await.unwrap();
+        let decrypted = handler
+            .handle_decrypt(Some(&decrypt_params))
+            .await
+            .expect("decrypt roundtrip");
 
         assert_eq!(decrypted["data"], plaintext_b64);
         assert_eq!(decrypted["plaintext"], plaintext_b64);
         assert_eq!(decrypted["verified"], true);
 
         // Verify plaintext matches
+        let data_str = decrypted["data"]
+            .as_str()
+            .expect("decrypted data should be string");
         let decrypted_bytes = base64::engine::general_purpose::STANDARD
-            .decode(decrypted["data"].as_str().unwrap())
-            .unwrap();
-        assert_eq!(String::from_utf8(decrypted_bytes).unwrap(), plaintext);
+            .decode(data_str)
+            .expect("decrypted data base64");
+        assert_eq!(
+            String::from_utf8(decrypted_bytes).expect("utf8 plaintext"),
+            plaintext
+        );
     }
 
     #[tokio::test]
@@ -326,7 +338,10 @@ mod tests {
             "key_ref": "key1",
         });
 
-        let encrypted = handler.handle_encrypt(Some(&encrypt_params)).await.unwrap();
+        let encrypted = handler
+            .handle_encrypt(Some(&encrypt_params))
+            .await
+            .expect("encrypt for wrong-key test");
 
         // Try to decrypt with different key
         let decrypt_params = serde_json::json!({
@@ -355,12 +370,16 @@ mod tests {
             "key_ref": "test-key",
         });
 
-        let encrypted = handler.handle_encrypt(Some(&encrypt_params)).await.unwrap();
+        let encrypted = handler
+            .handle_encrypt(Some(&encrypt_params))
+            .await
+            .expect("encrypt for tamper test");
 
         // Tamper with ciphertext
+        let ct_str = encrypted["ciphertext"].as_str().expect("ciphertext string");
         let mut ciphertext_bytes = base64::engine::general_purpose::STANDARD
-            .decode(encrypted["ciphertext"].as_str().unwrap())
-            .unwrap();
+            .decode(ct_str)
+            .expect("ciphertext base64");
 
         if !ciphertext_bytes.is_empty() {
             ciphertext_bytes[0] ^= 0xFF; // Flip bits

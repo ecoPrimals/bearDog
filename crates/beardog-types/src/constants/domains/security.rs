@@ -16,6 +16,7 @@ pub mod auth {
     pub const AUTH_TOKEN_LIFETIME: Duration = Duration::from_secs(3600); // 1 hour
     /// Lifetime of refresh tokens (7 days)
     pub const REFRESH_TOKEN_LIFETIME: Duration = Duration::from_secs(86400 * 7); // 7 days
+    /// Idle session timeout before re-authentication (30 minutes)
     pub const SESSION_TIMEOUT: Duration = Duration::from_secs(1800); // 30 minutes
     /// Lifetime of password reset tokens (15 minutes)
     pub const PASSWORD_RESET_TOKEN_LIFETIME: Duration = Duration::from_secs(900); // 15 minutes
@@ -53,6 +54,7 @@ pub mod auth {
     /// API key settings
     /// Length of generated API keys in bytes
     pub const API_KEY_LENGTH: usize = 32;
+    /// Prefix for generated BearDog API keys
     pub const API_KEY_PREFIX: &str = "bd_";
     /// Default lifetime of API keys (1 year)
     pub const API_KEY_LIFETIME: Duration = Duration::from_secs(86400 * 365); // 1 year
@@ -109,6 +111,7 @@ pub mod crypto {
 
     /// PBKDF2 parameters
     pub const PBKDF2_MIN_ITERATIONS: u32 = 100_000;
+    /// Default PBKDF2 iteration count (OWASP-aligned default)
     pub const PBKDF2_DEFAULT_ITERATIONS: u32 = 600_000;
     /// PBKDF2 salt length in bytes - cryptographically secure length
     pub const PBKDF2_SALT_LENGTH: usize = 32;
@@ -137,6 +140,7 @@ pub mod crypto {
     pub const AES_GCM_NONCE_SIZE: usize = 12;
     /// Configuration constant: aes gcm tag size
     pub const AES_GCM_TAG_SIZE: usize = 16;
+    /// Nonce length for ChaCha20-Poly1305 (RFC 8439)
     pub const CHACHA20_NONCE_SIZE: usize = 12;
     /// `ChaCha20` key size in bytes - 256-bit key length
     pub const CHACHA20_KEY_SIZE: usize = 32;
@@ -206,6 +210,7 @@ pub mod hsm {
     /// Maximum number of concurrent PKCS#11 sessions
     pub const PKCS11_MAX_SESSION_COUNT: usize = 64;
 
+    /// Default batch size for batched HSM operations
     pub const HSM_BATCH_SIZE: usize = 100;
     /// Configuration constant: hsm queue size
     pub const HSM_QUEUE_SIZE: usize = 1000;

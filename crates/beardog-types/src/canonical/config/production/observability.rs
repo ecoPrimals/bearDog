@@ -49,6 +49,7 @@ pub struct ProductionLoggingConfig {
     /// Log level
     /// The level value
     pub level: String,
+    /// Log line format (`json`, `pretty`, `compact`, etc.) consumed by the logging backend.
     pub format: String,
 }
 
@@ -238,7 +239,7 @@ impl ObservabilityConfig {
     /// Validate
     /// Validates input
     /// Validates input
-    pub fn validate(&self) -> Result<(), BearDogError> {
+    pub const fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }
 }

@@ -9,6 +9,7 @@ use std::time::{Duration, SystemTime};
 // Removed incorrect imports added by migration script
 // ServiceCapabilityType should be CapabilityType - the migration script made an error
 
+/// Single named performance observation with rolling stats and classification.
 #[derive(Debug, Clone)]
 pub struct PerformanceMetric {
     /// Metric name
@@ -87,6 +88,7 @@ pub struct CustomMetric {
     pub timestamp: SystemTime,
 }
 
+/// One sample in a metric's time series.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricDataPoint {
     /// Timestamp
@@ -99,6 +101,7 @@ pub struct MetricDataPoint {
     pub context: Option<String>,
 }
 
+/// Running descriptive statistics for a metric (min/max/avg, percentiles, count).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricStatistics {
     /// Minimum value
@@ -124,6 +127,7 @@ pub struct MetricStatistics {
     pub count: u64,
 }
 
+/// Real-time notification emitted when metrics or security signals change.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricEvent {
     /// Event type
@@ -193,6 +197,7 @@ pub struct TrendPrediction {
     pub confidence: f64,
 }
 
+/// Output of a threat detector: classification, confidence, and remediation hints.
 #[derive(Debug, Clone)]
 pub struct ThreatDetection {
     /// Detection timestamp
@@ -286,10 +291,12 @@ pub struct MetricsMetadata {
     pub version: String,
 }
 
+/// Aggregate counts and health score returned by [`crate::advanced_metrics::AdvancedMetricsSystem::get_metrics_summary`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricsSummary {
     /// Summary timestamp
     pub timestamp: SystemTime,
+    /// Number of distinct performance metrics currently held in the store.
     pub performance_metrics_count: usize,
     /// Security events count
     /// Number of `security_events`
@@ -304,9 +311,8 @@ pub struct MetricsSummary {
 
 // ENUMS
 
-/// Types of metrics
+/// Classification of a performance metric (counter, gauge, histogram, etc.).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-/// Types of metric
 pub enum MetricType {
     /// Represents counter variant
     Counter,
@@ -320,9 +326,8 @@ pub enum MetricType {
     Rate,
 }
 
-/// Security event types
+/// Categories of security-related incidents tracked in metrics and alerts.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
-/// Types of security event
 pub enum SecurityEventType {
     /// Represents authentication failure variant
     AuthenticationFailure,
@@ -346,7 +351,7 @@ pub enum SecurityEventType {
     HsmTamper,
 }
 
-/// Security severity levels
+/// Relative urgency of a security event for routing and alerting.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum SecuritySeverity {
     /// Represents low variant
@@ -378,9 +383,8 @@ pub enum ThreatLevel {
     Critical,
 }
 
-/// Types of ecosystem interactions
+/// Kind of cross-service interaction being measured (API, queue, HSM, etc.).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-/// Types of interaction
 pub enum InteractionType {
     /// Represents api call variant
     ApiCall,
@@ -410,7 +414,7 @@ pub enum MetricValue {
     /// Represents boolean variant
     Boolean(bool),
     /// Represents array variant
-    Array(Vec<MetricValue>),
+    Array(Vec<Self>),
 }
 
 /// HSM health status
@@ -441,9 +445,8 @@ pub enum HealthStatus {
     Unknown,
 }
 
-/// Metric event types
+/// Kind of [`MetricEvent`] broadcast on the advanced-metrics channel.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-/// Types of metric event
 pub enum MetricEventType {
     /// State indicating metricupdated
     MetricUpdated,

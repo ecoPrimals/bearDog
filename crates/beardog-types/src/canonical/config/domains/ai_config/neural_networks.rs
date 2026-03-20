@@ -346,9 +346,19 @@ pub enum WeightInitialization {
     /// Ones initialization
     Ones,
     /// Random uniform distribution
-    RandomUniform { min: f64, max: f64 },
+    RandomUniform {
+        /// Lower bound of the sampling range (inclusive).
+        min: f64,
+        /// Upper bound of the sampling range (exclusive in typical RNG usage).
+        max: f64,
+    },
     /// Random normal distribution
-    RandomNormal { mean: f64, stddev: f64 },
+    RandomNormal {
+        /// Mean of the Gaussian used for draws.
+        mean: f64,
+        /// Standard deviation of the Gaussian.
+        stddev: f64,
+    },
     /// Glorot uniform (Xavier uniform)
     GlorotUniform,
     /// Glorot normal (Xavier normal)
@@ -362,11 +372,22 @@ pub enum WeightInitialization {
     /// LeCun normal
     LeCunNormal,
     /// Orthogonal initialization
-    Orthogonal { gain: f64 },
+    Orthogonal {
+        /// Scaling factor applied to the orthogonal matrix.
+        gain: f64,
+    },
     /// Truncated normal distribution
-    TruncatedNormal { mean: f64, stddev: f64 },
+    TruncatedNormal {
+        /// Center of the truncated Gaussian.
+        mean: f64,
+        /// Spread before truncation.
+        stddev: f64,
+    },
     /// Entropy-based initialization (for sovereignty compliance)
-    EntropyBased { distribution: EntropyDistribution },
+    EntropyBased {
+        /// Which entropy-backed distribution to draw from.
+        distribution: EntropyDistribution,
+    },
 }
 
 /// Entropy distributions for sovereign weight initialization
@@ -377,7 +398,10 @@ pub enum EntropyDistribution {
     /// Normal distribution from human entropy
     HumanNormal,
     /// Mixed human-machine entropy
-    MixedEntropy { human_ratio: f64 },
+    MixedEntropy {
+        /// Fraction of bits sourced from human entropy in `[0.0, 1.0]`.
+        human_ratio: f64,
+    },
     /// Quantum-inspired distribution
     QuantumInspired,
     /// Biometric-seeded distribution

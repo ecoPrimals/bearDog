@@ -18,8 +18,8 @@
 )]
 
 use crate::core::system::BearDogCore;
-use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 use beardog_types::canonical::HealthStatus;
+use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 
 /// Test core initialization with default configuration
 #[tokio::test]

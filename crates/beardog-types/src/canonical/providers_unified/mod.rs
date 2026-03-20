@@ -1,24 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Unified Canonical Provider Configuration
-//
-// This module consolidates all provider configuration patterns across BearDog into a single,
-// comprehensive, modern system. It replaces fragmented provider configs with unified types.
-//
-// ## Smart Consolidation Strategy
-//
-// This unifies and modernizes:
-// - `beardog-types/src/providers.rs` - Legacy provider types
-// - `beardog-types/src/canonical/providers.rs` - Basic provider types
-// - Various provider configs scattered across crates
-//
-// ## Modern Architecture Principles
-//
-// - **Single Source of Truth**: All provider config in one canonical place
-// - **Hierarchical Organization**: Logical grouping by provider domain
-// - **Zero Fragmentation**: No duplicate types across crates
-// - **Modern Rust Patterns**: Latest idioms and BearDog conventions
-// - **Production Compatibility**: Maintains all existing functionality
+//! Canonical provider configuration and re-exports (connection, health, performance, traits).
 
 use serde::{Deserialize, Serialize};
 
@@ -42,6 +24,7 @@ pub mod service_discovery;
 // pub mod trait_migration; // Temporarily disabled - migration utility only
 /// Monitoring module
 pub mod monitoring;
+/// Throughput limits, caching, and compression for provider implementations.
 pub mod performance;
 /// Resilience module
 pub mod resilience;
@@ -105,6 +88,7 @@ pub struct CanonicalProviderConfig {
     /// The health value
     pub health: HealthConfig,
 
+    /// Concurrency, cache, and wire-efficiency knobs. **Default:** [`PerformanceConfig::default()`].
     pub performance: PerformanceConfig,
 
     /// Security configuration
@@ -128,4 +112,5 @@ pub struct CanonicalProviderConfig {
     pub monitoring: ProviderMonitoringConfig,
 }
 
+/// Back-compat alias for [`CanonicalProviderConfig`].
 pub type ProviderConfig = CanonicalProviderConfig;

@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
+/// Bind address, port, TLS, pooling, and timeout settings for network listeners and clients.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig {
     /// The bind address value
@@ -236,7 +237,7 @@ impl NetworkConfig {
     #[must_use]
     /// Checks if tls configured
     /// Checks if tls configured
-    pub fn is_tls_configured(&self) -> bool {
+    pub const fn is_tls_configured(&self) -> bool {
         self.tls_enabled && self.tls_cert_path.is_some() && self.tls_key_path.is_some()
     }
 

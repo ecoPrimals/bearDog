@@ -198,7 +198,7 @@ impl Default for ExternalApiHealthChecker {
 impl ExternalApiHealthChecker {
     /// Creates a new external API health checker
     #[must_use]
-    pub fn new(url: String) -> Self {
+    pub const fn new(url: String) -> Self {
         Self {
             url,
             simulated_latency: None,
@@ -207,7 +207,7 @@ impl ExternalApiHealthChecker {
 
     /// Creates a health checker with simulated latency
     #[must_use]
-    pub fn with_simulated_latency(url: String, latency: Duration) -> Self {
+    pub const fn with_simulated_latency(url: String, latency: Duration) -> Self {
         Self {
             url,
             simulated_latency: Some(latency),

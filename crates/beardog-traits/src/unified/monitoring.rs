@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Unified Monitoring Trait System
+//! Re-exports core health/metrics traits plus a minimal pub/sub [`Observable`] surface.
 
 pub use super::core::{HealthMonitored, MetricsCollector};
 
-// Observable trait - simple event system
+/// Optional publish/subscribe hook for streaming monitoring events.
 pub trait Observable: Send + Sync {
     /// Event type
     type Event: Send + Sync + Clone;

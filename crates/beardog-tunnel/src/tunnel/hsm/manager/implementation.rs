@@ -115,7 +115,7 @@ impl DefaultHsmManager {
     pub fn get_provider(&self, id: &str) -> Result<&dyn HsmProvider, BearDogError> {
         self.hsm_providers
             .get(id)
-            .map(|p| p.as_ref())
+            .map(std::convert::AsRef::as_ref)
             .ok_or_else(|| BearDogError::not_found(format!("Provider not found: {id}")))
     }
 
@@ -131,13 +131,15 @@ impl Default for DefaultHsmManager {
     }
 }
 
+/// Unit tests for [`DefaultHsmManager`] / [`HsmProvider`]. The in-memory `MockProvider` in
+/// this module is not compiled into non-test builds.
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tunnel::hsm::GenerateKeyRequest;
     use crate::tunnel::hsm::types::key::{
         KeyAttestation, KeyHealthStatus, KeyMaterial, KeyMetadata, KeyType,
     };
-    use crate::tunnel::hsm::GenerateKeyRequest;
     use chrono::Utc;
 
     struct MockProvider {

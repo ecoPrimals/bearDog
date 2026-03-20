@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Unified Logging Configuration
+//! Logging level, format, and rotation settings for the canonical monitoring bundle.
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 // Removed unused import: use std::time::Duration;
 use super::MonitoringConfigValidation;
 
+/// Primary logging sink configuration (level, encoder, rotation).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedLoggingConfig {
     /// Enabled
@@ -15,7 +16,7 @@ pub struct UnifiedLoggingConfig {
     /// Level
     /// The level value
     pub level: String,
-    /// Format
+    /// Output encoder (`json`, `pretty`, `compact`). **Default:** `"json"`.
     pub format: String,
     /// Rotation
     /// The rotation value
@@ -33,6 +34,7 @@ impl Default for UnifiedLoggingConfig {
     }
 }
 
+/// Size- and count-based rotation for on-disk log files.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogRotationConfig {
     /// Enabled

@@ -157,7 +157,7 @@ pub fn generate_ed25519_from_seed(seed: &[u8; 32]) -> Result<([u8; 64], [u8; 32]
 /// - Secret key is invalid or out of range for P-256 curve
 /// - Signing operation fails
 pub fn sign_ecdsa_p256(data: &[u8], secret_key: &[u8; 32]) -> Result<Vec<u8>> {
-    use p256::ecdsa::{signature::Signer, Signature, SigningKey};
+    use p256::ecdsa::{Signature, SigningKey, signature::Signer};
     use sha2::{Digest, Sha256};
 
     let signing_key = SigningKey::from_bytes(secret_key.into())
@@ -195,7 +195,7 @@ pub fn sign_ecdsa_p256(data: &[u8], secret_key: &[u8; 32]) -> Result<Vec<u8>> {
 /// - Public key format is invalid
 /// - Signature format is malformed
 pub fn verify_ecdsa_p256(data: &[u8], signature: &[u8], public_key: &[u8]) -> Result<bool> {
-    use p256::ecdsa::{signature::Verifier, Signature, VerifyingKey};
+    use p256::ecdsa::{Signature, VerifyingKey, signature::Verifier};
     use sha2::{Digest, Sha256};
 
     // Parse public key (accepts both compressed and uncompressed)
@@ -276,10 +276,10 @@ pub fn generate_ecdsa_p256_from_seed(seed: &[u8; 32]) -> Result<([u8; 32], Vec<u
 /// - Signing operation fails
 /// - Key size is insufficient for the hash/salt combination
 pub fn sign_rsa_pss(data: &[u8], private_key_der: &[u8]) -> Result<Vec<u8>> {
+    use rsa::RsaPrivateKey;
     use rsa::pkcs8::DecodePrivateKey;
     use rsa::pss::{BlindedSigningKey, Signature};
     use rsa::signature::{RandomizedSigner, SignatureEncoding};
-    use rsa::RsaPrivateKey;
     use sha2::Sha256;
 
     // Parse PKCS#8 DER-encoded private key
@@ -316,10 +316,10 @@ pub fn sign_rsa_pss(data: &[u8], private_key_der: &[u8]) -> Result<Vec<u8>> {
 /// - Public key format is invalid
 /// - Signature format is malformed
 pub fn verify_rsa_pss(data: &[u8], signature: &[u8], public_key_der: &[u8]) -> Result<bool> {
+    use rsa::RsaPublicKey;
     use rsa::pkcs8::DecodePublicKey;
     use rsa::pss::{Signature, VerifyingKey};
     use rsa::signature::Verifier;
-    use rsa::RsaPublicKey;
     use sha2::Sha256;
 
     // Parse public key

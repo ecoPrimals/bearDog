@@ -10,11 +10,14 @@ use super::spawning::SpawnPurpose;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+/// Declarative description of work that spans multiple nodes and requires elevated permissions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrossNodeWorkflowRequest {
+    /// Caller-supplied identifier used for idempotency and log correlation.
     pub workflow_id: String,
     /// The workflow type value
     pub workflow_type: BearDogWorkflowType,
+    /// Node that submitted the workflow and will receive callbacks/approvals.
     pub requester_node_id: String,
     /// Collection of target nodes
     pub target_nodes: Vec<String>,
@@ -30,31 +33,46 @@ pub struct CrossNodeWorkflowRequest {
     pub expires_at: DateTime<Utc>,
 }
 
+/// Discriminated union of supported multi-node workflow shapes.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Types of bear dog workflow
 pub enum BearDogWorkflowType {
     /// Represents data replication variant
     DataReplication {
+        /// Peers that should receive replicated shards or backups.
         backup_nodes: Vec<String>,
+        /// When true, payloads must be encrypted in flight and at rest on replicas.
         encryption_required: bool,
     },
+    /// Scheduled or ad-hoc compliance review across `audit_scope` using named `standards`.
     ComplianceAudit {
+        /// Resources or services included in the audit boundary.
         audit_scope: Vec<String>,
+        /// Framework identifiers (`SOC2`, `GDPR`, …) that drive checklists.
         standards: Vec<String>,
+        /// Whether failing controls may trigger automated remediation playbooks.
         automated_remediation: bool,
     },
+    /// Coordinated response playbook for an active or suspected incident.
     SecurityIncidentResponse {
+        /// Subjective severity on a 0–10 scale for prioritization and paging.
         threat_level: u8,
+        /// Asset identifiers impacted or potentially impacted.
         affected_resources: Vec<String>,
+        /// Human or bot roles that must acknowledge the workflow.
         response_team: Vec<String>,
     },
+    /// Requests synthesis of a child primal with genetics derived from `parent_genetics`.
     GeneticSpawning {
+        /// Parent genome identifiers whose traits should be inherited or merged.
         parent_genetics: Vec<String>,
+        /// Business justification influencing approval policy.
         spawn_purpose: SpawnPurpose,
+        /// Capabilities the spawned primal must exhibit after creation.
         target_capabilities: Vec<NodeCapability>,
     },
 }
 
+/// Pre-flight predicate evaluated before a workflow is allowed to run.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AutomatedCheck {
     /// Represents resource availability variant
@@ -69,6 +87,7 @@ pub enum AutomatedCheck {
     CapabilityMatch,
 }
 
+/// Signals that human review or elevated approval is required before continuing.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EscalationCondition {
     /// Represents high risk operation variant
@@ -83,11 +102,12 @@ pub enum EscalationCondition {
     SecurityThreat,
 }
 
+/// Lifecycle state reported by a [`WorkflowEngine`] for a submitted workflow.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum WorkflowStatus {
-    /// Operation in progress
+    /// Accepted but not yet assigned to executors.
     Pending,
-    /// Operation in progress
+    /// Actively running on one or more nodes.
     InProgress,
     /// Successful completion state
     Completed,

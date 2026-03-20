@@ -1,7 +1,7 @@
 [package]
 name = "beardog-capabilities"
 version.workspace = true
-edition = "2021"
+edition = "2024"
 authors = ["ecoPrimals Team"]
 description = "Capability-based primal interaction framework for BearDog - enabling sovereign service discovery and dynamic capability negotiation"
 license = "AGPL-3.0-only"
@@ -11,6 +11,9 @@ documentation = "https://docs.beardog.dev"
 readme = "README.md"
 keywords = ["capabilities", "security", "primal", "sovereignty", "discovery"]
 categories = ["cryptography", "network-programming", "api-bindings"]
+
+[lints]
+workspace = true
 
 [dependencies]
 # Async runtime
@@ -40,6 +43,7 @@ tracing = "0.1"
 zeroize = "1.7"
 
 # BearDog dependencies
+beardog-config = { path = "../beardog-config" }
 beardog-errors = { path = "../beardog-errors" }
 
 # Optional: mDNS discovery

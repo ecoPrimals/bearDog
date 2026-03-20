@@ -3,11 +3,11 @@
 //
 // ✅ REAL IMPLEMENTATIONS - No mocks, using actual Software HSM with RustCrypto
 
+use beardog_tunnel::tunnel::hsm::GenerateKeyRequest;
 use beardog_tunnel::tunnel::hsm::manager::HsmProvider;
 use beardog_tunnel::tunnel::hsm::software_hsm::core::RustSoftwareHsm;
-use beardog_tunnel::tunnel::hsm::types::config::SoftwareHsmConfig;
 use beardog_tunnel::tunnel::hsm::types::KeyType;
-use beardog_tunnel::tunnel::hsm::GenerateKeyRequest;
+use beardog_tunnel::tunnel::hsm::types::config::SoftwareHsmConfig;
 
 // TEST_CATEGORY: security
 // TEST_DOMAIN: hsm

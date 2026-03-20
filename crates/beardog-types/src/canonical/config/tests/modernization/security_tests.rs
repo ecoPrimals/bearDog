@@ -7,8 +7,8 @@
 
 use crate::canonical::config::domains::{network, system};
 use crate::canonical::config::production::resources::NetworkResourceConfig;
-use crate::canonical::config::security::authentication::CanonicalAuthenticationConfig;
 use crate::canonical::config::security::RateLimitingConfig;
+use crate::canonical::config::security::authentication::CanonicalAuthenticationConfig;
 use std::time::Duration;
 
 /// Helper to set env var for test scope
@@ -18,7 +18,7 @@ struct EnvGuard {
 
 impl EnvGuard {
     fn set(key: &str, value: &str) -> Self {
-        std::env::set_var(key, value);
+        beardog_errors::process_env::set_var(key, value);
         Self {
             key: key.to_string(),
         }
@@ -27,7 +27,7 @@ impl EnvGuard {
 
 impl Drop for EnvGuard {
     fn drop(&mut self) {
-        std::env::remove_var(&self.key);
+        beardog_errors::process_env::remove_var(&self.key);
     }
 }
 

@@ -8,6 +8,7 @@ use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 // Removed unused imports: std::time::{Duration, Instant}
 
+/// Collects and surfaces performance-related [`super::MetricEvent`] values.
 #[derive(Debug)]
 pub struct PerformanceEngine {
     #[allow(dead_code)] // Config reserved for future performance monitoring
@@ -27,6 +28,7 @@ impl PerformanceEngine {
         Ok(())
     }
 
+    /// Records a performance-category event (placeholder for future aggregation).
     pub const fn record_event(&self, _event: &super::MetricEvent) -> Result<(), BearDogError> {
         // Performance event processing logic
         Ok(())
@@ -45,6 +47,7 @@ impl PerformanceEngine {
     }
 }
 
+/// Normalized CPU, memory, latency, throughput, and error-rate figures from the performance engine.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
     /// The cpu usage value
@@ -59,11 +62,12 @@ pub struct PerformanceMetrics {
     pub error_rate: f64,
 }
 
+/// Sampling density and retention for [`PerformanceEngine`].
 #[derive(Debug, Clone)]
 pub struct PerformanceConfig {
     /// The sample rate value
     pub sample_rate: f64,
-    /// Number of `retention_hours`
+    /// How long raw samples are retained before rollover/pruning.
     pub retention_hours: u32,
 }
 

@@ -42,7 +42,7 @@
 use super::types::{HidDevice, HidDeviceInfo, ProductId, VendorId};
 use beardog_errors::BearDogError;
 use std::path::PathBuf;
-use tokio::fs::{read_dir, read_to_string, File, OpenOptions};
+use tokio::fs::{File, OpenOptions, read_dir, read_to_string};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tracing::{debug, trace, warn};
 
@@ -350,10 +350,12 @@ mod tests {
         let uevent = "HID_ID=0003:ZZZZZZZZ:0000BEEE\n";
         let result = parse_hid_id(uevent);
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Invalid vendor ID"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid vendor ID")
+        );
     }
 
     #[test]
@@ -362,10 +364,12 @@ mod tests {
         let uevent = "HID_ID=0003:00001209:XYZXYZXY\n";
         let result = parse_hid_id(uevent);
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Invalid product ID"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid product ID")
+        );
     }
 
     #[test]

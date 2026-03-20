@@ -9,9 +9,10 @@ use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Authentication configuration
+/// Tunable limits for interactive login sessions and lockout policy.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthConfig {
+    /// Wall-clock lifetime of issued session tokens, in hours.
     pub session_timeout_hours: u64,
     /// Number of `max_login_attempts`
     pub max_login_attempts: u32,
@@ -29,8 +30,10 @@ impl Default for AuthConfig {
     }
 }
 
+/// Materialized session returned after successful authentication and stored server-side for validation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionData {
+    /// Subject identifier extracted from credentials (username, email, etc.).
     pub user_id: String,
     /// The token value
     pub token: String,
@@ -84,7 +87,7 @@ impl AuthenticationHandler {
         password: &str,
         permissions: Vec<String>,
     ) -> Result<(), BearDogError> {
-        use argon2::password_hash::{rand_core::OsRng, PasswordHasher, SaltString};
+        use argon2::password_hash::{PasswordHasher, SaltString, rand_core::OsRng};
 
         // Generate password hash using Argon2
         let salt = SaltString::generate(&mut OsRng);
@@ -210,14 +213,11 @@ impl AuthenticationHandler {
         let (username, password) = (parts[0], parts[1]);
 
         // Lookup user credentials
-        let stored_credential = match self.credential_store.get(username) {
-            Some(cred) => cred,
-            None => {
-                // User not found - perform dummy hash verification to prevent timing attacks
-                // This ensures consistent timing whether user exists or not
-                let _ = Self::verify_dummy_password(password);
-                return Ok(false);
-            }
+        let Some(stored_credential) = self.credential_store.get(username) else {
+            // User not found - perform dummy hash verification to prevent timing attacks
+            // This ensures consistent timing whether user exists or not
+            let _ = Self::verify_dummy_password(password);
+            return Ok(false);
         };
 
         // Verify password using Argon2
@@ -300,6 +300,9 @@ impl AuthenticationHandler {
             .retain(|_, session| session.expires_at > now);
     }
 
+    /// Clears failed-attempt counters for `user_id` after administrative unlock or password reset.
+    ///
+    /// Returns `Ok(())` even if the user had no recorded attempts.
     pub fn reset_login_attempts(&mut self, user_id: &str) -> Result<(), BearDogError> {
         self.login_attempts.remove(user_id);
         Ok(())

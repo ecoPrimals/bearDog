@@ -152,7 +152,7 @@ impl fmt::Display for CloudProvider {
             Self::Oci => write!(f, "OCI"),
             Self::Ibm => write!(f, "IBM Cloud"),
             Self::Alibaba => write!(f, "Alibaba Cloud"),
-            Self::Custom { name } => write!(f, "Custom ({})", name),
+            Self::Custom { name } => write!(f, "Custom ({name})"),
         }
     }
 }
@@ -232,7 +232,7 @@ impl fmt::Display for CloudHsmService {
             Self::OciKeyManagement => write!(f, "OCI Key Management"),
             Self::IbmKeyProtect => write!(f, "IBM Key Protect"),
             Self::AlibabaKms => write!(f, "Alibaba Cloud KMS"),
-            Self::Custom { service_name, .. } => write!(f, "{}", service_name),
+            Self::Custom { service_name, .. } => write!(f, "{service_name}"),
         }
     }
 }

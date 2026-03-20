@@ -68,9 +68,13 @@
 //! ```
 
 // Public modules
+/// Algorithm families (symmetric, asymmetric, hashing) used by the crypto service.
 pub mod algorithms;
+/// Default [`BearDogCryptoService`](implementation::BearDogCryptoService) construction and operations.
 pub mod implementation;
+/// Protocol-agnostic [`CryptoService`](r#trait::CryptoService) trait definition.
 pub mod r#trait;
+/// Configuration and state types for crypto service operations.
 pub mod types;
 
 // Re-exports for ergonomic API

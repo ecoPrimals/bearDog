@@ -1,7 +1,7 @@
 [package]
 name = "beardog-errors"
 version.workspace = true
-edition = "2021"
+edition = "2024"
 description = "Comprehensive error handling for the BearDog distributed security ecosystem"
 license = "AGPL-3.0-only"
 repository = "https://github.com/ecoPrimals/beardog"
@@ -9,7 +9,7 @@ homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 readme = "README.md"
 authors = ["BearDog Team <beardog@ecoprimals.dev>"]
-rust-version = "1.75"
+rust-version = "1.85.0"
 keywords = ["error-handling", "security", "distributed", "rust", "beardog"]
 categories = ["development-tools::debugging", "rust-patterns"]
 
@@ -26,4 +26,7 @@ workspace = true
 workspace = true
 
 [dependencies.uuid]
+workspace = true
+
+[lints]
 workspace = true

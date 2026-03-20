@@ -190,7 +190,7 @@ fn test_error_conversion_patterns() {
 
 #[tokio::test]
 async fn test_timeout_handling() -> Result<(), BearDogError> {
-    use tokio::time::{timeout, Duration};
+    use tokio::time::{Duration, timeout};
 
     // Test that operations can be timed out
     let result = timeout(Duration::from_millis(100), async {

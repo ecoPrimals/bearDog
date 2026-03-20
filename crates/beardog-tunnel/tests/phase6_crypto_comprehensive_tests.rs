@@ -13,8 +13,8 @@
 //! 3. Chaos Tests - Concurrent operations, resource exhaustion
 //! 4. Fault Injection Tests - Error handling, recovery, corrupted inputs
 
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use serde_json::json;
 
 // Re-export handlers for testing
@@ -238,12 +238,14 @@ fn test_argon2id_unicode_password() {
     }));
 
     assert!(verify_result.is_ok());
-    assert!(verify_result
-        .unwrap()
-        .get("valid")
-        .unwrap()
-        .as_bool()
-        .unwrap());
+    assert!(
+        verify_result
+            .unwrap()
+            .get("valid")
+            .unwrap()
+            .as_bool()
+            .unwrap()
+    );
 }
 
 #[test]
@@ -332,12 +334,14 @@ fn test_argon2id_very_long_password() {
     }));
 
     assert!(verify_result.is_ok());
-    assert!(verify_result
-        .unwrap()
-        .get("valid")
-        .unwrap()
-        .as_bool()
-        .unwrap());
+    assert!(
+        verify_result
+            .unwrap()
+            .get("valid")
+            .unwrap()
+            .as_bool()
+            .unwrap()
+    );
 }
 
 #[test]
@@ -741,16 +745,20 @@ fn test_fault_missing_required_parameters() {
     assert!(handle_sha256(&json!({})).is_err());
 
     // ECDH derive missing private_key
-    assert!(handle_ecdh_p256_derive(&json!({
-        "peer_public_key": "somekey"
-    }))
-    .is_err());
+    assert!(
+        handle_ecdh_p256_derive(&json!({
+            "peer_public_key": "somekey"
+        }))
+        .is_err()
+    );
 
     // AES encrypt missing key
-    assert!(handle_aes256_gcm_encrypt(&json!({
-        "plaintext": BASE64.encode(b"test")
-    }))
-    .is_err());
+    assert!(
+        handle_aes256_gcm_encrypt(&json!({
+            "plaintext": BASE64.encode(b"test")
+        }))
+        .is_err()
+    );
 
     // Password hash missing password
     assert!(handle_argon2id_hash(&json!({})).is_err());
@@ -873,11 +881,13 @@ fn test_fault_pbkdf2_invalid_salt() {
 fn test_fault_null_json_values() {
     // Test with null JSON values
     assert!(handle_sha256(&json!({"data": null})).is_err());
-    assert!(handle_ecdh_p256_derive(&json!({
-        "private_key": null,
-        "peer_public_key": null
-    }))
-    .is_err());
+    assert!(
+        handle_ecdh_p256_derive(&json!({
+            "private_key": null,
+            "peer_public_key": null
+        }))
+        .is_err()
+    );
 }
 
 #[test]

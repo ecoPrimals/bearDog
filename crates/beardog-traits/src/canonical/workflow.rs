@@ -1,21 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! JSON-centric workflow DTOs and the canonical [`WorkflowProvider`] trait.
 
 use super::base::BaseProvider;
-// async_trait no longer needed - using native fn
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
-// Temporary type definitions for canonical workflow traits
+/// Arbitrary JSON parameters passed when starting a workflow run.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowParams {
     /// The parameters value
     pub parameters: std::collections::HashMap<String, serde_json::Value>,
 }
 
+/// Outcome payload and coarse status string for a finished or partial run.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowResult {
     /// The result value
@@ -24,8 +22,10 @@ pub struct WorkflowResult {
     pub status: String,
 }
 
+/// Summary row for [`WorkflowProvider::list_workflows`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowInfo {
+    /// Workflow definition id.
     pub id: String,
     /// Name of the item
     pub name: String,
@@ -33,9 +33,12 @@ pub struct WorkflowInfo {
     pub status: String,
 }
 
+/// One execution attempt of a workflow definition.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowExecution {
+    /// Unique run id.
     pub id: String,
+    /// Parent definition id.
     pub workflow_id: String,
     /// Current status of the component
     pub status: String,
@@ -43,6 +46,7 @@ pub struct WorkflowExecution {
     pub result: Option<serde_json::Value>,
 }
 
+/// Declarative workflow template stored in the engine.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowDefinition {
     /// Name of the item
@@ -53,6 +57,7 @@ pub struct WorkflowDefinition {
     pub metadata: std::collections::HashMap<String, String>,
 }
 
+/// CRUD and execution API for durable workflows.
 pub trait WorkflowProvider: BaseProvider {
     /// Execute Workflow operation.
     /// Executes workflow
@@ -69,7 +74,7 @@ pub trait WorkflowProvider: BaseProvider {
         workflow_id: &str,
     ) -> impl std::future::Future<Output = Result<String, BearDogError>> + Send;
 
-    /// Cancel workflow
+    /// Best-effort cancellation of an in-flight run.
     fn cancel_workflow(
         &self,
         workflow_id: &str,

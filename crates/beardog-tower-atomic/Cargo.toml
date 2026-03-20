@@ -1,7 +1,7 @@
 [package]
 name = "beardog-tower-atomic"
 version = "0.9.0"
-edition = "2021"
+edition = "2024"
 authors = ["BearDog Team"]
 description = "Tower Atomic - Unix socket-based JSON-RPC client for inter-primal communication"
 license = "AGPL-3.0-only"
@@ -29,6 +29,7 @@ tracing = "0.1"
 
 # BearDog types
 beardog-types = { version = "3.0.0", path = "../beardog-types" }
+beardog-errors = { path = "../beardog-errors" }
 
 [dev-dependencies]
 tokio = { version = "1.35", features = ["full", "test-util"] }

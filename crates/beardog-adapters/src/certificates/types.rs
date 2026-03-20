@@ -106,7 +106,10 @@ pub enum RiskLevel {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum CommercialIndicator {
     /// High request volume
-    HighVolume { requests_per_hour: u64 },
+    HighVolume {
+        /// Observed or estimated requests per hour used to flag sustained automation or scraping.
+        requests_per_hour: u64,
+    },
 
     /// Automated/bot-like patterns
     AutomatedPatterns,
@@ -115,13 +118,22 @@ pub enum CommercialIndicator {
     NoHumanInteraction,
 
     /// Corporate IP range
-    CorporateIpRange { range: String },
+    CorporateIpRange {
+        /// CIDR block, ASN label, or other description of the corporate address space.
+        range: String,
+    },
 
     /// Known commercial entity
-    KnownCommercialEntity { name: String },
+    KnownCommercialEntity {
+        /// Resolved vendor, product, or organization name associated with the traffic.
+        name: String,
+    },
 
     /// CI/CD system detected
-    CiCdSystem { system: String },
+    CiCdSystem {
+        /// Identified pipeline or automation stack (e.g. Jenkins, GitHub Actions).
+        system: String,
+    },
 }
 
 /// License information for commercial usage
@@ -220,12 +232,15 @@ pub enum CertificateExpiry {
     Commercial,
 
     /// Custom duration
-    Custom { hours: u64 },
+    Custom {
+        /// Certificate lifetime in whole hours when using a non-default expiry policy.
+        hours: u64,
+    },
 }
 
 impl CertificateExpiry {
-    /// Get duration in hours
-    pub fn hours(&self) -> u64 {
+    /// Returns the nominal certificate lifetime in whole hours (see [`Self::minutes`] for commercial tier).
+    pub const fn hours(&self) -> u64 {
         match self {
             Self::Human => 24,
             Self::SmallTeam => 12,
@@ -234,7 +249,7 @@ impl CertificateExpiry {
         }
     }
 
-    /// Get duration in minutes
+    /// Returns the certificate lifetime in minutes (used when computing [`AdapterUnlockCertificate::expires_at`]).
     pub fn minutes(&self) -> u64 {
         match self {
             Self::Human => 24 * 60,
@@ -256,22 +271,22 @@ impl Default for CertificateScope {
 }
 
 impl AdapterUnlockCertificate {
-    /// Check if certificate is expired
+    /// Returns `true` if the current UTC time is past [`Self::expires_at`].
     pub fn is_expired(&self) -> bool {
         Utc::now() > self.expires_at
     }
 
-    /// Check if certificate allows an operation
+    /// Returns whether [`CertificateScope::operations`] includes `operation`.
     pub fn allows_operation(&self, operation: &AdapterOperation) -> bool {
         self.scope.operations.contains(operation)
     }
 
-    /// Get time until expiry
+    /// Remaining lifetime from “now” until [`Self::expires_at`] (may be negative if expired).
     pub fn time_until_expiry(&self) -> chrono::Duration {
         self.expires_at - Utc::now()
     }
 
-    /// Check if renewal is recommended
+    /// Heuristic: `true` when less than 10% of the issued lifetime remains before expiry.
     pub fn needs_renewal(&self) -> bool {
         // Recommend renewal when < 10% of lifetime remains
         let time_left = self.time_until_expiry();

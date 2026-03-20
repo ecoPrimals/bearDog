@@ -117,9 +117,11 @@ async fn test_capability_auto_detection() -> Result<(), Box<dyn std::error::Erro
     let capabilities = engine.auto_detect_capabilities();
 
     // Should detect at least security capability
-    assert!(capabilities
-        .iter()
-        .any(|c| matches!(c.capability_type, ServiceCapabilityType::Security)));
+    assert!(
+        capabilities
+            .iter()
+            .any(|c| matches!(c.capability_type, ServiceCapabilityType::Security))
+    );
 
     // All capabilities should have reasonable confidence
     for cap in &capabilities {
@@ -398,7 +400,7 @@ async fn test_metadata_building() -> Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::test]
 async fn test_custom_primal_type() -> Result<(), Box<dyn std::error::Error>> {
-    std::env::set_var("PRIMAL_TYPE", "test-primal");
+    beardog_errors::process_env::set_var("PRIMAL_TYPE", "test-primal");
 
     let primal_id = SelfDiscoveryEngine::generate_primal_id();
     assert!(
@@ -406,13 +408,13 @@ async fn test_custom_primal_type() -> Result<(), Box<dyn std::error::Error>> {
         "Should use custom primal type"
     );
 
-    std::env::remove_var("PRIMAL_TYPE");
+    beardog_errors::process_env::remove_var("PRIMAL_TYPE");
     Ok(())
 }
 
 #[tokio::test]
 async fn test_custom_hostname() -> Result<(), Box<dyn std::error::Error>> {
-    std::env::set_var("HOSTNAME", "test-host-123");
+    beardog_errors::process_env::set_var("HOSTNAME", "test-host-123");
 
     let primal_id = SelfDiscoveryEngine::generate_primal_id();
     assert!(
@@ -420,7 +422,7 @@ async fn test_custom_hostname() -> Result<(), Box<dyn std::error::Error>> {
         "Should include hostname"
     );
 
-    std::env::remove_var("HOSTNAME");
+    beardog_errors::process_env::remove_var("HOSTNAME");
     Ok(())
 }
 

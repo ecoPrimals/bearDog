@@ -45,7 +45,7 @@ mod tests {
     #[test]
     fn test_config_loader_with_env_vars() {
         // Set a test environment variable
-        env::set_var("BEARDOG_API_PORT", "9999");
+        beardog_errors::process_env::set_var("BEARDOG_API_PORT", "9999");
 
         let loader = ConfigLoader::new().with_defaults().with_env_vars();
 
@@ -56,7 +56,7 @@ mod tests {
         assert!(config.network.api.port > 0, "Should have valid port");
 
         // Clean up
-        env::remove_var("BEARDOG_API_PORT");
+        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
     }
 
     #[test]

@@ -23,10 +23,10 @@ pub enum SimpleHsmTier {
 impl std::fmt::Display for SimpleHsmTier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SimpleHsmTier::Smartphone => write!(f, "Smartphone"),
-            SimpleHsmTier::Software => write!(f, "Software"),
-            SimpleHsmTier::Hardware => write!(f, "Hardware"),
-            SimpleHsmTier::Hybrid => write!(f, "Hybrid"),
+            Self::Smartphone => write!(f, "Smartphone"),
+            Self::Software => write!(f, "Software"),
+            Self::Hardware => write!(f, "Hardware"),
+            Self::Hybrid => write!(f, "Hybrid"),
         }
     }
 }
@@ -422,8 +422,9 @@ mod tests {
     fn test_tier_serde() {
         // Test serialization/deserialization
         let tier = SimpleHsmTier::Hardware;
-        let serialized = serde_json::to_string(&tier).unwrap();
-        let deserialized: SimpleHsmTier = serde_json::from_str(&serialized).unwrap();
+        let serialized = serde_json::to_string(&tier).expect("SimpleHsmTier should serialize");
+        let deserialized: SimpleHsmTier =
+            serde_json::from_str(&serialized).expect("SimpleHsmTier round-trip should deserialize");
         assert_eq!(tier, deserialized);
     }
 
@@ -438,8 +439,9 @@ mod tests {
         ];
 
         for tier in tiers {
-            let serialized = serde_json::to_string(&tier).unwrap();
-            let deserialized: SimpleHsmTier = serde_json::from_str(&serialized).unwrap();
+            let serialized = serde_json::to_string(&tier).expect("SimpleHsmTier should serialize");
+            let deserialized: SimpleHsmTier = serde_json::from_str(&serialized)
+                .expect("SimpleHsmTier round-trip should deserialize");
             assert_eq!(tier, deserialized);
         }
     }

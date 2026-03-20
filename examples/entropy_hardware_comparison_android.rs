@@ -185,6 +185,8 @@ fn analyze_quality(data: &[u8]) -> f64 {
 #[cfg(not(target_os = "android"))]
 fn main() {
     eprintln!("❌ This example only runs on Android devices!");
-    eprintln!("   Build with: cargo ndk -t aarch64-linux-android build --example entropy_hardware_comparison_android --release");
+    eprintln!(
+        "   Build with: cargo ndk -t aarch64-linux-android build --example entropy_hardware_comparison_android --release"
+    );
     std::process::exit(1);
 }

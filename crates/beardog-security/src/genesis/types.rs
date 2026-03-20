@@ -49,7 +49,7 @@ pub enum PhysicalChannelType {
 
 impl PhysicalChannelType {
     /// Get the trust level for this physical channel
-    pub fn trust_level(self) -> TrustLevel {
+    pub const fn trust_level(self) -> TrustLevel {
         match self {
             Self::HardwareKey => TrustLevel::Maximum,
             Self::QrCodeWithOob | Self::Nfc => TrustLevel::High,
@@ -58,12 +58,12 @@ impl PhysicalChannelType {
     }
 
     /// Check if this channel requires out-of-band verification
-    pub fn requires_oob(self) -> bool {
+    pub const fn requires_oob(self) -> bool {
         matches!(self, Self::QrCodeWithOob)
     }
 
     /// Get human-readable description of this channel
-    pub fn description(self) -> &'static str {
+    pub const fn description(self) -> &'static str {
         match self {
             Self::HardwareKey => "Hardware Security Key (SoloKey/YubiKey)",
             Self::QrCodeWithOob => "QR Code with Out-of-Band Verification",
@@ -73,7 +73,7 @@ impl PhysicalChannelType {
     }
 
     /// Whether this channel supports hardware attestation
-    pub fn supports_attestation(self) -> bool {
+    pub const fn supports_attestation(self) -> bool {
         matches!(self, Self::HardwareKey | Self::Nfc)
     }
 }
@@ -100,7 +100,7 @@ pub enum TrustLevel {
 
 impl TrustLevel {
     /// Get human-readable description of trust level
-    pub fn description(self) -> &'static str {
+    pub const fn description(self) -> &'static str {
         match self {
             Self::Low => "Low (⭐)",
             Self::Medium => "Medium (⭐⭐⭐)",
@@ -117,7 +117,7 @@ impl TrustLevel {
     }
 
     /// Get star rating as string
-    pub fn stars(self) -> &'static str {
+    pub const fn stars(self) -> &'static str {
         match self {
             Self::Low => "⭐",
             Self::Medium => "⭐⭐⭐",
@@ -127,7 +127,7 @@ impl TrustLevel {
     }
 
     /// Check if this trust level meets or exceeds the threshold
-    pub fn meets_threshold(self, threshold: TrustLevel) -> bool {
+    pub fn meets_threshold(self, threshold: Self) -> bool {
         self >= threshold
     }
 }

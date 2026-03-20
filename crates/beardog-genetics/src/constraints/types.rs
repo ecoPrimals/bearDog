@@ -11,7 +11,7 @@ use std::collections::HashSet;
 ///
 /// These constraints are cryptographically signed by the key's private key,
 /// making them tamper-proof. Any operation must pass constraint verification.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct KeyConstraints {
     /// What domains/scopes this key can operate in
     pub scope: ScopeConstraint,
@@ -42,7 +42,7 @@ impl Default for KeyConstraints {
 }
 
 /// Scope constraint - what domains can this key operate in?
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ScopeConstraint {
     /// No scope restrictions
     Unrestricted,
@@ -69,18 +69,26 @@ pub enum ScopeConstraint {
 /// Types of operations a key can perform
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum OperationType {
+    /// Cryptographic signing with the constrained key.
     Sign,
+    /// Decrypt ciphertext or sealed payloads.
     Decrypt,
+    /// Encrypt data for others or for storage.
     Encrypt,
+    /// Irreversible removal of protected material.
     Delete,
+    /// Mutate existing protected content.
     Modify,
+    /// Read-only access to protected resources.
     Read,
+    /// Delegate capabilities or sub-keys within policy.
     Delegate,
+    /// Mix or fuse entropy or key material under policy.
     Mix,
 }
 
 /// Lifetime constraint - when does this key expire or evolve?
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum LifetimeConstraint {
     /// Key never expires
     Permanent,
@@ -111,7 +119,7 @@ pub enum LifetimeConstraint {
 }
 
 /// Data access constraint - fine-grained control over data operations
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DataAccessConstraint {
     /// Path patterns that cannot be deleted
     pub cannot_delete: Vec<String>,
@@ -146,7 +154,7 @@ impl DataAccessConstraint {
 }
 
 /// Behavioral constraint - additional verification requirements
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BehavioralConstraint {
     /// Requires biometric verification for sensitive operations
     pub requires_biometric: bool,
@@ -259,7 +267,7 @@ pub enum KeyOperation {
         /// Target key ID
         to_key_id: String,
         /// What authority to delegate
-        authority: Box<KeyOperation>,
+        authority: Box<Self>,
     },
 
     /// Mix with other keys
@@ -271,7 +279,7 @@ pub enum KeyOperation {
 
 impl KeyOperation {
     /// Get the operation type
-    pub fn operation_type(&self) -> OperationType {
+    pub const fn operation_type(&self) -> OperationType {
         match self {
             Self::Sign { .. } => OperationType::Sign,
             Self::Decrypt { .. } => OperationType::Decrypt,

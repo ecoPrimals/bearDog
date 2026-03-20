@@ -59,9 +59,8 @@ impl Constraint for ProximityConstraint {
             .environment
             .get(&format!("{}_location", self.other_party))
         {
-            serde_json::from_value(loc_data.clone()).map_err(|e| {
-                BearDogError::serialization(&format!("Invalid location data: {}", e))
-            })?
+            serde_json::from_value(loc_data.clone())
+                .map_err(|e| BearDogError::serialization(&format!("Invalid location data: {e}")))?
         } else {
             return Err(BearDogError::not_found(format!(
                 "Location for '{}' not available. In production, would discover via Songbird.",
@@ -88,7 +87,7 @@ impl Constraint for ProximityConstraint {
 
     fn serialize_json(&self) -> Result<String, BearDogError> {
         serde_json::to_string(self)
-            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {}", e)))
+            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {e}")))
     }
 }
 
@@ -178,7 +177,7 @@ impl Constraint for EnvironmentalConstraint {
 
     fn serialize_json(&self) -> Result<String, BearDogError> {
         serde_json::to_string(self)
-            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {}", e)))
+            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {e}")))
     }
 }
 
@@ -229,7 +228,7 @@ impl Constraint for NetworkSsidConstraint {
 
     fn serialize_json(&self) -> Result<String, BearDogError> {
         serde_json::to_string(self)
-            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {}", e)))
+            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {e}")))
     }
 }
 
@@ -277,7 +276,7 @@ impl Constraint for VpnConstraint {
 
     fn serialize_json(&self) -> Result<String, BearDogError> {
         serde_json::to_string(self)
-            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {}", e)))
+            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {e}")))
     }
 }
 
@@ -288,19 +287,23 @@ impl Constraint for VpnConstraint {
 /// Biometric type
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum BiometricType {
+    /// Fingerprint sensor
     Fingerprint,
+    /// Face recognition (e.g. Face ID)
     FaceId,
+    /// Iris scan
     Iris,
+    /// Voice print / speaker verification
     Voice,
 }
 
 impl std::fmt::Display for BiometricType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            BiometricType::Fingerprint => write!(f, "Fingerprint"),
-            BiometricType::FaceId => write!(f, "Face ID"),
-            BiometricType::Iris => write!(f, "Iris"),
-            BiometricType::Voice => write!(f, "Voice"),
+            Self::Fingerprint => write!(f, "Fingerprint"),
+            Self::FaceId => write!(f, "Face ID"),
+            Self::Iris => write!(f, "Iris"),
+            Self::Voice => write!(f, "Voice"),
         }
     }
 }
@@ -364,7 +367,7 @@ impl Constraint for BiometricConstraint {
 
     fn serialize_json(&self) -> Result<String, BearDogError> {
         serde_json::to_string(self)
-            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {}", e)))
+            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {e}")))
     }
 }
 
@@ -412,7 +415,7 @@ impl Constraint for SystemLoadConstraint {
 
     fn serialize_json(&self) -> Result<String, BearDogError> {
         serde_json::to_string(self)
-            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {}", e)))
+            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {e}")))
     }
 }
 
@@ -469,7 +472,7 @@ impl Constraint for GeoFenceConstraint {
 
     fn serialize_json(&self) -> Result<String, BearDogError> {
         serde_json::to_string(self)
-            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {}", e)))
+            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {e}")))
     }
 }
 
@@ -517,7 +520,7 @@ impl Constraint for BatteryConstraint {
 
     fn serialize_json(&self) -> Result<String, BearDogError> {
         serde_json::to_string(self)
-            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {}", e)))
+            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {e}")))
     }
 }
 

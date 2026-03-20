@@ -21,8 +21,8 @@
 )]
 
 use super::super::system::BearDogCore;
-use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 use beardog_types::canonical::HealthStatus;
+use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 
 #[tokio::test]
 async fn test_beardog_core_creation() {

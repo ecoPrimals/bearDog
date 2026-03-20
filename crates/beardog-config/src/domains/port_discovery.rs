@@ -25,7 +25,7 @@
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::net::TcpListener;
+use std::net::{IpAddr, SocketAddr, TcpListener};
 
 /// Port discovery strategy
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -40,18 +40,45 @@ pub enum DiscoveryStrategy {
     Full,
 }
 
+/// **Fallback** lower bound for scanning when `BEARDOG_PORT_DISCOVERY_MIN` is unset.
+pub const FALLBACK_PORT_SCAN_MIN: u16 = 8000;
+
+/// **Fallback** upper bound when `BEARDOG_PORT_DISCOVERY_MAX` is unset.
+pub const FALLBACK_PORT_SCAN_MAX: u16 = 9000;
+
+/// **Fallback** excluded ports (comma-separated override: `BEARDOG_PORT_DISCOVERY_EXCLUDE`).
+pub const FALLBACK_EXCLUDED_DEV_PORTS: &[u16] = &[8000, 8888];
+
+/// **Fallback** primal-discovery timeout (ms) when `BEARDOG_PORT_DISCOVERY_TIMEOUT_MS` is unset.
+pub const FALLBACK_PORT_DISCOVERY_TIMEOUT_MS: u64 = 2000;
+
+fn parse_u16_env(key: &str, fallback: u16) -> u16 {
+    std::env::var(key)
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(fallback)
+}
+
+fn default_excluded_ports_from_env() -> Vec<u16> {
+    if let Ok(s) = std::env::var("BEARDOG_PORT_DISCOVERY_EXCLUDE") {
+        s.split(',').filter_map(|p| p.trim().parse().ok()).collect()
+    } else {
+        FALLBACK_EXCLUDED_DEV_PORTS.to_vec()
+    }
+}
+
 /// Port discovery configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PortDiscoveryConfig {
     /// Discovery strategy to use
     pub strategy: DiscoveryStrategy,
-    /// Minimum port to consider (default: 8000)
+    /// Minimum port to consider (**fallback**: `FALLBACK_PORT_SCAN_MIN`; env: `BEARDOG_PORT_DISCOVERY_MIN`)
     pub min_port: u16,
-    /// Maximum port to consider (default: 9000)
+    /// Maximum port to consider (**fallback**: `FALLBACK_PORT_SCAN_MAX`; env: `BEARDOG_PORT_DISCOVERY_MAX`)
     pub max_port: u16,
-    /// Ports to avoid (privileged, well-known, etc.)
+    /// Ports to avoid (**fallback**: `FALLBACK_EXCLUDED_DEV_PORTS`; env: `BEARDOG_PORT_DISCOVERY_EXCLUDE`)
     pub excluded_ports: Vec<u16>,
-    /// Enable primal discovery timeout
+    /// Primal discovery timeout (**fallback**: `FALLBACK_PORT_DISCOVERY_TIMEOUT_MS`)
     pub discovery_timeout_ms: u64,
 }
 
@@ -59,14 +86,13 @@ impl Default for PortDiscoveryConfig {
     fn default() -> Self {
         Self {
             strategy: DiscoveryStrategy::Full,
-            min_port: 8000,
-            max_port: 9000,
-            excluded_ports: vec![
-                // Avoid well-known ports
-                8000, // Common dev servers
-                8888, // Common proxies
-            ],
-            discovery_timeout_ms: 2000,
+            min_port: parse_u16_env("BEARDOG_PORT_DISCOVERY_MIN", FALLBACK_PORT_SCAN_MIN),
+            max_port: parse_u16_env("BEARDOG_PORT_DISCOVERY_MAX", FALLBACK_PORT_SCAN_MAX),
+            excluded_ports: default_excluded_ports_from_env(),
+            discovery_timeout_ms: std::env::var("BEARDOG_PORT_DISCOVERY_TIMEOUT_MS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(FALLBACK_PORT_DISCOVERY_TIMEOUT_MS),
         }
     }
 }
@@ -78,7 +104,7 @@ pub struct PortDiscoverer {
 
 impl PortDiscoverer {
     /// Create new port discoverer with configuration
-    pub fn new(config: PortDiscoveryConfig) -> Self {
+    pub const fn new(config: PortDiscoveryConfig) -> Self {
         Self { config }
     }
 
@@ -374,8 +400,19 @@ impl PortDiscoverer {
     /// Check if port is available by attempting to bind
     ///
     /// **Zero-Cost Check**: Immediately drops listener, no resources held.
+    ///
+    /// Bind address is **configuration-driven**: `BEARDOG_PORT_PROBE_BIND` (IP), else the documented
+    /// loopback fallback from `network_addresses::LOCALHOST_IPV4` (self-knowledge probe only).
     fn is_port_available(&self, port: u16) -> bool {
-        TcpListener::bind(("127.0.0.1", port)).is_ok()
+        let ip: IpAddr = std::env::var("BEARDOG_PORT_PROBE_BIND")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or_else(|| {
+                crate::domains::network_addresses::LOCALHOST_IPV4
+                    .parse()
+                    .expect("LOCALHOST_IPV4 must parse as IpAddr")
+            });
+        TcpListener::bind(SocketAddr::new(ip, port)).is_ok()
     }
 }
 
@@ -462,8 +499,8 @@ mod tests {
     fn test_port_discoverer_creation() {
         let config = PortDiscoveryConfig::default();
         let discoverer = PortDiscoverer::new(config);
-        assert_eq!(discoverer.config.min_port, 8000);
-        assert_eq!(discoverer.config.max_port, 9000);
+        assert_eq!(discoverer.config.min_port, FALLBACK_PORT_SCAN_MIN);
+        assert_eq!(discoverer.config.max_port, FALLBACK_PORT_SCAN_MAX);
     }
 
     #[test]

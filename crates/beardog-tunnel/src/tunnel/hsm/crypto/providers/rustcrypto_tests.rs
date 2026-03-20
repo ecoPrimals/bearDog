@@ -54,18 +54,21 @@ mod provider_basics_tests {
 
         // Should have symmetric algorithms
         assert!(!caps.symmetric_algorithms.is_empty());
-        assert!(caps
-            .symmetric_algorithms
-            .contains(&SymmetricAlgorithm::Aes256Gcm));
-        assert!(caps
-            .symmetric_algorithms
-            .contains(&SymmetricAlgorithm::ChaCha20Poly1305));
+        assert!(
+            caps.symmetric_algorithms
+                .contains(&SymmetricAlgorithm::Aes256Gcm)
+        );
+        assert!(
+            caps.symmetric_algorithms
+                .contains(&SymmetricAlgorithm::ChaCha20Poly1305)
+        );
 
         // Should have signature algorithms
         assert!(!caps.signature_algorithms.is_empty());
-        assert!(caps
-            .signature_algorithms
-            .contains(&SignatureAlgorithm::Ed25519));
+        assert!(
+            caps.signature_algorithms
+                .contains(&SignatureAlgorithm::Ed25519)
+        );
 
         // Should have hash algorithms
         assert!(!caps.hash_algorithms.is_empty());
@@ -546,8 +549,8 @@ mod ecdsa_p256_signature_tests {
     use super::*;
 
     fn create_test_keypair_p256() -> (Vec<u8>, Vec<u8>) {
-        use p256::ecdsa::SigningKey;
         use p256::SecretKey;
+        use p256::ecdsa::SigningKey;
 
         let secret_key = SecretKey::from_bytes((&[0x42; 32]).into()).unwrap();
         let signing_key = SigningKey::from(secret_key);

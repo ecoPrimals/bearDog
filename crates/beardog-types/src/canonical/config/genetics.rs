@@ -170,4 +170,5 @@ pub struct CanonicalGeneticsConfig {
     pub max_generations: u32,
 }
 
+/// Back-compat alias for [`CanonicalGeneticsConfig`]; prefer the canonical name in new code.
 pub type GeneticsConfig = CanonicalGeneticsConfig;

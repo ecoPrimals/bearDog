@@ -18,6 +18,7 @@ pub struct UnifiedHsmDiscoveryConfig {
     /// Enable automatic discovery of HSM devices
     /// Whether `auto_discovery` is enabled
     pub auto_discovery: bool,
+    /// Maximum wall-clock time to wait for discovery scans and capability probes before failing open.
     pub discovery_timeout: Duration,
     /// Whether to automatically detect HSM capabilities
     /// Whether `capability_detection` is enabled

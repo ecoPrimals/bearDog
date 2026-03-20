@@ -78,8 +78,10 @@ use std::future::Future;
 /// ecosystem must support, including health monitoring, metrics collection, and
 /// lifecycle management.
 pub trait BearDogProvider: Send + Sync + 'static {
+    /// Concrete error type for this provider; usually [`BearDogError`] or a thin wrapper.
     type Error: std::error::Error + Send + Sync + 'static;
 
+    /// Configuration blob deserialized from TOML/JSON before `initialize`.
     type Config: Send + Sync + Clone;
 
     /// Provider identification
@@ -255,6 +257,7 @@ pub trait CryptoProvider: BearDogProvider {
 /// - **Tamper Resistance**: Physical attacks are detected and countered
 /// - **High Assurance**: Certified security levels (FIPS 140-2, Common Criteria)
 pub trait HsmProvider: BearDogProvider + SecurityProvider + CryptoProvider {
+    /// Serialized health, tamper, and utilization snapshot for dashboards.
     type HsmStatus: Send + Sync + Clone + Serialize + for<'de> Deserialize<'de>;
 
     /// HSM key slot identifier type
@@ -461,11 +464,13 @@ pub trait AdapterProvider: BearDogProvider {
     /// Gets `supported_operations`
     fn get_supported_operations(&self) -> Vec<String>;
 
+    /// Normalizes an outgoing request to the wire format expected by the remote system.
     fn transform_request(
         &self,
         request: Self::Request,
     ) -> impl std::future::Future<Output = Result<Self::Request, Self::Error>> + Send;
 
+    /// Maps a raw remote response back into the internal [`AdapterProvider::Response`] shape.
     fn transform_response(
         &self,
         response: Self::Response,

@@ -18,14 +18,14 @@ fn test_discover_neural_api_socket_from_env() {
     // Test explicit NEURAL_API_SOCKET environment variable
     let original = env::var("NEURAL_API_SOCKET").ok();
 
-    env::set_var("NEURAL_API_SOCKET", "/tmp/test-neural.sock");
+    beardog_errors::process_env::set_var("NEURAL_API_SOCKET", "/tmp/test-neural.sock");
     let result = discover_neural_api_socket();
     assert_eq!(result, Some("/tmp/test-neural.sock".to_string()));
 
     // Cleanup
-    env::remove_var("NEURAL_API_SOCKET");
+    beardog_errors::process_env::remove_var("NEURAL_API_SOCKET");
     if let Some(val) = original {
-        env::set_var("NEURAL_API_SOCKET", val);
+        beardog_errors::process_env::set_var("NEURAL_API_SOCKET", val);
     }
 }
 
@@ -36,19 +36,19 @@ fn test_discover_neural_api_socket_from_neurals_env() {
     let original_neural = env::var("NEURAL_API_SOCKET").ok();
     let original_neurals = env::var("NEURALS_SOCKET").ok();
 
-    env::remove_var("NEURAL_API_SOCKET");
-    env::set_var("NEURALS_SOCKET", "/tmp/neurals-fallback.sock");
+    beardog_errors::process_env::remove_var("NEURAL_API_SOCKET");
+    beardog_errors::process_env::set_var("NEURALS_SOCKET", "/tmp/neurals-fallback.sock");
 
     let result = discover_neural_api_socket();
     assert_eq!(result, Some("/tmp/neurals-fallback.sock".to_string()));
 
     // Cleanup
-    env::remove_var("NEURALS_SOCKET");
+    beardog_errors::process_env::remove_var("NEURALS_SOCKET");
     if let Some(val) = original_neural {
-        env::set_var("NEURAL_API_SOCKET", val);
+        beardog_errors::process_env::set_var("NEURAL_API_SOCKET", val);
     }
     if let Some(val) = original_neurals {
-        env::set_var("NEURALS_SOCKET", val);
+        beardog_errors::process_env::set_var("NEURALS_SOCKET", val);
     }
 }
 
@@ -75,14 +75,14 @@ fn test_discover_neural_api_socket_empty_string() {
     // Test that empty string explicitly disables auto-registration
     let original = env::var("NEURAL_API_SOCKET").ok();
 
-    env::set_var("NEURAL_API_SOCKET", "");
+    beardog_errors::process_env::set_var("NEURAL_API_SOCKET", "");
     let result = discover_neural_api_socket();
     assert_eq!(result, None);
 
     // Cleanup
-    env::remove_var("NEURAL_API_SOCKET");
+    beardog_errors::process_env::remove_var("NEURAL_API_SOCKET");
     if let Some(val) = original {
-        env::set_var("NEURAL_API_SOCKET", val);
+        beardog_errors::process_env::set_var("NEURAL_API_SOCKET", val);
     }
 }
 
@@ -93,8 +93,8 @@ fn test_discover_neural_api_socket_default_paths() {
     let original_neural = env::var("NEURAL_API_SOCKET").ok();
     let original_neurals = env::var("NEURALS_SOCKET").ok();
 
-    env::remove_var("NEURAL_API_SOCKET");
-    env::remove_var("NEURALS_SOCKET");
+    beardog_errors::process_env::remove_var("NEURAL_API_SOCKET");
+    beardog_errors::process_env::remove_var("NEURALS_SOCKET");
 
     let result = discover_neural_api_socket();
 
@@ -109,10 +109,10 @@ fn test_discover_neural_api_socket_default_paths() {
 
     // Cleanup
     if let Some(val) = original_neural {
-        env::set_var("NEURAL_API_SOCKET", val);
+        beardog_errors::process_env::set_var("NEURAL_API_SOCKET", val);
     }
     if let Some(val) = original_neurals {
-        env::set_var("NEURALS_SOCKET", val);
+        beardog_errors::process_env::set_var("NEURALS_SOCKET", val);
     }
 }
 
@@ -224,8 +224,8 @@ fn test_discover_socket_handles_permission_errors() {
     let original_neural = env::var("NEURAL_API_SOCKET").ok();
     let original_neurals = env::var("NEURALS_SOCKET").ok();
 
-    env::remove_var("NEURAL_API_SOCKET");
-    env::remove_var("NEURALS_SOCKET");
+    beardog_errors::process_env::remove_var("NEURAL_API_SOCKET");
+    beardog_errors::process_env::remove_var("NEURALS_SOCKET");
 
     // Should return None or Some, not panic
     let result = discover_neural_api_socket();
@@ -233,10 +233,10 @@ fn test_discover_socket_handles_permission_errors() {
 
     // Cleanup
     if let Some(val) = original_neural {
-        env::set_var("NEURAL_API_SOCKET", val);
+        beardog_errors::process_env::set_var("NEURAL_API_SOCKET", val);
     }
     if let Some(val) = original_neurals {
-        env::set_var("NEURALS_SOCKET", val);
+        beardog_errors::process_env::set_var("NEURALS_SOCKET", val);
     }
 }
 
@@ -268,7 +268,7 @@ fn test_discover_socket_deterministic() {
     let original_neural = env::var("NEURAL_API_SOCKET").ok();
     let original_neurals = env::var("NEURALS_SOCKET").ok();
 
-    env::set_var("NEURAL_API_SOCKET", "/tmp/test.sock");
+    beardog_errors::process_env::set_var("NEURAL_API_SOCKET", "/tmp/test.sock");
 
     let result1 = discover_neural_api_socket();
     let result2 = discover_neural_api_socket();
@@ -276,12 +276,12 @@ fn test_discover_socket_deterministic() {
     assert_eq!(result1, result2);
 
     // Cleanup
-    env::remove_var("NEURAL_API_SOCKET");
+    beardog_errors::process_env::remove_var("NEURAL_API_SOCKET");
     if let Some(val) = original_neural {
-        env::set_var("NEURAL_API_SOCKET", val);
+        beardog_errors::process_env::set_var("NEURAL_API_SOCKET", val);
     }
     if let Some(val) = original_neurals {
-        env::set_var("NEURALS_SOCKET", val);
+        beardog_errors::process_env::set_var("NEURALS_SOCKET", val);
     }
 }
 
@@ -310,16 +310,16 @@ fn test_discover_socket_with_whitespace() {
     // Test handling of whitespace in environment variables
     let original = env::var("NEURAL_API_SOCKET").ok();
 
-    env::set_var("NEURAL_API_SOCKET", " /tmp/test.sock ");
+    beardog_errors::process_env::set_var("NEURAL_API_SOCKET", " /tmp/test.sock ");
     let result = discover_neural_api_socket();
 
     // Should preserve the exact value (including whitespace)
     assert_eq!(result, Some(" /tmp/test.sock ".to_string()));
 
     // Cleanup
-    env::remove_var("NEURAL_API_SOCKET");
+    beardog_errors::process_env::remove_var("NEURAL_API_SOCKET");
     if let Some(val) = original {
-        env::set_var("NEURAL_API_SOCKET", val);
+        beardog_errors::process_env::set_var("NEURAL_API_SOCKET", val);
     }
 }
 
@@ -331,7 +331,7 @@ fn test_discover_socket_empty_vs_unset() {
     let original_neurals = env::var("NEURALS_SOCKET").ok();
 
     // Empty string should disable (even if defaults exist)
-    env::set_var("NEURAL_API_SOCKET", "");
+    beardog_errors::process_env::set_var("NEURAL_API_SOCKET", "");
     let empty_result = discover_neural_api_socket();
     assert_eq!(
         empty_result, None,
@@ -339,18 +339,18 @@ fn test_discover_socket_empty_vs_unset() {
     );
 
     // Unset should fall through to default/None
-    env::remove_var("NEURAL_API_SOCKET");
-    env::remove_var("NEURALS_SOCKET");
+    beardog_errors::process_env::remove_var("NEURAL_API_SOCKET");
+    beardog_errors::process_env::remove_var("NEURALS_SOCKET");
     let unset_result = discover_neural_api_socket();
     // Could be None or default socket (depends on whether default paths exist)
     assert!(unset_result.is_none() || unset_result.is_some());
 
     // Cleanup
     if let Some(val) = original {
-        env::set_var("NEURAL_API_SOCKET", val);
+        beardog_errors::process_env::set_var("NEURAL_API_SOCKET", val);
     }
     if let Some(val) = original_neurals {
-        env::set_var("NEURALS_SOCKET", val);
+        beardog_errors::process_env::set_var("NEURALS_SOCKET", val);
     }
 }
 

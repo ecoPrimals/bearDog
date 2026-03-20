@@ -207,7 +207,7 @@ mod tests {
         let metrics = EcosystemListenerMetrics::default();
         let copy1 = metrics;
         let copy2 = metrics; // Should work due to Copy
-                             // Verify they're equal
+        // Verify they're equal
         assert_eq!(copy1.announcements_received, copy2.announcements_received);
     }
 
@@ -373,7 +373,7 @@ mod tests {
     async fn test_concurrent_metric_access() {
         // Test thread-safe metric access pattern
         use std::sync::Arc;
-        use tokio::sync::{oneshot, RwLock};
+        use tokio::sync::{RwLock, oneshot};
 
         let metrics = Arc::new(RwLock::new(EcosystemListenerMetrics::default()));
         let metrics_clone = Arc::clone(&metrics);

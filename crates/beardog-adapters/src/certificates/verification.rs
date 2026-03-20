@@ -16,7 +16,7 @@ pub struct CertificateVerifier {
 
 impl CertificateVerifier {
     /// Create new verifier with public key
-    pub fn new(verifying_key: VerifyingKey) -> Self {
+    pub const fn new(verifying_key: VerifyingKey) -> Self {
         Self { verifying_key }
     }
 
@@ -60,7 +60,7 @@ impl CertificateVerifier {
         // Verify
         self.verifying_key.verify(&hash, &signature).map_err(|e| {
             VerificationError::InvalidSignature {
-                reason: format!("Signature verification failed: {}", e),
+                reason: format!("Signature verification failed: {e}"),
             }
         })?;
 
@@ -101,13 +101,13 @@ impl CertificateVerifier {
         hasher.update(cert.adapter_id.as_bytes());
         hasher.update(&bincode::serialize(&cert.classification).map_err(|e| {
             VerificationError::HashingFailed {
-                reason: format!("Failed to serialize classification: {}", e),
+                reason: format!("Failed to serialize classification: {e}"),
             }
         })?);
         hasher.update(&cert.expires_at.timestamp().to_le_bytes());
         hasher.update(&bincode::serialize(&cert.scope).map_err(|e| {
             VerificationError::HashingFailed {
-                reason: format!("Failed to serialize scope: {}", e),
+                reason: format!("Failed to serialize scope: {e}"),
             }
         })?);
 
@@ -126,12 +126,12 @@ impl CertificateVerifier {
         // Check if operation is allowed
         if !cert.allows_operation(operation) {
             return Err(VerificationError::OperationNotAllowed {
-                operation: format!("{:?}", operation),
+                operation: format!("{operation:?}"),
                 allowed: cert
                     .scope
                     .operations
                     .iter()
-                    .map(|op| format!("{:?}", op))
+                    .map(|op| format!("{op:?}"))
                     .collect(),
             });
         }
@@ -145,58 +145,69 @@ impl CertificateVerifier {
 pub enum VerificationError {
     /// Certificate has expired
     Expired {
+        /// UTC timestamp after which the certificate is no longer valid.
         expired_at: chrono::DateTime<chrono::Utc>,
     },
 
     /// Invalid signature
-    InvalidSignature { reason: String },
+    InvalidSignature {
+        /// Why Ed25519 verification or signature parsing failed.
+        reason: String,
+    },
 
     /// License required but not present
-    LicenseRequired { classification: String },
+    LicenseRequired {
+        /// Serialized or debug representation of the classification that triggered the requirement.
+        classification: String,
+    },
 
     /// License has expired
     LicenseExpired {
+        /// UTC timestamp when the attached commercial license lapsed.
         expired_at: chrono::DateTime<chrono::Utc>,
     },
 
     /// Operation not allowed by certificate
     OperationNotAllowed {
+        /// Requested [`AdapterOperation`] that was denied.
         operation: String,
+        /// Operations present in the certificate [`CertificateScope`].
         allowed: Vec<String>,
     },
 
     /// Failed to compute hash
-    HashingFailed { reason: String },
+    HashingFailed {
+        /// Serialization or hashing error detail when building the certificate preimage.
+        reason: String,
+    },
 }
 
 impl fmt::Display for VerificationError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Expired { expired_at } => {
-                write!(f, "🔒 Certificate expired at {}", expired_at)
+                write!(f, "🔒 Certificate expired at {expired_at}")
             }
             Self::InvalidSignature { reason } => {
-                write!(f, "🔒 Invalid certificate signature: {}", reason)
+                write!(f, "🔒 Invalid certificate signature: {reason}")
             }
             Self::LicenseRequired { classification } => {
                 write!(
                     f,
-                    "🔒 License required for {} classification. Visit https://beardog.dev/pricing",
-                    classification
+                    "🔒 License required for {classification} classification. Visit https://beardog.dev/pricing"
                 )
             }
             Self::LicenseExpired { expired_at } => {
-                write!(f, "🔒 License expired at {}", expired_at)
+                write!(f, "🔒 License expired at {expired_at}")
             }
             Self::OperationNotAllowed { operation, allowed } => {
                 write!(
                     f,
-                    "🔒 Operation '{}' not allowed. Allowed: {:?}",
-                    operation, allowed
+                    "🔒 Operation '{operation}' not allowed. Allowed: {allowed:?}"
                 )
             }
             Self::HashingFailed { reason } => {
-                write!(f, "🔒 Certificate hashing failed: {}", reason)
+                write!(f, "🔒 Certificate hashing failed: {reason}")
             }
         }
     }
@@ -231,7 +242,9 @@ mod tests {
             reasons: vec!["Interactive session".to_string()],
         };
 
-        let cert = issuer.issue(classification, "prometheus").unwrap();
+        let cert = issuer
+            .issue(classification, "prometheus")
+            .expect("Human classification should issue without license");
 
         // Should verify successfully
         assert!(verifier.verify(&cert).is_ok());
@@ -246,7 +259,9 @@ mod tests {
             reasons: vec![],
         };
 
-        let mut cert = issuer.issue(classification, "prometheus").unwrap();
+        let mut cert = issuer
+            .issue(classification, "prometheus")
+            .expect("Human classification should issue without license");
 
         // Make it expired
         cert.expires_at = Utc::now() - Duration::hours(1);
@@ -269,7 +284,9 @@ mod tests {
             reasons: vec![],
         };
 
-        let mut cert = issuer.issue(classification, "prometheus").unwrap();
+        let mut cert = issuer
+            .issue(classification, "prometheus")
+            .expect("Human classification should issue without license");
 
         // Tamper with adapter_id
         cert.adapter_id = "grafana".to_string();
@@ -292,17 +309,23 @@ mod tests {
             reasons: vec![],
         };
 
-        let cert = issuer.issue(classification, "prometheus").unwrap();
+        let cert = issuer
+            .issue(classification, "prometheus")
+            .expect("Human classification should issue without license");
 
         // Read should be allowed
-        assert!(verifier
-            .verify_operation(&cert, &AdapterOperation::Read)
-            .is_ok());
+        assert!(
+            verifier
+                .verify_operation(&cert, &AdapterOperation::Read)
+                .is_ok()
+        );
 
         // Write should be allowed for high confidence human
-        assert!(verifier
-            .verify_operation(&cert, &AdapterOperation::Write)
-            .is_ok());
+        assert!(
+            verifier
+                .verify_operation(&cert, &AdapterOperation::Write)
+                .is_ok()
+        );
 
         // Admin may not be allowed
         let result = verifier.verify_operation(&cert, &AdapterOperation::Admin);
@@ -340,7 +363,7 @@ mod tests {
 
         let cert = issuer
             .issue_with_license(classification, "prometheus", license)
-            .unwrap();
+            .expect("Commercial high-risk with valid license should issue");
 
         assert!(verifier.verify(&cert).is_ok());
     }
@@ -411,7 +434,7 @@ mod tests {
 
         let mut cert = issuer
             .issue_with_license(classification, "prometheus", valid_license)
-            .unwrap();
+            .expect("Commercial high-risk with valid license should issue");
 
         // Now manually expire the license after issuance
         if let Some(ref mut license) = cert.license {
@@ -437,7 +460,9 @@ mod tests {
             confidence: 70,
         };
 
-        let cert = issuer.issue(classification, "prometheus").unwrap();
+        let cert = issuer
+            .issue(classification, "prometheus")
+            .expect("Low-risk commercial should issue without license");
         assert!(verifier.verify(&cert).is_ok());
     }
 
@@ -450,7 +475,9 @@ mod tests {
             reasons: vec![],
         };
 
-        let mut cert = issuer.issue(classification, "prometheus").unwrap();
+        let mut cert = issuer
+            .issue(classification, "prometheus")
+            .expect("Human classification should issue without license");
 
         // Truncate signature to less than 64 bytes
         cert.signature = vec![0u8; 32];
@@ -472,7 +499,9 @@ mod tests {
             reasons: vec!["unverified origin".to_string()],
         };
 
-        let cert = issuer.issue(classification, "prometheus").unwrap();
+        let cert = issuer
+            .issue(classification, "prometheus")
+            .expect("Uncertain classification should still issue certificate");
 
         // Admin should not be allowed for unknown classification
         let result = verifier.verify_operation(&cert, &AdapterOperation::Admin);

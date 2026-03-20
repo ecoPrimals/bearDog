@@ -185,31 +185,31 @@ pub struct CanonicalTimeoutConfig {
 }
 
 // Default functions for domain-specific timeouts
-fn default_health_check_timeout() -> Duration {
+const fn default_health_check_timeout() -> Duration {
     Duration::from_secs(5)
 }
 
-fn default_hsm_operation_timeout() -> Duration {
+const fn default_hsm_operation_timeout() -> Duration {
     Duration::from_secs(2)
 }
 
-fn default_hsm_probe_timeout() -> Duration {
+const fn default_hsm_probe_timeout() -> Duration {
     Duration::from_millis(500)
 }
 
-fn default_discovery_timeout() -> Duration {
+const fn default_discovery_timeout() -> Duration {
     Duration::from_secs(10)
 }
 
-fn default_ai_decision_timeout() -> Duration {
+const fn default_ai_decision_timeout() -> Duration {
     Duration::from_secs(30)
 }
 
-fn default_ai_request_timeout() -> Duration {
+const fn default_ai_request_timeout() -> Duration {
     Duration::from_secs(30)
 }
 
-fn default_ai_batch_timeout() -> Duration {
+const fn default_ai_batch_timeout() -> Duration {
     Duration::from_millis(10)
 }
 
@@ -323,7 +323,7 @@ impl CanonicalTimeoutConfig {
     ///
     /// Suitable for high-performance local networks where quick failure
     /// detection is preferred over waiting.
-    pub fn aggressive() -> Self {
+    pub const fn aggressive() -> Self {
         Self {
             // Network timeouts
             connect_timeout: Duration::from_secs(1),
@@ -348,7 +348,7 @@ impl CanonicalTimeoutConfig {
     ///
     /// Suitable for unreliable networks or long-running operations where
     /// waiting longer is acceptable.
-    pub fn conservative() -> Self {
+    pub const fn conservative() -> Self {
         Self {
             // Network timeouts
             connect_timeout: Duration::from_secs(30),
@@ -373,7 +373,7 @@ impl CanonicalTimeoutConfig {
     ///
     /// Suitable for extremely fast local operations where any delay
     /// indicates a problem.
-    pub fn minimal() -> Self {
+    pub const fn minimal() -> Self {
         Self {
             // Network timeouts
             connect_timeout: Duration::from_millis(500),
@@ -398,7 +398,7 @@ impl CanonicalTimeoutConfig {
     ///
     /// Suitable for operations that may take a long time to complete,
     /// such as large file transfers or complex computations.
-    pub fn long_running() -> Self {
+    pub const fn long_running() -> Self {
         Self {
             // Network timeouts
             connect_timeout: Duration::from_secs(10),

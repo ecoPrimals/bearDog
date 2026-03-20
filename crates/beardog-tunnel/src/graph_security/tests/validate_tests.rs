@@ -78,10 +78,12 @@ async fn test_invalid_edge_reference() {
         .expect("Validation should succeed");
 
     assert!(!report.valid, "Invalid edge reference should fail");
-    assert!(report
-        .issues
-        .iter()
-        .any(|i| i.category == ThreatCategory::Structure));
+    assert!(
+        report
+            .issues
+            .iter()
+            .any(|i| i.category == ThreatCategory::Structure)
+    );
 }
 
 #[tokio::test]
@@ -106,10 +108,12 @@ async fn test_cyclic_dependency_detected() {
         .expect("Validation should succeed");
 
     assert!(!report.valid, "Cyclic dependency should be detected");
-    assert!(report
-        .issues
-        .iter()
-        .any(|i| i.category == ThreatCategory::Structure));
+    assert!(
+        report
+            .issues
+            .iter()
+            .any(|i| i.category == ThreatCategory::Structure)
+    );
 }
 
 #[tokio::test]
@@ -129,10 +133,12 @@ async fn test_excessive_cpu_request() {
         .await
         .expect("Validation should succeed");
 
-    assert!(report
-        .issues
-        .iter()
-        .any(|i| i.category == ThreatCategory::ResourceAbuse));
+    assert!(
+        report
+            .issues
+            .iter()
+            .any(|i| i.category == ThreatCategory::ResourceAbuse)
+    );
 }
 
 #[tokio::test]
@@ -152,10 +158,12 @@ async fn test_excessive_memory_request() {
         .await
         .expect("Validation should succeed");
 
-    assert!(report
-        .issues
-        .iter()
-        .any(|i| i.category == ThreatCategory::ResourceAbuse));
+    assert!(
+        report
+            .issues
+            .iter()
+            .any(|i| i.category == ThreatCategory::ResourceAbuse)
+    );
 }
 
 #[tokio::test]
@@ -208,10 +216,12 @@ async fn test_disconnected_subgraphs_detected() {
         .expect("Validation should succeed");
 
     // Disconnected subgraphs are a low severity issue
-    assert!(report
-        .issues
-        .iter()
-        .any(|i| i.description.contains("disconnected")));
+    assert!(
+        report
+            .issues
+            .iter()
+            .any(|i| i.description.contains("disconnected"))
+    );
 }
 
 #[tokio::test]
@@ -330,10 +340,12 @@ async fn test_multiple_subgraphs() {
         .expect("Validation should succeed");
 
     // Multiple disconnected subgraphs should be noted
-    assert!(report
-        .issues
-        .iter()
-        .any(|i| i.description.contains("disconnected") || i.description.contains("subgraph")));
+    assert!(
+        report
+            .issues
+            .iter()
+            .any(|i| i.description.contains("disconnected") || i.description.contains("subgraph"))
+    );
 }
 
 #[tokio::test]

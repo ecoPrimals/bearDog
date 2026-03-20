@@ -155,9 +155,11 @@ pub struct HttpEndpoint {
     /// Optional expected body
     pub expected_body: Option<String>,
     /// Timeout
+    /// Per-request budget; `None` uses the parent check default.
     pub timeout: Option<Duration>,
 }
 
+/// HTTP verbs supported by [`HttpHealthCheckConfig`] probes.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HttpMethod {
     /// GET variant
@@ -475,6 +477,7 @@ pub struct EscalationRule {
 pub enum EscalationCondition {
     /// Escalate after a specific number of failures
     FailureCount(u32),
+    /// Escalate when unhealthy longer than this wall-clock span.
     FailureDuration(Duration),
     /// Escalate when failure percentage exceeds threshold
     FailurePercentage(f64),

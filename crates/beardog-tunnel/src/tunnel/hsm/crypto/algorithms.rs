@@ -31,7 +31,7 @@ impl CryptoAlgorithm {
     /// Returns an error if this is not a symmetric algorithm
     pub fn as_symmetric(&self) -> Result<SymmetricAlgorithm, String> {
         match self {
-            CryptoAlgorithm::Symmetric(alg) => Ok(alg.clone()),
+            Self::Symmetric(alg) => Ok(alg.clone()),
             _ => Err(format!("Expected symmetric algorithm, got: {self:?}")),
         }
     }
@@ -42,7 +42,7 @@ impl CryptoAlgorithm {
     /// Returns an error if this is not a signature algorithm
     pub fn as_signature(&self) -> Result<SignatureAlgorithm, String> {
         match self {
-            CryptoAlgorithm::Signature(alg) => Ok(alg.clone()),
+            Self::Signature(alg) => Ok(alg.clone()),
             _ => Err(format!("Expected signature algorithm, got: {self:?}")),
         }
     }
@@ -51,11 +51,11 @@ impl CryptoAlgorithm {
 impl std::fmt::Display for CryptoAlgorithm {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            CryptoAlgorithm::Symmetric(alg) => write!(f, "{alg}"),
-            CryptoAlgorithm::Asymmetric(alg) => write!(f, "{alg}"),
-            CryptoAlgorithm::Signature(alg) => write!(f, "{alg}"),
-            CryptoAlgorithm::Hash(alg) => write!(f, "{alg}"),
-            CryptoAlgorithm::Kdf(alg) => write!(f, "{alg}"),
+            Self::Symmetric(alg) => write!(f, "{alg}"),
+            Self::Asymmetric(alg) => write!(f, "{alg}"),
+            Self::Signature(alg) => write!(f, "{alg}"),
+            Self::Hash(alg) => write!(f, "{alg}"),
+            Self::Kdf(alg) => write!(f, "{alg}"),
         }
     }
 }

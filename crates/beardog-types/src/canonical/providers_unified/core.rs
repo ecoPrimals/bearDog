@@ -160,16 +160,22 @@ pub enum ParameterType {
     Enum(Vec<String>),
 }
 
+/// Declarative checks applied to provider configuration parameters before activation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ValidationRule {
+    /// Numeric parameters must be ≥ this value.
     MinValue(f64),
 
+    /// Numeric parameters must be ≤ this value.
     MaxValue(f64),
 
+    /// String/array length must be ≥ this many elements/bytes.
     MinLength(usize),
 
+    /// String/array length must be ≤ this many elements/bytes.
     MaxLength(usize),
 
+    /// Regular expression strings must satisfy this pattern.
     Pattern(String),
 
     /// Custom validation function name
@@ -177,6 +183,7 @@ pub enum ValidationRule {
 }
 
 // Missing types that are imported elsewhere
+/// Row stored in the canonical provider registry (identity + live health snapshot).
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ProviderRegistryEntry {
     /// Provider Id
@@ -207,6 +214,7 @@ pub enum ProviderStatus {
     Maintenance,
 }
 
+/// Lightweight health snapshot returned from synchronous probes (distinct from async trait checks).
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ProviderHealth {
     /// Healthy

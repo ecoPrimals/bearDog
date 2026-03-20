@@ -33,8 +33,8 @@
 //! ```
 
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use chrono::Utc;
 use parking_lot::RwLock;
@@ -180,13 +180,14 @@ impl BeardogBtspProvider {
     ) -> Result<Self, BearDogError> {
         info!("🐻 Initializing BearDog BTSP Provider with BirdSong genetics");
 
-        // Generate master secret from HSM for BirdSong
+        // Generate master secret from HSM for BirdSong (label from `beardog_config::domains::btsp`)
         use crate::tunnel::hsm::KeyType;
+        let birdsong_key_label = beardog_config::domains::btsp::resolve_btsp_birdsong_key_label();
         let birdsong_key = hsm
-            .generate_key("birdsong_master", &KeyType::ChaCha20)
+            .generate_key(&birdsong_key_label, &KeyType::ChaCha20)
             .await
             .map_err(|e| {
-                BearDogError::system(format!("Failed to generate BirdSong master key: {}", e))
+                BearDogError::system(format!("Failed to generate BirdSong master key: {e}"))
             })?;
 
         // Extract key material for BirdSong initialization
@@ -217,7 +218,7 @@ impl BeardogBtspProvider {
         let birdsong = BirdSongManager::new(master_secret, None)
             .await
             .map_err(|e| {
-                BearDogError::system(format!("Failed to initialize BirdSong manager: {}", e))
+                BearDogError::system(format!("Failed to initialize BirdSong manager: {e}"))
             })?;
 
         info!("✅ BearDog BTSP Provider initialized with BirdSong genetics");
@@ -312,8 +313,7 @@ impl BeardogBtspProvider {
 
         if lineage_path.is_empty() {
             return Err(BearDogError::business(format!(
-                "Peer {} not found within {} hops in genetic lineage",
-                target_peer_id, max_hops
+                "Peer {target_peer_id} not found within {max_hops} hops in genetic lineage"
             )));
         }
 
@@ -322,8 +322,7 @@ impl BeardogBtspProvider {
 
         if addresses.is_empty() {
             return Err(BearDogError::business(format!(
-                "No addresses found for peer {}",
-                target_peer_id
+                "No addresses found for peer {target_peer_id}"
             )));
         }
 
@@ -362,7 +361,10 @@ impl BeardogBtspProvider {
         // Get our family from environment (primal self-knowledge)
         let our_family = std::env::var("FAMILY_ID")
             .or_else(|_| std::env::var("BEARDOG_FAMILY_ID"))
-            .unwrap_or_else(|_| "unknown".to_string());
+            .unwrap_or_else(|_| {
+                std::env::var("BEARDOG_FAMILY_UNKNOWN_LABEL")
+                    .unwrap_or_else(|_| "unknown".to_string())
+            });
 
         // Check if peer is known in trust database
         let trust_db = self.trust_db.read();
@@ -422,11 +424,11 @@ impl BeardogBtspProvider {
     /// Discover peer addresses via capability-based discovery
     ///
     /// This implements the Primal IPC Protocol pattern:
-    /// 1. Query Songbird for "peer_discovery" capability
-    /// 2. Connect to discovered service via Unix socket
-    /// 3. Request peer addresses via JSON-RPC
+    /// 1. Resolve the discovery/registry Unix socket (`IPC_SOCKET`, `DISCOVERY_SOCKET`, then fallbacks)
+    /// 2. Connect via Unix stream
+    /// 3. Request peer endpoint via JSON-RPC (`ipc.resolve`)
     ///
-    /// Zero hardcoding - everything discovered at runtime!
+    /// No fixed peer primal names — paths come from environment and shared `beardog-ipc` fallbacks.
     ///
     /// Discovery follows this priority (self-knowledge principle):
     /// 1. Environment variable (DISCOVERY_SOCKET)
@@ -445,38 +447,42 @@ impl BeardogBtspProvider {
         let socket_paths = Self::get_discovery_socket_paths();
 
         for socket_path in socket_paths {
-            match UnixStream::connect(socket_path).await {
+            match UnixStream::connect(&socket_path).await {
                 Ok(mut stream) => {
-                    // Build JSON-RPC request per Primal IPC Protocol
+                    // Build JSON-RPC request per Primal IPC Protocol (param key overridable via
+                    // `beardog_ipc::ENV_IPC_RESOLVE_TARGET_PARAM_KEY`; value is opaque instance id).
+                    let mut params = serde_json::Map::new();
+                    params.insert(
+                        beardog_ipc::ipc_resolve_target_param_key(),
+                        serde_json::Value::String(peer_id.to_string()),
+                    );
                     let request = serde_json::json!({
                         "jsonrpc": "2.0",
                         "method": "ipc.resolve",
-                        "params": {
-                            "primal": peer_id
-                        },
+                        "params": params,
                         "id": 1
                     });
 
                     // Send request
                     let request_bytes = serde_json::to_vec(&request).map_err(|e| {
-                        BearDogError::system(format!("JSON serialization failed: {}", e))
+                        BearDogError::system(format!("JSON serialization failed: {e}"))
                     })?;
 
                     stream
                         .write_all(&request_bytes)
                         .await
-                        .map_err(|e| BearDogError::system(format!("Socket write failed: {}", e)))?;
+                        .map_err(|e| BearDogError::system(format!("Socket write failed: {e}")))?;
                     stream
                         .write_all(b"\n")
                         .await
-                        .map_err(|e| BearDogError::system(format!("Socket write failed: {}", e)))?;
+                        .map_err(|e| BearDogError::system(format!("Socket write failed: {e}")))?;
 
                     // Read response
                     let mut buffer = vec![0u8; 4096];
                     let n = stream
                         .read(&mut buffer)
                         .await
-                        .map_err(|e| BearDogError::system(format!("Socket read failed: {}", e)))?;
+                        .map_err(|e| BearDogError::system(format!("Socket read failed: {e}")))?;
 
                     if n == 0 {
                         continue; // No data, try next socket
@@ -484,7 +490,7 @@ impl BeardogBtspProvider {
 
                     // Parse JSON-RPC response
                     let response: serde_json::Value = serde_json::from_slice(&buffer[..n])
-                        .map_err(|e| BearDogError::system(format!("JSON parse failed: {}", e)))?;
+                        .map_err(|e| BearDogError::system(format!("JSON parse failed: {e}")))?;
 
                     // Extract endpoint from response
                     if let Some(result) = response.get("result") {
@@ -501,31 +507,31 @@ impl BeardogBtspProvider {
         Ok(vec![])
     }
 
-    /// Get discovery socket paths with zero hardcoding + self-knowledge
+    /// Discovery Unix socket paths (env-first, then `beardog-ipc` constants).
     ///
     /// Priority:
-    /// 1. DISCOVERY_SOCKET environment variable
-    /// 2. Generic Primal IPC discovery endpoint (/primal/discovery)
-    /// 3. Development fallback (/tmp/beardog-discovery)
-    ///
-    /// SELF-KNOWLEDGE PRINCIPLE (Feb 4, 2026): Primals only know themselves.
-    /// Instead of hardcoding "songbird", we use a generic "/primal/discovery"
-    /// endpoint that any discovery service can bind to.
-    fn get_discovery_socket_paths() -> Vec<&'static str> {
-        // Check environment first (highest priority)
-        if let Ok(_custom_socket) = std::env::var("DISCOVERY_SOCKET") {
-            // Note: This returns static str slice, so we can't include the env var directly
-            // In production, this would need to be refactored to return Vec<String>
-            // For now, document the pattern
+    /// 1. `IPC_SOCKET` / `DISCOVERY_SOCKET` when set
+    /// 2. [`beardog_ipc::DISCOVERY_SOCKET_FALLBACK`] (`/primal/discovery`)
+    /// 3. `BEARDOG_DEV_DISCOVERY_SOCKET` or [`beardog_ipc::DISCOVERY_SOCKET_DEV_FALLBACK`]
+    fn get_discovery_socket_paths() -> Vec<String> {
+        let mut paths = Vec::new();
+        for key in ["IPC_SOCKET", "DISCOVERY_SOCKET"] {
+            if let Ok(s) = std::env::var(key) {
+                if !s.is_empty() && !paths.contains(&s) {
+                    paths.push(s);
+                }
+            }
         }
-
-        // Generic Primal IPC protocol namespace (self-knowledge principle)
-        // Any discovery service can bind to /primal/discovery
-        // Per PRIMAL_IPC_PROTOCOL.md: Standard Path Format: /primal/{primal-name}
-        vec![
-            "/primal/discovery",      // Generic discovery endpoint (any primal can bind)
-            "/tmp/beardog-discovery", // Development fallback
-        ]
+        let generic = beardog_ipc::DISCOVERY_SOCKET_FALLBACK.to_string();
+        if !paths.contains(&generic) {
+            paths.push(generic);
+        }
+        let dev = std::env::var("BEARDOG_DEV_DISCOVERY_SOCKET")
+            .unwrap_or_else(|_| beardog_ipc::DISCOVERY_SOCKET_DEV_FALLBACK.to_string());
+        if !paths.contains(&dev) {
+            paths.push(dev);
+        }
+        paths
     }
 
     /// Get tunnel by ID (public API for handlers)
@@ -648,16 +654,18 @@ impl BeardogBtspProvider {
         );
 
         // Generate random session key material
-        use rand::{rngs::OsRng, RngCore};
+        use rand::{RngCore, rngs::OsRng};
         let mut key_material = vec![0u8; 32];
         OsRng.fill_bytes(&mut key_material);
 
         // Create lineage hint for this peer
         // In production, this would be derived from peer's certificate or previous exchange
+        let root_prefix = beardog_config::domains::btsp::resolve_btsp_lineage_root_prefix();
+        let max_depth = beardog_config::domains::btsp::resolve_btsp_lineage_max_depth();
         let lineage_hint = LineageHint {
-            root_id: format!("btsp_root_{}", peer_id),
-            min_depth: 0,       // Root can decrypt
-            max_depth: 10,      // Up to 10 generations deep
+            root_id: format!("{root_prefix}_{peer_id}"),
+            min_depth: 0, // Root can decrypt
+            max_depth,
             biome_filter: None, // No biome restriction
             version: 1,
         };
@@ -667,7 +675,7 @@ impl BeardogBtspProvider {
         let encrypt_request = BirdSongEncryptRequest {
             plaintext: key_material.clone(),
             lineage_hint: lineage_hint.clone(),
-            associated_data: Some(format!("BTSP session: {}", peer_id).into_bytes()),
+            associated_data: Some(format!("BTSP session: {peer_id}").into_bytes()),
         };
 
         let _broadcast = self
@@ -675,7 +683,7 @@ impl BeardogBtspProvider {
             .encrypt_broadcast(&encrypt_request)
             .map_err(|e| {
                 warn!("BirdSong encryption failed for peer {}: {}", peer_id, e);
-                BearDogError::system(format!("Failed to encrypt session key: {}", e))
+                BearDogError::system(format!("Failed to encrypt session key: {e}"))
             })?;
 
         info!(
@@ -714,18 +722,18 @@ impl BeardogBtspProvider {
         // The session key is derived from genetic lineage for forward secrecy
 
         use chacha20poly1305::{
-            aead::{Aead, AeadCore, KeyInit, OsRng},
             ChaCha20Poly1305,
+            aead::{Aead, AeadCore, KeyInit, OsRng},
         };
 
         let cipher = ChaCha20Poly1305::new_from_slice(session_key)
-            .map_err(|e| BearDogError::system(format!("Cipher init failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Cipher init failed: {e}")))?;
 
         let nonce = ChaCha20Poly1305::generate_nonce(OsRng);
 
         let ciphertext = cipher
             .encrypt(&nonce, data)
-            .map_err(|e| BearDogError::system(format!("Encryption failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Encryption failed: {e}")))?;
 
         // Prepend nonce to ciphertext
         let mut result = nonce.to_vec();
@@ -741,8 +749,8 @@ impl BeardogBtspProvider {
         session_key: &[u8],
     ) -> Result<Vec<u8>, BearDogError> {
         use chacha20poly1305::{
-            aead::{Aead, KeyInit},
             ChaCha20Poly1305, Nonce,
+            aead::{Aead, KeyInit},
         };
 
         if data.len() < 12 {
@@ -754,11 +762,11 @@ impl BeardogBtspProvider {
         let nonce = Nonce::from_slice(nonce_bytes);
 
         let cipher = ChaCha20Poly1305::new_from_slice(session_key)
-            .map_err(|e| BearDogError::system(format!("Cipher init failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Cipher init failed: {e}")))?;
 
         let plaintext = cipher
             .decrypt(nonce, ciphertext)
-            .map_err(|e| BearDogError::system(format!("Decryption failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Decryption failed: {e}")))?;
 
         Ok(plaintext)
     }

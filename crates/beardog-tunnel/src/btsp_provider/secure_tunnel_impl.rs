@@ -8,9 +8,9 @@
 
 use async_trait::async_trait;
 
+use super::BeardogBtspProvider;
 use super::tunnel::Tunnel;
 use super::types::TrustLevel;
-use super::BeardogBtspProvider;
 use beardog_capabilities::traits::{
     PeerEndpoint, SecureTunnelProvider, TunnelHandle as CapabilityTunnelHandle,
     TunnelStatus as CapabilityTunnelStatus,

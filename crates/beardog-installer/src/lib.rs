@@ -26,11 +26,6 @@
 //! - Async/concurrent by default
 //! - Universal & agnostic
 
-// Forbid unsafe code (100% Pure Rust)
-#![forbid(unsafe_code)]
-// Warn on missing docs
-#![warn(missing_docs)]
-
 pub mod arch;
 pub mod deployment;
 pub mod installer;

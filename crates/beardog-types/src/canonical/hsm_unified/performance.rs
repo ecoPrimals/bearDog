@@ -4,6 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 
+/// Tunables for HSM throughput: batching, pooling, and caching.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct HsmPerformanceConfig {
     /// Batch operations enabled

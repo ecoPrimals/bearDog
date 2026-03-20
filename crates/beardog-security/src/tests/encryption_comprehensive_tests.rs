@@ -154,9 +154,9 @@ mod tests {
     #[test]
     fn test_different_keys_produce_different_ciphertext() {
         let key1 = b"key_one_32bytes_long_12345678901"; // Exactly 32 bytes
-                                                        // TEST_CATEGORY: integration
-                                                        // TEST_DOMAIN: security
-                                                        // TEST_PRIORITY: critical
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
         let key2 = b"key_two_32bytes_long_09876543210"; // Exactly 32 bytes
         let data = b"Test data";
 
@@ -273,9 +273,9 @@ mod tests {
     fn test_encrypt_decrypt_multiple_blocks() {
         let key = b"test_key_32bytes_long_1234567890";
         let data = vec![0u8; 48]; // Exactly 3 AES blocks
-                                  // TEST_CATEGORY: integration
-                                  // TEST_DOMAIN: security
-                                  // TEST_PRIORITY: critical
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
 
         let encrypted = encrypt_data(&data, key).expect("Encryption failed");
         let decrypted = decrypt_data(&encrypted, key).expect("Decryption failed");
@@ -312,9 +312,9 @@ mod tests {
 
         let key = b"test_key_32bytes_long_1234567890";
         let data = vec![0u8; 1_000_000]; // 1MB
-                                         // TEST_CATEGORY: integration
-                                         // TEST_DOMAIN: security
-                                         // TEST_PRIORITY: critical
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: critical
 
         let start = Instant::now();
         let encrypted = encrypt_data(&data, key).expect("Encryption failed");

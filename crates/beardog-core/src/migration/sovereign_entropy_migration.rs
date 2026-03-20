@@ -35,7 +35,7 @@ pub struct SovereignEntropyMigrationConfig {
 }
 
 /// Phases of sovereign entropy migration that can be enabled independently
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum MigrationPhase {
     /// Phase 1: Cryptographic key generation
     CryptographicKeys,
@@ -390,10 +390,12 @@ impl SovereignEntropyMigrationManager {
 
         // Update running averages
         let total_calls = stats.total_calls_migrated as f64;
-        stats.average_quality_score =
-            (stats.average_quality_score * (total_calls - 1.0) + quality_score) / total_calls;
+        stats.average_quality_score = stats
+            .average_quality_score
+            .mul_add(total_calls - 1.0, quality_score)
+            / total_calls;
 
-        stats.success_rate = (stats.success_rate * (total_calls - 1.0) + 1.0) / total_calls;
+        stats.success_rate = stats.success_rate.mul_add(total_calls - 1.0, 1.0) / total_calls;
 
         Ok(())
     }

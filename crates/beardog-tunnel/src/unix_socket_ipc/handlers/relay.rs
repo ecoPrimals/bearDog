@@ -36,8 +36,8 @@
 //! - **Principle #3**: No hardcoding (family_id from PrimalIdentity)
 //! - **Principle #6**: Production crypto (real lineage verification, no mocks)
 
-use super::utils::get_primal_name;
 use super::MethodHandler;
+use super::utils::get_primal_name;
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
 use beardog_types::primal_identity::PrimalIdentity;
@@ -56,7 +56,7 @@ pub struct RelayHandler {
 
 impl RelayHandler {
     /// Create a new relay handler with explicit identity injection
-    pub fn new(identity: Arc<PrimalIdentity>) -> Self {
+    pub const fn new(identity: Arc<PrimalIdentity>) -> Self {
         Self { identity }
     }
 
@@ -134,7 +134,7 @@ impl RelayHandler {
                         "❌ Relay denied: {} lineage verification error: {}",
                         requester_node_id, e
                     );
-                    (false, "blocked", format!("verification_error: {}", e))
+                    (false, "blocked", format!("verification_error: {e}"))
                 }
             }
         } else {
@@ -174,12 +174,12 @@ impl RelayHandler {
     /// # Returns
     /// `Ok(true)` if proof is valid, `Ok(false)` if invalid, `Err` on decode failure
     fn verify_lineage_proof(&self, peer_family_id: &str, proof_b64: &str) -> Result<bool, String> {
-        use base64::engine::general_purpose::STANDARD as BASE64;
         use base64::Engine;
+        use base64::engine::general_purpose::STANDARD as BASE64;
 
         let proof_bytes = BASE64
             .decode(proof_b64)
-            .map_err(|e| format!("Invalid base64 lineage proof: {}", e))?;
+            .map_err(|e| format!("Invalid base64 lineage proof: {e}"))?;
 
         // Build expected proof: Blake3(family_seed || our_family || peer_family || domain_tag)
         // This matches GeneticCryptoProvider::verify_lineage() algorithm
@@ -213,7 +213,7 @@ impl MethodHandler for RelayHandler {
     ) -> Result<serde_json::Value, String> {
         match method {
             "relay.authorize" => self.handle_authorize(params).await,
-            _ => Err(format!("Unknown relay method: {}", method)),
+            _ => Err(format!("Unknown relay method: {method}")),
         }
     }
 }
@@ -247,7 +247,7 @@ mod tests {
         let result = handler.handle_authorize(Some(&params)).await;
         assert!(result.is_ok());
 
-        let resp = result.unwrap();
+        let resp = result.expect("authorize same family should succeed");
         assert_eq!(resp["authorized"], true);
         assert_eq!(resp["masking_level"], "transparent");
         assert_eq!(resp["reason"], "family_member");
@@ -268,7 +268,7 @@ mod tests {
         let result = handler.handle_authorize(Some(&params)).await;
         assert!(result.is_ok());
 
-        let resp = result.unwrap();
+        let resp = result.expect("authorize deny response");
         assert_eq!(resp["authorized"], false);
         assert_eq!(resp["masking_level"], "blocked");
         assert_eq!(resp["reason"], "not_family_member");
@@ -286,8 +286,8 @@ mod tests {
         hasher.update(b"RELAY_LINEAGE_PROOF_V1");
         let proof = hasher.finalize();
 
-        use base64::engine::general_purpose::STANDARD as BASE64;
         use base64::Engine;
+        use base64::engine::general_purpose::STANDARD as BASE64;
         let proof_b64 = BASE64.encode(proof.as_bytes());
 
         let params = serde_json::json!({
@@ -299,7 +299,7 @@ mod tests {
         let result = handler.handle_authorize(Some(&params)).await;
         assert!(result.is_ok());
 
-        let resp = result.unwrap();
+        let resp = result.expect("lineage proof authorize");
         assert_eq!(resp["authorized"], true);
         assert_eq!(resp["masking_level"], "transparent");
         assert_eq!(resp["reason"], "lineage_verified");
@@ -310,8 +310,8 @@ mod tests {
     async fn test_authorize_with_invalid_lineage_proof() {
         let handler = RelayHandler::new(test_identity());
 
-        use base64::engine::general_purpose::STANDARD as BASE64;
         use base64::Engine;
+        use base64::engine::general_purpose::STANDARD as BASE64;
         let bad_proof = BASE64.encode(b"this_is_not_a_valid_proof_at_all_nope");
 
         let params = serde_json::json!({
@@ -323,7 +323,7 @@ mod tests {
         let result = handler.handle_authorize(Some(&params)).await;
         assert!(result.is_ok());
 
-        let resp = result.unwrap();
+        let resp = result.expect("invalid lineage response");
         assert_eq!(resp["authorized"], false);
         assert_eq!(resp["masking_level"], "blocked");
         assert_eq!(resp["reason"], "lineage_proof_invalid");
@@ -342,11 +342,11 @@ mod tests {
         let result = handler.handle_authorize(Some(&params)).await;
         assert!(result.is_ok());
 
-        let resp = result.unwrap();
+        let resp = result.expect("invalid base64 proof response");
         assert_eq!(resp["authorized"], false);
         assert_eq!(resp["masking_level"], "blocked");
         // Reason should contain verification_error
-        let reason = resp["reason"].as_str().unwrap();
+        let reason = resp["reason"].as_str().expect("reason should be string");
         assert!(
             reason.contains("verification_error"),
             "Expected verification_error, got: {}",
@@ -399,7 +399,7 @@ mod tests {
             .handle("relay.authorize", Some(&params), &btsp_provider)
             .await;
         assert!(result.is_ok());
-        assert_eq!(result.unwrap()["authorized"], true);
+        assert_eq!(result.expect("trait handle authorize")["authorized"], true);
     }
 
     #[tokio::test]
@@ -425,19 +425,23 @@ mod tests {
         hasher.update(b"RELAY_LINEAGE_PROOF_V1");
         let proof = hasher.finalize();
 
-        use base64::engine::general_purpose::STANDARD as BASE64;
         use base64::Engine;
+        use base64::engine::general_purpose::STANDARD as BASE64;
         let proof_b64 = BASE64.encode(proof.as_bytes());
 
-        assert!(handler
-            .verify_lineage_proof("peer-family", &proof_b64)
-            .unwrap());
+        assert!(
+            handler
+                .verify_lineage_proof("peer-family", &proof_b64)
+                .expect("valid proof verification")
+        );
 
         // Invalid proof
         let bad_proof = BASE64.encode(b"garbage");
-        assert!(!handler
-            .verify_lineage_proof("peer-family", &bad_proof)
-            .unwrap());
+        assert!(
+            !handler
+                .verify_lineage_proof("peer-family", &bad_proof)
+                .expect("invalid proof check")
+        );
 
         // Invalid base64
         assert!(handler.verify_lineage_proof("peer-family", "!!!").is_err());
@@ -457,11 +461,17 @@ mod tests {
         });
 
         // Handler A should authorize (same family)
-        let result_a = handler_a.handle_authorize(Some(&params)).await.unwrap();
+        let result_a = handler_a
+            .handle_authorize(Some(&params))
+            .await
+            .expect("handler_a authorize");
         assert_eq!(result_a["authorized"], true);
 
         // Handler B should deny (different family)
-        let result_b = handler_b.handle_authorize(Some(&params)).await.unwrap();
+        let result_b = handler_b
+            .handle_authorize(Some(&params))
+            .await
+            .expect("handler_b authorize");
         assert_eq!(result_b["authorized"], false);
     }
 }

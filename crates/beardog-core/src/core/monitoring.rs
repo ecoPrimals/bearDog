@@ -285,8 +285,8 @@ impl SystemMonitor {
     ) -> Result<(), BearDogError> {
         // In a real implementation, this would use system APIs to collect metrics
         // For now, we'll simulate with reasonable values using a thread-safe random source
-        use rand::rngs::StdRng;
         use rand::SeedableRng;
+        use rand::rngs::StdRng;
 
         let mut rng = StdRng::from_entropy();
 
@@ -307,8 +307,8 @@ impl SystemMonitor {
     async fn check_component_health(
         health_checks: &Arc<RwLock<HashMap<String, ComponentHealth>>>,
     ) -> Result<(), BearDogError> {
-        use rand::rngs::StdRng;
         use rand::SeedableRng;
+        use rand::rngs::StdRng;
 
         let mut rng = StdRng::from_entropy();
 

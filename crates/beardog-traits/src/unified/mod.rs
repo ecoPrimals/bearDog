@@ -31,18 +31,26 @@ use beardog_types::canonical::config::r#trait::BearDogConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;
-/// Core functionality
-/// Core functionality
+/// Identifiers, configuration, validation, lifecycle, and observability primitives.
 pub mod core;
+/// Genetics, evolution, lineage, and entropy-quality hooks.
 pub mod genetics;
+/// Multi-credential HSM flows shared across security adapters.
 pub mod hsm_multi_credential;
+/// Stable ids and metadata for nodes, users, and workloads.
 pub mod identity;
+/// Health and metrics traits layered on top of `core`.
 pub mod monitoring;
+/// Transport-agnostic networking abstractions.
 pub mod network;
+/// Root [`BearDogProvider`] hierarchy and specialized provider roles.
 pub mod providers;
+/// Policy, trust, and risk interfaces used by security services.
 pub mod security;
+/// Durable and volatile storage contracts.
 pub mod storage;
-pub mod workflow; // NEW: Unified provider trait system
+/// Long-running workflow and saga orchestration traits.
+pub mod workflow;
 
 // Re-export unified traits
 pub use core::*;
@@ -64,6 +72,7 @@ pub use providers::{
 /// This is the root of the trait hierarchy and provides fundamental functionality
 /// that every component in the `BearDog` ecosystem requires.
 pub trait BearDogCore: Send + Sync + Debug {
+    /// Error type returned by lifecycle hooks; must convert into [`BearDogError`] for IPC boundaries.
     type Error: Send + Sync + Into<BearDogError>;
 
     /// Get component identifier
@@ -95,8 +104,7 @@ pub trait BearDogCore: Send + Sync + Debug {
     ) -> impl std::future::Future<Output = Result<ComponentHealth, Self::Error>> + Send;
 }
 
-///
-/// Services are stateful components that run continuously and provide ongoing functionality.
+/// Long-lived component with explicit start/stop semantics and typed configuration.
 pub trait BearDogService: BearDogCore {
     /// Service-specific configuration
     type ServiceConfig: BearDogConfig;
@@ -145,8 +153,7 @@ pub trait BearDogService: BearDogCore {
     fn is_running(&self) -> bool;
 }
 
-///
-/// Components are lightweight, stateless utilities that provide specific functionality.
+/// Short-lived or stateless helper invoked with explicit [`BearDogComponent::Parameters`].
 pub trait BearDogComponent: BearDogCore {
     /// Component-specific parameters
     type Parameters: Send + Sync;
@@ -173,13 +180,13 @@ pub trait BearDogComponent: BearDogCore {
 /// Component health status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ComponentHealth {
-    /// Whether `is_healthy` is enabled
+    /// Aggregated pass/fail from the latest probe.
     pub is_healthy: bool,
-    /// Current status of the component
+    /// Human-readable status line (e.g. `OK`, `DEGRADED`).
     pub status: String,
-    /// The last check value
+    /// When the health snapshot was taken.
     pub last_check: std::time::SystemTime,
-    /// Mapping of details
+    /// Arbitrary key/value diagnostics for dashboards.
     pub details: HashMap<String, String>,
 }
 
@@ -203,6 +210,7 @@ pub enum ServiceStatus {
 /// Service metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceMetrics {
+    /// Seconds since the service entered the running state.
     pub uptime_seconds: u64,
     /// Number of `requests_processed`
     pub requests_processed: u64,
@@ -216,25 +224,54 @@ pub struct ServiceMetrics {
     pub custom_metrics: HashMap<String, serde_json::Value>,
 }
 
+/// Errors surfaced by reference implementations of the unified traits.
 #[derive(Debug, Clone, Serialize, Deserialize, thiserror::Error)]
 pub enum UnifiedTraitError {
+    /// Invalid or inconsistent configuration.
     #[error("Configuration error: {message}")]
-    Configuration { message: String },
+    Configuration {
+        /// Explanation suitable for operators.
+        message: String,
+    },
 
+    /// A field-level validation failure.
     #[error("Validation error: {field} - {message}")]
-    Validation { field: String, message: String },
+    Validation {
+        /// Config or request field that failed validation.
+        field: String,
+        /// Why validation failed.
+        message: String,
+    },
 
+    /// The implementation deliberately does not implement the requested capability.
     #[error("Operation not supported: {operation}")]
-    NotSupported { operation: String },
+    NotSupported {
+        /// Name of the unsupported operation.
+        operation: String,
+    },
 
+    /// A referenced id or path does not exist.
     #[error("Resource not found: {resource}")]
-    NotFound { resource: String },
+    NotFound {
+        /// Missing resource identifier.
+        resource: String,
+    },
 
+    /// Authorization denied for a concrete action on a resource.
     #[error("Permission denied: {action} on {resource}")]
-    PermissionDenied { action: String, resource: String },
+    PermissionDenied {
+        /// Attempted verb (`read`, `delete`, …).
+        action: String,
+        /// Target resource id or type.
+        resource: String,
+    },
 
+    /// Unexpected failure that should be logged for investigation.
     #[error("Internal error: {message}")]
-    Internal { message: String },
+    Internal {
+        /// Developer-oriented detail; avoid leaking secrets.
+        message: String,
+    },
 }
 
 impl From<UnifiedTraitError> for BearDogError {

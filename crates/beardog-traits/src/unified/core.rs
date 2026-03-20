@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Core Trait Definitions
-//
-// This module contains the fundamental traits that form the foundation
-// of the unified BearDog trait system.
+//! Cross-cutting building blocks: identity, configuration, serialization, validation, lifecycle, and probes.
 
 use beardog_errors::BearDogError;
 use beardog_types::canonical::config::r#trait::BearDogConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Anything that can be named, typed, and tagged with loose metadata.
 pub trait Identifiable: Send + Sync {
     /// Get the unique identifier
     fn id(&self) -> &str;
@@ -28,6 +26,7 @@ pub trait Identifiable: Send + Sync {
     }
 }
 
+/// Component whose runtime settings are loaded from a [`BearDogConfig`] implementor.
 pub trait Configurable: Identifiable {
     /// Associated configuration type
     type Config: BearDogConfig;
@@ -55,6 +54,7 @@ pub trait Configurable: Identifiable {
     ) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
 }
 
+/// Exposes semantic and schema versions for migrations and compatibility gates.
 pub trait Versionable: Identifiable {
     /// Get the current version
     fn version(&self) -> &str;
@@ -71,6 +71,7 @@ pub trait Versionable: Identifiable {
     }
 }
 
+/// Serializes entities to multiple wire formats for storage and IPC.
 pub trait Serializable: Identifiable {
     /// Serialize to JSON
     /// Converts to json
@@ -84,8 +85,10 @@ pub trait Serializable: Identifiable {
     fn to_binary(&self) -> Result<Vec<u8>, BearDogError>;
 }
 
+/// Aggregated output of deep or batch validation passes.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationResult {
+    /// True when `errors` is empty.
     pub valid: bool,
     /// Collection of errors
     pub errors: Vec<String>,
@@ -93,6 +96,7 @@ pub struct ValidationResult {
     pub warnings: Vec<String>,
 }
 
+/// Runs structural validation beyond type checking (requires [`Configurable`] for batch helpers).
 pub trait Validatable: Identifiable {
     /// Validates deep
     fn validate_deep(
@@ -126,6 +130,7 @@ pub trait Validatable: Identifiable {
     }
 }
 
+/// Minimal start/stop/restart contract for daemons and workers.
 pub trait Lifecycle: Identifiable {
     /// Start the service
     /// Starts service
@@ -149,10 +154,12 @@ pub trait Lifecycle: Identifiable {
     fn pause(&mut self) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
 }
 
+/// Surfaces a typed health snapshot for orchestrators and load balancers.
 pub trait HealthMonitored: Identifiable {
-    /// Associated health status type
+    /// Structured health payload (often serialized to JSON for probes).
     type Health: Send + Sync + Serialize + for<'de> Deserialize<'de>;
 
+    /// Produces the latest health view; should be cheap enough for periodic polling.
     fn health_check(
         &self,
     ) -> impl std::future::Future<Output = Result<Self::Health, BearDogError>> + Send;
@@ -164,8 +171,9 @@ pub trait HealthMonitored: Identifiable {
     }
 }
 
+/// Periodically samples operational metrics for autoscaling and SLO tracking.
 pub trait MetricsCollector: Identifiable {
-    /// Associated metrics type
+    /// Metrics bundle returned to monitoring pipelines.
     type Metrics: Send + Sync + Serialize + for<'de> Deserialize<'de>;
 
     /// Collect current metrics
@@ -173,6 +181,7 @@ pub trait MetricsCollector: Identifiable {
         &self,
     ) -> impl std::future::Future<Output = Result<Self::Metrics, BearDogError>> + Send;
 
+    /// Single scalar summarizing “how well” the component is performing (implementation-defined).
     fn performance_score(
         &self,
     ) -> impl std::future::Future<Output = Result<f64, BearDogError>> + Send;

@@ -198,7 +198,7 @@ impl HsmOperationRouter {
             .average_latency_ms
             .entry(provider_id.clone())
             .or_insert(0.0);
-        *current_avg = (*current_avg * 0.9) + (latency_ms * 0.1);
+        *current_avg = (*current_avg).mul_add(0.9, latency_ms * 0.1);
 
         // Calculate success rate
         let total_ops = self.stats.operations_processed[&provider_id];
@@ -213,12 +213,12 @@ impl HsmOperationRouter {
     }
 
     /// Get statistics
-    pub fn stats(&self) -> &OperationStats {
+    pub const fn stats(&self) -> &OperationStats {
         &self.stats
     }
 
     /// Get configuration
-    pub fn config(&self) -> &OperationRouterConfig {
+    pub const fn config(&self) -> &OperationRouterConfig {
         &self.config
     }
 }

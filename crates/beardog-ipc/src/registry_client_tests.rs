@@ -285,7 +285,7 @@ mod registry_client_tests {
         let mut rng = rand::thread_rng();
 
         for _ in 0..100 {
-            let random_name = format!("/tmp/registry-{}.sock", rng.gen::<u32>());
+            let random_name = format!("/tmp/registry-{}.sock", rng.r#gen::<u32>());
             let client = PrimalRegistryClient::new(PathBuf::from(&random_name));
             assert_eq!(client.socket_path, PathBuf::from(&random_name));
         }

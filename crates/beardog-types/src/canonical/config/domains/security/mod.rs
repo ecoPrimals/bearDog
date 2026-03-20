@@ -54,31 +54,47 @@ use super::threat::CanonicalThreatDetectionConfig;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsolidatedSecurityConfiguration {
     /// **AUTHENTICATION & AUTHORIZATION**
+    /// Identity verification (MFA, sessions). **Default:** [`AuthenticationConfiguration::default()`].
     pub authentication: AuthenticationConfiguration,
+    /// RBAC/ABAC policy sources. **Default:** [`AuthorizationConfiguration::default()`].
     pub authorization: AuthorizationConfiguration,
+    /// Fine-grained resource ACLs. **Default:** [`AccessControlConfiguration::default()`].
     pub access_control: AccessControlConfiguration,
 
     /// **CRYPTOGRAPHIC OPERATIONS**
+    /// Data-protection algorithms and key rotation. **Default:** [`EncryptionConfiguration::default()`].
     pub encryption: EncryptionConfiguration,
+    /// Lifecycle for signing/encryption keys. **Default:** [`KeyManagementConfiguration::default()`].
     pub key_management: KeyManagementConfiguration,
+    /// Which software/HSM providers may satisfy crypto ops. **Default:** [`CryptoProviderConfiguration::default()`].
     pub crypto_provider: CryptoProviderConfiguration,
 
     /// **SECURITY MONITORING & AUDITING**
+    /// Immutable audit sinks and retention. **Default:** [`AuditConfiguration::default()`].
     pub audit: AuditConfiguration,
+    /// SIEM hooks and security metrics. **Default:** [`SecurityMonitoringConfiguration::default()`].
     pub monitoring: SecurityMonitoringConfiguration,
+    /// API and IPC rate limits. **Default:** [`super::network::RateLimitConfig::default()`].
     pub rate_limiting: super::network::RateLimitConfig,
 
     /// **THREAT DETECTION & RESPONSE**
+    /// IDS/IPS style signals. **Default:** [`CanonicalThreatDetectionConfig::default()`].
     pub threat_detection: CanonicalThreatDetectionConfig,
+    /// Automated containment workflows. **Default:** [`ThreatResponseConfiguration::default()`].
     pub threat_response: ThreatResponseConfiguration,
 
     /// **ADVANCED SECURITY FEATURES**
+    /// Genetics-aware key evolution policy. **Default:** [`GeneticSecurityConfiguration::default()`].
     pub genetic_security: GeneticSecurityConfiguration,
+    /// Node membership and attestation. **Default:** [`EcosystemMembershipConfiguration::default()`].
     pub ecosystem_membership: EcosystemMembershipConfiguration,
+    /// Trust scoring between primals. **Default:** [`TrustComputationConfiguration::default()`].
     pub trust_computation: TrustComputationConfiguration,
 
     /// **COMPLIANCE & GOVERNANCE**
+    /// Regulatory mapping (FIPS, SOC2, etc.). **Default:** [`SecurityComplianceConfiguration::default()`].
     pub compliance: SecurityComplianceConfiguration,
+    /// Data residency and sovereignty flags. **Default:** [`DataSovereigntyConfiguration::default()`].
     pub data_sovereignty: DataSovereigntyConfiguration,
 }
 

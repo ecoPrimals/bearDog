@@ -279,7 +279,7 @@ impl SovereignRng {
             _ => {
                 return Err(BearDogError::system(format!(
                     "Invalid entropy tier: {required_tier}. Must be 1-3"
-                )))
+                )));
             }
         };
 
@@ -359,8 +359,8 @@ impl SovereignRng {
 
     fn sample_normal(rng: &mut ChaCha20Rng, mean: f64, stddev: f64) -> f64 {
         // Box-Muller transform
-        let u1: f64 = rng.gen();
-        let u2: f64 = rng.gen();
+        let u1: f64 = rng.r#gen();
+        let u2: f64 = rng.r#gen();
         let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
         stddev.mul_add(z, mean)
     }

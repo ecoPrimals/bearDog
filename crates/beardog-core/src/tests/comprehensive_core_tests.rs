@@ -782,7 +782,7 @@ mod coordination_tests {
         *votes.entry("proposal-B".to_string()).or_insert(0) += 1;
 
         // Find winner
-        let winner = votes.iter().max_by_key(|(_, &v)| v).unwrap();
+        let winner = votes.iter().max_by_key(|(_, v)| *v).unwrap();
 
         assert_eq!(winner.0, "proposal-A");
         assert_eq!(*winner.1, 2);

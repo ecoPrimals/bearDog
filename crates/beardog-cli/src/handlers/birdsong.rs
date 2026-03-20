@@ -41,8 +41,8 @@ pub async fn handle_birdsong_encrypt(
     println!();
     println!("📋 Configuration:");
     println!("   Message: {} bytes", message.len());
-    println!("   Lineage Hint: {}", hint_type);
-    println!("   Root ID: {}", root_id);
+    println!("   Lineage Hint: {hint_type}");
+    println!("   Root ID: {root_id}");
     println!();
 
     // Parse hint type into LineageHint
@@ -61,7 +61,7 @@ pub async fn handle_birdsong_encrypt(
     };
 
     // Load root key to get master secret for lineage-based key derivation
-    println!("🔑 Loading root key {}...", root_id);
+    println!("🔑 Loading root key {root_id}...");
     let root_key = key_store::load_key(root_id)?;
     let root_key_material = key_store::base64_decode(&root_key.key_material_b64)?;
 
@@ -83,26 +83,26 @@ pub async fn handle_birdsong_encrypt(
     let encryption = BirdSongEncryption::new(kdf);
 
     // Encrypt the broadcast
-    println!("🔒 Encrypting broadcast for lineage {}...", root_id);
+    println!("🔒 Encrypting broadcast for lineage {root_id}...");
     let broadcast = encryption.encrypt(&request)?;
 
     // Serialize broadcast to file
     let output_path = output.unwrap_or("encrypted.birdsong");
     let serialized = serde_json::to_vec_pretty(&broadcast)
-        .map_err(|e| BearDogError::system(format!("Serialization failed: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Serialization failed: {e}")))?;
 
     fs::write(output_path, &serialized)
-        .map_err(|e| BearDogError::system(format!("Failed to write file: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to write file: {e}")))?;
 
     println!("✅ Broadcast encrypted successfully!");
     println!();
     println!("📁 Output:");
-    println!("   File: {}", output_path);
+    println!("   File: {output_path}");
     println!("   Size: {} bytes", serialized.len());
     println!("   Ciphertext: {} bytes", broadcast.ciphertext.len());
     println!();
     println!("🔐 Privacy:");
-    println!("   Only nodes in lineage '{}' can decrypt", root_id);
+    println!("   Only nodes in lineage '{root_id}' can decrypt");
     println!(
         "   Allowed depth range: {}-{}",
         hint.min_depth, hint.max_depth
@@ -127,16 +127,16 @@ pub async fn handle_birdsong_decrypt(input: &str, key_id: &str) -> Result<(), Be
     println!("=================================");
     println!();
     println!("📋 Configuration:");
-    println!("   Input: {}", input);
-    println!("   Key ID: {}", key_id);
+    println!("   Input: {input}");
+    println!("   Key ID: {key_id}");
     println!();
 
     // Read encrypted broadcast
     let encrypted_data =
-        fs::read(input).map_err(|e| BearDogError::system(format!("Failed to read file: {}", e)))?;
+        fs::read(input).map_err(|e| BearDogError::system(format!("Failed to read file: {e}")))?;
 
     let broadcast: BirdSongBroadcast = serde_json::from_slice(&encrypted_data)
-        .map_err(|e| BearDogError::system(format!("Invalid broadcast format: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Invalid broadcast format: {e}")))?;
 
     debug!(
         "Loaded broadcast: root={}, ciphertext={} bytes",
@@ -145,7 +145,7 @@ pub async fn handle_birdsong_decrypt(input: &str, key_id: &str) -> Result<(), Be
     );
 
     // Get lineage proof for this key
-    println!("🔍 Looking up lineage proof for {}...", key_id);
+    println!("🔍 Looking up lineage proof for {key_id}...");
     let proof = get_lineage_proof_for_key(key_id).await?;
 
     println!("📜 Lineage proof:");
@@ -203,7 +203,7 @@ pub async fn handle_birdsong_decrypt(input: &str, key_id: &str) -> Result<(), Be
             println!("✅ Decrypted successfully!");
             println!();
             println!("📄 Decrypted Message:");
-            println!("{}", message);
+            println!("{message}");
             println!();
             println!("🔐 Privacy verified:");
             println!("   You are in lineage '{}'", proof.root_id);
@@ -216,7 +216,7 @@ pub async fn handle_birdsong_decrypt(input: &str, key_id: &str) -> Result<(), Be
             Ok(())
         }
         Err(e) => {
-            println!("❌ Cannot decrypt: {}", e);
+            println!("❌ Cannot decrypt: {e}");
             println!();
             println!("🔐 Privacy enforced:");
             println!("   Either you're not in the allowed depth range,");
@@ -258,9 +258,11 @@ fn parse_lineage_hint(hint_type: &str, root_id: &str) -> Result<LineageHint, Bea
                 .map_err(|_| BearDogError::invalid_input("Invalid max depth"))?;
             (min, max)
         }
-        _ => return Err(BearDogError::invalid_input(
-            "Unknown hint type. Use: DirectAncestors, AllDescendants, RootOnly, or Depth:min-max",
-        )),
+        _ => {
+            return Err(BearDogError::invalid_input(
+                "Unknown hint type. Use: DirectAncestors, AllDescendants, RootOnly, or Depth:min-max",
+            ));
+        }
     };
 
     Ok(LineageHint {
@@ -291,8 +293,7 @@ async fn get_lineage_proof_for_key(key_id: &str) -> Result<LineageProof, BearDog
     // Get lineage information from key metadata
     let lineage_info = key.lineage.ok_or_else(|| {
         BearDogError::not_found(format!(
-            "Key '{}' has no lineage information. Generate keys with lineage tracking enabled.",
-            key_id
+            "Key '{key_id}' has no lineage information. Generate keys with lineage tracking enabled."
         ))
     })?;
 
@@ -303,7 +304,7 @@ async fn get_lineage_proof_for_key(key_id: &str) -> Result<LineageProof, BearDog
 
     // Build path from root to this node
     let mut path = vec![key_id.to_string()];
-    let mut current_parent = lineage_info.parent_key_id.clone();
+    let mut current_parent = lineage_info.parent_key_id;
 
     // Walk up the lineage chain
     while let Some(parent_id) = current_parent {

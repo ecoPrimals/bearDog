@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Unified Security Trait System
-//
-// This module provides comprehensive security traits that unify authentication,
-// authorization, cryptography, and audit functionality.
+//! Security-facing traits: sessions, crypto, HSM, audit, policy, and shared DTOs.
 
 use super::{BearDogProvider, UnifiedTraitError};
 // async_trait no longer needed - using native fn
@@ -65,10 +62,10 @@ pub trait SecurityProvider: BearDogProvider {
 
 /// Cryptographic provider trait
 pub trait CryptoProvider: BearDogProvider {
-    /// Key type
+    /// Opaque key handle (software id, HSM reference, or wrapped material).
     type Key: Send + Sync + Clone + Serialize + for<'de> Deserialize<'de>;
 
-    /// Signature type
+    /// Signature or MAC output paired with [`CryptoProvider::sign`].
     type Signature: Send + Sync + Clone + Serialize + for<'de> Deserialize<'de>;
 
     /// Generate cryptographic key
@@ -149,6 +146,7 @@ pub trait HsmProvider: CryptoProvider {
         slot: Self::KeySlot,
     ) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send;
 
+    /// Vendor-specific command dispatch (attestation, firmware query, etc.).
     fn hsm_operation(
         &self,
         operation: &str,
@@ -156,6 +154,7 @@ pub trait HsmProvider: CryptoProvider {
     ) -> impl std::future::Future<Output = Result<serde_json::Value, Self::Error>> + Send;
 }
 
+/// Append-only security audit sink with query and archival hooks.
 pub trait AuditProvider: BearDogProvider {
     /// Audit event type
     type AuditEvent: Send + Sync + Clone + Serialize + for<'de> Deserialize<'de>;
@@ -184,11 +183,12 @@ pub trait AuditProvider: BearDogProvider {
     ) -> impl std::future::Future<Output = Result<usize, Self::Error>> + Send;
 }
 
+/// Loads versioned policies and evaluates them against runtime [`PolicyContext`] values.
 pub trait PolicyEngine: Send + Sync {
     /// Policy type
     type Policy: Send + Sync + Clone + Serialize + for<'de> Deserialize<'de>;
 
-    /// Decision type
+    /// Allow/deny (or richer) outcome returned to enforcers.
     type Decision: Send + Sync + Clone + Serialize + for<'de> Deserialize<'de>;
 
     /// Evaluate policy
@@ -230,11 +230,15 @@ pub trait PolicyEngine: Send + Sync {
 /// Security audit event
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityAuditEvent {
+    /// Unique id for deduplication and correlation.
     pub event_id: String,
     /// The event type value
     pub event_type: String,
+    /// When the audited action occurred (UTC).
     pub timestamp: chrono::DateTime<chrono::Utc>,
+    /// Acting principal, if authenticated.
     pub user_id: Option<String>,
+    /// Session that authorized the action, when applicable.
     pub session_id: Option<String>,
     /// Optional resource
     pub resource: Option<String>,
@@ -277,8 +281,11 @@ pub enum SecuritySeverity {
 /// Audit query parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditQuery {
+    /// Inclusive lower bound on [`SecurityAuditEvent::timestamp`].
     pub start_time: Option<chrono::DateTime<chrono::Utc>>,
+    /// Exclusive upper bound on event time.
     pub end_time: Option<chrono::DateTime<chrono::Utc>>,
+    /// Filter to a single principal.
     pub user_id: Option<String>,
     /// Optional event type
     pub event_type: Option<String>,
@@ -303,13 +310,16 @@ pub struct AuditStats {
     pub success_rate: f64,
     /// The average events per day value
     pub average_events_per_day: f64,
+    /// Timestamp of the newest event included in this rollup.
     pub last_event_time: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 /// Policy evaluation context
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PolicyContext {
+    /// Subject requesting access.
     pub user_id: String,
+    /// Session tying the request to an authentication proof.
     pub session_id: Option<String>,
     /// The resource value
     pub resource: String,
@@ -317,6 +327,7 @@ pub struct PolicyContext {
     pub action: String,
     /// Mapping of environment
     pub environment: HashMap<String, serde_json::Value>,
+    /// Evaluation instant for time-bounded policies.
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
 
@@ -325,24 +336,38 @@ pub struct PolicyContext {
 pub enum AuthCredentials {
     /// Represents password variant
     Password {
+        /// Account name or email.
         username: String,
+        /// Shared secret or password hash token.
         password: String,
     },
+    /// Bearer or opaque token credential.
     Token {
+        /// Serialized token bytes as UTF-8 when applicable.
         token: String,
     },
+    /// Client TLS or mTLS material.
     Certificate {
+        /// DER-encoded certificate chain.
         certificate: Vec<u8>,
+        /// PKCS#8 or PKCS#1 private key bytes.
         private_key: Vec<u8>,
     },
+    /// Biometric template submission.
     Biometric {
+        /// User the template claims to represent.
         user_id: String,
+        /// Opaque template or probe bytes.
         biometric_data: Vec<u8>,
+        /// Sensor modality (`fingerprint`, `face`, …).
         biometric_type: String,
     },
+    /// Stacked factors evaluated in order.
     MultiFactorAuth {
-        primary: Box<AuthCredentials>,
-        secondary: Vec<AuthCredentials>,
+        /// First factor (password, cert, …).
+        primary: Box<Self>,
+        /// Additional factors required to succeed.
+        secondary: Vec<Self>,
     },
 }
 
@@ -351,7 +376,9 @@ pub enum AuthCredentials {
 pub struct AuthenticationResult {
     /// Whether success is enabled
     pub success: bool,
+    /// Authenticated principal when `success` is true.
     pub user_id: Option<String>,
+    /// Newly minted session handle.
     pub session_id: Option<String>,
     /// Collection of permissions
     pub permissions: Vec<String>,
@@ -363,9 +390,12 @@ pub struct AuthenticationResult {
     pub metadata: HashMap<String, serde_json::Value>,
 }
 
+/// Active session record including capability grants and expiry.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecureSession {
+    /// Opaque session token.
     pub session_id: String,
+    /// Bound user principal.
     pub user_id: String,
     /// The created at value
     pub created_at: chrono::DateTime<chrono::Utc>,
@@ -388,6 +418,7 @@ pub struct UnifiedSecurityConfig {
     pub enable_authorization: bool,
     /// Whether `enable_audit` is enabled
     pub enable_audit: bool,
+    /// Idle and absolute session lifetime cap in minutes.
     pub session_timeout_minutes: u64,
     /// Number of `max_failed_attempts`
     pub max_failed_attempts: u32,

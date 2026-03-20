@@ -5,8 +5,8 @@
 //! Provides a mockable time source that enables **instant time travel** in tests,
 //! eliminating the need for `thread::sleep()` or real time waiting.
 
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant, SystemTime};
 
 /// Abstraction over time sources for testability

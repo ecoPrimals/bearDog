@@ -120,7 +120,6 @@ use crate::unix_socket_ipc::handlers::crypto::{
     handle_hmac_sha256,
     // Asymmetric crypto handlers
     handle_sign_ed25519,
-    handle_tls12_prf,
     // TLS 1.3 handlers
     handle_tls_compute_finished_verify_data,
     handle_tls_derive_application_secrets,
@@ -128,6 +127,7 @@ use crate::unix_socket_ipc::handlers::crypto::{
     handle_tls_derive_secrets,
     handle_tls_sign_handshake,
     handle_tls_verify_certificate,
+    handle_tls12_prf,
     handle_verify_ed25519,
     handle_x25519_derive_secret,
     handle_x25519_generate_ephemeral,
@@ -572,12 +572,16 @@ impl MethodHandler for CryptoHandler {
             }
 
             "tls.derive_application_secrets" => {
-                info!("🔑 TLS: derive_application_secrets (RFC 8446 application key derivation for HTTP)");
+                info!(
+                    "🔑 TLS: derive_application_secrets (RFC 8446 application key derivation for HTTP)"
+                );
                 handle_tls_derive_application_secrets(params).await
             }
 
             "tls.compute_finished_verify_data" => {
-                info!("🏁 TLS: compute_finished_verify_data (RFC 8446 Section 4.4.4 - Finished message)");
+                info!(
+                    "🏁 TLS: compute_finished_verify_data (RFC 8446 Section 4.4.4 - Finished message)"
+                );
                 handle_tls_compute_finished_verify_data(params).await
             }
 
@@ -919,35 +923,47 @@ impl MethodHandler for CryptoHandler {
             // ====================================================================
             "beardog.crypto.tor_ntor_client_init" => {
                 info!("🧅 Crypto: tor_ntor_client_init (Tor ntor handshake - client init)");
-                super::super::crypto_handlers_tor::handle_tor_ntor_client_init(params).await
+                super::super::crypto_handlers_tor::handle_tor_ntor_client_init(params)
+                    .await
+                    .map_err(|e| e.to_string())
             }
 
             "beardog.crypto.tor_ntor_client_finish" => {
                 info!("🧅 Crypto: tor_ntor_client_finish (Tor ntor handshake - client finish)");
-                super::super::crypto_handlers_tor::handle_tor_ntor_client_finish(params).await
+                super::super::crypto_handlers_tor::handle_tor_ntor_client_finish(params)
+                    .await
+                    .map_err(|e| e.to_string())
             }
 
             "beardog.crypto.tor_ntor_server_respond" => {
                 info!("🧅 Crypto: tor_ntor_server_respond (Tor ntor handshake - server)");
-                super::super::crypto_handlers_tor::handle_tor_ntor_server_respond(params).await
+                super::super::crypto_handlers_tor::handle_tor_ntor_server_respond(params)
+                    .await
+                    .map_err(|e| e.to_string())
             }
 
             "beardog.crypto.tor_cell_encrypt" => {
                 info!("🧅 Crypto: tor_cell_encrypt (Tor relay cell encryption)");
-                super::super::crypto_handlers_tor::handle_tor_cell_encrypt(params).await
+                super::super::crypto_handlers_tor::handle_tor_cell_encrypt(params)
+                    .await
+                    .map_err(|e| e.to_string())
             }
 
             "beardog.crypto.tor_cell_decrypt" => {
                 info!("🧅 Crypto: tor_cell_decrypt (Tor relay cell decryption)");
-                super::super::crypto_handlers_tor::handle_tor_cell_decrypt(params).await
+                super::super::crypto_handlers_tor::handle_tor_cell_decrypt(params)
+                    .await
+                    .map_err(|e| e.to_string())
             }
 
             "beardog.crypto.tor_kdf" => {
                 info!("🧅 Crypto: tor_kdf (Tor key derivation)");
-                super::super::crypto_handlers_tor::handle_tor_kdf(params).await
+                super::super::crypto_handlers_tor::handle_tor_kdf(params)
+                    .await
+                    .map_err(|e| e.to_string())
             }
 
-            _ => Err(format!("Unknown crypto method: {}", method)),
+            _ => Err(format!("Unknown crypto method: {method}")),
         }
     }
 }

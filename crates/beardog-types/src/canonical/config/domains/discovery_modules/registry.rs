@@ -115,7 +115,7 @@ impl ServiceRegistryConfig {
     ///
     /// Useful for const contexts where Default can't be used.
     /// Note: Endpoints will be empty; set via builder or Default.
-    pub fn const_defaults() -> Self {
+    pub const fn const_defaults() -> Self {
         Self {
             backend: String::new(),
             endpoints: Vec::new(),
@@ -165,7 +165,7 @@ impl Default for ServiceRegistryConfig {
                 let host = env::var("REGISTRY_HOST")
                     .unwrap_or_else(|_| "consul.ecosystem.internal".to_string());
                 let port = env::var("REGISTRY_PORT").unwrap_or_else(|_| "8500".to_string());
-                format!("http://{}:{}", host, port)
+                format!("http://{host}:{port}")
             });
 
         Self {

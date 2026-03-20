@@ -28,9 +28,9 @@ fn test_configuration_defaults() {
     use beardog_types::canonical::config::WorkingUnifiedConfig;
     let config = WorkingUnifiedConfig::default();
     assert!(config.version.is_empty() || !config.version.is_empty()); // Basic existence check
-                                                                      // TEST_CATEGORY: unit
-                                                                      // TEST_DOMAIN: core
-                                                                      // TEST_PRIORITY: normal
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]

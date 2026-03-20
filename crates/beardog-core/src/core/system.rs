@@ -134,8 +134,8 @@
 //! - Minimal locking contention
 
 use beardog_errors::BearDogError;
-use beardog_types::canonical::config::unified::UnifiedBearDogConfig as BearDogConfig;
 use beardog_types::canonical::ComponentStatus;
+use beardog_types::canonical::config::unified::UnifiedBearDogConfig as BearDogConfig;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::info;
@@ -288,6 +288,8 @@ impl BearDogCore {
                 .insert("core".to_string(), ComponentStatus::Running);
             state.overall_health = beardog_types::canonical::HealthStatus::Healthy;
         }
+
+        self.register_with_ecosystem()?;
 
         info!("✅ BearDog Core initialized successfully");
         Ok(())

@@ -102,13 +102,13 @@ impl DatabaseConfig {
 
     /// Gets connection timeout as Duration
     #[must_use]
-    pub fn connection_timeout(&self) -> Duration {
+    pub const fn connection_timeout(&self) -> Duration {
         Duration::from_secs(self.connection_timeout_secs)
     }
 
     /// Gets max query timeout as Duration
     #[must_use]
-    pub fn max_query_timeout(&self) -> Duration {
+    pub const fn max_query_timeout(&self) -> Duration {
         Duration::from_secs(self.max_query_timeout_secs)
     }
 }
@@ -233,7 +233,7 @@ impl KeyStoreConfig {
 
     /// Gets backup interval as Duration
     #[must_use]
-    pub fn backup_interval(&self) -> Duration {
+    pub const fn backup_interval(&self) -> Duration {
         Duration::from_secs(self.backup_interval_secs)
     }
 }
@@ -274,28 +274,28 @@ impl Default for HsmConfig {
 }
 
 // Default value functions for serde
-fn default_max_connections() -> u32 {
+const fn default_max_connections() -> u32 {
     50
 }
-fn default_min_connections() -> u32 {
+const fn default_min_connections() -> u32 {
     5
 }
-fn default_connection_timeout_secs() -> u64 {
+const fn default_connection_timeout_secs() -> u64 {
     30
 }
-fn default_max_query_timeout_secs() -> u64 {
+const fn default_max_query_timeout_secs() -> u64 {
     300
 }
-fn default_cache_size() -> usize {
+const fn default_cache_size() -> usize {
     1024
 }
-fn default_backup_interval_secs() -> u64 {
+const fn default_backup_interval_secs() -> u64 {
     3600
 }
-fn default_rotation_interval_days() -> u32 {
+const fn default_rotation_interval_days() -> u32 {
     90
 }
-fn default_true() -> bool {
+const fn default_true() -> bool {
     true
 }
 

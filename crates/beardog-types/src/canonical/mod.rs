@@ -142,7 +142,7 @@ pub mod capabilities;
 /// Configuration management
 /// Configuration management
 pub mod config; // ✅ NEW: Unified canonical configuration system
-                // Use config::unified_simple::WorkingUnifiedConfig
+// Use config::unified_simple::WorkingUnifiedConfig
 /// Constants module
 pub mod constants;
 /// Cryptographic types and operations
@@ -363,7 +363,7 @@ pub trait CanonicalType: Send + Sync + Clone + Serialize + for<'de> Deserialize<
 /// # Thread Safety
 ///
 /// `HealthStatus` is `Send + Sync` and can be safely shared across threads.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum HealthStatus {
     /// System is fully operational
     Healthy,
@@ -372,13 +372,8 @@ pub enum HealthStatus {
     /// System is not operational
     Unhealthy,
     /// System status is unknown
+    #[default]
     Unknown,
-}
-
-impl Default for HealthStatus {
-    fn default() -> Self {
-        Self::Unknown
-    }
 }
 
 impl CanonicalType for HealthStatus {
@@ -753,7 +748,7 @@ impl CanonicalType for SecurityAuditEvent {
 /// - Use `Conditional` for step-up authentication scenarios
 /// - Always validate conditions before granting access
 /// - Log all `Deny` decisions for security auditing
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum PolicyDecision {
     /// Allow the requested action
     ///
@@ -763,6 +758,7 @@ pub enum PolicyDecision {
     /// Deny the requested action
     ///
     /// Permission is explicitly denied. This is the default for security (fail-closed).
+    #[default]
     Deny,
 
     /// Allow with conditions (condition details in string)
@@ -770,12 +766,6 @@ pub enum PolicyDecision {
     /// Permission granted but additional requirements must be met.
     /// Examples: "MFA_required", "time_restricted:9-17", "approval_needed:manager"
     Conditional(String),
-}
-
-impl Default for PolicyDecision {
-    fn default() -> Self {
-        Self::Deny
-    }
 }
 
 impl CanonicalType for PolicyDecision {
@@ -844,7 +834,7 @@ impl CanonicalType for PolicyDecision {
 /// - **Revoked**: Permanent disablement, cannot be restored
 /// - **Expired**: Time-based disablement, may need rotation
 /// - **Pending**: Awaiting approval, not yet trusted
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum KeyStatus {
     /// Key is currently active and valid for use
     ///
@@ -873,13 +863,8 @@ pub enum KeyStatus {
     ///
     /// Initial status for newly created keys. Awaiting approval or activation.
     /// Default status for security (keys are not trusted until explicitly activated).
+    #[default]
     Pending,
-}
-
-impl Default for KeyStatus {
-    fn default() -> Self {
-        Self::Pending
-    }
 }
 
 impl CanonicalType for KeyStatus {
@@ -895,9 +880,10 @@ impl CanonicalType for KeyStatus {
 }
 
 /// Canonical workflow status
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum WorkflowStatus {
     /// Workflow is pending execution
+    #[default]
     Pending,
     /// Workflow is currently executing
     InProgress,
@@ -905,13 +891,8 @@ pub enum WorkflowStatus {
     Completed,
     /// Workflow execution failed
     Failed,
+    /// Workflow was cancelled before completion
     Cancelled,
-}
-
-impl Default for WorkflowStatus {
-    fn default() -> Self {
-        Self::Pending
-    }
 }
 
 impl CanonicalType for WorkflowStatus {

@@ -73,24 +73,24 @@ pub enum EvictionPolicy {
 
 impl EvictionPolicy {
     /// Returns true if this policy tracks access patterns
-    pub fn tracks_access(&self) -> bool {
-        matches!(self, EvictionPolicy::Lru | EvictionPolicy::Lfu)
+    pub const fn tracks_access(&self) -> bool {
+        matches!(self, Self::Lru | Self::Lfu)
     }
 
     /// Returns true if this policy is time-based
-    pub fn is_time_based(&self) -> bool {
-        matches!(self, EvictionPolicy::Ttl)
+    pub const fn is_time_based(&self) -> bool {
+        matches!(self, Self::Ttl)
     }
 
     /// Returns the relative computational overhead of this policy
     ///
     /// Returns a value from 1 (lowest) to 5 (highest)
-    pub fn overhead_level(&self) -> u8 {
+    pub const fn overhead_level(&self) -> u8 {
         match self {
-            EvictionPolicy::Fifo | EvictionPolicy::Random => 1,
-            EvictionPolicy::Lru => 2,
-            EvictionPolicy::Ttl => 3,
-            EvictionPolicy::Lfu => 4,
+            Self::Fifo | Self::Random => 1,
+            Self::Lru => 2,
+            Self::Ttl => 3,
+            Self::Lfu => 4,
         }
     }
 }
@@ -98,11 +98,11 @@ impl EvictionPolicy {
 impl std::fmt::Display for EvictionPolicy {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            EvictionPolicy::Lru => write!(f, "LRU"),
-            EvictionPolicy::Lfu => write!(f, "LFU"),
-            EvictionPolicy::Fifo => write!(f, "FIFO"),
-            EvictionPolicy::Random => write!(f, "Random"),
-            EvictionPolicy::Ttl => write!(f, "TTL"),
+            Self::Lru => write!(f, "LRU"),
+            Self::Lfu => write!(f, "LFU"),
+            Self::Fifo => write!(f, "FIFO"),
+            Self::Random => write!(f, "Random"),
+            Self::Ttl => write!(f, "TTL"),
         }
     }
 }
@@ -256,18 +256,12 @@ pub trait CacheStrategy: Send + Sync {
         }
 
         if ttl < Duration::from_secs(1) {
-            eprintln!(
-                "WARNING: Very short TTL ({:?}), cache may not be effective",
-                ttl
-            );
+            eprintln!("WARNING: Very short TTL ({ttl:?}), cache may not be effective");
         }
 
         if ttl > Duration::from_secs(86400 * 365) {
             // > 1 year
-            eprintln!(
-                "WARNING: Very long TTL ({:?}), entries may never expire",
-                ttl
-            );
+            eprintln!("WARNING: Very long TTL ({ttl:?}), entries may never expire");
         }
 
         // Check max size if set
@@ -279,8 +273,7 @@ pub trait CacheStrategy: Send + Sync {
             if max_bytes > 100 * 1024 * 1024 * 1024 {
                 // > 100 GB
                 eprintln!(
-                    "WARNING: Very large max_size_bytes ({} bytes), ensure system has enough memory",
-                    max_bytes
+                    "WARNING: Very large max_size_bytes ({max_bytes} bytes), ensure system has enough memory"
                 );
             }
         }

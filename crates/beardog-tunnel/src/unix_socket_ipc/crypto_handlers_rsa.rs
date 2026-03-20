@@ -49,8 +49,8 @@
 //! - Recommended: 3072 bits (128-bit security, future-proof)
 //! - Maximum: 4096 bits (152-bit security, high-security/government)
 
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use rand::rngs::OsRng;
 use rsa::pkcs1v15::{SigningKey as Pkcs1SigningKey, VerifyingKey as Pkcs1VerifyingKey};
 use rsa::pss::{SigningKey as PssSigningKey, VerifyingKey as PssVerifyingKey};
@@ -126,21 +126,20 @@ pub async fn handle_sign_rsa_pkcs1_sha256(
     // Capability-based key size selection (no hardcoding)
     let key_size = params
         .get("key_size")
-        .and_then(|v| v.as_u64())
+        .and_then(serde_json::Value::as_u64)
         .unwrap_or(2048) as usize;
 
     // Validate key size (security requirement, not hardcoding)
     if ![2048, 3072, 4096].contains(&key_size) {
         return Err(format!(
-            "Invalid key size: {}. Supported: 2048, 3072, 4096",
-            key_size
+            "Invalid key size: {key_size}. Supported: 2048, 3072, 4096"
         ));
     }
 
     // Decode input data
     let data = BASE64
         .decode(data_b64)
-        .map_err(|e| format!("Invalid base64 data: {}", e))?;
+        .map_err(|e| format!("Invalid base64 data: {e}"))?;
 
     debug!(
         "📝 Data to sign: {} bytes, key size: {} bits",
@@ -151,7 +150,7 @@ pub async fn handle_sign_rsa_pkcs1_sha256(
     // Generate ephemeral RSA keypair (Pure Rust, no unsafe code)
     let mut rng = OsRng;
     let private_key = RsaPrivateKey::new(&mut rng, key_size)
-        .map_err(|e| format!("Failed to generate RSA key: {}", e))?;
+        .map_err(|e| format!("Failed to generate RSA key: {e}"))?;
 
     let public_key = RsaPublicKey::from(&private_key);
 
@@ -164,7 +163,7 @@ pub async fn handle_sign_rsa_pkcs1_sha256(
     // Encode public key as PEM (standard format for interoperability)
     let public_key_pem =
         rsa::pkcs8::EncodePublicKey::to_public_key_pem(&public_key, rsa::pkcs8::LineEnding::LF)
-            .map_err(|e| format!("Failed to encode public key: {}", e))?;
+            .map_err(|e| format!("Failed to encode public key: {e}"))?;
 
     // Encode signature as base64
     let signature_b64 = BASE64.encode(&signature);
@@ -246,12 +245,12 @@ pub async fn handle_verify_rsa_pkcs1_sha256(
     // Decode inputs
     let data = BASE64
         .decode(data_b64)
-        .map_err(|e| format!("Invalid base64 data: {}", e))?;
+        .map_err(|e| format!("Invalid base64 data: {e}"))?;
 
     let signature_bytes = Zeroizing::new(
         BASE64
             .decode(signature_b64)
-            .map_err(|e| format!("Invalid base64 signature: {}", e))?,
+            .map_err(|e| format!("Invalid base64 signature: {e}"))?,
     );
 
     debug!(
@@ -262,14 +261,14 @@ pub async fn handle_verify_rsa_pkcs1_sha256(
 
     // Parse public key from PEM (standard format)
     let public_key = rsa::pkcs8::DecodePublicKey::from_public_key_pem(public_key_pem)
-        .map_err(|e| format!("Invalid PEM public key: {}", e))?;
+        .map_err(|e| format!("Invalid PEM public key: {e}"))?;
 
     // Create PKCS#1 v1.5 verifying key
     let verifying_key = Pkcs1VerifyingKey::<Sha256>::new(public_key);
 
     // Parse signature
     let signature = rsa::pkcs1v15::Signature::try_from(signature_bytes.as_slice())
-        .map_err(|e| format!("Invalid signature format: {}", e))?;
+        .map_err(|e| format!("Invalid signature format: {e}"))?;
 
     // Verify signature (memory-safe, no unsafe code)
     let valid = verifying_key.verify(&data, &signature).is_ok();
@@ -353,21 +352,20 @@ pub async fn handle_sign_rsa_pss_sha256(
     // Capability-based key size selection (no hardcoding)
     let key_size = params
         .get("key_size")
-        .and_then(|v| v.as_u64())
+        .and_then(serde_json::Value::as_u64)
         .unwrap_or(2048) as usize;
 
     // Validate key size (security requirement, not hardcoding)
     if ![2048, 3072, 4096].contains(&key_size) {
         return Err(format!(
-            "Invalid key size: {}. Supported: 2048, 3072, 4096",
-            key_size
+            "Invalid key size: {key_size}. Supported: 2048, 3072, 4096"
         ));
     }
 
     // Decode input data
     let data = BASE64
         .decode(data_b64)
-        .map_err(|e| format!("Invalid base64 data: {}", e))?;
+        .map_err(|e| format!("Invalid base64 data: {e}"))?;
 
     debug!(
         "📝 Data to sign: {} bytes, key size: {} bits",
@@ -378,7 +376,7 @@ pub async fn handle_sign_rsa_pss_sha256(
     // Generate ephemeral RSA keypair (Pure Rust, no unsafe code)
     let mut rng = OsRng;
     let private_key = RsaPrivateKey::new(&mut rng, key_size)
-        .map_err(|e| format!("Failed to generate RSA key: {}", e))?;
+        .map_err(|e| format!("Failed to generate RSA key: {e}"))?;
 
     let public_key = RsaPublicKey::from(&private_key);
 
@@ -391,7 +389,7 @@ pub async fn handle_sign_rsa_pss_sha256(
     // Encode public key as PEM (standard format for interoperability)
     let public_key_pem =
         rsa::pkcs8::EncodePublicKey::to_public_key_pem(&public_key, rsa::pkcs8::LineEnding::LF)
-            .map_err(|e| format!("Failed to encode public key: {}", e))?;
+            .map_err(|e| format!("Failed to encode public key: {e}"))?;
 
     // Encode signature as base64
     let signature_b64 = BASE64.encode(&signature);
@@ -473,12 +471,12 @@ pub async fn handle_verify_rsa_pss_sha256(
     // Decode inputs
     let data = BASE64
         .decode(data_b64)
-        .map_err(|e| format!("Invalid base64 data: {}", e))?;
+        .map_err(|e| format!("Invalid base64 data: {e}"))?;
 
     let signature_bytes = Zeroizing::new(
         BASE64
             .decode(signature_b64)
-            .map_err(|e| format!("Invalid base64 signature: {}", e))?,
+            .map_err(|e| format!("Invalid base64 signature: {e}"))?,
     );
 
     debug!(
@@ -489,14 +487,14 @@ pub async fn handle_verify_rsa_pss_sha256(
 
     // Parse public key from PEM (standard format)
     let public_key = rsa::pkcs8::DecodePublicKey::from_public_key_pem(public_key_pem)
-        .map_err(|e| format!("Invalid PEM public key: {}", e))?;
+        .map_err(|e| format!("Invalid PEM public key: {e}"))?;
 
     // Create RSA-PSS verifying key
     let verifying_key = PssVerifyingKey::<Sha256>::new(public_key);
 
     // Parse signature
     let signature = rsa::pss::Signature::try_from(signature_bytes.as_slice())
-        .map_err(|e| format!("Invalid signature format: {}", e))?;
+        .map_err(|e| format!("Invalid signature format: {e}"))?;
 
     // Verify signature (memory-safe, no unsafe code)
     let valid = verifying_key.verify(&data, &signature).is_ok();
@@ -541,8 +539,12 @@ mod tests {
             .await
             .expect("Signing should succeed");
 
-        let signature_b64 = sign_result["signature"].as_str().unwrap();
-        let public_key_pem = sign_result["public_key_pem"].as_str().unwrap();
+        let signature_b64 = sign_result["signature"]
+            .as_str()
+            .expect("pkcs1 signature string");
+        let public_key_pem = sign_result["public_key_pem"]
+            .as_str()
+            .expect("pkcs1 public key pem");
         assert_eq!(sign_result["key_size"], 2048);
         assert_eq!(sign_result["algorithm"], "rsa_pkcs1_sha256");
 
@@ -576,8 +578,12 @@ mod tests {
             .await
             .expect("Signing should succeed");
 
-        let signature_b64 = sign_result["signature"].as_str().unwrap();
-        let public_key_pem = sign_result["public_key_pem"].as_str().unwrap();
+        let signature_b64 = sign_result["signature"]
+            .as_str()
+            .expect("pkcs1 signature string");
+        let public_key_pem = sign_result["public_key_pem"]
+            .as_str()
+            .expect("pkcs1 public key pem");
 
         // Tamper with data
         let tampered_data = b"Tampered data!";
@@ -617,8 +623,12 @@ mod tests {
             .await
             .expect("Signing should succeed");
 
-        let signature_b64 = sign_result["signature"].as_str().unwrap();
-        let public_key_pem = sign_result["public_key_pem"].as_str().unwrap();
+        let signature_b64 = sign_result["signature"]
+            .as_str()
+            .expect("pss signature string");
+        let public_key_pem = sign_result["public_key_pem"]
+            .as_str()
+            .expect("pss public key pem");
         assert_eq!(sign_result["key_size"], 2048);
         assert_eq!(sign_result["algorithm"], "rsa_pss_sha256");
 
@@ -652,8 +662,12 @@ mod tests {
             .await
             .expect("Signing should succeed");
 
-        let signature_b64 = sign_result["signature"].as_str().unwrap();
-        let public_key_pem = sign_result["public_key_pem"].as_str().unwrap();
+        let signature_b64 = sign_result["signature"]
+            .as_str()
+            .expect("pss signature string");
+        let public_key_pem = sign_result["public_key_pem"]
+            .as_str()
+            .expect("pss public key pem");
 
         // Tamper with data
         let tampered_data = b"Tampered data!";

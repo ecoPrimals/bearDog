@@ -180,7 +180,9 @@ fn build_for_android() -> io::Result<()> {
     println!("✅ Build complete!");
     println!();
     println!("📱 Deploy to device with:");
-    println!("   adb push target/aarch64-linux-android/release/examples/entropy_hardware_comparison /data/local/tmp/");
+    println!(
+        "   adb push target/aarch64-linux-android/release/examples/entropy_hardware_comparison /data/local/tmp/"
+    );
     println!("   adb shell chmod +x /data/local/tmp/entropy_hardware_comparison");
     println!("   adb shell /data/local/tmp/entropy_hardware_comparison");
     println!();

@@ -47,11 +47,17 @@ pub mod lifecycle;
 mod tests;
 
 // Core submodules
+/// Universal adapter wiring for capability bridging inside the core runtime.
 pub mod adapter;
-pub mod key_management; // Phase 2: HSM key persistence, public key management
+/// HSM and public key persistence hooks (phase-2 key management).
+pub mod key_management;
+/// Metrics, alerts, and health signals for core components.
 pub mod monitoring;
+/// Core cryptographic and policy enforcement surface.
 pub mod security;
+/// Shared core state machine and coordination primitives.
 pub mod state;
+/// [`BearDogCore`] entrypoint: bootstrap, lifecycle, and subsystem orchestration.
 pub mod system;
 
 // Re-export key types for convenience

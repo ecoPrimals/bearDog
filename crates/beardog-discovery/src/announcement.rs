@@ -14,7 +14,10 @@ pub struct Announcer {
 }
 
 impl Announcer {
-    pub fn new(config: AnnouncementConfig, primal_info: PrimalInfo) -> Self {
+    /// Builds an announcer that will publish [`PrimalInfo`] using the given [`AnnouncementConfig`].
+    ///
+    /// No network I/O occurs until [`Announcer::start`] is called.
+    pub const fn new(config: AnnouncementConfig, primal_info: PrimalInfo) -> Self {
         Self {
             config,
             primal_info,

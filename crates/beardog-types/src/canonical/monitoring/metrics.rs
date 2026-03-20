@@ -229,17 +229,20 @@ pub struct MetricCollectionConfig {
     /// Whether metric collection is enabled
     /// Whether feature is enabled
     pub enabled: bool,
+    /// Flush sizing and retry policy for scrapes. **Default:** [`BatchConfig::default()`].
     pub batch_config: BatchConfig,
     /// Size of the metric collection buffer
     /// Number of `buffer_size`
     pub buffer_size: usize,
-    /// Number of `collection_threads`
+    /// Worker threads pulling from the scrape pipeline. **Default:** `4` (`BEARDOG_METRICS_COLLECTION_THREADS`).
     pub collection_threads: usize,
+    /// Wall-clock budget for a full collection pass. **Default:** `30s`.
     pub collection_timeout: Duration,
     /// Whether to retry failed metric collections
     /// Whether `retry_failed_collections` is enabled
     pub retry_failed_collections: bool,
     /// Number of `max_collection_errors`
+    /// Failures tolerated before the collector enters backoff. **Default:** `10`.
     pub max_collection_errors: u32,
 }
 
@@ -281,7 +284,7 @@ pub struct MetricAggregationConfig {
     /// Grouping Keys
     /// Collection of grouping keys
     pub grouping_keys: Vec<String>,
-    /// Time Windows
+    /// Sliding windows used when computing rollups (1m, 5m, …). **Default:** see [`MetricAggregationConfig::default`].
     pub time_windows: Vec<Duration>,
 }
 
@@ -382,7 +385,12 @@ pub enum ValueFilterOperator {
     /// `NotEqual` variant
     NotEqual,
     /// Filter values between min and max range (inclusive)
-    Between { min: f64, max: f64 },
+    Between {
+        /// Lower inclusive bound.
+        min: f64,
+        /// Upper inclusive bound.
+        max: f64,
+    },
 }
 
 /// Filter actions
@@ -395,7 +403,9 @@ pub enum FilterAction {
         /// Maximum allowed value
         max_value: f64,
     },
+    /// Apply a registered transform to values matching the filter.
     Transform {
+        /// Registered transform function name.
         function: String,
     },
 }
@@ -419,6 +429,7 @@ pub struct MetricAnalysisConfig {
     /// Whether `pattern_detection` is enabled
     pub pattern_detection: bool,
     /// Forecasting
+    /// Optional horizon models for capacity planning. **Default:** [`ForecastingConfig::default()`].
     pub forecasting: ForecastingConfig,
 }
 

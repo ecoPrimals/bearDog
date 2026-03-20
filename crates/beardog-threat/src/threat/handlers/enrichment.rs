@@ -7,6 +7,7 @@
 // Removed unused imports: super::core::ThreatDetectionEngine, crate::threat::types::*
 use beardog_errors::BearDogError;
 
+/// Optional enrichment stage that can attach [`ExternalIntelligence`] to threats.
 pub struct ThreatEnrichmentHandler {
     /// Whether feature is enabled
     /// Whether feature is enabled
@@ -44,6 +45,7 @@ impl Default for ThreatEnrichmentHandler {
     }
 }
 
+/// Logical network placement used when enriching a threat’s source or target.
 #[derive(Debug, Clone)]
 pub struct NetworkContextInfo {
     /// The network segment value
@@ -71,11 +73,13 @@ impl Default for NetworkContextInfo {
     }
 }
 
+/// Short free-text enrichment blob returned by [`ThreatEnrichmentHandler::enrich_threat`].
 #[derive(Debug, Clone)]
 pub struct ExternalIntelligence {
     /// The description value
     /// The description value
     pub description: String,
+    /// Confidence that the enrichment applies to the queried threat (0.0–1.0).
     pub confidence: f64,
 }
 

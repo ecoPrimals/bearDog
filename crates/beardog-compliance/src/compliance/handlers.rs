@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Evaluates [`ComplianceEvent`](crate::compliance::types::ComplianceEvent)s against enabled
+//! [`ComplianceStandard`](crate::compliance::types::ComplianceStandard)s, appends [`AuditEntry`](crate::compliance::types::AuditEntry)
+//! rows, and exposes aggregate [`ComplianceResult`](crate::compliance::types::ComplianceResult) scores for operators.
 
 use crate::compliance::types::{
     AuditEntry, AuditOutcome, ComplianceConfig, ComplianceEvent, ComplianceEventType,
@@ -15,18 +15,19 @@ use std::collections::HashMap;
 use tracing::{error, info};
 use uuid::Uuid;
 
+/// Orchestrates framework-specific checks, scoring, and audit logging for a single runtime.
 #[derive(Debug, Clone)]
 pub struct ComplianceHandler {
+    /// Deployment-time toggles, thresholds, and standard list from canonical config.
     pub config: ComplianceConfig,
-    /// Whether `feature_standards` is enabled
+    /// Standards actually evaluated per event (typically cloned from `config`).
     pub enabled_standards: Vec<ComplianceStandard>,
-    /// Collection of audit trail
+    /// Append-only log of evaluations for metrics and export.
     pub audit_trail: Vec<AuditEntry>,
 }
 
 impl ComplianceHandler {
-    /// New operation.
-    /// Creates a new instance
+    /// Constructs a handler from deployment `config`, cloning enabled standards into [`Self::enabled_standards`].
     #[must_use]
     pub fn new(config: ComplianceConfig) -> Self {
         let enabled_standards = config.enabled_standards.clone();
@@ -38,6 +39,7 @@ impl ComplianceHandler {
         }
     }
 
+    /// Runs all [`Self::enabled_standards`] against `event`, records an [`AuditEntry`], and returns scored results.
     pub fn evaluate_compliance(
         &mut self,
         event: &ComplianceEvent,
@@ -102,6 +104,7 @@ impl ComplianceHandler {
         })
     }
 
+    /// Applies the ruleset for one `standard` to `event`, producing structured [`ComplianceViolation`]s.
     pub fn evaluate_standard(
         &self,
         event: &ComplianceEvent,
@@ -213,7 +216,7 @@ impl ComplianceHandler {
         Ok(violations)
     }
 
-    /// Generate Metrics operation.
+    /// Builds a [`ComplianceMetrics`] snapshot from the current audit trail length and enabled standards.
     #[must_use]
     pub fn generate_metrics(&self) -> ComplianceMetrics {
         let recent_violations: Vec<ComplianceViolation> = Vec::new(); // Would be populated from recent evaluations
@@ -233,7 +236,7 @@ impl ComplianceHandler {
         }
     }
 
-    /// Check Sovereignty Compliance operation.
+    /// Placeholder hook for data-residency and sovereignty rules (returns no violations today).
     pub const fn check_sovereignty_compliance(
         &self,
         _event: &ComplianceEvent,
@@ -241,7 +244,7 @@ impl ComplianceHandler {
         Ok(vec![])
     }
 
-    /// Check Privacy Compliance operation.
+    /// Placeholder hook for additional privacy-policy checks beyond per-standard evaluation.
     pub const fn check_privacy_compliance(
         &self,
         _event: &ComplianceEvent,

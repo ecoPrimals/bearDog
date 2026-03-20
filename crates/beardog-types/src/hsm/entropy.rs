@@ -32,7 +32,7 @@ impl EphemeralSeed {
 
     /// Creates a seed with a specific timestamp (for testing)
     #[must_use]
-    pub fn with_timestamp(seed_data: Vec<u8>, timestamp: SystemTime) -> Self {
+    pub const fn with_timestamp(seed_data: Vec<u8>, timestamp: SystemTime) -> Self {
         Self {
             seed_data,
             timestamp,
@@ -85,7 +85,7 @@ pub enum HumanEntropyMethod {
 impl HumanEntropyMethod {
     /// Returns a human-readable name for the method
     #[must_use]
-    pub fn name(&self) -> &'static str {
+    pub const fn name(&self) -> &'static str {
         match self {
             Self::TouchPattern => "Touch Pattern",
             Self::Accelerometer => "Accelerometer",
@@ -132,7 +132,7 @@ impl HumanEntropyCapabilities {
 
     /// Creates capabilities with no available methods
     #[must_use]
-    pub fn none() -> Self {
+    pub const fn none() -> Self {
         Self {
             available_methods: Vec::new(),
             quality_estimate: 0.0,

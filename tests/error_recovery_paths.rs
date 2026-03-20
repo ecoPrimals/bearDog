@@ -4,8 +4,8 @@
 //! `TEST_DOMAIN`: `error_recovery`
 //! `TEST_PRIORITY`: high
 
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
 #[tokio::test]
@@ -89,7 +89,7 @@ async fn test_recovery_from_partial_data() {
     let missing: Vec<_> = received
         .iter()
         .enumerate()
-        .filter(|(_, &r)| !r)
+        .filter(|(_, r)| !*r)
         .map(|(i, _)| i)
         .collect();
 

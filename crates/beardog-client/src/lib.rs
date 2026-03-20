@@ -46,13 +46,13 @@
 //! ```
 
 use beardog_tower_atomic::Client as AtomicClient;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tracing::{debug, info};
 
 mod error;
 pub use error::{BearDogClientError, ClientResult};
 
-use beardog_genetics::birdsong::{types::LineageMetadata, LineageProof};
+use beardog_genetics::birdsong::{LineageProof, types::LineageMetadata};
 
 /// BearDog client for lineage API (Tower Atomic edition)
 ///

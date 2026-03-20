@@ -68,9 +68,11 @@ fn test_register_service_accessible() {
     // (Full integration tests will test actual registration)
     let discovery = ModernServiceDiscovery::new();
     // Method exists and can be called (tested in integration tests with real ServiceInfo)
-    assert!(discovery
-        .required_capabilities
-        .contains(&CapabilityType::ServiceMesh));
+    assert!(
+        discovery
+            .required_capabilities
+            .contains(&CapabilityType::ServiceMesh)
+    );
 }
 
 #[test]
@@ -113,9 +115,11 @@ fn test_required_capabilities() {
     // Test that required capabilities are set correctly
     let discovery = ModernServiceDiscovery::new();
     assert!(!discovery.required_capabilities.is_empty());
-    assert!(discovery
-        .required_capabilities
-        .contains(&CapabilityType::ServiceMesh));
+    assert!(
+        discovery
+            .required_capabilities
+            .contains(&CapabilityType::ServiceMesh)
+    );
 }
 
 #[test]
@@ -203,9 +207,11 @@ fn test_zero_hardcoded_services_pattern() {
     assert!(discovery.discovered_providers.is_empty());
 
     // Discovery is based on capabilities
-    assert!(discovery
-        .required_capabilities
-        .contains(&CapabilityType::ServiceMesh));
+    assert!(
+        discovery
+            .required_capabilities
+            .contains(&CapabilityType::ServiceMesh)
+    );
 }
 
 #[test]

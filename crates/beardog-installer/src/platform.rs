@@ -45,7 +45,7 @@ impl OperatingSystem {
     /// ```
     /// use beardog_installer::platform::OperatingSystem;
     ///
-    /// let os = OperatingSystem::detect().unwrap();
+    /// let os = OperatingSystem::detect().expect("supported platform");
     /// println!("Running on: {:?}", os);
     /// ```
     pub fn detect() -> Result<Self, PlatformError> {
@@ -161,7 +161,7 @@ impl BiomeOSPaths {
     /// ```
     /// use beardog_installer::platform::BiomeOSPaths;
     ///
-    /// let paths = BiomeOSPaths::discover().unwrap();
+    /// let paths = BiomeOSPaths::discover().expect("home directory for paths");
     /// println!("Install to: {}", paths.bin_dir.display());
     /// ```
     ///
@@ -301,7 +301,7 @@ mod tests {
         assert!(os.is_ok(), "Should detect current OS");
 
         // Verify it's one of the supported OS
-        let os = os.unwrap();
+        let os = os.expect("OS detection");
         assert!(matches!(
             os,
             OperatingSystem::Linux
@@ -315,16 +315,14 @@ mod tests {
 
     #[test]
     fn test_discover_paths() {
-        let paths = BiomeOSPaths::discover().unwrap();
+        let paths = BiomeOSPaths::discover().expect("discover paths");
 
         // Paths should be valid and contain expected patterns
-        assert!(
-            paths.bin_dir.to_str().unwrap().contains("biomeos")
-                || paths.bin_dir.to_str().unwrap().contains(".local/bin")
-        );
+        let bin_str = paths.bin_dir.to_str().expect("bin_dir utf-8");
+        assert!(bin_str.contains("biomeos") || bin_str.contains(".local/bin"));
 
         // data_dir should contain either "biomeos" or "nucleus" (from ProjectDirs)
-        let data_str = paths.data_dir.to_str().unwrap();
+        let data_str = paths.data_dir.to_str().expect("data_dir utf-8");
         assert!(
             data_str.contains("biomeos") || data_str.contains("nucleus"),
             "data_dir should contain biomeos or nucleus, got: {}",
@@ -332,17 +330,23 @@ mod tests {
         );
 
         // config_dir should contain either "biomeos" or "nucleus"
-        let config_str = paths.config_dir.to_str().unwrap();
+        let config_str = paths.config_dir.to_str().expect("config_dir utf-8");
         assert!(
             config_str.contains("biomeos") || config_str.contains("nucleus"),
             "config_dir should contain biomeos or nucleus, got: {}",
             config_str
         );
 
-        assert!(paths.runtime_dir.to_str().unwrap().contains("biomeos"));
+        assert!(
+            paths
+                .runtime_dir
+                .to_str()
+                .expect("runtime_dir utf-8")
+                .contains("biomeos")
+        );
 
         // cache_dir should contain either "biomeos" or "nucleus"
-        let cache_str = paths.cache_dir.to_str().unwrap();
+        let cache_str = paths.cache_dir.to_str().expect("cache_dir utf-8");
         assert!(
             cache_str.contains("biomeos") || cache_str.contains("nucleus"),
             "cache_dir should contain biomeos or nucleus, got: {}",
@@ -354,7 +358,7 @@ mod tests {
     async fn test_ensure_paths_exist() {
         use tempfile::TempDir;
 
-        let temp = TempDir::new().unwrap();
+        let temp = TempDir::new().expect("tempdir");
         let paths = BiomeOSPaths {
             bin_dir: temp.path().join("bin"),
             data_dir: temp.path().join("data"),
@@ -363,7 +367,7 @@ mod tests {
             cache_dir: temp.path().join("cache"),
         };
 
-        paths.ensure_exists().await.unwrap();
+        paths.ensure_exists().await.expect("ensure_exists");
 
         // All directories should exist
         assert!(paths.bin_dir.exists());
@@ -375,7 +379,7 @@ mod tests {
 
     #[test]
     fn test_all_dirs() {
-        let paths = BiomeOSPaths::discover().unwrap();
+        let paths = BiomeOSPaths::discover().expect("discover paths");
         let all = paths.all_dirs();
 
         assert_eq!(all.len(), 5);
@@ -386,10 +390,10 @@ mod tests {
     #[test]
     fn test_serialization() {
         let os = OperatingSystem::Linux;
-        let json = serde_json::to_string(&os).unwrap();
+        let json = serde_json::to_string(&os).expect("serialize OS");
         assert_eq!(json, "\"linux\"");
 
-        let deserialized: OperatingSystem = serde_json::from_str(&json).unwrap();
+        let deserialized: OperatingSystem = serde_json::from_str(&json).expect("deserialize OS");
         assert_eq!(deserialized, OperatingSystem::Linux);
     }
 }

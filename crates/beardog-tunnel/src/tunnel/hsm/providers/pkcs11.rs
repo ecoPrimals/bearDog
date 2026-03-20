@@ -57,12 +57,12 @@ impl Pkcs11UniversalProvider {
     }
 
     /// Get security level (hardware HSM is level 3)
-    pub fn get_security_level(&self) -> u8 {
+    pub const fn get_security_level(&self) -> u8 {
         3 // Hardware HSM
     }
 
     /// Get capabilities
-    pub fn capabilities(&self) -> Option<&Pkcs11Capabilities> {
+    pub const fn capabilities(&self) -> Option<&Pkcs11Capabilities> {
         self.capabilities.as_ref()
     }
 }

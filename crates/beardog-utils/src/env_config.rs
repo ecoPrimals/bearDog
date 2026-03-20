@@ -59,7 +59,9 @@ pub fn get_env_required(key: &str) -> String {
 /// Configuration for network endpoints
 #[derive(Debug, Clone)]
 pub struct NetworkConfig {
+    /// Resolved hostname or IP literal.
     pub host: String,
+    /// TCP/UDP port.
     pub port: u16,
 }
 
@@ -95,8 +97,11 @@ impl NetworkConfig {
 /// Configuration for timeouts
 #[derive(Debug, Clone)]
 pub struct TimeoutConfig {
+    /// Time allowed to establish a connection.
     pub connect_timeout: Duration,
+    /// End-to-end deadline for a single request/response.
     pub request_timeout: Duration,
+    /// How long an idle connection may sit before teardown.
     pub idle_timeout: Duration,
 }
 
@@ -121,8 +126,11 @@ pub use beardog_types::canonical::config::domains::discovery::DiscoveryConfig;
 /// HSM configuration
 #[derive(Debug, Clone)]
 pub struct HsmConfig {
+    /// Backend identifier (e.g. `software`, vendor plugin name).
     pub provider: String,
+    /// Per-call timeout in milliseconds.
     pub timeout_ms: u64,
+    /// How many times to retry transient failures.
     pub retry_attempts: u32,
 }
 
@@ -149,7 +157,7 @@ impl HsmConfig {
     }
 }
 
-#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
+#[allow(unused_imports, clippy::nonminimal_bool, dead_code, missing_docs)]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -178,10 +186,10 @@ mod tests {
     #[serial_test::serial] // Environment variable test - must run serially
     fn test_network_config_defaults() {
         // Clear any env vars that might interfere
-        std::env::remove_var("TEST_SERVICE_HOST");
-        std::env::remove_var("TEST_SERVICE_PORT");
-        std::env::remove_var("BEARDOG_API_HOST");
-        std::env::remove_var("BEARDOG_API_PORT");
+        beardog_errors::process_env::remove_var("TEST_SERVICE_HOST");
+        beardog_errors::process_env::remove_var("TEST_SERVICE_PORT");
+        beardog_errors::process_env::remove_var("BEARDOG_API_HOST");
+        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
 
         let config = NetworkConfig::from_env("TEST_SERVICE");
         // TEST_CATEGORY: unit
@@ -192,10 +200,10 @@ mod tests {
         assert_eq!(config.port, TEST_DEFAULT_PORT);
 
         // Clean up
-        std::env::remove_var("TEST_SERVICE_HOST");
-        std::env::remove_var("TEST_SERVICE_PORT");
-        std::env::remove_var("BEARDOG_API_HOST");
-        std::env::remove_var("BEARDOG_API_PORT");
+        beardog_errors::process_env::remove_var("TEST_SERVICE_HOST");
+        beardog_errors::process_env::remove_var("TEST_SERVICE_PORT");
+        beardog_errors::process_env::remove_var("BEARDOG_API_HOST");
+        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
     }
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
@@ -254,56 +262,58 @@ mod tests {
 
     #[test]
     fn test_get_env_or_default_with_env_var() {
-        env::set_var("TEST_VAR_EXISTS", "custom_value");
+        beardog_errors::process_env::set_var("TEST_VAR_EXISTS", "custom_value");
         let result = get_env_or_default("TEST_VAR_EXISTS", "default_value");
         assert_eq!(result, "custom_value");
-        env::remove_var("TEST_VAR_EXISTS");
+        beardog_errors::process_env::remove_var("TEST_VAR_EXISTS");
     }
 
     #[test]
     fn test_get_env_as_with_env_var() {
         const TEST_DISCOVERY_PORT: u16 = 9090;
-        env::set_var("TEST_PORT_EXISTS", TEST_DISCOVERY_PORT.to_string());
+        beardog_errors::process_env::set_var("TEST_PORT_EXISTS", TEST_DISCOVERY_PORT.to_string());
         let result: u16 = get_env_as("TEST_PORT_EXISTS", TEST_DEFAULT_PORT);
         assert_eq!(result, TEST_DISCOVERY_PORT);
-        env::remove_var("TEST_PORT_EXISTS");
+        beardog_errors::process_env::remove_var("TEST_PORT_EXISTS");
     }
 
     #[test]
     fn test_get_env_as_with_invalid_value() {
-        env::set_var("TEST_PORT_INVALID", "not_a_number");
+        beardog_errors::process_env::set_var("TEST_PORT_INVALID", "not_a_number");
         let result: u16 = get_env_as("TEST_PORT_INVALID", TEST_DEFAULT_PORT);
         assert_eq!(result, TEST_DEFAULT_PORT); // Should fall back to default
-        env::remove_var("TEST_PORT_INVALID");
+        beardog_errors::process_env::remove_var("TEST_PORT_INVALID");
     }
 
     #[test]
     #[should_panic(expected = "Required environment variable")]
+    #[allow(deprecated)] // Exercises legacy `get_env_required` panic path
     fn test_get_env_required_missing() {
-        env::remove_var("REQUIRED_VAR_MISSING");
+        beardog_errors::process_env::remove_var("REQUIRED_VAR_MISSING");
         let _ = get_env_required("REQUIRED_VAR_MISSING");
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_get_env_required_present() {
-        env::set_var("REQUIRED_VAR_PRESENT", "required_value");
+        beardog_errors::process_env::set_var("REQUIRED_VAR_PRESENT", "required_value");
         let result = get_env_required("REQUIRED_VAR_PRESENT");
         assert_eq!(result, "required_value");
-        env::remove_var("REQUIRED_VAR_PRESENT");
+        beardog_errors::process_env::remove_var("REQUIRED_VAR_PRESENT");
     }
 
     #[test]
     fn test_network_config_from_env_custom() {
         const TEST_CUSTOM_PORT: u16 = 3000;
-        env::set_var("CUSTOM_HOST", "192.168.1.1");
-        env::set_var("CUSTOM_PORT", TEST_CUSTOM_PORT.to_string());
+        beardog_errors::process_env::set_var("CUSTOM_HOST", "192.168.1.1");
+        beardog_errors::process_env::set_var("CUSTOM_PORT", TEST_CUSTOM_PORT.to_string());
 
         let config = NetworkConfig::from_env("CUSTOM");
         assert_eq!(config.host, "192.168.1.1");
         assert_eq!(config.port, TEST_CUSTOM_PORT);
 
-        env::remove_var("CUSTOM_HOST");
-        env::remove_var("CUSTOM_PORT");
+        beardog_errors::process_env::remove_var("CUSTOM_HOST");
+        beardog_errors::process_env::remove_var("CUSTOM_PORT");
     }
 
     #[test]
@@ -313,7 +323,9 @@ mod tests {
             port: TEST_DEFAULT_PORT,
         };
 
-        let addr = config.to_socket_addr().unwrap();
+        let addr = config
+            .to_socket_addr()
+            .expect("127.0.0.1 should parse as a socket address");
         assert_eq!(addr.to_string(), format!("127.0.0.1:{}", TEST_DEFAULT_PORT));
     }
 
@@ -347,77 +359,90 @@ mod tests {
 
     #[test]
     fn test_timeout_config_from_env_custom() {
-        env::set_var("CUSTOM_CONNECT_TIMEOUT_MS", "1000");
-        env::set_var("CUSTOM_REQUEST_TIMEOUT_MS", "10000");
-        env::set_var("CUSTOM_IDLE_TIMEOUT_MS", "30000");
+        beardog_errors::process_env::set_var("CUSTOM_CONNECT_TIMEOUT_MS", "1000");
+        beardog_errors::process_env::set_var("CUSTOM_REQUEST_TIMEOUT_MS", "10000");
+        beardog_errors::process_env::set_var("CUSTOM_IDLE_TIMEOUT_MS", "30000");
 
         let config = TimeoutConfig::from_env("CUSTOM");
         assert_eq!(config.connect_timeout, Duration::from_millis(1000));
         assert_eq!(config.request_timeout, Duration::from_millis(10000));
         assert_eq!(config.idle_timeout, Duration::from_millis(30000));
 
-        env::remove_var("CUSTOM_CONNECT_TIMEOUT_MS");
-        env::remove_var("CUSTOM_REQUEST_TIMEOUT_MS");
-        env::remove_var("CUSTOM_IDLE_TIMEOUT_MS");
+        beardog_errors::process_env::remove_var("CUSTOM_CONNECT_TIMEOUT_MS");
+        beardog_errors::process_env::remove_var("CUSTOM_REQUEST_TIMEOUT_MS");
+        beardog_errors::process_env::remove_var("CUSTOM_IDLE_TIMEOUT_MS");
     }
 
     #[test]
     fn test_discovery_config_from_env_custom() {
         // Use a lock to ensure this test runs serially with other env-modifying tests
-        let _lock = ENV_TEST_MUTEX.lock().unwrap();
+        let _lock = ENV_TEST_MUTEX
+            .lock()
+            .expect("ENV_TEST_MUTEX should not be poisoned");
 
         // Save current env state
         let old_endpoint = env::var("BEARDOG_DISCOVERY_ENDPOINT").ok();
         let old_timeout = env::var("BEARDOG_DISCOVERY_TIMEOUT_SECS").ok();
         let old_retry = env::var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS").ok();
 
-        env::set_var("BEARDOG_DISCOVERY_ENDPOINT", "http://custom:9000/api");
-        env::set_var("BEARDOG_DISCOVERY_TIMEOUT_SECS", "60");
-        env::set_var("BEARDOG_DISCOVERY_MAX_ATTEMPTS", "5");
+        beardog_errors::process_env::set_var(
+            "BEARDOG_DISCOVERY_ENDPOINT",
+            "http://custom:9000/api",
+        );
+        beardog_errors::process_env::set_var("BEARDOG_DISCOVERY_TIMEOUT_SECS", "60");
+        beardog_errors::process_env::set_var("BEARDOG_DISCOVERY_MAX_ATTEMPTS", "5");
 
         let config = DiscoveryConfig::from_env();
         // Canonical DiscoveryConfig from_env() loads BEARDOG_DISCOVERY_ENDPOINT into endpoints vec
-        assert!(config
-            .endpoints
-            .iter()
-            .any(|e| e == "http://custom:9000/api"));
+        assert!(
+            config
+                .endpoints
+                .iter()
+                .any(|e| e == "http://custom:9000/api")
+        );
         assert_eq!(config.timeout.as_secs(), 60);
         assert_eq!(config.max_attempts, 5);
 
         // Restore original env state
         match old_endpoint {
-            Some(val) => env::set_var("BEARDOG_DISCOVERY_ENDPOINT", val),
-            None => env::remove_var("BEARDOG_DISCOVERY_ENDPOINT"),
+            Some(val) => beardog_errors::process_env::set_var("BEARDOG_DISCOVERY_ENDPOINT", val),
+            None => beardog_errors::process_env::remove_var("BEARDOG_DISCOVERY_ENDPOINT"),
         }
         match old_timeout {
-            Some(val) => env::set_var("BEARDOG_DISCOVERY_TIMEOUT_SECS", val),
-            None => env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS"),
+            Some(val) => {
+                beardog_errors::process_env::set_var("BEARDOG_DISCOVERY_TIMEOUT_SECS", val)
+            }
+            None => beardog_errors::process_env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS"),
         }
         match old_retry {
-            Some(val) => env::set_var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS", val),
-            None => env::remove_var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS"),
+            Some(val) => {
+                beardog_errors::process_env::set_var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS", val)
+            }
+            None => beardog_errors::process_env::remove_var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS"),
         }
     }
 
     #[test]
     fn test_hsm_config_from_env_custom() {
         // Lock mutex to prevent parallel test interference with env vars
-        let _lock = ENV_TEST_MUTEX.lock().unwrap();
+        let _lock = ENV_TEST_MUTEX
+            .lock()
+            .expect("ENV_TEST_MUTEX should not be poisoned");
 
         // Use a guard to ensure cleanup even if test fails
         struct EnvGuard;
         impl Drop for EnvGuard {
             fn drop(&mut self) {
-                env::remove_var("BEARDOG_HSM_PROVIDER");
-                env::remove_var("BEARDOG_HSM_TIMEOUT_MS");
-                env::remove_var("BEARDOG_HSM_RETRY_ATTEMPTS");
+                beardog_errors::process_env::remove_var("BEARDOG_HSM_PROVIDER");
+                beardog_errors::process_env::remove_var("BEARDOG_HSM_TIMEOUT_MS");
+                beardog_errors::process_env::remove_var("BEARDOG_HSM_RETRY_ATTEMPTS");
             }
         }
         let _guard = EnvGuard;
 
-        env::set_var("BEARDOG_HSM_PROVIDER", "hardware");
-        env::set_var("BEARDOG_HSM_TIMEOUT_MS", "10000");
-        env::set_var("BEARDOG_HSM_RETRY_ATTEMPTS", "5");
+        beardog_errors::process_env::set_var("BEARDOG_HSM_PROVIDER", "hardware");
+        beardog_errors::process_env::set_var("BEARDOG_HSM_TIMEOUT_MS", "10000");
+        beardog_errors::process_env::set_var("BEARDOG_HSM_RETRY_ATTEMPTS", "5");
 
         let config = HsmConfig::from_env();
         assert_eq!(config.provider, "hardware");

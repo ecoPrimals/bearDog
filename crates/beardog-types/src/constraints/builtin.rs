@@ -26,8 +26,10 @@ use serde::{Deserialize, Serialize};
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeRangeConstraint {
+    /// Inclusive start time as `HH:MM` (24-hour)
     pub start: String, // HH:MM
-    pub end: String,   // HH:MM
+    /// Inclusive end time as `HH:MM` (24-hour)
+    pub end: String, // HH:MM
 }
 
 impl Constraint for TimeRangeConstraint {
@@ -50,7 +52,7 @@ impl Constraint for TimeRangeConstraint {
 
     fn serialize_json(&self) -> Result<String, BearDogError> {
         serde_json::to_string(self)
-            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {}", e)))
+            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {e}")))
     }
 }
 
@@ -68,6 +70,7 @@ impl Constraint for TimeRangeConstraint {
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WeekdayConstraint {
+    /// Lowercase weekday names allowed (e.g. `mon`, `tue`, …)
     pub allowed_days: Vec<String>, // ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 }
 
@@ -99,7 +102,7 @@ impl Constraint for WeekdayConstraint {
 
     fn serialize_json(&self) -> Result<String, BearDogError> {
         serde_json::to_string(self)
-            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {}", e)))
+            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {e}")))
     }
 }
 
@@ -117,6 +120,7 @@ impl Constraint for WeekdayConstraint {
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CpuQuotaConstraint {
+    /// Maximum allowed CPU usage percent (0–100)
     pub max_percent: u8,
 }
 
@@ -142,7 +146,7 @@ impl Constraint for CpuQuotaConstraint {
 
     fn serialize_json(&self) -> Result<String, BearDogError> {
         serde_json::to_string(self)
-            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {}", e)))
+            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {e}")))
     }
 }
 
@@ -160,6 +164,7 @@ impl Constraint for CpuQuotaConstraint {
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryQuotaConstraint {
+    /// Maximum allowed resident memory usage in bytes
     pub max_bytes: u64,
 }
 
@@ -184,7 +189,7 @@ impl Constraint for MemoryQuotaConstraint {
 
     fn serialize_json(&self) -> Result<String, BearDogError> {
         serde_json::to_string(self)
-            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {}", e)))
+            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {e}")))
     }
 }
 
@@ -202,13 +207,14 @@ impl Constraint for MemoryQuotaConstraint {
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExpiryConstraint {
+    /// Expiration instant as RFC 3339 / ISO 8601 timestamp string
     pub expires_at: String, // ISO 8601 timestamp
 }
 
 impl Constraint for ExpiryConstraint {
     fn is_satisfied(&self, context: &ConstraintContext) -> Result<bool, BearDogError> {
         let expiry = chrono::DateTime::parse_from_rfc3339(&self.expires_at)
-            .map_err(|e| BearDogError::validation(&format!("Invalid expiry format: {}", e)))?;
+            .map_err(|e| BearDogError::validation(&format!("Invalid expiry format: {e}")))?;
 
         Ok(context.current_time < expiry)
     }
@@ -223,7 +229,7 @@ impl Constraint for ExpiryConstraint {
 
     fn serialize_json(&self) -> Result<String, BearDogError> {
         serde_json::to_string(self)
-            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {}", e)))
+            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {e}")))
     }
 }
 
@@ -245,7 +251,9 @@ impl Constraint for ExpiryConstraint {
 /// ```
 #[derive(Debug)]
 pub struct CompositeConstraint {
+    /// How child constraints are combined (`And`, `Or`, `Not`)
     pub operation: LogicOperation,
+    /// Child constraints evaluated according to [`LogicOperation`]
     pub constraints: Vec<Box<dyn Constraint>>,
 }
 
@@ -304,7 +312,7 @@ impl Constraint for CompositeConstraint {
         });
 
         serde_json::to_string(&json)
-            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {}", e)))
+            .map_err(|e| BearDogError::serialization(&format!("Serialization failed: {e}")))
     }
 }
 
@@ -351,7 +359,7 @@ fn format_bytes(bytes: u64) -> String {
     } else if bytes >= KB {
         format!("{:.2} KB", bytes as f64 / KB as f64)
     } else {
-        format!("{} bytes", bytes)
+        format!("{bytes} bytes")
     }
 }
 

@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Zero-Copy Optimization Framework
-//
-// This module provides comprehensive zero-copy optimizations to achieve
-// 20-30% performance improvements by eliminating unnecessary allocations.
+//! Higher-level zero-copy manager with [`Weak`]-backed string cache and [`OptimizedString`]/[`OptimizedBytes`] views.
 
 use parking_lot::RwLock;
 // use std::borrow::Cow; // Currently unused but kept for future zero-copy optimizations
@@ -13,6 +10,7 @@ use std::sync::{Arc, Weak};
 use std::time::{Duration, Instant};
 use tracing::{debug, info, trace};
 
+/// Atomic counters for clone avoidance, cache effectiveness, and applied transforms.
 #[derive(Debug, Default)]
 pub struct ZeroCopyStats {
     /// Number of clones avoided through optimization
@@ -43,8 +41,7 @@ pub struct ZeroCopyManager {
 }
 
 impl ZeroCopyManager {
-    /// Create a new zero-copy manager
-    /// Creates a new instance
+    /// Fresh caches with default capacities and logging.
     pub fn new() -> Self {
         info!("🚀 Initializing Zero-Copy Optimization Manager");
         Self {
@@ -55,8 +52,7 @@ impl ZeroCopyManager {
         }
     }
 
-    /// Gets `shared_string`
-    /// Gets `shared_string`
+    /// Returns a strong [`Arc<str>`], upgrading weak cache entries when alive.
     pub fn get_shared_string<S: AsRef<str>>(&self, s: S) -> Arc<str> {
         let s_ref = s.as_ref();
 
@@ -96,6 +92,7 @@ impl ZeroCopyManager {
         arc_str
     }
 
+    /// Picks [`OptimizedString::Shared`] for common/large strings, else an owned copy.
     #[must_use]
     pub fn optimize_string(&self, s: &str) -> OptimizedString {
         if self.is_common_string(s) || s.len() > 1024 {
@@ -107,6 +104,7 @@ impl ZeroCopyManager {
         }
     }
 
+    /// Uses [`Arc<[u8]>`] for payloads larger than 4 KiB.
     #[must_use]
     pub fn optimize_bytes(&self, data: &[u8]) -> OptimizedBytes {
         if data.len() > 4096 {
@@ -149,9 +147,7 @@ impl ZeroCopyManager {
             || s.ends_with(".local")
     }
 
-    /// Cleanup expired cache entries
-    /// Cleans up expired
-    /// Cleans up expired
+    /// Drops dead weak entries no more often than `BEARDOG_CACHE_CLEANUP_INTERVAL_SECS` (default 300s).
     pub fn cleanup_expired(&self) {
         let mut last_cleanup = self.last_cleanup.write();
         let now = Instant::now();
@@ -184,15 +180,13 @@ impl ZeroCopyManager {
         *last_cleanup = now;
     }
 
-    /// Get optimization statistics
-    /// Gets stats
-    /// Gets stats
+    /// Shared [`Arc`] to the live statistics bundle.
     #[must_use]
     pub fn get_stats(&self) -> Arc<ZeroCopyStats> {
         self.stats.clone()
     }
 
-    /// Print optimization report
+    /// Emits a human-readable summary via `tracing::info!`.
     pub fn print_optimization_report(&self) {
         let clones_avoided = self
             .stats
@@ -248,17 +242,17 @@ impl Default for ZeroCopyManager {
     }
 }
 
-/// Optimized string that uses zero-copy techniques
+/// Either a shared [`Arc<str>`] or a private [`String`] for small/uncommon text.
 #[derive(Debug, Clone)]
 pub enum OptimizedString {
     /// Shared reference to avoid clones
     Shared(Arc<str>),
+    /// Unique heap copy for small/uncommon literals.
     Owned(String),
 }
 
 impl OptimizedString {
-    /// Get the string as a &str
-    /// Returns as str
+    /// Borrows the active representation without allocating.
     #[must_use]
     pub fn as_str(&self) -> &str {
         match self {
@@ -276,9 +270,7 @@ impl OptimizedString {
         }
     }
 
-    /// Check if this is using zero-copy optimization
-    /// Checks if optimized
-    /// Checks if optimized
+    /// True when backed by [`OptimizedString::Shared`].
     #[must_use]
     pub const fn is_optimized(&self) -> bool {
         matches!(self, Self::Shared(_))
@@ -294,16 +286,17 @@ impl fmt::Display for OptimizedString {
     }
 }
 
-/// Optimized byte array that uses zero-copy techniques
+/// Byte payload as [`Arc<[u8]>`] or an owned [`Vec<u8>`] under the size threshold.
 #[derive(Debug, Clone)]
 pub enum OptimizedBytes {
+    /// Shared slice for large blobs.
     Shared(Arc<[u8]>),
+    /// Inline vector for small payloads.
     Owned(Vec<u8>),
 }
 
 impl OptimizedBytes {
-    /// Get the bytes as a slice
-    /// Returns as slice
+    /// Borrows the active byte representation.
     #[must_use]
     pub fn as_slice(&self) -> &[u8] {
         match self {
@@ -312,8 +305,7 @@ impl OptimizedBytes {
         }
     }
 
-    /// Convert to `Vec<u8>` (may clone if necessary)
-    /// Converts to vec
+    /// Materializes an owned copy, cloning shared data when needed.
     #[must_use]
     pub fn to_vec(&self) -> Vec<u8> {
         match self {
@@ -322,22 +314,20 @@ impl OptimizedBytes {
         }
     }
 
-    /// Check if this is using zero-copy optimization
-    /// Checks if optimized
-    /// Checks if optimized
+    /// True when backed by [`OptimizedBytes::Shared`].
     #[must_use]
     pub const fn is_optimized(&self) -> bool {
         matches!(self, Self::Shared(_))
     }
 }
 
+/// Hooks for routing values through [`ZeroCopyManager`] heuristics.
 pub trait ZeroCopyOptimized {
-    /// Apply zero-copy optimizations
+    /// Returns a (possibly) interned or shared clone of `self`.
     #[must_use]
     fn optimize(&self, manager: &ZeroCopyManager) -> Self;
 
-    /// Check if already optimized
-    /// Checks if optimized
+    /// Heuristic used by [`ZeroCopyBuilder`] before calling [`Self::optimize`].
     fn is_optimized(&self) -> bool;
 }
 
@@ -346,7 +336,6 @@ impl ZeroCopyOptimized for String {
         manager.optimize_string(self).to_string()
     }
 
-    /// Checks if optimized
     fn is_optimized(&self) -> bool {
         // Simple heuristic: common strings are likely optimized
         self.len() <= 64
@@ -358,7 +347,6 @@ impl ZeroCopyOptimized for Vec<u8> {
         manager.optimize_bytes(self).to_vec()
     }
 
-    /// Checks if optimized
     fn is_optimized(&self) -> bool {
         // Large vectors benefit from sharing
         self.len() <= 1024
@@ -390,6 +378,7 @@ pub fn optimize_bytes(data: &[u8]) -> OptimizedBytes {
     global_zero_copy_manager().optimize_bytes(data)
 }
 
+/// [`optimize_string`] on a `format!`-built literal or template.
 #[macro_export]
 macro_rules! zero_copy_format {
     ($template:literal) => {
@@ -400,14 +389,14 @@ macro_rules! zero_copy_format {
     };
 }
 
+/// Fluent helper that optionally runs [`ZeroCopyOptimized::optimize`] once.
 pub struct ZeroCopyBuilder<T> {
     inner: T,
     optimized: bool,
 }
 
 impl<T> ZeroCopyBuilder<T> {
-    /// Create a new builder
-    /// Creates a new instance
+    /// Wraps `inner` before optional optimization.
     pub const fn new(inner: T) -> Self {
         Self {
             inner,
@@ -432,16 +421,12 @@ impl<T> ZeroCopyBuilder<T> {
         self
     }
 
-    /// Build the final value
-    /// Builds component
-    /// Builds component
+    /// Consumes the builder and returns the (possibly optimized) value.
     pub fn build(self) -> T {
         self.inner
     }
 
-    /// Check if optimizations were applied
-    /// Checks if optimized
-    /// Checks if optimized
+    /// Whether [`Self::optimize`] mutated `inner`.
     pub const fn is_optimized(&self) -> bool {
         self.optimized
     }

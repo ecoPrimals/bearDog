@@ -28,8 +28,8 @@ use tracing::{debug, info, warn};
 
 // Pure Rust crypto imports - ZERO FFI!
 use aes_gcm::{
-    aead::{Aead, KeyInit},
     Aes256Gcm, Nonce,
+    aead::{Aead, KeyInit},
 };
 use blake3; // Faster and more secure than SHA-256
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
@@ -125,7 +125,7 @@ impl GeneticCryptoProvider {
     }
 
     /// Check if provider has lineage seed (Phase 5)
-    pub fn has_lineage(&self) -> bool {
+    pub const fn has_lineage(&self) -> bool {
         self.lineage_seed.is_some()
     }
 
@@ -177,7 +177,7 @@ impl CryptoProvider<KeyType> for GeneticCryptoProvider {
             KeyType::Rsa | KeyType::Generic | KeyType::Custom(_) => {
                 return Err(BearDogError::unsupported_operation(format!(
                     "GeneticCrypto supports AES, ChaCha20, Ed25519, X25519, and ECC. Got: {key_type:?}"
-                )))
+                )));
             }
         };
 
@@ -341,15 +341,12 @@ impl CryptoProvider<KeyType> for GeneticCryptoProvider {
         );
 
         // Verify signature (Pure Rust)
-        match verifying_key.verify(data, &sig) {
-            Ok(()) => {
-                debug!("✅ Signature valid");
-                Ok(true)
-            }
-            Err(_) => {
-                debug!("❌ Signature invalid");
-                Ok(false)
-            }
+        if matches!(verifying_key.verify(data, &sig), Ok(())) {
+            debug!("✅ Signature valid");
+            Ok(true)
+        } else {
+            debug!("❌ Signature invalid");
+            Ok(false)
         }
     }
 

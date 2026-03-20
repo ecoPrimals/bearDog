@@ -18,8 +18,8 @@
 //! - Boundary conditions
 
 use beardog_errors::BearDogError;
-use beardog_tunnel::tunnel::hsm::software_hsm::crypto_providers::GeneticCryptoProvider;
 use beardog_tunnel::tunnel::hsm::software_hsm::CryptoProvider;
+use beardog_tunnel::tunnel::hsm::software_hsm::crypto_providers::GeneticCryptoProvider;
 use rand::Rng;
 use std::sync::Arc;
 

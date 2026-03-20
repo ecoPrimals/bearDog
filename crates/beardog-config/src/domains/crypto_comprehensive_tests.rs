@@ -350,47 +350,47 @@ mod tests {
     #[test]
     #[serial_test::serial]
     fn test_from_env_no_variables() {
-        std::env::remove_var("BEARDOG_RSA_KEY_SIZE");
-        std::env::remove_var("BEARDOG_AES_KEY_SIZE");
-        std::env::remove_var("BEARDOG_EC_CURVE");
-        std::env::remove_var("BEARDOG_HASH_ALGORITHM");
-        std::env::remove_var("BEARDOG_PBKDF2_ITERATIONS");
+        beardog_errors::process_env::remove_var("BEARDOG_RSA_KEY_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_AES_KEY_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_EC_CURVE");
+        beardog_errors::process_env::remove_var("BEARDOG_HASH_ALGORITHM");
+        beardog_errors::process_env::remove_var("BEARDOG_PBKDF2_ITERATIONS");
 
         let config = CryptoConfig::from_env();
 
         assert_eq!(config, CryptoConfig::default());
 
-        std::env::remove_var("BEARDOG_RSA_KEY_SIZE");
-        std::env::remove_var("BEARDOG_AES_KEY_SIZE");
-        std::env::remove_var("BEARDOG_EC_CURVE");
-        std::env::remove_var("BEARDOG_HASH_ALGORITHM");
-        std::env::remove_var("BEARDOG_PBKDF2_ITERATIONS");
+        beardog_errors::process_env::remove_var("BEARDOG_RSA_KEY_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_AES_KEY_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_EC_CURVE");
+        beardog_errors::process_env::remove_var("BEARDOG_HASH_ALGORITHM");
+        beardog_errors::process_env::remove_var("BEARDOG_PBKDF2_ITERATIONS");
     }
 
     #[test]
     #[serial_test::serial] // Environment variable test - must run serially
     fn test_from_env_with_rsa_key_size() {
-        std::env::remove_var("BEARDOG_RSA_KEY_SIZE");
-        std::env::set_var("BEARDOG_RSA_KEY_SIZE", "4096");
+        beardog_errors::process_env::remove_var("BEARDOG_RSA_KEY_SIZE");
+        beardog_errors::process_env::set_var("BEARDOG_RSA_KEY_SIZE", "4096");
 
         let config = CryptoConfig::from_env();
 
         assert_eq!(config.rsa_key_size, 4096);
 
-        std::env::remove_var("BEARDOG_RSA_KEY_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_RSA_KEY_SIZE");
     }
 
     #[test]
     fn test_from_env_invalid_rsa_uses_default() {
-        std::env::remove_var("BEARDOG_RSA_KEY_SIZE");
-        std::env::set_var("BEARDOG_RSA_KEY_SIZE", "invalid");
+        beardog_errors::process_env::remove_var("BEARDOG_RSA_KEY_SIZE");
+        beardog_errors::process_env::set_var("BEARDOG_RSA_KEY_SIZE", "invalid");
 
         let config = CryptoConfig::from_env();
 
         // Should use default
         assert_eq!(config.rsa_key_size, 2048);
 
-        std::env::remove_var("BEARDOG_RSA_KEY_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_RSA_KEY_SIZE");
     }
 
     // ============================================================================

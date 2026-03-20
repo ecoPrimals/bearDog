@@ -2,7 +2,7 @@
 
 // Configuration property testing implementations
 
-use super::{info, BearDogError, PropertyBasedTestFramework, TestCase};
+use super::{BearDogError, PropertyBasedTestFramework, TestCase, info};
 
 impl PropertyBasedTestFramework {
     /// Test configuration properties
@@ -21,6 +21,7 @@ impl PropertyBasedTestFramework {
         Ok(())
     }
 
+    /// Builds configuration [`TestCase`] rows from [`PropertyBasedTestFramework::generate_config_data`].
     pub fn generate_config_test_cases(&mut self) -> Result<(), BearDogError> {
         info!("🎲 Generating configuration test cases");
 

@@ -253,7 +253,7 @@ impl ComprehensiveHsmStatus {
     }
 
     /// Check if status is overall healthy
-    pub fn is_healthy(&self) -> bool {
+    pub const fn is_healthy(&self) -> bool {
         self.health.is_healthy
             && self.operational.is_online
             && self.operational.is_ready

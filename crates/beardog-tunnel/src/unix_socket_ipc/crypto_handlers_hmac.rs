@@ -25,12 +25,12 @@
 //! - HMAC-SHA512: ~1ms per operation
 //! - HMAC-Blake3: ~500μs (faster, modern)
 
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
 use blake3;
 use hmac::{Hmac, Mac};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sha2::{Sha384, Sha512};
 
 type HmacSha384 = Hmac<Sha384>;
@@ -68,7 +68,7 @@ pub fn handle_hmac_sha384(params: &Value) -> Result<Value, BearDogError> {
 
     let key = BASE64
         .decode(key_b64)
-        .map_err(|e| BearDogError::business(format!("Invalid base64 key: {}", e)))?;
+        .map_err(|e| BearDogError::business(format!("Invalid base64 key: {e}")))?;
 
     // Parse message
     let message_b64 = params
@@ -80,11 +80,11 @@ pub fn handle_hmac_sha384(params: &Value) -> Result<Value, BearDogError> {
 
     let message = BASE64
         .decode(message_b64)
-        .map_err(|e| BearDogError::business(format!("Invalid base64 message: {}", e)))?;
+        .map_err(|e| BearDogError::business(format!("Invalid base64 message: {e}")))?;
 
     // Compute HMAC
     let mut mac = HmacSha384::new_from_slice(&key)
-        .map_err(|e| BearDogError::security(format!("HMAC-SHA384 initialization failed: {}", e)))?;
+        .map_err(|e| BearDogError::security(format!("HMAC-SHA384 initialization failed: {e}")))?;
     mac.update(&message);
     let result = mac.finalize();
     let mac_bytes = result.into_bytes();
@@ -132,7 +132,7 @@ pub fn handle_hmac_sha512(params: &Value) -> Result<Value, BearDogError> {
 
     let key = BASE64
         .decode(key_b64)
-        .map_err(|e| BearDogError::business(format!("Invalid base64 key: {}", e)))?;
+        .map_err(|e| BearDogError::business(format!("Invalid base64 key: {e}")))?;
 
     // Parse message
     let message_b64 = params
@@ -144,11 +144,11 @@ pub fn handle_hmac_sha512(params: &Value) -> Result<Value, BearDogError> {
 
     let message = BASE64
         .decode(message_b64)
-        .map_err(|e| BearDogError::business(format!("Invalid base64 message: {}", e)))?;
+        .map_err(|e| BearDogError::business(format!("Invalid base64 message: {e}")))?;
 
     // Compute HMAC
     let mut mac = HmacSha512::new_from_slice(&key)
-        .map_err(|e| BearDogError::security(format!("HMAC-SHA512 initialization failed: {}", e)))?;
+        .map_err(|e| BearDogError::security(format!("HMAC-SHA512 initialization failed: {e}")))?;
     mac.update(&message);
     let result = mac.finalize();
     let mac_bytes = result.into_bytes();
@@ -197,7 +197,7 @@ pub fn handle_hmac_blake3(params: &Value) -> Result<Value, BearDogError> {
 
     let key = BASE64
         .decode(key_b64)
-        .map_err(|e| BearDogError::business(format!("Invalid base64 key: {}", e)))?;
+        .map_err(|e| BearDogError::business(format!("Invalid base64 key: {e}")))?;
 
     // Parse message
     let message_b64 = params
@@ -209,7 +209,7 @@ pub fn handle_hmac_blake3(params: &Value) -> Result<Value, BearDogError> {
 
     let message = BASE64
         .decode(message_b64)
-        .map_err(|e| BearDogError::business(format!("Invalid base64 message: {}", e)))?;
+        .map_err(|e| BearDogError::business(format!("Invalid base64 message: {e}")))?;
 
     // Blake3 keyed hash (acts like HMAC)
     // Convert key to fixed 32-byte array for keyed hash

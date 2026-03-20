@@ -1,21 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Performance optimization utilities for BearDog
-// Provides zero-copy patterns, memory management, and SIMD acceleration
+//! Clone interning, pooled [`BytesMut`], zero-copy [`Bytes`] views, and a tiny SIMD-style hasher.
+//!
+//! Types here favor amortized allocations and shared ownership for hot paths.
 
 use bytes::{Bytes, BytesMut};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+/// Interns medium-length strings and reuses [`BytesMut`] slabs from size-class pools.
 pub struct CloneOptimizer {
     string_cache: HashMap<String, Arc<str>>,
     buffer_pools: HashMap<usize, Vec<BytesMut>>,
     stats: OptimizationStats,
 }
 
+/// Hit/miss accounting for [`CloneOptimizer`] string and buffer pools.
 #[derive(Debug, Clone, Default)]
 pub struct OptimizationStats {
+    /// Times a fast path avoided a full string/buffer clone.
     pub clones_avoided: u64,
     /// Number of `memory_saved`
     pub memory_saved: u64,
@@ -32,8 +36,7 @@ impl Default for CloneOptimizer {
 }
 
 impl CloneOptimizer {
-    /// New operation.
-    /// Creates a new instance
+    /// Empty caches and counters.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -43,7 +46,7 @@ impl CloneOptimizer {
         }
     }
 
-    /// Optimize String operation.
+    /// Returns a cheap borrow or a cached/interned owned string for eligible lengths.
     pub fn optimize_string<'a>(&mut self, input: &'a str) -> Cow<'a, str> {
         if self.should_intern_string(input) {
             if let Some(cached) = self.string_cache.get(input) {
@@ -62,9 +65,7 @@ impl CloneOptimizer {
         Cow::Borrowed(input)
     }
 
-    /// Get Optimized Buffer operation.
-    /// Gets `optimized_buffer`
-    /// Gets `optimized_buffer`
+    /// Pops a pooled buffer for `size`'s size class or allocates a fresh [`BytesMut`].
     pub fn get_optimized_buffer(&mut self, size: usize) -> BytesMut {
         let size_class = self.get_size_class(size);
 
@@ -79,7 +80,7 @@ impl CloneOptimizer {
         BytesMut::with_capacity(size_class)
     }
 
-    /// Return Buffer operation.
+    /// Clears and returns `buffer` to its pool if under the per-class cap.
     pub fn return_buffer(&mut self, mut buffer: BytesMut) {
         buffer.clear();
         let size_class = self.get_size_class(buffer.capacity());
@@ -91,9 +92,7 @@ impl CloneOptimizer {
         }
     }
 
-    /// Get Stats operation.
-    /// Gets stats
-    /// Gets stats
+    /// Hit/miss and savings counters for observability.
     #[must_use]
     pub const fn get_stats(&self) -> &OptimizationStats {
         &self.stats
@@ -103,7 +102,7 @@ impl CloneOptimizer {
         s.len() > 10 && s.len() < 1000
     }
 
-    /// Gets `size_class`
+    /// Rounds `size` up to a small set of pool buckets (64, 256, …).
     const fn get_size_class(&self, size: usize) -> usize {
         match size {
             0..=64 => 64,
@@ -115,6 +114,7 @@ impl CloneOptimizer {
     }
 }
 
+/// Batches slices into [`Bytes`] backed by a reusable [`BytesMut`] arena or [`Arc`].
 pub struct ZeroCopyProcessor {
     shared_buffer: BytesMut,
     shared_refs: HashMap<String, Arc<Bytes>>,
@@ -124,8 +124,7 @@ pub struct ZeroCopyProcessor {
 }
 
 impl ZeroCopyProcessor {
-    /// New operation.
-    /// Creates a new instance
+    /// Pre-allocates `shared_buffer` with `initial_capacity` bytes.
     #[must_use]
     pub fn new(initial_capacity: usize) -> Self {
         Self {
@@ -137,9 +136,7 @@ impl ZeroCopyProcessor {
         }
     }
 
-    /// Process Zero Copy operation.
-    /// Processes `zero_copy`
-    /// Processes `zero_copy`
+    /// Computes a lightweight checksum view over `input_buffer` without copying it.
     pub fn process_zero_copy(&mut self, input_buffer: &[u8]) -> ProcessingResult {
         if input_buffer.is_empty() {
             return ProcessingResult::InvalidInput;
@@ -160,9 +157,7 @@ impl ZeroCopyProcessor {
         }
     }
 
-    /// Create Shared Reference operation with zero-copy when possible
-    /// Creates `shared_reference`
-    /// Creates `shared_reference`
+    /// Returns [`Arc<Bytes>`] preferring append+freeze into `shared_buffer`, else copies.
     pub fn create_shared_reference(&mut self, input_buffer: &[u8]) -> Arc<Bytes> {
         // Try to reuse existing shared buffer space if available
         if self.shared_buffer.capacity() - self.shared_buffer.len() >= input_buffer.len() {
@@ -188,6 +183,7 @@ impl ZeroCopyProcessor {
         shared
     }
 
+    /// Copies `data` into a new [`Arc<Bytes>`] and registers it under `name`.
     pub fn store_shared_reference(&mut self, name: String, data: &[u8]) -> Arc<Bytes> {
         let bytes = Bytes::copy_from_slice(data);
         let shared = Arc::new(bytes);
@@ -196,23 +192,19 @@ impl ZeroCopyProcessor {
         shared
     }
 
-    /// Get stored reference by name
-    /// Gets `shared_reference`
-    /// Gets `shared_reference`
+    /// Clones the [`Arc`] for a previously stored name, if present.
     #[must_use]
     pub fn get_shared_reference(&self, name: &str) -> Option<Arc<Bytes>> {
         self.shared_refs.get(name).cloned()
     }
 
-    /// Extend shared buffer with data
+    /// Appends `data` to the internal scratch [`BytesMut`].
     pub fn extend_buffer(&mut self, data: &[u8]) {
         self.shared_buffer.extend_from_slice(data);
         self.total_bytes += data.len();
     }
 
-    /// Get statistics
-    /// Gets stats
-    /// Gets stats
+    /// Tuple of `(processed_count, shared_references, total_bytes)` for telemetry.
     #[must_use]
     pub const fn get_stats(&self) -> (usize, usize, usize) {
         (
@@ -222,9 +214,7 @@ impl ZeroCopyProcessor {
         )
     }
 
-    /// Create zero-copy slice from existing shared reference
-    /// Creates `zero_copy_slice`
-    /// Creates `zero_copy_slice`
+    /// Returns a new [`Arc<Bytes>`] pointing at `name`'s range `[start, start+len)`.
     #[must_use]
     pub fn create_zero_copy_slice(
         &self,
@@ -241,7 +231,7 @@ impl ZeroCopyProcessor {
         None
     }
 
-    /// Batch process multiple buffers with shared allocation
+    /// Runs [`Self::create_shared_reference`] for each buffer, reusing capacity when possible.
     pub fn batch_process_zero_copy(&mut self, buffers: &[&[u8]]) -> Vec<Arc<Bytes>> {
         let total_size: usize = buffers.iter().map(|b| b.len()).sum();
 
@@ -260,7 +250,7 @@ impl ZeroCopyProcessor {
         results
     }
 
-    /// Defragment shared references to reduce memory usage
+    /// Drops unshared entries and shrinks oversized scratch buffers.
     pub fn defragment(&mut self) {
         // Remove weak references and compact buffer
         self.shared_refs
@@ -273,9 +263,7 @@ impl ZeroCopyProcessor {
         }
     }
 
-    /// Process Stream operation.
-    /// Processes stream
-    /// Processes stream
+    /// Chunks `input_stream` and maps each chunk through `processor`, aggregating outputs.
     pub fn process_stream<F>(
         &mut self,
         input_stream: &[u8],
@@ -301,6 +289,7 @@ impl ZeroCopyProcessor {
         }
     }
 
+    /// Builds a [`DataView`] over the full `input_buffer` slice.
     #[must_use]
     pub const fn create_data_view<'a>(&self, input_buffer: &'a [u8]) -> DataView<'a> {
         DataView {
@@ -315,23 +304,37 @@ impl ZeroCopyProcessor {
     }
 }
 
+/// Outcome of [`ZeroCopyProcessor::process_zero_copy`].
 #[derive(Debug)]
 pub enum ProcessingResult {
-    Success { hash: usize, bytes_processed: usize },
+    /// Non-cryptographic hash plus byte count for the accepted input.
+    Success {
+        /// Simple additive checksum of input bytes.
+        hash: usize,
+        /// Number of bytes consumed from the caller buffer.
+        bytes_processed: usize,
+    },
+    /// Empty or otherwise unusable input.
     InvalidInput,
+    /// Fatal processing error message.
     Error(String),
 }
 
+/// Outcome of [`ZeroCopyProcessor::process_stream`].
 #[derive(Debug)]
 pub enum StreamResult {
     /// Successful completion state
     Success {
+        /// Per-chunk transformed payloads.
         results: Vec<Vec<u8>>,
+        /// Sum of output lengths from `processor`.
         bytes_processed: usize,
+        /// High-water mark for scratch memory (here: chunk size hint).
         peak_memory: usize,
     },
 }
 
+/// Borrowed subslice view; does not own `buffer` and cannot outlive `'a`.
 pub struct DataView<'a> {
     buffer: &'a [u8],
     offset: usize,
@@ -355,19 +358,19 @@ impl DataView<'_> {
         self.length
     }
 
-    /// Check if the view is empty
-    /// Checks if empty
-    /// Checks if empty
+    /// True when [`Self::len`] is zero.
     #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.length == 0
     }
 }
 
+/// Placeholder feature gate for future true SIMD; currently exposes portable hashes.
 pub struct SimdAccelerator {
     features: CpuFeatures,
 }
 
+/// Feature bits for SSE/AES paths (conservative defaults until runtime probing lands).
 #[derive(Debug, Clone)]
 pub struct CpuFeatures {
     /// Whether `sse4_1` is enabled
@@ -383,8 +386,7 @@ impl Default for SimdAccelerator {
 }
 
 impl SimdAccelerator {
-    /// New operation.
-    /// Creates a new instance
+    /// Default instance with conservative feature flags.
     #[must_use]
     pub const fn new() -> Self {
         Self {
@@ -395,7 +397,7 @@ impl SimdAccelerator {
         }
     }
 
-    /// Accelerated Hash operation.
+    /// Chunked folding hash over `buffer_data` (not a cryptographic digest).
     #[must_use]
     pub fn accelerated_hash(&self, buffer_data: &[u8]) -> u64 {
         // Safe SIMD-style acceleration without unsafe code
@@ -411,9 +413,7 @@ impl SimdAccelerator {
             .sum()
     }
 
-    /// Get Features operation.
-    /// Gets features
-    /// Gets features
+    /// Snapshot of detected CPU capabilities (conservative defaults today).
     #[must_use]
     pub const fn get_features(&self) -> &CpuFeatures {
         &self.features

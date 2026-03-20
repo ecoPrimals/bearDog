@@ -9,11 +9,11 @@
 //! TEST_DOMAIN: crypto
 //! TEST_PRIORITY: high
 
+use crate::tunnel::hsm::GenerateKeyRequest;
 use crate::tunnel::hsm::manager::HsmProvider;
 use crate::tunnel::hsm::software_hsm::core::RustSoftwareHsm;
-use crate::tunnel::hsm::types::config::SoftwareHsmConfig;
 use crate::tunnel::hsm::types::KeyType;
-use crate::tunnel::hsm::GenerateKeyRequest;
+use crate::tunnel::hsm::types::config::SoftwareHsmConfig;
 use beardog_errors::BearDogError;
 use std::sync::Arc;
 

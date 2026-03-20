@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Key Storage Module
-// Simple JSON-based key persistence for CLI operations
-// NOTE: This is a simplified version for testing. Production should use HSM-backed storage.
+//! Local JSON key store under `~/.beardog/keys` (CLI testing and development).
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -12,16 +10,22 @@ use std::path::PathBuf;
 /// Lineage information for a key
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct KeyLineageInfo {
+    /// Immediate parent key id, if any
     pub parent_key_id: Option<String>,
+    /// Depth from the lineage root (0 = root)
     pub depth: u32,
 }
 
 /// Key metadata stored in ~/.beardog/keys/
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct StoredKey {
+    /// User-defined key identifier (filename stem)
     pub key_id: String,
+    /// Algorithm name (e.g. `aes256-gcm`)
     pub algorithm: String,
+    /// Label of the HSM used when the key was created
     pub hsm_name: String,
+    /// Creation timestamp (RFC 3339)
     pub created_at: String,
     /// Base64-encoded key material (simplified for testing)
     /// In production, this would be an HSM reference/handle
@@ -86,12 +90,11 @@ pub fn save_key(key: &StoredKey) -> Result<(), BearDogError> {
 /// Load a key from storage
 pub fn load_key(key_id: &str) -> Result<StoredKey, BearDogError> {
     let keys_dir = get_keys_dir()?;
-    let key_file = keys_dir.join(format!("{}.json", key_id));
+    let key_file = keys_dir.join(format!("{key_id}.json"));
 
     if !key_file.exists() {
         return Err(BearDogError::not_found(format!(
-            "Key '{}' not found. Use 'beardog key generate' to create it.",
-            key_id
+            "Key '{key_id}' not found. Use 'beardog key generate' to create it."
         )));
     }
 
@@ -131,13 +134,10 @@ pub fn list_keys() -> Result<Vec<StoredKey>, BearDogError> {
 /// Delete a key from storage
 pub fn delete_key(key_id: &str) -> Result<(), BearDogError> {
     let keys_dir = get_keys_dir()?;
-    let key_file = keys_dir.join(format!("{}.json", key_id));
+    let key_file = keys_dir.join(format!("{key_id}.json"));
 
     if !key_file.exists() {
-        return Err(BearDogError::not_found(format!(
-            "Key '{}' not found",
-            key_id
-        )));
+        return Err(BearDogError::not_found(format!("Key '{key_id}' not found")));
     }
 
     fs::remove_file(key_file)?;
@@ -146,15 +146,15 @@ pub fn delete_key(key_id: &str) -> Result<(), BearDogError> {
 
 /// Encode bytes to base64
 pub fn base64_encode(data: &[u8]) -> String {
-    use base64::engine::general_purpose::STANDARD;
     use base64::Engine;
+    use base64::engine::general_purpose::STANDARD;
     STANDARD.encode(data)
 }
 
 /// Decode base64 to bytes
 pub fn base64_decode(data: &str) -> Result<Vec<u8>, BearDogError> {
-    use base64::engine::general_purpose::STANDARD;
     use base64::Engine;
+    use base64::engine::general_purpose::STANDARD;
     STANDARD
         .decode(data)
         .map_err(|e| BearDogError::serialization(&e.to_string()))

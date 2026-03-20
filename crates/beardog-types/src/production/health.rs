@@ -17,6 +17,7 @@ pub struct HealthConfig {
     /// Health check interval in seconds
     /// Number of `check_interval_seconds`
     pub check_interval_seconds: u64,
+    /// Maximum time to wait for a single health check response
     pub timeout_seconds: u64,
 }
 

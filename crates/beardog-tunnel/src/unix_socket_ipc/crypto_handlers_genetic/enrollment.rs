@@ -17,11 +17,11 @@
 //! - `handle_verify_lineage_certificate` - Certificate verification with chain support
 
 use super::*;
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
 use hkdf::Hkdf;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sha2::Sha256;
 use tracing::{debug, info, warn};
 
@@ -40,11 +40,11 @@ pub async fn handle_derive_device_seed(params: Value) -> Result<Value, BearDogEr
     debug!("🧬 RPC: genetic.derive_device_seed");
 
     let request: DeriveDeviceSeedRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid derive_device_seed params: {}", e))
+        BearDogError::invalid_input(&format!("Invalid derive_device_seed params: {e}"))
     })?;
 
     let root_seed = BASE64.decode(&request.root_seed).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid root_seed (not base64): {}", e))
+        BearDogError::invalid_input(&format!("Invalid root_seed (not base64): {e}"))
     })?;
 
     if root_seed.len() != 32 {
@@ -55,7 +55,7 @@ pub async fn handle_derive_device_seed(params: Value) -> Result<Value, BearDogEr
     }
 
     let device_entropy = BASE64.decode(&request.device_entropy).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid device_entropy (not base64): {}", e))
+        BearDogError::invalid_input(&format!("Invalid device_entropy (not base64): {e}"))
     })?;
 
     if device_entropy.len() < 16 {
@@ -70,7 +70,7 @@ pub async fn handle_derive_device_seed(params: Value) -> Result<Value, BearDogEr
 
     let mut info = format!("{}:{}", domain.escape_ascii(), request.device_id);
     if let Some(ts) = request.enrollment_timestamp {
-        info.push_str(&format!(":{}", ts));
+        info.push_str(&format!(":{ts}"));
     }
 
     let mut device_seed = [0u8; 32];
@@ -113,11 +113,11 @@ pub async fn handle_sign_lineage_certificate(params: Value) -> Result<Value, Bea
     debug!("🧬 RPC: genetic.sign_lineage_certificate");
 
     let request: SignLineageCertificateRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid sign_lineage_certificate params: {}", e))
+        BearDogError::invalid_input(&format!("Invalid sign_lineage_certificate params: {e}"))
     })?;
 
     let parent_seed = BASE64.decode(&request.parent_seed).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid parent_seed (not base64): {}", e))
+        BearDogError::invalid_input(&format!("Invalid parent_seed (not base64): {e}"))
     })?;
 
     if parent_seed.len() != 32 {
@@ -128,7 +128,7 @@ pub async fn handle_sign_lineage_certificate(params: Value) -> Result<Value, Bea
     }
 
     let child_pubkey_bytes = BASE64.decode(&request.child_public_key).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid child_public_key (not base64): {}", e))
+        BearDogError::invalid_input(&format!("Invalid child_public_key (not base64): {e}"))
     })?;
 
     if child_pubkey_bytes.len() != 32 {
@@ -184,7 +184,7 @@ pub async fn handle_sign_lineage_certificate(params: Value) -> Result<Value, Bea
 
     use sha2::Digest;
     let cert_json = serde_json::to_string(&certificate)
-        .map_err(|e| BearDogError::internal(format!("Failed to serialize certificate: {}", e)))?;
+        .map_err(|e| BearDogError::internal(format!("Failed to serialize certificate: {e}")))?;
     let cert_id = sha2::Sha256::digest(cert_json.as_bytes());
     let cert_id_hex = hex::encode(cert_id);
 
@@ -212,7 +212,7 @@ pub async fn handle_verify_lineage_certificate(params: Value) -> Result<Value, B
     debug!("🔍 RPC: genetic.verify_lineage_certificate");
 
     let request: VerifyLineageCertificateRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid verify_lineage_certificate params: {}", e))
+        BearDogError::invalid_input(&format!("Invalid verify_lineage_certificate params: {e}"))
     })?;
 
     let cert = &request.certificate;
@@ -228,15 +228,15 @@ pub async fn handle_verify_lineage_certificate(params: Value) -> Result<Value, B
 
     let parent_pubkey_bytes = BASE64
         .decode(&cert.parent_public_key)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid parent_public_key: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid parent_public_key: {e}")))?;
 
     let signature_bytes = BASE64
         .decode(&cert.parent_signature)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid parent_signature: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid parent_signature: {e}")))?;
 
     let child_pubkey_bytes = BASE64
         .decode(&cert.child_public_key)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid child_public_key: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid child_public_key: {e}")))?;
 
     use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 
@@ -249,7 +249,7 @@ pub async fn handle_verify_lineage_certificate(params: Value) -> Result<Value, B
         .map_err(|_| BearDogError::invalid_input("parent_signature must be 64 bytes"))?;
 
     let verifying_key = VerifyingKey::from_bytes(&parent_pubkey_array)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid public key: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid public key: {e}")))?;
 
     let signature = Signature::from_bytes(&signature_array);
 
@@ -280,8 +280,7 @@ pub async fn handle_verify_lineage_certificate(params: Value) -> Result<Value, B
         if now > expires_at {
             details.not_expired = false;
             details.failure_reason = Some(format!(
-                "Certificate expired at {} (current: {})",
-                expires_at, now
+                "Certificate expired at {expires_at} (current: {now})"
             ));
         }
     }
@@ -298,7 +297,7 @@ pub async fn handle_verify_lineage_certificate(params: Value) -> Result<Value, B
 
     if !request.trust_anchors.is_empty() {
         let parent_key_matches = request.trust_anchors.iter().any(|anchor| {
-            anchor.child_public_key == cert.parent_public_key
+            anchor.child_public_key == cert.child_public_key
                 || anchor.parent_public_key == cert.parent_public_key
         });
 

@@ -147,8 +147,8 @@ fn test_production_ready_thread_safe() {
 
 #[test]
 fn test_production_ready_concurrent_calls() {
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal

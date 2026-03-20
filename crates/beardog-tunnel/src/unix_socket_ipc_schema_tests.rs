@@ -130,11 +130,11 @@ mod tests {
     #[test]
     fn test_env_var_fallback_family_id() {
         // Clear any existing env vars
-        env::remove_var("FAMILY_ID");
-        env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("FAMILY_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
 
         // Set only BEARDOG_FAMILY_ID
-        env::set_var("BEARDOG_FAMILY_ID", "test-family");
+        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "test-family");
 
         // Test fallback logic
         let family = env::var("FAMILY_ID")
@@ -144,17 +144,17 @@ mod tests {
         assert_eq!(family, "test-family");
 
         // Cleanup
-        env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
     }
 
     #[test]
     fn test_env_var_fallback_node_id() {
         // Clear any existing env vars
-        env::remove_var("NODE_ID");
-        env::remove_var("BEARDOG_NODE_ID");
+        beardog_errors::process_env::remove_var("NODE_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
 
         // Set only BEARDOG_NODE_ID
-        env::set_var("BEARDOG_NODE_ID", "test-node");
+        beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "test-node");
 
         // Test fallback logic
         let node = env::var("NODE_ID")
@@ -164,14 +164,14 @@ mod tests {
         assert_eq!(node, "test-node");
 
         // Cleanup
-        env::remove_var("BEARDOG_NODE_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
     }
 
     #[test]
     fn test_env_var_primary_takes_precedence() {
         // Set both FAMILY_ID and BEARDOG_FAMILY_ID
-        env::set_var("FAMILY_ID", "primary-family");
-        env::set_var("BEARDOG_FAMILY_ID", "fallback-family");
+        beardog_errors::process_env::set_var("FAMILY_ID", "primary-family");
+        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "fallback-family");
 
         // Primary should take precedence
         let family = env::var("FAMILY_ID")
@@ -181,15 +181,15 @@ mod tests {
         assert_eq!(family, "primary-family");
 
         // Cleanup
-        env::remove_var("FAMILY_ID");
-        env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("FAMILY_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
     }
 
     #[test]
     fn test_env_var_fallback_to_unknown() {
         // Clear all env vars
-        env::remove_var("FAMILY_ID");
-        env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("FAMILY_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
 
         // Should fallback to "unknown"
         let family = env::var("FAMILY_ID")
@@ -202,8 +202,8 @@ mod tests {
     #[test]
     fn test_env_var_both_formats_work() {
         // Test FAMILY_ID format
-        env::set_var("FAMILY_ID", "nat0");
-        env::set_var("NODE_ID", "tower1");
+        beardog_errors::process_env::set_var("FAMILY_ID", "nat0");
+        beardog_errors::process_env::set_var("NODE_ID", "tower1");
 
         let family1 = env::var("FAMILY_ID").unwrap();
         let node1 = env::var("NODE_ID").unwrap();
@@ -212,10 +212,10 @@ mod tests {
         assert_eq!(node1, "tower1");
 
         // Clear and test BEARDOG_ format
-        env::remove_var("FAMILY_ID");
-        env::remove_var("NODE_ID");
-        env::set_var("BEARDOG_FAMILY_ID", "nat0");
-        env::set_var("BEARDOG_NODE_ID", "tower1");
+        beardog_errors::process_env::remove_var("FAMILY_ID");
+        beardog_errors::process_env::remove_var("NODE_ID");
+        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");
+        beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "tower1");
 
         let family2 = env::var("BEARDOG_FAMILY_ID").unwrap();
         let node2 = env::var("BEARDOG_NODE_ID").unwrap();
@@ -224,8 +224,8 @@ mod tests {
         assert_eq!(node2, "tower1");
 
         // Cleanup
-        env::remove_var("BEARDOG_FAMILY_ID");
-        env::remove_var("BEARDOG_NODE_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
     }
 
     #[test]
@@ -233,10 +233,10 @@ mod tests {
         // Test that env var fallback works for all IPC methods
 
         // Set only BEARDOG_ format
-        env::remove_var("FAMILY_ID");
-        env::remove_var("NODE_ID");
-        env::set_var("BEARDOG_FAMILY_ID", "prod-family");
-        env::set_var("BEARDOG_NODE_ID", "prod-node");
+        beardog_errors::process_env::remove_var("FAMILY_ID");
+        beardog_errors::process_env::remove_var("NODE_ID");
+        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "prod-family");
+        beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "prod-node");
 
         // Simulate capabilities method
         let family_caps = env::var("FAMILY_ID")
@@ -263,8 +263,8 @@ mod tests {
         assert_eq!(family_lineage, "prod-family");
 
         // Cleanup
-        env::remove_var("BEARDOG_FAMILY_ID");
-        env::remove_var("BEARDOG_NODE_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
     }
 
     // ========================================================================
@@ -274,8 +274,8 @@ mod tests {
     #[test]
     fn test_trust_response_with_correct_identity() {
         // Set environment - use unique test-scoped keys to avoid parallel test races
-        env::set_var("FAMILY_ID", "nat0");
-        env::set_var("NODE_ID", "tower1");
+        beardog_errors::process_env::set_var("FAMILY_ID", "nat0");
+        beardog_errors::process_env::set_var("NODE_ID", "tower1");
 
         // Simulate trust evaluation
         let our_family = env::var("FAMILY_ID")
@@ -310,14 +310,14 @@ mod tests {
         assert_ne!(response["our_node"], "unknown");
 
         // Cleanup
-        env::remove_var("FAMILY_ID");
-        env::remove_var("NODE_ID");
+        beardog_errors::process_env::remove_var("FAMILY_ID");
+        beardog_errors::process_env::remove_var("NODE_ID");
     }
 
     #[test]
     fn test_trust_response_reject_with_decision() {
         // Set environment
-        env::set_var("BEARDOG_FAMILY_ID", "nat0");
+        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");
 
         let our_family = env::var("FAMILY_ID")
             .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
@@ -346,7 +346,7 @@ mod tests {
         assert_ne!(response["peer_family"], response["our_family"]);
 
         // Cleanup
-        env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
     }
 
     // ========================================================================
@@ -391,10 +391,12 @@ mod tests {
         // All three present
         assert!(response.as_object().unwrap().contains_key("decision"));
         assert!(response.as_object().unwrap().contains_key("trust_level"));
-        assert!(response
-            .as_object()
-            .unwrap()
-            .contains_key("trust_level_name"));
+        assert!(
+            response
+                .as_object()
+                .unwrap()
+                .contains_key("trust_level_name")
+        );
 
         // Types correct
         assert!(response["decision"].is_string());

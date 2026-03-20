@@ -136,7 +136,7 @@ async fn test_hardware_entropy_uniqueness() {
         .await
         .unwrap()
         .with_hardware_entropy(Arc::new(|| {
-            use rand::{rngs::OsRng, RngCore};
+            use rand::{RngCore, rngs::OsRng};
             let mut entropy = vec![0u8; 32];
             OsRng.fill_bytes(&mut entropy);
             Ok(entropy)
@@ -206,7 +206,7 @@ async fn test_hardware_entropy_determinism() {
 #[tokio::test]
 #[serial_test::serial]
 async fn test_verify_witness_authority_permissionless_mode() {
-    std::env::set_var("BEARDOG_GENESIS_MODE", "permissionless");
+    beardog_errors::process_env::set_var("BEARDOG_GENESIS_MODE", "permissionless");
     let provider = GenesisLineageProvider::new().await.unwrap();
 
     let witness = GenesisWitness {
@@ -218,7 +218,7 @@ async fn test_verify_witness_authority_permissionless_mode() {
     };
 
     let result = provider.verify_witness_authority(&witness);
-    std::env::remove_var("BEARDOG_GENESIS_MODE");
+    beardog_errors::process_env::remove_var("BEARDOG_GENESIS_MODE");
     assert!(result.is_ok());
 }
 
@@ -257,7 +257,7 @@ async fn test_verify_witness_authority_empty_signature() {
 #[tokio::test]
 #[serial_test::serial]
 async fn test_verify_witness_authority_unknown_mode() {
-    std::env::set_var("BEARDOG_GENESIS_MODE", "unknown_mode");
+    beardog_errors::process_env::set_var("BEARDOG_GENESIS_MODE", "unknown_mode");
     let provider = GenesisLineageProvider::new().await.unwrap();
 
     let witness = GenesisWitness {
@@ -269,7 +269,7 @@ async fn test_verify_witness_authority_unknown_mode() {
     };
 
     let result = provider.verify_witness_authority(&witness);
-    std::env::remove_var("BEARDOG_GENESIS_MODE");
+    beardog_errors::process_env::remove_var("BEARDOG_GENESIS_MODE");
     assert!(result.is_err());
 }
 

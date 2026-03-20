@@ -2,7 +2,7 @@
 name = "beardog-auth"
 description = "BearDog auth module"
 repository = "https://github.com/eastgate-software/beardog"
-rust-version = "1.75"
+rust-version = "1.85.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "auth", "authentication", "authorization", "beardog", "security",]

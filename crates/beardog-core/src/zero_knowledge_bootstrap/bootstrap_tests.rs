@@ -147,9 +147,11 @@ mod tests {
 
         assert_eq!(metrics.protocols_used.len(), 3);
         assert!(metrics.protocols_used.contains(&"http".to_string()));
-        assert!(metrics
-            .protocols_used
-            .contains(&"multicast-dns".to_string()));
+        assert!(
+            metrics
+                .protocols_used
+                .contains(&"multicast-dns".to_string())
+        );
     }
 
     #[test]

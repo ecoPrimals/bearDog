@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Key Mixing Handler
-// Cryptographically mix two keys for shared access scenarios
+//! Mix two existing keys into a new derived key (XOR + hash) for shared-access workflows.
 
 use super::key_store::{self, StoredKey};
 use beardog_errors::BearDogError;
@@ -42,7 +41,7 @@ pub async fn handle_key_mix(
     // Mix keys using XOR + KDF
     println!("\n🔐 Mixing keys...");
     println!("   Method: XOR + HKDF-SHA256");
-    println!("   Threshold: {}", threshold);
+    println!("   Threshold: {threshold}");
 
     let mixed_material = mix_keys(&material1, &material2)?;
 
@@ -62,15 +61,14 @@ pub async fn handle_key_mix(
         key_material_b64: key_store::base64_encode(&mixed_material),
         created_at: Utc::now().to_rfc3339(),
         generation: key1.generation.max(key2.generation) + 1, // One generation higher
-        parent_key_id: Some(format!("{}+{}", key1_id, key2_id)), // Both parents
-        derivation_purpose: Some(format!("mixed-{}", threshold)),
+        parent_key_id: Some(format!("{key1_id}+{key2_id}")),  // Both parents
+        derivation_purpose: Some(format!("mixed-{threshold}")),
         children: Vec::new(),
         lineage: None, // Mixed keys don't have simple lineage
         expires_at: expires_at_str,
         usage: Some("all".to_string()), // Mixed keys can do everything parents can
         purpose: Some(format!(
-            "Mixed key from {} and {} (threshold: {})",
-            key1_id, key2_id, threshold
+            "Mixed key from {key1_id} and {key2_id} (threshold: {threshold})"
         )),
     };
 
@@ -87,7 +85,7 @@ pub async fn handle_key_mix(
     key_store::save_key(&updated_key2)?;
 
     // Generate operation receipt
-    use beardog_types::receipt::{generate_receipt_filename, KeyInfo, OperationReceipt};
+    use beardog_types::receipt::{KeyInfo, OperationReceipt, generate_receipt_filename};
     use serde_json::json;
 
     let receipt = OperationReceipt::new("key-mix")
@@ -95,7 +93,7 @@ pub async fn handle_key_mix(
             key_id: output_key_id.to_string(),
             algorithm: mixed_key.algorithm.clone(),
             generation: mixed_key.generation,
-            parent_key_id: Some(format!("{}+{}", key1_id, key2_id)),
+            parent_key_id: Some(format!("{key1_id}+{key2_id}")),
             expires_at: mixed_key.expires_at.clone(),
             usage: mixed_key.usage.clone(),
             purpose: mixed_key.purpose.clone(),
@@ -112,18 +110,18 @@ pub async fn handle_key_mix(
 
     println!("\n✅ Keys mixed successfully!");
     println!("\n📋 Mixed Key Details:");
-    println!("   ID: {}", output_key_id);
+    println!("   ID: {output_key_id}");
     println!("   Algorithm: {}", mixed_key.algorithm);
     println!(
         "   Generation: {} (mixed from Gen {} and Gen {})",
         mixed_key.generation, updated_key1.generation, updated_key2.generation
     );
-    println!("   Parents: {} + {}", key1_id, key2_id);
-    println!("   Threshold: {}", threshold);
+    println!("   Parents: {key1_id} + {key2_id}");
+    println!("   Threshold: {threshold}");
     println!("   Status: Active");
 
     if let Some(expiry) = &mixed_key.expires_at {
-        println!("\n⏰ Expiry: {}", expiry);
+        println!("\n⏰ Expiry: {expiry}");
     }
 
     println!("\n📜 Receipt: {}", receipt_path.display());
@@ -136,13 +134,9 @@ pub async fn handle_key_mix(
 
     println!("\n💡 Next steps:");
     println!(
-        "   • Encrypt: beardog encrypt --key {} --input data.txt --output data.enc",
-        output_key_id
+        "   • Encrypt: beardog encrypt --key {output_key_id} --input data.txt --output data.enc"
     );
-    println!(
-        "   • View lineage: beardog key lineage --key-id {}",
-        output_key_id
-    );
+    println!("   • View lineage: beardog key lineage --key-id {output_key_id}");
 
     Ok(())
 }
@@ -170,7 +164,7 @@ fn mix_keys(key1: &[u8], key2: &[u8]) -> Result<Vec<u8>, BearDogError> {
     let hk = Hkdf::<Sha256>::new(Some(&salt), &xored);
     let mut okm = vec![0u8; key1.len()]; // Same length as input keys
     hk.expand(b"beardog_key_mixing_v1", &mut okm)
-        .map_err(|e| BearDogError::crypto_error(format!("HKDF expansion failed: {}", e)))?;
+        .map_err(|e| BearDogError::crypto_error(format!("HKDF expansion failed: {e}")))?;
 
     Ok(okm)
 }

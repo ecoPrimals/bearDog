@@ -26,9 +26,11 @@ pub enum HsmInterfaceType {
         /// Cloud API endpoint URL
         endpoint: String,
     },
+    /// Platform-native cryptographic APIs (e.g. OS keystore) without PKCS#11 or network.
     Native,
 }
 
+/// Observed or advertised HSM throughput and latency characteristics.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct HsmPerformanceProfile {
     /// Operations per second
@@ -101,22 +103,27 @@ pub enum HsmSecurityCapability {
     TamperResistant,
     /// Network-attached security module
     NetworkAttached,
+    /// USB cryptographic token
     UsbToken,
+    /// Smart card with secure element
     SmartCard,
     /// Cloud-based HSM service
     CloudBased,
+    /// Software-only crypto provider (no dedicated HSM hardware)
     SoftwareBased,
 }
 
 /// Modern HSM provider based on capabilities, not vendor names
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ModernHsmProvider {
+    /// Stable identifier for this discovered or configured provider instance
     pub provider_id: String,
     /// Security capabilities provided by this HSM
     /// Collection of security capabilities
     pub security_capabilities: Vec<HsmSecurityCapability>,
     /// The interface type value
     pub interface_type: HsmInterfaceType,
+    /// Throughput and latency profile for this provider
     pub performance_profile: HsmPerformanceProfile,
     /// Trust level based on successful operations
     /// The trust level value
@@ -169,6 +176,7 @@ impl HsmProviderType {
         false
     }
 
+    /// Returns a modern provider type that supersedes this one, if any migration is defined.
     #[must_use]
     pub const fn get_modern_replacement(&self) -> Option<Self> {
         // All providers are now modern (capability-based)
@@ -176,6 +184,7 @@ impl HsmProviderType {
         None
     }
 
+    /// Human-readable migration advice when this provider pattern is legacy or deprecated.
     #[must_use]
     pub const fn get_migration_guidance(&self) -> Option<&'static str> {
         // All hardcoded cloud providers have been removed
@@ -289,10 +298,11 @@ impl HsmProviderConfig {
     }
 }
 
-/// HSM provider migration helper
+/// Static helpers documenting migration from legacy hardcoded HSM provider enums.
 pub struct HsmProviderMigrationHelper;
 
 impl HsmProviderMigrationHelper {
+    /// Full migration guide string for operators and config authors.
     #[must_use]
     pub const fn get_migration_guidance() -> &'static str {
         "🚨 HSM PROVIDER MIGRATION GUIDE:\n\

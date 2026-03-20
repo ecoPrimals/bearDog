@@ -46,7 +46,7 @@ impl ProductionUniversalAdapter {
 
     /// Get production configuration
     #[must_use]
-    pub fn production_config(&self) -> &ProductionConfig {
+    pub const fn production_config(&self) -> &ProductionConfig {
         &self.production_config
     }
 

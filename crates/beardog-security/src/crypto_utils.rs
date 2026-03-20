@@ -19,19 +19,19 @@
 #![allow(deprecated)]
 
 use aes_gcm::{
-    aead::{Aead, KeyInit, OsRng},
     Aes256Gcm, Key, Nonce,
+    aead::{Aead, KeyInit, OsRng},
 };
 use argon2::{
-    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
 };
 use beardog_errors::BearDogError;
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use hex;
 use hmac::{Hmac, Mac};
 use pbkdf2;
-use rand::{thread_rng, Rng, RngCore};
+use rand::{Rng, RngCore, thread_rng};
 use sha2::{Digest, Sha256};
 use subtle::ConstantTimeEq;
 use zeroize::Zeroize;

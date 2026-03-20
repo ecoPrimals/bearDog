@@ -28,6 +28,7 @@ pub struct SecurityCoreConfig {
     pub session_timeout_seconds: u64,
 }
 
+/// Discrete security posture levels for policy and UI.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum SecurityLevel {
     /// Low security level - basic protection

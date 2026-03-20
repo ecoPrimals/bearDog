@@ -35,7 +35,7 @@ pub struct CircuitBreaker {
 
 impl CircuitBreaker {
     /// Create a new circuit breaker
-    pub fn new(threshold: u32) -> Self {
+    pub const fn new(threshold: u32) -> Self {
         Self {
             state: CircuitBreakerState::Closed,
             failure_count: 0,
@@ -96,7 +96,7 @@ impl CircuitBreaker {
     }
 
     /// Get current state
-    pub fn state(&self) -> &CircuitBreakerState {
+    pub const fn state(&self) -> &CircuitBreakerState {
         &self.state
     }
 }

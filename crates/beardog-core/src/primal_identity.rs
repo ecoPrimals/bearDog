@@ -80,33 +80,51 @@ pub struct DiscoveredCapabilities {
     pub network: NetworkCapabilities,
 }
 
+/// Cryptographic facilities exposed by the local platform (HSM, OS RNG, post-quantum readiness).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptoCapabilities {
+    /// True when a hardware or OS-backed high-entropy source is available.
     pub hardware_entropy: bool,
+    /// True when secure hardware or OS APIs can perform signing without exposing raw keys.
     pub hardware_signing: bool,
+    /// True when keys can be stored in an encrypted or hardware-backed vault.
     pub secure_key_storage: bool,
+    /// True when PQ-resistant algorithms are advertised as available for new material.
     pub quantum_resistant: bool,
 }
 
+/// Local storage characteristics used for capability negotiation and placement decisions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StorageCapabilities {
+    /// Best-effort free space estimate for primal-owned storage, in bytes.
     pub available_bytes: u64,
+    /// Encrypted-at-rest storage is available.
     pub encrypted_storage: bool,
+    /// Fast media suitable for hot metadata (e.g. NVMe) is available.
     pub fast_storage: bool,
 }
 
+/// CPU and trusted-execution features discovered at runtime.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComputeCapabilities {
+    /// Logical CPU cores visible to the process.
     pub cpu_cores: usize,
+    /// SIMD extensions usable for bulk crypto or vector workloads.
     pub simd_support: bool,
+    /// TEE, SGX, SEV, or similar confidential execution is present.
     pub trusted_execution: bool,
 }
 
+/// L3/L4 reachability and discovery features for this primal.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkCapabilities {
+    /// IPv4 stack usable for binding or outbound traffic.
     pub ipv4: bool,
+    /// IPv6 stack usable for binding or outbound traffic.
     pub ipv6: bool,
+    /// mDNS / multicast DNS discovery can be used on this host.
     pub mdns: bool,
+    /// UPnP / NAT-PMP style port mapping may be available.
     pub upnp: bool,
 }
 
@@ -123,11 +141,16 @@ pub struct RuntimeNetworkInfo {
     pub ports: HashMap<String, u16>,
 }
 
+/// A single NIC or tunnel interface discovered during runtime network enumeration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkInterface {
+    /// OS-reported interface name (e.g. `eth0`, `wlan0`).
     pub name: String,
+    /// All addresses currently assigned to this interface.
     pub addresses: Vec<IpAddr>,
+    /// Interface is administratively up and able to pass traffic.
     pub is_up: bool,
+    /// Loopback or host-only interface (typically excluded from public announcement).
     pub is_loopback: bool,
 }
 

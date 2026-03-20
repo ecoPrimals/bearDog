@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Entropy Collection Handler
-// Vendor-agnostic: Works with ANY compatible HSM (PKCS#11, FIDO2, Mobile, etc.)
+//! Collect entropy into seed files and display seed metadata (`beardog entropy`).
 
 use beardog_errors::BearDogError;
 use beardog_genetics::genetics::entropy_hierarchy::LiveFeedValidator;
@@ -18,14 +17,23 @@ use uuid::Uuid;
 /// Entropy seed metadata (saved to file)
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EntropySeedMetadata {
+    /// Unique seed identifier (UUID)
     pub seed_id: String,
+    /// User-selected quality tier (1–5)
     pub quality_tier: u8,
+    /// Measured quality score (0.0–1.0)
     pub quality_score: f64,
+    /// HSM or device label used during collection
     pub device_used: String,
+    /// Tier label of the selected device (e.g. Hardware, Software)
     pub device_tier: String,
+    /// Creation time (RFC 3339)
     pub timestamp: String,
+    /// Whether interactive human entropy was used
     pub human_input: bool,
+    /// Optional human identity string for sovereign seeds
     pub identity: Option<String>,
+    /// Raw entropy bytes, standard Base64-encoded
     pub entropy_bytes_b64: String,
 }
 
@@ -85,21 +93,21 @@ pub async fn handle_entropy_collect(
             tier: format!("{:?}", hsm.assigned_tier),
             hsm_type: match &hsm.interface_type {
                 beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType::Tpm { version } =>
-                    format!("TPM {}", version),
+                    format!("TPM {version}"),
                 beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType::SoftwareHsm { implementation } =>
-                    format!("Software ({})", implementation),
+                    format!("Software ({implementation})"),
                 beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType::MobileHsm { platform, .. } =>
-                    format!("Mobile ({})", platform),
+                    format!("Mobile ({platform})"),
                 beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType::CloudKms { provider, .. } =>
-                    format!("Cloud ({})", provider),
+                    format!("Cloud ({provider})"),
                 beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType::NetworkHsm { endpoint, .. } =>
-                    format!("Network ({})", endpoint),
+                    format!("Network ({endpoint})"),
                 beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType::UsbHsm { device_id } =>
-                    format!("USB ({})", device_id),
+                    format!("USB ({device_id})"),
                 beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType::SmartCard { reader } =>
-                    format!("SmartCard ({})", reader),
+                    format!("SmartCard ({reader})"),
                 beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType::CustomApi { api_type, .. } =>
-                    format!("Custom ({})", api_type),
+                    format!("Custom ({api_type})"),
             },
         })
         .collect();
@@ -114,10 +122,7 @@ pub async fn handle_entropy_collect(
     println!();
 
     // Step 2: Select best HSM based on preference (algorithm-agnostic)
-    println!(
-        "🎯 Selecting HSM based on preference: '{}'",
-        device_preference
-    );
+    println!("🎯 Selecting HSM based on preference: '{device_preference}'");
 
     let selected_hsm = match device_preference.to_lowercase().as_str() {
         "auto" => {
@@ -155,8 +160,7 @@ pub async fn handle_entropy_collect(
             })?,
         _ => {
             let msg = format!(
-                "Unknown device preference: '{}'. Use: auto, software, mobile, usb, hardware",
-                device_preference
+                "Unknown device preference: '{device_preference}'. Use: auto, software, mobile, usb, hardware"
             );
             return Err(BearDogError::invalid_input(&msg));
         }
@@ -283,13 +287,13 @@ pub async fn handle_entropy_collect(
 
     // Step 5: Create seed metadata
     println!("🎉 Generated Entropy Seed");
-    println!("   ID: {}", seed_id);
-    println!("   Quality Tier: {}", quality_tier);
+    println!("   ID: {seed_id}");
+    println!("   Quality Tier: {quality_tier}");
     println!("   Quality Score: {:.2}%", quality_score * 100.0);
     println!("   Device: {}", selected_hsm.name);
     println!("   Timestamp: {}", Utc::now().to_rfc3339());
     if let Some(id) = identity {
-        println!("   Identity: {}", id);
+        println!("   Identity: {id}");
     }
     println!();
 
@@ -310,17 +314,11 @@ pub async fn handle_entropy_collect(
         .map_err(|e| BearDogError::serialization(&e.to_string()))?;
     fs::write(output_path, json)?;
 
-    println!("💾 Saved to: {}", output_path);
+    println!("💾 Saved to: {output_path}");
     println!();
     println!("💡 Next steps:");
-    println!(
-        "   • View seed info: beardog entropy info --seed {}",
-        output_path
-    );
-    println!(
-        "   • Use for keys: beardog key generate --key-id my-key --seed {}",
-        output_path
-    );
+    println!("   • View seed info: beardog entropy info --seed {output_path}");
+    println!("   • Use for keys: beardog key generate --key-id my-key --seed {output_path}");
 
     Ok(())
 }
@@ -349,7 +347,7 @@ pub async fn handle_entropy_info(seed_path: &str) -> Result<(), BearDogError> {
         if seed.human_input { "Yes" } else { "No" }
     );
     if let Some(id) = seed.identity {
-        println!("   Identity: {}", id);
+        println!("   Identity: {id}");
     }
 
     // Decode entropy bytes
@@ -369,21 +367,24 @@ pub async fn handle_entropy_info(seed_path: &str) -> Result<(), BearDogError> {
 // HELPER FUNCTIONS
 // ============================================================================
 
-pub(crate) fn base64_encode(data: &[u8]) -> String {
-    use base64::engine::general_purpose::STANDARD;
+/// Standard Base64-encode bytes (for seed payloads).
+pub fn base64_encode(data: &[u8]) -> String {
     use base64::Engine;
+    use base64::engine::general_purpose::STANDARD;
     STANDARD.encode(data)
 }
 
-pub(crate) fn base64_decode(data: &str) -> Result<Vec<u8>, BearDogError> {
-    use base64::engine::general_purpose::STANDARD;
+/// Decode standard Base64 to bytes.
+pub fn base64_decode(data: &str) -> Result<Vec<u8>, BearDogError> {
     use base64::Engine;
+    use base64::engine::general_purpose::STANDARD;
     STANDARD
         .decode(data)
         .map_err(|e| BearDogError::serialization(&e.to_string()))
 }
 
-pub(crate) fn calculate_entropy_quality(bytes: &[u8]) -> f64 {
+/// Shannon entropy of `bytes`, normalized to approximately 0.0–1.0 (8 bits max).
+pub fn calculate_entropy_quality(bytes: &[u8]) -> f64 {
     if bytes.is_empty() {
         return 0.0;
     }
@@ -410,16 +411,16 @@ pub(crate) fn calculate_entropy_quality(bytes: &[u8]) -> f64 {
 
 /// Save entropy data to file (for future persistence features)
 #[allow(dead_code)]
-pub(crate) fn save_entropy_file(data: &[u8], path: &str) -> Result<(), BearDogError> {
+pub fn save_entropy_file(data: &[u8], path: &str) -> Result<(), BearDogError> {
     std::fs::write(path, data)
-        .map_err(|e| BearDogError::io_error(&format!("Failed to save entropy file: {}", e)))
+        .map_err(|e| BearDogError::io_error(&format!("Failed to save entropy file: {e}")))
 }
 
 /// Load entropy data from file (for future persistence features)
 #[allow(dead_code)]
-pub(crate) fn load_entropy_file(path: &str) -> Result<Vec<u8>, BearDogError> {
+pub fn load_entropy_file(path: &str) -> Result<Vec<u8>, BearDogError> {
     std::fs::read(path)
-        .map_err(|e| BearDogError::io_error(&format!("Failed to load entropy file: {}", e)))
+        .map_err(|e| BearDogError::io_error(&format!("Failed to load entropy file: {e}")))
 }
 
 fn generate_system_entropy(size: usize) -> Result<Vec<u8>, BearDogError> {
@@ -441,7 +442,7 @@ fn generate_system_entropy(size: usize) -> Result<Vec<u8>, BearDogError> {
     // Source 2: High-resolution timestamp (nanosecond precision)
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .map_err(|e| BearDogError::system(format!("System time error: {}", e)))?
+        .map_err(|e| BearDogError::system(format!("System time error: {e}")))?
         .as_nanos();
     entropy_pool.extend_from_slice(&timestamp.to_le_bytes());
 

@@ -179,9 +179,8 @@ pub trait TimeoutPolicy: Send + Sync {
             eprintln!("WARNING: Connection timeout is zero (immediate failure)");
         } else if conn_timeout > Duration::from_secs(300) {
             eprintln!(
-                "WARNING: Connection timeout is very long ({:?}), \
-                 consider reducing for better responsiveness",
-                conn_timeout
+                "WARNING: Connection timeout is very long ({conn_timeout:?}), \
+                 consider reducing for better responsiveness"
             );
         }
 
@@ -194,8 +193,7 @@ pub trait TimeoutPolicy: Send + Sync {
             // Global should be reasonable
             if global < Duration::from_secs(1) {
                 return Err(format!(
-                    "Global timeout ({:?}) is too short for most operations",
-                    global
+                    "Global timeout ({global:?}) is too short for most operations"
                 ));
             }
         }

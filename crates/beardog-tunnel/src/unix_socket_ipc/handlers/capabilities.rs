@@ -5,8 +5,8 @@
 //! Provides self-description and identity endpoints for service discovery.
 //! Every primal should expose these methods to enable capability-based discovery.
 
-use super::utils::get_primal_name;
 use super::MethodHandler;
+use super::utils::get_primal_name;
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
 use beardog_types::primal_identity::PrimalIdentity;
@@ -48,14 +48,14 @@ impl MethodHandler for CapabilitiesHandler {
             "capabilities" | "get_capabilities" => self.handle_capabilities().await,
             "discover_capabilities" => self.handle_discover_capabilities().await,
             "identity" | "whoami" | "get_identity" => self.handle_identity().await,
-            _ => Err(format!("Method not found: {}", method)),
+            _ => Err(format!("Method not found: {method}")),
         }
     }
 }
 
 impl CapabilitiesHandler {
     /// Create a new CapabilitiesHandler with explicit identity injection
-    pub fn new(identity: Arc<PrimalIdentity>) -> Self {
+    pub const fn new(identity: Arc<PrimalIdentity>) -> Self {
         Self { identity }
     }
 
@@ -225,7 +225,7 @@ mod tests {
     #[serial]
     async fn test_capabilities_response() {
         let prev = std::env::var("PRIMAL_NAME").ok();
-        std::env::set_var("PRIMAL_NAME", "beardog");
+        beardog_errors::process_env::set_var("PRIMAL_NAME", "beardog");
         let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
         let handler = CapabilitiesHandler::new(identity);
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
@@ -242,9 +242,9 @@ mod tests {
         assert!(response["btsp_enabled"].as_bool().unwrap());
 
         if let Some(p) = prev {
-            std::env::set_var("PRIMAL_NAME", p);
+            beardog_errors::process_env::set_var("PRIMAL_NAME", p);
         } else {
-            std::env::remove_var("PRIMAL_NAME");
+            beardog_errors::process_env::remove_var("PRIMAL_NAME");
         }
     }
 
@@ -252,7 +252,7 @@ mod tests {
     #[serial]
     async fn test_identity_response() {
         let prev = std::env::var("PRIMAL_NAME").ok();
-        std::env::set_var("PRIMAL_NAME", "beardog");
+        beardog_errors::process_env::set_var("PRIMAL_NAME", "beardog");
         let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
         let handler = CapabilitiesHandler::new(identity);
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
@@ -268,9 +268,9 @@ mod tests {
         assert!(response["encryption_tag"].is_string());
 
         if let Some(p) = prev {
-            std::env::set_var("PRIMAL_NAME", p);
+            beardog_errors::process_env::set_var("PRIMAL_NAME", p);
         } else {
-            std::env::remove_var("PRIMAL_NAME");
+            beardog_errors::process_env::remove_var("PRIMAL_NAME");
         }
     }
 

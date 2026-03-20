@@ -4,7 +4,7 @@
 //!
 //! Tests Pure Rust HID access via /dev/hidraw and sysfs
 
-use crate::linux::{discover_hidraw, LinuxHidDevice};
+use crate::linux::{LinuxHidDevice, discover_hidraw};
 use crate::types::{HidDeviceInfo, ProductId, VendorId};
 
 // ═══════════════════════════════════════════════════════════════════════════

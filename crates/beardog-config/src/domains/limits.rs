@@ -122,7 +122,7 @@ impl LimitsConfig {
     ///
     /// Prefer using `LimitsConfig::builder()` for cleaner construction.
     #[allow(clippy::too_many_arguments)]
-    pub fn new(
+    pub const fn new(
         buffer_size: usize,
         max_connections: usize,
         max_retries: usize,
@@ -183,7 +183,7 @@ impl LimitsConfig {
         if self.thread_pool_size == 0 {
             // Use sensible default based on available CPUs
             let cpus = std::thread::available_parallelism()
-                .map(|n| n.get())
+                .map(std::num::NonZero::get)
                 .unwrap_or(DEFAULT_MIN_THREADS);
             cpus.clamp(DEFAULT_MIN_THREADS, DEFAULT_MAX_THREADS)
         } else {
@@ -208,56 +208,56 @@ pub struct LimitsConfigBuilder {
 impl LimitsConfigBuilder {
     /// Set the buffer size for I/O operations
     #[must_use]
-    pub fn buffer_size(mut self, size: usize) -> Self {
+    pub const fn buffer_size(mut self, size: usize) -> Self {
         self.buffer_size = Some(size);
         self
     }
 
     /// Set the maximum number of concurrent connections
     #[must_use]
-    pub fn max_connections(mut self, count: usize) -> Self {
+    pub const fn max_connections(mut self, count: usize) -> Self {
         self.max_connections = Some(count);
         self
     }
 
     /// Set the maximum number of retry attempts
     #[must_use]
-    pub fn max_retries(mut self, count: usize) -> Self {
+    pub const fn max_retries(mut self, count: usize) -> Self {
         self.max_retries = Some(count);
         self
     }
 
     /// Set the backoff duration in milliseconds between retries
     #[must_use]
-    pub fn backoff_ms(mut self, ms: u64) -> Self {
+    pub const fn backoff_ms(mut self, ms: u64) -> Self {
         self.backoff_ms = Some(ms);
         self
     }
 
     /// Set the maximum message size in bytes
     #[must_use]
-    pub fn max_message_size(mut self, size: usize) -> Self {
+    pub const fn max_message_size(mut self, size: usize) -> Self {
         self.max_message_size = Some(size);
         self
     }
 
     /// Set the queue size for async operations
     #[must_use]
-    pub fn queue_size(mut self, size: usize) -> Self {
+    pub const fn queue_size(mut self, size: usize) -> Self {
         self.queue_size = Some(size);
         self
     }
 
     /// Set the thread pool size (0 = automatic based on CPU count)
     #[must_use]
-    pub fn thread_pool_size(mut self, size: usize) -> Self {
+    pub const fn thread_pool_size(mut self, size: usize) -> Self {
         self.thread_pool_size = Some(size);
         self
     }
 
     /// Set the default operation timeout in seconds
     #[must_use]
-    pub fn operation_timeout_secs(mut self, secs: u64) -> Self {
+    pub const fn operation_timeout_secs(mut self, secs: u64) -> Self {
         self.operation_timeout_secs = Some(secs);
         self
     }

@@ -31,19 +31,16 @@ pub fn log_aes128_gcm_encrypt(
 ) {
     eprintln!("════════════════════════════════════════════════════════");
     eprintln!("🔐 AES-128-GCM ENCRYPT DIAGNOSTIC (stderr):");
-    eprintln!("   Key: {} bytes", key_len);
-    eprintln!("   Nonce: {} bytes", nonce_len);
-    eprintln!("   Plaintext: {} bytes", plaintext_len);
+    eprintln!("   Key: {key_len} bytes");
+    eprintln!("   Nonce: {nonce_len} bytes");
+    eprintln!("   Plaintext: {plaintext_len} bytes");
     eprintln!("   AAD: {} bytes", aad.len());
     if aad.is_empty() {
         eprintln!("   ⚠️  AAD is EMPTY - this might cause TLS decrypt_error!");
     } else {
         eprintln!("   AAD (hex): {}", hex::encode(aad));
     }
-    eprintln!(
-        "   ✅ Ciphertext: {} bytes (plaintext + 16-byte tag)",
-        ciphertext_len
-    );
+    eprintln!("   ✅ Ciphertext: {ciphertext_len} bytes (plaintext + 16-byte tag)");
     eprintln!("════════════════════════════════════════════════════════");
 }
 
@@ -74,14 +71,14 @@ pub fn log_aes256_gcm_encrypt(
 ) {
     eprintln!("════════════════════════════════════════════════════════");
     eprintln!("🔐 AES-256-GCM ENCRYPT DIAGNOSTIC:");
-    eprintln!("   Key: {} bytes", key_len);
-    eprintln!("   Nonce: {} bytes", nonce_len);
-    eprintln!("   Plaintext: {} bytes", plaintext_len);
+    eprintln!("   Key: {key_len} bytes");
+    eprintln!("   Nonce: {nonce_len} bytes");
+    eprintln!("   Plaintext: {plaintext_len} bytes");
     eprintln!("   AAD: {} bytes", aad.len());
     if !aad.is_empty() {
         eprintln!("   AAD (hex): {}", hex::encode(aad));
     }
-    eprintln!("   Ciphertext: {} bytes (+ 16-byte tag)", ciphertext_len);
+    eprintln!("   Ciphertext: {ciphertext_len} bytes (+ 16-byte tag)");
     eprintln!("════════════════════════════════════════════════════════");
 }
 
@@ -108,14 +105,14 @@ pub fn log_chacha20_poly1305_encrypt(
 ) {
     eprintln!("════════════════════════════════════════════════════════");
     eprintln!("🔐 ChaCha20-Poly1305 ENCRYPT DIAGNOSTIC:");
-    eprintln!("   Key: {} bytes", key_len);
-    eprintln!("   Nonce: {} bytes", nonce_len);
-    eprintln!("   Plaintext: {} bytes", plaintext_len);
+    eprintln!("   Key: {key_len} bytes");
+    eprintln!("   Nonce: {nonce_len} bytes");
+    eprintln!("   Plaintext: {plaintext_len} bytes");
     eprintln!("   AAD: {} bytes", aad.len());
     if !aad.is_empty() {
         eprintln!("   AAD (hex): {}", hex::encode(aad));
     }
-    eprintln!("   Ciphertext: {} bytes (+ 16-byte tag)", ciphertext_len);
+    eprintln!("   Ciphertext: {ciphertext_len} bytes (+ 16-byte tag)");
     eprintln!("════════════════════════════════════════════════════════");
 }
 
@@ -182,10 +179,10 @@ pub fn log_chacha20_poly1305_decrypt(
 pub fn log_hkdf_derivation(input_len: usize, salt_len: usize, info: &str, output_len: usize) {
     eprintln!("════════════════════════════════════════════════════════");
     eprintln!("🔑 HKDF KEY DERIVATION DIAGNOSTIC:");
-    eprintln!("   Input: {} bytes", input_len);
-    eprintln!("   Salt: {} bytes", salt_len);
-    eprintln!("   Info: {}", info);
-    eprintln!("   Output: {} bytes", output_len);
+    eprintln!("   Input: {input_len} bytes");
+    eprintln!("   Salt: {salt_len} bytes");
+    eprintln!("   Info: {info}");
+    eprintln!("   Output: {output_len} bytes");
     eprintln!("════════════════════════════════════════════════════════");
 }
 

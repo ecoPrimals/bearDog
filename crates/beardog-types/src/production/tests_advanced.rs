@@ -181,9 +181,9 @@ fn test_environment_level_all_variants() {
 
     for level in levels {
         let cloned = level; // Copy type, no need for .clone()
-                            // TEST_CATEGORY: unit
-                            // TEST_DOMAIN: types
-                            // TEST_PRIORITY: normal
+        // TEST_CATEGORY: unit
+        // TEST_DOMAIN: types
+        // TEST_PRIORITY: normal
         assert_eq!(level, cloned);
     }
 }

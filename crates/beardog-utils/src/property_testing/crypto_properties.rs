@@ -2,7 +2,7 @@
 
 // Cryptographic property testing implementations
 
-use super::{info, BearDogError, PropertyBasedTestFramework, TestCase};
+use super::{BearDogError, PropertyBasedTestFramework, TestCase, info};
 
 impl PropertyBasedTestFramework {
     /// Test cryptographic properties comprehensively
@@ -24,6 +24,7 @@ impl PropertyBasedTestFramework {
         Ok(())
     }
 
+    /// Seeds cryptographic [`TestCase`] entries with deterministic pseudo-random payloads.
     pub fn generate_crypto_test_cases(&mut self) -> Result<(), BearDogError> {
         info!("🎲 Generating cryptographic test cases");
 

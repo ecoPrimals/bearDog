@@ -13,6 +13,7 @@ use tracing::info;
 
 /// Property-based testing framework - main orchestrator
 pub struct PropertyBasedTestFramework {
+    /// Limits and options for generation, shrinking, and logging.
     pub config: PropertyTestConfig,
     /// Test execution statistics
     pub statistics: PropertyTestStatistics,
@@ -52,41 +53,62 @@ impl Default for PropertyTestConfig {
 /// Test execution statistics
 #[derive(Debug, Default)]
 pub struct PropertyTestStatistics {
+    /// Total recorded property checks (pass + fail).
     pub total_tests: u64,
+    /// Checks that satisfied the property.
     pub passed_tests: u64,
+    /// Checks that violated the property.
     pub failed_tests: u64,
+    /// Distinct property names exercised (if updated by the runner).
     pub properties_tested: u64,
+    /// Mean wall time per check in milliseconds.
     pub average_execution_time_ms: f64,
+    /// Shortest observed check duration in milliseconds.
     pub min_execution_time_ms: f64,
+    /// Longest observed check duration in milliseconds.
     pub max_execution_time_ms: f64,
 }
 
 /// Individual test case
 #[derive(Debug, Clone)]
 pub struct TestCase {
+    /// Stable identifier for correlating with results.
     pub id: u64,
+    /// Serialized or raw input fed to the property.
     pub input_data: Vec<u8>,
+    /// Category label (e.g. functional, crypto).
     pub test_type: String,
+    /// Human-readable property names this case is meant to stress.
     pub expected_properties: Vec<String>,
 }
 
 /// Result of a property test
 #[derive(Debug, Clone)]
 pub struct PropertyTestResult {
+    /// Matches [`TestCase::id`].
     pub test_case_id: u64,
+    /// Which logical property was evaluated.
     pub property_name: String,
+    /// Whether the property held for this case.
     pub passed: bool,
+    /// Time spent on this check in milliseconds.
     pub execution_time_ms: f64,
+    /// Failure explanation when `passed` is false.
     pub error_message: Option<String>,
 }
 
-/// Property value types
+/// Discriminated values for generated inputs and assertion payloads.
 #[derive(Debug, Clone)]
 pub enum PropertyValue {
+    /// UTF-8 string sample.
     String(String),
+    /// Signed integer sample.
     Integer(i64),
+    /// Floating-point sample.
     Float(f64),
+    /// Boolean flag sample.
     Boolean(bool),
+    /// Opaque byte blob sample.
     Bytes(Vec<u8>),
 }
 

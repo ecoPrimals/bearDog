@@ -7,53 +7,115 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Rich predicate tree evaluated against string-keyed security events.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RuleCondition {
     /// Always matches (default condition)
     Always,
 
     /// Field equals a specific value
-    FieldEquals { field: String, value: String },
+    FieldEquals {
+        /// Event field key.
+        field: String,
+        /// Expected string value.
+        value: String,
+    },
 
     /// Field contains a specific value
-    FieldContains { field: String, value: String },
+    FieldContains {
+        /// Event field key.
+        field: String,
+        /// Substring that must be present.
+        value: String,
+    },
 
     /// Field matches a regex pattern
-    FieldMatches { field: String, pattern: String },
+    FieldMatches {
+        /// Event field key.
+        field: String,
+        /// Rust regex pattern text (engine must compile it).
+        pattern: String,
+    },
 
     /// Field is greater than a numeric value
-    FieldGreaterThan { field: String, value: f64 },
+    FieldGreaterThan {
+        /// Event field key parsed as `f64`.
+        field: String,
+        /// Lower bound; match when field value is strictly greater.
+        value: f64,
+    },
 
     /// Field is less than a numeric value
-    FieldLessThan { field: String, value: f64 },
+    FieldLessThan {
+        /// Event field key parsed as `f64`.
+        field: String,
+        /// Upper bound; match when field value is strictly less.
+        value: f64,
+    },
 
     /// Field is between two numeric values
-    FieldBetween { field: String, min: f64, max: f64 },
+    FieldBetween {
+        /// Event field key parsed as `f64`.
+        field: String,
+        /// Inclusive minimum.
+        min: f64,
+        /// Inclusive maximum.
+        max: f64,
+    },
 
     /// Field exists in the event data
-    FieldExists { field: String },
+    FieldExists {
+        /// Key that must be present in the map.
+        field: String,
+    },
 
     /// Field is in a list of values
-    FieldIn { field: String, values: Vec<String> },
+    FieldIn {
+        /// Event field key.
+        field: String,
+        /// Allowed string values.
+        values: Vec<String>,
+    },
 
     /// Logical AND of multiple conditions
-    LogicalAnd { conditions: Vec<RuleCondition> },
+    LogicalAnd {
+        /// All must evaluate true.
+        conditions: Vec<Self>,
+    },
 
     /// Logical OR of multiple conditions
-    LogicalOr { conditions: Vec<RuleCondition> },
+    LogicalOr {
+        /// At least one must evaluate true.
+        conditions: Vec<Self>,
+    },
 
     /// Logical NOT of a condition
-    LogicalNot { condition: Box<RuleCondition> },
+    LogicalNot {
+        /// Negated subtree.
+        condition: Box<Self>,
+    },
 
     /// Frequency threshold condition
-    FrequencyThreshold { count: u32, window_minutes: u32 },
+    FrequencyThreshold {
+        /// Number of matching events required.
+        count: u32,
+        /// Rolling window length in minutes.
+        window_minutes: u32,
+    },
 
     /// Time-based condition
-    TimeWindow { start_hour: u8, end_hour: u8 },
+    TimeWindow {
+        /// Inclusive start hour (0–23).
+        start_hour: u8,
+        /// Inclusive end hour (0–23).
+        end_hour: u8,
+    },
 
     /// Custom condition with arbitrary logic
     Custom {
+        /// Registered plugin or handler name.
         name: String,
+        /// Opaque string parameters interpreted by the named handler.
         parameters: HashMap<String, String>,
     },
 }
@@ -206,6 +268,7 @@ impl RuleCondition {
     }
 }
 
+/// Fluent builder for chaining [`RuleCondition`] fragments before `build_and` / `build_or`.
 #[derive(Debug, Default)]
 pub struct ConditionBuilder {
     conditions: Vec<RuleCondition>,

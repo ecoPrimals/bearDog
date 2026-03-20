@@ -34,11 +34,11 @@ pub use universal::{
 
 // Re-export capability traits
 pub use service_discovery_capability::{
-    create_service_discovery, DiscoveryCapabilities, DiscoveryError, DiscoveryHealthStatus,
-    ServiceDescriptor, ServiceDiscoveryCapability, ServiceHealth, ServiceProtocol,
+    DiscoveryCapabilities, DiscoveryError, DiscoveryHealthStatus, ServiceDescriptor,
+    ServiceDiscoveryCapability, ServiceHealth, ServiceProtocol, create_service_discovery,
 };
 
 pub use key_management_capability::{
-    create_key_management, KeyAlgorithm, KeyManagementCapability, KeyMetadata, KeySpec, KeyState,
-    KeyUsage, KmsCapabilities, KmsError, KmsHealthStatus,
+    KeyAlgorithm, KeyManagementCapability, KeyMetadata, KeySpec, KeyState, KeyUsage,
+    KmsCapabilities, KmsError, KmsHealthStatus, create_key_management,
 };

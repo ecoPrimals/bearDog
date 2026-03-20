@@ -45,7 +45,7 @@ impl ThreatDetectionEngine {
         Ok(incident_id)
     }
 
-    /// Assign incident to team
+    /// Records an assignment (stub implementation logs to stdout).
     pub fn assign_incident_to_team(
         &self,
         incident_id: &str,
@@ -92,7 +92,7 @@ impl ThreatDetectionEngine {
         Ok(Vec::new())
     }
 
-    /// Close incident
+    /// Marks an incident closed in the stub implementation.
     pub fn close_incident(&self, incident_id: &str) -> Result<(), BearDogError> {
         // Simplified implementation for compilation
         println!("Closed incident: {incident_id}");
@@ -100,10 +100,12 @@ impl ThreatDetectionEngine {
     }
 }
 
-/// Incident response structure
+/// Handler-local incident DTO (stringly-typed status for stub implementations).
 #[derive(Debug, Clone)]
 pub struct IncidentResponse {
+    /// Incident identifier returned to callers.
     pub id: String,
+    /// Linked [`ThreatEvent::id`].
     pub threat_id: String,
     /// Current status of the component
     /// Current status of the component

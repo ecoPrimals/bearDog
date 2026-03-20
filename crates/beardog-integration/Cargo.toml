@@ -1,7 +1,7 @@
 [package]
 name = "beardog-integration"
 version.workspace = true
-edition = "2021"
+edition = "2024"
 authors = ["ecoPrimals Team"]
 description = "Songbird UPA integration layer for BearDog - enabling federated service discovery and orchestration"
 license = "AGPL-3.0-only"

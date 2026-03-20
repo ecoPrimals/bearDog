@@ -6,8 +6,8 @@
 
 use chrono::{DateTime, Utc};
 use parking_lot::Mutex;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::SystemTime;
 use tracing::debug;
 use zeroize::Zeroizing;
@@ -29,7 +29,7 @@ pub(super) struct Tunnel {
     pub peer_id: String,
 
     /// Peer's endpoint (e.g., "unix:///tmp/peer.sock")
-    pub peer_endpoint: String,
+    pub _peer_endpoint: String,
 
     /// When the tunnel was established
     pub established_at: DateTime<Utc>,
@@ -59,7 +59,7 @@ pub(super) struct Tunnel {
     pub last_activity: Arc<Mutex<SystemTime>>,
 
     /// Current trust level for this peer
-    pub trust_level: TrustLevel,
+    pub _trust_level: TrustLevel,
 }
 
 impl Tunnel {
@@ -82,13 +82,13 @@ impl Tunnel {
         Self {
             id,
             peer_id,
-            peer_endpoint,
+            _peer_endpoint: peer_endpoint,
             established_at: Utc::now(),
             session_key: Zeroizing::new(session_key),
             bytes_sent: AtomicU64::new(0),     // Lock-free atomic
             bytes_received: AtomicU64::new(0), // Lock-free atomic
             last_activity: Arc::new(Mutex::new(SystemTime::now())),
-            trust_level,
+            _trust_level: trust_level,
         }
     }
 

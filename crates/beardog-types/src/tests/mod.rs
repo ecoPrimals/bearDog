@@ -13,6 +13,59 @@ mod production_monitoring_advanced_tests;
 mod production_monitoring_basic_tests;
 
 // February 2026: Coverage gap tests
+mod coverage_gap_11_config_trait;
+mod coverage_gap_11_constants_tail;
+mod coverage_gap_11_domains_network;
+mod coverage_gap_11_hsm_monitoring;
+mod coverage_gap_11_migration_providers;
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    dead_code,
+    deprecated,
+    clippy::float_cmp
+)]
+mod coverage_gap_12_adapter_network;
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    dead_code,
+    deprecated,
+    clippy::float_cmp
+)]
+mod coverage_gap_12_config_genetics;
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    dead_code,
+    deprecated,
+    clippy::float_cmp
+)]
+mod coverage_gap_12_hsm_config_status;
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    dead_code,
+    deprecated,
+    clippy::float_cmp
+)]
+mod coverage_gap_12_hsm_keys;
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    dead_code,
+    deprecated,
+    clippy::float_cmp
+)]
+mod coverage_gap_12_resilience_monitoring;
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    dead_code,
+    deprecated,
+    clippy::float_cmp
+)]
+mod coverage_gap_12_system_loader;
 #[allow(
     unused_imports,
     clippy::module_inception,
@@ -22,15 +75,6 @@ mod production_monitoring_basic_tests;
 )]
 mod coverage_gap_tests_1;
 mod coverage_gap_tests_10;
-mod coverage_gap_tests_11;
-#[allow(
-    unused_imports,
-    clippy::module_inception,
-    dead_code,
-    deprecated,
-    clippy::float_cmp
-)]
-mod coverage_gap_tests_12;
 #[allow(
     unused_imports,
     clippy::module_inception,

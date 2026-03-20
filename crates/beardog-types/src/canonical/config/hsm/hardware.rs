@@ -53,6 +53,7 @@ pub struct HardwareHsmProvider {
     pub authentication: HsmAuthConfig,
     /// The security value
     pub security: HsmSecurityConfig,
+    /// Throughput and batching limits for this hardware slot. **Default:** [`HsmPerformanceConfig::default()`].
     pub performance: HsmPerformanceConfig,
     /// Whether this HSM provider is enabled
     /// Whether feature is enabled
@@ -72,15 +73,20 @@ pub enum HardwareHsmType {
     NetworkHsm {
         /// HSM endpoint URL or IP address
         endpoint: String,
+        /// Wire protocol (`grpc`, `https`, vendor-specific).
         protocol: String,
     },
     /// USB-connected HSM
-    UsbHsm { device_path: String },
+    UsbHsm {
+        /// OS device path (e.g. `/dev/hidraw0`).
+        device_path: String,
+    },
     /// Smart card HSM
     SmartCard {
         /// Smart card reader name
         reader_name: String,
     },
+    /// Trusted Platform Module integration.
     Tpm {
         /// TPM version (1.2, 2.0, etc.)
         version: String,
@@ -144,6 +150,7 @@ pub struct HsmAuthConfig {
     pub auth_method: AuthenticationMethod,
     /// The credentials value
     pub credentials: AuthenticationCredentials,
+    /// Max authenticated session lifetime before re-login. **Default:** from env or provider policy.
     pub session_timeout: Duration,
     /// Whether to automatically login to HSM
     /// Whether `auto_login` is enabled
@@ -167,10 +174,16 @@ pub enum AuthenticationMethod {
     None,
 }
 
+/// Secrets and references used with [`AuthenticationMethod`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuthenticationCredentials {
     /// Username and password authentication
-    UsernamePassword { username: String, password: String },
+    UsernamePassword {
+        /// HSM or PKCS#11 user name.
+        username: String,
+        /// Corresponding password or PIN (store via secure secret manager in production).
+        password: String,
+    },
     /// Certificate-based authentication
     Certificate {
         /// Path to certificate file
@@ -187,13 +200,16 @@ pub enum AuthenticationCredentials {
     },
     /// Hardware security token authentication
     HardwareToken {
+        /// Token slot or serial identifier.
         token_id: String,
+        /// Optional PIN for second factor.
         pin: Option<String>,
     },
     /// Biometric authentication method
     Biometric {
         /// Biometric authentication method (fingerprint, face, etc.)
         method: String,
+        /// Opaque template or challenge payload from the biometric stack.
         payload: Vec<u8>,
     },
     /// None variant
@@ -232,6 +248,7 @@ impl Default for HsmSecurityConfig {
     }
 }
 
+/// Tunable throughput and caching for a hardware HSM connection pool.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmPerformanceConfig {
     /// Max Operations Per Second

@@ -41,17 +41,23 @@ async fn test_get_license_status_capabilities() {
     let status = core.get_license_status();
 
     // Verify core capabilities are granted
-    assert!(status
-        .capabilities_granted
-        .contains(&"security".to_string()));
+    assert!(
+        status
+            .capabilities_granted
+            .contains(&"security".to_string())
+    );
     assert!(status.capabilities_granted.contains(&"hsm".to_string()));
     assert!(status.capabilities_granted.contains(&"crypto".to_string()));
-    assert!(status
-        .capabilities_granted
-        .contains(&"monitoring".to_string()));
-    assert!(status
-        .capabilities_granted
-        .contains(&"workflows".to_string()));
+    assert!(
+        status
+            .capabilities_granted
+            .contains(&"monitoring".to_string())
+    );
+    assert!(
+        status
+            .capabilities_granted
+            .contains(&"workflows".to_string())
+    );
     assert!(status.capabilities_granted.contains(&"ai".to_string()));
 }
 

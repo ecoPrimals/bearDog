@@ -228,7 +228,7 @@ impl EcosystemListener {
         let discovered_primals = self.discovered_primals.clone();
         let discovered_capabilities = self.discovered_capabilities.clone();
 
-        let task = tokio::spawn(async move {
+        tokio::spawn(async move {
             info!("🔍 mDNS listener active - discovering primals via multicast DNS");
 
             // Modern interval-based polling (replaces sleep in loop)
@@ -263,9 +263,7 @@ impl EcosystemListener {
                     }
                 }
             }
-        });
-
-        task
+        })
     }
 
     /// Start HTTP discovery listener
@@ -274,7 +272,7 @@ impl EcosystemListener {
         let discovered_primals = self.discovered_primals.clone();
         let discovered_capabilities = self.discovered_capabilities.clone();
 
-        let task = tokio::spawn(async move {
+        tokio::spawn(async move {
             info!("🌐 HTTP discovery listener active - polling discovery endpoints");
 
             // Modern interval-based polling (replaces sleep in loop)
@@ -309,9 +307,7 @@ impl EcosystemListener {
                     }
                 }
             }
-        });
-
-        task
+        })
     }
 
     /// Start environment variable listener
@@ -320,7 +316,7 @@ impl EcosystemListener {
         let discovered_primals = self.discovered_primals.clone();
         let discovered_capabilities = self.discovered_capabilities.clone();
 
-        let task = tokio::spawn(async move {
+        tokio::spawn(async move {
             info!("🔧 Environment listener active - monitoring environment variables");
 
             // Modern interval-based polling (replaces sleep in loop)
@@ -356,9 +352,7 @@ impl EcosystemListener {
                     }
                 }
             }
-        });
-
-        task
+        })
     }
 
     /// Start service mesh listener
@@ -367,7 +361,7 @@ impl EcosystemListener {
         let discovered_primals = self.discovered_primals.clone();
         let discovered_capabilities = self.discovered_capabilities.clone();
 
-        let task = tokio::spawn(async move {
+        tokio::spawn(async move {
             info!("🕸️ Service mesh listener active - discovering via service mesh");
 
             // Modern interval-based polling (replaces sleep in loop)
@@ -397,9 +391,7 @@ impl EcosystemListener {
                     }
                 }
             }
-        });
-
-        task
+        })
     }
 
     #[allow(clippy::cognitive_complexity)]
@@ -636,7 +628,9 @@ impl EcosystemListener {
                 "🚨 Potential sovereignty violation detected in primal ID: {}",
                 discovered_primal.primal_id
             );
-            warn!("   Each primal should only know itself and discover others through universal adapter");
+            warn!(
+                "   Each primal should only know itself and discover others through universal adapter"
+            );
         }
 
         // Store discovered primal with capability-based identification
@@ -802,7 +796,10 @@ mod tests {
     #[tokio::test]
     async fn test_environment_discovery() -> Result<(), Box<dyn std::error::Error>> {
         // Simulate an environment-based announcement discovery
-        std::env::set_var("COMPUTE_ENDPOINT", "http://discovered-compute-service:8081");
+        beardog_errors::process_env::set_var(
+            "COMPUTE_ENDPOINT",
+            "http://discovered-compute-service:8081",
+        );
 
         let announcements = EcosystemListener::check_environment_announcements()?;
 
@@ -813,9 +810,11 @@ mod tests {
 
         if !announcements.is_empty() {
             let compute_announcement = &announcements[0];
-            assert!(compute_announcement
-                .capabilities
-                .contains(&ServiceCapabilityType::ComputeIntelligence));
+            assert!(
+                compute_announcement
+                    .capabilities
+                    .contains(&ServiceCapabilityType::ComputeIntelligence)
+            );
             // Validate sovereignty compliance - primal only knows itself, discovers others dynamically
             assert!(
                 !compute_announcement.primal_id.is_empty(),
@@ -837,7 +836,7 @@ mod tests {
         }
 
         // Clean up
-        std::env::remove_var("COMPUTE_ENDPOINT");
+        beardog_errors::process_env::remove_var("COMPUTE_ENDPOINT");
 
         Ok(())
     }

@@ -148,9 +148,11 @@ fn test_context_aware_license_with_requirements() {
 
     assert!(!license.context_requirements.is_empty());
     assert_eq!(license.context_requirements.len(), 3);
-    assert!(license
-        .context_requirements
-        .contains(&"Active monitoring".to_string()));
+    assert!(
+        license
+            .context_requirements
+            .contains(&"Active monitoring".to_string())
+    );
 }
 
 // ============================================================================

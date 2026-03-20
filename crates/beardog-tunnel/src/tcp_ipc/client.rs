@@ -18,7 +18,7 @@ pub struct TcpIpcClient {
 
 impl TcpIpcClient {
     /// Create new TCP client
-    pub fn new(server_addr: SocketAddr) -> Self {
+    pub const fn new(server_addr: SocketAddr) -> Self {
         Self { server_addr }
     }
 
@@ -44,27 +44,27 @@ impl TcpIpcClient {
 
         // Send request (serialization of valid json! macro value is infallible, but handle gracefully)
         let request_str = serde_json::to_string(&request)
-            .map_err(|e| BearDogError::system(format!("Failed to serialize request: {}", e)))?
+            .map_err(|e| BearDogError::system(format!("Failed to serialize request: {e}")))?
             + "\n";
         writer
             .write_all(request_str.as_bytes())
             .await
-            .map_err(|e| BearDogError::system(format!("Failed to send request: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to send request: {e}")))?;
 
         // Read response
         let mut response_line = String::new();
         reader
             .read_line(&mut response_line)
             .await
-            .map_err(|e| BearDogError::system(format!("Failed to read response: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to read response: {e}")))?;
 
         // Parse response
         let response: Value = serde_json::from_str(&response_line)
-            .map_err(|e| BearDogError::system(format!("Invalid JSON response: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Invalid JSON response: {e}")))?;
 
         // Check for error
         if let Some(error) = response.get("error") {
-            return Err(BearDogError::system(format!("RPC error: {}", error)));
+            return Err(BearDogError::system(format!("RPC error: {error}")));
         }
 
         // Return result

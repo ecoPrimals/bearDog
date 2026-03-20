@@ -139,14 +139,18 @@ async fn test_spawn_with_single_parent() -> Result<(), BearDogError> {
     assert!(result.success);
     assert_eq!(result.genetics.generation, 1);
     assert!(result.genetics.capabilities.len() >= 2);
-    assert!(result
-        .genetics
-        .capabilities
-        .contains(&NodeCapability::DataStorage));
-    assert!(result
-        .genetics
-        .capabilities
-        .contains(&NodeCapability::ComputeProvider));
+    assert!(
+        result
+            .genetics
+            .capabilities
+            .contains(&NodeCapability::DataStorage)
+    );
+    assert!(
+        result
+            .genetics
+            .capabilities
+            .contains(&NodeCapability::ComputeProvider)
+    );
 
     Ok(())
 }

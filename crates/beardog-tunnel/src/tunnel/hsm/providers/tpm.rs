@@ -59,7 +59,7 @@ impl TpmUniversalProvider {
     }
 
     /// Get security level (TPM is level 2-3 depending on implementation)
-    pub fn get_security_level(&self) -> u8 {
+    pub const fn get_security_level(&self) -> u8 {
         match self.tpm_version {
             TpmVersion::V1_2 => 2,
             TpmVersion::V2_0 => 3,
@@ -67,12 +67,12 @@ impl TpmUniversalProvider {
     }
 
     /// Get TPM version
-    pub fn tpm_version(&self) -> &TpmVersion {
+    pub const fn tpm_version(&self) -> &TpmVersion {
         &self.tpm_version
     }
 
     /// Get capabilities
-    pub fn capabilities(&self) -> Option<&TpmCapabilities> {
+    pub const fn capabilities(&self) -> Option<&TpmCapabilities> {
         self.capabilities.as_ref()
     }
 }

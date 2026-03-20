@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Ring buffer of [`OptimizationAction`] records with rolling success-rate estimates.
 
 use super::types::OptimizationAction;
 use std::collections::{HashMap, VecDeque};
 
+/// Bounded deque of actions plus per-type success summaries.
 pub struct OptimizationHistory {
     optimization_actions: VecDeque<OptimizationAction>,
     success_rates: HashMap<String, f64>,
@@ -24,6 +23,7 @@ impl OptimizationHistory {
         }
     }
 
+    /// Appends `action`, evicts oldest when over `max_history_size`, refreshes rates.
     pub fn add_action(&mut self, action: OptimizationAction) {
         // Add new action
         self.optimization_actions.push_back(action);

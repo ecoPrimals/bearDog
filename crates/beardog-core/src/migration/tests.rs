@@ -38,15 +38,21 @@ fn test_migration_config_default() {
 fn test_migration_config_default_phases() {
     let config = SovereignEntropyMigrationConfig::default();
 
-    assert!(config
-        .enabled_phases
-        .contains(&MigrationPhase::CryptographicKeys));
-    assert!(config
-        .enabled_phases
-        .contains(&MigrationPhase::NeuralNetworkWeights));
-    assert!(config
-        .enabled_phases
-        .contains(&MigrationPhase::RandomDataGeneration));
+    assert!(
+        config
+            .enabled_phases
+            .contains(&MigrationPhase::CryptographicKeys)
+    );
+    assert!(
+        config
+            .enabled_phases
+            .contains(&MigrationPhase::NeuralNetworkWeights)
+    );
+    assert!(
+        config
+            .enabled_phases
+            .contains(&MigrationPhase::RandomDataGeneration)
+    );
     assert_eq!(
         config.enabled_phases.len(),
         3,

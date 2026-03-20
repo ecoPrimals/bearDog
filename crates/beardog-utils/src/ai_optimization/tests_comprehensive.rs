@@ -454,9 +454,9 @@ fn test_get_recent_actions_more_than_available() {
 
     let recent = history.get_recent_actions(10);
     assert_eq!(recent.len(), 3); // Only 3 available
-                                 // TEST_CATEGORY: unit
-                                 // TEST_DOMAIN: core
-                                 // TEST_PRIORITY: normal
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 }
 
 #[test]

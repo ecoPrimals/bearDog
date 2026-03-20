@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Decrypt Handler
-// Algorithm-agnostic: Automatically detects encryption algorithm from metadata
+//! Decrypt ciphertext files (or stdin) using key metadata from the encrypted payload.
 
 use super::key_store;
 use beardog_errors::BearDogError;
-use beardog_tunnel::tunnel::hsm::types::config::SoftwareHsmConfig;
 use beardog_tunnel::tunnel::hsm::HsmProvider;
 use beardog_tunnel::tunnel::hsm::SoftwareHsm;
+use beardog_tunnel::tunnel::hsm::types::config::SoftwareHsmConfig;
 use std::fs;
 use std::sync::Arc;
 
@@ -29,7 +28,7 @@ pub async fn handle_decrypt(
 
     // Step 1: Load key metadata (vendor-agnostic)
     if !use_stdin && !use_stdout {
-        println!("🔑 Loading key: {}", key_id);
+        println!("🔑 Loading key: {key_id}");
     }
     let stored_key = key_store::load_key(key_id)?;
     if !use_stdin && !use_stdout {
@@ -48,7 +47,7 @@ pub async fn handle_decrypt(
         buffer
     } else {
         if !use_stdout {
-            println!("📂 Reading encrypted file: {}", input_path);
+            println!("📂 Reading encrypted file: {input_path}");
         }
         let data = fs::read(input_path)?;
         if !use_stdout {
@@ -88,7 +87,7 @@ pub async fn handle_decrypt(
         io::stdout().write_all(&plaintext)?;
         io::stdout().flush()?;
     } else {
-        println!("💾 Writing decrypted file: {}", output_path);
+        println!("💾 Writing decrypted file: {output_path}");
         fs::write(output_path, plaintext)?;
         println!("✅ Saved successfully");
     }

@@ -214,13 +214,13 @@ mod tests {
     fn test_validate_env_vars() {
         const TEST_PORT: &str = "8080"; // Test constant
         
-        std::env::set_var("BEARDOG_PORT", TEST_PORT);
-        std::env::set_var("BEARDOG_LOG_LEVEL", "info");
+        beardog_errors::process_env::set_var("BEARDOG_PORT", TEST_PORT);
+        beardog_errors::process_env::set_var("BEARDOG_LOG_LEVEL", "info");
         let errors = validate_env_vars();
         assert!(errors.is_empty());
 
-        std::env::set_var("BEARDOG_PORT", "not_a_number");
+        beardog_errors::process_env::set_var("BEARDOG_PORT", "not_a_number");
         assert!(!errors.is_empty());
 
-        std::env::remove_var("BEARDOG_PORT");
-        std::env::remove_var("BEARDOG_LOG_LEVEL");
+        beardog_errors::process_env::remove_var("BEARDOG_PORT");
+        beardog_errors::process_env::remove_var("BEARDOG_LOG_LEVEL");

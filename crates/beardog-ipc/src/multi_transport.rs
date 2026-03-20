@@ -15,7 +15,7 @@
 //! │                                                               │
 //! │  ┌─────────────────────┐    ┌─────────────────────┐          │
 //! │  │   tarpc Server      │    │   JSON-RPC Server   │          │
-//! │  │   (Port 9901)       │    │   (Port 9900)       │          │
+//! │  │   (base+1, env)     │    │   (base, env)       │          │
 //! │  │   ~10-20μs          │    │   ~100-500μs        │          │
 //! │  │   Binary/Bincode    │    │   Human-readable    │          │
 //! │  └─────────────────────┘    └─────────────────────┘          │
@@ -40,6 +40,7 @@
 use std::net::SocketAddr;
 use std::time::Duration;
 
+use beardog_config::domains::network_addresses::DEFAULT_BIND_ADDRESS;
 use tokio::sync::broadcast;
 use tracing::{error, info, warn};
 
@@ -49,10 +50,10 @@ use crate::tarpc_server::BearDogCryptoServer;
 /// Multi-transport server configuration
 #[derive(Debug, Clone)]
 pub struct MultiTransportConfig {
-    /// tarpc server address (default: 127.0.0.1:9901)
+    /// tarpc bind address (`BEARDOG_TARPC_ADDR` or `BEARDOG_BIND_ADDR` + port from `beardog_config::DEFAULT_TCP_IPC_PORT` + 1)
     pub tarpc_addr: SocketAddr,
 
-    /// JSON-RPC server address (default: 127.0.0.1:9900)
+    /// JSON-RPC bind address (`BEARDOG_JSONRPC_ADDR` or `BEARDOG_BIND_ADDR` + `beardog_config::DEFAULT_TCP_IPC_PORT`)
     pub jsonrpc_addr: SocketAddr,
 
     /// Enable tarpc server
@@ -79,7 +80,7 @@ impl Default for MultiTransportConfig {
         // Self-knowledge: discover configuration from environment
         // All values can be overridden by environment variables
         let bind_addr =
-            std::env::var("BEARDOG_BIND_ADDR").unwrap_or_else(|_| "127.0.0.1".to_string());
+            std::env::var("BEARDOG_BIND_ADDR").unwrap_or_else(|_| DEFAULT_BIND_ADDRESS.to_string());
 
         let tarpc_port: u16 = std::env::var("BEARDOG_TARPC_PORT")
             .ok()
@@ -98,32 +99,34 @@ impl Default for MultiTransportConfig {
 
         // Safe address parsing with fallback to known-good defaults
         // This prevents panics from malformed BEARDOG_BIND_ADDR values
-        let tarpc_addr = format!("{}:{}", bind_addr, tarpc_port)
+        let tarpc_addr = format!("{bind_addr}:{tarpc_port}")
             .parse()
             .unwrap_or_else(|_| {
                 tracing::warn!(
-                    "Failed to parse tarpc address '{}:{}', using 127.0.0.1:{}",
+                    "Failed to parse tarpc address '{}:{}', using {}:{}",
                     bind_addr,
                     tarpc_port,
+                    DEFAULT_BIND_ADDRESS,
                     DEFAULT_TARPC_PORT
                 );
-                format!("127.0.0.1:{}", DEFAULT_TARPC_PORT)
+                format!("{DEFAULT_BIND_ADDRESS}:{DEFAULT_TARPC_PORT}")
                     .parse()
-                    .expect("hardcoded address is valid")
+                    .expect("default bind address is valid")
             });
 
-        let jsonrpc_addr = format!("{}:{}", bind_addr, jsonrpc_port)
+        let jsonrpc_addr = format!("{bind_addr}:{jsonrpc_port}")
             .parse()
             .unwrap_or_else(|_| {
                 tracing::warn!(
-                    "Failed to parse jsonrpc address '{}:{}', using 127.0.0.1:{}",
+                    "Failed to parse jsonrpc address '{}:{}', using {}:{}",
                     bind_addr,
                     jsonrpc_port,
+                    DEFAULT_BIND_ADDRESS,
                     DEFAULT_JSONRPC_PORT
                 );
-                format!("127.0.0.1:{}", DEFAULT_JSONRPC_PORT)
+                format!("{DEFAULT_BIND_ADDRESS}:{DEFAULT_JSONRPC_PORT}")
                     .parse()
-                    .expect("hardcoded address is valid")
+                    .expect("default bind address is valid")
             });
 
         Self {
@@ -177,36 +180,38 @@ impl MultiTransportConfig {
     pub fn from_router_config(router: &RouterConfig, base_port: u16) -> Self {
         // Self-knowledge: discover bind address from config or environment
         let bind_addr =
-            std::env::var("BEARDOG_BIND_ADDR").unwrap_or_else(|_| "127.0.0.1".to_string());
+            std::env::var("BEARDOG_BIND_ADDR").unwrap_or_else(|_| DEFAULT_BIND_ADDRESS.to_string());
 
         // Safe address parsing with fallback - prevents panics from invalid env vars
         let tarpc_port = base_port.saturating_add(1);
-        let tarpc_addr = format!("{}:{}", bind_addr, tarpc_port)
+        let tarpc_addr = format!("{bind_addr}:{tarpc_port}")
             .parse()
             .unwrap_or_else(|_| {
                 tracing::warn!(
-                    "Failed to parse tarpc address '{}:{}', using 127.0.0.1:{}",
+                    "Failed to parse tarpc address '{}:{}', using {}:{}",
                     bind_addr,
                     tarpc_port,
+                    DEFAULT_BIND_ADDRESS,
                     tarpc_port
                 );
-                format!("127.0.0.1:{}", tarpc_port)
+                format!("{DEFAULT_BIND_ADDRESS}:{tarpc_port}")
                     .parse()
-                    .expect("hardcoded localhost address is valid")
+                    .expect("default bind address is valid")
             });
 
-        let jsonrpc_addr = format!("{}:{}", bind_addr, base_port)
+        let jsonrpc_addr = format!("{bind_addr}:{base_port}")
             .parse()
             .unwrap_or_else(|_| {
                 tracing::warn!(
-                    "Failed to parse jsonrpc address '{}:{}', using 127.0.0.1:{}",
+                    "Failed to parse jsonrpc address '{}:{}', using {}:{}",
                     bind_addr,
                     base_port,
+                    DEFAULT_BIND_ADDRESS,
                     base_port
                 );
-                format!("127.0.0.1:{}", base_port)
+                format!("{DEFAULT_BIND_ADDRESS}:{base_port}")
                     .parse()
-                    .expect("hardcoded localhost address is valid")
+                    .expect("default bind address is valid")
             });
 
         Self {
@@ -254,12 +259,12 @@ impl MultiTransportHandle {
     }
 
     /// Get server configuration
-    pub fn config(&self) -> &MultiTransportConfig {
+    pub const fn config(&self) -> &MultiTransportConfig {
         &self.config
     }
 
     /// Get tarpc address (if enabled)
-    pub fn tarpc_addr(&self) -> Option<SocketAddr> {
+    pub const fn tarpc_addr(&self) -> Option<SocketAddr> {
         if self.config.enable_tarpc {
             Some(self.config.tarpc_addr)
         } else {
@@ -268,7 +273,7 @@ impl MultiTransportHandle {
     }
 
     /// Get JSON-RPC address (if enabled)
-    pub fn jsonrpc_addr(&self) -> Option<SocketAddr> {
+    pub const fn jsonrpc_addr(&self) -> Option<SocketAddr> {
         if self.config.enable_jsonrpc {
             Some(self.config.jsonrpc_addr)
         } else {
@@ -286,7 +291,7 @@ pub struct MultiTransportServer {
 
 impl MultiTransportServer {
     /// Create a new multi-transport server
-    pub fn new(config: MultiTransportConfig) -> Self {
+    pub const fn new(config: MultiTransportConfig) -> Self {
         Self { config }
     }
 
@@ -503,8 +508,8 @@ mod tests {
     #[test]
     fn test_config_from_env() {
         // Clear any existing env vars
-        std::env::remove_var("BEARDOG_TARPC_ADDR");
-        std::env::remove_var("BEARDOG_JSONRPC_ADDR");
+        beardog_errors::process_env::remove_var("BEARDOG_TARPC_ADDR");
+        beardog_errors::process_env::remove_var("BEARDOG_JSONRPC_ADDR");
 
         let config = MultiTransportConfig::from_env();
         assert!(config.enable_tarpc);

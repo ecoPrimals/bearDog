@@ -142,9 +142,10 @@ mod tests {
     fn test_canonical_type_info() {
         let info = canonical_type_info();
         assert!(!info.is_empty());
-        assert!(info
-            .iter()
-            .any(|(name, _)| *name == "CanonicalSecurityConfig"));
+        assert!(
+            info.iter()
+                .any(|(name, _)| *name == "CanonicalSecurityConfig")
+        );
     }
 
     #[test]

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Key Lineage Handler
-// Query and display key parent-child relationships
+//! Display key parent/child relationships as text or JSON.
 
 use super::key_store::{self, StoredKey};
 use beardog_errors::BearDogError;
@@ -10,23 +9,36 @@ use serde::{Deserialize, Serialize};
 /// Lineage node for JSON output
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LineageNode {
+    /// Key identifier
     pub key_id: String,
+    /// Cryptographic algorithm name
     pub algorithm: String,
+    /// Derivation generation (0 = root)
     pub generation: u32,
+    /// Parent key id, if derived
     pub parent_key_id: Option<String>,
+    /// HKDF / derivation context label
     pub derivation_purpose: Option<String>,
+    /// Creation time (RFC 3339)
     pub created_at: String,
+    /// Optional expiry (RFC 3339)
     pub expires_at: Option<String>,
-    pub children: Vec<LineageNode>,
+    /// Child keys in the tree
+    pub children: Vec<Self>,
 }
 
 /// Lineage summary for JSON output
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LineageSummary {
+    /// Key id passed to the CLI
     pub requested_key: String,
+    /// Root ancestor key id
     pub root_key: String,
+    /// Total keys in the subtree
     pub total_keys: usize,
+    /// Maximum depth from root
     pub max_depth: usize,
+    /// Recursive tree rooted at `root_key`
     pub lineage_tree: LineageNode,
 }
 
@@ -45,29 +57,29 @@ pub async fn handle_key_lineage(key_id: &str, json: bool) -> Result<(), BearDogE
 
         let summary = LineageSummary {
             requested_key: key_id.to_string(),
-            root_key: root.key_id.clone(),
+            root_key: root.key_id,
             total_keys,
             max_depth,
             lineage_tree,
         };
 
         let json = serde_json::to_string_pretty(&summary).map_err(|e| {
-            BearDogError::serialization(&format!("Failed to serialize lineage: {}", e))
+            BearDogError::serialization(&format!("Failed to serialize lineage: {e}"))
         })?;
-        println!("{}", json);
+        println!("{json}");
     } else {
         // Human-readable output
         println!("🌳 BearDog Key Lineage");
         println!("========================\n");
-        println!("📋 Lineage for key: {}\n", key_id);
+        println!("📋 Lineage for key: {key_id}\n");
 
         // Display full lineage tree
         display_lineage_tree(&root, key_id, 0)?;
 
         println!("\n📊 Lineage Summary:");
         let (total_keys, max_depth) = count_lineage(&root, 0);
-        println!("   Total keys in lineage: {}", total_keys);
-        println!("   Maximum depth: {}", max_depth);
+        println!("   Total keys in lineage: {total_keys}");
+        println!("   Maximum depth: {max_depth}");
         println!("   Root key: {}", root.key_id);
     }
 
@@ -120,18 +132,18 @@ fn display_lineage_tree(
 
     // Show metadata
     if let Some(purpose) = &key.derivation_purpose {
-        println!("{}   Purpose: {}", indent, purpose);
+        println!("{indent}   Purpose: {purpose}");
     }
     if let Some(parent) = &key.parent_key_id {
-        println!("{}   Parent: {}", indent, parent);
+        println!("{indent}   Parent: {parent}");
     }
     if let Some(expires) = &key.expires_at {
-        println!("{}   Expires: {}", indent, expires);
+        println!("{indent}   Expires: {expires}");
     }
 
     // Display children recursively
     if !key.children.is_empty() {
-        println!("{}   Children:", indent);
+        println!("{indent}   Children:");
         for child_id in &key.children {
             match key_store::load_key(child_id) {
                 Ok(child) => {

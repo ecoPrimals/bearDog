@@ -71,13 +71,17 @@ mod tests {
 
         // Test encryption method validation
         let valid_encryption = EncryptionMethod::new(Algorithm::AES256, 256);
-        assert!(crypto_policy
-            .validate_encryption_method(&valid_encryption)
-            .is_ok());
+        assert!(
+            crypto_policy
+                .validate_encryption_method(&valid_encryption)
+                .is_ok()
+        );
 
         let weak_encryption = EncryptionMethod::new(Algorithm::DES, 56);
-        assert!(crypto_policy
-            .validate_encryption_method(&weak_encryption)
-            .is_err());
+        assert!(
+            crypto_policy
+                .validate_encryption_method(&weak_encryption)
+                .is_err()
+        );
     }
 }

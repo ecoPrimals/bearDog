@@ -42,15 +42,15 @@ pub mod validation;
 pub mod zero_hardcoding;
 
 pub use error::{ConfigError, ConfigResult};
-pub use global::{config, BEARDOG_CONFIG};
+pub use global::{BEARDOG_CONFIG, config};
 pub use hierarchy::ConfigHierarchy;
 pub use loader::ConfigLoader;
 
 // Re-export commonly used types
 pub use domains::network_addresses::NetworkAddressesConfig;
 pub use domains::network_ports::{
-    NetworkPortsConfig, DEFAULT_API_PORT, DEFAULT_DISCOVERY_PORT, DEFAULT_HEALTH_PORT,
-    DEFAULT_HTTPS_PORT, DEFAULT_METRICS_PORT, DEFAULT_TCP_IPC_PORT, DEFAULT_VAULT_PORT,
+    DEFAULT_API_PORT, DEFAULT_DISCOVERY_PORT, DEFAULT_HEALTH_PORT, DEFAULT_HTTPS_PORT,
+    DEFAULT_METRICS_PORT, DEFAULT_TCP_IPC_PORT, DEFAULT_VAULT_PORT, NetworkPortsConfig,
 };
 
 // Re-export zero hardcoding for easy access

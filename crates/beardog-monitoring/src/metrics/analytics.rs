@@ -40,6 +40,7 @@ impl AnalyticsEngine {
     }
 }
 
+/// High-level output of the analytics engine (trends, anomalies, reporting cost).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalyticsSummary {
     /// Number of `total_events_processed`
@@ -50,9 +51,11 @@ pub struct AnalyticsSummary {
     pub anomalies_found: u32,
     /// The prediction accuracy value
     pub prediction_accuracy: f64,
+    /// Wall-clock time to produce the last analytics report (milliseconds).
     pub report_generation_time_ms: f64,
 }
 
+/// Tunables for [`AnalyticsEngine`] trend detection and forecasting windows.
 #[derive(Debug, Clone)]
 pub struct AnalyticsConfig {
     /// Whether `enable_trend_detection` is enabled

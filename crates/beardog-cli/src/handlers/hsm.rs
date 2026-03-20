@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// HSM Discovery Handler
-// Vendor-agnostic: Discovers ANY PKCS#11, FIDO2, or platform keystore
-// FULLY WIRED to beardog-tunnel universal discovery - NO HARDCODING!
+//! HSM discovery, capability display, and smoke tests (`beardog hsm`).
 
 use super::hsm_agnostic;
 use beardog_errors::BearDogError;
 
 /// Discover all available HSMs using universal agnostic discovery
-pub(crate) async fn discover_hsms_agnostic() -> Result<Vec<hsm_agnostic::CliHsmInfo>, BearDogError>
-{
+pub async fn discover_hsms_agnostic() -> Result<Vec<hsm_agnostic::CliHsmInfo>, BearDogError> {
     hsm_agnostic::discover_all_hsms().await
 }
 
@@ -59,6 +56,7 @@ pub async fn handle_hsm_discover(verbose: bool) -> Result<(), BearDogError> {
 }
 
 /// Handle HSM list command (alias for discover with less verbose output)
+#[allow(dead_code)] // Used in tests, planned for CLI subcommand
 pub async fn handle_hsm_list() -> Result<(), BearDogError> {
     println!("🔍 BearDog HSM Discovery");
     println!("========================");
@@ -94,7 +92,7 @@ pub async fn handle_hsm_list() -> Result<(), BearDogError> {
 
 /// Handle HSM capabilities command - show what a specific HSM can do
 pub async fn handle_hsm_capabilities(hsm_id: &str) -> Result<(), BearDogError> {
-    println!("🔍 HSM Capabilities for: {}", hsm_id);
+    println!("🔍 HSM Capabilities for: {hsm_id}");
     println!("================================");
     println!();
 
@@ -143,7 +141,7 @@ pub async fn handle_hsm_capabilities(hsm_id: &str) -> Result<(), BearDogError> {
         println!("   beardog key generate my-key --hsm {}", hsm.id);
         println!("   beardog hsm test {} --iterations 10", hsm.id);
     } else {
-        println!("❌ HSM not found: {}", hsm_id);
+        println!("❌ HSM not found: {hsm_id}");
         println!();
         println!("Available HSMs:");
         for hsm in &hsms {
@@ -157,7 +155,7 @@ pub async fn handle_hsm_capabilities(hsm_id: &str) -> Result<(), BearDogError> {
 
 /// Handle HSM test command - perform operations to verify HSM functionality
 pub async fn handle_hsm_test(hsm_id: &str, iterations: usize) -> Result<(), BearDogError> {
-    println!("🧪 Testing HSM: {}", hsm_id);
+    println!("🧪 Testing HSM: {hsm_id}");
     println!("================================");
     println!();
 
@@ -171,7 +169,7 @@ pub async fn handle_hsm_test(hsm_id: &str, iterations: usize) -> Result<(), Bear
 
     if let Some(hsm) = hsm {
         println!("📋 Testing: {} ({})", hsm.name, hsm.tier);
-        println!("   Iterations: {}", iterations);
+        println!("   Iterations: {iterations}");
         println!();
 
         println!("🔬 Test Suite:");
@@ -180,25 +178,25 @@ pub async fn handle_hsm_test(hsm_id: &str, iterations: usize) -> Result<(), Bear
         // Test 1: Random number generation
         println!("1️⃣  Random Number Generation");
         println!("   Status: ✅ PASS");
-        println!("   Details: Generated {} random values", iterations);
+        println!("   Details: Generated {iterations} random values");
         println!();
 
         // Test 2: Key generation
         println!("2️⃣  Key Generation");
         println!("   Status: ✅ PASS");
-        println!("   Details: Created {} test keys", iterations);
+        println!("   Details: Created {iterations} test keys");
         println!();
 
         // Test 3: Encryption/Decryption
         println!("3️⃣  Encryption/Decryption Round-Trip");
         println!("   Status: ✅ PASS");
-        println!("   Details: {} successful round-trips", iterations);
+        println!("   Details: {iterations} successful round-trips");
         println!();
 
         // Test 4: Signature verification
         println!("4️⃣  Digital Signature Verification");
         println!("   Status: ✅ PASS");
-        println!("   Details: {} signatures verified", iterations);
+        println!("   Details: {iterations} signatures verified");
         println!();
 
         println!("════════════════════════════════");
@@ -207,7 +205,7 @@ pub async fn handle_hsm_test(hsm_id: &str, iterations: usize) -> Result<(), Bear
         println!("💡 HSM '{}' is functioning correctly", hsm.name);
         println!();
     } else {
-        println!("❌ HSM not found: {}", hsm_id);
+        println!("❌ HSM not found: {hsm_id}");
         println!();
         println!("Available HSMs:");
         for hsm in &hsms {

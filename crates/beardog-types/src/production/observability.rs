@@ -63,7 +63,7 @@ impl ObservabilityEngine {
     #[must_use]
     /// Gets config
     /// Gets config
-    pub fn get_config(&self) -> &ObservabilityConfig {
+    pub const fn get_config(&self) -> &ObservabilityConfig {
         &self.config
     }
 }

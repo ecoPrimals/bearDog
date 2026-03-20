@@ -47,7 +47,7 @@ impl SafeIosProvider {
     }
 
     /// Checks if hardware-backed security is available
-    pub fn is_hardware_backed(&self) -> bool {
+    pub const fn is_hardware_backed(&self) -> bool {
         self.secure_enclave_available
     }
 
@@ -305,7 +305,7 @@ impl SafeIosProvider {
     }
 
     /// Get capabilities of this provider
-    pub fn capabilities(&self) -> &HashMap<String, bool> {
+    pub const fn capabilities(&self) -> &HashMap<String, bool> {
         &self.capabilities
     }
 }

@@ -10,12 +10,12 @@ use super::types::{AndroidAttestationService, AndroidDeviceInfo, AndroidHealthMo
 use crate::tunnel::hsm::types::*;
 use async_trait::async_trait;
 use beardog_errors::BearDogError;
+use beardog_types::canonical::UnifiedProvider;
 use beardog_types::canonical::providers_unified::traits::{
     AttestationResponse, AuthenticationRequest, AuthenticationResponse, AuthorizationRequest,
     AuthorizationResponse, BackupInfo, HsmDeviceInfo, KeyBackupSpec, KeyGenerationSpec, KeyInfo,
     KeyType, KeyUsage, SecurityContext, UnifiedHsmProvider, UnifiedSecurityProvider,
 };
-use beardog_types::canonical::UnifiedProvider;
 use chrono::Utc;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -499,12 +499,10 @@ impl UnifiedHsmProvider for AndroidStrongBoxHsm {
             "🔒 Key export denied for StrongBox key: {} (hardware-bound security)",
             key_id
         );
-        Err(BearDogError::hsm(
-            format!(
-                "Key export not supported for StrongBox key '{}' - keys are hardware-bound for security",
-                key_id
-            )
-        ))
+        Err(BearDogError::hsm(format!(
+            "Key export not supported for StrongBox key '{}' - keys are hardware-bound for security",
+            key_id
+        )))
     }
 
     async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {

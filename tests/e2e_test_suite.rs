@@ -28,7 +28,7 @@
 
 mod e2e;
 
-use e2e::{print_e2e_report, E2EScenario, E2ETestFramework};
+use e2e::{E2EScenario, E2ETestFramework, print_e2e_report};
 
 #[tokio::test]
 async fn test_production_deployment_e2e() {

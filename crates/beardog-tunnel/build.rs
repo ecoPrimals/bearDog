@@ -1,12 +1,13 @@
-// Build script for beardog-tunnel crate
-//
-// This build script configures platform-specific linking for Android and non-Android targets.
-// On Android, it links against the Android NDK libraries for hardware security module access.
-// On other platforms, it uses mock implementations for development and testing.
+//! Build script for the `beardog-tunnel` crate.
+//!
+//! Configures platform-specific native linking for tunnel and StrongBox-related code paths.
+//! On **Android**, links NDK libraries (`log`, `android`, `keystore`) and sets
+//! `cfg(feature = "android_native")` when appropriate. On other targets, consumers rely on
+//! mock StrongBox paths (see `cargo:warning` output during build).
+//!
+//! Environment variables observed: `ANDROID_NDK_HOME`, `CARGO_CFG_TARGET_OS`.
 
-/// Main build script entry point
-///
-/// - Android: Links against NDK libraries (log, android, keystore)
+/// Cargo `build.rs` entry: emits link flags, search paths, and `cfg` for the library target.
 fn main() {
     #[cfg(target_os = "android")]
     {
@@ -19,7 +20,10 @@ fn main() {
         println!("cargo:rustc-link-arg=-Wl,--allow-shlib-undefined");
 
         if let Ok(ndk_home) = std::env::var("ANDROID_NDK_HOME") {
-            println!("cargo:rustc-link-search=native={}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib", ndk_home);
+            println!(
+                "cargo:rustc-link-search=native={}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib",
+                ndk_home
+            );
         }
 
         println!("cargo:rustc-cfg=feature=\"android_native\"");

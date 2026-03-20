@@ -151,7 +151,7 @@ impl SoftwareKeyStore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tunnel::hsm::types::{key::KeyMetadata, KeyType};
+    use crate::tunnel::hsm::types::{KeyType, key::KeyMetadata};
 
     fn create_test_config() -> KeyStoreConfig {
         // Use the canonical KeyStoreConfig's memory() constructor for tests

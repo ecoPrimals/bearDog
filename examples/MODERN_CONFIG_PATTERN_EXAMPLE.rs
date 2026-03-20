@@ -272,17 +272,17 @@ mod tests {
     #[test]
     fn test_from_env_with_override() {
         // Clear env vars first for isolation
-        std::env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
-        std::env::remove_var("BEARDOG_RESOURCE_CPU_PERCENT");
+        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
+        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_CPU_PERCENT");
 
         // Set test value
-        std::env::set_var("BEARDOG_RESOURCE_MEMORY_MB", "2048");
+        beardog_errors::process_env::set_var("BEARDOG_RESOURCE_MEMORY_MB", "2048");
 
         let limits = ResourceLimits::from_env();
         assert_eq!(limits.memory_mb, 2048);
 
         // Cleanup
-        std::env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
+        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
 
         // ⚠️ BETTER: Use temp_env or serial_test crate for automatic cleanup
     }
@@ -292,10 +292,10 @@ mod tests {
     #[serial_test::serial]
     #[test]
     fn test_from_env_serial() {
-        std::env::set_var("BEARDOG_RESOURCE_MEMORY_MB", "2048");
+        beardog_errors::process_env::set_var("BEARDOG_RESOURCE_MEMORY_MB", "2048");
         let limits = ResourceLimits::from_env();
         assert_eq!(limits.memory_mb, 2048);
-        std::env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
+        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
         // ✅ serial_test ensures tests run one at a time, no races
     }
 

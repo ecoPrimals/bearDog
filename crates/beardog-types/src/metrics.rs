@@ -8,6 +8,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Host-level CPU, memory, disk, network, process, and custom gauges.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemMetrics {
     /// Name of the hostitem
@@ -30,6 +31,7 @@ pub struct SystemMetrics {
     pub custom: HashMap<String, f64>,
 }
 
+/// Processor utilization, per-core breakdown, load averages, and sensor data.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CpuMetrics {
     /// Overall CPU utilization as a percentage (0.0-100.0)
@@ -47,6 +49,7 @@ pub struct CpuMetrics {
     pub frequency_mhz: Option<f64>,
 }
 
+/// Physical memory and swap usage snapshot.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MemoryMetrics {
     /// Total system memory in bytes
@@ -72,6 +75,7 @@ pub struct MemoryMetrics {
     pub swap_used_bytes: u64,
 }
 
+/// Block device space and IOPS-style activity counters.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiskMetrics {
     /// Total disk storage capacity in bytes
@@ -99,6 +103,7 @@ pub struct DiskMetrics {
     pub avg_response_time_ms: f64,
 }
 
+/// Interface throughput, packet rates, errors, and connection counts.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkMetrics {
     /// Network data transmission rate in bytes per second
@@ -124,8 +129,10 @@ pub struct NetworkMetrics {
     pub active_connections: u64,
 }
 
+/// Single-process resource usage: CPU, memory, threads, descriptors, uptime.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProcessMetrics {
+    /// Operating-system process ID
     pub pid: u32,
     /// The cpu usage percent value
     pub cpu_usage_percent: f64,
@@ -274,6 +281,7 @@ pub struct CapacityMetrics {
     pub resource_pressure_score: f64,
 }
 
+/// Per-service request, latency, error, and saturation metrics at a point in time.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceMetrics {
     /// Timestamp when these metrics were collected

@@ -11,10 +11,15 @@ pub mod genetic_optimizer;
 pub mod lifecycle;
 
 // Core submodules
+/// Legacy layout: adapter bridge for the experimental core split.
 pub mod adapter;
+/// Legacy layout: nested [`BearDogCore`] module mirror.
 pub mod core;
+/// Legacy layout: monitoring hooks for the experimental core split.
 pub mod monitoring;
+/// Legacy layout: security provider for the experimental core split.
 pub mod security;
+/// Legacy layout: shared state for the experimental core split.
 pub mod state;
 
 // Re-export key types for convenience

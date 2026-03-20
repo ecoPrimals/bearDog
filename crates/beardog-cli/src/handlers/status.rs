@@ -1,29 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Status Handler
+//! Status, version, and capability summary for the CLI.
 
 use beardog_errors::BearDogError;
 
 /// Build information structure
 pub struct BuildInfo {
+    /// Crate version string (with `v` prefix via [`format_version`])
     pub version: String,
+    /// Rust `TARGET` triple when available
     pub target: String,
+    /// `debug` or `release`
     pub profile: String,
 }
 
 /// System information structure
 pub struct SystemInfo {
+    /// Operating system name (`std::env::consts::OS`)
     pub os: String,
+    /// CPU architecture (`std::env::consts::ARCH`)
     pub arch: String,
 }
 
 /// Format version string with 'v' prefix
-pub(crate) fn format_version(version: &str) -> String {
-    format!("v{}", version)
+pub fn format_version(version: &str) -> String {
+    format!("v{version}")
 }
 
 /// Get build information
-pub(crate) fn get_build_info() -> BuildInfo {
+pub fn get_build_info() -> BuildInfo {
     BuildInfo {
         version: format_version(env!("CARGO_PKG_VERSION")),
         target: std::env::var("TARGET").unwrap_or_else(|_| "unknown".to_string()),
@@ -36,7 +41,7 @@ pub(crate) fn get_build_info() -> BuildInfo {
 }
 
 /// Get system information
-pub(crate) fn get_system_info() -> SystemInfo {
+pub fn get_system_info() -> SystemInfo {
     SystemInfo {
         os: std::env::consts::OS.to_string(),
         arch: std::env::consts::ARCH.to_string(),
@@ -109,6 +114,7 @@ pub async fn handle_status(verbose: bool) -> Result<(), BearDogError> {
 }
 
 /// Handle version command
+#[allow(dead_code)] // Used in tests, planned for CLI subcommand
 pub async fn handle_version() -> Result<(), BearDogError> {
     let build_info = get_build_info();
     println!("BearDog {}", build_info.version);

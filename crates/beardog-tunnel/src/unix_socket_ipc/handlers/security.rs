@@ -8,8 +8,8 @@
 //! - BirdSong encryption/decryption for secure discovery
 //! - JWT secret generation for authentication systems
 
-use super::utils::get_primal_name;
 use super::MethodHandler;
+use super::utils::get_primal_name;
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
 use base64::Engine;
@@ -92,7 +92,7 @@ impl MethodHandler for SecurityHandler {
             | "security.generate_jwt_secret"
             | "beardog.jwt_secret"
             | "security.jwt_secret" => self.handle_generate_jwt_secret(params).await,
-            _ => Err(format!("Method not found: {}", method)),
+            _ => Err(format!("Method not found: {method}")),
         }
     }
 }
@@ -113,7 +113,7 @@ impl SecurityHandler {
     /// let identity = Arc::new(PrimalIdentity::for_test("nat0", "tower1"));
     /// let handler = SecurityHandler::new(identity);
     /// ```
-    pub fn new(identity: Arc<PrimalIdentity>) -> Self {
+    pub const fn new(identity: Arc<PrimalIdentity>) -> Self {
         Self { identity }
     }
 
@@ -261,13 +261,13 @@ impl SecurityHandler {
         // Decode base64 plaintext
         let plaintext_bytes = base64::engine::general_purpose::STANDARD
             .decode(plaintext)
-            .map_err(|e| format!("Invalid base64: {}", e))?;
+            .map_err(|e| format!("Invalid base64: {e}"))?;
 
         // Encrypt using BirdSong
         let ciphertext = btsp_provider
             .birdsong_manager()
             .encrypt_discovery_for_family(&plaintext_bytes, family_id)
-            .map_err(|e| format!("Encryption failed: {}", e))?;
+            .map_err(|e| format!("Encryption failed: {e}"))?;
 
         // Encode to base64
         let ciphertext_b64 = base64::engine::general_purpose::STANDARD.encode(&ciphertext);
@@ -294,7 +294,7 @@ impl SecurityHandler {
         // Decode base64 ciphertext
         let ciphertext_bytes = base64::engine::general_purpose::STANDARD
             .decode(ciphertext)
-            .map_err(|e| format!("Invalid base64: {}", e))?;
+            .map_err(|e| format!("Invalid base64: {e}"))?;
 
         // Decrypt using BirdSong
         match btsp_provider
@@ -361,7 +361,7 @@ impl SecurityHandler {
         let mut secret_bytes = vec![0u8; byte_length];
         rand::thread_rng()
             .try_fill_bytes(&mut secret_bytes)
-            .map_err(|e| format!("Failed to generate random bytes: {}", e))?;
+            .map_err(|e| format!("Failed to generate random bytes: {e}"))?;
 
         // Encode to base64 for safe transmission
         let secret_b64 = base64::engine::general_purpose::STANDARD.encode(&secret_bytes);
@@ -415,8 +415,8 @@ mod tests {
         let handler = SecurityHandler::new(identity);
 
         // Set environment for testing
-        std::env::set_var("FAMILY_ID", "test-family");
-        std::env::set_var("NODE_ID", "test-node");
+        beardog_errors::process_env::set_var("FAMILY_ID", "test-family");
+        beardog_errors::process_env::set_var("NODE_ID", "test-node");
 
         let params = serde_json::json!({
             "peer_id": "peer-123",
@@ -442,7 +442,7 @@ mod tests {
         let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
         let handler = SecurityHandler::new(identity);
 
-        std::env::set_var("FAMILY_ID", "our-family");
+        beardog_errors::process_env::set_var("FAMILY_ID", "our-family");
 
         let params = serde_json::json!({
             "peer_id": "peer-456",
@@ -467,10 +467,10 @@ mod tests {
         struct CleanupGuard;
         impl Drop for CleanupGuard {
             fn drop(&mut self) {
-                std::env::remove_var("PRIMAL_NAME");
+                beardog_errors::process_env::remove_var("PRIMAL_NAME");
             }
         }
-        std::env::set_var("PRIMAL_NAME", "beardog");
+        beardog_errors::process_env::set_var("PRIMAL_NAME", "beardog");
         let _guard = CleanupGuard;
 
         let identity = Arc::new(PrimalIdentity::for_test("lineage-family", "lineage-node"));
@@ -527,9 +527,11 @@ mod tests {
         let secret = response["secret"]
             .as_str()
             .expect("secret should be string");
-        assert!(base64::engine::general_purpose::STANDARD
-            .decode(secret)
-            .is_ok());
+        assert!(
+            base64::engine::general_purpose::STANDARD
+                .decode(secret)
+                .is_ok()
+        );
     }
 
     #[tokio::test]

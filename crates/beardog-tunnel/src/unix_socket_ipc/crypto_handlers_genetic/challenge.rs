@@ -13,10 +13,10 @@
 
 use super::*;
 use crate::tunnel::hsm::software_hsm::crypto_providers::genetic_crypto::GeneticCryptoProvider;
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tracing::{debug, info, warn};
 
 /// Handle `genetic.generate_challenge` RPC method
@@ -29,7 +29,7 @@ pub async fn handle_generate_challenge(params: Value) -> Result<Value, BearDogEr
     debug!("🎲 RPC: genetic.generate_challenge");
 
     let request: GenerateChallengeRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid generate_challenge params: {}", e))
+        BearDogError::invalid_input(&format!("Invalid generate_challenge params: {e}"))
     })?;
 
     let mut nonce = [0u8; 32];
@@ -63,7 +63,7 @@ pub async fn handle_respond_to_challenge(params: Value) -> Result<Value, BearDog
     debug!("🔐 RPC: genetic.respond_to_challenge");
 
     let request: RespondToChallengeRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid respond_to_challenge params: {}", e))
+        BearDogError::invalid_input(&format!("Invalid respond_to_challenge params: {e}"))
     })?;
 
     let seed_bytes = std::fs::read(&request.our_family_seed_path).map_err(|e| {
@@ -80,14 +80,14 @@ pub async fn handle_respond_to_challenge(params: Value) -> Result<Value, BearDog
         .await?;
 
     let nonce_bytes = hex::decode(&request.nonce)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid nonce (not hex): {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid nonce (not hex): {e}")))?;
 
     use hmac::{Hmac, Mac};
     use sha2::Sha512;
     type HmacSha512 = Hmac<Sha512>;
 
     let mut mac = HmacSha512::new_from_slice(&lineage_key)
-        .map_err(|e| BearDogError::system(format!("Failed to create HMAC: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to create HMAC: {e}")))?;
     mac.update(&nonce_bytes);
     let response_bytes = mac.finalize().into_bytes();
     let response_hex = hex::encode(response_bytes);
@@ -127,7 +127,7 @@ pub async fn handle_verify_challenge_response(params: Value) -> Result<Value, Be
     debug!("🔍 RPC: genetic.verify_challenge_response");
 
     let request: VerifyChallengeResponseRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid verify_challenge_response params: {}", e))
+        BearDogError::invalid_input(&format!("Invalid verify_challenge_response params: {e}"))
     })?;
 
     let our_seed_bytes = std::fs::read(&request.our_family_seed_path).map_err(|e| {
@@ -143,17 +143,17 @@ pub async fn handle_verify_challenge_response(params: Value) -> Result<Value, Be
         .await?;
 
     let nonce_bytes = hex::decode(&request.nonce)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid nonce (not hex): {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid nonce (not hex): {e}")))?;
 
     let response_bytes = hex::decode(&request.response)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid response (not hex): {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid response (not hex): {e}")))?;
 
     use hmac::{Hmac, Mac};
     use sha2::Sha512;
     type HmacSha512 = Hmac<Sha512>;
 
     let mut mac = HmacSha512::new_from_slice(&lineage_key)
-        .map_err(|e| BearDogError::system(format!("Failed to create HMAC: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to create HMAC: {e}")))?;
     mac.update(&nonce_bytes);
     let expected_bytes = mac.finalize().into_bytes();
 
@@ -161,7 +161,7 @@ pub async fn handle_verify_challenge_response(params: Value) -> Result<Value, Be
     let response_valid = response_bytes.ct_eq(&expected_bytes[..]).into();
 
     let lineage_proof = BASE64.decode(&request.lineage_proof).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid lineage_proof (not base64): {}", e))
+        BearDogError::invalid_input(&format!("Invalid lineage_proof (not base64): {e}"))
     })?;
 
     let proof_valid = provider

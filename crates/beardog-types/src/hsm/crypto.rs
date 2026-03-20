@@ -87,7 +87,7 @@ where
     /// - Encryption operation failure
     /// - Memory allocation failure
     async fn encrypt(&self, key_material: &[u8], plaintext: &[u8])
-        -> Result<Vec<u8>, BearDogError>;
+    -> Result<Vec<u8>, BearDogError>;
 
     /// Decrypt data using the provided key material
     ///

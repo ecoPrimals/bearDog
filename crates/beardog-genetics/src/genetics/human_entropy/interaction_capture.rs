@@ -44,54 +44,70 @@ impl Default for InteractionCaptureConfig {
 /// A single interaction event with precise timing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InteractionEvent {
-    /// Type of interaction
+    /// Kind of hardware event (key, mouse move, click, scroll).
     pub interaction_type: InteractionType,
-    /// Precise timestamp (nanoseconds since collection start)
+    /// Monotonic nanoseconds since collection started—primary entropy-bearing signal.
     pub timestamp_nanos: u128,
-    /// Additional event-specific data
+    /// Privacy-preserving payload: never stores raw key characters or absolute pointer coords.
     pub data: InteractionData,
 }
 
+/// High-level categories of terminal input merged into human entropy.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum InteractionType {
+    /// Physical key transitioned to pressed.
     KeyPress,
+    /// Physical key released.
     KeyRelease,
+    /// Pointer moved; deltas are stored, not screen positions.
     MouseMove,
+    /// Button down or up event.
     MouseClick,
+    /// Scroll wheel notch or trackpad scroll.
     MouseScroll,
 }
 
+/// Per-event metadata hashed into the final entropy buffer.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum InteractionData {
+    /// Key timing and modifier classification without storing which key was pressed.
     Keyboard {
-        /// We don't store the actual key for privacy
-        /// Only timing and type information
+        /// True if the key event was a printable character (still not recorded verbatim).
         is_char: bool,
+        /// True if the key was a modifier (Shift, Ctrl, …).
         is_modifier: bool,
     },
+    /// Relative pointer motion; absolute coordinates are never retained.
     Mouse {
-        /// Relative movement delta (not absolute position for privacy)
+        /// Horizontal delta in terminal cells or device units.
         delta_x: i16,
+        /// Vertical delta in terminal cells or device units.
         delta_y: i16,
     },
+    /// Mouse button transition without screen coordinates.
     Click {
-        /// Click type (left, right, middle)
+        /// Which mouse button toggled—does not reveal what was clicked on screen.
         button: MouseButton,
     },
+    /// Discrete scroll steps from wheel or trackpad.
     Scroll {
-        /// Scroll delta
+        /// Signed scroll steps contributing timing and gesture entropy.
         delta: i16,
     },
 }
 
+/// Mouse button identity without UI context.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MouseButton {
+    /// Primary button.
     Left,
+    /// Secondary button.
     Right,
+    /// Middle (wheel click) button.
     Middle,
 }
 
-/// Results from interaction capture
+/// Completed run of live capture: raw events, derived bytes, and quality analytics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InteractionCaptureResult {
     /// All captured interactions
@@ -108,6 +124,7 @@ pub struct InteractionCaptureResult {
     pub metrics: InteractionMetrics,
 }
 
+/// Statistical summary used to gate whether timing and movement entropy are sufficient.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InteractionMetrics {
     /// Total interactions captured
@@ -128,7 +145,7 @@ pub struct InteractionMetrics {
     pub overall_quality: f64,
 }
 
-/// Interactive entropy collector for keyboard and mouse
+/// Drives blocking terminal collection guided by [`InteractionCaptureConfig`].
 pub struct InteractionEntropyCollector {
     config: InteractionCaptureConfig,
 }
@@ -159,7 +176,7 @@ impl InteractionEntropyCollector {
 
         // Enable raw mode for terminal input
         crossterm::terminal::enable_raw_mode()
-            .map_err(|e| BearDogError::system(format!("Failed to enable raw mode: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to enable raw mode: {e}")))?;
 
         // Ensure we disable raw mode on exit
         let _guard = RawModeGuard;
@@ -183,10 +200,10 @@ impl InteractionEntropyCollector {
 
             // Poll for events with a short timeout
             if event::poll(Duration::from_millis(100))
-                .map_err(|e| BearDogError::system(format!("Event poll failed: {}", e)))?
+                .map_err(|e| BearDogError::system(format!("Event poll failed: {e}")))?
             {
                 let event = event::read()
-                    .map_err(|e| BearDogError::system(format!("Event read failed: {}", e)))?;
+                    .map_err(|e| BearDogError::system(format!("Event read failed: {e}")))?;
 
                 let timestamp_nanos = start_instant.elapsed().as_nanos();
 
@@ -243,7 +260,11 @@ impl InteractionEntropyCollector {
     }
 
     /// Process a keyboard event into an interaction
-    fn process_key_event(&self, key_event: KeyEvent, timestamp_nanos: u128) -> InteractionEvent {
+    const fn process_key_event(
+        &self,
+        key_event: KeyEvent,
+        timestamp_nanos: u128,
+    ) -> InteractionEvent {
         use crossterm::event::KeyCode;
 
         let is_char = matches!(key_event.code, KeyCode::Char(_));
@@ -448,7 +469,7 @@ impl InteractionEntropyCollector {
             .map(|&(dx, dy)| {
                 let diff_x = dx as f64 - mean_x;
                 let diff_y = dy as f64 - mean_y;
-                diff_x * diff_x + diff_y * diff_y
+                diff_x.mul_add(diff_x, diff_y * diff_y)
             })
             .sum::<f64>()
             / movements.len() as f64;
@@ -484,8 +505,7 @@ impl InteractionEntropyCollector {
             2000.0 / avg_interval // Too slow
         };
 
-        timing_entropy * TIMING_WEIGHT
-            + movement_entropy * MOVEMENT_WEIGHT
+        timing_entropy.mul_add(TIMING_WEIGHT, movement_entropy * MOVEMENT_WEIGHT)
             + quantity_score * QUANTITY_WEIGHT
             + pace_score * PACE_WEIGHT
     }
@@ -541,7 +561,7 @@ impl InteractionEntropyCollector {
     /// Display instructions to user
     fn display_instructions(&self) -> Result<(), BearDogError> {
         use crossterm::{cursor, execute, style, terminal};
-        use std::io::{stdout, Write};
+        use std::io::{Write, stdout};
 
         let mut stdout = stdout();
 
@@ -550,61 +570,61 @@ impl InteractionEntropyCollector {
             terminal::Clear(terminal::ClearType::All),
             cursor::MoveTo(0, 0)
         )
-        .map_err(|e| BearDogError::system(format!("Terminal clear failed: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Terminal clear failed: {e}")))?;
 
         writeln!(
             stdout,
             "╔══════════════════════════════════════════════════════════╗"
         )
-        .map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
         writeln!(
             stdout,
             "║  🎤 LIVE HUMAN ENTROPY COLLECTION                        ║"
         )
-        .map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
         writeln!(
             stdout,
             "╚══════════════════════════════════════════════════════════╝"
         )
-        .map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
-        writeln!(stdout).map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
+        writeln!(stdout).map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
 
         execute!(stdout, style::SetForegroundColor(style::Color::Green))
-            .map_err(|e| BearDogError::system(format!("Set color failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Set color failed: {e}")))?;
         writeln!(stdout, "INSTRUCTIONS:")
-            .map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
         execute!(stdout, style::ResetColor)
-            .map_err(|e| BearDogError::system(format!("Reset color failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Reset color failed: {e}")))?;
 
         writeln!(stdout, "  • Type naturally (any keys)")
-            .map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
         writeln!(stdout, "  • Move your mouse randomly")
-            .map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
         writeln!(stdout, "  • Vary your typing speed")
-            .map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
         writeln!(stdout, "  • Take natural pauses")
-            .map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
         writeln!(stdout, "  • BE YOURSELF - your uniqueness is the entropy!")
-            .map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
-        writeln!(stdout).map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
+        writeln!(stdout).map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
 
         execute!(stdout, style::SetForegroundColor(style::Color::Yellow))
-            .map_err(|e| BearDogError::system(format!("Set color failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Set color failed: {e}")))?;
         writeln!(
             stdout,
             "Target: {} interactions",
             self.config.target_interactions
         )
-        .map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
         writeln!(stdout, "Press ESC to finish early")
-            .map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
         execute!(stdout, style::ResetColor)
-            .map_err(|e| BearDogError::system(format!("Reset color failed: {}", e)))?;
-        writeln!(stdout).map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Reset color failed: {e}")))?;
+        writeln!(stdout).map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
 
         stdout
             .flush()
-            .map_err(|e| BearDogError::system(format!("Flush failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Flush failed: {e}")))?;
 
         Ok(())
     }
@@ -612,12 +632,12 @@ impl InteractionEntropyCollector {
     /// Display progress during collection
     fn display_progress(&self, collected: usize) -> Result<(), BearDogError> {
         use crossterm::{cursor, execute, style};
-        use std::io::{stdout, Write};
+        use std::io::{Write, stdout};
 
         let mut stdout = stdout();
 
         execute!(stdout, cursor::MoveTo(0, 10))
-            .map_err(|e| BearDogError::system(format!("Cursor move failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Cursor move failed: {e}")))?;
 
         let progress_percent =
             (collected as f64 / self.config.target_interactions as f64 * 100.0) as usize;
@@ -625,31 +645,31 @@ impl InteractionEntropyCollector {
         let filled = (collected * bar_width) / self.config.target_interactions;
 
         execute!(stdout, style::SetForegroundColor(style::Color::Cyan))
-            .map_err(|e| BearDogError::system(format!("Set color failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Set color failed: {e}")))?;
         write!(stdout, "Progress: [")
-            .map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
         execute!(stdout, style::SetForegroundColor(style::Color::Green))
-            .map_err(|e| BearDogError::system(format!("Set color failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Set color failed: {e}")))?;
         write!(stdout, "{}", "█".repeat(filled))
-            .map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
         execute!(stdout, style::SetForegroundColor(style::Color::DarkGrey))
-            .map_err(|e| BearDogError::system(format!("Set color failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Set color failed: {e}")))?;
         write!(stdout, "{}", "░".repeat(bar_width - filled))
-            .map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
         execute!(stdout, style::SetForegroundColor(style::Color::Cyan))
-            .map_err(|e| BearDogError::system(format!("Set color failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Set color failed: {e}")))?;
         write!(
             stdout,
             "] {}%  ({}/{})",
             progress_percent, collected, self.config.target_interactions
         )
-        .map_err(|e| BearDogError::system(format!("Write failed: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Write failed: {e}")))?;
         execute!(stdout, style::ResetColor)
-            .map_err(|e| BearDogError::system(format!("Reset color failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Reset color failed: {e}")))?;
 
         stdout
             .flush()
-            .map_err(|e| BearDogError::system(format!("Flush failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Flush failed: {e}")))?;
 
         Ok(())
     }

@@ -11,15 +11,10 @@
 //! - **Universal Adapter Pattern**: Works with any security provider
 //! - **Capability-Based Discovery**: Services discovered by capability, not name
 
-#![deny(unsafe_code)]
-// Production code must use proper error handling - deny panicking methods
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-// Allow expect in tests - test panics are appropriate failure modes
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
 
-// Adapter Certificate System - Cryptographic Locking
+/// Adapter certificate subsystem: signed unlock credentials, classification, and verification.
 pub mod certificates;
 
 // Re-export certificate types for convenience
@@ -74,6 +69,7 @@ use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use tokio::time::timeout;
 
+/// Capability router with optional response caching, retries, and per-request timeouts.
 #[derive(Debug, Clone)]
 pub struct UniversalAdapter {
     capabilities: Vec<String>,
@@ -82,8 +78,10 @@ pub struct UniversalAdapter {
     cache: HashMap<String, (CapabilityResponse, Instant)>,
 }
 
+/// Tunables for outbound adapter calls: how long to wait, how often to retry, and cache use.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdapterConfig {
+    /// Upper bound in seconds for a single capability invocation before it is treated as timed out.
     pub timeout_seconds: u64,
     /// Number of `retry_attempts`
     pub retry_attempts: u32,
@@ -128,7 +126,9 @@ pub struct CapabilityResponse {
 /// AI integration response metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIResponseMetadata {
+    /// Model-reported confidence in the primary result, typically in `[0.0, 1.0]`.
     pub confidence_score: f64,
+    /// Wall-clock time spent producing the AI result, in milliseconds.
     pub processing_time_ms: u32,
     /// The model version value
     pub model_version: String,

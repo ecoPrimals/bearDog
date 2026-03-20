@@ -160,8 +160,7 @@ async fn register_capability(neural_socket: &str, capability: serde_json::Value)
 
     // Connect to Neural API
     let mut stream = UnixStream::connect(neural_socket).await.context(format!(
-        "Failed to connect to Neural API at {}",
-        neural_socket
+        "Failed to connect to Neural API at {neural_socket}"
     ))?;
 
     // Send registration request
@@ -249,6 +248,10 @@ pub fn discover_neural_api_socket_with_env(
     None
 }
 
+/// Resolves the Neural API Unix socket path for IPC registration.
+///
+/// Resolution order: `NEURAL_API_SOCKET`, then `NEURALS_SOCKET`, then well-known `/tmp` paths.
+/// An empty env value disables auto-registration (returns `None`).
 pub fn discover_neural_api_socket() -> Option<String> {
     use std::path::Path;
 
@@ -293,7 +296,7 @@ pub fn discover_neural_api_socket() -> Option<String> {
     for path in &default_paths {
         if Path::new(path).exists() {
             info!("🔍 Found Neural API socket at default path: {}", path);
-            return Some(path.to_string());
+            return Some((*path).to_string());
         } else {
             debug!("Checked default path (not found): {}", path);
         }

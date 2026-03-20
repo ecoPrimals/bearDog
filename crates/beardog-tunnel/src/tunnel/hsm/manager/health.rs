@@ -144,8 +144,7 @@ impl HealthMonitor {
     pub async fn is_healthy(&self, provider_id: &str) -> bool {
         self.get_health_status(provider_id)
             .await
-            .map(|s| s.is_healthy)
-            .unwrap_or(false)
+            .is_some_and(|s| s.is_healthy)
     }
 }
 

@@ -100,7 +100,7 @@ impl ProductionMetricsCollector {
     /// # Returns
     #[must_use]
     /// Creates a new instance
-    pub fn new(config: MetricsConfig) -> Self {
+    pub const fn new(config: MetricsConfig) -> Self {
         Self {
             config,
             metrics_history: Vec::new(),
@@ -200,7 +200,7 @@ impl ProductionMetricsCollector {
     #[must_use]
     /// Gets config
     /// Gets config
-    pub fn get_config(&self) -> &MetricsConfig {
+    pub const fn get_config(&self) -> &MetricsConfig {
         &self.config
     }
 

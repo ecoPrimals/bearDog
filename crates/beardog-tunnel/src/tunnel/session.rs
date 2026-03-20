@@ -235,7 +235,7 @@ mod tests {
         );
 
         assert!(session.is_ok());
-        let session = session.unwrap();
+        let session = session.expect("SecureSession::new should succeed with valid inputs");
         assert_eq!(session.session_id, "test-session-123");
         assert_eq!(session.peer_node_id, "peer-node-456");
         assert!(!session.is_expired());
@@ -249,7 +249,7 @@ mod tests {
             SecurityGenetics::default(),
             GamingSecurityProfile::competitive_gaming(),
         )
-        .unwrap();
+        .expect("SecureSession::new should succeed with valid inputs");
 
         // Should not be expired initially
         assert!(!session.is_expired());
@@ -306,12 +306,12 @@ mod tests {
                 GamingSecurityProfile::competitive_gaming(),
             )
             .await
-            .unwrap();
+            .expect("create_session should succeed");
 
         let session = manager.get_session(session_id).await;
         assert!(session.is_some());
 
-        let session = session.unwrap();
+        let session = session.expect("session should exist after create_session");
         assert_eq!(session.session_id, session_id);
         assert_eq!(session.peer_node_id, "peer-456");
     }
@@ -329,7 +329,7 @@ mod tests {
                 GamingSecurityProfile::competitive_gaming(),
             )
             .await
-            .unwrap();
+            .expect("create_session should succeed");
 
         let removed = manager.remove_session(session_id).await;
         assert!(removed.is_some());
@@ -355,7 +355,7 @@ mod tests {
                     GamingSecurityProfile::competitive_gaming(),
                 )
                 .await
-                .unwrap();
+                .expect("create_session should succeed");
         }
 
         let result = manager.cleanup_expired_sessions().await;
@@ -384,9 +384,10 @@ mod tests {
 
         // Wait for all to complete
         for handle in handles {
-            let result = handle.await;
-            assert!(result.is_ok());
-            assert!(result.unwrap().is_ok());
+            let join_result = handle
+                .await
+                .expect("concurrent create_session task should complete");
+            assert!(join_result.is_ok());
         }
 
         let count = manager.session_count().await;
@@ -398,14 +399,15 @@ mod tests {
         let genetics = SecurityGenetics::default();
         let profile = GamingSecurityProfile::competitive_gaming();
 
-        let session = SecureSession::new("test-session", "peer-123", genetics, profile).unwrap();
+        let session = SecureSession::new("test-session", "peer-123", genetics, profile)
+            .expect("SecureSession::new should succeed with valid inputs");
 
         // Should have remaining time
         let remaining = session.remaining_time();
         assert!(remaining.is_some());
 
         // Should be close to 1 hour (3600 seconds)
-        let duration = remaining.unwrap();
+        let duration = remaining.expect("non-expired session should have remaining time");
         assert!(duration.as_secs() > 3590 && duration.as_secs() <= 3600);
     }
 
@@ -414,15 +416,19 @@ mod tests {
         let genetics = SecurityGenetics::default();
         let profile = GamingSecurityProfile::competitive_gaming();
 
-        let mut session =
-            SecureSession::new("test-session", "peer-123", genetics, profile).unwrap();
+        let mut session = SecureSession::new("test-session", "peer-123", genetics, profile)
+            .expect("SecureSession::new should succeed with valid inputs");
 
-        let initial_remaining = session.remaining_time().unwrap();
+        let initial_remaining = session
+            .remaining_time()
+            .expect("non-expired session should have remaining time");
 
         // Extend by 1 hour
         session.extend_session(Duration::from_secs(3600));
 
-        let after_extension = session.remaining_time().unwrap();
+        let after_extension = session
+            .remaining_time()
+            .expect("extended session should have remaining time");
 
         // Should have approximately 1 more hour
         assert!(after_extension > initial_remaining);
@@ -434,8 +440,8 @@ mod tests {
         let genetics = SecurityGenetics::default();
         let profile = GamingSecurityProfile::competitive_gaming();
 
-        let mut session =
-            SecureSession::new("test-session", "peer-123", genetics, profile).unwrap();
+        let mut session = SecureSession::new("test-session", "peer-123", genetics, profile)
+            .expect("SecureSession::new should succeed with valid inputs");
 
         // Set expiration to the past
         session.expires_at = SystemTime::now() - Duration::from_secs(60);

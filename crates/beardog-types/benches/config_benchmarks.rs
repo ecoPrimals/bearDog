@@ -1,5 +1,5 @@
 use beardog_types::canonical::config::UnifiedBearDogConfig;
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
 fn benchmark_config_creation(c: &mut Criterion) {
     c.bench_function("config_creation_default", |b| {
@@ -60,14 +60,14 @@ fn benchmark_config_migration(c: &mut Criterion) {
 
 fn benchmark_config_from_env(c: &mut Criterion) {
     // Set up environment variables
-    std::env::set_var("BEARDOG_ENVIRONMENT", "production");
+    beardog_errors::process_env::set_var("BEARDOG_ENVIRONMENT", "production");
 
     c.bench_function("config_load_from_env", |b| {
         b.iter(|| black_box(UnifiedBearDogConfig::load()).unwrap())
     });
 
     // Clean up
-    std::env::remove_var("BEARDOG_ENVIRONMENT");
+    beardog_errors::process_env::remove_var("BEARDOG_ENVIRONMENT");
 }
 
 criterion_group!(

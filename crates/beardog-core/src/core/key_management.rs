@@ -6,7 +6,7 @@
 //! Supports both ephemeral keys and persistent storage (HSM-backed or file-based).
 
 use beardog_errors::BearDogError;
-use ed25519_dalek::{SigningKey, VerifyingKey, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH};
+use ed25519_dalek::{PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SigningKey, VerifyingKey};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -142,7 +142,7 @@ impl KeyStore {
         use rand::rngs::OsRng;
 
         let mut rng = OsRng;
-        let signing_key = SigningKey::from_bytes(&rand::Rng::gen(&mut rng));
+        let signing_key = SigningKey::from_bytes(&rand::Rng::r#gen(&mut rng));
         let verifying_key = signing_key.verifying_key();
         let public_key_bytes = verifying_key.to_bytes().to_vec();
 

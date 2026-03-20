@@ -44,6 +44,7 @@ pub mod integration;
 pub mod logging;
 /// Metrics module
 pub mod metrics;
+/// Performance telemetry: latency, throughput, and resource saturation tied to monitoring.
 pub mod performance;
 /// Security module
 pub mod security;
@@ -112,6 +113,7 @@ pub struct MonitoringConfig {
     /// **SPECIALIZED MONITORING**
     /// The security value
     pub security: UnifiedSecurityMonitoringConfig,
+    /// Performance signals (latency histograms, saturation). **Default:** [`UnifiedPerformanceMonitoringConfig::default()`].
     pub performance: UnifiedPerformanceMonitoringConfig,
     /// Integration
     /// The integration value

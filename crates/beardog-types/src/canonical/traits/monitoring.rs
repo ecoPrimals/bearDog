@@ -68,39 +68,36 @@ pub enum MonitoringLevel {
 
 impl MonitoringLevel {
     /// Returns true if this level includes detailed metrics
-    pub fn includes_detailed_metrics(&self) -> bool {
-        matches!(self, MonitoringLevel::Detailed | MonitoringLevel::Verbose)
+    pub const fn includes_detailed_metrics(&self) -> bool {
+        matches!(self, Self::Detailed | Self::Verbose)
     }
 
     /// Returns true if this level includes trace data
-    pub fn includes_tracing(&self) -> bool {
-        matches!(
-            self,
-            MonitoringLevel::Standard | MonitoringLevel::Detailed | MonitoringLevel::Verbose
-        )
+    pub const fn includes_tracing(&self) -> bool {
+        matches!(self, Self::Standard | Self::Detailed | Self::Verbose)
     }
 
     /// Returns the relative performance overhead of this level
     ///
     /// Returns a value from 1 (lowest) to 5 (highest)
-    pub fn overhead_level(&self) -> u8 {
+    pub const fn overhead_level(&self) -> u8 {
         match self {
-            MonitoringLevel::Minimal => 1,
-            MonitoringLevel::Basic => 2,
-            MonitoringLevel::Standard => 3,
-            MonitoringLevel::Detailed => 4,
-            MonitoringLevel::Verbose => 5,
+            Self::Minimal => 1,
+            Self::Basic => 2,
+            Self::Standard => 3,
+            Self::Detailed => 4,
+            Self::Verbose => 5,
         }
     }
 
     /// Returns the typical reporting interval for this level
-    pub fn typical_interval(&self) -> Duration {
+    pub const fn typical_interval(&self) -> Duration {
         match self {
-            MonitoringLevel::Minimal => Duration::from_secs(300), // 5 minutes
-            MonitoringLevel::Basic => Duration::from_secs(120),   // 2 minutes
-            MonitoringLevel::Standard => Duration::from_secs(60), // 1 minute
-            MonitoringLevel::Detailed => Duration::from_secs(30), // 30 seconds
-            MonitoringLevel::Verbose => Duration::from_secs(10),  // 10 seconds
+            Self::Minimal => Duration::from_secs(300), // 5 minutes
+            Self::Basic => Duration::from_secs(120),   // 2 minutes
+            Self::Standard => Duration::from_secs(60), // 1 minute
+            Self::Detailed => Duration::from_secs(30), // 30 seconds
+            Self::Verbose => Duration::from_secs(10),  // 10 seconds
         }
     }
 }
@@ -108,11 +105,11 @@ impl MonitoringLevel {
 impl std::fmt::Display for MonitoringLevel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MonitoringLevel::Minimal => write!(f, "Minimal"),
-            MonitoringLevel::Basic => write!(f, "Basic"),
-            MonitoringLevel::Standard => write!(f, "Standard"),
-            MonitoringLevel::Detailed => write!(f, "Detailed"),
-            MonitoringLevel::Verbose => write!(f, "Verbose"),
+            Self::Minimal => write!(f, "Minimal"),
+            Self::Basic => write!(f, "Basic"),
+            Self::Standard => write!(f, "Standard"),
+            Self::Detailed => write!(f, "Detailed"),
+            Self::Verbose => write!(f, "Verbose"),
         }
     }
 }
@@ -279,24 +276,19 @@ pub trait MonitoringConfig: Send + Sync {
 
         if interval < Duration::from_secs(1) {
             eprintln!(
-                "WARNING: Very short reporting interval ({:?}), may cause performance issues",
-                interval
+                "WARNING: Very short reporting interval ({interval:?}), may cause performance issues"
             );
         }
 
         if interval > Duration::from_secs(600) {
-            eprintln!(
-                "WARNING: Very long reporting interval ({:?}), metrics may be stale",
-                interval
-            );
+            eprintln!("WARNING: Very long reporting interval ({interval:?}), metrics may be stale");
         }
 
         // Check sample rate
         let sample_rate = self.sample_rate();
         if !(0.0..=1.0).contains(&sample_rate) {
             return Err(format!(
-                "Sample rate must be between 0.0 and 1.0, got {}",
-                sample_rate
+                "Sample rate must be between 0.0 and 1.0, got {sample_rate}"
             ));
         }
 

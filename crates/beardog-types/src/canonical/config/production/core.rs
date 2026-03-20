@@ -59,6 +59,7 @@ pub enum EnvironmentLevel {
     Critical,
 }
 
+/// Toggles for observability, resilience, and data-protection features in production builds.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProductionFeatureFlags {
     /// Enable advanced monitoring and observability
@@ -67,6 +68,7 @@ pub struct ProductionFeatureFlags {
     /// Enable distributed tracing across services
     /// Whether `enable_distributed_tracing` is enabled
     pub enable_distributed_tracing: bool,
+    /// When true, allow CPU/flame profiling endpoints or agents (impacts overhead).
     pub enable_performance_profiling: bool,
     /// Enable comprehensive security auditing
     /// Whether `enable_security_auditing` is enabled
@@ -104,7 +106,7 @@ impl Default for ProductionCoreConfig {
 
 impl ProductionFeatureFlags {
     /// Create ProductionFeatureFlags with hardcoded defaults
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             enable_advanced_monitoring: true,
             enable_distributed_tracing: true,
@@ -187,7 +189,7 @@ impl ProductionCoreConfig {
     /// Set the environment level
     #[must_use]
     /// Creates instance with environment level
-    pub fn with_environment_level(mut self, level: EnvironmentLevel) -> Self {
+    pub const fn with_environment_level(mut self, level: EnvironmentLevel) -> Self {
         self.environment_level = level;
         self
     }
@@ -269,7 +271,7 @@ impl ProductionCoreConfig {
     #[must_use]
     /// Checks if production
     /// Checks if production
-    pub fn is_production(&self) -> bool {
+    pub const fn is_production(&self) -> bool {
         matches!(
             self.environment_level,
             EnvironmentLevel::Production | EnvironmentLevel::Critical
@@ -296,19 +298,18 @@ impl ProductionCoreConfig {
 }
 
 impl EnvironmentLevel {
-    /// Check if this environment level requires production-grade settings
+    /// Returns true for tiers that expect HA, stricter validation, and audited changes.
     #[must_use]
-    /// Checks if production grade
-    /// Checks if production grade
-    pub fn is_production_grade(&self) -> bool {
+    pub const fn is_production_grade(&self) -> bool {
         matches!(
             self,
             Self::PreProduction | Self::Production | Self::Critical
         )
     }
 
+    /// Target monthly availability as a fraction in `[0.0, 1.0]` used for SLO math.
     #[must_use]
-    pub fn required_uptime(&self) -> f64 {
+    pub const fn required_uptime(&self) -> f64 {
         match self {
             Self::Development => 0.95,    // 95%
             Self::Testing => 0.98,        // 98%
@@ -330,7 +331,7 @@ impl EnvironmentLevel {
 impl ProductionFeatureFlags {
     /// Create production-optimized feature flags
     #[must_use]
-    pub fn production() -> Self {
+    pub const fn production() -> Self {
         Self {
             enable_advanced_monitoring: true,
             enable_distributed_tracing: true,
@@ -347,7 +348,7 @@ impl ProductionFeatureFlags {
 
     /// Create development-optimized feature flags
     #[must_use]
-    pub fn development() -> Self {
+    pub const fn development() -> Self {
         Self {
             enable_advanced_monitoring: false,
             enable_distributed_tracing: false,
@@ -362,8 +363,9 @@ impl ProductionFeatureFlags {
         }
     }
 
+    /// Returns true when any enabled flag is known to add measurable runtime overhead.
     #[must_use]
-    pub fn has_performance_impact(&self) -> bool {
+    pub const fn has_performance_impact(&self) -> bool {
         self.enable_distributed_tracing
             || self.enable_performance_profiling
             || self.enable_security_auditing

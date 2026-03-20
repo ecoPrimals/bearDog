@@ -2,7 +2,7 @@
 name = "beardog-core"
 description = "BearDog core module"
 repository = "https://github.com/eastgate-software/beardog"
-rust-version = "1.75"
+rust-version = "1.85.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "core", "ecosystem", "beardog", "orchestration", "management",]
@@ -115,4 +115,4 @@ features = [ "serde",]
 [features]
 default = []
 hsm-integration = []
-mdns = ["dep:mdns-sd"]  # Enable mDNS runtime discovery
+mdns = ["dep:mdns-sd"]

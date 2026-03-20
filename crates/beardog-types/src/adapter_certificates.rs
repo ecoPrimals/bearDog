@@ -75,7 +75,7 @@ impl AdapterClassification {
 
     /// Get human-readable description
     #[must_use]
-    pub fn description(&self) -> &'static str {
+    pub const fn description(&self) -> &'static str {
         match self {
             Self::Human => "Human usage (free)",
             Self::Commercial => "Commercial usage (paid)",
@@ -338,8 +338,13 @@ pub enum CertificateVerificationResult {
     /// Certificate signature is invalid (tampered or forged)
     InvalidSignature,
 
-    /// Certificate is for a different adapter
-    WrongAdapter { expected: String, found: String },
+    /// Certificate is for a different adapter than the one performing verification.
+    WrongAdapter {
+        /// Adapter identity expected in this verification context (e.g. local adapter id).
+        expected: String,
+        /// Adapter identity present in the certificate payload or subject.
+        found: String,
+    },
 
     /// Certificate constraints have been tampered with
     ConstraintsTampered,
@@ -361,8 +366,7 @@ impl CertificateVerificationResult {
             Self::NotYetValid => Some("Certificate is not yet valid".to_string()),
             Self::InvalidSignature => Some("Certificate signature is invalid".to_string()),
             Self::WrongAdapter { expected, found } => Some(format!(
-                "Certificate is for adapter '{}', but this is '{}'",
-                found, expected
+                "Certificate is for adapter '{found}', but this is '{expected}'"
             )),
             Self::ConstraintsTampered => {
                 Some("Certificate constraints have been tampered with".to_string())
@@ -521,9 +525,11 @@ mod tests {
     #[test]
     fn test_verification_result_messages() {
         assert!(CertificateVerificationResult::Valid.is_valid());
-        assert!(CertificateVerificationResult::Valid
-            .error_message()
-            .is_none());
+        assert!(
+            CertificateVerificationResult::Valid
+                .error_message()
+                .is_none()
+        );
 
         let expired = CertificateVerificationResult::Expired;
         assert!(!expired.is_valid());

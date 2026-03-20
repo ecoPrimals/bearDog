@@ -80,8 +80,8 @@ impl CoreSecurityProvider {
     /// In production (Phase 2), this will load keys from HSM storage.
     fn encrypt_internal(data: &[u8], key_id: &str) -> Result<Vec<u8>, BearDogError> {
         use aes_gcm::{
-            aead::{Aead, KeyInit},
             Aes256Gcm, Nonce,
+            aead::{Aead, KeyInit},
         };
         use rand::RngCore;
         use sha2::{Digest, Sha256};
@@ -115,8 +115,8 @@ impl CoreSecurityProvider {
     /// Decrypt data using AES-256-GCM (real implementation)
     fn decrypt_internal(data: &[u8], key_id: &str) -> Result<Vec<u8>, BearDogError> {
         use aes_gcm::{
-            aead::{Aead, KeyInit},
             Aes256Gcm, Nonce,
+            aead::{Aead, KeyInit},
         };
         use sha2::{Digest, Sha256};
 
@@ -312,7 +312,7 @@ impl UnifiedSecurityProvider for CoreSecurityProvider {
                 "read".to_string(),
                 "write".to_string(),
                 "execute".to_string(),
-                request.operation.clone(),
+                request.operation,
             ];
 
             Ok(AuthorizationResponse {

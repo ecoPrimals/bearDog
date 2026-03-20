@@ -21,7 +21,7 @@ use std::path::PathBuf;
 use tracing::{debug, info};
 
 #[cfg(feature = "fido2")]
-use beardog_hid::{discover, types::is_fido2_device, HidDeviceInfo};
+use beardog_hid::{HidDeviceInfo, discover, types::is_fido2_device};
 
 /// Discover all FIDO2 devices on the system (Pure Rust)
 ///

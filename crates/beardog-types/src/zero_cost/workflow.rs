@@ -22,7 +22,9 @@ where
 
 /// Trait defining the interface for workflow processors with zero-cost abstractions
 pub trait WorkflowProcessorTrait {
+    /// Compile-time description of which workflow categories this processor handles
     type SupportedWorkflows: WorkflowTypes;
+    /// Error type returned from validation and processing
     type Error: std::error::Error + Send + Sync + 'static;
 
     /// Process a workflow asynchronously and return the result
@@ -38,6 +40,7 @@ pub trait WorkflowProcessorTrait {
     /// Validates workflow
     fn validate_workflow(&self, workflow: &Workflow) -> Result<(), Self::Error>;
 
+    /// Capability flags describing supported workflow families
     fn supported_types(&self) -> &Self::SupportedWorkflows;
 }
 
@@ -57,6 +60,7 @@ pub struct WorkflowEngineConfig {
     /// Maximum number of concurrent workflow executions
     /// Number of `max_concurrent`
     pub max_concurrent: usize,
+    /// Per-workflow wall-clock limit in milliseconds
     pub timeout_ms: u64,
     /// Number of `retry_attempts`
     pub retry_attempts: u32,

@@ -21,9 +21,9 @@ mod network_coverage_extension_tests {
     #[test]
     fn test_network_config_from_env_no_variables() {
         // Cleanup
-        std::env::remove_var("BEARDOG_API_BIND_ADDRESS");
-        std::env::remove_var("BEARDOG_API_PORT");
-        std::env::remove_var("BEARDOG_MAX_CONNECTIONS");
+        beardog_errors::process_env::remove_var("BEARDOG_API_BIND_ADDRESS");
+        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
+        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONNECTIONS");
 
         let config = NetworkConfig::from_env();
 
@@ -93,52 +93,52 @@ mod network_coverage_extension_tests {
 
     #[test]
     fn test_api_config_from_env_with_port() {
-        std::env::remove_var("BEARDOG_API_PORT");
-        std::env::set_var("BEARDOG_API_PORT", "9999");
+        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
+        beardog_errors::process_env::set_var("BEARDOG_API_PORT", "9999");
 
         let config = ApiConfig::from_env();
 
         assert_eq!(config.port, 9999);
 
-        std::env::remove_var("BEARDOG_API_PORT");
+        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
     }
 
     #[test]
     fn test_api_config_from_env_with_bind_address() {
-        std::env::remove_var("BEARDOG_API_BIND_ADDRESS");
-        std::env::set_var("BEARDOG_API_BIND_ADDRESS", "0.0.0.0");
+        beardog_errors::process_env::remove_var("BEARDOG_API_BIND_ADDRESS");
+        beardog_errors::process_env::set_var("BEARDOG_API_BIND_ADDRESS", "0.0.0.0");
 
         let config = ApiConfig::from_env();
 
         assert_eq!(config.bind_address, IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)));
 
-        std::env::remove_var("BEARDOG_API_BIND_ADDRESS");
+        beardog_errors::process_env::remove_var("BEARDOG_API_BIND_ADDRESS");
     }
 
     #[test]
     fn test_api_config_from_env_with_max_connections() {
-        std::env::remove_var("BEARDOG_API_MAX_CONNECTIONS");
-        std::env::set_var("BEARDOG_API_MAX_CONNECTIONS", "500");
+        beardog_errors::process_env::remove_var("BEARDOG_API_MAX_CONNECTIONS");
+        beardog_errors::process_env::set_var("BEARDOG_API_MAX_CONNECTIONS", "500");
 
         let config = ApiConfig::from_env();
 
         // The from_env() method should read BEARDOG_API_MAX_CONNECTIONS
         assert_eq!(config.max_connections, 500);
 
-        std::env::remove_var("BEARDOG_API_MAX_CONNECTIONS");
+        beardog_errors::process_env::remove_var("BEARDOG_API_MAX_CONNECTIONS");
     }
 
     #[test]
     fn test_api_config_from_env_invalid_port() {
-        std::env::remove_var("BEARDOG_API_PORT");
-        std::env::set_var("BEARDOG_API_PORT", "invalid");
+        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
+        beardog_errors::process_env::set_var("BEARDOG_API_PORT", "invalid");
 
         let config = ApiConfig::from_env();
 
         // Should use default on parse failure
         assert_eq!(config.port, DEFAULT_API_PORT);
 
-        std::env::remove_var("BEARDOG_API_PORT");
+        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
     }
 
     #[test]
@@ -290,26 +290,26 @@ mod network_coverage_extension_tests {
 
     #[test]
     fn test_admin_config_from_env_with_port() {
-        std::env::remove_var("BEARDOG_ADMIN_PORT");
-        std::env::set_var("BEARDOG_ADMIN_PORT", "5555");
+        beardog_errors::process_env::remove_var("BEARDOG_ADMIN_PORT");
+        beardog_errors::process_env::set_var("BEARDOG_ADMIN_PORT", "5555");
 
         let config = AdminConfig::from_env();
 
         assert_eq!(config.port, 5555);
 
-        std::env::remove_var("BEARDOG_ADMIN_PORT");
+        beardog_errors::process_env::remove_var("BEARDOG_ADMIN_PORT");
     }
 
     #[test]
     fn test_admin_config_from_env_with_enabled() {
-        std::env::remove_var("BEARDOG_ADMIN_ENABLED");
-        std::env::set_var("BEARDOG_ADMIN_ENABLED", "false");
+        beardog_errors::process_env::remove_var("BEARDOG_ADMIN_ENABLED");
+        beardog_errors::process_env::set_var("BEARDOG_ADMIN_ENABLED", "false");
 
         let config = AdminConfig::from_env();
 
         assert!(!config.enabled);
 
-        std::env::remove_var("BEARDOG_ADMIN_ENABLED");
+        beardog_errors::process_env::remove_var("BEARDOG_ADMIN_ENABLED");
     }
 
     #[test]

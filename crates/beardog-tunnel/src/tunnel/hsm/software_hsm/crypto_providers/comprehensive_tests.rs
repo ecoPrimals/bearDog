@@ -8,8 +8,8 @@
 //! Coverage Sprint - Session 1: Crypto Provider Integration Tests
 
 use super::*;
-use crate::tunnel::hsm::types::config::CryptoBackend;
 use crate::tunnel::hsm::types::KeyType;
+use crate::tunnel::hsm::types::config::CryptoBackend;
 use beardog_errors::BearDogError;
 
 // ============================================================================

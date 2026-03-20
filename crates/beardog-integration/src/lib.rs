@@ -278,14 +278,14 @@ mod tests {
 
     #[test]
     fn test_config_from_env() {
-        std::env::set_var("BEARDOG_API_PORT", "9999");
-        std::env::set_var("BEARDOG_SERVICE_NAME", "test-service");
+        beardog_errors::process_env::set_var("BEARDOG_API_PORT", "9999");
+        beardog_errors::process_env::set_var("BEARDOG_SERVICE_NAME", "test-service");
 
         let config = IntegrationConfig::default();
         assert_eq!(config.api_port, 9999);
         assert_eq!(config.service_name, "test-service");
 
-        std::env::remove_var("BEARDOG_API_PORT");
-        std::env::remove_var("BEARDOG_SERVICE_NAME");
+        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
+        beardog_errors::process_env::remove_var("BEARDOG_SERVICE_NAME");
     }
 }

@@ -1,16 +1,19 @@
 [package]
 name = "beardog-security"
 version.workspace = true
-edition = "2021"
+edition = "2024"
 description = "Security and cryptography for BearDog Security Manager"
 license = "AGPL-3.0-only"
 repository = "https://github.com/ecoPrimals/beardog"
-rust-version = "1.75"
+rust-version = "1.85.0"
 authors = [ "BearDog Team <team@beardog.dev>",]
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "security", "crypto", "beardog", "encryption", "hsm",]
 categories = [ "cryptography", "security", "development-tools",]
+
+[lints]
+workspace = true
 
 [dependencies]
 aes-gcm = "0.10"

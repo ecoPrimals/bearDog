@@ -216,4 +216,5 @@ pub enum AuthProvider {
     SAML,
 }
 
+/// Back-compat alias for [`CanonicalAuthConfig`]; prefer the canonical name in new code.
 pub type AuthConfig = CanonicalAuthConfig;

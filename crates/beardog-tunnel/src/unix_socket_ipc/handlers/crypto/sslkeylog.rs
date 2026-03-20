@@ -198,7 +198,7 @@ pub fn export_to_sslkeylogfile(
         .create(true)
         .append(true)
         .open(&keylog_path)
-        .map_err(|e| format!("Failed to open SSLKEYLOGFILE: {}", e))?;
+        .map_err(|e| format!("Failed to open SSLKEYLOGFILE: {e}"))?;
 
     let client_random_hex = hex::encode(client_random);
 
@@ -210,7 +210,7 @@ pub fn export_to_sslkeylogfile(
             client_random_hex,
             hex::encode(client_hs_secret)
         )
-        .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {}", e))?;
+        .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {e}"))?;
 
         writeln!(
             file,
@@ -218,7 +218,7 @@ pub fn export_to_sslkeylogfile(
             client_random_hex,
             hex::encode(server_hs_secret)
         )
-        .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {}", e))?;
+        .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {e}"))?;
 
         info!("  ✅ Exported handshake traffic secrets");
     }
@@ -231,7 +231,7 @@ pub fn export_to_sslkeylogfile(
             client_random_hex,
             hex::encode(client_app_secret)
         )
-        .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {}", e))?;
+        .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {e}"))?;
 
         writeln!(
             file,
@@ -239,7 +239,7 @@ pub fn export_to_sslkeylogfile(
             client_random_hex,
             hex::encode(server_app_secret)
         )
-        .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {}", e))?;
+        .map_err(|e| format!("Failed to write to SSLKEYLOGFILE: {e}"))?;
 
         info!("  ✅ Exported application traffic secrets");
     }
@@ -261,7 +261,7 @@ mod tests {
     #[test]
     fn test_export_without_env_var() {
         // Should succeed gracefully when SSLKEYLOGFILE is not set
-        std::env::remove_var("SSLKEYLOGFILE");
+        beardog_errors::process_env::remove_var("SSLKEYLOGFILE");
 
         let client_random = vec![0u8; 32];
         let result = export_to_sslkeylogfile(&client_random, None, None);
@@ -272,7 +272,7 @@ mod tests {
     #[test]
     fn test_invalid_client_random_length() {
         // Set a temporary keylog file
-        std::env::set_var("SSLKEYLOGFILE", "/tmp/test-keylog.log");
+        beardog_errors::process_env::set_var("SSLKEYLOGFILE", "/tmp/test-keylog.log");
 
         let client_random = vec![0u8; 16]; // Wrong length!
         let result = export_to_sslkeylogfile(&client_random, None, None);
@@ -280,7 +280,7 @@ mod tests {
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("must be 32 bytes"));
 
-        std::env::remove_var("SSLKEYLOGFILE");
+        beardog_errors::process_env::remove_var("SSLKEYLOGFILE");
     }
 
     #[test]
@@ -320,7 +320,7 @@ mod tests {
         // Set env var just before use, then call the function directly
         // Note: env vars are process-wide, so this test can race with others.
         // We mitigate by using a unique file path per thread.
-        std::env::set_var("SSLKEYLOGFILE", &temp_file_str);
+        beardog_errors::process_env::set_var("SSLKEYLOGFILE", &temp_file_str);
 
         let client_random = vec![0xAA; 32];
         let client_hs_secret = vec![0xBB; 32];
@@ -333,7 +333,7 @@ mod tests {
         );
 
         // Clean up env var immediately after use
-        std::env::remove_var("SSLKEYLOGFILE");
+        beardog_errors::process_env::remove_var("SSLKEYLOGFILE");
 
         assert!(
             result.is_ok(),

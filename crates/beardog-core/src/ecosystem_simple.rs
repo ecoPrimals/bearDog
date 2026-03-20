@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+//! Lightweight ecosystem coordinator with capability-based service discovery.
+//!
+//! Used where the full ecosystem stack is not required but health checks and discovery
+//! timeouts still need consistent defaults.
 
 use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;
@@ -20,8 +20,9 @@ const DEFAULT_CAPABILITIES: &[&str] = &[
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SimpleEcosystemConfig {
-    /// Whether feature_services is enabled
+    /// Capability or service identifiers to resolve during initialization.
     pub enabled_services: Vec<String>,
+    /// Maximum time to wait for a single discovery attempt, in milliseconds.
     pub discovery_timeout_ms: u64,
     /// Number of health_check_interval_ms
     pub health_check_interval_ms: u64,
@@ -50,6 +51,7 @@ impl Default for SimpleEcosystemConfig {
     }
 }
 
+/// Snapshot of one discovered peer service and its last health observation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemService {
     /// Name of the service
@@ -64,6 +66,7 @@ pub struct EcosystemService {
     pub capabilities: Vec<String>,
 }
 
+/// Holds discovered [`EcosystemService`] entries according to [`SimpleEcosystemConfig`].
 #[derive(Debug)]
 pub struct SimpleEcosystemManager {
     config: SimpleEcosystemConfig,

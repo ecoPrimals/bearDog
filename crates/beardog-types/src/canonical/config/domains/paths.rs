@@ -296,10 +296,10 @@ mod tests {
     
     #[test]
     fn test_environment_variable_override() {
-        std::env::set_var("BEARDOG_CONFIG_DIR", "/custom/config");
+        beardog_errors::process_env::set_var("BEARDOG_CONFIG_DIR", "/custom/config");
         let config = PathConfig::from_environment();
         assert_eq!(config.config_dir, PathBuf::from("/custom/config"));
-        std::env::remove_var("BEARDOG_CONFIG_DIR");
+        beardog_errors::process_env::remove_var("BEARDOG_CONFIG_DIR");
     }
     
     #[test]

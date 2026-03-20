@@ -33,6 +33,7 @@ pub struct ComponentHealth {
     pub metadata: HashMap<String, String>,
 }
 
+/// Roll-up of every component's status plus a single overall verdict.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemHealth {
     /// Overall system health status
@@ -45,6 +46,7 @@ pub struct SystemHealth {
     pub timestamp: DateTime<Utc>,
 }
 
+/// Captures machine-wide performance counters at a moment in time (load, I/O, uptime).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceSnapshot {
     /// CPU usage percentage (0.0 to 100.0)
@@ -160,6 +162,7 @@ impl Default for ResourceUsage {
 /// `MonitoringAlert` represents a system alert
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringAlert {
+    /// Stable identifier used for deduplication, routing, and acknowledgment.
     pub id: String,
     /// Alert message
     /// The message value
@@ -250,10 +253,10 @@ pub enum MetricValue {
     Timer(std::time::Duration),
 }
 
-/// `AlertType` categorizes different types of alerts
+/// High-level category for a fired alert (performance, security, capacity, etc.).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-/// Types of alert
 pub enum AlertType {
+    /// Latency, throughput, or saturation style alerts.
     Performance,
     /// Security-related alert
     Security,
@@ -278,6 +281,7 @@ pub enum AlertSeverity {
     Critical,
 }
 
+/// Backwards-compatible alias for [`AlertSeverity`] in user-facing APIs.
 pub type AlertLevel = AlertSeverity;
 
 /// Monitoring configuration
@@ -305,6 +309,7 @@ pub struct PrometheusConfig {
     pub endpoint: String,
     /// Prometheus server port
     pub port: u16,
+    /// Prefix applied to each exported metric name (e.g. primal or subsystem).
     pub prefix: String,
 }
 

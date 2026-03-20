@@ -19,6 +19,7 @@
 // See `/CONSTANTS_DOCUMENTATION.md` for detailed rationale for all "hardcoded" values.
 // All constants are industry standards (IANA, RFC, NIST) and overridable via config.
 
+/// Constants grouped by domain (system, network, security, validation, etc.).
 pub mod domains;
 
 /// Network port constants from IANA registry.

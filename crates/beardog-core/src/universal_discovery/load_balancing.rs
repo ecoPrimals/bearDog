@@ -237,7 +237,7 @@ impl LoadBalancer {
         let selected_service = balanced_services.first().cloned();
 
         // Update sticky session if enabled
-        if let (Some(session_id), Some(ref service)) = (session_id, &selected_service) {
+        if let (Some(session_id), Some(service)) = (session_id, &selected_service) {
             if self.config.enable_sticky_sessions {
                 let mut state = self.state.write().await;
                 state

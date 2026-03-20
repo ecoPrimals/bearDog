@@ -39,79 +39,79 @@ impl TimeoutConfigBuilder {
     }
 
     /// Set health check timeout (seconds)
-    pub fn health_check_secs(mut self, secs: u64) -> Self {
+    pub const fn health_check_secs(mut self, secs: u64) -> Self {
         self.health_check_secs = Some(secs);
         self
     }
 
     /// Set HSM operation timeout (seconds)
-    pub fn hsm_operation_secs(mut self, secs: u64) -> Self {
+    pub const fn hsm_operation_secs(mut self, secs: u64) -> Self {
         self.hsm_operation_secs = Some(secs);
         self
     }
 
     /// Set HSM probe timeout (milliseconds)
-    pub fn hsm_probe_millis(mut self, millis: u64) -> Self {
+    pub const fn hsm_probe_millis(mut self, millis: u64) -> Self {
         self.hsm_probe_millis = Some(millis);
         self
     }
 
     /// Set discovery operation timeout (seconds)
-    pub fn discovery_operation_secs(mut self, secs: u64) -> Self {
+    pub const fn discovery_operation_secs(mut self, secs: u64) -> Self {
         self.discovery_operation_secs = Some(secs);
         self
     }
 
     /// Set AI decision timeout (seconds)
-    pub fn ai_decision_secs(mut self, secs: u64) -> Self {
+    pub const fn ai_decision_secs(mut self, secs: u64) -> Self {
         self.ai_decision_secs = Some(secs);
         self
     }
 
     /// Set AI request timeout (seconds)
-    pub fn ai_request_secs(mut self, secs: u64) -> Self {
+    pub const fn ai_request_secs(mut self, secs: u64) -> Self {
         self.ai_request_secs = Some(secs);
         self
     }
 
     /// Set AI batch timeout (milliseconds)
-    pub fn ai_batch_timeout_millis(mut self, millis: u64) -> Self {
+    pub const fn ai_batch_timeout_millis(mut self, millis: u64) -> Self {
         self.ai_batch_timeout_millis = Some(millis);
         self
     }
 
     /// Set pool idle timeout (seconds)
-    pub fn pool_idle_secs(mut self, secs: u64) -> Self {
+    pub const fn pool_idle_secs(mut self, secs: u64) -> Self {
         self.pool_idle_secs = Some(secs);
         self
     }
 
     /// Set max connection age (seconds)
-    pub fn max_connection_age_secs(mut self, secs: u64) -> Self {
+    pub const fn max_connection_age_secs(mut self, secs: u64) -> Self {
         self.max_connection_age_secs = Some(secs);
         self
     }
 
     /// Set network operation timeout (seconds)
-    pub fn network_operation_secs(mut self, secs: u64) -> Self {
+    pub const fn network_operation_secs(mut self, secs: u64) -> Self {
         self.network_operation_secs = Some(secs);
         self
     }
 
     /// Set DNS resolution timeout (seconds)
-    pub fn dns_resolution_timeout_secs(mut self, secs: u64) -> Self {
+    pub const fn dns_resolution_timeout_secs(mut self, secs: u64) -> Self {
         self.dns_resolution_timeout_secs = Some(secs);
         self
     }
 
     /// Set connection timeout (seconds)
-    pub fn connection_timeout_secs(mut self, secs: u64) -> Self {
+    pub const fn connection_timeout_secs(mut self, secs: u64) -> Self {
         self.connection_timeout_secs = Some(secs);
         self
     }
 
     /// Set request timeout (seconds)
-    pub fn request_timeout_secs(mut self, secs: u64) -> Self {
+    pub const fn request_timeout_secs(mut self, secs: u64) -> Self {
         self.request_timeout_secs = Some(secs);
         self
     }

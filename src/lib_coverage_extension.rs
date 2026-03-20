@@ -228,7 +228,7 @@ mod root_lib_coverage_extension_tests {
     async fn test_discover_services_missing_compute_endpoint() {
         // ✅ Concurrent-safe: explicit config with missing endpoint
         // Clear env vars to ensure config takes full precedence
-        std::env::remove_var("BEARDOG_COMPUTE_ENDPOINT");
+        beardog_errors::process_env::remove_var("BEARDOG_COMPUTE_ENDPOINT");
 
         let config = FrameworkConfig {
             confidence_level: 0.95,
@@ -254,8 +254,8 @@ mod root_lib_coverage_extension_tests {
     #[serial_test::serial] // Ensure env var isolation
     async fn test_discover_services_missing_storage_endpoint() {
         // Clear env vars to ensure test isolation
-        std::env::remove_var("BEARDOG_COMPUTE_ENDPOINT");
-        std::env::remove_var("BEARDOG_STORAGE_ENDPOINT");
+        beardog_errors::process_env::remove_var("BEARDOG_COMPUTE_ENDPOINT");
+        beardog_errors::process_env::remove_var("BEARDOG_STORAGE_ENDPOINT");
 
         // Use explicit config instead of global env vars for concurrency safety
         let config = FrameworkConfig {
@@ -281,8 +281,8 @@ mod root_lib_coverage_extension_tests {
     #[tokio::test]
     async fn test_discover_services_success() {
         // Clear env vars to ensure test isolation
-        std::env::remove_var("BEARDOG_COMPUTE_ENDPOINT");
-        std::env::remove_var("BEARDOG_STORAGE_ENDPOINT");
+        beardog_errors::process_env::remove_var("BEARDOG_COMPUTE_ENDPOINT");
+        beardog_errors::process_env::remove_var("BEARDOG_STORAGE_ENDPOINT");
 
         // Use explicit config instead of global env vars for concurrency safety
         let config = FrameworkConfig {
@@ -305,17 +305,21 @@ mod root_lib_coverage_extension_tests {
         assert_eq!(services[0].name, "compute-service");
         assert_eq!(services[0].endpoint, "http://compute-test:8080");
         assert_eq!(services[0].capabilities.len(), 2);
-        assert!(services[0]
-            .capabilities
-            .contains(&"ai-processing".to_string()));
+        assert!(
+            services[0]
+                .capabilities
+                .contains(&"ai-processing".to_string())
+        );
 
         // Check second service (storage)
         assert_eq!(services[1].name, "storage-service");
         assert_eq!(services[1].endpoint, "http://storage-test:8081");
         assert_eq!(services[1].capabilities.len(), 2);
-        assert!(services[1]
-            .capabilities
-            .contains(&"high-throughput".to_string()));
+        assert!(
+            services[1]
+                .capabilities
+                .contains(&"high-throughput".to_string())
+        );
     }
 
     #[tokio::test]
@@ -379,15 +383,15 @@ mod root_lib_coverage_extension_tests {
     #[serial_test::serial] // Modern idiomatic: Serialize tests that use env vars
     async fn test_multiple_operations() {
         // Deep solution: Use RAII guard for env cleanup
-        std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://test1:8080");
-        std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://test2:8081");
+        beardog_errors::process_env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://test1:8080");
+        beardog_errors::process_env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://test2:8081");
 
         // Ensure cleanup even on test failure
         struct EnvCleanup;
         impl Drop for EnvCleanup {
             fn drop(&mut self) {
-                std::env::remove_var("BEARDOG_COMPUTE_ENDPOINT");
-                std::env::remove_var("BEARDOG_STORAGE_ENDPOINT");
+                beardog_errors::process_env::remove_var("BEARDOG_COMPUTE_ENDPOINT");
+                beardog_errors::process_env::remove_var("BEARDOG_STORAGE_ENDPOINT");
             }
         }
         let _cleanup = EnvCleanup;
@@ -448,8 +452,8 @@ mod root_lib_coverage_extension_tests {
     #[tokio::test]
     #[serial_test::serial]
     async fn test_service_metadata() {
-        std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://compute:9090");
-        std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://storage:9091");
+        beardog_errors::process_env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://compute:9090");
+        beardog_errors::process_env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://storage:9091");
 
         let mut framework = BearDogFramework::new().await.unwrap();
         let services = framework.discover_services().await.unwrap();
@@ -466,8 +470,8 @@ mod root_lib_coverage_extension_tests {
             Some(&"storage".to_string())
         );
 
-        std::env::remove_var("BEARDOG_COMPUTE_ENDPOINT");
-        std::env::remove_var("BEARDOG_STORAGE_ENDPOINT");
+        beardog_errors::process_env::remove_var("BEARDOG_COMPUTE_ENDPOINT");
+        beardog_errors::process_env::remove_var("BEARDOG_STORAGE_ENDPOINT");
     }
 
     #[tokio::test]
@@ -488,8 +492,8 @@ mod root_lib_coverage_extension_tests {
     #[tokio::test]
     #[serial_test::serial]
     async fn test_reset_after_operations() {
-        std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://test:8080");
-        std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://test:8081");
+        beardog_errors::process_env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://test:8080");
+        beardog_errors::process_env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://test:8081");
 
         let mut framework = BearDogFramework::new().await.unwrap();
 
@@ -506,7 +510,7 @@ mod root_lib_coverage_extension_tests {
         assert_eq!(framework.stats.services_discovered, 0);
         assert_eq!(framework.stats.zero_copy_operations, 0);
 
-        std::env::remove_var("BEARDOG_COMPUTE_ENDPOINT");
-        std::env::remove_var("BEARDOG_STORAGE_ENDPOINT");
+        beardog_errors::process_env::remove_var("BEARDOG_COMPUTE_ENDPOINT");
+        beardog_errors::process_env::remove_var("BEARDOG_STORAGE_ENDPOINT");
     }
 }

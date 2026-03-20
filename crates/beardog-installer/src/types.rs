@@ -18,14 +18,21 @@ use std::fmt;
 /// Primals are discovered at runtime via capability-based discovery, not hardcoded.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct PrimalName(pub String);
+pub struct PrimalName(
+    /// Canonical primal name string (typically lowercase, e.g. `beardog`).
+    pub String,
+);
 
 impl PrimalName {
-    /// Well-known primal name constants (for convenience, not exhaustive)
+    /// BearDog genomeBin primal name.
     pub const BEARDOG: &'static str = "beardog";
+    /// Songbird genomeBin primal name.
     pub const SONGBIRD: &'static str = "songbird";
+    /// Squirrel genomeBin
     pub const SQUIRREL: &'static str = "squirrel";
+    /// ToadStool genomeBin
     pub const TOADSTOOL: &'static str = "toadstool";
+    /// NestGate genomeBin
     pub const NESTGATE: &'static str = "nestgate";
 
     /// Create from any string (capability-based)
@@ -118,7 +125,7 @@ impl fmt::Display for DeploymentStatus {
             Self::Installing => write!(f, "Installing"),
             Self::Validating => write!(f, "Validating"),
             Self::Complete => write!(f, "Complete"),
-            Self::Failed { reason } => write!(f, "Failed: {}", reason),
+            Self::Failed { reason } => write!(f, "Failed: {reason}"),
             Self::RolledBack => write!(f, "Rolled Back"),
         }
     }
@@ -141,7 +148,12 @@ pub struct DeploymentProgress {
 
 impl DeploymentProgress {
     /// Create new progress entry
-    pub fn new(primal: PrimalName, status: DeploymentStatus, percent: u8, message: String) -> Self {
+    pub const fn new(
+        primal: PrimalName,
+        status: DeploymentStatus,
+        percent: u8,
+        message: String,
+    ) -> Self {
         Self {
             primal,
             status,
@@ -342,23 +354,23 @@ mod tests {
     #[test]
     fn test_serialization() {
         let primal = PrimalName::new(PrimalName::BEARDOG);
-        let json = serde_json::to_string(&primal).unwrap();
+        let json = serde_json::to_string(&primal).expect("serialize primal");
         assert_eq!(json, "\"beardog\"");
 
-        let deserialized: PrimalName = serde_json::from_str(&json).unwrap();
+        let deserialized: PrimalName = serde_json::from_str(&json).expect("deserialize primal");
         assert_eq!(deserialized, PrimalName::new(PrimalName::BEARDOG));
     }
 
     #[test]
     fn test_deployment_status_serialization() {
         let status = DeploymentStatus::Complete;
-        let json = serde_json::to_string(&status).unwrap();
+        let json = serde_json::to_string(&status).expect("serialize status");
         assert!(json.contains("\"status\":\"complete\""));
 
         let status = DeploymentStatus::Failed {
             reason: "test".to_string(),
         };
-        let json = serde_json::to_string(&status).unwrap();
+        let json = serde_json::to_string(&status).expect("serialize failed status");
         assert!(json.contains("\"status\":\"failed\""));
         assert!(json.contains("\"reason\":\"test\""));
     }

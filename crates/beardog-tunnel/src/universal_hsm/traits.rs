@@ -67,15 +67,15 @@ pub enum ProviderType {
 impl std::fmt::Display for ProviderType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ProviderType::MobileHardware => write!(f, "Mobile Hardware Security"),
-            ProviderType::DesktopHardware => write!(f, "Desktop Hardware Security"),
-            ProviderType::Software => write!(f, "Software HSM"),
-            ProviderType::Pkcs11 => write!(f, "PKCS#11 HSM"),
-            ProviderType::Tpm => write!(f, "TPM 2.0+"),
-            ProviderType::Cloud => write!(f, "Cloud HSM"),
-            ProviderType::UsbToken => write!(f, "USB Security Token"),
-            ProviderType::NetworkHsm => write!(f, "Network HSM"),
-            ProviderType::Custom => write!(f, "Custom HSM"),
+            Self::MobileHardware => write!(f, "Mobile Hardware Security"),
+            Self::DesktopHardware => write!(f, "Desktop Hardware Security"),
+            Self::Software => write!(f, "Software HSM"),
+            Self::Pkcs11 => write!(f, "PKCS#11 HSM"),
+            Self::Tpm => write!(f, "TPM 2.0+"),
+            Self::Cloud => write!(f, "Cloud HSM"),
+            Self::UsbToken => write!(f, "USB Security Token"),
+            Self::NetworkHsm => write!(f, "Network HSM"),
+            Self::Custom => write!(f, "Custom HSM"),
         }
     }
 }

@@ -3,12 +3,13 @@
 // Safe memory pools for BearDog
 // Provides thread-safe memory management without unsafe code
 
-use std::collections::VecDeque;
+use crossbeam::queue::ArrayQueue;
 use std::sync::{Arc, Mutex};
 
+/// Fixed-capacity [`ArrayQueue`] of boxed `T` with mutex-protected [`PoolStats`].
 #[derive(Debug)]
 pub struct SafeMemoryPool<T> {
-    pool: Arc<Mutex<VecDeque<Box<T>>>>,
+    pool: Arc<ArrayQueue<Box<T>>>,
     max_size: usize,
     stats: Arc<Mutex<PoolStats>>,
 }
@@ -38,57 +39,46 @@ where
     /// Creates a new instance
     #[must_use]
     pub fn new(max_size: usize) -> Self {
+        let cap = max_size.max(1);
         Self {
-            pool: Arc::new(Mutex::new(VecDeque::with_capacity(max_size))),
-            max_size,
+            pool: Arc::new(ArrayQueue::new(cap)),
+            max_size: cap,
             stats: Arc::new(Mutex::new(PoolStats::default())),
         }
     }
 
     /// Acquire object from pool or create new one
     pub fn acquire(&self) -> Result<Box<T>, std::io::Error> {
-        let mut pool = self
-            .pool
-            .lock()
-            .map_err(|_| std::io::Error::other("Pool mutex poisoned"))?;
-
         let mut stats = self
             .stats
             .lock()
             .map_err(|_| std::io::Error::other("Stats mutex poisoned"))?;
 
-        if let Some(element) = pool.pop_front() {
+        let element = if let Some(element) = self.pool.pop() {
             stats.pool_hits += 1;
-            stats.current_usage += 1;
-            if stats.current_usage > stats.peak_usage {
-                stats.peak_usage = stats.current_usage;
-            }
-            Ok(element)
+            element
         } else {
             stats.pool_misses += 1;
             stats.total_allocations += 1;
-            stats.current_usage += 1;
-            if stats.current_usage > stats.peak_usage {
-                stats.peak_usage = stats.current_usage;
-            }
-            Ok(Box::new(T::default()))
+            Box::new(T::default())
+        };
+
+        stats.current_usage += 1;
+        if stats.current_usage > stats.peak_usage {
+            stats.peak_usage = stats.current_usage;
         }
+        Ok(element)
     }
 
     /// Release object back to pool
     pub fn release(&self, element: Box<T>) -> Result<(), std::io::Error> {
-        let mut pool = self
-            .pool
-            .lock()
-            .map_err(|_| std::io::Error::other("Pool mutex poisoned"))?;
-
         let mut stats = self
             .stats
             .lock()
             .map_err(|_| std::io::Error::other("Stats mutex poisoned"))?;
 
-        if pool.len() < self.max_size {
-            pool.push_back(element);
+        if self.pool.push(element).is_err() {
+            // Pool at capacity; drop the returned box.
         }
 
         stats.total_deallocations += 1;
@@ -101,11 +91,7 @@ where
 
     /// Get current pool size
     pub fn pool_size(&self) -> Result<usize, std::io::Error> {
-        let pool = self
-            .pool
-            .lock()
-            .map_err(|_| std::io::Error::other("Pool mutex poisoned"))?;
-        Ok(pool.len())
+        Ok(self.pool.len())
     }
 
     /// Get pool statistics
@@ -121,11 +107,7 @@ where
 
     /// Clear the pool
     pub fn clear(&self) -> Result<(), std::io::Error> {
-        let mut pool = self
-            .pool
-            .lock()
-            .map_err(|_| std::io::Error::other("Pool mutex poisoned"))?;
-        pool.clear();
+        while self.pool.pop().is_some() {}
         Ok(())
     }
 }
@@ -324,9 +306,11 @@ mod tests {
 
         // Multiple cycles
         for _ in 0..3 {
-            let items: Vec<_> = (0..5).map(|_| pool.acquire().unwrap()).collect();
+            let items: Vec<_> = (0..5)
+                .map(|_| pool.acquire())
+                .collect::<Result<Vec<_>, _>>()?;
             for item in items {
-                pool.release(item).unwrap();
+                pool.release(item)?;
             }
         }
 
@@ -389,17 +373,23 @@ mod tests {
             let pool_clone = Arc::clone(&pool);
             handles.push(thread::spawn(move || {
                 for _ in 0..10 {
-                    let item = pool_clone.acquire().unwrap();
+                    let item = pool_clone
+                        .acquire()
+                        .expect("acquire should succeed in concurrent pool test");
                     // Do some "work"
                     std::thread::sleep(std::time::Duration::from_micros(1));
-                    pool_clone.release(item).unwrap();
+                    pool_clone
+                        .release(item)
+                        .expect("release should succeed in concurrent pool test");
                 }
             }));
         }
 
         // Wait for all threads
         for handle in handles {
-            handle.join().unwrap();
+            handle
+                .join()
+                .expect("concurrent pool test thread should not panic");
         }
 
         let stats = pool.get_stats()?;

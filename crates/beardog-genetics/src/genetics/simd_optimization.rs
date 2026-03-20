@@ -122,7 +122,7 @@ impl SimdGeneticsProcessor {
         {
             let (p1_batch, p2_batch) = batch;
             for (&p1_idx, &p2_idx) in p1_batch.iter().zip(p2_batch.iter()) {
-                if rng.gen::<f64>() < crossover_rate {
+                if rng.r#gen::<f64>() < crossover_rate {
                     self.perform_uniform_crossover_vectorized(usize,
         parent2_idx: usize,
         rng: &mut impl Rng,

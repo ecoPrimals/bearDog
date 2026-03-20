@@ -129,10 +129,9 @@ pub enum SafetyLevel {
     Ultimate,
 }
 
-/// Safe atomic operations wrapper that prevents race conditions
+/// RwLock-backed “atomic” with validity flag and token for extra defensive checks.
 ///
-/// Provides safe atomic operations with additional verification and
-/// protection against common concurrency issues.
+/// Prefer real atomics for numeric types; this trades throughput for auditability.
 #[allow(dead_code)]
 pub struct SafeAtomic<T> {
     /// The atomic value with additional safety wrapping
@@ -408,11 +407,17 @@ impl SafetyToken {
 /// Pool statistics snapshot
 #[derive(Debug, Clone)]
 pub struct PoolStats {
+    /// Idle objects waiting in the deque.
     pub objects_in_pool: u64,
+    /// Objects currently loaned to callers.
     pub objects_borrowed: u64,
+    /// Factory invocations (new allocations).
     pub total_created: u64,
+    /// Reuses served from the deque.
     pub pool_hits: u64,
+    /// Allocations because the deque was empty.
     pub pool_misses: u64,
+    /// Drops that could not return to a poisoned pool.
     pub leaks_prevented: u64,
 }
 
@@ -421,16 +426,23 @@ pub struct PoolStats {
 pub enum SafetyError {
     /// Buffer overflow prevented
     BufferOverflow {
+        /// Bytes the caller tried to append.
         attempted_size: usize,
+        /// Capacity remaining at the write cursor.
         available_space: usize,
     },
     /// Read beyond bounds prevented
     ReadBeyondBounds {
+        /// Bytes requested from the readable window.
         attempted_read: usize,
+        /// Bytes actually available between read/write cursors.
         available_data: usize,
     },
     /// Integrity violation detected
-    IntegrityViolation { description: String },
+    IntegrityViolation {
+        /// Human-readable invariant description.
+        description: String,
+    },
     /// Invalid reference access prevented
     InvalidReference,
     /// Lock poisoning detected
@@ -442,7 +454,7 @@ pub enum SafetyError {
 impl std::fmt::Display for SafetyError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SafetyError::BufferOverflow {
+            Self::BufferOverflow {
                 attempted_size,
                 available_space,
             } => {
@@ -451,7 +463,7 @@ impl std::fmt::Display for SafetyError {
                     "Buffer overflow prevented: attempted {attempted_size} bytes, only {available_space} available"
                 )
             }
-            SafetyError::ReadBeyondBounds {
+            Self::ReadBeyondBounds {
                 attempted_read,
                 available_data,
             } => {
@@ -460,16 +472,16 @@ impl std::fmt::Display for SafetyError {
                     "Read beyond bounds prevented: attempted {attempted_read} bytes, only {available_data} available"
                 )
             }
-            SafetyError::IntegrityViolation { description } => {
+            Self::IntegrityViolation { description } => {
                 write!(f, "Integrity violation: {description}")
             }
-            SafetyError::InvalidReference => {
+            Self::InvalidReference => {
                 write!(f, "Invalid reference access prevented")
             }
-            SafetyError::LockPoisoned => {
+            Self::LockPoisoned => {
                 write!(f, "Lock poisoning detected")
             }
-            SafetyError::ThreadSafetyViolation => {
+            Self::ThreadSafetyViolation => {
                 write!(f, "Thread safety violation prevented")
             }
         }

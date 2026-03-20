@@ -2,7 +2,7 @@
 
 BearDog is the cryptographic service provider for the ecoPrimals ecosystem. It provides secure crypto operations for all primals through the Tower Atomic Pattern via JSON-RPC over Unix sockets.
 
-**Status**: Production Ready | **Pure Rust**: 100% | **Tests**: 12,751+ passing
+**Status**: Production Ready | **Pure Rust**: 100% | **Edition**: 2024
 
 ---
 
@@ -11,11 +11,8 @@ BearDog is the cryptographic service provider for the ecoPrimals ecosystem. It p
 ### 1. Prerequisites
 
 ```bash
-# Rust 1.80+ (uses std::sync::LazyLock)
+# Rust 1.85+ (edition 2024)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-# System dependencies (Ubuntu/Debian)
-sudo apt-get install build-essential pkg-config
 ```
 
 ### 2. Build & Test
@@ -79,8 +76,6 @@ BearDog provides **crypto atoms** via JSON-RPC. Other primals (Songbird, Squirre
 - Single auditable crypto codebase
 - HSM abstraction (software, hardware, mobile)
 
-See: [TOWER_ATOMIC_PATTERN.md](TOWER_ATOMIC_PATTERN.md)
-
 ### Multi-Family Isolation
 
 Each family gets its own BearDog instance with independently derived key material. Family A's keys are never shared with Family B:
@@ -112,19 +107,20 @@ Introspection: `discover_capabilities`, `primal.info`, `rpc.methods`
 
 ### Standards
 
+- **Edition 2024** — Rust 2024 with MSRV 1.85.0
 - **Pure Rust** — No C dependencies
 - **Zero Hardcoding** — Use environment variables for configuration
 - **Result<T, E>** — No `unwrap()`/`expect()` in production code
 - **Serial Env Tests** — Use `#[serial_test::serial]` for env var tests
-- **< 1000 LOC** — File size discipline (exceptions justified)
+- **< 1000 LOC** — File size discipline
 - **Constant-Time** — Use `subtle` crate for secret comparisons
 
 ### Workflow
 
 ```bash
 cargo fmt --all                      # Format
-cargo clippy --workspace             # Lint (0 errors expected)
-cargo test --workspace               # Test (12,751+ tests)
+cargo clippy --workspace             # Lint (0 warnings expected)
+cargo test --workspace               # Test
 cargo build --release                # Build
 ```
 
@@ -136,8 +132,8 @@ cargo build --release                # Build
 | `FAMILY_ID` | Family identifier | (none) |
 | `NODE_ID` | Node identifier | (random) |
 | `BEARDOG_SOCKET` | Socket path override | auto-detected |
-| `UPA_PROVIDER` | UPA provider primal | `songbird` |
-| `IPC_SOCKET` | IPC socket override | auto-detected |
+| `BEARDOG_PORT` | Listening port | OS-assigned |
+| `BEARDOG_LISTEN_ADDR` | Full listen address | (none) |
 
 ---
 
@@ -145,11 +141,11 @@ cargo build --release                # Build
 
 | Metric | Value |
 |--------|-------|
-| Tests | 12,751+ passing |
-| Coverage | 78.6% |
-| Clippy | 0 errors |
+| Clippy | 0 warnings |
+| Missing Docs | 0 |
 | Unsafe | 0 blocks |
 | Pure Rust | 100% |
+| Files > 1000 LOC | 0 |
 
 ---
 
@@ -159,10 +155,10 @@ cargo build --release                # Build
 |----------|-------------|
 | [README.md](README.md) | Project overview |
 | [STATUS.md](STATUS.md) | Current status and metrics |
-| [TOWER_ATOMIC_PATTERN.md](TOWER_ATOMIC_PATTERN.md) | Architecture pattern |
 | [ROADMAP.md](ROADMAP.md) | Current priorities |
-| [ROOT_INDEX.md](ROOT_INDEX.md) | Complete documentation index |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture |
+| [SECURITY.md](SECURITY.md) | Security model |
 
 ---
 
-**Last Updated**: February 11, 2026
+**Last Updated**: March 20, 2026

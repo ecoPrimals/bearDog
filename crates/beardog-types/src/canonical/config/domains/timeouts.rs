@@ -226,10 +226,10 @@ mod tests {
     
     #[test]
     fn test_environment_variable_override() {
-        std::env::set_var("BEARDOG_CONNECTION_TIMEOUT_MS", "5000");
+        beardog_errors::process_env::set_var("BEARDOG_CONNECTION_TIMEOUT_MS", "5000");
         let config = TimeoutConfig::from_environment();
         assert_eq!(config.connection_timeout, Duration::from_millis(5000));
-        std::env::remove_var("BEARDOG_CONNECTION_TIMEOUT_MS");
+        beardog_errors::process_env::remove_var("BEARDOG_CONNECTION_TIMEOUT_MS");
     }
     
     #[test]

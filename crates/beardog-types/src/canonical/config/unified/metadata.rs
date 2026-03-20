@@ -21,12 +21,15 @@ pub struct SystemMetadata {
     /// Deployment mode and strategy
     /// The deployment mode value
     pub deployment_mode: DeploymentMode,
-    /// Mapping of feature flags
+    /// Named boolean feature toggles (e.g. beta endpoints) evaluated at runtime.
     pub feature_flags: HashMap<String, bool>,
+    /// Canary / blue-green rollout controls for staged config or binary releases.
     pub rollout_config: RolloutConfig,
 
     /// **SYSTEM IDENTIFICATION**
+    /// Stable identifier for this OS process or pod (used in logs and metrics).
     pub instance_id: String,
+    /// Optional fleet or Kubernetes cluster name for cross-site correlation.
     pub cluster_id: Option<String>,
     /// Unique node identifier within the cluster
     pub node_id: String,
@@ -44,6 +47,7 @@ pub struct UnifiedVersionInfo {
     /// Main `BearDog` system version (e.g., "3.0.0")
     /// The beardog version value
     pub beardog_version: String, // "3.0.0" - Main BearDog version
+    /// Semantic version of the configuration schema this file conforms to.
     pub config_schema_version: String, // "1.0.0" - Configuration schema version
     /// The api version value
     pub api_version: String, // "2.0" - API protocol version
@@ -75,6 +79,7 @@ pub struct UnifiedVersionInfo {
     pub max_supported_version: String, // "4.0.0" - Maximum supported version
 
     /// **BUILD INFORMATION**
+    /// ISO-8601 or monotonic build stamp embedded at compile time for support bundles.
     pub build_timestamp: String,
     /// Git Commit
     /// Optional git commit
@@ -105,8 +110,8 @@ impl Default for UnifiedVersionInfo {
     }
 }
 
+/// Logical deployment tier used for defaults, logging verbosity, and safety checks.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
-/// Deployment environment configuration
 pub enum Environment {
     #[default]
     /// Development Environment
@@ -119,11 +124,11 @@ pub enum Environment {
     Production,
 }
 
+/// How this node participates in the wider mesh (single host, cluster, federation, or cloud tenancy).
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum DeploymentMode {
-    /// Standalone deployment mode
+    /// Single-process or single-host deployment without peer quorum.
     #[default]
-    /// Represents standalone variant
     Standalone,
     /// Cluster variant
     Cluster,
@@ -150,6 +155,7 @@ pub enum LogLevel {
     Error,
 }
 
+/// Parameters for gradual exposure of new configuration or binaries.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RolloutConfig {
     /// Enable Gradual Rollout
@@ -163,6 +169,7 @@ pub struct RolloutConfig {
     pub rollout_strategy: RolloutStrategy,
 }
 
+/// Strategy used to shift traffic or enablement from old to new versions.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum RolloutStrategy {
     /// Blue-green deployment strategy (default)

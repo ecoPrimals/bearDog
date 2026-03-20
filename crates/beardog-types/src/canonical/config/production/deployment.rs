@@ -80,7 +80,7 @@ impl RolloutConfig {
     pub const DEFAULT_PERCENTAGE: f64 = 100.0;
 
     /// Create RolloutConfig with hardcoded defaults
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             percentage: Self::DEFAULT_PERCENTAGE,
         }
@@ -102,7 +102,7 @@ impl CanaryConfig {
     pub const DEFAULT_PERCENTAGE: f64 = 10.0;
 
     /// Create CanaryConfig with hardcoded defaults
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             percentage: Self::DEFAULT_PERCENTAGE,
         }
@@ -147,7 +147,7 @@ impl DeploymentConfig {
     /// Validate
     /// Validates input
     /// Validates input
-    pub fn validate(&self) -> Result<(), BearDogError> {
+    pub const fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }
 }

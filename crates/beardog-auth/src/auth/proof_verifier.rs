@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Default [`ProofVerifier`] used in tests and deployments without HSM-backed signing.
 
 use crate::auth::types::{
     AuthorizationProof, CrossNodeAuthorization, CrossNodeOperation, ProofVerifier,
@@ -10,6 +8,7 @@ use crate::auth::types::{
 use beardog_errors::BearDogError;
 use chrono::Utc;
 
+/// Reference [`ProofVerifier`] that checks proof shape and freshness only (no full crypto yet).
 pub struct DefaultProofVerifier {
     // In a real implementation, this would contain cryptographic keys and verification logic
 }

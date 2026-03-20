@@ -230,9 +230,10 @@ fn test_backend_info_all_operations() {
     };
 
     assert_eq!(info.supported_operations.len(), 8);
-    assert!(info
-        .supported_operations
-        .contains(&StorageOperation::Backup));
+    assert!(
+        info.supported_operations
+            .contains(&StorageOperation::Backup)
+    );
 }
 
 // =============================================================================
@@ -469,8 +470,10 @@ fn test_storage_location_format() {
 
     let response = backend.store(request).expect("Store should succeed");
     assert!(response.storage_location.is_some());
-    assert!(response
-        .storage_location
-        .expect("Location should exist")
-        .starts_with("mock://"));
+    assert!(
+        response
+            .storage_location
+            .expect("Location should exist")
+            .starts_with("mock://")
+    );
 }

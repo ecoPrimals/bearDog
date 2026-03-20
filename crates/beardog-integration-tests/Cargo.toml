@@ -13,7 +13,7 @@ path = "tests/concurrency_stress_tests.rs"
 [package]
 name = "beardog-integration-tests"
 version = "3.0.0"
-edition = "2021"
+edition = "2024"
 description = "beardog-integration-tests component of BearDog security ecosystem"
 readme = "README.md"
 license = "AGPL-3.0-only"
@@ -22,7 +22,7 @@ repository = "https://github.com/your-org/beardog"
 authors = [ "BearDog Security Team",]
 keywords = [ "security", "hsm", "threat-detection", "compliance", "workflow",]
 categories = [ "cryptography", "authentication", "web-programming", "network-programming",]
-rust-version = "1.70"
+rust-version = "1.85.0"
 documentation = "https://docs.rs/beardog"
 
 [dependencies.beardog-core]

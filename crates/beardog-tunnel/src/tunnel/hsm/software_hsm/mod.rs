@@ -154,8 +154,8 @@ pub use self::audit::{AuditLogEntry, AuditLogFilter, DefaultAuditLogger, Persist
 // ✅ ENABLED: Real crypto providers with production implementations (pure Rust only)
 pub use self::crypto_providers::rust_crypto::RustCryptoProvider;
 pub use self::crypto_providers::{
-    create_crypto_provider, get_crypto_provider_capabilities, get_supported_crypto_backends,
-    get_supported_storage_backends, CryptoProviderCapabilities,
+    CryptoProviderCapabilities, create_crypto_provider, get_crypto_provider_capabilities,
+    get_supported_crypto_backends, get_supported_storage_backends,
 };
 // RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust, ARM-ready!)
 // OpenSslCryptoProvider removed - evolved to pure Rust alternatives

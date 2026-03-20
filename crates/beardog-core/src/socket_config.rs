@@ -239,7 +239,7 @@ impl SocketConfig {
 
     /// Get the source tier that was used
     #[must_use]
-    pub fn source(&self) -> SocketPathSource {
+    pub const fn source(&self) -> SocketPathSource {
         self.source
     }
 
@@ -347,15 +347,15 @@ mod tests {
             .expect("ENV_TEST_LOCK should not be poisoned");
 
         // Clean slate - remove any existing variables
-        std::env::remove_var("BEARDOG_SOCKET");
-        std::env::remove_var("BEARDOG_FAMILY_ID");
-        std::env::remove_var("FAMILY_ID");
-        std::env::remove_var("BEARDOG_NODE_ID");
-        std::env::remove_var("NODE_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("FAMILY_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
+        beardog_errors::process_env::remove_var("NODE_ID");
 
         // Set explicit override
-        std::env::set_var("BEARDOG_SOCKET", "/tmp/custom-override.sock");
-        std::env::set_var("BEARDOG_FAMILY_ID", "test0");
+        beardog_errors::process_env::set_var("BEARDOG_SOCKET", "/tmp/custom-override.sock");
+        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "test0");
 
         let config = SocketConfig::from_env();
 
@@ -374,8 +374,8 @@ mod tests {
         assert_eq!(config.family_id(), "test0");
 
         // Cleanup
-        std::env::remove_var("BEARDOG_SOCKET");
-        std::env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
     }
 
     #[test]
@@ -389,14 +389,14 @@ mod tests {
         // This prevents production hangs discovered in integration testing
 
         // Clean slate
-        std::env::remove_var("BEARDOG_SOCKET");
-        std::env::remove_var("BIOMEOS_SOCKET_PATH");
-        std::env::remove_var("BEARDOG_FAMILY_ID");
-        std::env::remove_var("BEARDOG_NODE_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
+        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_PATH");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
 
         // Set empty socket path (should be rejected)
-        std::env::set_var("BEARDOG_SOCKET", "");
-        std::env::set_var("BEARDOG_FAMILY_ID", "test");
+        beardog_errors::process_env::set_var("BEARDOG_SOCKET", "");
+        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "test");
 
         let config = SocketConfig::from_env();
 
@@ -412,8 +412,8 @@ mod tests {
         );
 
         // Cleanup
-        std::env::remove_var("BEARDOG_SOCKET");
-        std::env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
     }
 
     #[test]
@@ -426,13 +426,13 @@ mod tests {
         // Test: Empty BIOMEOS_SOCKET_PATH should also be rejected
 
         // Clean slate
-        std::env::remove_var("BEARDOG_SOCKET");
-        std::env::remove_var("BIOMEOS_SOCKET_PATH");
-        std::env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
+        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_PATH");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
 
         // Set empty orchestrator socket (should be rejected)
-        std::env::set_var("BIOMEOS_SOCKET_PATH", "");
-        std::env::set_var("BEARDOG_FAMILY_ID", "test");
+        beardog_errors::process_env::set_var("BIOMEOS_SOCKET_PATH", "");
+        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "test");
 
         let config = SocketConfig::from_env();
 
@@ -448,8 +448,8 @@ mod tests {
         );
 
         // Cleanup
-        std::env::remove_var("BIOMEOS_SOCKET_PATH");
-        std::env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_PATH");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
     }
 
     #[test]
@@ -460,16 +460,19 @@ mod tests {
             .expect("ENV_TEST_LOCK should not be poisoned");
 
         // Clean slate - IMPORTANT: Remove ALL relevant env vars for concurrent test safety
-        std::env::remove_var("BEARDOG_SOCKET");
-        std::env::remove_var("BIOMEOS_SOCKET_PATH");
-        std::env::remove_var("BEARDOG_FAMILY_ID");
-        std::env::remove_var("FAMILY_ID");
-        std::env::remove_var("BEARDOG_NODE_ID");
-        std::env::remove_var("NODE_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
+        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_PATH");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("FAMILY_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
+        beardog_errors::process_env::remove_var("NODE_ID");
 
         // Set BIOMEOS_SOCKET_PATH (Tier 2 - Neural API orchestrator)
-        std::env::set_var("BIOMEOS_SOCKET_PATH", "/tmp/beardog-default-default.sock");
-        std::env::set_var("BEARDOG_FAMILY_ID", "nat0");
+        beardog_errors::process_env::set_var(
+            "BIOMEOS_SOCKET_PATH",
+            "/tmp/beardog-default-default.sock",
+        );
+        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");
 
         let config = SocketConfig::from_env();
 
@@ -485,8 +488,8 @@ mod tests {
         );
 
         // Cleanup - IMPORTANT: Clean ALL vars we touched
-        std::env::remove_var("BIOMEOS_SOCKET_PATH");
-        std::env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_PATH");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
     }
 
     #[test]
@@ -496,12 +499,12 @@ mod tests {
             .lock()
             .expect("ENV_TEST_LOCK should not be poisoned");
         // Clean slate
-        std::env::remove_var("BEARDOG_SOCKET");
-        std::env::remove_var("BIOMEOS_SOCKET_PATH");
+        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
+        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_PATH");
 
         // Set both - BEARDOG_SOCKET should win (Tier 1 > Tier 2)
-        std::env::set_var("BEARDOG_SOCKET", "/custom/beardog-specific.sock");
-        std::env::set_var("BIOMEOS_SOCKET_PATH", "/tmp/biomeos-generic.sock");
+        beardog_errors::process_env::set_var("BEARDOG_SOCKET", "/custom/beardog-specific.sock");
+        beardog_errors::process_env::set_var("BIOMEOS_SOCKET_PATH", "/tmp/biomeos-generic.sock");
 
         let config = SocketConfig::from_env();
 
@@ -517,8 +520,8 @@ mod tests {
         );
 
         // Cleanup
-        std::env::remove_var("BEARDOG_SOCKET");
-        std::env::remove_var("BIOMEOS_SOCKET_PATH");
+        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
+        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_PATH");
     }
 
     #[test]
@@ -526,9 +529,9 @@ mod tests {
         let _lock = ENV_TEST_LOCK
             .lock()
             .expect("ENV_TEST_LOCK should not be poisoned");
-        std::env::remove_var("BEARDOG_SOCKET");
-        std::env::remove_var("BIOMEOS_SOCKET_PATH");
-        std::env::set_var("BEARDOG_FAMILY_ID", "xdg-test");
+        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
+        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_PATH");
+        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "xdg-test");
 
         let config = SocketConfig::from_env();
 
@@ -548,7 +551,7 @@ mod tests {
             _ => panic!("Unexpected source: {:?}", config.source()),
         }
 
-        std::env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
     }
 
     #[test]
@@ -556,9 +559,9 @@ mod tests {
         let _lock = ENV_TEST_LOCK
             .lock()
             .expect("ENV_TEST_LOCK should not be poisoned");
-        std::env::remove_var("BEARDOG_SOCKET");
-        std::env::set_var("BEARDOG_FAMILY_ID", "fallback");
-        std::env::set_var("BEARDOG_NODE_ID", "node123");
+        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
+        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "fallback");
+        beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "node123");
 
         let config = SocketConfig::from_env();
 
@@ -573,8 +576,8 @@ mod tests {
         }
         // XDG would have different path, which is fine
 
-        std::env::remove_var("BEARDOG_FAMILY_ID");
-        std::env::remove_var("BEARDOG_NODE_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
     }
 
     #[test]
@@ -582,11 +585,11 @@ mod tests {
         let _lock = ENV_TEST_LOCK
             .lock()
             .expect("ENV_TEST_LOCK should not be poisoned");
-        std::env::remove_var("BEARDOG_SOCKET");
-        std::env::remove_var("BEARDOG_FAMILY_ID");
-        std::env::remove_var("FAMILY_ID");
-        std::env::remove_var("BEARDOG_NODE_ID");
-        std::env::remove_var("NODE_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::remove_var("FAMILY_ID");
+        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
+        beardog_errors::process_env::remove_var("NODE_ID");
 
         let config = SocketConfig::from_env();
 
@@ -610,14 +613,14 @@ mod tests {
         let _lock = ENV_TEST_LOCK
             .lock()
             .expect("ENV_TEST_LOCK should not be poisoned");
-        std::env::set_var("BEARDOG_SOCKET", "/custom/socket.sock");
+        beardog_errors::process_env::set_var("BEARDOG_SOCKET", "/custom/socket.sock");
         let config = SocketConfig::from_env();
 
         let desc = config.description();
         assert!(desc.contains("/custom/socket.sock"));
         assert!(desc.contains("BEARDOG_SOCKET"));
 
-        std::env::remove_var("BEARDOG_SOCKET");
+        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
     }
 
     #[test]
@@ -671,10 +674,12 @@ mod tests {
         config
             .prepare()
             .expect("prepare() should succeed for nested test");
-        assert!(socket_path
-            .parent()
-            .expect("socket path should have parent")
-            .exists());
+        assert!(
+            socket_path
+                .parent()
+                .expect("socket path should have parent")
+                .exists()
+        );
 
         // Cleanup
         let _ = fs::remove_dir_all(&test_dir);

@@ -13,7 +13,7 @@ pub struct CapabilityDetector;
 
 impl CapabilityDetector {
     /// Create new capability detector
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 }

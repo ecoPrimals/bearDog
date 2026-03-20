@@ -617,8 +617,8 @@ fn test_error_recovery_with_ok() {
 /// `TEST_PRIORITY`: high
 #[test]
 fn test_error_recovery_retry_pattern() {
-    use std::sync::atomic::{AtomicU32, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicU32, Ordering};
 
     // Setup: operation that succeeds on third attempt
     let attempt_count = Arc::new(AtomicU32::new(0));

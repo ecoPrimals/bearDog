@@ -114,7 +114,7 @@ pub async fn handle_tls_sign_handshake(params: Option<&Value>) -> Result<Value, 
 
     // Only Ed25519 is supported for now (most common in modern TLS)
     if algorithm != "ed25519" {
-        return Err(format!("Unsupported algorithm: {}", algorithm));
+        return Err(format!("Unsupported algorithm: {algorithm}"));
     }
 
     // Use BearDog's crypto service for Ed25519 signing
@@ -226,17 +226,17 @@ pub async fn handle_tls_compute_finished_verify_data(
     // NEW: Extract cipher_suite (default to SHA-256 for backwards compatibility)
     let cipher_suite = params
         .get("cipher_suite")
-        .and_then(|v| v.as_u64())
+        .and_then(serde_json::Value::as_u64)
         .unwrap_or(0x1301) as u16;
 
     // Decode from base64
     let base_key = BASE64_STANDARD
         .decode(base_key_b64)
-        .map_err(|e| format!("Invalid base64 for base_key: {}", e))?;
+        .map_err(|e| format!("Invalid base64 for base_key: {e}"))?;
 
     let transcript_hash = BASE64_STANDARD
         .decode(transcript_hash_b64)
-        .map_err(|e| format!("Invalid base64 for transcript_hash: {}", e))?;
+        .map_err(|e| format!("Invalid base64 for transcript_hash: {e}"))?;
 
     info!("🔐 Computing TLS 1.3 Finished verify_data");
     info!("   Cipher suite: 0x{:04x}", cipher_suite);
@@ -249,9 +249,8 @@ pub async fn handle_tls_compute_finished_verify_data(
         0x1302 => (48, "SHA-384"),          // TLS_AES_256_GCM_SHA384
         _ => {
             return Err(format!(
-                "Unsupported TLS 1.3 cipher suite for finished verify_data: 0x{:04x}",
-                cipher_suite
-            ))
+                "Unsupported TLS 1.3 cipher suite for finished verify_data: 0x{cipher_suite:04x}"
+            ));
         }
     };
 
@@ -275,11 +274,11 @@ pub async fn handle_tls_compute_finished_verify_data(
             let hkdf_expand_label_sha256 =
                 |secret: &[u8], label: &str, context: &[u8], length: usize| {
                     let hkdf = Hkdf::<Sha256>::from_prk(secret)
-                        .map_err(|e| format!("HKDF PRK error: {}", e))?;
+                        .map_err(|e| format!("HKDF PRK error: {e}"))?;
 
                     // RFC 8446 Section 7.1: HkdfLabel structure
                     // CRITICAL: Label must be "tls13 " + label (e.g., "tls13 finished")
-                    let tls13_label = format!("tls13 {}", label);
+                    let tls13_label = format!("tls13 {label}");
                     let mut hkdf_label = Vec::new();
                     hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
                     hkdf_label.push(tls13_label.len() as u8);
@@ -289,7 +288,7 @@ pub async fn handle_tls_compute_finished_verify_data(
 
                     let mut output = vec![0u8; length];
                     hkdf.expand(&hkdf_label, &mut output)
-                        .map_err(|e| format!("HKDF expand error: {}", e))?;
+                        .map_err(|e| format!("HKDF expand error: {e}"))?;
 
                     Ok::<Vec<u8>, String>(output)
                 };
@@ -303,7 +302,7 @@ pub async fn handle_tls_compute_finished_verify_data(
             // Compute verify_data = HMAC-SHA256(finished_key, transcript_hash)
             type HmacSha256 = Hmac<Sha256>;
             let mut mac = HmacSha256::new_from_slice(&finished_key)
-                .map_err(|e| format!("HMAC key error: {}", e))?;
+                .map_err(|e| format!("HMAC key error: {e}"))?;
             mac.update(&transcript_hash);
             let verify_data = mac.finalize().into_bytes().to_vec();
 
@@ -314,11 +313,11 @@ pub async fn handle_tls_compute_finished_verify_data(
             let hkdf_expand_label_sha384 =
                 |secret: &[u8], label: &str, context: &[u8], length: usize| {
                     let hkdf = Hkdf::<Sha384>::from_prk(secret)
-                        .map_err(|e| format!("HKDF PRK error: {}", e))?;
+                        .map_err(|e| format!("HKDF PRK error: {e}"))?;
 
                     // RFC 8446 Section 7.1: HkdfLabel structure
                     // CRITICAL: Label must be "tls13 " + label (e.g., "tls13 finished")
-                    let tls13_label = format!("tls13 {}", label);
+                    let tls13_label = format!("tls13 {label}");
                     let mut hkdf_label = Vec::new();
                     hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
                     hkdf_label.push(tls13_label.len() as u8);
@@ -328,7 +327,7 @@ pub async fn handle_tls_compute_finished_verify_data(
 
                     let mut output = vec![0u8; length];
                     hkdf.expand(&hkdf_label, &mut output)
-                        .map_err(|e| format!("HKDF expand error: {}", e))?;
+                        .map_err(|e| format!("HKDF expand error: {e}"))?;
 
                     Ok::<Vec<u8>, String>(output)
                 };
@@ -342,7 +341,7 @@ pub async fn handle_tls_compute_finished_verify_data(
             // Compute verify_data = HMAC-SHA384(finished_key, transcript_hash)
             type HmacSha384 = Hmac<Sha384>;
             let mut mac = HmacSha384::new_from_slice(&finished_key)
-                .map_err(|e| format!("HMAC key error: {}", e))?;
+                .map_err(|e| format!("HMAC key error: {e}"))?;
             mac.update(&transcript_hash);
             let verify_data = mac.finalize().into_bytes().to_vec();
 

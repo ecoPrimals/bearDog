@@ -15,11 +15,11 @@
 
 use super::*;
 use crate::tunnel::hsm::software_hsm::crypto_providers::genetic_crypto::GeneticCryptoProvider;
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
 use hkdf::Hkdf;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sha2::Sha256;
 use tracing::{debug, info, warn};
 
@@ -33,11 +33,11 @@ pub async fn handle_derive_lineage_key(params: Value) -> Result<Value, BearDogEr
     debug!("🧬 RPC: genetic.derive_lineage_key");
 
     let request: DeriveLineageKeyRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid derive_lineage_key params: {}", e))
+        BearDogError::invalid_input(&format!("Invalid derive_lineage_key params: {e}"))
     })?;
 
     let lineage_seed = BASE64.decode(&request.lineage_seed).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid lineage_seed (not base64): {}", e))
+        BearDogError::invalid_input(&format!("Invalid lineage_seed (not base64): {e}"))
     })?;
 
     let provider = GeneticCryptoProvider::new_with_lineage(lineage_seed)?;
@@ -79,12 +79,12 @@ pub async fn handle_derive_lineage_beacon_key(params: Value) -> Result<Value, Be
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
-    let lineage_seed = if !lineage_seed_b64.is_empty() {
-        BASE64.decode(lineage_seed_b64).map_err(|e| {
-            BearDogError::invalid_input(&format!("Invalid lineage_seed (not base64): {}", e))
-        })?
-    } else {
+    let lineage_seed = if lineage_seed_b64.is_empty() {
         vec![0u8; 32]
+    } else {
+        BASE64.decode(lineage_seed_b64).map_err(|e| {
+            BearDogError::invalid_input(&format!("Invalid lineage_seed (not base64): {e}"))
+        })?
     };
 
     let domain = b"birdsong_beacon_v1";
@@ -92,7 +92,7 @@ pub async fn handle_derive_lineage_beacon_key(params: Value) -> Result<Value, Be
 
     let hkdf = Hkdf::<Sha256>::new(None, &lineage_seed);
     hkdf.expand(domain, &mut okm)
-        .map_err(|e| BearDogError::system(format!("HKDF beacon key derivation failed: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("HKDF beacon key derivation failed: {e}")))?;
 
     let beacon_key_hex = hex::encode(okm);
 
@@ -119,28 +119,28 @@ pub async fn handle_mix_entropy(params: Value) -> Result<Value, BearDogError> {
     debug!("🌱 RPC: genetic.mix_entropy");
 
     let request: MixEntropyRequest = serde_json::from_value(params)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid mix_entropy params: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid mix_entropy params: {e}")))?;
 
     let tier3 = request
         .tier3_human
         .as_ref()
         .map(|s| BASE64.decode(s))
         .transpose()
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid tier3_human: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid tier3_human: {e}")))?;
 
     let tier2 = request
         .tier2_supervised
         .as_ref()
         .map(|s| BASE64.decode(s))
         .transpose()
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid tier2_supervised: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid tier2_supervised: {e}")))?;
 
     let tier1 = request
         .tier1_machine
         .as_ref()
         .map(|s| BASE64.decode(s))
         .transpose()
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid tier1_machine: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid tier1_machine: {e}")))?;
 
     let tiers_used = tier3.is_some() as u8 + tier2.is_some() as u8 + 1;
 
@@ -172,17 +172,16 @@ pub async fn handle_mix_entropy(params: Value) -> Result<Value, BearDogError> {
 pub async fn handle_verify_lineage(params: Value) -> Result<Value, BearDogError> {
     debug!("🔍 RPC: genetic.verify_lineage");
 
-    let request: VerifyLineageRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid verify_lineage params: {}", e))
-    })?;
+    let request: VerifyLineageRequest = serde_json::from_value(params)
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid verify_lineage params: {e}")))?;
 
     let lineage_proof = BASE64
         .decode(&request.lineage_proof)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid lineage_proof: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid lineage_proof: {e}")))?;
 
     let lineage_seed = BASE64
         .decode(&request.lineage_seed)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid lineage_seed: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid lineage_seed: {e}")))?;
 
     let provider = GeneticCryptoProvider::new_with_lineage(lineage_seed)?;
     let is_valid = provider
@@ -226,12 +225,12 @@ pub async fn handle_generate_lineage_proof(params: Value) -> Result<Value, BearD
     debug!("🔐 RPC: genetic.generate_lineage_proof");
 
     let request: GenerateLineageProofRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid generate_lineage_proof params: {}", e))
+        BearDogError::invalid_input(&format!("Invalid generate_lineage_proof params: {e}"))
     })?;
 
     let lineage_seed = BASE64
         .decode(&request.lineage_seed)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid lineage_seed: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid lineage_seed: {e}")))?;
 
     let mut hasher = blake3::Hasher::new();
     hasher.update(&lineage_seed);
@@ -242,7 +241,7 @@ pub async fn handle_generate_lineage_proof(params: Value) -> Result<Value, BearD
 
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .map_err(|e| BearDogError::system(format!("Failed to get timestamp: {}", e)))?
+        .map_err(|e| BearDogError::system(format!("Failed to get timestamp: {e}")))?
         .as_secs();
 
     let proof_b64 = BASE64.encode(proof.as_bytes());
@@ -443,8 +442,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_derive_lineage_beacon_key_different_seeds(
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_derive_lineage_beacon_key_different_seeds()
+    -> Result<(), Box<dyn std::error::Error>> {
         let seed1 = BASE64.encode(b"family_alpha_seed_value_here_");
         let seed2 = BASE64.encode(b"family_beta_seed_different!!!");
 

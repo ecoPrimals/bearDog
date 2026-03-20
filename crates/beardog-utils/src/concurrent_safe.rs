@@ -1,19 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Safe Concurrent Data Structures for BearDog
-//
-// This module provides high-performance concurrent data structures without unsafe code,
-// using safe abstractions like DashMap and parking_lot for optimal performance.
+//! [`DashMap`] hash maps and LRU-ish caches with `parking_lot` backing locks.
 
 use beardog_errors::BearDogError;
 use dashmap::DashMap;
 use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::hash::Hash;
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use tracing::{debug, info};
 
+/// Sharded concurrent map with atomic usage counters.
 #[derive(Debug)]
 pub struct SafeConcurrentHashMap<K, V>
 where
@@ -37,6 +35,7 @@ where
     stats: SafeConcurrentStats,
 }
 
+/// Atomics backing insert/lookup/eviction telemetry.
 #[derive(Debug, Default)]
 pub struct SafeConcurrentStats {
     /// The insertions value
@@ -235,6 +234,7 @@ where
         None
     }
 
+    /// Bumps LRU metadata for `key` if present.
     pub fn touch(&self, key: &K) -> bool {
         let access_time = self.access_counter.fetch_add(1, Ordering::Relaxed);
         let mut data = self.data.write();
@@ -413,18 +413,24 @@ mod tests {
         // TEST_PRIORITY: normal
 
         // Test insert and get
-        assert!(cache
-            .insert("key1".to_string(), "value1".to_string())
-            .is_ok());
+        assert!(
+            cache
+                .insert("key1".to_string(), "value1".to_string())
+                .is_ok()
+        );
         assert_eq!(cache.get(&"key1".to_string()), Some("value1".to_string()));
 
         // Test LRU eviction
-        assert!(cache
-            .insert("key2".to_string(), "value2".to_string())
-            .is_ok());
-        assert!(cache
-            .insert("key3".to_string(), "value3".to_string())
-            .is_ok()); // Should evict key1
+        assert!(
+            cache
+                .insert("key2".to_string(), "value2".to_string())
+                .is_ok()
+        );
+        assert!(
+            cache
+                .insert("key3".to_string(), "value3".to_string())
+                .is_ok()
+        ); // Should evict key1
 
         assert_eq!(cache.get(&"key1".to_string()), None); // Evicted
         assert_eq!(cache.get(&"key2".to_string()), Some("value2".to_string()));

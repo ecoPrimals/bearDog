@@ -318,12 +318,12 @@ mod pedantic_compliance_tests {
     fn test_pedantic_configuration_loading() {
         let mut manager = PedanticConfigManager::new();
 
-        std::env::set_var("BEARDOG_ENVIRONMENT", "testing");
-        std::env::set_var("BEARDOG_LOG_LEVEL", "debug");
+        beardog_errors::process_env::set_var("BEARDOG_ENVIRONMENT", "testing");
+        beardog_errors::process_env::set_var("BEARDOG_LOG_LEVEL", "debug");
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
-        std::env::set_var("BEARDOG_TIMEOUT_SECONDS", "60");
+        beardog_errors::process_env::set_var("BEARDOG_TIMEOUT_SECONDS", "60");
 
         let load_result = manager.load_configuration();
         assert!(load_result.is_ok(), "Configuration loading should succeed");
@@ -346,14 +346,14 @@ mod pedantic_compliance_tests {
  // TEST_DOMAIN: core
  // TEST_PRIORITY: normal
 
-        std::env::set_var("BEARDOG_ENVIRONMENT", "invalid_env");
+        beardog_errors::process_env::set_var("BEARDOG_ENVIRONMENT", "invalid_env");
         let load_result = manager.load_configuration();
         assert!(load_result.is_err(), "Invalid environment should cause validation failure");
 
-        std::env::set_var("BEARDOG_ENVIRONMENT", "production");
-        std::env::set_var("BEARDOG_LOG_LEVEL", "info");
-        std::env::set_var("BEARDOG_TIMEOUT_SECONDS", "30");
-        std::env::set_var("BEARDOG_MAX_CONNECTIONS", "1000");
+        beardog_errors::process_env::set_var("BEARDOG_ENVIRONMENT", "production");
+        beardog_errors::process_env::set_var("BEARDOG_LOG_LEVEL", "info");
+        beardog_errors::process_env::set_var("BEARDOG_TIMEOUT_SECONDS", "30");
+        beardog_errors::process_env::set_var("BEARDOG_MAX_CONNECTIONS", "1000");
 
         let mut valid_manager = PedanticConfigManager::new();
         let valid_result = valid_manager.load_configuration();
@@ -369,8 +369,8 @@ async fn test_comprehensive_pedantic_compliance() {
     println!("🎯 Testing Comprehensive Pedantic Compliance...");
 
     let mut config_manager = PedanticConfigManager::new();
-    std::env::set_var("BEARDOG_ENVIRONMENT", "testing");
-    std::env::set_var("BEARDOG_LOG_LEVEL", "debug");
+    beardog_errors::process_env::set_var("BEARDOG_ENVIRONMENT", "testing");
+    beardog_errors::process_env::set_var("BEARDOG_LOG_LEVEL", "debug");
     
     let config_result = config_manager.load_configuration();
     assert!(config_result.is_ok(), "Configuration loading should be pedantic compliant");

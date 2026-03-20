@@ -255,33 +255,33 @@ mod tests {
     // TEST_PRIORITY: normal
     #[test]
     fn test_get_optional() {
-        env::set_var("TEST_VAR", "test_value");
+        beardog_errors::process_env::set_var("TEST_VAR", "test_value");
         assert_eq!(EnvUtils::get_optional("TEST_VAR", "default"), "test_value");
         assert_eq!(EnvUtils::get_optional("NON_EXISTENT", "default"), "default");
-        env::remove_var("TEST_VAR");
+        beardog_errors::process_env::remove_var("TEST_VAR");
     }
 
 
     fn test_get_bool() {
-        env::set_var("TEST_BOOL_TRUE", "true");
-        env::set_var("TEST_BOOL_FALSE", "false");
-        env::set_var("TEST_BOOL_1", "1");
+        beardog_errors::process_env::set_var("TEST_BOOL_TRUE", "true");
+        beardog_errors::process_env::set_var("TEST_BOOL_FALSE", "false");
+        beardog_errors::process_env::set_var("TEST_BOOL_1", "1");
         assert!(EnvUtils::get_bool("TEST_BOOL_TRUE", false));
         assert!(!EnvUtils::get_bool("TEST_BOOL_FALSE", true));
         assert!(EnvUtils::get_bool("TEST_BOOL_1", false));
         assert!(EnvUtils::get_bool("NON_EXISTENT", true));
-        env::remove_var("TEST_BOOL_TRUE");
-        env::remove_var("TEST_BOOL_FALSE");
-        env::remove_var("TEST_BOOL_1");
+        beardog_errors::process_env::remove_var("TEST_BOOL_TRUE");
+        beardog_errors::process_env::remove_var("TEST_BOOL_FALSE");
+        beardog_errors::process_env::remove_var("TEST_BOOL_1");
     }
 
 
     fn test_get_csv_list() {
-        env::set_var("TEST_CSV", "item1,item2,item3");
+        beardog_errors::process_env::set_var("TEST_CSV", "item1,item2,item3");
         let result = EnvUtils::get_csv_list("TEST_CSV", vec!["default"]);
         assert_eq!(result, vec!["item1", "item2", "item3"]);
         let default_result = EnvUtils::get_csv_list("NON_EXISTENT", vec!["default1", "default2"]);
         assert_eq!(default_result, vec!["default1", "default2"]);
-        env::remove_var("TEST_CSV");
+        beardog_errors::process_env::remove_var("TEST_CSV");
     }
 }

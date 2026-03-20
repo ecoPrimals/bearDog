@@ -105,13 +105,13 @@ impl IpcServer {
         // Remove existing socket if present
         if self.socket_path.exists() {
             std::fs::remove_file(&self.socket_path).map_err(|e| {
-                BearDogError::system(format!("Failed to remove existing socket: {}", e))
+                BearDogError::system(format!("Failed to remove existing socket: {e}"))
             })?;
         }
 
         // Create Unix listener
         let listener = UnixListener::bind(&self.socket_path)
-            .map_err(|e| BearDogError::system(format!("Failed to bind Unix socket: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to bind Unix socket: {e}")))?;
 
         info!("🔌 IPC server listening on {:?}", self.socket_path);
 
@@ -170,17 +170,17 @@ impl IpcServer {
                     // Send response
                     if let Some(response_msg) = response {
                         let response_json = serde_json::to_string(&response_msg).map_err(|e| {
-                            BearDogError::system(format!("Failed to serialize response: {}", e))
+                            BearDogError::system(format!("Failed to serialize response: {e}"))
                         })?;
 
                         writer
                             .write_all(response_json.as_bytes())
                             .await
                             .map_err(|e| {
-                                BearDogError::system(format!("Failed to write response: {}", e))
+                                BearDogError::system(format!("Failed to write response: {e}"))
                             })?;
                         writer.write_all(b"\n").await.map_err(|e| {
-                            BearDogError::system(format!("Failed to write newline: {}", e))
+                            BearDogError::system(format!("Failed to write newline: {e}"))
                         })?;
                     }
                 }
@@ -219,7 +219,7 @@ impl IpcServer {
                     .handle_register(primal_id.clone(), capabilities)
                     .await
                 {
-                    Ok(_) => {
+                    Ok(()) => {
                         active_connections.write().await.push(primal_id.clone());
                         info!("✅ Registered primal: {}", primal_id);
                         Some(IpcMessage::Pong { to: primal_id })

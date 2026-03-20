@@ -6,8 +6,8 @@
 
 use std::collections::HashMap;
 use std::fmt::Write;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use tokio::sync::RwLock;
 // Removed unused imports: use chrono::{DateTime, Utc};
 use crate::monitoring::types::MetricValue;

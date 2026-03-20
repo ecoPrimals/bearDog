@@ -59,7 +59,7 @@
 //! ```
 
 #[cfg(feature = "fido2")]
-use beardog_security::hsm::fido2::{discover_fido2_devices, Fido2MultiCredentialProvider};
+use beardog_security::hsm::fido2::{Fido2MultiCredentialProvider, discover_fido2_devices};
 
 #[cfg(feature = "fido2")]
 use beardog_traits::unified::{CredentialNode, CredentialRequest, MultiCredentialHsmProvider};

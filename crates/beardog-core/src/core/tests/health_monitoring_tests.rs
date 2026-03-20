@@ -17,8 +17,8 @@
 )]
 
 use crate::core::system::BearDogCore;
-use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 use beardog_types::canonical::HealthStatus;
+use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 
 #[tokio::test]
 async fn test_initial_health_status() {
@@ -109,9 +109,9 @@ async fn test_multiple_health_checks() {
         let state = core.state.read().await;
         assert_eq!(state.overall_health, HealthStatus::Healthy);
         drop(state); // Release lock
-                     // TEST_CATEGORY: integration
-                     // TEST_DOMAIN: core
-                     // TEST_PRIORITY: normal
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: core
+        // TEST_PRIORITY: normal
     }
 }
 

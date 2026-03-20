@@ -10,7 +10,7 @@
 //! requires integration with actual PQC libraries when stable.
 
 use super::types::{
-    kyber_sizes::*, KemAlgorithm, QuantumKEM, QuantumKeyExchange, QuantumPrivateKey, SecurityLevel,
+    KemAlgorithm, QuantumKEM, QuantumKeyExchange, QuantumPrivateKey, SecurityLevel, kyber_sizes::*,
 };
 use beardog_errors::BearDogError;
 
@@ -23,7 +23,7 @@ pub struct KyberEngine {
 
 impl KyberEngine {
     /// Create a new Kyber engine with specified security level
-    pub fn new(security_level: SecurityLevel) -> Result<Self, BearDogError> {
+    pub const fn new(security_level: SecurityLevel) -> Result<Self, BearDogError> {
         Ok(Self { security_level })
     }
 
@@ -56,7 +56,7 @@ impl KyberEngine {
             public_key,
             private_key: Some(QuantumPrivateKey::new(
                 private_key_data,
-                format!("{:?}", algorithm),
+                format!("{algorithm:?}"),
             )),
             algorithm,
             security_level: self.security_level,
@@ -129,7 +129,7 @@ impl KyberEngine {
 
     /// Get the security level
     #[must_use]
-    pub fn security_level(&self) -> SecurityLevel {
+    pub const fn security_level(&self) -> SecurityLevel {
         self.security_level
     }
 }

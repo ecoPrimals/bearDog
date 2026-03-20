@@ -28,17 +28,16 @@ pub async fn handle_streaming_encrypt(
     // Validate input file exists
     if !Path::new(input_path).exists() {
         return Err(BearDogError::validation(&format!(
-            "Input file not found: {}",
-            input_path
+            "Input file not found: {input_path}"
         )));
     }
 
     // Get file size for progress reporting
     let metadata = std::fs::metadata(input_path)?;
     let file_size = metadata.len();
-    println!("📂 Input file: {} ({} bytes)", input_path, file_size);
-    println!("🔑 Key ID: {}", key_id);
-    println!("💾 Output file: {}\n", output_path);
+    println!("📂 Input file: {input_path} ({file_size} bytes)");
+    println!("🔑 Key ID: {key_id}");
+    println!("💾 Output file: {output_path}\n");
 
     // Open input and output files
     let mut input_file = File::open(input_path)?;
@@ -49,7 +48,7 @@ pub async fn handle_streaming_encrypt(
         .open(output_path)?;
 
     // Write metadata header (version, key_id, chunk_size)
-    let header = format!("BEARDOG_STREAM_V1\n{}\n{}\n", key_id, CHUNK_SIZE);
+    let header = format!("BEARDOG_STREAM_V1\n{key_id}\n{CHUNK_SIZE}\n");
     output_file.write_all(header.as_bytes())?;
 
     // Process file in chunks
@@ -79,17 +78,14 @@ pub async fn handle_streaming_encrypt(
         output_file.write_all(&encrypted)?;
 
         // Progress reporting
-        print!(
-            "\r   Chunk {}: {:.1}% ({}/{} bytes)",
-            chunk_index, progress, total_processed, file_size
-        );
+        print!("\r   Chunk {chunk_index}: {progress:.1}% ({total_processed}/{file_size} bytes)");
         std::io::stdout().flush()?;
 
         chunk_index += 1;
     }
 
     println!("\n\n✅ Encryption complete!");
-    println!("   Total chunks: {}", chunk_index);
+    println!("   Total chunks: {chunk_index}");
     println!(
         "   Output size: {} bytes",
         std::fs::metadata(output_path)?.len()
@@ -111,15 +107,14 @@ pub async fn handle_streaming_decrypt(
     // Validate input file exists
     if !Path::new(input_path).exists() {
         return Err(BearDogError::validation(&format!(
-            "Input file not found: {}",
-            input_path
+            "Input file not found: {input_path}"
         )));
     }
 
     // Get file size for progress reporting
     let metadata = std::fs::metadata(input_path)?;
     let file_size = metadata.len();
-    println!("📂 Input file: {} ({} bytes)", input_path, file_size);
+    println!("📂 Input file: {input_path} ({file_size} bytes)");
 
     // Open input and output files
     let mut input_file = File::open(input_path)?;
@@ -166,7 +161,7 @@ pub async fn handle_streaming_decrypt(
         .ok_or_else(|| BearDogError::validation("Missing key_id line"))?
         .trim()
         .to_string();
-    println!("🔑 Key ID: {}", key_id);
+    println!("🔑 Key ID: {key_id}");
 
     // Read chunk_size
     let _chunk_size: usize = lines
@@ -176,7 +171,7 @@ pub async fn handle_streaming_decrypt(
         .parse()
         .map_err(|_| BearDogError::validation("Invalid chunk size in header"))?;
 
-    println!("💾 Output file: {}\n", output_path);
+    println!("💾 Output file: {output_path}\n");
     println!("⏳ Processing chunks...\n");
 
     // Process chunks - now input_file is at the correct position
@@ -187,7 +182,7 @@ pub async fn handle_streaming_decrypt(
         // Read chunk length prefix
         let mut len_buffer = [0u8; 4];
         match input_file.read_exact(&mut len_buffer) {
-            Ok(_) => {}
+            Ok(()) => {}
             Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => break, // EOF
             Err(e) => return Err(e.into()),
         }
@@ -208,17 +203,14 @@ pub async fn handle_streaming_decrypt(
         let progress = (total_processed as f64 / file_size as f64) * 100.0;
 
         // Progress reporting
-        print!(
-            "\r   Chunk {}: {:.1}% ({} bytes)",
-            chunk_index, progress, total_processed
-        );
+        print!("\r   Chunk {chunk_index}: {progress:.1}% ({total_processed} bytes)");
         std::io::stdout().flush()?;
 
         chunk_index += 1;
     }
 
     println!("\n\n✅ Decryption complete!");
-    println!("   Total chunks: {}", chunk_index);
+    println!("   Total chunks: {chunk_index}");
     println!(
         "   Output size: {} bytes",
         std::fs::metadata(output_path)?.len()
@@ -242,14 +234,14 @@ async fn encrypt_chunk(
 
     // Use ChaCha20-Poly1305 for streaming (better for large data)
     use chacha20poly1305::{
-        aead::{Aead, KeyInit},
         ChaCha20Poly1305, Nonce,
+        aead::{Aead, KeyInit},
     };
 
     // Decode key material
     let key_bytes = base64::engine::general_purpose::STANDARD
         .decode(&key.key_material_b64)
-        .map_err(|e| BearDogError::validation(&format!("Invalid key material: {}", e)))?;
+        .map_err(|e| BearDogError::validation(&format!("Invalid key material: {e}")))?;
 
     if key_bytes.len() != 32 {
         return Err(BearDogError::validation(
@@ -258,14 +250,14 @@ async fn encrypt_chunk(
     }
 
     let cipher = ChaCha20Poly1305::new_from_slice(&key_bytes)
-        .map_err(|e| BearDogError::validation(&format!("Invalid key: {}", e)))?;
+        .map_err(|e| BearDogError::validation(&format!("Invalid key: {e}")))?;
 
     let nonce_obj = Nonce::from(nonce);
 
     // Encrypt chunk
     let ciphertext = cipher
         .encrypt(&nonce_obj, plaintext)
-        .map_err(|e| BearDogError::validation(&format!("Encryption failed: {}", e)))?;
+        .map_err(|e| BearDogError::validation(&format!("Encryption failed: {e}")))?;
 
     // Return: nonce (12 bytes) + ciphertext (with tag)
     let mut result = Vec::with_capacity(12 + ciphertext.len());
@@ -296,14 +288,14 @@ async fn decrypt_chunk(
 
     // Use ChaCha20-Poly1305
     use chacha20poly1305::{
-        aead::{Aead, KeyInit},
         ChaCha20Poly1305, Nonce,
+        aead::{Aead, KeyInit},
     };
 
     // Decode key material
     let key_bytes = base64::engine::general_purpose::STANDARD
         .decode(&key.key_material_b64)
-        .map_err(|e| BearDogError::validation(&format!("Invalid key material: {}", e)))?;
+        .map_err(|e| BearDogError::validation(&format!("Invalid key material: {e}")))?;
 
     if key_bytes.len() != 32 {
         return Err(BearDogError::validation(
@@ -312,14 +304,14 @@ async fn decrypt_chunk(
     }
 
     let cipher = ChaCha20Poly1305::new_from_slice(&key_bytes)
-        .map_err(|e| BearDogError::validation(&format!("Invalid key: {}", e)))?;
+        .map_err(|e| BearDogError::validation(&format!("Invalid key: {e}")))?;
 
     let nonce_obj = Nonce::from_slice(nonce);
 
     // Decrypt chunk
     let plaintext = cipher
         .decrypt(nonce_obj, ciphertext)
-        .map_err(|e| BearDogError::validation(&format!("Decryption failed: {}", e)))?;
+        .map_err(|e| BearDogError::validation(&format!("Decryption failed: {e}")))?;
 
     Ok(plaintext)
 }

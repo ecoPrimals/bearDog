@@ -7,7 +7,9 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::domains::security::{SecurityConfig, SecurityConfigBuilder};
+    use crate::domains::security::{
+        DEFAULT_MIN_TLS_VERSION_FALLBACK, SecurityConfig, SecurityConfigBuilder,
+    };
 
     // ============================================================================
     // SecurityConfig Default and Construction Tests
@@ -33,17 +35,17 @@ mod tests {
     fn test_default_has_tls_version() {
         let config = SecurityConfig::default();
 
-        assert_eq!(config.min_tls_version, "1.2");
+        assert_eq!(config.min_tls_version, DEFAULT_MIN_TLS_VERSION_FALLBACK);
     }
 
     #[serial_test::serial]
     #[test]
     fn test_from_env_no_variables() {
-        std::env::remove_var("BEARDOG_MIN_TLS_VERSION");
+        beardog_errors::process_env::remove_var("BEARDOG_MIN_TLS_VERSION");
 
         let config = SecurityConfig::from_env();
 
-        assert_eq!(config.min_tls_version, "1.2");
+        assert_eq!(config.min_tls_version, DEFAULT_MIN_TLS_VERSION_FALLBACK);
         assert!(!config.strict_mode);
         assert!(config.enable_audit_log);
     }
@@ -52,17 +54,17 @@ mod tests {
     #[serial_test::serial] // Ensure env var isolation
     fn test_from_env_with_tls_version() {
         // Clear any existing value first
-        std::env::remove_var("BEARDOG_MIN_TLS_VERSION");
+        beardog_errors::process_env::remove_var("BEARDOG_MIN_TLS_VERSION");
 
         // Set test value
-        std::env::set_var("BEARDOG_MIN_TLS_VERSION", "1.3");
+        beardog_errors::process_env::set_var("BEARDOG_MIN_TLS_VERSION", "1.3");
 
         let config = SecurityConfig::from_env();
 
         assert_eq!(config.min_tls_version, "1.3");
 
         // Clean up
-        std::env::remove_var("BEARDOG_MIN_TLS_VERSION");
+        beardog_errors::process_env::remove_var("BEARDOG_MIN_TLS_VERSION");
     }
 
     // ============================================================================
@@ -123,10 +125,10 @@ mod tests {
     #[test]
     fn test_builder_min_tls_version_1_2() {
         let config = SecurityConfig::builder()
-            .min_tls_version("1.2".to_string())
+            .min_tls_version(DEFAULT_MIN_TLS_VERSION_FALLBACK.to_string())
             .build();
 
-        assert_eq!(config.min_tls_version, "1.2");
+        assert_eq!(config.min_tls_version, DEFAULT_MIN_TLS_VERSION_FALLBACK);
     }
 
     #[serial_test::serial]
@@ -321,7 +323,7 @@ mod tests {
         let config = SecurityConfig::builder()
             .strict_mode(false)
             .require_mtls(true)
-            .min_tls_version("1.2".to_string())
+            .min_tls_version(DEFAULT_MIN_TLS_VERSION_FALLBACK.to_string())
             .allow_localhost_bypass(false)
             .enable_audit_log(true)
             .enable_rate_limiting(true)
@@ -448,6 +450,6 @@ mod tests {
         // Unset fields should use defaults
         assert!(config.strict_mode);
         assert!(!config.require_mtls); // default
-        assert_eq!(config.min_tls_version, "1.2"); // default
+        assert_eq!(config.min_tls_version, DEFAULT_MIN_TLS_VERSION_FALLBACK); // default
     }
 }

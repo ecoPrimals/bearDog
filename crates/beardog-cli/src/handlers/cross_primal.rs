@@ -17,7 +17,7 @@
 //! **No primal names are hardcoded.** Discovery is purely capability-based.
 
 use crate::ecosystem_discovery_adapter::EcosystemDiscoveryAdapter;
-use base64::{engine::general_purpose::STANDARD, Engine};
+use base64::{Engine, engine::general_purpose::STANDARD};
 use beardog_core::ecosystem_integration::{PrimalDiscoveryService, SecureCrossPrimalMessenger};
 use beardog_types::canonical::discovery::{
     ComputeAbility, NetworkFunction, SecurityService, StorageCharacteristic,
@@ -28,6 +28,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::info;
 
+/// `beardog cross-primal` command: capability-based discovery and secure messaging.
 #[derive(Parser, Debug)]
 pub struct CrossPrimalCommand {
     #[clap(subcommand)]
@@ -111,7 +112,7 @@ async fn handle_key_ceremony(
 
     // Load seed from Workflow 1
     let _seed_data = std::fs::read(seed_file).map_err(|e| {
-        beardog_errors::BearDogError::system(format!("Failed to read seed file: {}", e))
+        beardog_errors::BearDogError::system(format!("Failed to read seed file: {e}"))
     })?;
 
     info!("✅ Loaded seed from: {}", seed_file);
@@ -133,19 +134,19 @@ async fn handle_key_ceremony(
 
             // Save shared key
             std::fs::write(output, &session.encryption_key).map_err(|e| {
-                beardog_errors::BearDogError::system(format!("Failed to write shared key: {}", e))
+                beardog_errors::BearDogError::system(format!("Failed to write shared key: {e}"))
             })?;
 
             println!("✅ Key ceremony complete!");
             println!("   Peer: {}", session.peer_id);
             println!("   Session: {}", session.session_id);
-            println!("   Security Level: {}", security_level);
-            println!("   Shared key saved to: {}", output);
+            println!("   Security Level: {security_level}");
+            println!("   Shared key saved to: {output}");
         }
         Err(e) => {
             println!("⚠️  Key ceremony failed: No security-capable primals discovered");
             println!("   This is expected until other primals are running in the ecosystem");
-            println!("   Technical details: {}", e);
+            println!("   Technical details: {e}");
             return Err(e);
         }
     }
@@ -166,7 +167,7 @@ async fn handle_send_secure(
 
     // Load message
     let message_data = std::fs::read(message_file).map_err(|e| {
-        beardog_errors::BearDogError::system(format!("Failed to read message file: {}", e))
+        beardog_errors::BearDogError::system(format!("Failed to read message file: {e}"))
     })?;
 
     info!(
@@ -201,8 +202,7 @@ async fn handle_send_secure(
         "storage" => messenger.send_to_storage_primal(&message_data).await,
         _ => {
             return Err(beardog_errors::BearDogError::invalid_input(&format!(
-                "Unknown capability: {} (valid: network, compute, storage)",
-                capability
+                "Unknown capability: {capability} (valid: network, compute, storage)"
             )));
         }
     };
@@ -211,25 +211,22 @@ async fn handle_send_secure(
         Ok(response) => {
             println!("✅ Message sent successfully!");
             println!("   Size: {} bytes", message_data.len());
-            println!("   Capability: {}", capability);
+            println!("   Capability: {capability}");
             println!("   Responder: {}", response.responder_id);
             println!("   Processing time: {}ms", response.processing_time_ms);
 
             // Save response if output specified
             if let Some(output_path) = output {
                 std::fs::write(output_path, &response.ciphertext).map_err(|e| {
-                    beardog_errors::BearDogError::system(format!("Failed to write response: {}", e))
+                    beardog_errors::BearDogError::system(format!("Failed to write response: {e}"))
                 })?;
-                println!("   Response saved to: {}", output_path);
+                println!("   Response saved to: {output_path}");
             }
         }
         Err(e) => {
-            println!(
-                "⚠️  Message send failed: No primals with '{}' capability found",
-                capability
-            );
+            println!("⚠️  Message send failed: No primals with '{capability}' capability found");
             println!("   This is expected until other primals are running in the ecosystem");
-            println!("   Technical details: {}", e);
+            println!("   Technical details: {e}");
             return Err(e);
         }
     }
@@ -261,14 +258,13 @@ async fn handle_discover_primals(capability: &str) -> Result<(), beardog_errors:
         },
         _ => {
             return Err(beardog_errors::BearDogError::invalid_input(&format!(
-                "Unknown capability: {} (valid: network, security, compute, storage)",
-                capability
+                "Unknown capability: {capability} (valid: network, security, compute, storage)"
             )));
         }
     };
 
     // Discover primals (REAL)
-    println!("🔍 Discovering primals with '{}' capability...", capability);
+    println!("🔍 Discovering primals with '{capability}' capability...");
 
     match discovery_client
         .discover_by_capability(capability_type)
@@ -276,7 +272,7 @@ async fn handle_discover_primals(capability: &str) -> Result<(), beardog_errors:
     {
         Ok(primals) => {
             if primals.is_empty() {
-                println!("📋 No primals found with '{}' capability", capability);
+                println!("📋 No primals found with '{capability}' capability");
                 println!("   This is expected until other primals are running in the ecosystem");
                 println!("   The system correctly avoids hardcoding any primals");
             } else {
@@ -297,7 +293,7 @@ async fn handle_discover_primals(capability: &str) -> Result<(), beardog_errors:
             Ok(())
         }
         Err(e) => {
-            println!("⚠️  Discovery failed: {}", e);
+            println!("⚠️  Discovery failed: {e}");
             Err(e)
         }
     }

@@ -6,8 +6,8 @@
 //! to improve test coverage. These tests target areas identified in the coverage audit.
 
 use beardog_errors::BearDogError;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 // ========================================================================
 // Encryption Edge Cases
@@ -711,7 +711,7 @@ fn attempt_decryption(data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> 
 fn generate_test_key() -> Result<Vec<u8>, BearDogError> {
     use rand::Rng;
     let mut rng = rand::thread_rng();
-    let key: Vec<u8> = (0..32).map(|_| rng.gen()).collect();
+    let key: Vec<u8> = (0..32).map(|_| rng.r#gen()).collect();
     Ok(key)
 }
 
@@ -810,7 +810,7 @@ fn verify_signature_with_data(
 fn generate_random_bytes(size: usize) -> Result<Vec<u8>, BearDogError> {
     use rand::Rng;
     let mut rng = rand::thread_rng();
-    let bytes: Vec<u8> = (0..size).map(|_| rng.gen()).collect();
+    let bytes: Vec<u8> = (0..size).map(|_| rng.r#gen()).collect();
     Ok(bytes)
 }
 

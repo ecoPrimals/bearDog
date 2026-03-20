@@ -2,11 +2,14 @@
 name = "beardog-tunnel"
 description = "BearDog tunnel module"
 repository = "https://github.com/eastgate-software/beardog"
-rust-version = "1.75"
+rust-version = "1.85.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "tunnel", "secure", "communication", "beardog", "networking",]
 categories = [ "network-programming", "security", "development-tools",]
+
+[lints]
+workspace = true
 
 [dependencies]
 # BearDog internal crates

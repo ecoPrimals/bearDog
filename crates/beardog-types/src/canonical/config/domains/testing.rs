@@ -235,7 +235,7 @@ impl CanonicalApiTestConfig {
         use beardog_config::domains::network_ports::DEFAULT_API_PORT;
 
         Self {
-            base_url: format!("http://localhost:{}", DEFAULT_API_PORT),
+            base_url: format!("http://localhost:{DEFAULT_API_PORT}"),
             timeout_seconds: Self::DEFAULT_TIMEOUT_SECS,
             contract_validation: true,
             use_authentication: false,
@@ -263,7 +263,7 @@ impl CanonicalApiTestConfig {
         use beardog_config::domains::network_ports::DEFAULT_API_PORT;
 
         Self {
-            base_url: format!("http://localhost:{}", DEFAULT_API_PORT),
+            base_url: format!("http://localhost:{DEFAULT_API_PORT}"),
             timeout_seconds: std::env::var("BEARDOG_API_TEST_TIMEOUT_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -303,7 +303,7 @@ impl CanonicalApiTestConfig {
         use beardog_config::domains::network_ports::DEFAULT_API_PORT;
 
         Self {
-            base_url: format!("http://localhost:{}", DEFAULT_API_PORT),
+            base_url: format!("http://localhost:{DEFAULT_API_PORT}"),
             verify_tls: false,
             ..Default::default()
         }

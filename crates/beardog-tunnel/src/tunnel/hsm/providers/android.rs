@@ -73,7 +73,7 @@ impl AndroidUniversalProvider {
     }
 
     /// Check if running on Android platform
-    fn is_android_platform() -> bool {
+    const fn is_android_platform() -> bool {
         cfg!(target_os = "android")
     }
 
@@ -155,7 +155,7 @@ impl AndroidUniversalProvider {
     }
 
     /// Get security level
-    pub fn get_security_level(&self) -> u8 {
+    pub const fn get_security_level(&self) -> u8 {
         if self.strongbox_available {
             3 // Highest: StrongBox
         } else if self.tee_available {
@@ -183,17 +183,17 @@ impl AndroidUniversalProvider {
     }
 
     /// Check if StrongBox is available
-    pub fn has_strongbox(&self) -> bool {
+    pub const fn has_strongbox(&self) -> bool {
         self.strongbox_available
     }
 
     /// Check if TEE is available
-    pub fn has_tee(&self) -> bool {
+    pub const fn has_tee(&self) -> bool {
         self.tee_available
     }
 
     /// Get capabilities
-    pub fn capabilities(&self) -> Option<&AndroidCapabilities> {
+    pub const fn capabilities(&self) -> Option<&AndroidCapabilities> {
         self.capabilities.as_ref()
     }
 }

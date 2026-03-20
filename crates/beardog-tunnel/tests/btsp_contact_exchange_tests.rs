@@ -12,13 +12,13 @@ use std::sync::Arc;
 async fn test_contact_exchange_same_family() {
     // Initialize components with auto_initialize for proper HSM provider registration
     use std::env;
-    env::set_var("BEARDOG_HSM_MODE", "software");
+    beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "software");
     let hsm = Arc::new(
         HsmManager::auto_initialize()
             .await
             .expect("Failed to initialize HSM"),
     );
-    env::remove_var("BEARDOG_HSM_MODE");
+    beardog_errors::process_env::remove_var("BEARDOG_HSM_MODE");
 
     let genetics =
         Arc::new(EcosystemGeneticEngine::new().expect("Failed to create genetics engine"));
@@ -29,7 +29,7 @@ async fn test_contact_exchange_same_family() {
         .expect("Failed to create BTSP provider");
 
     // Set environment for testing
-    std::env::set_var("FAMILY_ID", "test_family");
+    beardog_errors::process_env::set_var("FAMILY_ID", "test_family");
 
     // Test contact exchange (will return empty path for unknown peer)
     let result = provider
@@ -72,8 +72,8 @@ async fn test_contact_info_serialization() {
 #[tokio::test]
 async fn test_lineage_path_environment() {
     // Test that environment variables are used for family discovery
-    std::env::set_var("BEARDOG_FAMILY_ID", "nat0");
-    std::env::set_var("BEARDOG_NODE_ID", "tower1");
+    beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");
+    beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "tower1");
 
     let family = std::env::var("FAMILY_ID")
         .or_else(|_| std::env::var("BEARDOG_FAMILY_ID"))
@@ -82,8 +82,8 @@ async fn test_lineage_path_environment() {
     assert_eq!(family, "nat0");
 
     // Clean up
-    std::env::remove_var("BEARDOG_FAMILY_ID");
-    std::env::remove_var("BEARDOG_NODE_ID");
+    beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
+    beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
 }
 
 #[tokio::test]
@@ -91,13 +91,13 @@ async fn test_lineage_path_environment() {
 async fn test_contact_exchange_max_hops() {
     // Initialize components with auto_initialize for proper HSM provider registration
     use std::env;
-    env::set_var("BEARDOG_HSM_MODE", "software");
+    beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "software");
     let hsm = Arc::new(
         HsmManager::auto_initialize()
             .await
             .expect("Failed to initialize HSM"),
     );
-    env::remove_var("BEARDOG_HSM_MODE");
+    beardog_errors::process_env::remove_var("BEARDOG_HSM_MODE");
 
     let genetics =
         Arc::new(EcosystemGeneticEngine::new().expect("Failed to create genetics engine"));
@@ -106,7 +106,7 @@ async fn test_contact_exchange_max_hops() {
         .await
         .expect("Failed to create BTSP provider");
 
-    std::env::set_var("FAMILY_ID", "test_family");
+    beardog_errors::process_env::set_var("FAMILY_ID", "test_family");
 
     // Test with different max_hops values
     let result1 = provider

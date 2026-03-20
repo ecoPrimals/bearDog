@@ -33,13 +33,13 @@ pub struct UniversalHsmDiscovery {
     /// Map of discovered HSMs by their unique identifier
     discovered_hsms: HashMap<String, DiscoveredHsm>,
     /// Capability detection component
-    capability_detector: capability_detector::CapabilityDetector,
+    _capability_detector: capability_detector::CapabilityDetector,
     /// Human entropy classification component
     entropy_classifier: human_entropy_classifier::HumanEntropyClassifier,
     /// Tier assignment manager
     tier_manager: tier_manager::TierManager,
     /// Discovery configuration
-    config: DiscoveryConfig,
+    _config: DiscoveryConfig,
 }
 
 // Use canonical HSM discovery configuration
@@ -384,10 +384,10 @@ impl UniversalHsmDiscovery {
 
         Ok(Self {
             discovered_hsms: HashMap::with_capacity(16),
-            capability_detector,
+            _capability_detector: capability_detector,
             entropy_classifier: entropy_classifier?,
             tier_manager: tier_manager?,
-            config,
+            _config: config,
         })
     }
 

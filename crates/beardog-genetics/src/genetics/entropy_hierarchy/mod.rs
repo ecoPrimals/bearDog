@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Entropy Hierarchy Module
-//
-// This module provides entropy hierarchy management and validation capabilities,
-// supporting human-centric entropy classification.
+//! Entropy hierarchy: classify sources, mix seeds, monitor health, and validate policy.
 
+/// Runtime manager coordinating validation, mixing, and seed lifecycle.
 pub mod engine;
+/// Validates that entropy feeds are live human input rather than scripted or replayed data.
 pub mod live_feed_validator;
+/// Metrics, analytics, and cleanup for active entropy seeds.
 pub mod monitoring;
+/// Fusion and mixing of multiple entropy buffers into classified seeds.
 pub mod sources;
+/// Core types: [`EntropyClass`], seeds, identities, and configuration.
 pub mod types;
+/// Quality, age, biometric, and ownership checks on entropy material.
 pub mod validation;
 
 // Re-export all types

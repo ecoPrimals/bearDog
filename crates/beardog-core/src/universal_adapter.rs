@@ -401,24 +401,24 @@ mod tests {
     #[serial_test::serial] // Environment variable test - must run serially
     async fn test_universal_adapter_creation() {
         // Set required environment for self-knowledge
-        std::env::set_var("PRIMAL_NAME", "BearDog");
-        std::env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
+        beardog_errors::process_env::set_var("PRIMAL_NAME", "BearDog");
+        beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
 
         let adapter = UniversalAdapter::new().unwrap();
 
         assert_eq!(adapter.self_knowledge().my_name(), "BearDog");
         assert_eq!(adapter.cached_capabilities().await.len(), 0); // Empty cache initially
 
-        std::env::remove_var("PRIMAL_NAME");
-        std::env::remove_var("PRIMAL_DISCOVERY_METHOD");
+        beardog_errors::process_env::remove_var("PRIMAL_NAME");
+        beardog_errors::process_env::remove_var("PRIMAL_DISCOVERY_METHOD");
     }
 
     #[tokio::test]
     async fn test_discover_capability_from_environment() {
-        std::env::set_var("PRIMAL_NAME", "BearDog");
-        std::env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
-        std::env::set_var("PRIMAL_TESTPRIMAL_ADDR", "http://127.0.0.1:9999");
-        std::env::set_var("PRIMAL_TESTPRIMAL_CAPABILITIES", "Discovery,Query"); // Multiple capabilities
+        beardog_errors::process_env::set_var("PRIMAL_NAME", "BearDog");
+        beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
+        beardog_errors::process_env::set_var("PRIMAL_TESTPRIMAL_ADDR", "http://127.0.0.1:9999");
+        beardog_errors::process_env::set_var("PRIMAL_TESTPRIMAL_CAPABILITIES", "Discovery,Query"); // Multiple capabilities
 
         let adapter = UniversalAdapter::new().unwrap();
 
@@ -434,21 +434,21 @@ mod tests {
             eprintln!("Note: No primals discovered - env discovery may need implementation");
         }
 
-        std::env::remove_var("PRIMAL_NAME");
-        std::env::remove_var("PRIMAL_DISCOVERY_METHOD");
-        std::env::remove_var("PRIMAL_TESTPRIMAL_ADDR");
-        std::env::remove_var("PRIMAL_TESTPRIMAL_CAPABILITIES");
+        beardog_errors::process_env::remove_var("PRIMAL_NAME");
+        beardog_errors::process_env::remove_var("PRIMAL_DISCOVERY_METHOD");
+        beardog_errors::process_env::remove_var("PRIMAL_TESTPRIMAL_ADDR");
+        beardog_errors::process_env::remove_var("PRIMAL_TESTPRIMAL_CAPABILITIES");
     }
 
     #[tokio::test]
     async fn test_cache_behavior() {
-        std::env::set_var("PRIMAL_NAME", "BearDog");
-        std::env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
-        std::env::set_var("UNIVERSAL_ADAPTER_CACHE_TTL_SECS", "60");
+        beardog_errors::process_env::set_var("PRIMAL_NAME", "BearDog");
+        beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
+        beardog_errors::process_env::set_var("UNIVERSAL_ADAPTER_CACHE_TTL_SECS", "60");
 
         // Set up environment to provide a discoverable primal with capabilities
-        std::env::set_var("PRIMAL_TESTPRIMAL_ADDR", "http://127.0.0.1:9000");
-        std::env::set_var(
+        beardog_errors::process_env::set_var("PRIMAL_TESTPRIMAL_ADDR", "http://127.0.0.1:9000");
+        beardog_errors::process_env::set_var(
             "PRIMAL_TESTPRIMAL_CAPABILITIES",
             "Discovery,SecureTunneling",
         );
@@ -492,17 +492,17 @@ mod tests {
             assert!(!adapter.has_capability(&SimpleCapability::Discovery).await);
         }
 
-        std::env::remove_var("PRIMAL_NAME");
-        std::env::remove_var("PRIMAL_DISCOVERY_METHOD");
-        std::env::remove_var("UNIVERSAL_ADAPTER_CACHE_TTL_SECS");
-        std::env::remove_var("PRIMAL_TESTPRIMAL_ADDR");
-        std::env::remove_var("PRIMAL_TESTPRIMAL_CAPABILITIES");
+        beardog_errors::process_env::remove_var("PRIMAL_NAME");
+        beardog_errors::process_env::remove_var("PRIMAL_DISCOVERY_METHOD");
+        beardog_errors::process_env::remove_var("UNIVERSAL_ADAPTER_CACHE_TTL_SECS");
+        beardog_errors::process_env::remove_var("PRIMAL_TESTPRIMAL_ADDR");
+        beardog_errors::process_env::remove_var("PRIMAL_TESTPRIMAL_CAPABILITIES");
     }
 
     #[test]
     fn test_self_knowledge_access() {
-        std::env::set_var("PRIMAL_NAME", "beardog"); // lowercase to match actual primal name
-        std::env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
+        beardog_errors::process_env::set_var("PRIMAL_NAME", "beardog"); // lowercase to match actual primal name
+        beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
 
         let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async {
@@ -512,7 +512,7 @@ mod tests {
             assert_eq!(sk.my_name(), "beardog"); // actual primal name is lowercase
         });
 
-        std::env::remove_var("PRIMAL_NAME");
-        std::env::remove_var("PRIMAL_DISCOVERY_METHOD");
+        beardog_errors::process_env::remove_var("PRIMAL_NAME");
+        beardog_errors::process_env::remove_var("PRIMAL_DISCOVERY_METHOD");
     }
 }

@@ -128,6 +128,7 @@ pub struct HyperZeroCopyStats {
     pub avg_latency_ns: AtomicU64,
 }
 
+/// SIMD-aligned slab pool with tiered sizes and atomic stats.
 pub struct SIMDAlignedPool {
     /// Pool of pre-allocated aligned buffers
     buffers: RwLock<Vec<AlignedBuffer>>,
@@ -343,6 +344,7 @@ impl HyperZeroCopyManager {
         }
     }
 
+    /// Borrows a pooled buffer of `data_size`, runs `operation`, then returns it to the pool.
     pub fn zero_copy_operation<F, R>(
         &self,
         data_size: usize,
@@ -367,6 +369,7 @@ impl HyperZeroCopyManager {
         Ok(result)
     }
 
+    /// Returns a shared [`Arc<str>`], inserting into the cache when missing.
     pub fn intern_string(&self, s: &str) -> Arc<str> {
         // Fast path: check if already interned
         {
@@ -440,6 +443,7 @@ impl HyperZeroCopyManager {
         }
     }
 
+    /// Delegates to [`SIMDAlignedPool::get_stats`].
     pub fn get_performance_stats(&self) -> HyperZeroCopyStats {
         self.memory_pool.get_stats()
     }
@@ -695,8 +699,8 @@ mod tests {
     }
 
     #[test]
-    fn test_hyper_manager_zero_copy_operation_various_sizes(
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    fn test_hyper_manager_zero_copy_operation_various_sizes()
+    -> Result<(), Box<dyn std::error::Error>> {
         let manager = HyperZeroCopyManager::new();
 
         // Small operation
@@ -796,8 +800,8 @@ mod tests {
     }
 
     #[test]
-    fn test_hyper_manager_zero_copy_operation_return_value(
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    fn test_hyper_manager_zero_copy_operation_return_value()
+    -> Result<(), Box<dyn std::error::Error>> {
         let manager = HyperZeroCopyManager::new();
 
         let result = manager.zero_copy_operation(128, |buffer| {

@@ -17,11 +17,13 @@ use uuid::Uuid;
 /// Main entropy hierarchy manager
 #[derive(Debug, Clone)]
 pub struct EntropyHierarchyManager {
+    /// Thresholds and feature flags governing entropy acceptance.
     pub config: EntropyHierarchyConfig,
     /// Mapping of active seeds
     pub active_seeds: HashMap<Uuid, EntropySeed>,
     /// The mixing engine value
     pub mixing_engine: EntropyMixingEngine,
+    /// Policy checks for quality, freshness, and optional biometric proof.
     pub validator: EntropyValidator,
     /// The monitor value
     pub monitor: EntropyMonitor,
@@ -71,6 +73,7 @@ impl EntropyHierarchyManager {
         Ok(seed_id)
     }
 
+    /// Consumes one logical use of a seed: enforces `max_usage`, updates counters, binds output to `operation`.
     pub fn use_seed(&mut self, seed_id: Uuid, operation: &str) -> Result<Vec<u8>, BearDogError> {
         let seed = self
             .active_seeds
@@ -148,6 +151,7 @@ impl EntropyHierarchyManager {
         Ok(removed_count)
     }
 
+    /// Snapshot of operational counters used for observability and tuning (timings are placeholders until wired).
     #[must_use]
     pub fn get_performance_metrics(&self) -> PerformanceMetrics {
         PerformanceMetrics {

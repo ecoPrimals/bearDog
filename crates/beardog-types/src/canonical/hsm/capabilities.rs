@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Hardware Security Module capabilities and feature definitions
-// Provides structured capability types for HSM functionality
+//! Structured capability matrices advertised by HSM devices (crypto, performance, APIs).
 
 use serde::{Deserialize, Serialize};
 
@@ -34,6 +33,7 @@ pub struct HsmCapabilities {
     /// Security capabilities
     /// The security value
     pub security: SecurityCapabilities,
+    /// Throughput, latency, and parallelism advertised by the device.
     pub performance: PerformanceCapabilities,
     /// Advanced features
     /// The advanced features value
@@ -239,6 +239,7 @@ impl Default for SecurityCapabilities {
     }
 }
 
+/// Advertised throughput and latency envelope for an HSM device.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceCapabilities {
     /// Maximum operations per second
@@ -323,13 +324,13 @@ impl Default for AdvancedFeatureCapabilities {
 
 /// HSM capability query and validation
 impl HsmCapabilities {
-    /// Create new HSM capabilities with defaults
+    /// Materializes [`Default`] capability advertisement (used in tests and synthetic HSMs).
     #[must_use]
-    /// Creates a new instance
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Returns true when `algorithm` appears in [`KeyGenerationCapabilities::supported_algorithms`].
     #[must_use]
     pub fn supports_key_algorithm(&self, algorithm: &str) -> bool {
         self.key_generation
@@ -361,7 +362,7 @@ impl HsmCapabilities {
 
     /// Get the maximum number of keys that can be stored
     #[must_use]
-    pub fn max_key_capacity(&self) -> Option<u32> {
+    pub const fn max_key_capacity(&self) -> Option<u32> {
         self.key_management.max_keys
     }
 
@@ -378,6 +379,7 @@ impl HsmCapabilities {
         )
     }
 
+    /// Heuristic score in `[0.0, 1.0]` combining ops/sec, latency, and throughput.
     #[must_use]
     pub fn performance_rating(&self) -> f64 {
         let ops_score =
@@ -388,11 +390,9 @@ impl HsmCapabilities {
         (ops_score + latency_score + throughput_score) / 3.0
     }
 
-    /// Check if advanced features are available
+    /// Returns true when any “advanced” cryptographic or isolation feature is advertised.
     #[must_use]
-    /// Checks if advanced features
-    /// Checks if advanced features
-    pub fn has_advanced_features(&self) -> bool {
+    pub const fn has_advanced_features(&self) -> bool {
         self.advanced_features.secure_enclaves
             || self.advanced_features.remote_attestation
             || self.advanced_features.post_quantum_crypto
@@ -424,6 +424,7 @@ pub struct CapabilitySummary {
     /// Security level
     /// The security level value
     pub security_level: String,
+    /// Normalized score from [`HsmCapabilities::performance_rating`].
     pub performance_rating: f64,
     /// Number of certifications
     /// Number of certifications
@@ -433,6 +434,7 @@ pub struct CapabilitySummary {
     pub advanced_features: bool,
 }
 
+/// Minimum capability set required before selecting an HSM for a workload.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityRequirements {
     /// Required algorithms
@@ -444,6 +446,7 @@ pub struct CapabilityRequirements {
     /// Minimum security level
     /// The min security level value
     pub min_security_level: String,
+    /// Floor for ops/sec, latency, and throughput checks in [`HsmCapabilities::meets_requirements`].
     pub min_performance: PerformanceRequirements,
     /// Required certifications
     /// Collection of required certifications
@@ -453,6 +456,7 @@ pub struct CapabilityRequirements {
     pub required_advanced_features: Vec<String>,
 }
 
+/// Performance floor used with [`CapabilityRequirements`] (distinct from config-tier types).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceRequirements {
     /// Minimum operations per second
@@ -524,6 +528,7 @@ impl HsmCapabilities {
     }
 }
 
+/// Control-plane protocols exposed by the HSM vendor (REST, gRPC, etc.).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiSupportCapabilities {
     /// Supported API versions

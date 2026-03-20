@@ -243,8 +243,8 @@ impl BirdSongManager {
         family_id: &str,
     ) -> Result<Vec<u8>, BearDogError> {
         use chacha20poly1305::{
-            aead::{rand_core::RngCore, Aead, KeyInit, OsRng},
             ChaCha20Poly1305, Nonce,
+            aead::{Aead, KeyInit, OsRng, rand_core::RngCore},
         };
         use sha3::{Digest, Sha3_256};
 
@@ -256,7 +256,7 @@ impl BirdSongManager {
 
         // Create cipher
         let cipher = ChaCha20Poly1305::new_from_slice(&key_bytes)
-            .map_err(|e| BearDogError::crypto_error(format!("Failed to create cipher: {}", e)))?;
+            .map_err(|e| BearDogError::crypto_error(format!("Failed to create cipher: {e}")))?;
 
         // Generate random nonce (ChaCha20-Poly1305 uses 12 bytes)
         let mut nonce_bytes = [0u8; 12];
@@ -266,7 +266,7 @@ impl BirdSongManager {
         // Encrypt
         let ciphertext = cipher
             .encrypt(nonce, plaintext)
-            .map_err(|e| BearDogError::crypto_error(format!("Encryption failed: {}", e)))?;
+            .map_err(|e| BearDogError::crypto_error(format!("Encryption failed: {e}")))?;
 
         // Prepend nonce to ciphertext (nonce is public, safe to transmit)
         let mut result = nonce_bytes.to_vec();
@@ -300,8 +300,8 @@ impl BirdSongManager {
         family_id: &str,
     ) -> Result<Vec<u8>, BearDogError> {
         use chacha20poly1305::{
-            aead::{Aead, KeyInit},
             ChaCha20Poly1305, Nonce,
+            aead::{Aead, KeyInit},
         };
         use sha3::{Digest, Sha3_256};
 
@@ -320,7 +320,7 @@ impl BirdSongManager {
 
         // Create cipher
         let cipher = ChaCha20Poly1305::new_from_slice(&key_bytes)
-            .map_err(|e| BearDogError::crypto_error(format!("Failed to create cipher: {}", e)))?;
+            .map_err(|e| BearDogError::crypto_error(format!("Failed to create cipher: {e}")))?;
 
         // Extract nonce (first 12 bytes) and ciphertext (rest)
         let (nonce_bytes, ciphertext) = encrypted.split_at(12);
@@ -328,10 +328,7 @@ impl BirdSongManager {
 
         // Decrypt
         let plaintext = cipher.decrypt(nonce, ciphertext).map_err(|e| {
-            BearDogError::crypto_error(format!(
-                "Decryption failed (likely different family): {}",
-                e
-            ))
+            BearDogError::crypto_error(format!("Decryption failed (likely different family): {e}"))
         })?;
 
         Ok(plaintext)

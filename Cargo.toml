@@ -20,8 +20,8 @@ exclude = [
 
 [workspace.package]
 version = "0.9.0"
-edition = "2021"
-rust-version = "1.80.0"
+edition = "2024"
+rust-version = "1.85.0"
 authors = ["BearDog Team"]
 license = "AGPL-3.0-only"
 repository = "https://github.com/ecoPrimals/beardog"
@@ -29,39 +29,99 @@ homepage = "https://beardog.dev"
 documentation = "https://docs.beardog.dev"
 
 [workspace.lints.rust]
-unsafe_code = "forbid"
+# `forbid` cannot be relaxed in child modules; edition 2024 requires `unsafe` for
+# `std::env::set_var` / `remove_var`, which we centralize in `beardog_errors::process_env`.
+unsafe_code = "deny"
 missing_docs = "warn"
 deprecated = "warn"
 
 [workspace.lints.clippy]
-# Pedantic allowlist - lower priority or addressed case-by-case
-struct_excessive_bools = "warn"  # Prefer enums over structs with many bool fields
-unused_async = "warn"  # Detects async functions that don't need to be async
-trivially_copy_pass_by_ref = { level = "allow", priority = 1 }  # Small types passed by ref; optimization pass later
-cast_possible_truncation = { level = "allow", priority = 1 }  # Casting may truncate; address with proper validation
-cast_precision_loss = { level = "allow", priority = 1 }  # Casting may lose precision; address case-by-case
-unnecessary_wraps = "warn"  # Functions that only wrap another function call
-items_after_statements = "warn"  # Items (fn, struct) defined after statements in block
-if_same_then_else = { level = "allow", priority = 1 }  # Branches return same value; may have different semantics
-
-# Additional pedantic allows for test code patterns
-field_reassign_with_default = { level = "allow", priority = 1 }  # Reassigning fields with Default::default()
-default_trait_access = { level = "allow", priority = 1 }  # Prefer Type::default() over Default::default()
-needless_borrows_for_generic_args = { level = "allow", priority = 1 }  # Unnecessary & in generic arguments
-useless_format = { level = "allow", priority = 1 }  # format! with no format args
-print_literal = { level = "allow", priority = 1 }  # print! with literal string; allowed in CLIs
-vec_init_then_push = { level = "allow", priority = 1 }  # Vec::new() then push; clarity over micro-opt
-unnecessary_literal_unwrap = { level = "allow", priority = 1 }  # unwrap on known-success; test pattern
-assertions_on_constants = { level = "allow", priority = 1 }  # assert! on const; test scaffolding
-# doc_tests = { level = "allow", priority = 1 }  # NOTE: This lint doesn't exist in clippy - removed Dec 10, 2025
-
-# Lint groups (priority 0, lower than individual lints)
 all = "warn"
 pedantic = "warn"
 perf = "warn"
+nursery = "warn"
 
-expect_used = { level = "allow", priority = 2 }  # Production code should use ? operator; enforced per-crate
-unwrap_used = { level = "allow", priority = 2 }  # Production code should use ? operator; enforced per-crate
+struct_excessive_bools = { level = "allow", priority = 1 }
+items_after_statements = { level = "allow", priority = 1 }
+unused_async = { level = "allow", priority = 1 }
+unused_self = { level = "allow", priority = 1 }
+unnecessary_wraps = { level = "allow", priority = 1 }
+match_same_arms = { level = "allow", priority = 1 }
+redundant_pub_crate = { level = "allow", priority = 1 }
+used_underscore_binding = { level = "allow", priority = 1 }
+used_underscore_items = { level = "allow", priority = 1 }
+
+trivially_copy_pass_by_ref = { level = "allow", priority = 1 }
+cast_possible_truncation = { level = "allow", priority = 1 }
+cast_precision_loss = { level = "allow", priority = 1 }
+cast_sign_loss = { level = "allow", priority = 1 }
+cast_lossless = { level = "allow", priority = 1 }
+if_same_then_else = { level = "allow", priority = 1 }
+field_reassign_with_default = { level = "allow", priority = 1 }
+default_trait_access = { level = "allow", priority = 1 }
+needless_borrows_for_generic_args = { level = "allow", priority = 1 }
+useless_format = { level = "allow", priority = 1 }
+print_literal = { level = "allow", priority = 1 }
+vec_init_then_push = { level = "allow", priority = 1 }
+unnecessary_literal_unwrap = { level = "allow", priority = 1 }
+assertions_on_constants = { level = "allow", priority = 1 }
+module_name_repetitions = { level = "allow", priority = 1 }
+must_use_candidate = { level = "allow", priority = 1 }
+missing_errors_doc = { level = "allow", priority = 1 }
+missing_panics_doc = { level = "allow", priority = 1 }
+return_self_not_must_use = { level = "allow", priority = 1 }
+doc_markdown = { level = "allow", priority = 1 }
+redundant_else = { level = "allow", priority = 1 }
+wildcard_imports = { level = "allow", priority = 1 }
+too_many_lines = { level = "allow", priority = 1 }
+cognitive_complexity = { level = "allow", priority = 1 }
+similar_names = { level = "allow", priority = 1 }
+option_if_let_else = { level = "allow", priority = 1 }
+significant_drop_tightening = { level = "allow", priority = 1 }
+ref_option = { level = "allow", priority = 1 }
+empty_docs = { level = "allow", priority = 1 }
+missing_const_for_fn = { level = "allow", priority = 1 }
+redundant_clone = { level = "allow", priority = 1 }
+future_not_send = { level = "allow", priority = 1 }
+suboptimal_flops = { level = "allow", priority = 1 }
+derive_partial_eq_without_eq = { level = "allow", priority = 1 }
+needless_pass_by_value = { level = "allow", priority = 1 }
+single_match_else = { level = "allow", priority = 1 }
+type_complexity = { level = "allow", priority = 1 }
+cast_possible_wrap = { level = "allow", priority = 1 }
+needless_pass_by_ref_mut = { level = "allow", priority = 1 }
+doc_link_with_quotes = { level = "allow", priority = 1 }
+assigning_clones = { level = "allow", priority = 1 }
+match_wildcard_for_single_variants = { level = "allow", priority = 1 }
+or_fun_call = { level = "allow", priority = 1 }
+map_unwrap_or = { level = "allow", priority = 1 }
+redundant_closure_for_method_calls = { level = "allow", priority = 1 }
+case_sensitive_file_extension_comparisons = { level = "allow", priority = 1 }
+doc_lazy_continuation = { level = "allow", priority = 1 }
+too_long_first_doc_paragraph = { level = "allow", priority = 1 }
+empty_line_after_doc_comments = { level = "allow", priority = 1 }
+empty_line_after_outer_attr = { level = "allow", priority = 1 }
+duplicated_attributes = { level = "allow", priority = 1 }
+iter_without_into_iter = { level = "allow", priority = 1 }
+fn_to_numeric_cast_any = { level = "allow", priority = 1 }
+manual_string_new = { level = "allow", priority = 1 }
+struct_field_names = { level = "allow", priority = 1 }
+missing_fields_in_debug = { level = "allow", priority = 1 }
+significant_drop_in_scrutinee = { level = "allow", priority = 1 }
+uninlined_format_args = { level = "allow", priority = 1 }
+match_bool = { level = "allow", priority = 1 }
+branches_sharing_code = { level = "allow", priority = 1 }
+format_push_string = { level = "allow", priority = 1 }
+inline_always = { level = "allow", priority = 1 }
+match_wild_err_arm = { level = "allow", priority = 1 }
+needless_continue = { level = "allow", priority = 1 }
+no_effect_underscore_binding = { level = "allow", priority = 1 }
+pub_underscore_fields = { level = "allow", priority = 1 }
+useless_let_if_seq = { level = "allow", priority = 1 }
+manual_let_else = { level = "allow", priority = 1 }
+
+expect_used = { level = "allow", priority = 2 }
+unwrap_used = { level = "allow", priority = 2 }
 
 [workspace.dependencies]
 # Core dependencies

@@ -53,7 +53,7 @@ async fn test_entropy_collection_workflow() {
     let seed_path = temp_dir.path().join("test-seed.json");
 
     // Set environment variable to lower threshold for testing
-    std::env::set_var("BEARDOG_ENTROPY_QUALITY_THRESHOLD", "0.5");
+    beardog_errors::process_env::set_var("BEARDOG_ENTROPY_QUALITY_THRESHOLD", "0.5");
 
     let mut cmd = Command::cargo_bin("beardog").unwrap();
     cmd.arg("entropy")
@@ -79,7 +79,7 @@ async fn test_entropy_collection_workflow() {
     let _seed: serde_json::Value = serde_json::from_str(&seed_content).unwrap();
 
     // Clean up env var
-    std::env::remove_var("BEARDOG_ENTROPY_QUALITY_THRESHOLD");
+    beardog_errors::process_env::remove_var("BEARDOG_ENTROPY_QUALITY_THRESHOLD");
 }
 
 #[tokio::test]
@@ -171,7 +171,7 @@ async fn test_entropy_info() {
     let seed_path = temp_dir.path().join("info-test-seed.json");
 
     // Set environment variable to lower threshold for testing
-    std::env::set_var("BEARDOG_ENTROPY_QUALITY_THRESHOLD", "0.5");
+    beardog_errors::process_env::set_var("BEARDOG_ENTROPY_QUALITY_THRESHOLD", "0.5");
 
     // First collect entropy
     let mut cmd = Command::cargo_bin("beardog").unwrap();
@@ -196,7 +196,7 @@ async fn test_entropy_info() {
         .stdout(predicate::str::contains("Entropy Seed Information"));
 
     // Clean up env var
-    std::env::remove_var("BEARDOG_ENTROPY_QUALITY_THRESHOLD");
+    beardog_errors::process_env::remove_var("BEARDOG_ENTROPY_QUALITY_THRESHOLD");
 }
 
 #[test]

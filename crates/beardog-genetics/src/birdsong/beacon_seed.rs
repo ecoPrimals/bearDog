@@ -38,11 +38,11 @@
 use beardog_errors::BearDogError;
 use blake3::Hasher;
 use chacha20poly1305::{
-    aead::{Aead, KeyInit},
     ChaCha20Poly1305, Nonce,
+    aead::{Aead, KeyInit},
 };
 use hkdf::Hkdf;
-use rand::{rngs::OsRng, RngCore};
+use rand::{RngCore, rngs::OsRng};
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use zeroize::Zeroizing;
@@ -132,7 +132,7 @@ impl BeaconSeed {
 
         let mut seed = [0u8; 32];
         hk.expand(b"ecoPrimals-beacon-v1", &mut seed)
-            .map_err(|e| BearDogError::system(format!("Beacon seed derivation failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Beacon seed derivation failed: {e}")))?;
 
         let beacon_id = Self::derive_beacon_id(&seed);
 
@@ -146,7 +146,7 @@ impl BeaconSeed {
     ///
     /// Safe to share - derived from seed but doesn't reveal seed.
     #[must_use]
-    pub fn id(&self) -> &BeaconId {
+    pub const fn id(&self) -> &BeaconId {
         &self.beacon_id
     }
 
@@ -168,7 +168,7 @@ impl BeaconSeed {
         let key = self.derive_encryption_key()?;
 
         let cipher = ChaCha20Poly1305::new_from_slice(&key)
-            .map_err(|e| BearDogError::system(format!("Cipher init failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Cipher init failed: {e}")))?;
 
         // Generate random nonce (12 bytes for ChaCha20-Poly1305)
         let mut nonce_bytes = [0u8; 12];
@@ -178,12 +178,12 @@ impl BeaconSeed {
         // Encrypt with AEAD (authenticated encryption)
         let ciphertext = cipher
             .encrypt(nonce, plaintext)
-            .map_err(|e| BearDogError::system(format!("Encryption failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Encryption failed: {e}")))?;
 
         // Get current timestamp for replay protection
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|e| BearDogError::system(format!("Time error: {}", e)))?
+            .map_err(|e| BearDogError::system(format!("Time error: {e}")))?
             .as_secs();
 
         Ok(BeaconCiphertext {
@@ -215,7 +215,7 @@ impl BeaconSeed {
         let key = self.derive_encryption_key()?;
 
         let cipher = ChaCha20Poly1305::new_from_slice(&key)
-            .map_err(|e| BearDogError::system(format!("Cipher init failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Cipher init failed: {e}")))?;
 
         let nonce = Nonce::from_slice(&encrypted.nonce);
 
@@ -256,7 +256,7 @@ impl BeaconSeed {
 
         let mut key = [0u8; 32];
         hk.expand(b"beacon-encrypt-v1", &mut key)
-            .map_err(|e| BearDogError::system(format!("Key derivation failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Key derivation failed: {e}")))?;
 
         Ok(key)
     }
@@ -299,8 +299,8 @@ impl BeaconId {
     ///
     /// Returns error if hex string is invalid or wrong length
     pub fn from_hex(hex_str: &str) -> Result<Self, BearDogError> {
-        let bytes = hex::decode(hex_str)
-            .map_err(|e| BearDogError::system(format!("Invalid hex: {}", e)))?;
+        let bytes =
+            hex::decode(hex_str).map_err(|e| BearDogError::system(format!("Invalid hex: {e}")))?;
 
         if bytes.len() != 16 {
             return Err(BearDogError::system(format!(

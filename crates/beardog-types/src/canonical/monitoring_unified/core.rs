@@ -18,6 +18,7 @@ pub struct MonitoringCoreConfig {
     pub buffer_size: usize,
 }
 
+/// Metrics collection toggles and retention-related defaults.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MetricsConfig {
     /// Enabled
@@ -31,6 +32,7 @@ pub struct MetricsConfig {
     pub retention_days: u32,
 }
 
+/// Alert routing: enabled flag and channel identifiers.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AlertingConfig {
     /// Enabled

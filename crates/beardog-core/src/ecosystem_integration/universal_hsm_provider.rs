@@ -11,10 +11,14 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+/// JSON-driven configuration for routing HSM work across named providers.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalHsmConfig {
+    /// Provider id used when a call does not name one explicitly.
     pub default_provider: String,
+    /// Per-provider opaque JSON blobs (connection URIs, key handles, vendor flags).
     pub provider_configs: HashMap<String, serde_json::Value>,
+    /// Upper bound in milliseconds for a single HSM operation before failing fast.
     pub operation_timeout_ms: u64,
     /// Number of max_retries
     pub max_retries: u32,
@@ -27,26 +31,35 @@ pub struct UniversalHsmConfig {
 pub enum HsmOperation {
     /// Represents generate key variant
     GenerateKey {
+        /// Algorithm identifier understood by the backing provider.
         algorithm: String,
+        /// Desired key size in bits.
         key_size: u32,
     },
+    /// Sign arbitrary bytes with a named key.
     Sign {
+        /// Provider-specific key handle.
         key_id: String,
+        /// Digest or message bytes to sign.
         data: Vec<u8>,
     },
+    /// Verify a signature over bytes.
     Verify {
         key_id: String,
         data: Vec<u8>,
         signature: Vec<u8>,
     },
+    /// Symmetric or asymmetric encrypt under a named key.
     Encrypt {
         key_id: String,
         plaintext: Vec<u8>,
     },
+    /// Decrypt ciphertext that was produced with the matching key.
     Decrypt {
         key_id: String,
         ciphertext: Vec<u8>,
     },
+    /// Export the public half of an asymmetric key pair.
     GetPublicKey {
         key_id: String,
     },
@@ -65,16 +78,18 @@ pub struct HsmResult {
     pub metadata: HashMap<String, String>,
 }
 
+/// Rolling counters for observability of the universal HSM manager.
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct HsmMetrics {
-    /// Number of total_operations
+    /// Total HSM calls attempted since start.
     pub total_operations: u64,
-    /// Number of successful_operations
+    /// Calls that completed without error.
     pub successful_operations: u64,
-    /// Number of failed_operations
+    /// Calls that returned an error or timed out.
     pub failed_operations: u64,
-    /// The avg latency ms value
+    /// Exponential moving average latency in milliseconds.
     pub avg_latency_ms: f64,
+    /// Human-readable aggregate health string for dashboards.
     pub provider_health: String,
 }
 
@@ -99,6 +114,7 @@ impl UniversalHsmManager {
         }
     }
 
+    /// Returns aggregate [`HealthStatus`] based on registered providers (empty map is unhealthy).
     pub fn health_check(
         &self,
     ) -> Result<beardog_types::canonical::HealthStatus, BearDogError> {

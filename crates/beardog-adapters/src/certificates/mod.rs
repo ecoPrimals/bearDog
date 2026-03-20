@@ -76,8 +76,11 @@
 //! adapter.initialize_with_certificate(cert)?;
 //! ```
 
+/// Daemon-side signing and lifecycle for [`AdapterUnlockCertificate`](types::AdapterUnlockCertificate).
 pub mod issuance;
+/// Serializable certificate payloads, scopes, and commercial classification enums.
 pub mod types;
+/// Ed25519 and policy checks for adapter certificates at runtime.
 pub mod verification;
 
 pub use issuance::CertificateIssuer;

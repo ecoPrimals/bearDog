@@ -56,7 +56,7 @@ pub struct NetworkDiscovery {
 
 impl NetworkDiscovery {
     /// Create new network discovery with preferences
-    pub fn new(preferences: NetworkPreferences) -> Self {
+    pub const fn new(preferences: NetworkPreferences) -> Self {
         Self { preferences }
     }
 
@@ -139,16 +139,16 @@ impl NetworkDiscovery {
         use std::net::UdpSocket;
 
         let socket = UdpSocket::bind("0.0.0.0:0")
-            .map_err(|e| BearDogError::network(format!("Socket bind failed: {}", e)))?;
+            .map_err(|e| BearDogError::network(format!("Socket bind failed: {e}")))?;
 
         // Connect to a public DNS server (doesn't send data)
         socket
             .connect("8.8.8.8:80")
-            .map_err(|e| BearDogError::network(format!("Socket connect failed: {}", e)))?;
+            .map_err(|e| BearDogError::network(format!("Socket connect failed: {e}")))?;
 
         let local_addr = socket
             .local_addr()
-            .map_err(|e| BearDogError::network(format!("Get local addr failed: {}", e)))?;
+            .map_err(|e| BearDogError::network(format!("Get local addr failed: {e}")))?;
 
         Ok(local_addr.ip())
     }
@@ -242,7 +242,7 @@ mod tests {
 
     #[test]
     fn test_prefers_environment_variable() {
-        std::env::set_var("BEARDOG_BIND_ADDRESS", "127.0.0.1");
+        beardog_errors::process_env::set_var("BEARDOG_BIND_ADDRESS", "127.0.0.1");
 
         let discovery = NetworkDiscovery::with_defaults();
         let capabilities = discovery.discover().unwrap();
@@ -250,7 +250,7 @@ mod tests {
         // Environment variable should be prioritized
         assert!(capabilities.local_addresses.first().unwrap().is_loopback());
 
-        std::env::remove_var("BEARDOG_BIND_ADDRESS");
+        beardog_errors::process_env::remove_var("BEARDOG_BIND_ADDRESS");
     }
 
     #[test]

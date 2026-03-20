@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Standalone analysis engine with coarse byte-length heuristics and signature maps.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -14,8 +12,10 @@ use beardog_errors::BearDogError;
 // Use canonical threat detection configuration
 use beardog_types::canonical::config::domains::threat::ThreatDetectionConfig;
 
+/// Counters updated while running [`ThreatDetectionEngine::analyze_threat`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatAnalysisMetrics {
+    /// Total `analyze_threat` invocations.
     pub analyses_performed: u64,
     /// Number of `threats_detected`
     /// Number of `threats_detected`
@@ -39,7 +39,9 @@ impl Default for ThreatAnalysisMetrics {
     }
 }
 
+/// Lightweight engine separate from `handlers::core`; useful for offline scans.
 pub struct ThreatDetectionEngine {
+    /// Canonical threat configuration controlling thresholds and features.
     pub config: ThreatDetectionConfig,
     /// Collection of detection rules
     /// Collection of detection rules
@@ -64,6 +66,7 @@ impl ThreatDetectionEngine {
         }
     }
 
+    /// Appends a rule to the in-memory list (no deduplication).
     pub fn add_detection_rule(&mut self, rule: DetectionRule) {
         self.detection_rules.push(rule);
     }
@@ -86,6 +89,7 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
+    /// Runs a trivial size-based heuristic and updates [`ThreatAnalysisMetrics`].
     pub fn analyze_threat(
         &mut self,
         threat_data: &[u8],
@@ -118,11 +122,13 @@ impl Default for ThreatDetectionEngine {
     }
 }
 
+/// Output of [`ThreatDetectionEngine::analyze_threat`] including coarse classification.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatAnalysisResult {
     /// Whether `threat_detected` is enabled
     /// Whether `threat_detected` is enabled
     pub threat_detected: bool,
+    /// Score returned by the heuristic (not calibrated to a global scale).
     pub confidence_score: f64,
     /// The threat type value
     /// The threat type value

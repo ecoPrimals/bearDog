@@ -6,7 +6,9 @@
 
 use serde::{Deserialize, Serialize};
 
+/// Summary of zero-cost abstraction goals and measured effects for a deployment.
 pub struct ZeroCostArchitecture {
+    /// Latest measured optimization metrics
     pub performance_metrics: PerformanceMetrics,
     /// Collection of optimization patterns
     pub optimization_patterns: Vec<OptimizationPattern>,
@@ -14,6 +16,7 @@ pub struct ZeroCostArchitecture {
     pub compilation_strategy: CompilationStrategy,
 }
 
+/// Flags and counters describing elimination of dynamic dispatch and allocations.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PerformanceMetrics {
     /// Whether async trait boxing has been eliminated
@@ -34,29 +37,37 @@ pub struct PerformanceMetrics {
 pub enum OptimizationPattern {
     /// Use enum-based dispatch instead of dynamic dispatch
     EnumDispatch,
+    /// Use const generics for fixed-size buffers and arrays
     ConstGenerics,
     /// Use static dispatch instead of dynamic dispatch
     StaticDispatch,
+    /// Exploit SIMD for hot loops
     SimdAcceleration,
     /// Use lock-free data structures and algorithms
     LockFree,
     /// Implement zero-copy data handling
     ZeroCopy,
+    /// Evaluate expressions at compile time where possible
     CompileTimeEvaluation,
 }
 
+/// Trade-off between compile time and runtime performance for codegen.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CompilationStrategy {
     /// Conservative optimization with minimal risk
     Conservative,
+    /// Balanced optimizations (default for most builds)
     Balanced,
+    /// Aggressive inlining and specialization
     Aggressive,
     /// Maximum optimization regardless of compile time
     Maximum,
 }
 
+/// Lifecycle state of a zero-cost optimization initiative.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ImplementationStatus {
+    /// Not yet started
     Planned,
     /// Optimization is currently being implemented
     InProgress,
@@ -66,7 +77,7 @@ pub enum ImplementationStatus {
     Deprecated,
 }
 
-/// Migration complexity levels
+/// Relative effort to migrate a subsystem off `Arc<dyn>` or similar patterns.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MigrationComplexity {
     /// Simple migration with minimal changes required
@@ -96,11 +107,11 @@ pub enum KeyType {
 impl From<CanonicalKeyType> for KeyType {
     fn from(ckt: CanonicalKeyType) -> Self {
         match ckt {
-            CanonicalKeyType::Rsa => KeyType::Rsa2048,
-            CanonicalKeyType::EllipticCurve | CanonicalKeyType::Ed25519 => KeyType::EcdsaP256,
-            CanonicalKeyType::Aes | CanonicalKeyType::ChaCha20 => KeyType::Aes256,
+            CanonicalKeyType::Rsa => Self::Rsa2048,
+            CanonicalKeyType::EllipticCurve | CanonicalKeyType::Ed25519 => Self::EcdsaP256,
+            CanonicalKeyType::Aes | CanonicalKeyType::ChaCha20 => Self::Aes256,
             CanonicalKeyType::X25519 | CanonicalKeyType::Generic | CanonicalKeyType::Custom(_) => {
-                KeyType::Aes256
+                Self::Aes256
             } // Default
         }
     }
@@ -109,9 +120,9 @@ impl From<CanonicalKeyType> for KeyType {
 impl From<KeyType> for CanonicalKeyType {
     fn from(kt: KeyType) -> Self {
         match kt {
-            KeyType::Rsa2048 => CanonicalKeyType::Rsa,
-            KeyType::EcdsaP256 => CanonicalKeyType::EllipticCurve,
-            KeyType::Aes256 => CanonicalKeyType::Aes,
+            KeyType::Rsa2048 => Self::Rsa,
+            KeyType::EcdsaP256 => Self::EllipticCurve,
+            KeyType::Aes256 => Self::Aes,
         }
     }
 }
@@ -119,14 +130,18 @@ impl From<KeyType> for CanonicalKeyType {
 /// Security level classifications
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum SecurityLevel {
+    /// Baseline cryptographic and operational posture
     Standard,
+    /// Hardened algorithms, key sizes, and audit expectations
     High,
+    /// Maximum assurance (regulated or high-threat environments)
     Critical,
 }
 
 /// HSM key representation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmKey {
+    /// Opaque HSM key handle or label
     pub key_id: String,
     /// Type of cryptographic key
     /// The key type value
@@ -139,6 +154,7 @@ pub struct HsmKey {
     pub metadata: std::collections::HashMap<String, String>,
 }
 
+/// Simple key/value health snapshot for dashboards.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthStatus {
     /// Current status of the component
@@ -154,6 +170,7 @@ pub struct HealthStatus {
 /// Workflow definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Workflow {
+    /// Stable workflow identifier
     pub id: String,
     /// Type or category of this workflow
     /// The workflow type value
@@ -168,6 +185,7 @@ pub struct Workflow {
 /// Individual workflow step
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowStep {
+    /// Step identifier within the workflow graph
     pub id: String,
     /// The action value
     pub action: String,
@@ -191,6 +209,7 @@ pub struct WorkflowResult {
     pub completed_at: chrono::DateTime<chrono::Utc>,
 }
 
+/// Registered service endpoint for discovery or mesh routing.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceInfo {
     /// Name of the item
@@ -241,12 +260,14 @@ pub struct ArcDynAnalysisReport {
     /// Number of patterns that can be migrated
     /// Number of `migratable_patterns`
     pub migratable_patterns: usize,
+    /// Estimated speedup factor if migratable patterns are removed (heuristic)
     pub estimated_performance_gain: f32,
     /// Overall complexity of the migration
     /// The migration complexity value
     pub migration_complexity: MigrationComplexity,
 }
 
+/// One occurrence of an `Arc<dyn Trait>` pattern found by static analysis.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ArcDynPattern {
     /// Name of the trait being used with `Arc<dyn>`
@@ -273,12 +294,14 @@ pub struct ZeroCostMigrationPlan {
     pub patterns: Vec<ArcDynPattern>,
     /// Expected increase in compilation time (percentage)
     pub estimated_compilation_time_increase: f32,
+    /// Estimated wall-time speedup after migration (ratio or percent per tooling)
     pub estimated_runtime_improvement: f32,
     /// Step-by-step migration instructions
     /// Collection of migration steps
     pub migration_steps: Vec<String>,
 }
 
+/// Runtime counters for a bump or pool allocator.
 #[derive(Debug, Clone)]
 pub struct MemoryPoolMetrics {
     /// Total memory allocated by the pool
@@ -295,6 +318,7 @@ pub struct MemoryPoolMetrics {
     pub fragmentation_ratio: f64,
 }
 
+/// Host CPU SIMD features relevant to crypto and hashing hot paths.
 #[derive(Debug, Clone)]
 pub struct SimdCapabilities {
     /// Whether AVX2 instructions are supported
@@ -303,7 +327,7 @@ pub struct SimdCapabilities {
     /// Whether SSE4.2 instructions are supported
     /// Whether `sse42_supported` is enabled
     pub sse42_supported: bool,
-    /// Number of `optimal_chunk_size`
+    /// Preferred chunk size for vectorized loops on this host
     pub optimal_chunk_size: usize,
 }
 

@@ -40,10 +40,13 @@ async fn test_repository_operations() -> Result<(), BearDogError> {
         found.ok_or_else(|| BearDogError::system("Expected workflow not found".to_string()))?;
     assert_eq!(found_workflow.name, "Test Workflow");
 
-    assert!(repo
-        .exists(&workflow_id)
-        .await
-        .map_err(|e| BearDogError::system(format!("Failed to check workflow existence: {e:?}")))?);
+    assert!(
+        repo.exists(&workflow_id)
+            .await
+            .map_err(|e| BearDogError::system(format!(
+                "Failed to check workflow existence: {e:?}"
+            )))?
+    );
 
     let updated = workflow.set_status(ExampleWorkflowStatus::Completed);
     repo.update(updated)

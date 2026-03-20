@@ -8,9 +8,9 @@
 #[cfg(test)]
 mod tests {
     use crate::domains::limits::{
-        LimitsConfig, DEFAULT_BACKOFF_MS, DEFAULT_BUFFER_SIZE, DEFAULT_MAX_CONNECTIONS,
-        DEFAULT_MAX_MESSAGE_SIZE, DEFAULT_MAX_RETRIES, DEFAULT_MAX_THREADS, DEFAULT_MIN_THREADS,
-        DEFAULT_OPERATION_TIMEOUT_SECS, DEFAULT_QUEUE_SIZE,
+        DEFAULT_BACKOFF_MS, DEFAULT_BUFFER_SIZE, DEFAULT_MAX_CONNECTIONS, DEFAULT_MAX_MESSAGE_SIZE,
+        DEFAULT_MAX_RETRIES, DEFAULT_MAX_THREADS, DEFAULT_MIN_THREADS,
+        DEFAULT_OPERATION_TIMEOUT_SECS, DEFAULT_QUEUE_SIZE, LimitsConfig,
     };
     use std::sync::Mutex;
 
@@ -40,14 +40,14 @@ mod tests {
 
     #[test]
     fn test_validate_default_config() {
-        std::env::remove_var("BEARDOG_BUFFER_SIZE");
-        std::env::remove_var("BEARDOG_MAX_CONNECTIONS");
+        beardog_errors::process_env::remove_var("BEARDOG_BUFFER_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONNECTIONS");
 
         let config = LimitsConfig::default();
         assert!(config.validate().is_ok());
 
-        std::env::remove_var("BEARDOG_BUFFER_SIZE");
-        std::env::remove_var("BEARDOG_MAX_CONNECTIONS");
+        beardog_errors::process_env::remove_var("BEARDOG_BUFFER_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONNECTIONS");
     }
 
     #[test]
@@ -266,31 +266,31 @@ mod tests {
 
     #[test]
     fn test_clone() {
-        std::env::remove_var("BEARDOG_BUFFER_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_BUFFER_SIZE");
         let config1 = LimitsConfig::default();
         let config2 = config1.clone();
 
         assert_eq!(config1.buffer_size, config2.buffer_size);
         assert_eq!(config1.max_connections, config2.max_connections);
 
-        std::env::remove_var("BEARDOG_BUFFER_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_BUFFER_SIZE");
     }
 
     #[test]
     fn test_debug() {
-        std::env::remove_var("BEARDOG_BUFFER_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_BUFFER_SIZE");
         let config = LimitsConfig::default();
         let debug_str = format!("{:?}", config);
 
         assert!(debug_str.contains("LimitsConfig"));
 
-        std::env::remove_var("BEARDOG_BUFFER_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_BUFFER_SIZE");
     }
 
     #[test]
     fn test_partial_eq() {
-        std::env::remove_var("BEARDOG_BUFFER_SIZE");
-        std::env::remove_var("BEARDOG_MAX_CONNECTIONS");
+        beardog_errors::process_env::remove_var("BEARDOG_BUFFER_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONNECTIONS");
 
         let config1 = LimitsConfig::default();
         let config2 = LimitsConfig::default();
@@ -302,8 +302,8 @@ mod tests {
         assert_eq!(config1, config2);
         assert_ne!(config1, config3);
 
-        std::env::remove_var("BEARDOG_BUFFER_SIZE");
-        std::env::remove_var("BEARDOG_MAX_CONNECTIONS");
+        beardog_errors::process_env::remove_var("BEARDOG_BUFFER_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONNECTIONS");
     }
 
     // ============================================================================
@@ -312,7 +312,7 @@ mod tests {
 
     #[test]
     fn test_serialization() {
-        std::env::remove_var("BEARDOG_BUFFER_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_BUFFER_SIZE");
         let config = LimitsConfig::default();
 
         let json = serde_json::to_string(&config).expect("Should serialize");
@@ -320,12 +320,12 @@ mod tests {
 
         assert_eq!(config, deserialized);
 
-        std::env::remove_var("BEARDOG_BUFFER_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_BUFFER_SIZE");
     }
 
     #[test]
     fn test_serialization_with_custom_values() {
-        std::env::remove_var("BEARDOG_BUFFER_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_BUFFER_SIZE");
         let config = LimitsConfig {
             buffer_size: 16384,
             max_connections: 500,
@@ -338,7 +338,7 @@ mod tests {
         assert_eq!(config.buffer_size, deserialized.buffer_size);
         assert_eq!(config.max_connections, deserialized.max_connections);
 
-        std::env::remove_var("BEARDOG_BUFFER_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_BUFFER_SIZE");
     }
 
     // ============================================================================
@@ -413,16 +413,16 @@ mod tests {
 
     #[test]
     fn test_from_env_method() {
-        std::env::remove_var("BEARDOG_BUFFER_SIZE");
-        std::env::remove_var("BEARDOG_MAX_CONNECTIONS");
+        beardog_errors::process_env::remove_var("BEARDOG_BUFFER_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONNECTIONS");
 
         let config = LimitsConfig::from_env();
 
         assert_eq!(config.buffer_size, DEFAULT_BUFFER_SIZE);
         assert_eq!(config.max_connections, DEFAULT_MAX_CONNECTIONS);
 
-        std::env::remove_var("BEARDOG_BUFFER_SIZE");
-        std::env::remove_var("BEARDOG_MAX_CONNECTIONS");
+        beardog_errors::process_env::remove_var("BEARDOG_BUFFER_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONNECTIONS");
     }
 
     #[test]
@@ -431,14 +431,14 @@ mod tests {
         let _lock = ENV_MUTEX.lock().unwrap();
 
         // Clear ALL limit-related env vars to ensure clean state
-        std::env::remove_var("BEARDOG_BUFFER_SIZE");
-        std::env::remove_var("BEARDOG_MAX_CONNECTIONS");
-        std::env::remove_var("BEARDOG_MAX_RETRIES");
-        std::env::remove_var("BEARDOG_BACKOFF_MS");
-        std::env::remove_var("BEARDOG_MAX_MESSAGE_SIZE");
-        std::env::remove_var("BEARDOG_QUEUE_SIZE");
-        std::env::remove_var("BEARDOG_THREAD_POOL_SIZE");
-        std::env::remove_var("BEARDOG_OPERATION_TIMEOUT_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_BUFFER_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONNECTIONS");
+        beardog_errors::process_env::remove_var("BEARDOG_MAX_RETRIES");
+        beardog_errors::process_env::remove_var("BEARDOG_BACKOFF_MS");
+        beardog_errors::process_env::remove_var("BEARDOG_MAX_MESSAGE_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_QUEUE_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_THREAD_POOL_SIZE");
+        beardog_errors::process_env::remove_var("BEARDOG_OPERATION_TIMEOUT_SECS");
 
         // Use builder instead to test explicit configuration
         // (from_env reads current env which can be polluted by parallel tests)

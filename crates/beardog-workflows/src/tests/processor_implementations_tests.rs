@@ -14,9 +14,9 @@
 //! - Error handling in processors
 //! - Concurrent processor execution
 
+use crate::WorkflowConfig;
 use crate::workflows::canonical_examples::ProcessingContext;
 use crate::workflows::types::enums::{ExecutionStatus, WorkflowType};
-use crate::WorkflowConfig;
 
 #[cfg(test)]
 mod processor_creation_tests {

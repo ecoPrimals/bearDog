@@ -61,9 +61,9 @@ pub enum Phase {
 impl fmt::Display for Phase {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Phase::One => write!(f, "Phase 1"),
-            Phase::Two => write!(f, "Phase 2"),
-            Phase::Three => write!(f, "Phase 3"),
+            Self::One => write!(f, "Phase 1"),
+            Self::Two => write!(f, "Phase 2"),
+            Self::Three => write!(f, "Phase 3"),
         }
     }
 }
@@ -71,49 +71,49 @@ impl fmt::Display for Phase {
 impl fmt::Display for AndroidError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            AndroidError::Phase2NotImplemented {
+            Self::Phase2NotImplemented {
                 feature,
                 phase,
                 tracking_issue,
                 workaround,
                 implementation_notes,
             } => {
-                writeln!(f, "❌ Feature not yet implemented: {}", feature)?;
+                writeln!(f, "❌ Feature not yet implemented: {feature}")?;
                 writeln!(f)?;
-                writeln!(f, "📋 Status: Planned for {}", phase)?;
+                writeln!(f, "📋 Status: Planned for {phase}")?;
                 if let Some(issue) = tracking_issue {
-                    writeln!(f, "🔗 Tracking: {}", issue)?;
+                    writeln!(f, "🔗 Tracking: {issue}")?;
                 }
                 writeln!(f)?;
                 writeln!(f, "📝 Implementation Notes:")?;
-                writeln!(f, "{}", implementation_notes)?;
+                writeln!(f, "{implementation_notes}")?;
 
                 if let Some(work) = workaround {
                     writeln!(f)?;
                     writeln!(f, "💡 Workaround:")?;
-                    writeln!(f, "{}", work)?;
+                    writeln!(f, "{work}")?;
                 }
 
                 Ok(())
             }
-            AndroidError::UnsupportedPlatform {
+            Self::UnsupportedPlatform {
                 platform,
                 feature,
                 alternatives,
             } => {
-                writeln!(f, "❌ Platform not supported: {}", platform)?;
+                writeln!(f, "❌ Platform not supported: {platform}")?;
                 writeln!(f)?;
-                writeln!(f, "Feature '{}' requires Android platform", feature)?;
+                writeln!(f, "Feature '{feature}' requires Android platform")?;
                 if !alternatives.is_empty() {
                     writeln!(f)?;
-                    writeln!(f, "💡 Alternatives for {}:", platform)?;
+                    writeln!(f, "💡 Alternatives for {platform}:")?;
                     for alt in alternatives {
-                        writeln!(f, "  • {}", alt)?;
+                        writeln!(f, "  • {alt}")?;
                     }
                 }
                 Ok(())
             }
-            AndroidError::StrongBoxNotAvailable {
+            Self::StrongBoxNotAvailable {
                 manufacturer,
                 model,
                 android_version,
@@ -121,8 +121,8 @@ impl fmt::Display for AndroidError {
             } => {
                 writeln!(f, "❌ StrongBox not available on this device")?;
                 writeln!(f)?;
-                writeln!(f, "Device: {} {}", manufacturer, model)?;
-                writeln!(f, "Android: {}", android_version)?;
+                writeln!(f, "Device: {manufacturer} {model}")?;
+                writeln!(f, "Android: {android_version}")?;
                 writeln!(f)?;
                 if *tee_fallback_available {
                     writeln!(
@@ -160,8 +160,12 @@ pub fn phase2_not_implemented(
     }
 }
 
-/// Convert `AndroidError` to `BearDogError`
+/// Converts a platform-specific [`AndroidError`] into a [`crate::BearDogError`].
+///
+/// The detailed Android message is kept in the resulting error string while classifying the
+/// failure under the shared system error category for cross-platform callers.
 impl From<AndroidError> for crate::BearDogError {
+    /// Wraps `err` using [`crate::BearDogError::system`] and its `Display` text.
     fn from(err: AndroidError) -> Self {
         Self::system(err.to_string())
     }

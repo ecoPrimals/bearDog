@@ -474,20 +474,20 @@ mod tests {
     
     #[tokio::test]
     fn test_get_service_endpoint_with_env_var() {
-        env::set_var("COMPUTE_ENDPOINT", "http://env-compute:8080");
+        beardog_errors::process_env::set_var("COMPUTE_ENDPOINT", "http://env-compute:8080");
         let config = UniversalEndpointConfig::default();
         let endpoint = config.get_service_endpoint("compute");
         assert_eq!(endpoint, "http://env-compute:8080");
-        env::remove_var("COMPUTE_ENDPOINT");
+        beardog_errors::process_env::remove_var("COMPUTE_ENDPOINT");
     }
     
     #[tokio::test]
     fn test_get_service_endpoint_with_legacy_env() {
-        env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://legacy-storage:9000");
+        beardog_errors::process_env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://legacy-storage:9000");
         let config = UniversalEndpointConfig::default();
         let endpoint = config.get_service_endpoint("storage");
         assert_eq!(endpoint, "http://legacy-storage:9000");
-        env::remove_var("BEARDOG_STORAGE_ENDPOINT");
+        beardog_errors::process_env::remove_var("BEARDOG_STORAGE_ENDPOINT");
     }
     
     #[tokio::test]
@@ -500,31 +500,31 @@ mod tests {
     
     #[tokio::test]
     fn test_get_bind_address_all_interfaces() {
-        env::set_var("BEARDOG_BIND_ALL_INTERFACES", "true");
+        beardog_errors::process_env::set_var("BEARDOG_BIND_ALL_INTERFACES", "true");
         const TEST_PORT: u16 = 9000;
         let config = UniversalEndpointConfig::default();
         let bind_addr = config.get_bind_address(TEST_PORT);
         assert_eq!(bind_addr, "0.0.0.0:9000");
-        env::remove_var("BEARDOG_BIND_ALL_INTERFACES");
+        beardog_errors::process_env::remove_var("BEARDOG_BIND_ALL_INTERFACES");
     }
     
     #[tokio::test]
     fn test_get_bind_address_localhost_only() {
-        env::set_var("BEARDOG_BIND_ALL_INTERFACES", "false");
+        beardog_errors::process_env::set_var("BEARDOG_BIND_ALL_INTERFACES", "false");
         const TEST_PORT: u16 = 8500;
         let config = UniversalEndpointConfig::default();
         let bind_addr = config.get_bind_address(TEST_PORT);
         assert!(bind_addr.starts_with("127.0.0.1:") || bind_addr.starts_with("localhost:"));
-        env::remove_var("BEARDOG_BIND_ALL_INTERFACES");
+        beardog_errors::process_env::remove_var("BEARDOG_BIND_ALL_INTERFACES");
     }
     
     #[tokio::test]
     fn test_get_database_endpoint_with_env() {
-        env::set_var("BEARDOG_DATABASE_ENDPOINT", "postgresql://db-server:5432/beardog");
+        beardog_errors::process_env::set_var("BEARDOG_DATABASE_ENDPOINT", "postgresql://db-server:5432/beardog");
         let config = UniversalEndpointConfig::default();
         let endpoint = config.get_database_endpoint();
         assert_eq!(endpoint, "postgresql://db-server:5432/beardog");
-        env::remove_var("BEARDOG_DATABASE_ENDPOINT");
+        beardog_errors::process_env::remove_var("BEARDOG_DATABASE_ENDPOINT");
     }
     
     #[tokio::test]
@@ -563,14 +563,14 @@ mod tests {
     
     #[tokio::test]
     fn test_endpoint_resolver_cache_ttl() {
-        env::set_var("BEARDOG_ENDPOINT_CACHE_TTL_SECS", "1");
+        beardog_errors::process_env::set_var("BEARDOG_ENDPOINT_CACHE_TTL_SECS", "1");
         let resolver = UniversalEndpointResolver::new();
         
         let _ = resolver.resolve_endpoint("ai");
         // Cache should exist but we can't easily test TTL expiration without waiting
         assert!(resolver.resolve_endpoint("ai").is_ok());
         
-        env::remove_var("BEARDOG_ENDPOINT_CACHE_TTL_SECS");
+        beardog_errors::process_env::remove_var("BEARDOG_ENDPOINT_CACHE_TTL_SECS");
     }
     
     #[tokio::test]

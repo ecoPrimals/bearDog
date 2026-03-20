@@ -14,6 +14,7 @@ use beardog_errors::BearDogError;
 use sha3::{Digest, Sha3_256};
 use std::collections::HashMap;
 
+/// Combines raw entropy buffers into [`EntropySeed`] values per configured fusion algorithms.
 #[derive(Debug, Clone)]
 pub struct EntropyMixingEngine {
     config: EntropyHierarchyConfig,

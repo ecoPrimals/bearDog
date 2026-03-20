@@ -6,9 +6,9 @@
 //! Tests cover peer info serialization, tunnel lifecycle, and basic operations.
 
 use super::*;
+use crate::tunnel::hsm::SoftwareHsmConfig;
 use crate::tunnel::hsm::manager::HsmManager;
 use crate::tunnel::hsm::software_hsm::RustSoftwareHsm;
-use crate::tunnel::hsm::SoftwareHsmConfig;
 use beardog_genetics::ecosystem_evolution::EcosystemGeneticEngine;
 use std::sync::Arc;
 
@@ -67,7 +67,7 @@ async fn test_tunnel_status_transitions() {
 
     // Initial state
     assert!(tunnel.is_active());
-    assert_eq!(tunnel.trust_level, TrustLevel::Verified);
+    assert_eq!(tunnel._trust_level, TrustLevel::Verified);
 }
 
 #[tokio::test]

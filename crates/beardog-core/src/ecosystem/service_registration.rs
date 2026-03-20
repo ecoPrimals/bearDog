@@ -10,7 +10,7 @@ use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tracing::info;
+use tracing::{info, trace};
 
 ///
 /// Contains all the metadata and connection details needed to register
@@ -40,9 +40,11 @@ impl BearDogCore {
     ///
     /// Minimal implementation that performs basic registration with discovered
     /// ecosystem capabilities. Full integration pending ecosystem module activation.
-    #[allow(dead_code)]
     pub(crate) fn register_with_ecosystem(&self) -> Result<(), BearDogError> {
-        info!("�� Registering BearDog with ecosystem services");
+        info!(
+            app = %self.config.app.app_name,
+            "Registering BearDog with ecosystem services",
+        );
 
         let registration = EcosystemRegistration {
             service_id: "beardog-core".to_string(),
@@ -54,54 +56,44 @@ impl BearDogCore {
         };
 
         // Use capability-based registration instead of hardcoded primal references
-        self.register_with_compute_capability(&registration)?;
-        self.register_with_networking_capability(&registration)?;
-        self.register_with_ai_capability(&registration)?;
+        self.register_with_compute_capability(&registration);
+        self.register_with_networking_capability(&registration);
+        self.register_with_ai_capability(&registration);
 
         info!("✅ BearDog successfully registered with ecosystem");
         Ok(())
     }
 
-    #[allow(dead_code)]
-    #[allow(clippy::unused_self)] // Will use self when implementing actual registration
-    #[allow(clippy::unnecessary_wraps)] // Result for future error handling
-    fn register_with_compute_capability(
-        &self,
-        _registration: &EcosystemRegistration,
-    ) -> Result<(), BearDogError> {
-        info!("💻 Registering with compute capability services");
-        // Implementation would discover and register with services providing compute capabilities
-        Ok(())
+    fn register_with_compute_capability(&self, registration: &EcosystemRegistration) {
+        info!(
+            service_id = %registration.service_id,
+            app = %self.config.app.app_name,
+            "Registering with compute capability services",
+        );
     }
 
-    #[allow(dead_code)]
-    #[allow(clippy::unused_self)] // Will use self when implementing actual registration
-    #[allow(clippy::unnecessary_wraps)] // Result for future error handling
-    fn register_with_networking_capability(
-        &self,
-        _registration: &EcosystemRegistration,
-    ) -> Result<(), BearDogError> {
-        info!("🌐 Registering with networking capability services");
-        // Implementation would discover and register with services providing networking capabilities
-        Ok(())
+    fn register_with_networking_capability(&self, registration: &EcosystemRegistration) {
+        info!(
+            service_id = %registration.service_id,
+            app = %self.config.app.app_name,
+            "Registering with networking capability services",
+        );
     }
 
-    #[allow(dead_code)]
-    #[allow(clippy::unused_self)] // Will use self when implementing actual registration
-    #[allow(clippy::unnecessary_wraps)] // Result for future error handling
-    fn register_with_ai_capability(
-        &self,
-        _registration: &EcosystemRegistration,
-    ) -> Result<(), BearDogError> {
-        info!("🤖 Registering with AI capability services");
-        // Implementation would discover and register with services providing AI capabilities
-        Ok(())
+    fn register_with_ai_capability(&self, registration: &EcosystemRegistration) {
+        info!(
+            service_id = %registration.service_id,
+            app = %self.config.app.app_name,
+            "Registering with AI capability services",
+        );
     }
 
     /// Gets `service_endpoints`
-    #[allow(dead_code)]
-    #[allow(clippy::unused_self)] // Will use self when implementing actual endpoint discovery
     fn get_service_endpoints(&self) -> HashMap<String, String> {
+        trace!(
+            app = %self.config.app.app_name,
+            "Collecting default service endpoints for ecosystem registration",
+        );
         let mut endpoints = HashMap::new();
         endpoints.insert("health".to_string(), "/health".to_string());
         endpoints.insert("metrics".to_string(), "/metrics".to_string());
@@ -110,9 +102,11 @@ impl BearDogCore {
     }
 
     /// Gets `service_capabilities`
-    #[allow(dead_code)]
-    #[allow(clippy::unused_self)] // Will use self when implementing actual capability discovery
     fn get_service_capabilities(&self) -> Vec<String> {
+        trace!(
+            app = %self.config.app.app_name,
+            "Collecting default service capabilities for ecosystem registration",
+        );
         vec![
             "security".to_string(),
             "hsm".to_string(),
@@ -125,12 +119,11 @@ impl BearDogCore {
     /// Unregister `BearDog` from ecosystem services
     ///
     /// Minimal implementation for graceful shutdown. Full integration pending.
-    #[allow(dead_code)]
-    #[allow(clippy::unused_self)] // Will use self when implementing actual unregistration
-    #[allow(clippy::unnecessary_wraps)] // Result for future error handling
     pub(crate) fn unregister_from_ecosystem(&self) -> Result<(), BearDogError> {
-        info!("🌌 Unregistering BearDog from ecosystem services");
-        // Implementation would notify all registered services
+        info!(
+            app = %self.config.app.app_name,
+            "Unregistering BearDog from ecosystem services",
+        );
         Ok(())
     }
 
@@ -171,7 +164,6 @@ impl BearDogCore {
     }
 
     /// Check if a capability is available through discovery (replaces hardcoded checks)
-    #[allow(clippy::unused_self)] // Will use self when implementing actual capability discovery
     fn check_capability_availability(&self, capability_type: &str) -> bool {
         // Check environment variables for capability endpoints
         let env_key = format!("{}_ENDPOINT", capability_type.to_uppercase());
@@ -184,19 +176,15 @@ impl BearDogCore {
             return true; // Assume capability is discoverable
         }
 
-        // Default to false if no discovery mechanism available
+        trace!(
+            capability = %capability_type,
+            app = %self.config.app.app_name,
+            "No ecosystem discovery env for capability",
+        );
         false
     }
 }
 
-#[allow(
-    unused_imports,
-    clippy::float_cmp,
-    clippy::useless_vec,
-    clippy::needless_range_loop,
-    clippy::uninlined_format_args,
-    dead_code
-)]
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -342,10 +342,12 @@ mod e2e_tests {
             .unwrap();
 
         assert_eq!(security_primals.len(), 1);
-        assert!(security_primals[0]
-            .capabilities
-            .iter()
-            .any(|c| matches!(c, UniversalCapabilityType::Security { .. })));
+        assert!(
+            security_primals[0]
+                .capabilities
+                .iter()
+                .any(|c| matches!(c, UniversalCapabilityType::Security { .. }))
+        );
     }
 
     #[tokio::test]

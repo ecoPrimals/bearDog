@@ -50,9 +50,9 @@ mod tests {
     fn test_entropy_min_length() {
         // Test that entropy generation meets minimum length requirements
         let entropy_bytes = [0u8; 32]; // 256 bits minimum
-                                       // TEST_CATEGORY: integration
-                                       // TEST_DOMAIN: security
-                                       // TEST_PRIORITY: normal
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         assert!(
             entropy_bytes.len() >= 32,

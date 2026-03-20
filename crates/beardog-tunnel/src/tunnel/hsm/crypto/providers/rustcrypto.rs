@@ -108,11 +108,11 @@ impl Default for RustCryptoProvider {
 
 #[async_trait]
 impl UniversalCryptoProvider for RustCryptoProvider {
-    fn provider_name(&self) -> &str {
+    fn provider_name(&self) -> &'static str {
         "RustCrypto"
     }
 
-    fn provider_version(&self) -> &str {
+    fn provider_version(&self) -> &'static str {
         env!("CARGO_PKG_VERSION")
     }
 
@@ -539,7 +539,7 @@ impl RustCryptoProvider {
         private_key: &[u8],
         message: &[u8],
     ) -> Result<Signature, BearDogError> {
-        use p256::ecdsa::{signature::Signer, SigningKey};
+        use p256::ecdsa::{SigningKey, signature::Signer};
 
         // Parse the private key
         let signing_key = SigningKey::from_bytes(private_key.into()).map_err(|e| {
@@ -565,7 +565,7 @@ impl RustCryptoProvider {
         message: &[u8],
         signature: &Signature,
     ) -> Result<bool, BearDogError> {
-        use p256::ecdsa::{signature::Verifier, VerifyingKey};
+        use p256::ecdsa::{VerifyingKey, signature::Verifier};
 
         // Parse the public key (SEC1 encoded point)
         let verifying_key = VerifyingKey::from_sec1_bytes(public_key).map_err(|e| {

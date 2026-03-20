@@ -89,7 +89,7 @@ pub async fn authorize_modification(
         checks_performed.push("structure_validation".to_string());
         return Ok(AuthorizationResult {
             authorized: false,
-            reasoning: format!("Invalid modification structure: {}", e),
+            reasoning: format!("Invalid modification structure: {e}"),
             confidence: 1.0,
             risk_level: RiskLevel::Medium,
             checks_performed,

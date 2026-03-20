@@ -12,6 +12,7 @@ use std::collections::HashMap;
 use tracing::{debug, info};
 use uuid::Uuid;
 
+/// Applies inheritance and fitness scoring when minting new [`BearDogGenetics`] records.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct GeneticSpawningEngine {
     config: GeneticsConfig,
@@ -461,12 +462,16 @@ mod tests {
         // Offspring should inherit ALL co-signers
         let offspring_constraints = result.genetics.constraints.as_ref().unwrap();
         assert_eq!(offspring_constraints.co_signers.len(), 2);
-        assert!(offspring_constraints
-            .co_signers
-            .contains(&"signer-1".to_string()));
-        assert!(offspring_constraints
-            .co_signers
-            .contains(&"signer-2".to_string()));
+        assert!(
+            offspring_constraints
+                .co_signers
+                .contains(&"signer-1".to_string())
+        );
+        assert!(
+            offspring_constraints
+                .co_signers
+                .contains(&"signer-2".to_string())
+        );
 
         Ok(())
     }
@@ -599,14 +604,18 @@ mod tests {
             offspring_constraints.data_access.mandatory_encryption.len(),
             2
         );
-        assert!(offspring_constraints
-            .data_access
-            .mandatory_encryption
-            .contains(&"key-1".to_string()));
-        assert!(offspring_constraints
-            .data_access
-            .mandatory_encryption
-            .contains(&"key-2".to_string()));
+        assert!(
+            offspring_constraints
+                .data_access
+                .mandatory_encryption
+                .contains(&"key-1".to_string())
+        );
+        assert!(
+            offspring_constraints
+                .data_access
+                .mandatory_encryption
+                .contains(&"key-2".to_string())
+        );
 
         Ok(())
     }

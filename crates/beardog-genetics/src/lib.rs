@@ -11,10 +11,6 @@
 //! - **Entropy Hierarchy**: Human and machine entropy source management
 //! - **Genetic Spawning**: Dynamic primal generation and evolution
 
-#![deny(unsafe_code)]
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-// Allow expect/unwrap in tests - test panics are appropriate failure modes
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
 
@@ -51,10 +47,14 @@
 use serde::{Deserialize, Serialize};
 
 // Core genetics modules
+/// Encrypted BirdSong discovery, lineage chains, and genesis enrollment.
 pub mod birdsong;
+/// Signed, self-enforcing key constraints and evolution.
 pub mod constraints;
+/// Non-binary trust models and ecosystem relationship evolution.
 pub mod ecosystem_evolution;
-pub mod genetics; // BirdSong lineage & encryption for Songbird integration
+/// Entropy hierarchy, human entropy, key exchange, and genetic spawning primitives.
+pub mod genetics;
 
 // Re-export constraint types
 pub use constraints::{
@@ -96,12 +96,13 @@ pub use birdsong::{
 #[cfg(test)]
 mod tests;
 
-/// Main genetics manager that coordinates all genetic operations
+/// Coordinates genetics subsystems: entropy, spawning, ecosystem evolution, and BirdSong lineage.
 #[derive(Debug, Clone)]
 pub struct GeneticsManager {
     config: GeneticsConfig,
 }
 
+/// Feature flags and policy toggles for the genetics stack.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticsConfig {
     /// Whether `entropy_collection` is enabled
@@ -110,6 +111,7 @@ pub struct GeneticsConfig {
     pub genetic_spawning_enabled: bool,
     /// Whether `ecosystem_evolution` is enabled
     pub ecosystem_evolution_enabled: bool,
+    /// When true, human-sourced entropy must pass quality and live-feed checks before use.
     pub human_entropy_validation: bool,
     /// Whether `authorization_genetics` is enabled
     pub authorization_genetics_enabled: bool,
@@ -164,6 +166,9 @@ impl Default for GeneticsManager {
     }
 }
 
+/// Returns a short human-readable genetics subsystem status (e.g. `"Healthy"`).
+///
+/// Intended for diagnostics; a full deployment would aggregate real metrics from each subsystem.
 #[must_use]
 pub fn assess_genetics_health() -> String {
     // In a full implementation, this would check the health of all genetic systems

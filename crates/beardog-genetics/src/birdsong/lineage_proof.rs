@@ -54,14 +54,14 @@ impl LineageProofManager {
         let chain = self
             .chain_manager
             .get_chain(chain_id)
-            .ok_or_else(|| BearDogError::system(format!("Chain not found: {}", chain_id)))?;
+            .ok_or_else(|| BearDogError::system(format!("Chain not found: {chain_id}")))?;
 
         // Get path from root to this node
         let path = self
             .chain_manager
             .get_path_from_root(chain_id, node_id)
             .ok_or_else(|| {
-                BearDogError::system(format!("Cannot determine path for node: {}", node_id))
+                BearDogError::system(format!("Cannot determine path for node: {node_id}"))
             })?;
 
         // Collect the relationships along the path
@@ -77,8 +77,7 @@ impl LineageProofManager {
                 .find(|r| r.parent_id == *parent_id && r.child_id == *child_id)
                 .ok_or_else(|| {
                     BearDogError::system(format!(
-                        "Relationship not found: {} -> {}",
-                        parent_id, child_id
+                        "Relationship not found: {parent_id} -> {child_id}"
                     ))
                 })?;
 
@@ -90,7 +89,7 @@ impl LineageProofManager {
 
         let proof = LineageProof {
             node_id: node_id.to_string(),
-            root_id: chain.root_node.node_id.clone(),
+            root_id: chain.root_node.node_id,
             path: path.clone(),
             proof_chain,
             merkle_root,
@@ -125,7 +124,7 @@ impl LineageProofManager {
         let chain = self
             .chain_manager
             .get_chain(chain_id)
-            .ok_or_else(|| BearDogError::system(format!("Chain not found: {}", chain_id)))?;
+            .ok_or_else(|| BearDogError::system(format!("Chain not found: {chain_id}")))?;
 
         // Verify root matches
         if proof.root_id != chain.root_node.node_id {
@@ -167,12 +166,13 @@ impl LineageProofManager {
 
             // Get parent and child nodes for signature verification
             let _parent_node = chain.nodes.get(parent_id).ok_or_else(|| {
-                BearDogError::system(format!("Parent node not found: {}", parent_id))
+                BearDogError::system(format!("Parent node not found: {parent_id}"))
             })?;
 
-            let _child_node = chain.nodes.get(child_id).ok_or_else(|| {
-                BearDogError::system(format!("Child node not found: {}", child_id))
-            })?;
+            let _child_node = chain
+                .nodes
+                .get(child_id)
+                .ok_or_else(|| BearDogError::system(format!("Child node not found: {child_id}")))?;
 
             // Verify signature (simplified for now - in production would use full verification)
             // self.chain_manager.verify_relationship(
@@ -401,11 +401,13 @@ mod tests {
         // Verify against chain2 (root mismatch)
         let result = proof_manager.verify_proof(&proof, &chain2.chain_id)?;
         assert!(!result.valid);
-        assert!(result
-            .failure_reason
-            .as_ref()
-            .unwrap()
-            .contains("Root mismatch"));
+        assert!(
+            result
+                .failure_reason
+                .as_ref()
+                .unwrap()
+                .contains("Root mismatch")
+        );
         Ok(())
     }
 
@@ -428,11 +430,13 @@ mod tests {
 
         let result = proof_manager.verify_proof(&proof, &chain.chain_id)?;
         assert!(!result.valid);
-        assert!(result
-            .failure_reason
-            .as_ref()
-            .unwrap()
-            .contains("Merkle root mismatch"));
+        assert!(
+            result
+                .failure_reason
+                .as_ref()
+                .unwrap()
+                .contains("Merkle root mismatch")
+        );
         Ok(())
     }
 
@@ -455,11 +459,13 @@ mod tests {
 
         let result = proof_manager.verify_proof(&proof, &chain.chain_id)?;
         assert!(!result.valid);
-        assert!(result
-            .failure_reason
-            .as_ref()
-            .unwrap()
-            .contains("Path length mismatch"));
+        assert!(
+            result
+                .failure_reason
+                .as_ref()
+                .unwrap()
+                .contains("Path length mismatch")
+        );
         Ok(())
     }
 
@@ -494,9 +500,11 @@ mod tests {
             .await?;
 
         // Non-existent nodes
-        assert!(proof_manager
-            .get_common_ancestor(&chain.chain_id, "nonexistent-a", "nonexistent-b")
-            .is_none());
+        assert!(
+            proof_manager
+                .get_common_ancestor(&chain.chain_id, "nonexistent-a", "nonexistent-b")
+                .is_none()
+        );
         Ok(())
     }
 

@@ -153,7 +153,7 @@ impl SoftwareUniversalProvider {
     }
 
     /// Get security level (software is level 1)
-    pub fn get_security_level(&self) -> u8 {
+    pub const fn get_security_level(&self) -> u8 {
         1 // Software HSM
     }
 
@@ -168,12 +168,12 @@ impl SoftwareUniversalProvider {
     }
 
     /// Get crypto provider type
-    pub fn crypto_provider(&self) -> &CryptoProviderType {
+    pub const fn crypto_provider(&self) -> &CryptoProviderType {
         &self.crypto_provider
     }
 
     /// Get capabilities
-    pub fn capabilities(&self) -> Option<&SoftwareCapabilities> {
+    pub const fn capabilities(&self) -> Option<&SoftwareCapabilities> {
         self.capabilities.as_ref()
     }
 
@@ -440,9 +440,10 @@ mod tests {
         let provider = SoftwareUniversalProvider::new(CryptoProviderType::Software).await?;
 
         if let Some(caps) = provider.capabilities() {
-            assert!(caps
-                .supported_algorithms
-                .contains(&"AES-256-GCM".to_string()));
+            assert!(
+                caps.supported_algorithms
+                    .contains(&"AES-256-GCM".to_string())
+            );
             assert!(caps.supported_algorithms.contains(&"Ed25519".to_string()));
             assert!(caps.supported_algorithms.len() >= 5);
         }

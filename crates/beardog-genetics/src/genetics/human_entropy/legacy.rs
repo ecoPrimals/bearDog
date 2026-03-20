@@ -140,10 +140,12 @@ fn calculate_entropy_quality(data: &[u8]) -> f64 {
     entropy / 8.0
 }
 
+/// Configuration for legacy collectors: minimum Shannon quality and collection deadline.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HumanEntropyConfig {
     /// The quality threshold value
     pub quality_threshold: f64,
+    /// Maximum wall-clock time to wait for entropy samples before failing the collection.
     pub collection_timeout_ms: u64,
 }
 

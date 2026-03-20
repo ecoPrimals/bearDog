@@ -1,18 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Handlers for analysis, enrichment, incidents, automated response, and operational management.
 
+/// Lightweight analysis engine and coarse metrics used in standalone pipelines.
 pub mod analysis;
-/// Core functionality
-/// Core functionality
+/// Primary async threat engine: rules, feeds, history, incidents, and optional ML.
 pub mod core;
+/// Enrichment against external or cached intelligence context.
 pub mod enrichment;
+/// Incident lifecycle helpers built on top of the core engine.
 pub mod incident;
+/// Rule and statistics management, health snapshots, and maintenance hooks.
 pub mod management;
+/// Bridges the core engine to optional ML model registries and adapters.
 pub mod ml_integration;
+/// Automated response orchestration and configuration.
 pub mod response;
+/// Ingestion of external threat feeds (STIX/TAXII-style; stubs allowed).
 pub mod threat_feeds;
 
 pub use self::enrichment::*;

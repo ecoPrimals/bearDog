@@ -6,20 +6,34 @@
 
 use super::core::TimeoutConfig;
 
-/// Default timeout values (seconds)
+/// Static timeout defaults (seconds unless noted) used by [`TimeoutConfig`](super::core::TimeoutConfig)
+/// when no file or environment override is present—part of the zero-hardcoding baseline.
 pub mod default_timeouts {
+    /// Interval between health probe evaluations.
     pub const HEALTH_CHECK_SECS: u64 = 5;
+    /// Upper bound for a single HSM crypto operation.
     pub const HSM_OPERATION_SECS: u64 = 2;
+    /// Time allowed for an HSM presence or capability probe (milliseconds).
     pub const HSM_PROBE_MILLIS: u64 = 500;
+    /// End-to-end budget for discovery (mDNS, registry, etc.).
     pub const DISCOVERY_OPERATION_SECS: u64 = 10;
+    /// Timeout for local AI policy or routing decisions.
     pub const AI_DECISION_SECS: u64 = 30;
+    /// Timeout for outbound AI or inference requests.
     pub const AI_REQUEST_SECS: u64 = 30;
+    /// Maximum wait for batched AI work units (milliseconds).
     pub const AI_BATCH_TIMEOUT_MILLIS: u64 = 10;
+    /// How long idle pooled resources may sit before reclamation.
     pub const POOL_IDLE_SECS: u64 = 300;
+    /// Maximum age of a pooled connection before it is retired.
     pub const MAX_CONNECTION_AGE_SECS: u64 = 3600;
+    /// Generic network I/O ceiling for non-specific operations.
     pub const NETWORK_OPERATION_SECS: u64 = 30;
+    /// DNS lookup budget.
     pub const DNS_RESOLUTION_TIMEOUT_SECS: u64 = 5;
+    /// TCP (or equivalent) connect handshake timeout.
     pub const CONNECTION_TIMEOUT_SECS: u64 = 10;
+    /// Full request/response deadline for application-level calls.
     pub const REQUEST_TIMEOUT_SECS: u64 = 60;
 }
 

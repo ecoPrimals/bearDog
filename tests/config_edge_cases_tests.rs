@@ -9,7 +9,7 @@ use std::env;
 #[tokio::test]
 async fn test_config_empty_string_values() {
     // Test that empty strings are handled gracefully
-    env::set_var("BEARDOG_TEST_EMPTY", "");
+    beardog_errors::process_env::set_var("BEARDOG_TEST_EMPTY", "");
 
     let value = env::var("BEARDOG_TEST_EMPTY").unwrap_or_else(|_| "default".to_string());
     assert_eq!(value, "");
@@ -21,7 +21,7 @@ async fn test_config_empty_string_values() {
     };
     assert_eq!(config, "default_value");
 
-    env::remove_var("BEARDOG_TEST_EMPTY");
+    beardog_errors::process_env::remove_var("BEARDOG_TEST_EMPTY");
 }
 
 #[tokio::test]
@@ -46,12 +46,12 @@ async fn test_config_unicode_paths() {
 async fn test_config_max_length_values() {
     // Test boundary values for string lengths
     let very_long_string = "a".repeat(10_000);
-    env::set_var("BEARDOG_TEST_LONG", &very_long_string);
+    beardog_errors::process_env::set_var("BEARDOG_TEST_LONG", &very_long_string);
 
     let retrieved = env::var("BEARDOG_TEST_LONG").expect("Should get long value");
     assert_eq!(retrieved.len(), 10_000);
 
-    env::remove_var("BEARDOG_TEST_LONG");
+    beardog_errors::process_env::remove_var("BEARDOG_TEST_LONG");
 }
 
 #[tokio::test]
@@ -68,12 +68,12 @@ async fn test_config_special_characters() {
 
     for (i, value) in special_chars.iter().enumerate() {
         let key = format!("BEARDOG_TEST_SPECIAL_{i}");
-        env::set_var(&key, value);
+        beardog_errors::process_env::set_var(&key, value);
 
         let retrieved = env::var(&key).expect("Should get value");
         assert_eq!(&retrieved, value);
 
-        env::remove_var(&key);
+        beardog_errors::process_env::remove_var(&key);
     }
 }
 
@@ -89,7 +89,7 @@ async fn test_config_numeric_boundary_values() {
     ];
 
     for (str_val, expected) in test_cases {
-        env::set_var("BEARDOG_TEST_NUM", str_val);
+        beardog_errors::process_env::set_var("BEARDOG_TEST_NUM", str_val);
 
         let parsed: u64 = env::var("BEARDOG_TEST_NUM")
             .expect("Should get env var")
@@ -97,7 +97,7 @@ async fn test_config_numeric_boundary_values() {
             .expect("Should parse valid number");
         assert_eq!(parsed, expected);
 
-        env::remove_var("BEARDOG_TEST_NUM");
+        beardog_errors::process_env::remove_var("BEARDOG_TEST_NUM");
     }
 }
 
@@ -113,21 +113,21 @@ async fn test_config_invalid_numeric_values() {
     ];
 
     for value in invalid_values {
-        env::set_var("BEARDOG_TEST_INVALID", value);
+        beardog_errors::process_env::set_var("BEARDOG_TEST_INVALID", value);
 
         let result: Result<u64, _> = env::var("BEARDOG_TEST_INVALID").unwrap_or_default().parse();
 
         assert!(result.is_err(), "Should reject invalid value: {value}");
 
-        env::remove_var("BEARDOG_TEST_INVALID");
+        beardog_errors::process_env::remove_var("BEARDOG_TEST_INVALID");
     }
 }
 
 #[tokio::test]
 async fn test_config_case_sensitivity() {
     // Test case sensitivity of config keys
-    env::set_var("BEARDOG_TEST_CASE", "lowercase");
-    env::set_var("beardog_test_case", "uppercase");
+    beardog_errors::process_env::set_var("BEARDOG_TEST_CASE", "lowercase");
+    beardog_errors::process_env::set_var("beardog_test_case", "uppercase");
 
     // Environment variables are case-sensitive on Unix
     #[cfg(unix)]
@@ -144,8 +144,8 @@ async fn test_config_case_sensitivity() {
         assert!(val == "lowercase" || val == "uppercase");
     }
 
-    env::remove_var("BEARDOG_TEST_CASE");
-    env::remove_var("beardog_test_case");
+    beardog_errors::process_env::remove_var("BEARDOG_TEST_CASE");
+    beardog_errors::process_env::remove_var("beardog_test_case");
 }
 
 #[tokio::test]
@@ -153,7 +153,7 @@ async fn test_config_concurrent_access() {
     // Test concurrent reads and writes
     use tokio::task;
 
-    env::set_var("BEARDOG_TEST_CONCURRENT", "initial");
+    beardog_errors::process_env::set_var("BEARDOG_TEST_CONCURRENT", "initial");
 
     let mut handles = vec![];
 
@@ -173,13 +173,13 @@ async fn test_config_concurrent_access() {
         handle.await.expect("Task should complete");
     }
 
-    env::remove_var("BEARDOG_TEST_CONCURRENT");
+    beardog_errors::process_env::remove_var("BEARDOG_TEST_CONCURRENT");
 }
 
 #[tokio::test]
 async fn test_config_missing_required_values() {
     // Test handling of missing required configuration
-    env::remove_var("BEARDOG_TEST_MISSING");
+    beardog_errors::process_env::remove_var("BEARDOG_TEST_MISSING");
 
     // Should handle missing gracefully
     let result = env::var("BEARDOG_TEST_MISSING");
@@ -201,7 +201,7 @@ async fn test_config_whitespace_handling() {
     ];
 
     for (input, expected) in test_cases {
-        env::set_var("BEARDOG_TEST_WHITESPACE", input);
+        beardog_errors::process_env::set_var("BEARDOG_TEST_WHITESPACE", input);
 
         let retrieved = env::var("BEARDOG_TEST_WHITESPACE").expect("Should get value");
         assert_eq!(retrieved, expected);
@@ -210,6 +210,6 @@ async fn test_config_whitespace_handling() {
         let trimmed = retrieved.trim();
         assert_eq!(trimmed, expected.trim());
 
-        env::remove_var("BEARDOG_TEST_WHITESPACE");
+        beardog_errors::process_env::remove_var("BEARDOG_TEST_WHITESPACE");
     }
 }

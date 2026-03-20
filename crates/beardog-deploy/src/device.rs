@@ -35,6 +35,7 @@ pub enum DeviceType {
 /// Represents the current connection and availability status of a device.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DeviceStatus {
+    /// Device is reachable and ready for deployment (e.g. listed by discovery or env fallback).
     Available,
     /// Device is currently connected
     Connected,
@@ -383,7 +384,11 @@ impl DeviceManager {
             .map_err(|e| BearDogError::system(format!("Failed to start logcat: {e}")))?;
 
         // Wait for process if not following, otherwise let it run
-        if !follow {
+        if follow {
+            info!("📊 Logcat running (press Ctrl+C to stop)");
+            // Let logcat continue running
+            let _ = child.wait();
+        } else {
             let status = child
                 .wait()
                 .map_err(|e| BearDogError::system(format!("Logcat failed: {e}")))?;
@@ -391,10 +396,6 @@ impl DeviceManager {
             if !status.success() {
                 return Err(BearDogError::system("Logcat exited with error".to_string()));
             }
-        } else {
-            info!("📊 Logcat running (press Ctrl+C to stop)");
-            // Let logcat continue running
-            let _ = child.wait();
         }
 
         Ok(())

@@ -41,7 +41,7 @@ impl SafeAndroidProvider {
     }
 
     /// Checks if hardware-backed security is available
-    pub fn is_hardware_backed(&self) -> bool {
+    pub const fn is_hardware_backed(&self) -> bool {
         self.strongbox_available
     }
 

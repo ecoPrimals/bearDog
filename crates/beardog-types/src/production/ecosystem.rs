@@ -258,7 +258,7 @@ impl ProductionEcosystem {
     /// println!("Active connections: {}", state.active_connections);
     /// ```
     #[must_use]
-    pub fn get_status(&self) -> &ProductionState {
+    pub const fn get_status(&self) -> &ProductionState {
         &self.state
     }
 
@@ -507,19 +507,19 @@ impl Default for ProductionState {
 impl ProductionState {
     /// Check if the system is ready to accept traffic (readiness probe)
     #[must_use]
-    pub fn is_ready(&self) -> bool {
+    pub const fn is_ready(&self) -> bool {
         self.status.is_ready()
     }
 
     /// Check if the system is alive (liveness probe)
     #[must_use]
-    pub fn is_alive(&self) -> bool {
+    pub const fn is_alive(&self) -> bool {
         self.status.is_alive()
     }
 
     /// Check if system requires immediate intervention
     #[must_use]
-    pub fn requires_intervention(&self) -> bool {
+    pub const fn requires_intervention(&self) -> bool {
         self.status.requires_intervention()
     }
 

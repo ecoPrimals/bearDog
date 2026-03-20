@@ -1,16 +1,19 @@
 [package]
 name = "beardog-traits"
 version.workspace = true
-edition = "2021"
+edition = "2024"
 authors = [ "BearDog Team <team@beardog.dev>",]
 description = "Unified trait system for BearDog ecosystem - provides common abstractions for security, genetics, monitoring, and performance"
 license = "AGPL-3.0-only"
 repository = "https://github.com/beardog/beardog"
 keywords = [ "beardog", "traits", "security", "genetics", "abstraction",]
 categories = [ "cryptography", "security", "data-structures",]
-rust-version = "1.75"
+rust-version = "1.85.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
+
+[lints]
+workspace = true
 
 [dependencies]
 serde_json = "1.0"

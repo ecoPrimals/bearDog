@@ -247,7 +247,7 @@ impl FailoverConfiguration {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             enabled: true,
             detection_timeout_seconds: Self::DEFAULT_DETECTION_TIMEOUT_SECS,
@@ -391,7 +391,7 @@ impl TimeoutConfiguration {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             connection_timeout_seconds:
                 crate::constants::domains::network::defaults::DEFAULT_CONNECTION_TIMEOUT.as_secs(),
@@ -538,7 +538,7 @@ impl CircuitBreakerConfiguration {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             enabled: true,
             failure_threshold: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE

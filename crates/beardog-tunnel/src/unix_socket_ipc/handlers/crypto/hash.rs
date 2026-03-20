@@ -125,7 +125,7 @@ pub async fn handle_hash_for_cipher(params: Option<&Value>) -> Result<Value, Str
 
     let cipher_suite = params
         .get("cipher_suite")
-        .and_then(|v| v.as_u64())
+        .and_then(serde_json::Value::as_u64)
         .ok_or("Missing required parameter: cipher_suite")? as u16;
 
     // Decode data
@@ -158,8 +158,7 @@ pub async fn handle_hash_for_cipher(params: Option<&Value>) -> Result<Value, Str
         }
         _ => {
             return Err(format!(
-                "Unsupported TLS 1.3 cipher suite: 0x{:04x}. Supported: 0x1301 (AES-128-GCM), 0x1302 (AES-256-GCM), 0x1303 (ChaCha20-Poly1305)",
-                cipher_suite
+                "Unsupported TLS 1.3 cipher suite: 0x{cipher_suite:04x}. Supported: 0x1301 (AES-128-GCM), 0x1302 (AES-256-GCM), 0x1303 (ChaCha20-Poly1305)"
             ));
         }
     };
@@ -287,12 +286,13 @@ mod tests {
         let result = handle_blake3_hash(Some(&params)).await;
         assert!(result.is_ok());
 
-        let value = result.unwrap();
+        let value = result.expect("blake3 hash should succeed");
         assert_eq!(value["algorithm"], "BLAKE3");
         assert!(value["hash"].is_string());
 
         // Decode and verify hash length (32 bytes)
-        let hash = BASE64.decode(value["hash"].as_str().unwrap()).unwrap();
+        let h = value["hash"].as_str().expect("hash should be string");
+        let hash = BASE64.decode(h).expect("hash base64");
         assert_eq!(hash.len(), 32);
     }
 
@@ -304,8 +304,9 @@ mod tests {
         let result = handle_blake3_hash(Some(&params)).await;
         assert!(result.is_ok());
 
-        let value = result.unwrap();
-        let hash = BASE64.decode(value["hash"].as_str().unwrap()).unwrap();
+        let value = result.expect("blake3 empty hash should succeed");
+        let h = value["hash"].as_str().expect("hash string");
+        let hash = BASE64.decode(h).expect("hash base64");
         assert_eq!(hash.len(), 32);
     }
 
@@ -314,8 +315,12 @@ mod tests {
         let data = BASE64.encode(b"Test data for BLAKE3");
         let params = json!({ "data": data });
 
-        let result1 = handle_blake3_hash(Some(&params)).await.unwrap();
-        let result2 = handle_blake3_hash(Some(&params)).await.unwrap();
+        let result1 = handle_blake3_hash(Some(&params))
+            .await
+            .expect("blake3 first");
+        let result2 = handle_blake3_hash(Some(&params))
+            .await
+            .expect("blake3 second");
 
         assert_eq!(result1["hash"], result2["hash"]);
     }
@@ -356,12 +361,13 @@ mod tests {
         let result = handle_hmac_sha256(Some(&params)).await;
         assert!(result.is_ok());
 
-        let value = result.unwrap();
+        let value = result.expect("hmac-sha256 should succeed");
         assert_eq!(value["algorithm"], "HMAC-SHA256");
         assert!(value["mac"].is_string());
 
         // Decode and verify MAC length (32 bytes)
-        let mac = BASE64.decode(value["mac"].as_str().unwrap()).unwrap();
+        let m = value["mac"].as_str().expect("mac string");
+        let mac = BASE64.decode(m).expect("mac base64");
         assert_eq!(mac.len(), 32);
     }
 
@@ -371,8 +377,10 @@ mod tests {
         let data = BASE64.encode(b"test-data");
         let params = json!({ "key": key, "data": data });
 
-        let result1 = handle_hmac_sha256(Some(&params)).await.unwrap();
-        let result2 = handle_hmac_sha256(Some(&params)).await.unwrap();
+        let result1 = handle_hmac_sha256(Some(&params)).await.expect("hmac first");
+        let result2 = handle_hmac_sha256(Some(&params))
+            .await
+            .expect("hmac second");
 
         assert_eq!(result1["mac"], result2["mac"]);
     }
@@ -384,8 +392,8 @@ mod tests {
         let params1 = json!({ "key": BASE64.encode(b"key1"), "data": data });
         let params2 = json!({ "key": BASE64.encode(b"key2"), "data": data });
 
-        let result1 = handle_hmac_sha256(Some(&params1)).await.unwrap();
-        let result2 = handle_hmac_sha256(Some(&params2)).await.unwrap();
+        let result1 = handle_hmac_sha256(Some(&params1)).await.expect("hmac key1");
+        let result2 = handle_hmac_sha256(Some(&params2)).await.expect("hmac key2");
 
         assert_ne!(result1["mac"], result2["mac"]);
     }
@@ -422,7 +430,7 @@ mod tests {
         let result = handle_hash_for_cipher(Some(&params)).await;
         assert!(result.is_ok());
 
-        let value = result.unwrap();
+        let value = result.expect("hash_for_cipher 0x1301");
         assert_eq!(value["algorithm"], "SHA-256");
         assert_eq!(value["cipher_suite"], 0x1301);
         assert_eq!(value["hash_length"], 32);
@@ -436,7 +444,7 @@ mod tests {
         let result = handle_hash_for_cipher(Some(&params)).await;
         assert!(result.is_ok());
 
-        let value = result.unwrap();
+        let value = result.expect("hash_for_cipher 0x1302");
         assert_eq!(value["algorithm"], "SHA-384");
         assert_eq!(value["cipher_suite"], 0x1302);
         assert_eq!(value["hash_length"], 48);
@@ -450,7 +458,7 @@ mod tests {
         let result = handle_hash_for_cipher(Some(&params)).await;
         assert!(result.is_ok());
 
-        let value = result.unwrap();
+        let value = result.expect("hash_for_cipher 0x1303");
         assert_eq!(value["algorithm"], "SHA-256");
         assert_eq!(value["cipher_suite"], 0x1303);
         assert_eq!(value["hash_length"], 32);

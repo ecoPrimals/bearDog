@@ -12,7 +12,9 @@ use std::pin::Pin;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+/// Out-of-process or remote ML backend invoked as JSON over an abstract transport.
 pub trait UniversalComputeAdapter: Send + Sync {
+    /// POST-style call: `endpoint` names the remote operation; `request` is the payload.
     fn request_compute(
         &self,
         endpoint: &str,
@@ -23,6 +25,7 @@ pub trait UniversalComputeAdapter: Send + Sync {
 /// ML prediction result
 #[derive(Debug, Clone)]
 pub struct MlPrediction {
+    /// Model belief in the assigned [`RiskLevel`] (0.0–1.0).
     pub confidence: f64,
     /// The risk level value
     /// The risk level value
@@ -33,6 +36,7 @@ pub struct MlPrediction {
     /// The model version value
     /// The model version value
     pub model_version: String,
+    /// End-to-end time for this prediction on the hot path.
     pub processing_time_ms: u64,
 }
 
@@ -71,6 +75,7 @@ pub struct MlModel {
     pub last_updated: chrono::DateTime<chrono::Utc>,
 }
 
+/// Local heuristic scorer with optional remote adapter and an async prediction cache.
 pub struct MlEngine {
     models: HashMap<String, MlModel>,
     universal_adapter: Option<Box<dyn UniversalComputeAdapter>>,
@@ -79,6 +84,7 @@ pub struct MlEngine {
     network_predictions: u64,
 }
 
+/// Type alias for the default BearDog threat ML entry type.
 pub type SmartThreatMLEngine = MlEngine;
 
 impl Default for MlEngine {

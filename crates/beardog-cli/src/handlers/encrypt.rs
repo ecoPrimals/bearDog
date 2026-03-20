@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Encrypt Handler
-// Algorithm-agnostic: Works with ANY encryption algorithm
+//! Encrypt plaintext files (or stdin) using a stored key and the software HSM tunnel.
 
 use super::key_store;
 use beardog_errors::BearDogError;
-use beardog_tunnel::tunnel::hsm::types::config::SoftwareHsmConfig;
 use beardog_tunnel::tunnel::hsm::HsmProvider;
 use beardog_tunnel::tunnel::hsm::SoftwareHsm;
+use beardog_tunnel::tunnel::hsm::types::config::SoftwareHsmConfig;
 use std::fs;
 use std::sync::Arc;
 
@@ -30,7 +29,7 @@ pub async fn handle_encrypt(
 
     // Step 1: Load key metadata (vendor-agnostic)
     if !use_stdin && !use_stdout {
-        println!("🔑 Loading key: {}", key_id);
+        println!("🔑 Loading key: {key_id}");
     }
     let stored_key = key_store::load_key(key_id)?;
     if !use_stdin && !use_stdout {
@@ -49,7 +48,7 @@ pub async fn handle_encrypt(
         buffer
     } else {
         if !use_stdout {
-            println!("📂 Reading input file: {}", input_path);
+            println!("📂 Reading input file: {input_path}");
         }
         let data = fs::read(input_path)?;
         if !use_stdout {
@@ -95,15 +94,14 @@ pub async fn handle_encrypt(
         io::stdout().write_all(&ciphertext)?;
         io::stdout().flush()?;
     } else {
-        println!("💾 Writing encrypted file: {}", output_path);
+        println!("💾 Writing encrypted file: {output_path}");
         fs::write(output_path, ciphertext)?;
         println!("✅ Saved successfully");
         println!();
 
         println!("💡 Next steps:");
         println!(
-            "   • Decrypt: beardog decrypt --key {} --input {} --output data-decrypted.txt",
-            key_id, output_path
+            "   • Decrypt: beardog decrypt --key {key_id} --input {output_path} --output data-decrypted.txt"
         );
     }
 

@@ -1,29 +1,53 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Handler module exports
+//! CLI command handlers (entropy, keys, HSM, server, etc.).
+//!
+//! Each submodule implements one area of the `beardog` binary.
 
-pub mod birdsong; // BirdSong lineage-based encryption
-pub mod client; // Interactive client mode
-pub mod cross_primal; // Cross-primal secure messaging (Workflow 3)
-pub mod daemon; // Daemon mode (background service)
+/// BirdSong lineage-based encryption
+pub mod birdsong;
+/// Interactive client mode
+pub mod client;
+/// Cross-primal secure messaging (Workflow 3)
+pub mod cross_primal;
+/// Daemon mode (background service)
+pub mod daemon;
+/// File decryption
 pub mod decrypt;
-pub mod doctor; // Health diagnostics
+/// Health diagnostics
+pub mod doctor;
+/// File encryption
 pub mod encrypt;
+/// Entropy collection and seed files
 pub mod entropy;
+/// HSM discovery and tests
 pub mod hsm;
-pub mod hsm_agnostic; // Key revocation
-pub mod kdf; // Key derivation functions
+/// Vendor-agnostic HSM discovery helpers
+pub mod hsm_agnostic;
+/// Key derivation function configuration
+pub mod kdf;
+/// Key generation, list, info, delete
 pub mod key;
-pub mod key_delegate; // Key delegation
-pub mod key_derive; // Key derivation
-pub mod key_export; // Key export/import (inter-primal sharing)
-pub mod key_lineage; // Key lineage tracking
-pub mod key_mix; // Key mixing
+/// Key delegation with constraints
+pub mod key_delegate;
+/// Derive keys from a master key
+pub mod key_derive;
+/// Key export/import for inter-primal sharing
+pub mod key_export;
+/// Key lineage tree display
+pub mod key_lineage;
+/// Mix two keys into a derived key
+pub mod key_mix;
+/// Key revocation list and checks
 pub mod key_revoke;
-pub mod key_store; // Key storage utilities
-pub mod server; // Server mode (long-running service)
+/// JSON key storage under `~/.beardog/keys`
+pub mod key_store;
+/// Server mode (long-running IPC service)
+pub mod server;
+/// Status and version output
 pub mod status;
-pub mod streaming; // Streaming encryption/decryption for large files
+/// Streaming encryption/decryption for large files
+pub mod streaming;
 
 // Test modules
 #[cfg(test)]

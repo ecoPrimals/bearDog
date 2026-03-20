@@ -147,9 +147,9 @@ fn test_shared_string_multiple_strings() {
     let s1 = manager.get_shared_string("first");
     let s2 = manager.get_shared_string("second");
     let s3 = manager.get_shared_string("first"); // Cache hit
-                                                 // TEST_CATEGORY: unit
-                                                 // TEST_DOMAIN: core
-                                                 // TEST_PRIORITY: normal
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
 
     assert_eq!(&*s1, "first");
     assert_eq!(&*s2, "second");

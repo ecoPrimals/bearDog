@@ -35,7 +35,7 @@ pub struct Pkcs11Discoverer {
 
 /// Cloud KMS discoverer
 pub struct CloudKmsDiscoverer {
-    enabled_providers: Vec<String>,
+    _enabled_providers: Vec<String>,
 }
 
 /// Network HSM discoverer  
@@ -342,7 +342,7 @@ impl CloudKmsDiscoverer {
     /// Creates a new Cloud KMS discoverer
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
-            enabled_providers: vec!["aws".to_string(), "azure".to_string(), "gcp".to_string()],
+            _enabled_providers: vec!["aws".to_string(), "azure".to_string(), "gcp".to_string()],
         })
     }
 
@@ -486,7 +486,7 @@ impl SoftwareHsmDiscoverer {
 
 impl MobileHsmDiscoverer {
     /// Creates a new Mobile HSM discoverer
-    pub fn new() -> Result<Self, BearDogError> {
+    pub const fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             _android_discoverer: AndroidStrongBoxDiscoverer,
             _ios_discoverer: IosSecureEnclaveDiscoverer,
@@ -517,7 +517,7 @@ impl TpmDiscoverer {
 
 impl SmartCardDiscoverer {
     /// Creates a new Smart Card discoverer
-    pub fn new() -> Result<Self, BearDogError> {
+    pub const fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             _readers: Vec::new(),
         })
@@ -712,7 +712,7 @@ mod tests {
         let discoverer = CloudKmsDiscoverer::new()?;
 
         // Verify discoverer has providers configured
-        assert!(!discoverer.enabled_providers.is_empty());
+        assert!(!discoverer._enabled_providers.is_empty());
 
         Ok(())
     }

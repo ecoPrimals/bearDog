@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Thread-safe [`Arc<str>`] intern table with basic hit/miss statistics.
 
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
+/// Mutex-backed map from `String` to weakly-counted shared slices.
 pub struct StringInterner {
     strings: Arc<Mutex<HashMap<String, Arc<str>>>>,
     stats: Arc<Mutex<InternerStats>>,
 }
 
+/// Aggregate interner traffic for tests and metrics hooks.
 #[derive(Debug, Clone, Default)]
 pub struct InternerStats {
     /// Number of total_requests

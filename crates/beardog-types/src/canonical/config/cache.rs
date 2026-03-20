@@ -423,7 +423,7 @@ impl CanonicalCacheConfig {
     }
 
     /// Memory-optimized preset
-    pub fn memory_optimized() -> Self {
+    pub const fn memory_optimized() -> Self {
         Self {
             enabled: true,
             max_size_mb: 256,

@@ -2,9 +2,7 @@
 
 #![allow(clippy::needless_doctest_main)]
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Management extensions: rule CRUD, health probes, maintenance, and aggregate stats.
 
 use super::core::ThreatDetectionEngine;
 use crate::threat::types::engine::threat_engine::ThreatDetectionStats;
@@ -18,6 +16,7 @@ use std::collections::HashMap;
 // Removed unused SystemTime import
 use tracing::info;
 
+/// Rolled-up health for the threat management subsystem and its components.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemHealth {
     /// Overall system status
@@ -179,6 +178,7 @@ impl ThreatDetectionEngine {
         }
     }
 
+    /// Trims historical events and completed incidents to bound memory usage.
     ///
     /// # Errors
     /// Returns an error if the operation fails.
@@ -219,8 +219,10 @@ impl ThreatDetectionEngine {
     }
 }
 
+/// Placeholder host metrics until real telemetry is wired into management.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemStatus {
+    /// Best-effort uptime string; placeholders until host metrics are wired in.
     pub system_uptime: String,
     /// The memory usage value
     /// The memory usage value
@@ -230,7 +232,7 @@ pub struct SystemStatus {
     pub cpu_usage: String,
 }
 
-/// Threat management statistics
+/// Point-in-time counts surfaced by management dashboards.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ThreatStats {
     /// Number of `total_rules`

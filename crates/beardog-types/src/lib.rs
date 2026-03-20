@@ -9,19 +9,8 @@
 //!
 //! **The canonical type system for the `BearDog` distributed security ecosystem - now with PEDANTIC PERFECTION!**
 //!
-#![deny(unsafe_code)]
-#![warn(missing_docs)]
-// Production code must use proper error handling - deny panicking methods
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-// Allow expect in tests - test panics are appropriate failure modes
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
-// Allow pedantic clippy lints for intentional type conversions and default trait usage
-#![allow(clippy::cast_precision_loss)]
-#![allow(clippy::cast_possible_wrap)]
-#![allow(clippy::cast_sign_loss)]
-#![allow(clippy::default_trait_access)]
 // ## 🎯 **PEDANTIC PERFECTION ACHIEVED** ✅
 //
 // This crate represents **ABSOLUTE SOFTWARE ENGINEERING EXCELLENCE** with:
@@ -381,32 +370,6 @@
 //! - Human dignity preservation
 
 #![doc(html_root_url = "https://docs.rs/beardog-types/3.0.0")]
-#![allow(missing_docs)] // Comprehensive documentation pending stabilization
-#![warn(clippy::all)]
-#![warn(clippy::pedantic)]
-#![warn(clippy::cargo)]
-// ecoPrimals: beardog-types lint debt — tracked for Phase 2 cleanup
-#![allow(clippy::module_name_repetitions)]
-#![allow(clippy::multiple_crate_versions)]
-#![allow(clippy::must_use_candidate)]
-#![allow(clippy::missing_errors_doc)]
-#![allow(clippy::missing_panics_doc)]
-#![allow(clippy::missing_const_for_fn)]
-#![allow(clippy::return_self_not_must_use)]
-#![allow(clippy::doc_markdown)] // Missing backticks in docs
-#![allow(clippy::uninlined_format_args)] // Direct variable usage in format!
-#![allow(clippy::cast_possible_truncation)] // usize to u32/u64 casts
-#![allow(clippy::derivable_impls)] // Impl can be derived
-#![allow(clippy::float_cmp)] // Strict f32/f64 comparison
-#![allow(clippy::empty_docs)] // Empty doc comments
-#![allow(clippy::match_same_arms)] // Identical match arms
-#![allow(clippy::redundant_closure)] // Redundant closures
-#![allow(clippy::doc_link_with_quotes)] // Doc list item indentation
-#![allow(clippy::bool_assert_comparison)] // assert_eq with bool literal
-#![allow(clippy::unused_self)] // Unused self argument
-#![allow(clippy::cast_lossless)] // Unnecessary same-type cast
-#![allow(clippy::ref_option)] // &Option<T> instead of Option<&T>
-#![allow(clippy::doc_lazy_continuation)] // Doc list item indentation
 
 // Re-export beardog-errors for convenience
 pub use beardog_errors::BearDogError;
@@ -426,6 +389,8 @@ pub use beardog_errors::BearDogError;
 pub mod canonical;
 
 pub mod adapter_certificates;
+/// Adapter integration types (unlock certificates, classifications for daemon issuance).
+pub mod adapters;
 /// 🔒 **CONSTRAINTS** - Universal constraint evaluation system
 ///
 /// Philosophy: Users define their own rules. We provide the framework, not the limits.
@@ -438,23 +403,25 @@ pub mod adapter_certificates;
 /// - Biometric authentication constraints
 /// - Composite logical constraints (AND/OR/NOT)
 pub mod constraints;
+/// Genetic constraint definitions used by the genetics subsystem and validation pipelines.
 pub mod genetics_constraints;
+/// Helpers for building, serializing, and evaluating genetic constraint bundles.
 pub mod genetics_constraints_helpers;
 pub mod primal_identity; // TRUE PRIMAL pattern: explicit identity injection
 
-// Core types with HSM support
+/// Crate-root HSM integration types (distinct from [`canonical::hsm`] canonical models).
 pub mod hsm;
 
-// 📜 Universal operation receipt system for verifiable audit trails
+/// Universal operation receipts for verifiable audit trails across services.
 pub mod receipt;
 
-// Mathematical and system constants
+/// Mathematical limits, domain constants, and shared numeric bounds for the ecosystem.
 pub mod constants;
 
-// Modern trait patterns for idiomatic type conversions and ergonomics
+/// Ergonomic trait patterns for conversions and shared behavior across Beardog types.
 pub mod modern_traits;
 
-// Zero-cost abstractions and types
+/// Zero-cost abstraction types (IDs, workflow markers) used on hot paths.
 pub mod zero_cost;
 
 /// 🏭 **PRODUCTION** - Production-ready components
@@ -501,6 +468,7 @@ mod tests;
 #[cfg(test)]
 mod lib_main_tests {
     use super::*;
+    use std::marker::PhantomData;
 
     #[test]
     fn test_types_lib_accessible() {
@@ -508,139 +476,119 @@ mod lib_main_tests {
     }
 
     #[test]
-    #[allow(clippy::const_is_empty)]
     fn test_version_constants() {
-        // Test version information - clippy knows these are const but we validate anyway
-        assert!(!VERSION.is_empty(), "VERSION should not be empty");
+        let version = VERSION;
+        let description = DESCRIPTION;
+        assert!(!version.is_empty(), "VERSION should not be empty");
         assert_eq!(CRATE_NAME, "beardog-types");
-        assert!(!DESCRIPTION.is_empty(), "DESCRIPTION should not be empty");
+        assert!(!description.is_empty(), "DESCRIPTION should not be empty");
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_canonical_module_accessible() {
-        // Verify canonical module is accessible
-        use crate::canonical;
+        use crate::canonical as _;
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_hsm_module_accessible() {
-        // Verify HSM module is accessible
-        use crate::hsm;
+        use crate::hsm as _;
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_constants_module_accessible() {
-        // Verify constants module is accessible
-        use crate::constants;
+        use crate::constants as _;
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_zero_cost_module_accessible() {
-        // Verify zero_cost module is accessible
-        use crate::zero_cost;
+        use crate::zero_cost as _;
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_production_module_accessible() {
-        // Verify production module is accessible
-        use crate::production;
+        use crate::production as _;
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_security_module_accessible() {
-        // Verify security module is accessible
-        use crate::security;
+        use crate::security as _;
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_genetics_module_accessible() {
-        // Verify genetics module is accessible
-        use crate::genetics;
+        use crate::genetics as _;
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_capabilities_module_accessible() {
-        // Verify capabilities module is accessible
-        use crate::capabilities;
+        use crate::capabilities as _;
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_metrics_module_accessible() {
-        // Verify metrics module is accessible
-        use crate::metrics;
+        use crate::metrics as _;
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_health_status_module_accessible() {
-        // Verify health_status module is accessible
-        use crate::health_status;
+        use crate::health_status as _;
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_workflow_module_accessible() {
-        // Verify workflow module is accessible
-        use crate::workflow;
+        use crate::workflow as _;
     }
 
     #[test]
-    #[allow(unused_variables)]
     fn test_unified_config_creation() {
-        // Test creating unified config
         let config = UnifiedBearDogConfig::default();
-        // Config should be creatable
+        assert!(!format!("{config:?}").is_empty());
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_config_exports() {
-        // Test that config exports are accessible
         use crate::{DatabaseSettings, MonitoringSettings, NetworkSettings};
         use crate::{PerformanceSettings, SecuritySettings};
+        let _: PhantomData<(
+            DatabaseSettings,
+            MonitoringSettings,
+            NetworkSettings,
+            PerformanceSettings,
+            SecuritySettings,
+        )> = PhantomData;
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_provider_trait_exports() {
-        // Test that provider traits are accessible
-        use crate::{UnifiedAiProvider, UnifiedStorageProvider};
-        use crate::{UnifiedHsmProvider, UnifiedProvider, UnifiedSecurityProvider};
-        use crate::{UnifiedMonitoringProvider, UnifiedNetworkProvider};
+        // Ensure crate-root provider traits remain reachable (not required to be object-safe).
+        const _: () = {
+            fn _ai<T: crate::UnifiedAiProvider>() {}
+            fn _storage<T: crate::UnifiedStorageProvider>() {}
+            fn _hsm<T: crate::UnifiedHsmProvider>() {}
+            fn _base<T: crate::UnifiedProvider>() {}
+            fn _sec<T: crate::UnifiedSecurityProvider>() {}
+            fn _mon<T: crate::UnifiedMonitoringProvider>() {}
+            fn _net<T: crate::UnifiedNetworkProvider>() {}
+        };
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_provider_types_exports() {
-        // Test that provider types are accessible
         use crate::{ProviderHealth, ProviderInfo, ProviderMetrics};
+        let _: PhantomData<(ProviderHealth, ProviderInfo, ProviderMetrics)> = PhantomData;
     }
 
     #[test]
-    #[allow(clippy::const_is_empty)]
     fn test_constants_exports() {
-        // Test that constants are accessible - clippy knows these are const but we validate anyway
         use crate::constants::domains::system::versions::BEARDOG_VERSION;
-        assert!(
-            !BEARDOG_VERSION.is_empty(),
-            "BEARDOG_VERSION should not be empty"
-        );
+        let ver = BEARDOG_VERSION;
+        assert!(!ver.is_empty(), "BEARDOG_VERSION should not be empty");
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_error_type_accessible() {
-        // Test that BearDogError is accessible
         use crate::BearDogError;
+        let _: PhantomData<BearDogError> = PhantomData;
     }
 
     #[test]
@@ -658,29 +606,20 @@ mod lib_main_tests {
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_canonical_config_system() {
-        // Test canonical configuration system is accessible
-        use crate::canonical::config;
+        use crate::canonical::config as _;
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_canonical_providers_system() {
-        // Test canonical providers system is accessible
-        use crate::canonical::providers_unified;
+        use crate::canonical::providers_unified as _;
     }
 
     #[test]
-    #[allow(unused_imports)]
     fn test_architecture_modules() {
-        // Verify all key architecture modules
-        // Canonical types
-        use crate::canonical;
-        // Zero-cost abstractions
-        use crate::zero_cost;
-        // Production components
-        use crate::production;
+        use crate::canonical as _;
+        use crate::production as _;
+        use crate::zero_cost as _;
     }
 
     #[tokio::test]

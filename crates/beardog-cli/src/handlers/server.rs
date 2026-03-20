@@ -30,7 +30,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     let socket_path = if args.r#abstract {
         // Abstract socket format: @biomeos_beardog_{family_id}
         let family = args.family_id.as_deref().unwrap_or("default");
-        let abstract_name = format!("@biomeos_beardog_{}", family);
+        let abstract_name = format!("@biomeos_beardog_{family}");
         info!("   Transport: Abstract Socket (SELinux-safe)");
         info!("   Socket: {} (no filesystem)", abstract_name);
         abstract_name
@@ -42,7 +42,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         let parent = family_sock
             .parent()
             .unwrap_or_else(|| std::path::Path::new("/tmp"));
-        let family_path = parent.join(format!("beardog-{}.sock", family_id));
+        let family_path = parent.join(format!("beardog-{family_id}.sock"));
         let path_str = family_path.to_string_lossy().to_string();
         info!("   Multi-family socket: {}", path_str);
         path_str
@@ -75,12 +75,12 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         RustSoftwareHsm::new(config)
             .await
             .map_err(|e| BearDogError::Initialization {
-                message: format!("Failed to create software HSM: {}", e),
+                message: format!("Failed to create software HSM: {e}"),
             })?;
 
     hsm.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))
         .map_err(|e| BearDogError::Initialization {
-            message: format!("Failed to register HSM provider: {}", e),
+            message: format!("Failed to register HSM provider: {e}"),
         })?;
     let hsm = Arc::new(hsm);
     info!("✅ HSM manager initialized");
@@ -90,7 +90,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     let genetics =
         Arc::new(
             EcosystemGeneticEngine::new().map_err(|e| BearDogError::Initialization {
-                message: format!("Failed to create genetics engine: {}", e),
+                message: format!("Failed to create genetics engine: {e}"),
             })?,
         );
     info!("✅ Genetics engine initialized");
@@ -99,7 +99,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     info!("🔧 Initializing BTSP provider...");
     let btsp_provider = Arc::new(BeardogBtspProvider::new(hsm, genetics).await.map_err(|e| {
         BearDogError::Initialization {
-            message: format!("Failed to create BTSP provider: {}", e),
+            message: format!("Failed to create BTSP provider: {e}"),
         }
     })?);
     info!("✅ BTSP provider initialized");
@@ -108,7 +108,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     let identity = Arc::new(
         beardog_types::primal_identity::PrimalIdentity::from_env().map_err(|e| {
             BearDogError::Initialization {
-                message: format!("Failed to read primal identity: {}", e),
+                message: format!("Failed to read primal identity: {e}"),
             }
         })?,
     );
@@ -157,7 +157,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         };
 
         match register_with_neural_api(&neural_socket, &primal_name, registration_addr).await {
-            Ok(_) => info!("✅ BearDog registered with Neural API (Tower Atomic enabled)"),
+            Ok(()) => info!("✅ BearDog registered with Neural API (Tower Atomic enabled)"),
             Err(e) => warn!("⚠️  Neural API registration failed (non-fatal): {}", e),
         }
     } else {

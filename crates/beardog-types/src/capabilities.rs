@@ -47,6 +47,7 @@ pub enum SecurityCapability {
         ml_enabled: bool,
         /// Real-time processing capability
         real_time: bool,
+        /// Minimum detector confidence (0.0–1.0) before raising alerts
         confidence_threshold: f64,
     },
 }
@@ -138,6 +139,7 @@ pub struct CapabilityMetadata {
     pub configuration: HashMap<String, String>,
 }
 
+/// CPU, memory, storage, GPU, and bandwidth needs for hosting a capability.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceRequirements {
     /// Optional cpu cores
@@ -180,9 +182,11 @@ pub struct CapabilityRegistration {
 pub enum CapabilityHealth {
     /// Capability is fully operational
     Healthy,
+    /// Reduced performance or partial feature set
     Degraded,
     /// Capability is not operational
     Unhealthy,
+    /// Deliberately offline for upgrades or maintenance
     Maintenance,
 }
 
@@ -196,6 +200,7 @@ pub struct BearDogAIArchitecture {
     /// List of security ML capabilities
     /// Collection of security ml
     pub security_ml: Vec<SecurityMLCapability>,
+    /// Enable ML-driven performance tuning of crypto and policy paths
     pub performance_optimization: bool,
     /// Adaptive learning capabilities
     /// Whether `adaptive_learning` is enabled
@@ -210,15 +215,20 @@ pub struct BearDogAIArchitecture {
 pub enum SecurityMLCapability {
     /// Threat pattern recognition
     ThreatPatternML {
+        /// Model family or checkpoint identifier
         model_type: String,
+        /// Minimum score to treat a detection as positive
         confidence_threshold: f64,
         /// Frequency of model updates in hours
         update_frequency_hours: u32,
     },
     /// Behavioral anomaly detection
     BehavioralAnomalyML {
+        /// Days of history used to establish a baseline
         baseline_period_days: u32,
+        /// Detector sensitivity (higher = more alerts)
         sensitivity_level: f64,
+        /// Online learning step size for model updates
         learning_rate: f64,
     },
     /// Cryptographic optimization
@@ -227,6 +237,7 @@ pub enum SecurityMLCapability {
         algorithm_selection: bool,
         /// Optimization of key rotation timing
         key_rotation_optimization: bool,
+        /// Allow ML to suggest cipher suites or cost parameters
         performance_tuning: bool,
     },
 }

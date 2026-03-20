@@ -34,14 +34,10 @@
 //!
 //! ```no_run
 //! use beardog_core::self_knowledge::PrimalSelfKnowledge;
-//! use std::env;
 //!
 //! # async fn example() -> Result<(), beardog_errors::BearDogError> {
-//! // Set identity via environment
-//! env::set_var("PRIMAL_NAME", "my-beardog-instance");
-//! env::set_var("BEARDOG_LISTEN_ADDR", "127.0.0.1:9000");
-//!
-//! // Discover self-knowledge at runtime
+//! // Identity comes from PRIMAL_NAME and BEARDOG_LISTEN_ADDR env vars
+//! // set before process start.
 //! let self_knowledge = PrimalSelfKnowledge::discover()?;
 //!
 //! // Use self-knowledge (zero assumptions!)
@@ -188,7 +184,7 @@ impl PrimalSelfKnowledge {
 
     /// Get this primal's version information
     #[must_use]
-    pub fn my_version(&self) -> &VersionInfo {
+    pub const fn my_version(&self) -> &VersionInfo {
         &self.version
     }
 
@@ -285,9 +281,9 @@ pub enum Protocol {
 impl std::fmt::Display for Protocol {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Protocol::Http => write!(f, "HTTP"),
-            Protocol::Grpc => write!(f, "gRPC"),
-            Protocol::UnixSocket => write!(f, "Unix Socket"),
+            Self::Http => write!(f, "HTTP"),
+            Self::Grpc => write!(f, "gRPC"),
+            Self::UnixSocket => write!(f, "Unix Socket"),
         }
     }
 }
@@ -421,55 +417,61 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_identity_from_env() {
-        env::set_var("PRIMAL_NAME", "test-primal");
+        beardog_errors::process_env::set_var("PRIMAL_NAME", "test-primal");
 
         let identity = PrimalIdentity::discover();
         assert_eq!(identity.name, "test-primal");
-        assert!(identity
-            .instance_id
-            .contains(&std::process::id().to_string()));
+        assert!(
+            identity
+                .instance_id
+                .contains(&std::process::id().to_string())
+        );
 
-        env::remove_var("PRIMAL_NAME");
+        beardog_errors::process_env::remove_var("PRIMAL_NAME");
     }
 
     #[test]
     fn test_identity_default() {
-        env::remove_var("PRIMAL_NAME");
-        env::remove_var("BEARDOG_NAME");
+        beardog_errors::process_env::remove_var("PRIMAL_NAME");
+        beardog_errors::process_env::remove_var("BEARDOG_NAME");
 
         let identity = PrimalIdentity::discover();
         assert_eq!(identity.name, "beardog");
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_endpoint_from_listen_addr() {
-        env::set_var("BEARDOG_LISTEN_ADDR", "127.0.0.1:9000");
+        beardog_errors::process_env::set_var("BEARDOG_LISTEN_ADDR", "127.0.0.1:9000");
 
         let endpoints = discover_endpoints().unwrap();
         assert_eq!(endpoints.len(), 1);
         assert_eq!(endpoints[0].address.port(), 9000);
         assert_eq!(endpoints[0].protocol, Protocol::Http);
 
-        env::remove_var("BEARDOG_LISTEN_ADDR");
+        beardog_errors::process_env::remove_var("BEARDOG_LISTEN_ADDR");
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_endpoint_from_port() {
-        env::remove_var("BEARDOG_LISTEN_ADDR");
-        env::set_var("BEARDOG_PORT", "8080");
+        beardog_errors::process_env::remove_var("BEARDOG_LISTEN_ADDR");
+        beardog_errors::process_env::set_var("BEARDOG_PORT", "8080");
 
         let endpoints = discover_endpoints().unwrap();
         assert_eq!(endpoints.len(), 1);
         assert_eq!(endpoints[0].address.port(), 8080);
 
-        env::remove_var("BEARDOG_PORT");
+        beardog_errors::process_env::remove_var("BEARDOG_PORT");
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_endpoint_default() {
-        env::remove_var("BEARDOG_LISTEN_ADDR");
-        env::remove_var("BEARDOG_PORT");
+        beardog_errors::process_env::remove_var("BEARDOG_LISTEN_ADDR");
+        beardog_errors::process_env::remove_var("BEARDOG_PORT");
 
         let endpoints = discover_endpoints().unwrap();
         assert_eq!(endpoints.len(), 1);
@@ -499,10 +501,11 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_my_name() {
-        env::set_var("PRIMAL_NAME", "test-name");
-        let sk = PrimalSelfKnowledge::discover().unwrap();
+        beardog_errors::process_env::set_var("PRIMAL_NAME", "test-name");
+        let sk = PrimalSelfKnowledge::discover().expect("discover should succeed");
         assert_eq!(sk.my_name(), "test-name");
-        env::remove_var("PRIMAL_NAME");
+        beardog_errors::process_env::remove_var("PRIMAL_NAME");
     }
 }

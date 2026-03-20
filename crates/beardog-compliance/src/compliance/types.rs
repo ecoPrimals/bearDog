@@ -30,309 +30,345 @@ pub use beardog_types::canonical::config::compliance::{
 // These types represent runtime data (events, reports, metrics) rather than
 // configuration, so they appropriately remain in the beardog-compliance crate.
 
-// Additional canonical compliance types
+/// What occurred in the system, used to select which compliance rules apply.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-/// Types of compliance event
 pub enum ComplianceEventType {
-    /// Represents data access variant
+    /// Read or export of personal or sensitive data.
     DataAccess,
-    /// Represents data modification variant
+    /// Create, update, or transform stored data.
     DataModification,
-    /// Represents data deletion variant
+    /// Erasure or anonymization of records.
     DataDeletion,
-    /// Represents system access variant
+    /// Login, API call, or physical access to a protected system.
     SystemAccess,
-    /// Represents configuration change variant
+    /// Change to security, network, or compliance-related settings.
     ConfigurationChange,
-    /// Represents policy violation variant
+    /// Detected breach of internal or external policy.
     PolicyViolation,
-    /// Represents security incident variant
+    /// Suspected or confirmed attack, leak, or integrity event.
     SecurityIncident,
-    /// Represents audit event variant
+    /// Formal audit logging or evidence collection activity.
     AuditEvent,
-    /// Represents financial transaction variant
-    FinancialTransaction, // Added missing variant
+    /// Ledger, payment, or other financially regulated operation.
+    FinancialTransaction,
 }
 
+/// Relative urgency of a violation or event for triage and reporting.
 #[derive(
     Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
 )]
 pub enum ComplianceSeverity {
-    /// Represents low variant
+    /// Informational or best-practice deviation.
     Low,
-    /// Represents medium variant
+    /// Should be reviewed within normal operational windows.
     Medium,
-    /// Represents high variant
+    /// Significant exposure or control gap.
     High,
-    /// Represents critical variant
+    /// Immediate remediation or incident response expected.
     Critical,
 }
 
+/// Terminal state of an audited action (supports both legacy and explicit success/failure labels).
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum AuditOutcome {
-    /// State indicating passed
+    /// Legacy: all checks passed.
     Passed,
-    /// Error or failure state
+    /// Legacy: one or more checks failed.
     Failed,
-    /// Currently warning
+    /// Completed with policy warnings that do not block the action.
     Warning,
-    /// Represents not applicable variant
+    /// Control intentionally does not apply to this case.
     NotApplicable,
-    /// Successful completion state
-    Success, // Added missing variant
-    /// Error or failure state
-    Failure, // Added missing variant
+    /// Explicit success (mirrors [`Passed`] for newer call sites).
+    Success,
+    /// Explicit failure (mirrors [`Failed`] for newer call sites).
+    Failure,
 }
 
+/// How end-user consent was obtained, for privacy law evidence trails.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ConsentMethod {
-    /// Represents opt in variant
+    /// Affirmative action required before processing.
     OptIn,
-    /// Represents opt out variant
+    /// Processing allowed until the subject objects.
     OptOut,
-    /// Represents implicit variant
+    /// Implied by context (e.g. strict necessity); document carefully.
     Implicit,
-    /// Represents explicit variant
+    /// Recorded affirmative statement or signature.
     Explicit,
 }
 
+/// Qualitative risk score used in DPIAs and breach assessments.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum RiskLevel {
-    /// Represents very low variant
+    /// Negligible impact or likelihood under policy.
     VeryLow,
-    /// Represents low variant
+    /// Minor impact; routine monitoring.
     Low,
-    /// Represents medium variant
+    /// Moderate; needs owner review.
     Medium,
-    /// Represents high variant
+    /// Major harm or likelihood without mitigation.
     High,
-    /// Represents very high variant
+    /// Severe or systemic; escalate immediately.
     VeryHigh,
 }
 
+/// Approval workflow state for privacy or security sign-off.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ApprovalStatus {
-    /// Operation in progress
+    /// Awaiting decision.
     Pending,
-    /// State indicating approved
+    /// Formally accepted.
     Approved,
-    /// State indicating rejected
+    /// Denied; processing must not proceed as proposed.
     Rejected,
-    /// State indicating expired
+    /// Previously approved scope or consent no longer valid.
     Expired,
 }
 
+/// Category of security or privacy incident for regulatory templates.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-/// Types of breach
 pub enum BreachType {
-    /// Represents data breach variant
+    /// Unauthorized disclosure or loss of data at rest or in motion.
     DataBreach,
-    /// Represents system breach variant
+    /// Compromise of platform integrity or availability.
     SystemBreach,
-    /// Represents access breach variant
+    /// Credential or permission abuse.
     AccessBreach,
-    /// Represents configuration breach variant
+    /// Unsafe or unauthorized configuration change.
     ConfigurationBreach,
 }
 
+/// Lifecycle stage from first report through closure.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum IncidentStatus {
-    /// Represents open variant
+    /// Reported but not yet assigned.
     Open,
-    /// Operation in progress
+    /// Containment, investigation, or remediation underway.
     InProgress,
-    /// State indicating resolved
+    /// Root cause addressed; may await formal sign-off.
     Resolved,
-    /// State indicating closed
+    /// Fully closed with documentation retained.
     Closed,
 }
 
-// Additional canonical compliance types
+/// Outcome of scoring one [`ComplianceEvent`] against its declared [`ComplianceStandard`].
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ComplianceResult {
-    /// The standard value
+    /// Framework that was evaluated.
     pub standard: ComplianceStandard,
-    /// Whether passed is enabled
+    /// True when no violations were recorded for this evaluation.
     pub passed: bool,
-    /// The score value
+    /// Normalized score in roughly `0.0`–`100.0` (higher is better).
     pub score: f64,
-    /// Collection of violations
+    /// Human-readable violation summaries for operators.
     pub violations: Vec<String>,
-    /// Collection of recommendations
+    /// Suggested remediations or next steps.
     pub recommendations: Vec<String>,
+    /// When this summary was produced (UTC).
     pub timestamp: DateTime<Utc>,
 }
 
 // Config structs imported from canonical location above
 
+/// Input to the compliance engine describing something that happened in the ecosystem.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceEvent {
+    /// Correlation id from the producer (often a UUID string).
     pub id: String,
+    /// When the underlying action occurred (UTC).
     pub timestamp: DateTime<Utc>,
-    /// The event type value
+    /// High-level classification driving rule selection.
     pub event_type: ComplianceEventType,
-    /// The standard value
+    /// Primary framework this evaluation should be attributed to.
     pub standard: ComplianceStandard,
-    /// The description value
+    /// Free-text summary for audit logs and dashboards.
     pub description: String,
-    /// The severity value
+    /// Caller-estimated severity before rule evaluation.
     pub severity: ComplianceSeverity,
-    /// The metadata value
+    /// Structured payload (paths, attributes, policy ids) for checkers.
     pub metadata: serde_json::Value,
 }
 
+/// Scheduled or on-demand report bundle suitable for export to GRC tools.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceReport {
-    /// The standard value
+    /// Framework covered by this report.
     pub standard: ComplianceStandard,
-    /// Whether passed is enabled
+    /// True if every attached violation list is empty for the window.
     pub passed: bool,
-    /// The score value
+    /// Aggregate score for the reporting period.
     pub score: f64,
-    /// Collection of violations
+    /// Structured violations with remediation metadata.
     pub violations: Vec<ComplianceViolation>,
-    /// Collection of recommendations
+    /// Executive or operational recommendations.
     pub recommendations: Vec<String>,
+    /// Report generation time (UTC).
     pub timestamp: DateTime<Utc>,
 }
 
+/// A single failed control produced by a checker or validator.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceViolation {
+    /// Stable identifier for ticketing (may mirror policy id).
     pub id: String,
-    /// The rule value
+    /// Policy clause or automated rule name that fired.
     pub rule: String,
-    /// The description value
+    /// Why the control failed, in operator-facing language.
     pub description: String,
-    /// The severity value
+    /// How urgent remediation is.
     pub severity: ComplianceSeverity,
-    /// The remediation value
+    /// Concrete steps or references to fix the gap.
     pub remediation: String,
-    /// Optional affected data
+    /// Data class or system component in scope, if applicable.
     pub affected_data: Option<String>,
 }
 
+/// One append-only row in the compliance handler's audit trail.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditEntry {
+    /// Unique row id (often a UUID string).
     pub id: String,
+    /// When the evaluation or action was recorded (UTC).
     pub timestamp: DateTime<Utc>,
+    /// Acting principal when known (`system`, user id, service account).
     pub user_id: Option<String>,
-    /// The action value
+    /// Verb or workflow step (e.g. `compliance_evaluation_DataAccess`).
     pub action: String,
-    /// The resource value
+    /// Resource or subject string (often mirrors event description).
     pub resource: String,
-    /// The outcome value
+    /// Whether the step succeeded, failed, or was out of scope.
     pub outcome: AuditOutcome,
-    /// The details value
+    /// Machine-readable JSON for SIEM export (scores, counts, ids).
     pub details: serde_json::Value,
 }
 
+/// Article-30 style record of processing for GDPR and similar regimes.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyRecord {
+    /// Internal record id.
     pub id: String,
+    /// Pseudonymous or external subject identifier.
     pub data_subject_id: String,
-    /// The processing purpose value
+    /// Business reason the data is processed.
     pub processing_purpose: String,
-    /// The legal basis value
+    /// Lawful basis string (contract, consent, legitimate interest, etc.).
     pub legal_basis: String,
-    /// Collection of data categories
+    /// Categories of personal data involved.
     pub data_categories: Vec<String>,
-    /// Collection of recipients
+    /// Processors or controllers receiving data.
     pub recipients: Vec<String>,
-    /// Optional retention period
+    /// Planned retention as a duration when policy defines one.
     pub retention_period: Option<chrono::Duration>,
-    /// Collection of cross border transfers
+    /// Jurisdictions or entities involved in transfers.
     pub cross_border_transfers: Vec<String>,
+    /// When this record was captured or last updated (UTC).
     pub timestamp: DateTime<Utc>,
 }
 
+/// Demonstrates valid consent (or withdrawal) for a specific processing purpose.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsentRecord {
+    /// Record id for audits.
     pub id: String,
+    /// Subject this consent applies to.
     pub data_subject_id: String,
-    /// The purpose value
+    /// Narrow purpose tied to the consent text shown to the user.
     pub purpose: String,
-    /// Whether `consent_given` is enabled
+    /// Whether consent is currently affirmative.
     pub consent_given: bool,
-    /// The consent date value
+    /// When consent was granted (UTC).
     pub consent_date: DateTime<Utc>,
-    /// Optional withdrawal date
+    /// When the subject revoked consent, if applicable.
     pub withdrawal_date: Option<DateTime<Utc>>,
-    /// The consent method value
+    /// Mechanism used to capture consent.
     pub consent_method: ConsentMethod,
+    /// Pointer to proof (document hash, URL, ticket id).
     pub evidence: String,
 }
 
+/// Data protection impact assessment (DPIA) snapshot for high-risk processing.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyImpactAssessment {
+    /// Assessment record id.
     pub id: String,
-    /// Name of the project
+    /// Human-readable initiative or system name.
     pub project_name: String,
-    /// The assessment date value
+    /// When the DPIA was performed (UTC).
     pub assessment_date: DateTime<Utc>,
-    /// Collection of data types
+    /// Personal or sensitive data classes in scope.
     pub data_types: Vec<String>,
+    /// Identified risks before mitigation.
     pub risks_identified: Vec<PrivacyRisk>,
-    /// Collection of mitigation measures
+    /// Controls or process changes that reduce risk.
     pub mitigation_measures: Vec<String>,
+    /// Risk after mitigations, per assessor judgment.
     pub residual_risk_level: RiskLevel,
-    /// Current status of the approval
+    /// Sign-off workflow state.
     pub approval_status: ApprovalStatus,
 }
 
+/// Single risk row inside a [`PrivacyImpactAssessment`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyRisk {
-    /// The description value
+    /// Narrative of what could go wrong.
     pub description: String,
-    /// The likelihood value
+    /// Estimated probability before controls.
     pub likelihood: RiskLevel,
-    /// The impact value
+    /// Estimated harm if the risk materializes.
     pub impact: RiskLevel,
-    /// The overall risk value
+    /// Combined rating used for prioritization.
     pub overall_risk: RiskLevel,
 }
 
+/// Regulatory-oriented incident log used for breach timelines and notifications.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataBreachRecord {
+    /// Case id in the compliance system.
     pub id: String,
+    /// When the incident began or was believed to have begun (UTC).
     pub incident_date: DateTime<Utc>,
-    /// The discovery date value
+    /// When the organization became aware (UTC).
     pub discovery_date: DateTime<Utc>,
+    /// High-level breach category.
     pub incident_type: BreachType,
-    /// Number of `affected_records`
+    /// Count of individuals or rows affected, when known.
     pub affected_records: u64,
-    /// Collection of data types affected
+    /// Data categories involved (PII, PHI, financial, etc.).
     pub data_types_affected: Vec<String>,
-    /// The cause value
+    /// Root cause or contributing factors.
     pub cause: String,
-    /// Collection of containment measures
+    /// Steps taken to limit spread or recurrence.
     pub containment_measures: Vec<String>,
-    /// Whether `notification_required` is enabled
+    /// Whether law or contract mandates regulator or subject notice.
     pub notification_required: bool,
-    /// Optional notification date
+    /// When notifications were sent, if required.
     pub notification_date: Option<DateTime<Utc>>,
-    /// Whether `regulatory_reported` is enabled
+    /// Whether a regulator filing was completed.
     pub regulatory_reported: bool,
-    /// Current status of the component
+    /// Current state in the incident workflow.
     pub status: IncidentStatus,
 }
 
+/// Aggregate dashboard view built from recent evaluations and trail length.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceMetrics {
-    /// The overall score value
+    /// Weighted score across enabled standards.
     pub overall_score: f64,
-    /// Mapping of standards compliance
+    /// Per-standard scores for heatmaps or drill-down.
     pub standards_compliance: HashMap<ComplianceStandard, f64>,
-    /// Collection of recent violations
+    /// Latest violations kept for trending widgets.
     pub recent_violations: Vec<ComplianceViolation>,
-    /// Number of `audit_trail_size`
+    /// Number of rows currently retained in the handler audit trail.
     pub audit_trail_size: u64,
-    /// Optional last assessment date
+    /// Last full or sample assessment timestamp, if tracked.
     pub last_assessment_date: Option<DateTime<Utc>>,
-    /// Optional next assessment due
+    /// Next scheduled assessment deadline from policy.
     pub next_assessment_due: Option<DateTime<Utc>>,
 }
 
-/// Supported compliance frameworks
+/// Jurisdiction-specific framework hooks beyond shared [`ComplianceStandard`] variants.
 pub enum ComplianceFramework {
+    /// California Consumer Privacy Act.
     Ccpa,
 }

@@ -371,10 +371,7 @@ impl HsmManager {
                 // Initialize software HSM
                 let config = SoftwareHsmConfig::default();
                 let software_hsm = RustSoftwareHsm::new(config).await.map_err(|e| {
-                    BearDogError::initialization(format!(
-                        "Failed to initialize software HSM: {}",
-                        e
-                    ))
+                    BearDogError::initialization(format!("Failed to initialize software HSM: {e}"))
                 })?;
 
                 manager.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))?;
@@ -382,36 +379,39 @@ impl HsmManager {
             }
             "hardware" => {
                 // Hardware HSM initialization (future implementation)
-                warn!("⚠️  Hardware HSM mode requested but not yet implemented, falling back to software");
+                warn!(
+                    "⚠️  Hardware HSM mode requested but not yet implemented, falling back to software"
+                );
                 let config = SoftwareHsmConfig::default();
                 let software_hsm = RustSoftwareHsm::new(config).await.map_err(|e| {
                     BearDogError::initialization(format!(
-                        "Failed to initialize fallback software HSM: {}",
-                        e
+                        "Failed to initialize fallback software HSM: {e}"
                     ))
                 })?;
                 manager.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))?;
             }
             "android_strongbox" => {
                 // Android StrongBox initialization (future implementation)
-                warn!("⚠️  Android StrongBox mode requested but not yet implemented, falling back to software");
+                warn!(
+                    "⚠️  Android StrongBox mode requested but not yet implemented, falling back to software"
+                );
                 let config = SoftwareHsmConfig::default();
                 let software_hsm = RustSoftwareHsm::new(config).await.map_err(|e| {
                     BearDogError::initialization(format!(
-                        "Failed to initialize fallback software HSM: {}",
-                        e
+                        "Failed to initialize fallback software HSM: {e}"
                     ))
                 })?;
                 manager.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))?;
             }
             "ios_secure_enclave" => {
                 // iOS Secure Enclave initialization (future implementation)
-                warn!("⚠️  iOS Secure Enclave mode requested but not yet implemented, falling back to software");
+                warn!(
+                    "⚠️  iOS Secure Enclave mode requested but not yet implemented, falling back to software"
+                );
                 let config = SoftwareHsmConfig::default();
                 let software_hsm = RustSoftwareHsm::new(config).await.map_err(|e| {
                     BearDogError::initialization(format!(
-                        "Failed to initialize fallback software HSM: {}",
-                        e
+                        "Failed to initialize fallback software HSM: {e}"
                     ))
                 })?;
                 manager.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))?;
@@ -534,21 +534,21 @@ impl HsmManager {
                 let mut total_failed: u64 = 0;
 
                 // Add per-provider metrics
-                for (provider_id, op_metrics) in metrics.iter() {
+                for (provider_id, op_metrics) in &metrics {
                     result.insert(
-                        format!("{}_total_ops", provider_id),
+                        format!("{provider_id}_total_ops"),
                         op_metrics.total_operations,
                     );
                     result.insert(
-                        format!("{}_success_ops", provider_id),
+                        format!("{provider_id}_success_ops"),
                         op_metrics.successful_operations,
                     );
                     result.insert(
-                        format!("{}_failed_ops", provider_id),
+                        format!("{provider_id}_failed_ops"),
                         op_metrics.failed_operations,
                     );
                     result.insert(
-                        format!("{}_avg_latency_ms", provider_id),
+                        format!("{provider_id}_avg_latency_ms"),
                         op_metrics.average_latency_ms as u64,
                     );
 

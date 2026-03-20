@@ -12,7 +12,7 @@ mod credential_validation_tests {
     #[test]
     fn test_bearer_token_validation_valid_token() {
         let token = "a".repeat(32); // Valid 32+ char token
-                                    // Test that valid tokens are accepted
+        // Test that valid tokens are accepted
         assert!(token.len() >= 32);
     }
 

@@ -10,8 +10,8 @@ use super::key_management_capability::{
 };
 use crate::canonical::types::ids::KeyId;
 use aes_gcm::{
-    aead::{Aead, AeadCore, KeyInit, OsRng},
     Aes256Gcm, Key, Nonce,
+    aead::{Aead, AeadCore, KeyInit, OsRng},
 };
 use async_trait::async_trait;
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
@@ -48,9 +48,9 @@ impl KeyAlgorithm {
     /// Get the required key size in bytes
     const fn key_size(&self) -> usize {
         match self {
-            KeyAlgorithm::Aes256Gcm => 32,        // 256 bits
-            KeyAlgorithm::Ed25519 => 32,          // 256 bits
-            KeyAlgorithm::ChaCha20Poly1305 => 32, // 256 bits
+            Self::Aes256Gcm => 32,        // 256 bits
+            Self::Ed25519 => 32,          // 256 bits
+            Self::ChaCha20Poly1305 => 32, // 256 bits
         }
     }
 }
@@ -60,14 +60,15 @@ pub struct SecureSoftwareHsm {
     /// Encrypted key store (keys are encrypted at rest)
     key_store: Arc<RwLock<HashMap<String, KeyMaterial>>>,
     /// Primary encryption key (derived from secure source, root of key hierarchy)
-    primary_key: Zeroizing<[u8; 32]>,
+    /// Reserved for Phase 2: encryption-at-rest of stored keys
+    _primary_key: Zeroizing<[u8; 32]>,
 }
 
 impl std::fmt::Debug for SecureSoftwareHsm {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SecureSoftwareHsm")
             .field("key_store", &"<encrypted>")
-            .field("primary_key", &"<redacted>")
+            .field("_primary_key", &"<redacted>")
             .finish()
     }
 }
@@ -82,19 +83,21 @@ impl SecureSoftwareHsm {
     pub fn new() -> Result<Self, KmsError> {
         let mut primary_key = Zeroizing::new([0u8; 32]);
         getrandom::getrandom(primary_key.as_mut()).map_err(|e| KmsError::Other {
-            message: format!("Failed to generate primary key: {}", e),
+            message: format!("Failed to generate primary key: {e}"),
         })?;
 
         Ok(Self {
             key_store: Arc::new(RwLock::new(HashMap::new())),
-            primary_key,
+            _primary_key: primary_key,
         })
     }
 
     /// Derive a key-specific encryption key from primary key
+    /// Reserved for Phase 2: encryption-at-rest of stored keys
+    #[allow(dead_code)]
     #[allow(clippy::expect_used)] // HKDF expand cannot fail with correct length
     fn derive_key_encryption_key(&self, key_id: &str) -> Zeroizing<[u8; 32]> {
-        let hkdf = Hkdf::<Sha256>::new(None, &self.primary_key[..]);
+        let hkdf = Hkdf::<Sha256>::new(None, &self._primary_key[..]);
         let mut okm = Zeroizing::new([0u8; 32]);
         hkdf.expand(key_id.as_bytes(), okm.as_mut())
             .expect("HKDF expand should never fail with valid length");
@@ -146,7 +149,7 @@ impl KeyManagementCapability for SecureSoftwareHsm {
                     cipher
                         .encrypt(&nonce, plaintext)
                         .map_err(|e| KmsError::Other {
-                            message: format!("AES-GCM encryption failed: {}", e),
+                            message: format!("AES-GCM encryption failed: {e}"),
                         })?;
 
                 // Return: nonce (12 bytes) || ciphertext (includes auth tag)
@@ -154,8 +157,8 @@ impl KeyManagementCapability for SecureSoftwareHsm {
             }
             KeyAlgorithm::ChaCha20Poly1305 => {
                 use chacha20poly1305::{
-                    aead::{Aead, KeyInit},
                     ChaCha20Poly1305,
+                    aead::{Aead, KeyInit},
                 };
 
                 let key = chacha20poly1305::Key::from_slice(&key_material.key_bytes[..]);
@@ -168,7 +171,7 @@ impl KeyManagementCapability for SecureSoftwareHsm {
                     cipher
                         .encrypt(&nonce, plaintext)
                         .map_err(|e| KmsError::Other {
-                            message: format!("ChaCha20-Poly1305 encryption failed: {}", e),
+                            message: format!("ChaCha20-Poly1305 encryption failed: {e}"),
                         })?;
 
                 Ok([nonce.as_slice(), ciphertext.as_slice()].concat())
@@ -200,13 +203,13 @@ impl KeyManagementCapability for SecureSoftwareHsm {
                 cipher
                     .decrypt(nonce, actual_ciphertext)
                     .map_err(|e| KmsError::Other {
-                        message: format!("AES-GCM decryption failed: {}", e),
+                        message: format!("AES-GCM decryption failed: {e}"),
                     })
             }
             KeyAlgorithm::ChaCha20Poly1305 => {
                 use chacha20poly1305::{
-                    aead::{Aead, KeyInit},
                     ChaCha20Poly1305,
+                    aead::{Aead, KeyInit},
                 };
 
                 if ciphertext.len() < 12 {
@@ -224,7 +227,7 @@ impl KeyManagementCapability for SecureSoftwareHsm {
                 cipher
                     .decrypt(nonce, actual_ciphertext)
                     .map_err(|e| KmsError::Other {
-                        message: format!("ChaCha20-Poly1305 decryption failed: {}", e),
+                        message: format!("ChaCha20-Poly1305 decryption failed: {e}"),
                     })
             }
             KeyAlgorithm::Ed25519 => Err(KmsError::Other {
@@ -242,15 +245,15 @@ impl KeyManagementCapability for SecureSoftwareHsm {
             "ChaCha20Poly1305" | "CHACHA20POLY1305" => KeyAlgorithm::ChaCha20Poly1305,
             other => {
                 return Err(KmsError::Other {
-                    message: format!("Unsupported algorithm: {}", other),
-                })
+                    message: format!("Unsupported algorithm: {other}"),
+                });
             }
         };
 
         // Generate cryptographically secure random key material
         let mut key_bytes = vec![0u8; algorithm.key_size()];
         getrandom::getrandom(&mut key_bytes).map_err(|e| KmsError::Other {
-            message: format!("Failed to generate random key: {}", e),
+            message: format!("Failed to generate random key: {e}"),
         })?;
 
         // Create key material (key_bytes wrapped in Zeroizing for automatic cleanup)
@@ -295,7 +298,7 @@ impl KeyManagementCapability for SecureSoftwareHsm {
 
                 let mut mac = <HmacSha256 as HmacMac>::new_from_slice(&key_material.key_bytes[..])
                     .map_err(|e| KmsError::Other {
-                        message: format!("HMAC initialization failed: {}", e),
+                        message: format!("HMAC initialization failed: {e}"),
                     })?;
                 mac.update(data);
                 let result = mac.finalize();
@@ -340,7 +343,7 @@ impl KeyManagementCapability for SecureSoftwareHsm {
 
                 let mut mac = <HmacSha256 as HmacMac>::new_from_slice(&key_material.key_bytes[..])
                     .map_err(|e| KmsError::Other {
-                        message: format!("HMAC initialization failed: {}", e),
+                        message: format!("HMAC initialization failed: {e}"),
                     })?;
                 mac.update(data);
                 let result = mac.finalize();
@@ -354,7 +357,7 @@ impl KeyManagementCapability for SecureSoftwareHsm {
     async fn generate_random(&self, count: usize) -> Result<Vec<u8>, KmsError> {
         let mut bytes = vec![0u8; count];
         getrandom::getrandom(&mut bytes).map_err(|e| KmsError::Other {
-            message: format!("Failed to generate random bytes: {}", e),
+            message: format!("Failed to generate random bytes: {e}"),
         })?;
         Ok(bytes)
     }

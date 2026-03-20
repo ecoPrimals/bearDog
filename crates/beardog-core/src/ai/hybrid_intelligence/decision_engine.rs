@@ -378,11 +378,11 @@ pub enum FuzzyExpression {
         fuzzy_set: String,
     },
     /// AND operation
-    And(Box<FuzzyExpression>, Box<FuzzyExpression>),
+    And(Box<Self>, Box<Self>),
     /// OR operation
-    Or(Box<FuzzyExpression>, Box<FuzzyExpression>),
+    Or(Box<Self>, Box<Self>),
     /// NOT operation
-    Not(Box<FuzzyExpression>),
+    Not(Box<Self>),
 }
 
 /// Defuzzification methods

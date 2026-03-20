@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// BearDog CLI - Main Entry Point
-// Vendor-agnostic, primal-agnostic, algorithm-agnostic, transport-agnostic
-
-#![allow(dead_code)] // CLI handlers not all wired up yet
+//! BearDog command-line binary (`beardog`).
+//!
+//! Parses subcommands and dispatches to internal `handlers` modules for entropy, keys, BirdSong,
+//! encryption, HSM discovery, cross-primal messaging, and server/daemon modes.
+//! Shared argument types (`ServerArgs`, `DaemonArgs`, etc.) live in the
+//! `beardog-cli` library crate.
 
 use beardog_cli::{ClientArgs, DaemonArgs, DoctorArgs, ServerArgs};
 use beardog_errors::BearDogError;
@@ -12,6 +14,7 @@ use clap::{Parser, Subcommand};
 mod ecosystem_discovery_adapter;
 mod handlers;
 
+/// Root CLI parser: global flags and subcommand dispatch.
 #[derive(Parser)]
 #[command(name = "beardog")]
 #[command(version, about = "BearDog - Sovereign Genetic Cryptography", long_about = None)]
@@ -24,6 +27,7 @@ struct Cli {
     command: Commands,
 }
 
+/// Top-level `beardog` subcommands.
 #[derive(Subcommand)]
 enum Commands {
     /// Entropy collection and seed generation
@@ -97,6 +101,7 @@ enum Commands {
 // ENTROPY COMMANDS
 // ============================================================================
 
+/// `beardog entropy` subcommands.
 #[derive(Subcommand)]
 enum EntropyCommands {
     /// Collect human entropy and generate seed
@@ -135,6 +140,7 @@ enum EntropyCommands {
 // KEY COMMANDS
 // ============================================================================
 
+/// `beardog key` subcommands.
 #[derive(Subcommand)]
 enum KeyCommands {
     /// Generate a new cryptographic key
@@ -365,6 +371,7 @@ enum KeyCommands {
 // ENCRYPT/DECRYPT COMMANDS
 // ============================================================================
 
+/// Arguments for `beardog encrypt`.
 #[derive(Parser)]
 struct EncryptArgs {
     /// Key ID to use for encryption
@@ -384,6 +391,7 @@ struct EncryptArgs {
     genetic: bool,
 }
 
+/// Arguments for `beardog decrypt`.
 #[derive(Parser)]
 struct DecryptArgs {
     /// Key ID to use for decryption
@@ -403,6 +411,7 @@ struct DecryptArgs {
 // BIRDSONG COMMANDS
 // ============================================================================
 
+/// `beardog birdsong` subcommands.
 #[derive(Subcommand)]
 enum BirdSongCommands {
     /// Encrypt message for lineage only (privacy-preserving)
@@ -440,6 +449,7 @@ enum BirdSongCommands {
 // HSM COMMANDS
 // ============================================================================
 
+/// `beardog hsm` subcommands.
 #[derive(Subcommand)]
 enum HsmCommands {
     /// Discover available HSMs

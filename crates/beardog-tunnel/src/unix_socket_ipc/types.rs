@@ -166,7 +166,7 @@ impl Protocol {
     /// - HTTP: Begins with HTTP verbs (GET, POST, etc.) - LEGACY compatibility
     pub fn detect_from_bytes(first_bytes: &[u8]) -> Self {
         if first_bytes.is_empty() {
-            return Protocol::JsonRpc; // Default to primary protocol
+            return Self::JsonRpc; // Default to primary protocol
         }
 
         // Check for HTTP verbs (legacy protocol)
@@ -176,31 +176,31 @@ impl Protocol {
             || first_bytes.starts_with(b"DELETE ")
             || first_bytes.starts_with(b"PATCH ")
         {
-            return Protocol::Http;
+            return Self::Http;
         }
 
         // Check for JSON-RPC (starts with '{' and likely contains "jsonrpc":"2.0")
         if first_bytes.starts_with(b"{") {
-            return Protocol::JsonRpc;
+            return Self::JsonRpc;
         }
 
         // Default: JSON-RPC (primary protocol)
-        Protocol::JsonRpc
+        Self::JsonRpc
     }
 
     /// Get protocol name for logging
-    pub fn name(&self) -> &'static str {
+    pub const fn name(&self) -> &'static str {
         match self {
-            Protocol::JsonRpc => "json-rpc",
-            Protocol::Http => "http",
+            Self::JsonRpc => "json-rpc",
+            Self::Http => "http",
         }
     }
 
     /// Get security level (5 = highest, 1 = lowest)
-    pub fn security_level(&self) -> u8 {
+    pub const fn security_level(&self) -> u8 {
         match self {
-            Protocol::JsonRpc => 4, // Structured, comprehensive, production-ready
-            Protocol::Http => 2,    // Plain text, less secure, legacy
+            Self::JsonRpc => 4, // Structured, comprehensive, production-ready
+            Self::Http => 2,    // Plain text, less secure, legacy
         }
     }
 }

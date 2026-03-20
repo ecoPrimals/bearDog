@@ -44,7 +44,7 @@ use std::time::Duration;
 /// - **Biome**: Use `beardog_types::canonical::biome::discovery::BiomeDiscoveryConfig`
 ///
 /// Do NOT create new discovery config structs in your crate.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DiscoveryConfig {
     // ═══════════════════════════════════════════════════════
     // Core Discovery

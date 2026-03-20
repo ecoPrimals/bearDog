@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Moving-window averages over CPU, memory, and network telemetry.
 
 use beardog_errors::BearDogError;
 use std::collections::VecDeque;
 
+/// Fixed-capacity deques feeding simple mean-based forecasts.
 pub struct ResourcePredictor {
     cpu_history: VecDeque<f64>,
     memory_history: VecDeque<f64>,
@@ -31,6 +30,7 @@ impl ResourcePredictor {
         })
     }
 
+    /// Pushes a correlated triple of readings, trimming to `prediction_window`.
     pub fn add_sample(&mut self, cpu: f64, memory: f64, network: f64) -> Result<(), BearDogError> {
         // Add new samples
         self.cpu_history.push_back(cpu);
@@ -51,6 +51,7 @@ impl ResourcePredictor {
         Ok(())
     }
 
+    /// Mean of the CPU deque.
     pub fn predict_cpu_usage(&self) -> Result<f64, BearDogError> {
         if self.cpu_history.is_empty() {
             return Err(BearDogError::invalid_input("No CPU history available"));
@@ -61,6 +62,7 @@ impl ResourcePredictor {
         Ok(sum / self.cpu_history.len() as f64)
     }
 
+    /// Mean of the memory deque.
     pub fn predict_memory_usage(&self) -> Result<f64, BearDogError> {
         if self.memory_history.is_empty() {
             return Err(BearDogError::invalid_input("No memory history available"));
@@ -70,6 +72,7 @@ impl ResourcePredictor {
         Ok(sum / self.memory_history.len() as f64)
     }
 
+    /// Mean of the network deque.
     pub fn predict_network_latency(&self) -> Result<f64, BearDogError> {
         if self.network_history.is_empty() {
             return Err(BearDogError::invalid_input("No network history available"));
@@ -79,8 +82,7 @@ impl ResourcePredictor {
         Ok(sum / self.network_history.len() as f64)
     }
 
-    /// Gets trend
-    /// Gets trend
+    /// Linear slope estimate over `"cpu"`, `"memory"`, or `"network"` history.
     pub fn get_trend(&self, resource_type: &str) -> Result<f64, BearDogError> {
         let history = match resource_type {
             "cpu" => &self.cpu_history,
@@ -89,7 +91,7 @@ impl ResourcePredictor {
             _ => {
                 return Err(BearDogError::invalid_input(&format!(
                     "Unknown resource type: {resource_type}"
-                )))
+                )));
             }
         };
 

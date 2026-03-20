@@ -111,7 +111,7 @@ impl BearDogGenetics {
             .map_err(|_| BearDogError::security("Invalid public key length".to_string()))?;
 
         let verifying_key = VerifyingKey::from_bytes(&public_key_array)
-            .map_err(|e| BearDogError::security(format!("Invalid public key: {}", e)))?;
+            .map_err(|e| BearDogError::security(format!("Invalid public key: {e}")))?;
 
         // Parse signature
         let signature_array: [u8; 64] = signature_bytes
@@ -132,8 +132,7 @@ impl BearDogGenetics {
                     self.id, e
                 );
                 BearDogError::security(format!(
-                    "Constraint integrity check failed - constraints may have been tampered with: {}",
-                    e
+                    "Constraint integrity check failed - constraints may have been tampered with: {e}"
                 ))
             })?;
 
@@ -357,10 +356,12 @@ mod tests {
 
         let result = key.verify_operation(&delete_op);
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("cannot delete protected"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("cannot delete protected")
+        );
     }
 
     #[test]
@@ -578,30 +579,34 @@ mod tests {
             BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![]).unwrap();
 
         // All protected paths should be blocked
-        assert!(key
-            .verify_operation(&KeyOperation::Delete {
+        assert!(
+            key.verify_operation(&KeyOperation::Delete {
                 path: "raw_data/sensor.csv".to_string(),
             })
-            .is_err());
+            .is_err()
+        );
 
-        assert!(key
-            .verify_operation(&KeyOperation::Delete {
+        assert!(
+            key.verify_operation(&KeyOperation::Delete {
                 path: "archive/2023/data.tar.gz".to_string(),
             })
-            .is_err());
+            .is_err()
+        );
 
-        assert!(key
-            .verify_operation(&KeyOperation::Delete {
+        assert!(
+            key.verify_operation(&KeyOperation::Delete {
                 path: "provenance/lineage.json".to_string(),
             })
-            .is_err());
+            .is_err()
+        );
 
         // Unprotected path should be allowed
-        assert!(key
-            .verify_operation(&KeyOperation::Delete {
+        assert!(
+            key.verify_operation(&KeyOperation::Delete {
                 path: "tmp/cache.dat".to_string(),
             })
-            .is_ok());
+            .is_ok()
+        );
     }
 
     #[test]
@@ -622,25 +627,28 @@ mod tests {
             BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![]).unwrap();
 
         // Protected by *.nc
-        assert!(key
-            .verify_operation(&KeyOperation::Delete {
+        assert!(
+            key.verify_operation(&KeyOperation::Delete {
                 path: "temperature.nc".to_string(),
             })
-            .is_err());
+            .is_err()
+        );
 
         // Protected by important_*
-        assert!(key
-            .verify_operation(&KeyOperation::Delete {
+        assert!(
+            key.verify_operation(&KeyOperation::Delete {
                 path: "important_config.toml".to_string(),
             })
-            .is_err());
+            .is_err()
+        );
 
         // Not protected
-        assert!(key
-            .verify_operation(&KeyOperation::Delete {
+        assert!(
+            key.verify_operation(&KeyOperation::Delete {
                 path: "temp.csv".to_string(),
             })
-            .is_ok());
+            .is_ok()
+        );
     }
 
     #[test]
@@ -658,18 +666,20 @@ mod tests {
             BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![]).unwrap();
 
         // Protected nested path
-        assert!(key
-            .verify_operation(&KeyOperation::Delete {
+        assert!(
+            key.verify_operation(&KeyOperation::Delete {
                 path: "data/raw/sensors/temp.csv".to_string(),
             })
-            .is_err());
+            .is_err()
+        );
 
         // Unprotected sibling path
-        assert!(key
-            .verify_operation(&KeyOperation::Delete {
+        assert!(
+            key.verify_operation(&KeyOperation::Delete {
                 path: "data/processed/temp.csv".to_string(),
             })
-            .is_ok());
+            .is_ok()
+        );
     }
 
     // ========================================================================

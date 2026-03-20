@@ -200,7 +200,7 @@ mod tests {
 
     #[test]
     fn test_production_config_requires_secret() {
-        std::env::remove_var("BEARDOG_JWT_SECRET");
+        beardog_errors::process_env::remove_var("BEARDOG_JWT_SECRET");
         let result = JwtConfig::production();
         assert!(result.is_err());
     }

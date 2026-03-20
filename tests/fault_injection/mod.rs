@@ -23,8 +23,8 @@
 //! - Data corruption scenarios
 //! - Concurrent fault scenarios
 
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::Duration;
 
 /// Fault injection configuration
@@ -173,7 +173,7 @@ impl FaultInjector {
 
         use rand::Rng;
         let mut rng = rand::thread_rng();
-        rng.gen::<f64>() < self.config.injection_rate
+        rng.r#gen::<f64>() < self.config.injection_rate
     }
 
     /// Inject a fault at a specific point

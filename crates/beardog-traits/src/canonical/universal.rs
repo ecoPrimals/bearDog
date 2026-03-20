@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Dynamic “invoke anything” provider for legacy integrations.
 
 use super::base::{BaseProvider, ConnectionStatus};
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// Temporary type definitions
+/// Success flag plus JSON payload from a dynamic operation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OperationResult {
     /// Whether success is enabled
@@ -20,6 +18,7 @@ pub struct OperationResult {
     pub message: String,
 }
 
+/// String-dispatched RPC-style surface over heterogeneous backends.
 pub trait UniversalProvider: BaseProvider {
     /// Executes operation
     fn execute_operation(
@@ -27,6 +26,7 @@ pub trait UniversalProvider: BaseProvider {
         params: HashMap<&str, &str>,
     ) -> impl std::future::Future<Output = Result<OperationResult, BearDogError>> + Send;
 
+    /// Link state for a named endpoint or shard.
     fn connection_status(
         endpoint: &str,
     ) -> impl std::future::Future<Output = Result<ConnectionStatus, BearDogError>> + Send;

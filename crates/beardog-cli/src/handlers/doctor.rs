@@ -21,7 +21,7 @@ fn discover_socket_path() -> String {
         .or_else(|_| std::env::var("BEARDOG_NAME"))
         .unwrap_or_else(|_| "beardog".to_string());
 
-    format!("/tmp/{}.sock", primal_name)
+    format!("/tmp/{primal_name}.sock")
 }
 
 /// Handle doctor command - health diagnostics
@@ -78,7 +78,7 @@ pub async fn handle_doctor(args: DoctorArgs) -> Result<(), BearDogError> {
         println!(
             "{}",
             serde_json::to_string_pretty(&result)
-                .unwrap_or_else(|e| format!("{{\"error\": \"JSON serialization failed: {}\"}}", e))
+                .unwrap_or_else(|e| format!("{{\"error\": \"JSON serialization failed: {e}\"}}"))
         );
     } else {
         // Text output
@@ -210,13 +210,13 @@ async fn check_server_connectivity() -> HealthCheck {
                 name: "Server Connectivity".to_string(),
                 healthy: true,
                 message: "Server is running and accepting connections".to_string(),
-                details: Some(format!("Socket: {}", socket_path)),
+                details: Some(format!("Socket: {socket_path}")),
             },
             Err(e) => HealthCheck {
                 name: "Server Connectivity".to_string(),
                 healthy: false,
                 message: "Server socket exists but connection failed".to_string(),
-                details: Some(format!("Error: {}", e)),
+                details: Some(format!("Error: {e}")),
             },
         }
     } else {
@@ -225,8 +225,7 @@ async fn check_server_connectivity() -> HealthCheck {
             healthy: true,
             message: "Server not running (expected in CLI mode)".to_string(),
             details: Some(format!(
-                "Use 'beardog server' to start. Socket path: {}",
-                socket_path
+                "Use 'beardog server' to start. Socket path: {socket_path}"
             )),
         }
     }
@@ -264,7 +263,7 @@ async fn check_component(component: &str) -> HealthCheck {
         "server" => check_server_connectivity().await,
         "crypto" => check_crypto_operations().await,
         _ => HealthCheck {
-            name: format!("Component: {}", component),
+            name: format!("Component: {component}"),
             healthy: false,
             message: "Unknown component".to_string(),
             details: Some("Valid components: entropy, storage, hsm, server, crypto".to_string()),

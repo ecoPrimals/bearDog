@@ -9,9 +9,9 @@ use crate::tunnel::hsm::software_hsm::core::RustSoftwareHsm;
 use crate::tunnel::hsm::software_hsm::crypto_providers::{CryptoProvider, RustCryptoProvider};
 // RingCryptoProvider removed - evolved to RustCrypto (100% Pure Rust!)
 // OpenSslCryptoProvider removed - evolved to pure Rust only
-use crate::tunnel::hsm::types::config::{CryptoBackendType, SoftwareHsmConfig};
-use crate::tunnel::hsm::types::KeyType;
 use crate::tunnel::hsm::GenerateKeyRequest;
+use crate::tunnel::hsm::types::KeyType;
+use crate::tunnel::hsm::types::config::{CryptoBackendType, SoftwareHsmConfig};
 use beardog_errors::BearDogError;
 
 // TEST_CATEGORY: error_path

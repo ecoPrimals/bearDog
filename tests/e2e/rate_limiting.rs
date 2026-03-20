@@ -235,8 +235,8 @@ pub async fn test_per_user_rate_limiting() -> Result<RateLimitMetrics, BearDogEr
 
 async fn simulate_rate_limit_check(limit: usize, _window_ms: u64) -> Result<bool, BearDogError> {
     // Modern safe pattern: AtomicUsize for thread-safe counter
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::OnceLock;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     static REQUEST_COUNT: OnceLock<AtomicUsize> = OnceLock::new();
     let counter = REQUEST_COUNT.get_or_init(|| AtomicUsize::new(0));
@@ -266,8 +266,8 @@ async fn simulate_quota_check(quota: usize, current: usize) -> Result<bool, Bear
 
 async fn simulate_token_bucket_check(_size: usize, _refill: usize) -> Result<bool, BearDogError> {
     // Modern safe pattern: AtomicUsize for thread-safe token counter
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::OnceLock;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     static TOKENS: OnceLock<AtomicUsize> = OnceLock::new();
     let token_bucket = TOKENS.get_or_init(|| AtomicUsize::new(20));
@@ -292,8 +292,8 @@ async fn simulate_token_bucket_check(_size: usize, _refill: usize) -> Result<boo
 
 async fn simulate_user_rate_limit_check(_user: &str, limit: usize) -> Result<bool, BearDogError> {
     // Modern safe pattern: AtomicUsize for thread-safe user counter
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::OnceLock;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     static USER_REQUEST_COUNT: OnceLock<AtomicUsize> = OnceLock::new();
     let counter = USER_REQUEST_COUNT.get_or_init(|| AtomicUsize::new(0));

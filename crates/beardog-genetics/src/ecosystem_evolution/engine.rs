@@ -333,6 +333,7 @@ impl Default for AdaptiveSecurity {
 }
 
 // Supporting struct types
+/// Named genetic operators, fitness evaluators, and selection strategies used by the evolution engine.
 #[derive(Debug, Clone)]
 pub struct EvolutionAlgorithms {
     /// Collection of genetic operators
@@ -343,6 +344,7 @@ pub struct EvolutionAlgorithms {
     pub selection_methods: Vec<String>,
 }
 
+/// How traits combine across generations (dominance, co-expression) in the ecosystem metaphor.
 #[derive(Debug, Clone)]
 pub struct TraitInheritance {
     /// Collection of inheritance patterns
@@ -353,6 +355,7 @@ pub struct TraitInheritance {
     pub expression_rules: Vec<String>,
 }
 
+/// Security posture adaptations (threat response, trust tuning) that co-evolve with relationships.
 #[derive(Debug, Clone)]
 pub struct AdaptiveSecurity {
     /// Collection of security adaptations

@@ -154,12 +154,13 @@ pub struct CanonicalDatabaseConfig {
     /// Maximum number of database connections
     /// Number of `max_connections`
     pub max_connections: u32,
-    /// Database connection timeout
+    /// Maximum time to wait when establishing a pooled connection before failing.
     pub connection_timeout: Duration,
-    /// Database query timeout
+    /// Maximum time a single query may run before the client aborts it.
     pub query_timeout: Duration,
 }
 
+/// Back-compat alias for [`CanonicalDatabaseConfig`]; prefer the canonical name in new code.
 pub type DatabaseConfig = CanonicalDatabaseConfig;
 
 #[cfg(test)]

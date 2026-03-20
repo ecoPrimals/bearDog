@@ -4,8 +4,8 @@
 //! `TEST_DOMAIN`: `multi_component`
 //! `TEST_PRIORITY`: high
 
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use tokio::sync::Mutex;
 
 #[tokio::test]

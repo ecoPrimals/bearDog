@@ -102,30 +102,37 @@ pub mod endpoints {
 pub mod capabilities {
     use super::*;
 
+    /// Interned capability id for the security domain.
     pub fn security() -> Arc<str> {
         shared_string("security")
     }
 
+    /// Interned capability id for hardware security modules.
     pub fn hsm() -> Arc<str> {
         shared_string("hsm")
     }
 
+    /// Interned capability id for authentication flows.
     pub fn authentication() -> Arc<str> {
         shared_string("authentication")
     }
 
+    /// Interned capability id for authorization decisions.
     pub fn authorization() -> Arc<str> {
         shared_string("authorization")
     }
 
+    /// Interned capability id for encryption services.
     pub fn encryption() -> Arc<str> {
         shared_string("encryption")
     }
 
+    /// Interned capability id for key lifecycle operations.
     pub fn key_management() -> Arc<str> {
         shared_string("key_management")
     }
 
+    /// Interned capability id for secure enclave / StrongBox style hardware.
     pub fn secure_enclave() -> Arc<str> {
         shared_string("secure_enclave")
     }
@@ -135,18 +142,22 @@ pub mod capabilities {
 pub mod node_types {
     use super::*;
 
+    /// Interned node role label for the primary replica.
     pub fn primary() -> Arc<str> {
         shared_string("primary")
     }
 
+    /// Interned node role label for read replicas.
     pub fn replica() -> Arc<str> {
         shared_string("replica")
     }
 
+    /// Interned node role label for witness / observer nodes.
     pub fn witness() -> Arc<str> {
         shared_string("witness")
     }
 
+    /// Interned node role label for edge gateways.
     pub fn gateway() -> Arc<str> {
         shared_string("gateway")
     }

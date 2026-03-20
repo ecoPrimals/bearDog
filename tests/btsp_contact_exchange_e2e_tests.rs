@@ -217,18 +217,24 @@ async fn test_e2e_complete_contact_exchange_flow() {
     // Verify complete flow
     assert!(response["success"].as_bool().unwrap());
     assert_eq!(response["data"]["contact"]["peer_id"], "tower-b");
-    assert!(!response["data"]["contact"]["addresses"]
-        .as_array()
-        .unwrap()
-        .is_empty());
-    assert!(!response["data"]["contact"]["lineage_proof"]
-        .as_str()
-        .unwrap()
-        .is_empty());
-    assert!(!response["data"]["contact"]["lineage_path"]
-        .as_array()
-        .unwrap()
-        .is_empty());
+    assert!(
+        !response["data"]["contact"]["addresses"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    assert!(
+        !response["data"]["contact"]["lineage_proof"]
+            .as_str()
+            .unwrap()
+            .is_empty()
+    );
+    assert!(
+        !response["data"]["contact"]["lineage_path"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
 }
 
 // ========================================================================
@@ -256,7 +262,7 @@ async fn test_e2e_contact_exchange_peer_not_found() {
 
 #[tokio::test]
 async fn test_e2e_contact_exchange_different_family() {
-    env::set_var("BEARDOG_FAMILY_ID", "nat0");
+    beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");
 
     let our_family = env::var("FAMILY_ID")
         .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
@@ -279,7 +285,7 @@ async fn test_e2e_contact_exchange_different_family() {
     assert!(!response["success"].as_bool().unwrap());
 
     // Cleanup
-    env::remove_var("BEARDOG_FAMILY_ID");
+    beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
 }
 
 #[tokio::test]
@@ -308,7 +314,7 @@ async fn test_e2e_contact_exchange_max_hops_exceeded() {
 #[tokio::test]
 async fn test_e2e_nat_traversal_contact_discovery() {
     // Tower A behind NAT wants to connect to Tower B behind NAT
-    env::set_var("BEARDOG_FAMILY_ID", "nat0");
+    beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");
 
     // Step 1: Tower A requests Tower B's contact info
     let _request = json!({
@@ -342,7 +348,7 @@ async fn test_e2e_nat_traversal_contact_discovery() {
     assert!(addresses[1].as_str().unwrap().starts_with("203.")); // Public
 
     // Cleanup
-    env::remove_var("BEARDOG_FAMILY_ID");
+    beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
 }
 
 // ========================================================================
@@ -453,7 +459,7 @@ async fn test_e2e_lineage_proof_required() {
 
 #[tokio::test]
 async fn test_e2e_genetic_family_verification() {
-    env::set_var("BEARDOG_FAMILY_ID", "nat0");
+    beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");
 
     let our_family = env::var("FAMILY_ID")
         .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
@@ -466,5 +472,5 @@ async fn test_e2e_genetic_family_verification() {
     assert!(peer_lineage_path[0] == our_family);
 
     // Cleanup
-    env::remove_var("BEARDOG_FAMILY_ID");
+    beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
 }

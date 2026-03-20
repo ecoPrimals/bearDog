@@ -2,11 +2,14 @@
 name = "beardog-genetics"
 description = "BearDog genetics module"
 repository = "https://github.com/eastgate-software/beardog"
-rust-version = "1.75"
+rust-version = "1.85.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "genetics", "evolution", "algorithms", "beardog", "computation",]
 categories = [ "algorithms", "science", "development-tools",]
+
+[lints]
+workspace = true
 
 [dependencies]
 rand = "0.8"

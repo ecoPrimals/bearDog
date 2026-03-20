@@ -21,11 +21,11 @@
 //! - **Principle #5**: Runtime discovery (meeting exchange)
 //! - **Principle #6**: Production crypto (real AEAD, no mocks)
 
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
 use beardog_genetics::birdsong::{BeaconCiphertext, BeaconSeed};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -160,7 +160,7 @@ pub async fn handle_beacon_encrypt(
 
     let plaintext = BASE64
         .decode(plaintext_b64)
-        .map_err(|e| format!("Invalid base64: {}", e))?;
+        .map_err(|e| format!("Invalid base64: {e}"))?;
 
     let beacon = beacon_manager
         .get_or_create_beacon()
@@ -215,11 +215,11 @@ pub async fn handle_beacon_try_decrypt(
                 .as_str()
                 .ok_or("Missing 'ciphertext' field")?,
         )
-        .map_err(|e| format!("Invalid base64: {}", e))?;
+        .map_err(|e| format!("Invalid base64: {e}"))?;
 
     let nonce_vec = BASE64
         .decode(params["nonce"].as_str().ok_or("Missing 'nonce' field")?)
-        .map_err(|e| format!("Invalid nonce base64: {}", e))?;
+        .map_err(|e| format!("Invalid nonce base64: {e}"))?;
 
     if nonce_vec.len() != 12 {
         return Err(format!("Nonce must be 12 bytes, got {}", nonce_vec.len()));
@@ -281,11 +281,11 @@ pub async fn handle_beacon_try_decrypt_any(
                 .as_str()
                 .ok_or("Missing 'ciphertext' field")?,
         )
-        .map_err(|e| format!("Invalid base64: {}", e))?;
+        .map_err(|e| format!("Invalid base64: {e}"))?;
 
     let nonce_vec = BASE64
         .decode(params["nonce"].as_str().ok_or("Missing 'nonce' field")?)
-        .map_err(|e| format!("Invalid nonce base64: {}", e))?;
+        .map_err(|e| format!("Invalid nonce base64: {e}"))?;
 
     if nonce_vec.len() != 12 {
         return Err(format!("Nonce must be 12 bytes, got {}", nonce_vec.len()));
@@ -376,7 +376,7 @@ pub async fn handle_beacon_add_known(
         .as_str()
         .ok_or("Missing 'beacon_seed_hex' field")?;
 
-    let seed_bytes = hex::decode(seed_hex).map_err(|e| format!("Invalid hex: {}", e))?;
+    let seed_bytes = hex::decode(seed_hex).map_err(|e| format!("Invalid hex: {e}"))?;
 
     if seed_bytes.len() != 32 {
         return Err(format!(
@@ -431,7 +431,7 @@ impl BeaconHandler {
 
     /// Create beacon handler with existing manager
     #[must_use]
-    pub fn with_manager(manager: Arc<BeaconManager>) -> Self {
+    pub const fn with_manager(manager: Arc<BeaconManager>) -> Self {
         Self {
             beacon_manager: manager,
         }

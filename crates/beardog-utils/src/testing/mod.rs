@@ -2,6 +2,10 @@
 
 //! Testing Utilities for Truly Concurrent Tests
 //!
+//! **Build gating:** this tree is compiled only when building `beardog-utils` as a test
+//! target (`cfg(test)`) or with the `test-utils` feature. It is not part of the default
+//! production library surface.
+//!
 //! This module provides infrastructure for writing **deterministic, concurrent tests**
 //! without relying on `sleep()` or other timing-based synchronization.
 //!
@@ -94,7 +98,7 @@ pub use sync::{EventWaiter, TestBarrier, TestLatch};
 /// Re-export commonly used testing utilities
 pub mod prelude {
     pub use super::concurrent::{
-        assert_eventually, spawn_with_completion, wait_for, Barrier, RateLimiter,
+        Barrier, RateLimiter, assert_eventually, spawn_with_completion, wait_for,
     };
     pub use super::mock_time::{MockTimeSource, TimeSource};
     pub use super::sync::{EventWaiter, TestBarrier, TestLatch};

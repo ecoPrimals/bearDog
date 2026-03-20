@@ -65,6 +65,8 @@ impl BearDogCore {
     pub async fn shutdown(&self) -> Result<(), BearDogError> {
         info!("🛑 BearDog Core shutdown initiated");
 
+        self.unregister_from_ecosystem()?;
+
         {
             let mut state = self.state.write().await;
             for status in state.components.values_mut() {

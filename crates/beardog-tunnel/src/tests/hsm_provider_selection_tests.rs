@@ -230,8 +230,8 @@ mod hsm_selection_tests {
         HealthStatus, HsmManager, HsmProvider, KeyInfo, ProviderInfo,
     };
     use crate::tunnel::hsm::{
-        types::{HsmKey, HsmTier},
         GenerateKeyRequest,
+        types::{HsmKey, HsmTier},
     };
     use async_trait::async_trait;
     use std::sync::Arc;
@@ -435,8 +435,8 @@ mod hsm_selection_tests {
     }
 
     #[tokio::test]
-    async fn test_hsm_manager_registers_multiple_providers(
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_hsm_manager_registers_multiple_providers()
+    -> Result<(), Box<dyn std::error::Error>> {
         // Test that HsmManager can register multiple providers
         let mut manager = HsmManager::new();
 
@@ -699,8 +699,8 @@ mod hsm_selection_tests {
     }
 
     #[tokio::test]
-    async fn test_provider_selection_with_multiple_providers(
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_provider_selection_with_multiple_providers()
+    -> Result<(), Box<dyn std::error::Error>> {
         // ✅ CRITICAL TEST: Provider selection with multiple providers
         // This test verifies that when multiple providers are registered,
         // the system selects the appropriate one based on tier priority.
@@ -777,8 +777,8 @@ mod hsm_selection_tests {
     }
 
     #[tokio::test]
-    async fn test_provider_selection_with_hardware_unavailable(
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_provider_selection_with_hardware_unavailable()
+    -> Result<(), Box<dyn std::error::Error>> {
         // Test failover when hardware is unavailable
         let hardware_hsm = Arc::new(MockHardwareHsm::new(false)); // Unavailable
         let cloud_hsm = Arc::new(MockCloudHsm::new(true)); // Available
@@ -914,8 +914,8 @@ mod hsm_selection_tests {
     }
 
     #[tokio::test]
-    async fn test_provider_selection_security_level_comparison(
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_provider_selection_security_level_comparison()
+    -> Result<(), Box<dyn std::error::Error>> {
         // Test that security levels are correctly compared
         let hardware_hsm = MockHardwareHsm::new(true);
         let cloud_hsm = MockCloudHsm::new(true);
@@ -938,8 +938,8 @@ mod hsm_selection_tests {
     }
 
     #[tokio::test]
-    async fn test_provider_selection_all_providers_registered(
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_provider_selection_all_providers_registered()
+    -> Result<(), Box<dyn std::error::Error>> {
         // ✅ COMPREHENSIVE TEST: All three provider tiers registered and functional
         let mut manager = HsmManager::new();
 

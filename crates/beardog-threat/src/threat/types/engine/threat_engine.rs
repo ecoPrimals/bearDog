@@ -13,9 +13,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 // SystemTime is available via std::time:: in usage
 
-/// Main threat detection engine
+/// Serializable engine snapshot: configuration, feeds, rules, models, and counters.
 #[derive(Debug)]
 pub struct ThreatDetectionEngine {
+    /// Active detection configuration (thresholds, feature flags, etc.).
     pub config: ThreatDetectionConfig,
     /// Mapping of threat feeds
     /// Mapping of threat feeds
@@ -42,8 +43,10 @@ pub struct ThreatDetectionEngine {
 
 // ThreatDetectionConfig is now imported from the parent module
 
+/// ML model row stored inside the engine’s in-memory registry.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MlModel {
+    /// Registry id for this model.
     pub id: String,
     /// Name of the item
     /// Name of the item
@@ -98,6 +101,7 @@ pub struct ThreatDetectionStats {
     /// The detection accuracy value
     /// The detection accuracy value
     pub detection_accuracy: f64,
+    /// Mean latency from ingest to classification over recent evaluations.
     pub average_detection_time_ms: f64,
     /// The last updated value
     /// The last updated value

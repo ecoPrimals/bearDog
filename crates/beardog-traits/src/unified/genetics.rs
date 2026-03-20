@@ -31,6 +31,7 @@ pub trait GeneticsProvider: BearDogProvider {
         signature: &Self::GeneticSignature,
     ) -> impl std::future::Future<Output = Result<bool, Self::Error>> + Send;
 
+    /// Produces an offspring signature by combining multiple parent signatures.
     fn recombine(
         &self,
         parents: Vec<Self::GeneticSignature>,
@@ -56,10 +57,12 @@ pub trait GeneticsProvider: BearDogProvider {
     ) -> impl std::future::Future<Output = Result<Vec<String>, Self::Error>> + Send;
 }
 
+/// Biome-scoped genetics: signatures, trust, and authorization for ecological partitions.
 pub trait BiomeGenetics: Send + Sync {
     /// Biome identity type
     type BiomeIdentity: Send + Sync + Clone + Serialize + for<'de> Deserialize<'de>;
 
+    /// Canonical serialized signature for a biome’s genetic profile.
     type GeneticSignature: Send + Sync + Clone + Serialize + for<'de> Deserialize<'de>;
 
     /// Trust level type
@@ -89,12 +92,14 @@ pub trait BiomeGenetics: Send + Sync {
         &self,
     ) -> impl std::future::Future<Output = Result<Self::TrustLevel, BearDogError>> + Send;
 
+    /// Decides whether a named genetics operation is allowed in the current trust posture.
     fn authorize_operation(
         &self,
         operation: &str,
     ) -> impl std::future::Future<Output = Result<AuthorizationResult, BearDogError>> + Send;
 }
 
+/// Drives generational search over typed populations and fitness scores.
 pub trait EvolutionEngine: Send + Sync {
     /// Associated error type
     type Error: std::error::Error + Send + Sync + 'static;
@@ -120,17 +125,20 @@ pub trait EvolutionEngine: Send + Sync {
         population: Self::Population,
     ) -> impl std::future::Future<Output = Result<Self::Population, Self::Error>> + Send;
 
+    /// Scores every member of the current population.
     fn calculate_fitness(
         &self,
         population: &Self::Population,
     ) -> impl std::future::Future<Output = Result<Vec<Self::FitnessScore>, Self::Error>> + Send;
 
+    /// Chooses parent genomes for the next generation.
     fn select_parents(
         &self,
         population: &Self::Population,
         count: usize,
     ) -> impl std::future::Future<Output = Result<Vec<Self::GeneticSignature>, Self::Error>> + Send;
 
+    /// Produces child signatures from the selected parents.
     fn crossover(
         &self,
         parents: Vec<Self::GeneticSignature>,
@@ -156,6 +164,7 @@ pub trait EvolutionEngine: Send + Sync {
     ) -> impl std::future::Future<Output = Result<EvolutionStats, Self::Error>> + Send;
 }
 
+/// Records parent/child relationships for audit and heredity analysis.
 pub trait LineageTracker: Send + Sync {
     /// Lineage record type
     type LineageRecord: Send + Sync + Clone + Serialize + for<'de> Deserialize<'de>;
@@ -243,6 +252,7 @@ pub trait EntropyQualityAssessor: Send + Sync {
 
 // Supporting types
 
+/// Inputs controlling how a [`GeneticsProvider`] derives a fresh signature.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticParameters {
     /// The entropy source value
@@ -266,7 +276,7 @@ pub struct AuthorizationResult {
     pub permissions: Vec<String>,
 }
 
-/// Evolution statistics
+/// Point-in-time snapshot of an evolutionary run.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EvolutionStats {
     /// Number of generation
@@ -303,6 +313,7 @@ pub enum EntropyClass {
 /// Biome genetics data structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BiomeGeneticsData {
+    /// Stable biome identifier in the mesh or registry.
     pub biome_id: String,
     /// Collection of signature
     pub signature: Vec<u8>,

@@ -4,8 +4,8 @@
 
 use super::failover::*;
 use beardog_errors::BearDogError;
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU32, Ordering};
 
 #[cfg(test)]
 #[allow(clippy::module_inception)]

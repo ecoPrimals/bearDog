@@ -288,7 +288,7 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
     // REQUIRED: cipher_suite (RFC 8446 Section 7.3 - determines key length!)
     let cipher_suite = params
         .get("cipher_suite")
-        .and_then(|v| v.as_u64())
+        .and_then(serde_json::Value::as_u64)
         .ok_or("Missing required parameter: cipher_suite")? as u16;
 
     // Decode parameters
@@ -332,13 +332,14 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
             ("SHA-384", 48, 32) // SHA-384 hash (48 bytes), AES-256-GCM keys (32 bytes)
         }
         0x1303 => {
-            info!("  → Cipher suite: 0x1303 (TLS_CHACHA20_POLY1305_SHA256) - using SHA-256, 32-byte keys");
+            info!(
+                "  → Cipher suite: 0x1303 (TLS_CHACHA20_POLY1305_SHA256) - using SHA-256, 32-byte keys"
+            );
             ("SHA-256", 32, 32) // SHA-256 hash (32 bytes), ChaCha20-Poly1305 keys (32 bytes)
         }
         _ => {
             return Err(format!(
-                "Unsupported TLS 1.3 cipher suite: 0x{:04x}. Supported: 0x1301 (AES-128-GCM-SHA256), 0x1302 (AES-256-GCM-SHA384), 0x1303 (ChaCha20-Poly1305-SHA256)",
-                cipher_suite
+                "Unsupported TLS 1.3 cipher suite: 0x{cipher_suite:04x}. Supported: 0x1301 (AES-128-GCM-SHA256), 0x1302 (AES-256-GCM-SHA384), 0x1303 (ChaCha20-Poly1305-SHA256)"
             ));
         }
     };
@@ -447,7 +448,7 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
         warn!("⚠️  Failed to export to SSLKEYLOGFILE: {}", e);
     }
 
-    let algorithm = format!("HKDF-{}", hash_algo);
+    let algorithm = format!("HKDF-{hash_algo}");
 
     Ok(serde_json::json!({
         "client_write_key": client_write_key_b64,
@@ -553,7 +554,7 @@ pub async fn handle_tls_derive_application_secrets(
     // Extract cipher_suite (for dynamic key length derivation)
     let cipher_suite = params
         .get("cipher_suite")
-        .and_then(|v| v.as_u64())
+        .and_then(serde_json::Value::as_u64)
         .unwrap_or(0x1303) as u16; // Default to ChaCha20-Poly1305
 
     info!("🔐 Cipher suite: 0x{:04x}", cipher_suite);
@@ -582,13 +583,14 @@ pub async fn handle_tls_derive_application_secrets(
             ("SHA-384", 48, 32, 12)
         }
         0x1303 => {
-            info!("  → Cipher suite: 0x1303 (TLS_CHACHA20_POLY1305_SHA256) - using SHA-256, 32-byte keys");
+            info!(
+                "  → Cipher suite: 0x1303 (TLS_CHACHA20_POLY1305_SHA256) - using SHA-256, 32-byte keys"
+            );
             ("SHA-256", 32, 32, 12)
         }
         _ => {
             return Err(format!(
-                "Unsupported TLS 1.3 cipher suite: 0x{:04x}. Supported: 0x1301, 0x1302, 0x1303",
-                cipher_suite
+                "Unsupported TLS 1.3 cipher suite: 0x{cipher_suite:04x}. Supported: 0x1301, 0x1302, 0x1303"
             ));
         }
     };
@@ -725,7 +727,7 @@ pub async fn handle_tls_derive_application_secrets(
     // handle_tls_derive_handshake_secrets or pass client_random as an optional parameter.
     debug!("ℹ️  SSLKEYLOGFILE export skipped (client_random not in RFC 8446 compliant API)");
 
-    let algorithm = format!("HKDF-{}", hash_algo);
+    let algorithm = format!("HKDF-{hash_algo}");
 
     Ok(serde_json::json!({
         "client_write_key": client_write_key_b64,

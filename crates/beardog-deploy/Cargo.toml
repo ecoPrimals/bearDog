@@ -5,11 +5,11 @@ path = "src/main.rs"
 [package]
 name = "beardog-deploy"
 version = "1.0.0"
-edition = "2021"
+edition = "2024"
 description = "Pure Rust deployment tool for BearDog on Android devices"
 repository = "https://github.com/eastgate-software/beardog"
 license = "AGPL-3.0-only"
-rust-version = "1.75"
+rust-version = "1.85.0"
 authors = [ "BearDog Team <team@beardog.dev>",]
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"

@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Threat detection runtime: handlers, ML scoring, shared types, and test helpers.
 
 use beardog_errors::BearDogError;
 pub mod handlers;
+/// Heuristic and remote-backed ML scoring for [`SecurityEvent`] inputs.
 pub mod ml_engine;
-/// Test utilities and fixtures
-/// Test utilities and fixtures
+/// Unit and integration tests for threat detection building blocks.
 pub mod tests;
 pub mod types;
 
@@ -19,27 +17,21 @@ pub use types::{
     ThreatIndicator, ThreatSeverity, ThreatSource, ThreatStatus, ThreatTarget, ThreatType,
 };
 
+/// Convenience entry points for constructing a [`ThreatDetectionEngine`] with optional ML support.
 pub struct ThreatAPI;
 impl ThreatAPI {
-    /// Create a default threat detection engine
+    /// Builds an engine from [`ThreatDetectionConfig::default`].
     ///
     /// # Errors
-    /// Returns an error if the engine configuration is invalid
-    /// Creates default
-    /// Creates default
+    /// Propagates configuration validation failures from [`ThreatDetectionEngine::new`].
     pub fn create_default() -> Result<ThreatDetectionEngine, BearDogError> {
         ThreatDetectionEngine::new(ThreatDetectionConfig::default())
     }
 
-    /// Create a new threat detection engine with ML capabilities
-    ///
-    /// # Returns
-    /// Returns a tuple containing the threat engine and ML engine
+    /// Builds a [`ThreatDetectionEngine`] together with a fresh [`SmartThreatMLEngine`] for scoring.
     ///
     /// # Errors
-    /// Returns an error if engine initialization fails
-    /// Creates a new instance
-    /// Creates a new instance
+    /// Same as [`Self::create_default`] when the rule engine fails to initialize.
     pub fn new_with_ml() -> Result<(ThreatDetectionEngine, SmartThreatMLEngine), BearDogError> {
         let threat_engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())?;
         let ml_engine = SmartThreatMLEngine::new();

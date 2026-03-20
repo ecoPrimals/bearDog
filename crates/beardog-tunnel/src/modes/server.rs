@@ -32,13 +32,13 @@ pub async fn run(
 ) -> anyhow::Result<()> {
     // Override environment with CLI args if provided
     if let Some(socket_path) = &socket {
-        std::env::set_var("BEARDOG_SOCKET", socket_path);
+        beardog_errors::process_env::set_var("BEARDOG_SOCKET", socket_path);
     }
     if let Some(fam_id) = &family_id {
-        std::env::set_var("BEARDOG_FAMILY_ID", fam_id);
+        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", fam_id);
     }
     if let Some(orch_id) = &orchestrator_id {
-        std::env::set_var("BEARDOG_ORCHESTRATOR_ID", orch_id);
+        beardog_errors::process_env::set_var("BEARDOG_ORCHESTRATOR_ID", orch_id);
     }
 
     // Step 0: Discover Self-Knowledge (Zero Hardcoded Identity)
@@ -130,7 +130,7 @@ pub async fn run(
         .await
         .map_err(|e| {
             error!("Failed to create Unix socket server: {}", e);
-            BearDogError::configuration(&format!("Failed to create Unix socket server: {}", e))
+            BearDogError::configuration(&format!("Failed to create Unix socket server: {e}"))
         })?,
     );
     info!("✅ Unix Socket IPC Server created\n");
@@ -160,9 +160,8 @@ pub async fn run(
     info!("✅ Unix Socket Server started and ready");
     info!("   ✨ Lock-free concurrent readiness verified!\n");
 
-    // Step 7.5: Register with Discovery Service (Neural API or fallback to Songbird)
-    // EVOLUTION: Use Neural API for TRUE PRIMAL pattern, fallback to legacy Songbird
-    info!("🌐 Registering with Discovery Service...");
+    // Step 7.5: Register with discovery (Neural API first, then legacy capability registry client)
+    info!("🌐 Registering with discovery service...");
     match register_with_discovery_service(&socket_config).await {
         Ok(()) => {
             info!("✅ Successfully registered with discovery service");
@@ -219,21 +218,11 @@ pub async fn run(
     Ok(())
 }
 
-/// Register BearDog with discovery service
+/// Register BearDog with a runtime-discovered discovery/registry endpoint
 ///
-/// Implements TRUE PRIMAL pattern via Neural API (capability.call).
-/// Falls back to legacy Songbird registration if Neural API unavailable.
-///
-/// # Evolution Strategy
-///
-/// 1. **Primary**: Neural API (TRUE PRIMAL pattern)
-///    - Auto-registration via `neural_registration` module
-///    - Capability-based semantic routing
-///    - Zero coupling between primals
-///
-/// 2. **Fallback**: Legacy Songbird client
-///    - Direct Songbird registration (deprecated)
-///    - Will be removed after full Neural API adoption
+/// 1. **Primary**: Neural API (`capability.call` semantics via `neural_registration`).
+/// 2. **Fallback**: Legacy JSON-RPC registry client (`SongbirdClient`) for deployments
+///    that have not migrated — still capability-oriented at the protocol level.
 ///
 /// # Returns
 ///
@@ -252,12 +241,19 @@ async fn register_with_discovery_service(socket_config: &SocketConfig) -> anyhow
         let identity = PrimalIdentity::from_env()
             .context("Failed to load primal identity for registration")?;
 
-        // Construct primal name and socket path
-        let primal_name = format!("beardog-{}", identity.node_id());
+        // Instance id for the registry (capability-oriented default, not a product name).
+        // Override with BEARDOG_NEURAL_REGISTRATION_INSTANCE; role from PRIMAL_TYPE / BEARDOG_PRIMAL_TYPE.
+        let registration_instance = std::env::var("BEARDOG_NEURAL_REGISTRATION_INSTANCE")
+            .unwrap_or_else(|_| {
+                let role = std::env::var("PRIMAL_TYPE")
+                    .or_else(|_| std::env::var("BEARDOG_PRIMAL_TYPE"))
+                    .unwrap_or_else(|_| "security".to_string());
+                format!("{role}-{}", identity.node_id())
+            });
         let socket_path = socket_config.socket_path_string();
 
-        match register_with_neural_api(&neural_socket, &primal_name, &socket_path).await {
-            Ok(_) => {
+        match register_with_neural_api(&neural_socket, &registration_instance, &socket_path).await {
+            Ok(()) => {
                 info!("✅ Registered with Neural API (TRUE PRIMAL)");
                 return Ok(());
             }
@@ -267,21 +263,21 @@ async fn register_with_discovery_service(socket_config: &SocketConfig) -> anyhow
             }
         }
     } else {
-        debug!("ℹ️  Neural API not detected, trying legacy Songbird...");
+        debug!("ℹ️  Neural API socket not detected; trying legacy registry client...");
     }
 
-    // PHASE 2: Fallback to legacy Songbird (DEPRECATED)
-    // This will be removed after full Neural API adoption
-    // ecoPrimals: Migration plan - migrate to Neural API when Songbird exposes it.
+    // PHASE 2: Fallback to legacy registry transport (deprecated path)
     #[allow(deprecated)]
     match register_with_legacy_songbird().await {
-        Ok(_) => {
-            info!("✅ Registered with Songbird (legacy, will migrate to Neural API)");
+        Ok(()) => {
+            info!(
+                "✅ Registered with legacy discovery registry (migrate to Neural API when available)"
+            );
             Ok(())
         }
         Err(e) => {
             warn!(
-                "⚠️  No discovery service available (Neural API or Songbird): {}",
+                "⚠️  No discovery endpoint available (Neural API or legacy registry): {}",
                 e
             );
             Err(e)
@@ -289,20 +285,17 @@ async fn register_with_discovery_service(socket_config: &SocketConfig) -> anyhow
     }
 }
 
-/// Legacy Songbird registration (DEPRECATED)
+/// Legacy registry registration (deprecated transport; capability list is unchanged)
 ///
-/// This function will be removed after full Neural API adoption.
-/// Use `register_with_neural_api` for TRUE PRIMAL pattern.
+/// Prefer `register_with_neural_api` for semantic routing without a fixed registry implementation.
 #[deprecated(
     since = "0.9.1",
     note = "Use Neural API registration for TRUE PRIMAL pattern"
 )]
 async fn register_with_legacy_songbird() -> anyhow::Result<()> {
     use beardog_ipc::{Capability, SongbirdClient};
-    use std::time::Duration;
 
-    // Attempt to connect to Songbird
-    // This may fail if Songbird isn't running - that's OK for standalone operation
+    // Connects via `beardog-ipc` discovery (env + fallbacks — no hardcoded peer host)
     let client = SongbirdClient::connect().await?;
 
     // Register BearDog with its capabilities
@@ -319,9 +312,7 @@ async fn register_with_legacy_songbird() -> anyhow::Result<()> {
     let primal_name = crate::unix_socket_ipc::handlers::utils::get_primal_name();
     client.register(&primal_name, capabilities).await?;
 
-    // Start heartbeat to maintain registration
-    // Songbird expects heartbeats every 30-60 seconds
-    let heartbeat_interval = Duration::from_secs(30);
+    let heartbeat_interval = beardog_ipc::DEFAULT_HEARTBEAT_INTERVAL;
     tokio::spawn(async move {
         let _heartbeat = client.start_heartbeat(heartbeat_interval);
         // Heartbeat task runs until client is dropped
@@ -392,10 +383,10 @@ async fn wait_for_shutdown() {
     let terminate = std::future::pending::<()>();
 
     tokio::select! {
-        _ = ctrl_c => {
+        () = ctrl_c => {
             info!("Received Ctrl+C");
         },
-        _ = terminate => {
+        () = terminate => {
             info!("Received SIGTERM");
         },
     }

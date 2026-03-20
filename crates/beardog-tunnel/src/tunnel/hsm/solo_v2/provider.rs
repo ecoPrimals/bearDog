@@ -99,7 +99,7 @@ impl SoloV2Provider {
             let hid_devices = tokio::task::block_in_place(|| {
                 tokio::runtime::Handle::current().block_on(beardog_hid::discover())
             })
-            .map_err(|e| BearDogError::system(format!("Failed to discover HID devices: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Failed to discover HID devices: {e}")))?;
 
             let mut devices = Vec::new();
 
@@ -287,7 +287,7 @@ impl SoloV2Provider {
         let handles = self.key_handles.read().await;
         let _handle = handles
             .get(key_id)
-            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {}", key_id)))?
+            .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}")))?
             .clone();
         drop(handles);
 
@@ -312,11 +312,10 @@ impl SoloV2Provider {
             // Step 1: Verify PIN if needed
             let pin_auth = {
                 let pin_config = self.pin_config.read().await;
-                if let Some(ref pin) = pin_config.cached_pin {
-                    Some(pin.as_bytes().to_vec())
-                } else {
-                    None
-                }
+                pin_config
+                    .cached_pin
+                    .as_ref()
+                    .map(|pin| pin.as_bytes().to_vec())
             };
 
             // Step 2: Prepare assertion parameters

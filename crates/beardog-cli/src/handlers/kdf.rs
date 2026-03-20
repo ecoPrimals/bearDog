@@ -1,21 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Key Derivation Functions Module
-// Wraps beardog-security KDF implementations for CLI use
+//! Key-derivation helpers for CLI key generation (PBKDF2, Argon2, HKDF).
 
 use beardog_errors::BearDogError;
 
 /// KDF configuration
 #[derive(Debug, Clone)]
 pub struct KdfConfig {
+    /// KDF name: `pbkdf2`, `argon2`, or `hkdf`
     pub kdf_type: String,
+    /// PBKDF2 iteration count
     pub iterations: Option<u32>,
+    /// Argon2 memory cost (KiB)
     pub memory: Option<u32>,
+    /// Argon2 time cost
     pub time: Option<u32>,
 }
 
 impl KdfConfig {
-    pub fn new(
+    /// Build configuration for [`KdfConfig::derive_key`].
+    pub const fn new(
         kdf_type: String,
         iterations: Option<u32>,
         memory: Option<u32>,
@@ -39,13 +43,13 @@ impl KdfConfig {
         match self.kdf_type.to_lowercase().as_str() {
             "pbkdf2" => {
                 let iterations = self.iterations.unwrap_or(100_000);
-                println!("   Using PBKDF2-HMAC-SHA256 ({} iterations)", iterations);
+                println!("   Using PBKDF2-HMAC-SHA256 ({iterations} iterations)");
                 self.derive_key_pbkdf2(password, salt, iterations, key_length)
             }
             "argon2" => {
                 let memory = self.memory.unwrap_or(65536); // 64 MB
                 let time = self.time.unwrap_or(3);
-                println!("   Using Argon2id (memory: {}KB, time: {})", memory, time);
+                println!("   Using Argon2id (memory: {memory}KB, time: {time})");
                 self.derive_key_argon2(password, salt, memory, time, key_length)
             }
             "hkdf" => {
@@ -69,25 +73,25 @@ impl KdfConfig {
         key_length: usize,
     ) -> Result<Vec<u8>, BearDogError> {
         use argon2::{
-            password_hash::{PasswordHasher, SaltString},
             Argon2, Params,
+            password_hash::{PasswordHasher, SaltString},
         };
 
         // Create params
         let params = Params::new(memory_kib, time_cost, 1, Some(key_length))
-            .map_err(|e| BearDogError::crypto_error(format!("Argon2 params failed: {}", e)))?;
+            .map_err(|e| BearDogError::crypto_error(format!("Argon2 params failed: {e}")))?;
 
         // Create Argon2 instance
         let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params);
 
         // Convert salt to SaltString
         let salt_string = SaltString::encode_b64(salt)
-            .map_err(|e| BearDogError::crypto_error(format!("Salt encoding failed: {}", e)))?;
+            .map_err(|e| BearDogError::crypto_error(format!("Salt encoding failed: {e}")))?;
 
         // Hash password
         let hash = argon2
             .hash_password(password, &salt_string)
-            .map_err(|e| BearDogError::crypto_error(format!("Argon2 hashing failed: {}", e)))?;
+            .map_err(|e| BearDogError::crypto_error(format!("Argon2 hashing failed: {e}")))?;
 
         // Extract hash bytes
         let hash_bytes = hash
@@ -132,12 +136,13 @@ impl KdfConfig {
         let hk = Hkdf::<Sha256>::new(Some(salt), password);
         let mut okm = vec![0u8; key_length];
         hk.expand(b"beardog_key_generation", &mut okm)
-            .map_err(|e| BearDogError::crypto_error(format!("HKDF expansion failed: {}", e)))?;
+            .map_err(|e| BearDogError::crypto_error(format!("HKDF expansion failed: {e}")))?;
 
         Ok(okm)
     }
 
     /// Get KDF metadata for storage
+    #[allow(dead_code)] // Planned for key metadata persistence
     pub fn to_metadata(&self) -> serde_json::Value {
         serde_json::json!({
             "kdf_type": self.kdf_type,

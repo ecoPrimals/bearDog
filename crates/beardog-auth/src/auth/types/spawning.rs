@@ -9,9 +9,12 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Runtime view of a spawned BearDog instance and its resource bindings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpawnedBearDog {
+    /// Unique id for this spawn, distinct from genetics or parent ids.
     pub spawn_id: String,
+    /// Originating primal or genome identifier responsible for the spawn.
     pub parent_id: String,
     /// The genetics value
     pub genetics: BearDogGenetics,
@@ -21,10 +24,13 @@ pub struct SpawnedBearDog {
     pub task_assignment: Vec<TaskType>,
     /// The resource limits value
     pub resource_limits: ResourceLimits,
+    /// Wall-clock timestamp when the spawn was created.
     pub spawn_time: DateTime<Utc>,
+    /// Optional hard stop after which the child should drain and exit.
     pub expected_lifetime: Option<DateTime<Utc>>,
     /// Current status of the current
     pub current_status: SpawnStatus,
+    /// Arbitrary KPIs (CPU%, queue depth, …) keyed by metric name for observability.
     pub performance_metrics: HashMap<String, f64>,
     /// Mapping of trust relationships
     pub trust_relationships: HashMap<String, f64>,
@@ -34,6 +40,7 @@ pub struct SpawnedBearDog {
     pub ecosystem_connections: Vec<String>,
 }
 
+/// Upper bounds enforced on a spawned instance to protect shared cluster capacity.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceLimits {
     /// Number of `memory_mb`
@@ -123,19 +130,19 @@ mod tests {
         let old_connections = std::env::var("BEARDOG_MAX_CONCURRENT_CONNECTIONS").ok();
 
         // Clear all env vars first to avoid pollution from other tests
-        std::env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
-        std::env::remove_var("BEARDOG_RESOURCE_DISK_MB");
-        std::env::remove_var("BEARDOG_RESOURCE_CPU_PERCENT");
-        std::env::remove_var("BEARDOG_RESOURCE_NETWORK_MBPS");
-        std::env::remove_var("BEARDOG_MAX_CONCURRENT_CONNECTIONS");
+        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
+        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_DISK_MB");
+        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_CPU_PERCENT");
+        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_NETWORK_MBPS");
+        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONCURRENT_CONNECTIONS");
 
         // Small delay to ensure env changes propagate
         std::thread::sleep(std::time::Duration::from_millis(10));
 
         // Set test values - these should be read by default()
-        std::env::set_var("BEARDOG_RESOURCE_MEMORY_MB", "2048");
-        std::env::set_var("BEARDOG_RESOURCE_DISK_MB", "10240");
-        std::env::set_var("BEARDOG_MAX_CONCURRENT_CONNECTIONS", "5000");
+        beardog_errors::process_env::set_var("BEARDOG_RESOURCE_MEMORY_MB", "2048");
+        beardog_errors::process_env::set_var("BEARDOG_RESOURCE_DISK_MB", "10240");
+        beardog_errors::process_env::set_var("BEARDOG_MAX_CONCURRENT_CONNECTIONS", "5000");
 
         // Small delay to ensure env changes propagate
         std::thread::sleep(std::time::Duration::from_millis(10));
@@ -156,24 +163,26 @@ mod tests {
 
         // Restore original env state
         match old_memory {
-            Some(val) => std::env::set_var("BEARDOG_RESOURCE_MEMORY_MB", val),
-            None => std::env::remove_var("BEARDOG_RESOURCE_MEMORY_MB"),
+            Some(val) => beardog_errors::process_env::set_var("BEARDOG_RESOURCE_MEMORY_MB", val),
+            None => beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_MEMORY_MB"),
         }
         match old_disk {
-            Some(val) => std::env::set_var("BEARDOG_RESOURCE_DISK_MB", val),
-            None => std::env::remove_var("BEARDOG_RESOURCE_DISK_MB"),
+            Some(val) => beardog_errors::process_env::set_var("BEARDOG_RESOURCE_DISK_MB", val),
+            None => beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_DISK_MB"),
         }
         match old_cpu {
-            Some(val) => std::env::set_var("BEARDOG_RESOURCE_CPU_PERCENT", val),
-            None => std::env::remove_var("BEARDOG_RESOURCE_CPU_PERCENT"),
+            Some(val) => beardog_errors::process_env::set_var("BEARDOG_RESOURCE_CPU_PERCENT", val),
+            None => beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_CPU_PERCENT"),
         }
         match old_network {
-            Some(val) => std::env::set_var("BEARDOG_RESOURCE_NETWORK_MBPS", val),
-            None => std::env::remove_var("BEARDOG_RESOURCE_NETWORK_MBPS"),
+            Some(val) => beardog_errors::process_env::set_var("BEARDOG_RESOURCE_NETWORK_MBPS", val),
+            None => beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_NETWORK_MBPS"),
         }
         match old_connections {
-            Some(val) => std::env::set_var("BEARDOG_MAX_CONCURRENT_CONNECTIONS", val),
-            None => std::env::remove_var("BEARDOG_MAX_CONCURRENT_CONNECTIONS"),
+            Some(val) => {
+                beardog_errors::process_env::set_var("BEARDOG_MAX_CONCURRENT_CONNECTIONS", val)
+            }
+            None => beardog_errors::process_env::remove_var("BEARDOG_MAX_CONCURRENT_CONNECTIONS"),
         }
     }
 
@@ -181,16 +190,16 @@ mod tests {
     #[serial_test::serial] // Environment variable test - must run serially
     fn test_resource_limits_invalid_env_uses_default() {
         // Clear env vars first to avoid interference from other tests
-        std::env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
-        std::env::remove_var("BEARDOG_RESOURCE_DISK_MB");
-        std::env::remove_var("BEARDOG_MAX_CONCURRENT_CONNECTIONS");
+        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
+        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_DISK_MB");
+        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONCURRENT_CONNECTIONS");
 
-        std::env::set_var("BEARDOG_RESOURCE_MEMORY_MB", "invalid");
+        beardog_errors::process_env::set_var("BEARDOG_RESOURCE_MEMORY_MB", "invalid");
 
         let limits = ResourceLimits::default();
         assert_eq!(limits.memory_mb, 1024, "Invalid env should use default"); // Default is 1024
 
-        std::env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
+        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
     }
 
     #[test]
@@ -285,6 +294,7 @@ mod tests {
     }
 }
 
+/// Inputs required to evaluate whether a new child primal may be spawned.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpawnRequest {
     /// Collection of parent genetics
@@ -295,6 +305,7 @@ pub struct SpawnRequest {
     pub target_environment: String,
 }
 
+/// Business or technical reason driving a spawn request (feeds policy/quotas).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SpawnPurpose {
     /// Represents task execution variant
@@ -311,8 +322,8 @@ pub enum SpawnPurpose {
     Experimentation,
 }
 
+/// Unit of work assigned to a spawned BearDog (drives scheduling and sandboxing).
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Types of task
 pub enum TaskType {
     /// Represents cryptographic variant
     Cryptographic,
@@ -328,6 +339,7 @@ pub enum TaskType {
     EcosystemMaintenance,
 }
 
+/// High-level lifecycle flag for a [`SpawnedBearDog`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SpawnStatus {
     /// Currently initializing

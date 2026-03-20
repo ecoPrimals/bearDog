@@ -111,7 +111,7 @@ pub enum CertificateClassification {
     /// Uncertain classification (cautious unlock)
     Uncertain {
         /// Best guess
-        likely_classification: Box<CertificateClassification>,
+        likely_classification: Box<Self>,
         /// Confidence in guess
         confidence: f64,
     },
@@ -230,7 +230,7 @@ impl AdapterUnlockCertificate {
         use uuid::Uuid;
 
         let issued_at = Utc::now();
-        
+
         // Determine expiry based on classification
         let expires_at = match &classification {
             CertificateClassification::Human { .. } => {
@@ -239,8 +239,13 @@ impl AdapterUnlockCertificate {
             CertificateClassification::SmallTeam { .. } => {
                 issued_at + Duration::hours(8) // 8 hours for teams
             }
-            CertificateClassification::Commercial { .. } => {
-                issued_at + Duration::minutes(15) // 15 minutes for commercial
+            CertificateClassification::Commercial { risk_level, .. } => {
+                let ttl = match risk_level {
+                    ExtractionRisk::Low => Duration::hours(1),
+                    ExtractionRisk::Medium => Duration::minutes(30),
+                    ExtractionRisk::High => Duration::minutes(15),
+                };
+                issued_at + ttl
             }
             CertificateClassification::Uncertain { .. } => {
                 issued_at + Duration::hours(1) // 1 hour for uncertain
@@ -287,7 +292,7 @@ impl AdapterUnlockCertificate {
         // Check expiry first
         if Utc::now() > self.expires_at {
             return Err(BearDogError::unauthorized(
-                "Certificate expired".to_string()
+                "Certificate expired".to_string(),
             ));
         }
 
@@ -313,9 +318,9 @@ impl AdapterUnlockCertificate {
         let signature = ed25519_dalek::Signature::from_bytes(&sig_array);
 
         // Verify signature
-        verifying_key
-            .verify(&cert_data, &signature)
-            .map_err(|_| BearDogError::security("Certificate signature verification failed".to_string()))?;
+        verifying_key.verify(&cert_data, &signature).map_err(|_| {
+            BearDogError::security("Certificate signature verification failed".to_string())
+        })?;
 
         Ok(())
     }
@@ -333,7 +338,10 @@ impl AdapterUnlockCertificate {
     pub fn requires_license(&self) -> bool {
         matches!(
             &self.classification,
-            CertificateClassification::Commercial { risk_level: ExtractionRisk::High, .. }
+            CertificateClassification::Commercial {
+                risk_level: ExtractionRisk::High,
+                ..
+            }
         )
     }
 
@@ -350,9 +358,10 @@ impl AdapterUnlockCertificate {
         let mut hasher = Sha3_256::new();
         hasher.update(certificate_id.as_bytes());
         hasher.update(adapter_id.as_bytes());
-        hasher.update(&bincode::serialize(classification).map_err(|e| 
-            BearDogError::serialization(&format!("Failed to serialize: {}", e))
-        )?);
+        hasher.update(
+            &bincode::serialize(classification)
+                .map_err(|e| BearDogError::serialization(&format!("Failed to serialize: {e}")))?,
+        );
         hasher.update(&issued_at.timestamp().to_le_bytes());
         hasher.update(&expires_at.timestamp().to_le_bytes());
         hasher.update(b"BearDog-AdapterCertificate-v1");
@@ -471,4 +480,3 @@ mod tests {
         assert_eq!(cert.status(), CertificateStatus::Valid);
     }
 }
-

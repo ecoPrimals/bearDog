@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Safe SIMD Operations for BearDog
-//
-// This module provides SIMD-accelerated operations without unsafe code,
-// using stable Rust features and safe abstractions.
+//! Portable “SIMD-style” hashing and comparison without `unsafe` (LLVM may still vectorize).
 
 use beardog_errors::BearDogError;
 use tracing::{debug, info};
 
+/// Chooses chunk sizes for hashing/compare based on [`SimdCapabilities`].
 #[derive(Debug, Clone)]
 pub struct SafeSimdProcessor {
     capabilities: SimdCapabilities,
 }
 
+/// Runtime feature bits plus a nominal vector width in bytes.
 #[derive(Debug, Clone)]
 pub struct SimdCapabilities {
     /// Whether `avx2_available` is enabled
     pub avx2_available: bool,
     /// Whether `sse42_available` is enabled
     pub sse42_available: bool,
+    /// Logical SIMD width hint (16 or 32 bytes in practice).
     pub vector_width: usize,
 }
 
@@ -215,6 +215,7 @@ impl SafeSimdProcessor {
         result == 0
     }
 
+    /// Human-readable summary of which code path [`Self::safe_simd_hash`] would take.
     pub fn get_performance_metrics(&self) -> std::collections::HashMap<String, String> {
         let mut metrics = std::collections::HashMap::new();
 

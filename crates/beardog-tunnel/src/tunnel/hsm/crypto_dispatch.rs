@@ -59,7 +59,7 @@ pub enum CryptoProviderDispatch {
 
 impl CryptoProviderDispatch {
     /// Create a RustCrypto provider (100% Pure Rust, ARM-ready!)
-    pub fn rust_crypto(provider: RustCryptoProvider) -> Self {
+    pub const fn rust_crypto(provider: RustCryptoProvider) -> Self {
         Self::RustCrypto(provider)
     }
 
@@ -67,7 +67,7 @@ impl CryptoProviderDispatch {
     // OpenSSL provider removed - evolved to RustCrypto
 
     /// Get the provider type as a string
-    pub fn provider_type(&self) -> &'static str {
+    pub const fn provider_type(&self) -> &'static str {
         match self {
             Self::RustCrypto(_) => "rust_crypto",
             // Ring removed - evolved to RustCrypto (100% Pure Rust!)

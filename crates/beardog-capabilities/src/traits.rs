@@ -118,7 +118,7 @@ pub trait SecureTunnelProvider: Send + Sync {
     /// # Arguments
     /// * `handle` - Tunnel to close
     async fn close_tunnel(&self, handle: &TunnelHandle)
-        -> Result<(), beardog_errors::BearDogError>;
+    -> Result<(), beardog_errors::BearDogError>;
 }
 
 // =============================================================================

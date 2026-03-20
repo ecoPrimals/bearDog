@@ -31,15 +31,15 @@
 //! Always generate a fresh random nonce for each encryption operation.
 
 use aes_gcm::{
-    aead::{Aead, KeyInit, Payload},
     Aes128Gcm, Aes256Gcm, Nonce,
+    aead::{Aead, KeyInit, Payload},
 };
-use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
-use rand::rngs::OsRng;
 use rand::RngCore;
-use serde_json::{json, Value};
+use rand::rngs::OsRng;
+use serde_json::{Value, json};
 use zeroize::Zeroizing;
 
 /// Handle `crypto.aes256_gcm_encrypt` - AES-256-GCM encryption
@@ -78,7 +78,7 @@ pub fn handle_aes256_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
 
     let plaintext = BASE64
         .decode(plaintext_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 plaintext: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 plaintext: {e}")))?;
 
     // Extract key (32 bytes for AES-256)
     let key_b64 = params
@@ -88,7 +88,7 @@ pub fn handle_aes256_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
 
     let key_bytes = BASE64
         .decode(key_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 key: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 key: {e}")))?;
 
     if key_bytes.len() != 32 {
         return Err(BearDogError::invalid_input(&format!(
@@ -101,7 +101,7 @@ pub fn handle_aes256_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
     let nonce_bytes = if let Some(nonce_b64) = params.get("nonce").and_then(|v| v.as_str()) {
         let nonce = BASE64
             .decode(nonce_b64)
-            .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 nonce: {}", e)))?;
+            .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 nonce: {e}")))?;
 
         if nonce.len() != 12 {
             return Err(BearDogError::invalid_input(&format!(
@@ -121,7 +121,7 @@ pub fn handle_aes256_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
     let aad_bytes = if let Some(aad_b64) = params.get("aad").and_then(|v| v.as_str()) {
         BASE64
             .decode(aad_b64)
-            .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 aad: {}", e)))?
+            .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 aad: {e}")))?
     } else {
         Vec::new()
     };
@@ -129,7 +129,7 @@ pub fn handle_aes256_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
     // Create cipher
     let key = Zeroizing::new(key_bytes);
     let cipher = Aes256Gcm::new_from_slice(&key)
-        .map_err(|e| BearDogError::system(format!("Failed to create AES-256-GCM cipher: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to create AES-256-GCM cipher: {e}")))?;
 
     // Create nonce
     let nonce = Nonce::from_slice(&nonce_bytes);
@@ -143,7 +143,7 @@ pub fn handle_aes256_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
     // Encrypt (this appends the authentication tag)
     let ciphertext = cipher
         .encrypt(nonce, payload)
-        .map_err(|e| BearDogError::system(format!("AES-256-GCM encryption failed: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("AES-256-GCM encryption failed: {e}")))?;
 
     // Encode outputs
     let ciphertext_b64 = BASE64.encode(&ciphertext);
@@ -192,7 +192,7 @@ pub fn handle_aes256_gcm_decrypt(params: &Value) -> Result<Value, BearDogError> 
 
     let ciphertext = BASE64
         .decode(ciphertext_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 ciphertext: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 ciphertext: {e}")))?;
 
     // Extract key (32 bytes for AES-256)
     let key_b64 = params
@@ -202,7 +202,7 @@ pub fn handle_aes256_gcm_decrypt(params: &Value) -> Result<Value, BearDogError> 
 
     let key_bytes = BASE64
         .decode(key_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 key: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 key: {e}")))?;
 
     if key_bytes.len() != 32 {
         return Err(BearDogError::invalid_input(&format!(
@@ -219,7 +219,7 @@ pub fn handle_aes256_gcm_decrypt(params: &Value) -> Result<Value, BearDogError> 
 
     let nonce_bytes = BASE64
         .decode(nonce_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 nonce: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 nonce: {e}")))?;
 
     if nonce_bytes.len() != 12 {
         return Err(BearDogError::invalid_input(&format!(
@@ -232,7 +232,7 @@ pub fn handle_aes256_gcm_decrypt(params: &Value) -> Result<Value, BearDogError> 
     let aad_bytes = if let Some(aad_b64) = params.get("aad").and_then(|v| v.as_str()) {
         BASE64
             .decode(aad_b64)
-            .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 aad: {}", e)))?
+            .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 aad: {e}")))?
     } else {
         Vec::new()
     };
@@ -240,7 +240,7 @@ pub fn handle_aes256_gcm_decrypt(params: &Value) -> Result<Value, BearDogError> 
     // Create cipher
     let key = Zeroizing::new(key_bytes);
     let cipher = Aes256Gcm::new_from_slice(&key)
-        .map_err(|e| BearDogError::system(format!("Failed to create AES-256-GCM cipher: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to create AES-256-GCM cipher: {e}")))?;
 
     // Create nonce
     let nonce = Nonce::from_slice(&nonce_bytes);
@@ -286,7 +286,7 @@ pub fn handle_aes128_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
 
     let plaintext = BASE64
         .decode(plaintext_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 plaintext: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 plaintext: {e}")))?;
 
     // Extract key (16 bytes for AES-128)
     let key_b64 = params
@@ -296,7 +296,7 @@ pub fn handle_aes128_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
 
     let key_bytes = BASE64
         .decode(key_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 key: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 key: {e}")))?;
 
     if key_bytes.len() != 16 {
         return Err(BearDogError::invalid_input(&format!(
@@ -309,7 +309,7 @@ pub fn handle_aes128_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
     let nonce_bytes = if let Some(nonce_b64) = params.get("nonce").and_then(|v| v.as_str()) {
         let nonce = BASE64
             .decode(nonce_b64)
-            .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 nonce: {}", e)))?;
+            .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 nonce: {e}")))?;
 
         if nonce.len() != 12 {
             return Err(BearDogError::invalid_input(&format!(
@@ -329,7 +329,7 @@ pub fn handle_aes128_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
     let aad_bytes = if let Some(aad_b64) = params.get("aad").and_then(|v| v.as_str()) {
         BASE64
             .decode(aad_b64)
-            .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 aad: {}", e)))?
+            .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 aad: {e}")))?
     } else {
         Vec::new()
     };
@@ -340,7 +340,7 @@ pub fn handle_aes128_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
     // Create cipher
     let key = Zeroizing::new(key_bytes);
     let cipher = Aes128Gcm::new_from_slice(&key)
-        .map_err(|e| BearDogError::system(format!("Failed to create AES-128-GCM cipher: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to create AES-128-GCM cipher: {e}")))?;
 
     // Create nonce
     let nonce = Nonce::from_slice(&nonce_bytes);
@@ -354,7 +354,7 @@ pub fn handle_aes128_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
     // Encrypt
     let ciphertext = cipher
         .encrypt(nonce, payload)
-        .map_err(|e| BearDogError::system(format!("AES-128-GCM encryption failed: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("AES-128-GCM encryption failed: {e}")))?;
 
     // EVOLVED: Diagnostic logging moved to diagnostics module (not removed!)
     // Enable with: cargo build --features diagnostics
@@ -396,7 +396,7 @@ pub fn handle_aes128_gcm_decrypt(params: &Value) -> Result<Value, BearDogError> 
 
     let ciphertext = BASE64
         .decode(ciphertext_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 ciphertext: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 ciphertext: {e}")))?;
 
     // Extract key (16 bytes for AES-128)
     let key_b64 = params
@@ -406,7 +406,7 @@ pub fn handle_aes128_gcm_decrypt(params: &Value) -> Result<Value, BearDogError> 
 
     let key_bytes = BASE64
         .decode(key_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 key: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 key: {e}")))?;
 
     if key_bytes.len() != 16 {
         return Err(BearDogError::invalid_input(&format!(
@@ -423,7 +423,7 @@ pub fn handle_aes128_gcm_decrypt(params: &Value) -> Result<Value, BearDogError> 
 
     let nonce_bytes = BASE64
         .decode(nonce_b64)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 nonce: {}", e)))?;
+        .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 nonce: {e}")))?;
 
     if nonce_bytes.len() != 12 {
         return Err(BearDogError::invalid_input(&format!(
@@ -436,7 +436,7 @@ pub fn handle_aes128_gcm_decrypt(params: &Value) -> Result<Value, BearDogError> 
     let aad_bytes = if let Some(aad_b64) = params.get("aad").and_then(|v| v.as_str()) {
         BASE64
             .decode(aad_b64)
-            .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 aad: {}", e)))?
+            .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 aad: {e}")))?
     } else {
         Vec::new()
     };
@@ -444,7 +444,7 @@ pub fn handle_aes128_gcm_decrypt(params: &Value) -> Result<Value, BearDogError> 
     // Create cipher
     let key = Zeroizing::new(key_bytes);
     let cipher = Aes128Gcm::new_from_slice(&key)
-        .map_err(|e| BearDogError::system(format!("Failed to create AES-128-GCM cipher: {}", e)))?;
+        .map_err(|e| BearDogError::system(format!("Failed to create AES-128-GCM cipher: {e}")))?;
 
     // Create nonce
     let nonce = Nonce::from_slice(&nonce_bytes);
@@ -481,248 +481,208 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    #[test]
-    fn test_aes256_gcm_roundtrip() {
-        // Test encrypt -> decrypt roundtrip
-        let plaintext = b"Hello, AES-256-GCM! This is a test message.";
-        let key = vec![0x42u8; 32]; // 32-byte key for AES-256
+    fn json_str<'a>(v: &'a Value, key: &'static str) -> Result<&'a str, BearDogError> {
+        v.get(key)
+            .and_then(|x| x.as_str())
+            .ok_or_else(|| BearDogError::invalid_input("missing JSON string field"))
+    }
 
-        // Encrypt
+    fn json_bool(v: &Value, key: &'static str) -> Result<bool, BearDogError> {
+        v.get(key)
+            .and_then(|x| x.as_bool())
+            .ok_or_else(|| BearDogError::invalid_input("missing JSON bool field"))
+    }
+
+    fn b64_decode(s: &str) -> Result<Vec<u8>, BearDogError> {
+        BASE64
+            .decode(s)
+            .map_err(|e| BearDogError::invalid_input(&format!("base64: {e}")))
+    }
+
+    #[test]
+    fn test_aes256_gcm_roundtrip() -> Result<(), BearDogError> {
+        let plaintext = b"Hello, AES-256-GCM! This is a test message.";
+        let key = vec![0x42u8; 32];
         let encrypt_params = json!({
             "plaintext": BASE64.encode(plaintext),
             "key": BASE64.encode(&key)
         });
-
-        let encrypt_result = handle_aes256_gcm_encrypt(&encrypt_params).unwrap();
-        let ciphertext = encrypt_result.get("ciphertext").unwrap().as_str().unwrap();
-        let nonce = encrypt_result.get("nonce").unwrap().as_str().unwrap();
-
-        // Decrypt
+        let encrypt_result = handle_aes256_gcm_encrypt(&encrypt_params)?;
+        let ciphertext = json_str(&encrypt_result, "ciphertext")?;
+        let nonce = json_str(&encrypt_result, "nonce")?;
         let decrypt_params = json!({
             "ciphertext": ciphertext,
             "key": BASE64.encode(&key),
             "nonce": nonce
         });
-
-        let decrypt_result = handle_aes256_gcm_decrypt(&decrypt_params).unwrap();
-        let decrypted_b64 = decrypt_result.get("plaintext").unwrap().as_str().unwrap();
-        let decrypted = BASE64.decode(decrypted_b64).unwrap();
-
-        assert_eq!(&decrypted, plaintext);
-        assert!(decrypt_result
-            .get("authenticated")
-            .unwrap()
-            .as_bool()
-            .unwrap());
+        let decrypt_result = handle_aes256_gcm_decrypt(&decrypt_params)?;
+        let decrypted = b64_decode(json_str(&decrypt_result, "plaintext")?)?;
+        assert_eq!(&decrypted[..], plaintext);
+        assert!(json_bool(&decrypt_result, "authenticated")?);
+        Ok(())
     }
 
     #[test]
-    fn test_aes256_gcm_with_aad() {
-        // Test with Additional Authenticated Data
+    fn test_aes256_gcm_with_aad() -> Result<(), BearDogError> {
         let plaintext = b"Secret message";
         let key = vec![0x33u8; 32];
         let aad = b"authenticated but not encrypted";
-
-        // Encrypt with AAD
         let encrypt_params = json!({
             "plaintext": BASE64.encode(plaintext),
             "key": BASE64.encode(&key),
             "aad": BASE64.encode(aad)
         });
-
-        let encrypt_result = handle_aes256_gcm_encrypt(&encrypt_params).unwrap();
-        let ciphertext = encrypt_result.get("ciphertext").unwrap().as_str().unwrap();
-        let nonce = encrypt_result.get("nonce").unwrap().as_str().unwrap();
-
-        // Decrypt with correct AAD
+        let encrypt_result = handle_aes256_gcm_encrypt(&encrypt_params)?;
+        let ciphertext = json_str(&encrypt_result, "ciphertext")?;
+        let nonce = json_str(&encrypt_result, "nonce")?;
         let decrypt_params = json!({
             "ciphertext": ciphertext,
             "key": BASE64.encode(&key),
             "nonce": nonce,
             "aad": BASE64.encode(aad)
         });
-
-        let decrypt_result = handle_aes256_gcm_decrypt(&decrypt_params).unwrap();
-        let decrypted_b64 = decrypt_result.get("plaintext").unwrap().as_str().unwrap();
-        let decrypted = BASE64.decode(decrypted_b64).unwrap();
-
-        assert_eq!(&decrypted, plaintext);
+        let decrypt_result = handle_aes256_gcm_decrypt(&decrypt_params)?;
+        let decrypted = b64_decode(json_str(&decrypt_result, "plaintext")?)?;
+        assert_eq!(&decrypted[..], plaintext);
+        Ok(())
     }
 
     #[test]
-    fn test_aes256_gcm_wrong_aad_fails() {
-        // Test that wrong AAD causes authentication failure
+    fn test_aes256_gcm_wrong_aad_fails() -> Result<(), BearDogError> {
         let plaintext = b"Secret";
         let key = vec![0x44u8; 32];
         let aad = b"correct aad";
         let wrong_aad = b"wrong aad!!";
-
-        // Encrypt with correct AAD
         let encrypt_params = json!({
             "plaintext": BASE64.encode(plaintext),
             "key": BASE64.encode(&key),
             "aad": BASE64.encode(aad)
         });
-
-        let encrypt_result = handle_aes256_gcm_encrypt(&encrypt_params).unwrap();
-        let ciphertext = encrypt_result.get("ciphertext").unwrap().as_str().unwrap();
-        let nonce = encrypt_result.get("nonce").unwrap().as_str().unwrap();
-
-        // Decrypt with WRONG AAD
+        let encrypt_result = handle_aes256_gcm_encrypt(&encrypt_params)?;
+        let ciphertext = json_str(&encrypt_result, "ciphertext")?;
+        let nonce = json_str(&encrypt_result, "nonce")?;
         let decrypt_params = json!({
             "ciphertext": ciphertext,
             "key": BASE64.encode(&key),
             "nonce": nonce,
             "aad": BASE64.encode(wrong_aad)
         });
-
         let decrypt_result = handle_aes256_gcm_decrypt(&decrypt_params);
         assert!(decrypt_result.is_err());
-        assert!(decrypt_result
-            .unwrap_err()
-            .to_string()
-            .contains("authentication tag"));
+        let msg = decrypt_result
+            .err()
+            .map(|e| e.to_string())
+            .unwrap_or_default();
+        assert!(msg.contains("authentication tag"));
+        Ok(())
     }
 
     #[test]
-    fn test_aes256_gcm_tampered_ciphertext_fails() {
-        // Test that tampered ciphertext is detected
+    fn test_aes256_gcm_tampered_ciphertext_fails() -> Result<(), BearDogError> {
         let plaintext = b"Original";
         let key = vec![0x55u8; 32];
-
-        // Encrypt
         let encrypt_params = json!({
             "plaintext": BASE64.encode(plaintext),
             "key": BASE64.encode(&key)
         });
-
-        let encrypt_result = handle_aes256_gcm_encrypt(&encrypt_params).unwrap();
-        let ciphertext_b64 = encrypt_result.get("ciphertext").unwrap().as_str().unwrap();
-        let nonce = encrypt_result.get("nonce").unwrap().as_str().unwrap();
-
-        // Tamper with ciphertext
-        let mut ciphertext = BASE64.decode(ciphertext_b64).unwrap();
+        let encrypt_result = handle_aes256_gcm_encrypt(&encrypt_params)?;
+        let ciphertext_b64 = json_str(&encrypt_result, "ciphertext")?;
+        let nonce = json_str(&encrypt_result, "nonce")?;
+        let mut ciphertext = b64_decode(ciphertext_b64)?;
         if !ciphertext.is_empty() {
-            ciphertext[0] ^= 0xFF; // Flip bits
+            ciphertext[0] ^= 0xFF;
         }
-
-        // Decrypt tampered ciphertext
         let decrypt_params = json!({
             "ciphertext": BASE64.encode(&ciphertext),
             "key": BASE64.encode(&key),
             "nonce": nonce
         });
-
-        let decrypt_result = handle_aes256_gcm_decrypt(&decrypt_params);
-        assert!(decrypt_result.is_err());
+        assert!(handle_aes256_gcm_decrypt(&decrypt_params).is_err());
+        Ok(())
     }
 
     #[test]
-    fn test_aes128_gcm_roundtrip() {
-        // Test AES-128-GCM encrypt -> decrypt
+    fn test_aes128_gcm_roundtrip() -> Result<(), BearDogError> {
         let plaintext = b"AES-128-GCM test";
-        let key = vec![0x77u8; 16]; // 16-byte key for AES-128
-
-        // Encrypt
+        let key = vec![0x77u8; 16];
         let encrypt_params = json!({
             "plaintext": BASE64.encode(plaintext),
             "key": BASE64.encode(&key)
         });
-
-        let encrypt_result = handle_aes128_gcm_encrypt(&encrypt_params).unwrap();
-        let ciphertext = encrypt_result.get("ciphertext").unwrap().as_str().unwrap();
-        let nonce = encrypt_result.get("nonce").unwrap().as_str().unwrap();
-        assert_eq!(
-            encrypt_result.get("algorithm").unwrap().as_str().unwrap(),
-            "aes-128-gcm"
-        );
-
-        // Decrypt
+        let encrypt_result = handle_aes128_gcm_encrypt(&encrypt_params)?;
+        let ciphertext = json_str(&encrypt_result, "ciphertext")?;
+        let nonce = json_str(&encrypt_result, "nonce")?;
+        assert_eq!(json_str(&encrypt_result, "algorithm")?, "aes-128-gcm");
         let decrypt_params = json!({
             "ciphertext": ciphertext,
             "key": BASE64.encode(&key),
             "nonce": nonce
         });
-
-        let decrypt_result = handle_aes128_gcm_decrypt(&decrypt_params).unwrap();
-        let decrypted_b64 = decrypt_result.get("plaintext").unwrap().as_str().unwrap();
-        let decrypted = BASE64.decode(decrypted_b64).unwrap();
-
-        assert_eq!(&decrypted, plaintext);
+        let decrypt_result = handle_aes128_gcm_decrypt(&decrypt_params)?;
+        let decrypted = b64_decode(json_str(&decrypt_result, "plaintext")?)?;
+        assert_eq!(&decrypted[..], plaintext);
+        Ok(())
     }
 
     #[test]
     fn test_aes256_gcm_invalid_key_size() {
-        // Test that wrong key size is rejected
         let params = json!({
             "plaintext": BASE64.encode(b"test"),
-            "key": BASE64.encode(vec![0u8; 16]) // Wrong size for AES-256
+            "key": BASE64.encode(vec![0u8; 16])
         });
-
         let result = handle_aes256_gcm_encrypt(&params);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("32-byte key"));
+        let msg = result.err().map(|e| e.to_string()).unwrap_or_default();
+        assert!(msg.contains("32-byte key"));
     }
 
     #[test]
     fn test_aes128_gcm_invalid_key_size() {
-        // Test that wrong key size is rejected
         let params = json!({
             "plaintext": BASE64.encode(b"test"),
-            "key": BASE64.encode(vec![0u8; 32]) // Wrong size for AES-128
+            "key": BASE64.encode(vec![0u8; 32])
         });
-
         let result = handle_aes128_gcm_encrypt(&params);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("16-byte key"));
+        let msg = result.err().map(|e| e.to_string()).unwrap_or_default();
+        assert!(msg.contains("16-byte key"));
     }
 
     #[test]
-    fn test_aes256_gcm_custom_nonce() {
-        // Test with user-provided nonce
+    fn test_aes256_gcm_custom_nonce() -> Result<(), BearDogError> {
         let plaintext = b"Custom nonce test";
         let key = vec![0x88u8; 32];
         let nonce = vec![0x99u8; 12];
-
         let encrypt_params = json!({
             "plaintext": BASE64.encode(plaintext),
             "key": BASE64.encode(&key),
             "nonce": BASE64.encode(&nonce)
         });
-
-        let encrypt_result = handle_aes256_gcm_encrypt(&encrypt_params).unwrap();
-        let returned_nonce = encrypt_result.get("nonce").unwrap().as_str().unwrap();
-
-        // Verify returned nonce matches provided nonce
-        assert_eq!(BASE64.decode(returned_nonce).unwrap(), nonce);
+        let encrypt_result = handle_aes256_gcm_encrypt(&encrypt_params)?;
+        let returned_nonce = json_str(&encrypt_result, "nonce")?;
+        assert_eq!(b64_decode(returned_nonce)?, nonce);
+        Ok(())
     }
 
     #[test]
-    fn test_aes256_gcm_empty_plaintext() {
-        // Test with empty plaintext (valid case)
+    fn test_aes256_gcm_empty_plaintext() -> Result<(), BearDogError> {
         let plaintext = b"";
         let key = vec![0xAAu8; 32];
-
         let encrypt_params = json!({
             "plaintext": BASE64.encode(plaintext),
             "key": BASE64.encode(&key)
         });
-
-        let encrypt_result = handle_aes256_gcm_encrypt(&encrypt_params).unwrap();
-        let ciphertext = encrypt_result.get("ciphertext").unwrap().as_str().unwrap();
-        let nonce = encrypt_result.get("nonce").unwrap().as_str().unwrap();
-
-        // Decrypt
+        let encrypt_result = handle_aes256_gcm_encrypt(&encrypt_params)?;
+        let ciphertext = json_str(&encrypt_result, "ciphertext")?;
+        let nonce = json_str(&encrypt_result, "nonce")?;
         let decrypt_params = json!({
             "ciphertext": ciphertext,
             "key": BASE64.encode(&key),
             "nonce": nonce
         });
-
-        let decrypt_result = handle_aes256_gcm_decrypt(&decrypt_params).unwrap();
-        let decrypted_b64 = decrypt_result.get("plaintext").unwrap().as_str().unwrap();
-        let decrypted = BASE64.decode(decrypted_b64).unwrap();
-
-        assert_eq!(&decrypted, plaintext);
+        let decrypt_result = handle_aes256_gcm_decrypt(&decrypt_params)?;
+        let decrypted = b64_decode(json_str(&decrypt_result, "plaintext")?)?;
+        assert_eq!(&decrypted[..], plaintext);
+        Ok(())
     }
 }

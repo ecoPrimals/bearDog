@@ -110,8 +110,8 @@ async fn test_multiple_concurrent_timeouts() {
 #[tokio::test]
 async fn test_timeout_with_cancellation() {
     // Test that timeout properly cancels the operation
-    use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};
 
     let was_cancelled = Arc::new(AtomicBool::new(false));
     let was_cancelled_clone = was_cancelled.clone();

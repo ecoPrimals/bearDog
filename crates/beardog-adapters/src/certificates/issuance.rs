@@ -17,7 +17,7 @@ pub struct CertificateIssuer {
 
 impl CertificateIssuer {
     /// Create new issuer with signing key
-    pub fn new(signing_key: SigningKey) -> Self {
+    pub const fn new(signing_key: SigningKey) -> Self {
         Self { signing_key }
     }
 
@@ -107,7 +107,10 @@ impl CertificateIssuer {
     }
 
     /// Determine appropriate expiry time
-    fn determine_expiry(&self, classification: &CommercialClassification) -> CertificateExpiry {
+    const fn determine_expiry(
+        &self,
+        classification: &CommercialClassification,
+    ) -> CertificateExpiry {
         match classification {
             CommercialClassification::Human { .. } => CertificateExpiry::Human,
             CommercialClassification::SmallTeam { .. } => CertificateExpiry::SmallTeam,
@@ -221,12 +224,12 @@ impl CertificateIssuer {
         hasher.update(cert.id.as_bytes());
         hasher.update(cert.adapter_id.as_bytes());
         hasher.update(&bincode::serialize(&cert.classification).map_err(|e| {
-            BearDogError::system(format!("Failed to serialize classification: {}", e))
+            BearDogError::system(format!("Failed to serialize classification: {e}"))
         })?);
         hasher.update(&cert.expires_at.timestamp().to_le_bytes());
         hasher.update(
             &bincode::serialize(&cert.scope)
-                .map_err(|e| BearDogError::system(format!("Failed to serialize scope: {}", e)))?,
+                .map_err(|e| BearDogError::system(format!("Failed to serialize scope: {e}")))?,
         );
 
         Ok(hasher.finalize().as_bytes().to_vec())
@@ -258,7 +261,9 @@ mod tests {
             reasons: vec!["Interactive session".to_string()],
         };
 
-        let cert = issuer.issue(classification, "prometheus").unwrap();
+        let cert = issuer
+            .issue(classification, "prometheus")
+            .expect("Human classification should issue without license");
 
         assert_eq!(cert.adapter_id, "prometheus");
         assert!(!cert.is_expired());
@@ -300,7 +305,7 @@ mod tests {
 
         let cert = issuer
             .issue_with_license(classification, "prometheus", license)
-            .unwrap();
+            .expect("Commercial with license should issue");
 
         assert!(cert.allows_operation(&AdapterOperation::Write));
         assert!(cert.allows_operation(&AdapterOperation::Configure));

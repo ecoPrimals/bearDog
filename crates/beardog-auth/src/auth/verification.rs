@@ -68,9 +68,8 @@ impl CrossNodeAuthEngine {
         &self,
         proof: &AuthorizationProof,
     ) -> Result<bool, BearDogError> {
-        let auth = match self.active_authorizations.get(&proof.authorization_id) {
-            Some(auth) => auth,
-            None => return Ok(false),
+        let Some(auth) = self.active_authorizations.get(&proof.authorization_id) else {
+            return Ok(false);
         };
 
         if !auth.is_active {

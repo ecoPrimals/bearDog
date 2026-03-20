@@ -51,9 +51,9 @@ mod tests {
         let key_16 = BearDogCrypto::generate_secure_random(16); // AES-128
         let key_24 = BearDogCrypto::generate_secure_random(24); // AES-192
         let key_32 = BearDogCrypto::generate_secure_random(32); // AES-256
-                                                                // TEST_CATEGORY: integration
-                                                                // TEST_DOMAIN: security
-                                                                // TEST_PRIORITY: normal
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         assert_eq!(key_16.len(), 16);
         assert_eq!(key_24.len(), 24);

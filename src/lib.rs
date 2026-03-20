@@ -1,36 +1,30 @@
-// # BearDog: Sovereign Computing Platform
-//
-// BearDog is a revolutionary sovereign computing platform that delivers enterprise-grade
-// distributed systems with zero-trust architecture, universal capability-based discovery,
-// and hyperoptimized zero-copy performance while preserving complete digital sovereignty.
-//
-// ## Key Features
-//
-// - **Hyperoptimized Zero-Copy**: SIMD-aligned memory pools with 2-5x performance gains
-// - **Universal Discovery**: Capability-based service discovery with zero vendor hardcoding
-// - **Digital Sovereignty**: Complete vendor independence with infant discovery patterns
-// - **Hardware Security**: HSM integration with Android StrongBox support
-// - **Memory Safety**: 100% safe Rust with comprehensive testing (378+ test functions)
-//
-// ## Quick Start
-//
-// ```rust
-// use beardog::BearDogFramework;
-//
-// #[tokio::main]
-// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//     let framework = BearDogFramework::new()?;
-//
-//     // Universal discovery without vendor hardcoding
-//     let services = framework.discover_services()?;
-//     println!("Discovered {} services", services.len());
-//
-//     // Hyperoptimized zero-copy operations
-//     framework.demonstrate_zero_copy_performance()?;
-//
-//     Ok(())
-// }
-// ```
+//! # BearDog: Sovereign Computing Platform
+//!
+//! BearDog is a sovereign computing platform for distributed, capability-oriented workflows
+//! with zero-trust defaults, configurable discovery, and performance-oriented data handling.
+//!
+//! ## Key features
+//!
+//! - **Low-copy data paths**: pooling and SIMD-friendly utilities via ecosystem crates
+//! - **Discovery**: capability-based service location without fixed vendor endpoints
+//! - **Sovereignty**: behavior driven by configuration rather than embedded third-party ties
+//! - **Hardware security**: optional HSM / keystore integration through companion crates
+//! - **Memory safety**: Rust-only core with a large automated test surface
+//!
+//! ## Quick start
+//!
+//! ```no_run
+//! use beardog::BearDogFramework;
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let mut framework = BearDogFramework::new().await?;
+//!     let services = framework.discover_services().await?;
+//!     println!("Discovered {} services", services.len());
+//!     framework.demonstrate_zero_copy_performance().await?;
+//!     Ok(())
+//! }
+//! ```
 
 use std::collections::HashMap;
 use std::time::Duration;
@@ -298,8 +292,14 @@ mod tests {
     async fn test_service_discovery() {
         // Set required environment variables for test
         // Using serial execution to avoid env var conflicts with other tests
-        std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://test-compute:8080");
-        std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://test-storage:8081");
+        beardog_errors::process_env::set_var(
+            "BEARDOG_COMPUTE_ENDPOINT",
+            "http://test-compute:8080",
+        );
+        beardog_errors::process_env::set_var(
+            "BEARDOG_STORAGE_ENDPOINT",
+            "http://test-storage:8081",
+        );
 
         let mut framework = BearDogFramework::new().await.unwrap();
         let services = framework.discover_services().await.unwrap();

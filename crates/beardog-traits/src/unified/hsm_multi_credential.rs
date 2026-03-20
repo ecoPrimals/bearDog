@@ -341,7 +341,7 @@ pub struct CredentialNode {
     pub credential: CredentialInfo,
 
     /// Child credentials
-    pub children: Vec<CredentialNode>,
+    pub children: Vec<Self>,
 }
 
 /// Data for replicating a credential to another device

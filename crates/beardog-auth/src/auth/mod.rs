@@ -23,9 +23,13 @@ mod ecosystem;
 mod genetics;
 mod verification;
 
+/// Password-based authentication, session issuance, and rate limiting for BearDog services.
 pub mod handlers;
+/// In-memory [`crate::auth::types::NodeRegistry`] used in tests and lightweight deployments.
 pub mod node_registry;
+/// Default [`crate::auth::types::ProofVerifier`] that performs structural checks on authorization proofs.
 pub mod proof_verifier;
 #[cfg(test)]
 mod tests;
+/// Shared auth DTOs: cross-node authorization, genetics, spawning, and workflow types.
 pub mod types;

@@ -1,17 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Pluggable workflow architecture: identity, lifecycle traits, and the [`WorkflowService`] orchestrator.
+//!
+//! Callers implement [`WorkflowRepository`] for persistence, [`WorkflowProcessor`] for step execution,
+//! and [`WorkflowObserver`] for side effects (metrics, audit). [`WorkflowService`] sequences load →
+//! notify → process → persist and fans out observer hooks on success or failure.
 
 use beardog_errors::BearDogError;
 use std::future::Future;
 
+/// Opaque workflow identifier suitable for logging, storage keys, and equality.
 pub trait WorkflowId: Clone + Send + Sync + std::fmt::Debug + std::fmt::Display {
     /// Returns as str
     fn as_str(&self) -> &str;
 }
 
+/// Workflow state with explicit active vs terminal semantics for schedulers and UIs.
 pub trait WorkflowStatus: Clone + Send + Sync + std::fmt::Debug {
     /// Checks if terminal
     fn is_terminal(&self) -> bool;
@@ -19,16 +23,22 @@ pub trait WorkflowStatus: Clone + Send + Sync + std::fmt::Debug {
     fn is_active(&self) -> bool;
 }
 
+/// Domain aggregate for a single workflow: stable id, current status, and creation time.
 pub trait Workflow: Clone + Send + Sync + std::fmt::Debug {
+    /// Identifier type (string wrapper, UUID, etc.).
     type Id: WorkflowId;
+    /// Status enum or struct implementing [`WorkflowStatus`].
     type Status: WorkflowStatus;
 
+    /// Unique id for this workflow instance.
     fn id(&self) -> &Self::Id;
+    /// Current lifecycle status; mutating workflows should update this through the processor/repository.
     fn status(&self) -> &Self::Status;
     /// Creates `itemd_at`
     fn created_at(&self) -> chrono::DateTime<chrono::Utc>;
 }
 
+/// Minimal built-in status model used by examples and tests when no custom enum is needed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DefaultWorkflowStatus {
     /// Operation in progress
@@ -55,8 +65,11 @@ impl WorkflowStatus for DefaultWorkflowStatus {
     }
 }
 
+/// Persistence boundary for workflow aggregates (CRUD + existence helpers).
 pub trait WorkflowRepository: Send + Sync {
+    /// Concrete [`Workflow`] type stored by this repository.
     type Workflow: Workflow;
+    /// Error surfaced by I/O or validation; must convert from [`BearDogError`] for uniform handling.
     type Error: From<BearDogError> + Send + Sync + 'static;
 
     /// Saves data
@@ -65,6 +78,7 @@ pub trait WorkflowRepository: Send + Sync {
         workflow: Self::Workflow,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send;
 
+    /// Load a workflow by id; returns `Ok(None)` if unknown.
     fn find_by_id(
         &self,
         id: &<Self::Workflow as Workflow>::Id,
@@ -82,22 +96,29 @@ pub trait WorkflowRepository: Send + Sync {
         id: &<Self::Workflow as Workflow>::Id,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send;
 
+    /// Returns all stored workflows (use with care at scale).
     fn list_all(&self) -> impl Future<Output = Result<Vec<Self::Workflow>, Self::Error>> + Send;
 
+    /// Number of persisted workflows.
     fn count(&self) -> impl Future<Output = Result<usize, Self::Error>> + Send;
 
+    /// Whether a workflow with the given id exists without loading the full aggregate.
     fn exists(
         &self,
         id: &<Self::Workflow as Workflow>::Id,
     ) -> impl Future<Output = Result<bool, Self::Error>> + Send;
 }
 
+/// Executes workflow logic: validate, advance state, and integrate with external systems via `Context`.
 pub trait WorkflowProcessor: Send + Sync {
+    /// Workflow type this processor understands.
     type Workflow: Workflow;
+    /// Arbitrary per-invocation inputs (user id, deadlines, feature flags).
     type Context: Send + Sync;
+    /// Processing failure type; must convert from [`BearDogError`].
     type Error: From<BearDogError> + Send + Sync + 'static;
 
-    /// Processes data
+    /// Runs the workflow body: may perform I/O, update status, and return the mutated aggregate.
     fn process(
         &self,
         workflow: Self::Workflow,
@@ -110,58 +131,75 @@ pub trait WorkflowProcessor: Send + Sync {
         workflow: &Self::Workflow,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send;
 
+    /// Fast pre-check before scheduling; if false, the runner should not invoke [`Self::process`].
     fn can_process(&self, workflow: &Self::Workflow) -> bool;
 
+    /// Short label for logging and metrics (e.g. processor implementation name).
     fn name(&self) -> &str;
 }
 
+/// Side-effect hooks for lifecycle events; failures are logged but do not fail the main workflow path.
 pub trait WorkflowObserver: Send + Sync {
+    /// Observed workflow type.
     type Workflow: Workflow;
+    /// Error type for observer I/O; must convert from [`BearDogError`].
     type Error: From<BearDogError> + Send + Sync + 'static;
 
+    /// Invoked after a new workflow is first persisted.
     fn on_created(
         &self,
         workflow: &Self::Workflow,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send;
 
+    /// Invoked immediately before [`WorkflowProcessor::process`] runs (after load).
     fn on_started(
         &self,
         workflow: &Self::Workflow,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send;
 
+    /// Invoked after a successful process/update cycle.
     fn on_completed(
         &self,
         workflow: &Self::Workflow,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send;
 
+    /// Invoked when processing returns an error; `error` is a best-effort string for logs.
     fn on_failed(
         &self,
         workflow: &Self::Workflow,
         error: &str,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send;
 
+    /// Invoked when a workflow is cancelled or aborted by policy.
     fn on_cancelled(
         &self,
         workflow: &Self::Workflow,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send;
 }
 
+/// Single-shot imperative action on a workflow (command pattern), decoupled from long-running processing.
 pub trait WorkflowCommand: Send + Sync {
+    /// Target workflow type.
     type Workflow: Workflow;
+    /// Successful command output (often the updated workflow or a view model).
     type Result: Send + Sync;
+    /// Command failure type; must convert from [`BearDogError`].
     type Error: From<BearDogError> + Send + Sync + 'static;
 
-    /// Executes operation
+    /// Applies the command and returns its result (e.g. updated workflow).
     fn execute(
         &self,
         workflow: Self::Workflow,
     ) -> impl Future<Output = Result<Self::Result, Self::Error>> + Send;
 
+    /// Whether this command applies to the workflow in its current state.
     fn can_execute(&self, workflow: &Self::Workflow) -> bool;
 
+    /// Human-readable explanation for operators and audit logs.
     fn description(&self) -> &str;
 }
 
+/// Coordinates repository access, processing, and observer notifications for workflow lifecycles.
 #[derive(Debug)]
 pub struct WorkflowService<R, P, O>
 where

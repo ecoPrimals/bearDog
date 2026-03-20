@@ -48,10 +48,10 @@ mod tests {
     #[test]
     #[serial] // Modern pattern: declarative serialization for env var tests
     fn test_from_env_no_variables() {
-        std::env::remove_var("BEARDOG_CONFIG_DIR");
-        std::env::remove_var("BEARDOG_DATA_DIR");
-        std::env::remove_var("BEARDOG_LOG_DIR");
-        std::env::remove_var("BEARDOG_PKCS11_LIBRARY");
+        beardog_errors::process_env::remove_var("BEARDOG_CONFIG_DIR");
+        beardog_errors::process_env::remove_var("BEARDOG_DATA_DIR");
+        beardog_errors::process_env::remove_var("BEARDOG_LOG_DIR");
+        beardog_errors::process_env::remove_var("BEARDOG_PKCS11_LIBRARY");
 
         let config = PathConfig::from_env();
 
@@ -60,17 +60,17 @@ mod tests {
         assert!(!config.log_dir.as_os_str().is_empty());
         assert!(config.pkcs11_library.is_none());
 
-        std::env::remove_var("BEARDOG_CONFIG_DIR");
-        std::env::remove_var("BEARDOG_DATA_DIR");
-        std::env::remove_var("BEARDOG_LOG_DIR");
-        std::env::remove_var("BEARDOG_PKCS11_LIBRARY");
+        beardog_errors::process_env::remove_var("BEARDOG_CONFIG_DIR");
+        beardog_errors::process_env::remove_var("BEARDOG_DATA_DIR");
+        beardog_errors::process_env::remove_var("BEARDOG_LOG_DIR");
+        beardog_errors::process_env::remove_var("BEARDOG_PKCS11_LIBRARY");
     }
 
     #[test]
     #[serial] // Modern pattern: declarative serialization for env var tests
     fn test_from_env_with_pkcs11_library() {
-        std::env::remove_var("BEARDOG_PKCS11_LIBRARY");
-        std::env::set_var("BEARDOG_PKCS11_LIBRARY", "/custom/path/lib.so");
+        beardog_errors::process_env::remove_var("BEARDOG_PKCS11_LIBRARY");
+        beardog_errors::process_env::set_var("BEARDOG_PKCS11_LIBRARY", "/custom/path/lib.so");
 
         let config = PathConfig::from_env();
 
@@ -79,7 +79,7 @@ mod tests {
             Some(PathBuf::from("/custom/path/lib.so"))
         );
 
-        std::env::remove_var("BEARDOG_PKCS11_LIBRARY");
+        beardog_errors::process_env::remove_var("BEARDOG_PKCS11_LIBRARY");
     }
 
     // ============================================================================
@@ -501,8 +501,8 @@ mod tests {
         assert!(config1.validate().is_ok());
 
         // 2. Load from environment
-        std::env::remove_var("BEARDOG_PKCS11_LIBRARY");
-        std::env::set_var("BEARDOG_PKCS11_LIBRARY", "/test/lib.so");
+        beardog_errors::process_env::remove_var("BEARDOG_PKCS11_LIBRARY");
+        beardog_errors::process_env::set_var("BEARDOG_PKCS11_LIBRARY", "/test/lib.so");
         let config2 = PathConfig::from_env();
         assert_eq!(config2.pkcs11_library, Some(PathBuf::from("/test/lib.so")));
 
@@ -515,6 +515,6 @@ mod tests {
         let config4 = config3.clone();
         assert_eq!(config3.config_dir, config4.config_dir);
 
-        std::env::remove_var("BEARDOG_PKCS11_LIBRARY");
+        beardog_errors::process_env::remove_var("BEARDOG_PKCS11_LIBRARY");
     }
 }

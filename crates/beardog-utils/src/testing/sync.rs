@@ -4,8 +4,8 @@
 //!
 //! Provides event-driven synchronization to replace `sleep()`-based waiting in tests.
 
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::Duration;
 use tokio::sync::{Notify, RwLock};
 
@@ -109,14 +109,11 @@ impl<T: Clone + Send + Sync> EventTrigger<T> {
     /// synchronous code that needs to trigger async waiters.
     pub fn notify_blocking(self, value: T) {
         // Block on async operation
-        let rt = tokio::runtime::Handle::try_current()
-            .ok()
-            .unwrap_or_else(|| {
-                tokio::runtime::Runtime::new()
-                    .expect("failed to create runtime")
-                    .handle()
-                    .clone()
-            });
+        let rt = tokio::runtime::Handle::try_current().unwrap_or_else(|_| {
+            tokio::runtime::Runtime::new()
+                .map(|runtime| runtime.handle().clone())
+                .unwrap_or_else(|_| unreachable!("failed to create runtime"))
+        });
 
         rt.block_on(async {
             *self.value.write().await = Some(value);
@@ -125,9 +122,10 @@ impl<T: Clone + Send + Sync> EventTrigger<T> {
     }
 }
 
-/// Error type for event waiting
+/// Why a timed wait on a testing event returned without a signal.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EventWaitError {
+    /// No notification arrived before the deadline.
     Timeout,
 }
 
@@ -189,7 +187,7 @@ impl TestBarrier {
     ///
     /// Blocks until all `n` tasks have called `wait()`.
     pub async fn wait(&self) {
-        let gen = self.generation.load(Ordering::SeqCst);
+        let generation_at_wait = self.generation.load(Ordering::SeqCst);
         let count = self.count.fetch_add(1, Ordering::SeqCst) + 1;
 
         if count >= self.target {
@@ -201,7 +199,7 @@ impl TestBarrier {
             // Wait for notification, but check generation to handle spurious wakeups
             loop {
                 self.notify.notified().await;
-                if self.generation.load(Ordering::SeqCst) > gen {
+                if self.generation.load(Ordering::SeqCst) > generation_at_wait {
                     break;
                 }
             }

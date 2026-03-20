@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 pub mod core;
 pub use core::*;
 
+/// Canonical network listener settings (port, timeout, enabled).
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CanonicalNetworkConfig {
     /// Enabled
@@ -22,4 +23,5 @@ pub struct CanonicalNetworkConfig {
     pub timeout: u64,
 }
 
+/// Alias for [`CanonicalNetworkConfig`] for backward-compatible imports.
 pub type NetworkConfig = CanonicalNetworkConfig;

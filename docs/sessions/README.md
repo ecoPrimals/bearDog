@@ -104,10 +104,10 @@ Focused analysis:
 
 ## 🔍 Quick Links
 
-- [Latest Status](../../CURRENT_STATUS.md)
+- [Latest Status](../../STATUS.md)
 - [Architecture](../../ARCHITECTURE.md)
 - [Documentation Index](../../ROOT_INDEX.md)
-- [Quick Start](../../QUICK_START.md)
+- [Quick Start](../../START_HERE.md)
 
 ---
 

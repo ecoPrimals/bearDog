@@ -15,6 +15,7 @@ use std::collections::HashMap;
 
 // Tracing imports removed due to module name conflict
 
+/// Outcome of merging legacy monitoring fragments into [`MonitoringConfig`].
 #[derive(Debug, Clone)]
 pub struct MonitoringMigrationResult {
     /// The unified canonical monitoring configuration
@@ -24,6 +25,7 @@ pub struct MonitoringMigrationResult {
     pub report: MonitoringMigrationReport,
 }
 
+/// Human-readable audit trail produced while normalizing monitoring configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringMigrationReport {
     /// Number of legacy monitoring configs processed
@@ -42,6 +44,7 @@ pub struct MonitoringMigrationReport {
     pub migrated_at: chrono::DateTime<chrono::Utc>,
 }
 
+/// Non-fatal issue encountered while interpreting a legacy monitoring blob.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringMigrationWarning {
     /// Component
@@ -55,6 +58,7 @@ pub struct MonitoringMigrationWarning {
     pub recommendation: Option<String>,
 }
 
+/// Fatal or blocking problem that prevented full migration of a legacy component.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringMigrationError {
     /// Component
@@ -88,6 +92,7 @@ pub enum LegacyMonitoringConfig {
     ProductionMonitoring {
         /// Legacy observability configuration
         observability: HashMap<String, serde_json::Value>,
+        /// Optional throughput/latency tuning captured from older production manifests.
         performance: Option<HashMap<String, serde_json::Value>>,
         /// Legacy security monitoring configuration
         security: Option<HashMap<String, serde_json::Value>>,
@@ -104,7 +109,7 @@ pub enum LegacyMonitoringConfig {
     },
 }
 
-/// Monitoring Configuration Migration Service
+/// Stateful helper that applies [`MonitoringMigrationOptions`] while coercing legacy configs.
 pub struct MonitoringMigrationService {
     /// Migration options
     options: MonitoringMigrationOptions,
@@ -116,12 +121,13 @@ impl Default for MonitoringMigrationService {
     }
 }
 
+/// Feature flags controlling how aggressively the migrator rewrites or validates inputs.
 #[derive(Debug, Clone)]
 pub struct MonitoringMigrationOptions {
     /// Whether to preserve legacy configurations as metadata
     /// Whether `preserve_legacy_metadata` is enabled
     pub preserve_legacy_metadata: bool,
-    /// Whether to validate migrated configurations
+    /// When true, run schema validation on the unified config after each migration step.
     pub validate_after_migration: bool,
     /// Whether to create backup of original configs
     /// Whether `create_backup` is enabled
@@ -150,7 +156,7 @@ impl MonitoringMigrationService {
     /// Create a new monitoring migration service
     #[must_use]
     /// Creates a new instance
-    pub fn new(options: MonitoringMigrationOptions) -> Self {
+    pub const fn new(options: MonitoringMigrationOptions) -> Self {
         Self { options }
     }
 
@@ -411,7 +417,7 @@ impl MonitoringMigrationService {
 
     /// Validate the unified monitoring configuration
     /// Validates `unified_monitoring_config`
-    fn validate_unified_monitoring_config(_unified_config: &MonitoringConfig) {
+    const fn validate_unified_monitoring_config(_unified_config: &MonitoringConfig) {
         // Implementation would validate the unified monitoring configuration
         // Check for required fields, valid ranges, port conflicts, etc.
     }

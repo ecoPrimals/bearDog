@@ -8,8 +8,8 @@ mod compliance_tests {
     use uuid::Uuid;
 
     #[tokio::test]
-    async fn test_compliance_engine_creation(
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    async fn test_compliance_engine_creation()
+    -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let _config = ComplianceConfig::default();
 
         Ok(())

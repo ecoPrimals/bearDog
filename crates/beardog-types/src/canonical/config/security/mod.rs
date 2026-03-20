@@ -101,13 +101,13 @@ impl Default for CanonicalSecurityConfig {
 }
 
 impl CanonicalSecurityConfig {
-    /// Create a new canonical security configuration with secure defaults
+    /// Returns [`Default`] security settings (suitable for development and CI).
     #[must_use]
-    /// Creates a new instance
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Hardened presets: encryption, HSM, MFA, auditing, and strict sessions enabled.
     #[must_use]
     pub fn production() -> Self {
         Self {
@@ -171,7 +171,7 @@ impl RateLimitingConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             enabled: true,
             max_requests_per_minute: Self::DEFAULT_MAX_REQUESTS_PER_MINUTE,

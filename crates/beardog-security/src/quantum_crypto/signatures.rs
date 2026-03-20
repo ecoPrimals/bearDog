@@ -10,8 +10,8 @@
 //! requires integration with actual PQC libraries when stable.
 
 use super::types::{
-    dilithium_sizes::*, QuantumPrivateKey, QuantumSignature, QuantumSignatureResult, SecurityLevel,
-    SignatureAlgorithm,
+    QuantumPrivateKey, QuantumSignature, QuantumSignatureResult, SecurityLevel, SignatureAlgorithm,
+    dilithium_sizes::*,
 };
 use beardog_errors::BearDogError;
 
@@ -28,7 +28,7 @@ pub struct DilithiumEngine {
 
 impl DilithiumEngine {
     /// Create a new Dilithium engine with specified security level
-    pub fn new(security_level: SecurityLevel) -> Result<Self, BearDogError> {
+    pub const fn new(security_level: SecurityLevel) -> Result<Self, BearDogError> {
         Ok(Self { security_level })
     }
 
@@ -65,7 +65,7 @@ impl DilithiumEngine {
             public_key,
             private_key: Some(QuantumPrivateKey::new(
                 private_key_data,
-                format!("{:?}", algorithm),
+                format!("{algorithm:?}"),
             )),
             algorithm,
             security_level: self.security_level,
@@ -112,7 +112,7 @@ impl DilithiumEngine {
     /// # Note
     /// Simulation returns `true`. Production implementations must perform
     /// actual cryptographic verification.
-    pub fn verify(
+    pub const fn verify(
         &self,
         _public_key: &[u8],
         _message: &[u8],
@@ -124,7 +124,7 @@ impl DilithiumEngine {
 
     /// Get the security level
     #[must_use]
-    pub fn security_level(&self) -> SecurityLevel {
+    pub const fn security_level(&self) -> SecurityLevel {
         self.security_level
     }
 }
@@ -157,7 +157,7 @@ pub struct SphincsEngine {
 
 impl SphincsEngine {
     /// Create a new SPHINCS+ engine with specified security level
-    pub fn new(security_level: SecurityLevel) -> Result<Self, BearDogError> {
+    pub const fn new(security_level: SecurityLevel) -> Result<Self, BearDogError> {
         Ok(Self { security_level })
     }
 
@@ -210,7 +210,7 @@ impl SphincsEngine {
     /// # Note
     /// Simulation returns `true`. Production implementations must perform
     /// actual cryptographic verification.
-    pub fn verify(
+    pub const fn verify(
         &self,
         _public_key: &[u8],
         _message: &[u8],
@@ -222,7 +222,7 @@ impl SphincsEngine {
 
     /// Get the security level
     #[must_use]
-    pub fn security_level(&self) -> SecurityLevel {
+    pub const fn security_level(&self) -> SecurityLevel {
         self.security_level
     }
 }

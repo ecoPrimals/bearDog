@@ -5,8 +5,8 @@
 // using only the beardog-genetics crate directly.
 
 use beardog_genetics::ecosystem_evolution::{
-    migrate_from_binary_patterns, BinaryAccessPattern, BinaryTrust, CoordinationModel,
-    EcosystemGeneticEngine, EcosystemMembership, HierarchicalPattern, TrustEvolution,
+    BinaryAccessPattern, BinaryTrust, CoordinationModel, EcosystemGeneticEngine,
+    EcosystemMembership, HierarchicalPattern, TrustEvolution, migrate_from_binary_patterns,
 };
 use beardog_types::canonical::HealthStatus;
 

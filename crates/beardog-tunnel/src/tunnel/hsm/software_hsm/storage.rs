@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 use aes_gcm::{
+    Aes256Gcm, Key,
     aead::generic_array::GenericArray,
     aead::{Aead, KeyInit},
-    Aes256Gcm, Key,
 };
 use hkdf::Hkdf;
 use sha2::Sha256;
@@ -306,13 +306,12 @@ impl DefaultEncryptionKey {
     }
 
     fn ensure_initialized(&self) {
-        if !self.initialized {
-            panic!(
-                "DefaultEncryptionKey used before initialization. \
-                 Call from_env(), from_master_secret(), or new() before encrypt/decrypt. \
-                 Set BEARDOG_HSM_MASTER_KEY for production."
-            );
-        }
+        assert!(
+            self.initialized,
+            "DefaultEncryptionKey used before initialization. \
+             Call from_env(), from_master_secret(), or new() before encrypt/decrypt. \
+             Set BEARDOG_HSM_MASTER_KEY for production."
+        );
     }
 
     /// Initialize the encryption key

@@ -16,7 +16,7 @@ use tracing::{debug, warn};
 pub async fn discover_primal_socket(primal_name: &str) -> Result<PathBuf> {
     // 1. Check XDG runtime dir (preferred for user services)
     if let Ok(xdg_runtime) = std::env::var("XDG_RUNTIME_DIR") {
-        let socket_path = PathBuf::from(format!("{}/ecoPrimals/{}.sock", xdg_runtime, primal_name));
+        let socket_path = PathBuf::from(format!("{xdg_runtime}/ecoPrimals/{primal_name}.sock"));
 
         if socket_path.exists() {
             debug!("✅ Found {} via XDG_RUNTIME_DIR", primal_name);
@@ -26,10 +26,8 @@ pub async fn discover_primal_socket(primal_name: &str) -> Result<PathBuf> {
 
     // 2. Check home dir (for user-level primals)
     if let Ok(home) = std::env::var("HOME") {
-        let socket_path = PathBuf::from(format!(
-            "{}/.local/share/ecoPrimals/{}.sock",
-            home, primal_name
-        ));
+        let socket_path =
+            PathBuf::from(format!("{home}/.local/share/ecoPrimals/{primal_name}.sock"));
 
         if socket_path.exists() {
             debug!("✅ Found {} via HOME", primal_name);
@@ -38,14 +36,14 @@ pub async fn discover_primal_socket(primal_name: &str) -> Result<PathBuf> {
     }
 
     // 3. Check /var/run (for system services)
-    let socket_path = PathBuf::from(format!("/var/run/ecoPrimals/{}.sock", primal_name));
+    let socket_path = PathBuf::from(format!("/var/run/ecoPrimals/{primal_name}.sock"));
     if socket_path.exists() {
         debug!("✅ Found {} via /var/run", primal_name);
         return Ok(socket_path);
     }
 
     // 4. Check /tmp (fallback)
-    let socket_path = PathBuf::from(format!("/tmp/ecoPrimals/{}.sock", primal_name));
+    let socket_path = PathBuf::from(format!("/tmp/ecoPrimals/{primal_name}.sock"));
     if socket_path.exists() {
         debug!("✅ Found {} via /tmp", primal_name);
         return Ok(socket_path);
@@ -54,8 +52,7 @@ pub async fn discover_primal_socket(primal_name: &str) -> Result<PathBuf> {
     // Not found
     warn!("❌ Primal not found: {}", primal_name);
     Err(Error::PrimalNotFound(format!(
-        "{} (searched XDG_RUNTIME_DIR, HOME, /var/run, /tmp)",
-        primal_name
+        "{primal_name} (searched XDG_RUNTIME_DIR, HOME, /var/run, /tmp)"
     )))
 }
 
@@ -76,7 +73,7 @@ mod tests {
         fs::File::create(&socket_path).unwrap();
 
         // Set HOME to temp dir
-        std::env::set_var("HOME", dir.path());
+        beardog_errors::process_env::set_var("HOME", dir.path());
 
         // Discover
         let result = discover_primal_socket("test_primal").await;
@@ -87,8 +84,8 @@ mod tests {
     #[tokio::test]
     async fn test_primal_not_found() {
         // Clear environment to ensure failure
-        std::env::remove_var("XDG_RUNTIME_DIR");
-        std::env::set_var("HOME", "/nonexistent");
+        beardog_errors::process_env::remove_var("XDG_RUNTIME_DIR");
+        beardog_errors::process_env::set_var("HOME", "/nonexistent");
 
         let result = discover_primal_socket("nonexistent_primal").await;
         assert!(result.is_err());

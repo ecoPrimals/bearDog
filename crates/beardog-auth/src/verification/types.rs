@@ -11,14 +11,17 @@ use std::collections::HashMap;
 // Note: BearDogGenetics and ResourcePermission types to be defined when needed
 // use crate::auth::{BearDogGenetics, ResourcePermission};
 
-// Placeholder types until proper types are defined
+/// Stand-in for rich genetics payloads while verification stays decoupled from `auth::genetics`.
 pub type BearDogGenetics = String;
+/// Stand-in for structured permissions; compare as opaque strings until unified types land.
 pub type ResourcePermission = String;
 
+/// Outcome of a single verification attempt, including confidence and audit metadata.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VerificationResult {
     /// Whether success is enabled
     pub success: bool,
+    /// Normalized 0.0–1.0 belief score from the verifier implementation.
     pub confidence: f64,
     /// The details value
     pub details: String,
@@ -28,6 +31,7 @@ pub struct VerificationResult {
     pub method: VerificationMethod,
 }
 
+/// Memoized [`VerificationResult`] with freshness bounds to avoid redundant checks.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CachedVerification {
     /// The result value
@@ -38,6 +42,7 @@ pub struct CachedVerification {
     pub expires_at: DateTime<Utc>,
 }
 
+/// Inputs (genetics snapshot, permission needs, auxiliary tags) passed into verifiers.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VerificationContext {
     /// Optional genetics
@@ -48,6 +53,7 @@ pub struct VerificationContext {
     pub context_data: HashMap<String, String>,
 }
 
+/// Aggregate counters for monitoring verifier health and cache effectiveness.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VerificationMetrics {
     /// Number of `total_verifications`
@@ -60,9 +66,11 @@ pub struct VerificationMetrics {
     pub cache_hits: u64,
     /// Number of `cache_misses`
     pub cache_misses: u64,
+    /// Rolling average latency of verification attempts, in milliseconds.
     pub avg_verification_time_ms: f64,
 }
 
+/// Channel used to satisfy a verification request (crypto, biometric, genetic, …).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum VerificationMethod {
     /// Represents cryptographic variant

@@ -96,7 +96,7 @@ impl UnifiedCloudHsmConfig {
     /// // Works with AWS, Azure, GCP, or any provider with these capabilities!
     /// ```
     #[must_use]
-    pub fn with_required_capabilities(capabilities: Vec<CapabilityType>) -> Self {
+    pub const fn with_required_capabilities(capabilities: Vec<CapabilityType>) -> Self {
         Self {
             enabled: true,
             required_capabilities: Some(capabilities),

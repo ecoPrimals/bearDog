@@ -64,7 +64,7 @@ impl ConstraintEnforcer {
 
         let pk = VerifyingKey::from_bytes(&key_bytes).map_err(|e| {
             ConstraintViolationError::SignatureVerificationFailed {
-                reason: format!("Invalid public key: {}", e),
+                reason: format!("Invalid public key: {e}"),
             }
         })?;
 
@@ -85,7 +85,7 @@ impl ConstraintEnforcer {
         // Verify
         pk.verify(&hash, &sig).map_err(|e| {
             ConstraintViolationError::SignatureVerificationFailed {
-                reason: format!("Signature verification failed: {}", e),
+                reason: format!("Signature verification failed: {e}"),
             }
         })?;
 
@@ -188,9 +188,8 @@ impl ConstraintEnforcer {
         data_access: &DataAccessConstraint,
         operation: &KeyOperation,
     ) -> Result<(), ConstraintViolationError> {
-        let path = match operation.path() {
-            Some(p) => p,
-            None => return Ok(()),
+        let Some(path) = operation.path() else {
+            return Ok(());
         };
 
         match operation {

@@ -177,7 +177,7 @@ impl MultiTransportServer {
                     let task = tokio::spawn(async move {
                         server_clone.start().await.map_err(|e| {
                             error!("Unix socket server error: {}", e);
-                            anyhow::anyhow!("Unix server failed: {}", e)
+                            anyhow::anyhow!("Unix server failed: {e}")
                         })
                     });
                     self.tasks.push(task);
@@ -187,7 +187,7 @@ impl MultiTransportServer {
                     let task = tokio::spawn(async move {
                         server_clone.start().await.map_err(|e| {
                             error!("TCP server error: {}", e);
-                            anyhow::anyhow!("TCP server failed: {}", e)
+                            anyhow::anyhow!("TCP server failed: {e}")
                         })
                     });
                     self.tasks.push(task);

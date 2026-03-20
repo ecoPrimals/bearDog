@@ -99,7 +99,7 @@ pub async fn handle_tls_verify_certificate(params: Option<&Value>) -> Result<Val
 
     let current_time_unix = params
         .get("current_time_unix")
-        .and_then(|v| v.as_i64())
+        .and_then(serde_json::Value::as_i64)
         .ok_or("Missing required parameter: current_time_unix")?;
 
     debug!(
@@ -113,11 +113,11 @@ pub async fn handle_tls_verify_certificate(params: Option<&Value>) -> Result<Val
     for (i, cert_value) in certificate_chain.iter().enumerate() {
         let cert_b64 = cert_value
             .as_str()
-            .ok_or(format!("Certificate {} is not a string", i))?;
+            .ok_or(format!("Certificate {i} is not a string"))?;
 
         let cert_der = base64::engine::general_purpose::STANDARD
             .decode(cert_b64)
-            .map_err(|e| format!("Invalid base64 certificate {}: {}", i, e))?;
+            .map_err(|e| format!("Invalid base64 certificate {i}: {e}"))?;
 
         certs.push(cert_der);
     }
@@ -157,7 +157,7 @@ pub async fn handle_tls_verify_certificate(params: Option<&Value>) -> Result<Val
     let mut name_matches = false;
 
     // Check Common Name (CN)
-    if subject.contains(&format!("CN={}", server_name)) {
+    if subject.contains(&format!("CN={server_name}")) {
         name_matches = true;
     }
 
@@ -170,7 +170,7 @@ pub async fn handle_tls_verify_certificate(params: Option<&Value>) -> Result<Val
                 for name in &san.general_names {
                     if let GeneralName::DNSName(dns_name) = name {
                         if *dns_name == server_name
-                            || dns_name.ends_with(&format!(".{}", server_name))
+                            || dns_name.ends_with(&format!(".{server_name}"))
                         {
                             name_matches = true;
                             break;

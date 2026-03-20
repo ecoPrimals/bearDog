@@ -13,9 +13,9 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
+use trust_dns_resolver::TokioAsyncResolver;
 use trust_dns_resolver::config::{ResolverConfig, ResolverOpts};
 use trust_dns_resolver::proto::rr::RecordType;
-use trust_dns_resolver::TokioAsyncResolver;
 
 /// DNS-SD discovery configuration
 #[derive(Debug, Clone)]
@@ -101,7 +101,6 @@ impl DnsSdDiscovery {
                 Ok(service) => services.push(service),
                 Err(e) => {
                     warn!("Failed to resolve service {}: {}", instance_name, e);
-                    continue;
                 }
             }
         }
@@ -147,7 +146,7 @@ impl DnsSdDiscovery {
 
         let instances: Vec<String> = response
             .iter()
-            .filter_map(|record| record.as_ptr().map(|ptr| ptr.to_string()))
+            .filter_map(|record| record.as_ptr().map(std::string::ToString::to_string))
             .collect();
 
         debug!("Found {} service instances", instances.len());
@@ -165,12 +164,11 @@ impl DnsSdDiscovery {
             .resolver
             .lookup(instance_name, RecordType::SRV)
             .await
-            .map_err(|e| DiscoveryError::QueryFailed(format!("SRV query failed: {}", e)))?;
+            .map_err(|e| DiscoveryError::QueryFailed(format!("SRV query failed: {e}")))?;
 
         let srv_record = srv_response
             .iter()
-            .filter_map(|r| r.as_srv())
-            .next()
+            .find_map(|r| r.as_srv())
             .ok_or_else(|| DiscoveryError::InvalidServiceInfo("No SRV record found".to_string()))?;
 
         let hostname = srv_record.target().to_string();
@@ -192,8 +190,7 @@ impl DnsSdDiscovery {
 
         if addresses.is_empty() {
             return Err(DiscoveryError::InvalidServiceInfo(format!(
-                "No IP addresses found for hostname: {}",
-                hostname
+                "No IP addresses found for hostname: {hostname}"
             )));
         }
 

@@ -5,6 +5,7 @@
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
+/// High-level key lifecycle switches (rotation, backup) for the unified HSM profile.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct HsmKeyManagementConfig {
     /// Key Rotation Enabled
@@ -19,7 +20,7 @@ impl HsmKeyManagementConfig {
     /// Validate
     /// Validates input
     /// Validates input
-    pub fn validate(&self) -> Result<(), BearDogError> {
+    pub const fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }
 }

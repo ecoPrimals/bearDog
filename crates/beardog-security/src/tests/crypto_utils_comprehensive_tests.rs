@@ -137,9 +137,9 @@ mod crypto_utils_tests {
     fn test_encrypt_large_data() {
         let key = [0u8; 32];
         let plaintext = vec![0u8; 1024 * 1024]; // 1MB
-                                                // TEST_CATEGORY: integration
-                                                // TEST_DOMAIN: security
-                                                // TEST_PRIORITY: normal
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: security
+        // TEST_PRIORITY: normal
 
         let result = encrypt_data(&plaintext, &key);
         assert!(result.is_ok(), "Should encrypt large data");

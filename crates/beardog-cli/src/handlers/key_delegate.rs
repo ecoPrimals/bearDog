@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Key Delegation Handler
-// Create delegated keys with time/resource constraints
-//
-// MODERNIZED: Now uses trait-based constraint system for extensibility
+//! Delegated keys with optional time, weekday, CPU, and memory constraints.
 
 use super::key_store::{self, StoredKey};
 use beardog_errors::BearDogError;
 use beardog_types::constraints::{
+    Constraint, ConstraintContext,
     builtin::{
         CompositeConstraint, CpuQuotaConstraint, ExpiryConstraint, MemoryQuotaConstraint,
         TimeRangeConstraint, WeekdayConstraint,
     },
-    Constraint, ConstraintContext,
 };
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
@@ -42,6 +39,7 @@ impl DelegationConstraints {
     ///
     /// This creates a `Vec<Box<dyn Constraint>>` that can be evaluated
     /// using the universal constraint system.
+    #[allow(dead_code)] // Planned for constraint evaluation in delegation flow
     pub fn to_constraints(&self) -> Vec<Box<dyn Constraint>> {
         let mut constraints: Vec<Box<dyn Constraint>> = Vec::new();
 
@@ -81,6 +79,7 @@ impl DelegationConstraints {
     /// Check if constraints are currently satisfied
     ///
     /// MODERNIZED: Uses trait-based constraint evaluation
+    #[allow(dead_code)] // Planned for delegation validation
     pub fn is_satisfied(&self) -> Result<bool, BearDogError> {
         let constraints = self.to_constraints();
         let context = ConstraintContext::new().with_user(self.delegated_to.clone());
@@ -96,6 +95,7 @@ impl DelegationConstraints {
     }
 
     /// Get composite constraint (all constraints with AND logic)
+    #[allow(dead_code)] // Planned for delegation validation
     pub fn as_composite(&self) -> CompositeConstraint {
         CompositeConstraint::and(self.to_constraints())
     }
@@ -117,7 +117,7 @@ pub async fn handle_key_delegate(
     println!("========================\n");
 
     // Load master key
-    println!("📥 Loading master key: {}", master_key_id);
+    println!("📥 Loading master key: {master_key_id}");
     let master_key = key_store::load_key(master_key_id)?;
 
     println!("✅ Master key loaded");
@@ -150,13 +150,13 @@ pub async fn handle_key_delegate(
     // Display constraints
     println!("✅ Constraints:");
     if let Some((start, end)) = &time_range_tuple {
-        println!("   ⏰ Time Range: {} - {}", start, end);
+        println!("   ⏰ Time Range: {start} - {end}");
     }
     if let Some(days) = &weekdays_vec {
         println!("   📅 Weekdays: {}", days.join(", "));
     }
     if let Some(cpu) = cpu_quota {
-        println!("   💻 CPU Quota: {}%", cpu);
+        println!("   💻 CPU Quota: {cpu}%");
     }
     if let Some(mem) = memory_bytes {
         println!("   🧠 Memory Quota: {}", format_bytes(mem));
@@ -189,11 +189,11 @@ pub async fn handle_key_delegate(
 
     // Serialize constraints to JSON string for storage in purpose field
     let constraints_json = serde_json::to_string(&constraints).map_err(|e| {
-        BearDogError::serialization(&format!("Failed to serialize constraints: {}", e))
+        BearDogError::serialization(&format!("Failed to serialize constraints: {e}"))
     })?;
 
     // Create delegated key
-    let parent_depth = master_key.lineage.as_ref().map(|l| l.depth).unwrap_or(0);
+    let parent_depth = master_key.lineage.as_ref().map_or(0, |l| l.depth);
 
     let delegated_key = StoredKey {
         key_id: output_key_id.to_string(),
@@ -203,7 +203,7 @@ pub async fn handle_key_delegate(
         created_at: Utc::now().to_rfc3339(),
         generation: master_key.generation + 1,
         parent_key_id: Some(master_key_id.to_string()),
-        derivation_purpose: Some(format!("delegated-to-{}", delegate_to)),
+        derivation_purpose: Some(format!("delegated-to-{delegate_to}")),
         children: Vec::new(),
         lineage: Some(key_store::KeyLineageInfo {
             parent_key_id: Some(master_key_id.to_string()),
@@ -223,7 +223,7 @@ pub async fn handle_key_delegate(
     key_store::save_key(&updated_master)?;
 
     // Generate operation receipt
-    use beardog_types::receipt::{generate_receipt_filename, KeyInfo, OperationReceipt};
+    use beardog_types::receipt::{KeyInfo, OperationReceipt, generate_receipt_filename};
     use serde_json::json;
 
     let mut receipt = OperationReceipt::new("key-delegate")
@@ -234,7 +234,7 @@ pub async fn handle_key_delegate(
             parent_key_id: Some(master_key_id.to_string()),
             expires_at: Some(expiry.to_rfc3339()),
             usage: None,
-            purpose: Some(format!("Delegated to {}", delegate_to)),
+            purpose: Some(format!("Delegated to {delegate_to}")),
         })
         .with_metadata("master_key_id", json!(master_key_id))
         .with_metadata("delegated_to", json!(delegate_to))
@@ -262,26 +262,26 @@ pub async fn handle_key_delegate(
 
     println!("\n✅ Delegated key created successfully!");
     println!("\n📋 Delegated Key Details:");
-    println!("   ID: {}", output_key_id);
-    println!("   Delegated To: {}", delegate_to);
+    println!("   ID: {output_key_id}");
+    println!("   Delegated To: {delegate_to}");
     println!(
         "   Generation: {} (delegated from Gen {})",
         delegated_key.generation, master_key.generation
     );
-    println!("   Parent: {}", master_key_id);
+    println!("   Parent: {master_key_id}");
 
     println!("\n📜 Receipt: {}", receipt_path.display());
     println!("   Receipt ID: {}", receipt.receipt_id);
 
     println!("\n🔒 Constraints:");
     if let Some((start, end)) = time_range_tuple {
-        println!("   ⏰ Active Hours: {} - {}", start, end);
+        println!("   ⏰ Active Hours: {start} - {end}");
     }
     if let Some(days) = weekdays_vec {
         println!("   📅 Active Days: {}", days.join(", "));
     }
     if let Some(cpu) = cpu_quota {
-        println!("   💻 CPU Limit: {}%", cpu);
+        println!("   💻 CPU Limit: {cpu}%");
     }
     if let Some(mem) = memory_bytes {
         println!("   🧠 Memory Limit: {}", format_bytes(mem));
@@ -294,14 +294,8 @@ pub async fn handle_key_delegate(
     println!("   Master retains full control and can revoke");
 
     println!("\n💡 Next steps:");
-    println!(
-        "   • Use delegated key: beardog encrypt --key {} --input data.txt",
-        output_key_id
-    );
-    println!(
-        "   • Check constraints: beardog key info --key-id {}",
-        output_key_id
-    );
+    println!("   • Use delegated key: beardog encrypt --key {output_key_id} --input data.txt");
+    println!("   • Check constraints: beardog key info --key-id {output_key_id}");
 
     Ok(())
 }
@@ -314,7 +308,7 @@ fn derive_delegated_key(master_key: &[u8], context: &[u8]) -> Result<Vec<u8>, Be
     let hk = Hkdf::<Sha256>::new(Some(b"beardog_delegation_v1"), master_key);
     let mut okm = vec![0u8; 32];
     hk.expand(context, &mut okm)
-        .map_err(|e| BearDogError::crypto_error(format!("HKDF expansion failed: {}", e)))?;
+        .map_err(|e| BearDogError::crypto_error(format!("HKDF expansion failed: {e}")))?;
 
     Ok(okm)
 }
@@ -332,8 +326,7 @@ fn parse_time_range(range: &str) -> Result<(String, String), BearDogError> {
     for part in &parts {
         if !part.contains(':') {
             return Err(BearDogError::validation(&format!(
-                "Invalid time format '{}'. Use 'HH:MM'",
-                part
+                "Invalid time format '{part}'. Use 'HH:MM'"
             )));
         }
     }
@@ -361,8 +354,7 @@ fn parse_weekdays(weekdays: &str) -> Result<Vec<String>, BearDogError> {
     for day in &days {
         if !is_valid_weekday(day) {
             return Err(BearDogError::validation(&format!(
-                "Invalid weekday '{}'. Use mon, tue, wed, thu, fri, sat, sun",
-                day
+                "Invalid weekday '{day}'. Use mon, tue, wed, thu, fri, sat, sun"
             )));
         }
     }
@@ -380,12 +372,12 @@ fn expand_weekday_range(start: &str, end: &str) -> Result<Vec<String>, BearDogEr
     let start_idx = days_order
         .iter()
         .position(|&d| d == start_lower)
-        .ok_or_else(|| BearDogError::validation(&format!("Invalid weekday: {}", start)))?;
+        .ok_or_else(|| BearDogError::validation(&format!("Invalid weekday: {start}")))?;
 
     let end_idx = days_order
         .iter()
         .position(|&d| d == end_lower)
-        .ok_or_else(|| BearDogError::validation(&format!("Invalid weekday: {}", end)))?;
+        .ok_or_else(|| BearDogError::validation(&format!("Invalid weekday: {end}")))?;
 
     if start_idx > end_idx {
         return Err(BearDogError::validation("Start day must be before end day"));
@@ -432,9 +424,8 @@ fn parse_memory_quota(quota: &str) -> Result<u64, BearDogError> {
         "TB" => num * 1024 * 1024 * 1024 * 1024,
         _ => {
             return Err(BearDogError::validation(&format!(
-                "Unknown memory unit '{}'. Use B, KB, MB, GB, or TB",
-                unit
-            )))
+                "Unknown memory unit '{unit}'. Use B, KB, MB, GB, or TB"
+            )));
         }
     };
 
@@ -457,7 +448,7 @@ fn format_bytes(bytes: u64) -> String {
     } else if bytes >= KB {
         format!("{:.2} KB", bytes as f64 / KB as f64)
     } else {
-        format!("{} bytes", bytes)
+        format!("{bytes} bytes")
     }
 }
 

@@ -9,8 +9,8 @@
 //!
 //! # Implementation Status (Deep Debt Evolution - Feb 4, 2026)
 //!
-//! **Current**: Returns fallback data (honest about capabilities - Principle #6)  
-//! **Blocker**: `beardog-adapters` discovery client needs wiring before integration  
+//! **Current**: Returns fallback data (honest about capabilities - Principle #6)\
+//! **Blocker**: `beardog-adapters` discovery client needs wiring before integration\
 //! **Future**: Will use UniversalPrimalAdapter for TRUE runtime discovery (Principle #5)
 //!
 //! The `beardog-adapters` crate exists and is stable (211 tests passing), but requires
@@ -35,7 +35,7 @@ impl Default for CollaborationService {
 
 impl CollaborationService {
     /// Create new collaboration service
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {}
     }
 
@@ -119,17 +119,17 @@ impl CollaborationService {
             template_id: template_id.to_string(),
             creator_id: creator_id.clone(),
             identity_verified: creator_id != "unknown",
-            trust_score: if creator_id != "unknown" { 0.75 } else { 0.10 },
-            reputation: if creator_id != "unknown" {
-                "established_contributor".to_string()
-            } else {
+            trust_score: if creator_id == "unknown" { 0.10 } else { 0.75 },
+            reputation: if creator_id == "unknown" {
                 "new_user".to_string()
+            } else {
+                "established_contributor".to_string()
             },
             member_since: "2025-06-15T10:00:00Z".to_string(),
-            genetic_family: if creator_id != "unknown" {
-                Some("nat0".to_string())
-            } else {
+            genetic_family: if creator_id == "unknown" {
                 None
+            } else {
+                Some("nat0".to_string())
             },
         }
     }
@@ -156,7 +156,7 @@ impl CollaborationService {
         }]
     }
 
-    fn default_community_metrics() -> CommunityMetrics {
+    const fn default_community_metrics() -> CommunityMetrics {
         CommunityMetrics {
             deployments: 145, // Realistic default for fallback
             success_rate: Some(0.94),

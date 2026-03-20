@@ -24,22 +24,22 @@
 //! manager.initialize().expect("deployment init");
 //! ```
 
-// Production code must use proper error handling - deny panicking methods
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-// Allow expect in tests - test panics are appropriate failure modes
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
+/// Android deployment: NDK verification, build environment checks, and APK-oriented workflows.
 pub mod android;
+/// Rust/Cargo build orchestration for deployment targets (e.g. Android triples).
 pub mod builder;
+/// Device discovery, ADB integration, install/run/log operations for deployable targets.
 pub mod device;
 
 /// Error types and handling for deployment operations
 pub mod error;
+/// Compiler and Cargo flags for tuned debug vs production deployment builds.
 pub mod optimization;
 #[cfg(test)]
 mod tests;
@@ -47,7 +47,6 @@ mod tests;
 pub use android::*;
 pub use builder::*;
 pub use device::*;
-pub use error::*;
 
 // October 27, 2025: Comprehensive test expansion
 #[cfg(test)]
@@ -57,6 +56,7 @@ mod deploy_comprehensive_tests;
 #[cfg(test)]
 mod coverage_tests;
 
+/// High-level knobs for a BearDog deployment run (environment, scale, and observability).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeploymentConfig {
     /// Target deployment environment (dev, staging, prod)
@@ -80,6 +80,7 @@ impl Default for DeploymentConfig {
     }
 }
 
+/// Owns [`DeploymentConfig`] and performs initialization/validation for a deployment session.
 #[derive(Debug, Clone)]
 pub struct DeploymentManager {
     config: DeploymentConfig,

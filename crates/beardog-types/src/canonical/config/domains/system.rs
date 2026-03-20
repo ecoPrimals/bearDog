@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 /// System domain configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SystemDomainConfig {
     /// Application metadata
     pub application: ApplicationConfig,
@@ -279,7 +279,7 @@ impl LogLevel {
     pub const DEFAULT: Self = Self::Info;
 
     /// Create LogLevel with defaults
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self::DEFAULT
     }
 }
@@ -295,7 +295,7 @@ impl LogFormat {
     pub const DEFAULT: Self = Self::Json;
 
     /// Create LogFormat with defaults
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self::DEFAULT
     }
 }
@@ -317,7 +317,7 @@ impl LogRotationConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             max_size_mb: Self::DEFAULT_MAX_SIZE_MB,
             max_files: Self::DEFAULT_MAX_FILES,
@@ -434,7 +434,7 @@ impl ThreadingConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables or system queries are performed.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             worker_threads: Self::DEFAULT_WORKER_THREADS,
             blocking_threads: Self::DEFAULT_BLOCKING_THREADS,
@@ -498,18 +498,6 @@ pub struct EnvironmentConfig {
     pub overrides: HashMap<String, serde_json::Value>,
 }
 
-impl Default for SystemDomainConfig {
-    fn default() -> Self {
-        Self {
-            application: ApplicationConfig::default(),
-            logging: LoggingConfig::default(),
-            threading: ThreadingConfig::default(),
-            resources: ResourceConfig::default(),
-            environment: EnvironmentConfig::default(),
-        }
-    }
-}
-
 impl Default for ApplicationConfig {
     fn default() -> Self {
         Self::with_defaults()
@@ -538,7 +526,7 @@ impl ResourceConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             max_memory_bytes: None,
             max_file_descriptors: Some(Self::DEFAULT_MAX_FILE_DESCRIPTORS),

@@ -13,8 +13,8 @@
 //! - Recovery and failover
 
 use beardog_errors::BearDogError;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use tokio::sync::mpsc;
 
 type Result<T> = std::result::Result<T, BearDogError>;

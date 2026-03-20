@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! [`Arc`]-backed byte views and a mutex pool for reusable `Vec` slabs.
 
 use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tracing::{debug, info};
 
+/// Shared backing storage with `(offset, length)` window; cheap subslices clone the [`Arc`].
 #[derive(Debug, Clone)]
 pub struct SafeZeroCopyBuffer {
     data: Arc<Vec<u8>>,
@@ -61,11 +60,13 @@ impl SafeZeroCopyBuffer {
         })
     }
 
+    /// Logical byte length of the active window.
     #[must_use]
     pub const fn len(&self) -> usize {
         self.length
     }
 
+    /// True when the window length is zero.
     #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.length == 0
@@ -90,6 +91,7 @@ impl SafeZeroCopyBuffer {
     }
 }
 
+/// Mutex-protected stack of `Vec<u8>` capped at `max_pool_size`, each sized to `buffer_size`.
 #[derive(Debug)]
 pub struct SafeBufferPool {
     buffers: std::sync::Mutex<Vec<Vec<u8>>>,

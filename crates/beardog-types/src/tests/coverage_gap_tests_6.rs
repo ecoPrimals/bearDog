@@ -193,9 +193,9 @@ mod resilience_from_env_tests {
 // canonical/providers_unified/migration.rs - 129 uncov (0% coverage)
 // ===========================================================================
 mod providers_migration_tests {
+    use crate::canonical::providers_unified::CanonicalProviderConfig;
     use crate::canonical::providers_unified::core::ProviderType;
     use crate::canonical::providers_unified::migration::*;
-    use crate::canonical::providers_unified::CanonicalProviderConfig;
 
     #[test]
     fn test_migrate_from_legacy() {

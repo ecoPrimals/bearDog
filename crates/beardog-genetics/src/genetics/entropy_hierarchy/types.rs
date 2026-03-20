@@ -20,6 +20,7 @@ pub enum EntropyClass {
         quality_score: f64,
         /// When the entropy was captured
         capture_timestamp: DateTime<Utc>,
+        /// Biometric commitment binding this entropy to a person without storing raw biometrics.
         biometric_signature: BiometricHash,
         /// Proof of ownership
         ownership_proof: OwnershipProof,
@@ -37,6 +38,7 @@ pub enum EntropyClass {
     },
     /// Store-bought machine entropy (lowest quality)
     StoreBoughtMachine {
+        /// Estimated quality of the machine-only entropy (0.0–1.0).
         quality_score: f64,
         /// Machine source type
         source_type: MachineEntropySource,
@@ -63,6 +65,7 @@ impl PartialOrd for EntropyClass {
     }
 }
 
+/// One-way representation of human biometric material plus an ownership binding.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BiometricHash {
     /// Hash of biometric data
@@ -85,6 +88,7 @@ impl BiometricHash {
     }
 }
 
+/// Evidence that the human operator consents to use of their entropy class in derivation.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct OwnershipProof {
     /// Proof data
@@ -110,6 +114,7 @@ impl OwnershipProof {
     }
 }
 
+/// Captured human entropy with modality metadata and collection time.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct HumanEntropySource {
     /// Type of human entropy source
@@ -123,27 +128,33 @@ pub struct HumanEntropySource {
     pub collected_at: DateTime<Utc>,
 }
 
-/// Types of human entropy sources
+/// Modalities through which humans contribute unpredictable input to the hierarchy.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-/// Types of human entropy
 pub enum HumanEntropyType {
     /// Biometric data (fingerprint, voice, etc.)
     Biometric {
+        /// Logical modality name (e.g. fingerprint, voice) for policy routing.
         biometric_type: String,
+        /// Normalized quality estimate for this sample.
         quality_score: f64,
     },
     /// Behavioral patterns
     Behavioral {
+        /// Class of behavior captured (e.g. typing rhythm).
         pattern_type: String,
+        /// How unpredictable the pattern is relative to population baselines.
         complexity_score: f64,
     },
     /// Creative expression
     Creative {
+        /// Kind of creative act (drawing, composition) contributing entropy.
         expression_type: String,
+        /// Uniqueness score for the creative output.
         uniqueness_score: f64,
     },
 }
 
+/// Machine-origin randomness with algorithm and seed-source transparency for auditing.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MachineEntropySource {
     /// Type of machine source
@@ -160,27 +171,33 @@ pub struct MachineEntropySource {
     pub quality_metrics: HashMap<String, f64>,
 }
 
-/// Types of machine entropy sources
+/// Physical or logical RNG implementation feeding supervised or store-bought entropy.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-/// Types of machine source
 pub enum MachineSourceType {
     /// Cryptographically secure pseudo-random number generator
     CSPRNG {
+        /// Named algorithm (e.g. ChaCha20).
         algorithm: String,
+        /// Where seed material originates (hardware, OS, etc.).
         seed_source: String,
     },
     /// Hardware random number generator
     HRNG {
+        /// Device or API identifier (e.g. TPM 2.0).
         device_type: String,
+        /// Observed or rated bits of entropy per sample.
         entropy_rate: f64,
     },
     /// True random number generator
     TRNG {
+        /// Physical noise source category (quantum, thermal, …).
         source_type: String,
+        /// Battery tests passed by this source (NIST, diehard, …).
         randomness_tests: Vec<String>,
     },
 }
 
+/// Human validator referenced when machine entropy is supervised or attested.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct HumanIdentity {
     /// Unique identity identifier
@@ -195,7 +212,7 @@ pub struct HumanIdentity {
     pub verified_at: DateTime<Utc>,
 }
 
-/// Levels of identity verification
+/// How strongly a human identity was proven before it may vouch for entropy.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum VerificationLevel {
     /// Basic verification
@@ -206,6 +223,7 @@ pub enum VerificationLevel {
     Maximum,
 }
 
+/// Describes how multiple entropy buffers are fused before key derivation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FusionAlgorithm {
     /// Algorithm type identifier
@@ -219,17 +237,24 @@ pub struct FusionAlgorithm {
     pub mixing_strategy: MixingStrategy,
 }
 
+/// Concrete mixing primitive applied inside a [`FusionAlgorithm`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MixingStrategy {
     /// Simple XOR mixing
     XorMix,
     /// Hash-based mixing
-    HashMix { hash_algorithm: String },
+    HashMix {
+        /// Digest or XOF algorithm identifier.
+        hash_algorithm: String,
+    },
     /// Cryptographic mixing
-    CryptoMix { cipher: String },
+    CryptoMix {
+        /// AEAD or KDF-capable cipher suite name.
+        cipher: String,
+    },
 }
 
-/// Entropy seed containing classified entropy
+/// Classified entropy buffer with lifecycle metadata—unit of storage in the hierarchy.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EntropySeed {
     /// Unique seed identifier
@@ -245,6 +270,7 @@ pub struct EntropySeed {
     pub metadata: SeedMetadata,
 }
 
+/// Creation time, optional expiry, and usage accounting for an [`EntropySeed`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SeedMetadata {
     /// Creation timestamp
@@ -261,6 +287,7 @@ pub struct SeedMetadata {
     pub max_usage: Option<u64>,
 }
 
+/// Global thresholds for accepting human vs machine entropy and mandatory proofs.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EntropyHierarchyConfig {
     /// The min human quality value

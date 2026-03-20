@@ -3,11 +3,11 @@
 //! BirdSong broadcast encryption and decryption
 
 use chacha20poly1305::{
-    aead::{Aead, KeyInit},
     ChaCha20Poly1305, Nonce,
+    aead::{Aead, KeyInit},
 };
 use chrono::Utc;
-use rand::{rngs::OsRng, RngCore};
+use rand::{RngCore, rngs::OsRng};
 use tracing::{debug, info};
 
 use beardog_errors::BearDogError;
@@ -64,7 +64,7 @@ impl BirdSongEncryption {
 
         // Initialize ChaCha20-Poly1305 cipher
         let cipher = ChaCha20Poly1305::new_from_slice(&key.key_material)
-            .map_err(|e| BearDogError::system(format!("Cipher init failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Cipher init failed: {e}")))?;
 
         // Generate random nonce (96 bits / 12 bytes for ChaCha20-Poly1305)
         let mut nonce_bytes = [0u8; 12];
@@ -77,7 +77,7 @@ impl BirdSongEncryption {
         // Encrypt plaintext
         let ciphertext = cipher
             .encrypt(nonce, request.plaintext.as_slice())
-            .map_err(|e| BearDogError::system(format!("Encryption failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Encryption failed: {e}")))?;
 
         // If there's AAD, append it (it's authenticated but not encrypted)
         // Note: ChaCha20-Poly1305 handles AAD internally, we just need to pass it during encrypt/decrypt
@@ -136,8 +136,7 @@ impl BirdSongEncryption {
             .proof
             .path
             .last()
-            .map(|last| last == &request.proof.node_id)
-            .unwrap_or(false);
+            .is_some_and(|last| last == &request.proof.node_id);
 
         if !is_sender
             && (node_depth < request.broadcast.hint.min_depth
@@ -157,14 +156,13 @@ impl BirdSongEncryption {
         // Note: Sender is always allowed (already checked above), so skip depth validity check for sender
         if !is_sender && !self.kdf.is_key_valid_for_depth(&key, node_depth) {
             return Err(BearDogError::system(format!(
-                "Key not valid for depth {}",
-                node_depth
+                "Key not valid for depth {node_depth}"
             )));
         }
 
         // Initialize cipher
         let cipher = ChaCha20Poly1305::new_from_slice(&key.key_material)
-            .map_err(|e| BearDogError::system(format!("Cipher init failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Cipher init failed: {e}")))?;
 
         // Extract nonce
         if request.broadcast.nonce.len() != 12 {
@@ -180,8 +178,7 @@ impl BirdSongEncryption {
             .decrypt(nonce, request.broadcast.ciphertext.as_slice())
             .map_err(|e| {
                 BearDogError::system(format!(
-                    "Decryption failed (wrong key or tampered data): {}",
-                    e
+                    "Decryption failed (wrong key or tampered data): {e}"
                 ))
             })?;
 
@@ -202,7 +199,7 @@ impl BirdSongEncryption {
     /// # Returns
     ///
     /// `true` if the node is authorized to decrypt, `false` otherwise
-    pub fn can_decrypt(&self, broadcast: &BirdSongBroadcast, node_depth: u32) -> bool {
+    pub const fn can_decrypt(&self, broadcast: &BirdSongBroadcast, node_depth: u32) -> bool {
         node_depth >= broadcast.hint.min_depth && node_depth <= broadcast.hint.max_depth
     }
 

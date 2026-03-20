@@ -21,19 +21,20 @@ Describes what a service provides:
 ```rust
 let metadata = CapabilityMetadata::new("secure_tunnel", "1.0")
     .with_interface("SecureTunnelProvider")
-    .with_endpoint("http://localhost:8080/btsp");
+    // Endpoint comes from discovery at runtime; below is illustrative only
+    .with_endpoint("https://discovered-host/capabilities/secure_tunnel");
 ```
 
 ### Capability Registry
-Type-erased storage for capability providers:
+Type-erased storage for capability providers. HTTP/mDNS defaults resolve from `BEARDOG_*` env vars (see crate docs); use `with_http_base` when pinning a base URL.
+
 ```rust
 let registry = CapabilityRegistry::new(
-    "beardog-node-1",
+    "550e8400-e29b-41d4-a716-446655440000",
     "cryptographic_services",
-    "http://localhost:8080"
 );
 
-registry.register(metadata, provider).await?;
+registry.register("secure_tunnel", provider, metadata);
 ```
 
 ### Capability Querying
@@ -59,26 +60,21 @@ Key principles:
 ## Usage Example
 
 ```rust
-use beardog_capabilities::{CapabilityRegistry, CapabilityMetadata};
+use beardog_capabilities::{CapabilityMetadata, CapabilityRegistry};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Create registry
     let registry = CapabilityRegistry::new(
-        "my-primal",
+        "550e8400-e29b-41d4-a716-446655440000",
         "security_provider",
-        "http://localhost:8080"
     );
 
-    // Register a capability
     let metadata = CapabilityMetadata::new("encryption", "2.0")
         .with_interface("EncryptionProvider")
-        .with_endpoint("http://localhost:8080/encrypt");
-    
-    registry.register(metadata, my_provider).await?;
+        .with_endpoint("resolved-from-discovery");
 
-    // Advertise via mDNS (if enabled)
-    #[cfg(feature = "mdns")]
+    registry.register("encryption", my_provider, metadata);
+
     registry.advertise().await?;
 
     Ok(())

@@ -35,7 +35,7 @@ static COLLABORATION: LazyLock<Arc<CollaborationService>> = LazyLock::new(|| {
 /// Get the module-level collaboration service
 ///
 /// Returns a clone of the Arc, allowing efficient sharing without locks
-pub(crate) fn collaboration_service() -> Arc<CollaborationService> {
+pub fn collaboration_service() -> Arc<CollaborationService> {
     COLLABORATION.clone()
 }
 
@@ -51,7 +51,7 @@ pub(crate) fn collaboration_service() -> Arc<CollaborationService> {
 /// # Returns
 ///
 /// Template information including creator details
-pub(crate) async fn get_creator_info(
+pub async fn get_creator_info(
     template_id: &str,
 ) -> Result<crate::graph_security::collaboration_service::TemplateInfo, BearDogError> {
     let collab = collaboration_service();
@@ -70,7 +70,7 @@ pub(crate) async fn get_creator_info(
 /// # Returns
 ///
 /// Vector of lineage versions (chronological order, oldest first)
-pub(crate) async fn get_lineage(
+pub async fn get_lineage(
     template_id: &str,
 ) -> Result<Vec<crate::graph_security::collaboration_service::LineageVersion>, BearDogError> {
     let collab = collaboration_service();
@@ -89,7 +89,7 @@ pub(crate) async fn get_lineage(
 /// # Returns
 ///
 /// Community metrics (deployments, success rate, ratings)
-pub(crate) async fn get_community_metrics(
+pub async fn get_community_metrics(
     template_id: &str,
 ) -> Result<crate::graph_security::collaboration_service::CommunityMetrics, BearDogError> {
     let collab = collaboration_service();
@@ -109,7 +109,7 @@ pub(crate) async fn get_community_metrics(
 /// # Returns
 ///
 /// User permissions including role and capabilities
-pub(crate) async fn get_user_permissions(
+pub async fn get_user_permissions(
     user_id: &str,
     resource_id: &str,
 ) -> Result<crate::graph_security::collaboration_service::UserPermissions, BearDogError> {

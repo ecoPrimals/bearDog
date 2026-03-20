@@ -19,6 +19,7 @@ pub struct CanonicalAuditConfig {
     /// The log level value
     pub log_level: String,
 
+    /// Serialization shape for audit events (`json`, `cef`, `syslog`, etc.).
     pub log_format: String,
 
     /// Audit log destination

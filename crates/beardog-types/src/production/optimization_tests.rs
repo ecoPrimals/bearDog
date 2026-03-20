@@ -4,8 +4,8 @@
 // Created: October 24, 2025
 // Purpose: Achieve 100% coverage for production/optimization.rs
 
-use super::optimization::*;
 use super::ProductionState;
+use super::optimization::*;
 
 // ============================================================================
 // Configuration Tests

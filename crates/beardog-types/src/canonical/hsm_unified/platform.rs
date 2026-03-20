@@ -5,6 +5,7 @@
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
+/// Which mobile or embedded HSM platforms are enabled for this deployment.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PlatformConfig {
     /// Android Enabled
@@ -18,7 +19,7 @@ impl PlatformConfig {
     /// Validate
     /// Validates input
     /// Validates input
-    pub fn validate(&self) -> Result<(), BearDogError> {
+    pub const fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }
 }

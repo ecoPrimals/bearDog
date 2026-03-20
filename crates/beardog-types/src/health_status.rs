@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Overall system health status
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum HealthStatus {
     /// All systems operational
     Healthy,
@@ -20,6 +20,7 @@ pub enum HealthStatus {
     /// System is not functional
     Critical,
     /// Status unknown or unreachable
+    #[default]
     Unknown,
 }
 
@@ -45,6 +46,7 @@ pub struct HealthCheck {
     pub details: HashMap<String, String>,
 }
 
+/// Aggregated health for one logical service and its constituent checks.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceHealth {
     /// Service Name
@@ -103,12 +105,6 @@ pub struct HealthSummary {
     /// Unknown Services
     /// Number of `unknown_services`
     pub unknown_services: usize,
-}
-
-impl Default for HealthStatus {
-    fn default() -> Self {
-        Self::Unknown
-    }
 }
 
 impl Default for ServiceHealth {

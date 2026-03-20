@@ -93,8 +93,8 @@ mod hsm_provider_edge_cases {
     #[test]
     fn test_provider_concurrent_requests() -> Result<(), Box<dyn std::error::Error>> {
         // Test multiple concurrent requests to same provider
-        use std::sync::atomic::{AtomicUsize, Ordering};
         use std::sync::Arc;
+        use std::sync::atomic::{AtomicUsize, Ordering};
 
         let request_count = Arc::new(AtomicUsize::new(0));
         let max_concurrent = 100;

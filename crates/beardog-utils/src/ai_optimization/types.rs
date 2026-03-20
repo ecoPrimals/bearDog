@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Serializable model weights, telemetry samples, and recommendation records for the AI optimizer.
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Learned linear-style weights per subsystem used to score health and pick actions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceModel {
     /// Collection of cpu utilization weights
@@ -16,14 +15,18 @@ pub struct PerformanceModel {
     pub memory_usage_weights: Vec<f64>,
     /// Collection of network latency weights
     pub network_latency_weights: Vec<f64>,
+    /// Relative importance of cryptographic throughput observations.
     pub crypto_performance_weights: Vec<f64>,
+    /// Named knobs → model certainty in `[0, 1]`.
     pub confidence_scores: HashMap<String, f64>,
     /// Number of `last_updated`
     pub last_updated: u64,
 }
 
+/// Single point-in-time metrics fed into [`PerformanceModel::update_weights`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceSample {
+    /// Epoch millis (or monotonic tick) for ordering samples.
     pub timestamp: u64,
     /// The cpu usage value
     pub cpu_usage: f64,
@@ -33,6 +36,7 @@ pub struct PerformanceSample {
     pub network_latency: f64,
     /// The crypto throughput value
     pub crypto_throughput: f64,
+    /// End-to-end latency of a representative request.
     pub response_time: f64,
     /// The error rate value
     pub error_rate: f64,
@@ -40,8 +44,10 @@ pub struct PerformanceSample {
     pub system_load: f64,
 }
 
+/// Record of an optimization attempt and its measured outcome (if known).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizationAction {
+    /// When the action was applied.
     pub timestamp: u64,
     /// The action type value
     pub action_type: OptimizationType,
@@ -76,10 +82,12 @@ pub enum OptimizationType {
     Pool,
 }
 
+/// Suggested tuning produced by the engine before execution.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizationRecommendation {
     /// The optimization type value
     pub optimization_type: OptimizationType,
+    /// Model belief in this recommendation, typically `[0, 1]`.
     pub confidence: f64,
     /// The expected improvement value
     pub expected_improvement: f64,
@@ -91,6 +99,7 @@ pub struct OptimizationRecommendation {
     pub priority: RecommendationPriority,
 }
 
+/// Relative urgency for applying a recommendation.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum RecommendationPriority {
     /// Represents low variant
@@ -103,6 +112,7 @@ pub enum RecommendationPriority {
     Critical,
 }
 
+/// Rolling quality metrics for how well predictions matched reality.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIOptimizationStats {
     /// Number of `total_optimizations`
@@ -117,6 +127,7 @@ pub struct AIOptimizationStats {
     pub prediction_accuracy: f64,
     /// Number of `anomalies_detected`
     pub anomalies_detected: u64,
+    /// Aggregate trust in the current weight tensor.
     pub model_confidence: f64,
 }
 
@@ -127,7 +138,7 @@ impl Default for PerformanceModel {
 }
 
 impl PerformanceModel {
-    /// Creates a new instance
+    /// Default heuristic weights with empty confidence map.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -140,8 +151,7 @@ impl PerformanceModel {
         }
     }
 
-    /// Updates weights
-    /// Updates weights
+    /// Applies a tiny learning-rate nudge when CPU/memory look saturated.
     pub fn update_weights(&mut self, sample: &PerformanceSample) -> Result<(), BearDogError> {
         // Simplified weight update logic
         let learning_rate = 0.01;

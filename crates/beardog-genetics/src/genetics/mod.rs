@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Genetic primitives: entropy classification, human collection, key exchange, and spawning.
 
+/// Classifies and mixes human vs machine entropy for key derivation policy.
 pub mod entropy_hierarchy;
-pub mod human_entropy; // Human entropy collection (keyboard, mouse, sensors)
+/// Live and legacy human entropy capture (keyboard, mouse, multi-modal).
+pub mod human_entropy;
+/// Delegated keys and lineage-aware exchange between primals.
 pub mod key_exchange;
+/// Creates new genetic identities from parent lineage and capability requests.
 pub mod spawning;
 
 // Re-export key types with explicit imports to avoid conflicts

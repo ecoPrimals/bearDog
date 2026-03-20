@@ -32,10 +32,11 @@ pub enum HsmSecurityTier {
 
 /// `AttestationLevel`
 ///
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, Default)]
 pub enum AttestationLevel {
     /// None variant
     /// None
+    #[default]
     None,
 
     /// Basic variant
@@ -61,8 +62,7 @@ pub enum AttestationLevel {
 
 /// `TamperResistanceLevel`
 ///
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, Default)]
 pub enum TamperResistanceLevel {
     /// None variant
     /// None
@@ -70,6 +70,7 @@ pub enum TamperResistanceLevel {
 
     /// Basic variant
     /// Basic
+    #[default]
     Basic,
 
     /// Evidence variant
@@ -87,16 +88,4 @@ pub enum TamperResistanceLevel {
     /// `MilitaryGrade` variant
     /// `MilitaryGrade`
     MilitaryGrade,
-}
-
-impl Default for AttestationLevel {
-    fn default() -> Self {
-        Self::None
-    }
-}
-
-impl Default for TamperResistanceLevel {
-    fn default() -> Self {
-        Self::Basic
-    }
 }

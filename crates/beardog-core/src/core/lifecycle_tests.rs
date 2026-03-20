@@ -16,8 +16,8 @@ mod tests {
         dead_code
     )]
     use crate::core::BearDogCore;
-    use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
     use beardog_types::canonical::ComponentStatus;
+    use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 
     fn create_test_core() -> BearDogCore {
         let config = UnifiedBearDogConfig::default();

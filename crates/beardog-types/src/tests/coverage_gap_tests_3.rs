@@ -81,13 +81,15 @@ mod config_trait_tests {
     #[test]
     fn test_validation_validate_duration() {
         use std::time::Duration;
-        assert!(validation::validate_duration(
-            Duration::from_secs(5),
-            Duration::from_secs(1),
-            Duration::from_secs(10),
-            "test"
-        )
-        .is_ok());
+        assert!(
+            validation::validate_duration(
+                Duration::from_secs(5),
+                Duration::from_secs(1),
+                Duration::from_secs(10),
+                "test"
+            )
+            .is_ok()
+        );
     }
 
     #[test]

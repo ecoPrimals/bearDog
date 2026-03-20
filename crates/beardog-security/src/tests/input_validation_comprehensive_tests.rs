@@ -161,9 +161,9 @@ fn test_key_size_validation() {
 fn test_algorithm_name_validation() {
     let valid_algorithms = ["ed25519", "aes256", "chacha20poly1305"];
     let invalid_algorithm = "md5"; // Deprecated/weak
-                                   // TEST_CATEGORY: integration
-                                   // TEST_DOMAIN: security
-                                   // TEST_PRIORITY: normal
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
 
     let is_valid = valid_algorithms.contains(&invalid_algorithm);
     assert!(!is_valid, "Weak algorithm should be rejected");
@@ -413,9 +413,9 @@ fn test_signature_format_validation() {
 #[test]
 fn test_public_key_format_validation() {
     let valid_key_len = 32; // Ed25519 public key
-                            // TEST_CATEGORY: integration
-                            // TEST_DOMAIN: security
-                            // TEST_PRIORITY: normal
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: security
+    // TEST_PRIORITY: normal
     let test_key = [0u8; 32];
 
     assert_eq!(

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Micro-benchmark harness: warmup, timed iterations, latency percentiles, and grading.
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -10,15 +8,20 @@ use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use tracing::{debug, info, warn};
 
+/// Collects named benchmarks and aggregates suite-level stats.
 #[derive(Debug)]
 pub struct BenchmarkSuite {
+    /// Stored results keyed by benchmark name.
     benchmarks: HashMap<String, BenchmarkResult>,
 
+    /// Warmup counts, iteration caps, and profiling toggles.
     config: BenchmarkConfig,
 
+    /// Running totals across all registered benchmarks.
     suite_stats: SuiteStats,
 }
 
+/// Tunables for how long and how hard each [`BenchmarkSuite::benchmark`] runs.
 #[derive(Debug, Clone)]
 pub struct BenchmarkConfig {
     /// Number of `warmup_iterations`
@@ -27,6 +30,7 @@ pub struct BenchmarkConfig {
     /// Number of `measurement_iterations`
     pub measurement_iterations: u32,
 
+    /// Wall-clock cap for the measurement loop (stops early if exceeded).
     pub max_time: Duration,
 
     /// Whether `enable_memory_profiling` is enabled
@@ -36,11 +40,13 @@ pub struct BenchmarkConfig {
     pub enable_latency_analysis: bool,
 }
 
+/// Captured measurements for a single benchmark name after warmup + timed iterations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkResult {
     /// Name of the item
     pub name: String,
 
+    /// End-to-end time including warmup and measurement for this run.
     pub total_time: Duration,
 
     /// Number of iterations
@@ -58,9 +64,11 @@ pub struct BenchmarkResult {
     /// The memory stats value
     pub memory_stats: MemoryStats,
 
+    /// Coarse bucket derived from [`Self::ops_per_second`].
     pub performance_grade: PerformanceGrade,
 }
 
+/// Empirical latency quantiles from the measured iteration set.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LatencyPercentiles {
     /// The p50 value
@@ -75,6 +83,7 @@ pub struct LatencyPercentiles {
     pub p99_9: Duration,
 }
 
+/// Placeholder allocation metrics (synthetic in this harness unless wired to a profiler).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryStats {
     /// Number of `peak_memory`
@@ -90,6 +99,7 @@ pub struct MemoryStats {
     pub avg_allocation_size: u64,
 }
 
+/// Coarse throughput bucket derived from ops/sec thresholds.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum PerformanceGrade {
     /// Represents excellent variant
@@ -104,6 +114,7 @@ pub enum PerformanceGrade {
     Critical, // < 1K ops/sec
 }
 
+/// Aggregate counters across every benchmark registered in a [`BenchmarkSuite`].
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SuiteStats {
     /// Number of `total_benchmarks`
@@ -112,7 +123,9 @@ pub struct SuiteStats {
     pub passed_benchmarks: u32,
     /// Number of `failed_benchmarks`
     pub failed_benchmarks: u32,
+    /// Sum of wall times for all completed benchmarks in the suite.
     pub total_execution_time: Duration,
+    /// Numeric summary of grades (suite-specific weighting).
     pub average_performance_grade: f64,
 }
 
@@ -139,6 +152,7 @@ impl BenchmarkSuite {
         }
     }
 
+    /// Runs warmup then timed iterations, records latencies, and stores a [`BenchmarkResult`].
     pub fn benchmark<F, R>(&mut self, name: &str, mut benchmark_fn: F) -> Result<(), BearDogError>
     where
         F: FnMut() -> R,
@@ -246,6 +260,7 @@ impl BenchmarkSuite {
         Ok(())
     }
 
+    /// Same as [`Self::benchmark`] but returns observed operations per second.
     pub fn benchmark_throughput<F, R>(
         &mut self,
         name: &str,
@@ -259,6 +274,7 @@ impl BenchmarkSuite {
         Ok(result.ops_per_second)
     }
 
+    /// Same as [`Self::benchmark`] but returns mean iteration latency.
     pub fn benchmark_latency<F, R>(
         &mut self,
         name: &str,
@@ -272,20 +288,19 @@ impl BenchmarkSuite {
         Ok(result.avg_latency)
     }
 
-    /// Gets result
-    /// Gets result
+    /// Looks up a finished benchmark by name.
     #[must_use]
     pub fn get_result(&self, name: &str) -> Option<&BenchmarkResult> {
         self.benchmarks.get(name)
     }
 
-    /// Gets `all_results`
-    /// Gets `all_results`
+    /// Borrow of all stored results.
     #[must_use]
     pub const fn get_all_results(&self) -> &HashMap<String, BenchmarkResult> {
         &self.benchmarks
     }
 
+    /// Aggregates grade counts and throughput totals across the suite.
     #[must_use]
     pub fn generate_report(&self) -> PerformanceReport {
         let mut excellent_count = 0;
@@ -327,6 +342,7 @@ impl BenchmarkSuite {
         }
     }
 
+    /// Human-readable report to stdout (logging alternative for ad-hoc runs).
     pub fn print_summary(&self) {
         let report = self.generate_report();
 
@@ -392,6 +408,7 @@ impl BenchmarkSuite {
     }
 }
 
+/// Serializable snapshot of a suite after [`BenchmarkSuite::generate_report`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceReport {
     /// The suite stats value
@@ -406,6 +423,7 @@ pub struct PerformanceReport {
     pub benchmarks: HashMap<String, BenchmarkResult>,
 }
 
+/// Counts of benchmarks per [`PerformanceGrade`] bucket.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GradeDistribution {
     /// Number of excellent
@@ -420,6 +438,7 @@ pub struct GradeDistribution {
     pub critical: u32,
 }
 
+/// Runs `$suite.benchmark($name, || $code)?` (see [`BenchmarkSuite::benchmark`]).
 #[macro_export]
 macro_rules! benchmark {
     ($suite:expr, $name:expr, $code:block) => {

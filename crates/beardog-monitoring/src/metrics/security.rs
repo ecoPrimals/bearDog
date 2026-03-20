@@ -7,7 +7,7 @@
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
-/// Security metrics collection engine
+/// Records security-category [`super::MetricEvent`] values and exposes aggregate counters.
 #[derive(Debug)]
 pub struct SecurityMetricsEngine {
     #[allow(dead_code)] // Config reserved for future security metrics
@@ -27,6 +27,7 @@ impl SecurityMetricsEngine {
         Ok(())
     }
 
+    /// Records a security-category event (placeholder for future correlation).
     pub const fn record_event(&self, _event: &super::MetricEvent) -> Result<(), BearDogError> {
         // Security event processing logic
         Ok(())
@@ -45,6 +46,7 @@ impl SecurityMetricsEngine {
     }
 }
 
+/// Aggregate security posture counters exposed by [`SecurityMetricsEngine::get_metrics`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityMetrics {
     /// Number of `failed_auth_attempts`
@@ -59,6 +61,7 @@ pub struct SecurityMetrics {
     pub compliance_score: f64,
 }
 
+/// Tunables for [`SecurityMetricsEngine`] sampling and alerting behavior.
 #[derive(Debug, Clone)]
 pub struct SecurityMetricsConfig {
     /// Whether `enable_threat_detection` is enabled

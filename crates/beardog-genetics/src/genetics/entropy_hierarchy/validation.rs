@@ -15,8 +15,9 @@ pub struct EntropyValidator {
 }
 
 impl EntropyValidator {
+    /// Builds a validator that enforces the given hierarchy thresholds and proof requirements.
     #[must_use]
-    pub fn new(config: EntropyHierarchyConfig) -> Self {
+    pub const fn new(config: EntropyHierarchyConfig) -> Self {
         Self { config }
     }
 

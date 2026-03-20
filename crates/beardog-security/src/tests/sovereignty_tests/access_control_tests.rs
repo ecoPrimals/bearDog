@@ -50,9 +50,11 @@ mod tests {
             .with_level(IdentityLevel::Low)
             .with_issuer("Unknown");
 
-        assert!(access_policy
-            .validate_identity(&unverified_identity)
-            .is_err());
+        assert!(
+            access_policy
+                .validate_identity(&unverified_identity)
+                .is_err()
+        );
 
         // Test attribute-based access control
         let mut attributes = AttributeSet::new();

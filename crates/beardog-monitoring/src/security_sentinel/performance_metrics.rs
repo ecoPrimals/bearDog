@@ -431,7 +431,7 @@ mod tests {
         let collector = PerformanceMetricsCollector::new();
         // First collection establishes CPU baseline — cpu_usage is 0.0 on first read.
         // Memory usage is real on Linux.
-        let metrics = collector.collect_metrics().await.unwrap();
+        let metrics = collector.collect_metrics().await.expect("collect metrics");
         assert!(metrics.cpu_usage >= 0.0, "CPU usage should be non-negative");
         #[cfg(target_os = "linux")]
         assert!(
@@ -444,10 +444,10 @@ mod tests {
     async fn test_collector_second_read_has_real_cpu() {
         let collector = PerformanceMetricsCollector::new();
         // Establish baseline
-        let _first = collector.collect_metrics().await.unwrap();
+        let _first = collector.collect_metrics().await.expect("first collect");
         // Small delay for CPU delta
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-        let second = collector.collect_metrics().await.unwrap();
+        let second = collector.collect_metrics().await.expect("second collect");
         assert!(second.cpu_usage >= 0.0 && second.cpu_usage <= 100.0);
     }
 
@@ -456,7 +456,7 @@ mod tests {
         let collector = PerformanceMetricsCollector::new();
         collector.record_request(std::time::Duration::from_millis(42), false);
         collector.record_request(std::time::Duration::from_millis(100), true);
-        let metrics = collector.collect_metrics().await.unwrap();
+        let metrics = collector.collect_metrics().await.expect("collect metrics");
         // Response time should reflect the recorded requests
         assert!(metrics.response_time >= 0.0);
     }

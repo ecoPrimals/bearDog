@@ -44,9 +44,9 @@
 //! - Graceful degradation on failures
 
 use beardog_errors::BearDogError;
+use beardog_types::canonical::HealthStatus;
 use beardog_types::canonical::config::network::NetworkConfig;
 use beardog_types::canonical::providers_unified::traits::ServiceInfo;
-use beardog_types::canonical::HealthStatus;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

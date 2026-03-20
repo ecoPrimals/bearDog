@@ -1,19 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! Async-safe pinned buffers and Tokio [`Mutex`] pools sized from canonical constants.
 
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-// Re-export buffer size constants from centralized location
+/// Canonical small/medium/large buffer capacities from `beardog-types`.
 pub use beardog_types::constants::domains::buffers::{
     BUFFER_SIZE_LARGE as LARGE, BUFFER_SIZE_MEDIUM as MEDIUM, BUFFER_SIZE_SMALL as SMALL,
 };
 
+/// Nested re-exports matching legacy `buffer_sizes::SMALL` paths.
 pub mod buffer_sizes {
-    // Re-export for backward compatibility
     pub use beardog_types::constants::domains::buffers::{
         BUFFER_SIZE_LARGE as LARGE, BUFFER_SIZE_MEDIUM as MEDIUM, BUFFER_SIZE_SMALL as SMALL,
     };
@@ -60,6 +58,7 @@ impl Default for GlobalBufferPools {
     }
 }
 
+/// Vec-backed byte slab with explicit logical `size` (may equal `data.len()`).
 pub struct SafePinnedBuffer {
     data: Vec<u8>,
     size: usize,
@@ -90,17 +89,19 @@ impl SafePinnedBuffer {
         f(&self.data)
     }
 
+    /// Same as [`Self::new`]; `_name` reserved for future diagnostics.
     #[must_use]
     pub fn named(size: usize, _name: &str) -> Self {
         Self::new(size)
     }
 
+    /// Logical byte length tracked alongside `data`.
     #[must_use]
     pub const fn size(&self) -> usize {
         self.size
     }
 
-    /// Creates instance with slice
+    /// Immutable read-only access to the full backing store.
     pub fn with_slice<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&[u8]) -> R,
@@ -108,7 +109,7 @@ impl SafePinnedBuffer {
         f(&self.data)
     }
 
-    /// Creates instance with mut slice
+    /// Mutable access to the full backing store for in-place writes.
     pub fn with_mut_slice<F, R>(&mut self, f: F) -> R
     where
         F: FnOnce(&mut [u8]) -> R,
@@ -117,6 +118,7 @@ impl SafePinnedBuffer {
     }
 }
 
+/// Fixed-capacity wrapper used when returning buffers from [`SafeBufferPool`].
 pub struct SafePooledBuffer<const SIZE: usize> {
     buffer: SafePinnedBuffer,
 }
@@ -136,22 +138,25 @@ impl<const SIZE: usize> SafePooledBuffer<SIZE> {
         }
     }
 
+    /// Borrow the inner pinned storage.
     #[must_use]
     pub const fn buffer(&self) -> &SafePinnedBuffer {
         &self.buffer
     }
 
-    /// Returns mutable reference to buffer
+    /// Mutable reference to the underlying [`SafePinnedBuffer`].
     pub fn buffer_mut(&mut self) -> &mut SafePinnedBuffer {
         &mut self.buffer
     }
 
+    /// Compile-time capacity `SIZE`.
     #[must_use]
     pub const fn size(&self) -> usize {
         SIZE
     }
 }
 
+/// Hit/miss counters for a single [`SafeBufferPool`].
 #[derive(Debug, Clone)]
 pub struct BufferPoolMetrics {
     /// Number of `total_requests`
@@ -179,6 +184,7 @@ impl BufferPoolMetrics {
         }
     }
 
+    /// `cache_hits / total_requests`, or `0.0` when idle.
     #[must_use]
     pub fn hit_rate(&self) -> f64 {
         if self.total_requests == 0 {
@@ -189,6 +195,7 @@ impl BufferPoolMetrics {
     }
 }
 
+/// Tokio mutex stack of [`SafePinnedBuffer`] of fixed `SIZE` with reuse metrics.
 pub struct SafeBufferPool<const SIZE: usize> {
     available: Arc<Mutex<Vec<SafePinnedBuffer>>>,
     metrics: Arc<Mutex<BufferPoolMetrics>>,
@@ -209,8 +216,7 @@ impl<const SIZE: usize> SafeBufferPool<SIZE> {
         }
     }
 
-    /// Gets buffer
-    /// Gets buffer
+    /// Pops a buffer or allocates fresh; updates [`BufferPoolMetrics`].
     pub async fn get_buffer(&self) -> SafePooledBuffer<SIZE> {
         if let Some(_buffer) = self.available.lock().await.pop() {
             let mut metrics = self.metrics.lock().await;
@@ -225,11 +231,13 @@ impl<const SIZE: usize> SafeBufferPool<SIZE> {
         SafePooledBuffer::new()
     }
 
+    /// Clone of the live metrics (cheap snapshot).
     pub async fn metrics(&self) -> BufferPoolMetrics {
         self.metrics.lock().await.clone()
     }
 }
 
+/// Three-tier pools (small/medium/large) for common I/O buffer sizes.
 pub struct EnhancedMemoryPools {
     small_pool: SafeBufferPool<{ buffer_sizes::SMALL }>,
     medium_pool: SafeBufferPool<{ buffer_sizes::MEDIUM }>,
@@ -253,24 +261,22 @@ impl EnhancedMemoryPools {
         }
     }
 
-    /// Gets small
-    /// Gets small
+    /// Acquires from the small pool ([`buffer_sizes::SMALL`] bytes).
     pub async fn get_small(&self) -> SafePooledBuffer<{ buffer_sizes::SMALL }> {
         self.small_pool.get_buffer().await
     }
 
-    /// Gets medium
-    /// Gets medium
+    /// Acquires from the medium pool ([`buffer_sizes::MEDIUM`] bytes).
     pub async fn get_medium(&self) -> SafePooledBuffer<{ buffer_sizes::MEDIUM }> {
         self.medium_pool.get_buffer().await
     }
 
-    /// Gets large
-    /// Gets large
+    /// Acquires from the large pool ([`buffer_sizes::LARGE`] bytes).
     pub async fn get_large(&self) -> SafePooledBuffer<{ buffer_sizes::LARGE }> {
         self.large_pool.get_buffer().await
     }
 
+    /// Sums metrics across all three internal pools.
     pub async fn all_metrics(&self) -> BufferPoolMetrics {
         let small_metrics = self.small_pool.metrics().await;
         let medium_metrics = self.medium_pool.metrics().await;

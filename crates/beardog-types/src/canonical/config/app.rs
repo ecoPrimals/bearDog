@@ -244,5 +244,7 @@ pub enum LogLevel {
 }
 
 // Compatibility aliases
+/// Historical name for [`CanonicalAppConfig`]; prefer the canonical type in new code.
 pub type AppConfig = CanonicalAppConfig;
+/// Historical name for [`CanonicalAppConfig`]; prefer the canonical type in new code.
 pub type ApplicationConfig = CanonicalAppConfig;

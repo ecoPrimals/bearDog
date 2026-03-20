@@ -24,10 +24,10 @@ impl SimpleHsmTier {
     /// Convert to string representation
     pub fn to_string_repr(&self) -> String {
         match self {
-            SimpleHsmTier::Smartphone => "Smartphone".to_string(),
-            SimpleHsmTier::Software => "Software".to_string(),
-            SimpleHsmTier::Hardware => "Hardware".to_string(),
-            SimpleHsmTier::Hybrid => "Hybrid".to_string(),
+            Self::Smartphone => "Smartphone".to_string(),
+            Self::Software => "Software".to_string(),
+            Self::Hardware => "Hardware".to_string(),
+            Self::Hybrid => "Hybrid".to_string(),
         }
     }
 }

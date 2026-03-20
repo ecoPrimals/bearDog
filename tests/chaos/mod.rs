@@ -262,7 +262,7 @@ impl NetworkChaos {
     pub fn should_drop_packet(&self) -> bool {
         use rand::Rng;
         let mut rng = rand::thread_rng();
-        rng.gen::<f64>() < self.packet_loss_rate
+        rng.r#gen::<f64>() < self.packet_loss_rate
     }
 
     /// Simulate connection drop
@@ -270,7 +270,7 @@ impl NetworkChaos {
     pub fn should_disconnect(&self) -> bool {
         use rand::Rng;
         let mut rng = rand::thread_rng();
-        rng.gen::<f64>() < self.disconnect_probability
+        rng.r#gen::<f64>() < self.disconnect_probability
     }
 }
 
@@ -297,14 +297,14 @@ impl HsmChaos {
     pub fn should_fail(&self) -> bool {
         use rand::Rng;
         let mut rng = rand::thread_rng();
-        rng.gen::<f64>() < self.failure_rate
+        rng.r#gen::<f64>() < self.failure_rate
     }
 
     /// Simulate HSM timeout
     pub async fn maybe_timeout(&self) -> bool {
         use rand::Rng;
         let mut rng = rand::thread_rng();
-        let should_timeout = rng.gen::<f64>() < self.timeout_rate;
+        let should_timeout = rng.r#gen::<f64>() < self.timeout_rate;
 
         if should_timeout {
             sleep(self.timeout_duration).await;

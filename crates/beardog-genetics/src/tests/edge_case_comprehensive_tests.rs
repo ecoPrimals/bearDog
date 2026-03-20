@@ -354,7 +354,7 @@ fn test_spawn_with_complex_inheritance_chain() {
     };
 
     // Spawn 5 generations
-    for gen in 0..5 {
+    for gen_idx in 0..5 {
         let request = SpawnRequest {
             required_capabilities: vec![],
             security_clearance: SecurityClearance::Medium,
@@ -365,7 +365,7 @@ fn test_spawn_with_complex_inheritance_chain() {
         assert!(result.is_ok());
 
         current_genetics = result.unwrap().genetics;
-        assert_eq!(current_genetics.generation, gen + 1);
+        assert_eq!(current_genetics.generation, gen_idx + 1);
     }
 
     // Final genetics should be generation 5

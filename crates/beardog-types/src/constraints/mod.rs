@@ -4,7 +4,9 @@
 //
 // Philosophy: Users define their own rules. We provide the framework, not the limits.
 
+/// Shipped constraint types (time range, CPU/memory quotas, composites, etc.).
 pub mod builtin;
+/// Extensible constraints for VPN, biometrics, proximity, and other novel contexts.
 pub mod novel;
 
 use beardog_errors::BearDogError;
@@ -152,7 +154,7 @@ impl ConstraintContext {
     }
 
     /// Add location
-    pub fn with_location(mut self, location: GeoLocation) -> Self {
+    pub const fn with_location(mut self, location: GeoLocation) -> Self {
         self.location = Some(location);
         self
     }
@@ -173,15 +175,19 @@ impl Default for ConstraintContext {
 /// Geographic location
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct GeoLocation {
+    /// Latitude in decimal degrees
     pub latitude: f64,
+    /// Longitude in decimal degrees
     pub longitude: f64,
+    /// Altitude in meters above reference ellipsoid, if known
     pub altitude: Option<f64>,
+    /// Horizontal accuracy in meters, if reported by the source
     pub accuracy: Option<f64>, // meters
 }
 
 impl GeoLocation {
     /// Calculate distance to another location (Haversine formula)
-    pub fn distance_to(&self, other: &GeoLocation) -> f64 {
+    pub fn distance_to(&self, other: &Self) -> f64 {
         const EARTH_RADIUS_M: f64 = 6_371_000.0;
 
         let lat1 = self.latitude.to_radians();
@@ -189,8 +195,10 @@ impl GeoLocation {
         let delta_lat = (other.latitude - self.latitude).to_radians();
         let delta_lon = (other.longitude - self.longitude).to_radians();
 
-        let a = (delta_lat / 2.0).sin().powi(2)
-            + lat1.cos() * lat2.cos() * (delta_lon / 2.0).sin().powi(2);
+        let a = (delta_lat / 2.0).sin().mul_add(
+            (delta_lat / 2.0).sin(),
+            lat1.cos() * lat2.cos() * (delta_lon / 2.0).sin().powi(2),
+        );
         let c = 2.0 * a.sqrt().atan2((1.0 - a).sqrt());
 
         EARTH_RADIUS_M * c
@@ -200,12 +208,19 @@ impl GeoLocation {
 /// System state (CPU, memory, load, etc.)
 #[derive(Debug, Clone, Default)]
 pub struct SystemState {
+    /// Recent CPU utilization percentage, if sampled
     pub cpu_usage_percent: Option<f64>,
+    /// Resident or reported memory used, in bytes
     pub memory_used_bytes: Option<u64>,
+    /// Total system memory, in bytes
     pub memory_total_bytes: Option<u64>,
+    /// Load average over the last minute
     pub load_average_1m: Option<f64>,
+    /// Load average over the last five minutes
     pub load_average_5m: Option<f64>,
+    /// Load average over the last fifteen minutes
     pub load_average_15m: Option<f64>,
+    /// System uptime in seconds
     pub uptime_seconds: Option<u64>,
 }
 
@@ -224,11 +239,17 @@ impl SystemState {
 /// Network state (connectivity, SSID, VPN, etc.)
 #[derive(Debug, Clone, Default)]
 pub struct NetworkState {
+    /// Whether the host has a working default route or equivalent connectivity
     pub connected: bool,
+    /// Associated Wi-Fi SSID when applicable
     pub wifi_ssid: Option<String>,
+    /// Whether a VPN tunnel is active
     pub vpn_active: bool,
+    /// Human-readable VPN profile or tunnel name
     pub vpn_name: Option<String>,
+    /// Observed public IP address, if known
     pub public_ip: Option<String>,
+    /// Local interface address used for outbound traffic, if known
     pub local_ip: Option<String>,
 }
 
@@ -246,9 +267,9 @@ pub enum LogicOperation {
 impl fmt::Display for LogicOperation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            LogicOperation::And => write!(f, "AND"),
-            LogicOperation::Or => write!(f, "OR"),
-            LogicOperation::Not => write!(f, "NOT"),
+            Self::And => write!(f, "AND"),
+            Self::Or => write!(f, "OR"),
+            Self::Not => write!(f, "NOT"),
         }
     }
 }

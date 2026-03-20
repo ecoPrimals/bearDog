@@ -71,7 +71,7 @@ impl LiveFeedValidator {
 
     /// Create with custom configuration
     #[must_use]
-    pub fn with_config(config: LiveFeedConfig) -> Self {
+    pub const fn with_config(config: LiveFeedConfig) -> Self {
         Self { config }
     }
 
@@ -127,8 +127,7 @@ impl LiveFeedValidator {
         // Check 5: PRNG pattern detection
         if let Some(prng_type) = self.detect_prng_pattern(entropy_data)? {
             violations.push(format!(
-                "PRNG pattern detected: {} - entropy is simulated",
-                prng_type
+                "PRNG pattern detected: {prng_type} - entropy is simulated"
             ));
         }
 
@@ -139,7 +138,7 @@ impl LiveFeedValidator {
 
         let confidence = if is_live {
             // High confidence if all checks pass
-            0.9 + (timing_entropy * 0.1)
+            timing_entropy.mul_add(0.1, 0.9)
         } else {
             // Low confidence if violations detected
             0.1
@@ -236,7 +235,7 @@ impl LiveFeedValidator {
 
         // Check for repeating patterns (common in weak PRNGs)
         if let Some(period) = self.detect_repeating_pattern(data) {
-            return Ok(Some(format!("Repeating pattern (period: {})", period)));
+            return Ok(Some(format!("Repeating pattern (period: {period})")));
         }
 
         Ok(None)
@@ -307,10 +306,12 @@ mod tests {
 
         assert!(!result.is_live);
         assert!(!result.violations.is_empty());
-        assert!(result
-            .violations
-            .iter()
-            .any(|v| v.contains("hardware attestation")));
+        assert!(
+            result
+                .violations
+                .iter()
+                .any(|v| v.contains("hardware attestation"))
+        );
     }
 
     #[test]

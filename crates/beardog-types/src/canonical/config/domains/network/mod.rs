@@ -47,54 +47,47 @@ pub use server::*;
 ///
 /// This structure consolidates all network-related configurations across the BearDog ecosystem,
 /// eliminating fragmentation and providing a unified network configuration interface.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ConsolidatedNetworkConfiguration {
     /// **CORE NETWORK SETTINGS**
+    /// Bind addresses, ports, and listener limits for inbound traffic. **Default:** [`ServerConfiguration::default()`].
     pub server: ServerConfiguration,
+    /// Outbound dialer defaults (timeouts, connection caps). **Default:** [`ClientConfiguration::default()`].
     pub client: ClientConfiguration,
+    /// Static and discovered service endpoints. **Default:** [`EndpointsConfiguration::default()`].
     pub endpoints: EndpointsConfiguration,
 
     /// **CONNECTION MANAGEMENT**
+    /// Pool sizing and idle handling for outbound connections. **Default:** [`ConnectionPoolConfig::default()`].
     pub connection_pool: ConnectionPoolConfig,
+    /// Connect/read/write idle budgets. **Default:** [`TimeoutConfiguration::default()`].
     pub timeouts: TimeoutConfiguration,
+    /// L4/L7 balancing across upstreams. **Default:** [`LoadBalancerConfiguration::default()`].
     pub load_balancer: LoadBalancerConfiguration,
 
     /// **SECURITY & ENCRYPTION**
+    /// Certificate material and TLS versions. **Default:** [`TlsConfiguration::default()`].
     pub tls: TlsConfiguration,
+    /// Firewalls, IP allowlists, and mesh trust hints. **Default:** [`NetworkSecurityConfiguration::default()`].
     pub security: NetworkSecurityConfiguration,
+    /// Per-endpoint mTLS and authz policies. **Default:** [`EndpointSecurityConfiguration::default()`].
     pub endpoint_security: EndpointSecurityConfiguration,
 
     /// **PERFORMANCE & OPTIMIZATION**
+    /// Response/path caching knobs. **Default:** [`CacheConfiguration::default()`].
     pub cache: CacheConfiguration,
+    /// Compression, pipelining, and buffer tuning. **Default:** [`NetworkPerformanceConfiguration::default()`].
     pub performance: NetworkPerformanceConfiguration,
+    /// Token-bucket / leaky-bucket request throttles. **Default:** [`NetworkRateLimitConfiguration::default()`].
     pub rate_limiting: NetworkRateLimitConfiguration,
 
     /// **MONITORING & HEALTH**
+    /// Active probes for upstream readiness. **Default:** [`HealthCheckConfiguration::default()`].
     pub health_checks: HealthCheckConfiguration,
+    /// Metrics and tracing exporters for network plane. **Default:** [`NetworkMonitoringConfiguration::default()`].
     pub monitoring: NetworkMonitoringConfiguration,
+    /// mDNS/DNS-SD and registry integration. **Default:** [`ServiceDiscoveryConfiguration::default()`].
     pub discovery: ServiceDiscoveryConfiguration,
-}
-
-impl Default for ConsolidatedNetworkConfiguration {
-    fn default() -> Self {
-        Self {
-            server: ServerConfiguration::default(),
-            client: ClientConfiguration::default(),
-            endpoints: EndpointsConfiguration::default(),
-            connection_pool: ConnectionPoolConfig::default(),
-            timeouts: TimeoutConfiguration::default(),
-            load_balancer: LoadBalancerConfiguration::default(),
-            tls: TlsConfiguration::default(),
-            security: NetworkSecurityConfiguration::default(),
-            endpoint_security: EndpointSecurityConfiguration::default(),
-            cache: CacheConfiguration::default(),
-            performance: NetworkPerformanceConfiguration::default(),
-            rate_limiting: NetworkRateLimitConfiguration::default(),
-            health_checks: HealthCheckConfiguration::default(),
-            monitoring: NetworkMonitoringConfiguration::default(),
-            discovery: ServiceDiscoveryConfiguration::default(),
-        }
-    }
 }
 
 impl ConsolidatedNetworkConfiguration {
@@ -226,22 +219,24 @@ pub struct RateLimitConfig {
 }
 
 /// Rate limiting strategy/algorithm
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum RateLimitStrategy {
     /// Fixed window algorithm (simple, fast, but allows bursts at window boundaries)
     FixedWindow,
     /// Sliding window algorithm (more accurate, smoother rate enforcement)
     SlidingWindow,
     /// Token bucket algorithm (supports controlled bursts)
+    #[default]
     TokenBucket,
     /// Leaky bucket algorithm (smooth, constant rate output)
     LeakyBucket,
 }
 
 /// Rate limiting scope
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum RateLimitScope {
     /// Per IP address
+    #[default]
     PerIp,
     /// Per authenticated user
     PerUser,
@@ -285,18 +280,6 @@ impl Default for RateLimitConfig {
                 crate::constants::domains::network::addresses::LOCALHOST_IPV4.to_string(),
             ],
         }
-    }
-}
-
-impl Default for RateLimitStrategy {
-    fn default() -> Self {
-        Self::TokenBucket
-    }
-}
-
-impl Default for RateLimitScope {
-    fn default() -> Self {
-        Self::PerIp
     }
 }
 
@@ -433,7 +416,9 @@ pub type NetworkingConfig = ConsolidatedNetworkConfiguration;
 /// However, we provide a helper to convert to standard network config.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkScanConfig {
+    /// CIDRs or literal ranges to probe when locating HSMs or peers on the LAN.
     pub ip_ranges: Vec<String>,
+    /// Maximum time to wait for each probe response during a scan pass.
     pub timeout_ms: u32,
 }
 
@@ -479,7 +464,7 @@ impl ConsolidatedNetworkConfiguration {
         addr_str
             .to_socket_addrs()
             .map_err(|e| BearDogError::Configuration {
-                message: format!("Invalid bind address: {}", e),
+                message: format!("Invalid bind address: {e}"),
                 category: ConfigurationErrorCategory::default(),
             })?
             .next()

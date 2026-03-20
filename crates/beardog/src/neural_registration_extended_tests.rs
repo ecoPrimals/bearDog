@@ -139,29 +139,29 @@ fn test_discover_neural_api_socket_env_priority() {
     let saved_neurals = std::env::var("NEURALS_SOCKET").ok();
     
     // Test: No env vars → default
-    std::env::remove_var("NEURAL_API_SOCKET");
-    std::env::remove_var("NEURALS_SOCKET");
+    beardog_errors::process_env::remove_var("NEURAL_API_SOCKET");
+    beardog_errors::process_env::remove_var("NEURALS_SOCKET");
     let default_socket = discover_neural_api_socket();
     assert_eq!(default_socket, Some("/tmp/neural-api-nat0.sock".to_string()));
     
     // Test: NEURALS_SOCKET set
-    std::env::set_var("NEURALS_SOCKET", "/tmp/neurals-custom.sock");
+    beardog_errors::process_env::set_var("NEURALS_SOCKET", "/tmp/neurals-custom.sock");
     let neurals_socket = discover_neural_api_socket();
     assert_eq!(neurals_socket, Some("/tmp/neurals-custom.sock".to_string()));
     
     // Test: NEURAL_API_SOCKET takes priority
-    std::env::set_var("NEURAL_API_SOCKET", "/tmp/neural-priority.sock");
+    beardog_errors::process_env::set_var("NEURAL_API_SOCKET", "/tmp/neural-priority.sock");
     let priority_socket = discover_neural_api_socket();
     assert_eq!(priority_socket, Some("/tmp/neural-priority.sock".to_string()));
     
     // Restore env
-    std::env::remove_var("NEURAL_API_SOCKET");
-    std::env::remove_var("NEURALS_SOCKET");
+    beardog_errors::process_env::remove_var("NEURAL_API_SOCKET");
+    beardog_errors::process_env::remove_var("NEURALS_SOCKET");
     if let Some(val) = saved_neural {
-        std::env::set_var("NEURAL_API_SOCKET", val);
+        beardog_errors::process_env::set_var("NEURAL_API_SOCKET", val);
     }
     if let Some(val) = saved_neurals {
-        std::env::set_var("NEURALS_SOCKET", val);
+        beardog_errors::process_env::set_var("NEURALS_SOCKET", val);
     }
 }
 
@@ -173,14 +173,14 @@ fn test_empty_string_disables_registration() {
     let saved = std::env::var("NEURAL_API_SOCKET").ok();
     
     // Set to empty
-    std::env::set_var("NEURAL_API_SOCKET", "");
+    beardog_errors::process_env::set_var("NEURAL_API_SOCKET", "");
     let socket = discover_neural_api_socket();
     assert_eq!(socket, None);
     
     // Restore
-    std::env::remove_var("NEURAL_API_SOCKET");
+    beardog_errors::process_env::remove_var("NEURAL_API_SOCKET");
     if let Some(val) = saved {
-        std::env::set_var("NEURAL_API_SOCKET", val);
+        beardog_errors::process_env::set_var("NEURAL_API_SOCKET", val);
     }
 }
 

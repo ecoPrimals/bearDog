@@ -9,8 +9,9 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-/// Optimized Arc cloning pattern
-/// Use Arc::clone(&arc) instead of arc.clone() for clarity and performance
+/// Optimized `Arc` cloning: prefer [`Arc::clone`] on references over moving clones blindly.
+///
+/// Use `Arc::clone(&arc)` instead of `arc.clone()` for clarity and performance
 pub mod arc_optimization {
     use super::*;
 
@@ -25,11 +26,11 @@ pub mod arc_optimization {
     }
 }
 
-/// String optimization patterns using Cow and `Arc<str>`
+/// String deduplication via [`Arc<str>`] and cheap borrows into `&str` slices.
 pub mod string_optimization {
     use super::*;
 
-    /// Shared string pool for common strings
+    /// In-process intern table mapping `String` keys to shared [`Arc<str>`] values.
     pub struct SharedStringPool {
         pool: HashMap<String, Arc<str>>,
     }
@@ -41,6 +42,7 @@ pub mod string_optimization {
     }
 
     impl SharedStringPool {
+        /// Empty pool; call [`Self::get_shared`] to populate.
         pub fn new() -> Self {
             Self {
                 pool: HashMap::new(),
@@ -65,7 +67,7 @@ pub mod string_optimization {
     }
 }
 
-/// Configuration optimization patterns
+/// Share or borrow configuration: [`Cow`] for single owners, [`Arc`] for multi-consumer.
 pub mod config_optimization {
     use super::*;
 
@@ -75,6 +77,7 @@ pub mod config_optimization {
     where
         T: Clone,
     {
+        /// Either a borrowed view or an owned clone of `T`.
         pub inner: Cow<'a, T>,
     }
 
@@ -82,46 +85,52 @@ pub mod config_optimization {
     where
         T: Clone,
     {
+        /// Zero-copy wrapper around an existing `T` reference.
         pub fn borrowed(config: &'a T) -> Self {
             Self {
                 inner: Cow::Borrowed(config),
             }
         }
 
+        /// Moves `config` into an owned [`Cow`].
         pub fn owned(config: T) -> Self {
             Self {
                 inner: Cow::Owned(config),
             }
         }
 
+        /// Borrows the active configuration (shared or owned).
         pub fn get(&self) -> &T {
             &self.inner
         }
     }
 
-    /// Shared configuration using Arc
+    /// Immutable config behind [`Arc`] for cheap multi-handle sharing.
     pub struct SharedConfig<T> {
         config: Arc<T>,
     }
 
     impl<T> SharedConfig<T> {
+        /// Wraps `config` in a new [`Arc`].
         pub fn new(config: T) -> Self {
             Self {
                 config: Arc::new(config),
             }
         }
 
+        /// Shared reference to the inner value.
         pub fn get(&self) -> &T {
             &self.config
         }
 
+        /// Increments the [`Arc`] and returns a new handle.
         pub fn clone_arc(&self) -> Arc<T> {
             Arc::clone(&self.config)
         }
     }
 }
 
-/// Metadata optimization patterns
+/// JSON metadata as [`Cow`] or shared [`Arc`] to avoid cloning large maps.
 pub mod metadata_optimization {
     use super::*;
     use serde_json::Value;
@@ -132,18 +141,21 @@ pub mod metadata_optimization {
     }
 
     impl<'a> MetadataCow<'a> {
+        /// Borrows an existing metadata map without allocating.
         pub fn borrowed(metadata: &'a HashMap<String, Value>) -> Self {
             Self {
                 inner: Cow::Borrowed(metadata),
             }
         }
 
+        /// Takes ownership of a metadata map.
         pub fn owned(metadata: HashMap<String, Value>) -> Self {
             Self {
                 inner: Cow::Owned(metadata),
             }
         }
 
+        /// Read-only view of the map regardless of borrow state.
         pub fn get(&self) -> &HashMap<String, Value> {
             &self.inner
         }
@@ -154,42 +166,47 @@ pub mod metadata_optimization {
         }
     }
 
-    /// Shared metadata using Arc
+    /// Shared JSON metadata for handlers that only need read access.
     pub struct SharedMetadata {
         metadata: Arc<HashMap<String, Value>>,
     }
 
     impl SharedMetadata {
+        /// Stores `metadata` in a new [`Arc`].
         pub fn new(metadata: HashMap<String, Value>) -> Self {
             Self {
                 metadata: Arc::new(metadata),
             }
         }
 
+        /// Borrows the shared map.
         pub fn get(&self) -> &HashMap<String, Value> {
             &self.metadata
         }
 
+        /// Clones the [`Arc`] handle (not the map contents).
         pub fn clone_arc(&self) -> Arc<HashMap<String, Value>> {
             Arc::clone(&self.metadata)
         }
     }
 }
 
-/// Request optimization patterns
+/// Pass requests by reference or [`Arc`] so downstream layers never clone large bodies twice.
 pub mod request_optimization {
     use super::*;
 
-    /// Request wrapper that avoids cloning when possible
+    /// Zero-cost handle to a request living elsewhere for the lifetime `'a`.
     pub struct RequestRef<'a, T> {
         request: &'a T,
     }
 
     impl<'a, T> RequestRef<'a, T> {
+        /// Wraps a borrowed request.
         pub fn new(request: &'a T) -> Self {
             Self { request }
         }
 
+        /// Returns the borrowed request.
         pub fn get(&self) -> &T {
             self.request
         }
@@ -201,23 +218,26 @@ pub mod request_optimization {
     }
 
     impl<T> SharedRequest<T> {
+        /// Moves `request` behind an [`Arc`].
         pub fn new(request: T) -> Self {
             Self {
                 request: Arc::new(request),
             }
         }
 
+        /// Immutable view of the shared request.
         pub fn get(&self) -> &T {
             &self.request
         }
 
+        /// Additional [`Arc`] handle for fan-out.
         pub fn clone_arc(&self) -> Arc<T> {
             Arc::clone(&self.request)
         }
     }
 }
 
-/// Collection optimization patterns
+/// Iterator- and [`Cow`]-based collection patterns to skip intermediate `Vec` clones.
 pub mod collection_optimization {
     use super::*;
 
@@ -250,7 +270,7 @@ pub mod collection_optimization {
     }
 }
 
-/// Performance measurement utilities
+/// Wall-clock helpers for comparing clone-heavy vs reference-heavy code paths.
 pub mod performance_measurement {
     use std::time::{Duration, Instant};
 

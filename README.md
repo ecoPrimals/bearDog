@@ -1,14 +1,14 @@
 # BearDog
 
 [![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)](STATUS.md)
-[![Tests](https://img.shields.io/badge/tests-8,542+-brightgreen.svg)](STATUS.md)
-[![Coverage](https://img.shields.io/badge/coverage-74%25--92%25-yellow.svg)](STATUS.md)
+[![Clippy](https://img.shields.io/badge/clippy-0_warnings-brightgreen.svg)](STATUS.md)
 [![Pure Rust](https://img.shields.io/badge/rust-100%25_pure-orange.svg)](STATUS.md)
+[![Edition](https://img.shields.io/badge/edition-2024-blue.svg)](Cargo.toml)
 [![License](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](LICENSE)
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Crates**: 29 | **Tests**: 8,542+ (lib)
+**Status**: Production Ready | **Edition**: 2024 | **Crates**: 29
 
 ---
 
@@ -27,6 +27,7 @@ BearDog provides secure cryptographic operations for all primals through the **T
 ### Key Features
 
 - **100% Pure Rust** — Zero C dependencies (RustCrypto suite)
+- **Rust 2024 Edition** — Modern idioms, MSRV 1.85.0
 - **91+ Crypto Methods** — Complete JSON-RPC API
 - **Tor v3 Support** — Onion address derivation + ntor handshake + cell crypto
 - **Multi-Family Support** — `--family-id` flag for per-family instances
@@ -44,7 +45,7 @@ BearDog provides secure cryptographic operations for all primals through the **T
 ### Prerequisites
 
 ```bash
-# Rust 1.80+ required (uses std::sync::LazyLock)
+# Rust 1.85+ required (edition 2024)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
@@ -160,22 +161,23 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | Metric | Value |
 |--------|-------|
 | **Build** | Clean, 0 errors |
-| **Tests** | 8,542+ passing (29 crates, lib only) |
-| **Coverage** | 74–92% line coverage (llvm-cov) |
+| **Clippy** | 0 warnings (pedantic + nursery) |
+| **Missing Docs** | 0 warnings |
 | **Pure Rust** | 100% — zero C dependencies |
-| **Unsafe Code** | 0 production blocks (`#![forbid(unsafe_code)]`) |
-| **Clippy** | 0 errors (pedantic level) |
-| **Production panics** | 0 — all `Result<T, E>` |
+| **Unsafe Code** | 0 production blocks (`deny(unsafe_code)`) |
+| **Format** | `cargo fmt` clean |
+| **TODO/FIXME** | 0 |
+| **Files > 1000 LOC** | 0 |
 | **License** | AGPL-3.0-only (SPDX headers on all .rs files) |
 
 ### Standards
 
+- **Edition 2024** — Modern Rust with latest language features
 - **Pure Rust** — No C dependencies anywhere (ecoBin compliant)
 - **Zero Hardcoding** — Environment variables and capability discovery
-- **Zero `#[allow()]`** — No lint suppression in production code
 - **Result<T, E>** — No `unwrap()`/`expect()` in production code
-- **< 1000 LOC** — File size discipline (exceptions justified)
-- **std over external** — `std::sync::LazyLock` over `once_cell`, etc.
+- **< 1000 LOC** — File size discipline across all 1,740 .rs files
+- **Workspace Lints** — Centralized clippy pedantic + nursery configuration
 - **SPDX headers** — Every `.rs` file has `// SPDX-License-Identifier: AGPL-3.0-only`
 
 ---
@@ -186,9 +188,9 @@ Key material is derived from the family seed. A BearDog instance serving family 
 |----------|-------------|
 | [STATUS.md](STATUS.md) | Current status and metrics |
 | [START_HERE.md](START_HERE.md) | Quick start and onboarding |
-| [TOWER_ATOMIC_PATTERN.md](TOWER_ATOMIC_PATTERN.md) | Architecture pattern |
 | [ROADMAP.md](ROADMAP.md) | Current priorities and roadmap |
-| [ROOT_INDEX.md](ROOT_INDEX.md) | Complete documentation index |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture |
+| [SECURITY.md](SECURITY.md) | Security model |
 
 ---
 

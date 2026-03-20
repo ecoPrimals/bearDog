@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Safe buffer pool implementation for BearDog
-// Provides memory-efficient buffer management without unsafe code
+//! Size-classed buffer pools backed by [`bytes::BytesMut`] (no raw pointers).
 
+use bytes::BytesMut;
 use std::collections::HashMap;
 
+/// Accounting for [`SafeBufferPool`] reuse and high-water marks.
 #[derive(Debug, Clone, Default)]
 pub struct PoolStats {
     /// Number of `buffers_allocated`
@@ -19,8 +20,9 @@ pub struct PoolStats {
     pub current_usage: u64,
 }
 
+/// Per–size-class stacks of [`BytesMut`] with a cap on pooled instances.
 pub struct SafeBufferPool {
-    pools: HashMap<usize, Vec<Vec<u8>>>,
+    pools: HashMap<usize, Vec<BytesMut>>,
     stats: PoolStats,
     max_pool_size: usize,
 }
@@ -37,15 +39,13 @@ impl SafeBufferPool {
         }
     }
 
-    /// Gets a buffer of the specified size
-    /// Gets buffer
-    /// Gets buffer
-    pub fn get_buffer(&mut self, size: usize) -> Vec<u8> {
+    /// Gets a zero-filled [`BytesMut`] of the requested logical length.
+    pub fn get_buffer(&mut self, size: usize) -> BytesMut {
         let size_class = self.get_size_class(size);
 
         if let Some(pool) = self.pools.get_mut(&size_class) {
             if let Some(mut buffer) = pool.pop() {
-                // Resize to requested size if needed
+                buffer.clear();
                 buffer.resize(size, 0);
                 self.stats.buffers_reused += 1;
                 return buffer;
@@ -58,11 +58,13 @@ impl SafeBufferPool {
             self.stats.peak_usage = self.stats.current_usage;
         }
 
-        vec![0u8; size]
+        let mut b = BytesMut::with_capacity(size_class.max(size));
+        b.resize(size, 0);
+        b
     }
 
-    /// Returns a buffer to the pool
-    pub fn return_buffer(&mut self, mut buffer: Vec<u8>) {
+    /// Returns a buffer to the pool.
+    pub fn return_buffer(&mut self, mut buffer: BytesMut) {
         buffer.clear();
         let capacity = buffer.capacity();
         let size_class = self.get_size_class(capacity);

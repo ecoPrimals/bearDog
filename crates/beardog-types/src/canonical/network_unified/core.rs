@@ -15,6 +15,7 @@ pub struct NetworkCoreConfig {
     pub protocol: NetworkProtocol,
 }
 
+/// Application-level network protocol selector for core networking config.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum NetworkProtocol {
     /// HTTP protocol

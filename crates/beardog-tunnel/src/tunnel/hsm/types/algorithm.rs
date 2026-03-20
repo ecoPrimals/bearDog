@@ -202,7 +202,7 @@ pub enum CryptographicAlgorithm {
 
 impl CryptographicAlgorithm {
     /// Get the recommended key size for this algorithm
-    pub fn recommended_key_size(&self) -> Option<u32> {
+    pub const fn recommended_key_size(&self) -> Option<u32> {
         match self {
             Self::Aes128Gcm | Self::Aes128Cbc => Some(128),
             Self::Aes256Gcm | Self::Aes256Cbc => Some(256),
@@ -220,7 +220,7 @@ impl CryptographicAlgorithm {
     }
 
     /// Check if this algorithm supports authenticated encryption
-    pub fn is_authenticated_encryption(&self) -> bool {
+    pub const fn is_authenticated_encryption(&self) -> bool {
         matches!(
             self,
             Self::Aes128Gcm | Self::Aes256Gcm | Self::ChaCha20Poly1305
@@ -228,7 +228,7 @@ impl CryptographicAlgorithm {
     }
 
     /// Check if this algorithm is for signing/verification
-    pub fn is_signature_algorithm(&self) -> bool {
+    pub const fn is_signature_algorithm(&self) -> bool {
         matches!(
             self,
             Self::EcdsaP256

@@ -7,8 +7,8 @@
 //! `TEST_DOMAIN`: `concurrent_safety`
 //! `TEST_PRIORITY`: critical
 
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use tokio::sync::{Mutex, RwLock, Semaphore};
 use tokio::task;
 
@@ -207,7 +207,7 @@ async fn test_mutex_contention_scalability() {
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn test_cancellation_safety() {
     use tokio::sync::mpsc;
-    use tokio::time::{timeout, Duration};
+    use tokio::time::{Duration, timeout};
 
     let (tx, mut rx) = mpsc::channel(10);
     let completed = Arc::new(AtomicU64::new(0));

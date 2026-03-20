@@ -29,8 +29,8 @@ fn test_socket() -> (TempDir, std::path::PathBuf) {
 
 // Helper to create test BTSP provider
 async fn create_test_btsp_provider() -> Arc<BeardogBtspProvider> {
-    std::env::set_var("BEARDOG_HSM_MODE", "software");
-    std::env::set_var("BEARDOG_FAMILY_ID", "nat0"); // Set family ID for tests
+    beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "software");
+    beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0"); // Set family ID for tests
     let hsm = Arc::new(HsmManager::auto_initialize().await.expect("HSM init"));
     let genetics = Arc::new(EcosystemGeneticEngine::new().expect("Genetics init"));
     Arc::new(
@@ -97,8 +97,8 @@ async fn send_jsonrpc(
 #[tokio::test]
 async fn test_verify_family_member() {
     // Set environment for test
-    std::env::set_var("FAMILY_ID", "nat0");
-    std::env::set_var("NODE_ID", "node-alpha");
+    beardog_errors::process_env::set_var("FAMILY_ID", "nat0");
+    beardog_errors::process_env::set_var("NODE_ID", "node-alpha");
 
     let (_dir, socket_path) = test_socket();
     let (server_handle, _ready_flag, server) = start_server_ready(socket_path.clone()).await;
@@ -133,14 +133,14 @@ async fn test_verify_family_member() {
     server.stop().await.unwrap();
     server_handle.abort();
 
-    std::env::remove_var("FAMILY_ID");
-    std::env::remove_var("NODE_ID");
+    beardog_errors::process_env::remove_var("FAMILY_ID");
+    beardog_errors::process_env::remove_var("NODE_ID");
 }
 
 #[tokio::test]
 async fn test_verify_family_member_different_family() {
     // Set environment for test
-    std::env::set_var("FAMILY_ID", "nat0");
+    beardog_errors::process_env::set_var("FAMILY_ID", "nat0");
 
     let (_dir, socket_path) = test_socket();
     let (server_handle, _ready_flag, server) = start_server_ready(socket_path.clone()).await;
@@ -168,7 +168,7 @@ async fn test_verify_family_member_different_family() {
     server.stop().await.unwrap();
     server_handle.abort();
 
-    std::env::remove_var("FAMILY_ID");
+    beardog_errors::process_env::remove_var("FAMILY_ID");
 }
 
 #[tokio::test]
@@ -196,10 +196,12 @@ async fn test_derive_subfed_key() {
     // Verify response structure
     assert_eq!(response["jsonrpc"], "2.0");
     assert!(response["result"].is_object());
-    assert!(response["result"]["key_ref"]
-        .as_str()
-        .unwrap()
-        .starts_with("beardog-hsm-key-gaming-"));
+    assert!(
+        response["result"]["key_ref"]
+            .as_str()
+            .unwrap()
+            .starts_with("beardog-hsm-key-gaming-")
+    );
     assert_eq!(response["result"]["algorithm"], "AES-256-GCM");
     assert_eq!(response["result"]["key_id"], "subfed:nat0:gaming:v1");
     assert_eq!(response["result"]["derivation_method"], "HKDF-SHA256");
@@ -321,10 +323,12 @@ async fn test_encrypt_with_invalid_base64() {
 
     // Should return error
     assert!(response["error"].is_object());
-    assert!(response["error"]["message"]
-        .as_str()
-        .unwrap()
-        .contains("Invalid base64"));
+    assert!(
+        response["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("Invalid base64")
+    );
 
     server.stop().await.unwrap();
     server_handle.abort();
@@ -352,10 +356,12 @@ async fn test_missing_required_params() {
 
     // Should return error
     assert!(response["error"].is_object());
-    assert!(response["error"]["message"]
-        .as_str()
-        .unwrap()
-        .contains("family_id"));
+    assert!(
+        response["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("family_id")
+    );
 
     server.stop().await.unwrap();
     server_handle.abort();
@@ -364,8 +370,8 @@ async fn test_missing_required_params() {
 #[tokio::test]
 async fn test_all_methods_with_real_biomeos_data() {
     // Test with real biomeOS spore data
-    std::env::set_var("FAMILY_ID", "nat0");
-    std::env::set_var("NODE_ID", "node-alpha");
+    beardog_errors::process_env::set_var("FAMILY_ID", "nat0");
+    beardog_errors::process_env::set_var("NODE_ID", "node-alpha");
 
     let (_dir, socket_path) = test_socket();
     let (server_handle, _ready_flag, server) = start_server_ready(socket_path.clone()).await;
@@ -443,6 +449,6 @@ async fn test_all_methods_with_real_biomeos_data() {
     server.stop().await.unwrap();
     server_handle.abort();
 
-    std::env::remove_var("FAMILY_ID");
-    std::env::remove_var("NODE_ID");
+    beardog_errors::process_env::remove_var("FAMILY_ID");
+    beardog_errors::process_env::remove_var("NODE_ID");
 }

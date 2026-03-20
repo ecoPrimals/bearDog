@@ -164,16 +164,19 @@ impl RustBuilder {
     /// * `api_level` - Android API level
     ///   Sets `aarch64_toolchain`
     fn set_aarch64_toolchain(toolchain_path: &std::path::Path, api_level: &str) {
-        env::set_var(
+        beardog_errors::process_env::set_var(
             "CC_aarch64_linux_android",
             toolchain_path.join(format!("aarch64-linux-android{api_level}-clang")),
         );
-        env::set_var(
+        beardog_errors::process_env::set_var(
             "CXX_aarch64_linux_android",
             toolchain_path.join(format!("aarch64-linux-android{api_level}-clang++")),
         );
-        env::set_var("AR_aarch64_linux_android", toolchain_path.join("llvm-ar"));
-        env::set_var(
+        beardog_errors::process_env::set_var(
+            "AR_aarch64_linux_android",
+            toolchain_path.join("llvm-ar"),
+        );
+        beardog_errors::process_env::set_var(
             "RANLIB_aarch64_linux_android",
             toolchain_path.join("llvm-ranlib"),
         );
@@ -186,16 +189,19 @@ impl RustBuilder {
     /// * `api_level` - Android API level
     ///   Sets `armv7_toolchain`
     fn set_armv7_toolchain(toolchain_path: &std::path::Path, api_level: &str) {
-        env::set_var(
+        beardog_errors::process_env::set_var(
             "CC_armv7_linux_androideabi",
             toolchain_path.join(format!("armv7a-linux-androideabi{api_level}-clang")),
         );
-        env::set_var(
+        beardog_errors::process_env::set_var(
             "CXX_armv7_linux_androideabi",
             toolchain_path.join(format!("armv7a-linux-androideabi{api_level}-clang++")),
         );
-        env::set_var("AR_armv7_linux_androideabi", toolchain_path.join("llvm-ar"));
-        env::set_var(
+        beardog_errors::process_env::set_var(
+            "AR_armv7_linux_androideabi",
+            toolchain_path.join("llvm-ar"),
+        );
+        beardog_errors::process_env::set_var(
             "RANLIB_armv7_linux_androideabi",
             toolchain_path.join("llvm-ranlib"),
         );
@@ -302,9 +308,15 @@ mod tests {
     fn test_get_host_architecture_linux() {
         let result = RustBuilder::get_host_architecture();
         if cfg!(target_os = "linux") && cfg!(target_arch = "x86_64") {
-            assert_eq!(result.unwrap(), "linux-x86_64");
+            assert_eq!(
+                result.expect("get_host_architecture should succeed on linux x86_64"),
+                "linux-x86_64"
+            );
         } else if cfg!(target_os = "macos") {
-            assert_eq!(result.unwrap(), "darwin-x86_64");
+            assert_eq!(
+                result.expect("get_host_architecture should succeed on macOS"),
+                "darwin-x86_64"
+            );
         }
     }
 

@@ -25,7 +25,11 @@ pub struct AttestationData {
 impl AttestationData {
     /// Creates new attestation data
     #[must_use]
-    pub fn new(challenge: Vec<u8>, response: Vec<u8>, certificate_chain: Vec<Vec<u8>>) -> Self {
+    pub const fn new(
+        challenge: Vec<u8>,
+        response: Vec<u8>,
+        certificate_chain: Vec<Vec<u8>>,
+    ) -> Self {
         Self {
             challenge,
             response,
@@ -35,7 +39,7 @@ impl AttestationData {
 
     /// Creates empty attestation data
     #[must_use]
-    pub fn empty() -> Self {
+    pub const fn empty() -> Self {
         Self {
             challenge: Vec::new(),
             response: Vec::new(),

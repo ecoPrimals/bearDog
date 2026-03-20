@@ -14,13 +14,13 @@
 use crate::domains::network_addresses::NetworkAddressesConfig;
 #[cfg(test)]
 use crate::domains::network_ports::DEFAULT_ADMIN_PORT;
-use crate::domains::network_ports::{NetworkPortsConfig, DEFAULT_API_PORT, DEFAULT_DISCOVERY_PORT};
+use crate::domains::network_ports::{DEFAULT_API_PORT, DEFAULT_DISCOVERY_PORT, NetworkPortsConfig};
 use crate::error::{ConfigError, ConfigResult};
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr};
 
 /// Network configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct NetworkConfig {
     /// Centralized port configuration (preferred)
     ///
@@ -115,7 +115,7 @@ impl Default for NetworkConfig {
 }
 
 /// API server configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ApiConfig {
     /// Bind address (default: 127.0.0.1 for security)
     pub bind_address: IpAddr,
@@ -226,40 +226,48 @@ pub struct ApiConfigBuilder {
 }
 
 impl ApiConfigBuilder {
+    /// Starts a builder; unset fields use [`ApiConfig::const_defaults`].
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn bind_address(mut self, addr: IpAddr) -> Self {
+    /// Address the public API listener binds to.
+    pub const fn bind_address(mut self, addr: IpAddr) -> Self {
         self.bind_address = Some(addr);
         self
     }
 
-    pub fn port(mut self, port: u16) -> Self {
+    /// TCP port for the primary API server.
+    pub const fn port(mut self, port: u16) -> Self {
         self.port = Some(port);
         self
     }
 
-    pub fn tls_enabled(mut self, enabled: bool) -> Self {
+    /// Whether TLS terminates on this listener (vs offloaded upstream).
+    pub const fn tls_enabled(mut self, enabled: bool) -> Self {
         self.tls_enabled = Some(enabled);
         self
     }
 
+    /// Filesystem path to the leaf certificate presented when TLS is enabled.
     pub fn tls_cert_path(mut self, path: String) -> Self {
         self.tls_cert_path = Some(path);
         self
     }
 
+    /// Filesystem path to the private key for `tls_cert_path`.
     pub fn tls_key_path(mut self, path: String) -> Self {
         self.tls_key_path = Some(path);
         self
     }
 
-    pub fn max_connections(mut self, max: usize) -> Self {
+    /// Upper bound on concurrent accepted connections for the API socket.
+    pub const fn max_connections(mut self, max: usize) -> Self {
         self.max_connections = Some(max);
         self
     }
 
+    /// Produces an [`ApiConfig`] with defaults filling any omitted settings.
     pub fn build(self) -> ApiConfig {
         let defaults = ApiConfig::const_defaults();
 
@@ -275,7 +283,7 @@ impl ApiConfigBuilder {
 }
 
 /// Service discovery configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ServiceDiscoveryConfig {
     /// Discovery port
     pub port: u16,
@@ -371,30 +379,36 @@ pub struct ServiceDiscoveryConfigBuilder {
 }
 
 impl ServiceDiscoveryConfigBuilder {
+    /// Starts a builder backed by [`ServiceDiscoveryConfig::const_defaults`].
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn port(mut self, port: u16) -> Self {
+    /// UDP/TCP port used for discovery traffic (mDNS, etc.).
+    pub const fn port(mut self, port: u16) -> Self {
         self.port = Some(port);
         self
     }
 
+    /// Ordered list of discovery backend identifiers (e.g. `dns-sd`, `static`).
     pub fn backends(mut self, backends: Vec<String>) -> Self {
         self.backends = Some(backends);
         self
     }
 
+    /// Multicast group and port string for mDNS or similar (e.g. `239.255.0.1:5353`).
     pub fn multicast_address(mut self, addr: String) -> Self {
         self.multicast_address = Some(addr);
         self
     }
 
-    pub fn interval_secs(mut self, secs: u64) -> Self {
+    /// Seconds between periodic re-announcement or refresh cycles.
+    pub const fn interval_secs(mut self, secs: u64) -> Self {
         self.interval_secs = Some(secs);
         self
     }
 
+    /// Builds [`ServiceDiscoveryConfig`] with static defaults for unset fields.
     pub fn build(self) -> ServiceDiscoveryConfig {
         let defaults = ServiceDiscoveryConfig::const_defaults();
 
@@ -408,7 +422,7 @@ impl ServiceDiscoveryConfigBuilder {
 }
 
 /// Admin interface configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AdminConfig {
     /// Admin interface bind address
     pub bind_address: IpAddr,
@@ -485,25 +499,30 @@ pub struct AdminConfigBuilder {
 }
 
 impl AdminConfigBuilder {
+    /// Starts a builder using [`AdminConfig::const_defaults`] for gaps.
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn bind_address(mut self, addr: IpAddr) -> Self {
+    /// Bind address for the administrative HTTP or control plane interface.
+    pub const fn bind_address(mut self, addr: IpAddr) -> Self {
         self.bind_address = Some(addr);
         self
     }
 
-    pub fn port(mut self, port: u16) -> Self {
+    /// TCP port for the admin interface when enabled.
+    pub const fn port(mut self, port: u16) -> Self {
         self.port = Some(port);
         self
     }
 
-    pub fn enabled(mut self, enabled: bool) -> Self {
+    /// Master switch for exposing the admin listener and routes.
+    pub const fn enabled(mut self, enabled: bool) -> Self {
         self.enabled = Some(enabled);
         self
     }
 
+    /// Materializes [`AdminConfig`].
     pub fn build(self) -> AdminConfig {
         let defaults = AdminConfig::const_defaults();
 

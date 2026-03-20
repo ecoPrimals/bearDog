@@ -13,6 +13,7 @@ use crate::ecosystem_evolution::support::HealingProtocol;
 // Genetics Structs
 // ============================================================================
 
+/// Parameters for evolving peer relationships (strategies, mutation, crossover) over time.
 #[derive(Debug, Clone, Default)]
 pub struct RelationshipEvolutionGenetics {
     /// Collection of evolution strategies
@@ -25,6 +26,7 @@ pub struct RelationshipEvolutionGenetics {
     pub crossover_methods: Vec<String>,
 }
 
+/// Rules that govern how actors enter, stay in, or leave ecosystem membership tiers.
 #[derive(Debug, Clone, Default)]
 pub struct EcosystemMembershipGenetics {
     /// The membership evolution value
@@ -37,6 +39,7 @@ pub struct EcosystemMembershipGenetics {
     pub membership_transitions: MembershipTransitions,
 }
 
+/// Coordination genetics: leadership emergence, consensus, and conflict handling between symbionts.
 #[derive(Debug, Clone, Default)]
 pub struct SymbioticCoordinationGenetics {
     /// The coordination evolution value
@@ -49,6 +52,7 @@ pub struct SymbioticCoordinationGenetics {
     pub conflict_resolution: ConflictResolution,
 }
 
+/// Trust repair and measurement pathways—how confidence rebuilds after stress or violation.
 #[derive(Debug, Clone, Default)]
 pub struct TrustEvolutionGenetics {
     /// Collection of trust building algorithms

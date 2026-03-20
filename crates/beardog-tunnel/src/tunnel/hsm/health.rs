@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use tracing::{debug, info, warn};
 
 /// HSM health status
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum HsmHealthStatus {
     /// HSM is functioning normally
     Healthy,
@@ -78,7 +78,7 @@ impl HsmHealthMonitor {
                 }
             ),
             last_check: chrono::Utc::now(),
-            error_count: if hsm_available { 0 } else { 1 },
+            error_count: u32::from(!hsm_available),
         };
 
         self.last_check = Some(check.clone());

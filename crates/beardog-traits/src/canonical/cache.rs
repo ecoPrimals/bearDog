@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! String-keyed cache providers with TTL support and extended batch helpers.
 
 use super::base::BaseProvider;
 use beardog_errors::BearDogError;
@@ -12,6 +10,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 #[allow(clippy::type_complexity)]
+/// Minimal key/value cache with string payloads and optional TTL.
 pub trait CacheProvider: BaseProvider {
     /// Sets value
     fn set(
@@ -28,8 +27,10 @@ pub trait CacheProvider: BaseProvider {
     /// Removes item
     fn remove(key: &str) -> impl std::future::Future<Output = Result<bool, BearDogError>> + Send;
 
+    /// Returns whether `key` is present.
     fn exists(key: &str) -> impl std::future::Future<Output = Result<bool, BearDogError>> + Send;
 
+    /// Drops all entries in the namespace.
     fn clear(&self) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
 
     /// Gets many
@@ -56,6 +57,7 @@ pub trait CacheProvider: BaseProvider {
         &self,
     ) -> impl std::future::Future<Output = Result<CacheStats, BearDogError>> + Send;
 
+    /// Refreshes or sets expiry on an existing key.
     fn expire(
         key: &str,
         ttl: Duration,
@@ -67,6 +69,7 @@ pub trait CacheProvider: BaseProvider {
     ) -> impl std::future::Future<Output = Result<Option<Duration>, BearDogError>> + Send;
 }
 
+/// Aggregate cache performance and memory view.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CacheStats {
     /// Memory usage in bytes
@@ -86,7 +89,7 @@ pub struct CacheStats {
     pub hot_keys: Vec<String>,
 }
 
-// Temporary type definitions
+/// Extended hit/miss and memory stats for cache dashboards.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdvancedCacheStats {
     /// The hit rate value
@@ -100,20 +103,25 @@ pub struct AdvancedCacheStats {
 }
 
 #[allow(clippy::type_complexity)]
+/// Batch and pattern operations for high-throughput caches.
 pub trait EnhancedCacheProvider: CacheProvider {
+    /// Multi-get returning only found keys.
     fn batch_get(
         keys: &[&str],
     ) -> impl std::future::Future<Output = Result<HashMap<String, String>, BearDogError>> + Send;
 
+    /// Multi-set for JSON values.
     fn batch_set(
         data: HashMap<&str, Value>,
         ttl: Option<Duration>,
     ) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
 
+    /// Deletes all keys matching a glob-style `pattern`.
     fn invalidate_pattern(
         pattern: &str,
     ) -> impl std::future::Future<Output = Result<u64, BearDogError>> + Send;
 
+    /// Preloads `keys` from origin into the cache.
     fn warm_cache(
         keys: &[&str],
     ) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;

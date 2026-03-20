@@ -2,6 +2,7 @@
 
 //! Domain-specific configuration modules
 
+pub mod btsp;
 pub mod capacity;
 pub mod crypto;
 pub mod hsm;

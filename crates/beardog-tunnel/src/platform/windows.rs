@@ -141,9 +141,9 @@ mod tests {
     #[test]
     fn test_environment_variable_override() {
         // Test BEARDOG_PIPE override
-        std::env::set_var("BEARDOG_PIPE", r"\\.\pipe\test_override");
+        beardog_errors::process_env::set_var("BEARDOG_PIPE", r"\\.\pipe\test_override");
         let endpoint = WindowsSocket::create_endpoint("beardog").unwrap();
-        std::env::remove_var("BEARDOG_PIPE");
+        beardog_errors::process_env::remove_var("BEARDOG_PIPE");
 
         match endpoint {
             SocketEndpoint::NamedPipe(name) => {
@@ -157,12 +157,12 @@ mod tests {
     #[test]
     fn test_biomeos_pipe_dir() {
         // Clear override first
-        std::env::remove_var("BEARDOG_PIPE");
+        beardog_errors::process_env::remove_var("BEARDOG_PIPE");
 
         // Test BIOMEOS_PIPE_DIR
-        std::env::set_var("BIOMEOS_PIPE_DIR", r"\\.\pipe\custom");
+        beardog_errors::process_env::set_var("BIOMEOS_PIPE_DIR", r"\\.\pipe\custom");
         let endpoint = WindowsSocket::create_endpoint("beardog").unwrap();
-        std::env::remove_var("BIOMEOS_PIPE_DIR");
+        beardog_errors::process_env::remove_var("BIOMEOS_PIPE_DIR");
 
         match endpoint {
             SocketEndpoint::NamedPipe(name) => {

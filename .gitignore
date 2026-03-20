@@ -24,6 +24,11 @@ Thumbs.db
 *.log
 audit.log
 
+# Environment files (may contain secrets)
+.env
+.env.*
+!.env.example
+
 # Temporary files
 *.tmp
 *.temp

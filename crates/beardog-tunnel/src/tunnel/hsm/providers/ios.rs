@@ -84,7 +84,7 @@ impl IosUniversalProvider {
     }
 
     /// Check if running on iOS platform
-    fn is_ios_platform() -> bool {
+    const fn is_ios_platform() -> bool {
         cfg!(target_os = "ios")
     }
 
@@ -209,7 +209,7 @@ impl IosUniversalProvider {
             match self
                 .device_metadata
                 .get("biometric_type")
-                .map(|s| s.as_str())
+                .map(std::string::String::as_str)
             {
                 Some("TouchID") => Some(BiometricType::TouchId),
                 Some("FaceID") => Some(BiometricType::FaceId),
@@ -229,7 +229,7 @@ impl IosUniversalProvider {
     }
 
     /// Get security level
-    pub fn get_security_level(&self) -> u8 {
+    pub const fn get_security_level(&self) -> u8 {
         if self.secure_enclave_available {
             3 // Highest: Secure Enclave
         } else {
@@ -255,17 +255,17 @@ impl IosUniversalProvider {
     }
 
     /// Check if Secure Enclave is available
-    pub fn has_secure_enclave(&self) -> bool {
+    pub const fn has_secure_enclave(&self) -> bool {
         self.secure_enclave_available
     }
 
     /// Check if biometric authentication is available
-    pub fn has_biometric_auth(&self) -> bool {
+    pub const fn has_biometric_auth(&self) -> bool {
         self.biometric_available
     }
 
     /// Get capabilities
-    pub fn capabilities(&self) -> Option<&IosCapabilities> {
+    pub const fn capabilities(&self) -> Option<&IosCapabilities> {
         self.capabilities.as_ref()
     }
 }
@@ -411,11 +411,11 @@ mod tests {
             device_metadata: HashMap::new(),
         };
 
-        std::env::set_var("IOS_MODEL", "iPhone 15 Pro (M3)");
+        beardog_errors::process_env::set_var("IOS_MODEL", "iPhone 15 Pro (M3)");
         provider.simulate_secure_enclave_detection();
 
         // Clean up environment variable
-        std::env::remove_var("IOS_MODEL");
+        beardog_errors::process_env::remove_var("IOS_MODEL");
 
         // Chip detection may or may not populate metadata depending on platform
         // Just verify the test runs without panicking

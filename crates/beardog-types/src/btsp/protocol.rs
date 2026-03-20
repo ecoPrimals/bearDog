@@ -99,44 +99,44 @@ pub enum TunnelProtocol {
 
 impl TunnelProtocol {
     /// Check if this is internal mode (BTSP native)
-    pub fn is_internal(&self) -> bool {
-        matches!(self, TunnelProtocol::BtspNative { .. })
+    pub const fn is_internal(&self) -> bool {
+        matches!(self, Self::BtspNative { .. })
     }
 
     /// Check if this is external mode (TLS HTTP)
-    pub fn is_external(&self) -> bool {
-        matches!(self, TunnelProtocol::TlsHttp { .. })
+    pub const fn is_external(&self) -> bool {
+        matches!(self, Self::TlsHttp { .. })
     }
 
     /// Get the protocol version string
     pub fn version(&self) -> &str {
         match self {
-            TunnelProtocol::BtspNative { version, .. } => version,
-            TunnelProtocol::TlsHttp { tls_version, .. } => tls_version,
+            Self::BtspNative { version, .. } => version,
+            Self::TlsHttp { tls_version, .. } => tls_version,
         }
     }
 
     /// Get HTTP version (for external mode)
     pub fn http_version(&self) -> Option<&str> {
         match self {
-            TunnelProtocol::TlsHttp { http_version, .. } => Some(http_version),
-            TunnelProtocol::BtspNative { .. } => None,
+            Self::TlsHttp { http_version, .. } => Some(http_version),
+            Self::BtspNative { .. } => None,
         }
     }
 
     /// Get ALPN protocols (for external mode)
     pub fn alpn_protocols(&self) -> Option<&[String]> {
         match self {
-            TunnelProtocol::TlsHttp { alpn_protocols, .. } => Some(alpn_protocols),
-            TunnelProtocol::BtspNative { .. } => None,
+            Self::TlsHttp { alpn_protocols, .. } => Some(alpn_protocols),
+            Self::BtspNative { .. } => None,
         }
     }
 
     /// Check if a feature is enabled (for internal mode)
     pub fn has_feature(&self, feature: &str) -> bool {
         match self {
-            TunnelProtocol::BtspNative { features, .. } => features.contains(&feature.to_string()),
-            TunnelProtocol::TlsHttp { .. } => false,
+            Self::BtspNative { features, .. } => features.contains(&feature.to_string()),
+            Self::TlsHttp { .. } => false,
         }
     }
 }

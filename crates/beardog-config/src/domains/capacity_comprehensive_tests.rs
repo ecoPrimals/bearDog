@@ -224,8 +224,8 @@ mod tests {
     #[test]
     #[serial] // Required: env vars are process-global
     fn test_from_env_no_variables() {
-        std::env::remove_var("BEARDOG_CHANNEL_BUFFER");
-        std::env::remove_var("BEARDOG_MAX_CONNECTIONS");
+        beardog_errors::process_env::remove_var("BEARDOG_CHANNEL_BUFFER");
+        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONNECTIONS");
 
         let config = CapacityConfig::from_env();
 
@@ -236,28 +236,28 @@ mod tests {
     #[test]
     #[serial] // Required: env vars are process-global
     fn test_from_env_with_channel_buffer() {
-        std::env::remove_var("BEARDOG_CHANNEL_BUFFER");
-        std::env::set_var("BEARDOG_CHANNEL_BUFFER", "5000");
+        beardog_errors::process_env::remove_var("BEARDOG_CHANNEL_BUFFER");
+        beardog_errors::process_env::set_var("BEARDOG_CHANNEL_BUFFER", "5000");
 
         let config = CapacityConfig::from_env();
 
         assert_eq!(config.default_channel_buffer, 5000);
 
-        std::env::remove_var("BEARDOG_CHANNEL_BUFFER");
+        beardog_errors::process_env::remove_var("BEARDOG_CHANNEL_BUFFER");
     }
 
     #[test]
     #[serial] // Required: env vars are process-global
     fn test_from_env_invalid_value() {
-        std::env::remove_var("BEARDOG_EVENT_BUS_CAPACITY");
-        std::env::set_var("BEARDOG_EVENT_BUS_CAPACITY", "not_valid");
+        beardog_errors::process_env::remove_var("BEARDOG_EVENT_BUS_CAPACITY");
+        beardog_errors::process_env::set_var("BEARDOG_EVENT_BUS_CAPACITY", "not_valid");
 
         let config = CapacityConfig::from_env();
 
         // Should use default
         assert_eq!(config.event_bus_capacity, 10000);
 
-        std::env::remove_var("BEARDOG_EVENT_BUS_CAPACITY");
+        beardog_errors::process_env::remove_var("BEARDOG_EVENT_BUS_CAPACITY");
     }
 
     // ============================================================================

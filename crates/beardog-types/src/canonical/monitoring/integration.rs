@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Unified Integration Monitoring Configuration
+//! Cross-service integration health (APIs, discovery, ecosystem mesh).
 
 use super::MonitoringConfigValidation;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
+/// Monitors external dependencies that Beardog primals rely on at runtime.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedIntegrationMonitoringConfig {
     /// Enabled

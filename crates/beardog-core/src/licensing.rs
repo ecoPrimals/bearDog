@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+//! License payloads, validation results, and a context-aware license manager facade.
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::{debug, info};
 
+/// Parsed license material as stored or received from a customer.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LicenseData {
     /// The license key value
@@ -20,8 +18,10 @@ pub struct LicenseData {
     pub features: Vec<String>,
 }
 
+/// Outcome of validating a license against signing keys and business rules.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LicenseValidationResult {
+    /// Whether the license is currently acceptable for use.
     pub valid: bool,
     /// The license type value
     pub license_type: String,
@@ -37,6 +37,7 @@ pub struct LicenseValidationResult {
     pub days_remaining: Option<u32>,
 }
 
+/// Single feature gate with optional metering.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LicenseFeature {
     /// Name of the feature
@@ -48,30 +49,40 @@ pub struct LicenseFeature {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Types of license
+/// Commercial or trial license tiers carried inside validation flows.
 pub enum LicenseType {
-    /// Represents trial variant
+    /// Time-limited evaluation with a fixed number of days remaining.
     Trial {
+        /// Whole days left before the trial blocks premium features.
         days_remaining: u32,
     },
+    /// Standard paid tier with a hard expiry.
     Standard {
+        /// Instant when the standard subscription ends.
         expires_at: chrono::DateTime<chrono::Utc>,
     },
+    /// Premium tier with a hard expiry.
     Premium {
+        /// Instant when premium entitlements lapse.
         expires_at: chrono::DateTime<chrono::Utc>,
     },
+    /// Enterprise tier; may be perpetual when `expires_at` is None.
     Enterprise {
+        /// Optional contract end; None means no fixed expiry in metadata.
         expires_at: Option<chrono::DateTime<chrono::Utc>>,
     },
 }
 
+/// Tunables for how aggressively license checks reject borderline keys.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LicenseManager {
     /// Optional grace period days
     pub grace_period_days: Option<u64>,
+    /// When true, expired or malformed licenses fail closed immediately.
     pub strict_validation: bool,
 }
 
+/// Verifies signed license blobs and tracks grace windows per deployment context.
 pub struct ContextAwareLicenseManager {
     signed_licenses: HashMap<String, LicenseData>,
     verification_key: String,
@@ -258,6 +269,7 @@ impl ContextAwareLicenseManager {
     }
 }
 
+/// Namespace for classifying externally exposed integration hooks by product category.
 pub struct ExternalFunctions;
 
 impl ExternalFunctions {

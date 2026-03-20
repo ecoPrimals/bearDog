@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Threat Detection Types - Modern Implementation
-//
-// **MODERNIZED**: Clean, production-ready type definitions for the BearDog threat detection system.
+//! Serializable threat-domain types: events, sources, rules, intelligence feeds, and response payloads.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
 
+/// Incident-centric records used by higher-level workflows.
 pub mod incidents;
 
+/// Engine-facing rule conditions, ML metadata, and the core engine snapshot type.
 pub mod engine;
 
 // Re-export engine types
@@ -21,6 +21,7 @@ pub use beardog_types::canonical::config::domains::threat::ThreatDetectionConfig
 /// Threat event representing a detected security incident
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatEvent {
+    /// Stable identifier for this threat instance (often a UUID string).
     pub id: String,
     /// Type of threat detected
     /// The threat type value
@@ -46,6 +47,7 @@ pub struct ThreatEvent {
     /// The detected at value
     /// The detected at value
     pub detected_at: SystemTime,
+    /// Wall-clock time associated with the event for correlation and ordering.
     pub timestamp: SystemTime,
     /// Threat confidence score (0.0 - 1.0)
     pub confidence: f64,
@@ -61,7 +63,7 @@ pub struct ThreatEvent {
     /// The detection method value
     /// The detection method value
     pub detection_method: DetectionMethod,
-    /// Evidence collected
+    /// Human-readable or structured evidence strings supporting the finding.
     pub evidence: Vec<String>,
     /// Recommended actions
     /// Collection of recommended actions
@@ -106,6 +108,7 @@ pub struct ThreatSource {
     pub source_type: String,
     /// Source identifier
     pub identifier: String,
+    /// Unique id for this source record, often distinct from `identifier`.
     pub id: String,
     /// IP address if applicable
     /// Optional ip address
@@ -141,7 +144,7 @@ pub struct ThreatSource {
     /// The reputation score value
     /// The reputation score value
     pub reputation_score: f64,
-    /// Confidence score
+    /// Normalized confidence in source attribution, in the same 0.0–1.0 scale as threat confidence.
     pub confidence_score: f64,
     /// First seen timestamp
     /// Optional first seen
@@ -187,12 +190,13 @@ pub struct ThreatTarget {
     /// The target type value
     /// The target type value
     pub target_type: String,
-    /// Target identifier
+    /// Human-readable target label (service name, host, etc.).
     pub identifier: String,
+    /// Unique id for this target in the inventory graph.
     pub id: String,
-    /// Resource identifier
+    /// Logical resource id (database, bucket, queue) when distinct from `id`.
     pub resource_id: String,
-    /// Node identifier
+    /// Optional cluster or mesh node id when the target spans multiple hosts.
     pub node_id: Option<String>,
     /// User account if applicable
     /// Number of `user_acitems`
@@ -263,24 +267,46 @@ impl Default for ThreatTarget {
     }
 }
 
+/// Predicate evaluated against string-keyed event fields for [`DetectionRule`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RuleCondition {
     /// Field equals a specific value
-    FieldEquals { field: String, value: String },
+    FieldEquals {
+        /// Key in the event’s string map.
+        field: String,
+        /// Expected value for equality.
+        value: String,
+    },
     /// Field greater than a threshold
-    FieldGreaterThan { field: String, threshold: f64 },
+    FieldGreaterThan {
+        /// Numeric field parsed as `f64` for comparison.
+        field: String,
+        /// Exclusive lower bound for a match.
+        threshold: f64,
+    },
     /// Field less than a threshold
-    FieldLessThan { field: String, threshold: f64 },
+    FieldLessThan {
+        /// Numeric field parsed as `f64` for comparison.
+        field: String,
+        /// Exclusive upper bound for a match.
+        threshold: f64,
+    },
     /// Field contains a pattern
-    FieldContains { field: String, pattern: String },
+    FieldContains {
+        /// Field whose string value is substring-searched.
+        field: String,
+        /// Substring that must appear in the field value.
+        pattern: String,
+    },
     /// Complex condition with multiple criteria
-    Complex { conditions: Vec<RuleCondition> },
+    Complex {
+        /// Child predicates combined with implicit AND semantics in the engine.
+        conditions: Vec<Self>,
+    },
 }
 
-/// Types of threats that can be detected
+/// High-level category assigned to a detected or suspected threat.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-/// Types of threat
-/// Types of threat
 pub enum ThreatType {
     /// Malware detection
     Malware,
@@ -310,6 +336,7 @@ pub enum ThreatType {
     Unknown,
 }
 
+/// Ordinal severity used for alerting thresholds, SLAs, and automated response policy.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ThreatSeverity {
     /// Low severity - monitoring only
@@ -335,6 +362,7 @@ impl ThreatSeverity {
         }
     }
 
+    /// Maps severity to a small integer rank for sorting and composite scoring.
     #[must_use]
     pub const fn score(&self) -> u8 {
         match self {
@@ -410,6 +438,7 @@ pub enum AssetCriticality {
     Critical,
 }
 
+/// Expected defensive posture for an asset when evaluating impact.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ProtectionLevel {
     /// Basic protection
@@ -435,13 +464,12 @@ pub enum ThreatAction {
     QuarantineAsset,
     /// Escalate to administrator
     EscalateToAdmin,
+    /// Record the event for later hunting without immediate containment.
     LogForAnalysis,
 }
 
-/// Types of threat detection rules
+/// How a [`DetectionRule`] derives its decision (signature, ML, heuristic, etc.).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-/// Types of threat rule
-/// Types of threat rule
 pub enum ThreatRuleType {
     /// Signature-based rule
     Signature,
@@ -457,9 +485,8 @@ pub enum ThreatRuleType {
     Custom,
 }
 
+/// Shape of a [`ThreatIndicator`] value for feed normalization and matching.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-/// Types of indicator
-/// Types of indicator
 pub enum IndicatorType {
     /// IP address indicator
     IpAddress,
@@ -506,7 +533,7 @@ pub struct ThreatIndicator {
     /// The value value
     /// The value value
     pub value: String,
-    /// Confidence in indicator
+    /// Provider confidence that this indicator is malicious or relevant (0.0–1.0).
     pub confidence: f64,
     /// Source of indicator
     /// The source value
@@ -549,6 +576,7 @@ pub struct ThreatIntelligenceFeed {
     pub indicators: Vec<ThreatIndicator>,
 }
 
+/// One recorded action taken while containing or remediating a threat.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MitigationStep {
     /// Step identifier
@@ -557,7 +585,7 @@ pub struct MitigationStep {
     /// The action value
     /// The action value
     pub action: String,
-    /// Timestamp when action was taken
+    /// When the mitigation action started or completed (implementation-defined).
     pub timestamp: SystemTime,
     /// Result of the action
     /// The result value
@@ -569,6 +597,7 @@ pub struct MitigationStep {
     pub success: bool,
 }
 
+/// Normalized security telemetry row before enrichment into a [`ThreatEvent`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityEvent {
     /// Event identifier
@@ -631,6 +660,7 @@ impl SecurityEvent {
     }
 }
 
+/// Lightweight registry entry for a trained model used in policy or scoring.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MlModel {
     /// Model identifier
@@ -657,10 +687,8 @@ pub struct MlModel {
     pub trained_at: SystemTime,
 }
 
-/// Types of machine learning models
+/// Algorithm family for [`MlModel`] entries in this crate’s type layer.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-/// Types of ml model
-/// Types of ml model
 pub enum MlModelType {
     /// Anomaly detection model
     AnomalyDetection,
@@ -676,11 +704,12 @@ pub enum MlModelType {
     Ensemble,
 }
 
+/// Tracks human-driven incident workflow tied to a [`ThreatEvent`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IncidentResponse {
     /// Incident identifier
     pub id: String,
-    /// Related threat event ID
+    /// Id of the originating [`ThreatEvent`].
     pub threat_id: String,
     /// Response status
     /// Current status of the component
@@ -723,7 +752,7 @@ pub enum ResponseStatus {
     Failed,
 }
 
-/// Action taken during incident response
+/// Single step executed as part of an [`IncidentResponse`] playbook.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResponseAction {
     /// Action identifier
@@ -785,7 +814,7 @@ impl ThreatEvent {
         }
     }
 
-    /// Add a mitigation step to the threat event
+    /// Appends a [`MitigationStep`] to the running containment timeline.
     pub fn add_mitigation_step(&mut self, step: MitigationStep) {
         self.mitigation_steps.push(step);
     }
@@ -809,6 +838,7 @@ impl ThreatEvent {
     }
 }
 
+/// Declarative rule evaluated against [`SecurityEvent`] maps or fused telemetry.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DetectionRule {
     /// Unique rule identifier
@@ -833,7 +863,7 @@ pub struct DetectionRule {
     /// Whether feature is enabled
     /// Whether feature is enabled
     pub enabled: bool,
-    /// Rule confidence score
+    /// Tuning weight or belief in the rule’s precision when fused with other signals.
     pub confidence: f64,
     /// The condition value
     /// The condition value

@@ -7,12 +7,13 @@
 use beardog_errors::BearDogError;
 // Removed unused import: use crate::monitoring::types::*;
 
-/// Core metrics functionality
+/// Coordinator for baseline metrics collection settings and lifecycle.
 #[derive(Debug, Clone)]
 pub struct MetricsCore {
     config: MetricsCoreConfig,
 }
 
+/// Enablement and polling interval for [`MetricsCore`].
 #[derive(Debug, Clone)]
 pub struct MetricsCoreConfig {
     /// Whether core metrics are enabled

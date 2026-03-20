@@ -36,8 +36,8 @@ use beardog_types::canonical::discovery::{
     UniversalCapabilityType, UniversalServiceDescriptor,
 };
 use chacha20poly1305::{
-    aead::{Aead, KeyInit, OsRng},
     ChaCha20Poly1305, Nonce,
+    aead::{Aead, KeyInit, OsRng},
 };
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -662,10 +662,12 @@ mod tests {
 
         // Should fail because no primals are discovered (not because of hardcoding)
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("No network-capable primals discovered"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("No network-capable primals discovered")
+        );
     }
 
     #[tokio::test]

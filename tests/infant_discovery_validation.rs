@@ -49,8 +49,8 @@ async fn test_no_hardcoded_primal_names() {
             assert!(
                 !discovered.to_lowercase().contains(forbidden),
                 "Discovered name '{discovered}' should not contain hardcoded primal name '{forbidden}'" // TEST_CATEGORY: unit
-                          // TEST_DOMAIN: core
-                          // TEST_PRIORITY: important
+                                                                                                        // TEST_DOMAIN: core
+                                                                                                        // TEST_PRIORITY: important
             );
         }
     }

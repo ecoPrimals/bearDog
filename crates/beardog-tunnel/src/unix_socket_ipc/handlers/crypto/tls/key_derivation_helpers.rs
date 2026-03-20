@@ -23,7 +23,7 @@ pub(super) fn derive_application_secrets_sha256(
     let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
         let mut hkdf_label = Vec::new();
         hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
-        let tls13_label = format!("tls13 {}", label);
+        let tls13_label = format!("tls13 {label}");
         hkdf_label.push(tls13_label.len() as u8);
         hkdf_label.extend_from_slice(tls13_label.as_bytes());
         hkdf_label.push(context.len() as u8);
@@ -79,7 +79,7 @@ pub(super) fn derive_application_secrets_sha384(
     let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
         let mut hkdf_label = Vec::new();
         hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
-        let tls13_label = format!("tls13 {}", label);
+        let tls13_label = format!("tls13 {label}");
         hkdf_label.push(tls13_label.len() as u8);
         hkdf_label.extend_from_slice(tls13_label.as_bytes());
         hkdf_label.push(context.len() as u8);
@@ -146,7 +146,7 @@ pub(super) fn derive_handshake_secrets_sha256(
     let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
         let mut hkdf_label = Vec::new();
         hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
-        let tls13_label = format!("tls13 {}", label);
+        let tls13_label = format!("tls13 {label}");
         hkdf_label.push(tls13_label.len() as u8);
         hkdf_label.extend_from_slice(tls13_label.as_bytes());
         hkdf_label.push(context.len() as u8);
@@ -224,7 +224,7 @@ pub(super) fn derive_handshake_secrets_sha384(
     let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
         let mut hkdf_label = Vec::new();
         hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
-        let tls13_label = format!("tls13 {}", label);
+        let tls13_label = format!("tls13 {label}");
         hkdf_label.push(tls13_label.len() as u8);
         hkdf_label.extend_from_slice(tls13_label.as_bytes());
         hkdf_label.push(context.len() as u8);

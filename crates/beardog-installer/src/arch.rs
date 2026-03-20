@@ -42,7 +42,7 @@ impl Architecture {
     /// ```
     /// use beardog_installer::arch::Architecture;
     ///
-    /// let arch = Architecture::detect().unwrap();
+    /// let arch = Architecture::detect().expect("supported architecture");
     /// println!("Running on: {}", arch);
     /// ```
     ///
@@ -76,7 +76,7 @@ impl Architecture {
     /// assert_eq!(arch.to_rust_target(&os), "x86_64-unknown-linux-gnu");
     /// ```
     pub fn to_rust_target(&self, os: &crate::platform::OperatingSystem) -> String {
-        use crate::platform::OperatingSystem::*;
+        use crate::platform::OperatingSystem::{Android, Ios, Linux, LinuxMusl, MacOS, Windows};
 
         match (self, os) {
             // Linux (GNU)
@@ -124,7 +124,7 @@ impl Architecture {
     /// assert_eq!(arch.binary_extension(&OperatingSystem::Windows), ".exe");
     /// assert_eq!(arch.binary_extension(&OperatingSystem::Linux), "");
     /// ```
-    pub fn binary_extension(&self, os: &crate::platform::OperatingSystem) -> &'static str {
+    pub const fn binary_extension(&self, os: &crate::platform::OperatingSystem) -> &'static str {
         match os {
             crate::platform::OperatingSystem::Windows => ".exe",
             _ => "",
@@ -171,7 +171,7 @@ mod tests {
         assert!(arch.is_ok(), "Should detect current architecture");
 
         // Verify it's one of the supported architectures
-        let arch = arch.unwrap();
+        let arch = arch.expect("architecture detection");
         assert!(Architecture::all().contains(&arch));
     }
 
@@ -294,10 +294,10 @@ mod tests {
     #[test]
     fn test_serialization() {
         let arch = Architecture::X86_64;
-        let json = serde_json::to_string(&arch).unwrap();
+        let json = serde_json::to_string(&arch).expect("serialize arch");
         assert_eq!(json, "\"x86_64\"");
 
-        let deserialized: Architecture = serde_json::from_str(&json).unwrap();
+        let deserialized: Architecture = serde_json::from_str(&json).expect("deserialize arch");
         assert_eq!(deserialized, Architecture::X86_64);
     }
 }

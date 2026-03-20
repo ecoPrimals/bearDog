@@ -150,11 +150,11 @@ impl TarpcCryptoClient {
                     // Mark connection as stale
                     let mut write = self.inner.client.write().await;
                     *write = None;
-                    Err(anyhow::anyhow!("Connection lost: {}", e))
+                    Err(anyhow::anyhow!("Connection lost: {e}"))
                 } else if err_msg.contains("deadline") || err_msg.contains("timeout") {
-                    Err(anyhow::anyhow!("Request timeout: {}", e))
+                    Err(anyhow::anyhow!("Request timeout: {e}"))
                 } else {
-                    Err(anyhow::anyhow!("RPC error: {}", e))
+                    Err(anyhow::anyhow!("RPC error: {e}"))
                 }
             }
         }
@@ -420,7 +420,7 @@ impl TarpcCryptoClient {
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Not connected"))?;
 
-        let request = HmacRequest { key, data };
+        let request = HmacRequest { data, key };
         self.handle_error(client.hmac_sha256(self.context(), request).await)
             .await
     }

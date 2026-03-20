@@ -73,7 +73,7 @@ impl LineageKeyDerivation {
         let hk = Hkdf::<Sha256>::new(Some(&[0u8; 32]), &self.master_secret);
         let mut key_material = Zeroizing::new(vec![0u8; 32]); // ChaCha20-Poly1305 key size
         hk.expand(&context, &mut key_material)
-            .map_err(|e| BearDogError::system(format!("HKDF expansion failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("HKDF expansion failed: {e}")))?;
 
         // Calculate key validity period
         let now = Utc::now();
@@ -160,7 +160,7 @@ impl LineageKeyDerivation {
     }
 
     /// Check if a key is valid for a given lineage depth
-    pub fn is_key_valid_for_depth(&self, key: &BirdSongKey, depth: LineageDepth) -> bool {
+    pub const fn is_key_valid_for_depth(&self, key: &BirdSongKey, depth: LineageDepth) -> bool {
         depth >= key.hint.min_depth && depth <= key.hint.max_depth
     }
 
@@ -223,7 +223,7 @@ impl LineageKeyDerivation {
         let hk = Hkdf::<Sha256>::new(None, &mixed_entropy);
         let mut master_secret = vec![0u8; 32];
         hk.expand(b"birdsong-master-secret-v1", &mut master_secret)
-            .map_err(|e| BearDogError::system(format!("Master secret derivation failed: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Master secret derivation failed: {e}")))?;
 
         Ok(master_secret)
     }

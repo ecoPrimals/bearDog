@@ -50,7 +50,7 @@ pub async fn run(
 
     // Check 2: Socket Path
     println!("🔌 Socket Configuration:");
-    println!("   Socket: {}", socket_path);
+    println!("   Socket: {socket_path}");
 
     if Path::new(&socket_path).exists() {
         println!("   ✅ Socket exists");
@@ -90,9 +90,9 @@ pub async fn run(
 
     for var in &env_vars {
         if let Ok(value) = std::env::var(var) {
-            println!("   • {}: {}", var, value);
+            println!("   • {var}: {value}");
         } else {
-            println!("   • {}: (not set)", var);
+            println!("   • {var}: (not set)");
         }
     }
     println!();
@@ -147,11 +147,11 @@ pub async fn run(
     println!("║                                                                    ║");
     println!("╚════════════════════════════════════════════════════════════════════╝\n");
 
-    if !Path::new(&socket_path).exists() {
+    if Path::new(&socket_path).exists() {
+        println!("💡 BearDog server is running and accessible!\n");
+    } else {
         println!("💡 Tip: Start BearDog server with:");
         println!("   beardog server\n");
-    } else {
-        println!("💡 BearDog server is running and accessible!\n");
     }
 
     Ok(())

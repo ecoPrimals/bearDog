@@ -5,8 +5,8 @@
 // This module contains service registration, tracking, and management functionality.
 
 use beardog_errors::BearDogError;
-use beardog_types::canonical::providers_unified::traits::ServiceInfo;
 use beardog_types::canonical::HealthStatus;
+use beardog_types::canonical::providers_unified::traits::ServiceInfo;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

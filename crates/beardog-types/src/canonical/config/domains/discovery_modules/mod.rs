@@ -13,7 +13,7 @@
 //! - Additional modules to be added: network, quantum, cache, security, load_balancing
 //!
 //! ## Migration Path
-//! This module is being extracted from `discovery_unified.rs` for better
+//! This module is being extracted from `discovery_unified` for better
 //! maintainability. The original file will remain as a compatibility wrapper.
 
 pub mod registry;

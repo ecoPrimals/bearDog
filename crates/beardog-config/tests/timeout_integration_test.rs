@@ -5,8 +5,8 @@
 //!
 //! All tests in this file can run in parallel without race conditions.
 
-use beardog_config::domains::timeouts_new::TimeoutConfig;
 use beardog_config::BearDogConfig;
+use beardog_config::domains::timeouts_new::TimeoutConfig;
 use std::time::Duration;
 
 // ============================================================================

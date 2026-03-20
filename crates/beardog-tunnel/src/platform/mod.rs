@@ -78,8 +78,8 @@ impl SocketEndpoint {
     /// Get the display string for logging
     pub fn display(&self) -> String {
         match self {
-            SocketEndpoint::Filesystem(path) => format!("{}", path.display()),
-            SocketEndpoint::Abstract(name) => name.clone(),
+            Self::Filesystem(path) => format!("{}", path.display()),
+            Self::Abstract(name) => name.clone(),
             #[cfg(windows)]
             SocketEndpoint::NamedPipe(name) => name.clone(),
             #[cfg(target_os = "ios")]
@@ -122,7 +122,7 @@ pub fn default_socket_endpoint() -> SocketEndpoint {
     // Use primal name from environment for self-knowledge pattern
     let primal_name =
         std::env::var("PRIMAL_NAME").unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string());
-    SocketEndpoint::Filesystem(PathBuf::from(format!("/tmp/{}.sock", primal_name)))
+    SocketEndpoint::Filesystem(PathBuf::from(format!("/tmp/{primal_name}.sock")))
 }
 
 #[cfg(windows)]

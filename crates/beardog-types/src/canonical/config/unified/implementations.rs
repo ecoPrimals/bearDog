@@ -6,8 +6,8 @@
 
 use beardog_errors::BearDogError;
 
-use super::metadata::Environment;
 use super::UnifiedBearDogConfig;
+use super::metadata::Environment;
 
 impl UnifiedBearDogConfig {
     /// Loads configuration from environment variables and default sources

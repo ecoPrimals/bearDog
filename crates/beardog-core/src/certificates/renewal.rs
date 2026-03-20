@@ -4,8 +4,8 @@
 //!
 //! Handles automatic renewal for certificates that are about to expire.
 
+use super::RequestContext;
 use super::{CertificateIssuer, CertificateStore};
-use super::issuer::RequestContext;
 use beardog_errors::BearDogError;
 use chrono::{Duration, Utc};
 use std::sync::Arc;
@@ -19,16 +19,17 @@ use tracing::{debug, info, warn};
 pub struct CertificateRenewal {
     /// Certificate issuer for creating new certificates
     issuer: Arc<CertificateIssuer>,
-    
+
     /// Certificate store
     store: Arc<CertificateStore>,
-    
+
     /// How far before expiry to renew (default: 5 minutes)
     renewal_buffer: Duration,
 }
 
 impl CertificateRenewal {
     /// Create a new renewal manager
+    #[must_use]
     pub fn new(issuer: CertificateIssuer, store: CertificateStore) -> Self {
         Self {
             issuer: Arc::new(issuer),
@@ -42,7 +43,7 @@ impl CertificateRenewal {
     /// Returns true if:
     /// - Certificate exists
     /// - Certificate is valid
-    /// - Certificate expires within renewal_buffer time
+    /// - Certificate expires within `renewal_buffer` time
     pub async fn needs_renewal(&self, adapter_id: &str) -> bool {
         if let Some(cert) = self.store.get(adapter_id).await {
             let time_until_expiry = cert.expires_at - Utc::now();
@@ -80,7 +81,11 @@ impl CertificateRenewal {
         info!("Renewing certificate for adapter: {}", adapter_id);
 
         // Issue new certificate (will re-classify and check eligibility)
-        match self.issuer.issue_certificate(adapter_id.to_string(), context).await {
+        match self
+            .issuer
+            .issue_certificate(adapter_id.to_string(), context)
+            .await
+        {
             Ok(new_cert) => {
                 // Store the new certificate
                 self.store.store(new_cert).await?;
@@ -105,8 +110,8 @@ impl CertificateRenewal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use beardog_types::adapter_certificates::AdapterClassification;
-    use beardog_types::commercial_extraction::CommercialExtractionDetector;
+    use crate::certificates::CommercialExtractionDetector;
+    use beardog_types::adapters::CertificateClassification;
     use ed25519_dalek::SigningKey;
 
     #[tokio::test]
@@ -119,12 +124,13 @@ mod tests {
 
         // Create certificate that expires soon
         let signing_key = SigningKey::from_bytes(&[1u8; 32]);
-        let mut cert = beardog_types::adapter_certificates::AdapterUnlockCertificate::issue(
+        let mut cert = beardog_types::adapters::AdapterUnlockCertificate::issue(
             "test-adapter".to_string(),
-            AdapterClassification::Human { confidence: 0.9 },
+            CertificateClassification::Human { confidence: 0.9 },
             &signing_key,
-        ).unwrap();
-        
+        )
+        .unwrap();
+
         // Set to expire in 3 minutes (within 5 minute buffer)
         cert.expires_at = Utc::now() + Duration::minutes(3);
         store.store(cert).await.unwrap();
@@ -143,16 +149,16 @@ mod tests {
 
         // Create certificate with plenty of time
         let signing_key = SigningKey::from_bytes(&[1u8; 32]);
-        let cert = beardog_types::adapter_certificates::AdapterUnlockCertificate::issue(
+        let cert = beardog_types::adapters::AdapterUnlockCertificate::issue(
             "test-adapter".to_string(),
-            AdapterClassification::Human { confidence: 0.9 },
+            CertificateClassification::Human { confidence: 0.9 },
             &signing_key,
-        ).unwrap();
-        
+        )
+        .unwrap();
+
         store.store(cert).await.unwrap();
 
         // Should not need renewal
         assert!(!renewal.needs_renewal("test-adapter").await);
     }
 }
-

@@ -159,7 +159,7 @@ pub trait KeyManagementCapability: Send + Sync + fmt::Debug {
     /// * `Ok(false)` - Signature is invalid
     /// * `Err(KmsError)` - If verification fails
     async fn verify(&self, data: &[u8], signature: &[u8], key_id: &KeyId)
-        -> Result<bool, KmsError>;
+    -> Result<bool, KmsError>;
 
     /// Generate random bytes using HSM/KMS RNG
     ///
@@ -386,69 +386,97 @@ pub struct KmsCapabilities {
 /// KMS error types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum KmsError {
-    /// Key not found
-    KeyNotFound { key_id: String },
+    /// Key not found for the given identifier.
+    KeyNotFound {
+        /// KMS key identifier that could not be resolved.
+        key_id: String,
+    },
 
     /// KMS provider unavailable
-    ProviderUnavailable { provider: String, reason: String },
+    ProviderUnavailable {
+        /// Provider name or endpoint that failed.
+        provider: String,
+        /// Human-readable reason (e.g. timeout, maintenance).
+        reason: String,
+    },
 
     /// Operation not supported
-    OperationNotSupported { operation: String },
+    OperationNotSupported {
+        /// Requested operation name as reported by the provider.
+        operation: String,
+    },
 
     /// Invalid key specification
-    InvalidKeySpec { reason: String },
+    InvalidKeySpec {
+        /// Validation or parsing error detail.
+        reason: String,
+    },
 
     /// Cryptographic operation failed
-    CryptoError { details: String },
+    CryptoError {
+        /// Provider error text or internal crypto failure summary.
+        details: String,
+    },
 
     /// Permission denied
-    PermissionDenied { resource: String },
+    PermissionDenied {
+        /// Resource or capability that was denied.
+        resource: String,
+    },
 
     /// Rate limit exceeded
-    RateLimitExceeded { retry_after_seconds: u64 },
+    RateLimitExceeded {
+        /// Suggested backoff before retrying, in seconds.
+        retry_after_seconds: u64,
+    },
 
     /// Network error
-    NetworkError { details: String },
+    NetworkError {
+        /// Transport- or TLS-level failure description.
+        details: String,
+    },
 
     /// Generic error
-    Other { message: String },
+    Other {
+        /// Catch-all message when no specific variant applies.
+        message: String,
+    },
 }
 
 impl fmt::Display for KmsError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            KmsError::KeyNotFound { key_id } => {
-                write!(f, "Key not found: {}", key_id)
+            Self::KeyNotFound { key_id } => {
+                write!(f, "Key not found: {key_id}")
             }
-            KmsError::ProviderUnavailable { provider, reason } => {
-                write!(f, "KMS provider '{}' unavailable: {}", provider, reason)
+            Self::ProviderUnavailable { provider, reason } => {
+                write!(f, "KMS provider '{provider}' unavailable: {reason}")
             }
-            KmsError::OperationNotSupported { operation } => {
-                write!(f, "Operation not supported: {}", operation)
+            Self::OperationNotSupported { operation } => {
+                write!(f, "Operation not supported: {operation}")
             }
-            KmsError::InvalidKeySpec { reason } => {
-                write!(f, "Invalid key specification: {}", reason)
+            Self::InvalidKeySpec { reason } => {
+                write!(f, "Invalid key specification: {reason}")
             }
-            KmsError::CryptoError { details } => {
-                write!(f, "Cryptographic error: {}", details)
+            Self::CryptoError { details } => {
+                write!(f, "Cryptographic error: {details}")
             }
-            KmsError::PermissionDenied { resource } => {
-                write!(f, "Permission denied for resource: {}", resource)
+            Self::PermissionDenied { resource } => {
+                write!(f, "Permission denied for resource: {resource}")
             }
-            KmsError::RateLimitExceeded {
+            Self::RateLimitExceeded {
                 retry_after_seconds,
             } => {
                 write!(
                     f,
-                    "Rate limit exceeded, retry after {} seconds",
-                    retry_after_seconds
+                    "Rate limit exceeded, retry after {retry_after_seconds} seconds"
                 )
             }
-            KmsError::NetworkError { details } => {
-                write!(f, "Network error: {}", details)
+            Self::NetworkError { details } => {
+                write!(f, "Network error: {details}")
             }
-            KmsError::Other { message } => {
-                write!(f, "KMS error: {}", message)
+            Self::Other { message } => {
+                write!(f, "KMS error: {message}")
             }
         }
     }
@@ -534,7 +562,7 @@ async fn detect_cloud_kms_via_metadata() -> Result<KmsDiscoveryResult, KmsError>
     };
 
     Ok(KmsDiscoveryResult {
-        endpoint: format!("cloud-kms://{}", auth_type),
+        endpoint: format!("cloud-kms://{auth_type}"),
         capabilities: KmsProviderCapabilities {
             can_generate: true,
             can_encrypt: true,
@@ -562,7 +590,7 @@ async fn detect_hardware_kms() -> Result<KmsDiscoveryResult, KmsError> {
     for path in &pkcs11_paths {
         if std::path::Path::new(path).exists() {
             return Ok(KmsDiscoveryResult {
-                endpoint: format!("pkcs11://{}", path),
+                endpoint: format!("pkcs11://{path}"),
                 capabilities: KmsProviderCapabilities {
                     can_generate: true,
                     can_encrypt: true,
@@ -691,10 +719,7 @@ impl Default for SoftwareHsmProvider {
         Self {
             inner: Arc::new(
                 super::software_hsm_impl::SecureSoftwareHsm::new().unwrap_or_else(|e| {
-                    panic!(
-                        "Failed to initialize SecureSoftwareHsm - OS entropy unavailable: {:?}",
-                        e
-                    )
+                    panic!("Failed to initialize SecureSoftwareHsm - OS entropy unavailable: {e:?}")
                 }),
             ),
         }

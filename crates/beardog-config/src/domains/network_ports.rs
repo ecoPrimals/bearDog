@@ -30,6 +30,8 @@
 //! - `BEARDOG_HTTPS_PORT` - HTTPS API port (default: 8443)
 //! - `BEARDOG_METRICS_PORT` - Metrics/monitoring port (default: 9100)
 //! - `BEARDOG_HEALTH_PORT` - Health check port (default: 8081)
+//! - `BEARDOG_TCP_IPC_PORT` - TCP IPC fallback when Unix sockets unavailable (default: 9900)
+//! - `BEARDOG_PROFILING_PORT` - Profiling / diagnostic HTTP (default: 6060; see `DEFAULT_PROFILING_PORT`)
 
 use serde::{Deserialize, Serialize};
 
@@ -148,6 +150,9 @@ pub const DEFAULT_TCP_IPC_PORT: u16 = 9900;
 
 /// Default Jaeger port (14268)
 pub const DEFAULT_JAEGER_PORT: u16 = 14268;
+
+/// Default profiling / diagnostic HTTP port (6060, common pprof convention)
+pub const DEFAULT_PROFILING_PORT: u16 = 6060;
 
 fn default_api_port() -> u16 {
     std::env::var("BEARDOG_API_PORT")

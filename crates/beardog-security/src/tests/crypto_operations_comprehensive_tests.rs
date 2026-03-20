@@ -617,8 +617,8 @@ mod key_rotation_tests {
 #[allow(dead_code)]
 fn generate_ed25519_keypair() -> Result<Ed25519Keypair, BearDogError> {
     use ed25519_dalek::SigningKey;
-    use rand::rngs::OsRng;
     use rand::RngCore;
+    use rand::rngs::OsRng;
 
     let mut csprng = OsRng;
     let mut seed = [0u8; 32];
@@ -710,7 +710,7 @@ fn encrypt_aes_256_gcm(
     nonce: &[u8],
     plaintext: &[u8],
 ) -> Result<Vec<u8>, BearDogError> {
-    use aes_gcm::{aead::Aead, Aes256Gcm, Key, KeyInit, Nonce};
+    use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce, aead::Aead};
 
     let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key));
     let nonce = Nonce::from_slice(nonce);
@@ -726,7 +726,7 @@ fn decrypt_aes_256_gcm(
     nonce: &[u8],
     ciphertext: &[u8],
 ) -> Result<Vec<u8>, BearDogError> {
-    use aes_gcm::{aead::Aead, Aes256Gcm, Key, KeyInit, Nonce};
+    use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce, aead::Aead};
 
     let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key));
     let nonce = Nonce::from_slice(nonce);
@@ -758,7 +758,7 @@ fn encrypt_chacha20_poly1305(
     nonce: &[u8],
     plaintext: &[u8],
 ) -> Result<Vec<u8>, BearDogError> {
-    use chacha20poly1305::{aead::Aead, ChaCha20Poly1305, Key, KeyInit, Nonce};
+    use chacha20poly1305::{ChaCha20Poly1305, Key, KeyInit, Nonce, aead::Aead};
 
     let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
     let nonce = Nonce::from_slice(nonce);
@@ -774,7 +774,7 @@ fn decrypt_chacha20_poly1305(
     nonce: &[u8],
     ciphertext: &[u8],
 ) -> Result<Vec<u8>, BearDogError> {
-    use chacha20poly1305::{aead::Aead, ChaCha20Poly1305, Key, KeyInit, Nonce};
+    use chacha20poly1305::{ChaCha20Poly1305, Key, KeyInit, Nonce, aead::Aead};
 
     let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
     let nonce = Nonce::from_slice(nonce);
@@ -791,7 +791,7 @@ fn encrypt_chacha20_poly1305_with_aad(
     plaintext: &[u8],
     aad: &[u8],
 ) -> Result<Vec<u8>, BearDogError> {
-    use chacha20poly1305::{aead::Aead, aead::Payload, ChaCha20Poly1305, Key, KeyInit, Nonce};
+    use chacha20poly1305::{ChaCha20Poly1305, Key, KeyInit, Nonce, aead::Aead, aead::Payload};
 
     let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
     let nonce = Nonce::from_slice(nonce);
@@ -812,7 +812,7 @@ fn decrypt_chacha20_poly1305_with_aad(
     ciphertext: &[u8],
     aad: &[u8],
 ) -> Result<Vec<u8>, BearDogError> {
-    use chacha20poly1305::{aead::Aead, aead::Payload, ChaCha20Poly1305, Key, KeyInit, Nonce};
+    use chacha20poly1305::{ChaCha20Poly1305, Key, KeyInit, Nonce, aead::Aead, aead::Payload};
 
     let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
     let nonce = Nonce::from_slice(nonce);

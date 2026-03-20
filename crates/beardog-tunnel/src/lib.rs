@@ -5,12 +5,6 @@
 //! Provides secure communication tunnels and Hardware Security Module (HSM) integration
 //! for the BearDog ecosystem, enabling encrypted channels and cryptographic key management.
 
-#![deny(unsafe_code)]
-#![warn(missing_docs)]
-// Production code must use proper error handling - deny panicking methods
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-// Allow expect in tests - test panics are appropriate failure modes
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
 //!

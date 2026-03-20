@@ -25,7 +25,7 @@
 //! (SoloKeys) (Pixel 8a)
 //! ```
 
-use beardog_errors::{phase2_not_implemented, BearDogError};
+use beardog_errors::{BearDogError, phase2_not_implemented};
 use beardog_traits::unified::{
     CredentialHierarchy, CredentialInfo, CredentialNode, CredentialReplicationData,
     CredentialRequest, HsmProtocol, MultiCredentialCapabilities, MultiCredentialHsmProvider,

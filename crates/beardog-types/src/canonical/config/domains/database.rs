@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 /// Database domain configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DatabaseDomainConfig {
     /// Primary database connection
     pub primary: DatabaseConnectionConfig,
@@ -48,16 +48,6 @@ pub struct MigrationConfig {
     pub auto_migrate: bool,
     /// Migration directory
     pub directory: String,
-}
-
-impl Default for DatabaseDomainConfig {
-    fn default() -> Self {
-        Self {
-            primary: DatabaseConnectionConfig::default(),
-            pool: DatabasePoolConfig::default(),
-            migrations: MigrationConfig::default(),
-        }
-    }
 }
 
 impl DatabaseConnectionConfig {
@@ -138,7 +128,7 @@ impl DatabasePoolConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
-    pub fn with_defaults() -> Self {
+    pub const fn with_defaults() -> Self {
         Self {
             min_idle: Self::DEFAULT_MIN_IDLE,
             max_size: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u32,
