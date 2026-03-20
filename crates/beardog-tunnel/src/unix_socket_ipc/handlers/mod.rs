@@ -160,7 +160,7 @@ impl HandlerRegistry {
         // Phase 1: Create registry with initial handlers
         let registry = Arc::new(Self {
             handlers: tokio::sync::RwLock::new(vec![
-                Arc::new(health::HealthHandler),
+                Arc::new(health::HealthHandler::new()),
                 Arc::new(capabilities::CapabilitiesHandler::new(identity.clone())),
                 Arc::new(security::SecurityHandler::new(identity.clone())),
                 Arc::new(btsp::BtspHandler),
@@ -227,6 +227,21 @@ impl HandlerRegistry {
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
+        // Backward-compat bridge: bare crypto names → namespaced equivalents.
+        // Songbird and other primals may call bare names during migration
+        // to capability-based routing via the Neural API.
+        let method = match method {
+            "x25519_generate_ephemeral" => "crypto.x25519_generate_ephemeral",
+            "x25519_derive_secret" => "crypto.x25519_derive_secret",
+            "sign_ed25519" => "crypto.sign_ed25519",
+            "verify_ed25519" => "crypto.verify_ed25519",
+            "chacha20_poly1305_encrypt" => "crypto.chacha20_poly1305_encrypt",
+            "chacha20_poly1305_decrypt" => "crypto.chacha20_poly1305_decrypt",
+            "hmac_sha256" => "crypto.hmac_sha256",
+            "blake3_hash" => "crypto.blake3_hash",
+            other => other,
+        };
+
         // Try each handler in order
         let handlers = self.handlers.read().await;
         for handler in handlers.iter() {

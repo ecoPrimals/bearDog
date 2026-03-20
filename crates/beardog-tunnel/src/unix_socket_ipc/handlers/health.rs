@@ -6,7 +6,7 @@
 //! These methods are essential for service discovery, load balancing, and monitoring.
 
 use super::MethodHandler;
-use super::utils::get_primal_name;
+use super::utils::{IdentityHints, get_primal_name_with};
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
 use chrono::Utc;
@@ -20,14 +20,41 @@ use tracing::info;
 /// - `health` - Health status
 /// - `status` - Service status
 /// - `check` - Generic check
+/// - `health.liveness` - Ecosystem standard liveness probe
+/// - `health.readiness` - Ecosystem standard readiness probe
+/// - `health.check` - Ecosystem standard health check
 ///
 /// All return the same response with service metadata.
-pub struct HealthHandler;
+pub struct HealthHandler {
+    identity: IdentityHints,
+}
+
+impl HealthHandler {
+    /// Production: identity from environment (see [`IdentityHints::from_env`]).
+    pub fn new() -> Self {
+        Self {
+            identity: IdentityHints::from_env(),
+        }
+    }
+
+    /// Tests / DI: explicit identity hints (no `PRIMAL_NAME` env mutation).
+    pub fn with_identity_hints(identity: IdentityHints) -> Self {
+        Self { identity }
+    }
+}
 
 #[async_trait]
 impl MethodHandler for HealthHandler {
     fn methods(&self) -> Vec<&'static str> {
-        vec!["ping", "health", "status", "check"]
+        vec![
+            "ping",
+            "health",
+            "status",
+            "check",
+            "health.liveness",
+            "health.readiness",
+            "health.check",
+        ]
     }
 
     async fn handle(
@@ -40,7 +67,7 @@ impl MethodHandler for HealthHandler {
 
         Ok(serde_json::json!({
             "status": "healthy",
-            "primal": get_primal_name(),
+            "primal": get_primal_name_with(&self.identity),
             "version": env!("CARGO_PKG_VERSION"),
             "protocol": "JSON-RPC",
             "timestamp": Utc::now().to_rfc3339(),
@@ -51,27 +78,29 @@ impl MethodHandler for HealthHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
+    use crate::unix_socket_ipc::handlers::utils::IdentityHints;
 
     #[tokio::test]
     async fn test_health_handler_methods() {
-        let handler = HealthHandler;
+        let handler = HealthHandler::new();
         let methods = handler.methods();
 
-        assert_eq!(methods.len(), 4);
+        assert_eq!(methods.len(), 7);
         assert!(methods.contains(&"ping"));
         assert!(methods.contains(&"health"));
         assert!(methods.contains(&"status"));
         assert!(methods.contains(&"check"));
+        assert!(methods.contains(&"health.liveness"));
+        assert!(methods.contains(&"health.readiness"));
+        assert!(methods.contains(&"health.check"));
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_health_check_response() {
-        let prev = std::env::var("PRIMAL_NAME").ok();
-        beardog_errors::process_env::set_var("PRIMAL_NAME", "beardog");
-
-        let handler = HealthHandler;
+        let handler = HealthHandler::with_identity_hints(IdentityHints {
+            primal_name: Some("beardog".to_string()),
+            ..Default::default()
+        });
 
         // Use safe mock provider (health handler doesn't actually use it)
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
@@ -86,20 +115,22 @@ mod tests {
         assert_eq!(response["protocol"], "JSON-RPC");
         assert!(response["version"].is_string());
         assert!(response["timestamp"].is_string());
-
-        if let Some(p) = prev {
-            beardog_errors::process_env::set_var("PRIMAL_NAME", p);
-        } else {
-            beardog_errors::process_env::remove_var("PRIMAL_NAME");
-        }
     }
 
     #[tokio::test]
     async fn test_all_method_names() {
-        let handler = HealthHandler;
+        let handler = HealthHandler::new();
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
-        for method in &["ping", "health", "status", "check"] {
+        for method in &[
+            "ping",
+            "health",
+            "status",
+            "check",
+            "health.liveness",
+            "health.readiness",
+            "health.check",
+        ] {
             let result = handler.handle(method, None, &btsp_provider).await;
             assert!(result.is_ok(), "Method {} should succeed", method);
         }

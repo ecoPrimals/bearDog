@@ -6,7 +6,7 @@
 //! Every primal should expose these methods to enable capability-based discovery.
 
 use super::MethodHandler;
-use super::utils::get_primal_name;
+use super::utils::{IdentityHints, get_primal_name_with};
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
 use beardog_types::primal_identity::PrimalIdentity;
@@ -23,6 +23,7 @@ use tracing::info;
 /// from environment variables at runtime (no hardcoding).
 pub struct CapabilitiesHandler {
     identity: Arc<PrimalIdentity>,
+    primal_hints: IdentityHints,
 }
 
 #[async_trait]
@@ -32,6 +33,7 @@ impl MethodHandler for CapabilitiesHandler {
             "capabilities",
             "get_capabilities",
             "discover_capabilities",
+            "capabilities.list",
             "identity",
             "whoami",
             "get_identity",
@@ -45,7 +47,9 @@ impl MethodHandler for CapabilitiesHandler {
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
         match method {
-            "capabilities" | "get_capabilities" => self.handle_capabilities().await,
+            "capabilities" | "get_capabilities" | "capabilities.list" => {
+                self.handle_capabilities().await
+            }
             "discover_capabilities" => self.handle_discover_capabilities().await,
             "identity" | "whoami" | "get_identity" => self.handle_identity().await,
             _ => Err(format!("Method not found: {method}")),
@@ -55,8 +59,19 @@ impl MethodHandler for CapabilitiesHandler {
 
 impl CapabilitiesHandler {
     /// Create a new CapabilitiesHandler with explicit identity injection
-    pub const fn new(identity: Arc<PrimalIdentity>) -> Self {
-        Self { identity }
+    pub fn new(identity: Arc<PrimalIdentity>) -> Self {
+        Self {
+            identity,
+            primal_hints: IdentityHints::from_env(),
+        }
+    }
+
+    /// Tests / DI: explicit primal name hints (no `PRIMAL_NAME` env mutation).
+    pub fn with_hints(identity: Arc<PrimalIdentity>, primal_hints: IdentityHints) -> Self {
+        Self {
+            identity,
+            primal_hints,
+        }
     }
 
     /// Handle capabilities request
@@ -71,7 +86,7 @@ impl CapabilitiesHandler {
         info!("🎯 Capabilities requested - exposing our capabilities");
 
         Ok(serde_json::json!({
-            "primal": get_primal_name(),
+            "primal": get_primal_name_with(&self.primal_hints),
             "family_id": family_id,
             "node_id": node_id,
             "provided_capabilities": [
@@ -192,7 +207,7 @@ impl CapabilitiesHandler {
         );
 
         Ok(serde_json::json!({
-            "primal": get_primal_name(),
+            "primal": get_primal_name_with(&self.primal_hints),
             "family": family_id,
             "node": node_id,
             "encryption_tag": encryption_tag,
@@ -204,30 +219,35 @@ impl CapabilitiesHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
+    use crate::unix_socket_ipc::handlers::utils::IdentityHints;
+
+    fn test_hints() -> IdentityHints {
+        IdentityHints {
+            primal_name: Some("beardog".to_string()),
+            ..Default::default()
+        }
+    }
 
     #[tokio::test]
     async fn test_capabilities_handler_methods() {
         let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
-        let handler = CapabilitiesHandler::new(identity);
+        let handler = CapabilitiesHandler::with_hints(identity, test_hints());
         let methods = handler.methods();
 
-        assert_eq!(methods.len(), 6);
+        assert_eq!(methods.len(), 7);
         assert!(methods.contains(&"capabilities"));
         assert!(methods.contains(&"get_capabilities"));
         assert!(methods.contains(&"discover_capabilities"));
+        assert!(methods.contains(&"capabilities.list"));
         assert!(methods.contains(&"identity"));
         assert!(methods.contains(&"whoami"));
         assert!(methods.contains(&"get_identity"));
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_capabilities_response() {
-        let prev = std::env::var("PRIMAL_NAME").ok();
-        beardog_errors::process_env::set_var("PRIMAL_NAME", "beardog");
         let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
-        let handler = CapabilitiesHandler::new(identity);
+        let handler = CapabilitiesHandler::with_hints(identity, test_hints());
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         let result = handler.handle("capabilities", None, &btsp_provider).await;
@@ -240,21 +260,12 @@ mod tests {
         assert!(response["family_id"].is_string());
         assert!(response["node_id"].is_string());
         assert!(response["btsp_enabled"].as_bool().unwrap());
-
-        if let Some(p) = prev {
-            beardog_errors::process_env::set_var("PRIMAL_NAME", p);
-        } else {
-            beardog_errors::process_env::remove_var("PRIMAL_NAME");
-        }
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_identity_response() {
-        let prev = std::env::var("PRIMAL_NAME").ok();
-        beardog_errors::process_env::set_var("PRIMAL_NAME", "beardog");
         let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
-        let handler = CapabilitiesHandler::new(identity);
+        let handler = CapabilitiesHandler::with_hints(identity, test_hints());
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         let result = handler.handle("identity", None, &btsp_provider).await;
@@ -266,18 +277,12 @@ mod tests {
         assert!(response["family"].is_string());
         assert!(response["node"].is_string());
         assert!(response["encryption_tag"].is_string());
-
-        if let Some(p) = prev {
-            beardog_errors::process_env::set_var("PRIMAL_NAME", p);
-        } else {
-            beardog_errors::process_env::remove_var("PRIMAL_NAME");
-        }
     }
 
     #[tokio::test]
     async fn test_discover_capabilities_response() {
         let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
-        let handler = CapabilitiesHandler::new(identity);
+        let handler = CapabilitiesHandler::with_hints(identity, test_hints());
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         let result = handler
@@ -308,7 +313,7 @@ mod tests {
     #[tokio::test]
     async fn test_all_capability_aliases() {
         let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
-        let handler = CapabilitiesHandler::new(identity);
+        let handler = CapabilitiesHandler::with_hints(identity, test_hints());
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         for method in &["capabilities", "get_capabilities"] {
@@ -320,7 +325,7 @@ mod tests {
     #[tokio::test]
     async fn test_all_identity_aliases() {
         let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
-        let handler = CapabilitiesHandler::new(identity);
+        let handler = CapabilitiesHandler::with_hints(identity, test_hints());
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         for method in &["identity", "whoami", "get_identity"] {
