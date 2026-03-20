@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Data Integrity & Corruption Scenarios
 //!
 //! Tests data corruption detection, quarantine, and recovery from backups.

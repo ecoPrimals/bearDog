@@ -182,7 +182,7 @@ mod tests {
         let listener = AndroidSocket::bind(&endpoint);
         assert!(listener.is_ok(), "Abstract socket binding failed");
 
-        if let Ok(mut listener) = listener {
+        if let Ok(listener) = listener {
             // Verify local_addr works
             let addr = listener.local_addr().unwrap();
             assert!(addr.starts_with('@'));
@@ -206,7 +206,7 @@ mod tests {
         #[cfg(target_os = "linux")]
         {
             // Only test binding on Linux (where abstract sockets work)
-            let mut listener = AndroidSocket::bind(&endpoint).unwrap();
+            let listener = AndroidSocket::bind(&endpoint).unwrap();
 
             // Verify universal trait methods
             let addr = listener.local_addr().unwrap();

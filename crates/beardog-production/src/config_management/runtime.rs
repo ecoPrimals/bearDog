@@ -94,30 +94,30 @@ impl ProductionConfigManager {
     fn load_from_environment(&self, config: &mut ProductionConfig) -> Result<()> {
         debug!("Loading configuration from environment variables");
 
-        if let Ok(port) = env::var("BEARDOG_PORT") {
+        if let Ok(port) = beardog_errors::process_env::var("BEARDOG_PORT") {
             config.application.port = port.parse()
                 .map_err(|_| BearDogError::validation("Invalid BEARDOG_PORT value"))?;
         }
         
-        if let Ok(bind_address) = env::var("BEARDOG_BIND_ADDRESS") {
+        if let Ok(bind_address) = beardog_errors::process_env::var("BEARDOG_BIND_ADDRESS") {
             config.application.bind_address = bind_address;
         }
         
-        if let Ok(worker_threads) = env::var("BEARDOG_WORKER_THREADS") {
+        if let Ok(worker_threads) = beardog_errors::process_env::var("BEARDOG_WORKER_THREADS") {
             config.application.worker_threads = worker_threads.parse()
                 .map_err(|_| BearDogError::validation("Invalid BEARDOG_WORKER_THREADS value"))?;
         }
 
-        if let Ok(db_host) = env::var("BEARDOG_DB_HOST") {
+        if let Ok(db_host) = beardog_errors::process_env::var("BEARDOG_DB_HOST") {
             config.database.primary.host = db_host;
         }
         
-        if let Ok(db_port) = env::var("BEARDOG_DB_PORT") {
+        if let Ok(db_port) = beardog_errors::process_env::var("BEARDOG_DB_PORT") {
             config.database.primary.port = db_port.parse()
                 .map_err(|_| BearDogError::validation("Invalid BEARDOG_DB_PORT value"))?;
         }
 
-        if let Ok(log_level) = env::var("BEARDOG_LOG_LEVEL") {
+        if let Ok(log_level) = beardog_errors::process_env::var("BEARDOG_LOG_LEVEL") {
             config.logging.level = log_level;
         }
         
@@ -236,8 +236,8 @@ impl ProductionConfigManager {
         });
 
         if matches!(environment, Environment::Production) {
-            if let Ok(vault_endpoint) = env::var("VAULT_ENDPOINT") {
-                if let Ok(vault_token) = env::var("VAULT_TOKEN") {
+            if let Ok(vault_endpoint) = beardog_errors::process_env::var("VAULT_ENDPOINT") {
+                if let Ok(vault_token) = beardog_errors::process_env::var("VAULT_TOKEN") {
                     sources.push(ConfigSource::UniversalSecretsManagement {
                         endpoint: vault_endpoint,
                         provider_type: "HashiCorpVault".to_string(),
@@ -250,9 +250,9 @@ impl ProductionConfigManager {
                 }
             }
             
-            if env::var("KUBERNETES_SERVICE_HOST").is_ok() {
+            if beardog_errors::process_env::var("KUBERNETES_SERVICE_HOST").is_ok() {
                 sources.push(ConfigSource::UniversalContainerSecrets {
-                    namespace: env::var("KUBERNETES_NAMESPACE")
+                    namespace: beardog_errors::process_env::var("KUBERNETES_NAMESPACE")
                         .unwrap_or_else(|_| "default".to_string()),
                     provider_type: "kubernetes".to_string(),
                 });
@@ -320,7 +320,7 @@ impl SecretsManager {
         match provider {
             SecretsProvider::EnvironmentVariables => {
                 let env_key = format!("BEARDOG_SECRET_{}", key.replace('/', "_").to_uppercase());
-                if let Ok(value) = env::var(&env_key) {
+                if let Ok(value) = beardog_errors::process_env::var(&env_key) {
                     Ok(SecretValue {
                         value,
                         expires_at: None,
@@ -358,12 +358,12 @@ impl SecretsManager {
 
         if matches!(environment, Environment::Production) {
             // Add production secrets providers
-            if let Ok(vault_endpoint) = env::var("VAULT_ENDPOINT") {
-                if let Ok(vault_token) = env::var("VAULT_TOKEN") {
+            if let Ok(vault_endpoint) = beardog_errors::process_env::var("VAULT_ENDPOINT") {
+                if let Ok(vault_token) = beardog_errors::process_env::var("VAULT_TOKEN") {
                     providers.insert(0, SecretsProvider::Vault {
                         endpoint: vault_endpoint,
                         token: vault_token,
-                        mount_path: env::var("VAULT_MOUNT_PATH").unwrap_or_else(|_| "secret".to_string()),
+                        mount_path: beardog_errors::process_env::var("VAULT_MOUNT_PATH").unwrap_or_else(|_| "secret".to_string()),
                     });
                 }
             }
@@ -396,7 +396,7 @@ impl Default for ApplicationConfig {
             version: env!("CARGO_PKG_VERSION").to_string(),
             environment: "development".to_string(),
             instance_id: uuid::Uuid::new_v4().to_string(),
-            bind_address: env::var("BEARDOG_BIND_ADDRESS")
+            bind_address: beardog_errors::process_env::var("BEARDOG_BIND_ADDRESS")
                 .unwrap_or_else(|_| {
                     use beardog_types::constants::domains::network::config;
                     config::default_service_host()
@@ -430,15 +430,15 @@ impl Default for DatabaseConnection {
         let network_config = NetworkConfig::default();
         
         Self {
-            host: env::var("BEARDOG_DB_HOST")
+            host: beardog_errors::process_env::var("BEARDOG_DB_HOST")
                 .unwrap_or_else(|_| network_config.default_host.clone()),
-            port: env::var("BEARDOG_DB_PORT")
+            port: beardog_errors::process_env::var("BEARDOG_DB_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(5432),
-            database: env::var("BEARDOG_DB_NAME")
+            database: beardog_errors::process_env::var("BEARDOG_DB_NAME")
                 .unwrap_or_else(|_| "beardog".to_string()),
-            username: env::var("BEARDOG_DB_USER")
+            username: beardog_errors::process_env::var("BEARDOG_DB_USER")
                 .unwrap_or_else(|_| "beardog".to_string()),
             password: String::new(),
             ssl_mode: "require".to_string(),

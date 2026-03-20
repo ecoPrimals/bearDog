@@ -635,6 +635,21 @@ mod tests {
         let metrics = monitor.get_system_metrics().await;
         assert!(metrics.cpu_usage_percent >= 0.0);
     }
+
+    #[tokio::test]
+    async fn test_start_eventually_updates_metrics_snapshot() {
+        let mut monitor = SystemMonitor::with_config(SystemMonitorConfig {
+            check_interval_ms: 15,
+            ..SystemMonitorConfig::default()
+        })
+        .expect("monitor");
+        monitor.start().expect("start");
+        tokio::time::sleep(std::time::Duration::from_millis(80)).await;
+        let metrics = monitor.get_system_metrics().await;
+        assert!(metrics.last_updated.is_some());
+        assert!(metrics.cpu_usage_percent >= 0.0);
+        let _ = monitor.stop();
+    }
 }
 
 impl Default for SystemMonitor {

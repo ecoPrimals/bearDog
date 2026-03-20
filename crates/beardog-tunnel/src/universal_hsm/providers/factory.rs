@@ -257,7 +257,7 @@ impl ProviderFactory {
                 }
 
                 // Verify AWS credentials are configured
-                if std::env::var("AWS_ACCESS_KEY_ID").is_err() {
+                if beardog_errors::process_env::var("AWS_ACCESS_KEY_ID").is_err() {
                     warn!("AWS credentials not found in environment");
                     return Err(BearDogError::business(
                         "AWS credentials not configured (AWS_ACCESS_KEY_ID missing)".to_string(),
@@ -276,7 +276,7 @@ impl ProviderFactory {
                 }
 
                 // Verify Azure credentials are configured
-                if std::env::var("AZURE_CLIENT_ID").is_err() {
+                if beardog_errors::process_env::var("AZURE_CLIENT_ID").is_err() {
                     warn!("Azure credentials not found in environment");
                     return Err(BearDogError::business(
                         "Azure credentials not configured (AZURE_CLIENT_ID missing)".to_string(),
@@ -295,7 +295,7 @@ impl ProviderFactory {
                 }
 
                 // Verify GCP credentials are configured
-                if std::env::var("GOOGLE_APPLICATION_CREDENTIALS").is_err() {
+                if beardog_errors::process_env::var("GOOGLE_APPLICATION_CREDENTIALS").is_err() {
                     warn!("GCP credentials not found in environment");
                     return Err(BearDogError::business(
                         "GCP credentials not configured (GOOGLE_APPLICATION_CREDENTIALS missing)".to_string(),

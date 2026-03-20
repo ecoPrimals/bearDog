@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Comprehensive Error Handling Tests
 //!
 //! This module contains extensive tests for `BearDog`'s error handling system,

@@ -35,15 +35,15 @@ impl Default for SimpleEcosystemConfig {
         Self {
             // Use capability-based discovery instead of hardcoded service names
             enabled_services: DEFAULT_CAPABILITIES.iter().map(|&s| s.into()).collect(),
-            discovery_timeout_ms: std::env::var("BEARDOG_DISCOVERY_TIMEOUT_MS")
+            discovery_timeout_ms: beardog_errors::process_env::var("BEARDOG_DISCOVERY_TIMEOUT_MS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(5000),
-            health_check_interval_ms: std::env::var("BEARDOG_HEALTH_CHECK_INTERVAL_MS")
+            health_check_interval_ms: beardog_errors::process_env::var("BEARDOG_HEALTH_CHECK_INTERVAL_MS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(30000),
-            retry_attempts: std::env::var("BEARDOG_RETRY_ATTEMPTS")
+            retry_attempts: beardog_errors::process_env::var("BEARDOG_RETRY_ATTEMPTS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(3),
@@ -130,7 +130,7 @@ impl SimpleEcosystemManager {
                 self.get_environment_endpoint(service_name)
                     .unwrap_or_else(|| {
                         // Ultimate fallback to universal discovery service
-                        let base_endpoint = std::env::var("UNIVERSAL_DISCOVERY_ENDPOINT")
+                        let base_endpoint = beardog_errors::process_env::var("UNIVERSAL_DISCOVERY_ENDPOINT")
                             .unwrap_or_else(|_| {
                                 use beardog_types::canonical::config::network::NetworkConfig;
                                 let config = NetworkConfig::default();
@@ -165,30 +165,30 @@ impl SimpleEcosystemManager {
     fn get_environment_endpoint(&self, capability_name: &str) -> Option<String> {
         // Try capability-based environment variables first
         let capability_env = format!("{}_ENDPOINT", capability_name.to_uppercase());
-        if let Ok(endpoint) = std::env::var(&capability_env) {
+        if let Ok(endpoint) = beardog_errors::process_env::var(&capability_env) {
             return Some(endpoint);
         }
 
         // Try legacy BearDog environment variables as fallback
         let legacy_env = format!("BEARDOG_{}_ENDPOINT", capability_name.to_uppercase());
-        if let Ok(endpoint) = std::env::var(&legacy_env) {
+        if let Ok(endpoint) = beardog_errors::process_env::var(&legacy_env) {
             return Some(endpoint);
         }
 
         // Try common capability mappings
         match capability_name {
-            "compute" => std::env::var("COMPUTE_ENDPOINT")
+            "compute" => beardog_errors::process_env::var("COMPUTE_ENDPOINT")
                 .ok()
-                .or_else(|| std::env::var("COMPUTEINTELLIGENCE_ENDPOINT").ok()),
-            "mesh" => std::env::var("MESH_ENDPOINT")
+                .or_else(|| beardog_errors::process_env::var("COMPUTEINTELLIGENCE_ENDPOINT").ok()),
+            "mesh" => beardog_errors::process_env::var("MESH_ENDPOINT")
                 .ok()
-                .or_else(|| std::env::var("SERVICEMESH_ENDPOINT").ok()),
-            "ai" => std::env::var("AI_ENDPOINT")
+                .or_else(|| beardog_errors::process_env::var("SERVICEMESH_ENDPOINT").ok()),
+            "ai" => beardog_errors::process_env::var("AI_ENDPOINT")
                 .ok()
-                .or_else(|| std::env::var("DISTRIBUTEDINTELLIGENCE_ENDPOINT").ok()),
-            "storage" => std::env::var("STORAGE_ENDPOINT")
+                .or_else(|| beardog_errors::process_env::var("DISTRIBUTEDINTELLIGENCE_ENDPOINT").ok()),
+            "storage" => beardog_errors::process_env::var("STORAGE_ENDPOINT")
                 .ok()
-                .or_else(|| std::env::var("DATASTORAGE_ENDPOINT").ok()),
+                .or_else(|| beardog_errors::process_env::var("DATASTORAGE_ENDPOINT").ok()),
             _ => None,
         }
     }

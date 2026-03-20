@@ -112,6 +112,7 @@ version = "0.1"
 workspace = true
 
 [dev-dependencies]
+serial_test.workspace = true
 tokio = { version = "1.42", features = ["full"] }
 assert_cmd = "2.0"
 predicates = "3.0"

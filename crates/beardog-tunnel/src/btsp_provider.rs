@@ -359,10 +359,10 @@ impl BeardogBtspProvider {
         // This can be expanded to multi-hop lineage traversal later
 
         // Get our family from environment (primal self-knowledge)
-        let our_family = std::env::var("FAMILY_ID")
-            .or_else(|_| std::env::var("BEARDOG_FAMILY_ID"))
+        let our_family = beardog_errors::process_env::var("FAMILY_ID")
+            .or_else(|_| beardog_errors::process_env::var("BEARDOG_FAMILY_ID"))
             .unwrap_or_else(|_| {
-                std::env::var("BEARDOG_FAMILY_UNKNOWN_LABEL")
+                beardog_errors::process_env::var("BEARDOG_FAMILY_UNKNOWN_LABEL")
                     .unwrap_or_else(|_| "unknown".to_string())
             });
 
@@ -512,7 +512,7 @@ impl BeardogBtspProvider {
     fn get_discovery_socket_paths() -> Vec<String> {
         let mut paths = Vec::new();
         for key in ["IPC_SOCKET", "DISCOVERY_SOCKET"] {
-            if let Ok(s) = std::env::var(key) {
+            if let Ok(s) = beardog_errors::process_env::var(key) {
                 if !s.is_empty() && !paths.contains(&s) {
                     paths.push(s);
                 }
@@ -522,7 +522,7 @@ impl BeardogBtspProvider {
         if !paths.contains(&generic) {
             paths.push(generic);
         }
-        let dev = std::env::var("BEARDOG_DEV_DISCOVERY_SOCKET")
+        let dev = beardog_errors::process_env::var("BEARDOG_DEV_DISCOVERY_SOCKET")
             .unwrap_or_else(|_| beardog_ipc::DISCOVERY_SOCKET_DEV_FALLBACK.to_string());
         if !paths.contains(&dev) {
             paths.push(dev);

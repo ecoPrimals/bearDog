@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 #![allow(clippy::all)]
 //! Comprehensive Authentication E2E Tests
 //! Implements scenarios E2E-AUTH-001 through E2E-AUTH-005

@@ -89,7 +89,7 @@ pub async fn run(
     ];
 
     for var in &env_vars {
-        if let Ok(value) = std::env::var(var) {
+        if let Ok(value) = beardog_errors::process_env::var(var) {
             println!("   • {var}: {value}");
         } else {
             println!("   • {var}: (not set)");

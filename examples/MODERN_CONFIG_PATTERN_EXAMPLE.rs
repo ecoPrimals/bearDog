@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Modern Config Pattern Example - Best Practices
 //
 // This example shows how to write robust, testable, concurrent-safe
@@ -88,34 +89,37 @@ impl ResourceLimits {
     ///
     /// # Example
     /// ```
-    /// std::env::set_var("BEARDOG_RESOURCE_MEMORY_MB", "2048");
-    /// let limits = ResourceLimits::from_env();
+    /// let limits = ResourceLimits::from_env_get(|k| match k {
+    ///     "BEARDOG_RESOURCE_MEMORY_MB" => Some("2048".to_string()),
+    ///     _ => None,
+    /// });
     /// assert_eq!(limits.memory_mb, 2048);
     /// ```
     #[must_use]
-    pub fn from_env() -> Self {
+    pub fn from_env_get(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            memory_mb: std::env::var("BEARDOG_RESOURCE_MEMORY_MB")
-                .ok()
+            memory_mb: get("BEARDOG_RESOURCE_MEMORY_MB")
                 .and_then(|m| m.parse().ok())
                 .unwrap_or(Self::DEFAULT_MEMORY_MB),
-            cpu_percent: std::env::var("BEARDOG_RESOURCE_CPU_PERCENT")
-                .ok()
+            cpu_percent: get("BEARDOG_RESOURCE_CPU_PERCENT")
                 .and_then(|c| c.parse().ok())
                 .unwrap_or(Self::DEFAULT_CPU_PERCENT),
-            disk_mb: std::env::var("BEARDOG_RESOURCE_DISK_MB")
-                .ok()
+            disk_mb: get("BEARDOG_RESOURCE_DISK_MB")
                 .and_then(|d| d.parse().ok())
                 .unwrap_or(Self::DEFAULT_DISK_MB),
-            network_mbps: std::env::var("BEARDOG_RESOURCE_NETWORK_MBPS")
-                .ok()
+            network_mbps: get("BEARDOG_RESOURCE_NETWORK_MBPS")
                 .and_then(|n| n.parse().ok())
                 .unwrap_or(Self::DEFAULT_NETWORK_MBPS),
-            concurrent_connections: std::env::var("BEARDOG_MAX_CONCURRENT_CONNECTIONS")
-                .ok()
+            concurrent_connections: get("BEARDOG_MAX_CONCURRENT_CONNECTIONS")
                 .and_then(|c| c.parse().ok())
                 .unwrap_or(Self::DEFAULT_CONCURRENT_CONNECTIONS),
         }
+    }
+
+    /// Create `ResourceLimits` from environment variables (reads the real process environment).
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self::from_env_get(|k| beardog_errors::process_env::var(k).ok())
     }
 
     // ✅ GOOD: Builder pattern for programmatic configuration
@@ -268,35 +272,14 @@ mod tests {
         // ✅ No global state, safe to run in parallel
     }
 
-    // ✅ GOOD: Test env reading with explicit cleanup
     #[test]
-    fn test_from_env_with_override() {
-        // Clear env vars first for isolation
-        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
-        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_CPU_PERCENT");
-
-        // Set test value
-        beardog_errors::process_env::set_var("BEARDOG_RESOURCE_MEMORY_MB", "2048");
-
-        let limits = ResourceLimits::from_env();
+    fn test_from_env_get_injected_values() {
+        let limits = ResourceLimits::from_env_get(|k| match k {
+            "BEARDOG_RESOURCE_MEMORY_MB" => Some("2048".to_string()),
+            _ => None,
+        });
         assert_eq!(limits.memory_mb, 2048);
-
-        // Cleanup
-        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
-
-        // ⚠️ BETTER: Use temp_env or serial_test crate for automatic cleanup
-    }
-
-    // ✅ EXCELLENT: Using serial_test for proper isolation
-    #[cfg(feature = "serial_test")]
-    #[serial_test::serial]
-    #[test]
-    fn test_from_env_serial() {
-        beardog_errors::process_env::set_var("BEARDOG_RESOURCE_MEMORY_MB", "2048");
-        let limits = ResourceLimits::from_env();
-        assert_eq!(limits.memory_mb, 2048);
-        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
-        // ✅ serial_test ensures tests run one at a time, no races
+        assert_eq!(limits.cpu_percent, ResourceLimits::DEFAULT_CPU_PERCENT);
     }
 
     // ✅ EXCELLENT: Using temp_env for automatic cleanup
@@ -402,7 +385,7 @@ mod usage_examples {
 // impl Default for ResourceLimits {
 //     fn default() -> Self {
 //         Self {
-//             memory_mb: std::env::var("...").unwrap_or(1024),
+//             memory_mb: beardog_errors::process_env::var("...").unwrap_or(1024),
 //             // Implicit env reading, non-deterministic
 //         }
 //     }

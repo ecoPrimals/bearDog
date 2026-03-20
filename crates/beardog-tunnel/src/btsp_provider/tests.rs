@@ -144,3 +144,66 @@ async fn test_cleanup_session_key_no_op() {
     let result = provider.cleanup_session_key("test_peer").await;
     assert!(result.is_ok(), "Cleanup should succeed");
 }
+
+#[tokio::test]
+async fn test_get_metrics_and_tunnel_queries() {
+    let hsm = create_test_hsm().await;
+    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+    let provider = BeardogBtspProvider::new(hsm, genetics)
+        .await
+        .expect("provider");
+
+    let m = provider.get_metrics();
+    assert_eq!(m.tunnels_established, 0);
+    assert_eq!(m.tunnels_active, 0);
+
+    assert!(provider.get_tunnel("nope").is_none());
+    assert!(provider.get_peer_trust_record("nope").is_none());
+
+    let bs = provider.birdsong_manager();
+    assert!(Arc::strong_count(&bs) >= 1);
+}
+
+#[tokio::test]
+async fn test_contact_exchange_fails_without_trusted_peer() {
+    let hsm = create_test_hsm().await;
+    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+    let provider = BeardogBtspProvider::new(hsm, genetics)
+        .await
+        .expect("provider");
+
+    let err = provider
+        .contact_exchange("unknown-peer", "lineage", 3)
+        .await
+        .unwrap_err();
+    let msg = format!("{err}");
+    assert!(
+        msg.contains("not found") || msg.contains("genetic") || msg.contains("lineage"),
+        "{msg}"
+    );
+}
+
+#[tokio::test]
+async fn test_establish_tunnel_registers_with_get_tunnel() {
+    use beardog_capabilities::traits::{PeerEndpoint, SecureTunnelProvider};
+
+    let hsm = create_test_hsm().await;
+    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+    let provider = BeardogBtspProvider::new(hsm, genetics)
+        .await
+        .expect("provider");
+
+    let handle = provider
+        .establish_tunnel(PeerEndpoint {
+            id: "registered-peer".to_string(),
+            endpoint: "unix:///tmp/registered.sock".to_string(),
+            public_key: Some(vec![3u8; 32]),
+        })
+        .await
+        .expect("establish");
+
+    let found = provider.get_tunnel(&handle.id);
+    assert!(found.is_some());
+    let (_, peer_id) = found.expect("tunnel");
+    assert_eq!(peer_id, "registered-peer");
+}

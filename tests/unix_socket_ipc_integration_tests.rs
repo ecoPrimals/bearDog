@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Integration tests for Unix Socket IPC
 //!
 //! These tests verify the complete IPC flow for `BearDog`'s Unix socket server:
@@ -23,7 +24,7 @@ use tokio::net::UnixStream;
 
 use beardog_genetics::EcosystemGeneticEngine;
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
-use beardog_tunnel::tunnel::hsm::HsmManager;
+use beardog_tunnel::tunnel::hsm::manager::{HsmAutoInitConfig, HsmManager};
 use beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer;
 use beardog_types::primal_identity::PrimalIdentity;
 
@@ -36,13 +37,13 @@ fn test_socket() -> (TempDir, PathBuf) {
 
 // Helper to create minimal BTSP provider for testing
 async fn create_test_btsp_provider() -> Arc<BeardogBtspProvider> {
-    // Use software HSM for tests
-    beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "software");
-
     let hsm = Arc::new(
-        HsmManager::auto_initialize()
-            .await
-            .expect("HSM init failed"),
+        HsmManager::auto_initialize_with_config(HsmAutoInitConfig {
+            mode: "software".to_string(),
+            auto_init: true,
+        })
+        .await
+        .expect("HSM init failed"),
     );
     let genetics = Arc::new(EcosystemGeneticEngine::new().expect("Genetics init failed"));
 

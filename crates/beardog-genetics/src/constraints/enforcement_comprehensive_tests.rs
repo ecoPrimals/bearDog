@@ -93,8 +93,12 @@ fn test_valid_operation_passes() {
 
     let operation = create_test_operation(OperationType::Encrypt, Some("data/test.txt"));
 
-    let result =
-        ConstraintEnforcer::verify_operation(&signed, &operation, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &operation,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
 
     assert!(result.is_ok());
 }
@@ -111,8 +115,12 @@ fn test_invalid_signature_fails() {
 
     let operation = create_test_operation(OperationType::Encrypt, Some("data/test.txt"));
 
-    let result =
-        ConstraintEnforcer::verify_operation(&signed, &operation, wrong_verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &operation,
+        wrong_verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
 
     assert!(result.is_err(), "Should fail with wrong key");
     match result {
@@ -136,8 +144,12 @@ fn test_use_count_exceeded_fails() {
 
     let operation = create_test_operation(OperationType::Encrypt, Some("data/test.txt"));
 
-    let result =
-        ConstraintEnforcer::verify_operation(&signed, &operation, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &operation,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
 
     assert!(result.is_err());
     match result {
@@ -168,8 +180,12 @@ fn test_forbidden_operation_fails() {
 
     let operation = create_test_operation(OperationType::Sign, Some("data/test.txt"));
 
-    let result =
-        ConstraintEnforcer::verify_operation(&signed, &operation, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &operation,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
 
     assert!(result.is_err());
     match result {
@@ -188,8 +204,12 @@ fn test_read_only_path_write_fails() {
     // Try to modify a path in read_only list
     let operation = create_test_operation(OperationType::Modify, Some("secret/password.txt"));
 
-    let result =
-        ConstraintEnforcer::verify_operation(&signed, &operation, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &operation,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
 
     assert!(result.is_err());
 }
@@ -211,8 +231,12 @@ fn test_cannot_delete_path_fails() {
     // Try to delete a path in cannot_delete list
     let operation = create_test_operation(OperationType::Delete, Some("critical/data.bin"));
 
-    let result =
-        ConstraintEnforcer::verify_operation(&signed, &operation, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &operation,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
 
     assert!(result.is_err(), "Should fail to delete protected path");
     match result {
@@ -235,7 +259,12 @@ fn test_short_public_key_fails() {
     // Public key too short
     let short_key = vec![1u8; 16]; // Only 16 bytes instead of 32
 
-    let result = ConstraintEnforcer::verify_operation(&signed, &operation, &short_key);
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &operation,
+        &short_key,
+        &ConstraintEnforcementPolicy::default(),
+    );
 
     assert!(result.is_err());
     match result {
@@ -257,8 +286,12 @@ fn test_tampered_constraints_fail() {
 
     let operation = create_test_operation(OperationType::Encrypt, Some("data/test.txt"));
 
-    let result =
-        ConstraintEnforcer::verify_operation(&signed, &operation, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &operation,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
 
     assert!(result.is_err());
     match result {
@@ -283,8 +316,13 @@ fn test_multiple_operations_tracking() {
     };
     let signed1 = sign_constraints(constraints1, &signing_key);
     assert!(
-        ConstraintEnforcer::verify_operation(&signed1, &operation, verifying_key.as_bytes())
-            .is_ok()
+        ConstraintEnforcer::verify_operation(
+            &signed1,
+            &operation,
+            verifying_key.as_bytes(),
+            &ConstraintEnforcementPolicy::default()
+        )
+        .is_ok()
     );
 
     // Second operation - should pass
@@ -297,8 +335,13 @@ fn test_multiple_operations_tracking() {
     };
     let signed2 = sign_constraints(constraints2, &signing_key);
     assert!(
-        ConstraintEnforcer::verify_operation(&signed2, &operation, verifying_key.as_bytes())
-            .is_ok()
+        ConstraintEnforcer::verify_operation(
+            &signed2,
+            &operation,
+            verifying_key.as_bytes(),
+            &ConstraintEnforcementPolicy::default()
+        )
+        .is_ok()
     );
 
     // Third operation - should pass
@@ -311,8 +354,13 @@ fn test_multiple_operations_tracking() {
     };
     let signed3 = sign_constraints(constraints3, &signing_key);
     assert!(
-        ConstraintEnforcer::verify_operation(&signed3, &operation, verifying_key.as_bytes())
-            .is_ok()
+        ConstraintEnforcer::verify_operation(
+            &signed3,
+            &operation,
+            verifying_key.as_bytes(),
+            &ConstraintEnforcementPolicy::default()
+        )
+        .is_ok()
     );
 
     // Fourth operation - should fail (exceeded)
@@ -325,8 +373,13 @@ fn test_multiple_operations_tracking() {
     };
     let signed4 = sign_constraints(constraints4, &signing_key);
     assert!(
-        ConstraintEnforcer::verify_operation(&signed4, &operation, verifying_key.as_bytes())
-            .is_err()
+        ConstraintEnforcer::verify_operation(
+            &signed4,
+            &operation,
+            verifying_key.as_bytes(),
+            &ConstraintEnforcementPolicy::default()
+        )
+        .is_err()
     );
 }
 
@@ -359,8 +412,12 @@ fn test_empty_allowed_operations() {
 
     let operation = create_test_operation(OperationType::Encrypt, Some("data/test.txt"));
 
-    let result =
-        ConstraintEnforcer::verify_operation(&signed, &operation, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &operation,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
 
     // Should fail because no operations are explicitly allowed
     assert!(result.is_err());
@@ -377,8 +434,12 @@ fn test_permanent_lifetime_passes() {
 
     let operation = create_test_operation(OperationType::Encrypt, Some("data/test.txt"));
 
-    let result =
-        ConstraintEnforcer::verify_operation(&signed, &operation, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &operation,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
 
     assert!(result.is_ok());
 }
@@ -400,8 +461,12 @@ fn test_unrestricted_scope_allows_all() {
         OperationType::Read,
     ] {
         let operation = create_test_operation(op_type, Some("data/test.txt"));
-        let result =
-            ConstraintEnforcer::verify_operation(&signed, &operation, verifying_key.as_bytes());
+        let result = ConstraintEnforcer::verify_operation(
+            &signed,
+            &operation,
+            verifying_key.as_bytes(),
+            &ConstraintEnforcementPolicy::default(),
+        );
         assert!(result.is_ok(), "Operation {:?} should be allowed", op_type);
     }
 }
@@ -455,8 +520,12 @@ fn test_expires_at_constraint() {
 
     let operation = create_test_operation(OperationType::Encrypt, Some("data/test.txt"));
 
-    let result =
-        ConstraintEnforcer::verify_operation(&signed, &operation, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &operation,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
 
     // Should fail - key has expired
     assert!(result.is_err());
@@ -525,8 +594,12 @@ fn test_cannot_modify_path_fails() {
     // Try to modify a path in cannot_modify list
     let operation = create_test_operation(OperationType::Modify, Some("immutable/config.toml"));
 
-    let result =
-        ConstraintEnforcer::verify_operation(&signed, &operation, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &operation,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
 
     assert!(result.is_err());
 }

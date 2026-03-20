@@ -117,12 +117,24 @@ pub fn default_socket_endpoint() -> SocketEndpoint {
 /// Returns the default socket endpoint for the current Unix platform
 #[cfg(all(unix, not(target_os = "android")))]
 pub fn default_socket_endpoint() -> SocketEndpoint {
-    // Linux/macOS: Use filesystem Unix sockets
-    // These provide best performance on traditional Unix systems
-    // Use primal name from environment for self-knowledge pattern
-    let primal_name =
-        std::env::var("PRIMAL_NAME").unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string());
+    default_socket_endpoint_for_primal(None)
+}
+
+/// Default Unix filesystem socket using an optional primal name (`None` → [`env!("CARGO_PKG_NAME")`]).
+#[cfg(all(unix, not(target_os = "android")))]
+pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEndpoint {
+    let primal_name = primal_name.unwrap_or(env!("CARGO_PKG_NAME"));
     SocketEndpoint::Filesystem(PathBuf::from(format!("/tmp/{primal_name}.sock")))
+}
+
+/// Same as [`default_socket_endpoint_for_primal`] but reads `PRIMAL_NAME` from the environment.
+#[cfg(all(unix, not(target_os = "android")))]
+pub fn default_socket_endpoint_from_env() -> SocketEndpoint {
+    default_socket_endpoint_for_primal(
+        beardog_errors::process_env::var("PRIMAL_NAME")
+            .ok()
+            .as_deref(),
+    )
 }
 
 #[cfg(windows)]
@@ -139,10 +151,22 @@ pub fn default_socket_endpoint() -> SocketEndpoint {
 
 #[cfg(target_family = "wasm")]
 pub fn default_socket_endpoint() -> SocketEndpoint {
-    // WASM: Use in-process channels (no true IPC in browser)
-    let primal_name =
-        std::env::var("PRIMAL_NAME").unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string());
-    SocketEndpoint::InProcess(primal_name)
+    default_socket_endpoint_for_primal(None)
+}
+
+#[cfg(target_family = "wasm")]
+pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEndpoint {
+    let primal_name = primal_name.unwrap_or(env!("CARGO_PKG_NAME"));
+    SocketEndpoint::InProcess(primal_name.to_string())
+}
+
+#[cfg(target_family = "wasm")]
+pub fn default_socket_endpoint_from_env() -> SocketEndpoint {
+    default_socket_endpoint_for_primal(
+        beardog_errors::process_env::var("PRIMAL_NAME")
+            .ok()
+            .as_deref(),
+    )
 }
 
 /// Convert socket endpoint to string path (for CLI defaults)

@@ -46,7 +46,7 @@ pub struct DiscoveredService {
 /// Service endpoint information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceEndpoint {
-    /// Primary URL (e.g., "https://orchestrator.internal:8080")
+    /// Primary URL (e.g., `<https://orchestrator.internal:8080>`)
     pub primary_url: String,
 
     /// Fallback URLs

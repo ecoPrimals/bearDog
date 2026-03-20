@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Infant Discovery Pattern Validation Tests
 //
 // These tests validate the core principle of BearDog's infant discovery:

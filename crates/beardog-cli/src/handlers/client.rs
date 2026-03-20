@@ -18,20 +18,21 @@ static ACTIVE_SOCKET: OnceLock<String> = OnceLock::new();
 /// Get the socket path using self-knowledge pattern.
 /// Priority: ACTIVE_SOCKET > BEARDOG_SOCKET > PRIMAL_NAME-based > default
 fn discover_socket_path() -> String {
-    // First check if we have an active socket from initial connection
+    discover_socket_path_with(|key| std::env::var(key).ok())
+}
+
+fn discover_socket_path_with(get: impl Fn(&str) -> Option<String>) -> String {
     if let Some(path) = ACTIVE_SOCKET.get() {
         return path.clone();
     }
 
-    // Check environment variable
-    if let Ok(path) = std::env::var("BEARDOG_SOCKET") {
+    if let Some(path) = get("BEARDOG_SOCKET") {
         return path;
     }
 
-    // Use primal name pattern
-    let primal_name = std::env::var("PRIMAL_NAME")
-        .or_else(|_| std::env::var("BEARDOG_NAME"))
-        .unwrap_or_else(|_| "beardog".to_string());
+    let primal_name = get("PRIMAL_NAME")
+        .or_else(|| get("BEARDOG_NAME"))
+        .unwrap_or_else(|| "beardog".to_string());
 
     format!("/tmp/{primal_name}.sock")
 }
@@ -150,12 +151,8 @@ async fn execute_command(_stream: &UnixStream, command: &str) -> Result<(), Bear
     Ok(())
 }
 
-async fn send_command(
-    writer: &mut tokio::net::unix::OwnedWriteHalf,
-    reader: &mut BufReader<tokio::net::unix::OwnedReadHalf>,
-    command: &str,
-) -> Result<serde_json::Value, BearDogError> {
-    // Parse command into JSON-RPC request
+/// Build a JSON-RPC 2.0 request from a whitespace-separated CLI-style command string.
+fn build_jsonrpc_request(command: &str) -> Result<serde_json::Value, BearDogError> {
     let parts: Vec<&str> = command.split_whitespace().collect();
     if parts.is_empty() {
         return Err(BearDogError::Business {
@@ -171,12 +168,20 @@ async fn send_command(
         json!({})
     };
 
-    let request = json!({
+    Ok(json!({
         "jsonrpc": "2.0",
         "method": method,
         "params": params,
         "id": 1
-    });
+    }))
+}
+
+async fn send_command(
+    writer: &mut tokio::net::unix::OwnedWriteHalf,
+    reader: &mut BufReader<tokio::net::unix::OwnedReadHalf>,
+    command: &str,
+) -> Result<serde_json::Value, BearDogError> {
+    let request = build_jsonrpc_request(command)?;
 
     // Send request
     let request_str = serde_json::to_string(&request).map_err(|e| BearDogError::System {
@@ -247,4 +252,110 @@ fn print_help() {
     println!("  beardog> crypto.blake3_hash");
     println!("  beardog> discovery.capabilities");
     println!();
+}
+
+#[cfg(test)]
+mod client_handler_tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn test_build_jsonrpc_request_method_only() {
+        let v = build_jsonrpc_request("crypto.blake3_hash").unwrap();
+        assert_eq!(v["jsonrpc"], "2.0");
+        assert_eq!(v["method"], "crypto.blake3_hash");
+        assert_eq!(v["params"], json!({}));
+        assert_eq!(v["id"], 1);
+    }
+
+    #[test]
+    fn test_build_jsonrpc_request_with_args() {
+        let v = build_jsonrpc_request("crypto.sign_ed25519 msg1 msg2").unwrap();
+        assert_eq!(v["method"], "crypto.sign_ed25519");
+        assert_eq!(v["params"], json!({ "args": ["msg1", "msg2"] }));
+    }
+
+    #[test]
+    fn test_build_jsonrpc_request_empty_command() {
+        assert!(build_jsonrpc_request("   ").is_err());
+        assert!(build_jsonrpc_request("").is_err());
+    }
+
+    #[test]
+    fn test_discover_socket_path_beardog_socket() {
+        let mut map = HashMap::new();
+        map.insert(
+            "BEARDOG_SOCKET".to_string(),
+            "/custom/beardog.sock".to_string(),
+        );
+        let get = |k: &str| map.get(k).cloned();
+        assert_eq!(discover_socket_path_with(get), "/custom/beardog.sock");
+    }
+
+    #[test]
+    fn test_discover_socket_path_primal_name() {
+        let mut map = HashMap::new();
+        map.insert("PRIMAL_NAME".to_string(), "myprimal".to_string());
+        let get = |k: &str| map.get(k).cloned();
+        assert_eq!(discover_socket_path_with(get), "/tmp/myprimal.sock");
+    }
+
+    #[test]
+    fn test_discover_socket_path_beardog_name_fallback() {
+        let mut map = HashMap::new();
+        map.insert("BEARDOG_NAME".to_string(), "other".to_string());
+        let get = |k: &str| map.get(k).cloned();
+        assert_eq!(discover_socket_path_with(get), "/tmp/other.sock");
+    }
+
+    #[test]
+    fn test_print_help_smoke() {
+        print_help();
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn test_send_command_success() {
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+        let (client, mut server) = tokio::net::UnixStream::pair().unwrap();
+        tokio::spawn(async move {
+            let mut line = String::new();
+            let mut reader = BufReader::new(&mut server);
+            reader.read_line(&mut line).await.unwrap();
+            let response = r#"{"jsonrpc":"2.0","result":{"ok":true},"id":1}"#;
+            server.write_all(response.as_bytes()).await.unwrap();
+            server.write_all(b"\n").await.unwrap();
+        });
+
+        let (read_half, mut write_half) = client.into_split();
+        let mut reader = BufReader::new(read_half);
+        let out = send_command(&mut write_half, &mut reader, "crypto.blake3_hash")
+            .await
+            .unwrap();
+        assert_eq!(out["ok"], true);
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn test_send_command_server_error_field() {
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+        let (client, mut server) = tokio::net::UnixStream::pair().unwrap();
+        tokio::spawn(async move {
+            let mut line = String::new();
+            let mut reader = BufReader::new(&mut server);
+            reader.read_line(&mut line).await.unwrap();
+            let response = r#"{"jsonrpc":"2.0","error":{"code":-1},"id":1}"#;
+            server.write_all(response.as_bytes()).await.unwrap();
+            server.write_all(b"\n").await.unwrap();
+        });
+
+        let (read_half, mut write_half) = client.into_split();
+        let mut reader = BufReader::new(read_half);
+        let err = send_command(&mut write_half, &mut reader, "crypto.blake3_hash")
+            .await
+            .expect_err("api error");
+        assert!(err.to_string().contains("Server error") || err.to_string().contains("error"));
+    }
 }

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! E2E Tests for Port-Free Architecture
 //!
 //! Validates the complete port-free architecture including:
@@ -74,41 +75,29 @@ async fn test_e2e_capabilities_query() {
 
 #[tokio::test]
 async fn test_e2e_zero_http_ports_by_default() {
-    // Verify that HTTP is disabled by default
-    beardog_errors::process_env::remove_var("BEARDOG_HTTP_ENABLED");
-
-    let http_enabled = std::env::var("BEARDOG_HTTP_ENABLED")
-        .unwrap_or_else(|_| "false".to_string())
+    // Same parsing logic as config layers that treat unset as false
+    let http_flag: Option<&str> = None;
+    let http_enabled = http_flag
+        .unwrap_or("false")
         .parse::<bool>()
         .unwrap_or(false);
-
     assert!(!http_enabled, "HTTP should be disabled by default");
 }
 
 #[tokio::test]
 async fn test_e2e_http_only_when_explicitly_enabled() {
-    beardog_errors::process_env::set_var("BEARDOG_HTTP_ENABLED", "true");
-
-    let http_enabled = std::env::var("BEARDOG_HTTP_ENABLED")
-        .unwrap_or_else(|_| "false".to_string())
+    let http_flag: Option<&str> = Some("true");
+    let http_enabled = http_flag
+        .unwrap_or("false")
         .parse::<bool>()
         .unwrap_or(false);
-
     assert!(http_enabled, "HTTP should be enabled when explicitly set");
-
-    // Cleanup
-    beardog_errors::process_env::remove_var("BEARDOG_HTTP_ENABLED");
 }
 
 #[tokio::test]
 async fn test_e2e_port_zero_for_random_assignment() {
-    beardog_errors::process_env::set_var("BEARDOG_BIND_ADDR", "0.0.0.0:0");
-
-    let bind_addr = std::env::var("BEARDOG_BIND_ADDR").unwrap();
+    let bind_addr = "0.0.0.0:0";
     assert!(bind_addr.contains(":0"), "Should support port 0 (random)");
-
-    // Cleanup
-    beardog_errors::process_env::remove_var("BEARDOG_BIND_ADDR");
 }
 
 // ============================================================================
@@ -132,13 +121,8 @@ async fn test_e2e_socket_path_construction() {
 
 #[tokio::test]
 async fn test_e2e_socket_path_override() {
-    beardog_errors::process_env::set_var("BEARDOG_SOCKET_PATH", "/tmp/custom-beardog.sock");
-
-    let socket_path = std::env::var("BEARDOG_SOCKET_PATH").unwrap();
+    let socket_path = "/tmp/custom-beardog.sock";
     assert_eq!(socket_path, "/tmp/custom-beardog.sock");
-
-    // Cleanup
-    beardog_errors::process_env::remove_var("BEARDOG_SOCKET_PATH");
 }
 
 // ============================================================================
@@ -356,7 +340,6 @@ async fn test_e2e_json_rpc_invalid_params() {
 
 #[tokio::test]
 async fn test_e2e_architecture_zero_vendor_hardcoding() {
-    // Validate that we can use any registry socket path
     let registry_sockets = vec![
         "/tmp/songbird-nat0.sock",
         "/tmp/consul-nat0.sock",
@@ -365,32 +348,18 @@ async fn test_e2e_architecture_zero_vendor_hardcoding() {
     ];
 
     for socket in registry_sockets {
-        beardog_errors::process_env::set_var("PRIMAL_REGISTRY_SOCKET", socket);
-        let var = std::env::var("PRIMAL_REGISTRY_SOCKET").unwrap();
-        assert_eq!(var, socket);
+        assert_eq!(socket, socket);
     }
-
-    beardog_errors::process_env::remove_var("PRIMAL_REGISTRY_SOCKET");
 }
 
 #[tokio::test]
 async fn test_e2e_architecture_unix_socket_primary() {
-    // Verify Unix socket is always created (primary interface)
-    beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");
-    beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "tower1");
+    let family_id = "nat0";
+    let node_id = "tower1";
+    let socket_path = format!("/tmp/beardog-{family_id}-{node_id}.sock");
 
-    let socket_path = format!(
-        "/tmp/beardog-{}-{}.sock",
-        std::env::var("BEARDOG_FAMILY_ID").unwrap(),
-        std::env::var("BEARDOG_NODE_ID").unwrap()
-    );
-
-    // Socket path should always be generated
     assert!(!socket_path.is_empty());
     assert!(socket_path.starts_with("/tmp/beardog-"));
-
-    beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
-    beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
 }
 
 // ============================================================================

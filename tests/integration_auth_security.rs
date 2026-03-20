@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Integration Tests for Authentication and Security
 //!
 //! This module contains comprehensive integration tests for `BearDog`'s authentication

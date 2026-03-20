@@ -31,7 +31,7 @@
 //! use beardog_core::self_knowledge::SimpleCapability;
 //!
 //! # async fn example() -> Result<(), beardog_errors::BearDogError> {
-//! let mut router = CapabilityRouter::new()?;
+//! let mut router = CapabilityRouter::from_env()?;
 //!
 //! // Route by capability, not by service name!
 //! let decision = router.route(
@@ -217,17 +217,21 @@ impl Default for RequestContext {
 // =============================================================================
 
 impl CapabilityRouter {
-    /// Create a new capability router
-    pub fn new() -> Result<Self, BearDogError> {
+    /// Create a router with an explicit [`PrimalDiscovery`] (no environment reads here).
+    #[must_use]
+    pub fn new(discovery: PrimalDiscovery) -> Self {
         info!("🧭 Initializing capability-based router...");
 
-        let discovery = PrimalDiscovery::from_env()?;
-
-        Ok(Self {
+        Self {
             discovery,
             load_tracker: HashMap::new(),
             rr_counters: HashMap::new(),
-        })
+        }
+    }
+
+    /// Build discovery from the process environment (`std::env::var` via [`PrimalDiscovery::from_env`]).
+    pub fn from_env() -> Result<Self, BearDogError> {
+        Ok(Self::new(PrimalDiscovery::from_env()?))
     }
 
     /// Route a request to the best primal for a capability
@@ -443,6 +447,7 @@ impl CapabilityRouter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::primal_discovery::DiscoveryMethod;
 
     #[test]
     fn test_request_context_builder() {
@@ -463,13 +468,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_router_initialization() {
-        beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
-
-        let router = CapabilityRouter::new().unwrap();
+        let router = CapabilityRouter::new(PrimalDiscovery::new(
+            crate::primal_discovery::DiscoveryMethod::Environment,
+        ));
         assert!(router.load_tracker.is_empty());
         assert!(router.rr_counters.is_empty());
-
-        beardog_errors::process_env::remove_var("PRIMAL_DISCOVERY_METHOD");
     }
 
     #[test]
@@ -496,7 +499,7 @@ mod tests {
         ];
 
         let mut router = CapabilityRouter {
-            discovery: PrimalDiscovery::from_env().unwrap(),
+            discovery: PrimalDiscovery::new(DiscoveryMethod::Environment),
             load_tracker: HashMap::new(),
             rr_counters: HashMap::new(),
         };
@@ -513,7 +516,7 @@ mod tests {
     #[test]
     fn test_record_success_updates_stats() {
         let mut router = CapabilityRouter {
-            discovery: PrimalDiscovery::from_env().unwrap(),
+            discovery: PrimalDiscovery::new(DiscoveryMethod::Environment),
             load_tracker: HashMap::new(),
             rr_counters: HashMap::new(),
         };
@@ -549,7 +552,7 @@ mod tests {
         ];
 
         let mut router = CapabilityRouter {
-            discovery: PrimalDiscovery::from_env().unwrap(),
+            discovery: PrimalDiscovery::new(DiscoveryMethod::Environment),
             load_tracker: HashMap::new(),
             rr_counters: HashMap::new(),
         };
@@ -584,7 +587,7 @@ mod tests {
         ];
 
         let mut router = CapabilityRouter {
-            discovery: PrimalDiscovery::from_env().unwrap(),
+            discovery: PrimalDiscovery::new(DiscoveryMethod::Environment),
             load_tracker: HashMap::new(),
             rr_counters: HashMap::new(),
         };
@@ -597,7 +600,7 @@ mod tests {
     #[test]
     fn test_record_failure() {
         let mut router = CapabilityRouter {
-            discovery: PrimalDiscovery::from_env().unwrap(),
+            discovery: PrimalDiscovery::new(DiscoveryMethod::Environment),
             load_tracker: HashMap::new(),
             rr_counters: HashMap::new(),
         };

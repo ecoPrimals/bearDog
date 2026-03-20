@@ -511,4 +511,85 @@ mod tests {
         let result = provider.set_pin("123456".to_string()).await;
         assert!(result.is_ok());
     }
+
+    #[test]
+    fn solo_v2_new_fails_when_disconnected() {
+        let device_info = SoloV2DeviceInfo {
+            device_id: "gone".to_string(),
+            product_name: "Solo V2 Test".to_string(),
+            firmware_version: "1.0.0".to_string(),
+            is_connected: false,
+            vendor_id: 0x20a0,
+            product_id: 0x42b2,
+        };
+        let err = match SoloV2Provider::new(device_info, SoloV2Config::default()) {
+            Ok(_) => panic!("expected disconnected device to fail"),
+            Err(e) => e,
+        };
+        let msg = format!("{err}");
+        assert!(msg.contains("not connected") || msg.contains("gone"));
+    }
+
+    #[tokio::test]
+    async fn solo_v2_sign_with_device_errors_on_unknown_key() {
+        let device_info = SoloV2DeviceInfo {
+            device_id: "test-device".to_string(),
+            product_name: "Solo V2 Test".to_string(),
+            firmware_version: "1.0.0".to_string(),
+            is_connected: true,
+            vendor_id: 0x20a0,
+            product_id: 0x42b2,
+        };
+        let provider = SoloV2Provider::new(device_info, SoloV2Config::default()).unwrap();
+        let err = provider
+            .sign_with_device("missing-key", b"data")
+            .await
+            .unwrap_err();
+        let msg = format!("{err}");
+        assert!(msg.contains("not found") || msg.contains("Key"));
+    }
+
+    #[test]
+    fn solo_v2_universal_trait_directs_to_async_methods() {
+        let device_info = SoloV2DeviceInfo {
+            device_id: "test-device".to_string(),
+            product_name: "Solo V2 Test".to_string(),
+            firmware_version: "1.0.0".to_string(),
+            is_connected: true,
+            vendor_id: 0x20a0,
+            product_id: 0x42b2,
+        };
+        let provider = SoloV2Provider::new(device_info, SoloV2Config::default()).unwrap();
+        use crate::universal_hsm::traits::UniversalHsmProvider;
+        assert!(
+            provider
+                .generate_key(crate::tunnel::hsm::types::KeyType::Ed25519)
+                .is_err()
+        );
+        assert!(provider.sign("k", b"d").is_err());
+        assert!(provider.verify("k", b"d", b"s").is_err());
+        assert!(!provider.get_capabilities().is_empty());
+    }
+
+    #[tokio::test]
+    async fn solo_v2_generate_key_without_ctap2_returns_not_implemented() {
+        let device_info = SoloV2DeviceInfo {
+            device_id: "test-device".to_string(),
+            product_name: "Solo V2 Test".to_string(),
+            firmware_version: "1.0.0".to_string(),
+            is_connected: true,
+            vendor_id: 0x20a0,
+            product_id: 0x42b2,
+        };
+        let provider = SoloV2Provider::new(device_info, SoloV2Config::default()).unwrap();
+        let err = provider
+            .generate_key_on_device(KeyType::Ed25519, "kid".to_string())
+            .await
+            .unwrap_err();
+        let msg = format!("{err}");
+        assert!(
+            msg.contains("CTAP2") || msg.contains("not implemented") || msg.contains("ctap2"),
+            "{msg}"
+        );
+    }
 }

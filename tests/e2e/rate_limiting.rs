@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 #![allow(
     unused_imports,
     unused_variables,
@@ -39,9 +40,9 @@ pub async fn test_rate_limit_enforcement() -> Result<RateLimitMetrics, BearDogEr
     for i in 0..rate_limit {
         metrics.requests_sent += 1;
 
-        let allowed = simulate_rate_limit_check(rate_limit, window_ms).await?;
+        let allowed = simulate_rate_limit_check(rate_limit, window_ms)?;
         if allowed {
-            simulate_api_request_fast().await?;
+            simulate_api_request_fast()?;
             metrics.requests_allowed += 1;
             info!("  Request {}/{}: ALLOWED", i + 1, rate_limit);
         } else {
@@ -59,9 +60,9 @@ pub async fn test_rate_limit_enforcement() -> Result<RateLimitMetrics, BearDogEr
     for i in 0..5 {
         metrics.requests_sent += 1;
 
-        let allowed = simulate_rate_limit_check(rate_limit, window_ms).await?;
+        let allowed = simulate_rate_limit_check(rate_limit, window_ms)?;
         if allowed {
-            simulate_api_request_fast().await?;
+            simulate_api_request_fast()?;
             metrics.requests_allowed += 1;
         } else {
             metrics.requests_blocked += 1;
@@ -89,7 +90,7 @@ pub async fn test_throttling_backoff() -> Result<RateLimitMetrics, BearDogError>
         for i in 0..burst_size {
             metrics.requests_sent += 1;
 
-            let throttle_delay = simulate_throttle_check(burst_size).await?;
+            let throttle_delay = simulate_throttle_check(burst_size)?;
 
             if throttle_delay > 0 {
                 info!("  Request throttled, delay: {}ms", throttle_delay);
@@ -98,7 +99,7 @@ pub async fn test_throttling_backoff() -> Result<RateLimitMetrics, BearDogError>
                 // For real throttling tests, use tokio::time::pause() + advance()
             }
 
-            simulate_api_request_fast().await?;
+            simulate_api_request_fast()?;
             metrics.requests_allowed += 1;
 
             // No sleep needed - testing burst logic, not request timing
@@ -125,10 +126,10 @@ pub async fn test_quota_management() -> Result<RateLimitMetrics, BearDogError> {
     for i in 0..daily_quota + 10 {
         metrics.requests_sent += 1;
 
-        let quota_available = simulate_quota_check(daily_quota, current_usage).await?;
+        let quota_available = simulate_quota_check(daily_quota, current_usage)?;
 
         if quota_available {
-            simulate_api_request_fast().await?;
+            simulate_api_request_fast()?;
             current_usage += 1;
             metrics.requests_allowed += 1;
 
@@ -162,10 +163,10 @@ pub async fn test_burst_handling() -> Result<RateLimitMetrics, BearDogError> {
     for i in 0..bucket_size {
         metrics.requests_sent += 1;
 
-        let tokens_available = simulate_token_bucket_check(bucket_size, refill_rate).await?;
+        let tokens_available = simulate_token_bucket_check(bucket_size, refill_rate)?;
 
         if tokens_available {
-            simulate_api_request_fast().await?;
+            simulate_api_request_fast()?;
             metrics.requests_allowed += 1;
         } else {
             metrics.requests_blocked += 1;
@@ -183,10 +184,10 @@ pub async fn test_burst_handling() -> Result<RateLimitMetrics, BearDogError> {
     for _ in 0..refill_rate {
         metrics.requests_sent += 1;
 
-        let tokens_available = simulate_token_bucket_check(bucket_size, refill_rate).await?;
+        let tokens_available = simulate_token_bucket_check(bucket_size, refill_rate)?;
 
         if tokens_available {
-            simulate_api_request_fast().await?;
+            simulate_api_request_fast()?;
             metrics.requests_allowed += 1;
         } else {
             metrics.requests_blocked += 1;
@@ -212,10 +213,10 @@ pub async fn test_per_user_rate_limiting() -> Result<RateLimitMetrics, BearDogEr
         for i in 0..per_user_limit + 5 {
             metrics.requests_sent += 1;
 
-            let allowed = simulate_user_rate_limit_check(user, per_user_limit).await?;
+            let allowed = simulate_user_rate_limit_check(user, per_user_limit)?;
 
             if allowed {
-                simulate_api_request_fast().await?;
+                simulate_api_request_fast()?;
                 metrics.requests_allowed += 1;
             } else {
                 metrics.requests_blocked += 1;
@@ -233,7 +234,7 @@ pub async fn test_per_user_rate_limiting() -> Result<RateLimitMetrics, BearDogEr
 
 // Helper functions
 
-async fn simulate_rate_limit_check(limit: usize, _window_ms: u64) -> Result<bool, BearDogError> {
+fn simulate_rate_limit_check(limit: usize, _window_ms: u64) -> Result<bool, BearDogError> {
     // Modern safe pattern: AtomicUsize for thread-safe counter
     use std::sync::OnceLock;
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -245,7 +246,7 @@ async fn simulate_rate_limit_check(limit: usize, _window_ms: u64) -> Result<bool
     Ok(count <= limit || count % 12 == 0) // Allow some, block others
 }
 
-async fn simulate_throttle_check(burst_size: usize) -> Result<usize, BearDogError> {
+fn simulate_throttle_check(burst_size: usize) -> Result<usize, BearDogError> {
     // Return throttle delay based on burst size
     let delay = if burst_size > 25 {
         100 // Heavy throttle
@@ -260,11 +261,11 @@ async fn simulate_throttle_check(burst_size: usize) -> Result<usize, BearDogErro
     Ok(delay)
 }
 
-async fn simulate_quota_check(quota: usize, current: usize) -> Result<bool, BearDogError> {
+fn simulate_quota_check(quota: usize, current: usize) -> Result<bool, BearDogError> {
     Ok(current < quota)
 }
 
-async fn simulate_token_bucket_check(_size: usize, _refill: usize) -> Result<bool, BearDogError> {
+fn simulate_token_bucket_check(_size: usize, _refill: usize) -> Result<bool, BearDogError> {
     // Modern safe pattern: AtomicUsize for thread-safe token counter
     use std::sync::OnceLock;
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -290,7 +291,7 @@ async fn simulate_token_bucket_check(_size: usize, _refill: usize) -> Result<boo
     }
 }
 
-async fn simulate_user_rate_limit_check(_user: &str, limit: usize) -> Result<bool, BearDogError> {
+fn simulate_user_rate_limit_check(_user: &str, limit: usize) -> Result<bool, BearDogError> {
     // Modern safe pattern: AtomicUsize for thread-safe user counter
     use std::sync::OnceLock;
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -303,7 +304,7 @@ async fn simulate_user_rate_limit_check(_user: &str, limit: usize) -> Result<boo
     Ok(allowed)
 }
 
-async fn simulate_api_request_fast() -> Result<(), BearDogError> {
+fn simulate_api_request_fast() -> Result<(), BearDogError> {
     // Simulate API request (instant in tests, would be I/O in production)
     Ok(())
 }

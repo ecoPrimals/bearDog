@@ -363,20 +363,23 @@ impl InfantPatternConfig {
     /// - `BEARDOG_PATTERN_MAX_AGE_SECS`: Pattern max age in seconds (default: 3600)
     /// - `BEARDOG_PATTERN_CONSOLIDATION_INTERVAL_SECS`: Consolidation interval (default: 300)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             min_observations: Self::DEFAULT_MIN_OBSERVATIONS,
             confidence_threshold: Self::DEFAULT_CONFIDENCE_THRESHOLD,
             pattern_max_age: Duration::from_secs(
-                std::env::var("BEARDOG_PATTERN_MAX_AGE_SECS")
-                    .ok()
+                get("BEARDOG_PATTERN_MAX_AGE_SECS")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_PATTERN_MAX_AGE_SECS),
             ),
             learning_rate: Self::DEFAULT_LEARNING_RATE,
             enable_continuous_learning: true,
             consolidation_interval: Duration::from_secs(
-                std::env::var("BEARDOG_PATTERN_CONSOLIDATION_INTERVAL_SECS")
-                    .ok()
+                get("BEARDOG_PATTERN_CONSOLIDATION_INTERVAL_SECS")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_CONSOLIDATION_INTERVAL_SECS),
             ),

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Integration tests for timeout configuration
 //!
 //! Tests end-to-end timeout configuration using the **builder pattern**
@@ -345,28 +346,9 @@ fn test_timeout_builder_fluent_api() {
 }
 
 // ============================================================================
-// NOTE: Environment Variable Tests
+// NOTE: Environment-free tests
 // ============================================================================
 //
-// Tests that modify environment variables should use the `serial_test` crate
-// and be marked with `#[serial]` to avoid race conditions. For now, we prefer
-// using the builder pattern which doesn't require environment modification.
-//
-// If you need to test `TimeoutConfig::from_env()`:
-// 1. Add `serial_test = "2.0"` to dev-dependencies in Cargo.toml
-// 2. Mark tests with `#[serial]`
-// 3. Clean up env vars in test cleanup
-//
-// Example:
-// ```
-// use serial_test::serial;
-//
-// #[test]
-// #[serial]
-// fn test_from_env() {
-//     std::env::set_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS", "15");
-//     let config = TimeoutConfig::from_env();
-//     assert_eq!(config.health_check_secs, 15);
-//     std::env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-// }
-// ```
+// Prefer `TimeoutConfig::builder()` and explicit values for unit tests.
+// For `from_env()` behavior, use a parameter-injected variant or integration
+// tests that read the real environment without mutating it (documented).

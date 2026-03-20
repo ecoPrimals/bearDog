@@ -165,7 +165,7 @@ impl SoftwareDiscoverer {
     fn check_gnome_keyring(&self) -> Result<bool, BearDogError> {
         // Check if D-Bus service is available
         // This is a simplified check - real implementation would query D-Bus
-        Ok(std::env::var("DBUS_SESSION_BUS_ADDRESS").is_ok())
+        Ok(beardog_errors::process_env::var("DBUS_SESSION_BUS_ADDRESS").is_ok())
     }
 
     /// Create BearDog Software HSM

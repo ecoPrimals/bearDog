@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Simple Core Integration Tests
 // Migrated from tests_NEEDS_FIXING_BACKUP/simple_core_tests.rs
 // Date: October 10, 2025

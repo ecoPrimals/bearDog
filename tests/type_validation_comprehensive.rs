@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Comprehensive Type Validation Tests
 //!
 //! This module contains high-value integration tests for canonical type construction,

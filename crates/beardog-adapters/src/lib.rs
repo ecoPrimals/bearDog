@@ -227,10 +227,11 @@ impl UniversalAdapter {
             let cache_key = format!("{}:{}", request.capability, request.operation);
             if let Some((cached_response, cached_time)) = self.cache.get(&cache_key) {
                 // Cache valid for 5 minutes
-                let cache_duration_secs = std::env::var("BEARDOG_ADAPTER_CACHE_DURATION_SECS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(300); // 5 minutes default
+                let cache_duration_secs =
+                    beardog_errors::process_env::var("BEARDOG_ADAPTER_CACHE_DURATION_SECS")
+                        .ok()
+                        .and_then(|s| s.parse().ok())
+                        .unwrap_or(300); // 5 minutes default
                 if cached_time.elapsed() < Duration::from_secs(cache_duration_secs) {
                     let mut response = cached_response.clone();
                     response

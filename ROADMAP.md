@@ -17,9 +17,15 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - 91+ JSON-RPC crypto methods (semantic naming)
 - 0 clippy warnings (pedantic + nursery, workspace-centralized)
 - 0 missing documentation warnings (all public items documented)
-- 0 unsafe code blocks (`forbid(unsafe_code)` per-crate; 1 justified exception in `process_env.rs`)
+- 0 unsafe code blocks (`forbid(unsafe_code)` per-crate)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 1000 lines of code
+- 13,400+ tests passing (fully concurrent, 8 threads)
+- 84% line coverage (llvm-cov)
+- Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
+- Only 15 `#[serial_test::serial]` remaining (chaos/fault only)
+- `cargo deny` passes all 4 checks
+- `trust-dns-resolver` → `hickory-resolver`, `bincode` → `postcard`, `validator` 0.20
 - Multi-family socket support (`--family-id` flag)
 - Encrypted secret storage (family-scoped ChaCha20-Poly1305)
 - `discover_capabilities` introspection method
@@ -35,6 +41,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - All mocks isolated behind `cfg(test)` / `test-utils` feature
 - Hardcoding eliminated — capability-based discovery throughout
 - `deny.toml` hardened — C deps banned, duplicate versions denied
+- `CommandRunner` trait for mocking external commands (`adb`) in tests
 
 ### Platform Coverage
 

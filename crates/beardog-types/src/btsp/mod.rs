@@ -20,18 +20,18 @@
 //!
 //! ### Trust Modes
 //!
-//! - [`TrustMode::GeneticLineage`]: Verify cryptographic family trees (internal)
-//! - [`TrustMode::Certificate`]: Verify X.509 certificate chains (external)
+//! - `TrustMode::GeneticLineage`: Verify cryptographic family trees (internal)
+//! - `TrustMode::Certificate`: Verify X.509 certificate chains (external)
 //!
 //! ### Protocols
 //!
-//! - [`TunnelProtocol::BtspNative`]: Custom protocol for internal primals
-//! - [`TunnelProtocol::TlsHttp`]: Standard TLS 1.3 + HTTP/2 for external APIs
+//! - `TunnelProtocol::BtspNative`: Custom protocol for internal primals
+//! - `TunnelProtocol::TlsHttp`: Standard TLS 1.3 + HTTP/2 for external APIs
 //!
 //! ### Transports
 //!
-//! - [`Transport::UnixSocket`]: Unix domain sockets (local primals)
-//! - [`Transport::TcpSocket`]: TCP sockets (remote servers)
+//! - `Transport::UnixSocket`: Unix domain sockets (local primals)
+//! - `Transport::TcpSocket`: TCP sockets (remote servers)
 //!
 //! ## Example: Internal Mode (Primal-to-Primal)
 //!

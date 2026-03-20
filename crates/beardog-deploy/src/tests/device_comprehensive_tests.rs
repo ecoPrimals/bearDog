@@ -19,7 +19,7 @@ fn test_device_manager_new() {
 
 #[test]
 fn test_device_manager_default() {
-    let manager = DeviceManager;
+    let manager = DeviceManager::default();
     // Verify default implementation works
     assert!(format!("{:?}", manager).contains("DeviceManager"));
 }

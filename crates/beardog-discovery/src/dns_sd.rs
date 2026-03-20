@@ -2,20 +2,21 @@
 
 //! DNS Service Discovery (DNS-SD) implementation
 //!
-//! Complete production implementation using trust-dns-resolver for standards-compliant
+//! Complete production implementation using hickory-resolver for standards-compliant
 //! DNS-SD service discovery (RFC 6763). No mocks - real DNS queries.
 
 use crate::error::{DiscoveryError, Result};
 use crate::types::{Capability, DiscoveredService, HealthStatus, QoSMetrics, ServiceEndpoint};
+use hickory_resolver::TokioResolver;
+use hickory_resolver::config::{ResolverConfig, ResolverOpts};
+use hickory_resolver::name_server::TokioConnectionProvider;
+use hickory_resolver::proto::rr::RecordType;
 use std::collections::HashMap;
 use std::net::IpAddr;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
-use trust_dns_resolver::TokioAsyncResolver;
-use trust_dns_resolver::config::{ResolverConfig, ResolverOpts};
-use trust_dns_resolver::proto::rr::RecordType;
 
 /// DNS-SD discovery configuration
 #[derive(Debug, Clone)]
@@ -48,7 +49,7 @@ impl Default for DnsSdConfig {
 /// DNS Service Discovery client - complete implementation
 #[derive(Clone)]
 pub struct DnsSdDiscovery {
-    resolver: Arc<TokioAsyncResolver>,
+    resolver: Arc<TokioResolver>,
     config: DnsSdConfig,
     cache: Arc<RwLock<HashMap<String, Vec<DiscoveredService>>>>,
 }
@@ -61,8 +62,12 @@ impl DnsSdDiscovery {
 
     /// Create new DNS-SD discovery client with custom configuration
     pub async fn with_config(config: DnsSdConfig) -> Result<Self> {
-        let resolver =
-            TokioAsyncResolver::tokio(config.resolver_config.clone(), config.resolver_opts);
+        let resolver = TokioResolver::builder_with_config(
+            config.resolver_config.clone(),
+            TokioConnectionProvider::default(),
+        )
+        .with_options(config.resolver_opts.clone())
+        .build();
 
         Ok(Self {
             resolver: Arc::new(resolver),
@@ -235,7 +240,7 @@ impl DnsSdDiscovery {
     ///
     /// TXT records format: key=value
     fn parse_txt_records(
-        txt_records: Vec<&trust_dns_resolver::proto::rr::rdata::TXT>,
+        txt_records: Vec<&hickory_resolver::proto::rr::rdata::TXT>,
     ) -> HashMap<String, String> {
         let mut properties = HashMap::new();
 

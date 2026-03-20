@@ -505,3 +505,139 @@ fn generate_system_entropy(size: usize) -> Result<Vec<u8>, BearDogError> {
 // Placeholder functions removed - now using real DiscoveryEngine
 // All HSM discovery is handled by beardog-tunnel::universal_hsm_discovery
 // This is the evolution from placeholders to complete implementations!
+
+#[cfg(test)]
+mod entropy_handler_tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_entropy_seed_metadata_serde_roundtrip() {
+        let meta = EntropySeedMetadata {
+            seed_id: "550e8400-e29b-41d4-a716-446655440000".to_string(),
+            quality_tier: 3,
+            quality_score: 0.92,
+            device_used: "Test HSM".to_string(),
+            device_tier: "Software".to_string(),
+            timestamp: "2025-01-01T00:00:00Z".to_string(),
+            human_input: true,
+            identity: Some("alice".to_string()),
+            entropy_bytes_b64: base64_encode(b"entropy-bytes"),
+        };
+        let json = serde_json::to_string(&meta).unwrap();
+        let back: EntropySeedMetadata = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.seed_id, meta.seed_id);
+        assert_eq!(back.quality_tier, meta.quality_tier);
+        assert_eq!(back.identity, meta.identity);
+    }
+
+    #[test]
+    fn test_generate_system_entropy_output_lengths() {
+        assert_eq!(generate_system_entropy(16).unwrap().len(), 16);
+        assert_eq!(generate_system_entropy(32).unwrap().len(), 32);
+        assert_eq!(generate_system_entropy(48).unwrap().len(), 48);
+        assert_eq!(generate_system_entropy(64).unwrap().len(), 64);
+    }
+
+    #[test]
+    fn test_calculate_entropy_quality_single_byte() {
+        let q = calculate_entropy_quality(&[42; 32]);
+        assert!(q < 0.2);
+    }
+
+    #[tokio::test]
+    async fn test_handle_entropy_info_reads_seed_file() {
+        let dir = TempDir::new().unwrap();
+        let seed_path = dir.path().join("seed.json");
+        let meta = EntropySeedMetadata {
+            seed_id: "id-1".to_string(),
+            quality_tier: 2,
+            quality_score: 0.88,
+            device_used: "dev".to_string(),
+            device_tier: "Hardware".to_string(),
+            timestamp: "2025-06-01T12:00:00Z".to_string(),
+            human_input: false,
+            identity: None,
+            entropy_bytes_b64: base64_encode(&[0u8; 40]),
+        };
+        std::fs::write(&seed_path, serde_json::to_string_pretty(&meta).unwrap()).unwrap();
+        let result = handle_entropy_info(seed_path.to_str().unwrap()).await;
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_base64_decode_error() {
+        assert!(base64_decode("not-valid-base64!!!").is_err());
+    }
+
+    #[test]
+    fn test_calculate_entropy_quality_empty() {
+        assert_eq!(calculate_entropy_quality(&[]), 0.0);
+    }
+
+    #[test]
+    fn test_calculate_entropy_quality_near_uniform() {
+        let v: Vec<u8> = (0u16..256).map(|i| i as u8).collect();
+        let q = calculate_entropy_quality(&v);
+        assert!(q > 0.95);
+    }
+
+    #[test]
+    fn test_save_and_load_entropy_file_roundtrip() {
+        let dir = TempDir::new().unwrap();
+        let p = dir.path().join("raw.bin");
+        let data = [7u8, 8, 9];
+        save_entropy_file(&data, p.to_str().unwrap()).unwrap();
+        assert_eq!(load_entropy_file(p.to_str().unwrap()).unwrap(), data);
+    }
+
+    #[tokio::test]
+    async fn test_handle_entropy_info_invalid_json() {
+        let dir = TempDir::new().unwrap();
+        let seed_path = dir.path().join("bad.json");
+        std::fs::write(&seed_path, "{not json").unwrap();
+        assert!(
+            handle_entropy_info(seed_path.to_str().unwrap())
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_handle_entropy_info_invalid_entropy_b64() {
+        let dir = TempDir::new().unwrap();
+        let seed_path = dir.path().join("seed.json");
+        let meta = EntropySeedMetadata {
+            seed_id: "id-1".to_string(),
+            quality_tier: 1,
+            quality_score: 0.5,
+            device_used: "dev".to_string(),
+            device_tier: "Software".to_string(),
+            timestamp: "2025-06-01T12:00:00Z".to_string(),
+            human_input: false,
+            identity: Some("x".to_string()),
+            entropy_bytes_b64: "!!!".to_string(),
+        };
+        std::fs::write(&seed_path, serde_json::to_string_pretty(&meta).unwrap()).unwrap();
+        assert!(
+            handle_entropy_info(seed_path.to_str().unwrap())
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_handle_entropy_info_missing_file() {
+        assert!(
+            handle_entropy_info("/nonexistent/path/seed.json")
+                .await
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn test_generate_system_entropy_branch_over_32_bytes() {
+        let v = generate_system_entropy(100).unwrap();
+        assert_eq!(v.len(), 100);
+    }
+}

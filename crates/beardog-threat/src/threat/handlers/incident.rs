@@ -111,7 +111,7 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
-    /// Update incident status using legacy string labels (see [`legacy_status_label`]).
+    /// Update incident status using legacy string labels (see `legacy_status_label`).
     ///
     /// When the incident id is unknown, returns a synthetic snapshot so existing callers keep working.
     pub fn update_incident_status(

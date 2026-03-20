@@ -1,10 +1,10 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! End-to-End Tests for BTSP Contact Exchange (January 7, 2026)
 //!
 //! These tests verify the complete integration of genetic lineage-based
 //! peer discovery for VPN-free P2P mesh networking.
 
 use serde_json::json;
-use std::env;
 
 // ========================================================================
 // E2E Test: Contact Exchange API Endpoint
@@ -262,11 +262,7 @@ async fn test_e2e_contact_exchange_peer_not_found() {
 
 #[tokio::test]
 async fn test_e2e_contact_exchange_different_family() {
-    beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");
-
-    let our_family = env::var("FAMILY_ID")
-        .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
-        .unwrap();
+    let our_family = "nat0";
     let peer_family = "other-family";
 
     // Different family should not return contact info
@@ -283,9 +279,6 @@ async fn test_e2e_contact_exchange_different_family() {
     });
 
     assert!(!response["success"].as_bool().unwrap());
-
-    // Cleanup
-    beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
 }
 
 #[tokio::test]
@@ -313,9 +306,6 @@ async fn test_e2e_contact_exchange_max_hops_exceeded() {
 
 #[tokio::test]
 async fn test_e2e_nat_traversal_contact_discovery() {
-    // Tower A behind NAT wants to connect to Tower B behind NAT
-    beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");
-
     // Step 1: Tower A requests Tower B's contact info
     let _request = json!({
         "target_peer_id": "tower-b",
@@ -346,9 +336,6 @@ async fn test_e2e_nat_traversal_contact_discovery() {
     assert_eq!(addresses.len(), 2);
     assert!(addresses[0].as_str().unwrap().starts_with("192.168.")); // Local
     assert!(addresses[1].as_str().unwrap().starts_with("203.")); // Public
-
-    // Cleanup
-    beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
 }
 
 // ========================================================================
@@ -459,18 +446,8 @@ async fn test_e2e_lineage_proof_required() {
 
 #[tokio::test]
 async fn test_e2e_genetic_family_verification() {
-    beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");
+    let our_family = "nat0";
+    let peer_lineage_path = [our_family.to_string(), "tower-b".to_string()];
 
-    let our_family = env::var("FAMILY_ID")
-        .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
-        .unwrap();
-
-    let _peer_family = "nat0";
-    let peer_lineage_path = [our_family.clone(), "tower-b".to_string()];
-
-    // Verify peer is in same genetic family
     assert!(peer_lineage_path[0] == our_family);
-
-    // Cleanup
-    beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
 }

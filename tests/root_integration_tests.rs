@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Root Integration Tests
 //!
 //! Comprehensive integration tests for the root `beardog` crate.

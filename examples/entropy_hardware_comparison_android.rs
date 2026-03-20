@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Android-specific entropy comparison
 //!
 //! Lightweight version for Android that doesn't pull in OpenSSL dependencies.

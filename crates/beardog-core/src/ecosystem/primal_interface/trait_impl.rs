@@ -407,3 +407,109 @@ impl BearDogCore {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::PrimalTrait;
+    use crate::BearDogCore;
+    use crate::ecosystem::primal_types::{PrimalRequest, UniversalIntegrationConfig};
+
+    fn test_core() -> BearDogCore {
+        BearDogCore::with_default_config().expect("BearDogCore with default config")
+    }
+
+    #[test]
+    fn primal_metadata_lists_display_name_and_endpoints() {
+        let meta = test_core().metadata();
+        assert_eq!(
+            meta.display_name.as_deref(),
+            Some("BearDog Security System")
+        );
+        assert!(!meta.version.is_empty());
+        assert!(meta.health_check_endpoint.contains("health"));
+        assert!(meta.metrics_endpoint.contains("metrics"));
+        assert!(!meta.capabilities.is_empty());
+        assert!(!meta.supported_protocols.is_empty());
+    }
+
+    #[tokio::test]
+    async fn primal_initialize_skips_discovery_when_disabled() {
+        let core = test_core();
+        let mut config = UniversalIntegrationConfig::default();
+        config.enable_capability_discovery = false;
+        config.required_capabilities.clear();
+        config.optional_capabilities.clear();
+        let result = PrimalTrait::initialize(&core, &config).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn primal_health_check_returns_structured_health() {
+        let core = test_core();
+        let health = PrimalTrait::health_check(&core)
+            .await
+            .expect("health check");
+        assert!(health.checks.contains_key("core"));
+        assert!(
+            health
+                .checks
+                .get("universal_adapter")
+                .copied()
+                .unwrap_or(false)
+        );
+    }
+
+    #[tokio::test]
+    async fn handle_request_security_operation() {
+        let core = test_core();
+        let mut req = PrimalRequest::default();
+        req.operation_type = "security_operation".to_string();
+        let resp = PrimalTrait::handle_request(&core, req)
+            .await
+            .expect("security op");
+        assert!(resp.success);
+        assert_eq!(resp.status, "completed");
+    }
+
+    #[tokio::test]
+    async fn handle_request_health_check_operation() {
+        let core = test_core();
+        let mut req = PrimalRequest::default();
+        req.operation_type = "health_check".to_string();
+        let resp = PrimalTrait::handle_request(&core, req)
+            .await
+            .expect("health op");
+        assert!(resp.success);
+    }
+
+    #[tokio::test]
+    async fn handle_request_unknown_operation_is_error() {
+        let core = test_core();
+        let mut req = PrimalRequest::default();
+        req.operation_type = "not_a_real_operation".to_string();
+        let err = PrimalTrait::handle_request(&core, req)
+            .await
+            .expect_err("unsupported op");
+        assert_eq!(err.code, "UnsupportedOperation");
+        assert!(err.message.contains("not supported"));
+    }
+
+    #[tokio::test]
+    async fn discover_capability_lists_are_ok_without_network() {
+        let core = test_core();
+        let ai = PrimalTrait::discover_ai_capabilities(&core)
+            .await
+            .expect("ai caps");
+        assert!(ai.is_empty() || ai.iter().any(|c| format!("{c:?}").len() > 0));
+
+        let compute = PrimalTrait::discover_compute_capabilities(&core)
+            .await
+            .expect("compute caps");
+        assert!(compute.is_empty() || compute.iter().any(|c| format!("{c:?}").len() > 0));
+
+        let storage = PrimalTrait::discover_storage_capabilities(&core)
+            .await
+            .expect("storage caps");
+        assert!(storage.is_empty() || storage.iter().any(|c| format!("{c:?}").len() > 0));
+    }
+}

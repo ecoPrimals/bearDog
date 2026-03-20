@@ -15,6 +15,70 @@ use std::collections::HashMap;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
+/// Inputs for primal ID generation (see [`SelfDiscoveryEngine::generate_primal_id_from_inputs`]).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct PrimalIdEnvInputs {
+    /// `HOSTNAME` / `COMPUTERNAME`
+    pub hostname: Option<String>,
+    /// `PRIMAL_TYPE` / `SERVICE_TYPE`
+    pub primal_type: Option<String>,
+}
+
+impl PrimalIdEnvInputs {
+    /// Read identity inputs with `std::env::var` (read-only).
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
+            hostname: std::env::var("HOSTNAME")
+                .ok()
+                .or_else(|| std::env::var("COMPUTERNAME").ok()),
+            primal_type: std::env::var("PRIMAL_TYPE")
+                .ok()
+                .or_else(|| std::env::var("SERVICE_TYPE").ok()),
+        }
+    }
+}
+
+/// Injected configuration for [`SelfDiscoveryEngine`] (no reads in [`Default::default`]).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[allow(missing_docs)]
+pub struct SelfDiscoveryEnvInputs {
+    /// Primal ID components ([`PrimalIdEnvInputs`]).
+    pub primal_id: PrimalIdEnvInputs,
+    pub primal_name: Option<String>,
+    pub service_name: Option<String>,
+    pub beardog_display_name: Option<String>,
+    pub localhost_override: Option<String>,
+    pub network_host_override: Option<String>,
+    pub mesh_port_override: Option<u16>,
+    pub admin_port_override: Option<u16>,
+    pub mesh_bind_address_override: Option<String>,
+}
+
+impl SelfDiscoveryEnvInputs {
+    /// Read inputs from the process environment (read-only).
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
+            primal_id: PrimalIdEnvInputs::from_env(),
+            primal_name: std::env::var("PRIMAL_NAME").ok(),
+            service_name: std::env::var("SERVICE_NAME").ok(),
+            beardog_display_name: std::env::var("BEARDOG_DISPLAY_NAME").ok(),
+            localhost_override: std::env::var("BEARDOG_LOCALHOST").ok(),
+            network_host_override: std::env::var("BEARDOG_HOST")
+                .ok()
+                .or_else(|| std::env::var("BEARDOG_BIND_ADDRESS").ok()),
+            mesh_port_override: std::env::var("BEARDOG_MESH_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok()),
+            admin_port_override: std::env::var("BEARDOG_ADMIN_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok()),
+            mesh_bind_address_override: std::env::var("BEARDOG_MESH_BIND_ADDRESS").ok(),
+        }
+    }
+}
+
 /// Self-Discovery Engine for Zero-Knowledge Bootstrap
 ///
 /// This engine enables a primal to discover its own capabilities and identity
@@ -39,6 +103,7 @@ use uuid::Uuid;
 #[derive(Debug)]
 pub struct SelfDiscoveryEngine {
     discovered_capabilities: Vec<ServiceCapabilityType>,
+    inputs: SelfDiscoveryEnvInputs,
     // Note: Config-based discovery and metadata caching removed as unused.
     // These can be re-added when dynamic configuration and caching are needed.
 }
@@ -77,11 +142,22 @@ impl SelfDiscoveryEngine {
     /// # Errors
     /// Returns an error if initialization of internal components or configuration fails.
     pub fn new() -> Result<Self, BearDogError> {
+        Self::with_inputs(SelfDiscoveryEnvInputs::default())
+    }
+
+    /// Create an engine using environment-derived inputs (see [`SelfDiscoveryEnvInputs::from_env`]).
+    pub fn from_env() -> Result<Self, BearDogError> {
+        Self::with_inputs(SelfDiscoveryEnvInputs::from_env())
+    }
+
+    /// Create an engine with explicit discovery inputs (no environment reads).
+    pub fn with_inputs(inputs: SelfDiscoveryEnvInputs) -> Result<Self, BearDogError> {
         info!("🌱 Initializing Self-Discovery Engine");
         info!("🎯 Mission: Discover own capabilities without hardcoded knowledge");
 
         Ok(Self {
             discovered_capabilities: Vec::new(),
+            inputs,
         })
     }
 
@@ -130,7 +206,7 @@ impl SelfDiscoveryEngine {
         BearDogError,
     > {
         // Phase 1: Generate unique primal identity
-        let primal_id = Self::generate_primal_id();
+        let primal_id = Self::generate_primal_id_from_inputs(&self.inputs.primal_id);
         info!("✅ Generated primal ID: {}", primal_id);
 
         // Phase 2: Auto-detect capabilities
@@ -138,11 +214,11 @@ impl SelfDiscoveryEngine {
         info!("✅ Detected {} capabilities", capabilities.len());
 
         // Phase 3: Discover endpoints
-        let endpoints = Self::discover_endpoints();
+        let endpoints = Self::discover_endpoints(&self.inputs);
         info!("✅ Discovered {} endpoints", endpoints.len());
 
         // Phase 4: Build metadata
-        let metadata = Self::build_self_metadata(&primal_id, &capabilities);
+        let metadata = Self::build_self_metadata(&primal_id, &capabilities, &self.inputs);
         info!("✅ Built self-metadata");
 
         // Phase 5: Validate self-knowledge
@@ -186,21 +262,18 @@ impl SelfDiscoveryEngine {
         info!("   ⏱️  Duration: {}ms", discovery_duration);
     }
 
-    /// Generate unique primal ID (no hardcoded names)
-    fn generate_primal_id() -> String {
-        // Generate truly unique ID without hardcoded primal names
+    /// Generate unique primal ID from explicit inputs (no environment reads).
+    pub fn generate_primal_id_from_inputs(inputs: &PrimalIdEnvInputs) -> String {
         let uuid = Uuid::new_v4();
-        let hostname = std::env::var("HOSTNAME")
-            .or_else(|_| std::env::var("COMPUTERNAME"))
-            .unwrap_or_else(|_| "unknown".to_string());
+        let hostname = inputs
+            .hostname
+            .clone()
+            .unwrap_or_else(|| "unknown".to_string());
+        let primal_type = inputs
+            .primal_type
+            .clone()
+            .unwrap_or_else(|| "primal".to_string());
 
-        // Get primal type from environment or use "primal" as generic type
-        // This eliminates hardcoded "beardog" name - each primal discovers its own type
-        let primal_type = std::env::var("PRIMAL_TYPE")
-            .or_else(|_| std::env::var("SERVICE_TYPE"))
-            .unwrap_or_else(|_| "primal".to_string());
-
-        // Create primal ID that's unique and self-discovered
         let primal_id = format!(
             "{}-{}-{}",
             primal_type.to_lowercase(),
@@ -347,20 +420,20 @@ impl SelfDiscoveryEngine {
     }
 
     /// Discover communication endpoints
-    fn discover_endpoints() -> Vec<UniversalEndpoint> {
+    fn discover_endpoints(inputs: &SelfDiscoveryEnvInputs) -> Vec<UniversalEndpoint> {
         info!("📡 Discovering communication endpoints...");
         let mut endpoints = Vec::new();
 
         // Discover local endpoints
-        let local_endpoint = Self::discover_local_endpoint();
+        let local_endpoint = Self::discover_local_endpoint(inputs);
         endpoints.push(local_endpoint);
 
         // Discover network endpoints
-        let network_endpoint = Self::discover_network_endpoint();
+        let network_endpoint = Self::discover_network_endpoint(inputs);
         endpoints.push(network_endpoint);
 
         // Discover service mesh endpoints
-        let mesh_endpoint = Self::discover_mesh_endpoint();
+        let mesh_endpoint = Self::discover_mesh_endpoint(inputs);
         endpoints.push(mesh_endpoint);
 
         debug!("📡 Discovered {} endpoints", endpoints.len());
@@ -368,14 +441,16 @@ impl SelfDiscoveryEngine {
     }
 
     /// Discover local endpoint
-    fn discover_local_endpoint() -> UniversalEndpoint {
+    fn discover_local_endpoint(inputs: &SelfDiscoveryEnvInputs) -> UniversalEndpoint {
         let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
         let port = network_config.service_ports.api_port;
 
         use beardog_types::constants::domains::network::config;
 
-        let host =
-            std::env::var("BEARDOG_LOCALHOST").unwrap_or_else(|_| config::default_service_host());
+        let host = inputs
+            .localhost_override
+            .clone()
+            .unwrap_or_else(|| config::default_service_host());
 
         UniversalEndpoint {
             url: format!("http://{host}:{port}"),
@@ -386,13 +461,14 @@ impl SelfDiscoveryEngine {
     }
 
     /// Discover network endpoint
-    fn discover_network_endpoint() -> UniversalEndpoint {
+    fn discover_network_endpoint(inputs: &SelfDiscoveryEnvInputs) -> UniversalEndpoint {
         use beardog_config::global::BEARDOG_CONFIG;
         let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
         // Get bind address from centralized config
-        let host = std::env::var("BEARDOG_HOST")
-            .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
-            .unwrap_or_else(|_| BEARDOG_CONFIG.network.addresses.bind_address.clone());
+        let host = inputs
+            .network_host_override
+            .clone()
+            .unwrap_or_else(|| BEARDOG_CONFIG.network.addresses.bind_address.clone());
         let port = network_config.service_ports.api_port;
 
         UniversalEndpoint {
@@ -404,22 +480,19 @@ impl SelfDiscoveryEngine {
     }
 
     /// Discover service mesh endpoint
-    fn discover_mesh_endpoint() -> UniversalEndpoint {
+    fn discover_mesh_endpoint(inputs: &SelfDiscoveryEnvInputs) -> UniversalEndpoint {
         use beardog_config::domains::network_ports;
         use beardog_config::global::BEARDOG_CONFIG;
 
-        let mesh_port = std::env::var("BEARDOG_MESH_PORT")
-            .ok()
-            .and_then(|p| p.parse().ok())
-            .or_else(|| {
-                std::env::var("BEARDOG_ADMIN_PORT")
-                    .ok()
-                    .and_then(|p| p.parse().ok())
-            })
+        let mesh_port = inputs
+            .mesh_port_override
+            .or(inputs.admin_port_override)
             .unwrap_or(network_ports::DEFAULT_MESH_PORT);
 
-        let bind_address = std::env::var("BEARDOG_MESH_BIND_ADDRESS")
-            .unwrap_or_else(|_| BEARDOG_CONFIG.network.addresses.bind_address.clone());
+        let bind_address = inputs
+            .mesh_bind_address_override
+            .clone()
+            .unwrap_or_else(|| BEARDOG_CONFIG.network.addresses.bind_address.clone());
 
         UniversalEndpoint {
             url: format!("https://{bind_address}:{mesh_port}"),
@@ -438,6 +511,7 @@ impl SelfDiscoveryEngine {
     fn build_self_metadata(
         primal_id: &str,
         capabilities: &[SelfCapabilityDetection],
+        inputs: &SelfDiscoveryEnvInputs,
     ) -> PrimalMetadata {
         let version = env!("CARGO_PKG_VERSION").to_string();
 
@@ -453,10 +527,11 @@ impl SelfDiscoveryEngine {
         );
         custom_fields.insert("auto_detected".to_string(), "true".to_string());
 
-        // Get display name from environment or generate from primal ID
-        let display_name = std::env::var("PRIMAL_NAME")
-            .ok()
-            .or_else(|| std::env::var("SERVICE_NAME").ok())
+        let display_name = inputs
+            .beardog_display_name
+            .clone()
+            .or_else(|| inputs.primal_name.clone())
+            .or_else(|| inputs.service_name.clone())
             .or_else(|| {
                 // Extract type and identifier from primal_id for display
                 primal_id.split('-').next().map(|s| {

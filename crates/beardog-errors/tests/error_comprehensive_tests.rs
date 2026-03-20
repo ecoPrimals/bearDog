@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Comprehensive Tests for BearDog Error Types
 //!
 //! Coverage expansion for beardog-errors crate

@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### March 20, 2026 -- Concurrency Architecture & Dependency Modernization
+
+- **Dependency Injection architecture** — Eliminated global mutable state (process_env overlay)
+  across ALL crates. `Default` impls are pure (no I/O). `from_env()` uses `std::env::var`
+  (read-only, thread-safe). `from_env_provider()` accepts closures for injectable testing.
+- **330 → 15 `#[serial_test::serial]` annotations** — Only chaos/fault tests remain serialized.
+  All other tests run fully concurrent at `--test-threads=8`.
+- **Dependency modernization**:
+  - `trust-dns-resolver` → `hickory-resolver` 0.25 (trust-dns was unmaintained)
+  - `bincode` → `postcard` 1.0 (bincode was unmaintained)
+  - `validator` 0.18 → 0.20 (drops unmaintained `proc-macro-error`)
+  - `cargo update` applied across all transitive deps
+- **`cargo deny` passes all 4 checks** (advisories, bans, licenses, sources):
+  - RSA Marvin Attack documented as accepted risk (no upstream fix)
+  - 27 transitive duplicate crates skipped (RustCrypto ecosystem version split)
+  - `deny.toml` simplified: AGPL-3.0-only in global allow, per-crate exceptions removed
+- **Hanging tests eliminated**: `beardog-deploy` refactored with `CommandRunner` trait +
+  `MockAdbCommandRunner`. `show_logs` follow mode has bounded timeout. No more zombie
+  `adb` processes.
+- **Zero clippy warnings** (pedantic + nursery)
+- **Coverage**: 80% → 84% (13,400+ tests passing)
+- **Config types refactored**: `SocketPathInputs`, `IdentityInputs`, `SelfKnowledgeInputs`,
+  `EcosystemListenerEnvInputs`, `ConstraintEnforcementPolicy`, `HsmAutoInitConfig`,
+  `DiscoverSocketEnv`, `UnixListenHints`, `IdentityHints`, `ResourceLimits`, and many more
+  now flow through the call chain instead of reading globals.
+
 ### March 19, 2026 -- Deep Debt Execution & Stub Evolution
 
 - **Zero source clippy warnings**: Fixed all 49 remaining library warnings (redundant borrows,

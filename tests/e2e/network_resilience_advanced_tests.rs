@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Advanced Network Resilience Tests
 //! December 6, 2025 - Phase 2 Coverage Expansion
 //!

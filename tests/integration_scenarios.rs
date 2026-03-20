@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Integration Scenario Tests
 //!
 //! `TEST_CATEGORY`: integration

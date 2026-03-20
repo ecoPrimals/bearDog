@@ -920,7 +920,7 @@ mod tests {
 
         // Create message encrypted with shared beacon
         let secret_message = b"Family recognition signal";
-        let encrypted = shared_beacon
+        let _encrypted = shared_beacon
             .encrypt(secret_message)
             .expect("encrypt failed");
 

@@ -60,24 +60,38 @@ pub struct StoredKey {
     pub purpose: Option<String>,
 }
 
-/// Get the keys directory path
-pub fn get_keys_dir() -> Result<PathBuf, BearDogError> {
-    let home = std::env::var("HOME")
-        .map_err(|_| BearDogError::system("HOME environment variable not set".to_string()))?;
-
-    let keys_dir = PathBuf::from(home).join(".beardog").join("keys");
-
-    // Create directory if it doesn't exist
+/// Keys directory under a given home (testable).
+pub fn get_keys_dir_for_home(home: impl AsRef<std::path::Path>) -> Result<PathBuf, BearDogError> {
+    let keys_dir = home.as_ref().join(".beardog").join("keys");
     if !keys_dir.exists() {
         fs::create_dir_all(&keys_dir)?;
     }
-
     Ok(keys_dir)
 }
 
-/// Save a key to storage
-pub fn save_key(key: &StoredKey) -> Result<(), BearDogError> {
-    let keys_dir = get_keys_dir()?;
+/// Home directory used for `get_keys_dir()` (same as `HOME` env).
+pub fn home_dir_for_keys() -> Result<PathBuf, BearDogError> {
+    std::env::var("HOME")
+        .map_err(|_| BearDogError::system("HOME environment variable not set".to_string()))
+        .map(PathBuf::from)
+}
+
+/// Get the keys directory path
+pub fn get_keys_dir() -> Result<PathBuf, BearDogError> {
+    let home = home_dir_for_keys()?;
+    get_keys_dir_for_home(home)
+}
+
+/// Save a key to storage under a specific home directory (tests).
+pub fn save_key_to_home(
+    key: &StoredKey,
+    home: impl AsRef<std::path::Path>,
+) -> Result<(), BearDogError> {
+    let keys_dir = get_keys_dir_for_home(home)?;
+    save_key_to_dir(key, &keys_dir)
+}
+
+fn save_key_to_dir(key: &StoredKey, keys_dir: &std::path::Path) -> Result<(), BearDogError> {
     let key_file = keys_dir.join(format!("{}.json", key.key_id));
 
     let json = serde_json::to_string_pretty(key)
@@ -87,9 +101,22 @@ pub fn save_key(key: &StoredKey) -> Result<(), BearDogError> {
     Ok(())
 }
 
-/// Load a key from storage
-pub fn load_key(key_id: &str) -> Result<StoredKey, BearDogError> {
+/// Save a key to storage
+pub fn save_key(key: &StoredKey) -> Result<(), BearDogError> {
     let keys_dir = get_keys_dir()?;
+    save_key_to_dir(key, &keys_dir)
+}
+
+/// Load a key from storage under a specific home directory (tests).
+pub fn load_key_from_home(
+    key_id: &str,
+    home: impl AsRef<std::path::Path>,
+) -> Result<StoredKey, BearDogError> {
+    let keys_dir = get_keys_dir_for_home(home)?;
+    load_key_from_dir(key_id, &keys_dir)
+}
+
+fn load_key_from_dir(key_id: &str, keys_dir: &std::path::Path) -> Result<StoredKey, BearDogError> {
     let key_file = keys_dir.join(format!("{key_id}.json"));
 
     if !key_file.exists() {
@@ -105,10 +132,29 @@ pub fn load_key(key_id: &str) -> Result<StoredKey, BearDogError> {
     Ok(key)
 }
 
+/// Load a key from storage
+pub fn load_key(key_id: &str) -> Result<StoredKey, BearDogError> {
+    let keys_dir = get_keys_dir()?;
+    load_key_from_dir(key_id, &keys_dir)
+}
+
 /// List all stored keys
+// Public API for callers using default HOME; CLI handlers use `list_keys_from_home` for DI.
+#[allow(dead_code)]
 pub fn list_keys() -> Result<Vec<StoredKey>, BearDogError> {
     let keys_dir = get_keys_dir()?;
+    list_keys_in_dir(&keys_dir)
+}
 
+/// List keys under a specific home directory (tests / DI).
+pub fn list_keys_from_home(
+    home: impl AsRef<std::path::Path>,
+) -> Result<Vec<StoredKey>, BearDogError> {
+    let keys_dir = get_keys_dir_for_home(home)?;
+    list_keys_in_dir(&keys_dir)
+}
+
+fn list_keys_in_dir(keys_dir: &std::path::Path) -> Result<Vec<StoredKey>, BearDogError> {
     if !keys_dir.exists() {
         return Ok(Vec::new());
     }
@@ -132,8 +178,23 @@ pub fn list_keys() -> Result<Vec<StoredKey>, BearDogError> {
 }
 
 /// Delete a key from storage
+// Public API for callers using default HOME; CLI handlers use `delete_key_from_home` for DI.
+#[allow(dead_code)]
 pub fn delete_key(key_id: &str) -> Result<(), BearDogError> {
     let keys_dir = get_keys_dir()?;
+    delete_key_in_dir(key_id, &keys_dir)
+}
+
+/// Delete a key under a specific home directory (tests / DI).
+pub fn delete_key_from_home(
+    key_id: &str,
+    home: impl AsRef<std::path::Path>,
+) -> Result<(), BearDogError> {
+    let keys_dir = get_keys_dir_for_home(home)?;
+    delete_key_in_dir(key_id, &keys_dir)
+}
+
+fn delete_key_in_dir(key_id: &str, keys_dir: &std::path::Path) -> Result<(), BearDogError> {
     let key_file = keys_dir.join(format!("{key_id}.json"));
 
     if !key_file.exists() {

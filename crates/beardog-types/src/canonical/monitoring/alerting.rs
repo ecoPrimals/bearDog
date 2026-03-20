@@ -103,7 +103,7 @@ pub enum AlertCondition {
     MetricThreshold {
         /// Name of the metric to monitor
         metric: String,
-        /// Comparison applied to the sampled metric vs [`threshold`].
+        /// Comparison applied to the sampled metric vs the `threshold` field.
         operator: ComparisonOperator,
         /// Threshold value to compare against
         threshold: f64,

@@ -455,7 +455,7 @@ fn test_prometheus_config_default() {
     let config = PrometheusConfig::default();
     assert!(config.enabled);
     assert_eq!(config.endpoint, "/metrics");
-    assert_eq!(config.prefix, "beardog");
+    assert_eq!(config.prefix, env!("CARGO_PKG_NAME"));
 }
 
 #[test]

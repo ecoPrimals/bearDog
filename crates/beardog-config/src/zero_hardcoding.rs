@@ -162,7 +162,13 @@ impl EndpointConfig {
 
 impl Default for EndpointConfig {
     fn default() -> Self {
-        Self::from_env()
+        Self {
+            http_port: 0,
+            rpc_port: 0,
+            ws_port: 0,
+            metrics_port: 0,
+            bind_addr: IpAddr::V4(Ipv4Addr::UNSPECIFIED),
+        }
     }
 }
 
@@ -272,7 +278,15 @@ impl ZeroHardcodingTimeouts {
 
 impl Default for ZeroHardcodingTimeouts {
     fn default() -> Self {
-        Self::from_env()
+        Self {
+            connect: Duration::from_secs(10),
+            request: Duration::from_secs(30),
+            idle: Duration::from_secs(60),
+            discovery: Duration::from_secs(5),
+            shutdown: Duration::from_secs(30),
+            health_check: Duration::from_secs(5),
+            db_query: Duration::from_secs(10),
+        }
     }
 }
 
@@ -340,7 +354,12 @@ impl RetryConfig {
 
 impl Default for RetryConfig {
     fn default() -> Self {
-        Self::from_env()
+        Self {
+            max_attempts: 3,
+            initial_backoff: Duration::from_millis(100),
+            max_backoff: Duration::from_secs(30),
+            backoff_multiplier: 2.0,
+        }
     }
 }
 
@@ -403,7 +422,11 @@ impl ZeroHardcodingConfig {
 
 impl Default for ZeroHardcodingConfig {
     fn default() -> Self {
-        Self::from_env()
+        Self {
+            endpoints: EndpointConfig::default(),
+            timeouts: ZeroHardcodingTimeouts::default(),
+            retries: RetryConfig::default(),
+        }
     }
 }
 
@@ -481,11 +504,10 @@ mod tests {
     }
 
     #[test]
-    fn test_endpoint_config_default_is_from_env() {
+    fn test_endpoint_config_default_is_pure() {
         let d = EndpointConfig::default();
-        let e = EndpointConfig::from_env();
-        assert_eq!(d.http_port, e.http_port);
-        assert_eq!(d.rpc_port, e.rpc_port);
+        assert_eq!(d.http_port, 0);
+        assert_eq!(d.bind_addr, IpAddr::V4(Ipv4Addr::UNSPECIFIED));
     }
 
     #[test]
@@ -513,11 +535,10 @@ mod tests {
     }
 
     #[test]
-    fn test_timeout_default_is_from_env() {
+    fn test_timeout_default_matches_documented_baseline() {
         let d = ZeroHardcodingTimeouts::default();
-        let e = ZeroHardcodingTimeouts::from_env();
-        assert_eq!(d.connect, e.connect);
-        assert_eq!(d.request, e.request);
+        assert_eq!(d.connect, Duration::from_secs(10));
+        assert_eq!(d.request, Duration::from_secs(30));
     }
 
     #[test]
@@ -531,10 +552,10 @@ mod tests {
     }
 
     #[test]
-    fn test_retry_config_default_is_from_env() {
+    fn test_retry_config_default_is_pure() {
         let d = RetryConfig::default();
-        let e = RetryConfig::from_env();
-        assert_eq!(d.max_attempts, e.max_attempts);
+        assert_eq!(d.max_attempts, 3);
+        assert_eq!(d.initial_backoff, Duration::from_millis(100));
     }
 
     #[test]
@@ -567,9 +588,10 @@ mod tests {
     }
 
     #[test]
-    fn test_zero_hardcoding_config_default_is_from_env() {
+    fn test_zero_hardcoding_config_default_is_pure() {
         let d = ZeroHardcodingConfig::default();
-        let e = ZeroHardcodingConfig::from_env();
-        assert_eq!(d.endpoints.http_port, e.endpoints.http_port);
+        assert_eq!(d.endpoints.http_port, 0);
+        assert_eq!(d.timeouts.connect, Duration::from_secs(10));
+        assert_eq!(d.retries.max_attempts, 3);
     }
 }

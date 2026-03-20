@@ -314,7 +314,7 @@ pub fn handle_sha3_256(params: &Value) -> Result<Value, BearDogError> {
 /// }
 /// ```
 ///
-/// **Reference**: https://spec.torproject.org/rend-spec-v3#encoding-onion-addresses
+/// **Reference**: <https://spec.torproject.org/rend-spec-v3#encoding-onion-addresses>
 pub fn handle_derive_onion_address(params: &Value) -> Result<Value, BearDogError> {
     // Extract public key
     let pubkey_b64 = params

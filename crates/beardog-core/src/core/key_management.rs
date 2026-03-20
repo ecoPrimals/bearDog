@@ -598,6 +598,8 @@ impl KeyStore {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ed25519_dalek::{SECRET_KEY_LENGTH, SigningKey};
+    use rand::RngCore;
     use tempfile::TempDir;
 
     #[tokio::test]
@@ -728,5 +730,105 @@ mod tests {
         assert_eq!(keys.len(), 2);
         assert!(keys.contains(&"key1".to_string()));
         assert!(keys.contains(&"key2".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_import_signing_key_rejects_bad_length() {
+        let store = KeyStore::new(None);
+        let err = store
+            .import_signing_key(
+                "bad".to_string(),
+                &[0u8; 16],
+                vec![KeyUsage::Sign],
+                KeyStorage::Ephemeral,
+                None,
+            )
+            .await
+            .expect_err("wrong length");
+        assert!(format!("{err}").contains("32"));
+    }
+
+    #[tokio::test]
+    async fn test_get_signing_key_missing() {
+        let store = KeyStore::new(None);
+        let err = store.get_signing_key("nope").await.expect_err("missing");
+        assert!(format!("{err}").contains("nope"));
+    }
+
+    #[tokio::test]
+    async fn test_import_public_key_ed25519_and_reject_unsupported_type() {
+        let store = KeyStore::new(None);
+        let mut sk = [0u8; SECRET_KEY_LENGTH];
+        rand::rngs::OsRng.fill_bytes(&mut sk);
+        let signing = SigningKey::from_bytes(&sk);
+        let vk = signing.verifying_key();
+        store
+            .import_public_key(
+                "pub-only".to_string(),
+                vk.as_bytes(),
+                KeyType::Ed25519,
+                Some("peer".to_string()),
+            )
+            .await
+            .expect("import pub");
+
+        let err = store
+            .import_public_key("rsa".to_string(), vk.as_bytes(), KeyType::Rsa2048, None)
+            .await
+            .expect_err("rsa not supported for import");
+        assert!(format!("{err}").to_lowercase().contains("unsupported"));
+
+        let err = store
+            .import_public_key("bad-len".to_string(), &[0u8; 8], KeyType::Ed25519, None)
+            .await
+            .expect_err("short key");
+        assert!(format!("{err}").contains("32"));
+    }
+
+    #[tokio::test]
+    async fn test_generate_signing_key_persists_when_storage_dir_set() {
+        let temp = TempDir::new().expect("temp");
+        let dir = temp.path().to_path_buf();
+        let store = KeyStore::new(Some(dir.clone()));
+        store
+            .generate_signing_key(
+                "file-sk".to_string(),
+                vec![KeyUsage::Sign],
+                KeyStorage::File(dir.clone()),
+                None,
+            )
+            .await
+            .expect("gen");
+
+        assert!(dir.join("file-sk.key").exists());
+        assert!(dir.join("file-sk.meta.json").exists());
+    }
+
+    #[tokio::test]
+    async fn test_load_from_storage_empty_dir_returns_zero() {
+        let temp = TempDir::new().expect("temp");
+        let store = KeyStore::new(Some(temp.path().to_path_buf()));
+        let n = store.load_from_storage().await.expect("load");
+        assert_eq!(n, 0);
+    }
+
+    #[tokio::test]
+    async fn test_delete_key_removes_persisted_files() {
+        let temp = TempDir::new().expect("temp");
+        let dir = temp.path().to_path_buf();
+        let store = KeyStore::new(Some(dir.clone()));
+        store
+            .generate_symmetric_key(
+                "sym-del".to_string(),
+                vec![KeyUsage::Encrypt],
+                KeyStorage::File(dir.clone()),
+                None,
+            )
+            .await
+            .expect("sym");
+
+        assert!(dir.join("sym-del.key").exists());
+        store.delete_key("sym-del").await.expect("delete");
+        assert!(!dir.join("sym-del.key").exists());
     }
 }

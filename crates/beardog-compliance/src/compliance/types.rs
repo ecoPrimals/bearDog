@@ -79,9 +79,9 @@ pub enum AuditOutcome {
     Warning,
     /// Control intentionally does not apply to this case.
     NotApplicable,
-    /// Explicit success (mirrors [`Passed`] for newer call sites).
+    /// Explicit success (mirrors [`AuditOutcome::Passed`](AuditOutcome::Passed) for newer call sites).
     Success,
-    /// Explicit failure (mirrors [`Failed`] for newer call sites).
+    /// Explicit failure (mirrors [`AuditOutcome::Failed`](AuditOutcome::Failed) for newer call sites).
     Failure,
 }
 

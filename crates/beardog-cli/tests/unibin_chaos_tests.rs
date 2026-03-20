@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Chaos tests for UniBin commands - error conditions and edge cases
 
 use assert_cmd::Command;
@@ -166,7 +167,7 @@ fn test_doctor_stress_comprehensive() {
         let mut cmd = Command::cargo_bin("beardog").unwrap();
         cmd.arg("doctor").arg("--comprehensive");
 
-        let result = cmd.assert().success();
+        let _result = cmd.assert().success();
         eprintln!("Comprehensive check {} completed", i + 1);
     }
 }

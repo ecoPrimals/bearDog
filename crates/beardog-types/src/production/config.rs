@@ -229,8 +229,19 @@ impl Default for ProductionCoreConfig {
             deployment_id: uuid::Uuid::new_v4().to_string(),
             region: "local".to_string(),
             cluster_id: "default-cluster".to_string(),
-            node_id: std::env::var("HOSTNAME").unwrap_or_else(|_| "unknown".to_string()),
+            node_id: "unknown".to_string(),
             flags: ProductionFlags::default(),
+        }
+    }
+}
+
+impl ProductionCoreConfig {
+    /// Load core identity fields from environment variables (e.g. `HOSTNAME` for `node_id`).
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
+            node_id: std::env::var("HOSTNAME").unwrap_or_else(|_| "unknown".to_string()),
+            ..Default::default()
         }
     }
 }

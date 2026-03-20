@@ -152,7 +152,16 @@ pub struct HumanEntropyConfig {
 impl Default for HumanEntropyConfig {
     fn default() -> Self {
         Self {
-            // Use 0.8 for production quality threshold (can be configured via env var)
+            quality_threshold: 0.8,
+            collection_timeout_ms: 5000,
+        }
+    }
+}
+
+impl HumanEntropyConfig {
+    /// Load `quality_threshold` from `BEARDOG_ENTROPY_QUALITY_THRESHOLD` when set (default `0.8`).
+    pub fn from_env() -> Self {
+        Self {
             quality_threshold: std::env::var("BEARDOG_ENTROPY_QUALITY_THRESHOLD")
                 .ok()
                 .and_then(|v| v.parse().ok())

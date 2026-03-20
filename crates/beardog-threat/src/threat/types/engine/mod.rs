@@ -9,7 +9,7 @@ pub mod conditions;
 pub mod ml_models;
 /// Detection rules, execution results, and validation helpers.
 pub mod rules;
-/// [`ThreatDetectionEngine`] snapshot type shared with handlers.
+/// [`ThreatDetectionEngine`](crate::threat::types::engine::threat_engine::ThreatDetectionEngine) snapshot type shared with handlers.
 pub mod threat_engine;
 
 pub use conditions::RuleCondition;

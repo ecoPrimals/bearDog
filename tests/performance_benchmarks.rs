@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Performance Benchmarking Infrastructure for `BearDog`
 //!
 //! Provides infrastructure for tracking performance metrics,

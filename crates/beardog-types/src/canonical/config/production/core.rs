@@ -123,45 +123,40 @@ impl ProductionFeatureFlags {
 
     /// Create ProductionFeatureFlags from environment variables
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            enable_advanced_monitoring: std::env::var("BEARDOG_ENABLE_ADVANCED_MONITORING")
-                .ok()
+            enable_advanced_monitoring: get("BEARDOG_ENABLE_ADVANCED_MONITORING")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
-            enable_distributed_tracing: std::env::var("BEARDOG_ENABLE_DISTRIBUTED_TRACING")
-                .ok()
+            enable_distributed_tracing: get("BEARDOG_ENABLE_DISTRIBUTED_TRACING")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
-            enable_performance_profiling: std::env::var("BEARDOG_ENABLE_PERFORMANCE_PROFILING")
-                .ok()
+            enable_performance_profiling: get("BEARDOG_ENABLE_PERFORMANCE_PROFILING")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(false),
-            enable_security_auditing: std::env::var("BEARDOG_ENABLE_SECURITY_AUDITING")
-                .ok()
+            enable_security_auditing: get("BEARDOG_ENABLE_SECURITY_AUDITING")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
-            enable_auto_scaling: std::env::var("BEARDOG_ENABLE_AUTO_SCALING")
-                .ok()
+            enable_auto_scaling: get("BEARDOG_ENABLE_AUTO_SCALING")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(false),
-            enable_circuit_breakers: std::env::var("BEARDOG_ENABLE_CIRCUIT_BREAKERS")
-                .ok()
+            enable_circuit_breakers: get("BEARDOG_ENABLE_CIRCUIT_BREAKERS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
-            enable_rate_limiting: std::env::var("BEARDOG_ENABLE_RATE_LIMITING")
-                .ok()
+            enable_rate_limiting: get("BEARDOG_ENABLE_RATE_LIMITING")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
-            enable_caching: std::env::var("BEARDOG_ENABLE_CACHING")
-                .ok()
+            enable_caching: get("BEARDOG_ENABLE_CACHING")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
-            enable_compression: std::env::var("BEARDOG_ENABLE_COMPRESSION")
-                .ok()
+            enable_compression: get("BEARDOG_ENABLE_COMPRESSION")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
-            enable_encryption_at_rest: std::env::var("BEARDOG_ENABLE_ENCRYPTION_AT_REST")
-                .ok()
+            enable_encryption_at_rest: get("BEARDOG_ENABLE_ENCRYPTION_AT_REST")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
         }

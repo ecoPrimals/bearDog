@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Export and import keys for inter-primal sharing (JSON [`ExportedKey`] format).
+//! Export and import keys for inter-primal sharing (JSON [`ExportedKey`](crate::handlers::key_export::ExportedKey) format).
 
 use super::key_store::{self, StoredKey};
 use beardog_errors::BearDogError;
@@ -524,5 +524,55 @@ mod tests {
         assert_eq!(deserialized.key_id, "test-key");
         assert_eq!(deserialized.algorithm, "aes-256-gcm");
         assert_eq!(deserialized.generation, 1);
+    }
+
+    #[test]
+    fn test_exported_key_serde_default_version() {
+        let json = r#"{"key_id":"k","algorithm":"aes-256-gcm","generation":0,"created_at":"t","key_material":"e30="}"#;
+        let e: ExportedKey = serde_json::from_str(json).unwrap();
+        assert_eq!(e.version, "1.0");
+        assert!(!e.encrypted);
+    }
+
+    #[test]
+    fn test_decrypt_key_material_invalid_json() {
+        let r = decrypt_key_material("not json", "pw");
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn test_decrypt_key_material_missing_fields() {
+        let r = decrypt_key_material(r#"{"salt":"x"}"#, "pw");
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn test_decrypt_key_material_invalid_salt_b64() {
+        let bad = r#"{"salt":"not-valid-salt-string","nonce":"AAAA","ciphertext":"AAAA"}"#;
+        assert!(decrypt_key_material(bad, "pw").is_err());
+    }
+
+    #[test]
+    fn test_encrypt_key_material_invalid_base64() {
+        assert!(encrypt_key_material("@@@not-base64@@@", "pw").is_err());
+    }
+
+    #[test]
+    fn test_decrypt_key_material_invalid_nonce_length() {
+        use base64::Engine;
+        use base64::engine::general_purpose::STANDARD;
+        let enc = encrypt_key_material("e30=", "pw").unwrap();
+        let mut v: serde_json::Value = serde_json::from_str(&enc).unwrap();
+        v["nonce"] = serde_json::Value::String(STANDARD.encode([1u8, 2, 3]));
+        let bad = v.to_string();
+        assert!(decrypt_key_material(&bad, "pw").is_err());
+    }
+
+    #[test]
+    fn test_decrypt_key_material_invalid_ciphertext_b64() {
+        let enc = encrypt_key_material("e30=", "pw").unwrap();
+        let mut v: serde_json::Value = serde_json::from_str(&enc).unwrap();
+        v["ciphertext"] = serde_json::Value::String("not-valid-b64!!!".to_string());
+        assert!(decrypt_key_material(&v.to_string(), "pw").is_err());
     }
 }

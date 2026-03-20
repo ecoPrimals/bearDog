@@ -160,14 +160,14 @@ impl Default for CapabilityRegistryConfig {
     fn default() -> Self {
         Self {
             health_check_interval: Duration::from_secs(
-                std::env::var("BEARDOG_CAPABILITY_HEALTH_CHECK_INTERVAL_SECS")
+                beardog_errors::process_env::var("BEARDOG_CAPABILITY_HEALTH_CHECK_INTERVAL_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),
             ),
             max_consecutive_failures: 3,
             health_check_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_CAPABILITY_HEALTH_CHECK_TIMEOUT_SECS")
+                beardog_errors::process_env::var("BEARDOG_CAPABILITY_HEALTH_CHECK_TIMEOUT_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(5),

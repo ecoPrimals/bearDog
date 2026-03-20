@@ -59,9 +59,9 @@ pub mod genetics;
 
 // Re-export constraint types
 pub use constraints::{
-    BehavioralConstraint, ConstraintEnforcer, ConstraintEvolutionEngine, ConstraintViolationError,
-    DataAccessConstraint, EvolutionTrigger, KeyConstraints, KeyOperation, LifetimeConstraint,
-    ScopeConstraint, SignedConstraints,
+    BehavioralConstraint, ConstraintEnforcementPolicy, ConstraintEnforcer,
+    ConstraintEvolutionEngine, ConstraintViolationError, DataAccessConstraint, EvolutionTrigger,
+    KeyConstraints, KeyOperation, LifetimeConstraint, ScopeConstraint, SignedConstraints,
 };
 
 // Re-export key types from genetics module

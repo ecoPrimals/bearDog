@@ -505,4 +505,55 @@ mod tests {
         assert!(decision.decision.contains("approve"));
         assert!(decision.confidence > 0.8);
     }
+
+    #[tokio::test]
+    async fn test_decision_conditional_approve_branch() {
+        let config = create_test_config();
+        let system = HybridIntelligenceSystem::new(config).expect("Should create system");
+        let mut context = HashMap::new();
+        context.insert("risk_level".to_string(), serde_json::json!(0.4));
+        context.insert("data_quality".to_string(), serde_json::json!(0.85));
+        context.insert("system_confidence".to_string(), serde_json::json!(0.85));
+        let decision = system.make_decision(context).await.expect("decision");
+        assert_eq!(decision.decision, "conditional_approve");
+    }
+
+    #[tokio::test]
+    async fn test_decision_review_required_branch() {
+        let config = create_test_config();
+        let system = HybridIntelligenceSystem::new(config).expect("Should create system");
+        let mut context = HashMap::new();
+        context.insert("risk_level".to_string(), serde_json::json!(0.6));
+        context.insert("data_quality".to_string(), serde_json::json!(0.75));
+        context.insert("system_confidence".to_string(), serde_json::json!(0.75));
+        let decision = system.make_decision(context).await.expect("decision");
+        assert_eq!(decision.decision, "review_required");
+    }
+
+    #[tokio::test]
+    async fn test_decision_reject_low_confidence_branch() {
+        let config = create_test_config();
+        let system = HybridIntelligenceSystem::new(config).expect("Should create system");
+        let mut context = HashMap::new();
+        context.insert("risk_level".to_string(), serde_json::json!(0.2));
+        context.insert("data_quality".to_string(), serde_json::json!(0.2));
+        context.insert("system_confidence".to_string(), serde_json::json!(0.2));
+        let decision = system.make_decision(context).await.expect("decision");
+        assert_eq!(decision.decision, "reject_low_confidence");
+    }
+
+    #[tokio::test]
+    async fn test_predict_covers_trend_branch_for_multiple_inputs() {
+        let config = create_test_config();
+        let system = HybridIntelligenceSystem::new(config).expect("Should create system");
+        let input = vec![1.0, 3.0, 5.0, 7.0];
+        let pred = system.predict(input, None).await.expect("pred");
+        assert_eq!(pred.predictions.len(), 4);
+        assert!(
+            pred.uncertainty
+                .as_ref()
+                .map(|u| !u.is_empty())
+                .unwrap_or(false)
+        );
+    }
 }

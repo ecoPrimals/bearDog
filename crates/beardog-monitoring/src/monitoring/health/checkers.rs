@@ -98,7 +98,7 @@ impl HealthChecker for DatabaseHealthChecker {
                 let mut meta = HashMap::with_capacity(16);
                 meta.insert("type".to_string(), "PostgreSQL".to_string());
                 // Capability-based: Discover DB host from environment (no hardcoding)
-                let db_host = std::env::var("BEARDOG_DB_HOST")
+                let db_host = beardog_errors::process_env::var("BEARDOG_DB_HOST")
                     .unwrap_or_else(|_| "not_configured".to_string());
                 meta.insert("host".to_string(), db_host);
                 meta
@@ -161,7 +161,7 @@ impl HealthChecker for CacheHealthChecker {
                 let mut meta = HashMap::with_capacity(16);
                 meta.insert("type".to_string(), "Redis".to_string());
                 // Capability-based: Discover cache host from environment
-                let cache_host = std::env::var("BEARDOG_CACHE_HOST")
+                let cache_host = beardog_errors::process_env::var("BEARDOG_CACHE_HOST")
                     .unwrap_or_else(|_| "not_configured".to_string());
                 meta.insert("host".to_string(), cache_host);
                 meta
@@ -188,7 +188,7 @@ pub struct ExternalApiHealthChecker {
 impl Default for ExternalApiHealthChecker {
     fn default() -> Self {
         Self {
-            url: std::env::var("BEARDOG_EXTERNAL_API_URL")
+            url: beardog_errors::process_env::var("BEARDOG_EXTERNAL_API_URL")
                 .unwrap_or_else(|_| "not_configured".to_string()),
             simulated_latency: None,
         }
@@ -291,8 +291,8 @@ impl HealthChecker for HsmHealthChecker {
             metadata: {
                 let mut meta = HashMap::with_capacity(16);
                 // Capability-based: Discover HSM provider dynamically
-                let hsm_provider =
-                    std::env::var("BEARDOG_HSM_PROVIDER").unwrap_or_else(|_| "auto".to_string());
+                let hsm_provider = beardog_errors::process_env::var("BEARDOG_HSM_PROVIDER")
+                    .unwrap_or_else(|_| "auto".to_string());
                 meta.insert("provider".to_string(), hsm_provider);
                 meta
             },

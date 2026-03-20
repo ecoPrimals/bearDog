@@ -3,7 +3,7 @@
 //! Shared workflow configuration, API DTOs, and taxonomy enums for orchestration.
 //!
 //! [`WorkflowRequest`] / [`WorkflowResponse`] model RPC-style workflow submission and status.
-//! [`enums`] defines lifecycle, audit, approval, and execution states used by policies and logs.
+//! [`enums`](crate::workflows::types::enums) defines lifecycle, audit, approval, and execution states used by policies and logs.
 
 // Define WorkflowConfig locally until it's available in beardog_types
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

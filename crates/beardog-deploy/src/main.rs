@@ -5,6 +5,7 @@
 use beardog_errors::BearDogError;
 mod android;
 mod builder;
+mod command_runner;
 mod device;
 mod error;
 
@@ -169,10 +170,6 @@ async fn build_command(
     Ok(())
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "Deploy flow passes builder, deployment, device manager, and build flags together"
-)]
 async fn deploy_command(
     builder: &RustBuilder,
     android_deployment: &AndroidDeployment,

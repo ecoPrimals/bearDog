@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Property-Based Testing for Cryptographic Roundtrips
 //!
 //! This test suite verifies that cryptographic operations maintain

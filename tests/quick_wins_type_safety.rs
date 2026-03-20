@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Quick Win Tests: Type Safety
 //!
 //! This module contains unit tests focused on verifying type safety, trait implementations,

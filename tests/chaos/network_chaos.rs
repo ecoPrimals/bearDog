@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 #![allow(unused_imports, unused_variables, dead_code, unused_comparisons, clippy::all)]
 
 // Network Chaos Tests

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Higher-level zero-copy manager with [`Weak`]-backed string cache and [`OptimizedString`]/[`OptimizedBytes`] views.
+//! Higher-level zero-copy manager with [`std::sync::Weak`]-backed string cache and [`OptimizedString`](crate::zero_copy_optimized::OptimizedString)/[`OptimizedBytes`](crate::zero_copy_optimized::OptimizedBytes) views.
 
 use parking_lot::RwLock;
 // use std::borrow::Cow; // Currently unused but kept for future zero-copy optimizations
@@ -157,10 +157,11 @@ impl ZeroCopyManager {
         let mut last_cleanup = self.last_cleanup.write();
         let now = Instant::now();
 
-        let cleanup_interval_secs = std::env::var("BEARDOG_CACHE_CLEANUP_INTERVAL_SECS")
-            .ok()
-            .and_then(|v| v.parse().ok())
-            .unwrap_or(300);
+        let cleanup_interval_secs =
+            beardog_errors::process_env::var("BEARDOG_CACHE_CLEANUP_INTERVAL_SECS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(300);
         if now.duration_since(*last_cleanup) < Duration::from_secs(cleanup_interval_secs) {
             return; // Cleanup at most once per interval
         }

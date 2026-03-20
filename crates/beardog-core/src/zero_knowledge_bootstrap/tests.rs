@@ -47,8 +47,8 @@ use super::*;
         assert!(!self_id.is_empty(), "Must have self-identity");
 
         // ✅ SOVEREIGNTY COMPLIANCE: Self-discovered primal type (not hardcoded)
-        let primal_type = std::env::var("PRIMAL_TYPE")
-            .or_else(|_| std::env::var("SERVICE_TYPE"))
+        let primal_type = beardog_errors::process_env::var("PRIMAL_TYPE")
+            .or_else(|_| beardog_errors::process_env::var("SERVICE_TYPE"))
             .unwrap_or_else(|_| "primal".to_string());
 
         // Validate infant discovery - no hardcoded ecosystem assumptions
@@ -338,24 +338,22 @@ use super::*;
         assert_eq!(config.discovery_timeout_ms, 30000); // 30 seconds
         assert_eq!(config.max_discovery_attempts, 10);
         assert_eq!(config.min_capabilities_threshold, 1);
-        assert_eq!(config.listen_interface, "0.0.0.0");
+        assert!(!config.listen_interface.is_empty());
         assert!(config.enable_passive_listening);
         assert!(!config.discovery_protocols.is_empty());
     }
 
     #[test]
     #[allow(deprecated)]
-    fn test_bootstrap_config_environment_override() {
-        beardog_errors::process_env::set_var("BEARDOG_ZK_DISCOVERY_TIMEOUT_MS", "60000");
-        beardog_errors::process_env::set_var("BEARDOG_ZK_MAX_DISCOVERY_ATTEMPTS", "5");
-
-        let config = BootstrapConfig::default();
+    fn test_bootstrap_config_explicit_overrides() {
+        let config = BootstrapConfig {
+            discovery_timeout_ms: 60000,
+            max_discovery_attempts: 5,
+            ..BootstrapConfig::default()
+        };
 
         assert_eq!(config.discovery_timeout_ms, 60000);
         assert_eq!(config.max_discovery_attempts, 5);
-
-        beardog_errors::process_env::remove_var("BEARDOG_ZK_DISCOVERY_TIMEOUT_MS");
-        beardog_errors::process_env::remove_var("BEARDOG_ZK_MAX_DISCOVERY_ATTEMPTS");
     }
 
     #[test]

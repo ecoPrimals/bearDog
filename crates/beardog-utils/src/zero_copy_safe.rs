@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! [`Arc`]-backed byte views and a mutex pool for reusable `Vec` slabs.
+//! [`std::sync::Arc`]-backed byte views and a mutex pool for reusable `Vec` slabs.
 
 use beardog_errors::BearDogError;
 use std::sync::Arc;

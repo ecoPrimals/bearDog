@@ -41,7 +41,7 @@ impl SafeIosProvider {
 
     /// Checks if Secure Enclave is available on this device
     fn check_secure_enclave_availability() -> bool {
-        std::env::var("IOS_SECURE_ENCLAVE_AVAILABLE")
+        beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE")
             .map(|v| v == "true")
             .unwrap_or(false)
     }

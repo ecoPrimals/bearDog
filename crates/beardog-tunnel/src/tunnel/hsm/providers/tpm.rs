@@ -49,16 +49,22 @@ impl TpmUniversalProvider {
     /// # Errors
     /// Returns an error if initialization fails
     pub async fn new() -> Result<Self, BearDogError> {
-        let provider = Self {
-            capabilities: None,
-            tpm_version: TpmVersion::V2_0,
-            metadata: HashMap::with_capacity(16),
-        };
-
-        // Note: TPM integration requires actual hardware/driver access
-        // This is a placeholder for future implementation
-
-        Ok(provider)
+        #[cfg(not(feature = "tpm-provider"))]
+        {
+            return Err(BearDogError::not_implemented(
+                "TPM HSM provider: enable Cargo feature `tpm-provider` when platform TPM integration is wired",
+            ));
+        }
+        #[cfg(feature = "tpm-provider")]
+        {
+            let provider = Self {
+                capabilities: None,
+                tpm_version: TpmVersion::V2_0,
+                metadata: HashMap::with_capacity(16),
+            };
+            // Note: Full TPM 2.0 crypto still requires tss2 / platform integration beyond this stub.
+            Ok(provider)
+        }
     }
 
     /// Get security level (TPM is level 2-3 depending on implementation)
@@ -80,7 +86,7 @@ impl TpmUniversalProvider {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "tpm-provider"))]
 mod tests {
     use super::*;
 

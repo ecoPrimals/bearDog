@@ -154,26 +154,27 @@ impl NetworkResourceConfig {
     /// - `BEARDOG_PROD_READ_TIMEOUT_SECS`: Read timeout (default: 30)
     /// - `BEARDOG_PROD_WRITE_TIMEOUT_SECS`: Write timeout (default: 30)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            max_connections: std::env::var("BEARDOG_PROD_MAX_CONNECTIONS")
-                .ok()
+            max_connections: get("BEARDOG_PROD_MAX_CONNECTIONS")
                 .and_then(|c| c.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_CONNECTIONS),
             connection_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_PROD_CONNECTION_TIMEOUT_SECS")
-                    .ok()
+                get("BEARDOG_PROD_CONNECTION_TIMEOUT_SECS")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_CONNECTION_TIMEOUT_SECS),
             ),
             read_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_PROD_READ_TIMEOUT_SECS")
-                    .ok()
+                get("BEARDOG_PROD_READ_TIMEOUT_SECS")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_READ_TIMEOUT_SECS),
             ),
             write_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_PROD_WRITE_TIMEOUT_SECS")
-                    .ok()
+                get("BEARDOG_PROD_WRITE_TIMEOUT_SECS")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_WRITE_TIMEOUT_SECS),
             ),
@@ -253,23 +254,24 @@ impl StorageResourceConfig {
     /// - `BEARDOG_LOG_ROTATION_SIZE_MB`: Log rotation size (default: 100)
     /// - `BEARDOG_LOG_RETENTION_DAYS`: Log retention days (default: 30)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            max_disk_usage_percent: std::env::var("BEARDOG_MAX_DISK_USAGE_PERCENT")
-                .ok()
+            max_disk_usage_percent: get("BEARDOG_MAX_DISK_USAGE_PERCENT")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_DISK_USAGE_PERCENT),
             temp_dir_cleanup_interval: Duration::from_secs(
-                std::env::var("BEARDOG_TEMP_CLEANUP_INTERVAL_SECS")
-                    .ok()
+                get("BEARDOG_TEMP_CLEANUP_INTERVAL_SECS")
                     .and_then(|i| i.parse().ok())
                     .unwrap_or(Self::DEFAULT_TEMP_CLEANUP_INTERVAL_SECS),
             ),
-            log_rotation_size_mb: std::env::var("BEARDOG_LOG_ROTATION_SIZE_MB")
-                .ok()
+            log_rotation_size_mb: get("BEARDOG_LOG_ROTATION_SIZE_MB")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_LOG_ROTATION_SIZE_MB),
-            log_retention_days: std::env::var("BEARDOG_LOG_RETENTION_DAYS")
-                .ok()
+            log_retention_days: get("BEARDOG_LOG_RETENTION_DAYS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_LOG_RETENTION_DAYS),
         }
@@ -312,24 +314,25 @@ impl ConnectionConfig {
     /// - `BEARDOG_CONNECTION_LIFETIME_SECS`: Connection lifetime (default: 1800)
     /// - `BEARDOG_CONNECTION_HEALTH_CHECK_INTERVAL_SECS`: Health check interval (default: 60)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            pool_size: std::env::var("BEARDOG_CONNECTION_POOL_SIZE")
-                .ok()
+            pool_size: get("BEARDOG_CONNECTION_POOL_SIZE")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_POOL_SIZE),
-            max_idle_connections: std::env::var("BEARDOG_MAX_IDLE_CONNECTIONS")
-                .ok()
+            max_idle_connections: get("BEARDOG_MAX_IDLE_CONNECTIONS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_IDLE_CONNECTIONS),
             connection_lifetime: Duration::from_secs(
-                std::env::var("BEARDOG_CONNECTION_LIFETIME_SECS")
-                    .ok()
+                get("BEARDOG_CONNECTION_LIFETIME_SECS")
                     .and_then(|l| l.parse().ok())
                     .unwrap_or(Self::DEFAULT_CONNECTION_LIFETIME_SECS),
             ),
             health_check_interval: Duration::from_secs(
-                std::env::var("BEARDOG_CONNECTION_HEALTH_CHECK_INTERVAL_SECS")
-                    .ok()
+                get("BEARDOG_CONNECTION_HEALTH_CHECK_INTERVAL_SECS")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_HEALTH_CHECK_INTERVAL_SECS),
             ),
@@ -349,12 +352,14 @@ impl GcTuningConfig {
 
     /// Create GcTuningConfig from environment variables
     pub fn from_env() -> Self {
-        let target_pause_ms = std::env::var("BEARDOG_GC_TARGET_PAUSE_MS")
-            .ok()
-            .and_then(|s| s.parse().ok());
-        let throughput_target_percent = std::env::var("BEARDOG_GC_THROUGHPUT_TARGET_PERCENT")
-            .ok()
-            .and_then(|s| s.parse().ok());
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
+        let target_pause_ms = get("BEARDOG_GC_TARGET_PAUSE_MS").and_then(|s| s.parse().ok());
+        let throughput_target_percent =
+            get("BEARDOG_GC_THROUGHPUT_TARGET_PERCENT").and_then(|s| s.parse().ok());
 
         Self {
             strategy: GcStrategy::Default,

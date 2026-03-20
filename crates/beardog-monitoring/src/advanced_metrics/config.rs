@@ -102,12 +102,12 @@ impl Default for MetricsConfig {
         Self {
             enabled: true,
             collection_interval: Duration::from_secs(
-                std::env::var("BEARDOG_METRICS_COLLECTION_INTERVAL_SECS")
+                beardog_errors::process_env::var("BEARDOG_METRICS_COLLECTION_INTERVAL_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(60),
             ),
-            max_history_size: std::env::var("BEARDOG_METRICS_HISTORY_SIZE")
+            max_history_size: beardog_errors::process_env::var("BEARDOG_METRICS_HISTORY_SIZE")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(1000), // 1000 samples default
@@ -124,7 +124,7 @@ impl Default for AnalysisConfig {
             enable_anomaly_detection: true,
             enable_trend_analysis: true,
             analysis_window: Duration::from_secs(
-                std::env::var("BEARDOG_ANALYSIS_WINDOW_SECS")
+                beardog_errors::process_env::var("BEARDOG_ANALYSIS_WINDOW_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(24 * 60 * 60), // 24 hours default
@@ -140,7 +140,7 @@ impl Default for MetricsHealthCheckConfig {
         Self {
             enabled: true,
             check_interval: Duration::from_secs(
-                std::env::var("BEARDOG_HEALTH_CHECK_INTERVAL_SECS")
+                beardog_errors::process_env::var("BEARDOG_HEALTH_CHECK_INTERVAL_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(300),

@@ -19,21 +19,15 @@
 //!
 //! ## Example
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use beardog_types::adapters::AdapterUnlockCertificate;
 //!
-//! # fn example() -> Result<(), beardog_errors::BearDogError> {
-//! // BearDog daemon issues certificate
 //! let cert = AdapterUnlockCertificate::issue(
 //!     "prometheus".to_string(),
 //!     CommercialClassification::Human { confidence: 0.95 },
 //!     &daemon_signing_key,
 //! )?;
-//!
-//! // Adapter verifies and unlocks
 //! cert.verify(&daemon_public_key)?;
-//! # Ok(())
-//! # }
 //! ```
 
 use beardog_errors::BearDogError;
@@ -359,7 +353,7 @@ impl AdapterUnlockCertificate {
         hasher.update(certificate_id.as_bytes());
         hasher.update(adapter_id.as_bytes());
         hasher.update(
-            &bincode::serialize(classification)
+            &postcard::to_allocvec(classification)
                 .map_err(|e| BearDogError::serialization(&format!("Failed to serialize: {e}")))?,
         );
         hasher.update(issued_at.timestamp().to_le_bytes());

@@ -14,11 +14,16 @@
 | **Clippy** | 0 warnings | Pedantic + nursery, workspace-centralized |
 | **Missing Docs** | 0 warnings | All public items documented |
 | **Pure Rust** | 100% | Zero C dependencies (ecoBin) |
-| **Unsafe Code** | 1 justified module | `forbid(unsafe_code)` per-crate, `deny` workspace; `process_env.rs` exception |
+| **Unsafe Code** | 0 production | `forbid(unsafe_code)` per-crate, `deny` workspace |
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
-| **Files > 1000 LOC** | 0 | All 1,740 .rs files compliant |
+| **Files > 1000 LOC** | 0 | All .rs files compliant |
+| **Tests** | 13,400+ | Fully concurrent (8 threads) |
+| **Coverage** | 84% line | llvm-cov, workspace-wide |
+| **Serial Tests** | 15 | Chaos/fault injection only |
+| **cargo deny** | 4/4 pass | Advisories, bans, licenses, sources |
 | **License** | AGPL-3.0-only | SPDX headers on all .rs files |
+| **Architecture** | DI-based | Pure `Default`, `from_env()` at boundaries |
 | **Production** | READY | Universal deployment |
 
 ---
@@ -55,11 +60,12 @@
 | Edition 2024 | MSRV 1.85.0, all crates |
 | Pure Rust (ecoBin) | Zero C deps; blake3 pure feature; sysinfo removed |
 | UniBin/ecoBin | Single binary, cross-compilation ready |
+| Dependency Injection | Pure `Default`, `from_env()` at startup, `from_env_provider()` for tests |
 | Zero Hardcoding | `PRIMAL_NAME` env var, capability-based discovery |
 | Self-Knowledge | Primals discover peers at runtime |
 | JSON-RPC + tarpc | Both protocols supported |
 | AGPL-3.0-only | License verified; SPDX headers on all .rs files |
-| `forbid(unsafe_code)` | Per-crate `lib.rs`; 1 justified exception (`process_env.rs`) |
+| `forbid(unsafe_code)` | Per-crate `lib.rs`; platform FFI documented per wateringHole |
 | Workspace Lints | Centralized clippy pedantic + nursery |
 | All Public Items Documented | 0 missing_docs warnings |
 | File Size | 0 files > 1000 LOC |
@@ -67,6 +73,16 @@
 ---
 
 ## Recent Improvements (March 20, 2026)
+
+### Wave 5: Concurrency Architecture & Dependency Modernization
+
+- **Dependency Injection architecture** — Eliminated global mutable state; `Default` pure (no I/O), `from_env()` at boundaries, `from_env_provider()` for tests
+- **330 → 15 `#[serial_test::serial]`** — Only chaos/fault tests serialized; all other tests fully concurrent
+- **Dependency modernization**: `trust-dns-resolver` → `hickory-resolver`, `bincode` → `postcard`, `validator` 0.18 → 0.20
+- **`cargo deny` passes all 4 checks** (advisories, bans, licenses, sources)
+- **Hanging tests eliminated**: `CommandRunner` trait for `adb` mocking; bounded timeouts on streaming ops
+- **13,400+ tests passing** at `--test-threads=8` with zero races
+- **Coverage**: 80% → 84% line (llvm-cov)
 
 ### Wave 4: Deep Debt Execution & Stub Evolution
 
@@ -87,8 +103,7 @@
 - Centralized all lints in workspace Cargo.toml
 - Evolved all unsafe code in beardog-utils to safe Rust
 - Refactored 3 files that grew past 1000 lines from doc additions
-- Fixed env var test race conditions with `#[serial_test::serial]`
-- Cleaned up `std::env::set_var` for edition 2024 safety requirements
+- Edition 2024 `std::env::set_var` safety — resolved via DI architecture (Wave 5)
 - Updated `gen` keyword usage (now reserved in edition 2024)
 
 ### Wave 2: Deep Compliance (prior session)

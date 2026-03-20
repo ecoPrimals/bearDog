@@ -38,13 +38,12 @@ impl UnifiedDiscoveryConfig {
 
     /// Create an aggressive discovery configuration (fast timeouts, aggressive retries)
     pub fn aggressive() -> Self {
-        use std::env;
-        let discovery_endpoint = env::var("BEARDOG_DISCOVERY_ENDPOINT")
-            .or_else(|_| env::var("DISCOVERY_ENDPOINT"))
+        let discovery_endpoint = std::env::var("BEARDOG_DISCOVERY_ENDPOINT")
+            .or_else(|_| std::env::var("DISCOVERY_ENDPOINT"))
             .unwrap_or_else(|_| {
-                let host = env::var("DISCOVERY_HOST")
+                let host = std::env::var("DISCOVERY_HOST")
                     .unwrap_or_else(|_| "discovery.ecosystem.internal".to_string());
-                let port = env::var("DISCOVERY_PORT").unwrap_or_else(|_| "8500".to_string());
+                let port = std::env::var("DISCOVERY_PORT").unwrap_or_else(|_| "8500".to_string());
                 format!("http://{host}:{port}")
             });
 
@@ -75,13 +74,12 @@ impl UnifiedDiscoveryConfig {
 
     /// Create a conservative discovery configuration (long timeouts, fewer retries)
     pub fn conservative() -> Self {
-        use std::env;
-        let discovery_endpoint = env::var("BEARDOG_DISCOVERY_ENDPOINT")
-            .or_else(|_| env::var("DISCOVERY_ENDPOINT"))
+        let discovery_endpoint = std::env::var("BEARDOG_DISCOVERY_ENDPOINT")
+            .or_else(|_| std::env::var("DISCOVERY_ENDPOINT"))
             .unwrap_or_else(|_| {
-                let host = env::var("DISCOVERY_HOST")
+                let host = std::env::var("DISCOVERY_HOST")
                     .unwrap_or_else(|_| "discovery.ecosystem.internal".to_string());
-                let port = env::var("DISCOVERY_PORT").unwrap_or_else(|_| "8500".to_string());
+                let port = std::env::var("DISCOVERY_PORT").unwrap_or_else(|_| "8500".to_string());
                 format!("http://{host}:{port}")
             });
 
@@ -217,13 +215,12 @@ impl CircuitBreakerConfig {
 
 impl Default for UnifiedDiscoveryConfig {
     fn default() -> Self {
-        use std::env;
-        let discovery_endpoint = env::var("BEARDOG_DISCOVERY_ENDPOINT")
-            .or_else(|_| env::var("DISCOVERY_ENDPOINT"))
+        let discovery_endpoint = std::env::var("BEARDOG_DISCOVERY_ENDPOINT")
+            .or_else(|_| std::env::var("DISCOVERY_ENDPOINT"))
             .unwrap_or_else(|_| {
-                let host = env::var("DISCOVERY_HOST")
+                let host = std::env::var("DISCOVERY_HOST")
                     .unwrap_or_else(|_| "discovery.ecosystem.internal".to_string());
-                let port = env::var("DISCOVERY_PORT").unwrap_or_else(|_| "8500".to_string());
+                let port = std::env::var("DISCOVERY_PORT").unwrap_or_else(|_| "8500".to_string());
                 format!("http://{host}:{port}")
             });
 
@@ -246,13 +243,12 @@ impl Default for UnifiedDiscoveryConfig {
 
 impl Default for ServiceRegistryConfig {
     fn default() -> Self {
-        use std::env;
-        let registry_endpoint = env::var("BEARDOG_SERVICE_REGISTRY_ENDPOINT")
-            .or_else(|_| env::var("CONSUL_HTTP_ADDR"))
+        let registry_endpoint = std::env::var("BEARDOG_SERVICE_REGISTRY_ENDPOINT")
+            .or_else(|_| std::env::var("CONSUL_HTTP_ADDR"))
             .unwrap_or_else(|_| {
-                let host = env::var("REGISTRY_HOST")
+                let host = std::env::var("REGISTRY_HOST")
                     .unwrap_or_else(|_| "consul.ecosystem.internal".to_string());
-                let port = env::var("REGISTRY_PORT").unwrap_or_else(|_| "8500".to_string());
+                let port = std::env::var("REGISTRY_PORT").unwrap_or_else(|_| "8500".to_string());
                 format!("http://{host}:{port}")
             });
 
@@ -341,6 +337,94 @@ impl Default for CircuitBreakerConfig {
             timeout: Duration::from_secs(60),
             half_open_max_calls: 3,
         }
+    }
+}
+
+impl UnifiedDiscoveryConfig {
+    /// Load from a custom environment provider (e.g. tests); production uses [`BearDogConfig::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Result<Self, BearDogError> {
+        let mut config = Self::default();
+
+        if let Some(enabled) = get("BEARDOG_DISCOVERY_ENABLED") {
+            config.enabled = enabled.parse().unwrap_or(true);
+        }
+        if let Some(service_id) = get("BEARDOG_DISCOVERY_SERVICE_ID") {
+            config.service_id = Arc::from(service_id.as_str());
+        }
+
+        if let Some(backend) = get("BEARDOG_REGISTRY_BACKEND") {
+            config.registry.backend = backend;
+        }
+        if let Some(endpoints) = get("BEARDOG_REGISTRY_ENDPOINTS") {
+            config.registry.endpoints =
+                endpoints.split(',').map(|s| s.trim().to_string()).collect();
+        }
+        if let Some(ttl) = get("BEARDOG_REGISTRY_SERVICE_TTL_SECS") {
+            if let Ok(secs) = ttl.parse::<u64>() {
+                config.registry.service_ttl = Duration::from_secs(secs);
+            }
+        }
+        if let Some(health_interval) = get("BEARDOG_REGISTRY_HEALTH_CHECK_INTERVAL_SECS") {
+            if let Ok(secs) = health_interval.parse::<u64>() {
+                config.registry.health_check_interval = Duration::from_secs(secs);
+            }
+        }
+        if let Some(cleanup_interval) = get("BEARDOG_REGISTRY_CLEANUP_INTERVAL_SECS") {
+            if let Ok(secs) = cleanup_interval.parse::<u64>() {
+                config.registry.cleanup_interval = Duration::from_secs(secs);
+            }
+        }
+
+        if let Some(ports) = get("BEARDOG_DISCOVERY_PORTS") {
+            if let Some(port_vec) = ports
+                .split(',')
+                .map(|p| p.trim().parse::<u16>().ok())
+                .collect::<Option<Vec<u16>>>()
+            {
+                config.network.ports = port_vec;
+            }
+        }
+        if let Some(timeout) = get("BEARDOG_DISCOVERY_TIMEOUT_SECS") {
+            if let Ok(secs) = timeout.parse::<u64>() {
+                config.network.timeout = Duration::from_secs(secs);
+            }
+        }
+
+        if let Some(cache_enabled) = get("BEARDOG_DISCOVERY_CACHE_ENABLED") {
+            config.cache.enabled = cache_enabled.parse().unwrap_or(true);
+        }
+        if let Some(cache_size) = get("BEARDOG_DISCOVERY_CACHE_SIZE") {
+            if let Ok(size) = cache_size.parse::<usize>() {
+                config.cache.size = size;
+            }
+        }
+        if let Some(cache_ttl) = get("BEARDOG_DISCOVERY_CACHE_TTL_SECS") {
+            if let Ok(secs) = cache_ttl.parse::<u64>() {
+                config.cache.ttl = Duration::from_secs(secs);
+            }
+        }
+
+        if let Some(quantum_enabled) = get("BEARDOG_QUANTUM_DISCOVERY_ENABLED") {
+            config.quantum.enabled = quantum_enabled.parse().unwrap_or(false);
+        }
+        if let Some(coherence) = get("BEARDOG_QUANTUM_COHERENCE_TIME_MS") {
+            if let Ok(ms) = coherence.parse::<u64>() {
+                config.quantum.coherence_time = Duration::from_millis(ms);
+            }
+        }
+
+        if let Some(security_enabled) = get("BEARDOG_DISCOVERY_SECURITY_ENABLED") {
+            config.security.enabled = security_enabled.parse().unwrap_or(true);
+        }
+        if let Some(auth_required) = get("BEARDOG_DISCOVERY_AUTH_REQUIRED") {
+            config.security.auth_required = auth_required.parse().unwrap_or(false);
+        }
+        if let Some(encryption_required) = get("BEARDOG_DISCOVERY_ENCRYPTION_REQUIRED") {
+            config.security.encryption_required = encryption_required.parse().unwrap_or(false);
+        }
+
+        config.validate()?;
+        Ok(config)
     }
 }
 
@@ -449,94 +533,7 @@ impl BearDogConfig for UnifiedDiscoveryConfig {
     }
 
     fn from_env() -> Result<Self, BearDogError> {
-        let mut config = Self::default();
-
-        // Core settings
-        if let Ok(enabled) = std::env::var("BEARDOG_DISCOVERY_ENABLED") {
-            config.enabled = enabled.parse().unwrap_or(true);
-        }
-        if let Ok(service_id) = std::env::var("BEARDOG_DISCOVERY_SERVICE_ID") {
-            config.service_id = Arc::from(service_id.as_str());
-        }
-
-        // Registry settings
-        if let Ok(backend) = std::env::var("BEARDOG_REGISTRY_BACKEND") {
-            config.registry.backend = backend;
-        }
-        if let Ok(endpoints) = std::env::var("BEARDOG_REGISTRY_ENDPOINTS") {
-            config.registry.endpoints =
-                endpoints.split(',').map(|s| s.trim().to_string()).collect();
-        }
-        if let Ok(ttl) = std::env::var("BEARDOG_REGISTRY_SERVICE_TTL_SECS") {
-            if let Ok(secs) = ttl.parse::<u64>() {
-                config.registry.service_ttl = Duration::from_secs(secs);
-            }
-        }
-        if let Ok(health_interval) = std::env::var("BEARDOG_REGISTRY_HEALTH_CHECK_INTERVAL_SECS") {
-            if let Ok(secs) = health_interval.parse::<u64>() {
-                config.registry.health_check_interval = Duration::from_secs(secs);
-            }
-        }
-        if let Ok(cleanup_interval) = std::env::var("BEARDOG_REGISTRY_CLEANUP_INTERVAL_SECS") {
-            if let Ok(secs) = cleanup_interval.parse::<u64>() {
-                config.registry.cleanup_interval = Duration::from_secs(secs);
-            }
-        }
-
-        // Network settings
-        if let Ok(ports) = std::env::var("BEARDOG_DISCOVERY_PORTS") {
-            if let Some(port_vec) = ports
-                .split(',')
-                .map(|p| p.trim().parse::<u16>().ok())
-                .collect::<Option<Vec<u16>>>()
-            {
-                config.network.ports = port_vec;
-            }
-        }
-        if let Ok(timeout) = std::env::var("BEARDOG_DISCOVERY_TIMEOUT_SECS") {
-            if let Ok(secs) = timeout.parse::<u64>() {
-                config.network.timeout = Duration::from_secs(secs);
-            }
-        }
-
-        // Cache settings
-        if let Ok(cache_enabled) = std::env::var("BEARDOG_DISCOVERY_CACHE_ENABLED") {
-            config.cache.enabled = cache_enabled.parse().unwrap_or(true);
-        }
-        if let Ok(cache_size) = std::env::var("BEARDOG_DISCOVERY_CACHE_SIZE") {
-            if let Ok(size) = cache_size.parse::<usize>() {
-                config.cache.size = size;
-            }
-        }
-        if let Ok(cache_ttl) = std::env::var("BEARDOG_DISCOVERY_CACHE_TTL_SECS") {
-            if let Ok(secs) = cache_ttl.parse::<u64>() {
-                config.cache.ttl = Duration::from_secs(secs);
-            }
-        }
-
-        // Quantum settings
-        if let Ok(quantum_enabled) = std::env::var("BEARDOG_QUANTUM_DISCOVERY_ENABLED") {
-            config.quantum.enabled = quantum_enabled.parse().unwrap_or(false);
-        }
-        if let Ok(coherence) = std::env::var("BEARDOG_QUANTUM_COHERENCE_TIME_MS") {
-            if let Ok(ms) = coherence.parse::<u64>() {
-                config.quantum.coherence_time = Duration::from_millis(ms);
-            }
-        }
-
-        // Security settings
-        if let Ok(security_enabled) = std::env::var("BEARDOG_DISCOVERY_SECURITY_ENABLED") {
-            config.security.enabled = security_enabled.parse().unwrap_or(true);
-        }
-        if let Ok(auth_required) = std::env::var("BEARDOG_DISCOVERY_AUTH_REQUIRED") {
-            config.security.auth_required = auth_required.parse().unwrap_or(false);
-        }
-        if let Ok(encryption_required) = std::env::var("BEARDOG_DISCOVERY_ENCRYPTION_REQUIRED") {
-            config.security.encryption_required = encryption_required.parse().unwrap_or(false);
-        }
-
-        config.validate()?;
-        Ok(config)
+        Self::from_env_provider(|k| std::env::var(k).ok())
     }
 
     fn to_toml(&self) -> Result<String, BearDogError> {

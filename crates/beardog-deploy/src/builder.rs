@@ -7,7 +7,7 @@
 // All operations maintain sovereignty compliance and zero hardcoded assumptions.
 
 use beardog_errors::BearDogError;
-use std::{env, path::PathBuf, process::Stdio};
+use std::{path::PathBuf, process::Stdio};
 use tokio::process::Command;
 use tracing::{debug, info};
 
@@ -101,8 +101,8 @@ impl RustBuilder {
     /// Returns error if NDK path is not configured
     /// Gets `ndk_path`
     fn get_ndk_path() -> Result<String, BearDogError> {
-        env::var("ANDROID_NDK_HOME")
-            .or_else(|_| env::var("NDK_HOME"))
+        std::env::var("ANDROID_NDK_HOME")
+            .or_else(|_| std::env::var("NDK_HOME"))
             .map_err(|_| BearDogError::system("ANDROID_NDK_HOME not set".to_string()))
     }
 
@@ -163,23 +163,32 @@ impl RustBuilder {
     /// * `toolchain_path` - Path to toolchain binaries
     /// * `api_level` - Android API level
     ///   Sets `aarch64_toolchain`
+    /// Target triple env vars and paths (testable without touching process environment).
+    fn aarch64_toolchain_bindings(
+        toolchain_path: &std::path::Path,
+        api_level: &str,
+    ) -> [(&'static str, std::path::PathBuf); 4] {
+        [
+            (
+                "CC_aarch64_linux_android",
+                toolchain_path.join(format!("aarch64-linux-android{api_level}-clang")),
+            ),
+            (
+                "CXX_aarch64_linux_android",
+                toolchain_path.join(format!("aarch64-linux-android{api_level}-clang++")),
+            ),
+            ("AR_aarch64_linux_android", toolchain_path.join("llvm-ar")),
+            (
+                "RANLIB_aarch64_linux_android",
+                toolchain_path.join("llvm-ranlib"),
+            ),
+        ]
+    }
+
     fn set_aarch64_toolchain(toolchain_path: &std::path::Path, api_level: &str) {
-        beardog_errors::process_env::set_var(
-            "CC_aarch64_linux_android",
-            toolchain_path.join(format!("aarch64-linux-android{api_level}-clang")),
-        );
-        beardog_errors::process_env::set_var(
-            "CXX_aarch64_linux_android",
-            toolchain_path.join(format!("aarch64-linux-android{api_level}-clang++")),
-        );
-        beardog_errors::process_env::set_var(
-            "AR_aarch64_linux_android",
-            toolchain_path.join("llvm-ar"),
-        );
-        beardog_errors::process_env::set_var(
-            "RANLIB_aarch64_linux_android",
-            toolchain_path.join("llvm-ranlib"),
-        );
+        for (key, path) in Self::aarch64_toolchain_bindings(toolchain_path, api_level) {
+            beardog_errors::process_env::set_var(key, path);
+        }
     }
 
     /// Sets up armv7 toolchain environment variables
@@ -188,23 +197,31 @@ impl RustBuilder {
     /// * `toolchain_path` - Path to toolchain binaries
     /// * `api_level` - Android API level
     ///   Sets `armv7_toolchain`
+    fn armv7_toolchain_bindings(
+        toolchain_path: &std::path::Path,
+        api_level: &str,
+    ) -> [(&'static str, std::path::PathBuf); 4] {
+        [
+            (
+                "CC_armv7_linux_androideabi",
+                toolchain_path.join(format!("armv7a-linux-androideabi{api_level}-clang")),
+            ),
+            (
+                "CXX_armv7_linux_androideabi",
+                toolchain_path.join(format!("armv7a-linux-androideabi{api_level}-clang++")),
+            ),
+            ("AR_armv7_linux_androideabi", toolchain_path.join("llvm-ar")),
+            (
+                "RANLIB_armv7_linux_androideabi",
+                toolchain_path.join("llvm-ranlib"),
+            ),
+        ]
+    }
+
     fn set_armv7_toolchain(toolchain_path: &std::path::Path, api_level: &str) {
-        beardog_errors::process_env::set_var(
-            "CC_armv7_linux_androideabi",
-            toolchain_path.join(format!("armv7a-linux-androideabi{api_level}-clang")),
-        );
-        beardog_errors::process_env::set_var(
-            "CXX_armv7_linux_androideabi",
-            toolchain_path.join(format!("armv7a-linux-androideabi{api_level}-clang++")),
-        );
-        beardog_errors::process_env::set_var(
-            "AR_armv7_linux_androideabi",
-            toolchain_path.join("llvm-ar"),
-        );
-        beardog_errors::process_env::set_var(
-            "RANLIB_armv7_linux_androideabi",
-            toolchain_path.join("llvm-ranlib"),
-        );
+        for (key, path) in Self::armv7_toolchain_bindings(toolchain_path, api_level) {
+            beardog_errors::process_env::set_var(key, path);
+        }
     }
 
     /// Builds the Android library
@@ -257,10 +274,6 @@ impl RustBuilder {
     ///
     /// # Errors
     /// Returns error if example app compilation fails
-    #[expect(
-        dead_code,
-        reason = "Example Android app build path reserved for tooling"
-    )]
     async fn build_example_app(&self, release: bool, target: &str) -> Result<(), BearDogError> {
         let android_dir = self.project_root.join("android");
 
@@ -332,15 +345,31 @@ mod tests {
     }
 
     #[test]
-    fn test_configure_target_toolchain_aarch64() {
+    fn test_configure_target_toolchain_aarch64_bindings() {
         let path = std::path::Path::new("/fake/toolchain/bin");
-        assert!(RustBuilder::configure_target_toolchain("aarch64-linux-android", path).is_ok());
+        let bindings = RustBuilder::aarch64_toolchain_bindings(path, "28");
+        assert_eq!(bindings[0].0, "CC_aarch64_linux_android");
+        assert!(
+            bindings[0]
+                .1
+                .to_string_lossy()
+                .contains("aarch64-linux-android28-clang")
+        );
+        assert_eq!(bindings.len(), 4);
     }
 
     #[test]
-    fn test_configure_target_toolchain_armv7() {
+    fn test_configure_target_toolchain_armv7_bindings() {
         let path = std::path::Path::new("/fake/toolchain/bin");
-        assert!(RustBuilder::configure_target_toolchain("armv7-linux-androideabi", path).is_ok());
+        let bindings = RustBuilder::armv7_toolchain_bindings(path, "28");
+        assert_eq!(bindings[0].0, "CC_armv7_linux_androideabi");
+        assert!(
+            bindings[0]
+                .1
+                .to_string_lossy()
+                .contains("armv7a-linux-androideabi28-clang")
+        );
+        assert_eq!(bindings.len(), 4);
     }
 
     #[test]
@@ -348,21 +377,6 @@ mod tests {
         let path = std::path::Path::new("/fake/toolchain/bin");
         let result = RustBuilder::configure_target_toolchain("riscv64-unknown-linux-gnu", path);
         assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_set_aarch64_toolchain() {
-        let path = std::path::Path::new("/fake/bin");
-        RustBuilder::set_aarch64_toolchain(path, "28");
-        // Verify env vars were set (they're process-global but test exercises the code)
-        assert!(std::env::var("CC_aarch64_linux_android").is_ok());
-    }
-
-    #[test]
-    fn test_set_armv7_toolchain() {
-        let path = std::path::Path::new("/fake/bin");
-        RustBuilder::set_armv7_toolchain(path, "28");
-        assert!(std::env::var("CC_armv7_linux_androideabi").is_ok());
     }
 
     #[test]

@@ -129,16 +129,6 @@ impl SecureSoftwareHsm {
     }
 }
 
-impl Default for SecureSoftwareHsm {
-    #[expect(
-        clippy::expect_used,
-        reason = "Default must construct HSM; new() only fails on OS RNG failure"
-    )]
-    fn default() -> Self {
-        Self::new().expect("Failed to initialize secure software HSM")
-    }
-}
-
 #[async_trait]
 impl KeyManagementCapability for SecureSoftwareHsm {
     async fn encrypt(&self, plaintext: &[u8], key_id: &KeyId) -> Result<Vec<u8>, KmsError> {

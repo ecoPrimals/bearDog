@@ -58,26 +58,37 @@ pub struct ResourceLimits {
 impl Default for ResourceLimits {
     fn default() -> Self {
         Self {
-            memory_mb: std::env::var("BEARDOG_RESOURCE_MEMORY_MB")
-                .ok()
-                .and_then(|m| m.parse().ok())
-                .unwrap_or(1024), // 1GB default
-            cpu_percent: std::env::var("BEARDOG_RESOURCE_CPU_PERCENT")
-                .ok()
-                .and_then(|c| c.parse().ok())
-                .unwrap_or(50), // 50% default
-            disk_mb: std::env::var("BEARDOG_RESOURCE_DISK_MB")
-                .ok()
-                .and_then(|d| d.parse().ok())
-                .unwrap_or(5120), // 5GB default
-            network_mbps: std::env::var("BEARDOG_RESOURCE_NETWORK_MBPS")
-                .ok()
-                .and_then(|n| n.parse().ok())
-                .unwrap_or(100), // 100 Mbps default
-            concurrent_connections: std::env::var("BEARDOG_MAX_CONCURRENT_CONNECTIONS")
-                .ok()
-                .and_then(|c| c.parse().ok())
-                .unwrap_or(1000), // 1000 connections default
+            memory_mb: 1024,
+            cpu_percent: 50,
+            disk_mb: 5120,
+            network_mbps: 100,
+            concurrent_connections: 1000,
+        }
+    }
+}
+
+impl ResourceLimits {
+    /// Load limits from process environment via `std::env` (production entry point).
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self::from_env_with(|key| std::env::var(key).ok())
+    }
+
+    /// Load limits using a custom lookup (tests inject a map or closure; no global env).
+    #[must_use]
+    pub fn from_env_with(get: impl Fn(&str) -> Option<String>) -> Self {
+        let parse_u64 =
+            |key: &str, default: u64| get(key).and_then(|s| s.parse().ok()).unwrap_or(default);
+        let parse_u8 =
+            |key: &str, default: u8| get(key).and_then(|s| s.parse().ok()).unwrap_or(default);
+        let parse_u32 =
+            |key: &str, default: u32| get(key).and_then(|s| s.parse().ok()).unwrap_or(default);
+        Self {
+            memory_mb: parse_u64("BEARDOG_RESOURCE_MEMORY_MB", 1024),
+            cpu_percent: parse_u8("BEARDOG_RESOURCE_CPU_PERCENT", 50),
+            disk_mb: parse_u64("BEARDOG_RESOURCE_DISK_MB", 5120),
+            network_mbps: parse_u32("BEARDOG_RESOURCE_NETWORK_MBPS", 100),
+            concurrent_connections: parse_u32("BEARDOG_MAX_CONCURRENT_CONNECTIONS", 1000),
         }
     }
 }
@@ -87,119 +98,42 @@ mod tests {
     use super::*;
 
     #[test]
-    #[serial_test::serial] // Environment variable test - must run serially
     fn test_resource_limits_default() {
-        // NOTE: This test is sensitive to environment variables
-        // test_resource_limits_from_env() properly manages env var state
-        // If both tests modify env, we need serial_test crate for isolation
-        // For now, we test that default() works (may read from env if set)
-
         let limits = ResourceLimits::default();
 
-        // Accept both 1024 and 2048 as valid defaults during test environment
-        // NOTE: Future improvement - Use serial_test crate to fully isolate test environment
-        // This would ensure complete test isolation in parallel test execution scenarios
-        assert!(
-            limits.memory_mb == 1024 || limits.memory_mb == 2048,
-            "Default memory should be 1GB or 2GB (test env), got {}",
-            limits.memory_mb
-        );
-        assert_eq!(limits.cpu_percent, 50, "Default CPU should be 50%");
-        assert_eq!(limits.disk_mb, 5120, "Default disk should be 5GB");
-        assert_eq!(
-            limits.network_mbps, 100,
-            "Default network should be 100Mbps"
-        );
-        assert_eq!(
-            limits.concurrent_connections, 1000,
-            "Default connections should be 1000"
-        );
+        assert_eq!(limits.memory_mb, 1024);
+        assert_eq!(limits.cpu_percent, 50);
+        assert_eq!(limits.disk_mb, 5120);
+        assert_eq!(limits.network_mbps, 100);
+        assert_eq!(limits.concurrent_connections, 1000);
     }
 
     #[test]
-    #[serial_test::serial] // Environment variable test - must run serially
-    fn test_resource_limits_from_env() {
-        // FIXED: Better env isolation - clear ALL env vars and sleep between ops
-        // This prevents interference from other tests or CI environment
-
-        // Save current env state
-        let old_memory = std::env::var("BEARDOG_RESOURCE_MEMORY_MB").ok();
-        let old_disk = std::env::var("BEARDOG_RESOURCE_DISK_MB").ok();
-        let old_cpu = std::env::var("BEARDOG_RESOURCE_CPU_PERCENT").ok();
-        let old_network = std::env::var("BEARDOG_RESOURCE_NETWORK_MBPS").ok();
-        let old_connections = std::env::var("BEARDOG_MAX_CONCURRENT_CONNECTIONS").ok();
-
-        // Clear all env vars first to avoid pollution from other tests
-        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
-        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_DISK_MB");
-        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_CPU_PERCENT");
-        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_NETWORK_MBPS");
-        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONCURRENT_CONNECTIONS");
-
-        // Small delay to ensure env changes propagate
-        std::thread::sleep(std::time::Duration::from_millis(10));
-
-        // Set test values - these should be read by default()
-        beardog_errors::process_env::set_var("BEARDOG_RESOURCE_MEMORY_MB", "2048");
-        beardog_errors::process_env::set_var("BEARDOG_RESOURCE_DISK_MB", "10240");
-        beardog_errors::process_env::set_var("BEARDOG_MAX_CONCURRENT_CONNECTIONS", "5000");
-
-        // Small delay to ensure env changes propagate
-        std::thread::sleep(std::time::Duration::from_millis(10));
-
-        let limits = ResourceLimits::default();
-
-        // Be flexible with the assertion - env vars may not always be read immediately
-        assert!(
-            limits.memory_mb == 2048 || limits.memory_mb == 1024,
-            "Memory should be 2048 (from env) or 1024 (default if env not read), got {}",
-            limits.memory_mb
-        );
-        assert_eq!(limits.disk_mb, 10240, "Should read disk from env");
-        assert_eq!(
-            limits.concurrent_connections, 5000,
-            "Should read connections from env"
+    fn test_resource_limits_from_env_with_map() {
+        let mut map = HashMap::new();
+        map.insert("BEARDOG_RESOURCE_MEMORY_MB".to_string(), "2048".to_string());
+        map.insert("BEARDOG_RESOURCE_DISK_MB".to_string(), "10240".to_string());
+        map.insert(
+            "BEARDOG_MAX_CONCURRENT_CONNECTIONS".to_string(),
+            "5000".to_string(),
         );
 
-        // Restore original env state
-        match old_memory {
-            Some(val) => beardog_errors::process_env::set_var("BEARDOG_RESOURCE_MEMORY_MB", val),
-            None => beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_MEMORY_MB"),
-        }
-        match old_disk {
-            Some(val) => beardog_errors::process_env::set_var("BEARDOG_RESOURCE_DISK_MB", val),
-            None => beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_DISK_MB"),
-        }
-        match old_cpu {
-            Some(val) => beardog_errors::process_env::set_var("BEARDOG_RESOURCE_CPU_PERCENT", val),
-            None => beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_CPU_PERCENT"),
-        }
-        match old_network {
-            Some(val) => beardog_errors::process_env::set_var("BEARDOG_RESOURCE_NETWORK_MBPS", val),
-            None => beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_NETWORK_MBPS"),
-        }
-        match old_connections {
-            Some(val) => {
-                beardog_errors::process_env::set_var("BEARDOG_MAX_CONCURRENT_CONNECTIONS", val)
-            }
-            None => beardog_errors::process_env::remove_var("BEARDOG_MAX_CONCURRENT_CONNECTIONS"),
-        }
+        let limits = ResourceLimits::from_env_with(|k| map.get(k).cloned());
+        assert_eq!(limits.memory_mb, 2048);
+        assert_eq!(limits.disk_mb, 10240);
+        assert_eq!(limits.concurrent_connections, 5000);
     }
 
     #[test]
-    #[serial_test::serial] // Environment variable test - must run serially
     fn test_resource_limits_invalid_env_uses_default() {
-        // Clear env vars first to avoid interference from other tests
-        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
-        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_DISK_MB");
-        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONCURRENT_CONNECTIONS");
+        let mut map = HashMap::new();
+        map.insert(
+            "BEARDOG_RESOURCE_MEMORY_MB".to_string(),
+            "invalid".to_string(),
+        );
 
-        beardog_errors::process_env::set_var("BEARDOG_RESOURCE_MEMORY_MB", "invalid");
-
-        let limits = ResourceLimits::default();
-        assert_eq!(limits.memory_mb, 1024, "Invalid env should use default"); // Default is 1024
-
-        beardog_errors::process_env::remove_var("BEARDOG_RESOURCE_MEMORY_MB");
+        let limits = ResourceLimits::from_env_with(|k| map.get(k).cloned());
+        assert_eq!(limits.memory_mb, 1024);
     }
 
     #[test]

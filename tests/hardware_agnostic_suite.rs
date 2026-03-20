@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Hardware-Agnostic HSM Test Infrastructure
 //!
 //! This module provides test infrastructure that works with ANY HSM hardware
@@ -32,7 +33,7 @@ pub async fn discover_any_available_hsm() -> Result<String, BearDogError> {
     info!("🔍 Discovering available HSM hardware...");
 
     // Priority 1: Check for Android StrongBox (via ADB or env var)
-    if std::env::var("ANDROID_STRONGBOX_AVAILABLE").is_ok() {
+    if beardog_errors::process_env::var("ANDROID_STRONGBOX_AVAILABLE").is_ok() {
         info!("✅ Found Android StrongBox (via environment)");
         return Ok("AndroidStrongBox".to_string());
     }
@@ -56,7 +57,7 @@ pub async fn discover_any_available_hsm() -> Result<String, BearDogError> {
     }
 
     // Priority 3: Check for SoftHSM2 (lowest priority for general discovery)
-    if std::env::var("SOFTHSM2_CONF").is_ok() {
+    if beardog_errors::process_env::var("SOFTHSM2_CONF").is_ok() {
         info!("✅ Found SoftHSM2");
         return Ok("SoftHSM2".to_string());
     }
@@ -114,16 +115,11 @@ mod tests {
     #[tokio::test]
     #[ignore = "Requires SoftHSM2 - run with SOFTHSM2_CONF set"]
     async fn validate_on_softhsm2() {
-        // Explicitly test SoftHSM2 by checking SOFTHSM2_CONF directly
-        // (bypass auto-discovery which might find other hardware)
-        if std::env::var("SOFTHSM2_CONF").is_err() {
-            beardog_errors::process_env::set_var(
-                "SOFTHSM2_CONF",
-                "~/.config/softhsm2/softhsm2.conf",
-            );
+        if beardog_errors::process_env::var("SOFTHSM2_CONF").is_err() {
+            info!("⚠️  SOFTHSM2_CONF not set; skipping SoftHSM2 validation");
+            return;
         }
 
-        // For this test, we directly verify SoftHSM2 works
         info!("✅ Testing SoftHSM2 directly");
         let hsm_type = "SoftHSM2";
 
@@ -135,9 +131,6 @@ mod tests {
     #[tokio::test]
     #[ignore = "Requires Android device connected via ADB"]
     async fn validate_on_android_strongbox() {
-        // Set environment to enable StrongBox detection
-        beardog_errors::process_env::set_var("ANDROID_STRONGBOX_AVAILABLE", "true");
-
         let hsm_type = discover_any_available_hsm()
             .await
             .expect("Android StrongBox not available");

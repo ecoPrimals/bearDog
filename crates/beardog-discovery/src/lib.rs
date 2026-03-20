@@ -33,6 +33,7 @@
 //! ```
 
 pub mod announcement;
+pub mod capability_env;
 pub mod config;
 pub mod discovery;
 pub mod dns_sd;
@@ -42,8 +43,13 @@ pub mod service_registry;
 pub mod types;
 
 pub use announcement::{AnnouncementConfig, Announcer};
+pub use capability_env::{
+    DEFAULT_ENV_DISCOVERY_TTL_SECS, discovered_services_from_environment,
+    discovered_services_from_environment_from_env, discovered_services_from_environment_with,
+    primary_url_to_ipc_socket_path,
+};
 pub use config::DiscoveryConfig;
-pub use discovery::CapabilityDiscovery;
+pub use discovery::{CapabilityDiscovery, EnvironmentDiscoveryFn};
 pub use error::{DiscoveryError, Result};
 pub use types::{Capability, DiscoveredService, PrimalInfo, ServiceEndpoint};
 

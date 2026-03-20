@@ -80,7 +80,7 @@ impl MobileDiscoverer {
         }
 
         // Check environment hints for cross-compilation or testing
-        if let Ok(platform) = env::var("MOBILE_PLATFORM") {
+        if let Ok(platform) = beardog_errors::process_env::var("MOBILE_PLATFORM") {
             match platform.to_lowercase().as_str() {
                 "ios" => return MobilePlatform::Ios,
                 "android" => return MobilePlatform::Android,
@@ -157,7 +157,7 @@ impl MobileDiscoverer {
     #[cfg(not(target_os = "ios"))]
     async fn detect_ios_secure_enclave(&self) -> Result<Option<DiscoveredHsm>, BearDogError> {
         // Check for simulator or test environment
-        if env::var("IOS_SECURE_ENCLAVE_AVAILABLE").is_ok() {
+        if beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE").is_ok() {
             Ok(Some(self.create_ios_secure_enclave_hsm()))
         } else {
             Ok(None)
@@ -251,7 +251,7 @@ impl MobileDiscoverer {
         // 3. Android API level >= 28
         
         // For now, check environment
-        if env::var("ANDROID_STRONGBOX_AVAILABLE").is_ok() {
+        if beardog_errors::process_env::var("ANDROID_STRONGBOX_AVAILABLE").is_ok() {
             Ok(Some(self.create_android_strongbox_hsm()))
         } else {
             Ok(None)
@@ -264,7 +264,7 @@ impl MobileDiscoverer {
     /// Returns an error if detection fails
     #[cfg(not(target_os = "android"))]
     async fn detect_android_strongbox(&self) -> Result<Option<DiscoveredHsm>, BearDogError> {
-        if env::var("ANDROID_STRONGBOX_AVAILABLE").is_ok() {
+        if beardog_errors::process_env::var("ANDROID_STRONGBOX_AVAILABLE").is_ok() {
             Ok(Some(self.create_android_strongbox_hsm()))
         } else {
             Ok(None)
@@ -282,7 +282,7 @@ impl MobileDiscoverer {
         // 2. Build.MANUFACTURER == "samsung"
         // 3. Knox SDK availability
         
-        if env::var("SAMSUNG_KNOX_AVAILABLE").is_ok() {
+        if beardog_errors::process_env::var("SAMSUNG_KNOX_AVAILABLE").is_ok() {
             Ok(Some(self.create_samsung_knox_hsm()))
         } else {
             Ok(None)
@@ -295,7 +295,7 @@ impl MobileDiscoverer {
     /// Returns an error if detection fails
     #[cfg(not(target_os = "android"))]
     async fn detect_samsung_knox(&self) -> Result<Option<DiscoveredHsm>, BearDogError> {
-        if env::var("SAMSUNG_KNOX_AVAILABLE").is_ok() {
+        if beardog_errors::process_env::var("SAMSUNG_KNOX_AVAILABLE").is_ok() {
             Ok(Some(self.create_samsung_knox_hsm()))
         } else {
             Ok(None)

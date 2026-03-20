@@ -47,15 +47,18 @@ impl ApplicationConfig {
     /// Default application description
     pub const DEFAULT_DESCRIPTION: &'static str = "BearDog Security Provider";
 
-    /// Create ApplicationConfig with hardcoded defaults
+    /// Create ApplicationConfig with defaults (no fixed product instance identity).
     ///
-    /// This method is deterministic and safe for concurrent use.
-    /// Uses fixed version and instance ID for deterministic behavior.
+    /// Version and instance ID are taken from `BEARDOG_APP_VERSION` and `BEARDOG_INSTANCE_ID`
+    /// when set; otherwise version is the crate version at compile time and instance ID is
+    /// `instance-{pid}` for stable local defaults without embedding a named deployment.
     pub fn with_defaults() -> Self {
         Self {
             name: Self::DEFAULT_NAME.to_string(),
-            version: "0.0.0-dev".to_string(), // Deterministic placeholder
-            instance_id: "default-instance".to_string(), // Deterministic placeholder
+            version: std::env::var("BEARDOG_APP_VERSION")
+                .unwrap_or_else(|_| env!("CARGO_PKG_VERSION").to_string()),
+            instance_id: std::env::var("BEARDOG_INSTANCE_ID")
+                .unwrap_or_else(|_| format!("instance-{}", std::process::id())),
             description: Self::DEFAULT_DESCRIPTION.to_string(),
             features: HashMap::new(),
         }
@@ -68,18 +71,26 @@ impl ApplicationConfig {
     /// # Environment Variables
     /// - `BEARDOG_APP_NAME`: Application name override
     /// - `BEARDOG_APP_DESCRIPTION`: Application description override
+    /// - `BEARDOG_APP_VERSION`: Version string (defaults to compile-time crate version)
+    /// - `BEARDOG_INSTANCE_ID`: Instance identifier (defaults to a new UUID)
     ///
     /// # System Detection
-    /// - Version: Detected from CARGO_PKG_VERSION at compile time
-    /// - Instance ID: Generated as unique UUID
+    /// - Version: `BEARDOG_APP_VERSION` or `CARGO_PKG_VERSION` at compile time
+    /// - Instance ID: `BEARDOG_INSTANCE_ID` or random UUID
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            name: std::env::var("BEARDOG_APP_NAME")
-                .unwrap_or_else(|_| Self::DEFAULT_NAME.to_string()),
-            version: env!("CARGO_PKG_VERSION").to_string(),
-            instance_id: uuid::Uuid::new_v4().to_string(),
-            description: std::env::var("BEARDOG_APP_DESCRIPTION")
-                .unwrap_or_else(|_| Self::DEFAULT_DESCRIPTION.to_string()),
+            name: get("BEARDOG_APP_NAME").unwrap_or_else(|| Self::DEFAULT_NAME.to_string()),
+            version: get("BEARDOG_APP_VERSION")
+                .unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_string()),
+            instance_id: get("BEARDOG_INSTANCE_ID")
+                .unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
+            description: get("BEARDOG_APP_DESCRIPTION")
+                .unwrap_or_else(|| Self::DEFAULT_DESCRIPTION.to_string()),
             features: HashMap::new(),
         }
     }
@@ -333,13 +344,16 @@ impl LogRotationConfig {
     /// - `BEARDOG_SYSTEM_LOG_MAX_SIZE_MB`: Max log file size in MB (default: 100)
     /// - `BEARDOG_SYSTEM_LOG_MAX_FILES`: Max number of log files (default: 10)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            max_size_mb: std::env::var("BEARDOG_SYSTEM_LOG_MAX_SIZE_MB")
-                .ok()
+            max_size_mb: get("BEARDOG_SYSTEM_LOG_MAX_SIZE_MB")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_SIZE_MB),
-            max_files: std::env::var("BEARDOG_SYSTEM_LOG_MAX_FILES")
-                .ok()
+            max_files: get("BEARDOG_SYSTEM_LOG_MAX_FILES")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_FILES),
             frequency: LogRotationFrequency::Daily,
@@ -451,8 +465,12 @@ impl ThreadingConfig {
     /// - `BEARDOG_WORKER_THREADS`: Number of worker threads (default: detected from system)
     /// - `BEARDOG_BLOCKING_THREADS`: Number of blocking threads (default: DEFAULT_CACHE_SIZE)
     pub fn from_env() -> Self {
-        let worker_threads = std::env::var("BEARDOG_WORKER_THREADS")
-            .ok()
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
+        let worker_threads = get("BEARDOG_WORKER_THREADS")
             .and_then(|v| v.parse().ok())
             .unwrap_or_else(|| {
                 std::thread::available_parallelism()
@@ -460,8 +478,7 @@ impl ThreadingConfig {
                     .unwrap_or(Self::DEFAULT_WORKER_THREADS)
             });
 
-        let blocking_threads = std::env::var("BEARDOG_BLOCKING_THREADS")
-            .ok()
+        let blocking_threads = get("BEARDOG_BLOCKING_THREADS")
             .and_then(|v| v.parse().ok())
             .unwrap_or(Self::DEFAULT_BLOCKING_THREADS);
 
@@ -544,21 +561,23 @@ impl ResourceConfig {
     /// - `BEARDOG_SYSTEM_MAX_CONNECTIONS`: Maximum connections (default: 10000)
     /// - `BEARDOG_SYSTEM_MONITORING_INTERVAL_SECS`: Monitoring interval (default: 60)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             max_memory_bytes: None,
             max_file_descriptors: Some(
-                std::env::var("BEARDOG_MAX_FILE_DESCRIPTORS")
-                    .ok()
+                get("BEARDOG_MAX_FILE_DESCRIPTORS")
                     .and_then(|f| f.parse().ok())
                     .unwrap_or(Self::DEFAULT_MAX_FILE_DESCRIPTORS),
             ),
-            max_connections: std::env::var("BEARDOG_SYSTEM_MAX_CONNECTIONS")
-                .ok()
+            max_connections: get("BEARDOG_SYSTEM_MAX_CONNECTIONS")
                 .and_then(|c| c.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_CONNECTIONS),
             monitoring_interval: Duration::from_secs(
-                std::env::var("BEARDOG_SYSTEM_MONITORING_INTERVAL_SECS")
-                    .ok()
+                get("BEARDOG_SYSTEM_MONITORING_INTERVAL_SECS")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_MONITORING_INTERVAL_SECS),
             ),
@@ -595,9 +614,14 @@ impl EnvironmentConfig {
     /// # Environment Variables
     /// - `BEARDOG_ENVIRONMENT`: Environment type (default: "development")
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            environment_type: std::env::var("BEARDOG_ENVIRONMENT")
-                .unwrap_or_else(|_| Self::DEFAULT_ENVIRONMENT_TYPE.to_string()),
+            environment_type: get("BEARDOG_ENVIRONMENT")
+                .unwrap_or_else(|| Self::DEFAULT_ENVIRONMENT_TYPE.to_string()),
             variables: HashMap::new(),
             overrides: HashMap::new(),
         }

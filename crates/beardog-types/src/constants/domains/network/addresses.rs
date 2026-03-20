@@ -17,6 +17,12 @@ pub const WILDCARD_IPV6: &str = "::";
 /// Checks `BEARDOG_BIND_ADDRESS` environment variable first.
 #[must_use]
 pub fn default_bind_address() -> String {
+    WILDCARD_IPV4.to_string()
+}
+
+/// Bind address from `BEARDOG_BIND_ADDRESS`, falling back to [`WILDCARD_IPV4`].
+#[must_use]
+pub fn default_bind_address_from_env() -> String {
     std::env::var("BEARDOG_BIND_ADDRESS").unwrap_or_else(|_| WILDCARD_IPV4.to_string())
 }
 
@@ -25,10 +31,20 @@ pub fn default_bind_address() -> String {
 /// Checks `BEARDOG_API_BIND` environment variable first.
 #[must_use]
 pub fn default_api_bind() -> String {
+    format!(
+        "{}:{}",
+        default_bind_address(),
+        super::defaults::default_api_port()
+    )
+}
+
+/// API bind from `BEARDOG_API_BIND`, or constructed from [`default_api_bind_from_env`] parts.
+#[must_use]
+pub fn default_api_bind_from_env() -> String {
     std::env::var("BEARDOG_API_BIND").unwrap_or_else(|_| {
         format!(
             "{}:{}",
-            default_bind_address(),
+            default_bind_address_from_env(),
             super::defaults::default_api_port()
         )
     })
@@ -39,10 +55,20 @@ pub fn default_api_bind() -> String {
 /// Checks `BEARDOG_METRICS_BIND` environment variable first.
 #[must_use]
 pub fn default_metrics_bind() -> String {
+    format!(
+        "{}:{}",
+        default_bind_address(),
+        super::defaults::default_metrics_port()
+    )
+}
+
+/// Metrics bind from `BEARDOG_METRICS_BIND`, or constructed from env-aware bind address.
+#[must_use]
+pub fn default_metrics_bind_from_env() -> String {
     std::env::var("BEARDOG_METRICS_BIND").unwrap_or_else(|_| {
         format!(
             "{}:{}",
-            default_bind_address(),
+            default_bind_address_from_env(),
             super::defaults::default_metrics_port()
         )
     })
@@ -53,10 +79,20 @@ pub fn default_metrics_bind() -> String {
 /// Checks `BEARDOG_HEALTH_BIND` environment variable first.
 #[must_use]
 pub fn default_health_bind() -> String {
+    format!(
+        "{}:{}",
+        default_bind_address(),
+        super::defaults::default_health_port()
+    )
+}
+
+/// Health bind from `BEARDOG_HEALTH_BIND`, or constructed from env-aware bind address.
+#[must_use]
+pub fn default_health_bind_from_env() -> String {
     std::env::var("BEARDOG_HEALTH_BIND").unwrap_or_else(|_| {
         format!(
             "{}:{}",
-            default_bind_address(),
+            default_bind_address_from_env(),
             super::defaults::default_health_port()
         )
     })
@@ -67,6 +103,12 @@ pub fn default_health_bind() -> String {
 /// Checks `BEARDOG_MULTICAST_ADDRESS` environment variable first.
 #[must_use]
 pub fn multicast_address() -> String {
+    "224.0.0.251".to_string()
+}
+
+/// Multicast address from `BEARDOG_MULTICAST_ADDRESS`, falling back to the default multicast group.
+#[must_use]
+pub fn multicast_address_from_env() -> String {
     std::env::var("BEARDOG_MULTICAST_ADDRESS").unwrap_or_else(|_| "224.0.0.251".to_string())
 }
 
@@ -115,13 +157,16 @@ pub const FALLBACK_DNS_SERVERS: &[&str] = &["8.8.8.8", "8.8.4.4", "1.1.1.1"];
 /// Reads from `BEARDOG_DNS_SERVERS` environment variable (comma-separated).
 /// Falls back to well-known public DNS servers if not set.
 pub fn dns_servers() -> Vec<String> {
+    FALLBACK_DNS_SERVERS
+        .iter()
+        .map(|s| (*s).to_string())
+        .collect()
+}
+
+/// DNS servers from `BEARDOG_DNS_SERVERS`, falling back to [`dns_servers`].
+pub fn dns_servers_from_env() -> Vec<String> {
     std::env::var("BEARDOG_DNS_SERVERS").map_or_else(
-        |_| {
-            FALLBACK_DNS_SERVERS
-                .iter()
-                .map(|s| (*s).to_string())
-                .collect()
-        },
+        |_| dns_servers(),
         |s| s.split(',').map(str::trim).map(String::from).collect(),
     )
 }

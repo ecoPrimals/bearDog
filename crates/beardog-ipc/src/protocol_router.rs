@@ -11,7 +11,7 @@
 //!
 //! ## Protocol Detection Strategy
 //! Uses first-bytes sniffing to identify protocol:
-//! - tarpc/bincode: Length-prefixed binary frames
+//! - tarpc/binary: Length-prefixed binary frames
 //! - JSON-RPC: `{` character (JSON object start)
 //! - HTTP: `GET`, `POST`, `PUT`, `DELETE`, etc.
 //!
@@ -123,8 +123,8 @@ impl ProtocolDetector {
             return Protocol::Unknown;
         }
 
-        // Check for tarpc/bincode (length-prefixed binary)
-        // Bincode frames start with a 4-byte length prefix (little-endian u32)
+        // Check for tarpc/binary (length-prefixed binary)
+        // Length-prefixed frames start with a 4-byte length prefix (little-endian u32)
         // The length should be reasonable (< 16MB)
         if bytes.len() >= 4 {
             let frame_len = u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]) as usize;
@@ -135,7 +135,7 @@ impl ProtocolDetector {
                 // Check if this looks like binary data (not ASCII text)
                 if bytes.len() > 4 {
                     let fifth = bytes[4];
-                    // tarpc/bincode payloads typically start with enum variant indices
+                    // tarpc binary payloads typically start with enum variant indices
                     // or struct field counts (small numbers), not ASCII printable chars
                     if !fifth.is_ascii_graphic() || fifth < 0x20 {
                         return Protocol::Tarpc;

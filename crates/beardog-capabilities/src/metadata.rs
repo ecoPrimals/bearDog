@@ -149,17 +149,17 @@ pub const ENV_CAPABILITY_MDNS_SERVICE: &str = "BEARDOG_CAPABILITY_MDNS_SERVICE";
 /// 1. [`ENV_CAPABILITY_HTTP_BASE`]
 /// 2. `BEARDOG_API_HOST` or `BEARDOG_BIND_ADDRESS` + `BEARDOG_API_PORT` (or [`beardog_config::DEFAULT_API_PORT`])
 pub fn resolve_capability_http_base() -> String {
-    if let Ok(base) = std::env::var(ENV_CAPABILITY_HTTP_BASE) {
+    if let Ok(base) = beardog_errors::process_env::var(ENV_CAPABILITY_HTTP_BASE) {
         return base.trim_end_matches('/').to_string();
     }
 
-    let host = std::env::var("BEARDOG_API_HOST")
-        .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
+    let host = beardog_errors::process_env::var("BEARDOG_API_HOST")
+        .or_else(|_| beardog_errors::process_env::var("BEARDOG_BIND_ADDRESS"))
         .unwrap_or_else(|_| {
             beardog_config::domains::network_addresses::DEFAULT_BIND_ADDRESS.to_string()
         });
 
-    let port: u16 = std::env::var("BEARDOG_API_PORT")
+    let port: u16 = beardog_errors::process_env::var("BEARDOG_API_PORT")
         .ok()
         .and_then(|p| p.parse().ok())
         .unwrap_or(beardog_config::DEFAULT_API_PORT);
@@ -169,7 +169,7 @@ pub fn resolve_capability_http_base() -> String {
 
 /// Full HTTP URL for the capability discovery document.
 pub fn resolve_capability_http_discovery_url() -> String {
-    let path = std::env::var(ENV_CAPABILITY_HTTP_PATH)
+    let path = beardog_errors::process_env::var(ENV_CAPABILITY_HTTP_PATH)
         .unwrap_or_else(|_| DEFAULT_CAPABILITY_HTTP_PATH.to_string());
     let base = resolve_capability_http_base();
     if path.starts_with('/') {
@@ -180,11 +180,12 @@ pub fn resolve_capability_http_discovery_url() -> String {
 }
 
 fn resolve_mdns_instance_label(instance_id: &str) -> String {
-    std::env::var(ENV_CAPABILITY_MDNS_INSTANCE).unwrap_or_else(|_| instance_id.to_string())
+    beardog_errors::process_env::var(ENV_CAPABILITY_MDNS_INSTANCE)
+        .unwrap_or_else(|_| instance_id.to_string())
 }
 
 fn resolve_mdns_service_type() -> String {
-    std::env::var(ENV_CAPABILITY_MDNS_SERVICE)
+    beardog_errors::process_env::var(ENV_CAPABILITY_MDNS_SERVICE)
         .unwrap_or_else(|_| DEFAULT_CAPABILITY_MDNS_SERVICE_TYPE.to_string())
 }
 

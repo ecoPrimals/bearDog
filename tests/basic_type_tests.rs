@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Basic type tests for canonical types
 //!
 //! These tests validate fundamental `BearDog` types including health status

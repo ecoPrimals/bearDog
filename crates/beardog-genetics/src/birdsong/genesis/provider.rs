@@ -27,6 +27,8 @@ pub struct GenesisLineageProvider {
     _hardware_entropy: Option<HardwareEntropyFn>,
     /// Minimum [`TrustLevel`] a [`GenesisWitness`] must meet for lineage to be accepted.
     pub min_trust_level: TrustLevel,
+    /// Witness policy: `permissioned` | `permissionless` (see [`Self::verify_witness_authority`]).
+    pub genesis_mode: String,
 }
 
 impl GenesisLineageProvider {
@@ -47,7 +49,22 @@ impl GenesisLineageProvider {
             trusted_witnesses: Arc::new(RwLock::new(HashMap::new())),
             _hardware_entropy: None,
             min_trust_level,
+            genesis_mode: "permissioned".to_string(),
         })
+    }
+
+    /// Override genesis witness policy (default `permissioned`).
+    pub fn with_genesis_mode(mut self, mode: impl Into<String>) -> Self {
+        self.genesis_mode = mode.into();
+        self
+    }
+
+    /// Set [`Self::genesis_mode`] from `BEARDOG_GENESIS_MODE` (default `permissioned` when unset).
+    pub fn with_genesis_mode_from_env(mut self) -> Self {
+        self.genesis_mode = std::env::var("BEARDOG_GENESIS_MODE")
+            .unwrap_or_else(|_| "permissioned".to_string())
+            .to_lowercase();
+        self
     }
 
     /// Enable hardware entropy for production-grade genetic ID generation
@@ -71,7 +88,7 @@ impl GenesisLineageProvider {
             new_node_id, witness.device_id
         );
 
-        self.verify_witness_authority(witness)?;
+        self.verify_witness_authority(witness, &self.genesis_mode)?;
 
         if !witness.verify_signature(new_node_id)? {
             warn!(
@@ -148,7 +165,7 @@ impl GenesisLineageProvider {
             .unwrap_or_else(|_| std::time::Duration::from_secs(0))
             .as_secs();
 
-        if !physical_proof.verify()? {
+        if !physical_proof.verify_from_env()? {
             warn!(
                 "Physical channel proof verification failed for {}",
                 new_node_id
@@ -215,10 +232,11 @@ impl GenesisLineageProvider {
         debug!("Added trusted witness: {}", device_id);
     }
 
-    /// Verify witness has authority to create lineage
+    /// Verify witness has authority to create lineage.
     pub(crate) fn verify_witness_authority(
         &self,
         witness: &GenesisWitness,
+        genesis_mode: &str,
     ) -> Result<(), BearDogError> {
         if witness.public_key.len() != 32 {
             return Err(BearDogError::security(
@@ -230,11 +248,7 @@ impl GenesisLineageProvider {
             return Err(BearDogError::security("Witness signature missing".into()));
         }
 
-        let genesis_mode = std::env::var("BEARDOG_GENESIS_MODE")
-            .unwrap_or_else(|_| "permissioned".to_string())
-            .to_lowercase();
-
-        match genesis_mode.as_str() {
+        match genesis_mode.to_lowercase().as_str() {
             "permissionless" => {
                 debug!("Genesis mode: permissionless (any valid witness accepted)");
                 Ok(())
@@ -299,6 +313,18 @@ impl GenesisLineageProvider {
                 }
             }
         }
+    }
+
+    /// [`verify_witness_authority`](Self::verify_witness_authority) using `BEARDOG_GENESIS_MODE`
+    /// (default `permissioned` when unset).
+    pub fn verify_witness_authority_from_env(
+        &self,
+        witness: &GenesisWitness,
+    ) -> Result<(), BearDogError> {
+        let mode = std::env::var("BEARDOG_GENESIS_MODE")
+            .unwrap_or_else(|_| "permissioned".to_string())
+            .to_lowercase();
+        self.verify_witness_authority(witness, &mode)
     }
 
     /// Generate genetic identity for new node

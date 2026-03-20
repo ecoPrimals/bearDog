@@ -52,7 +52,7 @@ BEARDOG_SOCKET=@biomeos_beardog ./beardog server
 ### 4. Test the API
 
 ```bash
-cargo run --release --example crypto_client
+cargo run --release --example api_demo
 ```
 
 ---
@@ -109,9 +109,10 @@ Introspection: `discover_capabilities`, `primal.info`, `rpc.methods`
 
 - **Edition 2024** — Rust 2024 with MSRV 1.85.0
 - **Pure Rust** — No C dependencies
-- **Zero Hardcoding** — Use environment variables for configuration
+- **Dependency Injection** — Pure `Default` (no I/O), `from_env()` at boundaries, `from_env_provider()` in tests
+- **Zero Hardcoding** — Config flows through parameters, capability-based discovery
 - **Result<T, E>** — No `unwrap()`/`expect()` in production code
-- **Serial Env Tests** — Use `#[serial_test::serial]` for env var tests
+- **Fully Concurrent Tests** — No `#[serial]` outside chaos/fault suites
 - **< 1000 LOC** — File size discipline
 - **Constant-Time** — Use `subtle` crate for secret comparisons
 
@@ -145,6 +146,8 @@ cargo build --release                # Build
 | Missing Docs | 0 |
 | Unsafe | 0 blocks |
 | Pure Rust | 100% |
+| Tests | 13,400+ (concurrent) |
+| Coverage | 84% line (llvm-cov) |
 | Files > 1000 LOC | 0 |
 
 ---

@@ -296,13 +296,13 @@ pub enum DiscoveryEvent {
 
 impl Default for UniversalDiscoveryConfig {
     fn default() -> Self {
-        // ✅ Self-discovered service ID (no hardcoded primal name)
-        let primal_type = std::env::var("PRIMAL_TYPE")
-            .or_else(|_| std::env::var("SERVICE_TYPE"))
-            .unwrap_or_else(|_| "primal".to_string());
-
+        let network_config = NetworkConfig::default();
+        let endpoint = format!(
+            "http://{}:{}/v1/catalog/services",
+            network_config.default_host, 8500
+        );
         Self {
-            service_id: format!("{}-{}", primal_type, Uuid::new_v4()),
+            service_id: format!("primal-{}", Uuid::new_v4()),
             enabled_protocols: vec![
                 DiscoveryProtocol::Mdns {
                     service_type: "_http._tcp".to_string(),
@@ -311,31 +311,63 @@ impl Default for UniversalDiscoveryConfig {
                     continuous_monitoring: true,
                 },
                 DiscoveryProtocol::Http {
-                    endpoint: std::env::var("SERVICE_REGISTRY_ENDPOINT")
-                        .or_else(|_| std::env::var("DISCOVERY_SERVICE_ENDPOINT"))
-                        .or_else(|_| std::env::var("BEARDOG_CONSUL_ENDPOINT"))
-                        .or_else(|_| std::env::var("CONSUL_HTTP_ADDR"))
-                        .unwrap_or_else(|_| {
-                            // ✅ Vendor-agnostic: Could be Consul, etcd, k8s, etc.
-                            // Use SERVICE_REGISTRY_* environment variables (not consul-specific)
-                            let network_config = NetworkConfig::default();
-                            let registry_host = std::env::var("SERVICE_REGISTRY_HOST")
-                                .or_else(|_| std::env::var("CONSUL_HOST"))
-                                .unwrap_or_else(|_| network_config.default_host.clone());
-                            let registry_port = std::env::var("SERVICE_REGISTRY_PORT")
-                                .or_else(|_| std::env::var("CONSUL_PORT"))
-                                .ok()
-                                .and_then(|p| p.parse::<u16>().ok())
-                                .unwrap_or(8500); // 8500 is common for service registries
-                            format!("http://{registry_host}:{registry_port}/v1/catalog/services")
-                        }),
+                    endpoint,
                     headers: HashMap::new(),
                 },
             ],
             registry_config: ServiceRegistryConfig::default(),
             health_config: HealthCheckConfig::default(),
             load_balancing_config: LoadBalancingConfig::default(),
-            network_config: NetworkConfig::default(),
+            network_config,
+            cache_config: CanonicalCacheConfig::default(),
+            security_config: CanonicalSecurityConfig::default(),
+        }
+    }
+}
+
+impl UniversalDiscoveryConfig {
+    /// Build configuration from process environment (`std::env::var`).
+    #[must_use]
+    pub fn from_env() -> Self {
+        let primal_type = std::env::var("PRIMAL_TYPE")
+            .or_else(|_| std::env::var("SERVICE_TYPE"))
+            .unwrap_or_else(|_| "primal".to_string());
+
+        let network_config = NetworkConfig::default();
+        let http_endpoint = std::env::var("SERVICE_REGISTRY_ENDPOINT")
+            .or_else(|_| std::env::var("DISCOVERY_SERVICE_ENDPOINT"))
+            .or_else(|_| std::env::var("BEARDOG_CONSUL_ENDPOINT"))
+            .or_else(|_| std::env::var("CONSUL_HTTP_ADDR"))
+            .unwrap_or_else(|_| {
+                let registry_host = std::env::var("SERVICE_REGISTRY_HOST")
+                    .or_else(|_| std::env::var("CONSUL_HOST"))
+                    .unwrap_or_else(|_| network_config.default_host.clone());
+                let registry_port = std::env::var("SERVICE_REGISTRY_PORT")
+                    .or_else(|_| std::env::var("CONSUL_PORT"))
+                    .ok()
+                    .and_then(|p| p.parse::<u16>().ok())
+                    .unwrap_or(8500);
+                format!("http://{registry_host}:{registry_port}/v1/catalog/services")
+            });
+
+        Self {
+            service_id: format!("{primal_type}-{}", Uuid::new_v4()),
+            enabled_protocols: vec![
+                DiscoveryProtocol::Mdns {
+                    service_type: "_http._tcp".to_string(),
+                    interface: "eth0".to_string(),
+                    timeout_ms: 5000,
+                    continuous_monitoring: true,
+                },
+                DiscoveryProtocol::Http {
+                    endpoint: http_endpoint,
+                    headers: HashMap::new(),
+                },
+            ],
+            registry_config: ServiceRegistryConfig::default(),
+            health_config: HealthCheckConfig::default(),
+            load_balancing_config: LoadBalancingConfig::default(),
+            network_config,
             cache_config: CanonicalCacheConfig::default(),
             security_config: CanonicalSecurityConfig::default(),
         }

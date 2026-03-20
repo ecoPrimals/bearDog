@@ -49,13 +49,78 @@
 //! # }
 //! ```
 
-use std::env;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::PathBuf;
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
+
+/// Inputs for [`PrimalIdentity::from_inputs`] (no environment reads).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct IdentityInputs {
+    /// `PRIMAL_NAME`
+    pub primal_name: Option<String>,
+    /// `BEARDOG_NAME`
+    pub beardog_name: Option<String>,
+    /// `HOSTNAME`
+    pub hostname: Option<String>,
+    /// `HOST`
+    pub host: Option<String>,
+}
+
+impl IdentityInputs {
+    /// Read identity-related variables with `std::env::var` (read-only).
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
+            primal_name: std::env::var("PRIMAL_NAME").ok(),
+            beardog_name: std::env::var("BEARDOG_NAME").ok(),
+            hostname: std::env::var("HOSTNAME").ok(),
+            host: std::env::var("HOST").ok(),
+        }
+    }
+}
+
+/// Inputs for [`discover_endpoints_from_inputs`] (no environment reads).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct EndpointInputs {
+    /// `BEARDOG_LISTEN_ADDR`
+    pub beardog_listen_addr: Option<String>,
+    /// `BEARDOG_PORT`
+    pub beardog_port: Option<String>,
+}
+
+impl EndpointInputs {
+    /// Read endpoint-related variables with `std::env::var` (read-only).
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
+            beardog_listen_addr: std::env::var("BEARDOG_LISTEN_ADDR").ok(),
+            beardog_port: std::env::var("BEARDOG_PORT").ok(),
+        }
+    }
+}
+
+/// Full inputs for [`PrimalSelfKnowledge::discover_from_inputs`].
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct SelfKnowledgeInputs {
+    /// Identity fields (name, host, etc.)
+    pub identity: IdentityInputs,
+    /// Listen address / port overrides
+    pub endpoints: EndpointInputs,
+}
+
+impl SelfKnowledgeInputs {
+    /// Read all self-knowledge inputs from the process environment.
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
+            identity: IdentityInputs::from_env(),
+            endpoints: EndpointInputs::from_env(),
+        }
+    }
+}
 
 /// Simple capability enumeration
 ///
@@ -113,7 +178,7 @@ impl PrimalSelfKnowledge {
     ///
     /// # Environment Variables
     ///
-    /// - `PRIMAL_NAME` - This primal's name (default: "beardog")
+    /// - `PRIMAL_NAME` / `BEARDOG_NAME` - This primal's name (default: `HOSTNAME` / `HOST`, else `"local"`)
     /// - `BEARDOG_LISTEN_ADDR` - Listen address (default: "127.0.0.1:0")
     /// - `BEARDOG_PORT` - Explicit port override (optional)
     ///
@@ -127,16 +192,18 @@ impl PrimalSelfKnowledge {
     /// - Environment variables are malformed
     /// - Socket addresses cannot be parsed
     /// - Required configuration is missing
-    pub fn discover() -> Result<Self, BearDogError> {
+    ///
+    /// Discover self-knowledge from explicit inputs (no environment reads).
+    pub fn discover_from_inputs(inputs: &SelfKnowledgeInputs) -> Result<Self, BearDogError> {
         info!("🔍 Discovering primal self-knowledge...");
 
-        let identity = PrimalIdentity::discover();
+        let identity = PrimalIdentity::from_inputs(&inputs.identity);
         debug!("Identity discovered: {}", identity.name);
 
         let capabilities = discover_capabilities();
         debug!("Capabilities discovered: {} total", capabilities.len());
 
-        let endpoints = discover_endpoints()?;
+        let endpoints = discover_endpoints_from_inputs(&inputs.endpoints)?;
         debug!("Endpoints discovered: {} total", endpoints.len());
 
         let version = VersionInfo::discover();
@@ -148,6 +215,16 @@ impl PrimalSelfKnowledge {
             endpoints,
             version,
         })
+    }
+
+    /// Discover from the process environment (`std::env::var`, read-only).
+    pub fn discover_from_env() -> Result<Self, BearDogError> {
+        Self::discover_from_inputs(&SelfKnowledgeInputs::from_env())
+    }
+
+    /// Discover self-knowledge at runtime (reads environment via [`SelfKnowledgeInputs::from_env`]).
+    pub fn discover() -> Result<Self, BearDogError> {
+        Self::discover_from_env()
     }
 
     /// Get this primal's name (never assume it!)
@@ -211,23 +288,37 @@ pub struct PrimalIdentity {
 }
 
 impl PrimalIdentity {
-    /// Discover identity from environment/config
-    fn discover() -> Self {
-        let name = env::var("PRIMAL_NAME")
-            .or_else(|_| env::var("BEARDOG_NAME"))
-            .unwrap_or_else(|_| {
-                warn!("No PRIMAL_NAME set, using default 'beardog'");
-                "beardog".to_string()
+    /// Build identity from explicit inputs (no environment reads).
+    #[must_use]
+    pub fn from_inputs(inputs: &IdentityInputs) -> Self {
+        let name = inputs
+            .primal_name
+            .clone()
+            .or_else(|| inputs.beardog_name.clone())
+            .unwrap_or_else(|| {
+                inputs
+                    .hostname
+                    .clone()
+                    .or_else(|| inputs.host.clone())
+                    .unwrap_or_else(|| "local".to_string())
             });
 
-        let hostname = std::env::var("HOSTNAME")
-            .or_else(|_| std::env::var("HOST"))
-            .unwrap_or_else(|_| "unknown".to_string());
+        let hostname = inputs
+            .hostname
+            .clone()
+            .or_else(|| inputs.host.clone())
+            .unwrap_or_else(|| "unknown".to_string());
 
         let pid = std::process::id();
         let instance_id = format!("{hostname}-{pid}");
 
         Self { name, instance_id }
+    }
+
+    /// Read identity from the process environment.
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self::from_inputs(&IdentityInputs::from_env())
     }
 }
 
@@ -375,18 +466,16 @@ impl VersionInfo {
 /// Introspects what capabilities this primal actually implements.
 /// This is done at runtime by checking feature flags, available modules, etc.
 fn discover_capabilities() -> Vec<SimpleCapability> {
-    let mut capabilities = vec![
-        SimpleCapability::SecureTunneling,
-        SimpleCapability::GeneticLineage,
-        SimpleCapability::Cryptography,
-    ];
-
-    // Conditional capabilities based on features
-    #[cfg(feature = "hsm-integration")]
-    capabilities.push(SimpleCapability::HsmIntegration);
-
-    #[cfg(feature = "mdns")]
-    capabilities.push(SimpleCapability::Discovery);
+    let capabilities: Vec<SimpleCapability> = [
+        Some(SimpleCapability::SecureTunneling),
+        Some(SimpleCapability::GeneticLineage),
+        Some(SimpleCapability::Cryptography),
+        cfg!(feature = "hsm-integration").then(|| SimpleCapability::HsmIntegration),
+        cfg!(feature = "mdns").then(|| SimpleCapability::Discovery),
+    ]
+    .into_iter()
+    .flatten()
+    .collect();
 
     debug!("Discovered capabilities: {:?}", capabilities);
     capabilities
@@ -395,15 +484,15 @@ fn discover_capabilities() -> Vec<SimpleCapability> {
 /// Discover endpoints where this primal listens
 ///
 /// Priority order:
-/// 1. Explicit `BEARDOG_LISTEN_ADDR` environment variable
-/// 2. `BEARDOG_PORT` environment variable (with 127.0.0.1)
-/// 3. Configuration file
-/// 4. Default: 127.0.0.1:0 (let OS assign port)
-fn discover_endpoints() -> Result<Vec<Endpoint>, BearDogError> {
+/// 1. Explicit `beardog_listen_addr`
+/// 2. `beardog_port` (with 127.0.0.1)
+/// 3. Default: 127.0.0.1:0 (let OS assign port)
+pub fn discover_endpoints_from_inputs(
+    inputs: &EndpointInputs,
+) -> Result<Vec<Endpoint>, BearDogError> {
     let mut endpoints = Vec::new();
 
-    // Try BEARDOG_LISTEN_ADDR first
-    if let Ok(addr_str) = env::var("BEARDOG_LISTEN_ADDR") {
+    if let Some(ref addr_str) = inputs.beardog_listen_addr {
         debug!("Using BEARDOG_LISTEN_ADDR: {}", addr_str);
 
         let addr = addr_str
@@ -427,8 +516,7 @@ fn discover_endpoints() -> Result<Vec<Endpoint>, BearDogError> {
         return Ok(endpoints);
     }
 
-    // Try BEARDOG_PORT
-    if let Ok(port_str) = env::var("BEARDOG_PORT") {
+    if let Some(ref port_str) = inputs.beardog_port {
         let port: u16 = port_str.parse().map_err(|e| {
             BearDogError::network(format!("Invalid BEARDOG_PORT '{port_str}': {e}"))
         })?;
@@ -444,7 +532,6 @@ fn discover_endpoints() -> Result<Vec<Endpoint>, BearDogError> {
         return Ok(endpoints);
     }
 
-    // Default: Let OS assign port (port 0)
     debug!("No explicit endpoint configured, using OS-assigned port");
     #[expect(
         clippy::expect_used,
@@ -461,6 +548,11 @@ fn discover_endpoints() -> Result<Vec<Endpoint>, BearDogError> {
     Ok(endpoints)
 }
 
+/// Discover endpoints using [`EndpointInputs::from_env`].
+pub fn discover_endpoints_from_env() -> Result<Vec<Endpoint>, BearDogError> {
+    discover_endpoints_from_inputs(&EndpointInputs::from_env())
+}
+
 // =============================================================================
 // Tests
 // =============================================================================
@@ -471,69 +563,61 @@ mod tests {
 
     #[test]
     fn test_self_knowledge_discovery() {
-        // Should succeed even with no env vars set
-        let sk = PrimalSelfKnowledge::discover();
+        let sk = PrimalSelfKnowledge::discover_from_inputs(&SelfKnowledgeInputs::default());
         assert!(sk.is_ok());
     }
 
     #[test]
-    #[serial_test::serial]
-    fn test_identity_from_env() {
-        beardog_errors::process_env::set_var("PRIMAL_NAME", "test-primal");
-
-        let identity = PrimalIdentity::discover();
+    fn test_identity_from_primal_name() {
+        let identity = PrimalIdentity::from_inputs(&IdentityInputs {
+            primal_name: Some("test-primal".to_string()),
+            ..Default::default()
+        });
         assert_eq!(identity.name, "test-primal");
         assert!(
             identity
                 .instance_id
                 .contains(&std::process::id().to_string())
         );
-
-        beardog_errors::process_env::remove_var("PRIMAL_NAME");
     }
 
     #[test]
     fn test_identity_default() {
-        beardog_errors::process_env::remove_var("PRIMAL_NAME");
-        beardog_errors::process_env::remove_var("BEARDOG_NAME");
-
-        let identity = PrimalIdentity::discover();
-        assert_eq!(identity.name, "beardog");
+        let identity = PrimalIdentity::from_inputs(&IdentityInputs {
+            primal_name: None,
+            beardog_name: None,
+            hostname: Some("test-host-self-knowledge".to_string()),
+            host: None,
+        });
+        assert_eq!(identity.name, "test-host-self-knowledge");
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_endpoint_from_listen_addr() {
-        beardog_errors::process_env::set_var("BEARDOG_LISTEN_ADDR", "127.0.0.1:9000");
-
-        let endpoints = discover_endpoints().unwrap();
+        let endpoints = discover_endpoints_from_inputs(&EndpointInputs {
+            beardog_listen_addr: Some("127.0.0.1:9000".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
         assert_eq!(endpoints.len(), 1);
         assert_eq!(endpoints[0].address.port(), 9000);
         assert_eq!(endpoints[0].protocol, Protocol::Http);
-
-        beardog_errors::process_env::remove_var("BEARDOG_LISTEN_ADDR");
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_endpoint_from_port() {
-        beardog_errors::process_env::remove_var("BEARDOG_LISTEN_ADDR");
-        beardog_errors::process_env::set_var("BEARDOG_PORT", "8080");
-
-        let endpoints = discover_endpoints().unwrap();
+        let endpoints = discover_endpoints_from_inputs(&EndpointInputs {
+            beardog_port: Some("8080".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
         assert_eq!(endpoints.len(), 1);
         assert_eq!(endpoints[0].address.port(), 8080);
-
-        beardog_errors::process_env::remove_var("BEARDOG_PORT");
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_endpoint_default() {
-        beardog_errors::process_env::remove_var("BEARDOG_LISTEN_ADDR");
-        beardog_errors::process_env::remove_var("BEARDOG_PORT");
-
-        let endpoints = discover_endpoints().unwrap();
+        let endpoints = discover_endpoints_from_inputs(&EndpointInputs::default()).unwrap();
         assert_eq!(endpoints.len(), 1);
         assert_eq!(endpoints[0].address.port(), 0); // OS-assigned
     }
@@ -573,12 +657,16 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_my_name() {
-        beardog_errors::process_env::set_var("PRIMAL_NAME", "test-name");
-        let sk = PrimalSelfKnowledge::discover().expect("discover should succeed");
+        let sk = PrimalSelfKnowledge::discover_from_inputs(&SelfKnowledgeInputs {
+            identity: IdentityInputs {
+                primal_name: Some("test-name".to_string()),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .expect("discover should succeed");
         assert_eq!(sk.my_name(), "test-name");
-        beardog_errors::process_env::remove_var("PRIMAL_NAME");
     }
 
     #[test]
@@ -631,32 +719,31 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_identity_from_beardog_name() {
-        beardog_errors::process_env::remove_var("PRIMAL_NAME");
-        beardog_errors::process_env::set_var("BEARDOG_NAME", "from-beardog-name");
-        let id = PrimalIdentity::discover();
+        let id = PrimalIdentity::from_inputs(&IdentityInputs {
+            primal_name: None,
+            beardog_name: Some("from-beardog-name".to_string()),
+            ..Default::default()
+        });
         assert_eq!(id.name, "from-beardog-name");
-        beardog_errors::process_env::remove_var("BEARDOG_NAME");
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_discover_endpoints_invalid_listen_addr_errors() {
-        beardog_errors::process_env::set_var("BEARDOG_LISTEN_ADDR", "127.0.0.1:99999");
-        let err = discover_endpoints();
+        let err = discover_endpoints_from_inputs(&EndpointInputs {
+            beardog_listen_addr: Some("127.0.0.1:99999".to_string()),
+            ..Default::default()
+        });
         assert!(err.is_err());
-        beardog_errors::process_env::remove_var("BEARDOG_LISTEN_ADDR");
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_discover_endpoints_invalid_port_errors() {
-        beardog_errors::process_env::remove_var("BEARDOG_LISTEN_ADDR");
-        beardog_errors::process_env::set_var("BEARDOG_PORT", "not-a-u16");
-        let err = discover_endpoints();
+        let err = discover_endpoints_from_inputs(&EndpointInputs {
+            beardog_port: Some("not-a-u16".to_string()),
+            ..Default::default()
+        });
         assert!(err.is_err());
-        beardog_errors::process_env::remove_var("BEARDOG_PORT");
     }
 
     #[test]

@@ -16,6 +16,7 @@ workspace = true
 # BearDog core types
 beardog-core = { path = "../beardog-core" }
 beardog-config = { path = "../beardog-config" }
+beardog-discovery = { path = "../beardog-discovery" }
 beardog-errors = { path = "../beardog-errors" }
 
 # Core async runtime
@@ -34,7 +35,7 @@ anyhow = { workspace = true }
 tracing = { workspace = true }
 
 # Optional: Type-safe RPC (tarpc for high-performance)
-# Full feature includes: serde-transport, tokio1, serde1, and bincode codec
+# Full feature includes: serde-transport, tokio1, serde1, and codec options
 tarpc = { version = "0.34", features = ["full"], optional = true }
 tokio-util = { version = "0.7", features = ["codec"], optional = true }
 futures = { workspace = true, optional = true }
@@ -78,4 +79,3 @@ tarpc = [
 [dev-dependencies]
 tokio-test = "0.4"
 rand = { workspace = true }
-serial_test = "2.0"

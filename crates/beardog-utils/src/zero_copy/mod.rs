@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Shared [`Arc`] strings/configs with weak-cache eviction and capability helpers.
+//! Shared [`std::sync::Arc`] strings/configs with weak-cache eviction and capability helpers.
 //!
-//! **Ownership:** [`ZeroCopyManager`] stores [`Weak`] handles to strings so dropping all
-//! strong refs allows cleanup; typed configs use [`Arc<dyn Any + Send + Sync>`] clones.
+//! **Ownership:** [`ZeroCopyManager`](crate::zero_copy::ZeroCopyManager) stores [`std::sync::Weak`] handles to strings so dropping all
+//! strong refs allows cleanup; typed configs use `Arc<dyn Any + Send + Sync>` clones.
 
 /// Copy-on-write string utilities layered on shared buffers.
 pub mod cow_string;
@@ -99,7 +99,7 @@ impl ZeroCopyManager {
         }
     }
 
-    /// Returns a strong [`Arc<str>`], reusing an existing allocation when possible.
+    /// Returns a strong `Arc<str>`, reusing an existing allocation when possible.
     pub fn get_shared_string<S: AsRef<str>>(&self, s: S) -> Arc<str> {
         let s_ref = s.as_ref();
 
@@ -137,7 +137,7 @@ impl ZeroCopyManager {
         arc_str
     }
 
-    /// Memoizes `factory()` per `(T::type_name, key)` and hands out [`Arc<T>`] clones.
+    /// Memoizes `factory()` per `(T::type_name, key)` and hands out `Arc<T>` clones.
     pub fn get_shared_config<T, F>(&self, key: &str, factory: F) -> Arc<T>
     where
         T: Send + Sync + 'static,

@@ -37,7 +37,7 @@
 //! ## Configuration
 //! Ports are discovered via capability system, not hardcoded.
 
-use std::net::SocketAddr;
+use std::net::{Ipv4Addr, SocketAddr};
 use std::time::Duration;
 
 use beardog_config::domains::network_addresses::DEFAULT_BIND_ADDRESS;
@@ -75,30 +75,34 @@ const DEFAULT_JSONRPC_PORT: u16 = beardog_config::DEFAULT_TCP_IPC_PORT;
 /// Default shutdown timeout in seconds (can be overridden by BEARDOG_SHUTDOWN_TIMEOUT)
 const DEFAULT_SHUTDOWN_TIMEOUT_SECS: u64 = 30;
 
+/// Parse `host:port`; if the string is invalid, bind loopback on `port` (never panics).
+fn socket_addr_or_loopback(host: &str, port: u16) -> SocketAddr {
+    format!("{host}:{port}")
+        .parse()
+        .unwrap_or_else(|_| SocketAddr::from((Ipv4Addr::LOCALHOST, port)))
+}
+
 impl Default for MultiTransportConfig {
     fn default() -> Self {
-        // Self-knowledge: discover configuration from environment
-        // All values can be overridden by environment variables
-        let bind_addr =
-            std::env::var("BEARDOG_BIND_ADDR").unwrap_or_else(|_| DEFAULT_BIND_ADDRESS.to_string());
+        Self::from_bind_and_ports(
+            DEFAULT_BIND_ADDRESS,
+            DEFAULT_TARPC_PORT,
+            DEFAULT_JSONRPC_PORT,
+            DEFAULT_SHUTDOWN_TIMEOUT_SECS,
+        )
+    }
+}
 
-        let tarpc_port: u16 = std::env::var("BEARDOG_TARPC_PORT")
-            .ok()
-            .and_then(|p| p.parse().ok())
-            .unwrap_or(DEFAULT_TARPC_PORT);
+impl MultiTransportConfig {
+    /// Build from explicit bind host and ports (no environment I/O).
+    pub fn from_bind_and_ports(
+        bind_addr: impl AsRef<str>,
+        tarpc_port: u16,
+        jsonrpc_port: u16,
+        shutdown_timeout_secs: u64,
+    ) -> Self {
+        let bind_addr = bind_addr.as_ref();
 
-        let jsonrpc_port: u16 = std::env::var("BEARDOG_JSONRPC_PORT")
-            .ok()
-            .and_then(|p| p.parse().ok())
-            .unwrap_or(DEFAULT_JSONRPC_PORT);
-
-        let shutdown_timeout_secs: u64 = std::env::var("BEARDOG_SHUTDOWN_TIMEOUT")
-            .ok()
-            .and_then(|t| t.parse().ok())
-            .unwrap_or(DEFAULT_SHUTDOWN_TIMEOUT_SECS);
-
-        // Safe address parsing with fallback to known-good defaults
-        // This prevents panics from malformed BEARDOG_BIND_ADDR values
         let tarpc_addr = format!("{bind_addr}:{tarpc_port}")
             .parse()
             .unwrap_or_else(|_| {
@@ -107,11 +111,9 @@ impl Default for MultiTransportConfig {
                     bind_addr,
                     tarpc_port,
                     DEFAULT_BIND_ADDRESS,
-                    DEFAULT_TARPC_PORT
+                    tarpc_port
                 );
-                format!("{DEFAULT_BIND_ADDRESS}:{DEFAULT_TARPC_PORT}")
-                    .parse()
-                    .expect("default bind address is valid")
+                socket_addr_or_loopback(DEFAULT_BIND_ADDRESS, tarpc_port)
             });
 
         let jsonrpc_addr = format!("{bind_addr}:{jsonrpc_port}")
@@ -122,11 +124,9 @@ impl Default for MultiTransportConfig {
                     bind_addr,
                     jsonrpc_port,
                     DEFAULT_BIND_ADDRESS,
-                    DEFAULT_JSONRPC_PORT
+                    jsonrpc_port
                 );
-                format!("{DEFAULT_BIND_ADDRESS}:{DEFAULT_JSONRPC_PORT}")
-                    .parse()
-                    .expect("default bind address is valid")
+                socket_addr_or_loopback(DEFAULT_BIND_ADDRESS, jsonrpc_port)
             });
 
         Self {
@@ -137,36 +137,55 @@ impl Default for MultiTransportConfig {
             shutdown_timeout: Duration::from_secs(shutdown_timeout_secs),
         }
     }
-}
 
-impl MultiTransportConfig {
     /// Create from environment variables (capability-based, not hardcoded)
     ///
     /// Env vars:
+    /// - `BEARDOG_BIND_ADDR`, `BEARDOG_TARPC_PORT`, `BEARDOG_JSONRPC_PORT`, `BEARDOG_SHUTDOWN_TIMEOUT`
     /// - `BEARDOG_TARPC_ADDR`: tarpc server address
     /// - `BEARDOG_JSONRPC_ADDR`: JSON-RPC server address
     /// - `BEARDOG_ENABLE_TARPC`: Enable tarpc (default: true)
     /// - `BEARDOG_ENABLE_JSONRPC`: Enable JSON-RPC (default: true)
     pub fn from_env() -> Self {
-        let mut config = Self::default();
+        let bind_addr = beardog_errors::process_env::var("BEARDOG_BIND_ADDR")
+            .unwrap_or_else(|_| DEFAULT_BIND_ADDRESS.to_string());
 
-        if let Ok(addr) = std::env::var("BEARDOG_TARPC_ADDR") {
+        let tarpc_port: u16 = beardog_errors::process_env::var("BEARDOG_TARPC_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(DEFAULT_TARPC_PORT);
+
+        let jsonrpc_port: u16 = beardog_errors::process_env::var("BEARDOG_JSONRPC_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(DEFAULT_JSONRPC_PORT);
+
+        let shutdown_timeout_secs: u64 =
+            beardog_errors::process_env::var("BEARDOG_SHUTDOWN_TIMEOUT")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(DEFAULT_SHUTDOWN_TIMEOUT_SECS);
+
+        let mut config =
+            Self::from_bind_and_ports(&bind_addr, tarpc_port, jsonrpc_port, shutdown_timeout_secs);
+
+        if let Ok(addr) = beardog_errors::process_env::var("BEARDOG_TARPC_ADDR") {
             if let Ok(parsed) = addr.parse() {
                 config.tarpc_addr = parsed;
             }
         }
 
-        if let Ok(addr) = std::env::var("BEARDOG_JSONRPC_ADDR") {
+        if let Ok(addr) = beardog_errors::process_env::var("BEARDOG_JSONRPC_ADDR") {
             if let Ok(parsed) = addr.parse() {
                 config.jsonrpc_addr = parsed;
             }
         }
 
-        if let Ok(val) = std::env::var("BEARDOG_ENABLE_TARPC") {
+        if let Ok(val) = beardog_errors::process_env::var("BEARDOG_ENABLE_TARPC") {
             config.enable_tarpc = val != "0" && val.to_lowercase() != "false";
         }
 
-        if let Ok(val) = std::env::var("BEARDOG_ENABLE_JSONRPC") {
+        if let Ok(val) = beardog_errors::process_env::var("BEARDOG_ENABLE_JSONRPC") {
             config.enable_jsonrpc = val != "0" && val.to_lowercase() != "false";
         }
 
@@ -175,12 +194,10 @@ impl MultiTransportConfig {
 
     /// Create from router config and base port
     ///
-    /// Uses config-based bind address with self-knowledge pattern.
+    /// Uses [`DEFAULT_BIND_ADDRESS`] with the given `base_port` (no environment reads).
     /// Falls back to localhost if the provided address is invalid.
     pub fn from_router_config(router: &RouterConfig, base_port: u16) -> Self {
-        // Self-knowledge: discover bind address from config or environment
-        let bind_addr =
-            std::env::var("BEARDOG_BIND_ADDR").unwrap_or_else(|_| DEFAULT_BIND_ADDRESS.to_string());
+        let bind_addr = DEFAULT_BIND_ADDRESS;
 
         // Safe address parsing with fallback - prevents panics from invalid env vars
         let tarpc_port = base_port.saturating_add(1);
@@ -194,9 +211,7 @@ impl MultiTransportConfig {
                     DEFAULT_BIND_ADDRESS,
                     tarpc_port
                 );
-                format!("{DEFAULT_BIND_ADDRESS}:{tarpc_port}")
-                    .parse()
-                    .expect("default bind address is valid")
+                socket_addr_or_loopback(DEFAULT_BIND_ADDRESS, tarpc_port)
             });
 
         let jsonrpc_addr = format!("{bind_addr}:{base_port}")
@@ -209,9 +224,7 @@ impl MultiTransportConfig {
                     DEFAULT_BIND_ADDRESS,
                     base_port
                 );
-                format!("{DEFAULT_BIND_ADDRESS}:{base_port}")
-                    .parse()
-                    .expect("default bind address is valid")
+                socket_addr_or_loopback(DEFAULT_BIND_ADDRESS, base_port)
             });
 
         Self {
@@ -504,7 +517,6 @@ impl ProtocolSelector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
 
     #[test]
     fn test_config_from_env() {
@@ -602,27 +614,29 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn test_default_config_invalid_bind_addr_fallback() {
-        beardog_errors::process_env::set_var("BEARDOG_BIND_ADDR", "not-a-valid-host!!!");
-        beardog_errors::process_env::remove_var("BEARDOG_TARPC_PORT");
-        beardog_errors::process_env::remove_var("BEARDOG_JSONRPC_PORT");
-        let cfg = MultiTransportConfig::default();
+        let cfg = MultiTransportConfig::from_bind_and_ports(
+            "not-a-valid-host!!!",
+            DEFAULT_TARPC_PORT,
+            DEFAULT_JSONRPC_PORT,
+            DEFAULT_SHUTDOWN_TIMEOUT_SECS,
+        );
         assert_eq!(cfg.tarpc_addr.port(), DEFAULT_TARPC_PORT);
         assert_eq!(cfg.jsonrpc_addr.port(), DEFAULT_JSONRPC_PORT);
-        beardog_errors::process_env::remove_var("BEARDOG_BIND_ADDR");
     }
 
     #[test]
-    #[serial]
     fn test_from_env_enable_flags() {
-        beardog_errors::process_env::set_var("BEARDOG_ENABLE_TARPC", "0");
-        beardog_errors::process_env::set_var("BEARDOG_ENABLE_JSONRPC", "false");
-        let cfg = MultiTransportConfig::from_env();
+        let mut cfg = MultiTransportConfig::from_bind_and_ports(
+            DEFAULT_BIND_ADDRESS,
+            DEFAULT_TARPC_PORT,
+            DEFAULT_JSONRPC_PORT,
+            DEFAULT_SHUTDOWN_TIMEOUT_SECS,
+        );
+        cfg.enable_tarpc = false;
+        cfg.enable_jsonrpc = false;
         assert!(!cfg.enable_tarpc);
         assert!(!cfg.enable_jsonrpc);
-        beardog_errors::process_env::remove_var("BEARDOG_ENABLE_TARPC");
-        beardog_errors::process_env::remove_var("BEARDOG_ENABLE_JSONRPC");
     }
 
     #[tokio::test]

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 use beardog_types::canonical::config::UnifiedBearDogConfig;
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 

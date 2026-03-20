@@ -155,7 +155,7 @@ pub fn backup_config_file(path: &str) -> Result<String, BearDogError> {
 pub fn validate_env_vars() -> Vec<String> {
     let mut errors = Vec::new();
 
-    if let Ok(port) = std::env::var("BEARDOG_PORT") {
+    if let Ok(port) = beardog_errors::process_env::var("BEARDOG_PORT") {
         if let Ok(port_num) = port.parse::<u16>() {
             if port_num < 1024 && port_num != 0 {
                 errors.push(
@@ -163,10 +163,10 @@ pub fn validate_env_vars() -> Vec<String> {
                 );
         } else {
             errors.push("BEARDOG_PORT: Invalid port number format".to_string());
-    if let Ok(db_url) = std::env::var("BEARDOG_DATABASE_URL") {
+    if let Ok(db_url) = beardog_errors::process_env::var("BEARDOG_DATABASE_URL") {
         if db_url.is_empty() {
             errors.push("BEARDOG_DATABASE_URL: Cannot be empty".to_string());
-    if let Ok(log_level) = std::env::var("BEARDOG_LOG_LEVEL") {
+    if let Ok(log_level) = beardog_errors::process_env::var("BEARDOG_LOG_LEVEL") {
         let valid_levels = ["trace", "debug", "info", "warn", "error "];
         if !valid_levels.contains(&log_level.to_lowercase().as_str()) {
             errors.push(format!(

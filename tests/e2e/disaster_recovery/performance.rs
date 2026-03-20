@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Performance Degradation & Resource Exhaustion Scenarios
 //!
 //! Tests system behavior under resource constraints and load.

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // E2E Test Suite - Top Level
 // Created October 7, 2025
 
@@ -32,9 +33,7 @@ use e2e::{E2EScenario, E2ETestFramework, print_e2e_report};
 
 #[tokio::test]
 async fn test_production_deployment_e2e() {
-    let framework = E2ETestFramework::new()
-        .await
-        .expect("Failed to create E2E framework");
+    let framework = E2ETestFramework::new().expect("Failed to create E2E framework");
 
     let result = framework
         .run_scenario(E2EScenario::ProductionDeployment)
@@ -62,9 +61,7 @@ async fn test_production_deployment_e2e() {
 
 #[tokio::test]
 async fn test_full_stack_integration_e2e() {
-    let framework = E2ETestFramework::new()
-        .await
-        .expect("Failed to create E2E framework");
+    let framework = E2ETestFramework::new().expect("Failed to create E2E framework");
 
     let result = framework
         .run_scenario(E2EScenario::FullStackIntegration)
@@ -88,9 +85,7 @@ async fn test_full_stack_integration_e2e() {
 
 #[tokio::test]
 async fn test_security_flow_e2e() {
-    let framework = E2ETestFramework::new()
-        .await
-        .expect("Failed to create E2E framework");
+    let framework = E2ETestFramework::new().expect("Failed to create E2E framework");
 
     let result = framework.run_scenario(E2EScenario::SecurityFlow).await;
     assert!(result.is_ok(), "Security flow test failed");
@@ -112,9 +107,7 @@ async fn test_security_flow_e2e() {
 
 #[tokio::test]
 async fn test_disaster_recovery_e2e() {
-    let framework = E2ETestFramework::new()
-        .await
-        .expect("Failed to create E2E framework");
+    let framework = E2ETestFramework::new().expect("Failed to create E2E framework");
 
     let result = framework.run_scenario(E2EScenario::DisasterRecovery).await;
     assert!(result.is_ok(), "Disaster recovery test failed");
@@ -136,9 +129,7 @@ async fn test_disaster_recovery_e2e() {
 
 #[tokio::test]
 async fn test_all_e2e_scenarios() {
-    let framework = E2ETestFramework::new()
-        .await
-        .expect("Failed to create E2E framework");
+    let framework = E2ETestFramework::new().expect("Failed to create E2E framework");
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
@@ -164,7 +155,7 @@ async fn test_all_e2e_scenarios() {
 
 #[tokio::test]
 async fn test_e2e_framework_initialization() {
-    let result = E2ETestFramework::new().await;
+    let result = E2ETestFramework::new();
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal

@@ -353,14 +353,9 @@ fn test_key_exists() {
     );
 }
 
-// ============================================================================
-// Recovery Key Management Tests - TEMPORARILY DISABLED
-// Note: Recovery module has naming conflict (both .rs and /mod.rs exist)
-// These tests will be re-enabled once the module structure is resolved
-// ============================================================================
-
-// Test count: 7 recovery tests temporarily disabled
-// Remaining: 27 active key management tests
+// Recovery key management tests are blocked on recovery module naming conflict
+// (both recovery.rs and recovery/mod.rs exist). Tracked for the large-file
+// refactoring pass.
 
 // ============================================================================
 // Key Configuration Tests

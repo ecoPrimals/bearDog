@@ -38,7 +38,7 @@ pub struct BirdSongManager {
     proof_manager: Arc<LineageProofManager>,
     kdf: Arc<LineageKeyDerivation>,
     encryption: Arc<BirdSongEncryption>,
-    /// Distributed keys (node_id -> Vec<BirdSongKey>)
+    /// Distributed keys (`node_id` -> `Vec` of `BirdSongKey`)
     distributed_keys: Arc<RwLock<HashMap<String, Vec<BirdSongKey>>>>,
 }
 

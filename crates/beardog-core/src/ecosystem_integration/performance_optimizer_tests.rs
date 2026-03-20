@@ -574,13 +574,6 @@ async fn test_zero_copy_cached_result() {
 
 #[tokio::test]
 async fn test_config_from_environment_defaults() {
-    // Clear environment variables
-    beardog_errors::process_env::remove_var("BEARDOG_OPTIMIZER_MAX_CONNECTIONS");
-    beardog_errors::process_env::remove_var("BEARDOG_OPTIMIZER_CONNECTION_TIMEOUT_SECS");
-    beardog_errors::process_env::remove_var("BEARDOG_OPTIMIZER_CACHE_TTL_SECS");
-    beardog_errors::process_env::remove_var("BEARDOG_OPTIMIZER_RATE_LIMIT");
-    beardog_errors::process_env::remove_var("BEARDOG_OPTIMIZER_HEALTH_CHECK_INTERVAL_SECS");
-
     let config = EcosystemOptimizerConfig::default();
 
     // Should use default values

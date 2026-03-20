@@ -18,7 +18,7 @@ mod tests {
 
     use crate::ecosystem::primal_types::UniversalIntegrationConfig;
     use crate::ecosystem::self_discovery::{
-        DiscoveredService, HealthStatus, SelfDiscoveryManager, SelfIdentity,
+        DiscoveredService, HealthStatus, SelfDiscoveryManager, SelfIdentity, SelfIdentityEnvInputs,
         UniversalCapabilityDiscovery,
     };
     use beardog_types::canonical::capabilities::ServiceCapabilityType;
@@ -29,7 +29,7 @@ mod tests {
         SelfIdentity {
             id: "test-id-123".to_string(),
             name: "TestService".to_string(),
-            version: "1.0.0".to_string(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
             capabilities: vec![ServiceCapabilityType::Security],
             endpoint: "https://test.example.com".to_string(),
             health_status: HealthStatus::Healthy,
@@ -58,7 +58,7 @@ mod tests {
         );
 
         assert_eq!(identity.name, "TestService");
-        assert_eq!(identity.version, "1.0.0");
+        assert_eq!(identity.version, env!("CARGO_PKG_VERSION"));
         assert_eq!(identity.capabilities.len(), 1);
         assert_eq!(identity.endpoint, "https://test.com");
         assert_eq!(identity.health_status, HealthStatus::Healthy);
@@ -66,12 +66,17 @@ mod tests {
     }
 
     #[test]
-    fn test_self_identity_beardog() {
-        let identity = SelfIdentity::beardog();
+    fn test_self_identity_from_environment() {
+        let inputs = SelfIdentityEnvInputs {
+            primal_name: Some("test-primal-from-env".to_string()),
+            beardog_advertised_capabilities: Some("security,network".to_string()),
+            ..Default::default()
+        };
+        let identity = SelfIdentity::from_inputs(&inputs);
 
-        assert_eq!(identity.name, "BearDog");
+        assert_eq!(identity.name, "test-primal-from-env");
         assert!(!identity.version.is_empty());
-        assert!(identity.capabilities.len() >= 4);
+        assert_eq!(identity.capabilities.len(), 2);
         assert_eq!(identity.health_status, HealthStatus::Healthy);
         assert!(!identity.id.is_empty());
     }
@@ -101,13 +106,30 @@ mod tests {
     }
 
     #[test]
-    fn test_discover_by_capability_empty() {
-        let discovery = UniversalCapabilityDiscovery::new().expect("Should create");
+    fn test_discover_by_capability_empty_without_env() {
+        let discovery =
+            UniversalCapabilityDiscovery::with_env_override(HashMap::new()).expect("Should create");
         let capability = ServiceCapabilityType::Security;
 
         let result = discovery.discover_by_capability(&capability);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 0);
+    }
+
+    #[test]
+    fn test_discover_by_capability_from_env() {
+        let mut env = HashMap::new();
+        env.insert(
+            "CAPABILITY_SECURITY_ENDPOINT".to_string(),
+            "https://registry.example.test/security".to_string(),
+        );
+        let discovery =
+            UniversalCapabilityDiscovery::with_env_override(env).expect("Should create");
+        let capability = ServiceCapabilityType::Security;
+
+        let result = discovery.discover_by_capability(&capability).expect("ok");
+        assert_eq!(result.len(), 1);
+        assert!(result[0].endpoint.contains("registry.example.test"));
     }
 
     #[tokio::test]
@@ -131,7 +153,7 @@ mod tests {
 
         let identity = manager.identity();
         assert_eq!(identity.name, "TestService");
-        assert_eq!(identity.version, "1.0.0");
+        assert_eq!(identity.version, env!("CARGO_PKG_VERSION"));
         assert_eq!(identity.health_status, HealthStatus::Healthy);
     }
 
@@ -170,10 +192,14 @@ mod tests {
         let mut config = create_test_config();
         config.required_capabilities = vec![ServiceCapabilityType::Security];
 
-        let manager = SelfDiscoveryManager::new(identity, config).expect("Should create manager");
+        let manager = SelfDiscoveryManager::new_with_capability_discovery(
+            identity,
+            config,
+            UniversalCapabilityDiscovery::with_env_override(HashMap::new()).expect("create"),
+        )
+        .expect("Should create manager");
 
         let result = manager.discover_required_capabilities();
-        // Should fail because no services are found
         assert!(result.is_err());
     }
 
@@ -197,11 +223,11 @@ mod tests {
     fn test_discovered_service_default() {
         let service = DiscoveredService::default();
 
-        assert_eq!(service.name, "BearDog Security Provider");
-        assert_eq!(service.service_id, "beardog-default");
-        assert_eq!(service.capabilities.len(), 1);
-        assert_eq!(service.health_status, HealthStatus::Healthy);
-        assert!(!service.endpoint.is_empty());
+        assert!(service.name.is_empty());
+        assert!(service.service_id.is_empty());
+        assert!(service.capabilities.is_empty());
+        assert_eq!(service.health_status, HealthStatus::Unknown);
+        assert!(service.endpoint.is_empty());
     }
 
     #[test]

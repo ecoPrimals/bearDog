@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Network Partition Tests
 //!
 //! Tests for network partition scenarios and recovery.

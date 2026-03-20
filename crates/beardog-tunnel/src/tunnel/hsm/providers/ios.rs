@@ -129,7 +129,7 @@ impl IosUniversalProvider {
 
     /// Simulate Secure Enclave detection based on device model
     fn simulate_secure_enclave_detection(&mut self) -> bool {
-        if let Ok(model) = std::env::var("IOS_MODEL") {
+        if let Ok(model) = beardog_errors::process_env::var("IOS_MODEL") {
             return self.detect_from_model(&model);
         }
 

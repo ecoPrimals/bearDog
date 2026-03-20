@@ -33,13 +33,13 @@ mod tests {
 
     #[test]
     fn test_android_ndk_path_env() {
-        let ndk_home = std::env::var("ANDROID_NDK_HOME");
+        let ndk_home = beardog_errors::process_env::var("ANDROID_NDK_HOME");
         assert!(ndk_home.is_ok() || ndk_home.is_err()); // Either is valid
     }
 
     #[test]
     fn test_android_sdk_path_env() {
-        let sdk_home = std::env::var("ANDROID_HOME");
+        let sdk_home = beardog_errors::process_env::var("ANDROID_HOME");
         assert!(sdk_home.is_ok() || sdk_home.is_err()); // Either is valid
     }
 

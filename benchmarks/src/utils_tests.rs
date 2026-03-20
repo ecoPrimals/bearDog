@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Comprehensive tests for benchmark utilities
 //!
 //! These tests ensure our benchmark statistics calculations are accurate

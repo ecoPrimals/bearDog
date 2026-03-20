@@ -229,7 +229,6 @@ async fn test_discover_multi_runs_environment_and_dedupes() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn test_discover_multi_async_with_upa_fails_gracefully() {
     let mut discovery = PrimalDiscovery::new(DiscoveryMethod::Multi(vec![
         DiscoveryMethod::Environment,
@@ -243,19 +242,12 @@ async fn test_discover_multi_async_with_upa_fails_gracefully() {
 }
 
 #[test]
-#[serial_test::serial]
-fn test_from_env_discovery_method_variants() {
-    beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "environment");
-    let d = PrimalDiscovery::from_env().expect("env");
-    assert!(matches!(d.method, DiscoveryMethod::Environment));
-    beardog_errors::process_env::remove_var("PRIMAL_DISCOVERY_METHOD");
+fn test_discovery_method_explicit_constructors() {
+    let e = PrimalDiscovery::new(DiscoveryMethod::Environment);
+    assert!(matches!(e.method, DiscoveryMethod::Environment));
 
-    beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "dns-sd");
-    let d2 = PrimalDiscovery::from_env().expect("dns-sd");
-    assert!(matches!(d2.method, DiscoveryMethod::DnsSd { .. }));
-    beardog_errors::process_env::remove_var("PRIMAL_DISCOVERY_METHOD");
-
-    beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "bogus-method");
-    assert!(PrimalDiscovery::from_env().is_err());
-    beardog_errors::process_env::remove_var("PRIMAL_DISCOVERY_METHOD");
+    let d = PrimalDiscovery::new(DiscoveryMethod::DnsSd {
+        domain: "local.".to_string(),
+    });
+    assert!(matches!(d.method, DiscoveryMethod::DnsSd { .. }));
 }

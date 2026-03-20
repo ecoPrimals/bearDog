@@ -275,7 +275,7 @@ pub struct EmergentBehavior {
 // Input Pattern Types
 // ============================================================================
 
-/// Legacy allow/block/simple patterns migrated into richer [`EcosystemMembership`] models.
+/// Legacy allow/block/simple patterns migrated into richer [`EcosystemMembership`](crate::ecosystem_evolution::EcosystemMembership) models.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BinaryAccessPattern {
     /// Represents allowlist variant

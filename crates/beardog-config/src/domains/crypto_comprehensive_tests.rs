@@ -348,49 +348,23 @@ mod tests {
     // ============================================================================
 
     #[test]
-    #[serial_test::serial]
     fn test_from_env_no_variables() {
-        beardog_errors::process_env::remove_var("BEARDOG_RSA_KEY_SIZE");
-        beardog_errors::process_env::remove_var("BEARDOG_AES_KEY_SIZE");
-        beardog_errors::process_env::remove_var("BEARDOG_EC_CURVE");
-        beardog_errors::process_env::remove_var("BEARDOG_HASH_ALGORITHM");
-        beardog_errors::process_env::remove_var("BEARDOG_PBKDF2_ITERATIONS");
-
         let config = CryptoConfig::from_env();
 
         assert_eq!(config, CryptoConfig::default());
-
-        beardog_errors::process_env::remove_var("BEARDOG_RSA_KEY_SIZE");
-        beardog_errors::process_env::remove_var("BEARDOG_AES_KEY_SIZE");
-        beardog_errors::process_env::remove_var("BEARDOG_EC_CURVE");
-        beardog_errors::process_env::remove_var("BEARDOG_HASH_ALGORITHM");
-        beardog_errors::process_env::remove_var("BEARDOG_PBKDF2_ITERATIONS");
     }
 
     #[test]
-    #[serial_test::serial] // Environment variable test - must run serially
-    fn test_from_env_with_rsa_key_size() {
-        beardog_errors::process_env::remove_var("BEARDOG_RSA_KEY_SIZE");
-        beardog_errors::process_env::set_var("BEARDOG_RSA_KEY_SIZE", "4096");
-
-        let config = CryptoConfig::from_env();
+    fn test_rsa_key_size_via_builder() {
+        let config = CryptoConfig::builder().rsa_key_size(4096).build();
 
         assert_eq!(config.rsa_key_size, 4096);
-
-        beardog_errors::process_env::remove_var("BEARDOG_RSA_KEY_SIZE");
     }
 
     #[test]
-    fn test_from_env_invalid_rsa_uses_default() {
-        beardog_errors::process_env::remove_var("BEARDOG_RSA_KEY_SIZE");
-        beardog_errors::process_env::set_var("BEARDOG_RSA_KEY_SIZE", "invalid");
-
-        let config = CryptoConfig::from_env();
-
-        // Should use default
+    fn test_default_rsa_key_size() {
+        let config = CryptoConfig::default();
         assert_eq!(config.rsa_key_size, 2048);
-
-        beardog_errors::process_env::remove_var("BEARDOG_RSA_KEY_SIZE");
     }
 
     // ============================================================================

@@ -79,13 +79,13 @@ pub struct IntegrationConfig {
 impl Default for IntegrationConfig {
     fn default() -> Self {
         Self {
-            upa_url: std::env::var("BEARDOG_UPA_URL")
+            upa_url: beardog_errors::process_env::var("BEARDOG_UPA_URL")
                 .unwrap_or_else(|_| "https://localhost:8080".to_string()),
-            api_port: std::env::var("BEARDOG_API_PORT")
+            api_port: beardog_errors::process_env::var("BEARDOG_API_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(9000),
-            service_name: std::env::var("BEARDOG_SERVICE_NAME")
+            service_name: beardog_errors::process_env::var("BEARDOG_SERVICE_NAME")
                 .unwrap_or_else(|_| "beardog-security-provider".to_string()),
             capabilities: vec![
                 "security".to_string(),
@@ -93,7 +93,7 @@ impl Default for IntegrationConfig {
                 "lineage".to_string(),
                 "birdsong".to_string(),
             ],
-            heartbeat_interval_secs: std::env::var("BEARDOG_HEARTBEAT_INTERVAL")
+            heartbeat_interval_secs: beardog_errors::process_env::var("BEARDOG_HEARTBEAT_INTERVAL")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(30),
@@ -135,9 +135,9 @@ impl BearDogIntegration {
         // Register with UPA
         // Use environment-driven endpoint or construct from config
         // Configuration hierarchy: BEARDOG_ENDPOINT > BEARDOG_HOST + port > 127.0.0.1 (dev) / 0.0.0.0 (prod)
-        let endpoint = std::env::var("BEARDOG_ENDPOINT").unwrap_or_else(|_| {
+        let endpoint = beardog_errors::process_env::var("BEARDOG_ENDPOINT").unwrap_or_else(|_| {
             // If no explicit endpoint, use BEARDOG_HOST or environment-aware default
-            let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|_| {
+            let host = beardog_errors::process_env::var("BEARDOG_HOST").unwrap_or_else(|_| {
                 // Secure default for dev, production default for release
                 if cfg!(debug_assertions) {
                     "127.0.0.1".to_string()  // Secure localhost for development

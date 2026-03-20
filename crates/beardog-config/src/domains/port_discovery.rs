@@ -59,12 +59,8 @@ fn parse_u16_env(key: &str, fallback: u16) -> u16 {
         .unwrap_or(fallback)
 }
 
-fn default_excluded_ports_from_env() -> Vec<u16> {
-    if let Ok(s) = std::env::var("BEARDOG_PORT_DISCOVERY_EXCLUDE") {
-        s.split(',').filter_map(|p| p.trim().parse().ok()).collect()
-    } else {
-        FALLBACK_EXCLUDED_DEV_PORTS.to_vec()
-    }
+fn default_excluded_ports() -> Vec<u16> {
+    FALLBACK_EXCLUDED_DEV_PORTS.to_vec()
 }
 
 /// Port discovery configuration
@@ -86,14 +82,31 @@ impl Default for PortDiscoveryConfig {
     fn default() -> Self {
         Self {
             strategy: DiscoveryStrategy::Full,
-            min_port: parse_u16_env("BEARDOG_PORT_DISCOVERY_MIN", FALLBACK_PORT_SCAN_MIN),
-            max_port: parse_u16_env("BEARDOG_PORT_DISCOVERY_MAX", FALLBACK_PORT_SCAN_MAX),
-            excluded_ports: default_excluded_ports_from_env(),
-            discovery_timeout_ms: std::env::var("BEARDOG_PORT_DISCOVERY_TIMEOUT_MS")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(FALLBACK_PORT_DISCOVERY_TIMEOUT_MS),
+            min_port: FALLBACK_PORT_SCAN_MIN,
+            max_port: FALLBACK_PORT_SCAN_MAX,
+            excluded_ports: default_excluded_ports(),
+            discovery_timeout_ms: FALLBACK_PORT_DISCOVERY_TIMEOUT_MS,
         }
+    }
+}
+
+impl PortDiscoveryConfig {
+    /// Load port discovery settings from environment variables.
+    #[must_use]
+    pub fn from_env() -> Self {
+        let mut base = Self::default();
+        base.min_port = parse_u16_env("BEARDOG_PORT_DISCOVERY_MIN", FALLBACK_PORT_SCAN_MIN);
+        base.max_port = parse_u16_env("BEARDOG_PORT_DISCOVERY_MAX", FALLBACK_PORT_SCAN_MAX);
+        base.discovery_timeout_ms = std::env::var("BEARDOG_PORT_DISCOVERY_TIMEOUT_MS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(FALLBACK_PORT_DISCOVERY_TIMEOUT_MS);
+        base.excluded_ports = if let Ok(s) = std::env::var("BEARDOG_PORT_DISCOVERY_EXCLUDE") {
+            s.split(',').filter_map(|p| p.trim().parse().ok()).collect()
+        } else {
+            default_excluded_ports()
+        };
+        base
     }
 }
 
@@ -601,5 +614,127 @@ mod tests {
         // These ports should be considered unavailable even if system allows
         assert!(!discoverer.config.excluded_ports.contains(&8003));
         assert!(discoverer.config.excluded_ports.contains(&8000));
+    }
+
+    #[test]
+    fn default_config_is_pure_and_from_env_matches_explicit_overrides() {
+        let d = PortDiscoveryConfig::default();
+        assert_eq!(d.min_port, FALLBACK_PORT_SCAN_MIN);
+        assert_eq!(d.max_port, FALLBACK_PORT_SCAN_MAX);
+
+        let c = PortDiscoveryConfig {
+            min_port: 9100,
+            max_port: 9101,
+            discovery_timeout_ms: 1500,
+            excluded_ports: vec![9100, 9101],
+            ..Default::default()
+        };
+        assert_eq!(c.min_port, 9100);
+        assert_eq!(c.max_port, 9101);
+        assert_eq!(c.discovery_timeout_ms, 1500);
+        assert_eq!(c.excluded_ports, vec![9100, 9101]);
+    }
+
+    #[tokio::test]
+    async fn hierarchical_uses_config_when_env_unset() {
+        let port = discover_port_hierarchical(
+            "HIER_PORT_TEST_XYZ",
+            None,
+            Some(1111),
+            2222,
+            PortDiscoveryConfig {
+                strategy: DiscoveryStrategy::ExplicitOnly,
+                ..Default::default()
+            },
+        )
+        .await
+        .unwrap();
+        assert_eq!(port, 1111);
+    }
+
+    #[tokio::test]
+    async fn hierarchical_invalid_env_falls_through_to_config() {
+        let port = discover_port_hierarchical(
+            "HIER_PORT_BAD",
+            None,
+            Some(3333),
+            4444,
+            PortDiscoveryConfig {
+                strategy: DiscoveryStrategy::ExplicitOnly,
+                ..Default::default()
+            },
+        )
+        .await
+        .unwrap();
+        assert_eq!(port, 3333);
+    }
+
+    #[tokio::test]
+    async fn hierarchical_runtime_discovery_then_default() {
+        let port = discover_port_hierarchical(
+            "NONEXISTENT_HIER_PORT_999",
+            None,
+            None,
+            4242,
+            PortDiscoveryConfig {
+                strategy: DiscoveryStrategy::ExplicitOnly,
+                ..Default::default()
+            },
+        )
+        .await
+        .unwrap();
+        assert_eq!(port, 4242);
+    }
+
+    #[tokio::test]
+    async fn full_strategy_falls_back_to_system_when_primal_fails() {
+        let config = PortDiscoveryConfig {
+            strategy: DiscoveryStrategy::Full,
+            min_port: 58200,
+            max_port: 58250,
+            excluded_ports: vec![],
+            discovery_timeout_ms: 100,
+        };
+        let discoverer = PortDiscoverer::new(config);
+        let p = discoverer.discover().await.unwrap();
+        assert!((58200..=58250).contains(&p));
+    }
+
+    #[tokio::test]
+    async fn primal_query_strategy_smoke() {
+        let config = PortDiscoveryConfig {
+            strategy: DiscoveryStrategy::PrimalQuery,
+            min_port: 58300,
+            max_port: 58320,
+            excluded_ports: vec![],
+            discovery_timeout_ms: 100,
+        };
+        let discoverer = PortDiscoverer::new(config);
+        let res = discoverer.discover().await;
+        assert!(res.is_ok());
+        let p = res.unwrap();
+        assert!((58300..=58320).contains(&p));
+    }
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn parse_proc_net_line_extracts_port() {
+        let line = "0: 0100007F:1F90 00000000:0000 0A";
+        assert_eq!(PortDiscoverer::parse_proc_net_line(line), Some(8080));
+        assert!(PortDiscoverer::parse_proc_net_line("short").is_none());
+    }
+
+    #[tokio::test]
+    async fn discover_errors_when_no_free_port_in_range() {
+        let config = PortDiscoveryConfig {
+            strategy: DiscoveryStrategy::SystemQuery,
+            min_port: 60000,
+            max_port: 60000,
+            excluded_ports: vec![60000],
+            discovery_timeout_ms: 100,
+        };
+        let discoverer = PortDiscoverer::new(config);
+        let err = discoverer.discover().await.unwrap_err();
+        assert!(err.to_string().contains("No available ports"));
     }
 }

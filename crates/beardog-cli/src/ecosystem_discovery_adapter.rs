@@ -108,7 +108,7 @@ impl EcosystemDiscoveryAdapter {
         info!("🎧 Starting EcosystemListener for discovery...");
 
         // Create new listener
-        let mut listener = EcosystemListener::new(
+        let mut listener = EcosystemListener::from_env(
             self.config.clone(),
             Arc::clone(&self.discovered_primals),
             Arc::clone(&self.discovered_capabilities),

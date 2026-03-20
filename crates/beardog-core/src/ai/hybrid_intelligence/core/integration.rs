@@ -176,7 +176,7 @@ impl Default for IntegrationConfig {
     fn default() -> Self {
         // Use config-driven endpoint with proper hierarchy
         use beardog_config::global::BEARDOG_CONFIG;
-        let default_endpoint = std::env::var("BEARDOG_AI_INTEGRATION_ENDPOINT")
+        let default_endpoint = beardog_errors::process_env::var("BEARDOG_AI_INTEGRATION_ENDPOINT")
             .unwrap_or_else(|_| {
                 format!(
                     "http://{}:{}",

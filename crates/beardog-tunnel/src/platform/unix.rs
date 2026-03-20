@@ -79,8 +79,38 @@ impl PlatformListener for UnixPlatformListener {
     }
 }
 
-impl PlatformSocket for UnixSocket {
-    fn create_endpoint(primal_name: &str) -> std::io::Result<SocketEndpoint> {
+/// Injected paths for Unix listener setup (tests avoid mutating process env).
+#[derive(Debug, Clone, Default)]
+pub struct UnixListenHints {
+    /// `BEARDOG_SOCKET` when set.
+    pub beardog_socket: Option<String>,
+    /// `XDG_RUNTIME_DIR` when set.
+    pub xdg_runtime_dir: Option<String>,
+}
+
+impl UnixListenHints {
+    /// Read `BEARDOG_SOCKET` and `XDG_RUNTIME_DIR`.
+    pub fn from_env() -> Self {
+        Self {
+            beardog_socket: beardog_errors::process_env::var("BEARDOG_SOCKET").ok(),
+            xdg_runtime_dir: beardog_errors::process_env::var("XDG_RUNTIME_DIR").ok(),
+        }
+    }
+}
+
+impl UnixSocket {
+    /// Create a filesystem socket endpoint using explicit path hints.
+    pub fn create_endpoint_with(
+        primal_name: &str,
+        hints: &UnixListenHints,
+    ) -> std::io::Result<SocketEndpoint> {
+        Self::create_endpoint_inner(primal_name, hints)
+    }
+
+    fn create_endpoint_inner(
+        primal_name: &str,
+        hints: &UnixListenHints,
+    ) -> std::io::Result<SocketEndpoint> {
         // NOTE: This function contains blocking filesystem operations (std::fs::create_dir_all)
         // during directory creation. This is acceptable as:
         // 1. It runs only during initialization (not in hot path)
@@ -90,14 +120,13 @@ impl PlatformSocket for UnixSocket {
         // Phase 3 plan: Consider making PlatformSocket trait async for full non-blocking operation,
         // allowing create_endpoint to use async filesystem APIs.
 
-        // Priority 1: Environment variable (operator control)
-        if let Ok(custom_socket) = std::env::var("BEARDOG_SOCKET") {
+        if let Some(ref custom_socket) = hints.beardog_socket {
             info!("📡 Using BEARDOG_SOCKET override: {}", custom_socket);
             return Ok(SocketEndpoint::Filesystem(custom_socket.into()));
         }
 
         // Priority 2: XDG Base Directory (standard Linux/Unix)
-        let socket_path = if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
+        let socket_path = if let Some(ref runtime_dir) = hints.xdg_runtime_dir {
             // XDG compliant: /run/user/$UID/biomeos/beardog.sock
             let biomeos_dir = std::path::PathBuf::from(&runtime_dir).join("biomeos");
 
@@ -126,6 +155,12 @@ impl PlatformSocket for UnixSocket {
         );
 
         Ok(SocketEndpoint::Filesystem(socket_path))
+    }
+}
+
+impl PlatformSocket for UnixSocket {
+    fn create_endpoint(primal_name: &str) -> std::io::Result<SocketEndpoint> {
+        Self::create_endpoint_inner(primal_name, &UnixListenHints::from_env())
     }
 
     fn bind(endpoint: &SocketEndpoint) -> std::io::Result<Box<dyn PlatformListener>> {
@@ -166,21 +201,18 @@ mod tests {
 
     #[test]
     fn test_xdg_socket_path() {
-        // Use a temp directory we can control (not /run/user which requires permissions)
         let temp_dir = std::env::temp_dir();
         let xdg_runtime = temp_dir.join(format!("xdg_test_{}", std::process::id()));
         std::fs::create_dir_all(&xdg_runtime).ok();
 
-        // Set XDG_RUNTIME_DIR to our temp directory
-        beardog_errors::process_env::set_var("XDG_RUNTIME_DIR", xdg_runtime.to_str().unwrap());
-
-        let endpoint = UnixSocket::create_endpoint("beardog").unwrap();
-
-        beardog_errors::process_env::remove_var("XDG_RUNTIME_DIR");
+        let hints = UnixListenHints {
+            beardog_socket: None,
+            xdg_runtime_dir: Some(xdg_runtime.to_string_lossy().into_owned()),
+        };
+        let endpoint = UnixSocket::create_endpoint_with("beardog", &hints).unwrap();
 
         match endpoint {
             SocketEndpoint::Filesystem(path) => {
-                // Should be in XDG_RUNTIME_DIR/biomeos/beardog.sock
                 assert!(path.to_str().unwrap().contains("biomeos"));
                 assert!(path.to_str().unwrap().ends_with("beardog.sock"));
                 println!("✅ XDG-compliant path: {}", path.display());
@@ -188,17 +220,16 @@ mod tests {
             _ => panic!("Expected Filesystem endpoint"),
         }
 
-        // Cleanup
         std::fs::remove_dir_all(&xdg_runtime).ok();
     }
 
     #[test]
     fn test_environment_override() {
-        beardog_errors::process_env::set_var("BEARDOG_SOCKET", "/custom/path/beardog.sock");
-
-        let endpoint = UnixSocket::create_endpoint("beardog").unwrap();
-
-        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
+        let hints = UnixListenHints {
+            beardog_socket: Some("/custom/path/beardog.sock".to_string()),
+            xdg_runtime_dir: None,
+        };
+        let endpoint = UnixSocket::create_endpoint_with("beardog", &hints).unwrap();
 
         match endpoint {
             SocketEndpoint::Filesystem(path) => {
@@ -212,7 +243,8 @@ mod tests {
     #[test]
     fn test_primal_name_variations() {
         for primal in &["beardog", "songbird", "nestgate", "toadstool", "squirrel"] {
-            let endpoint = UnixSocket::create_endpoint(primal).unwrap();
+            let endpoint =
+                UnixSocket::create_endpoint_with(primal, &UnixListenHints::default()).unwrap();
             match endpoint {
                 SocketEndpoint::Filesystem(path) => {
                     assert!(path.to_str().unwrap().contains(primal));
@@ -230,7 +262,7 @@ mod tests {
         let endpoint = SocketEndpoint::Filesystem(test_socket.clone().into());
 
         // Bind using universal trait
-        let mut listener = UnixSocket::bind(&endpoint).unwrap();
+        let listener = UnixSocket::bind(&endpoint).unwrap();
 
         // Verify local_addr works
         let addr = listener.local_addr().unwrap();

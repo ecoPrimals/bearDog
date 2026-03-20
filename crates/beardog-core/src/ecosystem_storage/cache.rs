@@ -198,14 +198,16 @@ impl Default for CacheConfig {
     fn default() -> Self {
         Self {
             max_size_bytes: 1024 * 1024 * 1024, // 1GB
-            max_entries: std::env::var("BEARDOG_STORAGE_CACHE_MAX_ENTRIES")
+            max_entries: beardog_errors::process_env::var("BEARDOG_STORAGE_CACHE_MAX_ENTRIES")
                 .ok()
                 .and_then(|e| e.parse().ok())
                 .unwrap_or(10000), // 10K entries default
-            default_ttl_secs: std::env::var("BEARDOG_STORAGE_CACHE_DEFAULT_TTL_SECS")
-                .ok()
-                .and_then(|t| t.parse().ok())
-                .unwrap_or(3600), // 1 hour default
+            default_ttl_secs: beardog_errors::process_env::var(
+                "BEARDOG_STORAGE_CACHE_DEFAULT_TTL_SECS",
+            )
+            .ok()
+            .and_then(|t| t.parse().ok())
+            .unwrap_or(3600), // 1 hour default
             eviction_policy: CacheEvictionPolicy::Lru,
             enable_compression: false,
         }

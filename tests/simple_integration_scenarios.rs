@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Simple Integration Scenarios
 //!
 //! High-value integration tests for common workflows,

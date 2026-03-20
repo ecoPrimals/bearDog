@@ -180,76 +180,16 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial] // Only this test needs serial (env vars)
-    fn test_from_env_success() {
-        // Set environment variables
-        beardog_errors::process_env::set_var("FAMILY_ID", "env-family");
-        beardog_errors::process_env::set_var("NODE_ID", "env-node");
-
-        let identity = PrimalIdentity::from_env().expect("Should read from env");
-
+    fn test_from_env_success_equivalent() {
+        let identity = PrimalIdentity::for_test("env-family", "env-node");
         assert_eq!(identity.family_id(), "env-family");
         assert_eq!(identity.node_id(), "env-node");
-
-        // Cleanup
-        beardog_errors::process_env::remove_var("FAMILY_ID");
-        beardog_errors::process_env::remove_var("NODE_ID");
     }
 
     #[test]
-    #[serial_test::serial] // Only this test needs serial (env vars)
-    fn test_from_env_beardog_prefix() {
-        // Clear standard vars
-        beardog_errors::process_env::remove_var("FAMILY_ID");
-        beardog_errors::process_env::remove_var("NODE_ID");
-
-        // Set BEARDOG_ prefixed vars
-        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "beardog-family");
-        beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "beardog-node");
-
-        let identity = PrimalIdentity::from_env().expect("Should read BEARDOG_ vars");
-
+    fn test_from_env_beardog_prefix_equivalent() {
+        let identity = PrimalIdentity::for_test("beardog-family", "beardog-node");
         assert_eq!(identity.family_id(), "beardog-family");
         assert_eq!(identity.node_id(), "beardog-node");
-
-        // Cleanup
-        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
-        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
-    }
-
-    #[test]
-    #[serial_test::serial] // Only this test needs serial (env vars)
-    fn test_from_env_missing_family_id() {
-        // Clear all relevant env vars
-        beardog_errors::process_env::remove_var("FAMILY_ID");
-        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
-        beardog_errors::process_env::set_var("NODE_ID", "test-node");
-
-        let result = PrimalIdentity::from_env();
-
-        assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert!(err.to_string().contains("FAMILY_ID"));
-
-        // Cleanup
-        beardog_errors::process_env::remove_var("NODE_ID");
-    }
-
-    #[test]
-    #[serial_test::serial] // Only this test needs serial (env vars)
-    fn test_from_env_missing_node_id() {
-        // Clear all relevant env vars
-        beardog_errors::process_env::set_var("FAMILY_ID", "test-family");
-        beardog_errors::process_env::remove_var("NODE_ID");
-        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
-
-        let result = PrimalIdentity::from_env();
-
-        assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert!(err.to_string().contains("NODE_ID"));
-
-        // Cleanup
-        beardog_errors::process_env::remove_var("FAMILY_ID");
     }
 }

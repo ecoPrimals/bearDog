@@ -9,7 +9,14 @@
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::process::Command;
+use std::io::ErrorKind;
+use std::time::Duration;
+
+use crate::command_runner::CommandRunner;
+#[cfg(test)]
+use crate::command_runner::MockAdbCommandRunner;
+#[cfg(not(test))]
+use crate::command_runner::SystemCommandRunner;
 use tracing::{debug, error, info, warn};
 
 /// Device type enumeration
@@ -70,8 +77,15 @@ pub struct DeviceInfo {
 
 ///
 /// Handles device discovery, connection management, and deployment operations
-#[derive(Debug)]
-pub struct DeviceManager;
+pub struct DeviceManager {
+    runner: Box<dyn CommandRunner>,
+}
+
+impl std::fmt::Debug for DeviceManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DeviceManager").finish_non_exhaustive()
+    }
+}
 
 impl Default for DeviceManager {
     /// Creates default device manager
@@ -84,13 +98,34 @@ impl Default for DeviceManager {
 }
 
 impl DeviceManager {
+    fn logcat_follow_timeout() -> Duration {
+        std::env::var("BEARDOG_LOGCAT_FOLLOW_SECS")
+            .ok()
+            .and_then(|s| s.parse::<u64>().ok())
+            .map(Duration::from_secs)
+            .unwrap_or_else(|| Duration::from_secs(300))
+    }
+
     /// Creates a new device manager
     ///
     /// # Returns
     /// A new `DeviceManager` instance
     #[must_use]
-    pub const fn new() -> Self {
-        Self
+    pub fn new() -> Self {
+        #[cfg(test)]
+        {
+            Self::with_command_runner(Box::new(MockAdbCommandRunner::new()))
+        }
+        #[cfg(not(test))]
+        {
+            Self::with_command_runner(Box::new(SystemCommandRunner))
+        }
+    }
+
+    /// Use a custom command runner (e.g. [`MockAdbCommandRunner`] in tests).
+    #[must_use]
+    pub fn with_command_runner(runner: Box<dyn CommandRunner>) -> Self {
+        Self { runner }
     }
 
     /// Check for a default available device via capability detection
@@ -111,56 +146,53 @@ impl DeviceManager {
                 Ok(devices.remove(0))
             }
             Ok(_) | Err(_) => {
+                let get = |k: &str| std::env::var(k).ok();
                 // Fallback: Check environment for device info
-                let device_id = std::env::var("BEARDOG_DEVICE_ID")
-                    .unwrap_or_else(|_| "local_fallback".to_string());
-                let device_name = std::env::var("BEARDOG_DEVICE_NAME")
-                    .unwrap_or_else(|_| "Local Development Device".to_string());
+                let device_id =
+                    get("BEARDOG_DEVICE_ID").unwrap_or_else(|| "local_fallback".to_string());
+                let device_name = get("BEARDOG_DEVICE_NAME")
+                    .unwrap_or_else(|| "Local Development Device".to_string());
 
                 warn!("⚠️ No adb devices detected, using environment-configured fallback");
 
                 Ok(DeviceInfo {
                     id: device_id.clone(),
                     name: device_name,
-                    device_type: Self::detect_device_type_from_env(),
+                    device_type: Self::detect_device_type_from_env_with(&get),
                     status: DeviceStatus::Available,
-                    capabilities: Self::detect_capabilities_from_env(),
-                    metadata: Self::build_device_metadata(&device_id),
+                    capabilities: Self::detect_capabilities_from_env_with(&get),
+                    metadata: Self::build_device_metadata_with(&device_id, &get),
                 })
             }
         }
     }
 
-    /// Detect device type from environment (capability-based)
-    fn detect_device_type_from_env() -> DeviceType {
-        // Runtime capability detection, not hardcoded
-        if std::env::var("DEVICE_STRONGBOX_CAPABLE").unwrap_or_default() == "true" {
+    /// Detect device type using a custom env lookup (tests inject a map).
+    fn detect_device_type_from_env_with(get: &impl Fn(&str) -> Option<String>) -> DeviceType {
+        if get("DEVICE_STRONGBOX_CAPABLE").unwrap_or_default() == "true" {
             DeviceType::AndroidStrongBox
-        } else if std::env::var("DEVICE_SECURE_ENCLAVE_CAPABLE").unwrap_or_default() == "true" {
+        } else if get("DEVICE_SECURE_ENCLAVE_CAPABLE").unwrap_or_default() == "true" {
             DeviceType::IosSecureEnclave
-        } else if std::env::var("DEVICE_HARDWARE_HSM_CAPABLE").unwrap_or_default() == "true" {
+        } else if get("DEVICE_HARDWARE_HSM_CAPABLE").unwrap_or_default() == "true" {
             DeviceType::HardwareHsm
         } else {
             DeviceType::SoftwareHsm // Safe fallback
         }
     }
 
-    /// Detect capabilities from environment (runtime discovery)
-    fn detect_capabilities_from_env() -> Vec<String> {
+    fn detect_capabilities_from_env_with(get: &impl Fn(&str) -> Option<String>) -> Vec<String> {
         let mut capabilities = Vec::new();
 
-        // Check for specific capabilities via environment
-        if std::env::var("DEVICE_STRONGBOX_CAPABLE").unwrap_or_default() == "true" {
+        if get("DEVICE_STRONGBOX_CAPABLE").unwrap_or_default() == "true" {
             capabilities.push("strongbox".to_string());
         }
-        if std::env::var("DEVICE_BIOMETRIC_CAPABLE").unwrap_or_default() == "true" {
+        if get("DEVICE_BIOMETRIC_CAPABLE").unwrap_or_default() == "true" {
             capabilities.push("biometric_auth".to_string());
         }
-        if std::env::var("DEVICE_SECURE_STORAGE_CAPABLE").unwrap_or_default() == "true" {
+        if get("DEVICE_SECURE_STORAGE_CAPABLE").unwrap_or_default() == "true" {
             capabilities.push("secure_storage".to_string());
         }
 
-        // If no capabilities detected, provide safe defaults
         if capabilities.is_empty() {
             capabilities.push("software_crypto".to_string());
             capabilities.push("basic_auth".to_string());
@@ -169,35 +201,36 @@ impl DeviceManager {
         capabilities
     }
 
-    /// Build device metadata from runtime detection
-    fn build_device_metadata(device_id: &str) -> HashMap<String, String> {
+    fn build_device_metadata_with(
+        device_id: &str,
+        get: &impl Fn(&str) -> Option<String>,
+    ) -> HashMap<String, String> {
         let mut map = HashMap::new();
 
-        // Runtime detection via environment
         map.insert("device_id".to_string(), device_id.to_string());
         map.insert(
             "storage_available".to_string(),
-            std::env::var("DEVICE_STORAGE_BYTES").unwrap_or_else(|_| "1073741824".to_string()),
+            get("DEVICE_STORAGE_BYTES").unwrap_or_else(|| "1073741824".to_string()),
         );
         map.insert(
             "strongbox_supported".to_string(),
-            std::env::var("DEVICE_STRONGBOX_CAPABLE").unwrap_or_else(|_| "false".to_string()),
+            get("DEVICE_STRONGBOX_CAPABLE").unwrap_or_else(|| "false".to_string()),
         );
         map.insert(
             "secure_enclave_supported".to_string(),
-            std::env::var("DEVICE_SECURE_ENCLAVE_CAPABLE").unwrap_or_else(|_| "false".to_string()),
+            get("DEVICE_SECURE_ENCLAVE_CAPABLE").unwrap_or_else(|| "false".to_string()),
         );
         map.insert(
             "manufacturer".to_string(),
-            std::env::var("DEVICE_MANUFACTURER").unwrap_or_else(|_| "Unknown".to_string()),
+            get("DEVICE_MANUFACTURER").unwrap_or_else(|| "Unknown".to_string()),
         );
         map.insert(
             "model".to_string(),
-            std::env::var("DEVICE_MODEL").unwrap_or_else(|_| "Unknown".to_string()),
+            get("DEVICE_MODEL").unwrap_or_else(|| "Unknown".to_string()),
         );
         map.insert(
             "os_version".to_string(),
-            std::env::var("DEVICE_OS_VERSION").unwrap_or_else(|_| "Unknown".to_string()),
+            get("DEVICE_OS_VERSION").unwrap_or_else(|| "Unknown".to_string()),
         );
 
         map
@@ -270,14 +303,9 @@ impl DeviceManager {
         let device_id = &devices[0].id;
         info!("📲 Deploying to device: {}", device_id);
 
-        // Install APK using adb
-        let output = Command::new("adb")
-            .arg("-s")
-            .arg(device_id)
-            .arg("install")
-            .arg("-r") // Replace existing
-            .arg(apk_path)
-            .output()
+        let output = self
+            .runner
+            .run("adb", &["-s", device_id, "install", "-r", apk_path])
             .map_err(|e| BearDogError::system(format!("Failed to execute adb install: {e}")))?;
 
         if !output.status.success() {
@@ -311,23 +339,24 @@ impl DeviceManager {
             std::env::var("BEARDOG_PACKAGE_NAME").unwrap_or_else(|_| "com.beardog.app".to_string());
         let main_activity = format!("{package_name}/MainActivity");
 
-        let mut command = Command::new("adb");
-        command
-            .arg("-s")
-            .arg(device_id)
-            .arg("shell")
-            .arg("am")
-            .arg("start")
-            .arg("-n")
-            .arg(&main_activity);
-
-        // Add extra args if provided
+        let mut owned: Vec<String> = vec![
+            "-s".to_string(),
+            device_id.to_string(),
+            "shell".to_string(),
+            "am".to_string(),
+            "start".to_string(),
+            "-n".to_string(),
+            main_activity,
+        ];
         for arg in args {
-            command.arg("--es").arg("arg").arg(arg);
+            owned.push("--es".to_string());
+            owned.push("arg".to_string());
+            owned.push(arg.clone());
         }
-
-        let output = command
-            .output()
+        let argv: Vec<&str> = owned.iter().map(|s| s.as_str()).collect();
+        let output = self
+            .runner
+            .run("adb", &argv)
             .map_err(|e| BearDogError::system(format!("Failed to launch app: {e}")))?;
 
         if !output.status.success() {
@@ -356,49 +385,48 @@ impl DeviceManager {
 
         let device_id = &devices[0].id;
 
-        // Clear logcat buffer first
-        let _ = Command::new("adb")
-            .arg("-s")
-            .arg(device_id)
-            .arg("logcat")
-            .arg("-c")
-            .output();
-
-        // Build logcat command
-        let mut command = Command::new("adb");
-        command.arg("-s").arg(device_id).arg("logcat");
-
-        // Filter by package if not following
-        if !follow {
-            command.arg("-d"); // Dump and exit
-        }
-
-        // Add package filter
-        command.arg("--pid").arg(package);
+        let _ = self
+            .runner
+            .run("adb", &["-s", device_id, "logcat", "-c"])
+            .ok();
 
         info!("📊 Starting logcat for {} on device {}", package, device_id);
 
-        // Execute logcat
-        let mut child = command
-            .spawn()
-            .map_err(|e| BearDogError::system(format!("Failed to start logcat: {e}")))?;
-
-        // Wait for process if not following, otherwise let it run
-        if follow {
-            info!("📊 Logcat running (press Ctrl+C to stop)");
-            // Let logcat continue running
-            let _ = child.wait();
-        } else {
-            let status = child
-                .wait()
+        if !follow {
+            // Snapshot (bounded); do not use `--pid` with a package name (expects PID).
+            let output = self
+                .runner
+                .run("adb", &["-s", device_id, "logcat", "-d", "-t", "200"])
                 .map_err(|e| BearDogError::system(format!("Logcat failed: {e}")))?;
 
-            if !status.success() {
+            if !output.status.success() {
                 return Err(BearDogError::system("Logcat exited with error".to_string()));
             }
+            return Ok(());
         }
 
-        Ok(())
+        info!(
+            "📊 Logcat following (max {}s) — set BEARDOG_LOGCAT_FOLLOW_SECS to override",
+            Self::logcat_follow_timeout().as_secs()
+        );
+
+        match self.runner.run_bounded(
+            "adb",
+            &["-s", device_id, "logcat"],
+            Self::logcat_follow_timeout(),
+        ) {
+            Ok(out) => {
+                if !out.status.success() {
+                    return Err(BearDogError::system("Logcat exited with error".to_string()));
+                }
+                Ok(())
+            }
+            Err(e) if e.kind() == ErrorKind::TimedOut => {
+                info!("logcat follow stopped after timeout");
+                Ok(())
+            }
+            Err(e) => Err(BearDogError::system(format!("Failed to start logcat: {e}"))),
+        }
     }
 
     /// Detect Android Devices operation - Android-specific device detection via adb
@@ -409,17 +437,12 @@ impl DeviceManager {
     pub fn detect_android_devices(&self) -> Result<Vec<DeviceInfo>, BearDogError> {
         debug!("🔍 Detecting Android devices via adb...");
 
-        // Execute `adb devices -l` command to get detailed device list
-        let output = Command::new("adb")
-            .arg("devices")
-            .arg("-l")
-            .output()
-            .map_err(|e| {
-                error!("Failed to execute adb: {}", e);
-                BearDogError::system(format!(
-                    "Failed to execute adb: {e}. Ensure adb is installed and in PATH"
-                ))
-            })?;
+        let output = self.runner.run("adb", &["devices", "-l"]).map_err(|e| {
+            error!("Failed to execute adb: {}", e);
+            BearDogError::system(format!(
+                "Failed to execute adb: {e}. Ensure adb is installed and in PATH"
+            ))
+        })?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -489,13 +512,9 @@ impl DeviceManager {
 
     /// Get device property via adb shell getprop
     fn get_device_property(&self, device_id: &str, property: &str) -> Result<String, BearDogError> {
-        let output = Command::new("adb")
-            .arg("-s")
-            .arg(device_id)
-            .arg("shell")
-            .arg("getprop")
-            .arg(property)
-            .output()
+        let output = self
+            .runner
+            .run("adb", &["-s", device_id, "shell", "getprop", property])
             .map_err(|e| BearDogError::system(format!("Failed to get device property: {e}")))?;
 
         if output.status.success() {
@@ -507,15 +526,9 @@ impl DeviceManager {
 
     /// Check if device has StrongBox support
     fn has_strongbox_support(&self, device_id: &str) -> bool {
-        // Check for StrongBox KeyMaster support via PackageManager
-        let output = Command::new("adb")
-            .arg("-s")
-            .arg(device_id)
-            .arg("shell")
-            .arg("pm")
-            .arg("list")
-            .arg("features")
-            .output();
+        let output = self
+            .runner
+            .run("adb", &["-s", device_id, "shell", "pm", "list", "features"]);
 
         if let Ok(output) = output {
             let features = String::from_utf8_lossy(&output.stdout);
@@ -533,15 +546,9 @@ impl DeviceManager {
             capabilities.push("strongbox".to_string());
         }
 
-        // Check for biometric support
-        if let Ok(output) = Command::new("adb")
-            .arg("-s")
-            .arg(device_id)
-            .arg("shell")
-            .arg("pm")
-            .arg("list")
-            .arg("features")
-            .output()
+        if let Ok(output) = self
+            .runner
+            .run("adb", &["-s", device_id, "shell", "pm", "list", "features"])
         {
             let features = String::from_utf8_lossy(&output.stdout);
             if features.contains("android.hardware.fingerprint")
@@ -573,16 +580,10 @@ impl DeviceManager {
             )));
         }
 
-        // Install APK using adb
         info!("📦 Installing APK...");
-        let output = Command::new("adb")
-            .arg("-s")
-            .arg(device_id)
-            .arg("install")
-            .arg("-r") // Replace existing application
-            .arg("-t") // Allow test packages
-            .arg(apk_path)
-            .output()
+        let output = self
+            .runner
+            .run("adb", &["-s", device_id, "install", "-r", "-t", apk_path])
             .map_err(|e| BearDogError::system(format!("Failed to execute adb install: {e}")))?;
 
         if !output.status.success() {
@@ -612,34 +613,149 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_detect_device_type_from_env_default() {
-        // When no device env vars set, should return SoftwareHsm
-        if std::env::var("DEVICE_STRONGBOX_CAPABLE").is_err()
-            && std::env::var("DEVICE_SECURE_ENCLAVE_CAPABLE").is_err()
-            && std::env::var("DEVICE_HARDWARE_HSM_CAPABLE").is_err()
-        {
-            assert_eq!(
-                DeviceManager::detect_device_type_from_env(),
-                DeviceType::SoftwareHsm
-            );
+    fn test_device_manager_default_matches_new() {
+        assert!(format!("{:?}", DeviceManager::default()).contains("DeviceManager"));
+        let _ = DeviceManager::new();
+    }
+
+    #[test]
+    fn test_device_type_serde_roundtrip() {
+        for dt in [
+            DeviceType::AndroidStrongBox,
+            DeviceType::IosSecureEnclave,
+            DeviceType::HardwareHsm,
+            DeviceType::SoftwareHsm,
+            DeviceType::Unknown,
+        ] {
+            let json = serde_json::to_string(&dt).unwrap();
+            let back: DeviceType = serde_json::from_str(&json).unwrap();
+            assert_eq!(dt, back);
         }
+    }
+
+    #[test]
+    fn test_device_status_serde_roundtrip() {
+        for st in [
+            DeviceStatus::Available,
+            DeviceStatus::Connected,
+            DeviceStatus::Disconnected,
+            DeviceStatus::Error,
+        ] {
+            let json = serde_json::to_string(&st).unwrap();
+            let back: DeviceStatus = serde_json::from_str(&json).unwrap();
+            assert_eq!(st, back);
+        }
+    }
+
+    #[test]
+    fn test_device_info_serde_roundtrip() {
+        let info = DeviceInfo {
+            id: "id-1".to_string(),
+            name: "n".to_string(),
+            device_type: DeviceType::HardwareHsm,
+            status: DeviceStatus::Connected,
+            capabilities: vec!["a".to_string()],
+            metadata: HashMap::from([("k".to_string(), "v".to_string())]),
+        };
+        let json = serde_json::to_string(&info).unwrap();
+        let back: DeviceInfo = serde_json::from_str(&json).unwrap();
+        assert_eq!(info.id, back.id);
+        assert_eq!(info.capabilities, back.capabilities);
+    }
+
+    #[test]
+    fn test_detect_device_type_strongbox_env() {
+        let mut map = HashMap::new();
+        map.insert("DEVICE_STRONGBOX_CAPABLE".to_string(), "true".to_string());
+        let get = |k: &str| map.get(k).cloned();
+        assert_eq!(
+            DeviceManager::detect_device_type_from_env_with(&get),
+            DeviceType::AndroidStrongBox
+        );
+    }
+
+    #[test]
+    fn test_detect_device_type_secure_enclave_env() {
+        let mut map = HashMap::new();
+        map.insert("DEVICE_STRONGBOX_CAPABLE".to_string(), "false".to_string());
+        map.insert(
+            "DEVICE_SECURE_ENCLAVE_CAPABLE".to_string(),
+            "true".to_string(),
+        );
+        let get = |k: &str| map.get(k).cloned();
+        assert_eq!(
+            DeviceManager::detect_device_type_from_env_with(&get),
+            DeviceType::IosSecureEnclave
+        );
+    }
+
+    #[test]
+    fn test_detect_device_type_hardware_hsm_env() {
+        let mut map = HashMap::new();
+        map.insert(
+            "DEVICE_HARDWARE_HSM_CAPABLE".to_string(),
+            "true".to_string(),
+        );
+        let get = |k: &str| map.get(k).cloned();
+        assert_eq!(
+            DeviceManager::detect_device_type_from_env_with(&get),
+            DeviceType::HardwareHsm
+        );
+    }
+
+    #[test]
+    fn test_detect_capabilities_from_env_all_flags() {
+        let mut map = HashMap::new();
+        map.insert("DEVICE_STRONGBOX_CAPABLE".to_string(), "true".to_string());
+        map.insert("DEVICE_BIOMETRIC_CAPABLE".to_string(), "true".to_string());
+        map.insert(
+            "DEVICE_SECURE_STORAGE_CAPABLE".to_string(),
+            "true".to_string(),
+        );
+        let get = |k: &str| map.get(k).cloned();
+        let caps = DeviceManager::detect_capabilities_from_env_with(&get);
+        assert!(caps.contains(&"strongbox".to_string()));
+        assert!(caps.contains(&"biometric_auth".to_string()));
+        assert!(caps.contains(&"secure_storage".to_string()));
+    }
+
+    #[test]
+    fn test_build_device_metadata_env_overrides() {
+        let mut map = HashMap::new();
+        map.insert("DEVICE_STORAGE_BYTES".to_string(), "2048".to_string());
+        map.insert("DEVICE_MANUFACTURER".to_string(), "Acme".to_string());
+        map.insert("DEVICE_MODEL".to_string(), "X1".to_string());
+        map.insert("DEVICE_OS_VERSION".to_string(), "14".to_string());
+        let get = |k: &str| map.get(k).cloned();
+        let m = DeviceManager::build_device_metadata_with("dev-xyz", &get);
+        assert_eq!(m["device_id"], "dev-xyz");
+        assert_eq!(m["storage_available"], "2048");
+        assert_eq!(m["manufacturer"], "Acme");
+        assert_eq!(m["model"], "X1");
+        assert_eq!(m["os_version"], "14");
+    }
+
+    #[test]
+    fn test_detect_device_type_from_env_default() {
+        let get = |_k: &str| -> Option<String> { None };
+        assert_eq!(
+            DeviceManager::detect_device_type_from_env_with(&get),
+            DeviceType::SoftwareHsm
+        );
     }
 
     #[test]
     fn test_detect_capabilities_from_env_defaults() {
-        if std::env::var("DEVICE_STRONGBOX_CAPABLE").is_err()
-            && std::env::var("DEVICE_BIOMETRIC_CAPABLE").is_err()
-            && std::env::var("DEVICE_SECURE_STORAGE_CAPABLE").is_err()
-        {
-            let caps = DeviceManager::detect_capabilities_from_env();
-            assert!(caps.contains(&"software_crypto".to_string()));
-            assert!(caps.contains(&"basic_auth".to_string()));
-        }
+        let get = |_k: &str| -> Option<String> { None };
+        let caps = DeviceManager::detect_capabilities_from_env_with(&get);
+        assert!(caps.contains(&"software_crypto".to_string()));
+        assert!(caps.contains(&"basic_auth".to_string()));
     }
 
     #[test]
     fn test_build_device_metadata_structure() {
-        let metadata = DeviceManager::build_device_metadata("test-123");
+        let metadata =
+            DeviceManager::build_device_metadata_with("test-123", &|_k| -> Option<String> { None });
         assert_eq!(metadata["device_id"], "test-123");
         assert!(metadata.contains_key("storage_available"));
         assert!(metadata.contains_key("strongbox_supported"));
@@ -658,9 +774,17 @@ mod tests {
             "pixel8a_strongbox",
             "long-id-with-many-parts",
         ] {
-            let m = DeviceManager::build_device_metadata(id);
+            let m = DeviceManager::build_device_metadata_with(id, &|_| None);
             assert_eq!(m["device_id"], id);
         }
+    }
+
+    #[test]
+    fn test_check_device_env_fallback_with_empty_mock() {
+        let mgr =
+            DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner::empty_devices()));
+        let d = mgr.check_device().expect("fallback device");
+        assert_eq!(d.id, "local_fallback");
     }
 
     #[test]

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Integration Tests for Self-Enforcing Key Constraints and Adapter Certificates
 //!
 //! This test suite validates the end-to-end functionality of:

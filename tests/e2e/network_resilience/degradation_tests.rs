@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Graceful Degradation Tests
 //!
 //! Tests for graceful degradation under network stress.

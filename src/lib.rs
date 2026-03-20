@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 #![forbid(unsafe_code)]
 
 //! # BearDog: Sovereign Computing Platform
@@ -290,20 +291,16 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial_test::serial]
     async fn test_service_discovery() {
-        // Set required environment variables for test
-        // Using serial execution to avoid env var conflicts with other tests
-        beardog_errors::process_env::set_var(
-            "BEARDOG_COMPUTE_ENDPOINT",
-            "http://test-compute:8080",
-        );
-        beardog_errors::process_env::set_var(
-            "BEARDOG_STORAGE_ENDPOINT",
-            "http://test-storage:8081",
-        );
+        let config = FrameworkConfig {
+            confidence_level: 0.95,
+            sample_size: 1000,
+            timeout: Duration::from_secs(30),
+            compute_endpoint: Some("http://test-compute:8080".to_string()),
+            storage_endpoint: Some("http://test-storage:8081".to_string()),
+        };
 
-        let mut framework = BearDogFramework::new().await.unwrap();
+        let mut framework = BearDogFramework::with_config(config).await.unwrap();
         let services = framework.discover_services().await.unwrap();
 
         assert!(!services.is_empty());

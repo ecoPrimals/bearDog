@@ -7,7 +7,7 @@
 //!
 //! # Design Philosophy
 //!
-//! Instead of directly calling `std::env::var()`, configuration structs accept
+//! Instead of coupling `Default` to environment reads, configuration structs accept
 //! a `ConfigSource` trait. This enables:
 //! - **Thread-safe testing** - No global state interference
 //! - **Deterministic behavior** - Tests are reproducible
@@ -290,17 +290,11 @@ mod tests {
 
     #[test]
     fn test_env_source_reads_actual_env() {
-        // Set an actual env var for this test
-        beardog_errors::process_env::set_var("BEARDOG_TEST_VAR_UNIQUE", "test_value");
-
         let source = EnvConfigSource::new();
         assert_eq!(
-            source.get("BEARDOG_TEST_VAR_UNIQUE"),
-            Some("test_value".to_string())
+            source.get("BEARDOG_TEST_VAR_UNIQUE_XYZ_NOT_SET"),
+            std::env::var("BEARDOG_TEST_VAR_UNIQUE_XYZ_NOT_SET").ok()
         );
-
-        // Cleanup
-        beardog_errors::process_env::remove_var("BEARDOG_TEST_VAR_UNIQUE");
     }
 
     #[test]

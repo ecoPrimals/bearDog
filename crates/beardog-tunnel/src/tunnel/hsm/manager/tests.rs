@@ -341,7 +341,6 @@ impl EnvCleanup {
 
 impl Drop for EnvCleanup {
     fn drop(&mut self) {
-        use std::env;
         for key in &self.keys {
             beardog_errors::process_env::remove_var(key);
         }
@@ -350,7 +349,6 @@ impl Drop for EnvCleanup {
 
 #[tokio::test]
 async fn test_auto_initialize_default_software_mode() {
-    use std::env;
     let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
 
     // Clear any existing env vars
@@ -412,7 +410,6 @@ async fn test_auto_initialize_case_insensitive() {
 
 #[tokio::test]
 async fn test_auto_initialize_hardware_mode_fallback() {
-    use std::env;
     let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
 
     beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "hardware");
@@ -432,7 +429,6 @@ async fn test_auto_initialize_hardware_mode_fallback() {
 
 #[tokio::test]
 async fn test_auto_initialize_android_mode_fallback() {
-    use std::env;
     let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
 
     beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "android_strongbox");
@@ -447,7 +443,6 @@ async fn test_auto_initialize_android_mode_fallback() {
 
 #[tokio::test]
 async fn test_auto_initialize_ios_mode_fallback() {
-    use std::env;
     let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
 
     beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "ios_secure_enclave");
@@ -480,7 +475,6 @@ async fn test_auto_initialize_invalid_mode() {
 
 #[tokio::test]
 async fn test_auto_initialize_disabled() {
-    use std::env;
     let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
 
     // Clear env vars first
@@ -507,7 +501,6 @@ async fn test_auto_initialize_disabled() {
 
 #[tokio::test]
 async fn test_auto_initialize_multiple_key_operations() {
-    use std::env;
     let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
 
     beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "software");
@@ -567,7 +560,6 @@ async fn test_auto_initialize_concurrent_safe() {
 
 #[tokio::test]
 async fn test_auto_initialize_environment_precedence() {
-    use std::env;
     let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
 
     // Test that environment variable takes precedence over default

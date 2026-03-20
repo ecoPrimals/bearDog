@@ -70,7 +70,7 @@ impl PlatformSocket for IOSSocket {
         {
             // Delegate to Unix socket implementation
             // macOS prefers /var/tmp over /tmp (persists across reboots)
-            let socket_dir = std::env::var("BIOMEOS_SOCKET_DIR")
+            let socket_dir = beardog_errors::process_env::var("BIOMEOS_SOCKET_DIR")
                 .ok()
                 .and_then(|d| {
                     let path = std::path::PathBuf::from(d);

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! `BearDog` Core Initialization Tests
 //!
 //! This module contains unit and integration tests for `BearDogCore` initialization,

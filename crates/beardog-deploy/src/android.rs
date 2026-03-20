@@ -235,13 +235,13 @@ impl AndroidDeployment {
         }
 
         // Check environment variables
-        if let Ok(ndk_home) = std::env::var("ANDROID_NDK_HOME") {
+        if let Ok(ndk_home) = beardog_errors::process_env::var("ANDROID_NDK_HOME") {
             if std::path::Path::new(&ndk_home).exists() {
                 return Ok(ndk_home);
             }
         }
 
-        if let Ok(ndk_root) = std::env::var("NDK_HOME") {
+        if let Ok(ndk_root) = beardog_errors::process_env::var("NDK_HOME") {
             if std::path::Path::new(&ndk_root).exists() {
                 return Ok(ndk_root);
             }
@@ -373,7 +373,9 @@ mod tests {
         let d = AndroidDeployment::new(Some("/nonexistent/ndk".to_string()), 33);
         let result = d.find_ndk_path();
         // Should fail because path doesn't exist and env vars likely not set
-        if std::env::var("ANDROID_NDK_HOME").is_err() && std::env::var("NDK_HOME").is_err() {
+        if beardog_errors::process_env::var("ANDROID_NDK_HOME").is_err()
+            && beardog_errors::process_env::var("NDK_HOME").is_err()
+        {
             assert!(result.is_err());
         }
     }
@@ -381,7 +383,9 @@ mod tests {
     #[test]
     fn test_find_ndk_path_no_path_no_env() {
         let d = AndroidDeployment::new(None, 33);
-        if std::env::var("ANDROID_NDK_HOME").is_err() && std::env::var("NDK_HOME").is_err() {
+        if beardog_errors::process_env::var("ANDROID_NDK_HOME").is_err()
+            && beardog_errors::process_env::var("NDK_HOME").is_err()
+        {
             assert!(d.find_ndk_path().is_err());
         }
     }
@@ -396,7 +400,9 @@ mod tests {
     #[test]
     fn test_verify_android_ndk_no_ndk() {
         let d = AndroidDeployment::new(None, 33);
-        if std::env::var("ANDROID_NDK_HOME").is_err() && std::env::var("NDK_HOME").is_err() {
+        if beardog_errors::process_env::var("ANDROID_NDK_HOME").is_err()
+            && beardog_errors::process_env::var("NDK_HOME").is_err()
+        {
             assert!(d.verify_android_ndk().is_err());
         }
     }

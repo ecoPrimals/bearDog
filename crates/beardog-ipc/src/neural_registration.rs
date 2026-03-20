@@ -186,108 +186,35 @@ async fn register_capability(neural_socket: &str, capability: serde_json::Value)
     Ok(())
 }
 
-/// Discover Neural API socket from environment
+/// Resolves the Neural API Unix socket path from injected options.
 ///
-/// Checks in order:
-/// 1. `NEURAL_API_SOCKET` environment variable (if empty, disables auto-registration)
-/// 2. `NEURALS_SOCKET` environment variable (alternate name, if empty, disables)
-/// 3. Default paths (checked in order):
-///    - `/tmp/neural-api.sock` (primary default)
-///    - `/tmp/neural-api-nat0.sock` (legacy compatibility)
-///
-/// Returns `None` if:
-/// - Explicitly set to empty string (disables auto-registration)
-/// - No default socket paths exist (Neural API not running)
-/// Discover Neural API socket from environment (for testing)
-///
-/// This version accepts an explicit environment map, making it concurrent-safe for tests.
-#[cfg(test)]
-pub fn discover_neural_api_socket_with_env(
-    env_vars: &std::collections::HashMap<String, String>,
+/// Resolution order: `neural_api_socket`, then `neurals_socket`, then well-known `/tmp` paths.
+/// An empty string in `Some("")` disables auto-registration for that slot (returns `None`).
+#[must_use]
+pub fn discover_neural_api_socket_with(
+    neural_api_socket: Option<String>,
+    neurals_socket: Option<String>,
 ) -> Option<String> {
     use std::path::Path;
 
-    // Check NEURAL_API_SOCKET first (highest priority)
-    if let Some(socket) = env_vars.get("NEURAL_API_SOCKET") {
-        if !socket.is_empty() {
-            info!("🔍 Using NEURAL_API_SOCKET: {}", socket);
-            return Some(socket.clone());
-        } else {
-            // Empty string explicitly disables auto-registration
+    if let Some(ref socket) = neural_api_socket {
+        if socket.is_empty() {
             debug!("NEURAL_API_SOCKET is empty - auto-registration disabled");
             return None;
         }
+        info!("🔍 Using NEURAL_API_SOCKET: {}", socket);
+        return Some(socket.clone());
     }
 
-    // Check NEURALS_SOCKET (fallback)
-    if let Some(socket) = env_vars.get("NEURALS_SOCKET") {
-        if !socket.is_empty() {
-            info!("🔍 Using NEURALS_SOCKET: {}", socket);
-            return Some(socket.clone());
-        } else {
-            // Empty string explicitly disables auto-registration
+    if let Some(ref socket) = neurals_socket {
+        if socket.is_empty() {
             debug!("NEURALS_SOCKET is empty - auto-registration disabled");
             return None;
         }
+        info!("🔍 Using NEURALS_SOCKET: {}", socket);
+        return Some(socket.clone());
     }
 
-    // Try default paths in priority order
-    let default_paths = [
-        "/tmp/neural-api.sock",      // Primary default (biomeOS standard)
-        "/tmp/neural-api-nat0.sock", // Legacy compatibility
-    ];
-
-    for path in &default_paths {
-        if Path::new(path).exists() {
-            info!("🔍 Found Neural API at default path: {}", path);
-            return Some(path.to_string());
-        }
-    }
-
-    info!("🔍 No Neural API socket found");
-    None
-}
-
-/// Resolves the Neural API Unix socket path for IPC registration.
-///
-/// Resolution order: `NEURAL_API_SOCKET`, then `NEURALS_SOCKET`, then well-known `/tmp` paths.
-/// An empty env value disables auto-registration (returns `None`).
-pub fn discover_neural_api_socket() -> Option<String> {
-    use std::path::Path;
-
-    // Check NEURAL_API_SOCKET first (highest priority)
-    match std::env::var("NEURAL_API_SOCKET") {
-        Ok(socket) if !socket.is_empty() => {
-            info!("🔍 Using NEURAL_API_SOCKET: {}", socket);
-            return Some(socket);
-        }
-        Ok(_) => {
-            // Empty string explicitly disables auto-registration
-            debug!("NEURAL_API_SOCKET is empty - auto-registration disabled");
-            return None;
-        }
-        Err(_) => {
-            // Not set, try next option
-        }
-    }
-
-    // Check NEURALS_SOCKET (fallback)
-    match std::env::var("NEURALS_SOCKET") {
-        Ok(socket) if !socket.is_empty() => {
-            info!("🔍 Using NEURALS_SOCKET: {}", socket);
-            return Some(socket);
-        }
-        Ok(_) => {
-            // Empty string explicitly disables auto-registration
-            debug!("NEURALS_SOCKET is empty - auto-registration disabled");
-            return None;
-        }
-        Err(_) => {
-            // Not set, try defaults
-        }
-    }
-
-    // Try default paths in priority order
     let default_paths = [
         "/tmp/neural-api.sock",      // Primary default (biomeOS standard)
         "/tmp/neural-api-nat0.sock", // Legacy compatibility
@@ -306,6 +233,28 @@ pub fn discover_neural_api_socket() -> Option<String> {
         default_paths.len()
     );
     None
+}
+
+/// Resolves the Neural API Unix socket path for IPC registration.
+///
+/// Resolution order: `NEURAL_API_SOCKET`, then `NEURALS_SOCKET`, then well-known `/tmp` paths.
+/// An empty env value disables auto-registration (returns `None`).
+pub fn discover_neural_api_socket() -> Option<String> {
+    discover_neural_api_socket_with(
+        beardog_errors::process_env::var("NEURAL_API_SOCKET").ok(),
+        beardog_errors::process_env::var("NEURALS_SOCKET").ok(),
+    )
+}
+
+/// Test helper: same as [`discover_neural_api_socket_with`] using a string map.
+#[cfg(test)]
+pub fn discover_neural_api_socket_with_env(
+    env_vars: &std::collections::HashMap<String, String>,
+) -> Option<String> {
+    discover_neural_api_socket_with(
+        env_vars.get("NEURAL_API_SOCKET").cloned(),
+        env_vars.get("NEURALS_SOCKET").cloned(),
+    )
 }
 
 #[cfg(test)]

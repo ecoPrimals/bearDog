@@ -49,7 +49,7 @@ use serde_json::Value;
 /// ```
 pub(super) fn derive_key_from_id(key_id: &str, purpose: &str) -> Result<[u8; 32], String> {
     // Get master key from environment or generate deterministic key
-    let master_key = std::env::var("BEARDOG_MASTER_KEY")
+    let master_key = beardog_errors::process_env::var("BEARDOG_MASTER_KEY")
         .unwrap_or_else(|_| "beardog_default_master_key_v1".to_string());
 
     // Derive key using BLAKE3 KDF

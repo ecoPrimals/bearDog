@@ -7,6 +7,7 @@ use super::key_store::{self, StoredKey};
 use beardog_errors::BearDogError;
 use chrono::Utc;
 use std::fs;
+use std::path::Path;
 
 // ALL OLD PLACEHOLDER CODE REMOVED
 // Now using hsm_agnostic module for universal discovery
@@ -215,11 +216,21 @@ pub async fn handle_key_generate(
 
 /// Handle key list command
 pub async fn handle_key_list(hsm_filter: Option<&str>, _verbose: bool) -> Result<(), BearDogError> {
+    let home = key_store::home_dir_for_keys()?;
+    handle_key_list_with_home(hsm_filter, _verbose, &home).await
+}
+
+/// Same as [`handle_key_list`] but with an explicit home directory for the key store (tests / DI).
+pub async fn handle_key_list_with_home(
+    hsm_filter: Option<&str>,
+    _verbose: bool,
+    home: impl AsRef<Path>,
+) -> Result<(), BearDogError> {
     println!("🔑 Available Keys");
     println!("================");
     println!();
 
-    let keys = key_store::list_keys()?;
+    let keys = key_store::list_keys_from_home(home)?;
 
     let filtered_keys: Vec<_> = if let Some(filter) = hsm_filter {
         println!("📌 Filtering by HSM: {filter}");
@@ -267,6 +278,16 @@ pub async fn handle_key_info(key_id: &str) -> Result<(), BearDogError> {
 
 /// Handle key delete command
 pub async fn handle_key_delete(key_id: &str, skip_confirm: bool) -> Result<(), BearDogError> {
+    let home = key_store::home_dir_for_keys()?;
+    handle_key_delete_with_home(key_id, skip_confirm, &home).await
+}
+
+/// Same as [`handle_key_delete`] but with an explicit home directory for the key store (tests / DI).
+pub async fn handle_key_delete_with_home(
+    key_id: &str,
+    skip_confirm: bool,
+    home: impl AsRef<Path>,
+) -> Result<(), BearDogError> {
     println!("🗑️  Delete Key");
     println!("=============");
     println!();
@@ -279,7 +300,7 @@ pub async fn handle_key_delete(key_id: &str, skip_confirm: bool) -> Result<(), B
         return Ok(());
     }
 
-    key_store::delete_key(key_id)?;
+    key_store::delete_key_from_home(key_id, home)?;
     println!("✅ Key '{key_id}' deleted successfully");
 
     Ok(())
@@ -500,4 +521,117 @@ pub async fn handle_key_generate_v2(
     println!("   • Encrypt: beardog encrypt --key {key_id} --input data.txt --output data.enc");
 
     Ok(())
+}
+
+#[cfg(test)]
+mod key_handler_tests {
+    use super::*;
+    use crate::handlers::key_store;
+    use chrono::Utc;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_generate_aes_key_without_seed() {
+        let k1 = generate_aes_key_with_seed(None).unwrap();
+        let k2 = generate_aes_key_with_seed(None).unwrap();
+        assert_eq!(k1.len(), 32);
+        assert_eq!(k2.len(), 32);
+        assert_ne!(k1, k2);
+    }
+
+    #[test]
+    fn test_generate_aes_key_with_seed_length_and_entropy() {
+        // System entropy is mixed per call (OsRng); same seed does not imply identical output.
+        let a = generate_aes_key_with_seed(Some(b"human-entropy-seed")).unwrap();
+        let b = generate_aes_key_with_seed(Some(b"human-entropy-seed")).unwrap();
+        assert_eq!(a.len(), 32);
+        assert_eq!(b.len(), 32);
+        assert_ne!(a, b);
+    }
+
+    #[test]
+    fn test_generate_aes_key_legacy_alias() {
+        let k = generate_aes_key().unwrap();
+        assert_eq!(k.len(), 32);
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_list_empty_store() {
+        let dir = TempDir::new().unwrap();
+        handle_key_list_with_home(None, false, dir.path())
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_list_with_filter_and_keys() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+
+        let alpha = key_store::StoredKey {
+            key_id: "alpha".to_string(),
+            algorithm: "aes256-gcm".to_string(),
+            hsm_name: "AlphaHSM-software".to_string(),
+            created_at: Utc::now().to_rfc3339(),
+            key_material_b64: key_store::base64_encode(&[1u8; 32]),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        let beta = key_store::StoredKey {
+            hsm_name: "BetaHSM-hardware".to_string(),
+            key_id: "beta".to_string(),
+            ..alpha.clone()
+        };
+        key_store::save_key_to_home(&alpha, home).unwrap();
+        key_store::save_key_to_home(&beta, home).unwrap();
+
+        handle_key_list_with_home(Some("alpha"), false, home)
+            .await
+            .unwrap();
+        handle_key_list_with_home(None, true, home).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_info() {
+        handle_key_info("any-id").await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_delete_skip_confirm_removes_file() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+
+        let k = key_store::StoredKey {
+            key_id: "to-delete".to_string(),
+            algorithm: "aes256-gcm".to_string(),
+            hsm_name: "h".to_string(),
+            created_at: Utc::now().to_rfc3339(),
+            key_material_b64: key_store::base64_encode(&[2u8; 32]),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        key_store::save_key_to_home(&k, home).unwrap();
+
+        handle_key_delete_with_home("to-delete", true, home)
+            .await
+            .unwrap();
+        assert!(key_store::load_key_from_home("to-delete", home).is_err());
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_delete_without_confirm_returns_early() {
+        handle_key_delete("some-key", false).await.unwrap();
+    }
 }

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Recovery Scenario Tests
 //!
 //! Tests for various recovery scenarios after failures.

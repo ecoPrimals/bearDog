@@ -193,10 +193,23 @@ impl Default for SimdGeneticsConfig {
         Self {
             enable_simd: true,
             force_instruction_set: None,
+            memory_alignment: 64,
+            population_size: 1000,
+            chromosome_length: 100,
+        }
+    }
+}
+
+impl SimdGeneticsConfig {
+    /// Load SIMD genetics settings from `BEARDOG_GENETICS_MEMORY_ALIGNMENT`, `BEARDOG_GENETICS_SIMD_POPULATION_SIZE`, `BEARDOG_GENETICS_CHROMOSOME_LENGTH`.
+    pub fn from_env() -> Self {
+        Self {
+            enable_simd: true,
+            force_instruction_set: None,
             memory_alignment: std::env::var("BEARDOG_GENETICS_MEMORY_ALIGNMENT")
                 .ok()
                 .and_then(|v| v.parse().ok())
-                .unwrap_or(64), // 64-byte alignment for AVX-512
+                .unwrap_or(64),
             population_size: std::env::var("BEARDOG_GENETICS_SIMD_POPULATION_SIZE")
                 .ok()
                 .and_then(|v| v.parse().ok())

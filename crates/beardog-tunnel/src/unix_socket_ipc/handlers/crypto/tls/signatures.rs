@@ -365,3 +365,109 @@ pub async fn handle_tls_compute_finished_verify_data(
         "cipher_suite": format!("0x{:04x}", cipher_suite),
     }))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use base64::prelude::*;
+
+    #[tokio::test]
+    async fn sign_handshake_roundtrip() {
+        let msg = b"hello tls transcript";
+        let params = serde_json::json!({
+            "message": BASE64_STANDARD.encode(msg),
+            "algorithm": "ed25519",
+            "key_id": "test_key",
+            "purpose": "tls_handshake",
+        });
+        let out = handle_tls_sign_handshake(Some(&params)).await.unwrap();
+        assert_eq!(out["algorithm"], "Ed25519");
+        assert_eq!(out["key_id"], "test_key");
+        let sig_b64 = out["signature"].as_str().unwrap();
+        let sig = BASE64_STANDARD.decode(sig_b64).unwrap();
+        assert_eq!(sig.len(), 64);
+    }
+
+    #[tokio::test]
+    async fn sign_handshake_errors() {
+        assert!(handle_tls_sign_handshake(None).await.is_err());
+        let p = serde_json::json!({
+            "message": "!!!",
+            "algorithm": "ed25519",
+        });
+        assert!(handle_tls_sign_handshake(Some(&p)).await.is_err());
+        let p2 = serde_json::json!({
+            "message": BASE64_STANDARD.encode(b"x"),
+            "algorithm": "rsa-pss",
+        });
+        assert!(handle_tls_sign_handshake(Some(&p2)).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn finished_verify_data_sha256_suites() {
+        let base_key = [7u8; 32];
+        let th = [9u8; 32];
+        for suite in [0x1301u16, 0x1303u16] {
+            let params = serde_json::json!({
+                "base_key": BASE64_STANDARD.encode(base_key),
+                "transcript_hash": BASE64_STANDARD.encode(th),
+                "cipher_suite": suite,
+            });
+            let out = handle_tls_compute_finished_verify_data(Some(&params))
+                .await
+                .unwrap();
+            assert_eq!(out["length"], 32);
+            assert_eq!(out["hash_algorithm"], "SHA-256");
+        }
+    }
+
+    #[tokio::test]
+    async fn finished_verify_data_sha384() {
+        let base_key = [3u8; 48];
+        let th = [0xabu8; 48];
+        let params = serde_json::json!({
+            "base_key": BASE64_STANDARD.encode(base_key),
+            "transcript_hash": BASE64_STANDARD.encode(th),
+            "cipher_suite": 0x1302,
+        });
+        let out = handle_tls_compute_finished_verify_data(Some(&params))
+            .await
+            .unwrap();
+        assert_eq!(out["length"], 48);
+        assert_eq!(out["hash_algorithm"], "SHA-384");
+    }
+
+    #[tokio::test]
+    async fn finished_verify_data_errors() {
+        assert!(handle_tls_compute_finished_verify_data(None).await.is_err());
+        let p = serde_json::json!({
+            "base_key": "x",
+            "transcript_hash": base64::engine::general_purpose::STANDARD.encode([0u8; 32]),
+        });
+        assert!(
+            handle_tls_compute_finished_verify_data(Some(&p))
+                .await
+                .is_err()
+        );
+        let p2 = serde_json::json!({
+            "base_key": base64::engine::general_purpose::STANDARD.encode([0u8; 32]),
+            "transcript_hash": base64::engine::general_purpose::STANDARD.encode([0u8; 16]),
+            "cipher_suite": 0x1301,
+        });
+        assert!(
+            handle_tls_compute_finished_verify_data(Some(&p2))
+                .await
+                .is_err()
+        );
+        let p3 = serde_json::json!({
+            "base_key": base64::engine::general_purpose::STANDARD.encode([0u8; 32]),
+            "transcript_hash": base64::engine::general_purpose::STANDARD.encode([0u8; 32]),
+            "cipher_suite": 0x9999,
+        });
+        assert!(
+            handle_tls_compute_finished_verify_data(Some(&p3))
+                .await
+                .is_err()
+        );
+    }
+}

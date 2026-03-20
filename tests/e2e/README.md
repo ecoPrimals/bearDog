@@ -109,7 +109,7 @@ use e2e::{E2ETestFramework, E2EScenario};
 #[tokio::test]
 async fn my_custom_e2e_test() {
     // Create framework
-    let framework = E2ETestFramework::new().await.unwrap();
+    let framework = E2ETestFramework::new().unwrap();
     
     // Run specific scenario
     let result = framework.run_scenario(E2EScenario::ProductionDeployment).await;
@@ -129,7 +129,7 @@ use e2e::{E2ETestFramework, print_e2e_report};
 
 #[tokio::test]
 async fn test_all_scenarios() {
-    let framework = E2ETestFramework::new().await.unwrap();
+    let framework = E2ETestFramework::new().unwrap();
     let results = framework.run_all_scenarios().await.unwrap();
     
     // Print comprehensive report
@@ -224,7 +224,7 @@ let config = E2ETestConfig {
     verbose_logging: true, // Detailed logs
 };
 
-let framework = E2ETestFramework::with_config(config).await?;
+let framework = E2ETestFramework::with_config(config)?;
 ```
 
 ---
@@ -285,7 +285,7 @@ async fn run_my_scenario(&self) -> Result<E2EMetrics, BearDogError> {
 
 #[tokio::test]
 async fn test_my_scenario_e2e() {
-    let framework = E2ETestFramework::new().await.unwrap();
+    let framework = E2ETestFramework::new().unwrap();
     let result = framework.run_scenario(E2EScenario::MyScenario).await;
     assert!(result.is_ok());
 }

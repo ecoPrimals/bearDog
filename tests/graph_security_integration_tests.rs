@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Integration tests for Collaborative Intelligence graph security via Unix socket IPC
 //!
 //! Tests the complete flow from JSON-RPC request → Unix socket → graph security → response

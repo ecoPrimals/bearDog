@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Production Observability Tests
 //!
 //! Tests for the production monitoring and observability systems

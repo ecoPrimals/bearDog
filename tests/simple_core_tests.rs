@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Simple core integration tests
 //!
 //! These tests validate basic functionality of core `BearDog` types and errors.

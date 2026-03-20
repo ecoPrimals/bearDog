@@ -167,12 +167,12 @@ impl BearDogCore {
     fn check_capability_availability(&self, capability_type: &str) -> bool {
         // Check environment variables for capability endpoints
         let env_key = format!("{}_ENDPOINT", capability_type.to_uppercase());
-        if std::env::var(&env_key).is_ok() {
+        if beardog_errors::process_env::var(&env_key).is_ok() {
             return true;
         }
 
         // Check for generic discovery endpoints
-        if std::env::var("ECOSYSTEM_DISCOVERY_ENDPOINT").is_ok() {
+        if beardog_errors::process_env::var("ECOSYSTEM_DISCOVERY_ENDPOINT").is_ok() {
             return true; // Assume capability is discoverable
         }
 

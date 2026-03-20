@@ -91,13 +91,13 @@ pub async fn safe_get_ios_device_info() -> Result<IOSDeviceInfo, BearDogError> {
     info!("📱 Safe iOS device detection starting");
 
     let device_info = IOSDeviceInfo {
-        device_model: std::env::var("IOS_DEVICE_MODEL")
+        device_model: beardog_errors::process_env::var("IOS_DEVICE_MODEL")
             .unwrap_or_else(|_| "iOS Device".to_string()),
-        ios_version: std::env::var("IOS_VERSION").unwrap_or_else(|_| "Unknown".to_string()),
-        secure_enclave_available: std::env::var("IOS_SECURE_ENCLAVE_AVAILABLE")
+        ios_version: beardog_errors::process_env::var("IOS_VERSION").unwrap_or_else(|_| "Unknown".to_string()),
+        secure_enclave_available: beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE")
             .map(|v| v == "true")
             .unwrap_or(false),
-        biometric_available: std::env::var("IOS_BIOMETRIC_AVAILABLE")
+        biometric_available: beardog_errors::process_env::var("IOS_BIOMETRIC_AVAILABLE")
             .map(|v| v == "true")
             .unwrap_or(false),
     };

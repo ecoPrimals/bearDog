@@ -260,29 +260,30 @@ impl CanonicalApiTestConfig {
     /// - `BEARDOG_API_TEST_MAX_RETRIES`: Max retry attempts (default: 3)
     /// - `BEARDOG_API_TEST_RETRY_DELAY_MS`: Retry delay in ms (default: 1000)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         use beardog_config::domains::network_ports::DEFAULT_API_PORT;
 
         Self {
             base_url: format!("http://localhost:{DEFAULT_API_PORT}"),
-            timeout_seconds: std::env::var("BEARDOG_API_TEST_TIMEOUT_SECS")
-                .ok()
+            timeout_seconds: get("BEARDOG_API_TEST_TIMEOUT_SECS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_TIMEOUT_SECS),
             contract_validation: true,
             use_authentication: false,
             api_key: None,
             verify_tls: true,
-            max_concurrent_requests: std::env::var("BEARDOG_API_TEST_MAX_CONCURRENT")
-                .ok()
+            max_concurrent_requests: get("BEARDOG_API_TEST_MAX_CONCURRENT")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_CONCURRENT),
             retry_failed_requests: false,
-            max_retries: std::env::var("BEARDOG_API_TEST_MAX_RETRIES")
-                .ok()
+            max_retries: get("BEARDOG_API_TEST_MAX_RETRIES")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_RETRIES),
-            retry_delay_ms: std::env::var("BEARDOG_API_TEST_RETRY_DELAY_MS")
-                .ok()
+            retry_delay_ms: get("BEARDOG_API_TEST_RETRY_DELAY_MS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_RETRY_DELAY_MS),
             cache_responses: false,
@@ -559,6 +560,11 @@ impl CanonicalProductionTestConfig {
     /// - `BEARDOG_PROD_TEST_HEALTH_TIMEOUT_SECS`: Health check timeout (default: 30)
     /// - `BEARDOG_CANARY_PERCENTAGE`: Canary deployment percentage (default: 5.0)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             environment: "production".to_string(),
             smoke_tests_enabled: true,
@@ -567,14 +573,12 @@ impl CanonicalProductionTestConfig {
             performance_validation_enabled: true,
             compliance_checks_enabled: true,
             health_check_endpoint: "/health".to_string(),
-            health_check_timeout_seconds: std::env::var("BEARDOG_PROD_TEST_HEALTH_TIMEOUT_SECS")
-                .ok()
+            health_check_timeout_seconds: get("BEARDOG_PROD_TEST_HEALTH_TIMEOUT_SECS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_HEALTH_TIMEOUT_SECS),
             required_services: Vec::new(),
             canary_testing_enabled: false,
-            canary_percentage: std::env::var("BEARDOG_CANARY_PERCENTAGE")
-                .ok()
+            canary_percentage: get("BEARDOG_CANARY_PERCENTAGE")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_CANARY_PERCENTAGE),
             rollback_on_failure: true,

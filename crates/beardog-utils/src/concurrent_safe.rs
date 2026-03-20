@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! [`DashMap`] hash maps and LRU-ish caches with `parking_lot` backing locks.
+//! [`DashMap`](dashmap::DashMap) hash maps and LRU-ish caches with `parking_lot` backing locks.
 
 use beardog_errors::BearDogError;
 use dashmap::DashMap;

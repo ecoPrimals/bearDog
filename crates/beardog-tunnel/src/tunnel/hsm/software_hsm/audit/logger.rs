@@ -262,7 +262,9 @@ impl DefaultAuditLogger {
                 success,
                 error
             )
-            .unwrap();
+            .map_err(|e| {
+                BearDogError::serialization(&format!("CSV audit export line failed: {e}"))
+            })?;
         }
 
         Ok(csv.into_bytes())
@@ -280,5 +282,75 @@ impl AuditLogger for DefaultAuditLogger {
         filter: &AuditLogFilter,
     ) -> Result<Vec<AuditLogEntry>, BearDogError> {
         self.storage.get_entries(filter).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[tokio::test]
+    async fn audit_logger_with_temp_path_logs_and_exports() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("audit_test.log");
+        let logger = DefaultAuditLogger::with_storage_path(path)
+            .await
+            .expect("logger");
+
+        logger
+            .log_success("op1", Some("u1"), Some("k1"))
+            .await
+            .expect("log");
+        logger
+            .log_failure("op2", None, Some("k2"), "boom")
+            .await
+            .expect("fail log");
+        logger
+            .log_key_generation("kid", "ecc", "p256", true)
+            .await
+            .expect("kg");
+        logger
+            .log_key_deletion("kid", false, Some("nope"))
+            .await
+            .expect("del");
+
+        let crypto = CryptoOperationLog {
+            operation_type: "sign".to_string(),
+            user_id: Some("u".to_string()),
+            key_id: Some("k".to_string()),
+            algorithm: "ed25519".to_string(),
+            data_size: 32,
+            success: true,
+            processing_time_ms: Some(12),
+        };
+        logger.log_crypto_operation(crypto).await.expect("crypto");
+
+        logger
+            .log_security_event("alert", "high", "desc", std::collections::HashMap::new())
+            .await
+            .expect("sec");
+
+        let stats = logger.get_audit_statistics().await.expect("stats");
+        assert_eq!(stats.total_operations, 0); // mock returns new()
+
+        let json = logger.export_audit_log("json").await.expect("json export");
+        assert!(json.starts_with(b"[") || !json.is_empty());
+
+        let csv = logger.export_audit_log("csv").await.expect("csv export");
+        let csv_s = String::from_utf8(csv).unwrap();
+        assert!(csv_s.contains("timestamp"));
+
+        assert!(logger.export_audit_log("weird").await.is_err());
+    }
+
+    #[tokio::test]
+    async fn log_audit_event_stub_ok() {
+        let dir = tempdir().unwrap();
+        let logger = DefaultAuditLogger::with_storage_path(dir.path().join("a.log"))
+            .await
+            .unwrap();
+        let ev = beardog_types::hsm::AuditEvent::default();
+        logger.log_audit_event(ev).await.unwrap();
     }
 }

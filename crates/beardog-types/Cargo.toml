@@ -41,12 +41,13 @@ hmac = "0.12"                 # HMAC for message authentication
 sha2 = "0.10"                 # SHA-256/512 hashing
 sha3 = "0.10"                 # SHA3-256 hashing (for constraints)
 zeroize = { version = "1.7", features = ["derive"] }  # Memory zeroing for keys
-bincode = "1.3"               # Binary serialization for constraint hashing
+postcard = { workspace = true }  # Binary serialization for constraint hashing
 
 [dev-dependencies]
 tokio-test = "0.4"
 criterion = { version = "0.5", features = ["html_reports"] }
 serial_test = { workspace = true }
+tempfile = { workspace = true }
 
 [features]
 default = [ "config",]

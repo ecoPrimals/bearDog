@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! E2E Integration Test for Zero-Hardcoding
 //!
 //! Validates that `BearDog` works with ANY registry implementation

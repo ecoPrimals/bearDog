@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Quick Win Tests: Error Handling
 //!
 //! This module contains unit tests focused on verifying basic error handling patterns

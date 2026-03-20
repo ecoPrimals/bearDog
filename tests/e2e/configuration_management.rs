@@ -1,12 +1,4 @@
-#![expect(
-    unused_imports,
-    reason = "E2E test scaffolding imports used conditionally"
-)]
-#![expect(
-    dead_code,
-    reason = "E2E helper functions called from test orchestrator"
-)]
-
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Configuration Management E2E Tests
 //!
 //! End-to-end tests for configuration loading, validation, and hot-reloading

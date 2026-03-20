@@ -123,7 +123,7 @@ impl StandaloneSecurityMode {
                     self.policy.threat_threshold
                 ),
                 retry_after: Some(Duration::from_secs(
-                    std::env::var("BEARDOG_SECURITY_THREAT_RETRY_SECS")
+                    beardog_errors::process_env::var("BEARDOG_SECURITY_THREAT_RETRY_SECS")
                         .ok()
                         .and_then(|s| s.parse().ok())
                         .unwrap_or(60)
@@ -216,11 +216,11 @@ pub struct StandaloneRetryConfig {
 impl Default for StandaloneRetryConfig {
     fn default() -> Self {
         Self {
-            federation_retry_secs: std::env::var("BEARDOG_FEDERATION_RETRY_SECS")
+            federation_retry_secs: beardog_errors::process_env::var("BEARDOG_FEDERATION_RETRY_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(60),
-            rate_limit_retry_secs: std::env::var("BEARDOG_RATE_LIMIT_RETRY_SECS")
+            rate_limit_retry_secs: beardog_errors::process_env::var("BEARDOG_RATE_LIMIT_RETRY_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(300),
@@ -496,12 +496,12 @@ impl Default for StandaloneRateLimiter {
         Self {
             requests: HashMap::new(),
             window: Duration::from_secs(
-                std::env::var("BEARDOG_STANDALONE_RATE_LIMIT_WINDOW_SECS")
+                beardog_errors::process_env::var("BEARDOG_STANDALONE_RATE_LIMIT_WINDOW_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(60)
             ),
-            max_requests: std::env::var("BEARDOG_STANDALONE_RATE_LIMIT_MAX_REQUESTS")
+            max_requests: beardog_errors::process_env::var("BEARDOG_STANDALONE_RATE_LIMIT_MAX_REQUESTS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(10),

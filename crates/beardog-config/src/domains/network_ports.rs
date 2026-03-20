@@ -155,52 +155,31 @@ pub const DEFAULT_JAEGER_PORT: u16 = 14268;
 pub const DEFAULT_PROFILING_PORT: u16 = 6060;
 
 fn default_api_port() -> u16 {
-    std::env::var("BEARDOG_API_PORT")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(DEFAULT_API_PORT)
+    DEFAULT_API_PORT
 }
 
 fn default_discovery_port() -> u16 {
-    std::env::var("BEARDOG_DISCOVERY_PORT")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(DEFAULT_DISCOVERY_PORT)
+    DEFAULT_DISCOVERY_PORT
 }
 
 fn default_admin_port() -> u16 {
-    std::env::var("BEARDOG_ADMIN_PORT")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(DEFAULT_ADMIN_PORT)
+    DEFAULT_ADMIN_PORT
 }
 
 fn default_https_port() -> u16 {
-    std::env::var("BEARDOG_HTTPS_PORT")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(DEFAULT_HTTPS_PORT)
+    DEFAULT_HTTPS_PORT
 }
 
 fn default_metrics_port() -> u16 {
-    std::env::var("BEARDOG_METRICS_PORT")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(DEFAULT_METRICS_PORT)
+    DEFAULT_METRICS_PORT
 }
 
 fn default_health_port() -> u16 {
-    std::env::var("BEARDOG_HEALTH_PORT")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(DEFAULT_HEALTH_PORT)
+    DEFAULT_HEALTH_PORT
 }
 
 fn default_tcp_ipc_port() -> u16 {
-    std::env::var("BEARDOG_TCP_IPC_PORT")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(DEFAULT_TCP_IPC_PORT)
+    DEFAULT_TCP_IPC_PORT
 }
 
 impl Default for NetworkPortsConfig {
@@ -210,10 +189,10 @@ impl Default for NetworkPortsConfig {
 }
 
 impl NetworkPortsConfig {
-    /// Creates configuration with secure defaults
+    /// Creates configuration with documented static defaults (no environment reads).
     ///
-    /// Reads from environment variables if set, otherwise uses documented defaults.
-    /// All defaults are non-privileged ports (>1024).
+    /// All defaults are non-privileged ports (>1024). For environment overrides, use
+    /// [`Self::from_env`].
     ///
     /// # Example
     ///
@@ -238,7 +217,7 @@ impl NetworkPortsConfig {
 
     /// Loads configuration from environment variables
     ///
-    /// This is equivalent to `with_defaults()` but makes the intent explicit.
+    /// Reads `BEARDOG_*` port variables when set; otherwise matches [`Self::with_defaults`].
     ///
     /// # Example
     ///
@@ -250,7 +229,36 @@ impl NetworkPortsConfig {
     /// ```
     #[must_use]
     pub fn from_env() -> Self {
-        Self::default()
+        Self {
+            api_port: std::env::var("BEARDOG_API_PORT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(DEFAULT_API_PORT),
+            discovery_port: std::env::var("BEARDOG_DISCOVERY_PORT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(DEFAULT_DISCOVERY_PORT),
+            admin_port: std::env::var("BEARDOG_ADMIN_PORT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(DEFAULT_ADMIN_PORT),
+            https_port: std::env::var("BEARDOG_HTTPS_PORT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(DEFAULT_HTTPS_PORT),
+            metrics_port: std::env::var("BEARDOG_METRICS_PORT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(DEFAULT_METRICS_PORT),
+            health_port: std::env::var("BEARDOG_HEALTH_PORT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(DEFAULT_HEALTH_PORT),
+            tcp_ipc_port: std::env::var("BEARDOG_TCP_IPC_PORT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(DEFAULT_TCP_IPC_PORT),
+        }
     }
 
     /// Validates that all ports are in valid range

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Concurrent Test Utilities
 //!
 //! Modern patterns for concurrent testing without sleep-based synchronization.

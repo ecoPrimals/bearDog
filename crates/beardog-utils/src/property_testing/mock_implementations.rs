@@ -214,10 +214,10 @@ impl PropertyBasedTestFramework {
         // Add defaults for missing keys
         config
             .entry("default_value".to_string())
-            .or_insert("default".to_string());
+            .or_insert_with(|| "default".to_string());
         config
             .entry("timeout".to_string())
-            .or_insert("30".to_string());
+            .or_insert_with(|| "30".to_string());
 
         Ok(config)
     }

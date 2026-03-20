@@ -83,22 +83,24 @@ impl DatabaseConnectionConfig {
     /// - `DATABASE_TIMEOUT_SECONDS`: Connection timeout (default: 30)
     /// - `DATABASE_SSL`: Enable SSL/TLS (default: false)
     pub fn from_env() -> Self {
-        let default_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
-            std::env::var("BEARDOG_DATABASE_URL").unwrap_or_else(|_| Self::DEFAULT_URL.to_string())
-        });
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
 
-        let max_connections = std::env::var("DATABASE_MAX_CONNECTIONS")
-            .ok()
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
+        let default_url = get("DATABASE_URL")
+            .or_else(|| get("BEARDOG_DATABASE_URL"))
+            .unwrap_or_else(|| Self::DEFAULT_URL.to_string());
+
+        let max_connections = get("DATABASE_MAX_CONNECTIONS")
             .and_then(|v| v.parse().ok())
             .unwrap_or(crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u32);
 
-        let timeout_secs = std::env::var("DATABASE_TIMEOUT_SECONDS")
-            .ok()
+        let timeout_secs = get("DATABASE_TIMEOUT_SECONDS")
             .and_then(|v| v.parse().ok())
             .unwrap_or(Self::DEFAULT_TIMEOUT_SECS);
 
-        let ssl = std::env::var("DATABASE_SSL")
-            .ok()
+        let ssl = get("DATABASE_SSL")
             .and_then(|v| v.parse().ok())
             .unwrap_or(Self::DEFAULT_SSL);
 
@@ -145,18 +147,20 @@ impl DatabasePoolConfig {
     /// - `DATABASE_POOL_MAX_SIZE`: Maximum pool size (default: DEFAULT_POOL_SIZE)
     /// - `DATABASE_POOL_IDLE_TIMEOUT_SECONDS`: Idle timeout (default: 600)
     pub fn from_env() -> Self {
-        let min_idle = std::env::var("DATABASE_POOL_MIN_IDLE")
-            .ok()
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
+        let min_idle = get("DATABASE_POOL_MIN_IDLE")
             .and_then(|v| v.parse().ok())
             .unwrap_or(Self::DEFAULT_MIN_IDLE);
 
-        let max_size = std::env::var("DATABASE_POOL_MAX_SIZE")
-            .ok()
+        let max_size = get("DATABASE_POOL_MAX_SIZE")
             .and_then(|v| v.parse().ok())
             .unwrap_or(crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u32);
 
-        let idle_timeout_secs = std::env::var("DATABASE_POOL_IDLE_TIMEOUT_SECONDS")
-            .ok()
+        let idle_timeout_secs = get("DATABASE_POOL_IDLE_TIMEOUT_SECONDS")
             .and_then(|v| v.parse().ok())
             .unwrap_or(Self::DEFAULT_IDLE_TIMEOUT_SECS);
 
@@ -200,13 +204,17 @@ impl MigrationConfig {
     /// - `DATABASE_AUTO_MIGRATE`: Enable auto-migration (default: true)
     /// - `DATABASE_MIGRATION_DIR`: Migration directory (default: "migrations")
     pub fn from_env() -> Self {
-        let auto_migrate = std::env::var("DATABASE_AUTO_MIGRATE")
-            .ok()
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
+        let auto_migrate = get("DATABASE_AUTO_MIGRATE")
             .and_then(|v| v.parse().ok())
             .unwrap_or(Self::DEFAULT_AUTO_MIGRATE);
 
-        let directory = std::env::var("DATABASE_MIGRATION_DIR")
-            .unwrap_or_else(|_| Self::DEFAULT_DIRECTORY.to_string());
+        let directory =
+            get("DATABASE_MIGRATION_DIR").unwrap_or_else(|| Self::DEFAULT_DIRECTORY.to_string());
 
         Self {
             auto_migrate,

@@ -11,17 +11,26 @@ use tracing::{debug, info};
 pub struct Announcer {
     config: AnnouncementConfig,
     primal_info: PrimalInfo,
+    service_registry_url: Option<String>,
 }
 
 impl Announcer {
     /// Builds an announcer that will publish [`PrimalInfo`] using the given [`AnnouncementConfig`].
     ///
     /// No network I/O occurs until [`Announcer::start`] is called.
-    pub const fn new(config: AnnouncementConfig, primal_info: PrimalInfo) -> Self {
+    pub fn new(config: AnnouncementConfig, primal_info: PrimalInfo) -> Self {
         Self {
             config,
             primal_info,
+            service_registry_url: None,
         }
+    }
+
+    /// Set the service registry URL (e.g. from `SERVICE_REGISTRY_URL` at startup).
+    #[must_use]
+    pub fn with_service_registry_url(mut self, url: Option<String>) -> Self {
+        self.service_registry_url = url;
+        self
     }
 
     /// Start announcing this primal's capabilities
@@ -105,10 +114,9 @@ impl Announcer {
     /// Announce service via service registry
     ///
     /// Registers service with centralized registry (Consul, etcd, etc.).
-    /// Environment-driven configuration determines target registry.
+    /// Caller supplies the registry URL via [`Announcer::with_service_registry_url`].
     ///
     /// # Configuration
-    /// Set `SERVICE_REGISTRY_URL` to enable registration.
     /// Example: `http://consul:8500` or `http://etcd:2379`
     ///
     /// # Implementation Status
@@ -120,8 +128,7 @@ impl Announcer {
     /// - Periodic heartbeat/TTL refresh
     /// - Deregistration on shutdown
     async fn announce_via_service_registry(&self) -> Result<()> {
-        // Check if service registry is configured (environment-driven)
-        if let Ok(registry_url) = std::env::var("SERVICE_REGISTRY_URL") {
+        if let Some(registry_url) = self.service_registry_url.as_ref() {
             info!(
                 "Service registry configured at {}, registration for {} pending full implementation",
                 registry_url, self.primal_info.primal_id
@@ -140,7 +147,7 @@ impl Announcer {
             );
         } else {
             debug!(
-                "Service registry not configured (set SERVICE_REGISTRY_URL) for {}",
+                "Service registry URL not set for {}",
                 self.primal_info.primal_id
             );
         }

@@ -108,10 +108,15 @@ impl ProductionMetricsConfig {
     /// # Environment Variables
     /// - `BEARDOG_METRICS_ENDPOINT`: Metrics endpoint (default: "/metrics")
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             enabled: true,
-            endpoint: std::env::var("BEARDOG_METRICS_ENDPOINT")
-                .unwrap_or_else(|_| Self::DEFAULT_ENDPOINT.to_string()),
+            endpoint: get("BEARDOG_METRICS_ENDPOINT")
+                .unwrap_or_else(|| Self::DEFAULT_ENDPOINT.to_string()),
         }
     }
 }
@@ -142,11 +147,14 @@ impl ProductionLoggingConfig {
     /// - `BEARDOG_LOG_LEVEL`: Log level (default: "info")
     /// - `BEARDOG_LOG_FORMAT`: Log format (default: "json")
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            level: std::env::var("BEARDOG_LOG_LEVEL")
-                .unwrap_or_else(|_| Self::DEFAULT_LEVEL.to_string()),
-            format: std::env::var("BEARDOG_LOG_FORMAT")
-                .unwrap_or_else(|_| Self::DEFAULT_FORMAT.to_string()),
+            level: get("BEARDOG_LOG_LEVEL").unwrap_or_else(|| Self::DEFAULT_LEVEL.to_string()),
+            format: get("BEARDOG_LOG_FORMAT").unwrap_or_else(|| Self::DEFAULT_FORMAT.to_string()),
         }
     }
 }
@@ -173,10 +181,15 @@ impl ProductionTracingConfig {
     /// # Environment Variables
     /// - `BEARDOG_TRACING_ENDPOINT`: Tracing endpoint (default: "/traces")
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             enabled: false,
-            endpoint: std::env::var("BEARDOG_TRACING_ENDPOINT")
-                .unwrap_or_else(|_| Self::DEFAULT_ENDPOINT.to_string()),
+            endpoint: get("BEARDOG_TRACING_ENDPOINT")
+                .unwrap_or_else(|| Self::DEFAULT_ENDPOINT.to_string()),
         }
     }
 }
@@ -203,10 +216,15 @@ impl DashboardConfig {
     /// # Environment Variables
     /// - `BEARDOG_DASHBOARD_ENDPOINT`: Dashboard endpoint (default: "/dashboard")
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             enabled: false,
-            endpoint: std::env::var("BEARDOG_DASHBOARD_ENDPOINT")
-                .unwrap_or_else(|_| Self::DEFAULT_ENDPOINT.to_string()),
+            endpoint: get("BEARDOG_DASHBOARD_ENDPOINT")
+                .unwrap_or_else(|| Self::DEFAULT_ENDPOINT.to_string()),
         }
     }
 }

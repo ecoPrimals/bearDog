@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Disabled - modules don't exist yet
 // pub mod boundary_tests;
 // pub mod confidence_analysis;

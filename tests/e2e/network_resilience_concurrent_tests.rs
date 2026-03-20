@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Concurrent Network Resilience Tests
 //! December 7, 2025 - Modern Concurrent Testing
 //!
@@ -15,6 +16,7 @@
 #![allow(clippy::unwrap_used)] // Test code
 
 use beardog_errors::BearDogError;
+use std::future::ready;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
@@ -51,7 +53,7 @@ impl MockConnection {
         }
     }
 
-    async fn request(&self) -> Result<String, BearDogError> {
+    fn request(&self) -> Result<String, BearDogError> {
         self.call_count.fetch_add(1, Ordering::SeqCst);
 
         if !self.is_alive.load(Ordering::SeqCst) {
@@ -155,7 +157,7 @@ async fn test_concurrent_failover_with_circuit_breaker() {
 
                 // Try primary first if circuit breaker allows
                 if circuit_breaker.allows_request() {
-                    match primary.request().await {
+                    match primary.request() {
                         Ok(result) => {
                             circuit_breaker.record_success();
                             return Ok(result);
@@ -168,7 +170,7 @@ async fn test_concurrent_failover_with_circuit_breaker() {
                 }
 
                 // Use secondary
-                secondary.request().await
+                secondary.request()
             })
         })
         .collect();
@@ -287,7 +289,7 @@ async fn test_network_partition_detection_concurrent() {
             let successful = successful_requests.clone();
 
             tokio::spawn(async move {
-                match connection.request().await {
+                match connection.request() {
                     Ok(_) => successful.fetch_add(1, Ordering::SeqCst),
                     Err(_) => failed.fetch_add(1, Ordering::SeqCst),
                 };
@@ -317,7 +319,7 @@ async fn test_network_partition_detection_concurrent() {
     let recovery_handles: Vec<_> = (0..100)
         .map(|_| {
             let connection = connection.clone();
-            tokio::spawn(async move { connection.request().await })
+            tokio::spawn(async move { connection.request() })
         })
         .collect();
 
@@ -356,7 +358,7 @@ async fn test_concurrent_retry_coordination() {
                 for retry in 0..max_retries {
                     total_requests.fetch_add(1, Ordering::SeqCst);
 
-                    match connection.request().await {
+                    match connection.request() {
                         Ok(_) => {
                             total_successes.fetch_add(1, Ordering::SeqCst);
                             return Ok(());
@@ -432,7 +434,7 @@ async fn test_load_balancer_concurrent_distribution() {
             tokio::spawn(async move {
                 // Round-robin selection (atomic)
                 let index = next_index.fetch_add(1, Ordering::SeqCst) % connections.len();
-                connections[index].request().await
+                connections[index].request()
             })
         })
         .collect();
@@ -477,7 +479,7 @@ async fn test_timeout_handling_concurrent() {
 
             tokio::spawn(async move {
                 // Apply aggressive timeout
-                tokio::time::timeout(Duration::from_millis(100), connection.request()).await
+                tokio::time::timeout(Duration::from_millis(100), ready(connection.request())).await
             })
         })
         .collect();
@@ -555,7 +557,7 @@ async fn test_connection_recovery_after_mass_failure() {
                 }
 
                 let conn = &connections[(i as usize) % connections.len()];
-                let result = conn.request().await;
+                let result = conn.request();
 
                 match result {
                     Ok(_) => {
@@ -629,7 +631,7 @@ async fn test_extreme_concurrent_load_stress() {
                 barrier.wait().await;
 
                 let conn = &connections[i % connections.len()];
-                if conn.request().await.is_ok() {
+                if conn.request().is_ok() {
                     successful.fetch_add(1, Ordering::SeqCst);
                 }
             })

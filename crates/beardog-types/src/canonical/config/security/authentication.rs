@@ -263,17 +263,20 @@ impl CanonicalAuthenticationConfig {
     /// - `BEARDOG_MAX_AUTH_ATTEMPTS`: Maximum authentication attempts (default: 3)
     /// - `BEARDOG_LOCKOUT_DURATION_SECS`: Lockout duration (default: 900)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             jwt_secret: Arc::from("CHANGE_ME_IN_PRODUCTION"),
-            jwt_expiration_seconds: std::env::var("BEARDOG_JWT_EXPIRATION_SECS")
-                .ok()
+            jwt_expiration_seconds: get("BEARDOG_JWT_EXPIRATION_SECS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_JWT_EXPIRATION_SECS),
             jwt_issuer: Arc::from("beardog"),
             jwt_audience: Arc::from("beardog-api"),
             enable_jwt_refresh: true,
-            jwt_refresh_expiration_seconds: std::env::var("BEARDOG_JWT_REFRESH_EXPIRATION_SECS")
-                .ok()
+            jwt_refresh_expiration_seconds: get("BEARDOG_JWT_REFRESH_EXPIRATION_SECS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_JWT_REFRESH_EXPIRATION_SECS),
             enable_oauth: false,
@@ -283,25 +286,21 @@ impl CanonicalAuthenticationConfig {
             oauth_scopes: vec!["read".to_string(), "write".to_string()],
             enable_api_key: true,
             api_key_header: Arc::from("X-API-Key"),
-            api_key_min_length: std::env::var("BEARDOG_API_KEY_MIN_LENGTH")
-                .ok()
+            api_key_min_length: get("BEARDOG_API_KEY_MIN_LENGTH")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_API_KEY_MIN_LENGTH),
             enable_basic_auth: false,
-            password_min_length: std::env::var("BEARDOG_PASSWORD_MIN_LENGTH")
-                .ok()
+            password_min_length: get("BEARDOG_PASSWORD_MIN_LENGTH")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_PASSWORD_MIN_LENGTH),
             password_require_uppercase: true,
             password_require_lowercase: true,
             password_require_numbers: true,
             password_require_symbols: false,
-            max_auth_attempts: std::env::var("BEARDOG_MAX_AUTH_ATTEMPTS")
-                .ok()
+            max_auth_attempts: get("BEARDOG_MAX_AUTH_ATTEMPTS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_AUTH_ATTEMPTS),
-            lockout_duration_seconds: std::env::var("BEARDOG_LOCKOUT_DURATION_SECS")
-                .ok()
+            lockout_duration_seconds: get("BEARDOG_LOCKOUT_DURATION_SECS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_LOCKOUT_DURATION_SECS),
             identity_providers: HashMap::new(),

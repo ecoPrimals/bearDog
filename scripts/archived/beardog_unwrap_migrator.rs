@@ -161,7 +161,7 @@ impl BearDogUnwrapMigrator {
             "env_var_unwrap".to_string(),
             MigrationPattern {
                 pattern: r#"std::env::var\("([^"]+)"\)\.unwrap\(\)"#.to_string(),
-                replacement: r#"std::env::var("$1").map_err(|_| BearDogError::Configuration { 
+                replacement: r#"beardog_errors::process_env::var("$1").map_err(|_| BearDogError::Configuration { 
                     message: format!("Missing required environment variable: {}", "$1") 
                 })?"#.to_string(),
                 error_category: "BearDogError::Configuration".to_string(),
@@ -173,7 +173,7 @@ impl BearDogUnwrapMigrator {
             "env_var_expect".to_string(),
             MigrationPattern {
                 pattern: r#"std::env::var\("([^"]+)"\)\.expect\("([^"]+)"\)"#.to_string(),
-                replacement: r#"std::env::var("$1").map_err(|_| BearDogError::Configuration { 
+                replacement: r#"beardog_errors::process_env::var("$1").map_err(|_| BearDogError::Configuration { 
                     message: format!("Missing environment variable {}: {}", "$1", "$2") 
                 })?"#.to_string(),
                 error_category: "BearDogError::Configuration".to_string(),

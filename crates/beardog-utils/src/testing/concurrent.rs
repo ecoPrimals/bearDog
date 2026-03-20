@@ -386,10 +386,9 @@ pub async fn assert_eventually<F>(condition: F, timeout_duration: Duration, mess
 where
     F: Fn() -> bool + Send,
 {
-    match wait_for(condition, timeout_duration).await {
-        Ok(()) => {}
-        Err(_) => panic!("{message} (timeout after {timeout_duration:?})"),
-    }
+    wait_for(condition, timeout_duration)
+        .await
+        .unwrap_or_else(|_| panic!("{message} (timeout after {timeout_duration:?})"));
 }
 
 /// Run a test with a strict timeout

@@ -4,15 +4,39 @@
 //!
 //! This module provides utilities for loading configuration from environment variables
 //! with sensible defaults and validation.
+//!
+//! Production code uses [`std_env_lookup`] with the real process environment.
+//! Tests pass a [`HashMap`]-backed lookup via [`env_map_lookup`] to avoid global `set_var` / races.
 
-use std::env;
+use std::collections::HashMap;
 use std::net::{IpAddr, SocketAddr};
 use std::str::FromStr;
 use std::time::Duration;
 
+/// Look up a variable the same way as `std::env::var` but as `Option<String>`.
+#[must_use]
+pub fn std_env_lookup(key: &str) -> Option<String> {
+    std::env::var(key).ok()
+}
+
+/// Build a lookup closure backed by a map (for tests).
+#[must_use]
+pub fn env_map_lookup(map: &HashMap<String, String>) -> impl Fn(&str) -> Option<String> + '_ {
+    move |k| map.get(k).cloned()
+}
+
 /// Get an environment variable or return a default value
 pub fn get_env_or_default(key: &str, default: &str) -> String {
-    env::var(key).unwrap_or_else(|_| default.to_string())
+    get_env_or_default_with(std_env_lookup, key, default)
+}
+
+/// Get an environment variable or default using a custom lookup.
+pub fn get_env_or_default_with(
+    get: impl Fn(&str) -> Option<String>,
+    key: &str,
+    default: &str,
+) -> String {
+    get(key).unwrap_or_else(|| default.to_string())
 }
 
 /// Get an environment variable as a typed value or return a default
@@ -20,8 +44,15 @@ pub fn get_env_as<T>(key: &str, default: T) -> T
 where
     T: FromStr,
 {
-    env::var(key)
-        .ok()
+    get_env_as_with(std_env_lookup, key, default)
+}
+
+/// Typed env parse with a custom lookup.
+pub fn get_env_as_with<T>(get: impl Fn(&str) -> Option<String>, key: &str, default: T) -> T
+where
+    T: FromStr,
+{
+    get(key)
         .and_then(|s| s.parse::<T>().ok())
         .unwrap_or(default)
 }
@@ -32,7 +63,15 @@ where
 ///
 /// Returns `BearDogError::configuration` if the environment variable is not set.
 pub fn try_get_env_required(key: &str) -> Result<String, beardog_errors::BearDogError> {
-    env::var(key).map_err(|_| {
+    try_get_env_required_with(std_env_lookup, key)
+}
+
+/// Required env with custom lookup.
+pub fn try_get_env_required_with(
+    get: impl Fn(&str) -> Option<String>,
+    key: &str,
+) -> Result<String, beardog_errors::BearDogError> {
+    get(key).ok_or_else(|| {
         let message = format!(
             "Required environment variable '{key}' is not set. \
              Please set it in your .env file or environment. \
@@ -56,15 +95,22 @@ impl NetworkConfig {
     pub fn from_env(prefix: &str) -> Self {
         use beardog_types::canonical::config::runtime_config::RuntimeNetworkConfig;
 
-        // Use RuntimeNetworkConfig for defaults instead of hardcoded values
         let runtime_config = RuntimeNetworkConfig::from_env();
+        Self::from_env_with_runtime(prefix, std_env_lookup, &runtime_config)
+    }
 
+    /// Create from a custom lookup and explicit runtime defaults (testable).
+    pub fn from_env_with_runtime(
+        prefix: &str,
+        get: impl Fn(&str) -> Option<String>,
+        runtime_defaults: &beardog_types::canonical::config::runtime_config::RuntimeNetworkConfig,
+    ) -> Self {
         let host_key = format!("{prefix}_HOST");
         let port_key = format!("{prefix}_PORT");
 
         Self {
-            host: get_env_or_default(&host_key, &runtime_config.api_host),
-            port: get_env_as(&port_key, runtime_config.api_port),
+            host: get_env_or_default_with(&get, &host_key, &runtime_defaults.api_host),
+            port: get_env_as_with(&get, &port_key, runtime_defaults.api_port),
         }
     }
 
@@ -94,14 +140,19 @@ pub struct TimeoutConfig {
 impl TimeoutConfig {
     /// Create from environment variables with prefix
     pub fn from_env(prefix: &str) -> Self {
+        Self::from_env_with(prefix, std_env_lookup)
+    }
+
+    /// Create from custom lookup (tests).
+    pub fn from_env_with(prefix: &str, get: impl Fn(&str) -> Option<String>) -> Self {
         let connect_key = format!("{prefix}_CONNECT_TIMEOUT_MS");
         let request_key = format!("{prefix}_REQUEST_TIMEOUT_MS");
         let idle_key = format!("{prefix}_IDLE_TIMEOUT_MS");
 
         Self {
-            connect_timeout: Duration::from_millis(get_env_as(&connect_key, 5000)),
-            request_timeout: Duration::from_millis(get_env_as(&request_key, 30000)),
-            idle_timeout: Duration::from_millis(get_env_as(&idle_key, 60000)),
+            connect_timeout: Duration::from_millis(get_env_as_with(&get, &connect_key, 5000u64)),
+            request_timeout: Duration::from_millis(get_env_as_with(&get, &request_key, 30000u64)),
+            idle_timeout: Duration::from_millis(get_env_as_with(&get, &idle_key, 60000u64)),
         }
     }
 }
@@ -135,10 +186,15 @@ impl Default for HsmConfig {
 impl HsmConfig {
     /// Load from environment or use defaults
     pub fn from_env() -> Self {
+        Self::from_env_with(std_env_lookup)
+    }
+
+    /// Load using custom lookup (tests).
+    pub fn from_env_with(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            provider: get_env_or_default("BEARDOG_HSM_PROVIDER", "software"),
-            timeout_ms: get_env_as("BEARDOG_HSM_TIMEOUT_MS", 5000),
-            retry_attempts: get_env_as("BEARDOG_HSM_RETRY_ATTEMPTS", 3),
+            provider: get_env_or_default_with(&get, "BEARDOG_HSM_PROVIDER", "software"),
+            timeout_ms: get_env_as_with(&get, "BEARDOG_HSM_TIMEOUT_MS", 5000u64),
+            retry_attempts: get_env_as_with(&get, "BEARDOG_HSM_RETRY_ATTEMPTS", 3u32),
         }
     }
 }
@@ -147,14 +203,29 @@ impl HsmConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Mutex;
+    use beardog_types::canonical::config::runtime_config::RuntimeNetworkConfig;
 
     // Test constant - matches DEFAULT_API_PORT from beardog-config
     const TEST_DEFAULT_PORT: u16 = 8080;
 
-    // Mutex to serialize tests that modify environment variables
-    // This prevents race conditions when tests run in parallel
-    static ENV_TEST_MUTEX: Mutex<()> = Mutex::new(());
+    fn test_runtime_defaults() -> RuntimeNetworkConfig {
+        RuntimeNetworkConfig {
+            discovery_endpoint: format!("http://127.0.0.1:{TEST_DEFAULT_PORT}/discover"),
+            api_host: "127.0.0.1".to_string(),
+            api_port: TEST_DEFAULT_PORT,
+            metrics_port: 9090,
+            health_port: 8081,
+            ws_port: 3000,
+            grpc_port: 50051,
+            admin_port: 8082,
+            database_port: 5432,
+            consul_port: 8500,
+            redis_port: 6379,
+            timeout_seconds: 30,
+            max_connections: 1000,
+            enable_tls: true,
+        }
+    }
 
     #[test]
     fn test_get_env_or_default() {
@@ -169,78 +240,39 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial] // Environment variable test - must run serially
     fn test_network_config_defaults() {
-        // Clear any env vars that might interfere
-        beardog_errors::process_env::remove_var("TEST_SERVICE_HOST");
-        beardog_errors::process_env::remove_var("TEST_SERVICE_PORT");
-        beardog_errors::process_env::remove_var("BEARDOG_API_HOST");
-        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
-
-        let config = NetworkConfig::from_env("TEST_SERVICE");
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: core
-        // TEST_PRIORITY: normal
-        // Actual default from RuntimeNetworkConfig is 127.0.0.1 (not "localhost")
+        let runtime = test_runtime_defaults();
+        let config = NetworkConfig::from_env_with_runtime("TEST_SERVICE", |_| None, &runtime);
         assert_eq!(config.host, "127.0.0.1");
         assert_eq!(config.port, TEST_DEFAULT_PORT);
-
-        // Clean up
-        beardog_errors::process_env::remove_var("TEST_SERVICE_HOST");
-        beardog_errors::process_env::remove_var("TEST_SERVICE_PORT");
-        beardog_errors::process_env::remove_var("BEARDOG_API_HOST");
-        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
     }
-    // TEST_CATEGORY: unit
-    // TEST_DOMAIN: core
-    // TEST_PRIORITY: normal
 
     #[test]
     fn test_network_config_to_url() {
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: core
-        // TEST_PRIORITY: normal
         let config = NetworkConfig {
             host: "127.0.0.1".to_string(),
             port: 9000,
         };
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: core
-        // TEST_PRIORITY: normal
         assert_eq!(config.to_url("http"), "http://127.0.0.1:9000");
     }
 
     #[test]
     fn test_discovery_config_defaults() {
-        // Modern pattern: Test Default implementation directly (no env vars)
-        // This is concurrent-safe and doesn't pollute global state
         let config = DiscoveryConfig::default();
 
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: core
-        // TEST_PRIORITY: normal
-        // Canonical DiscoveryConfig uses endpoints: Vec<String>, timeout: Duration, max_attempts: u32
-        // Default timeout is 5 seconds (canonical default)
         assert_eq!(config.timeout.as_secs(), 5);
         assert_eq!(config.max_attempts, 3);
-        assert_eq!(config.max_concurrent, 10); // canonical default
+        assert_eq!(config.max_concurrent, 10);
 
-        // Verify other defaults
         assert!(config.enabled);
         assert!(config.cache_enabled);
-        assert_eq!(config.endpoints.len(), 0); // No endpoints in pure default
+        assert_eq!(config.endpoints.len(), 0);
     }
 
-    // TEST_CATEGORY: unit
-    // TEST_DOMAIN: core
-    // TEST_PRIORITY: normal
     #[test]
     fn test_hsm_config_defaults() {
-        // Modern pattern: Test Default implementation directly (no env vars)
-        // This is concurrent-safe and doesn't pollute global state
         let config = HsmConfig::default();
 
-        // Verify default values
         assert_eq!(config.provider, "software");
         assert_eq!(config.timeout_ms, 5000);
         assert_eq!(config.retry_attempts, 3);
@@ -248,33 +280,39 @@ mod tests {
 
     #[test]
     fn test_get_env_or_default_with_env_var() {
-        beardog_errors::process_env::set_var("TEST_VAR_EXISTS", "custom_value");
-        let result = get_env_or_default("TEST_VAR_EXISTS", "default_value");
+        let mut map = HashMap::new();
+        map.insert("TEST_VAR_EXISTS".to_string(), "custom_value".to_string());
+        let result =
+            get_env_or_default_with(env_map_lookup(&map), "TEST_VAR_EXISTS", "default_value");
         assert_eq!(result, "custom_value");
-        beardog_errors::process_env::remove_var("TEST_VAR_EXISTS");
     }
 
     #[test]
     fn test_get_env_as_with_env_var() {
         const TEST_DISCOVERY_PORT: u16 = 9090;
-        beardog_errors::process_env::set_var("TEST_PORT_EXISTS", TEST_DISCOVERY_PORT.to_string());
-        let result: u16 = get_env_as("TEST_PORT_EXISTS", TEST_DEFAULT_PORT);
+        let mut map = HashMap::new();
+        map.insert(
+            "TEST_PORT_EXISTS".to_string(),
+            TEST_DISCOVERY_PORT.to_string(),
+        );
+        let result: u16 =
+            get_env_as_with(env_map_lookup(&map), "TEST_PORT_EXISTS", TEST_DEFAULT_PORT);
         assert_eq!(result, TEST_DISCOVERY_PORT);
-        beardog_errors::process_env::remove_var("TEST_PORT_EXISTS");
     }
 
     #[test]
     fn test_get_env_as_with_invalid_value() {
-        beardog_errors::process_env::set_var("TEST_PORT_INVALID", "not_a_number");
-        let result: u16 = get_env_as("TEST_PORT_INVALID", TEST_DEFAULT_PORT);
-        assert_eq!(result, TEST_DEFAULT_PORT); // Should fall back to default
-        beardog_errors::process_env::remove_var("TEST_PORT_INVALID");
+        let mut map = HashMap::new();
+        map.insert("TEST_PORT_INVALID".to_string(), "not_a_number".to_string());
+        let result: u16 =
+            get_env_as_with(env_map_lookup(&map), "TEST_PORT_INVALID", TEST_DEFAULT_PORT);
+        assert_eq!(result, TEST_DEFAULT_PORT);
     }
 
     #[test]
     fn test_try_get_env_required_missing() {
-        beardog_errors::process_env::remove_var("REQUIRED_VAR_MISSING");
-        let err = try_get_env_required("REQUIRED_VAR_MISSING").expect_err("missing var should err");
+        let err = try_get_env_required_with(|_| None, "REQUIRED_VAR_MISSING")
+            .expect_err("missing var should err");
         let msg = err.to_string();
         assert!(
             msg.contains("REQUIRED_VAR_MISSING") && msg.contains("not set"),
@@ -284,24 +322,27 @@ mod tests {
 
     #[test]
     fn test_try_get_env_required_present() {
-        beardog_errors::process_env::set_var("REQUIRED_VAR_PRESENT", "required_value");
-        let result = try_get_env_required("REQUIRED_VAR_PRESENT").expect("var is set");
+        let mut map = HashMap::new();
+        map.insert(
+            "REQUIRED_VAR_PRESENT".to_string(),
+            "required_value".to_string(),
+        );
+        let result = try_get_env_required_with(env_map_lookup(&map), "REQUIRED_VAR_PRESENT")
+            .expect("var is set");
         assert_eq!(result, "required_value");
-        beardog_errors::process_env::remove_var("REQUIRED_VAR_PRESENT");
     }
 
     #[test]
     fn test_network_config_from_env_custom() {
         const TEST_CUSTOM_PORT: u16 = 3000;
-        beardog_errors::process_env::set_var("CUSTOM_HOST", "192.168.1.1");
-        beardog_errors::process_env::set_var("CUSTOM_PORT", TEST_CUSTOM_PORT.to_string());
+        let mut map = HashMap::new();
+        map.insert("CUSTOM_HOST".to_string(), "192.168.1.1".to_string());
+        map.insert("CUSTOM_PORT".to_string(), TEST_CUSTOM_PORT.to_string());
 
-        let config = NetworkConfig::from_env("CUSTOM");
+        let runtime = test_runtime_defaults();
+        let config = NetworkConfig::from_env_with_runtime("CUSTOM", env_map_lookup(&map), &runtime);
         assert_eq!(config.host, "192.168.1.1");
         assert_eq!(config.port, TEST_CUSTOM_PORT);
-
-        beardog_errors::process_env::remove_var("CUSTOM_HOST");
-        beardog_errors::process_env::remove_var("CUSTOM_PORT");
     }
 
     #[test]
@@ -339,7 +380,7 @@ mod tests {
 
     #[test]
     fn test_timeout_config_from_env_defaults() {
-        let config = TimeoutConfig::from_env("DEFAULT");
+        let config = TimeoutConfig::from_env_with("DEFAULT", |_| None);
         assert_eq!(config.connect_timeout, Duration::from_millis(5000));
         assert_eq!(config.request_timeout, Duration::from_millis(30000));
         assert_eq!(config.idle_timeout, Duration::from_millis(60000));
@@ -347,41 +388,27 @@ mod tests {
 
     #[test]
     fn test_timeout_config_from_env_custom() {
-        beardog_errors::process_env::set_var("CUSTOM_CONNECT_TIMEOUT_MS", "1000");
-        beardog_errors::process_env::set_var("CUSTOM_REQUEST_TIMEOUT_MS", "10000");
-        beardog_errors::process_env::set_var("CUSTOM_IDLE_TIMEOUT_MS", "30000");
+        let mut map = HashMap::new();
+        map.insert("CUSTOM_CONNECT_TIMEOUT_MS".to_string(), "1000".to_string());
+        map.insert("CUSTOM_REQUEST_TIMEOUT_MS".to_string(), "10000".to_string());
+        map.insert("CUSTOM_IDLE_TIMEOUT_MS".to_string(), "30000".to_string());
 
-        let config = TimeoutConfig::from_env("CUSTOM");
+        let config = TimeoutConfig::from_env_with("CUSTOM", env_map_lookup(&map));
         assert_eq!(config.connect_timeout, Duration::from_millis(1000));
         assert_eq!(config.request_timeout, Duration::from_millis(10000));
         assert_eq!(config.idle_timeout, Duration::from_millis(30000));
-
-        beardog_errors::process_env::remove_var("CUSTOM_CONNECT_TIMEOUT_MS");
-        beardog_errors::process_env::remove_var("CUSTOM_REQUEST_TIMEOUT_MS");
-        beardog_errors::process_env::remove_var("CUSTOM_IDLE_TIMEOUT_MS");
     }
 
     #[test]
-    fn test_discovery_config_from_env_custom() {
-        // Use a lock to ensure this test runs serially with other env-modifying tests
-        let _lock = ENV_TEST_MUTEX
-            .lock()
-            .expect("ENV_TEST_MUTEX should not be poisoned");
+    fn test_discovery_config_custom_values() {
+        use std::time::Duration;
 
-        // Save current env state
-        let old_endpoint = env::var("BEARDOG_DISCOVERY_ENDPOINT").ok();
-        let old_timeout = env::var("BEARDOG_DISCOVERY_TIMEOUT_SECS").ok();
-        let old_retry = env::var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS").ok();
-
-        beardog_errors::process_env::set_var(
-            "BEARDOG_DISCOVERY_ENDPOINT",
-            "http://custom:9000/api",
-        );
-        beardog_errors::process_env::set_var("BEARDOG_DISCOVERY_TIMEOUT_SECS", "60");
-        beardog_errors::process_env::set_var("BEARDOG_DISCOVERY_MAX_ATTEMPTS", "5");
-
-        let config = DiscoveryConfig::from_env();
-        // Canonical DiscoveryConfig from_env() loads BEARDOG_DISCOVERY_ENDPOINT into endpoints vec
+        let config = DiscoveryConfig {
+            endpoints: vec!["http://custom:9000/api".to_string()],
+            timeout: Duration::from_secs(60),
+            max_attempts: 5,
+            ..DiscoveryConfig::default()
+        };
         assert!(
             config
                 .endpoints
@@ -390,49 +417,16 @@ mod tests {
         );
         assert_eq!(config.timeout.as_secs(), 60);
         assert_eq!(config.max_attempts, 5);
-
-        // Restore original env state
-        match old_endpoint {
-            Some(val) => beardog_errors::process_env::set_var("BEARDOG_DISCOVERY_ENDPOINT", val),
-            None => beardog_errors::process_env::remove_var("BEARDOG_DISCOVERY_ENDPOINT"),
-        }
-        match old_timeout {
-            Some(val) => {
-                beardog_errors::process_env::set_var("BEARDOG_DISCOVERY_TIMEOUT_SECS", val)
-            }
-            None => beardog_errors::process_env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS"),
-        }
-        match old_retry {
-            Some(val) => {
-                beardog_errors::process_env::set_var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS", val)
-            }
-            None => beardog_errors::process_env::remove_var("BEARDOG_DISCOVERY_RETRY_ATTEMPTS"),
-        }
     }
 
     #[test]
     fn test_hsm_config_from_env_custom() {
-        // Lock mutex to prevent parallel test interference with env vars
-        let _lock = ENV_TEST_MUTEX
-            .lock()
-            .expect("ENV_TEST_MUTEX should not be poisoned");
+        let mut map = HashMap::new();
+        map.insert("BEARDOG_HSM_PROVIDER".to_string(), "hardware".to_string());
+        map.insert("BEARDOG_HSM_TIMEOUT_MS".to_string(), "10000".to_string());
+        map.insert("BEARDOG_HSM_RETRY_ATTEMPTS".to_string(), "5".to_string());
 
-        // Use a guard to ensure cleanup even if test fails
-        struct EnvGuard;
-        impl Drop for EnvGuard {
-            fn drop(&mut self) {
-                beardog_errors::process_env::remove_var("BEARDOG_HSM_PROVIDER");
-                beardog_errors::process_env::remove_var("BEARDOG_HSM_TIMEOUT_MS");
-                beardog_errors::process_env::remove_var("BEARDOG_HSM_RETRY_ATTEMPTS");
-            }
-        }
-        let _guard = EnvGuard;
-
-        beardog_errors::process_env::set_var("BEARDOG_HSM_PROVIDER", "hardware");
-        beardog_errors::process_env::set_var("BEARDOG_HSM_TIMEOUT_MS", "10000");
-        beardog_errors::process_env::set_var("BEARDOG_HSM_RETRY_ATTEMPTS", "5");
-
-        let config = HsmConfig::from_env();
+        let config = HsmConfig::from_env_with(env_map_lookup(&map));
         assert_eq!(config.provider, "hardware");
         assert_eq!(config.timeout_ms, 10000);
         assert_eq!(config.retry_attempts, 5);

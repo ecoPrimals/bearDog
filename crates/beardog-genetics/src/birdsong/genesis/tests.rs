@@ -204,9 +204,7 @@ async fn test_hardware_entropy_determinism() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn test_verify_witness_authority_permissionless_mode() {
-    beardog_errors::process_env::set_var("BEARDOG_GENESIS_MODE", "permissionless");
     let provider = GenesisLineageProvider::new().await.unwrap();
 
     let witness = GenesisWitness {
@@ -217,8 +215,7 @@ async fn test_verify_witness_authority_permissionless_mode() {
         signature: vec![0u8; 64],
     };
 
-    let result = provider.verify_witness_authority(&witness);
-    beardog_errors::process_env::remove_var("BEARDOG_GENESIS_MODE");
+    let result = provider.verify_witness_authority(&witness, "permissionless");
     assert!(result.is_ok());
 }
 
@@ -234,7 +231,7 @@ async fn test_verify_witness_authority_invalid_pubkey_length() {
         signature: vec![0u8; 64],
     };
 
-    let result = provider.verify_witness_authority(&witness);
+    let result = provider.verify_witness_authority(&witness, "permissioned");
     assert!(result.is_err());
 }
 
@@ -250,14 +247,12 @@ async fn test_verify_witness_authority_empty_signature() {
         signature: vec![],
     };
 
-    let result = provider.verify_witness_authority(&witness);
+    let result = provider.verify_witness_authority(&witness, "permissioned");
     assert!(result.is_err());
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn test_verify_witness_authority_unknown_mode() {
-    beardog_errors::process_env::set_var("BEARDOG_GENESIS_MODE", "unknown_mode");
     let provider = GenesisLineageProvider::new().await.unwrap();
 
     let witness = GenesisWitness {
@@ -268,8 +263,7 @@ async fn test_verify_witness_authority_unknown_mode() {
         signature: vec![0u8; 64],
     };
 
-    let result = provider.verify_witness_authority(&witness);
-    beardog_errors::process_env::remove_var("BEARDOG_GENESIS_MODE");
+    let result = provider.verify_witness_authority(&witness, "unknown_mode");
     assert!(result.is_err());
 }
 
@@ -286,7 +280,7 @@ async fn test_verify_witness_authority_pubkey_mismatch() {
         signature: vec![0u8; 64],
     };
 
-    let result = provider.verify_witness_authority(&witness);
+    let result = provider.verify_witness_authority(&witness, "permissioned");
     assert!(result.is_err());
     assert!(result.unwrap_err().to_string().contains("does not match"));
 }

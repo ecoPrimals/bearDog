@@ -118,7 +118,7 @@ impl Default for InfantPatternConfig {
             min_observations: 5,
             confidence_threshold: 0.7,
             pattern_max_age: Duration::from_secs(
-                std::env::var("BEARDOG_PATTERN_MAX_AGE_SECS")
+                beardog_errors::process_env::var("BEARDOG_PATTERN_MAX_AGE_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(3600) // 1 hour default

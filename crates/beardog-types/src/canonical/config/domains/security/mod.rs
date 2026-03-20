@@ -56,23 +56,23 @@ pub struct ConsolidatedSecurityConfiguration {
     /// **AUTHENTICATION & AUTHORIZATION**
     /// Identity verification (MFA, sessions). **Default:** [`AuthenticationConfiguration::default()`].
     pub authentication: AuthenticationConfiguration,
-    /// RBAC/ABAC policy sources. **Default:** [`AuthorizationConfiguration::default()`].
+    /// RBAC/ABAC policy sources. **Default:** `AuthorizationConfiguration::default()`.
     pub authorization: AuthorizationConfiguration,
-    /// Fine-grained resource ACLs. **Default:** [`AccessControlConfiguration::default()`].
+    /// Fine-grained resource ACLs. **Default:** `AccessControlConfiguration::default()`.
     pub access_control: AccessControlConfiguration,
 
     /// **CRYPTOGRAPHIC OPERATIONS**
-    /// Data-protection algorithms and key rotation. **Default:** [`EncryptionConfiguration::default()`].
+    /// Data-protection algorithms and key rotation. **Default:** `EncryptionConfiguration::default()`.
     pub encryption: EncryptionConfiguration,
-    /// Lifecycle for signing/encryption keys. **Default:** [`KeyManagementConfiguration::default()`].
+    /// Lifecycle for signing/encryption keys. **Default:** `KeyManagementConfiguration::default()`.
     pub key_management: KeyManagementConfiguration,
-    /// Which software/HSM providers may satisfy crypto ops. **Default:** [`CryptoProviderConfiguration::default()`].
+    /// Which software/HSM providers may satisfy crypto ops. **Default:** `CryptoProviderConfiguration::default()`.
     pub crypto_provider: CryptoProviderConfiguration,
 
     /// **SECURITY MONITORING & AUDITING**
     /// Immutable audit sinks and retention. **Default:** [`AuditConfiguration::default()`].
     pub audit: AuditConfiguration,
-    /// SIEM hooks and security metrics. **Default:** [`SecurityMonitoringConfiguration::default()`].
+    /// SIEM hooks and security metrics. **Default:** `SecurityMonitoringConfiguration::default()`.
     pub monitoring: SecurityMonitoringConfiguration,
     /// API and IPC rate limits. **Default:** [`super::network::RateLimitConfig::default()`].
     pub rate_limiting: super::network::RateLimitConfig,
@@ -84,17 +84,17 @@ pub struct ConsolidatedSecurityConfiguration {
     pub threat_response: ThreatResponseConfiguration,
 
     /// **ADVANCED SECURITY FEATURES**
-    /// Genetics-aware key evolution policy. **Default:** [`GeneticSecurityConfiguration::default()`].
+    /// Genetics-aware key evolution policy. **Default:** `GeneticSecurityConfiguration::default()`.
     pub genetic_security: GeneticSecurityConfiguration,
-    /// Node membership and attestation. **Default:** [`EcosystemMembershipConfiguration::default()`].
+    /// Node membership and attestation. **Default:** `EcosystemMembershipConfiguration::default()`.
     pub ecosystem_membership: EcosystemMembershipConfiguration,
-    /// Trust scoring between primals. **Default:** [`TrustComputationConfiguration::default()`].
+    /// Trust scoring between primals. **Default:** `TrustComputationConfiguration::default()`.
     pub trust_computation: TrustComputationConfiguration,
 
     /// **COMPLIANCE & GOVERNANCE**
-    /// Regulatory mapping (FIPS, SOC2, etc.). **Default:** [`SecurityComplianceConfiguration::default()`].
+    /// Regulatory mapping (FIPS, SOC2, etc.). **Default:** `SecurityComplianceConfiguration::default()`.
     pub compliance: SecurityComplianceConfiguration,
-    /// Data residency and sovereignty flags. **Default:** [`DataSovereigntyConfiguration::default()`].
+    /// Data residency and sovereignty flags. **Default:** `DataSovereigntyConfiguration::default()`.
     pub data_sovereignty: DataSovereigntyConfiguration,
 }
 

@@ -31,6 +31,9 @@
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
+mod command_runner;
+pub use command_runner::{CommandRunner, MockAdbCommandRunner};
+
 /// Android deployment: NDK verification, build environment checks, and APK-oriented workflows.
 pub mod android;
 /// Rust/Cargo build orchestration for deployment targets (e.g. Android triples).

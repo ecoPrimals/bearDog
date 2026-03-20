@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Basic E2E Workflow Test
 //!
 //! This test demonstrates a complete end-to-end workflow validation

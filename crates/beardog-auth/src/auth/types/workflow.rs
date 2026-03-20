@@ -102,7 +102,7 @@ pub enum EscalationCondition {
     SecurityThreat,
 }
 
-/// Lifecycle state reported by a [`WorkflowEngine`] for a submitted workflow.
+/// Lifecycle state reported by a [`WorkflowEngine`](crate::auth::types::node_registry::WorkflowEngine) for a submitted workflow.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum WorkflowStatus {
     /// Accepted but not yet assigned to executors.

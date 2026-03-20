@@ -44,14 +44,18 @@ impl Default for UniversalAdapterConfig {
                 ProtocolType::WebSocket,
                 ProtocolType::Grpc,
             ],
-            connection_timeout_ms: std::env::var("BEARDOG_ADAPTER_CONNECTION_TIMEOUT_MS")
-                .ok()
-                .and_then(|t| t.parse().ok())
-                .unwrap_or(30000), // 30 seconds default
-            request_timeout_ms: std::env::var("BEARDOG_ADAPTER_REQUEST_TIMEOUT_MS")
-                .ok()
-                .and_then(|t| t.parse().ok())
-                .unwrap_or(10000), // 10 seconds default
+            connection_timeout_ms: beardog_errors::process_env::var(
+                "BEARDOG_ADAPTER_CONNECTION_TIMEOUT_MS",
+            )
+            .ok()
+            .and_then(|t| t.parse().ok())
+            .unwrap_or(30000), // 30 seconds default
+            request_timeout_ms: beardog_errors::process_env::var(
+                "BEARDOG_ADAPTER_REQUEST_TIMEOUT_MS",
+            )
+            .ok()
+            .and_then(|t| t.parse().ok())
+            .unwrap_or(10000), // 10 seconds default
             max_retries: 3,
             auto_reconnect: true,
             health_check_interval_secs: 30,

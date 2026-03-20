@@ -213,4 +213,31 @@ mod tests {
         assert!(display.contains("50"));
         assert!(display.contains("100"));
     }
+
+    #[test]
+    fn test_validation_error_above_maximum_display() {
+        let e = ValidationError::AboveMaximum {
+            value: "999".to_string(),
+            maximum: "100".to_string(),
+            field: "batch".to_string(),
+        };
+        let s = e.to_string();
+        assert!(s.contains("batch"));
+        assert!(s.contains("999"));
+        assert!(s.contains("exceeds"));
+    }
+
+    #[test]
+    fn test_validation_error_out_of_range_display() {
+        let e = ValidationError::OutOfRange {
+            value: "3".to_string(),
+            min: "10".to_string(),
+            max: "20".to_string(),
+            field: "depth".to_string(),
+        };
+        let s = e.to_string();
+        assert!(s.contains("depth"));
+        assert!(s.contains("3"));
+        assert!(s.contains("[10, 20]"));
+    }
 }

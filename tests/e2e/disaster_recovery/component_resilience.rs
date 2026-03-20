@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Component Resilience & Failure Scenarios
 //!
 //! Tests component crash, recovery, and failover mechanisms.

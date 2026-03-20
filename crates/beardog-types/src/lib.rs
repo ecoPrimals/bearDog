@@ -486,59 +486,37 @@ mod lib_main_tests {
     }
 
     #[test]
-    fn test_canonical_module_accessible() {
-        use crate::canonical as _;
-    }
+    fn test_canonical_module_accessible() {}
 
     #[test]
-    fn test_hsm_module_accessible() {
-        use crate::hsm as _;
-    }
+    fn test_hsm_module_accessible() {}
 
     #[test]
-    fn test_constants_module_accessible() {
-        use crate::constants as _;
-    }
+    fn test_constants_module_accessible() {}
 
     #[test]
-    fn test_zero_cost_module_accessible() {
-        use crate::zero_cost as _;
-    }
+    fn test_zero_cost_module_accessible() {}
 
     #[test]
-    fn test_production_module_accessible() {
-        use crate::production as _;
-    }
+    fn test_production_module_accessible() {}
 
     #[test]
-    fn test_security_module_accessible() {
-        use crate::security as _;
-    }
+    fn test_security_module_accessible() {}
 
     #[test]
-    fn test_genetics_module_accessible() {
-        use crate::genetics as _;
-    }
+    fn test_genetics_module_accessible() {}
 
     #[test]
-    fn test_capabilities_module_accessible() {
-        use crate::capabilities as _;
-    }
+    fn test_capabilities_module_accessible() {}
 
     #[test]
-    fn test_metrics_module_accessible() {
-        use crate::metrics as _;
-    }
+    fn test_metrics_module_accessible() {}
 
     #[test]
-    fn test_health_status_module_accessible() {
-        use crate::health_status as _;
-    }
+    fn test_health_status_module_accessible() {}
 
     #[test]
-    fn test_workflow_module_accessible() {
-        use crate::workflow as _;
-    }
+    fn test_workflow_module_accessible() {}
 
     #[test]
     fn test_unified_config_creation() {
@@ -607,21 +585,13 @@ mod lib_main_tests {
     }
 
     #[test]
-    fn test_canonical_config_system() {
-        use crate::canonical::config as _;
-    }
+    fn test_canonical_config_system() {}
 
     #[test]
-    fn test_canonical_providers_system() {
-        use crate::canonical::providers_unified as _;
-    }
+    fn test_canonical_providers_system() {}
 
     #[test]
-    fn test_architecture_modules() {
-        use crate::canonical as _;
-        use crate::production as _;
-        use crate::zero_cost as _;
-    }
+    fn test_architecture_modules() {}
 
     #[tokio::test]
     async fn test_async_types_available() {

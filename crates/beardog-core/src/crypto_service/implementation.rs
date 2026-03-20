@@ -147,7 +147,7 @@ impl BearDogCryptoService {
         }
 
         // Key not found - generate based on environment
-        let rsa_key_mode = std::env::var("BEARDOG_RSA_KEY_MODE")
+        let rsa_key_mode = beardog_errors::process_env::var("BEARDOG_RSA_KEY_MODE")
             .unwrap_or_else(|_| "generate".to_string())
             .to_lowercase();
 
@@ -166,7 +166,7 @@ impl BearDogCryptoService {
     /// Generate and store RSA key (internal)
     fn generate_and_store_rsa_key(&self, key_id: &str) -> Result<Vec<u8>> {
         // Determine key size from environment
-        let bits = std::env::var("BEARDOG_RSA_KEY_SIZE")
+        let bits = beardog_errors::process_env::var("BEARDOG_RSA_KEY_SIZE")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(4096); // Default: RSA-4096 for maximum security

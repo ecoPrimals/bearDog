@@ -35,12 +35,12 @@ impl UniversalProvider for BearDogCore {
             description: "Comprehensive security and encryption services".to_string(),
             endpoint: ServiceEndpoint {
                 protocol: "https".to_string(),
-                host: std::env::var("BEARDOG_SECURITY_HOST")
+                host: beardog_errors::process_env::var("BEARDOG_SECURITY_HOST")
                     .unwrap_or_else(|_| {
-                std::env::var("SECURITY_SERVICE_HOST")
+                beardog_errors::process_env::var("SECURITY_SERVICE_HOST")
                     .unwrap_or_else(|_| "beardog-security.ecosystem.internal".to_string())
             }),
-                port: std::env::var("BEARDOG_SECURITY_PORT")
+                port: beardog_errors::process_env::var("BEARDOG_SECURITY_PORT")
                     .ok()
                     .and_then(|p| p.parse().ok())
                     .unwrap_or(8443),
@@ -66,12 +66,12 @@ impl UniversalProvider for BearDogCore {
             description: "AI-powered threat detection and response".to_string(),
             endpoint: ServiceEndpoint {
                 protocol: "https".to_string(),
-                host: std::env::var("BEARDOG_THREAT_HOST")
+                host: beardog_errors::process_env::var("BEARDOG_THREAT_HOST")
                     .unwrap_or_else(|_| {
-                std::env::var("THREAT_SERVICE_HOST")
+                beardog_errors::process_env::var("THREAT_SERVICE_HOST")
                     .unwrap_or_else(|_| "beardog-threat.ecosystem.internal".to_string())
             }),
-                port: std::env::var("BEARDOG_THREAT_PORT")
+                port: beardog_errors::process_env::var("BEARDOG_THREAT_PORT")
                     .ok()
                     .and_then(|p| p.parse().ok())
                     .unwrap_or(8080),
@@ -97,12 +97,12 @@ impl UniversalProvider for BearDogCore {
             description: "Compliance monitoring and audit services".to_string(),
             endpoint: ServiceEndpoint {
                 protocol: "https".to_string(),
-                host: std::env::var("BEARDOG_COMPLIANCE_HOST")
+                host: beardog_errors::process_env::var("BEARDOG_COMPLIANCE_HOST")
                     .unwrap_or_else(|_| {
-                std::env::var("COMPLIANCE_SERVICE_HOST")
+                beardog_errors::process_env::var("COMPLIANCE_SERVICE_HOST")
                     .unwrap_or_else(|_| "beardog-compliance.ecosystem.internal".to_string())
             }),
-                port: std::env::var("BEARDOG_COMPLIANCE_PORT")
+                port: beardog_errors::process_env::var("BEARDOG_COMPLIANCE_PORT")
                     .unwrap_or_else(|_| "8090".to_string())
                     .parse()
                     .unwrap_or(8090),
@@ -114,12 +114,12 @@ impl UniversalProvider for BearDogCore {
             description: "Multi-party workflow orchestration".to_string(),
             endpoint: ServiceEndpoint {
                 protocol: "https".to_string(),
-                host: std::env::var("BEARDOG_WORKFLOW_HOST")
+                host: beardog_errors::process_env::var("BEARDOG_WORKFLOW_HOST")
                     .unwrap_or_else(|_| {
-                std::env::var("WORKFLOW_SERVICE_HOST")
+                beardog_errors::process_env::var("WORKFLOW_SERVICE_HOST")
                     .unwrap_or_else(|_| "beardog-workflow.ecosystem.internal".to_string())
             }),
-                port: std::env::var("BEARDOG_WORKFLOW_PORT")
+                port: beardog_errors::process_env::var("BEARDOG_WORKFLOW_PORT")
                     .unwrap_or_else(|_| "8100".to_string())
                     .parse()
                     .unwrap_or(8100),

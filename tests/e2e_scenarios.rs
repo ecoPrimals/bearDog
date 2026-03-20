@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! End-to-End Test Scenarios for `BearDog`
 //!
 //! Comprehensive E2E tests covering multi-component interactions,

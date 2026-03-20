@@ -6,6 +6,7 @@
 
 use crate::btsp_provider::BeardogBtspProvider;
 use crate::tunnel::hsm::HsmManager;
+use crate::tunnel::hsm::manager::HsmAutoInitConfig;
 use crate::unix_socket_ipc::UnixSocketIpcServer;
 use beardog_core::self_knowledge::PrimalSelfKnowledge;
 use beardog_core::socket_config::SocketConfig;
@@ -14,6 +15,46 @@ use beardog_genetics::EcosystemGeneticEngine;
 use std::sync::Arc;
 use tokio::signal;
 use tracing::{debug, error, info, warn};
+
+/// Neural API registration fields (inject in tests; use [`Self::from_env`] at process startup).
+#[derive(Debug, Clone, Default)]
+pub struct NeuralRegistrationParams {
+    /// `BEARDOG_NEURAL_REGISTRATION_INSTANCE`
+    pub instance_override: Option<String>,
+    /// `PRIMAL_TYPE`
+    pub primal_type: Option<String>,
+    /// `BEARDOG_PRIMAL_TYPE`
+    pub beardog_primal_type: Option<String>,
+}
+
+impl NeuralRegistrationParams {
+    /// Read `BEARDOG_NEURAL_REGISTRATION_INSTANCE`, `PRIMAL_TYPE`, `BEARDOG_PRIMAL_TYPE`.
+    pub fn from_env() -> Self {
+        Self {
+            instance_override: beardog_errors::process_env::var(
+                "BEARDOG_NEURAL_REGISTRATION_INSTANCE",
+            )
+            .ok(),
+            primal_type: beardog_errors::process_env::var("PRIMAL_TYPE").ok(),
+            beardog_primal_type: beardog_errors::process_env::var("BEARDOG_PRIMAL_TYPE").ok(),
+        }
+    }
+
+    /// Registry instance id (capability-oriented; not a fixed product name).
+    pub fn registration_instance_id(
+        &self,
+        identity: &beardog_types::primal_identity::PrimalIdentity,
+    ) -> String {
+        self.instance_override.clone().unwrap_or_else(|| {
+            let role = self
+                .primal_type
+                .clone()
+                .or_else(|| self.beardog_primal_type.clone())
+                .unwrap_or_else(|| "security".to_string());
+            format!("{role}-{}", identity.node_id())
+        })
+    }
+}
 
 /// Run BearDog in server mode
 ///
@@ -52,13 +93,17 @@ pub async fn run(
 
     // Step 1: Initialize HSM Manager
     info!("🔐 Initializing HSM Manager...");
-    let hsm_mode = std::env::var("BEARDOG_HSM_MODE").unwrap_or_else(|_| "software".to_string());
-    info!("   HSM Mode: {}", hsm_mode);
+    let hsm_init = HsmAutoInitConfig::from_env();
+    info!("   HSM Mode: {}", hsm_init.mode);
 
-    let hsm = Arc::new(HsmManager::auto_initialize().await.map_err(|e| {
-        error!("Failed to initialize HSM: {}", e);
-        e
-    })?);
+    let hsm = Arc::new(
+        HsmManager::auto_initialize_with_config(hsm_init)
+            .await
+            .map_err(|e| {
+                error!("Failed to initialize HSM: {}", e);
+                e
+            })?,
+    );
     info!("✅ HSM Manager initialized successfully\n");
 
     // Step 2: Initialize Genetic Engine
@@ -70,7 +115,7 @@ pub async fn run(
     info!("✅ Genetic Engine initialized\n");
 
     // Step 3: Load Family Seed (if provided)
-    if let Ok(family_seed) = std::env::var("BEARDOG_FAMILY_SEED") {
+    if let Ok(family_seed) = beardog_errors::process_env::var("BEARDOG_FAMILY_SEED") {
         info!("👨‍👩‍👧‍👦 Family lineage seed detected");
         let family_id: String = family_seed
             .chars()
@@ -162,7 +207,8 @@ pub async fn run(
 
     // Step 7.5: Register with discovery (Neural API first, then legacy capability registry client)
     info!("🌐 Registering with discovery service...");
-    match register_with_discovery_service(&socket_config).await {
+    let neural_registration = NeuralRegistrationParams::from_env();
+    match register_with_discovery_service(&socket_config, &neural_registration).await {
         Ok(()) => {
             info!("✅ Successfully registered with discovery service");
             info!("   Other primals can now discover BearDog via capabilities\n");
@@ -228,7 +274,10 @@ pub async fn run(
 ///
 /// Ok(()) if registered successfully with any service, Err if all methods fail.
 /// Non-fatal - BearDog can operate standalone without discovery.
-async fn register_with_discovery_service(socket_config: &SocketConfig) -> anyhow::Result<()> {
+async fn register_with_discovery_service(
+    socket_config: &SocketConfig,
+    neural_registration: &NeuralRegistrationParams,
+) -> anyhow::Result<()> {
     use anyhow::Context;
     use beardog_ipc::{discover_neural_api_socket, register_with_neural_api};
     use beardog_types::primal_identity::PrimalIdentity;
@@ -241,15 +290,7 @@ async fn register_with_discovery_service(socket_config: &SocketConfig) -> anyhow
         let identity = PrimalIdentity::from_env()
             .context("Failed to load primal identity for registration")?;
 
-        // Instance id for the registry (capability-oriented default, not a product name).
-        // Override with BEARDOG_NEURAL_REGISTRATION_INSTANCE; role from PRIMAL_TYPE / BEARDOG_PRIMAL_TYPE.
-        let registration_instance = std::env::var("BEARDOG_NEURAL_REGISTRATION_INSTANCE")
-            .unwrap_or_else(|_| {
-                let role = std::env::var("PRIMAL_TYPE")
-                    .or_else(|_| std::env::var("BEARDOG_PRIMAL_TYPE"))
-                    .unwrap_or_else(|_| "security".to_string());
-                format!("{role}-{}", identity.node_id())
-            });
+        let registration_instance = neural_registration.registration_instance_id(&identity);
         let socket_path = socket_config.socket_path_string();
 
         match register_with_neural_api(&neural_socket, &registration_instance, &socket_path).await {
@@ -389,5 +430,23 @@ async fn wait_for_shutdown() {
         () = terminate => {
             info!("Received SIGTERM");
         },
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Unit tests (same module as `display_banner` — exercises startup banner logic
+// without binding sockets or running the full `run` lifecycle).
+// -----------------------------------------------------------------------------
+
+#[cfg(test)]
+mod banner_tests {
+    use super::display_banner;
+    use beardog_core::self_knowledge::PrimalSelfKnowledge;
+
+    #[test]
+    fn display_banner_smoke_with_discovered_self_knowledge() {
+        let sk = PrimalSelfKnowledge::discover().expect("discover self-knowledge");
+        display_banner(&sk, false);
+        display_banner(&sk, true);
     }
 }

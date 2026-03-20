@@ -487,28 +487,28 @@ impl EcosystemOptimizerConfig {
     #[must_use]
     pub fn from_env() -> Self {
         Self {
-            max_connections: std::env::var("BEARDOG_OPTIMIZER_MAX_CONNECTIONS")
+            max_connections: beardog_errors::process_env::var("BEARDOG_OPTIMIZER_MAX_CONNECTIONS")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(100),
             connection_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_OPTIMIZER_CONNECTION_TIMEOUT_SECS")
+                beardog_errors::process_env::var("BEARDOG_OPTIMIZER_CONNECTION_TIMEOUT_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30),
             ),
             cache_ttl: Duration::from_secs(
-                std::env::var("BEARDOG_OPTIMIZER_CACHE_TTL_SECS")
+                beardog_errors::process_env::var("BEARDOG_OPTIMIZER_CACHE_TTL_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(300),
             ),
-            rate_limit: std::env::var("BEARDOG_OPTIMIZER_RATE_LIMIT")
+            rate_limit: beardog_errors::process_env::var("BEARDOG_OPTIMIZER_RATE_LIMIT")
                 .ok()
                 .and_then(|r| r.parse().ok())
                 .unwrap_or(1000),
             health_check_interval: Duration::from_secs(
-                std::env::var("BEARDOG_OPTIMIZER_HEALTH_CHECK_INTERVAL_SECS")
+                beardog_errors::process_env::var("BEARDOG_OPTIMIZER_HEALTH_CHECK_INTERVAL_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(60),

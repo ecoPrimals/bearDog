@@ -57,9 +57,9 @@ async fn test_zero_hardcoded_knowledge() -> Result<(), Box<dyn std::error::Error
 
     // ✅ SOVEREIGNTY COMPLIANCE: Primal type should be self-discovered or environment-configured
     // No hardcoded primal type enforcement - could be beardog, songbird, toadstool, or any primal
-    let primal_type = std::env::var("PRIMAL_TYPE")
-        .or_else(|_| std::env::var("SERVICE_TYPE"))
-        .unwrap_or_else(|_| "primal".to_string());
+    let primal_type = PrimalIdEnvInputs::from_env()
+        .primal_type
+        .unwrap_or_else(|| "primal".to_string());
 
     assert!(
         identity
@@ -149,8 +149,8 @@ async fn test_multiple_engine_creation() -> Result<(), Box<dyn std::error::Error
 
 #[tokio::test]
 async fn test_primal_id_uniqueness() -> Result<(), Box<dyn std::error::Error>> {
-    let id1 = SelfDiscoveryEngine::generate_primal_id();
-    let id2 = SelfDiscoveryEngine::generate_primal_id();
+    let id1 = SelfDiscoveryEngine::generate_primal_id_from_inputs(&PrimalIdEnvInputs::default());
+    let id2 = SelfDiscoveryEngine::generate_primal_id_from_inputs(&PrimalIdEnvInputs::default());
 
     assert_ne!(id1, id2, "Primal IDs should be unique");
     Ok(())
@@ -158,7 +158,8 @@ async fn test_primal_id_uniqueness() -> Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::test]
 async fn test_primal_id_format() -> Result<(), Box<dyn std::error::Error>> {
-    let primal_id = SelfDiscoveryEngine::generate_primal_id();
+    let primal_id =
+        SelfDiscoveryEngine::generate_primal_id_from_inputs(&PrimalIdEnvInputs::default());
 
     assert!(!primal_id.is_empty(), "Primal ID should not be empty");
     assert!(
@@ -320,9 +321,10 @@ async fn test_capability_detection_functions() -> Result<(), Box<dyn std::error:
 
 #[tokio::test]
 async fn test_endpoint_discovery_functions() -> Result<(), Box<dyn std::error::Error>> {
-    let local = SelfDiscoveryEngine::discover_local_endpoint();
-    let network = SelfDiscoveryEngine::discover_network_endpoint();
-    let mesh = SelfDiscoveryEngine::discover_mesh_endpoint();
+    let inputs = SelfDiscoveryEnvInputs::default();
+    let local = SelfDiscoveryEngine::discover_local_endpoint(&inputs);
+    let network = SelfDiscoveryEngine::discover_network_endpoint(&inputs);
+    let mesh = SelfDiscoveryEngine::discover_mesh_endpoint(&inputs);
 
     assert!(local.url.starts_with("http://"), "Local should use HTTP");
     assert!(
@@ -387,7 +389,11 @@ async fn test_metadata_building() -> Result<(), Box<dyn std::error::Error>> {
         auto_detected: true,
     }];
 
-    let metadata = SelfDiscoveryEngine::build_self_metadata("test-id", &caps);
+    let metadata = SelfDiscoveryEngine::build_self_metadata(
+        "test-id",
+        &caps,
+        &SelfDiscoveryEnvInputs::default(),
+    );
 
     assert!(!metadata.version.is_empty());
     assert_eq!(
@@ -400,29 +406,29 @@ async fn test_metadata_building() -> Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::test]
 async fn test_custom_primal_type() -> Result<(), Box<dyn std::error::Error>> {
-    beardog_errors::process_env::set_var("PRIMAL_TYPE", "test-primal");
-
-    let primal_id = SelfDiscoveryEngine::generate_primal_id();
+    let inputs = PrimalIdEnvInputs {
+        primal_type: Some("test-primal".to_string()),
+        ..Default::default()
+    };
+    let primal_id = SelfDiscoveryEngine::generate_primal_id_from_inputs(&inputs);
     assert!(
         primal_id.starts_with("test-primal"),
         "Should use custom primal type"
     );
-
-    beardog_errors::process_env::remove_var("PRIMAL_TYPE");
     Ok(())
 }
 
 #[tokio::test]
 async fn test_custom_hostname() -> Result<(), Box<dyn std::error::Error>> {
-    beardog_errors::process_env::set_var("HOSTNAME", "test-host-123");
-
-    let primal_id = SelfDiscoveryEngine::generate_primal_id();
+    let inputs = PrimalIdEnvInputs {
+        hostname: Some("test-host-123".to_string()),
+        ..Default::default()
+    };
+    let primal_id = SelfDiscoveryEngine::generate_primal_id_from_inputs(&inputs);
     assert!(
         primal_id.contains("test-hos") || primal_id.contains("test-host"),
         "Should include hostname"
     );
-
-    beardog_errors::process_env::remove_var("HOSTNAME");
     Ok(())
 }
 

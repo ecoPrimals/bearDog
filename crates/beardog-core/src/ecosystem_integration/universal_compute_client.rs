@@ -241,10 +241,7 @@ pub struct ComputeMetrics {
 impl Default for UniversalComputeConfig {
     fn default() -> Self {
         Self {
-            request_timeout_ms: std::env::var("BEARDOG_COMPUTE_REQUEST_TIMEOUT_MS")
-                .ok()
-                .and_then(|t| t.parse().ok())
-                .unwrap_or(30000), // 30 seconds default
+            request_timeout_ms: 30000,
             max_concurrent_requests: 10,
             retry_attempts: 3,
             enable_batching: true,
@@ -255,17 +252,50 @@ impl Default for UniversalComputeConfig {
     }
 }
 
+impl UniversalComputeConfig {
+    /// Load overrides from `BEARDOG_COMPUTE_*` via `std::env::var`.
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
+            request_timeout_ms: std::env::var("BEARDOG_COMPUTE_REQUEST_TIMEOUT_MS")
+                .ok()
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(30000),
+            max_concurrent_requests: 10,
+            retry_attempts: 3,
+            enable_batching: true,
+            batch_size: 5,
+            enable_metrics: true,
+            discovery_config: ComputeDiscoveryConfig::from_env(),
+        }
+    }
+}
+
 impl Default for ComputeDiscoveryConfig {
     fn default() -> Self {
+        Self {
+            discovery_timeout_ms: 5000,
+            cache_duration_ms: 300_000,
+            preferred_architectures: vec![ComputeArchitecture::X86_64, ComputeArchitecture::Arm64],
+            min_performance_score: 0.7,
+            enable_failover: true,
+        }
+    }
+}
+
+impl ComputeDiscoveryConfig {
+    /// Load discovery/cache timeouts from environment.
+    #[must_use]
+    pub fn from_env() -> Self {
         Self {
             discovery_timeout_ms: std::env::var("BEARDOG_COMPUTE_DISCOVERY_TIMEOUT_MS")
                 .ok()
                 .and_then(|t| t.parse().ok())
-                .unwrap_or(5000), // 5 seconds default
+                .unwrap_or(5000),
             cache_duration_ms: std::env::var("BEARDOG_COMPUTE_CACHE_DURATION_MS")
                 .ok()
                 .and_then(|d| d.parse().ok())
-                .unwrap_or(300_000), // 5 minutes default
+                .unwrap_or(300_000),
             preferred_architectures: vec![ComputeArchitecture::X86_64, ComputeArchitecture::Arm64],
             min_performance_score: 0.7,
             enable_failover: true,
@@ -492,5 +522,140 @@ impl UniversalComputeClient {
         info!("✅ Refreshed {} compute capabilities", capabilities_count);
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use beardog_types::canonical::capabilities::{
+        AuthConfig, AuthType, CapabilityType, CircuitBreakerConfig, EndpointConfig, HealthStatus,
+        PerformanceMetrics, ProviderInfo, SecurityLevel, UniversalCapability,
+    };
+    use beardog_types::canonical::providers_unified::core::ProviderType;
+    use std::collections::HashMap;
+
+    fn sample_compute_capability(success_rate: f64) -> UniversalCapability {
+        UniversalCapability {
+            capability_type: CapabilityType::ComputeIntelligence,
+            provider: ProviderInfo {
+                provider_id: "prov-a".to_string(),
+                provider_name: "Test Compute".to_string(),
+                provider_type: ProviderType::Compute,
+                version: "1.0.0".to_string(),
+                region: None,
+            },
+            endpoint: EndpointConfig {
+                base_url: "http://127.0.0.1:9".to_string(),
+                api_version: None,
+                timeout_ms: 1000,
+                max_retries: 1,
+                circuit_breaker: CircuitBreakerConfig::default(),
+            },
+            auth_config: AuthConfig {
+                auth_type: AuthType::None,
+                api_key: None,
+                bearer_token: None,
+                cert_path: None,
+                custom_params: HashMap::new(),
+            },
+            health_status: HealthStatus::Healthy,
+            performance: PerformanceMetrics {
+                avg_response_time_ms: 10.0,
+                success_rate,
+                throughput_rps: 1.0,
+                current_load: 0.1,
+                last_updated: chrono::Utc::now(),
+            },
+            security_level: SecurityLevel::Standard,
+            metadata: HashMap::new(),
+        }
+    }
+
+    #[test]
+    fn universal_compute_config_defaults_are_deterministic_without_env() {
+        let _ = ComputeDiscoveryConfig::default();
+        let c: UniversalComputeConfig = UniversalComputeConfig::default();
+        assert!(c.request_timeout_ms > 0);
+        assert!(c.discovery_config.min_performance_score > 0.0);
+    }
+
+    #[test]
+    fn universal_compute_config_reads_env_overrides() {
+        let c = UniversalComputeConfig {
+            request_timeout_ms: 12000,
+            discovery_config: ComputeDiscoveryConfig {
+                discovery_timeout_ms: 1500,
+                cache_duration_ms: 60000,
+                ..ComputeDiscoveryConfig::default()
+            },
+            ..UniversalComputeConfig::default()
+        };
+        assert_eq!(c.request_timeout_ms, 12000);
+        assert_eq!(c.discovery_config.discovery_timeout_ms, 1500);
+        assert_eq!(c.discovery_config.cache_duration_ms, 60000);
+    }
+
+    #[tokio::test]
+    async fn submit_compute_errors_when_no_providers() {
+        let client = UniversalComputeClient::new(vec![]).expect("client");
+        let req = UniversalComputeRequest {
+            request_id: "r1".to_string(),
+            operation_type: "test".to_string(),
+            input_data: serde_json::json!({}),
+            processing_requirements: ProcessingCapability {
+                cpu_cores: None,
+                memory_gb: None,
+                gpu_units: None,
+                storage_gb: None,
+                architectures: vec![ComputeArchitecture::X86_64],
+                special_capabilities: vec![],
+            },
+            priority: ComputePriority::Normal,
+            optimization: OptimizationType::Balanced,
+            timeout_ms: None,
+            metadata: HashMap::new(),
+        };
+        let err = client.submit_compute(req).await.expect_err("no providers");
+        assert!(format!("{err}").to_lowercase().contains("compute"));
+    }
+
+    #[tokio::test]
+    async fn submit_compute_selects_highest_success_rate() {
+        let caps = vec![
+            sample_compute_capability(0.5),
+            sample_compute_capability(0.99),
+        ];
+        let client = UniversalComputeClient::new(caps).expect("client");
+        let req = UniversalComputeRequest {
+            request_id: "r2".to_string(),
+            operation_type: "analyze".to_string(),
+            input_data: serde_json::json!({"x": 1}),
+            processing_requirements: ProcessingCapability {
+                cpu_cores: Some(1),
+                memory_gb: None,
+                gpu_units: None,
+                storage_gb: None,
+                architectures: vec![],
+                special_capabilities: vec![],
+            },
+            priority: ComputePriority::High,
+            optimization: OptimizationType::Speed,
+            timeout_ms: Some(5000),
+            metadata: HashMap::new(),
+        };
+        let resp = client.submit_compute(req).await.expect("ok");
+        assert!(resp.success);
+        assert_eq!(resp.provider_info.performance_score, 0.99);
+
+        tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+        let m = client.get_metrics().await;
+        assert!(m.total_requests >= 1);
+    }
+
+    #[tokio::test]
+    async fn refresh_capabilities_is_ok() {
+        let client = UniversalComputeClient::new(vec![sample_compute_capability(1.0)]).unwrap();
+        client.refresh_capabilities().await.expect("refresh");
     }
 }

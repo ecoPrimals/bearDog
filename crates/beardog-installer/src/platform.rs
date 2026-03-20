@@ -92,8 +92,8 @@ impl OperatingSystem {
         {
             // Check for Android-specific indicators
             std::path::Path::new("/system/build.prop").exists()
-                || std::env::var("ANDROID_ROOT").is_ok()
-                || std::env::var("ANDROID_DATA").is_ok()
+                || beardog_errors::process_env::var("ANDROID_ROOT").is_ok()
+                || beardog_errors::process_env::var("ANDROID_DATA").is_ok()
         }
 
         #[cfg(not(target_os = "linux"))]
@@ -198,18 +198,18 @@ impl BiomeOSPaths {
     /// Discover runtime directory (fast temporary storage)
     fn discover_runtime_dir() -> Result<PathBuf, PlatformError> {
         // 1. Try XDG_RUNTIME_DIR (Linux, guaranteed fast tmpfs)
-        if let Ok(xdg_runtime) = std::env::var("XDG_RUNTIME_DIR") {
+        if let Ok(xdg_runtime) = beardog_errors::process_env::var("XDG_RUNTIME_DIR") {
             let runtime_dir = PathBuf::from(xdg_runtime).join("biomeos");
             return Ok(runtime_dir);
         }
 
         // 2. Try TMPDIR (macOS, Linux fallback)
-        if let Ok(tmpdir) = std::env::var("TMPDIR") {
+        if let Ok(tmpdir) = beardog_errors::process_env::var("TMPDIR") {
             return Ok(PathBuf::from(tmpdir).join("biomeos"));
         }
 
         // 3. Try TEMP (Windows)
-        if let Ok(temp) = std::env::var("TEMP") {
+        if let Ok(temp) = beardog_errors::process_env::var("TEMP") {
             return Ok(PathBuf::from(temp).join("biomeos"));
         }
 

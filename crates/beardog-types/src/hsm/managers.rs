@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! HSM Manager Types
+//! HSM manager types (DTOs)
 //!
-//! Provides placeholder types for HSM health monitoring and failover management.
-//! These are simple marker types that will be replaced with full implementations.
+//! Serializable identifiers for health and failover components. Runtime monitoring and
+//! failover logic are implemented in `beardog-tunnel` (and related crates), not in these structs.
 
 use serde::{Deserialize, Serialize};
 
-/// Default HSM health monitor
+/// Default HSM health monitor (identity / serialization handle)
 ///
-/// A simple health monitoring implementation for HSM systems.
-/// This is a placeholder that will be expanded with full monitoring capabilities.
+/// Used where a stable, serializable monitor id is required; live health state is tracked elsewhere.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefaultHsmHealthMonitor {
     /// Unique identifier for this monitor
@@ -37,10 +36,9 @@ impl Default for DefaultHsmHealthMonitor {
     }
 }
 
-/// Default HSM failover manager
+/// Default HSM failover manager (identity / serialization handle)
 ///
-/// A simple failover management implementation for HSM systems.
-/// This is a placeholder that will be expanded with full failover capabilities.
+/// Used where a stable, serializable manager id is required; failover policy runs in the tunnel layer.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefaultHsmFailoverManager {
     /// Unique identifier for this failover manager

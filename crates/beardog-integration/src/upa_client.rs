@@ -69,7 +69,7 @@ pub struct RegistrationResponse {
 /// 1. `UPA_PROVIDER` env var (operator override)
 /// 2. `"songbird"` (default UPA implementation)
 fn discover_upa_provider() -> String {
-    std::env::var("UPA_PROVIDER").unwrap_or_else(|_| "songbird".to_string())
+    beardog_errors::process_env::var("UPA_PROVIDER").unwrap_or_else(|_| "songbird".to_string())
 }
 
 /// UPA client for service registration and discovery

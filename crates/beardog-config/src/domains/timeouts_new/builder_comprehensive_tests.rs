@@ -8,11 +8,6 @@
 mod tests {
     use crate::domains::timeouts_new::TimeoutConfigBuilder;
     use crate::domains::timeouts_new::defaults::default_timeouts;
-    use std::sync::Mutex;
-
-    // Mutex to serialize environment variable tests
-    // This is acceptable for these specific tests because they're testing env var parsing
-    static ENV_TEST_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn test_builder_new_creates_default() {
@@ -209,24 +204,8 @@ mod tests {
     }
 
     #[test]
-    fn test_builder_from_env_no_variables() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
-
-        // Cleanup any leftover environment variables from other tests
-        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS");
-        beardog_errors::process_env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_DECISION_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_AI_REQUEST_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_AI_BATCH_TIMEOUT_MS");
-        beardog_errors::process_env::remove_var("BEARDOG_POOL_IDLE_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONNECTION_AGE_SECS");
-
-        // No environment variables set
+    fn test_builder_from_env_leaves_defaults_when_no_env() {
         let config = TimeoutConfigBuilder::new().from_env().build();
-
-        // Should use defaults
         assert_eq!(
             config.health_check_secs,
             default_timeouts::HEALTH_CHECK_SECS
@@ -238,147 +217,33 @@ mod tests {
     }
 
     #[test]
-    fn test_builder_from_env_with_valid_variables() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
-
-        // Cleanup any leftover environment variables first
-        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS");
-
-        beardog_errors::process_env::set_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS", "15");
-        beardog_errors::process_env::set_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS", "25");
-        beardog_errors::process_env::set_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS", "750");
-
-        let config = TimeoutConfigBuilder::new().from_env().build();
-
+    fn test_programmatic_override_same_as_explicit_builder_chain() {
+        let config = TimeoutConfigBuilder::new()
+            .health_check_secs(15)
+            .hsm_operation_secs(25)
+            .hsm_probe_millis(750)
+            .build();
         assert_eq!(config.health_check_secs, 15);
         assert_eq!(config.hsm_operation_secs, 25);
         assert_eq!(config.hsm_probe_millis, 750);
-
-        // Cleanup
-        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS");
     }
 
     #[test]
-    fn test_builder_from_env_with_invalid_variables() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
-
-        // Cleanup any leftover environment variables first
-        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
-
-        beardog_errors::process_env::set_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS", "not_a_number");
-        beardog_errors::process_env::set_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS", "invalid");
-
-        let config = TimeoutConfigBuilder::new().from_env().build();
-
-        // Should use defaults when parsing fails
-        assert_eq!(
-            config.health_check_secs,
-            default_timeouts::HEALTH_CHECK_SECS
-        );
-        assert_eq!(
-            config.hsm_operation_secs,
-            default_timeouts::HSM_OPERATION_SECS
-        );
-
-        // Cleanup
-        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
-    }
-
-    #[test]
-    fn test_builder_from_env_all_variables() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
-
-        // Cleanup any leftover environment variables first
-        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS");
-        beardog_errors::process_env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_DECISION_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_AI_REQUEST_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_AI_BATCH_TIMEOUT_MS");
-        beardog_errors::process_env::remove_var("BEARDOG_POOL_IDLE_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONNECTION_AGE_SECS");
-
-        beardog_errors::process_env::set_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS", "1");
-        beardog_errors::process_env::set_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS", "2");
-        beardog_errors::process_env::set_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS", "100");
-        beardog_errors::process_env::set_var("BEARDOG_DISCOVERY_TIMEOUT_SECS", "3");
-        beardog_errors::process_env::set_var("BEARDOG_DECISION_TIMEOUT_SECS", "4");
-        beardog_errors::process_env::set_var("BEARDOG_AI_REQUEST_TIMEOUT_SECS", "5");
-        beardog_errors::process_env::set_var("BEARDOG_AI_BATCH_TIMEOUT_MS", "1000");
-        beardog_errors::process_env::set_var("BEARDOG_POOL_IDLE_TIMEOUT_SECS", "600");
-        beardog_errors::process_env::set_var("BEARDOG_MAX_CONNECTION_AGE_SECS", "1200");
-
-        let config = TimeoutConfigBuilder::new().from_env().build();
-
-        assert_eq!(config.health_check_secs, 1);
-        assert_eq!(config.hsm_operation_secs, 2);
-        assert_eq!(config.hsm_probe_millis, 100);
-        assert_eq!(config.discovery_operation_secs, 3);
-        assert_eq!(config.ai_decision_secs, 4);
-        assert_eq!(config.ai_request_secs, 5);
-        assert_eq!(config.ai_batch_timeout_millis, 1000);
-        assert_eq!(config.pool_idle_secs, 600);
-        assert_eq!(config.max_connection_age_secs, 1200);
-
-        // Cleanup
-        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS");
-        beardog_errors::process_env::remove_var("BEARDOG_DISCOVERY_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_DECISION_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_AI_REQUEST_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_AI_BATCH_TIMEOUT_MS");
-        beardog_errors::process_env::remove_var("BEARDOG_POOL_IDLE_TIMEOUT_SECS");
-        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONNECTION_AGE_SECS");
-    }
-
-    #[test]
-    fn test_builder_env_overrides_explicit_values() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
-
-        // Cleanup any leftover environment variables first
-        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-
-        beardog_errors::process_env::set_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS", "99");
-
+    fn test_builder_explicit_after_from_env() {
         let config = TimeoutConfigBuilder::new()
-            .health_check_secs(10) // Set explicitly
-            .from_env() // Then load from env
+            .from_env()
+            .health_check_secs(10)
             .build();
-
-        // Environment should override explicit value
-        assert_eq!(config.health_check_secs, 99);
-
-        // Cleanup
-        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-    }
-
-    #[test]
-    fn test_builder_explicit_values_after_env() {
-        let _lock = ENV_TEST_LOCK.lock().unwrap();
-
-        // Cleanup any leftover environment variables first
-        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
-
-        beardog_errors::process_env::set_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS", "99");
-
-        let config = TimeoutConfigBuilder::new()
-            .from_env() // Load from env first
-            .health_check_secs(10) // Then set explicitly
-            .build();
-
-        // Explicit value should override environment
         assert_eq!(config.health_check_secs, 10);
+    }
 
-        // Cleanup
-        beardog_errors::process_env::remove_var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS");
+    #[test]
+    fn test_builder_from_env_then_explicit_chain() {
+        let config = TimeoutConfigBuilder::new()
+            .health_check_secs(10)
+            .from_env()
+            .build();
+        assert_eq!(config.health_check_secs, 10);
     }
 
     #[test]

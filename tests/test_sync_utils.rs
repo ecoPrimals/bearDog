@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Modern Async Test Synchronization Utilities
 //!
 //! This module provides reusable patterns for test synchronization without sleeps.

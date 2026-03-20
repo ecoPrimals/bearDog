@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Fixed license_manager.rs - Context-aware licensing system
 // Removed unused compute client imports - licensing doesn't require compute operations
 // Module documentation

@@ -9,7 +9,7 @@
 
 use std::path::PathBuf;
 
-/// Subdirectory under [`XDG_RUNTIME_DIR`](std::env::var) for primal Unix sockets.
+/// Subdirectory under [`XDG_RUNTIME_DIR`](std::env::var_os) for primal Unix sockets.
 pub const BIOMEOS_RUNTIME_SOCKET_SUBDIR: &str = "biomeos";
 
 /// Default UPA / service-registry listener socket (filename only, under the biomeOS dir).
@@ -33,19 +33,12 @@ pub const ENV_UPA_REGISTRY_ADDR: &str = "UPA_REGISTRY_ADDR";
 /// Resolve `$XDG_RUNTIME_DIR/biomeos` (or override / temp fallback) from process environment.
 #[must_use]
 pub fn biomeos_ipc_socket_dir() -> PathBuf {
-    biomeos_ipc_socket_dir_from_components(
-        std::env::var_os(ENV_BIOMEOS_SOCKET_DIR_OVERRIDE)
-            .as_ref()
-            .and_then(|s| s.to_str()),
-        std::env::var_os("XDG_RUNTIME_DIR")
-            .as_ref()
-            .and_then(|s| s.to_str()),
-    )
+    biomeos_ipc_socket_dir_from_components(None, None)
 }
 
 /// Resolve biomeOS IPC dir using explicit components (e.g. from a captured env map).
 ///
-/// Precedence: `socket_dir_override` → `xdg_runtime_dir`/biomeos → process env (same fields) → temp dir.
+/// Precedence: `socket_dir_override` → `xdg_runtime_dir`/biomeos → temp dir fallback.
 #[must_use]
 pub fn biomeos_ipc_socket_dir_from_components(
     socket_dir_override: Option<&str>,
@@ -57,17 +50,20 @@ pub fn biomeos_ipc_socket_dir_from_components(
     if let Some(xdg) = xdg_runtime_dir.filter(|s| !s.is_empty()) {
         return PathBuf::from(xdg).join(BIOMEOS_RUNTIME_SOCKET_SUBDIR);
     }
-    if let Ok(p) = std::env::var(ENV_BIOMEOS_SOCKET_DIR_OVERRIDE) {
-        if !p.is_empty() {
-            return PathBuf::from(p);
-        }
-    }
-    if let Ok(xdg) = std::env::var("XDG_RUNTIME_DIR") {
-        if !xdg.is_empty() {
-            return PathBuf::from(xdg).join(BIOMEOS_RUNTIME_SOCKET_SUBDIR);
-        }
-    }
     std::env::temp_dir().join(BIOMEOS_RUNTIME_SOCKET_SUBDIR)
+}
+
+/// Same layout as [`biomeos_ipc_socket_dir`], but reads `BEARDOG_BIOMEOS_SOCKET_DIR` and `XDG_RUNTIME_DIR` from the process environment.
+#[must_use]
+pub fn biomeos_ipc_socket_dir_from_env() -> PathBuf {
+    biomeos_ipc_socket_dir_from_components(
+        std::env::var_os(ENV_BIOMEOS_SOCKET_DIR_OVERRIDE)
+            .as_ref()
+            .and_then(|s| s.to_str()),
+        std::env::var_os("XDG_RUNTIME_DIR")
+            .as_ref()
+            .and_then(|s| s.to_str()),
+    )
 }
 
 /// Default `unix://` URI for the UPA / registry socket under the resolved biomeOS dir.
@@ -80,6 +76,12 @@ pub fn default_upa_registry_unix_uri() -> String {
 /// Resolve registry endpoint: env chain then default `unix://` path under biomeOS dir.
 #[must_use]
 pub fn resolve_upa_registry_endpoint() -> String {
+    default_upa_registry_unix_uri()
+}
+
+/// Resolve registry endpoint from environment, then fall back to default `unix://` path.
+#[must_use]
+pub fn resolve_upa_registry_endpoint_from_env() -> String {
     resolve_upa_registry_endpoint_from_optional(
         std::env::var(ENV_BEARDOG_REGISTRY_ENDPOINT).ok().as_deref(),
         std::env::var(ENV_BEARDOG_SERVICE_REGISTRY_ENDPOINT)

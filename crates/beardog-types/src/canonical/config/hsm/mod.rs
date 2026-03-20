@@ -3,7 +3,7 @@
 //! Unified HSM configuration for Beardog (hardware, software, mobile, cloud).
 //!
 //! Consolidates fragmented HSM settings from tunnel, core, and adapter crates into one
-//! serde-friendly tree with validation hooks ([`HsmConfigValidation`]).
+//! serde-friendly tree with validation hooks ([`HsmConfigValidation`](crate::canonical::config::hsm::HsmConfigValidation)).
 
 use crate::canonical::traits::RetryStrategy;
 use beardog_errors::BearDogError;

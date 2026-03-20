@@ -144,14 +144,26 @@ pub struct GeneticsSystemConfig {
 impl Default for GeneticsSystemConfig {
     fn default() -> Self {
         Self {
+            max_genetics_stored: 1000,
+            cleanup_interval_seconds: 3600,
+            enable_metrics_collection: true,
+            fitness_threshold: 0.5,
+        }
+    }
+}
+
+impl GeneticsSystemConfig {
+    /// Load from `BEARDOG_MAX_GENETICS_STORED`, `BEARDOG_GENETICS_CLEANUP_INTERVAL_SECS`, `BEARDOG_GENETICS_TYPES_FITNESS_THRESHOLD`.
+    pub fn from_env() -> Self {
+        Self {
             max_genetics_stored: std::env::var("BEARDOG_MAX_GENETICS_STORED")
                 .ok()
                 .and_then(|g| g.parse().ok())
-                .unwrap_or(1000), // 1000 genetics default
+                .unwrap_or(1000),
             cleanup_interval_seconds: std::env::var("BEARDOG_GENETICS_CLEANUP_INTERVAL_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(3600), // 1 hour default
+                .unwrap_or(3600),
             enable_metrics_collection: true,
             fitness_threshold: std::env::var("BEARDOG_GENETICS_TYPES_FITNESS_THRESHOLD")
                 .ok()

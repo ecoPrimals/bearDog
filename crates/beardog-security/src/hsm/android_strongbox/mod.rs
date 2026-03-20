@@ -31,10 +31,3 @@ pub mod multi_credential_provider;
 pub use multi_credential_provider::{
     StrongBoxDeviceInfo, StrongBoxMultiCredentialProvider, StrongBoxProviderConfig,
 };
-
-// Re-export from beardog-tunnel for compatibility (not available on Android pure Rust builds)
-#[cfg(not(target_os = "android"))]
-pub use beardog_tunnel::tunnel::hsm::android_strongbox::types::{
-    AndroidDeviceInfo, AndroidKeyAlgorithm, AndroidKeyParams, StrongBoxImplementation,
-    VerifiedBootState,
-};

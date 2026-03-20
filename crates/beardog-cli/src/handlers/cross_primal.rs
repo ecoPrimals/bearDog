@@ -302,6 +302,7 @@ async fn handle_discover_primals(capability: &str) -> Result<(), beardog_errors:
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::TempDir;
 
     #[tokio::test]
     async fn test_discover_primals_valid_capabilities() {
@@ -316,6 +317,56 @@ mod tests {
     async fn test_discover_primals_invalid_capability() {
         // Test that invalid capabilities are rejected
         assert!(handle_discover_primals("invalid").await.is_err());
+    }
+
+    #[test]
+    fn test_cross_primal_parse_discover_primals() {
+        use clap::Parser;
+
+        let cmd = CrossPrimalCommand::try_parse_from([
+            "beardog",
+            "discover-primals",
+            "--capability",
+            "network",
+        ])
+        .expect("parse");
+
+        match cmd.action {
+            CrossPrimalAction::DiscoverPrimals { capability } => {
+                assert_eq!(capability, "network");
+            }
+            _ => panic!("expected DiscoverPrimals"),
+        }
+    }
+
+    #[test]
+    fn test_cross_primal_parse_key_ceremony() {
+        use clap::Parser;
+
+        let cmd = CrossPrimalCommand::try_parse_from([
+            "beardog",
+            "key-ceremony",
+            "--seed-file",
+            "/tmp/seed",
+            "--output",
+            "/tmp/out",
+            "--security-level",
+            "medium",
+        ])
+        .expect("parse");
+
+        match cmd.action {
+            CrossPrimalAction::KeyCeremony {
+                seed_file,
+                output,
+                security_level,
+            } => {
+                assert_eq!(seed_file, "/tmp/seed");
+                assert_eq!(output, "/tmp/out");
+                assert_eq!(security_level, "medium");
+            }
+            _ => panic!("expected KeyCeremony"),
+        }
     }
 
     #[test]
@@ -336,5 +387,52 @@ mod tests {
             !code_only.contains("\"network-primal\""),
             "Should not hardcode primal names"
         );
+    }
+
+    #[tokio::test]
+    async fn test_handle_send_secure_unknown_capability_before_network() {
+        let dir = TempDir::new().unwrap();
+        let msg = dir.path().join("msg.bin");
+        std::fs::write(&msg, b"hello").unwrap();
+        let err = handle_send_secure(msg.to_str().unwrap(), "not-a-capability", None)
+            .await
+            .expect_err("invalid capability");
+        assert!(err.to_string().contains("Unknown capability"));
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_ceremony_missing_seed_file() {
+        let err = handle_key_ceremony("/no/such/seed", "/tmp/out", "high")
+            .await
+            .expect_err("missing seed");
+        assert!(err.to_string().contains("seed") || err.to_string().contains("Failed to read"));
+    }
+
+    #[test]
+    fn test_parse_send_secure_subcommand() {
+        use clap::Parser;
+        let cmd = CrossPrimalCommand::try_parse_from([
+            "beardog",
+            "send-secure",
+            "--message",
+            "/tmp/m",
+            "--capability",
+            "network",
+            "--output",
+            "/tmp/o",
+        ])
+        .expect("parse");
+        match cmd.action {
+            CrossPrimalAction::SendSecure {
+                message,
+                capability,
+                output,
+            } => {
+                assert_eq!(message, "/tmp/m");
+                assert_eq!(capability, "network");
+                assert_eq!(output.as_deref(), Some("/tmp/o"));
+            }
+            _ => panic!("expected SendSecure"),
+        }
     }
 }

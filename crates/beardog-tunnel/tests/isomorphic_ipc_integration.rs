@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Isomorphic IPC Test - Linux Verification
 //
 // This test verifies that the isomorphic IPC implementation

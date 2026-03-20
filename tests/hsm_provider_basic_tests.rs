@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! HSM Provider Basic Tests
 //!
 //! This module contains unit and integration tests for HSM (Hardware Security Module)

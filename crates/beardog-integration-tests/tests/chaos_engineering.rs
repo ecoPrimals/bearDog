@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Chaos Engineering Tests
 //!
 //! These tests intentionally use sleep() to simulate:

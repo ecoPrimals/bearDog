@@ -74,6 +74,71 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+/// Inputs for [`PrimalIdentity::from_inputs`] (no environment reads).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct PrimalIdentityEnvInputs {
+    /// `BEARDOG_PRIMAL_NAME`
+    pub beardog_primal_name: Option<String>,
+    /// `BEARDOG_PRIMAL_TYPE`
+    pub beardog_primal_type: Option<String>,
+    /// `BEARDOG_CAPABILITY_HSM` is set
+    pub capability_hsm: bool,
+    /// `BEARDOG_CAPABILITY_ENCRYPTION` is set
+    pub capability_encryption: bool,
+    /// `BEARDOG_CAPABILITY_AUTH` is set
+    pub capability_auth: bool,
+    /// `BEARDOG_API_HOST`
+    pub beardog_api_host: Option<String>,
+    /// `BEARDOG_API_PORT` (parsed)
+    pub beardog_api_port: Option<u16>,
+    /// `BEARDOG_GRPC_PORT` (parsed)
+    pub beardog_grpc_port: Option<u16>,
+    /// `BEARDOG_GRPC_HOST`
+    pub beardog_grpc_host: Option<String>,
+}
+
+impl PrimalIdentityEnvInputs {
+    /// Read primal identity inputs with `std::env::var` (read-only).
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
+            beardog_primal_name: std::env::var("BEARDOG_PRIMAL_NAME").ok(),
+            beardog_primal_type: std::env::var("BEARDOG_PRIMAL_TYPE").ok(),
+            capability_hsm: std::env::var("BEARDOG_CAPABILITY_HSM").is_ok(),
+            capability_encryption: std::env::var("BEARDOG_CAPABILITY_ENCRYPTION").is_ok(),
+            capability_auth: std::env::var("BEARDOG_CAPABILITY_AUTH").is_ok(),
+            beardog_api_host: std::env::var("BEARDOG_API_HOST").ok(),
+            beardog_api_port: std::env::var("BEARDOG_API_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok()),
+            beardog_grpc_port: std::env::var("BEARDOG_GRPC_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok()),
+            beardog_grpc_host: std::env::var("BEARDOG_GRPC_HOST").ok(),
+        }
+    }
+}
+
+/// Runtime discovery / announcement options (no environment reads).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct PrimalDiscoveryRuntimeInputs {
+    /// `BEARDOG_SERVICE_REGISTRY_URL`
+    pub service_registry_url: Option<String>,
+    /// `BEARDOG_MDNS_ANNOUNCE` is set
+    pub mdns_announce: bool,
+}
+
+impl PrimalDiscoveryRuntimeInputs {
+    /// Read discovery runtime inputs with `std::env::var` (read-only).
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
+            service_registry_url: std::env::var("BEARDOG_SERVICE_REGISTRY_URL").ok(),
+            mdns_announce: std::env::var("BEARDOG_MDNS_ANNOUNCE").is_ok(),
+        }
+    }
+}
+
 // =============================================================================
 // Primal Self-Knowledge (What I Am)
 // =============================================================================
@@ -101,37 +166,32 @@ pub struct PrimalIdentity {
 }
 
 impl PrimalIdentity {
-    /// Create from environment (self-knowledge from config/env)
-    ///
-    /// Reads ONLY information about THIS primal from:
-    /// - Environment variables (BEARDOG_*)
-    /// - Configuration files
-    /// - Runtime introspection
-    ///
-    /// NO hardcoded peer addresses or external service locations.
+    /// Build identity from explicit inputs (no environment reads).
     ///
     /// # Errors
     ///
-    /// Returns an error if required environment variables are missing or invalid.
-    pub fn from_environment() -> Result<Self> {
-        let name =
-            std::env::var("BEARDOG_PRIMAL_NAME").unwrap_or_else(|_| "beardog-default".to_string());
+    /// Currently infallible; reserved for future validation.
+    pub fn from_inputs(inputs: &PrimalIdentityEnvInputs) -> Result<Self> {
+        let name = inputs
+            .beardog_primal_name
+            .clone()
+            .unwrap_or_else(|| "beardog-default".to_string());
 
-        let primal_type =
-            std::env::var("BEARDOG_PRIMAL_TYPE").unwrap_or_else(|_| "beardog".to_string());
+        let primal_type = inputs
+            .beardog_primal_type
+            .clone()
+            .unwrap_or_else(|| "beardog".to_string());
 
-        // Capabilities from config (what THIS primal can do)
         let mut capabilities = HashSet::new();
-        if std::env::var("BEARDOG_CAPABILITY_HSM").is_ok() {
+        if inputs.capability_hsm {
             capabilities.insert(Capability::Hsm);
         }
-        if std::env::var("BEARDOG_CAPABILITY_ENCRYPTION").is_ok() {
+        if inputs.capability_encryption {
             capabilities.insert(Capability::Encryption);
         }
-        if std::env::var("BEARDOG_CAPABILITY_AUTH").is_ok() {
+        if inputs.capability_auth {
             capabilities.insert(Capability::Authentication);
         }
-        // Default: If no capabilities specified, provide all BearDog capabilities
         if capabilities.is_empty() {
             capabilities.insert(Capability::Hsm);
             capabilities.insert(Capability::Encryption);
@@ -139,8 +199,7 @@ impl PrimalIdentity {
             capabilities.insert(Capability::KeyManagement);
         }
 
-        // Endpoints where THIS primal listens (from config, not hardcoded)
-        let endpoints = Self::discover_my_endpoints();
+        let endpoints = Self::endpoints_from_inputs(inputs);
 
         let mut metadata = HashMap::new();
         metadata.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());
@@ -157,36 +216,42 @@ impl PrimalIdentity {
         })
     }
 
-    /// Discover this primal's own endpoints (introspection, not hardcoding)
-    fn discover_my_endpoints() -> Vec<Endpoint> {
+    /// Create from environment via [`PrimalIdentityEnvInputs::from_env`].
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if required environment variables are missing or invalid.
+    pub fn from_environment() -> Result<Self> {
+        Self::from_inputs(&PrimalIdentityEnvInputs::from_env())
+    }
+
+    /// Discover this primal's own endpoints from inputs (introspection, not hardcoding)
+    fn endpoints_from_inputs(inputs: &PrimalIdentityEnvInputs) -> Vec<Endpoint> {
         let mut endpoints = Vec::new();
 
-        if let Ok(api_host) = std::env::var("BEARDOG_API_HOST") {
-            let api_port = std::env::var("BEARDOG_API_PORT")
-                .ok()
-                .and_then(|p| p.parse().ok())
-                .unwrap_or(8080);
+        if let Some(api_host) = &inputs.beardog_api_host {
+            let api_port = inputs.beardog_api_port.unwrap_or(8080);
 
             endpoints.push(Endpoint {
                 protocol: Protocol::Http,
-                host: api_host,
+                host: api_host.clone(),
                 port: api_port,
                 path: Some("/api/v1".to_string()),
             });
         }
 
-        if let Ok(grpc_port) = std::env::var("BEARDOG_GRPC_PORT") {
-            if let Ok(port) = grpc_port.parse() {
-                let host =
-                    std::env::var("BEARDOG_GRPC_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
+        if let Some(port) = inputs.beardog_grpc_port {
+            let host = inputs
+                .beardog_grpc_host
+                .clone()
+                .unwrap_or_else(|| "0.0.0.0".to_string());
 
-                endpoints.push(Endpoint {
-                    protocol: Protocol::Grpc,
-                    host,
-                    port,
-                    path: None,
-                });
-            }
+            endpoints.push(Endpoint {
+                protocol: Protocol::Grpc,
+                host,
+                port,
+                path: None,
+            });
         }
 
         endpoints
@@ -217,16 +282,32 @@ pub struct PrimalDiscovery {
 
     /// Discovered primals (populated at runtime)
     discovered: Arc<RwLock<HashMap<String, DiscoveredPrimal>>>,
+
+    /// Registry / mDNS announcement configuration (injected)
+    runtime: PrimalDiscoveryRuntimeInputs,
 }
 
 impl PrimalDiscovery {
     /// Create new discovery service with self-knowledge
     #[must_use]
     pub fn new(identity: PrimalIdentity) -> Self {
+        Self::with_runtime(identity, PrimalDiscoveryRuntimeInputs::default())
+    }
+
+    /// Create with explicit runtime inputs (tests and non-env configuration).
+    #[must_use]
+    pub fn with_runtime(identity: PrimalIdentity, runtime: PrimalDiscoveryRuntimeInputs) -> Self {
         Self {
             identity,
             discovered: Arc::new(RwLock::new(HashMap::new())),
+            runtime,
         }
+    }
+
+    /// Same as [`Self::new`] but reads [`PrimalDiscoveryRuntimeInputs::from_env`].
+    #[must_use]
+    pub fn from_env_with_identity(identity: PrimalIdentity) -> Self {
+        Self::with_runtime(identity, PrimalDiscoveryRuntimeInputs::from_env())
     }
 
     /// Get this primal's identity (self-knowledge)
@@ -271,7 +352,7 @@ impl PrimalDiscovery {
 
         // 3. Service registry (if configured)
         if primals.is_empty() {
-            if let Ok(registry_primals) = Self::discover_via_registry(capability) {
+            if let Ok(registry_primals) = self.discover_via_registry(capability) {
                 primals.extend(registry_primals);
             }
         }
@@ -357,10 +438,8 @@ impl PrimalDiscovery {
     }
 
     /// Discover via service registry (if configured)
-    fn discover_via_registry(_capability: &str) -> Result<Vec<DiscoveredPrimal>> {
-        let registry_url = std::env::var("BEARDOG_SERVICE_REGISTRY_URL").ok();
-
-        if registry_url.is_none() {
+    fn discover_via_registry(&self, _capability: &str) -> Result<Vec<DiscoveredPrimal>> {
+        if self.runtime.service_registry_url.is_none() {
             return Ok(Vec::new());
         }
 
@@ -377,13 +456,13 @@ impl PrimalDiscovery {
         // Announce via configured mechanisms only
         // NO hardcoded announcement targets
 
-        if let Ok(registry_url) = std::env::var("BEARDOG_SERVICE_REGISTRY_URL") {
+        if let Some(registry_url) = &self.runtime.service_registry_url {
             // Register with service registry
             tracing::info!("Announcing to registry: {}", registry_url);
             // Future: POST self.identity to registry
         }
 
-        if std::env::var("BEARDOG_MDNS_ANNOUNCE").is_ok() {
+        if self.runtime.mdns_announce {
             // Announce via mDNS
             tracing::info!("Announcing via mDNS");
             // Future: Broadcast mDNS announcement
@@ -503,22 +582,23 @@ impl PrimalSelfKnowledge {
     /// Create new primal self-knowledge from environment
     #[must_use]
     pub fn new() -> Self {
-        let identity = PrimalIdentity::from_environment().unwrap_or_else(|_| {
-            // Fallback identity for testing
-            let mut caps = HashSet::new();
-            caps.insert(Capability::Hsm);
-            caps.insert(Capability::Encryption);
-            caps.insert(Capability::Authentication);
+        let identity = PrimalIdentity::from_inputs(&PrimalIdentityEnvInputs::from_env())
+            .unwrap_or_else(|_| {
+                // Fallback identity for testing
+                let mut caps = HashSet::new();
+                caps.insert(Capability::Hsm);
+                caps.insert(Capability::Encryption);
+                caps.insert(Capability::Authentication);
 
-            PrimalIdentity {
-                name: "beardog-test".to_string(),
-                primal_type: "beardog".to_string(),
-                capabilities: caps,
-                endpoints: vec![],
-                metadata: HashMap::new(),
-            }
-        });
-        let discovery = Arc::new(PrimalDiscovery::new(identity.clone()));
+                PrimalIdentity {
+                    name: "beardog-test".to_string(),
+                    primal_type: "beardog".to_string(),
+                    capabilities: caps,
+                    endpoints: vec![],
+                    metadata: HashMap::new(),
+                }
+            });
+        let discovery = Arc::new(PrimalDiscovery::from_env_with_identity(identity.clone()));
 
         Self {
             identity,
@@ -610,11 +690,12 @@ mod tests {
 
     #[test]
     fn test_primal_identity_self_knowledge_only() {
-        // Primal knows only itself, no hardcoded peers
-        beardog_errors::process_env::set_var("BEARDOG_PRIMAL_NAME", "test-primal");
-        beardog_errors::process_env::set_var("BEARDOG_PRIMAL_TYPE", "beardog");
-
-        let identity = PrimalIdentity::from_environment().unwrap();
+        let inputs = PrimalIdentityEnvInputs {
+            beardog_primal_name: Some("test-primal".to_string()),
+            beardog_primal_type: Some("beardog".to_string()),
+            ..Default::default()
+        };
+        let identity = PrimalIdentity::from_inputs(&inputs).unwrap();
 
         assert_eq!(identity.name, "test-primal");
         assert_eq!(identity.primal_type, "beardog");
@@ -626,7 +707,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_discovery_no_hardcoded_addresses() {
-        let identity = PrimalIdentity::from_environment().unwrap();
+        let identity = PrimalIdentity::from_inputs(&PrimalIdentityEnvInputs::default()).unwrap();
         let discovery = PrimalDiscovery::new(identity);
 
         // Discovery should work WITHOUT hardcoded addresses
@@ -639,7 +720,12 @@ mod tests {
 
     #[test]
     fn test_no_hardcoded_endpoints_in_identity() {
-        let identity = PrimalIdentity::from_environment().unwrap();
+        let inputs = PrimalIdentityEnvInputs {
+            beardog_api_host: Some("127.0.0.1".to_string()),
+            beardog_api_port: Some(9090),
+            ..Default::default()
+        };
+        let identity = PrimalIdentity::from_inputs(&inputs).unwrap();
 
         // Endpoints should come from config/env, not hardcoded
         for endpoint in &identity.endpoints {

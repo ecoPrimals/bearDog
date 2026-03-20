@@ -1,12 +1,4 @@
-#![expect(
-    unused_imports,
-    reason = "E2E test scaffolding imports used conditionally"
-)]
-#![expect(
-    dead_code,
-    reason = "E2E helper functions called from test orchestrator"
-)]
-
+// SPDX-License-Identifier: AGPL-3.0-only
 //! HSM Operations E2E Tests
 //!
 //! End-to-end tests for Hardware Security Module operations across different providers
@@ -223,7 +215,7 @@ async fn is_pkcs11_available() -> bool {
 #[cfg(target_os = "ios")]
 async fn is_ios_secure_enclave_available() -> bool {
     // In production, would check for Secure Enclave availability
-    std::env::var("IOS_SECURE_ENCLAVE_AVAILABLE")
+    beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE")
         .map(|v| v == "true")
         .unwrap_or(false)
 }
@@ -231,7 +223,7 @@ async fn is_ios_secure_enclave_available() -> bool {
 #[cfg(target_os = "android")]
 async fn is_android_strongbox_available() -> bool {
     // In production, would check for StrongBox availability
-    std::env::var("ANDROID_STRONGBOX_AVAILABLE")
+    beardog_errors::process_env::var("ANDROID_STRONGBOX_AVAILABLE")
         .map(|v| v == "true")
         .unwrap_or(false)
 }
@@ -905,7 +897,7 @@ async fn get_hsm_metrics(hsm: &str) -> HsmMetrics {
 
 async fn detect_tpm_availability() -> bool {
     // Check environment variable for testing
-    std::env::var("TPM_AVAILABLE")
+    beardog_errors::process_env::var("TPM_AVAILABLE")
         .map(|v| v == "true")
         .unwrap_or(false)
 }

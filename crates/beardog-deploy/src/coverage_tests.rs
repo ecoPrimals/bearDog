@@ -114,6 +114,7 @@ fn test_device_manager_run_app_exercises_path() {
 fn test_device_manager_show_logs_exercises_path() {
     let manager = DeviceManager::new();
     let _ = manager.show_logs("com.beardog.app", false);
+    let _ = manager.show_logs("com.beardog.app", true);
 }
 
 #[test]

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2025 EcoPrimals BearDog Team
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -118,7 +119,7 @@ async fn try_environment_port(
 ) -> Result<Option<DiscoveredPort>, BearDogError> {
     // Try service-specific env var first
     let env_var = format!("BEARDOG_{}_PORT", service.to_uppercase());
-    if let Ok(port_str) = std::env::var(&env_var) {
+    if let Ok(port_str) = beardog_errors::process_env::var(&env_var) {
         if let Ok(port) = port_str.parse::<u16>() {
             debug!("Found port {} from environment: {}", port, env_var);
             
@@ -137,7 +138,7 @@ async fn try_environment_port(
     }
 
     // Try generic BEARDOG_PORT as fallback
-    if let Ok(port_str) = std::env::var("BEARDOG_PORT") {
+    if let Ok(port_str) = beardog_errors::process_env::var("BEARDOG_PORT") {
         if let Ok(port) = port_str.parse::<u16>() {
             debug!("Found generic port {} from BEARDOG_PORT", port);
             

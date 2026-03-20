@@ -9,7 +9,7 @@
 //!
 //! **Architecture**: BearDog provides crypto primitives, Songbird implements protocol
 //!
-//! **Reference**: https://spec.torproject.org/tor-spec
+//! **Reference**: <https://spec.torproject.org/tor-spec>
 //!
 //! Pure Rust implementation using RustCrypto (zero C dependencies).
 

@@ -162,10 +162,20 @@ pub struct SecurityConfig {
 impl Default for SecurityConfig {
     fn default() -> Self {
         Self {
-            key_storage_path: std::env::var("BEARDOG_TUNNEL_KEY_STORAGE_PATH")
-                .unwrap_or_else(|_| String::from("/secure/keys")),
+            key_storage_path: "/secure/keys".to_string(),
             key_escrow_threshold: 10,
         }
+    }
+}
+
+impl SecurityConfig {
+    /// Merge `BEARDOG_TUNNEL_KEY_STORAGE_PATH` when set.
+    pub fn from_env() -> Self {
+        let mut s = Self::default();
+        if let Ok(p) = beardog_errors::process_env::var("BEARDOG_TUNNEL_KEY_STORAGE_PATH") {
+            s.key_storage_path = p;
+        }
+        s
     }
 }
 
@@ -203,11 +213,20 @@ pub struct GamingConfig {
 impl Default for GamingConfig {
     fn default() -> Self {
         Self {
-            // Empty: resolve anti-cheat provider by capability id at runtime when wired
-            anti_cheat_provider: std::env::var("BEARDOG_GAMING_ANTI_CHEAT_CAPABILITY")
-                .unwrap_or_default(),
+            anti_cheat_provider: String::new(),
             max_latency_ms: 50,
         }
+    }
+}
+
+impl GamingConfig {
+    /// Merge `BEARDOG_GAMING_ANTI_CHEAT_CAPABILITY` when set.
+    pub fn from_env() -> Self {
+        let mut g = Self::default();
+        if let Ok(v) = beardog_errors::process_env::var("BEARDOG_GAMING_ANTI_CHEAT_CAPABILITY") {
+            g.anti_cheat_provider = v;
+        }
+        g
     }
 }
 
@@ -376,10 +395,7 @@ impl Default for TunnelMonitoringConfig {
             enable_health_endpoint: true,
             health_endpoint_port: BEARDOG_CONFIG.network.ports.health_port,
             enable_profiling: false,
-            profiling_port: std::env::var("BEARDOG_PROFILING_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(DEFAULT_PROFILING_PORT),
+            profiling_port: DEFAULT_PROFILING_PORT,
             enable_alerts: true,
             alert_thresholds: AlertThresholds::default(),
             aggregation_window: Duration::from_secs(300),
@@ -518,9 +534,7 @@ mod tests {
     #[test]
     fn test_security_config_defaults() {
         let config = SecurityConfig::default();
-        let expected = std::env::var("BEARDOG_TUNNEL_KEY_STORAGE_PATH")
-            .unwrap_or_else(|_| "/secure/keys".to_string());
-        assert_eq!(config.key_storage_path, expected);
+        assert_eq!(config.key_storage_path, "/secure/keys");
         assert_eq!(config.key_escrow_threshold, 10);
     }
 
@@ -528,8 +542,7 @@ mod tests {
     fn test_gaming_config_defaults() {
         let config = GamingConfig::default();
         assert_eq!(config.max_latency_ms, 50);
-        let expected = std::env::var("BEARDOG_GAMING_ANTI_CHEAT_CAPABILITY").unwrap_or_default();
-        assert_eq!(config.anti_cheat_provider, expected);
+        assert_eq!(config.anti_cheat_provider, "");
     }
 
     #[test]

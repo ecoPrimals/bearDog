@@ -459,6 +459,9 @@ pub mod policies {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tunnel::hsm::universal_discovery::{
+        HumanEntropyCapabilities, HumanEntropyMethod, UniversalHsmCapabilities,
+    };
 
     #[test]
     fn test_classifier_creation() -> Result<(), Box<dyn std::error::Error>> {
@@ -476,6 +479,103 @@ mod tests {
         let balanced = policies::balanced_policy();
         assert_eq!(balanced.min_quality_score, 0.65);
         assert!(!balanced.require_biometric);
+        Ok(())
+    }
+
+    #[test]
+    fn permissive_policy_allows_low_quality() {
+        let p = policies::permissive_policy();
+        assert_eq!(p.min_quality_score, 0.5);
+        assert!(!p.require_realtime);
+    }
+
+    #[test]
+    fn classifier_accepts_strong_human_entropy_capabilities()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let classifier = HumanEntropyClassifier::with_criteria(TierElevationCriteria {
+            min_quality_score: 0.3,
+            require_realtime: false,
+            require_biometric: false,
+            require_quality_assessment: false,
+        })?;
+
+        let mut caps = UniversalHsmCapabilities::default();
+        caps.human_entropy = HumanEntropyCapabilities {
+            ephemeral_seed_creation: true,
+            collection_methods: vec![
+                HumanEntropyMethod::KeystrokeDynamics,
+                HumanEntropyMethod::MouseMovement,
+            ],
+            entropy_quality_assessment: true,
+            biometric_entropy: false,
+            behavioral_entropy: true,
+            realtime_entropy: true,
+        };
+
+        assert!(classifier.classify_human_entropy_support(&caps)?);
+        Ok(())
+    }
+
+    #[test]
+    fn classifier_rejects_insufficient_methods() -> Result<(), Box<dyn std::error::Error>> {
+        let classifier = HumanEntropyClassifier::new()?;
+        let mut caps = UniversalHsmCapabilities::default();
+        caps.human_entropy = HumanEntropyCapabilities {
+            ephemeral_seed_creation: true,
+            collection_methods: vec![HumanEntropyMethod::MouseMovement],
+            entropy_quality_assessment: true,
+            biometric_entropy: false,
+            behavioral_entropy: true,
+            realtime_entropy: true,
+        };
+        assert!(!classifier.classify_human_entropy_support(&caps)?);
+        Ok(())
+    }
+
+    #[test]
+    fn get_ranked_methods_orders_by_score() -> Result<(), Box<dyn std::error::Error>> {
+        let classifier = HumanEntropyClassifier::new()?;
+        let mut method_scores = std::collections::HashMap::new();
+        method_scores.insert(HumanEntropyMethod::MouseMovement, 0.2);
+        method_scores.insert(HumanEntropyMethod::BiometricVariations, 0.9);
+        let assessment = HumanEntropyAssessment {
+            supports_ephemeral_seeds: true,
+            quality_score: 0.8,
+            method_scores,
+            collection_efficiency: 0.5,
+            realtime_capability: true,
+            biometric_integration_quality: 0.0,
+            recommended_tier_elevation: false,
+            assessed_at: chrono::Utc::now(),
+        };
+        let ranked = classifier.get_ranked_methods(&assessment)?;
+        assert_eq!(ranked[0].0, HumanEntropyMethod::BiometricVariations);
+        Ok(())
+    }
+
+    #[test]
+    fn entropy_quality_assessor_weights_methods() -> Result<(), Box<dyn std::error::Error>> {
+        let assessor = EntropyQualityAssessor::new()?;
+        let mut scores = std::collections::HashMap::new();
+        scores.insert(HumanEntropyMethod::BiometricVariations, 1.0);
+        let he = HumanEntropyCapabilities {
+            ephemeral_seed_creation: true,
+            collection_methods: vec![],
+            entropy_quality_assessment: false,
+            biometric_entropy: false,
+            behavioral_entropy: false,
+            realtime_entropy: false,
+        };
+        let q = assessor.calculate_quality_score(&scores, &he)?;
+        assert!(q > 0.0 && q <= 1.0);
+        Ok(())
+    }
+
+    #[test]
+    fn method_evaluator_unknown_method_uses_defaults() -> Result<(), Box<dyn std::error::Error>> {
+        let ev = HumanEntropyMethodEvaluator::new()?;
+        let scores = ev.evaluate_entropy_methods(&[HumanEntropyMethod::CustomInput])?;
+        assert!(scores.contains_key(&HumanEntropyMethod::CustomInput));
         Ok(())
     }
 }

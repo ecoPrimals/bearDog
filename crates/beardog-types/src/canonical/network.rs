@@ -35,13 +35,8 @@ pub struct NetworkConfig {
 impl Default for NetworkConfig {
     fn default() -> Self {
         Self {
-            bind_address: std::env::var("BEARDOG_NETWORK_BIND_ADDRESS")
-                .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
-                .unwrap_or_else(|_| "0.0.0.0".to_string()), // Standard bind-to-all-interfaces
-            port: std::env::var("BEARDOG_NETWORK_PORT")
-                .ok()
-                .and_then(|p| p.parse().ok())
-                .unwrap_or(8080),
+            bind_address: "0.0.0.0".to_string(),
+            port: 8080,
             tls_enabled: true,
             tls_cert_path: None,
             tls_key_path: None,
@@ -220,6 +215,21 @@ impl Default for HealthCheckConfig {
 }
 
 impl NetworkConfig {
+    /// Load network configuration from environment variables, falling back to [`Default::default`].
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
+            bind_address: std::env::var("BEARDOG_NETWORK_BIND_ADDRESS")
+                .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
+                .unwrap_or_else(|_| "0.0.0.0".to_string()),
+            port: std::env::var("BEARDOG_NETWORK_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8080),
+            ..Default::default()
+        }
+    }
+
     /// Create a new network configuration
     #[must_use]
     /// Creates a new instance
@@ -267,5 +277,73 @@ impl NetworkConfig {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod network_timeout_policy_tests {
+    use super::*;
+    use std::time::Duration;
+
+    #[test]
+    fn timeout_config_operation_timeout_branches() {
+        let tc = TimeoutConfig::default();
+        assert_eq!(tc.operation_timeout("request"), tc.request_timeout);
+        assert_eq!(tc.operation_timeout("read"), tc.request_timeout);
+        assert_eq!(tc.operation_timeout("connect"), tc.connection_timeout);
+        assert_eq!(tc.operation_timeout("keepalive"), tc.keep_alive_timeout);
+        assert_eq!(tc.operation_timeout("unknown"), tc.request_timeout);
+    }
+
+    #[test]
+    fn timeout_config_should_timeout_and_remaining() {
+        let tc = TimeoutConfig::default();
+        assert!(!tc.should_timeout(Duration::from_secs(1), "request"));
+        assert!(tc.should_timeout(Duration::from_secs(120), "request"));
+        assert_eq!(
+            tc.remaining_time(Duration::from_secs(5), "request"),
+            tc.request_timeout - Duration::from_secs(5)
+        );
+    }
+
+    #[test]
+    fn timeout_config_validate_errors() {
+        let mut tc = TimeoutConfig::default();
+        tc.connection_timeout = Duration::ZERO;
+        assert!(tc.validate().is_err());
+        tc.connection_timeout = Duration::from_secs(30);
+        tc.request_timeout = Duration::ZERO;
+        assert!(tc.validate().is_err());
+    }
+
+    #[test]
+    fn timeout_config_is_production_ready() {
+        let mut tc = TimeoutConfig::default();
+        assert!(tc.is_production_ready());
+        tc.connection_timeout = Duration::from_secs(0);
+        assert!(!tc.is_production_ready());
+    }
+
+    #[test]
+    fn network_config_validate_port_and_tls() {
+        let mut nc = NetworkConfig::default();
+        nc.tls_enabled = false;
+        assert!(nc.validate().is_ok());
+
+        nc.port = 0;
+        assert!(nc.validate().unwrap_err().contains("Port"));
+
+        nc.port = 8080;
+        nc.tls_enabled = true;
+        assert!(nc.validate().unwrap_err().contains("certificate"));
+
+        nc.tls_cert_path = Some("/path/cert.pem".to_string());
+        assert!(nc.validate().unwrap_err().contains("key"));
+
+        nc.tls_key_path = Some("/path/key.pem".to_string());
+        assert!(nc.validate().is_ok());
+
+        nc.connection_pool.max_size = 0;
+        assert!(nc.validate().unwrap_err().contains("pool"));
     }
 }

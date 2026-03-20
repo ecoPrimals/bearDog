@@ -80,40 +80,38 @@ impl HsmConfig {
     /// - `BEARDOG_YUBIHSM_CONNECTOR`: YubiHSM connector URL
     #[must_use]
     pub fn from_env() -> Self {
-        use std::env;
-
         let defaults = Self::default();
 
         Self {
-            auto_detect: env::var("BEARDOG_HSM_AUTO_DETECT")
+            auto_detect: std::env::var("BEARDOG_HSM_AUTO_DETECT")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.auto_detect),
-            prefer_hardware: env::var("BEARDOG_HSM_PREFER_HARDWARE")
+            prefer_hardware: std::env::var("BEARDOG_HSM_PREFER_HARDWARE")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.prefer_hardware),
-            enable_softhsm: env::var("BEARDOG_HSM_ENABLE_SOFTHSM")
+            enable_softhsm: std::env::var("BEARDOG_HSM_ENABLE_SOFTHSM")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.enable_softhsm),
-            enable_yubihsm: env::var("BEARDOG_HSM_ENABLE_YUBIHSM")
+            enable_yubihsm: std::env::var("BEARDOG_HSM_ENABLE_YUBIHSM")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.enable_yubihsm),
-            enable_tpm: env::var("BEARDOG_HSM_ENABLE_TPM")
+            enable_tpm: std::env::var("BEARDOG_HSM_ENABLE_TPM")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.enable_tpm),
-            enable_strongbox: env::var("BEARDOG_HSM_ENABLE_STRONGBOX")
+            enable_strongbox: std::env::var("BEARDOG_HSM_ENABLE_STRONGBOX")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(defaults.enable_strongbox),
-            softhsm_config: env::var("SOFTHSM2_CONF")
+            softhsm_config: std::env::var("SOFTHSM2_CONF")
                 .ok()
                 .map(PathBuf::from)
                 .or(defaults.softhsm_config),
-            yubihsm_connector: env::var("BEARDOG_YUBIHSM_CONNECTOR")
+            yubihsm_connector: std::env::var("BEARDOG_YUBIHSM_CONNECTOR")
                 .ok()
                 .or(defaults.yubihsm_connector),
             provider_order: defaults.provider_order,

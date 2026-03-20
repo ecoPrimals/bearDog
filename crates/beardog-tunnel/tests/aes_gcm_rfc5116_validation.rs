@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! RFC 5116 AES-GCM Test Vectors Validation
 //!
 //! This test validates BearDog's AES-GCM implementation against known test vectors

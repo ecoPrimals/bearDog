@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 use super::ExternalFunctionHandler;
 use crate::licensing::LicenseManager;
 use beardog_errors::BearDogError;
@@ -22,8 +23,8 @@ use beardog_errors::BearDogError;
         let network_config = NetworkConfig::default();
         let default_prometheus_endpoint = format!(
             "http://{}:{}",
-            std::env::var("BEARDOG_PROMETHEUS_HOST").unwrap_or_else(|_| network_config.default_host.clone()),
-            std::env::var("BEARDOG_PROMETHEUS_PORT")
+            beardog_errors::process_env::var("BEARDOG_PROMETHEUS_HOST").unwrap_or_else(|_| network_config.default_host.clone()),
+            beardog_errors::process_env::var("BEARDOG_PROMETHEUS_PORT")
                 .ok()
                 .and_then(|p| p.parse::<u16>().ok())
                 .unwrap_or(9090)

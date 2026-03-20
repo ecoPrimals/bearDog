@@ -32,9 +32,9 @@
 //!
 //! ## Modules
 //!
-//! - [`witness`] - Witness verification and signature checking
-//! - [`physical_proof`] - Physical channel attestation and trust levels
-//! - [`types`] - Core types for genesis ceremony
+//! - [`witness`](crate::genesis::witness) - Witness verification and signature checking
+//! - [`physical_proof`](crate::genesis::physical_proof) - Physical channel attestation and trust levels
+//! - [`types`](crate::genesis::types) - Core types for genesis ceremony
 
 pub mod physical_proof;
 pub mod types;

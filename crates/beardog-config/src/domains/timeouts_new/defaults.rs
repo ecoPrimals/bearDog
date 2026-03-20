@@ -6,7 +6,7 @@
 
 use super::core::TimeoutConfig;
 
-/// Static timeout defaults (seconds unless noted) used by [`TimeoutConfig`](super::core::TimeoutConfig)
+/// Static timeout defaults (seconds unless noted) used by [`TimeoutConfig`]
 /// when no file or environment override is present—part of the zero-hardcoding baseline.
 pub mod default_timeouts {
     /// Interval between health probe evaluations.

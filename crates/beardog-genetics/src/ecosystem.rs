@@ -25,25 +25,35 @@ pub struct EcosystemGeneticConfig { /// Enable ecosystem-aware spawning
     /// Maximum ecosystem size for spawning
     pub max_ecosystem_size: usize }
 
-impl Default for EcosystemGeneticConfig { fn default() -> Self  {
+impl Default for EcosystemGeneticConfig {
+    fn default() -> Self {
         Self {
-            /// Perfect field with comprehensive validation
             enable_ecosystem_spawning: true,
-            /// Perfect field with comprehensive validation
+            coordination_mutation_rate: 0.1,
+            inter_primal_evolution_rate: 0.05,
+            max_ecosystem_size: 100,
+        }
+    }
+}
+
+impl EcosystemGeneticConfig {
+    /// Load from `BEARDOG_ECOSYSTEM_COORDINATION_MUTATION_RATE`, `BEARDOG_ECOSYSTEM_INTER_PRIMAL_EVOLUTION_RATE`, `BEARDOG_ECOSYSTEM_MAX_SIZE`.
+    pub fn from_env() -> Self {
+        Self {
+            enable_ecosystem_spawning: true,
             coordination_mutation_rate: std::env::var("BEARDOG_ECOSYSTEM_COORDINATION_MUTATION_RATE")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(0.1),
-            /// Perfect field with comprehensive validation
             inter_primal_evolution_rate: std::env::var("BEARDOG_ECOSYSTEM_INTER_PRIMAL_EVOLUTION_RATE")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(0.05),
-            /// Perfect field with comprehensive validation
             max_ecosystem_size: std::env::var("BEARDOG_ECOSYSTEM_MAX_SIZE")
                 .ok()
                 .and_then(|v| v.parse().ok())
-                .unwrap_or(100) }
+                .unwrap_or(100),
+        }
     }
 }
 

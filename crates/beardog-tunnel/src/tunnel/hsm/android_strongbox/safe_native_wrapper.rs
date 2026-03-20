@@ -68,7 +68,9 @@ impl SafeAndroidStrongBoxWrapper {
     /// Check if StrongBox is available on this device
     fn check_strongbox_availability() -> bool {
         // Check environment variable for mock availability
-        std::env::var("STRONGBOX_AVAILABLE").unwrap_or_else(|_| "false".to_string()) == "true"
+        beardog_errors::process_env::var("STRONGBOX_AVAILABLE")
+            .unwrap_or_else(|_| "false".to_string())
+            == "true"
     }
 
     /// Initialize native Android handles safely

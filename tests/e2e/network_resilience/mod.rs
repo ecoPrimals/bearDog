@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Network Resilience E2E Test Suite
 //!
 //! Modular test organization for network failure handling, retries, and recovery.
@@ -32,7 +33,6 @@
 )]
 
 use beardog_errors::BearDogError;
-use serial_test::serial;
 use tracing::{info, warn};
 
 /// E2E metrics for network resilience tests

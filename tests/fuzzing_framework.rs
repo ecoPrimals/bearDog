@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Fuzzing Test Framework for `BearDog`
 //!
 //! Implements property-based and fuzz testing infrastructure

@@ -433,10 +433,11 @@ impl HybridIntelligenceSystem {
         let start_time = Utc::now();
 
         tokio::spawn(async move {
-            let interval_secs = std::env::var("BEARDOG_AI_METRICS_INTERVAL_SECS")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(60);
+            let interval_secs =
+                beardog_errors::process_env::var("BEARDOG_AI_METRICS_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60);
             let mut interval = interval(Duration::from_secs(interval_secs));
 
             loop {
@@ -874,3 +875,7 @@ fn create_default_decision_config() -> DecisionEngineConfig {
 }
 
 // Removed unused helper functions - now using Default implementations directly
+
+#[cfg(test)]
+#[path = "core_tests.rs"]
+mod core_tests;

@@ -66,6 +66,32 @@ use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 use tracing::{debug, info};
 
+/// Injected options for [`UniversalAdapter`] (cache TTL, etc.). No environment reads in [`Default`].
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct UniversalAdapterEnvInputs {
+    /// `UNIVERSAL_ADAPTER_CACHE_TTL_SECS`
+    pub cache_ttl_secs: Option<u64>,
+}
+
+impl UniversalAdapterEnvInputs {
+    /// Read `UNIVERSAL_ADAPTER_CACHE_TTL_SECS` via `std::env::var`.
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
+            cache_ttl_secs: std::env::var("UNIVERSAL_ADAPTER_CACHE_TTL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok()),
+        }
+    }
+
+    #[must_use]
+    fn cache_ttl(&self) -> Duration {
+        self.cache_ttl_secs
+            .map(Duration::from_secs)
+            .unwrap_or_else(|| Duration::from_secs(300))
+    }
+}
+
 // =============================================================================
 // CORE TYPES
 // =============================================================================
@@ -164,32 +190,49 @@ impl UniversalAdapter {
     /// # }
     /// ```
     pub fn new() -> Result<Self, BearDogError> {
+        let self_knowledge = PrimalSelfKnowledge::discover()?;
+        Self::with_self_knowledge_and_inputs(self_knowledge, UniversalAdapterEnvInputs::from_env())
+    }
+
+    /// Initialize adapter with explicit self-knowledge (no environment read for identity/endpoints).
+    ///
+    /// Use in tests and when configuration is loaded from non-env sources.
+    pub fn with_self_knowledge(self_knowledge: PrimalSelfKnowledge) -> Result<Self, BearDogError> {
+        Self::with_self_knowledge_and_inputs(self_knowledge, UniversalAdapterEnvInputs::from_env())
+    }
+
+    /// Like [`Self::with_self_knowledge`] but uses explicit adapter inputs (e.g. tests without env).
+    pub fn with_self_knowledge_and_inputs(
+        self_knowledge: PrimalSelfKnowledge,
+        adapter_inputs: UniversalAdapterEnvInputs,
+    ) -> Result<Self, BearDogError> {
+        let discovery = PrimalDiscovery::from_env()?;
+        Self::with_self_knowledge_discovery_and_cache(
+            self_knowledge,
+            discovery,
+            adapter_inputs.cache_ttl(),
+        )
+    }
+
+    /// Full injection: self-knowledge, discovery engine, and cache TTL (no implicit env except optional callers).
+    pub fn with_self_knowledge_discovery_and_cache(
+        self_knowledge: PrimalSelfKnowledge,
+        discovery: PrimalDiscovery,
+        default_cache_ttl: Duration,
+    ) -> Result<Self, BearDogError> {
         info!("🧒 Initializing Universal Adapter (Infant Discovery Mode)");
 
-        // Step 1: Discover self (who am I?)
-        info!("   1️⃣  Discovering self-knowledge...");
-        let self_knowledge = PrimalSelfKnowledge::discover()?;
+        info!("   1️⃣  Self-knowledge provided");
         info!(
             "   ✅ I am: {} v{}",
             self_knowledge.my_name(),
             self_knowledge.my_version().version
         );
 
-        // Step 2: Initialize discovery engine (how to find others?)
-        info!("   2️⃣  Initializing discovery engine...");
-        let discovery = PrimalDiscovery::from_env()?;
-        info!("   ✅ Discovery engine ready");
-
-        // Step 3: Initialize routing (how to choose best?)
+        info!("   2️⃣  Discovery engine provided");
         info!("   3️⃣  Initializing capability router...");
-        let router = CapabilityRouter::new()?;
+        let router = CapabilityRouter::new(discovery.clone());
         info!("   ✅ Routing engine ready");
-
-        // Get cache TTL from environment (default: 5 minutes)
-        let default_cache_ttl = std::env::var("UNIVERSAL_ADAPTER_CACHE_TTL_SECS")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .map_or(Duration::from_secs(300), Duration::from_secs);
 
         info!("✅ Universal Adapter initialized (zero hardcoded knowledge)");
 
@@ -396,36 +439,62 @@ impl UniversalAdapter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::primal_discovery::DiscoveryMethod;
+    use crate::self_knowledge::{IdentityInputs, SelfKnowledgeInputs};
+    use std::collections::HashMap;
 
     #[tokio::test]
-    #[serial_test::serial] // Environment variable test - must run serially
     async fn test_universal_adapter_creation() {
-        // Set required environment for self-knowledge
-        beardog_errors::process_env::set_var("PRIMAL_NAME", "BearDog");
-        beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
-
-        let adapter = UniversalAdapter::new().unwrap();
+        let sk = PrimalSelfKnowledge::discover_from_inputs(&SelfKnowledgeInputs {
+            identity: IdentityInputs {
+                primal_name: Some("BearDog".to_string()),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .unwrap();
+        let discovery = PrimalDiscovery::new(DiscoveryMethod::Environment);
+        let adapter = UniversalAdapter::with_self_knowledge_discovery_and_cache(
+            sk,
+            discovery,
+            Duration::from_secs(300),
+        )
+        .unwrap();
 
         assert_eq!(adapter.self_knowledge().my_name(), "BearDog");
         assert_eq!(adapter.cached_capabilities().await.len(), 0); // Empty cache initially
-
-        beardog_errors::process_env::remove_var("PRIMAL_NAME");
-        beardog_errors::process_env::remove_var("PRIMAL_DISCOVERY_METHOD");
     }
 
     #[tokio::test]
-    #[serial_test::serial]
     async fn test_discover_capability_from_environment() {
-        beardog_errors::process_env::set_var("PRIMAL_NAME", "BearDog");
-        beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
         let dir = tempfile::tempdir().unwrap();
         let sock = dir.path().join("testprimal.sock");
         std::fs::File::create(&sock).unwrap();
         let uri = format!("unix://{}", sock.display());
-        beardog_errors::process_env::set_var("PRIMAL_TESTPRIMAL_ADDR", &uri);
-        beardog_errors::process_env::set_var("PRIMAL_TESTPRIMAL_CAPABILITIES", "Discovery");
 
-        let adapter = UniversalAdapter::new().unwrap();
+        let mut env = HashMap::new();
+        env.insert("PRIMAL_TESTPRIMAL_ADDR".to_string(), uri);
+        env.insert(
+            "PRIMAL_TESTPRIMAL_CAPABILITIES".to_string(),
+            "Discovery".to_string(),
+        );
+
+        let sk = PrimalSelfKnowledge::discover_from_inputs(&SelfKnowledgeInputs {
+            identity: IdentityInputs {
+                primal_name: Some("BearDog".to_string()),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .unwrap();
+
+        let discovery = PrimalDiscovery::new(DiscoveryMethod::Environment).with_env_override(env);
+        let adapter = UniversalAdapter::with_self_knowledge_discovery_and_cache(
+            sk,
+            discovery,
+            Duration::from_secs(300),
+        )
+        .unwrap();
 
         let primals = adapter
             .discover_capability(SimpleCapability::Discovery)
@@ -437,31 +506,38 @@ mod tests {
             "expected testprimal from env + capability filter, got {:?}",
             primals
         );
-
-        beardog_errors::process_env::remove_var("PRIMAL_NAME");
-        beardog_errors::process_env::remove_var("PRIMAL_DISCOVERY_METHOD");
-        beardog_errors::process_env::remove_var("PRIMAL_TESTPRIMAL_ADDR");
-        beardog_errors::process_env::remove_var("PRIMAL_TESTPRIMAL_CAPABILITIES");
     }
 
     #[tokio::test]
-    #[serial_test::serial]
     async fn test_cache_behavior() {
-        beardog_errors::process_env::set_var("PRIMAL_NAME", "BearDog");
-        beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
-        beardog_errors::process_env::set_var("UNIVERSAL_ADAPTER_CACHE_TTL_SECS", "60");
-
         let dir = tempfile::tempdir().unwrap();
         let sock = dir.path().join("testprimal.sock");
         std::fs::File::create(&sock).unwrap();
         let uri = format!("unix://{}", sock.display());
-        beardog_errors::process_env::set_var("PRIMAL_TESTPRIMAL_ADDR", &uri);
-        beardog_errors::process_env::set_var(
-            "PRIMAL_TESTPRIMAL_CAPABILITIES",
-            "Discovery,SecureTunneling",
+
+        let mut env = HashMap::new();
+        env.insert("PRIMAL_TESTPRIMAL_ADDR".to_string(), uri);
+        env.insert(
+            "PRIMAL_TESTPRIMAL_CAPABILITIES".to_string(),
+            "Discovery,SecureTunneling".to_string(),
         );
 
-        let adapter = UniversalAdapter::new().unwrap();
+        let sk = PrimalSelfKnowledge::discover_from_inputs(&SelfKnowledgeInputs {
+            identity: IdentityInputs {
+                primal_name: Some("BearDog".to_string()),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .unwrap();
+
+        let discovery = PrimalDiscovery::new(DiscoveryMethod::Environment).with_env_override(env);
+        let adapter = UniversalAdapter::with_self_knowledge_discovery_and_cache(
+            sk,
+            discovery,
+            Duration::from_secs(60),
+        )
+        .unwrap();
 
         assert_eq!(adapter.cached_capabilities().await.len(), 0);
 
@@ -485,29 +561,30 @@ mod tests {
             .clear_capability_cache(&SimpleCapability::Discovery)
             .await;
         assert!(!adapter.has_capability(&SimpleCapability::Discovery).await);
-
-        beardog_errors::process_env::remove_var("PRIMAL_NAME");
-        beardog_errors::process_env::remove_var("PRIMAL_DISCOVERY_METHOD");
-        beardog_errors::process_env::remove_var("UNIVERSAL_ADAPTER_CACHE_TTL_SECS");
-        beardog_errors::process_env::remove_var("PRIMAL_TESTPRIMAL_ADDR");
-        beardog_errors::process_env::remove_var("PRIMAL_TESTPRIMAL_CAPABILITIES");
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_self_knowledge_access() {
-        beardog_errors::process_env::set_var("PRIMAL_NAME", "beardog"); // lowercase to match actual primal name
-        beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
-
         let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async {
-            let adapter = UniversalAdapter::new().unwrap();
+            let sk_in = PrimalSelfKnowledge::discover_from_inputs(&SelfKnowledgeInputs {
+                identity: IdentityInputs {
+                    primal_name: Some("beardog".to_string()),
+                    ..Default::default()
+                },
+                ..Default::default()
+            })
+            .unwrap();
+            let discovery = PrimalDiscovery::new(DiscoveryMethod::Environment);
+            let adapter = UniversalAdapter::with_self_knowledge_discovery_and_cache(
+                sk_in,
+                discovery,
+                Duration::from_secs(300),
+            )
+            .unwrap();
 
             let sk = adapter.self_knowledge();
-            assert_eq!(sk.my_name(), "beardog"); // actual primal name is lowercase
+            assert_eq!(sk.my_name(), "beardog");
         });
-
-        beardog_errors::process_env::remove_var("PRIMAL_NAME");
-        beardog_errors::process_env::remove_var("PRIMAL_DISCOVERY_METHOD");
     }
 }

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Error Handling Edge Cases Tests
 //!
 //! This module contains edge case tests for `BearDog`'s error handling system,

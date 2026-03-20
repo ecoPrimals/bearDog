@@ -257,12 +257,16 @@ impl EnvironmentValidation {
     /// # Environment Variables
     /// - `BEARDOG_ENV_VALIDATION_INTERVAL_SECS`: Validation interval (default: 300)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             validate_on_startup: true,
             validate_periodically: false,
             validation_interval: Duration::from_secs(
-                std::env::var("BEARDOG_ENV_VALIDATION_INTERVAL_SECS")
-                    .ok()
+                get("BEARDOG_ENV_VALIDATION_INTERVAL_SECS")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_VALIDATION_INTERVAL_SECS),
             ),

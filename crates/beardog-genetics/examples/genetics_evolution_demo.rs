@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // # Pure Genetics Evolution Demonstration
 //
 // This example demonstrates the ecosystem evolution genetics capabilities

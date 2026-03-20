@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Chaos Engineering Test Framework for `BearDog`
 //!
 //! Implements chaos testing scenarios to validate system resilience

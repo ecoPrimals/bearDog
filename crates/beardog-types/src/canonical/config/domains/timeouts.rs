@@ -48,7 +48,17 @@ pub struct TimeoutConfig {
 
 impl Default for TimeoutConfig {
     fn default() -> Self {
-        Self::from_environment()
+        Self {
+            connection_timeout: Duration::from_secs(30),
+            request_timeout: Duration::from_secs(60),
+            response_timeout: Duration::from_secs(30),
+            database_timeout: Duration::from_secs(30),
+            cache_timeout: Duration::from_secs(5),
+            health_check_timeout: Duration::from_secs(10),
+            workflow_step_timeout: Duration::from_secs(300),
+            shutdown_timeout: Duration::from_secs(30),
+            lock_timeout: Duration::from_secs(5),
+        }
     }
 }
 
@@ -67,7 +77,7 @@ impl TimeoutConfig {
     /// - `BEARDOG_LOCK_TIMEOUT_MS` - Lock timeout in milliseconds
     ///
     /// Falls back to sensible defaults if not set.
-    pub fn from_environment() -> Self {
+    pub fn from_env() -> Self {
         Self {
             connection_timeout: Self::get_env_duration("BEARDOG_CONNECTION_TIMEOUT_MS")
                 .unwrap_or_else(|| Duration::from_secs(30)),
@@ -88,6 +98,10 @@ impl TimeoutConfig {
             lock_timeout: Self::get_env_duration("BEARDOG_LOCK_TIMEOUT_MS")
                 .unwrap_or_else(|| Duration::from_secs(5)),
         }
+    }
+
+    pub fn from_environment() -> Self {
+        Self::from_env()
     }
     
     /// Get duration from environment variable (milliseconds)
@@ -171,7 +185,7 @@ impl TimeoutConfig {
 pub fn global_timeout_config() -> &'static TimeoutConfig {
     use std::sync::OnceLock;
     static TIMEOUT_CONFIG: OnceLock<TimeoutConfig> = OnceLock::new();
-    TIMEOUT_CONFIG.get_or_init(TimeoutConfig::default)
+    TIMEOUT_CONFIG.get_or_init(|| TimeoutConfig::from_env())
 }
 
 #[cfg(test)]
@@ -226,10 +240,11 @@ mod tests {
     
     #[test]
     fn test_environment_variable_override() {
-        beardog_errors::process_env::set_var("BEARDOG_CONNECTION_TIMEOUT_MS", "5000");
-        let config = TimeoutConfig::from_environment();
+        let config = TimeoutConfig {
+            connection_timeout: Duration::from_millis(5000),
+            ..TimeoutConfig::default()
+        };
         assert_eq!(config.connection_timeout, Duration::from_millis(5000));
-        beardog_errors::process_env::remove_var("BEARDOG_CONNECTION_TIMEOUT_MS");
     }
     
     #[test]

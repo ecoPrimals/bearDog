@@ -1,9 +1,10 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Build script for the `beardog-tunnel` crate.
 //!
 //! Configures platform-specific native linking for tunnel and StrongBox-related code paths.
 //! On **Android**, links NDK libraries (`log`, `android`, `keystore`) and sets
 //! `cfg(feature = "android_native")` when appropriate. On other targets, consumers rely on
-//! mock StrongBox paths (see `cargo:warning` output during build).
+//! non-Android targets omit the Android StrongBox module (see `cargo:warning` during build).
 //!
 //! Environment variables observed: `ANDROID_NDK_HOME`, `CARGO_CFG_TARGET_OS`.
 
@@ -32,7 +33,7 @@ fn main() {
 
     #[cfg(not(target_os = "android"))]
     println!(
-        "cargo:warning=Building for non-Android platform - using mock StrongBox implementation"
+        "cargo:warning=Building for non-Android target: Android StrongBox module is not compiled (expected)"
     );
 
     println!("cargo:rerun-if-env-changed=ANDROID_NDK_HOME");

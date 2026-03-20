@@ -33,7 +33,7 @@ pub struct ServiceRegistryConfig {
 impl Default for ServiceRegistryConfig {
     fn default() -> Self {
         Self {
-            max_services: std::env::var("BEARDOG_MAX_SERVICES")
+            max_services: beardog_errors::process_env::var("BEARDOG_MAX_SERVICES")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(1000), // 1000 services default

@@ -9,7 +9,7 @@ use base64::Engine; // For base64 decoding
 use beardog_errors::BearDogError;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Chunk size for streaming (16MB - optimal for most systems)
 const CHUNK_SIZE: usize = 16 * 1024 * 1024;
@@ -22,6 +22,18 @@ pub async fn handle_streaming_encrypt(
     input_path: &str,
     output_path: &str,
 ) -> Result<(), BearDogError> {
+    let home = super::key_store::home_dir_for_keys()?;
+    handle_streaming_encrypt_with_home(key_id, input_path, output_path, &home).await
+}
+
+/// Same as [`handle_streaming_encrypt`] but with an explicit home directory for the key store (tests / DI).
+pub async fn handle_streaming_encrypt_with_home(
+    key_id: &str,
+    input_path: &str,
+    output_path: &str,
+    home: impl AsRef<Path>,
+) -> Result<(), BearDogError> {
+    let home: PathBuf = home.as_ref().to_path_buf();
     println!("🔐 BearDog Streaming Encryption");
     println!("================================\n");
 
@@ -70,7 +82,7 @@ pub async fn handle_streaming_encrypt(
 
         // Encrypt chunk (using BearDog crypto service)
         let plaintext = &buffer[..bytes_read];
-        let encrypted = encrypt_chunk(key_id, plaintext, chunk_index).await?;
+        let encrypted = encrypt_chunk_with_home(key_id, plaintext, chunk_index, &home).await?;
 
         // Write encrypted chunk with length prefix
         let chunk_len = encrypted.len() as u32;
@@ -101,6 +113,17 @@ pub async fn handle_streaming_decrypt(
     input_path: &str,
     output_path: &str,
 ) -> Result<(), BearDogError> {
+    let home = super::key_store::home_dir_for_keys()?;
+    handle_streaming_decrypt_with_home(input_path, output_path, &home).await
+}
+
+/// Same as [`handle_streaming_decrypt`] but with an explicit home directory for the key store (tests / DI).
+pub async fn handle_streaming_decrypt_with_home(
+    input_path: &str,
+    output_path: &str,
+    home: impl AsRef<Path>,
+) -> Result<(), BearDogError> {
+    let home: PathBuf = home.as_ref().to_path_buf();
     println!("🔓 BearDog Streaming Decryption");
     println!("================================\n");
 
@@ -194,7 +217,8 @@ pub async fn handle_streaming_decrypt(
         input_file.read_exact(&mut encrypted_chunk)?;
 
         // Decrypt chunk
-        let decrypted = decrypt_chunk(&key_id, &encrypted_chunk, chunk_index).await?;
+        let decrypted =
+            decrypt_chunk_with_home(&key_id, &encrypted_chunk, chunk_index, &home).await?;
 
         // Write decrypted chunk
         output_file.write_all(&decrypted)?;
@@ -220,13 +244,14 @@ pub async fn handle_streaming_decrypt(
 }
 
 /// Encrypt a single chunk
-async fn encrypt_chunk(
+async fn encrypt_chunk_with_home(
     key_id: &str,
     plaintext: &[u8],
     chunk_index: u64,
+    home: &Path,
 ) -> Result<Vec<u8>, BearDogError> {
     // Load key from key store
-    let key = super::key_store::load_key(key_id)?;
+    let key = super::key_store::load_key_from_home(key_id, home)?;
 
     // Derive chunk-specific nonce (deterministic based on chunk index)
     let mut nonce = [0u8; 12];
@@ -268,13 +293,14 @@ async fn encrypt_chunk(
 }
 
 /// Decrypt a single chunk
-async fn decrypt_chunk(
+async fn decrypt_chunk_with_home(
     key_id: &str,
     encrypted: &[u8],
     _chunk_index: u64,
+    home: &Path,
 ) -> Result<Vec<u8>, BearDogError> {
     // Load key from key store
-    let key = super::key_store::load_key(key_id)?;
+    let key = super::key_store::load_key_from_home(key_id, home)?;
 
     // Extract nonce (first 12 bytes)
     if encrypted.len() < 12 {
@@ -319,11 +345,73 @@ async fn decrypt_chunk(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::handlers::key_store::{self, StoredKey};
+    use chrono::Utc;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_chunk_size_constant() {
+        assert_eq!(CHUNK_SIZE, 16 * 1024 * 1024);
+    }
 
     #[tokio::test]
-    async fn test_chunk_encrypt_decrypt() {
-        // This would require a test key in the key store
-        // For now, just test that the functions exist and have correct signatures
-        assert_eq!(CHUNK_SIZE, 16 * 1024 * 1024);
+    async fn test_streaming_encrypt_rejects_missing_input() {
+        assert!(
+            handle_streaming_encrypt("any", "/nonexistent/path/input.bin", "/tmp/out.bin")
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_streaming_decrypt_rejects_missing_input() {
+        assert!(
+            handle_streaming_decrypt("/nonexistent/stream.enc", "/tmp/out.bin")
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_streaming_encrypt_decrypt_roundtrip_small_file() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+
+        let key_material: [u8; 32] = [0xAB; 32];
+        let sk = StoredKey {
+            key_id: "stream-roundtrip".to_string(),
+            algorithm: "aes256-gcm".to_string(),
+            hsm_name: "test".to_string(),
+            created_at: Utc::now().to_rfc3339(),
+            key_material_b64: key_store::base64_encode(&key_material),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        key_store::save_key_to_home(&sk, home).unwrap();
+
+        let plain = dir.path().join("plain.bin");
+        let enc = dir.path().join("stream.enc");
+        let out = dir.path().join("decrypted.bin");
+        std::fs::write(&plain, b"streaming-roundtrip-data").unwrap();
+
+        handle_streaming_encrypt_with_home(
+            "stream-roundtrip",
+            plain.to_str().unwrap(),
+            enc.to_str().unwrap(),
+            home,
+        )
+        .await
+        .expect("encrypt");
+        handle_streaming_decrypt_with_home(enc.to_str().unwrap(), out.to_str().unwrap(), home)
+            .await
+            .expect("decrypt");
+
+        assert_eq!(std::fs::read(&out).unwrap(), b"streaming-roundtrip-data");
     }
 }

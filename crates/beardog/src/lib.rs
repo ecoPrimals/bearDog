@@ -42,3 +42,6 @@ pub use beardog_types::constants::domains::ecosystem::version::{MISSION, VERSION
 
 // Re-export neural_registration from beardog-ipc for convenience
 pub use beardog_ipc::neural_registration;
+
+#[cfg(test)]
+mod neural_registration_extended_tests;

@@ -733,4 +733,120 @@ mod tests {
         );
         assert!(quality < 0.5, "Poor interaction should have low quality");
     }
+
+    #[test]
+    fn test_calculate_metrics_empty_and_mixed_events() {
+        let empty = InteractionEntropyCollector::calculate_metrics(&[], 0);
+        assert_eq!(empty.total_interactions, 0);
+        assert_eq!(empty.avg_interval_ms, 0.0);
+
+        let events = vec![
+            InteractionEvent {
+                interaction_type: InteractionType::KeyPress,
+                timestamp_nanos: 0,
+                data: InteractionData::Keyboard {
+                    is_char: true,
+                    is_modifier: false,
+                },
+            },
+            InteractionEvent {
+                interaction_type: InteractionType::MouseMove,
+                timestamp_nanos: 10_000_000,
+                data: InteractionData::Mouse {
+                    delta_x: 3,
+                    delta_y: -2,
+                },
+            },
+            InteractionEvent {
+                interaction_type: InteractionType::MouseScroll,
+                timestamp_nanos: 25_000_000,
+                data: InteractionData::Scroll { delta: 1 },
+            },
+        ];
+        let m = InteractionEntropyCollector::calculate_metrics(&events, 30);
+        assert_eq!(m.total_interactions, 3);
+        assert_eq!(m.keyboard_events, 1);
+        assert_eq!(m.mouse_events, 2);
+        assert!(m.movement_entropy >= 0.0);
+    }
+
+    #[test]
+    fn test_derive_entropy_bytes_deterministic_for_same_inputs() {
+        let events = vec![InteractionEvent {
+            interaction_type: InteractionType::KeyRelease,
+            timestamp_nanos: 99,
+            data: InteractionData::Keyboard {
+                is_char: false,
+                is_modifier: true,
+            },
+        }];
+        let metrics = InteractionEntropyCollector::calculate_metrics(&events, 1);
+        let a = InteractionEntropyCollector::derive_entropy_bytes(&events, &metrics);
+        let b = InteractionEntropyCollector::derive_entropy_bytes(&events, &metrics);
+        assert_eq!(a, b);
+        assert_eq!(a.len(), 32);
+    }
+
+    #[test]
+    fn test_calculate_movement_entropy_neutral_without_mouse() {
+        let events = vec![InteractionEvent {
+            interaction_type: InteractionType::KeyPress,
+            timestamp_nanos: 0,
+            data: InteractionData::Keyboard {
+                is_char: true,
+                is_modifier: false,
+            },
+        }];
+        let m = InteractionEntropyCollector::calculate_movement_entropy(&events);
+        assert!((m - 0.5).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_shannon_empty_intervals() {
+        assert_eq!(
+            InteractionEntropyCollector::calculate_shannon_entropy(&[]),
+            0.0
+        );
+    }
+
+    #[test]
+    fn test_process_key_event_classifies_printable_vs_modifier() {
+        use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers};
+        let collector = InteractionEntropyCollector::new(InteractionCaptureConfig::default());
+        let printable = KeyEvent {
+            code: KeyCode::Char('z'),
+            modifiers: KeyModifiers::NONE,
+            kind: KeyEventKind::Press,
+            state: KeyEventState::empty(),
+        };
+        let ev = collector.process_key_event(printable, 100u128);
+        match ev.data {
+            InteractionData::Keyboard {
+                is_char,
+                is_modifier,
+            } => {
+                assert!(is_char);
+                assert!(!is_modifier);
+            }
+            _ => panic!("expected keyboard data"),
+        }
+
+        let modifier = KeyEvent {
+            code: KeyCode::Modifier(crossterm::event::ModifierKeyCode::LeftShift),
+            modifiers: KeyModifiers::SHIFT,
+            kind: KeyEventKind::Press,
+            state: KeyEventState::empty(),
+        };
+        let ev2 = collector.process_key_event(modifier, 200u128);
+        match ev2.data {
+            InteractionData::Keyboard {
+                is_char,
+                is_modifier,
+            } => {
+                assert!(!is_char);
+                assert!(is_modifier);
+            }
+            _ => panic!("expected keyboard data"),
+        }
+    }
 }

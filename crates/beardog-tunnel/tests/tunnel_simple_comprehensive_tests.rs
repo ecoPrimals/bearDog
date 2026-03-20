@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Simplified Comprehensive Tests for BearDog Tunnel
 //!
 //! Coverage expansion for beardog-tunnel crate - Phase 2

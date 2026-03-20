@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Fault injection tests for UniBin commands - resilience testing
 
 use assert_cmd::Command;

@@ -31,7 +31,8 @@ pub fn format_version(version: &str) -> String {
 pub fn get_build_info() -> BuildInfo {
     BuildInfo {
         version: format_version(env!("CARGO_PKG_VERSION")),
-        target: std::env::var("TARGET").unwrap_or_else(|_| "unknown".to_string()),
+        target: beardog_errors::process_env::var("TARGET")
+            .unwrap_or_else(|_| "unknown".to_string()),
         profile: if cfg!(debug_assertions) {
             "debug".to_string()
         } else {

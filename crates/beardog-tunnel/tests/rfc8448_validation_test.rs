@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! RFC 8448 Validation Test
 //!
 //! This test validates BearDog's TLS 1.3 key derivation against known values

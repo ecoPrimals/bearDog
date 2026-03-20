@@ -2,7 +2,7 @@
 
 //! Property-Based Testing Framework - Canonical Location
 //!
-//! **Build gating:** the `property_testing` module (including [`mock_implementations`]) is
+//! **Build gating:** the `property_testing` module (including [`mock_implementations`](crate::property_testing::mock_implementations)) is
 //! compiled only under `cfg(test)` or the `test-utils` Cargo feature on `beardog-utils`.
 //! It must not be relied on from production dependency graphs without that feature.
 //!

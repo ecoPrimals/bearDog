@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Test Categorization System
 // Created: October 26, 2025
 // Purpose: Standardize test organization and enable accurate coverage measurement
@@ -101,7 +102,7 @@ pub mod requires {
 #[must_use]
 pub fn should_run_category(category: &str) -> bool {
     // Check environment variables for test filtering
-    if let Ok(filter) = std::env::var("TEST_CATEGORY") {
+    if let Ok(filter) = beardog_errors::process_env::var("TEST_CATEGORY") {
         return filter.split(',').any(|c| c.trim() == category);
     }
     true
@@ -110,7 +111,7 @@ pub fn should_run_category(category: &str) -> bool {
 /// Helper to check if running specific test domains
 #[must_use]
 pub fn should_run_domain(domain: &str) -> bool {
-    if let Ok(filter) = std::env::var("TEST_DOMAIN") {
+    if let Ok(filter) = beardog_errors::process_env::var("TEST_DOMAIN") {
         return filter.split(',').any(|d| d.trim() == domain);
     }
     true

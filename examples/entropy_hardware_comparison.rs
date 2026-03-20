@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Hardware Entropy Comparison Suite
 //!
 //! Compare entropy generation across multiple hardware platforms:

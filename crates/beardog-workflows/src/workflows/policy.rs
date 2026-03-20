@@ -27,7 +27,7 @@ impl WorkflowScheduler {
             let workflows = Arc::clone(&self.workflows);
             let policy_config = &self.policy_config; // Use the correct policy_config field
             let cleanup_handle = tokio::spawn(async move {
-                let interval_secs = std::env::var("BEARDOG_POLICY_CLEANUP_INTERVAL_SECS")
+                let interval_secs = beardog_errors::process_env::var("BEARDOG_POLICY_CLEANUP_INTERVAL_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(3600);

@@ -10,7 +10,7 @@
 //! ## Performance
 //! - ~10-20 μs latency (vs 50-100 μs for JSON-RPC)
 //! - ~100K requests/sec (vs 10K for JSON-RPC)
-//! - Zero-copy binary serialization with bincode
+//! - Compact binary serialization (e.g. postcard) for IPC payloads
 //! - Type-safe at compile time
 //!
 //! ## Philosophy: Walk → Run (Protocol Graduation)

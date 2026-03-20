@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2025 EcoPrimals BearDog Team
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -223,12 +224,12 @@ impl CertificateIssuer {
         let mut hasher = Hasher::new();
         hasher.update(cert.id.as_bytes());
         hasher.update(cert.adapter_id.as_bytes());
-        hasher.update(&bincode::serialize(&cert.classification).map_err(|e| {
+        hasher.update(&postcard::to_allocvec(&cert.classification).map_err(|e| {
             BearDogError::system(format!("Failed to serialize classification: {e}"))
         })?);
         hasher.update(&cert.expires_at.timestamp().to_le_bytes());
         hasher.update(
-            &bincode::serialize(&cert.scope)
+            &postcard::to_allocvec(&cert.scope)
                 .map_err(|e| BearDogError::system(format!("Failed to serialize scope: {e}")))?,
         );
 

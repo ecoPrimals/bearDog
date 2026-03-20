@@ -13,11 +13,11 @@
 //! ## Architecture
 //!
 //! The AI optimization system consists of:
-//! - [`engine`]: Core AI optimization engine with neural networks
-//! - [`history`]: Historical optimization data and learning patterns
-//! - [`neural_network`]: Simple neural network implementation
-//! - [`predictor`]: Resource usage prediction algorithms
-//! - [`types`]: Type definitions for AI optimization components
+//! - [`engine`](crate::ai_optimization::engine): Core AI optimization engine with neural networks
+//! - [`history`](crate::ai_optimization::history): Historical optimization data and learning patterns
+//! - [`neural_network`](crate::ai_optimization::neural_network): Simple neural network implementation
+//! - [`predictor`](crate::ai_optimization::predictor): Resource usage prediction algorithms
+//! - [`types`](crate::ai_optimization::types): Type definitions for AI optimization components
 //!
 //! ## Examples
 //!

@@ -105,7 +105,7 @@ impl ProductionManager {
     fn start_maintenance_scheduler(&self) -> Result<(), BearDogError> {
         info!("🔧 Starting maintenance scheduler ");
         let maintenance_config = &self.config.maintenance_config;
-        let interval_secs = std::env::var("BEARDOG_PRODUCTION_MAINTENANCE_INTERVAL_SECS")
+        let interval_secs = beardog_errors::process_env::var("BEARDOG_PRODUCTION_MAINTENANCE_INTERVAL_SECS")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(300);

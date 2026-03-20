@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 #![allow(
     unused_imports,
     unused_variables,
@@ -203,7 +204,7 @@ async fn discover_network_hsms() -> Result<usize, BearDogError> {
     debug!("Discovering network HSMs");
 
     // Check for known endpoints from environment
-    let known_endpoints = std::env::var("BEARDOG_HSM_KNOWN_ENDPOINTS")
+    let known_endpoints = beardog_errors::process_env::var("BEARDOG_HSM_KNOWN_ENDPOINTS")
         .ok()
         .filter(|s| !s.is_empty());
 
@@ -224,10 +225,10 @@ async fn discover_cloud_hsms() -> Result<usize, BearDogError> {
     let mut count = 0;
 
     // Check for AWS credentials
-    if std::env::var("AWS_ACCESS_KEY_ID").is_ok()
+    if beardog_errors::process_env::var("AWS_ACCESS_KEY_ID").is_ok()
         || std::path::Path::new(&format!(
             "{}/.aws/credentials",
-            std::env::var("HOME").unwrap_or_default()
+            beardog_errors::process_env::var("HOME").unwrap_or_default()
         ))
         .exists()
     {
@@ -236,10 +237,10 @@ async fn discover_cloud_hsms() -> Result<usize, BearDogError> {
     }
 
     // Check for Azure credentials
-    if std::env::var("AZURE_CLIENT_ID").is_ok()
+    if beardog_errors::process_env::var("AZURE_CLIENT_ID").is_ok()
         || std::path::Path::new(&format!(
             "{}/.azure",
-            std::env::var("HOME").unwrap_or_default()
+            beardog_errors::process_env::var("HOME").unwrap_or_default()
         ))
         .exists()
     {
@@ -248,10 +249,10 @@ async fn discover_cloud_hsms() -> Result<usize, BearDogError> {
     }
 
     // Check for GCP credentials
-    if std::env::var("GOOGLE_APPLICATION_CREDENTIALS").is_ok()
+    if beardog_errors::process_env::var("GOOGLE_APPLICATION_CREDENTIALS").is_ok()
         || std::path::Path::new(&format!(
             "{}/.config/gcloud",
-            std::env::var("HOME").unwrap_or_default()
+            beardog_errors::process_env::var("HOME").unwrap_or_default()
         ))
         .exists()
     {
@@ -322,7 +323,7 @@ async fn discover_with_defaults() -> Result<usize, BearDogError> {
 
 async fn discover_with_custom_timeout() -> Result<usize, BearDogError> {
     // Verify custom timeout is applied
-    let timeout = std::env::var("BEARDOG_HSM_PROBE_TIMEOUT_SECS")
+    let timeout = beardog_errors::process_env::var("BEARDOG_HSM_PROBE_TIMEOUT_SECS")
         .ok()
         .and_then(|s| s.parse::<u64>().ok())
         .unwrap_or(5);
@@ -338,7 +339,7 @@ async fn discover_with_custom_timeout() -> Result<usize, BearDogError> {
 
 async fn discover_with_known_endpoints() -> Result<usize, BearDogError> {
     // Count configured endpoints
-    let endpoints = std::env::var("BEARDOG_HSM_KNOWN_ENDPOINTS")
+    let endpoints = beardog_errors::process_env::var("BEARDOG_HSM_KNOWN_ENDPOINTS")
         .ok()
         .filter(|s| !s.is_empty());
 

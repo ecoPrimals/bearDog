@@ -14,6 +14,41 @@ use std::collections::HashMap;
 use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
+/// Inputs for [`SelfIdentity::from_inputs`] (no environment reads).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct SelfIdentityEnvInputs {
+    /// `PRIMAL_NAME`
+    pub primal_name: Option<String>,
+    /// `BEARDOG_NAME`
+    pub beardog_name: Option<String>,
+    /// `HOSTNAME`
+    pub hostname: Option<String>,
+    /// `HOST`
+    pub host: Option<String>,
+    /// `BEARDOG_ENDPOINT`
+    pub beardog_endpoint: Option<String>,
+    /// `SELF_DISCOVERY_ENDPOINT`
+    pub self_discovery_endpoint: Option<String>,
+    /// `BEARDOG_ADVERTISED_CAPABILITIES` (comma-separated)
+    pub beardog_advertised_capabilities: Option<String>,
+}
+
+impl SelfIdentityEnvInputs {
+    /// Read identity-related variables with `std::env::var` (read-only).
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
+            primal_name: std::env::var("PRIMAL_NAME").ok(),
+            beardog_name: std::env::var("BEARDOG_NAME").ok(),
+            hostname: std::env::var("HOSTNAME").ok(),
+            host: std::env::var("HOST").ok(),
+            beardog_endpoint: std::env::var("BEARDOG_ENDPOINT").ok(),
+            self_discovery_endpoint: std::env::var("SELF_DISCOVERY_ENDPOINT").ok(),
+            beardog_advertised_capabilities: std::env::var("BEARDOG_ADVERTISED_CAPABILITIES").ok(),
+        }
+    }
+}
+
 /// Each primal maintains only its own identity and capabilities
 /// Self-identity information for a service
 ///
@@ -57,9 +92,13 @@ pub enum HealthStatus {
 /// Provides capability-based service discovery across the `BearDog` ecosystem,
 /// allowing components to find and connect to services based on their capabilities
 /// rather than hardcoded endpoints.
+///
+/// Uses `beardog_discovery::discovered_services_from_environment_with` (same rules as
+/// `CAPABILITY_*_ENDPOINT` / `PRIMAL_*` env conventions).
 #[derive(Debug, Clone)]
 pub struct UniversalCapabilityDiscovery {
-    // Placeholder fields
+    /// When set, discovery uses this map instead of the process environment.
+    env_override: Option<HashMap<String, String>>,
 }
 
 impl UniversalCapabilityDiscovery {
@@ -73,8 +112,15 @@ impl UniversalCapabilityDiscovery {
     ///
     /// # Errors
     /// - Returns `BearDogError` if initialization fails
-    pub const fn new() -> Result<Self, BearDogError> {
-        Ok(Self {})
+    pub fn new() -> Result<Self, BearDogError> {
+        Ok(Self { env_override: None })
+    }
+
+    /// Discovery using an explicit environment map (tests and injected configuration).
+    pub fn with_env_override(env: HashMap<String, String>) -> Result<Self, BearDogError> {
+        Ok(Self {
+            env_override: Some(env),
+        })
     }
 
     /// Discover services by capability type
@@ -93,17 +139,71 @@ impl UniversalCapabilityDiscovery {
         &self,
         capability: &ServiceCapabilityType,
     ) -> Result<Vec<DiscoveredService>, BearDogError> {
-        // Perform capability-based service discovery
-        debug!("🔍 Discovering services for capability: {:?}", capability);
+        match &self.env_override {
+            Some(m) => self.discover_by_capability_with_vars(capability, m),
+            None => {
+                self.discover_by_capability_with(capability, |k| std::env::var(k), std::env::vars())
+            }
+        }
+    }
 
-        // In a full implementation, this would:
-        // 1. Query environment variables for service endpoints
-        // 2. Check service registry for matching capabilities
-        // 3. Perform network discovery for matching services
+    /// Discover using an explicit environment map (concurrent-safe tests).
+    pub fn discover_by_capability_with_vars(
+        &self,
+        capability: &ServiceCapabilityType,
+        vars: &HashMap<String, String>,
+    ) -> Result<Vec<DiscoveredService>, BearDogError> {
+        self.discover_by_capability_with(
+            capability,
+            |k| vars.get(k).cloned().ok_or(std::env::VarError::NotPresent),
+            vars.iter().map(|(k, v)| (k.clone(), v.clone())),
+        )
+    }
 
-        // For now, return empty list to indicate no services found
-        // This is a safe default that doesn't break the system
-        Ok(vec![])
+    fn discover_by_capability_with<G, V>(
+        &self,
+        capability: &ServiceCapabilityType,
+        mut get_var: G,
+        vars: V,
+    ) -> Result<Vec<DiscoveredService>, BearDogError>
+    where
+        G: FnMut(&str) -> Result<String, std::env::VarError>,
+        V: IntoIterator<Item = (String, String)>,
+    {
+        let token = capability.discovery_env_token();
+        debug!(
+            "🔍 Discovering services for capability: {:?} (token={})",
+            capability, token
+        );
+
+        let found = beardog_discovery::discovered_services_from_environment_with(
+            &token,
+            beardog_discovery::DEFAULT_ENV_DISCOVERY_TTL_SECS,
+            |k| get_var(k),
+            vars,
+        );
+
+        let mapped: Vec<DiscoveredService> = found
+            .into_iter()
+            .map(|r| {
+                let meta: HashMap<String, serde_json::Value> = r
+                    .metadata
+                    .into_iter()
+                    .map(|(k, v)| (k, serde_json::Value::String(v)))
+                    .collect();
+                DiscoveredService {
+                    service_id: r.id,
+                    name: r.display_name,
+                    endpoint: r.endpoint.primary_url,
+                    capabilities: vec![capability.clone()],
+                    health_status: HealthStatus::Unknown,
+                    metadata: meta,
+                    discovered_at: chrono::DateTime::<chrono::Utc>::from(r.discovered_at),
+                }
+            })
+            .collect();
+
+        Ok(mapped)
     }
 }
 
@@ -130,8 +230,15 @@ impl SelfDiscoveryManager {
         identity: SelfIdentity,
         config: UniversalIntegrationConfig,
     ) -> Result<Self, BearDogError> {
-        let capability_discovery = UniversalCapabilityDiscovery::new()?;
-        // ⚡ ZERO-COPY OPTIMIZATION: Move instead of cloning
+        Self::new_with_capability_discovery(identity, config, UniversalCapabilityDiscovery::new()?)
+    }
+
+    /// Same as [`Self::new`] but with an explicit [`UniversalCapabilityDiscovery`].
+    pub fn new_with_capability_discovery(
+        identity: SelfIdentity,
+        config: UniversalIntegrationConfig,
+        capability_discovery: UniversalCapabilityDiscovery,
+    ) -> Result<Self, BearDogError> {
         let required_capabilities = config.required_capabilities.clone();
 
         Ok(Self {
@@ -302,14 +409,11 @@ pub struct DiscoveredService {
 impl Default for DiscoveredService {
     fn default() -> Self {
         Self {
-            service_id: "beardog-default".to_string(),
-            name: "BearDog Security Provider".to_string(),
-            endpoint: std::env::var("BEARDOG_ENDPOINT").unwrap_or_else(|_| {
-                std::env::var("SELF_DISCOVERY_ENDPOINT")
-                    .unwrap_or_else(|_| "https://beardog.ecoprimals.com".to_string())
-            }),
-            capabilities: vec![ServiceCapabilityType::Security],
-            health_status: HealthStatus::Healthy,
+            service_id: String::new(),
+            name: String::new(),
+            endpoint: String::new(),
+            capabilities: vec![],
+            health_status: HealthStatus::Unknown,
             metadata: HashMap::new(),
             discovered_at: chrono::Utc::now(),
         }
@@ -317,30 +421,68 @@ impl Default for DiscoveredService {
 }
 
 impl SelfIdentity {
-    /// Create `BearDog` self-identity
+    /// Build self-identity from explicit inputs (no environment reads).
     #[must_use]
-    pub fn beardog() -> Self {
+    pub fn from_inputs(inputs: &SelfIdentityEnvInputs) -> Self {
+        let name = inputs
+            .primal_name
+            .clone()
+            .or_else(|| inputs.beardog_name.clone())
+            .unwrap_or_else(|| {
+                inputs
+                    .hostname
+                    .clone()
+                    .or_else(|| inputs.host.clone())
+                    .unwrap_or_else(|| "local".to_string())
+            });
+
+        let endpoint = inputs
+            .beardog_endpoint
+            .clone()
+            .or_else(|| inputs.self_discovery_endpoint.clone())
+            .unwrap_or_default();
+
+        let capabilities = match &inputs.beardog_advertised_capabilities {
+            Some(s) => {
+                let v: Vec<ServiceCapabilityType> = s
+                    .split(',')
+                    .filter(|t| !t.trim().is_empty())
+                    .map(|t| ServiceCapabilityType::Custom(t.trim().to_string()))
+                    .collect();
+                if v.is_empty() {
+                    vec![ServiceCapabilityType::Security]
+                } else {
+                    v
+                }
+            }
+            None => vec![ServiceCapabilityType::Security],
+        };
+
         Self {
             id: Uuid::new_v4().to_string(),
-            name: "BearDog".to_string(),
+            name,
             version: env!("CARGO_PKG_VERSION").to_string(),
-            capabilities: vec![
-                ServiceCapabilityType::Security,
-                ServiceCapabilityType::Custom("HSM".to_string()),
-                ServiceCapabilityType::Custom("CrossPlatformSecurity".to_string()),
-                ServiceCapabilityType::Custom("BiometricAuthentication".to_string()),
-            ],
-            endpoint: std::env::var("BEARDOG_ENDPOINT").unwrap_or_else(|_| {
-                // This line was removed as per the edit hint to fix the async context
-                // universal_adapter
-                //     .discover_capability_endpoint(required_capability)
-                //     ?
-                //     .to_string()
-                String::new() // Placeholder, as universal_adapter is not defined
-            }),
+            capabilities,
+            endpoint,
             health_status: HealthStatus::Healthy,
             metadata: HashMap::new(),
         }
+    }
+
+    /// Build self-identity from environment (no hardcoded peer names or URLs).
+    ///
+    /// Uses `PRIMAL_NAME` / `BEARDOG_NAME`, `BEARDOG_ENDPOINT` / `SELF_DISCOVERY_ENDPOINT`,
+    /// and optional `BEARDOG_ADVERTISED_CAPABILITIES` (comma-separated capability tokens).
+    #[must_use]
+    pub fn from_environment() -> Self {
+        Self::from_inputs(&SelfIdentityEnvInputs::from_env())
+    }
+
+    /// Deprecated alias for [`Self::from_environment`].
+    #[deprecated(note = "use SelfIdentity::from_environment()")]
+    #[must_use]
+    pub fn beardog() -> Self {
+        Self::from_environment()
     }
 
     /// Creates a new instance
@@ -352,7 +494,7 @@ impl SelfIdentity {
         Self {
             id: Uuid::new_v4().to_string(),
             name: name.into(),
-            version: "1.0.0".to_string(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
             capabilities,
             endpoint: endpoint.into(),
             health_status: HealthStatus::Healthy,

@@ -178,8 +178,8 @@ impl BearDogCapabilities {
         metadata.insert("primal_type".to_string(), "security".to_string());
 
         // Self-knowledge pattern: discover primal name from environment
-        let primal_name = std::env::var("PRIMAL_NAME")
-            .or_else(|_| std::env::var("BEARDOG_NAME"))
+        let primal_name = beardog_errors::process_env::var("PRIMAL_NAME")
+            .or_else(|_| beardog_errors::process_env::var("BEARDOG_NAME"))
             .unwrap_or_else(|_| "beardog".to_string());
 
         let socket_path = format!(
@@ -283,8 +283,8 @@ mod tests {
 
     /// Helper to get expected primal name from environment or default
     fn expected_primal_name() -> String {
-        std::env::var("PRIMAL_NAME")
-            .or_else(|_| std::env::var("BEARDOG_NAME"))
+        beardog_errors::process_env::var("PRIMAL_NAME")
+            .or_else(|_| beardog_errors::process_env::var("BEARDOG_NAME"))
             .unwrap_or_else(|_| "beardog".to_string())
     }
 

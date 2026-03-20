@@ -157,7 +157,7 @@ impl Pkcs11Discoverer {
         }
 
         // Check environment variable
-        if let Ok(p11_lib) = std::env::var("PKCS11_MODULE") {
+        if let Ok(p11_lib) = beardog_errors::process_env::var("PKCS11_MODULE") {
             let path = PathBuf::from(p11_lib);
             if path.exists() {
                 debug!("Found PKCS#11 library from env: {:?}", path);

@@ -2,9 +2,9 @@
 
 //! Workflow orchestration surface: traits, reference implementations, and shared types.
 //!
-//! The [`canonical_traits`] module defines repository, processor, observer, and service
-//! contracts. [`canonical_examples`] provides in-memory and logging implementations suitable
-//! for tests and demos. [`types`] holds cross-cutting DTOs and execution metadata.
+//! The [`canonical_traits`](crate::workflows::canonical_traits) module defines repository, processor, observer, and service
+//! contracts. [`canonical_examples`](crate::workflows::canonical_examples) provides in-memory and logging implementations suitable
+//! for tests and demos. [`types`](crate::workflows::types) holds cross-cutting DTOs and execution metadata.
 
 pub mod canonical_examples;
 /// Core workflow traits: identity, persistence, step execution, and lifecycle observation.
@@ -13,6 +13,8 @@ pub mod canonical_examples;
 pub mod canonical_traits;
 
 /// Request/response payloads, configuration mirrors, and rich enums for execution and approval flows.
+///
+/// The [`types`](crate::workflows::types) module defines lifecycle, audit, approval, and execution states used by policies and logs.
 pub mod types;
 
 pub use canonical_traits::{

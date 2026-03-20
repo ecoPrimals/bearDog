@@ -118,7 +118,7 @@ impl AndroidUniversalProvider {
 
     /// Simulate StrongBox detection based on device model
     fn simulate_strongbox_detection(&mut self) -> bool {
-        if let Ok(model) = std::env::var("ANDROID_MODEL") {
+        if let Ok(model) = beardog_errors::process_env::var("ANDROID_MODEL") {
             self.device_metadata
                 .insert("device_model".to_string(), model.clone());
 

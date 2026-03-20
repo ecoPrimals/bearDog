@@ -189,18 +189,20 @@ impl RateLimitingConfig {
     /// - `BEARDOG_RATE_LIMIT_BURST_CAPACITY`: Burst capacity (default: 10)
     /// - `BEARDOG_RATE_LIMIT_WINDOW_SECS`: Window in seconds (default: 60)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             enabled: true,
-            max_requests_per_minute: std::env::var("BEARDOG_RATE_LIMIT_MAX_REQUESTS_PER_MIN")
-                .ok()
+            max_requests_per_minute: get("BEARDOG_RATE_LIMIT_MAX_REQUESTS_PER_MIN")
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_REQUESTS_PER_MINUTE),
-            burst_capacity: std::env::var("BEARDOG_RATE_LIMIT_BURST_CAPACITY")
-                .ok()
+            burst_capacity: get("BEARDOG_RATE_LIMIT_BURST_CAPACITY")
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(Self::DEFAULT_BURST_CAPACITY),
-            window_seconds: std::env::var("BEARDOG_RATE_LIMIT_WINDOW_SECS")
-                .ok()
+            window_seconds: get("BEARDOG_RATE_LIMIT_WINDOW_SECS")
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(Self::DEFAULT_WINDOW_SECS),
         }

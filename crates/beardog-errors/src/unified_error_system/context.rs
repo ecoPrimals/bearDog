@@ -266,7 +266,7 @@ impl SystemState {
         state.disk_usage = get_disk_usage();
 
         // Collect relevant environment variables
-        for (key, value) in std::env::vars() {
+        for (key, value) in crate::process_env::vars() {
             if key.starts_with("BEARDOG_") || key.starts_with("RUST_") {
                 state.environment.insert(key, value);
             }

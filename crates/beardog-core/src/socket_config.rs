@@ -48,6 +48,73 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+/// All inputs needed to resolve a [`SocketConfig`] without reading the process environment.
+///
+/// Use [`SocketPathInputs::from_env`] at process boundaries; tests should construct values
+/// directly for concurrency-safe, deterministic behavior.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SocketPathInputs {
+    /// Tier 1: `BEARDOG_SOCKET` (empty string is treated as unset).
+    pub beardog_socket: Option<String>,
+    /// Tier 2: `BIOMEOS_SOCKET_PATH`
+    pub biomeos_socket_path: Option<String>,
+    /// Tier 2: `BIOMEOS_SOCKET_DIR` (joins `beardog.sock`)
+    pub biomeos_socket_dir: Option<String>,
+    /// Used for tier 3–5 path construction; defaults to `"beardog"` in resolution.
+    pub primal_name: Option<String>,
+    /// Resolved family id (`BEARDOG_FAMILY_ID` / `FAMILY_ID`); default `"default"`.
+    pub family_id: Option<String>,
+    /// Resolved node id (`BEARDOG_NODE_ID` / `NODE_ID`); default `"default"`.
+    pub node_id: Option<String>,
+    /// User id for tier 4 (`/run/user/<uid>/...`); defaults to `1000` in [`Default`].
+    pub uid: u32,
+    /// When `true`, tier 3 uses `/primal/<primal_name>` if tier 1–2 do not apply.
+    pub primal_namespace_root_exists: bool,
+}
+
+impl Default for SocketPathInputs {
+    fn default() -> Self {
+        Self {
+            beardog_socket: None,
+            biomeos_socket_path: None,
+            biomeos_socket_dir: None,
+            primal_name: None,
+            family_id: None,
+            node_id: None,
+            uid: 1000,
+            primal_namespace_root_exists: false,
+        }
+    }
+}
+
+impl SocketPathInputs {
+    /// Read configuration from the process environment (read-only, thread-safe `std::env::var`).
+    #[must_use]
+    pub fn from_env() -> Self {
+        let family_id = std::env::var("BEARDOG_FAMILY_ID")
+            .ok()
+            .or_else(|| std::env::var("FAMILY_ID").ok());
+        let node_id = std::env::var("BEARDOG_NODE_ID")
+            .ok()
+            .or_else(|| std::env::var("NODE_ID").ok());
+        let uid = std::env::var("UID")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(1000);
+
+        Self {
+            beardog_socket: std::env::var("BEARDOG_SOCKET").ok(),
+            biomeos_socket_path: std::env::var("BIOMEOS_SOCKET_PATH").ok(),
+            biomeos_socket_dir: std::env::var("BIOMEOS_SOCKET_DIR").ok(),
+            primal_name: std::env::var("PRIMAL_NAME").ok(),
+            family_id,
+            node_id,
+            uid,
+            primal_namespace_root_exists: Path::new("/primal").exists(),
+        }
+    }
+}
+
 /// Socket configuration with 3-tier fallback logic
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SocketConfig {
@@ -77,31 +144,28 @@ pub enum SocketPathSource {
 }
 
 impl SocketConfig {
-    /// Create socket configuration from environment variables
+    /// Resolve socket configuration from explicit inputs (no environment reads).
     ///
     /// Implements 5-tier fallback (Primal IPC Protocol compliant):
-    /// 1. `BEARDOG_SOCKET` env var (primal-specific, highest priority)
-    /// 2. `BIOMEOS_SOCKET_PATH` or `BIOMEOS_SOCKET_DIR` env var (generic orchestrator, e.g., Neural API)
-    /// 3. `/primal/beardog` (Primal IPC Protocol standard namespace)
-    /// 4. `/run/user/<uid>/biomeos/beardog.sock` (XDG Runtime Directory, biomeOS standard)
-    /// 5. `/tmp/beardog-<family>-<node>.sock` (fallback)
+    /// 1. `beardog_socket` (primal-specific, highest priority)
+    /// 2. `biomeos_socket_path` or `biomeos_socket_dir` (generic orchestrator)
+    /// 3. `/primal/{primal-name}` when `primal_namespace_root_exists`
+    /// 4. `/run/user/<uid>/biomeos/beardog.sock` when the XDG runtime dir exists
+    /// 5. `/tmp/{primal-name}-{family}-{node}.sock` (fallback)
     #[must_use]
-    pub fn from_env() -> Self {
-        let family_id = std::env::var("BEARDOG_FAMILY_ID")
-            .or_else(|_| std::env::var("FAMILY_ID"))
-            .unwrap_or_else(|_| "default".to_string());
+    pub fn from_inputs(inputs: &SocketPathInputs) -> Self {
+        let family_id = inputs
+            .family_id
+            .clone()
+            .unwrap_or_else(|| "default".to_string());
+        let node_id = inputs
+            .node_id
+            .clone()
+            .unwrap_or_else(|| "default".to_string());
 
-        let node_id = std::env::var("BEARDOG_NODE_ID")
-            .or_else(|_| std::env::var("NODE_ID"))
-            .unwrap_or_else(|_| "default".to_string());
-
-        // Tier 1: Check for primal-specific BEARDOG_SOCKET env var (highest priority)
-        if let Ok(socket_path) = std::env::var("BEARDOG_SOCKET") {
-            // Validate: reject empty paths (fail fast, no hanging)
-            if socket_path.is_empty() {
-                // Skip to next tier instead of using empty path
-                // This prevents production hangs discovered in testing
-            } else {
+        // Tier 1: primal-specific BEARDOG_SOCKET
+        if let Some(ref socket_path) = inputs.beardog_socket {
+            if !socket_path.is_empty() {
                 return Self {
                     socket_path: PathBuf::from(socket_path),
                     family_id,
@@ -111,12 +175,8 @@ impl SocketConfig {
             }
         }
 
-        // Tier 2: Check for generic orchestrator BIOMEOS_SOCKET_PATH or BIOMEOS_SOCKET_DIR
-        // This allows Neural API to set a standard path for all primals
-        // BIOMEOS_SOCKET_PATH: Full path to socket file
-        // BIOMEOS_SOCKET_DIR: Directory where beardog.sock will be created
-        if let Ok(socket_path) = std::env::var("BIOMEOS_SOCKET_PATH") {
-            // Validate: reject empty paths (fail fast, no hanging)
+        // Tier 2: BIOMEOS_SOCKET_PATH or BIOMEOS_SOCKET_DIR
+        if let Some(ref socket_path) = inputs.biomeos_socket_path {
             if !socket_path.is_empty() {
                 return Self {
                     socket_path: PathBuf::from(socket_path),
@@ -125,8 +185,7 @@ impl SocketConfig {
                     source: SocketPathSource::OrchestratorEnvVar,
                 };
             }
-        } else if let Ok(socket_dir) = std::env::var("BIOMEOS_SOCKET_DIR") {
-            // Validate: reject empty paths
+        } else if let Some(ref socket_dir) = inputs.biomeos_socket_dir {
             if !socket_dir.is_empty() {
                 return Self {
                     socket_path: PathBuf::from(socket_dir).join("beardog.sock"),
@@ -137,12 +196,13 @@ impl SocketConfig {
             }
         }
 
-        // Tier 3: Try Primal IPC Protocol standard namespace (/primal/{primal-name})
-        // Per PRIMAL_IPC_PROTOCOL.md: Standard Path Format: /primal/{primal-name}
-        // Uses PRIMAL_NAME env var for self-knowledge, defaults to "beardog"
-        if Path::new("/primal").exists() {
-            let primal_name =
-                std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_string());
+        let primal_name = inputs
+            .primal_name
+            .clone()
+            .unwrap_or_else(|| "beardog".to_string());
+
+        // Tier 3: Primal IPC Protocol standard namespace
+        if inputs.primal_namespace_root_exists {
             return Self {
                 socket_path: PathBuf::from(format!("/primal/{primal_name}")),
                 family_id,
@@ -151,8 +211,8 @@ impl SocketConfig {
             };
         }
 
-        // Tier 4: Try XDG Runtime Directory (more secure, per-user)
-        if let Some(xdg_path) = Self::try_xdg_runtime(&family_id) {
+        // Tier 4: XDG Runtime Directory
+        if let Some(xdg_path) = Self::try_xdg_runtime(inputs.uid) {
             return Self {
                 socket_path: xdg_path,
                 family_id,
@@ -161,9 +221,7 @@ impl SocketConfig {
             };
         }
 
-        // Tier 5: Fallback to /tmp (last resort)
-        // Uses PRIMAL_NAME env var for self-knowledge, defaults to "beardog"
-        let primal_name = std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_string());
+        // Tier 5: /tmp fallback
         let tmp_path = format!("/tmp/{primal_name}-{family_id}-{node_id}.sock");
         Self {
             socket_path: PathBuf::from(tmp_path),
@@ -173,6 +231,14 @@ impl SocketConfig {
         }
     }
 
+    /// Create socket configuration from environment variables.
+    ///
+    /// Thin wrapper: [`SocketPathInputs::from_env`] then [`SocketConfig::from_inputs`].
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self::from_inputs(&SocketPathInputs::from_env())
+    }
+
     /// Try to use XDG Runtime Directory
     ///
     /// Returns `Some(path)` if `/run/user/<uid>/` exists, otherwise `None`
@@ -180,37 +246,15 @@ impl SocketConfig {
     /// Creates socket at `/run/user/<uid>/biomeos/beardog.sock` for biomeOS integration.
     /// The `/biomeos/` subdirectory groups all biomeOS primal sockets together for
     /// easy discovery and management.
-    fn try_xdg_runtime(_family_id: &str) -> Option<PathBuf> {
-        // Get current user ID
-        let uid = Self::get_uid();
-
-        // Check if XDG runtime directory exists
+    fn try_xdg_runtime(uid: u32) -> Option<PathBuf> {
         let xdg_runtime_dir = format!("/run/user/{uid}");
         if Path::new(&xdg_runtime_dir).exists() {
-            // Use biomeOS subdirectory for ecosystem integration
-            // Path: /run/user/<uid>/biomeos/beardog.sock
             Some(PathBuf::from(format!(
                 "{xdg_runtime_dir}/biomeos/beardog.sock"
             )))
         } else {
             None
         }
-    }
-
-    /// Get current user ID
-    ///
-    /// Uses fallback parsing from environment or defaults to 1000
-    #[cfg(unix)]
-    fn get_uid() -> u32 {
-        std::env::var("UID")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(1000) // Default to 1000 (common for first user)
-    }
-
-    #[cfg(not(unix))]
-    fn get_uid() -> u32 {
-        1000 // Default UID for non-Unix systems
     }
 
     /// Get the resolved socket path
@@ -332,35 +376,15 @@ impl std::fmt::Display for SocketConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Mutex;
-
-    // Global mutex to serialize env var tests
-    // Modern Rust: Tests that mutate global state (env vars) must be serialized
-    // This is a deep debt solution: explicit serialization for correctness
-    static ENV_TEST_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn test_env_var_override_takes_priority() {
-        // Lock to prevent concurrent env var modification
-        let _lock = ENV_TEST_LOCK
-            .lock()
-            .expect("ENV_TEST_LOCK should not be poisoned");
+        let config = SocketConfig::from_inputs(&SocketPathInputs {
+            beardog_socket: Some("/tmp/custom-override.sock".to_string()),
+            family_id: Some("test0".to_string()),
+            ..Default::default()
+        });
 
-        // Clean slate - remove any existing variables
-        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
-        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
-        beardog_errors::process_env::remove_var("FAMILY_ID");
-        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
-        beardog_errors::process_env::remove_var("NODE_ID");
-
-        // Set explicit override
-        beardog_errors::process_env::set_var("BEARDOG_SOCKET", "/tmp/custom-override.sock");
-        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "test0");
-
-        let config = SocketConfig::from_env();
-
-        // Deep debt solution: Assert what we set, not assumptions about XDG
-        // The env var should take priority regardless of system configuration
         assert_eq!(
             config.socket_path_string(),
             "/tmp/custom-override.sock",
@@ -372,109 +396,52 @@ mod tests {
             "Source should be PrimalEnvVar when BEARDOG_SOCKET is set"
         );
         assert_eq!(config.family_id(), "test0");
-
-        // Cleanup
-        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
-        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
     }
 
     #[test]
     fn test_empty_socket_path_rejected() {
-        // Lock to prevent concurrent env var modification
-        let _lock = ENV_TEST_LOCK
-            .lock()
-            .expect("ENV_TEST_LOCK should not be poisoned");
+        let config = SocketConfig::from_inputs(&SocketPathInputs {
+            beardog_socket: Some(String::new()),
+            family_id: Some("test".to_string()),
+            primal_namespace_root_exists: false,
+            ..Default::default()
+        });
 
-        // Test: Empty socket paths should fall through to next tier
-        // This prevents production hangs discovered in integration testing
-
-        // Clean slate
-        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
-        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_PATH");
-        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
-        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
-
-        // Set empty socket path (should be rejected)
-        beardog_errors::process_env::set_var("BEARDOG_SOCKET", "");
-        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "test");
-
-        let config = SocketConfig::from_env();
-
-        // Should NOT use empty path - should fall through to tier 3, 4, or 5
         assert_ne!(config.socket_path_string(), "");
         assert_ne!(config.source(), SocketPathSource::PrimalEnvVar);
 
-        // Should use Primal IPC namespace, XDG, or /tmp fallback
         assert!(
-            config.source() == SocketPathSource::PrimalNamespace
-                || config.source() == SocketPathSource::XdgRuntime
+            config.source() == SocketPathSource::XdgRuntime
                 || config.source() == SocketPathSource::TempDir
         );
-
-        // Cleanup
-        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
-        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
     }
 
     #[test]
     fn test_empty_biomeos_socket_rejected() {
-        // Lock to prevent concurrent env var modification
-        let _lock = ENV_TEST_LOCK
-            .lock()
-            .expect("ENV_TEST_LOCK should not be poisoned");
+        let config = SocketConfig::from_inputs(&SocketPathInputs {
+            biomeos_socket_path: Some(String::new()),
+            family_id: Some("test".to_string()),
+            primal_namespace_root_exists: false,
+            ..Default::default()
+        });
 
-        // Test: Empty BIOMEOS_SOCKET_PATH should also be rejected
-
-        // Clean slate
-        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
-        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_PATH");
-        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
-
-        // Set empty orchestrator socket (should be rejected)
-        beardog_errors::process_env::set_var("BIOMEOS_SOCKET_PATH", "");
-        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "test");
-
-        let config = SocketConfig::from_env();
-
-        // Should NOT use empty path - should fall through to tier 3, 4, or 5
         assert_ne!(config.socket_path_string(), "");
         assert_ne!(config.source(), SocketPathSource::OrchestratorEnvVar);
 
-        // Should use Primal IPC namespace, XDG, or /tmp fallback
         assert!(
-            config.source() == SocketPathSource::PrimalNamespace
-                || config.source() == SocketPathSource::XdgRuntime
+            config.source() == SocketPathSource::XdgRuntime
                 || config.source() == SocketPathSource::TempDir
         );
-
-        // Cleanup
-        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_PATH");
-        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
     }
 
     #[test]
     fn test_biomeos_socket_path_tier2() {
-        // Lock to prevent concurrent env var modification
-        let _lock = ENV_TEST_LOCK
-            .lock()
-            .expect("ENV_TEST_LOCK should not be poisoned");
-
-        // Clean slate - IMPORTANT: Remove ALL relevant env vars for concurrent test safety
-        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
-        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_PATH");
-        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
-        beardog_errors::process_env::remove_var("FAMILY_ID");
-        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
-        beardog_errors::process_env::remove_var("NODE_ID");
-
-        // Set BIOMEOS_SOCKET_PATH (Tier 2 - Neural API orchestrator)
-        beardog_errors::process_env::set_var(
-            "BIOMEOS_SOCKET_PATH",
-            "/tmp/beardog-default-default.sock",
-        );
-        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");
-
-        let config = SocketConfig::from_env();
+        let config = SocketConfig::from_inputs(&SocketPathInputs {
+            biomeos_socket_path: Some("/tmp/beardog-default-default.sock".to_string()),
+            family_id: Some("nat0".to_string()),
+            primal_namespace_root_exists: false,
+            ..Default::default()
+        });
 
         assert_eq!(
             config.socket_path_string(),
@@ -486,27 +453,15 @@ mod tests {
             SocketPathSource::OrchestratorEnvVar,
             "Source should be OrchestratorEnvVar when BIOMEOS_SOCKET_PATH is set"
         );
-
-        // Cleanup - IMPORTANT: Clean ALL vars we touched
-        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_PATH");
-        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
     }
 
     #[test]
     fn test_beardog_socket_overrides_biomeos_socket_path() {
-        // Lock to prevent concurrent env var modification
-        let _lock = ENV_TEST_LOCK
-            .lock()
-            .expect("ENV_TEST_LOCK should not be poisoned");
-        // Clean slate
-        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
-        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_PATH");
-
-        // Set both - BEARDOG_SOCKET should win (Tier 1 > Tier 2)
-        beardog_errors::process_env::set_var("BEARDOG_SOCKET", "/custom/beardog-specific.sock");
-        beardog_errors::process_env::set_var("BIOMEOS_SOCKET_PATH", "/tmp/biomeos-generic.sock");
-
-        let config = SocketConfig::from_env();
+        let config = SocketConfig::from_inputs(&SocketPathInputs {
+            beardog_socket: Some("/custom/beardog-specific.sock".to_string()),
+            biomeos_socket_path: Some("/tmp/biomeos-generic.sock".to_string()),
+            ..Default::default()
+        });
 
         assert_eq!(
             config.socket_path_string(),
@@ -518,31 +473,19 @@ mod tests {
             SocketPathSource::PrimalEnvVar,
             "Source should be PrimalEnvVar when BEARDOG_SOCKET is set"
         );
-
-        // Cleanup
-        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
-        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_PATH");
     }
 
     #[test]
     fn test_xdg_runtime_preferred_over_tmp() {
-        let _lock = ENV_TEST_LOCK
-            .lock()
-            .expect("ENV_TEST_LOCK should not be poisoned");
-        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
-        beardog_errors::process_env::remove_var("BIOMEOS_SOCKET_PATH");
-        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "xdg-test");
+        let config = SocketConfig::from_inputs(&SocketPathInputs {
+            family_id: Some("xdg-test".to_string()),
+            primal_namespace_root_exists: false,
+            ..Default::default()
+        });
 
-        let config = SocketConfig::from_env();
-
-        // Should use Primal IPC namespace, XDG, or /tmp depending on system
         match config.source() {
-            SocketPathSource::PrimalNamespace => {
-                assert_eq!(config.socket_path_string(), "/primal/beardog");
-            }
             SocketPathSource::XdgRuntime => {
                 assert!(config.socket_path_string().contains("/run/user/"));
-                // biomeOS standard: /run/user/$UID/biomeos/beardog.sock
                 assert!(config.socket_path_string().contains("biomeos/beardog.sock"));
             }
             SocketPathSource::TempDir => {
@@ -550,77 +493,67 @@ mod tests {
             }
             _ => panic!("Unexpected source: {:?}", config.source()),
         }
-
-        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
     }
 
     #[test]
     fn test_fallback_to_tmp_with_node_id() {
-        let _lock = ENV_TEST_LOCK
-            .lock()
-            .expect("ENV_TEST_LOCK should not be poisoned");
-        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
-        beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "fallback");
-        beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "node123");
+        let config = SocketConfig::from_inputs(&SocketPathInputs {
+            family_id: Some("fallback".to_string()),
+            node_id: Some("node123".to_string()),
+            primal_namespace_root_exists: false,
+            ..Default::default()
+        });
 
-        let config = SocketConfig::from_env();
-
-        // If Primal namespace, XDG, or /tmp fallback is used
         if config.source() == SocketPathSource::TempDir {
             assert_eq!(
                 config.socket_path_string(),
                 "/tmp/beardog-fallback-node123.sock"
             );
-        } else if config.source() == SocketPathSource::PrimalNamespace {
-            assert_eq!(config.socket_path_string(), "/primal/beardog");
+        } else if config.source() == SocketPathSource::XdgRuntime {
+            // XDG path when /run/user/<uid> exists
+            assert!(config.socket_path_string().contains("/run/user/"));
         }
-        // XDG would have different path, which is fine
-
-        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
-        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
     }
 
     #[test]
     fn test_default_family_and_node_ids() {
-        let _lock = ENV_TEST_LOCK
-            .lock()
-            .expect("ENV_TEST_LOCK should not be poisoned");
-        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
-        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
-        beardog_errors::process_env::remove_var("FAMILY_ID");
-        beardog_errors::process_env::remove_var("BEARDOG_NODE_ID");
-        beardog_errors::process_env::remove_var("NODE_ID");
-
-        let config = SocketConfig::from_env();
+        let config = SocketConfig::from_inputs(&SocketPathInputs {
+            primal_namespace_root_exists: false,
+            ..Default::default()
+        });
 
         assert_eq!(config.family_id(), "default");
         assert_eq!(config.node_id(), "default");
 
-        // Should generate a valid path - could be Primal namespace, XDG, or /tmp
         if config.source() == SocketPathSource::TempDir {
             assert_eq!(
                 config.socket_path_string(),
                 "/tmp/beardog-default-default.sock"
             );
-        } else if config.source() == SocketPathSource::PrimalNamespace {
-            assert_eq!(config.socket_path_string(), "/primal/beardog");
         }
-        // XDG would have different path, which is fine
+    }
+
+    #[test]
+    fn test_primal_namespace_tier3_when_root_exists() {
+        let config = SocketConfig::from_inputs(&SocketPathInputs {
+            primal_namespace_root_exists: true,
+            primal_name: None,
+            ..Default::default()
+        });
+        assert_eq!(config.source(), SocketPathSource::PrimalNamespace);
+        assert_eq!(config.socket_path_string(), "/primal/beardog");
     }
 
     #[test]
     fn test_description_format() {
-        let _lock = ENV_TEST_LOCK
-            .lock()
-            .expect("ENV_TEST_LOCK should not be poisoned");
-        beardog_errors::process_env::set_var("BEARDOG_SOCKET", "/custom/socket.sock");
-        let config = SocketConfig::from_env();
+        let config = SocketConfig::from_inputs(&SocketPathInputs {
+            beardog_socket: Some("/custom/socket.sock".to_string()),
+            ..Default::default()
+        });
 
         let desc = config.description();
         assert!(desc.contains("/custom/socket.sock"));
         assert!(desc.contains("BEARDOG_SOCKET"));
-
-        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
     }
 
     #[test]

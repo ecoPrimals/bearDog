@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Test CTAP2 `GetInfo` Command with Real Hardware (Pure Rust)
 //!
 //! This example tests the CTAP2 `GetInfo` command implementation

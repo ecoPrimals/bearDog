@@ -4,7 +4,7 @@
 
 /// Lightweight analysis engine and coarse metrics used in standalone pipelines.
 pub mod analysis;
-/// Primary async threat engine: rules, feeds, history, incidents, and optional ML.
+/// Primary async [`ThreatDetectionEngine`](crate::threat::handlers::core::ThreatDetectionEngine) with feeds, rules, ML hooks, and incident tracking.
 pub mod core;
 /// Enrichment against external or cached intelligence context.
 pub mod enrichment;

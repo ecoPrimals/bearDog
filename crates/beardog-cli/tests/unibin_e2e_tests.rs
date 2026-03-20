@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! E2E tests for UniBin commands
 
 use assert_cmd::Command;

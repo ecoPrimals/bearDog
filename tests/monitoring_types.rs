@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Monitoring Types Tests - Comprehensive Coverage
 //
 // Tests for monitoring enums and configuration types

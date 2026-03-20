@@ -128,7 +128,7 @@ impl SimdCryptoAccelerator {
         metrics
     }
 
-    /// Runs micro-benchmarks for AES and SHA using [`CRYPTO_BENCHMARK_ITERATIONS`].
+    /// Runs micro-benchmarks for AES and SHA using the crate-private benchmark iteration count.
     pub fn benchmark_operations(&self) -> Result<HashMap<String, u64>, BearDogError> {
         let mut results = HashMap::new();
 

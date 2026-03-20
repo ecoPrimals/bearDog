@@ -841,4 +841,39 @@ mod tests {
         assert!(status.is_healthy);
         Ok(())
     }
+
+    #[test]
+    fn algorithm_security_bits_and_flags() {
+        assert_eq!(Algorithm::Ed25519.security_bits(), 256);
+        assert!(Algorithm::Ed25519.is_signature_algorithm());
+        assert!(!Algorithm::Ed25519.is_encryption_algorithm());
+        assert!(Algorithm::Aes256Gcm.is_encryption_algorithm());
+        assert_eq!(Algorithm::EcdsaP384.security_bits(), 384);
+        let kt: KeyType = Algorithm::X25519.into();
+        assert_eq!(kt, KeyType::X25519);
+    }
+
+    #[test]
+    fn hsm_capabilities_default() {
+        let c = HsmCapabilities::default();
+        assert!(c.supports_key_generation && c.supports_signing && c.supports_encryption);
+    }
+
+    #[test]
+    fn algorithm_security_bits_rsa_and_hkdf() {
+        assert_eq!(Algorithm::RsaPss2048.security_bits(), 112);
+        assert_eq!(Algorithm::HkdfSha256.security_bits(), 256);
+        assert!(!Algorithm::HkdfSha256.is_signature_algorithm());
+        assert!(!Algorithm::X25519.is_signature_algorithm());
+    }
+
+    #[test]
+    fn android_key_params_builder_methods() {
+        let mut p = AndroidKeyParams::new().set_algorithm("RSA");
+        p.set_key_size(2048);
+        p.set_strongbox_required(true);
+        assert_eq!(p.algorithm, "RSA");
+        assert_eq!(p.key_size, 2048);
+        assert!(p.strongbox_required);
+    }
 }

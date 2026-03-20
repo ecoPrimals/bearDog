@@ -451,7 +451,7 @@ mod tests {
         MetricSource {
             source_id: "test_source".to_string(),
             source_type: "system".to_string(),
-            endpoint: std::env::var(None,
+            endpoint: beardog_errors::process_env::var(None,
     /// Creates test_alert
     fn create_test_alert(format!("alert_{}", uuid::Uuid::new_v4()),
             alert_name: "Test Alert".to_string(),
@@ -484,7 +484,7 @@ mod tests {
             MetricSource {
                 source_id: "app_source".to_string(),
                 source_type: "application".to_string(),
-                endpoint: std::env::var(None,
+                endpoint: beardog_errors::process_env::var(None,
             },
         let config = MetricCollectionConfig {
             config_id: "test_collection".to_string()),

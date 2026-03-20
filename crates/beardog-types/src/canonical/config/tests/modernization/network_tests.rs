@@ -8,26 +8,6 @@
 use crate::canonical::config::domains::{network, testing};
 use std::time::Duration;
 
-/// Helper to set env var for test scope
-struct EnvGuard {
-    key: String,
-}
-
-impl EnvGuard {
-    fn set(key: &str, value: &str) -> Self {
-        beardog_errors::process_env::set_var(key, value);
-        Self {
-            key: key.to_string(),
-        }
-    }
-}
-
-impl Drop for EnvGuard {
-    fn drop(&mut self) {
-        beardog_errors::process_env::remove_var(&self.key);
-    }
-}
-
 // ============================================================================
 // Network Config Tests
 // ============================================================================
@@ -57,10 +37,11 @@ fn test_connection_pool_config_with_defaults() {
 fn test_connection_pool_config_from_env() {
     use network::connection::ConnectionPoolConfig;
 
-    let _g1 = EnvGuard::set("BEARDOG_CONNECTION_POOL_MAX_SIZE", "200");
-    let _g2 = EnvGuard::set("BEARDOG_CONNECTION_IDLE_TIMEOUT_SECS", "1200");
-
-    let config = ConnectionPoolConfig::from_env();
+    let config = ConnectionPoolConfig::from_env_provider(|k| match k {
+        "BEARDOG_CONNECTION_POOL_MAX_SIZE" => Some("200".to_string()),
+        "BEARDOG_CONNECTION_IDLE_TIMEOUT_SECS" => Some("1200".to_string()),
+        _ => None,
+    });
 
     assert_eq!(config.max_size, 200);
     assert_eq!(config.idle_timeout, Duration::from_secs(1200));
@@ -98,10 +79,11 @@ fn test_timeout_configuration_with_defaults() {
 fn test_timeout_configuration_from_env() {
     use network::connection::TimeoutConfiguration;
 
-    let _g1 = EnvGuard::set("BEARDOG_KEEPALIVE_TIMEOUT_SECS", "120");
-    let _g2 = EnvGuard::set("BEARDOG_TLS_HANDSHAKE_TIMEOUT_SECS", "60");
-
-    let config = TimeoutConfiguration::from_env();
+    let config = TimeoutConfiguration::from_env_provider(|k| match k {
+        "BEARDOG_KEEPALIVE_TIMEOUT_SECS" => Some("120".to_string()),
+        "BEARDOG_TLS_HANDSHAKE_TIMEOUT_SECS" => Some("60".to_string()),
+        _ => None,
+    });
 
     assert_eq!(config.keepalive_timeout_seconds, 120);
     assert_eq!(config.tls_handshake_timeout_seconds, 60);
@@ -128,10 +110,11 @@ fn test_circuit_breaker_configuration_with_defaults() {
 fn test_circuit_breaker_configuration_from_env() {
     use network::connection::CircuitBreakerConfiguration;
 
-    let _g1 = EnvGuard::set("BEARDOG_CIRCUIT_BREAKER_RECOVERY_TIMEOUT_SECS", "120");
-    let _g2 = EnvGuard::set("BEARDOG_CIRCUIT_BREAKER_MIN_THROUGHPUT", "50");
-
-    let config = CircuitBreakerConfiguration::from_env();
+    let config = CircuitBreakerConfiguration::from_env_provider(|k| match k {
+        "BEARDOG_CIRCUIT_BREAKER_RECOVERY_TIMEOUT_SECS" => Some("120".to_string()),
+        "BEARDOG_CIRCUIT_BREAKER_MIN_THROUGHPUT" => Some("50".to_string()),
+        _ => None,
+    });
 
     assert_eq!(config.recovery_timeout_seconds, 120);
     assert_eq!(config.minimum_throughput, 50);
@@ -161,11 +144,12 @@ fn test_load_balancer_health_check_config_with_defaults() {
 fn test_load_balancer_health_check_config_from_env() {
     use network::connection::LoadBalancerHealthCheckConfiguration;
 
-    let _g1 = EnvGuard::set("BEARDOG_LB_HEALTH_CHECK_INTERVAL_SECS", "60");
-    let _g2 = EnvGuard::set("BEARDOG_LB_UNHEALTHY_THRESHOLD", "5");
-    let _g3 = EnvGuard::set("BEARDOG_LB_HEALTHY_THRESHOLD", "3");
-
-    let config = LoadBalancerHealthCheckConfiguration::from_env();
+    let config = LoadBalancerHealthCheckConfiguration::from_env_provider(|k| match k {
+        "BEARDOG_LB_HEALTH_CHECK_INTERVAL_SECS" => Some("60".to_string()),
+        "BEARDOG_LB_UNHEALTHY_THRESHOLD" => Some("5".to_string()),
+        "BEARDOG_LB_HEALTHY_THRESHOLD" => Some("3".to_string()),
+        _ => None,
+    });
 
     assert_eq!(config.interval_seconds, 60);
     assert_eq!(config.unhealthy_threshold, 5);
@@ -204,10 +188,11 @@ fn test_canonical_api_test_config_with_defaults() {
 fn test_canonical_api_test_config_from_env() {
     use testing::CanonicalApiTestConfig;
 
-    let _g1 = EnvGuard::set("BEARDOG_API_TEST_TIMEOUT_SECS", "60");
-    let _g2 = EnvGuard::set("BEARDOG_API_TEST_MAX_CONCURRENT", "20");
-
-    let config = CanonicalApiTestConfig::from_env();
+    let config = CanonicalApiTestConfig::from_env_provider(|k| match k {
+        "BEARDOG_API_TEST_TIMEOUT_SECS" => Some("60".to_string()),
+        "BEARDOG_API_TEST_MAX_CONCURRENT" => Some("20".to_string()),
+        _ => None,
+    });
 
     assert_eq!(config.timeout_seconds, 60);
     assert_eq!(config.max_concurrent_requests, 20);
@@ -233,10 +218,11 @@ fn test_canonical_production_test_config_with_defaults() {
 fn test_canonical_production_test_config_from_env() {
     use testing::CanonicalProductionTestConfig;
 
-    let _g1 = EnvGuard::set("BEARDOG_PROD_TEST_HEALTH_TIMEOUT_SECS", "60");
-    let _g2 = EnvGuard::set("BEARDOG_CANARY_PERCENTAGE", "10.0");
-
-    let config = CanonicalProductionTestConfig::from_env();
+    let config = CanonicalProductionTestConfig::from_env_provider(|k| match k {
+        "BEARDOG_PROD_TEST_HEALTH_TIMEOUT_SECS" => Some("60".to_string()),
+        "BEARDOG_CANARY_PERCENTAGE" => Some("10.0".to_string()),
+        _ => None,
+    });
 
     assert_eq!(config.health_check_timeout_seconds, 60);
     assert_eq!(config.canary_percentage, 10.0);

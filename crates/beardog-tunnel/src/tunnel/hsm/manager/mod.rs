@@ -97,12 +97,11 @@ impl Default for HsmAutoInitConfig {
 impl HsmAutoInitConfig {
     /// Create config from environment variables (for production use)
     pub fn from_env() -> Self {
-        use std::env;
         Self {
-            mode: env::var("BEARDOG_HSM_MODE")
+            mode: beardog_errors::process_env::var("BEARDOG_HSM_MODE")
                 .unwrap_or_else(|_| "software".to_string())
                 .to_lowercase(),
-            auto_init: env::var("BEARDOG_HSM_AUTO_INIT")
+            auto_init: beardog_errors::process_env::var("BEARDOG_HSM_AUTO_INIT")
                 .unwrap_or_else(|_| "true".to_string())
                 .parse::<bool>()
                 .unwrap_or(true),

@@ -755,3 +755,71 @@ pub async fn handle_tls_derive_application_secrets(
         "cipher_suite": cipher_suite
     }))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use base64::engine::general_purpose::STANDARD as B64;
+
+    fn rand32() -> Vec<u8> {
+        (0..32).map(|i| (i * 7 + 13) as u8).collect()
+    }
+
+    #[tokio::test]
+    async fn derive_secrets_happy_path() {
+        let pms = B64.encode([5u8; 32]);
+        let cr = B64.encode([1u8; 32]);
+        let sr = B64.encode([2u8; 32]);
+        let params = serde_json::json!({
+            "pre_master_secret": pms,
+            "client_random": cr,
+            "server_random": sr,
+            "cipher_suite": "TLS_AES_128_GCM_SHA256",
+        });
+        let out = handle_tls_derive_secrets(Some(&params)).await.unwrap();
+        assert!(out.get("master_secret").is_some());
+        assert_eq!(out["cipher_suite"], "TLS_AES_128_GCM_SHA256");
+    }
+
+    #[tokio::test]
+    async fn derive_secrets_errors() {
+        assert!(handle_tls_derive_secrets(None).await.is_err());
+        let bad = serde_json::json!({
+            "pre_master_secret": "x",
+            "client_random": B64.encode([0u8; 32]),
+            "server_random": B64.encode([0u8; 32]),
+        });
+        assert!(handle_tls_derive_secrets(Some(&bad)).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn derive_handshake_secrets_sha256() {
+        let params = serde_json::json!({
+            "pre_master_secret": B64.encode([8u8; 32]),
+            "client_random": B64.encode(rand32()),
+            "server_random": B64.encode(rand32()),
+            "transcript_hash": B64.encode([3u8; 32]),
+            "cipher_suite": 0x1303u64,
+        });
+        let out = handle_tls_derive_handshake_secrets(Some(&params))
+            .await
+            .unwrap();
+        assert!(out.get("client_write_key").is_some());
+        assert!(out.get("hash_algorithm").is_some());
+    }
+
+    #[tokio::test]
+    async fn derive_handshake_missing_cipher_fails() {
+        let params = serde_json::json!({
+            "pre_master_secret": B64.encode([8u8; 32]),
+            "client_random": B64.encode(rand32()),
+            "server_random": B64.encode(rand32()),
+            "transcript_hash": B64.encode([3u8; 32]),
+        });
+        assert!(
+            handle_tls_derive_handshake_secrets(Some(&params))
+                .await
+                .is_err()
+        );
+    }
+}

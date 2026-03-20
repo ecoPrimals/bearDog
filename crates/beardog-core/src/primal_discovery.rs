@@ -31,8 +31,8 @@
 //! - `UPA_REGISTRY_ADDR` - Legacy UPA registry address
 //! - `BEARDOG_BIOMEOS_SOCKET_DIR` - Override `$XDG_RUNTIME_DIR/biomeos` for IPC socket scan
 //! - `DISCOVERY_TIMEOUT_MS` - Discovery timeout in milliseconds
-//! - `PRIMAL_<NAME>_ADDR` - Explicit primal address (`http://…`, `unix://…`, or absolute socket path on Unix)
-//! - `PRIMAL_<NAME>_CAPABILITIES` - Comma-separated capabilities for env- or socket-discovered primals
+//! - `PRIMAL_&lt;NAME&gt;_ADDR` - Explicit primal address (`http://…`, `unix://…`, or absolute socket path on Unix)
+//! - `PRIMAL_&lt;NAME&gt;_CAPABILITIES` - Comma-separated capabilities for env- or socket-discovered primals
 //!
 //! # Usage Example
 //!
@@ -58,7 +58,6 @@ use beardog_errors::BearDogError;
 use beardog_types::constants::domains::network::ipc_discovery as ipc;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::env;
 use std::ffi::OsStr;
 use std::time::Duration;
 use tracing::{debug, info, warn};
@@ -70,7 +69,7 @@ use tracing::{debug, info, warn};
 /// Discovery method for finding primals
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum DiscoveryMethod {
-    /// Environment variables (PRIMAL_<NAME>_ADDR)
+    /// Environment variables (`PRIMAL_&lt;NAME&gt;_ADDR`)
     Environment,
 
     /// Universal Primal Authority (UPA) registry
@@ -128,6 +127,7 @@ pub struct DiscoveredPrimal {
 }
 
 /// Primal discovery engine
+#[derive(Clone)]
 pub struct PrimalDiscovery {
     /// Discovery method
     method: DiscoveryMethod,
@@ -137,6 +137,9 @@ pub struct PrimalDiscovery {
 
     /// Cache TTL (for future use)
     _cache_ttl: Duration,
+
+    /// When set, environment-based discovery uses this map instead of reading the process environment.
+    env_override: Option<HashMap<String, String>>,
 }
 
 // =============================================================================
@@ -201,7 +204,15 @@ impl PrimalDiscovery {
             method,
             _cache: HashMap::new(),
             _cache_ttl: cache_ttl,
+            env_override: None,
         }
+    }
+
+    /// Use an explicit environment map for `DiscoveryMethod::Environment` (tests and injected config).
+    #[must_use]
+    pub fn with_env_override(mut self, env: HashMap<String, String>) -> Self {
+        self.env_override = Some(env);
+        self
     }
 
     /// Create discovery engine from environment
@@ -214,7 +225,7 @@ impl PrimalDiscovery {
         let method = Self::detect_discovery_method()?;
         debug!("Discovery method: {:?}", method);
 
-        let cache_ttl = env::var("DISCOVERY_CACHE_TTL_SECS")
+        let cache_ttl = beardog_errors::process_env::var("DISCOVERY_CACHE_TTL_SECS")
             .ok()
             .and_then(|s| s.parse().ok())
             .map_or(Duration::from_secs(300), Duration::from_secs); // 5 minutes default
@@ -223,12 +234,16 @@ impl PrimalDiscovery {
             method,
             _cache: HashMap::new(),
             _cache_ttl: cache_ttl,
+            env_override: None,
         })
     }
 
     /// Detect discovery method from environment
     fn detect_discovery_method() -> Result<DiscoveryMethod, BearDogError> {
-        match env::var("PRIMAL_DISCOVERY_METHOD").ok().as_deref() {
+        match beardog_errors::process_env::var("PRIMAL_DISCOVERY_METHOD")
+            .ok()
+            .as_deref()
+        {
             Some("env" | "environment") => {
                 info!("Using environment-based discovery");
                 Ok(DiscoveryMethod::Environment)
@@ -239,13 +254,14 @@ impl PrimalDiscovery {
                 Ok(DiscoveryMethod::UniversalPrimalAuthority { registry_addr })
             }
             Some("mdns") => {
-                let service_type =
-                    env::var("MDNS_SERVICE_TYPE").unwrap_or_else(|_| "_ecoprimal._tcp".to_string());
+                let service_type = beardog_errors::process_env::var("MDNS_SERVICE_TYPE")
+                    .unwrap_or_else(|_| "_ecoprimal._tcp".to_string());
                 info!("Using mDNS service discovery: {}", service_type);
                 Ok(DiscoveryMethod::Mdns { service_type })
             }
             Some("dns-sd") => {
-                let domain = env::var("DNSSD_DOMAIN").unwrap_or_else(|_| "local.".to_string());
+                let domain = beardog_errors::process_env::var("DNSSD_DOMAIN")
+                    .unwrap_or_else(|_| "local.".to_string());
                 info!("Using DNS-SD discovery in domain: {}", domain);
                 Ok(DiscoveryMethod::DnsSd { domain })
             }
@@ -326,13 +342,16 @@ impl PrimalDiscovery {
 
     /// Discover from environment variables
     ///
-    /// This method reads from the actual environment at runtime, making it suitable
-    /// for production but not concurrent-safe for tests.
+    /// Reads via [`beardog_errors::process_env::vars`] (OS env merged with the test overlay).
     fn discover_from_env(
         &mut self,
         query: &DiscoveryQuery,
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
-        self.discover_from_env_vars(&env::vars().collect(), query)
+        let vars: HashMap<String, String> = match &self.env_override {
+            Some(m) => m.clone(),
+            None => beardog_errors::process_env::vars().collect(),
+        };
+        self.discover_from_env_vars(&vars, query)
     }
 
     /// Discover from explicit environment map
@@ -506,7 +525,7 @@ impl PrimalDiscovery {
     ///
     /// Expected format: Comma-separated list like "SecureTunneling,GeneticLineage,Discovery"
     fn _parse_capabilities_from_env(env_key: &str) -> Vec<SimpleCapability> {
-        env::var(env_key)
+        beardog_errors::process_env::var(env_key)
             .ok()
             .map(|caps_str| Self::parse_capabilities_str(&caps_str, env_key))
             .unwrap_or_default()

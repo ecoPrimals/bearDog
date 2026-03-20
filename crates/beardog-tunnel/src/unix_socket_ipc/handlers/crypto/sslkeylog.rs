@@ -166,7 +166,7 @@ pub fn export_to_sslkeylogfile(
     );
 
     // Check if SSLKEYLOGFILE env var is set
-    let keylog_path = match std::env::var("SSLKEYLOGFILE") {
+    let keylog_path = match beardog_errors::process_env::var("SSLKEYLOGFILE") {
         Ok(path) if !path.is_empty() => {
             info!("   ✅ SSLKEYLOGFILE is set: {}", path);
             path

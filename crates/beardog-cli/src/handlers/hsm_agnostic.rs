@@ -21,7 +21,7 @@ pub struct CliHsmInfo {
     pub tier: String,
     /// High-level interface kind (USB, TPM, Software, …)
     pub hsm_type: String,
-    /// Endpoint or device path detail (reserved for diagnostics)
+    /// Endpoint or device path detail (reserved for diagnostics; also in `interface_detail`)
     pub path: String,
     /// Single-line description of interface and path
     pub interface_detail: String,
@@ -150,12 +150,13 @@ pub fn select_hsm<'a>(
             hsms.iter()
                 .filter(|h| h.tier == "Hardware")
                 .max_by_key(|h| {
-                    // Prioritize by type: USB Token > TPM > Other
-                    match h.hsm_type.as_str() {
+                    // Prioritize by type: USB Token > TPM > Other; `path` breaks ties deterministically
+                    let type_rank = match h.hsm_type.as_str() {
                         "USB Token" => 100,
                         "TPM" => 50,
                         _ => 10,
-                    }
+                    };
+                    (type_rank, h.path.as_str())
                 })
                 .ok_or_else(|| BearDogError::not_found("No hardware HSMs found".to_string()))
         }
@@ -174,23 +175,29 @@ pub fn select_hsm<'a>(
         "auto" => {
             // Smart selection: Hardware > Software > Mobile > Cloud
             hsms.iter()
-                .max_by_key(|h| match h.tier.as_str() {
-                    "Hardware" => 100,
-                    "Software" => 50,
-                    "Mobile" => 40,
-                    "Cloud" => 30,
-                    _ => 1,
+                .max_by_key(|h| {
+                    let tier_rank = match h.tier.as_str() {
+                        "Hardware" => 100,
+                        "Software" => 50,
+                        "Mobile" => 40,
+                        "Cloud" => 30,
+                        _ => 1,
+                    };
+                    (tier_rank, h.path.as_str())
                 })
                 .ok_or_else(|| BearDogError::not_found("No HSMs available".to_string()))
         }
         _ => {
             // Unknown preference - default to auto selection
             hsms.iter()
-                .max_by_key(|h| match h.tier.as_str() {
-                    "Hardware" => 100,
-                    "Software" => 50,
-                    "Mobile" => 25,
-                    _ => 1,
+                .max_by_key(|h| {
+                    let tier_rank = match h.tier.as_str() {
+                        "Hardware" => 100,
+                        "Software" => 50,
+                        "Mobile" => 25,
+                        _ => 1,
+                    };
+                    (tier_rank, h.path.as_str())
                 })
                 .ok_or_else(|| BearDogError::not_found("No HSMs available".to_string()))
         }

@@ -443,12 +443,12 @@ impl StorageBackendTrait for FileStorageBackend {
             backup_data.insert(key_id, data);
         }
 
-        bincode::serialize(&backup_data).map_err(|e| BearDogError::internal(e.to_string()))
+        postcard::to_allocvec(&backup_data).map_err(|e| BearDogError::internal(e.to_string()))
     }
 
     async fn restore(&self, backup_data: &[u8]) -> Result<(), BearDogError> {
         let backup: HashMap<String, Vec<u8>> =
-            bincode::deserialize(backup_data).map_err(|e| BearDogError::internal(e.to_string()))?;
+            postcard::from_bytes(backup_data).map_err(|e| BearDogError::internal(e.to_string()))?;
 
         for (key_id, data) in backup {
             self.store(&key_id, &data).await?;
@@ -596,12 +596,12 @@ impl StorageBackendTrait for MemoryStorageBackend {
 
     async fn backup(&self) -> Result<Vec<u8>, BearDogError> {
         let storage = self.storage.read().await;
-        bincode::serialize(&*storage).map_err(|e| BearDogError::internal(e.to_string()))
+        postcard::to_allocvec(&*storage).map_err(|e| BearDogError::internal(e.to_string()))
     }
 
     async fn restore(&self, backup_data: &[u8]) -> Result<(), BearDogError> {
         let restored: HashMap<String, Vec<u8>> =
-            bincode::deserialize(backup_data).map_err(|e| BearDogError::internal(e.to_string()))?;
+            postcard::from_bytes(backup_data).map_err(|e| BearDogError::internal(e.to_string()))?;
         let mut storage = self.storage.write().await;
         *storage = restored;
         Ok(())

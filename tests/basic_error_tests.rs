@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Basic Error Creation and Handling Tests
 //!
 //! This module contains unit tests for basic error type creation across all `BearDogError` variants.

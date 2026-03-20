@@ -66,22 +66,24 @@ pub struct OnlineLearningConfig {
 impl Default for OnlineLearningConfig {
     fn default() -> Self {
         Self {
-            enabled: std::env::var("BEARDOG_AI_ONLINE_LEARNING_ENABLED")
+            enabled: beardog_errors::process_env::var("BEARDOG_AI_ONLINE_LEARNING_ENABLED")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(false),
-            learning_rate: std::env::var("BEARDOG_AI_ONLINE_LEARNING_RATE")
+            learning_rate: beardog_errors::process_env::var("BEARDOG_AI_ONLINE_LEARNING_RATE")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.001),
-            batch_size: std::env::var("BEARDOG_AI_ONLINE_BATCH_SIZE")
+            batch_size: beardog_errors::process_env::var("BEARDOG_AI_ONLINE_BATCH_SIZE")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(32),
-            update_frequency: std::env::var("BEARDOG_AI_ONLINE_UPDATE_FREQUENCY")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(100),
+            update_frequency: beardog_errors::process_env::var(
+                "BEARDOG_AI_ONLINE_UPDATE_FREQUENCY",
+            )
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(100),
         }
     }
 }

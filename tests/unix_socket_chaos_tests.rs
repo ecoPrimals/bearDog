@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Chaos Tests for Unix Socket IPC Evolution
 //!
 //! Tests the resilience of the lock-free concurrent Unix socket implementation
@@ -88,6 +89,7 @@ async fn send_request(
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn chaos_test_connection_storm() {
     // Test: 100 concurrent connections hitting the server simultaneously
     let (_dir, socket_path) = test_socket();
@@ -135,6 +137,7 @@ async fn chaos_test_connection_storm() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn chaos_test_rapid_connect_disconnect() {
     // Test: Rapid connect/disconnect cycles to test connection cleanup
     let (_dir, socket_path) = test_socket();
@@ -170,6 +173,7 @@ async fn chaos_test_rapid_connect_disconnect() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn chaos_test_readiness_race_condition() {
     // Test: Multiple threads racing to check readiness
     let (_dir, socket_path) = test_socket();
@@ -221,6 +225,7 @@ async fn chaos_test_readiness_race_condition() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn chaos_test_shutdown_during_connections() {
     // Test: Shutdown server while connections are being established
     let (_dir, socket_path) = test_socket();
@@ -274,6 +279,7 @@ async fn chaos_test_shutdown_during_connections() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn chaos_test_concurrent_request_flood() {
     // Test: Flood server with concurrent requests from multiple connections
     let (_dir, socket_path) = test_socket();
@@ -332,6 +338,7 @@ async fn chaos_test_concurrent_request_flood() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn chaos_test_atomic_readiness_under_load() {
     // Test: Verify atomic readiness flag remains consistent under load
     let (_dir, socket_path) = test_socket();
@@ -391,6 +398,7 @@ async fn chaos_test_atomic_readiness_under_load() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn chaos_test_error_handling_under_pressure() {
     // Test: Mix of valid and invalid requests under load
     let (_dir, socket_path) = test_socket();

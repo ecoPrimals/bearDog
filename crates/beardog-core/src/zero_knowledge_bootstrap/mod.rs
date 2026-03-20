@@ -255,20 +255,40 @@ pub struct BootstrapMetrics {
 #[allow(deprecated)]
 impl Default for BootstrapConfig {
     fn default() -> Self {
+        use beardog_config::global::BEARDOG_CONFIG;
+        Self {
+            discovery_timeout_ms: 30000,
+            max_discovery_attempts: 10,
+            min_capabilities_threshold: 1, // At least discover one other capability
+            listen_interface: BEARDOG_CONFIG.network.addresses.bind_address.clone(),
+            discovery_protocols: vec![
+                DiscoveryProtocol::MulticastDNS,
+                DiscoveryProtocol::HttpDiscovery,
+                DiscoveryProtocol::EnvironmentDiscovery,
+            ],
+            enable_passive_listening: true,
+        }
+    }
+}
+
+#[allow(deprecated)]
+impl BootstrapConfig {
+    /// Load bootstrap tuning from `BEARDOG_ZK_*` / `BEARDOG_LISTEN_INTERFACE` via `std::env::var`.
+    #[must_use]
+    pub fn from_env() -> Self {
+        use beardog_config::global::BEARDOG_CONFIG;
         Self {
             discovery_timeout_ms: std::env::var("BEARDOG_ZK_DISCOVERY_TIMEOUT_MS")
                 .ok()
                 .and_then(|v| v.parse().ok())
-                .unwrap_or(30000), // 30 seconds default
+                .unwrap_or(30000),
             max_discovery_attempts: std::env::var("BEARDOG_ZK_MAX_DISCOVERY_ATTEMPTS")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(10),
-            min_capabilities_threshold: 1, // At least discover one other capability
-            listen_interface: std::env::var("BEARDOG_LISTEN_INTERFACE").unwrap_or_else(|_| {
-                use beardog_config::global::BEARDOG_CONFIG;
-                BEARDOG_CONFIG.network.addresses.bind_address.clone()
-            }),
+            min_capabilities_threshold: 1,
+            listen_interface: std::env::var("BEARDOG_LISTEN_INTERFACE")
+                .unwrap_or_else(|_| BEARDOG_CONFIG.network.addresses.bind_address.clone()),
             discovery_protocols: vec![
                 DiscoveryProtocol::MulticastDNS,
                 DiscoveryProtocol::HttpDiscovery,
@@ -321,7 +341,7 @@ impl ZeroKnowledgeBootstrap {
         let config = UnifiedBootstrapConfig::default();
 
         // Step 1: Discover our own identity and capabilities (only thing we can know)
-        let mut self_discovery = self_discovery::SelfDiscoveryEngine::new().map_err(|e| {
+        let mut self_discovery = self_discovery::SelfDiscoveryEngine::from_env().map_err(|e| {
             beardog_errors::BearDogError::internal(format!(
                 "Failed to create discovery engine: {e}"
             ))
@@ -462,7 +482,7 @@ impl ZeroKnowledgeBootstrap {
     fn start_ecosystem_listening(&mut self) -> Result<(), BearDogError> {
         info!("👂 Starting passive ecosystem listening...");
 
-        let mut listener = ecosystem_listener::EcosystemListener::new(
+        let mut listener = ecosystem_listener::EcosystemListener::from_env(
             self.config.clone(),
             self.discovered_primals.clone(),
             self.discovered_capabilities.clone(),

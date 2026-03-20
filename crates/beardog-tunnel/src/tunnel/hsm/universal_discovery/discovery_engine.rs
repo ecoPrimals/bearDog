@@ -240,7 +240,7 @@ impl Pkcs11Discoverer {
     /// (colon-separated on Unix, semicolon-separated on Windows)
     fn get_default_search_paths() -> Vec<PathBuf> {
         // Check for environment override first
-        if let Ok(env_paths) = std::env::var("BEARDOG_HSM_LIBRARY_PATHS") {
+        if let Ok(env_paths) = beardog_errors::process_env::var("BEARDOG_HSM_LIBRARY_PATHS") {
             let separator = if cfg!(windows) { ';' } else { ':' };
             let custom_paths: Vec<PathBuf> = env_paths
                 .split(separator)

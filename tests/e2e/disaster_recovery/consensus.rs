@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Consensus & Byzantine Fault Tolerance Scenarios
 //!
 //! Tests distributed consensus under adversarial conditions.

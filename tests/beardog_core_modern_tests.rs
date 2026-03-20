@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Modern `BearDog` Core Tests
 //!
 //! Canonical tests for beardog-core functionality using current architecture.

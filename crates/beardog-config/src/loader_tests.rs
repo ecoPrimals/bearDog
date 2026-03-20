@@ -5,7 +5,6 @@
 #[cfg(test)]
 mod tests {
     use super::super::*;
-    use std::env;
 
     #[test]
     fn test_config_loader_new() {
@@ -44,19 +43,11 @@ mod tests {
 
     #[test]
     fn test_config_loader_with_env_vars() {
-        // Set a test environment variable
-        beardog_errors::process_env::set_var("BEARDOG_API_PORT", "9999");
-
         let loader = ConfigLoader::new().with_defaults().with_env_vars();
 
         let config = loader.build().expect("Should build with env vars");
 
-        // Note: This test may not work if from_env() doesn't read BEARDOG_API_PORT
-        // but it verifies the method doesn't panic
         assert!(config.network.api.port > 0, "Should have valid port");
-
-        // Clean up
-        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
     }
 
     #[test]

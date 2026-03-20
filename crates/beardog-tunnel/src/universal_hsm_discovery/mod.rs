@@ -278,7 +278,7 @@ impl UniversalHsmDiscovery {
     /// Discover AWS KMS HSM
     async fn discover_aws_kms(&self) -> Result<DiscoveredHsm, BearDogError> {
         // Check for AWS credentials via environment
-        if std::env::var("AWS_ACCESS_KEY_ID").is_err() {
+        if beardog_errors::process_env::var("AWS_ACCESS_KEY_ID").is_err() {
             return Err(BearDogError::not_found(
                 "AWS credentials not configured".to_string(),
             ));
@@ -298,7 +298,7 @@ impl UniversalHsmDiscovery {
                 ("type".to_string(), "cloud".to_string()),
                 (
                     "region".to_string(),
-                    std::env::var("AWS_REGION").unwrap_or_else(|_| "us-east-1".to_string()),
+                    beardog_errors::process_env::var("AWS_REGION").unwrap_or_else(|_| "us-east-1".to_string()),
                 ),
             ]),
         })
@@ -307,7 +307,7 @@ impl UniversalHsmDiscovery {
     /// Discover Azure Key Vault HSM
     async fn discover_azure_key_vault(&self) -> Result<DiscoveredHsm, BearDogError> {
         // Check for Azure credentials via environment
-        if std::env::var("AZURE_CLIENT_ID").is_err() {
+        if beardog_errors::process_env::var("AZURE_CLIENT_ID").is_err() {
             return Err(BearDogError::not_found(
                 "Azure credentials not configured".to_string(),
             ));
@@ -327,7 +327,7 @@ impl UniversalHsmDiscovery {
                 ("type".to_string(), "cloud".to_string()),
                 (
                     "vault_url".to_string(),
-                    std::env::var("AZURE_KEY_VAULT_URL")
+                    beardog_errors::process_env::var("AZURE_KEY_VAULT_URL")
                         .unwrap_or_else(|_| "https://vault.azure.net".to_string()),
                 ),
             ]),
@@ -337,7 +337,7 @@ impl UniversalHsmDiscovery {
     /// Discover Google Cloud KMS HSM
     async fn discover_gcp_kms(&self) -> Result<DiscoveredHsm, BearDogError> {
         // Check for GCP credentials via environment
-        if std::env::var("GOOGLE_APPLICATION_CREDENTIALS").is_err() {
+        if beardog_errors::process_env::var("GOOGLE_APPLICATION_CREDENTIALS").is_err() {
             return Err(BearDogError::not_found(
                 "GCP credentials not configured".to_string(),
             ));
@@ -357,7 +357,7 @@ impl UniversalHsmDiscovery {
                 ("type".to_string(), "cloud".to_string()),
                 (
                     "project_id".to_string(),
-                    std::env::var("GCP_PROJECT_ID").unwrap_or_else(|_| "default".to_string()),
+                    beardog_errors::process_env::var("GCP_PROJECT_ID").unwrap_or_else(|_| "default".to_string()),
                 ),
             ]),
         })

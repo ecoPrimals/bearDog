@@ -326,4 +326,195 @@ mod tests {
             _ => panic!("Wrong message type"),
         }
     }
+
+    #[tokio::test]
+    async fn handle_message_capability_request_ok() {
+        let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+        let connections = Arc::new(RwLock::new(Vec::new()));
+        let req = CapabilityRequest {
+            from_primal: "a".to_string(),
+            capability: Capability::Encryption {
+                algorithms: vec!["aes".to_string()],
+                key_types: vec!["x25519".to_string()],
+            },
+            params: std::collections::HashMap::new(),
+            request_id: "r1".to_string(),
+        };
+        let out =
+            IpcServer::handle_message(IpcMessage::CapabilityRequest(req), &handler, &connections)
+                .await;
+        assert!(out.is_some());
+        match out.unwrap() {
+            IpcMessage::CapabilityResponse(resp) => {
+                assert_eq!(resp.request_id, "r1");
+                assert!(matches!(resp.status, ResponseStatus::Success));
+            }
+            _ => panic!("expected capability response"),
+        }
+    }
+
+    #[tokio::test]
+    async fn handle_message_register_ok_returns_pong() {
+        let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+        let connections = Arc::new(RwLock::new(Vec::new()));
+        let out = IpcServer::handle_message(
+            IpcMessage::Register {
+                primal_id: "p1".to_string(),
+                capabilities: vec!["c".to_string()],
+            },
+            &handler,
+            &connections,
+        )
+        .await;
+        assert!(matches!(out, Some(IpcMessage::Pong { ref to }) if to == "p1"));
+        assert_eq!(*connections.read().await, vec!["p1".to_string()]);
+    }
+
+    struct FailingRegisterHandler;
+
+    #[async_trait::async_trait]
+    impl IpcHandler for FailingRegisterHandler {
+        async fn handle_capability_request(
+            &self,
+            _request: CapabilityRequest,
+        ) -> Result<CapabilityResponse, BearDogError> {
+            unreachable!()
+        }
+
+        async fn handle_register(
+            &self,
+            _primal_id: String,
+            _capabilities: Vec<String>,
+        ) -> Result<(), BearDogError> {
+            Err(BearDogError::business("register failed".to_string()))
+        }
+
+        async fn handle_event(
+            &self,
+            _event_type: String,
+            _data: serde_json::Value,
+        ) -> Result<(), BearDogError> {
+            Ok(())
+        }
+    }
+
+    #[tokio::test]
+    async fn handle_message_register_err_returns_none() {
+        let handler: Arc<dyn IpcHandler> = Arc::new(FailingRegisterHandler);
+        let connections = Arc::new(RwLock::new(Vec::new()));
+        let out = IpcServer::handle_message(
+            IpcMessage::Register {
+                primal_id: "p1".to_string(),
+                capabilities: vec![],
+            },
+            &handler,
+            &connections,
+        )
+        .await;
+        assert!(out.is_none());
+        assert!(connections.read().await.is_empty());
+    }
+
+    #[tokio::test]
+    async fn handle_message_ping_returns_pong() {
+        let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+        let connections = Arc::new(RwLock::new(Vec::new()));
+        let out = IpcServer::handle_message(
+            IpcMessage::Ping {
+                from: "alice".to_string(),
+            },
+            &handler,
+            &connections,
+        )
+        .await;
+        assert!(matches!(out, Some(IpcMessage::Pong { ref to }) if to == "alice"));
+    }
+
+    #[tokio::test]
+    async fn handle_message_event_returns_none() {
+        let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+        let connections = Arc::new(RwLock::new(Vec::new()));
+        let out = IpcServer::handle_message(
+            IpcMessage::Event {
+                event_type: "e".to_string(),
+                data: serde_json::json!({}),
+            },
+            &handler,
+            &connections,
+        )
+        .await;
+        assert!(out.is_none());
+    }
+
+    #[tokio::test]
+    async fn handle_message_response_variants_yield_none() {
+        let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+        let connections = Arc::new(RwLock::new(Vec::new()));
+        assert!(
+            IpcServer::handle_message(
+                IpcMessage::Pong {
+                    to: "x".to_string()
+                },
+                &handler,
+                &connections,
+            )
+            .await
+            .is_none()
+        );
+        let resp = CapabilityResponse {
+            request_id: "r".to_string(),
+            status: ResponseStatus::Success,
+            data: None,
+            error: None,
+        };
+        assert!(
+            IpcServer::handle_message(IpcMessage::CapabilityResponse(resp), &handler, &connections,)
+                .await
+                .is_none()
+        );
+    }
+
+    struct FailingEventHandler;
+
+    #[async_trait::async_trait]
+    impl IpcHandler for FailingEventHandler {
+        async fn handle_capability_request(
+            &self,
+            _request: CapabilityRequest,
+        ) -> Result<CapabilityResponse, BearDogError> {
+            unreachable!()
+        }
+
+        async fn handle_register(
+            &self,
+            _primal_id: String,
+            _capabilities: Vec<String>,
+        ) -> Result<(), BearDogError> {
+            Ok(())
+        }
+
+        async fn handle_event(
+            &self,
+            _event_type: String,
+            _data: serde_json::Value,
+        ) -> Result<(), BearDogError> {
+            Err(BearDogError::business("event failed".to_string()))
+        }
+    }
+
+    #[tokio::test]
+    async fn handle_message_event_error_returns_none() {
+        let handler: Arc<dyn IpcHandler> = Arc::new(FailingEventHandler);
+        let connections = Arc::new(RwLock::new(Vec::new()));
+        let out = IpcServer::handle_message(
+            IpcMessage::Event {
+                event_type: "bad".to_string(),
+                data: serde_json::json!({}),
+            },
+            &handler,
+            &connections,
+        )
+        .await;
+        assert!(out.is_none());
+    }
 }

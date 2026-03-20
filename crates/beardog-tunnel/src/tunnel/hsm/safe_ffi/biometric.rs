@@ -82,14 +82,14 @@ impl SafeBiometricAuthenticator {
             // LAContext().canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics)
 
             // Check environment variables for testing
-            if std::env::var("IOS_TOUCH_ID_AVAILABLE")
+            if beardog_errors::process_env::var("IOS_TOUCH_ID_AVAILABLE")
                 .map(|v| v == "true")
                 .unwrap_or(false)
             {
                 types.push(BiometricType::TouchId);
             }
 
-            if std::env::var("IOS_FACE_ID_AVAILABLE")
+            if beardog_errors::process_env::var("IOS_FACE_ID_AVAILABLE")
                 .map(|v| v == "true")
                 .unwrap_or(false)
             {

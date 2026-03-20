@@ -9,7 +9,7 @@
 //! These methods enable runtime capability discovery by allowing other primals
 //! and services to query what this primal provides without manual configuration.
 
-use super::utils::get_primal_name;
+use super::utils::{IdentityHints, get_primal_name_with};
 use super::{HandlerRegistry, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
@@ -20,12 +20,21 @@ use std::sync::Arc;
 pub struct IntrospectionHandler {
     /// Reference to handler registry for method listing
     registry: Arc<HandlerRegistry>,
+    identity: IdentityHints,
 }
 
 impl IntrospectionHandler {
-    /// Create new introspection handler
-    pub const fn new(registry: Arc<HandlerRegistry>) -> Self {
-        Self { registry }
+    /// Create new introspection handler (reads identity from environment).
+    pub fn new(registry: Arc<HandlerRegistry>) -> Self {
+        Self {
+            registry,
+            identity: IdentityHints::from_env(),
+        }
+    }
+
+    /// Tests / DI: explicit identity hints (no `PRIMAL_NAME` env mutation).
+    pub fn with_identity_hints(registry: Arc<HandlerRegistry>, identity: IdentityHints) -> Self {
+        Self { registry, identity }
     }
 }
 
@@ -60,7 +69,7 @@ impl IntrospectionHandler {
     /// - Protocol version
     async fn handle_primal_info(&self) -> Result<Value, String> {
         Ok(json!({
-            "name": get_primal_name(),
+            "name": get_primal_name_with(&self.identity),
             "version": env!("CARGO_PKG_VERSION"),
             "description": "Cryptographic heart of ecoPrimals - Pure Rust crypto service",
             "capabilities": [
@@ -206,16 +215,18 @@ impl IntrospectionHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
+    use crate::unix_socket_ipc::handlers::utils::IdentityHints;
 
     #[tokio::test]
-    #[serial]
     async fn test_primal_info_structure() {
-        let prev = std::env::var("PRIMAL_NAME").ok();
-        beardog_errors::process_env::set_var("PRIMAL_NAME", "beardog");
-
         let registry = HandlerRegistry::default();
-        let handler = IntrospectionHandler::new(registry);
+        let handler = IntrospectionHandler::with_identity_hints(
+            registry,
+            IdentityHints {
+                primal_name: Some("beardog".to_string()),
+                ..Default::default()
+            },
+        );
 
         let result = handler.handle_primal_info().await.unwrap();
 
@@ -226,12 +237,6 @@ mod tests {
         assert!(result["capabilities"].is_array());
         assert!(result["protocol"].is_object());
         assert!(result["features"].is_object());
-
-        if let Some(p) = prev {
-            beardog_errors::process_env::set_var("PRIMAL_NAME", p);
-        } else {
-            beardog_errors::process_env::remove_var("PRIMAL_NAME");
-        }
     }
 
     #[tokio::test]

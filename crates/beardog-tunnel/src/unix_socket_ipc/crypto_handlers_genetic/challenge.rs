@@ -193,3 +193,160 @@ pub async fn handle_verify_challenge_response(params: Value) -> Result<Value, Be
         trust_level: trust_level.to_string(),
     }))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[tokio::test]
+    async fn generate_challenge_parses_and_returns_hex_nonce() {
+        let params = json!({
+            "challenger_node_id": "node-a",
+            "target_family_id": "fam-1",
+        });
+        let v = handle_generate_challenge(params).await.expect("generate");
+        let nonce = v.get("nonce").and_then(|x| x.as_str()).expect("nonce");
+        assert_eq!(nonce.len(), 64);
+        assert!(v.get("challenge_id").and_then(|x| x.as_str()).is_some());
+    }
+
+    #[tokio::test]
+    async fn generate_challenge_rejects_malformed_params() {
+        let err = handle_generate_challenge(json!("not-an-object"))
+            .await
+            .unwrap_err();
+        let msg = format!("{err}");
+        assert!(
+            msg.contains("Invalid generate_challenge") || msg.contains("invalid"),
+            "{msg}"
+        );
+    }
+
+    #[tokio::test]
+    async fn respond_and_verify_roundtrip_with_temp_seed() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let seed_path = dir.path().join("family.seed");
+        std::fs::write(&seed_path, b"test-seed-bytes-for-lineage").expect("write seed");
+
+        let gen_params = json!({
+            "challenger_node_id": "c1",
+            "target_family_id": "fam-x",
+        });
+        let challenge = handle_generate_challenge(gen_params)
+            .await
+            .expect("generate challenge");
+        let nonce = challenge["nonce"].as_str().expect("nonce");
+
+        let respond_params = json!({
+            "nonce": nonce,
+            "our_family_seed_path": seed_path.to_string_lossy(),
+            "our_node_id": "responder-1",
+        });
+        let resp = handle_respond_to_challenge(respond_params)
+            .await
+            .expect("respond");
+
+        let verify_params = json!({
+            "nonce": nonce,
+            "response": resp["response"],
+            "responder_node_id": "responder-1",
+            "lineage_proof": resp["lineage_proof"],
+            "our_family_seed_path": seed_path.to_string_lossy(),
+        });
+        let verified = handle_verify_challenge_response(verify_params)
+            .await
+            .expect("verify");
+        assert_eq!(verified["valid"], true);
+        assert_eq!(verified["relationship"], "verified_sibling");
+    }
+
+    #[tokio::test]
+    async fn respond_fails_on_invalid_hex_nonce() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let seed_path = dir.path().join("family.seed");
+        std::fs::write(&seed_path, b"x").expect("write seed");
+
+        let err = handle_respond_to_challenge(json!({
+            "nonce": "not-hex",
+            "our_family_seed_path": seed_path.to_string_lossy(),
+            "our_node_id": "n",
+        }))
+        .await
+        .unwrap_err();
+        assert!(format!("{err}").contains("hex") || format!("{err}").contains("nonce"));
+    }
+
+    #[tokio::test]
+    async fn verify_fails_on_tampered_response() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let seed_path = dir.path().join("family.seed");
+        std::fs::write(&seed_path, b"same-seed").expect("write seed");
+
+        let challenge = handle_generate_challenge(json!({
+            "challenger_node_id": "c",
+            "target_family_id": "f",
+        }))
+        .await
+        .expect("gen");
+        let nonce = challenge["nonce"].as_str().expect("nonce");
+
+        let resp = handle_respond_to_challenge(json!({
+            "nonce": nonce,
+            "our_family_seed_path": seed_path.to_string_lossy(),
+            "our_node_id": "r",
+        }))
+        .await
+        .expect("respond");
+
+        let mut bad_hex = resp["response"].as_str().expect("response hex").to_string();
+        let last = bad_hex.pop().unwrap();
+        bad_hex.push(if last == '0' { '1' } else { '0' });
+
+        let out = handle_verify_challenge_response(json!({
+            "nonce": nonce,
+            "response": bad_hex,
+            "responder_node_id": "r",
+            "lineage_proof": resp["lineage_proof"],
+            "our_family_seed_path": seed_path.to_string_lossy(),
+        }))
+        .await
+        .expect("verify");
+        assert_eq!(out["valid"], false);
+        assert_eq!(out["relationship"], "unrelated");
+    }
+
+    #[tokio::test]
+    async fn verify_rejects_invalid_lineage_proof_base64() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let seed_path = dir.path().join("family.seed");
+        std::fs::write(&seed_path, b"seed").expect("write seed");
+
+        let challenge = handle_generate_challenge(json!({
+            "challenger_node_id": "c",
+            "target_family_id": "f",
+        }))
+        .await
+        .expect("gen");
+        let nonce = challenge["nonce"].as_str().expect("nonce");
+
+        let resp = handle_respond_to_challenge(json!({
+            "nonce": nonce,
+            "our_family_seed_path": seed_path.to_string_lossy(),
+            "our_node_id": "r",
+        }))
+        .await
+        .expect("respond");
+
+        let err = handle_verify_challenge_response(json!({
+            "nonce": nonce,
+            "response": resp["response"],
+            "responder_node_id": "r",
+            "lineage_proof": "@@@not-base64@@@",
+            "our_family_seed_path": seed_path.to_string_lossy(),
+        }))
+        .await
+        .unwrap_err();
+        assert!(format!("{err}").contains("base64") || format!("{err}").contains("lineage"));
+    }
+}

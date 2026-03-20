@@ -9,6 +9,7 @@ use crate::universal_discovery::{
 use beardog_types::canonical::providers_unified::traits::ServiceInfo;
 use std::collections::{HashMap, hash_map::DefaultHasher};
 use std::hash::{Hash, Hasher};
+use uuid::Uuid;
 
 #[test]
 fn discovery_protocol_hash_smoke() {
@@ -28,6 +29,37 @@ fn discovery_protocol_hash_smoke() {
     .hash(&mut h);
     let b = h.finish();
     assert_ne!(a, b);
+}
+
+#[test]
+fn discovery_protocol_hash_all_variants_differ() {
+    let mut hashes = std::collections::HashSet::new();
+    let protocols = [
+        DiscoveryProtocol::Dns {
+            domain: "a.local".to_string(),
+            servers: vec!["127.0.0.1".to_string()],
+        },
+        DiscoveryProtocol::Mdns {
+            service_type: "_http._tcp".to_string(),
+            interface: "eth0".to_string(),
+            timeout_ms: 1000,
+            continuous_monitoring: false,
+        },
+        DiscoveryProtocol::Consul {
+            address: "127.0.0.1:8500".to_string(),
+            datacenter: "dc1".to_string(),
+        },
+        DiscoveryProtocol::Etcd {
+            endpoints: vec!["http://127.0.0.1:2379".to_string()],
+            key_prefix: "/k".to_string(),
+            timeout_ms: 500,
+        },
+    ];
+    for p in protocols {
+        let mut h = DefaultHasher::new();
+        p.hash(&mut h);
+        assert!(hashes.insert(h.finish()));
+    }
 }
 
 #[test]
@@ -113,4 +145,49 @@ fn minimal_protocol_handler_trait_smoke() {
     assert!(h.discover_services("any").unwrap().is_empty());
     assert!(h.get_statistics().is_ok());
     assert!(h.stop().is_ok());
+}
+
+#[test]
+fn discovery_event_additional_variants_format() {
+    use beardog_types::canonical::HealthStatus;
+    use chrono::Utc;
+
+    let e = DiscoveryEvent::ServiceDeregistered {
+        service_id: "x".to_string(),
+        timestamp: Utc::now(),
+    };
+    assert!(format!("{e:?}").contains("Deregistered"));
+
+    let e = DiscoveryEvent::ServiceHealthChanged {
+        service_id: "y".to_string(),
+        old_status: HealthStatus::Healthy,
+        new_status: HealthStatus::Unhealthy,
+        timestamp: Utc::now(),
+    };
+    assert!(format!("{e:?}").contains("Health"));
+
+    let e = DiscoveryEvent::LoadBalancerConfigChanged {
+        algorithm: crate::universal_discovery::LoadBalancingAlgorithm::RoundRobin,
+        timestamp: Utc::now(),
+    };
+    assert!(format!("{e:?}").contains("LoadBalancer"));
+
+    let e = DiscoveryEvent::ProtocolError {
+        protocol: DiscoveryProtocol::Http {
+            endpoint: "http://127.0.0.1:1".to_string(),
+            headers: HashMap::new(),
+        },
+        error: "e".to_string(),
+        timestamp: Utc::now(),
+    };
+    assert!(format!("{e:?}").contains("ProtocolError"));
+}
+
+#[test]
+fn universal_discovery_config_custom_service_id_prefix() {
+    let c = UniversalDiscoveryConfig {
+        service_id: format!("custom-primal-{}", Uuid::new_v4()),
+        ..UniversalDiscoveryConfig::default()
+    };
+    assert!(c.service_id.starts_with("custom-primal-"));
 }

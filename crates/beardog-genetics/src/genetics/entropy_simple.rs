@@ -32,6 +32,9 @@ use uuid::Uuid;
 }
 
 #[derive(Debug, Clone)]
+pub struct EntropyConfig {
+    /// Minimum quality threshold for accepted entropy
+    pub min_quality_threshold: f64,
     /// Number of max_seeds
     pub max_seeds: usize,
     /// Number of seed_expiry_hours
@@ -41,7 +44,18 @@ use uuid::Uuid;
 impl Default for EntropyConfig {
     fn default() -> Self {
         Self {
-            entropy_threshold: 0.7,
+            min_quality_threshold: 0.7,
+            max_seeds: 1000,
+            seed_expiry_hours: 24,
+        }
+    }
+}
+
+impl EntropyConfig {
+    /// Load `max_seeds` / `seed_expiry_hours` from `BEARDOG_ENTROPY_*` env vars.
+    pub fn from_env() -> Self {
+        Self {
+            min_quality_threshold: 0.7,
             max_seeds: std::env::var("BEARDOG_ENTROPY_MAX_SEEDS")
                 .ok()
                 .and_then(|v| v.parse().ok())

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Primary async [`ThreatDetectionEngine`] with feeds, rules, ML hooks, and incident tracking.
+//! Primary async [`ThreatDetectionEngine`](crate::threat::handlers::core::ThreatDetectionEngine) with feeds, rules, ML hooks, and incident tracking.
 
 use crate::threat::ml_engine::SmartThreatMLEngine;
 use crate::threat::types::engine::threat_engine::ThreatDetectionStats;

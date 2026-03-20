@@ -215,3 +215,20 @@ pub async fn handle_hsm_test(hsm_id: &str, iterations: usize) -> Result<(), Bear
 
     Ok(())
 }
+
+#[cfg(test)]
+mod hsm_handler_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_handle_hsm_capabilities_unknown_id() {
+        let r = handle_hsm_capabilities("___unlikely_cli_hsm_id___").await;
+        assert!(r.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_handle_hsm_test_unknown_id() {
+        let r = handle_hsm_test("___unlikely_cli_hsm_id___", 1).await;
+        assert!(r.is_ok());
+    }
+}

@@ -132,21 +132,21 @@ pub struct OptimizationResult {
 impl Default for OptimizationConfig {
     fn default() -> Self {
         Self {
-            max_cache_ttl_ms: std::env::var("BEARDOG_ZK_MAX_CACHE_TTL_MS")
+            max_cache_ttl_ms: beardog_errors::process_env::var("BEARDOG_ZK_MAX_CACHE_TTL_MS")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(30000), // 30 seconds default
-            max_concurrent_tasks: std::env::var("BEARDOG_ZK_MAX_CONCURRENT_TASKS")
+            max_concurrent_tasks: beardog_errors::process_env::var("BEARDOG_ZK_MAX_CONCURRENT_TASKS")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(10),
             enable_aggressive_caching: true,
             preload_common_capabilities: true,
-            target_discovery_time_ms: std::env::var("BEARDOG_ZK_TARGET_DISCOVERY_TIME_MS")
+            target_discovery_time_ms: beardog_errors::process_env::var("BEARDOG_ZK_TARGET_DISCOVERY_TIME_MS")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(100),
-            enable_profiling: std::env::var("BEARDOG_ZK_ENABLE_PROFILING")
+            enable_profiling: beardog_errors::process_env::var("BEARDOG_ZK_ENABLE_PROFILING")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(true),
@@ -439,7 +439,7 @@ impl PerformanceOptimizer {
         // Check if we have a cached identity that's still valid
         if let Some(cached) = &self.cached_identity {
             let cache_age = self.last_cache_update.elapsed();
-            let cache_ttl_secs = std::env::var("BEARDOG_IDENTITY_CACHE_TTL_SECS")
+            let cache_ttl_secs = beardog_errors::process_env::var("BEARDOG_IDENTITY_CACHE_TTL_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(300); // 5 minute default

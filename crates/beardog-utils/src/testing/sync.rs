@@ -110,9 +110,10 @@ impl<T: Clone + Send + Sync> EventTrigger<T> {
     pub fn notify_blocking(self, value: T) {
         // Block on async operation
         let rt = tokio::runtime::Handle::try_current().unwrap_or_else(|_| {
-            tokio::runtime::Runtime::new()
-                .map(|runtime| runtime.handle().clone())
-                .unwrap_or_else(|_| unreachable!("failed to create runtime"))
+            tokio::runtime::Runtime::new().map_or_else(
+                |_| unreachable!("failed to create runtime"),
+                |runtime| runtime.handle().clone(),
+            )
         });
 
         rt.block_on(async {

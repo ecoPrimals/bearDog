@@ -184,23 +184,39 @@ impl PhysicalChannelProof {
         self.channel_type.trust_level()
     }
 
-    /// Verify this physical proof
+    /// Verify this physical proof using the default attestation policy (`software`).
+    ///
+    /// For runtime configuration via `BEARDOG_ATTESTATION_MODE`, use [`Self::verify_from_env`].
+    pub fn verify(&self) -> Result<bool, beardog_errors::BearDogError> {
+        self.verify_with_attestation_mode("software")
+    }
+
+    /// Verify using `BEARDOG_ATTESTATION_MODE` (default `software` when unset).
+    pub fn verify_from_env(&self) -> Result<bool, beardog_errors::BearDogError> {
+        let mode = std::env::var("BEARDOG_ATTESTATION_MODE")
+            .unwrap_or_else(|_| "software".to_string())
+            .to_lowercase();
+        self.verify_with_attestation_mode(&mode)
+    }
+
+    /// Verify this physical proof with an explicit attestation mode (`hardware` | `software` | `permissionless`).
     ///
     /// # Hardware Attestation
     ///
-    /// Verifies platform-specific hardware attestation based on environment:
+    /// Verifies platform-specific hardware attestation:
     /// - TPM (Trusted Platform Module) on Linux/Windows
     /// - StrongBox on Android
     /// - Secure Enclave on iOS
     /// - Software attestation for development
-    ///
-    /// Mode controlled by `BEARDOG_ATTESTATION_MODE` environment variable.
-    pub fn verify(&self) -> Result<bool, beardog_errors::BearDogError> {
+    pub fn verify_with_attestation_mode(
+        &self,
+        attestation_mode: &str,
+    ) -> Result<bool, beardog_errors::BearDogError> {
         match self.channel_type {
             PhysicalChannelType::HardwareKey => {
                 // Verify hardware attestation
                 if let Some(attestation) = &self.attestation {
-                    self.verify_hardware_attestation(attestation)
+                    self.verify_hardware_attestation(attestation, attestation_mode)
                 } else {
                     Ok(false)
                 }
@@ -241,24 +257,17 @@ impl PhysicalChannelProof {
     /// - iOS: Secure Enclave attestation
     /// - Development: Software-based HMAC attestation
     ///
-    /// # Environment Variables
-    ///
-    /// - `BEARDOG_ATTESTATION_MODE`: hardware|software|permissionless (default: software)
     fn verify_hardware_attestation(
         &self,
         attestation: &[u8],
+        attestation_mode: &str,
     ) -> Result<bool, beardog_errors::BearDogError> {
         // Check attestation is non-empty
         if attestation.is_empty() {
             return Ok(false);
         }
 
-        // Get attestation mode from environment
-        let attestation_mode = std::env::var("BEARDOG_ATTESTATION_MODE")
-            .unwrap_or_else(|_| "software".to_string())
-            .to_lowercase();
-
-        match attestation_mode.as_str() {
+        match attestation_mode.to_lowercase().as_str() {
             "hardware" => {
                 // Hardware attestation verification
                 #[cfg(target_os = "android")]
@@ -500,10 +509,8 @@ mod tests {
         assert!(!proof.verify().unwrap());
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_proof_verify_hardware_key_with_attestation() {
-        beardog_errors::process_env::set_var("BEARDOG_ATTESTATION_MODE", "permissionless");
         let proof = PhysicalChannelProof {
             channel_type: PhysicalChannelType::HardwareKey,
             attestation: Some(vec![1u8; 64]),
@@ -511,8 +518,11 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(proof.verify().unwrap());
-        beardog_errors::process_env::remove_var("BEARDOG_ATTESTATION_MODE");
+        assert!(
+            proof
+                .verify_with_attestation_mode("permissionless")
+                .unwrap()
+        );
     }
 
     #[test]
@@ -613,10 +623,8 @@ mod tests {
 
     // === Hardware attestation mode tests ===
 
-    #[serial_test::serial]
     #[test]
     fn test_attestation_software_mode_short() {
-        beardog_errors::process_env::set_var("BEARDOG_ATTESTATION_MODE", "software");
         let proof = PhysicalChannelProof {
             channel_type: PhysicalChannelType::HardwareKey,
             attestation: Some(vec![1u8; 16]), // too short for software mode
@@ -624,14 +632,11 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(!proof.verify().unwrap());
-        beardog_errors::process_env::remove_var("BEARDOG_ATTESTATION_MODE");
+        assert!(!proof.verify_with_attestation_mode("software").unwrap());
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_attestation_software_mode_valid() {
-        beardog_errors::process_env::set_var("BEARDOG_ATTESTATION_MODE", "software");
         let proof = PhysicalChannelProof {
             channel_type: PhysicalChannelType::HardwareKey,
             attestation: Some(vec![1u8; 64]),
@@ -639,14 +644,11 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(proof.verify().unwrap());
-        beardog_errors::process_env::remove_var("BEARDOG_ATTESTATION_MODE");
+        assert!(proof.verify_with_attestation_mode("software").unwrap());
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_attestation_software_mode_zero_hash() {
-        beardog_errors::process_env::set_var("BEARDOG_ATTESTATION_MODE", "software");
         let proof = PhysicalChannelProof {
             channel_type: PhysicalChannelType::HardwareKey,
             attestation: Some(vec![0u8; 64]), // all zeros
@@ -654,14 +656,11 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(!proof.verify().unwrap());
-        beardog_errors::process_env::remove_var("BEARDOG_ATTESTATION_MODE");
+        assert!(!proof.verify_with_attestation_mode("software").unwrap());
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_attestation_permissionless_mode() {
-        beardog_errors::process_env::set_var("BEARDOG_ATTESTATION_MODE", "permissionless");
         let proof = PhysicalChannelProof {
             channel_type: PhysicalChannelType::HardwareKey,
             attestation: Some(vec![42u8; 1]), // any non-empty
@@ -669,14 +668,15 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(proof.verify().unwrap());
-        beardog_errors::process_env::remove_var("BEARDOG_ATTESTATION_MODE");
+        assert!(
+            proof
+                .verify_with_attestation_mode("permissionless")
+                .unwrap()
+        );
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_attestation_permissionless_mode_empty() {
-        beardog_errors::process_env::set_var("BEARDOG_ATTESTATION_MODE", "permissionless");
         let proof = PhysicalChannelProof {
             channel_type: PhysicalChannelType::HardwareKey,
             attestation: Some(vec![]), // empty
@@ -684,14 +684,15 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(!proof.verify().unwrap());
-        beardog_errors::process_env::remove_var("BEARDOG_ATTESTATION_MODE");
+        assert!(
+            !proof
+                .verify_with_attestation_mode("permissionless")
+                .unwrap()
+        );
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_attestation_hardware_mode() {
-        beardog_errors::process_env::set_var("BEARDOG_ATTESTATION_MODE", "hardware");
         let proof = PhysicalChannelProof {
             channel_type: PhysicalChannelType::HardwareKey,
             attestation: Some(vec![1u8; 128]),
@@ -700,15 +701,12 @@ mod tests {
             timestamp: 1735000000,
         };
         // On linux, this uses verify_tpm_attestation which checks len >= 64
-        let result = proof.verify().unwrap();
+        let result = proof.verify_with_attestation_mode("hardware").unwrap();
         assert!(result);
-        beardog_errors::process_env::remove_var("BEARDOG_ATTESTATION_MODE");
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_attestation_unknown_mode() {
-        beardog_errors::process_env::set_var("BEARDOG_ATTESTATION_MODE", "unknown_mode");
         let proof = PhysicalChannelProof {
             channel_type: PhysicalChannelType::HardwareKey,
             attestation: Some(vec![1u8; 64]), // valid for software fallback
@@ -716,8 +714,7 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(proof.verify().unwrap());
-        beardog_errors::process_env::remove_var("BEARDOG_ATTESTATION_MODE");
+        assert!(proof.verify_with_attestation_mode("unknown_mode").unwrap());
     }
 
     #[test]

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Extended Error Handling Tests
 //!
 //! This module contains high-value integration tests for advanced error handling patterns,

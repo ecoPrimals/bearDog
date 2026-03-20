@@ -507,7 +507,7 @@ mod key_management_extra_tests {
 
     #[test]
     fn test_software_hsm_provider_new() {
-        let p = SoftwareHsmProvider::new();
+        let p = SoftwareHsmProvider::new().expect("Software HSM init in test");
         let _ = format!("{p:?}");
     }
 }

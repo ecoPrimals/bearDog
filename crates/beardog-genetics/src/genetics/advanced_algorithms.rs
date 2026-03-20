@@ -50,6 +50,22 @@ pub struct EvolutionConfig {
 impl Default for EvolutionConfig {
     fn default() -> Self {
         Self {
+            population_size: 100,
+            mutation_rate: 0.05,
+            crossover_rate: 0.8,
+            elitism_percentage: 0.1,
+            max_generations: 1000,
+            fitness_threshold: 0.95,
+            diversity_preservation: true,
+            adaptive_parameters: true,
+        }
+    }
+}
+
+impl EvolutionConfig {
+    /// Load evolution parameters from `BEARDOG_GENETICS_*` environment variables (see source for names).
+    pub fn from_env() -> Self {
+        Self {
             population_size: std::env::var("BEARDOG_GENETICS_POPULATION_SIZE")
                 .ok()
                 .and_then(|v| v.parse().ok())

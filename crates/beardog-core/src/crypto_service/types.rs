@@ -107,29 +107,29 @@ impl CryptoServiceConfig {
         let mut config = Self::default();
 
         // Service name
-        if let Ok(name) = std::env::var("BEARDOG_CRYPTO_SERVICE_NAME") {
+        if let Ok(name) = beardog_errors::process_env::var("BEARDOG_CRYPTO_SERVICE_NAME") {
             config.service_name = name;
         }
 
         // HSM enabled
-        if let Ok(enabled) = std::env::var("BEARDOG_CRYPTO_HSM_ENABLED") {
+        if let Ok(enabled) = beardog_errors::process_env::var("BEARDOG_CRYPTO_HSM_ENABLED") {
             config.hsm_enabled = enabled.parse().unwrap_or(false);
         }
 
         // Genetic enabled
-        if let Ok(enabled) = std::env::var("BEARDOG_CRYPTO_GENETIC_ENABLED") {
+        if let Ok(enabled) = beardog_errors::process_env::var("BEARDOG_CRYPTO_GENETIC_ENABLED") {
             config.genetic_enabled = enabled.parse().unwrap_or(true);
         }
 
         // Max data size
-        if let Ok(size) = std::env::var("BEARDOG_CRYPTO_MAX_DATA_SIZE") {
+        if let Ok(size) = beardog_errors::process_env::var("BEARDOG_CRYPTO_MAX_DATA_SIZE") {
             if let Ok(parsed) = size.parse() {
                 config.max_data_size = parsed;
             }
         }
 
         // Audit enabled
-        if let Ok(enabled) = std::env::var("BEARDOG_CRYPTO_AUDIT_ENABLED") {
+        if let Ok(enabled) = beardog_errors::process_env::var("BEARDOG_CRYPTO_AUDIT_ENABLED") {
             config.audit_enabled = enabled.parse().unwrap_or(true);
         }
 

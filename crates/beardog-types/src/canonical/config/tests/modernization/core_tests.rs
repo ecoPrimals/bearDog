@@ -10,26 +10,6 @@
 use crate::canonical::config::domains::{bootstrap, database, system};
 use std::time::Duration;
 
-/// Helper to set env var for test scope
-struct EnvGuard {
-    key: String,
-}
-
-impl EnvGuard {
-    fn set(key: &str, value: &str) -> Self {
-        beardog_errors::process_env::set_var(key, value);
-        Self {
-            key: key.to_string(),
-        }
-    }
-}
-
-impl Drop for EnvGuard {
-    fn drop(&mut self) {
-        beardog_errors::process_env::remove_var(&self.key);
-    }
-}
-
 // ============================================================================
 // Bootstrap Config Tests
 // ============================================================================
@@ -62,12 +42,12 @@ fn test_infant_pattern_config_with_defaults() {
 }
 
 #[test]
-#[serial_test::serial] // Environment variable test - must run serially
 fn test_infant_pattern_config_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_PATTERN_MAX_AGE_SECS", "7200");
-    let _g2 = EnvGuard::set("BEARDOG_PATTERN_CONSOLIDATION_INTERVAL_SECS", "600");
-
-    let config = bootstrap::InfantPatternConfig::from_env();
+    let config = bootstrap::InfantPatternConfig::from_env_provider(|k| match k {
+        "BEARDOG_PATTERN_MAX_AGE_SECS" => Some("7200".to_string()),
+        "BEARDOG_PATTERN_CONSOLIDATION_INTERVAL_SECS" => Some("600".to_string()),
+        _ => None,
+    });
 
     assert_eq!(config.pattern_max_age, Duration::from_secs(7200));
     assert_eq!(config.consolidation_interval, Duration::from_secs(600));
@@ -99,11 +79,12 @@ fn test_database_connection_config_with_defaults() {
 
 #[test]
 fn test_database_connection_config_from_env() {
-    let _g1 = EnvGuard::set("DATABASE_URL", "postgres://localhost/test");
-    let _g2 = EnvGuard::set("DATABASE_TIMEOUT_SECONDS", "60");
-    let _g3 = EnvGuard::set("DATABASE_SSL", "true");
-
-    let config = database::DatabaseConnectionConfig::from_env();
+    let config = database::DatabaseConnectionConfig::from_env_provider(|k| match k {
+        "DATABASE_URL" => Some("postgres://localhost/test".to_string()),
+        "DATABASE_TIMEOUT_SECONDS" => Some("60".to_string()),
+        "DATABASE_SSL" => Some("true".to_string()),
+        _ => None,
+    });
 
     assert_eq!(config.url, "postgres://localhost/test");
     assert_eq!(config.timeout, Duration::from_secs(60));
@@ -126,10 +107,11 @@ fn test_database_pool_config_with_defaults() {
 
 #[test]
 fn test_database_pool_config_from_env() {
-    let _g1 = EnvGuard::set("DATABASE_POOL_MIN_IDLE", "5");
-    let _g2 = EnvGuard::set("DATABASE_POOL_IDLE_TIMEOUT_SECONDS", "1200");
-
-    let config = database::DatabasePoolConfig::from_env();
+    let config = database::DatabasePoolConfig::from_env_provider(|k| match k {
+        "DATABASE_POOL_MIN_IDLE" => Some("5".to_string()),
+        "DATABASE_POOL_IDLE_TIMEOUT_SECONDS" => Some("1200".to_string()),
+        _ => None,
+    });
 
     assert_eq!(config.min_idle, 5);
     assert_eq!(config.idle_timeout, Duration::from_secs(1200));
@@ -151,10 +133,11 @@ fn test_migration_config_with_defaults() {
 
 #[test]
 fn test_migration_config_from_env() {
-    let _g1 = EnvGuard::set("DATABASE_AUTO_MIGRATE", "false");
-    let _g2 = EnvGuard::set("DATABASE_MIGRATION_DIR", "db/migrations");
-
-    let config = database::MigrationConfig::from_env();
+    let config = database::MigrationConfig::from_env_provider(|k| match k {
+        "DATABASE_AUTO_MIGRATE" => Some("false".to_string()),
+        "DATABASE_MIGRATION_DIR" => Some("db/migrations".to_string()),
+        _ => None,
+    });
 
     assert_eq!(config.auto_migrate, false);
     assert_eq!(config.directory, "db/migrations");
@@ -180,10 +163,11 @@ fn test_log_rotation_config_with_defaults() {
 
 #[test]
 fn test_log_rotation_config_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_SYSTEM_LOG_MAX_SIZE_MB", "200");
-    let _g2 = EnvGuard::set("BEARDOG_SYSTEM_LOG_MAX_FILES", "20");
-
-    let config = system::LogRotationConfig::from_env();
+    let config = system::LogRotationConfig::from_env_provider(|k| match k {
+        "BEARDOG_SYSTEM_LOG_MAX_SIZE_MB" => Some("200".to_string()),
+        "BEARDOG_SYSTEM_LOG_MAX_FILES" => Some("20".to_string()),
+        _ => None,
+    });
 
     assert_eq!(config.max_size_mb, 200);
     assert_eq!(config.max_files, 20);
@@ -209,11 +193,12 @@ fn test_resource_config_with_defaults() {
 
 #[test]
 fn test_resource_config_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_MAX_FILE_DESCRIPTORS", "32768");
-    let _g2 = EnvGuard::set("BEARDOG_SYSTEM_MAX_CONNECTIONS", "5000");
-    let _g3 = EnvGuard::set("BEARDOG_SYSTEM_MONITORING_INTERVAL_SECS", "30");
-
-    let config = system::ResourceConfig::from_env();
+    let config = system::ResourceConfig::from_env_provider(|k| match k {
+        "BEARDOG_MAX_FILE_DESCRIPTORS" => Some("32768".to_string()),
+        "BEARDOG_SYSTEM_MAX_CONNECTIONS" => Some("5000".to_string()),
+        "BEARDOG_SYSTEM_MONITORING_INTERVAL_SECS" => Some("30".to_string()),
+        _ => None,
+    });
 
     assert_eq!(config.max_file_descriptors, Some(32768));
     assert_eq!(config.max_connections, 5000);
@@ -234,9 +219,10 @@ fn test_environment_config_with_defaults() {
 
 #[test]
 fn test_environment_config_from_env() {
-    let _g = EnvGuard::set("BEARDOG_ENVIRONMENT", "production");
-
-    let config = system::EnvironmentConfig::from_env();
+    let config = system::EnvironmentConfig::from_env_provider(|k| match k {
+        "BEARDOG_ENVIRONMENT" => Some("production".to_string()),
+        _ => None,
+    });
 
     assert_eq!(config.environment_type, "production");
 }

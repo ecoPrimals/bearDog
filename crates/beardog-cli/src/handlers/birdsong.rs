@@ -14,6 +14,7 @@ use beardog_genetics::birdsong::{
     },
 };
 use std::fs;
+use std::path::Path;
 use std::sync::Arc;
 use tracing::{debug, info};
 
@@ -36,6 +37,19 @@ pub async fn handle_birdsong_encrypt(
     root_id: &str,
     output: Option<&str>,
 ) -> Result<(), BearDogError> {
+    let home = key_store::home_dir_for_keys()?;
+    handle_birdsong_encrypt_with_home(message, hint_type, root_id, output, &home).await
+}
+
+/// Same as [`handle_birdsong_encrypt`] but with an explicit home directory for the key store (tests / DI).
+pub async fn handle_birdsong_encrypt_with_home(
+    message: &str,
+    hint_type: &str,
+    root_id: &str,
+    output: Option<&str>,
+    home: impl AsRef<Path>,
+) -> Result<(), BearDogError> {
+    let home = home.as_ref();
     info!("🎵 BirdSong Lineage Encryption");
     println!("================================");
     println!();
@@ -62,7 +76,7 @@ pub async fn handle_birdsong_encrypt(
 
     // Load root key to get master secret for lineage-based key derivation
     println!("🔑 Loading root key {root_id}...");
-    let root_key = key_store::load_key(root_id)?;
+    let root_key = key_store::load_key_from_home(root_id, home)?;
     let root_key_material = key_store::base64_decode(&root_key.key_material_b64)?;
 
     // Use root key material as master secret for lineage derivation
@@ -123,6 +137,17 @@ pub async fn handle_birdsong_encrypt(
 /// * `input` - Input file path (encrypted broadcast)
 /// * `key_id` - Key ID to use for decryption (determines lineage proof)
 pub async fn handle_birdsong_decrypt(input: &str, key_id: &str) -> Result<(), BearDogError> {
+    let home = key_store::home_dir_for_keys()?;
+    handle_birdsong_decrypt_with_home(input, key_id, &home).await
+}
+
+/// Same as [`handle_birdsong_decrypt`] but with an explicit home directory for the key store (tests / DI).
+pub async fn handle_birdsong_decrypt_with_home(
+    input: &str,
+    key_id: &str,
+    home: impl AsRef<Path>,
+) -> Result<(), BearDogError> {
+    let home = home.as_ref();
     info!("🎵 BirdSong Lineage Decryption");
     println!("=================================");
     println!();
@@ -146,7 +171,7 @@ pub async fn handle_birdsong_decrypt(input: &str, key_id: &str) -> Result<(), Be
 
     // Get lineage proof for this key
     println!("🔍 Looking up lineage proof for {key_id}...");
-    let proof = get_lineage_proof_for_key(key_id).await?;
+    let proof = get_lineage_proof_for_key_with_home(key_id, home).await?;
 
     println!("📜 Lineage proof:");
     println!("   Node ID: {}", proof.node_id);
@@ -176,7 +201,7 @@ pub async fn handle_birdsong_decrypt(input: &str, key_id: &str) -> Result<(), Be
 
     // Load root key to get master secret (must match encryption!)
     println!("🔑 Loading root key {}...", proof.root_id);
-    let root_key = key_store::load_key(&proof.root_id)?;
+    let root_key = key_store::load_key_from_home(&proof.root_id, home)?;
     let root_key_material = key_store::base64_decode(&root_key.key_material_b64)?;
 
     // Use same root key material as master secret (must match encryption)
@@ -286,9 +311,12 @@ fn parse_lineage_hint(hint_type: &str, root_id: &str) -> Result<LineageHint, Bea
 /// # Returns
 ///
 /// A lineage proof showing the path from root to this node
-async fn get_lineage_proof_for_key(key_id: &str) -> Result<LineageProof, BearDogError> {
+async fn get_lineage_proof_for_key_with_home(
+    key_id: &str,
+    home: &Path,
+) -> Result<LineageProof, BearDogError> {
     // Load key from store
-    let key = key_store::load_key(key_id)?;
+    let key = key_store::load_key_from_home(key_id, home)?;
 
     // Get lineage information from key metadata
     let lineage_info = key.lineage.ok_or_else(|| {
@@ -311,7 +339,7 @@ async fn get_lineage_proof_for_key(key_id: &str) -> Result<LineageProof, BearDog
         path.insert(0, parent_id.clone());
 
         // Load parent key to continue walking
-        match key_store::load_key(&parent_id) {
+        match key_store::load_key_from_home(&parent_id, home) {
             Ok(parent_key) => {
                 current_parent = parent_key.lineage.and_then(|l| l.parent_key_id);
             }
@@ -433,6 +461,7 @@ fn compute_merkle_root(leaves: &[Vec<u8>]) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::TempDir;
 
     #[test]
     fn test_parse_lineage_hint_direct_ancestors() {
@@ -476,5 +505,183 @@ mod tests {
     fn test_parse_lineage_hint_invalid_depth_format() {
         let result = parse_lineage_hint("Depth:invalid", "root-123");
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_lineage_hint_depth_too_many_parts() {
+        assert!(parse_lineage_hint("Depth:0-1-2", "r").is_err());
+    }
+
+    #[test]
+    fn test_compute_merkle_root_empty() {
+        assert!(super::compute_merkle_root(&[]).is_empty());
+    }
+
+    #[test]
+    fn test_compute_merkle_root_single_leaf() {
+        let leaf = vec![1u8; 32];
+        let root = super::compute_merkle_root(&[leaf.clone()]);
+        assert_eq!(root, leaf);
+    }
+
+    #[test]
+    fn test_compute_merkle_root_two_leaves() {
+        let a = vec![1u8; 32];
+        let b = vec![2u8; 32];
+        let root = super::compute_merkle_root(&[a, b]);
+        assert_eq!(root.len(), 32);
+    }
+
+    #[test]
+    fn test_compute_merkle_root_three_leaves() {
+        let leaves: Vec<Vec<u8>> = (0u8..3).map(|i| vec![i; 32]).collect();
+        let root = super::compute_merkle_root(&leaves);
+        assert_eq!(root.len(), 32);
+    }
+
+    fn sample_stored_key(id: &str, material: &[u8]) -> key_store::StoredKey {
+        key_store::StoredKey {
+            key_id: id.to_string(),
+            algorithm: "aes256-gcm".to_string(),
+            hsm_name: "test-hsm".to_string(),
+            created_at: chrono::Utc::now().to_rfc3339(),
+            key_material_b64: key_store::base64_encode(material),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: Some(key_store::KeyLineageInfo {
+                parent_key_id: None,
+                depth: 0,
+            }),
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn test_birdsong_encrypt_decrypt_roundtrip_full_key_material() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+
+        let root = sample_stored_key("root-lineage-1", &[9u8; 32]);
+        key_store::save_key_to_home(&root, home).unwrap();
+
+        let out = dir.path().join("out.birdsong");
+        handle_birdsong_encrypt_with_home(
+            "hello-roundtrip",
+            "DirectAncestors",
+            "root-lineage-1",
+            Some(out.to_str().unwrap()),
+            home,
+        )
+        .await
+        .expect("encrypt");
+
+        handle_birdsong_decrypt_with_home(out.to_str().unwrap(), "root-lineage-1", home)
+            .await
+            .expect("decrypt");
+    }
+
+    #[tokio::test]
+    async fn test_birdsong_encrypt_uses_short_key_material_hkdf_branch() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+
+        let root = sample_stored_key("short-root", &[1u8; 16]);
+        key_store::save_key_to_home(&root, home).unwrap();
+
+        let out = dir.path().join("short.birdsong");
+        handle_birdsong_encrypt_with_home(
+            "m",
+            "RootOnly",
+            "short-root",
+            Some(out.to_str().unwrap()),
+            home,
+        )
+        .await
+        .expect("encrypt");
+
+        handle_birdsong_decrypt_with_home(out.to_str().unwrap(), "short-root", home)
+            .await
+            .expect("decrypt");
+    }
+
+    #[tokio::test]
+    async fn test_birdsong_decrypt_lineage_mismatch() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+
+        let a = sample_stored_key("root-a", &[2u8; 32]);
+        let b = sample_stored_key("root-b", &[3u8; 32]);
+        key_store::save_key_to_home(&a, home).unwrap();
+        key_store::save_key_to_home(&b, home).unwrap();
+
+        let out = dir.path().join("mismatch.birdsong");
+        handle_birdsong_encrypt_with_home(
+            "x",
+            "AllDescendants",
+            "root-a",
+            Some(out.to_str().unwrap()),
+            home,
+        )
+        .await
+        .unwrap();
+
+        let err = handle_birdsong_decrypt_with_home(out.to_str().unwrap(), "root-b", home)
+            .await
+            .expect_err("lineage mismatch");
+        assert!(
+            err.to_string().to_lowercase().contains("lineage")
+                || err.to_string().contains("Lineage")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_birdsong_decrypt_missing_file() {
+        assert!(
+            handle_birdsong_decrypt("/no/such/file.birdsong", "k")
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_birdsong_decrypt_invalid_json() {
+        let dir = TempDir::new().unwrap();
+        let p = dir.path().join("bad.json");
+        std::fs::write(&p, b"not json").unwrap();
+        assert!(
+            handle_birdsong_decrypt(p.to_str().unwrap(), "k")
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_birdsong_decrypt_key_without_lineage() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+
+        let mut k = sample_stored_key("no-lineage", &[5u8; 32]);
+        k.lineage = None;
+        key_store::save_key_to_home(&k, home).unwrap();
+
+        let out = dir.path().join("x.birdsong");
+        handle_birdsong_encrypt_with_home(
+            "z",
+            "RootOnly",
+            "no-lineage",
+            Some(out.to_str().unwrap()),
+            home,
+        )
+        .await
+        .unwrap();
+
+        let err = handle_birdsong_decrypt_with_home(out.to_str().unwrap(), "no-lineage", home)
+            .await
+            .expect_err("no lineage on decrypt key");
+        assert!(err.to_string().contains("lineage") || err.to_string().contains("Lineage"));
     }
 }

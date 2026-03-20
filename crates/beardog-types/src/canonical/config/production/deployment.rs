@@ -88,9 +88,13 @@ impl RolloutConfig {
 
     /// Create RolloutConfig from environment variables
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            percentage: std::env::var("BEARDOG_ROLLOUT_PERCENTAGE")
-                .ok()
+            percentage: get("BEARDOG_ROLLOUT_PERCENTAGE")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_PERCENTAGE),
         }
@@ -110,9 +114,13 @@ impl CanaryConfig {
 
     /// Create CanaryConfig from environment variables
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            percentage: std::env::var("BEARDOG_CANARY_PERCENTAGE")
-                .ok()
+            percentage: get("BEARDOG_CANARY_PERCENTAGE")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_PERCENTAGE),
         }

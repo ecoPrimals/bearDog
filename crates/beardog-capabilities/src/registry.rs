@@ -32,8 +32,9 @@ struct RegisteredCapability {
     /// Capability metadata
     metadata: CapabilityMetadata,
 
-    /// Type-erased capability provider (Box<dyn Trait>)
-    /// Note: Currently unused but reserved for future runtime capability queries
+    /// Type-erased capability provider instance (`Box<dyn Any + Send + Sync>`).
+    /// This stores the real registered value for future runtime queries; it is not a mock.
+    /// Metadata-driven APIs (`build_advertisement`, etc.) do not downcast today.
     _provider: Box<dyn Any + Send + Sync>,
 }
 
@@ -65,7 +66,7 @@ impl CapabilityRegistry {
     ) -> Self {
         let instance_id = instance_id.into();
         let base = http_base.into().trim_end_matches('/').to_string();
-        let path = std::env::var(crate::metadata::ENV_CAPABILITY_HTTP_PATH)
+        let path = beardog_errors::process_env::var(crate::metadata::ENV_CAPABILITY_HTTP_PATH)
             .unwrap_or_else(|_| crate::metadata::DEFAULT_CAPABILITY_HTTP_PATH.to_string());
         let discovery_http = if path.starts_with('/') {
             format!("{base}{path}")
@@ -94,7 +95,7 @@ impl CapabilityRegistry {
                 &instance_id,
             )),
             http: discovery_http,
-            ttl: std::env::var("BEARDOG_CAPABILITY_DISCOVERY_TTL")
+            ttl: beardog_errors::process_env::var("BEARDOG_CAPABILITY_DISCOVERY_TTL")
                 .ok()
                 .and_then(|t| t.parse().ok())
                 .unwrap_or(crate::metadata::DEFAULT_DISCOVERY_TTL_SECS),
@@ -222,7 +223,7 @@ impl CapabilityRegistry {
         // Environment-driven: Only advertise if ENABLE_MDNS=true
         // Graceful fallback: Log intent if mDNS unavailable
 
-        let mdns_enabled = std::env::var("ENABLE_MDNS")
+        let mdns_enabled = beardog_errors::process_env::var("ENABLE_MDNS")
             .ok()
             .and_then(|v| v.parse::<bool>().ok())
             .unwrap_or(false);

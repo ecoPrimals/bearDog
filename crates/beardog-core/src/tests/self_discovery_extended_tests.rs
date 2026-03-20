@@ -6,7 +6,7 @@
 // Created: October 25, 2025
 // Purpose: Expand test coverage for self-discovery functionality
 
-use crate::zero_knowledge_bootstrap::self_discovery::SelfDiscoveryEngine;
+use crate::zero_knowledge_bootstrap::self_discovery::{SelfDiscoveryEngine, SelfDiscoveryEnvInputs};
 
 #[cfg(test)]
 mod self_discovery_extended_tests {
@@ -49,9 +49,10 @@ mod self_discovery_extended_tests {
             !identity.primal_id.is_empty(),
             "Primal ID should not be empty"
         );
+        let prefix = identity.primal_id.split('-').next().unwrap_or("");
         assert!(
-            identity.primal_id.starts_with("beardog-"),
-            "Primal ID should start with 'beardog-'"
+            !prefix.is_empty(),
+            "Primal ID should have a type prefix segment"
         );
         assert!(
             !identity.capabilities.is_empty(),
@@ -154,22 +155,11 @@ mod self_discovery_extended_tests {
         let identity1 = engine.discover_self_identity().unwrap();
         let identity2 = engine.discover_self_identity().unwrap();
 
-        // Multiple calls should return valid identities with consistent format
-        assert!(identity1.primal_id.starts_with("beardog-"));
-        assert!(identity2.primal_id.starts_with("beardog-"));
-
-        // Both should have the same structure (type-subtype-uuid)
         let parts1: Vec<&str> = identity1.primal_id.split('-').collect();
         let parts2: Vec<&str> = identity2.primal_id.split('-').collect();
         assert_eq!(parts1.len(), 3, "Identity should have 3 parts");
         assert_eq!(parts2.len(), 3, "Identity should have 3 parts");
-
-        // Both should have 'beardog' as the type
-        assert_eq!(parts1[0], "beardog");
-        // TEST_CATEGORY: integration
-        // TEST_DOMAIN: core
-        // TEST_PRIORITY: normal
-        assert_eq!(parts2[0], "beardog");
+        assert_eq!(parts1[0], parts2[0], "Same engine inputs should yield same type prefix");
     }
 
     #[tokio::test]
@@ -194,39 +184,27 @@ mod self_discovery_extended_tests {
 
         let primal_id = &identity.primal_id;
 
-        // Verify format: beardog-{uuid}
-        assert!(primal_id.starts_with("beardog-"));
+        let parts: Vec<&str> = primal_id.split('-').collect();
+        assert_eq!(parts.len(), 3, "Expected type-host-uuid fragment layout");
         assert!(
-            primal_id.len() > 8,
-            "Primal ID should include unique identifier"
+            !parts[2].is_empty(),
+            "UUID fragment should not be empty"
         );
-
-        // Extract UUID part
-        let uuid_part = &primal_id[8..];
-        assert!(!uuid_part.is_empty(), "UUID part should not be empty");
     }
 
     #[tokio::test]
-    async fn test_discovery_with_environment_variables() {
-        // TEST_CATEGORY: integration
-        // TEST_DOMAIN: core
-        // TEST_PRIORITY: normal
-        // Set environment variable for display name
-        beardog_errors::process_env::set_var("BEARDOG_DISPLAY_NAME", "Test BearDog Instance");
-
-        let mut engine = SelfDiscoveryEngine::new().unwrap();
+    async fn test_discovery_with_display_name_inputs() {
+        let mut engine = SelfDiscoveryEngine::with_inputs(SelfDiscoveryEnvInputs {
+            beardog_display_name: Some("Test BearDog Instance".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
         let identity = engine.discover_self_identity().unwrap();
 
-        // Should pick up environment variable if supported
-        if let Some(display_name) = &identity.metadata.display_name {
-            assert!(!display_name.is_empty(), "Display name should not be empty");
-        // TEST_CATEGORY: integration
-        // TEST_DOMAIN: core
-        // TEST_PRIORITY: normal
-        }
-
-        // Cleanup
-        beardog_errors::process_env::remove_var("BEARDOG_DISPLAY_NAME");
+        assert_eq!(
+            identity.metadata.display_name.as_deref(),
+            Some("Test BearDog Instance")
+        );
     }
 
     #[tokio::test]

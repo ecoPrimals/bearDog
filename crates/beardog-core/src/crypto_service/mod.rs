@@ -29,8 +29,8 @@
 //!
 //! This module is organized for **maintainability and discoverability**:
 //!
-//! - [`r#trait`] - Protocol-agnostic trait definition
-//! - [`types`] - Configuration and state types
+//! - **`r#trait`** — Protocol-agnostic [`CryptoService`](crate::crypto_service::CryptoService) trait definition
+//! - [`types`](crate::crypto_service::types) - Configuration and state types
 //! - [`algorithms`](crate::crypto_service::algorithms) - Cryptographic algorithm implementations
 //! - [`implementation`](crate::crypto_service::implementation) - BearDogCryptoService implementation
 //!
@@ -72,7 +72,7 @@
 pub mod algorithms;
 /// Default [`BearDogCryptoService`](implementation::BearDogCryptoService) construction and operations.
 pub mod implementation;
-/// Protocol-agnostic [`CryptoService`](r#trait::CryptoService) trait definition.
+/// Protocol-agnostic [`CryptoService`](crate::crypto_service::CryptoService) trait definition.
 pub mod r#trait;
 /// Configuration and state types for crypto service operations.
 pub mod types;

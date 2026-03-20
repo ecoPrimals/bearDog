@@ -26,8 +26,8 @@ toml = "0.8"
 # mDNS discovery
 mdns-sd = "0.11"
 
-# DNS-SD discovery
-trust-dns-resolver = "0.23"
+# DNS-SD discovery (hickory-resolver is the maintained successor to trust-dns-resolver)
+hickory-resolver = "0.25"
 
 # REMOVED: HTTP client (not needed - Unix sockets + mDNS only!)
 # reqwest = { workspace = true }
@@ -35,6 +35,7 @@ trust-dns-resolver = "0.23"
 # Error handling
 anyhow = "1.0"
 thiserror = "1.0"
+beardog-errors = { path = "../beardog-errors" }
 
 # Logging
 tracing = "0.1"

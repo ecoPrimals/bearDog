@@ -53,21 +53,25 @@ impl Default for EcosystemStorageConfig {
             primary_storage_path: PathBuf::from("./storage/primary"),
             backup_storage_paths: vec![PathBuf::from("./storage/backup")],
             cache_storage_path: PathBuf::from("./storage/cache"),
-            max_storage_size_bytes: std::env::var("BEARDOG_MAX_STORAGE_SIZE_BYTES")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(1024 * 1024 * 1024 * 100), // 100GB default
-            cache_size_limit_bytes: std::env::var("BEARDOG_CACHE_SIZE_LIMIT_BYTES")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(1024 * 1024 * 1024), // 1GB default
+            max_storage_size_bytes: beardog_errors::process_env::var(
+                "BEARDOG_MAX_STORAGE_SIZE_BYTES",
+            )
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(1024 * 1024 * 1024 * 100), // 100GB default
+            cache_size_limit_bytes: beardog_errors::process_env::var(
+                "BEARDOG_CACHE_SIZE_LIMIT_BYTES",
+            )
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(1024 * 1024 * 1024), // 1GB default
             enable_compression: true,
             enable_encryption: true,
-            replication_factor: std::env::var("BEARDOG_REPLICATION_FACTOR")
+            replication_factor: beardog_errors::process_env::var("BEARDOG_REPLICATION_FACTOR")
                 .ok()
                 .and_then(|r| r.parse().ok())
                 .unwrap_or(3),
-            backup_interval_secs: std::env::var("BEARDOG_BACKUP_INTERVAL_SECS")
+            backup_interval_secs: beardog_errors::process_env::var("BEARDOG_BACKUP_INTERVAL_SECS")
                 .ok()
                 .and_then(|i| i.parse().ok())
                 .unwrap_or(3600), // 1 hour default

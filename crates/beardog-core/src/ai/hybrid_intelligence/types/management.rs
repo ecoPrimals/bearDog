@@ -25,17 +25,17 @@ pub struct ModelManagementConfig {
 impl Default for ModelManagementConfig {
     fn default() -> Self {
         Self {
-            model_path: std::env::var("BEARDOG_AI_MODEL_PATH")
+            model_path: beardog_errors::process_env::var("BEARDOG_AI_MODEL_PATH")
                 .unwrap_or_else(|_| "./models".to_string()),
-            versioning: std::env::var("BEARDOG_AI_MODEL_VERSIONING")
+            versioning: beardog_errors::process_env::var("BEARDOG_AI_MODEL_VERSIONING")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
-            max_versions: std::env::var("BEARDOG_AI_MAX_MODEL_VERSIONS")
+            max_versions: beardog_errors::process_env::var("BEARDOG_AI_MAX_MODEL_VERSIONS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(5),
-            auto_cleanup: std::env::var("BEARDOG_AI_AUTO_CLEANUP")
+            auto_cleanup: beardog_errors::process_env::var("BEARDOG_AI_AUTO_CLEANUP")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
@@ -71,35 +71,35 @@ impl Default for AIModelRegistryConfig {
     fn default() -> Self {
         use beardog_types::constants::domains::network::config;
         
-        let default_host = std::env::var("BEARDOG_REGISTRY_HOST")
+        let default_host = beardog_errors::process_env::var("BEARDOG_REGISTRY_HOST")
             .unwrap_or_else(|_| config::default_service_host());
-        let default_port = std::env::var("BEARDOG_REGISTRY_PORT")
+        let default_port = beardog_errors::process_env::var("BEARDOG_REGISTRY_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(8080);
         
         Self {
             registry_type: RegistryType::Local,
-            url: std::env::var("BEARDOG_REGISTRY_URL")
+            url: beardog_errors::process_env::var("BEARDOG_REGISTRY_URL")
                 .unwrap_or_else(|_| format!("http://{}:{}", default_host, default_port)),
             auth_token: None,
             connection_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_REGISTRY_CONNECTION_TIMEOUT_SECS")
+                beardog_errors::process_env::var("BEARDOG_REGISTRY_CONNECTION_TIMEOUT_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(10)
             ),
             request_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_REGISTRY_REQUEST_TIMEOUT_SECS")
+                beardog_errors::process_env::var("BEARDOG_REGISTRY_REQUEST_TIMEOUT_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30)
             ),
-            retry_attempts: std::env::var("BEARDOG_REGISTRY_RETRY_ATTEMPTS")
+            retry_attempts: beardog_errors::process_env::var("BEARDOG_REGISTRY_RETRY_ATTEMPTS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(3),
-            ssl_verify: std::env::var("BEARDOG_REGISTRY_SSL_VERIFY")
+            ssl_verify: beardog_errors::process_env::var("BEARDOG_REGISTRY_SSL_VERIFY")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
@@ -176,7 +176,7 @@ impl Default for DeploymentConfig {
     fn default() -> Self {
         Self {
             environment: DeploymentEnvironment::Development,
-            replicas: std::env::var("BEARDOG_AI_REPLICAS")
+            replicas: beardog_errors::process_env::var("BEARDOG_AI_REPLICAS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(1),
@@ -263,22 +263,22 @@ impl Default for HealthCheckConfig {
         Self {
             endpoint: "/health".to_string(),
             interval: Duration::from_secs(
-                std::env::var("BEARDOG_AI_HEALTH_INTERVAL_SECS")
+                beardog_errors::process_env::var("BEARDOG_AI_HEALTH_INTERVAL_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30)
             ),
             timeout: Duration::from_secs(
-                std::env::var("BEARDOG_AI_HEALTH_TIMEOUT_SECS")
+                beardog_errors::process_env::var("BEARDOG_AI_HEALTH_TIMEOUT_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(5)
             ),
-            failure_threshold: std::env::var("BEARDOG_AI_HEALTH_FAILURE_THRESHOLD")
+            failure_threshold: beardog_errors::process_env::var("BEARDOG_AI_HEALTH_FAILURE_THRESHOLD")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(3),
-            success_threshold: std::env::var("BEARDOG_AI_HEALTH_SUCCESS_THRESHOLD")
+            success_threshold: beardog_errors::process_env::var("BEARDOG_AI_HEALTH_SUCCESS_THRESHOLD")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(1),
@@ -308,34 +308,34 @@ pub struct AutoScalingConfig {
 impl Default for AutoScalingConfig {
     fn default() -> Self {
         Self {
-            enabled: std::env::var("BEARDOG_AUTOSCALING_ENABLED")
+            enabled: beardog_errors::process_env::var("BEARDOG_AUTOSCALING_ENABLED")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(false),
-            min_replicas: std::env::var("BEARDOG_MIN_REPLICAS")
+            min_replicas: beardog_errors::process_env::var("BEARDOG_MIN_REPLICAS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(1),
-            max_replicas: std::env::var("BEARDOG_MAX_REPLICAS")
+            max_replicas: beardog_errors::process_env::var("BEARDOG_MAX_REPLICAS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(10),
-            target_cpu_utilization: std::env::var("BEARDOG_TARGET_CPU_UTILIZATION")
+            target_cpu_utilization: beardog_errors::process_env::var("BEARDOG_TARGET_CPU_UTILIZATION")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(70.0),
-            target_memory_utilization: std::env::var("BEARDOG_TARGET_MEMORY_UTILIZATION")
+            target_memory_utilization: beardog_errors::process_env::var("BEARDOG_TARGET_MEMORY_UTILIZATION")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(80.0),
             scale_up_cooldown: Duration::from_secs(
-                std::env::var("BEARDOG_SCALE_UP_COOLDOWN_SECS")
+                beardog_errors::process_env::var("BEARDOG_SCALE_UP_COOLDOWN_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(300) // 5 minutes default
             ),
             scale_down_cooldown: Duration::from_secs(
-                std::env::var("BEARDOG_SCALE_DOWN_COOLDOWN_SECS")
+                beardog_errors::process_env::var("BEARDOG_SCALE_DOWN_COOLDOWN_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(600) // 10 minutes default

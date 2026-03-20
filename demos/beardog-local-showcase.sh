@@ -253,7 +253,7 @@ echo ""
 if $BEARDOG genesis --help &>/dev/null || $BEARDOG key genesis --help &>/dev/null; then
     echo -e "${GREEN}✅ Genesis command available${NC}"
     
-    # TODO: Actual genesis command when implemented
+    # Genesis command placeholder — wire when CLI subcommand lands
     echo ""
     echo -e "${YELLOW}Expected command:${NC}"
     echo "   beardog genesis witness \\"

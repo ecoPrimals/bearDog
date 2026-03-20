@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Integration test modules
 #[path = "integration/hsm_provider_tests.rs"]
 mod hsm_provider_tests;

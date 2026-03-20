@@ -20,26 +20,6 @@ use crate::canonical::config::production::resources::{
 };
 use std::time::Duration;
 
-/// Helper to set env var for test scope
-struct EnvGuard {
-    key: String,
-}
-
-impl EnvGuard {
-    fn set(key: &str, value: &str) -> Self {
-        beardog_errors::process_env::set_var(key, value);
-        Self {
-            key: key.to_string(),
-        }
-    }
-}
-
-impl Drop for EnvGuard {
-    fn drop(&mut self) {
-        beardog_errors::process_env::remove_var(&self.key);
-    }
-}
-
 // ============================================================================
 // Application Configuration Tests
 // ============================================================================
@@ -49,8 +29,12 @@ impl Drop for EnvGuard {
 fn test_application_config_with_defaults() {
     let config = system::ApplicationConfig::with_defaults();
     assert_eq!(config.name, system::ApplicationConfig::DEFAULT_NAME);
-    assert_eq!(config.version, "0.0.0-dev"); // Deterministic placeholder
-    assert_eq!(config.instance_id, "default-instance"); // Deterministic placeholder
+    assert_eq!(config.version, env!("CARGO_PKG_VERSION"));
+    assert!(
+        config.instance_id.starts_with("instance-"),
+        "expected instance-{{pid}} default, got {:?}",
+        config.instance_id
+    );
     assert_eq!(
         config.description,
         system::ApplicationConfig::DEFAULT_DESCRIPTION
@@ -61,10 +45,11 @@ fn test_application_config_with_defaults() {
 /// Test ApplicationConfig::from_env()
 #[test]
 fn test_application_config_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_APP_NAME", "CustomApp");
-    let _g2 = EnvGuard::set("BEARDOG_APP_DESCRIPTION", "Custom Description");
-
-    let config = system::ApplicationConfig::from_env();
+    let config = system::ApplicationConfig::from_env_provider(|k| match k {
+        "BEARDOG_APP_NAME" => Some("CustomApp".to_string()),
+        "BEARDOG_APP_DESCRIPTION" => Some("Custom Description".to_string()),
+        _ => None,
+    });
     assert_eq!(config.name, "CustomApp");
     assert_eq!(config.description, "Custom Description");
     // Version comes from CARGO_PKG_VERSION (compile time)
@@ -102,12 +87,13 @@ fn test_storage_resource_config_with_defaults() {
 /// Test StorageResourceConfig::from_env()
 #[test]
 fn test_storage_resource_config_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_MAX_DISK_USAGE_PERCENT", "90.5");
-    let _g2 = EnvGuard::set("BEARDOG_TEMP_CLEANUP_INTERVAL_SECS", "7200");
-    let _g3 = EnvGuard::set("BEARDOG_LOG_ROTATION_SIZE_MB", "200");
-    let _g4 = EnvGuard::set("BEARDOG_LOG_RETENTION_DAYS", "60");
-
-    let config = StorageResourceConfig::from_env();
+    let config = StorageResourceConfig::from_env_provider(|k| match k {
+        "BEARDOG_MAX_DISK_USAGE_PERCENT" => Some("90.5".to_string()),
+        "BEARDOG_TEMP_CLEANUP_INTERVAL_SECS" => Some("7200".to_string()),
+        "BEARDOG_LOG_ROTATION_SIZE_MB" => Some("200".to_string()),
+        "BEARDOG_LOG_RETENTION_DAYS" => Some("60".to_string()),
+        _ => None,
+    });
     assert_eq!(config.max_disk_usage_percent, 90.5);
     assert_eq!(config.temp_dir_cleanup_interval, Duration::from_secs(7200));
     assert_eq!(config.log_rotation_size_mb, 200);
@@ -136,12 +122,13 @@ fn test_connection_config_with_defaults() {
 /// Test ConnectionConfig::from_env()
 #[test]
 fn test_connection_config_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_CONNECTION_POOL_SIZE", "20");
-    let _g2 = EnvGuard::set("BEARDOG_MAX_IDLE_CONNECTIONS", "10");
-    let _g3 = EnvGuard::set("BEARDOG_CONNECTION_LIFETIME_SECS", "3600");
-    let _g4 = EnvGuard::set("BEARDOG_CONNECTION_HEALTH_CHECK_INTERVAL_SECS", "120");
-
-    let config = ConnectionConfig::from_env();
+    let config = ConnectionConfig::from_env_provider(|k| match k {
+        "BEARDOG_CONNECTION_POOL_SIZE" => Some("20".to_string()),
+        "BEARDOG_MAX_IDLE_CONNECTIONS" => Some("10".to_string()),
+        "BEARDOG_CONNECTION_LIFETIME_SECS" => Some("3600".to_string()),
+        "BEARDOG_CONNECTION_HEALTH_CHECK_INTERVAL_SECS" => Some("120".to_string()),
+        _ => None,
+    });
     assert_eq!(config.pool_size, 20);
     assert_eq!(config.max_idle_connections, 10);
     assert_eq!(config.connection_lifetime, Duration::from_secs(3600));
@@ -166,9 +153,10 @@ fn test_maintenance_config_with_defaults() {
 /// Test MaintenanceConfig::from_env()
 #[test]
 fn test_maintenance_config_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_MAINTENANCE_WINDOW_SECS", "7200");
-
-    let config = MaintenanceConfig::from_env();
+    let config = MaintenanceConfig::from_env_provider(|k| match k {
+        "BEARDOG_MAINTENANCE_WINDOW_SECS" => Some("7200".to_string()),
+        _ => None,
+    });
     assert!(!config.enabled);
     assert_eq!(config.window_duration, Duration::from_secs(7200));
 }
@@ -187,9 +175,10 @@ fn test_backup_config_with_defaults() {
 /// Test BackupConfig::from_env()
 #[test]
 fn test_backup_config_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_BACKUP_INTERVAL_SECS", "43200");
-
-    let config = BackupConfig::from_env();
+    let config = BackupConfig::from_env_provider(|k| match k {
+        "BEARDOG_BACKUP_INTERVAL_SECS" => Some("43200".to_string()),
+        _ => None,
+    });
     assert!(config.enabled);
     assert_eq!(config.interval, Duration::from_secs(43200));
 }
@@ -208,9 +197,10 @@ fn test_disaster_recovery_config_with_defaults() {
 /// Test DisasterRecoveryConfig::from_env()
 #[test]
 fn test_disaster_recovery_config_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_DR_RTO_SECS", "1800");
-
-    let config = DisasterRecoveryConfig::from_env();
+    let config = DisasterRecoveryConfig::from_env_provider(|k| match k {
+        "BEARDOG_DR_RTO_SECS" => Some("1800".to_string()),
+        _ => None,
+    });
     assert!(!config.enabled);
     assert_eq!(config.rto, Duration::from_secs(1800));
 }
@@ -242,9 +232,10 @@ fn test_environment_validation_with_defaults() {
 /// Test EnvironmentValidation::from_env()
 #[test]
 fn test_environment_validation_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_ENV_VALIDATION_INTERVAL_SECS", "600");
-
-    let config = EnvironmentValidation::from_env();
+    let config = EnvironmentValidation::from_env_provider(|k| match k {
+        "BEARDOG_ENV_VALIDATION_INTERVAL_SECS" => Some("600".to_string()),
+        _ => None,
+    });
     assert_eq!(config.validation_interval, Duration::from_secs(600));
 }
 
@@ -259,9 +250,10 @@ fn test_production_metrics_config_with_defaults() {
 /// Test ProductionMetricsConfig::from_env()
 #[test]
 fn test_production_metrics_config_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_METRICS_ENDPOINT", "/custom-metrics");
-
-    let config = ProductionMetricsConfig::from_env();
+    let config = ProductionMetricsConfig::from_env_provider(|k| match k {
+        "BEARDOG_METRICS_ENDPOINT" => Some("/custom-metrics".to_string()),
+        _ => None,
+    });
     assert_eq!(config.endpoint, "/custom-metrics");
 }
 
@@ -276,10 +268,11 @@ fn test_production_logging_config_with_defaults() {
 /// Test ProductionLoggingConfig::from_env()
 #[test]
 fn test_production_logging_config_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_LOG_LEVEL", "debug");
-    let _g2 = EnvGuard::set("BEARDOG_LOG_FORMAT", "text");
-
-    let config = ProductionLoggingConfig::from_env();
+    let config = ProductionLoggingConfig::from_env_provider(|k| match k {
+        "BEARDOG_LOG_LEVEL" => Some("debug".to_string()),
+        "BEARDOG_LOG_FORMAT" => Some("text".to_string()),
+        _ => None,
+    });
     assert_eq!(config.level, "debug");
     assert_eq!(config.format, "text");
 }
@@ -295,9 +288,10 @@ fn test_production_tracing_config_with_defaults() {
 /// Test ProductionTracingConfig::from_env()
 #[test]
 fn test_production_tracing_config_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_TRACING_ENDPOINT", "/custom-traces");
-
-    let config = ProductionTracingConfig::from_env();
+    let config = ProductionTracingConfig::from_env_provider(|k| match k {
+        "BEARDOG_TRACING_ENDPOINT" => Some("/custom-traces".to_string()),
+        _ => None,
+    });
     assert_eq!(config.endpoint, "/custom-traces");
 }
 
@@ -312,9 +306,10 @@ fn test_dashboard_config_with_defaults() {
 /// Test DashboardConfig::from_env()
 #[test]
 fn test_dashboard_config_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_DASHBOARD_ENDPOINT", "/admin/dashboard");
-
-    let config = DashboardConfig::from_env();
+    let config = DashboardConfig::from_env_provider(|k| match k {
+        "BEARDOG_DASHBOARD_ENDPOINT" => Some("/admin/dashboard".to_string()),
+        _ => None,
+    });
     assert_eq!(config.endpoint, "/admin/dashboard");
 }
 
@@ -332,9 +327,10 @@ fn test_rollout_config_with_defaults() {
 /// Test RolloutConfig::from_env()
 #[test]
 fn test_rollout_config_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_ROLLOUT_PERCENTAGE", "50.0");
-
-    let config = RolloutConfig::from_env();
+    let config = RolloutConfig::from_env_provider(|k| match k {
+        "BEARDOG_ROLLOUT_PERCENTAGE" => Some("50.0".to_string()),
+        _ => None,
+    });
     assert_eq!(config.percentage, 50.0);
 }
 
@@ -348,9 +344,10 @@ fn test_canary_config_with_defaults() {
 /// Test CanaryConfig::from_env()
 #[test]
 fn test_canary_config_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_CANARY_PERCENTAGE", "5.0");
-
-    let config = CanaryConfig::from_env();
+    let config = CanaryConfig::from_env_provider(|k| match k {
+        "BEARDOG_CANARY_PERCENTAGE" => Some("5.0".to_string()),
+        _ => None,
+    });
     assert_eq!(config.percentage, 5.0);
 }
 
@@ -371,10 +368,11 @@ fn test_production_feature_flags_with_defaults() {
 /// Test ProductionFeatureFlags::from_env()
 #[test]
 fn test_production_feature_flags_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_ENABLE_PERFORMANCE_PROFILING", "true");
-    let _g2 = EnvGuard::set("BEARDOG_ENABLE_AUTO_SCALING", "true");
-
-    let config = ProductionFeatureFlags::from_env();
+    let config = ProductionFeatureFlags::from_env_provider(|k| match k {
+        "BEARDOG_ENABLE_PERFORMANCE_PROFILING" => Some("true".to_string()),
+        "BEARDOG_ENABLE_AUTO_SCALING" => Some("true".to_string()),
+        _ => None,
+    });
     assert!(config.enable_performance_profiling);
     assert!(config.enable_auto_scaling);
 }
@@ -390,10 +388,11 @@ fn test_gc_tuning_config_with_defaults() {
 /// Test GcTuningConfig::from_env()
 #[test]
 fn test_gc_tuning_config_from_env() {
-    let _g1 = EnvGuard::set("BEARDOG_GC_TARGET_PAUSE_MS", "100");
-    let _g2 = EnvGuard::set("BEARDOG_GC_THROUGHPUT_TARGET_PERCENT", "95");
-
-    let config = GcTuningConfig::from_env();
+    let config = GcTuningConfig::from_env_provider(|k| match k {
+        "BEARDOG_GC_TARGET_PAUSE_MS" => Some("100".to_string()),
+        "BEARDOG_GC_THROUGHPUT_TARGET_PERCENT" => Some("95".to_string()),
+        _ => None,
+    });
     assert_eq!(config.target_pause_ms, Some(100));
     assert_eq!(config.throughput_target_percent, Some(95));
 }

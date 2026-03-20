@@ -131,8 +131,8 @@ impl Default for EcosystemNode {
             id: Uuid::new_v4(),
             name: "unnamed-node".to_string(),
             node_type: NodeType::Service,
-            endpoint: std::env::var("BEARDOG_ENDPOINT").unwrap_or_else(|_| {
-                std::env::var("ECOSYSTEM_BASE_URL")
+            endpoint: beardog_errors::process_env::var("BEARDOG_ENDPOINT").unwrap_or_else(|_| {
+                beardog_errors::process_env::var("ECOSYSTEM_BASE_URL")
                     .unwrap_or_else(|_| "https://beardog.ecoprimals.com".to_string())
             }),
             health_status: HealthStatus::Healthy,

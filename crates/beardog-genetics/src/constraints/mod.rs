@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2025 EcoPrimals BearDog Team
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -112,7 +113,7 @@ pub mod enforcement;
 pub mod evolution;
 pub mod types;
 
-pub use enforcement::{ConstraintEnforcer, ConstraintViolationError};
+pub use enforcement::{ConstraintEnforcementPolicy, ConstraintEnforcer, ConstraintViolationError};
 pub use evolution::{ConstraintEvolutionEngine, EvolutionTrigger};
 pub use types::{
     BehavioralConstraint, DataAccessConstraint, KeyConstraints, KeyOperation, LifetimeConstraint,

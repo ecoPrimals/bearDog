@@ -155,16 +155,14 @@ impl Default for ServiceRegistryConfig {
     ///
     /// The default backend is "consul" with standard settings.
     fn default() -> Self {
-        use std::env;
-
         // Try multiple environment variables for flexibility
-        let registry_endpoint = env::var("BEARDOG_SERVICE_REGISTRY_ENDPOINT")
-            .or_else(|_| env::var("CONSUL_HTTP_ADDR"))
+        let registry_endpoint = std::env::var("BEARDOG_SERVICE_REGISTRY_ENDPOINT")
+            .or_else(|_| std::env::var("CONSUL_HTTP_ADDR"))
             .unwrap_or_else(|_| {
                 // Build from components
-                let host = env::var("REGISTRY_HOST")
+                let host = std::env::var("REGISTRY_HOST")
                     .unwrap_or_else(|_| "consul.ecosystem.internal".to_string());
-                let port = env::var("REGISTRY_PORT").unwrap_or_else(|_| "8500".to_string());
+                let port = std::env::var("REGISTRY_PORT").unwrap_or_else(|_| "8500".to_string());
                 format!("http://{host}:{port}")
             });
 

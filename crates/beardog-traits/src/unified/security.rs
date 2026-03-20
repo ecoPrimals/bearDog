@@ -540,22 +540,24 @@ impl BearDogConfig for UnifiedSecurityConfig {
     fn from_env() -> Result<Self, beardog_errors::BearDogError> {
         let mut config = Self::default();
 
-        if let Ok(enable_auth) = std::env::var("BEARDOG_SECURITY_ENABLE_AUTH") {
+        if let Ok(enable_auth) = beardog_errors::process_env::var("BEARDOG_SECURITY_ENABLE_AUTH") {
             config.enable_authentication =
                 enable_auth.parse().unwrap_or(config.enable_authentication);
         }
 
-        if let Ok(session_timeout) = std::env::var("BEARDOG_SECURITY_SESSION_TIMEOUT") {
+        if let Ok(session_timeout) =
+            beardog_errors::process_env::var("BEARDOG_SECURITY_SESSION_TIMEOUT")
+        {
             config.session_timeout_minutes = session_timeout
                 .parse()
                 .unwrap_or(config.session_timeout_minutes);
         }
 
-        if let Ok(require_mfa) = std::env::var("BEARDOG_SECURITY_REQUIRE_MFA") {
+        if let Ok(require_mfa) = beardog_errors::process_env::var("BEARDOG_SECURITY_REQUIRE_MFA") {
             config.require_mfa = require_mfa.parse().unwrap_or(config.require_mfa);
         }
 
-        if let Ok(hsm_enabled) = std::env::var("BEARDOG_SECURITY_HSM_ENABLED") {
+        if let Ok(hsm_enabled) = beardog_errors::process_env::var("BEARDOG_SECURITY_HSM_ENABLED") {
             config.hsm_enabled = hsm_enabled.parse().unwrap_or(config.hsm_enabled);
         }
 

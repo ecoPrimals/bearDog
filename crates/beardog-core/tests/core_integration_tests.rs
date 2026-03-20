@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Integration tests for beardog-core functionality
 #![allow(unused_variables, dead_code)]
 

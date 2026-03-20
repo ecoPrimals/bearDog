@@ -14,7 +14,6 @@ mod tests {
     // Default and Construction Tests
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_const_defaults() {
         let config = CapacityConfig::const_defaults();
@@ -30,7 +29,6 @@ mod tests {
         assert_eq!(config.cache_max_entries, 10000);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_default_equals_const_defaults() {
         let default_config = CapacityConfig::default();
@@ -43,7 +41,6 @@ mod tests {
     // from_env_provider Tests (Concurrent-Safe Testing Pattern)
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_from_env_provider_no_overrides() {
         let config = CapacityConfig::from_env_provider(|_| None);
@@ -52,7 +49,6 @@ mod tests {
         assert_eq!(config, defaults);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_from_env_provider_channel_buffer() {
         let mut env = HashMap::new();
@@ -63,7 +59,6 @@ mod tests {
         assert_eq!(config.default_channel_buffer, 2000);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_from_env_provider_discovery_queue() {
         let mut env = HashMap::new();
@@ -74,7 +69,6 @@ mod tests {
         assert_eq!(config.discovery_queue_size, 500);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_from_env_provider_event_bus() {
         let mut env = HashMap::new();
@@ -85,7 +79,6 @@ mod tests {
         assert_eq!(config.event_bus_capacity, 50000);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_from_env_provider_max_connections() {
         let mut env = HashMap::new();
@@ -96,7 +89,6 @@ mod tests {
         assert_eq!(config.max_connections, 500);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_from_env_provider_min_idle_connections() {
         let mut env = HashMap::new();
@@ -107,7 +99,6 @@ mod tests {
         assert_eq!(config.min_idle_connections, 50);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_from_env_provider_pool_timeout() {
         let mut env = HashMap::new();
@@ -118,7 +109,6 @@ mod tests {
         assert_eq!(config.connection_pool_timeout_secs, 60);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_from_env_provider_max_message_size() {
         let mut env = HashMap::new();
@@ -129,7 +119,6 @@ mod tests {
         assert_eq!(config.max_message_size_bytes, 52428800);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_from_env_provider_buffer_pool() {
         let mut env = HashMap::new();
@@ -140,7 +129,6 @@ mod tests {
         assert_eq!(config.buffer_pool_size, 4096);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_from_env_provider_cache_max() {
         let mut env = HashMap::new();
@@ -151,7 +139,6 @@ mod tests {
         assert_eq!(config.cache_max_entries, 50000);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_from_env_provider_all_fields() {
         let mut env = HashMap::new();
@@ -178,7 +165,6 @@ mod tests {
         assert_eq!(config.cache_max_entries, 30000);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_from_env_provider_invalid_values_ignored() {
         let mut env = HashMap::new();
@@ -192,7 +178,6 @@ mod tests {
         assert_eq!(config.max_connections, 100);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_from_env_provider_partial_overrides() {
         let mut env = HashMap::new();
@@ -211,22 +196,11 @@ mod tests {
     }
 
     // ============================================================================
-    // from_env() Tests (Using Real Environment)
-    //
-    // CONCURRENCY NOTE: These tests use serial_test to prevent race conditions
-    // when modifying shared process environment. This is the ONLY acceptable use
-    // of serialization - environment variable tests. All other tests must be
-    // fully concurrent and use proper synchronization primitives.
+    // from_env() — use `from_env_provider` in tests to avoid mutating process env
     // ============================================================================
 
-    use serial_test::serial;
-
     #[test]
-    #[serial] // Required: env vars are process-global
     fn test_from_env_no_variables() {
-        beardog_errors::process_env::remove_var("BEARDOG_CHANNEL_BUFFER");
-        beardog_errors::process_env::remove_var("BEARDOG_MAX_CONNECTIONS");
-
         let config = CapacityConfig::from_env();
 
         assert_eq!(config.default_channel_buffer, 1000);
@@ -234,37 +208,27 @@ mod tests {
     }
 
     #[test]
-    #[serial] // Required: env vars are process-global
-    fn test_from_env_with_channel_buffer() {
-        beardog_errors::process_env::remove_var("BEARDOG_CHANNEL_BUFFER");
-        beardog_errors::process_env::set_var("BEARDOG_CHANNEL_BUFFER", "5000");
-
-        let config = CapacityConfig::from_env();
+    fn test_from_env_provider_channel_buffer_5000() {
+        let config = CapacityConfig::from_env_provider(|key| {
+            (key == "BEARDOG_CHANNEL_BUFFER").then(|| "5000".to_string())
+        });
 
         assert_eq!(config.default_channel_buffer, 5000);
-
-        beardog_errors::process_env::remove_var("BEARDOG_CHANNEL_BUFFER");
     }
 
     #[test]
-    #[serial] // Required: env vars are process-global
-    fn test_from_env_invalid_value() {
-        beardog_errors::process_env::remove_var("BEARDOG_EVENT_BUS_CAPACITY");
-        beardog_errors::process_env::set_var("BEARDOG_EVENT_BUS_CAPACITY", "not_valid");
+    fn test_from_env_provider_invalid_value_ignored() {
+        let config = CapacityConfig::from_env_provider(|key| {
+            (key == "BEARDOG_EVENT_BUS_CAPACITY").then(|| "not_valid".to_string())
+        });
 
-        let config = CapacityConfig::from_env();
-
-        // Should use default
         assert_eq!(config.event_bus_capacity, 10000);
-
-        beardog_errors::process_env::remove_var("BEARDOG_EVENT_BUS_CAPACITY");
     }
 
     // ============================================================================
     // Configuration Scenarios
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_low_resource_config() {
         let mut env = HashMap::new();
@@ -279,7 +243,6 @@ mod tests {
         assert_eq!(config.cache_max_entries, 1000);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_high_throughput_config() {
         let mut env = HashMap::new();
@@ -296,7 +259,6 @@ mod tests {
         assert_eq!(config.cache_max_entries, 100000);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_large_message_config() {
         let mut env = HashMap::new();
@@ -311,7 +273,6 @@ mod tests {
     // Trait Implementation Tests
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_clone() {
         let config1 = CapacityConfig::default();
@@ -320,7 +281,6 @@ mod tests {
         assert_eq!(config1, config2);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_debug() {
         let config = CapacityConfig::default();
@@ -329,7 +289,6 @@ mod tests {
         assert!(debug_str.contains("CapacityConfig"));
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_partial_eq() {
         let config1 = CapacityConfig::default();
@@ -347,7 +306,6 @@ mod tests {
     // Serialization Tests
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_serialization() {
         let config = CapacityConfig::default();
@@ -358,7 +316,6 @@ mod tests {
         assert_eq!(config, deserialized);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_serialization_with_custom_values() {
         let mut env = HashMap::new();
@@ -378,7 +335,6 @@ mod tests {
     // Edge Cases and Boundary Tests
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_zero_values() {
         let mut env = HashMap::new();
@@ -391,7 +347,6 @@ mod tests {
         assert_eq!(config.max_connections, 0);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_very_large_values() {
         let mut env = HashMap::new();
@@ -404,7 +359,6 @@ mod tests {
         assert_eq!(config.cache_max_entries, 10000000);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_negative_values_rejected() {
         let mut env = HashMap::new();
@@ -416,7 +370,6 @@ mod tests {
         assert_eq!(config.max_connections, 100);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_empty_string_values() {
         let mut env = HashMap::new();
@@ -428,7 +381,6 @@ mod tests {
         assert_eq!(config.default_channel_buffer, 1000);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_whitespace_values() {
         let mut env = HashMap::new();
@@ -444,7 +396,6 @@ mod tests {
     // Realistic Production Scenarios
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_production_high_traffic_config() {
         let mut env = HashMap::new();
@@ -464,7 +415,6 @@ mod tests {
         assert_eq!(config.cache_max_entries, 50000);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_development_config() {
         let mut env = HashMap::new();
@@ -479,7 +429,6 @@ mod tests {
         assert_eq!(config.cache_max_entries, 100);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_embedded_device_config() {
         let mut env = HashMap::new();
@@ -502,7 +451,6 @@ mod tests {
     // Concurrent-Safe Testing Pattern Verification
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_env_provider_closure_isolation() {
         // Test 1 with one set of values

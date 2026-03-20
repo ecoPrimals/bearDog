@@ -273,6 +273,152 @@ impl Fido2HsmProvider {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::hsm::fido2::types::{Fido2Capabilities, Fido2DeviceInfo, Fido2Transport};
+    use std::path::PathBuf;
+
+    fn sample_device_info(hmac: bool, resident: bool) -> Fido2DeviceInfo {
+        let mut caps = Fido2Capabilities::default();
+        caps.hmac_secret = hmac;
+        caps.resident_keys = resident;
+        Fido2DeviceInfo {
+            device_path: PathBuf::from("/no/such/beardog_fido2_test_device"),
+            vendor_id: 0x1209,
+            product_id: 0xbeee,
+            manufacturer: "Test".to_string(),
+            product: "TestKey".to_string(),
+            serial: None,
+            aaguid: None,
+            firmware_version: None,
+            protocol_versions: vec!["FIDO_2_0".to_string()],
+            extensions: vec![],
+            transport: Fido2Transport::Usb,
+            capabilities: caps,
+        }
+    }
+
+    #[tokio::test]
+    async fn test_new_fails_when_fido2_feature_disabled() {
+        #[cfg(not(feature = "fido2"))]
+        {
+            let info = sample_device_info(false, false);
+            let err = Fido2HsmProvider::new(info).await.unwrap_err();
+            assert!(err.to_string().contains("fido2") || err.to_string().contains("FIDO2"));
+        }
+        #[cfg(feature = "fido2")]
+        {
+            let info = sample_device_info(false, false);
+            let p = Fido2HsmProvider::new(info).await.expect("new with fido2");
+            assert_eq!(p.name(), "TestKey");
+            assert!(
+                p.device_path()
+                    .display()
+                    .to_string()
+                    .contains("beardog_fido2_test")
+            );
+            assert_eq!(p.device_info().product, "TestKey");
+        }
+    }
+
+    #[tokio::test]
+    async fn test_generate_entropy_requires_hmac_secret() {
+        let p = Fido2HsmProvider::new(sample_device_info(false, false))
+            .await
+            .expect("new");
+        let err = p.generate_entropy(32).await.unwrap_err();
+        assert!(err.to_string().contains("hmac-secret"));
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "fido2")]
+    async fn test_generate_entropy_open_or_phase2_error() {
+        let p = Fido2HsmProvider::new(sample_device_info(true, false))
+            .await
+            .expect("new");
+        let res = p.generate_entropy(16).await;
+        let err = res.expect_err("entropy should not complete without hardware");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Failed to open")
+                || msg.contains("not implemented")
+                || msg.contains("Phase 2")
+                || msg.contains("HID")
+                || msg.contains("not yet implemented"),
+            "unexpected error: {msg}"
+        );
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "fido2")]
+    async fn test_generate_key_resident_keys_required() {
+        let p = Fido2HsmProvider::new(sample_device_info(false, false))
+            .await
+            .expect("new");
+        let err = p
+            .generate_key("ES256", "")
+            .await
+            .expect_err("no resident keys");
+        assert!(err.to_string().contains("resident") || err.to_string().contains("Resident"));
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "fido2")]
+    async fn test_generate_key_stubs_after_open_attempt() {
+        let p = Fido2HsmProvider::new(sample_device_info(false, true))
+            .await
+            .expect("new");
+        let err = p.generate_key("ES256", "").await.expect_err("phase 2");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Failed to open")
+                || msg.contains("not implemented")
+                || msg.contains("Phase 2")
+                || msg.contains("not yet implemented"),
+            "{msg}"
+        );
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "fido2")]
+    async fn test_sign_stubs_after_open_attempt() {
+        use crate::hsm::fido2::types::Fido2KeyHandle;
+        let p = Fido2HsmProvider::new(sample_device_info(false, false))
+            .await
+            .expect("new");
+        let handle = Fido2KeyHandle {
+            credential_id: vec![1],
+            public_key: vec![],
+            algorithm: -7,
+            rp_id: "rp".to_string(),
+            user_id: vec![],
+            is_resident: true,
+        };
+        let err = p.sign(b"data", &handle).await.expect_err("sign");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Failed to open")
+                || msg.contains("not implemented")
+                || msg.contains("Phase 2")
+                || msg.contains("not yet implemented"),
+            "{msg}"
+        );
+    }
+
+    #[tokio::test]
+    #[cfg(feature = "fido2")]
+    async fn test_request_presence_stubs() {
+        let p = Fido2HsmProvider::new(sample_device_info(false, false))
+            .await
+            .expect("new");
+        let err = p.request_presence().await.expect_err("presence");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Failed to open")
+                || msg.contains("not implemented")
+                || msg.contains("Phase 2")
+                || msg.contains("not yet implemented"),
+            "{msg}"
+        );
+    }
 
     #[tokio::test]
     #[ignore] // Requires physical FIDO2 device

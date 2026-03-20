@@ -78,7 +78,7 @@ use std::future::Future;
 /// ecosystem must support, including health monitoring, metrics collection, and
 /// lifecycle management.
 pub trait BearDogProvider: Send + Sync + 'static {
-    /// Concrete error type for this provider; usually [`BearDogError`] or a thin wrapper.
+    /// Concrete error type for this provider; usually [`BearDogError`](beardog_errors::BearDogError) or a thin wrapper.
     type Error: std::error::Error + Send + Sync + 'static;
 
     /// Configuration blob deserialized from TOML/JSON before `initialize`.

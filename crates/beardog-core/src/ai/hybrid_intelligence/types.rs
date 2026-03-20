@@ -44,6 +44,22 @@ pub struct TrainingConfig {
 impl Default for TrainingConfig {
     fn default() -> Self {
         Self {
+            batch_size: 32,
+            epochs: 100,
+            learning_rate: 0.001,
+            validation_split: 0.2,
+            early_stopping: None,
+            regularization: None,
+            optimizer: OptimizerConfig::default(),
+        }
+    }
+}
+
+impl TrainingConfig {
+    /// Load training hyperparameters from `BEARDOG_AI_*` via `std::env::var`.
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
             batch_size: std::env::var("BEARDOG_AI_TRAINING_BATCH_SIZE")
                 .ok()
                 .and_then(|v| v.parse().ok())
@@ -83,6 +99,19 @@ pub struct InferenceConfig {
 impl Default for InferenceConfig {
     fn default() -> Self {
         Self {
+            batch_size: 1,
+            max_inference_time_ms: 1000,
+            serving_config: ServingConfig::default(),
+            caching: None,
+        }
+    }
+}
+
+impl InferenceConfig {
+    /// Load inference settings from `BEARDOG_AI_*` via `std::env::var`.
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
             batch_size: std::env::var("BEARDOG_AI_INFERENCE_BATCH_SIZE")
                 .ok()
                 .and_then(|v| v.parse().ok())
@@ -91,7 +120,7 @@ impl Default for InferenceConfig {
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(1000),
-            serving_config: ServingConfig::default(),
+            serving_config: ServingConfig::from_env(),
             caching: None,
         }
     }
@@ -181,28 +210,16 @@ impl Default for NeuralNetworkConfig {
                 },
                 hidden_layers: vec![],
                 output_layer: crate::ai::hybrid_intelligence::neural_networks::OutputLayerConfig {
-                    units: std::env::var("BEARDOG_AI_OUTPUT_UNITS")
-                        .ok()
-                        .and_then(|v| v.parse().ok())
-                        .unwrap_or(10),
+                    units: 10,
                     activation: crate::ai::hybrid_intelligence::neural_networks::ActivationFunction::Softmax,
                     loss_function: crate::ai::hybrid_intelligence::neural_networks::LossFunction::MeanSquaredError,
                 },
                 skip_connections: vec![],
             },
             training_params: TrainingParams {
-                batch_size: std::env::var("BEARDOG_AI_TRAINING_BATCH_SIZE")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(32),
-                epochs: std::env::var("BEARDOG_AI_TRAINING_EPOCHS")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(100),
-                learning_rate: std::env::var("BEARDOG_AI_LEARNING_RATE")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(0.001),
+                batch_size: 32,
+                epochs: 100,
+                learning_rate: 0.001,
                 lr_scheduler: None,
                 optimizer: crate::ai::hybrid_intelligence::neural_networks::Optimizer {
                     optimizer_type: crate::ai::hybrid_intelligence::neural_networks::OptimizerType::Adam,
@@ -228,10 +245,7 @@ impl Default for NeuralNetworkConfig {
                 early_stopping: Some(crate::ai::hybrid_intelligence::neural_networks::EarlyStoppingConfig {
                     monitor: "val_loss".to_string(),
                     min_delta: 0.001,
-                    patience: std::env::var("BEARDOG_AI_EARLY_STOPPING_PATIENCE")
-                        .ok()
-                        .and_then(|v| v.parse().ok())
-                        .unwrap_or(10),
+                    patience: 10,
                     restore_best_weights: true,
                     mode: crate::ai::hybrid_intelligence::neural_networks::MonitoringMode::Min,
                 }),
@@ -486,6 +500,18 @@ pub struct ServingConfig {
 impl Default for ServingConfig {
     fn default() -> Self {
         Self {
+            max_concurrent_requests: 100,
+            request_timeout: Duration::from_secs(30),
+            load_balancing: LoadBalancingStrategy::RoundRobin,
+        }
+    }
+}
+
+impl ServingConfig {
+    /// Load serving limits from `BEARDOG_AI_*` via `std::env::var`.
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
             max_concurrent_requests: std::env::var("BEARDOG_AI_SERVING_MAX_CONCURRENT_REQUESTS")
                 .ok()
                 .and_then(|v| v.parse().ok())
@@ -551,6 +577,22 @@ pub type RegistryConfig = AIRegistryConfig;
 
 impl Default for AIRegistryConfig {
     fn default() -> Self {
+        let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
+        Self {
+            registry_type: RegistryType::Local,
+            endpoint: format!(
+                "{}:{}",
+                network_config.default_host, network_config.service_ports.ai_port
+            ),
+            auth: None,
+        }
+    }
+}
+
+impl AIRegistryConfig {
+    /// Prefer `BEARDOG_AI_REGISTRY_ENDPOINT` when set; otherwise same as [`Default::default`].
+    #[must_use]
+    pub fn from_env() -> Self {
         let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
         Self {
             registry_type: RegistryType::Local,
@@ -865,6 +907,19 @@ pub struct ResourceRequirements {
 impl Default for ResourceRequirements {
     fn default() -> Self {
         Self {
+            cpu: 1.0,
+            memory: 1024,
+            gpu: None,
+            storage: 10,
+        }
+    }
+}
+
+impl ResourceRequirements {
+    /// Load resource hints from `BEARDOG_AI_RESOURCE_*` via `std::env::var`.
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
             cpu: std::env::var("BEARDOG_AI_RESOURCE_CPU")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -982,3 +1037,127 @@ pub enum NotificationChannel {
 //
 // All types are available at their canonical locations in beardog-types.
 // ═══════════════════════════════════════════════════════════════════════════
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        AIMonitoringConfig, AIRegistryConfig, AuthType, CachingConfig, DeploymentStrategy,
+        EvictionPolicy, InferenceConfig, LoadBalancingStrategy, MetricType, ModelManagementConfig,
+        NeuralNetworkConfig, NormalizationStrategy, OptimizerType, PreprocessingConfig,
+        RegistryType, ResourceRequirements, ServingConfig, TrainingConfig, VersioningStrategy,
+    };
+    use std::time::Duration;
+
+    #[test]
+    fn ai_monitoring_config_helpers_reflect_enabled_set() {
+        let mut cfg = AIMonitoringConfig::default();
+        assert!(cfg.collects_training_metrics());
+        cfg.enabled_metrics.clear();
+        assert!(!cfg.collects_training_metrics());
+        assert!(!cfg.collects_inference_metrics());
+        assert!(!cfg.tracks_model_performance());
+        assert!(!cfg.monitors_resource_usage());
+    }
+
+    #[test]
+    fn versioning_and_registry_type_variants() {
+        let _ = VersioningStrategy::Hash;
+        let _ = RegistryType::CloudStorage;
+        let _ = DeploymentStrategy::Canary;
+        let _ = AuthType::OAuth2;
+        let _ = MetricType::PredictionConfidence;
+        let _ = LoadBalancingStrategy::WeightedRoundRobin;
+        let _ = EvictionPolicy::Lfu;
+        let _ = NormalizationStrategy::Robust;
+    }
+
+    #[test]
+    fn optimizer_type_roundtrip_debug() {
+        let o = OptimizerType::Sgd { momentum: 0.9 };
+        assert!(format!("{o:?}").contains("Sgd"));
+    }
+
+    #[test]
+    fn model_management_and_preprocessing_defaults_are_serializable() {
+        let mm: ModelManagementConfig = ModelManagementConfig::default();
+        let json = serde_json::to_string(&mm).expect("serialize");
+        let _: ModelManagementConfig = serde_json::from_str(&json).expect("deserialize");
+
+        let p: PreprocessingConfig = PreprocessingConfig::default();
+        let json = serde_json::to_string(&p).expect("serialize");
+        let _: PreprocessingConfig = serde_json::from_str(&json).expect("deserialize");
+    }
+
+    #[test]
+    fn neural_network_config_default_serializes() {
+        let n: NeuralNetworkConfig = NeuralNetworkConfig::default();
+        let json = serde_json::to_string(&n).expect("serialize");
+        assert!(json.contains("Feedforward") || json.contains("architecture"));
+    }
+
+    #[test]
+    fn training_config_overrides_are_explicit() {
+        let t = TrainingConfig {
+            batch_size: 64,
+            epochs: 42,
+            learning_rate: 0.5,
+            ..TrainingConfig::default()
+        };
+        assert_eq!(t.batch_size, 64);
+        assert_eq!(t.epochs, 42);
+        assert!((t.learning_rate - 0.5).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn inference_and_serving_config_overrides_are_explicit() {
+        let s = ServingConfig {
+            max_concurrent_requests: 50,
+            request_timeout: Duration::from_secs(120),
+            load_balancing: LoadBalancingStrategy::RoundRobin,
+        };
+        let i = InferenceConfig {
+            batch_size: 8,
+            max_inference_time_ms: 2500,
+            serving_config: s,
+            caching: None,
+        };
+        assert_eq!(i.batch_size, 8);
+        assert_eq!(i.max_inference_time_ms, 2500);
+        assert_eq!(i.serving_config.max_concurrent_requests, 50);
+        assert_eq!(i.serving_config.request_timeout.as_secs(), 120);
+    }
+
+    #[test]
+    fn ai_registry_config_custom_endpoint() {
+        let r = AIRegistryConfig {
+            registry_type: RegistryType::Local,
+            endpoint: "http://registry.test:9000".to_string(),
+            auth: None,
+        };
+        assert!(r.endpoint.contains("registry.test"));
+    }
+
+    #[test]
+    fn resource_requirements_custom_values() {
+        let r = ResourceRequirements {
+            cpu: 4.5,
+            memory: 8192,
+            gpu: Some(2),
+            storage: 100,
+        };
+        assert!((r.cpu - 4.5).abs() < f64::EPSILON);
+        assert_eq!(r.memory, 8192);
+        assert_eq!(r.gpu, Some(2));
+        assert_eq!(r.storage, 100);
+    }
+
+    #[test]
+    fn caching_config_struct_fields() {
+        let c = CachingConfig {
+            max_cache_size: 100,
+            ttl: std::time::Duration::from_secs(60),
+            eviction_policy: EvictionPolicy::Lru,
+        };
+        assert_eq!(c.max_cache_size, 100);
+    }
+}

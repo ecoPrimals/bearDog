@@ -96,6 +96,9 @@ path = "../beardog-threat"
 [dependencies.beardog-adapters]
 path = "../beardog-adapters"
 
+[dependencies.beardog-discovery]
+path = "../beardog-discovery"
+
 [dependencies.tokio]
 version = "1.0"
 features = [ "full",]

@@ -584,4 +584,95 @@ mod tests {
         manager.disable_migration_phase(MigrationPhase::GeneticOperations);
         // Verify no panic - phases modified successfully
     }
+
+    #[tokio::test]
+    async fn test_migrate_crypto_with_custom_identity_and_operation_tier() {
+        let entropy_manager = Arc::new(beardog_genetics::EntropyHierarchyManager::default());
+        let mut config = SovereignEntropyMigrationConfig::default();
+        config
+            .operation_tier_requirements
+            .insert("custom_crypto_op".to_string(), 2);
+        let manager = SovereignEntropyMigrationManager::new(entropy_manager, config).unwrap();
+        let bytes = manager
+            .migrate_crypto_key_generation("custom_crypto_op", 16, Some("human-1"))
+            .await
+            .expect("crypto migrate");
+        assert_eq!(bytes.len(), 16);
+        let stats = manager.get_migration_statistics().await;
+        assert!(stats.total_calls_migrated >= 1);
+        assert!(stats.calls_by_tier.contains_key(&2));
+    }
+
+    #[tokio::test]
+    async fn test_migrate_neural_weights_distribution_variants() {
+        let entropy_manager = Arc::new(beardog_genetics::EntropyHierarchyManager::default());
+        let manager = SovereignEntropyMigrationManager::new(
+            entropy_manager,
+            SovereignEntropyMigrationConfig::default(),
+        )
+        .unwrap();
+        for dist in ["he", "normal", "uniform", "xavier", "unknown"] {
+            let w = manager
+                .migrate_neural_weight_initialization((2, 3), dist, None)
+                .await
+                .expect(dist);
+            assert_eq!(w.len(), 2);
+            assert_eq!(w[0].len(), 3);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_migrate_random_data_default_tier_for_unknown_operation() {
+        let entropy_manager = Arc::new(beardog_genetics::EntropyHierarchyManager::default());
+        let manager = SovereignEntropyMigrationManager::new(
+            entropy_manager,
+            SovereignEntropyMigrationConfig::default(),
+        )
+        .unwrap();
+        let bytes = manager
+            .migrate_random_data_generation("unlisted_operation", 24, Some("id-a"))
+            .await
+            .expect("random");
+        assert_eq!(bytes.len(), 24);
+    }
+
+    #[tokio::test]
+    async fn test_enable_phase_idempotent() {
+        let entropy_manager = Arc::new(beardog_genetics::EntropyHierarchyManager::default());
+        let config = SovereignEntropyMigrationConfig::default();
+        let mut manager = SovereignEntropyMigrationManager::new(entropy_manager, config).unwrap();
+        let n = manager.config.enabled_phases.len();
+        manager.enable_migration_phase(MigrationPhase::CryptographicKeys);
+        assert_eq!(manager.config.enabled_phases.len(), n);
+    }
+
+    #[test]
+    fn test_config_and_stats_serde_roundtrip() {
+        let config = SovereignEntropyMigrationConfig::default();
+        let json = serde_json::to_string(&config).unwrap();
+        let back: SovereignEntropyMigrationConfig = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.default_system_identity, config.default_system_identity);
+
+        let stats = MigrationStatistics::default();
+        let json = serde_json::to_string(&stats).unwrap();
+        let _: MigrationStatistics = serde_json::from_str(&json).unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_fallback_neural_and_random_when_phases_disabled() {
+        let entropy_manager = Arc::new(beardog_genetics::EntropyHierarchyManager::default());
+        let mut config = SovereignEntropyMigrationConfig::default();
+        config.enabled_phases.clear();
+        let manager = SovereignEntropyMigrationManager::new(entropy_manager, config).unwrap();
+        let w = manager
+            .migrate_neural_weight_initialization((2, 2), "he", None)
+            .await
+            .unwrap();
+        assert_eq!(w.len(), 2);
+        let r = manager
+            .migrate_random_data_generation("nonce_generation", 8, None)
+            .await
+            .unwrap();
+        assert_eq!(r.len(), 8);
+    }
 }

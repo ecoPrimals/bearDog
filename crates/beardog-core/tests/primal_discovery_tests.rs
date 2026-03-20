@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! High-Value Tests for Primal Discovery System
 //!
 //! Created: December 15, 2025

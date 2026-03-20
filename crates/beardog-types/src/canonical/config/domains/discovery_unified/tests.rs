@@ -107,18 +107,16 @@ fn test_conservative_config() {
 
 #[test]
 fn test_from_env() {
-    beardog_errors::process_env::set_var("BEARDOG_DISCOVERY_ENABLED", "true");
-    beardog_errors::process_env::set_var("BEARDOG_DISCOVERY_SERVICE_ID", "env-test");
-    beardog_errors::process_env::set_var("BEARDOG_REGISTRY_BACKEND", "etcd");
-
-    let config = UnifiedDiscoveryConfig::from_env().unwrap();
+    let config = UnifiedDiscoveryConfig::from_env_provider(|k| match k {
+        "BEARDOG_DISCOVERY_ENABLED" => Some("true".to_string()),
+        "BEARDOG_DISCOVERY_SERVICE_ID" => Some("env-test".to_string()),
+        "BEARDOG_REGISTRY_BACKEND" => Some("etcd".to_string()),
+        _ => None,
+    })
+    .unwrap();
     assert!(config.enabled);
     assert_eq!(config.service_id.as_ref(), "env-test");
     assert_eq!(&config.registry.backend, "etcd");
-
-    beardog_errors::process_env::remove_var("BEARDOG_DISCOVERY_ENABLED");
-    beardog_errors::process_env::remove_var("BEARDOG_DISCOVERY_SERVICE_ID");
-    beardog_errors::process_env::remove_var("BEARDOG_REGISTRY_BACKEND");
 }
 
 #[test]

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2025 EcoPrimals BearDog Team
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -58,23 +59,36 @@ fn test_collaboration_key_story() {
     let sign_op = KeyOperation::Sign {
         domain: Some("climate_modeling".to_string()),
     };
-    let result = ConstraintEnforcer::verify_operation(&signed, &sign_op, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &sign_op,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
     assert!(result.is_ok(), "Signing in allowed domain should work");
 
     // ❌ This should FAIL: signing in forbidden domain
     let wrong_domain_op = KeyOperation::Sign {
         domain: Some("medical_research".to_string()),
     };
-    let result =
-        ConstraintEnforcer::verify_operation(&signed, &wrong_domain_op, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &wrong_domain_op,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
     assert!(result.is_err(), "Signing in wrong domain should fail");
 
     // ❌ This should FAIL: deleting raw data
     let delete_op = KeyOperation::Delete {
         path: "raw_data/2020-temperature.nc".to_string(),
     };
-    let result =
-        ConstraintEnforcer::verify_operation(&signed, &delete_op, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &delete_op,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
     assert!(result.is_err(), "Deleting raw data should be blocked");
     match result.unwrap_err() {
         ConstraintViolationError::DataAccessDenied {
@@ -90,8 +104,12 @@ fn test_collaboration_key_story() {
     let modify_op = KeyOperation::Modify {
         path: "published/paper.pdf".to_string(),
     };
-    let result =
-        ConstraintEnforcer::verify_operation(&signed, &modify_op, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &modify_op,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
     assert!(
         result.is_err(),
         "Modifying published data should be blocked"
@@ -101,7 +119,12 @@ fn test_collaboration_key_story() {
     let read_op = KeyOperation::Read {
         path: "raw_data/2020-temperature.nc".to_string(),
     };
-    let result = ConstraintEnforcer::verify_operation(&signed, &read_op, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &read_op,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
     assert!(result.is_ok(), "Reading data should work");
 }
 
@@ -118,7 +141,12 @@ fn test_signature_verification_detects_tampering() {
 
     // Verification should fail
     let op = KeyOperation::Sign { domain: None };
-    let result = ConstraintEnforcer::verify_operation(&signed, &op, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &op,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
 
     assert!(
         result.is_err(),
@@ -142,7 +170,12 @@ fn test_expired_key_rejected() {
     let verifying_key = signing_key.verifying_key();
 
     let op = KeyOperation::Sign { domain: None };
-    let result = ConstraintEnforcer::verify_operation(&signed, &op, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &op,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
 
     assert!(result.is_err(), "Expired key should be rejected");
     assert!(matches!(
@@ -165,7 +198,12 @@ fn test_use_count_enforcement() {
     let verifying_key = signing_key.verifying_key();
 
     let op = KeyOperation::Sign { domain: None };
-    let result = ConstraintEnforcer::verify_operation(&signed, &op, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &op,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
 
     assert!(result.is_err(), "Use count limit should be enforced");
     assert!(matches!(
@@ -192,15 +230,24 @@ fn test_operation_specific_constraints() {
 
     // ✅ Sign should work
     let sign_op = KeyOperation::Sign { domain: None };
-    let result = ConstraintEnforcer::verify_operation(&signed, &sign_op, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &sign_op,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
     assert!(result.is_ok(), "Sign operation should be allowed");
 
     // ❌ Delete should fail
     let delete_op = KeyOperation::Delete {
         path: "test.txt".to_string(),
     };
-    let result =
-        ConstraintEnforcer::verify_operation(&signed, &delete_op, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &delete_op,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
     assert!(result.is_err(), "Delete operation should not be allowed");
 }
 
@@ -272,8 +319,12 @@ fn test_immutable_paths() {
     let modify_op = KeyOperation::Modify {
         path: "config/system.conf".to_string(),
     };
-    let result =
-        ConstraintEnforcer::verify_operation(&signed, &modify_op, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &modify_op,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
     assert!(
         result.is_err(),
         "Modifying immutable path should be blocked"
@@ -283,6 +334,11 @@ fn test_immutable_paths() {
     let read_op = KeyOperation::Read {
         path: "config/system.conf".to_string(),
     };
-    let result = ConstraintEnforcer::verify_operation(&signed, &read_op, verifying_key.as_bytes());
+    let result = ConstraintEnforcer::verify_operation(
+        &signed,
+        &read_op,
+        verifying_key.as_bytes(),
+        &ConstraintEnforcementPolicy::default(),
+    );
     assert!(result.is_ok(), "Reading immutable path should work");
 }

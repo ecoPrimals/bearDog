@@ -44,8 +44,11 @@ impl AndroidStrongBoxHsm {
 
     /// Creates a StrongBox HSM with default ID and device info
     ///
+    /// This constructs the **canonical type** from defaults; it does not open StrongBox hardware.
+    /// On Android builds, use the platform HSM in `beardog-tunnel` for real keystore operations.
+    ///
     /// # Errors
-    /// Returns an error if initialization fails (mock implementation always succeeds)
+    /// Currently always returns `Ok` for this DTO constructor.
     pub fn with_defaults() -> Result<Self, beardog_errors::BearDogError> {
         Ok(Self {
             id: "android-strongbox".to_string(),
@@ -54,16 +57,14 @@ impl AndroidStrongBoxHsm {
     }
 }
 
-/// Default implementation. On Android, this uses real StrongBox when available.
-/// On non-Android platforms, this is a mock for testing/desktop development only.
-#[cfg(not(target_os = "android"))]
+/// Default is only implemented for non-Android when compiling this crate's unit tests.
+/// Production code on other targets should use [`Self::new`], [`Self::with_defaults`], or the
+/// platform HSM in `beardog-tunnel` (Android).
+#[cfg(all(not(target_os = "android"), test))]
 impl Default for AndroidStrongBoxHsm {
     fn default() -> Self {
-        // Mock implementation for non-Android (desktop, CI, etc.): construct directly to avoid
-        // panic paths. On Android, use AndroidStrongBoxHsm::with_defaults() or platform-specific
-        // initialization for real StrongBox hardware.
         Self {
-            id: "android-strongbox-mock".to_string(),
+            id: "android-strongbox-test-default".to_string(),
             device_info: super::AndroidDeviceInfo::default(),
         }
     }
@@ -165,7 +166,7 @@ mod tests {
         #[cfg(target_os = "android")]
         assert_eq!(hsm.id, "android-strongbox");
         #[cfg(not(target_os = "android"))]
-        assert_eq!(hsm.id, "android-strongbox-mock");
+        assert_eq!(hsm.id, "android-strongbox-test-default");
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: types
         // TEST_PRIORITY: normal

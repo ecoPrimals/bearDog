@@ -68,8 +68,8 @@ impl BearDogCore {
         // Service mesh initialization logic using universal adapter
         // Initialize with basic capabilities
         // Use environment-aware endpoint discovery
-        let mesh_endpoint = std::env::var("MESH_SERVICE_ENDPOINT")
-            .or_else(|_| std::env::var("BEARDOG_MESH_ENDPOINT"))
+        let mesh_endpoint = beardog_errors::process_env::var("MESH_SERVICE_ENDPOINT")
+            .or_else(|_| beardog_errors::process_env::var("BEARDOG_MESH_ENDPOINT"))
             .unwrap_or_else(|_| {
                 use beardog_types::constants::domains::network::config;
                 format!(
@@ -95,8 +95,8 @@ impl BearDogCore {
 
         // Register service mesh capability if not already registered
         // Use environment-aware endpoint with API path
-        let api_endpoint = std::env::var("API_SERVICE_ENDPOINT")
-            .or_else(|_| std::env::var("BEARDOG_API_ENDPOINT"))
+        let api_endpoint = beardog_errors::process_env::var("API_SERVICE_ENDPOINT")
+            .or_else(|_| beardog_errors::process_env::var("BEARDOG_API_ENDPOINT"))
             .unwrap_or_else(|_| {
                 use beardog_types::constants::domains::network::config;
                 format!(

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 use super::ExternalFunctionHandler;
 use crate::licensing::LicenseManager;
 use beardog_errors::BearDogError;

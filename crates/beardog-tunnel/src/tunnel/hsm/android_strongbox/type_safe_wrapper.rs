@@ -80,7 +80,7 @@ impl TypeSafeAndroidKeystore {
 
         info!("🔍 Detecting Android StrongBox using safe APIs");
 
-        if let Ok(strongbox_available) = std::env::var(SecurityLevel::StrongBox,
+        if let Ok(strongbox_available) = beardog_errors::process_env::var(SecurityLevel::StrongBox,
                     supported_algorithms: vec![
                         SupportedAlgorithm::Aes256Gcm,
                         SupportedAlgorithm::EcdsaP256,
@@ -111,11 +111,11 @@ impl TypeSafeAndroidKeystore {
     /// Gets safe_device_info
     fn get_safe_device_info() -> Result<DeviceInfo, BearDogError> {
 
-        let api_level = std::env::var("ANDROID_API_LEVEL")
+        let api_level = beardog_errors::process_env::var("ANDROID_API_LEVEL")
             .unwrap_or_else(|_| "28".to_string())
             .parse::<u32>()
             .unwrap_or(28);
-        let device_model = std::env::var("ANDROID_MODEL").unwrap_or_else(|_| "Unknown".to_string());
+        let device_model = beardog_errors::process_env::var("ANDROID_MODEL").unwrap_or_else(|_| "Unknown".to_string());
 
         let has_hardware_keystore =
             tokio::fs::metadata(AlgorithmConstraint>(

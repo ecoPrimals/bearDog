@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! E2E Tests for tarpc Protocol
 //!
 //! PRIMARY inter-primal communication protocol tests
@@ -11,7 +12,7 @@ async fn test_e2e_tarpc_is_primary_protocol() {
     // tarpc should be detected as the highest priority protocol
     let tarpc_frame = [0x00, 0x00, 0x00, 0x10, 0x01, 0x02, 0x03, 0x04];
 
-    // Verify this looks like tarpc (length-delimited bincode)
+    // Verify this looks like tarpc (length-delimited binary frames)
     assert!(tarpc_frame.len() >= 4);
     assert_eq!(tarpc_frame[0], 0x00); // Length prefix
 }
@@ -190,18 +191,18 @@ async fn test_e2e_tarpc_uses_async_await() {
 
 #[tokio::test]
 async fn test_e2e_tarpc_zero_copy_capable() {
-    // tarpc with bincode can do zero-copy deserialization
+    // tarpc binary codecs can use efficient deserialization
     let zero_copy_capable = true;
     assert!(zero_copy_capable);
 }
 
 #[tokio::test]
 async fn test_e2e_tarpc_efficient_serialization() {
-    // bincode is more efficient than JSON
-    let bincode_size = 100; // bytes
+    // Binary framing is more efficient than JSON
+    let binary_size = 100; // bytes
     let json_size = 200; // bytes (approximate)
 
-    assert!(bincode_size < json_size);
+    assert!(binary_size < json_size);
 }
 
 // ============================================================================

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Real E2E Scenario Tests - Test File
 // Created November 1, 2025
 
@@ -102,6 +103,10 @@ async fn test_real_scenario_5_component_management() {
 // TEST_CATEGORY: e2e
 // TEST_DOMAIN: integration
 // TEST_PRIORITY: high
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "precision loss acceptable for percentage calculation"
+)]
 #[tokio::test]
 async fn test_all_real_scenarios_sequential() {
     let config = E2ETestConfig::default();

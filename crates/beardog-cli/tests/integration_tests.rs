@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Integration Tests for `BearDog` CLI
 //!
 //! End-to-end tests for CLI commands and workflows
@@ -52,10 +53,8 @@ async fn test_entropy_collection_workflow() {
     let temp_dir = TempDir::new().unwrap();
     let seed_path = temp_dir.path().join("test-seed.json");
 
-    // Set environment variable to lower threshold for testing
-    beardog_errors::process_env::set_var("BEARDOG_ENTROPY_QUALITY_THRESHOLD", "0.5");
-
     let mut cmd = Command::cargo_bin("beardog").unwrap();
+    cmd.env("BEARDOG_ENTROPY_QUALITY_THRESHOLD", "0.5");
     cmd.arg("entropy")
         .arg("collect")
         .arg("--human-input")
@@ -77,9 +76,6 @@ async fn test_entropy_collection_workflow() {
     // Verify seed file is valid JSON
     let seed_content = fs::read_to_string(&seed_path).unwrap();
     let _seed: serde_json::Value = serde_json::from_str(&seed_content).unwrap();
-
-    // Clean up env var
-    beardog_errors::process_env::remove_var("BEARDOG_ENTROPY_QUALITY_THRESHOLD");
 }
 
 #[tokio::test]
@@ -170,11 +166,9 @@ async fn test_entropy_info() {
     let temp_dir = TempDir::new().unwrap();
     let seed_path = temp_dir.path().join("info-test-seed.json");
 
-    // Set environment variable to lower threshold for testing
-    beardog_errors::process_env::set_var("BEARDOG_ENTROPY_QUALITY_THRESHOLD", "0.5");
-
     // First collect entropy
     let mut cmd = Command::cargo_bin("beardog").unwrap();
+    cmd.env("BEARDOG_ENTROPY_QUALITY_THRESHOLD", "0.5");
     cmd.arg("entropy")
         .arg("collect")
         .arg("--human-input")
@@ -194,9 +188,6 @@ async fn test_entropy_info() {
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("Entropy Seed Information"));
-
-    // Clean up env var
-    beardog_errors::process_env::remove_var("BEARDOG_ENTROPY_QUALITY_THRESHOLD");
 }
 
 #[test]

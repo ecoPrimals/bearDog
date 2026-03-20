@@ -27,21 +27,21 @@ pub struct InferenceConfig {
 impl Default for InferenceConfig {
     fn default() -> Self {
         Self {
-            batch_size: std::env::var("BEARDOG_INFERENCE_BATCH_SIZE")
+            batch_size: beardog_errors::process_env::var("BEARDOG_INFERENCE_BATCH_SIZE")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(1),
             max_inference_time: Duration::from_secs(
-                std::env::var("BEARDOG_MAX_INFERENCE_TIME_SECS")
+                beardog_errors::process_env::var("BEARDOG_MAX_INFERENCE_TIME_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(30)
             ),
-            use_gpu: std::env::var("BEARDOG_INFERENCE_USE_GPU")
+            use_gpu: beardog_errors::process_env::var("BEARDOG_INFERENCE_USE_GPU")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(false),
-            num_threads: std::env::var("BEARDOG_INFERENCE_NUM_THREADS")
+            num_threads: beardog_errors::process_env::var("BEARDOG_INFERENCE_NUM_THREADS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(4),
@@ -69,15 +69,15 @@ impl Default for PredictionConfig {
         Self {
             horizon: PredictionHorizon::ShortTerm,
             model: PredictionModel::TimeSeries,
-            confidence_threshold: std::env::var("BEARDOG_PREDICTION_CONFIDENCE_THRESHOLD")
+            confidence_threshold: beardog_errors::process_env::var("BEARDOG_PREDICTION_CONFIDENCE_THRESHOLD")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(0.8),
-            uncertainty_quantification: std::env::var("BEARDOG_UNCERTAINTY_QUANTIFICATION")
+            uncertainty_quantification: beardog_errors::process_env::var("BEARDOG_UNCERTAINTY_QUANTIFICATION")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(true),
-            num_samples: std::env::var("BEARDOG_PREDICTION_NUM_SAMPLES")
+            num_samples: beardog_errors::process_env::var("BEARDOG_PREDICTION_NUM_SAMPLES")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(100),
@@ -116,14 +116,14 @@ impl Default for ServingConfig {
         let timeout_config = TimeoutConfig::from_env();
         
         Self {
-            host: std::env::var("BEARDOG_AI_SERVING_HOST")
-                .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
+            host: beardog_errors::process_env::var("BEARDOG_AI_SERVING_HOST")
+                .or_else(|_| beardog_errors::process_env::var("BEARDOG_BIND_ADDRESS"))
                 .unwrap_or_else(|_| config::default_service_host()), // Environment-aware bind address
-            port: std::env::var("BEARDOG_AI_SERVING_PORT")
+            port: beardog_errors::process_env::var("BEARDOG_AI_SERVING_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(8080),
-            max_concurrent_requests: std::env::var("BEARDOG_AI_MAX_CONCURRENT_REQUESTS")
+            max_concurrent_requests: beardog_errors::process_env::var("BEARDOG_AI_MAX_CONCURRENT_REQUESTS")
                 .ok()
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(100),
@@ -158,7 +158,7 @@ impl Default for CachingConfig {
             enabled: true,
             size_limit_mb: 1024, // 1GB
             ttl: Duration::from_secs(
-                std::env::var("BEARDOG_AI_CACHE_TTL_SECS")
+                beardog_errors::process_env::var("BEARDOG_AI_CACHE_TTL_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(3600) // 1 hour default

@@ -12,13 +12,13 @@ use tracing::info;
 /// Discover socket path using self-knowledge pattern.
 fn discover_socket_path() -> String {
     // Check environment variable first
-    if let Ok(path) = std::env::var("BEARDOG_SOCKET") {
+    if let Ok(path) = beardog_errors::process_env::var("BEARDOG_SOCKET") {
         return path;
     }
 
     // Use primal name pattern
-    let primal_name = std::env::var("PRIMAL_NAME")
-        .or_else(|_| std::env::var("BEARDOG_NAME"))
+    let primal_name = beardog_errors::process_env::var("PRIMAL_NAME")
+        .or_else(|_| beardog_errors::process_env::var("BEARDOG_NAME"))
         .unwrap_or_else(|_| "beardog".to_string());
 
     format!("/tmp/{primal_name}.sock")
@@ -152,16 +152,16 @@ async fn check_entropy() -> HealthCheck {
 
 async fn check_key_storage() -> HealthCheck {
     // Get key storage directory from environment or XDG-compliant default
-    let key_dir = std::env::var("BEARDOG_KEY_STORAGE_DIR")
+    let key_dir = beardog_errors::process_env::var("BEARDOG_KEY_STORAGE_DIR")
         .map(std::path::PathBuf::from)
         .or_else(|_| {
             // Use XDG_DATA_HOME/beardog/keys if available
-            std::env::var("XDG_DATA_HOME")
+            beardog_errors::process_env::var("XDG_DATA_HOME")
                 .map(|xdg| std::path::PathBuf::from(xdg).join("beardog").join("keys"))
         })
         .or_else(|_| {
             // Fall back to ~/.local/share/beardog/keys (XDG default)
-            std::env::var("HOME")
+            beardog_errors::process_env::var("HOME")
                 .map(|home| std::path::PathBuf::from(home).join(".local/share/beardog/keys"))
         })
         .unwrap_or_else(|_| std::path::PathBuf::from("/tmp/beardog_keys")); // Last resort

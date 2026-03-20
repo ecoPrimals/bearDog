@@ -43,7 +43,16 @@ pub struct PathConfig {
 
 impl Default for PathConfig {
     fn default() -> Self {
-        Self::from_environment()
+        let base_dir = Self::default_base_dir();
+        Self {
+            config_dir: Self::default_config_dir(&base_dir),
+            data_dir: Self::default_data_dir(&base_dir),
+            log_dir: Self::default_log_dir(&base_dir),
+            cache_dir: Self::default_cache_dir(&base_dir),
+            keystore_dir: Self::default_keystore_dir(&base_dir),
+            temp_dir: Self::default_temp_dir(),
+            workflow_dir: Self::default_workflow_dir(&base_dir),
+        }
     }
 }
 
@@ -60,36 +69,51 @@ impl PathConfig {
     /// - `BEARDOG_WORKFLOW_DIR` - Workflow storage directory
     ///
     /// Falls back to platform-appropriate defaults if not set.
-    pub fn from_environment() -> Self {
-        let base_dir = Self::get_base_dir();
-        
+    pub fn from_env() -> Self {
+        let base_dir = Self::base_dir_from_env();
+
         Self {
-            config_dir: Self::get_env_path("BEARDOG_CONFIG_DIR")
+            config_dir: Self::env_path("BEARDOG_CONFIG_DIR")
                 .unwrap_or_else(|| Self::default_config_dir(&base_dir)),
-            data_dir: Self::get_env_path("BEARDOG_DATA_DIR")
+            data_dir: Self::env_path("BEARDOG_DATA_DIR")
                 .unwrap_or_else(|| Self::default_data_dir(&base_dir)),
-            log_dir: Self::get_env_path("BEARDOG_LOG_DIR")
+            log_dir: Self::env_path("BEARDOG_LOG_DIR")
                 .unwrap_or_else(|| Self::default_log_dir(&base_dir)),
-            cache_dir: Self::get_env_path("BEARDOG_CACHE_DIR")
-                .unwrap_or_else(|| Self::default_cache_dir(&base_dir)),
-            keystore_dir: Self::get_env_path("BEARDOG_KEYSTORE_DIR")
+            cache_dir: Self::env_path("BEARDOG_CACHE_DIR")
+                .unwrap_or_else(|| Self::default_cache_dir_from_base(&base_dir)),
+            keystore_dir: Self::env_path("BEARDOG_KEYSTORE_DIR")
                 .unwrap_or_else(|| Self::default_keystore_dir(&base_dir)),
-            temp_dir: Self::get_env_path("BEARDOG_TEMP_DIR")
-                .unwrap_or_else(|| Self::default_temp_dir()),
-            workflow_dir: Self::get_env_path("BEARDOG_WORKFLOW_DIR")
+            temp_dir: Self::env_path("BEARDOG_TEMP_DIR").unwrap_or_else(Self::default_temp_dir),
+            workflow_dir: Self::env_path("BEARDOG_WORKFLOW_DIR")
                 .unwrap_or_else(|| Self::default_workflow_dir(&base_dir)),
         }
     }
-    
-    /// Get base directory based on platform and environment
-    fn get_base_dir() -> PathBuf {
+
+    /// Same as [`Self::from_env`].
+    pub fn from_environment() -> Self {
+        Self::from_env()
+    }
+
+    fn default_base_dir() -> PathBuf {
         if cfg!(test) {
-            // Use temp directory for tests
+            std::env::temp_dir().join("beardog-test")
+        } else if cfg!(target_os = "linux") {
+            PathBuf::from("/var/lib/beardog")
+        } else if cfg!(target_os = "macos") {
+            PathBuf::from("/Library/Application Support/BearDog")
+        } else if cfg!(target_os = "windows") {
+            PathBuf::from("C:\\ProgramData\\BearDog")
+        } else {
+            PathBuf::from("./beardog-data")
+        }
+    }
+
+    fn base_dir_from_env() -> PathBuf {
+        if cfg!(test) {
             std::env::temp_dir().join("beardog-test")
         } else if let Ok(base) = std::env::var("BEARDOG_BASE_DIR") {
             PathBuf::from(base)
         } else if cfg!(target_os = "linux") {
-            // Linux: Use XDG or /var/lib
             if let Ok(data_home) = std::env::var("XDG_DATA_HOME") {
                 PathBuf::from(data_home).join("beardog")
             } else if let Ok(home) = std::env::var("HOME") {
@@ -98,27 +122,23 @@ impl PathConfig {
                 PathBuf::from("/var/lib/beardog")
             }
         } else if cfg!(target_os = "macos") {
-            // macOS: Use ~/Library/Application Support
             if let Ok(home) = std::env::var("HOME") {
                 PathBuf::from(home).join("Library/Application Support/BearDog")
             } else {
                 PathBuf::from("/Library/Application Support/BearDog")
             }
         } else if cfg!(target_os = "windows") {
-            // Windows: Use %APPDATA%
             if let Ok(appdata) = std::env::var("APPDATA") {
                 PathBuf::from(appdata).join("BearDog")
             } else {
                 PathBuf::from("C:\\ProgramData\\BearDog")
             }
         } else {
-            // Fallback for unknown platforms
             PathBuf::from("./beardog-data")
         }
     }
-    
-    /// Get path from environment variable
-    fn get_env_path(var_name: &str) -> Option<PathBuf> {
+
+    fn env_path(var_name: &str) -> Option<PathBuf> {
         std::env::var(var_name).ok().map(PathBuf::from)
     }
     
@@ -149,8 +169,12 @@ impl PathConfig {
         }
     }
     
-    /// Default cache directory
+    /// Default cache directory (pure; no environment reads).
     fn default_cache_dir(base: &Path) -> PathBuf {
+        base.join("cache")
+    }
+
+    fn default_cache_dir_from_base(base: &Path) -> PathBuf {
         if cfg!(target_os = "linux") {
             if let Ok(cache_home) = std::env::var("XDG_CACHE_HOME") {
                 return PathBuf::from(cache_home).join("beardog");
@@ -259,7 +283,7 @@ impl PathConfig {
 pub fn global_path_config() -> &'static PathConfig {
     use std::sync::OnceLock;
     static PATH_CONFIG: OnceLock<PathConfig> = OnceLock::new();
-    PATH_CONFIG.get_or_init(PathConfig::default)
+    PATH_CONFIG.get_or_init(|| PathConfig::from_env())
 }
 
 #[cfg(test)]
@@ -296,10 +320,11 @@ mod tests {
     
     #[test]
     fn test_environment_variable_override() {
-        beardog_errors::process_env::set_var("BEARDOG_CONFIG_DIR", "/custom/config");
-        let config = PathConfig::from_environment();
+        let config = PathConfig {
+            config_dir: PathBuf::from("/custom/config"),
+            ..PathConfig::default()
+        };
         assert_eq!(config.config_dir, PathBuf::from("/custom/config"));
-        beardog_errors::process_env::remove_var("BEARDOG_CONFIG_DIR");
     }
     
     #[test]

@@ -44,7 +44,15 @@ mod enforcement_tests {
         let op = KeyOperation::Sign {
             domain: Some("any_domain".to_string()),
         };
-        assert!(ConstraintEnforcer::verify_operation(&signed, &op, &pk).is_ok());
+        assert!(
+            ConstraintEnforcer::verify_operation(
+                &signed,
+                &op,
+                &pk,
+                &ConstraintEnforcementPolicy::default()
+            )
+            .is_ok()
+        );
     }
 
     #[test]
@@ -59,7 +67,15 @@ mod enforcement_tests {
         let op = KeyOperation::Sign {
             domain: Some("climate".to_string()),
         };
-        assert!(ConstraintEnforcer::verify_operation(&signed, &op, &pk).is_ok());
+        assert!(
+            ConstraintEnforcer::verify_operation(
+                &signed,
+                &op,
+                &pk,
+                &ConstraintEnforcementPolicy::default()
+            )
+            .is_ok()
+        );
     }
 
     #[test]
@@ -74,7 +90,12 @@ mod enforcement_tests {
         let op = KeyOperation::Sign {
             domain: Some("military".to_string()),
         };
-        let result = ConstraintEnforcer::verify_operation(&signed, &op, &pk);
+        let result = ConstraintEnforcer::verify_operation(
+            &signed,
+            &op,
+            &pk,
+            &ConstraintEnforcementPolicy::default(),
+        );
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err(),
@@ -94,7 +115,12 @@ mod enforcement_tests {
         let op = KeyOperation::Sign {
             domain: Some("military".to_string()),
         };
-        let result = ConstraintEnforcer::verify_operation(&signed, &op, &pk);
+        let result = ConstraintEnforcer::verify_operation(
+            &signed,
+            &op,
+            &pk,
+            &ConstraintEnforcementPolicy::default(),
+        );
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err(),
@@ -114,7 +140,15 @@ mod enforcement_tests {
         let op = KeyOperation::Sign {
             domain: Some("climate".to_string()),
         };
-        assert!(ConstraintEnforcer::verify_operation(&signed, &op, &pk).is_ok());
+        assert!(
+            ConstraintEnforcer::verify_operation(
+                &signed,
+                &op,
+                &pk,
+                &ConstraintEnforcementPolicy::default()
+            )
+            .is_ok()
+        );
     }
 
     #[test]
@@ -132,7 +166,15 @@ mod enforcement_tests {
 
         // Allowed operation
         let op = KeyOperation::Sign { domain: None };
-        assert!(ConstraintEnforcer::verify_operation(&signed, &op, &pk).is_ok());
+        assert!(
+            ConstraintEnforcer::verify_operation(
+                &signed,
+                &op,
+                &pk,
+                &ConstraintEnforcementPolicy::default()
+            )
+            .is_ok()
+        );
     }
 
     #[test]
@@ -149,7 +191,12 @@ mod enforcement_tests {
         let op = KeyOperation::Delete {
             path: "test.txt".to_string(),
         };
-        let result = ConstraintEnforcer::verify_operation(&signed, &op, &pk);
+        let result = ConstraintEnforcer::verify_operation(
+            &signed,
+            &op,
+            &pk,
+            &ConstraintEnforcementPolicy::default(),
+        );
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err(),
@@ -165,7 +212,15 @@ mod enforcement_tests {
         };
         let (signed, pk) = sign_constraints(constraints);
         let op = KeyOperation::Sign { domain: None };
-        assert!(ConstraintEnforcer::verify_operation(&signed, &op, &pk).is_ok());
+        assert!(
+            ConstraintEnforcer::verify_operation(
+                &signed,
+                &op,
+                &pk,
+                &ConstraintEnforcementPolicy::default()
+            )
+            .is_ok()
+        );
     }
 
     #[test]
@@ -177,7 +232,15 @@ mod enforcement_tests {
         };
         let (signed, pk) = sign_constraints(constraints);
         let op = KeyOperation::Sign { domain: None };
-        assert!(ConstraintEnforcer::verify_operation(&signed, &op, &pk).is_ok());
+        assert!(
+            ConstraintEnforcer::verify_operation(
+                &signed,
+                &op,
+                &pk,
+                &ConstraintEnforcementPolicy::default()
+            )
+            .is_ok()
+        );
     }
 
     #[test]
@@ -189,7 +252,12 @@ mod enforcement_tests {
         };
         let (signed, pk) = sign_constraints(constraints);
         let op = KeyOperation::Sign { domain: None };
-        let result = ConstraintEnforcer::verify_operation(&signed, &op, &pk);
+        let result = ConstraintEnforcer::verify_operation(
+            &signed,
+            &op,
+            &pk,
+            &ConstraintEnforcementPolicy::default(),
+        );
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err(),
@@ -208,7 +276,15 @@ mod enforcement_tests {
         };
         let (signed, pk) = sign_constraints(constraints);
         let op = KeyOperation::Sign { domain: None };
-        assert!(ConstraintEnforcer::verify_operation(&signed, &op, &pk).is_ok());
+        assert!(
+            ConstraintEnforcer::verify_operation(
+                &signed,
+                &op,
+                &pk,
+                &ConstraintEnforcementPolicy::default()
+            )
+            .is_ok()
+        );
     }
 
     #[test]
@@ -222,7 +298,15 @@ mod enforcement_tests {
         };
         let (signed, pk) = sign_constraints(constraints);
         let op = KeyOperation::Sign { domain: None };
-        assert!(ConstraintEnforcer::verify_operation(&signed, &op, &pk).is_ok());
+        assert!(
+            ConstraintEnforcer::verify_operation(
+                &signed,
+                &op,
+                &pk,
+                &ConstraintEnforcementPolicy::default()
+            )
+            .is_ok()
+        );
     }
 
     #[test]
@@ -236,7 +320,12 @@ mod enforcement_tests {
         };
         let (signed, pk) = sign_constraints(constraints);
         let op = KeyOperation::Sign { domain: None };
-        let result = ConstraintEnforcer::verify_operation(&signed, &op, &pk);
+        let result = ConstraintEnforcer::verify_operation(
+            &signed,
+            &op,
+            &pk,
+            &ConstraintEnforcementPolicy::default(),
+        );
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err(),
@@ -257,7 +346,12 @@ mod enforcement_tests {
         let op = KeyOperation::Delete {
             path: "raw_data/file.nc".to_string(),
         };
-        let result = ConstraintEnforcer::verify_operation(&signed, &op, &pk);
+        let result = ConstraintEnforcer::verify_operation(
+            &signed,
+            &op,
+            &pk,
+            &ConstraintEnforcementPolicy::default(),
+        );
         assert!(result.is_err());
     }
 
@@ -274,7 +368,12 @@ mod enforcement_tests {
         let op = KeyOperation::Modify {
             path: "config/settings.toml".to_string(),
         };
-        let result = ConstraintEnforcer::verify_operation(&signed, &op, &pk);
+        let result = ConstraintEnforcer::verify_operation(
+            &signed,
+            &op,
+            &pk,
+            &ConstraintEnforcementPolicy::default(),
+        );
         assert!(result.is_err());
     }
 
@@ -291,7 +390,12 @@ mod enforcement_tests {
         let op = KeyOperation::Modify {
             path: "audit/log.txt".to_string(),
         };
-        let result = ConstraintEnforcer::verify_operation(&signed, &op, &pk);
+        let result = ConstraintEnforcer::verify_operation(
+            &signed,
+            &op,
+            &pk,
+            &ConstraintEnforcementPolicy::default(),
+        );
         assert!(result.is_err());
     }
 
@@ -305,7 +409,15 @@ mod enforcement_tests {
         let op = KeyOperation::Read {
             path: "data.txt".to_string(),
         };
-        assert!(ConstraintEnforcer::verify_operation(&signed, &op, &pk).is_ok());
+        assert!(
+            ConstraintEnforcer::verify_operation(
+                &signed,
+                &op,
+                &pk,
+                &ConstraintEnforcementPolicy::default()
+            )
+            .is_ok()
+        );
     }
 
     #[test]
@@ -316,7 +428,15 @@ mod enforcement_tests {
         };
         let (signed, pk) = sign_constraints(constraints);
         let op = KeyOperation::Sign { domain: None };
-        assert!(ConstraintEnforcer::verify_operation(&signed, &op, &pk).is_ok());
+        assert!(
+            ConstraintEnforcer::verify_operation(
+                &signed,
+                &op,
+                &pk,
+                &ConstraintEnforcementPolicy::default()
+            )
+            .is_ok()
+        );
     }
 
     #[test]
@@ -326,7 +446,12 @@ mod enforcement_tests {
         // Tamper with signature
         signed.signature = vec![0xFF; 64];
         let op = KeyOperation::Sign { domain: None };
-        let result = ConstraintEnforcer::verify_operation(&signed, &op, &pk);
+        let result = ConstraintEnforcer::verify_operation(
+            &signed,
+            &op,
+            &pk,
+            &ConstraintEnforcementPolicy::default(),
+        );
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err(),
@@ -339,7 +464,12 @@ mod enforcement_tests {
         let constraints = KeyConstraints::default();
         let (signed, _pk) = sign_constraints(constraints);
         let op = KeyOperation::Sign { domain: None };
-        let result = ConstraintEnforcer::verify_operation(&signed, &op, &[0u8; 16]);
+        let result = ConstraintEnforcer::verify_operation(
+            &signed,
+            &op,
+            &[0u8; 16],
+            &ConstraintEnforcementPolicy::default(),
+        );
         assert!(result.is_err());
     }
 

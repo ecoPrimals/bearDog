@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Fault Injection Tests for Unix Socket IPC Evolution
 //!
 //! Tests the resilience and recovery of the lock-free concurrent implementation
@@ -69,6 +70,7 @@ async fn start_server_ready(
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn fault_test_socket_deletion_during_operation() {
     // Fault: Delete socket file while server is running
     let (_dir, socket_path) = test_socket();
@@ -108,6 +110,7 @@ async fn fault_test_socket_deletion_during_operation() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn fault_test_connection_timeout() {
     // Fault: Simulate slow/hanging connections
     let (_dir, socket_path) = test_socket();
@@ -140,6 +143,7 @@ async fn fault_test_connection_timeout() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn fault_test_malformed_requests() {
     // Fault: Send malformed/corrupted data
     let (_dir, socket_path) = test_socket();
@@ -168,6 +172,7 @@ async fn fault_test_malformed_requests() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn fault_test_rapid_server_restart() {
     // Fault: Rapidly stop and restart server
     let (_dir, socket_path) = test_socket();
@@ -217,6 +222,7 @@ async fn fault_test_rapid_server_restart() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn fault_test_partial_writes() {
     // Fault: Simulate partial/incomplete writes
     let (_dir, socket_path) = test_socket();
@@ -254,6 +260,7 @@ async fn fault_test_partial_writes() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn fault_test_concurrent_stop_calls() {
     // Fault: Multiple concurrent stop() calls
     let (_dir, socket_path) = test_socket();
@@ -277,6 +284,7 @@ async fn fault_test_concurrent_stop_calls() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn fault_test_readiness_check_before_start() {
     // Fault: Check readiness before server starts
     let (_dir, socket_path) = test_socket();
@@ -300,6 +308,7 @@ async fn fault_test_readiness_check_before_start() {
 }
 
 #[tokio::test]
+#[serial_test::serial]
 async fn fault_test_connection_after_stop() {
     // Fault: Try to connect after server has stopped
     let (_dir, socket_path) = test_socket();

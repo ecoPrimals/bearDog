@@ -738,10 +738,10 @@ impl RustSoftwareHsm {
     }
 
     /// Reload HSM configuration (custom method, not part of trait)
+    ///
+    /// Intentional no-op until hot-reload of software HSM settings is implemented.
     pub async fn reload_configuration(&self, _new_config: HsmConfig) -> Result<(), BearDogError> {
         info!("🔧 Reloading HSM configuration");
-        // Configuration reload would happen here
-        // For now, this is a placeholder
         Ok(())
     }
 }

@@ -79,6 +79,3 @@ version = "0.10"
 
 [dependencies.blake3]
 workspace = true
-
-[dev-dependencies]
-serial_test = "3.0"  # For serial test execution (env tests)

@@ -70,9 +70,7 @@ mod system_properties {
     //! ## Migration from Unsafe FFI
     //!
     //! - **Old**: `unsafe { __system_property_get(...) }` (15.3μs)
-    //! - **New**: `std::env::var(...)` (14.1μs) ✅ 8% FASTER!
-
-    use std::env;
+    //! - **New**: `beardog_errors::process_env::var(...)` (14.1μs) ✅ 8% FASTER!
 
     /// Get an Android system property value safely
     ///
@@ -100,19 +98,19 @@ mod system_properties {
         // Try multiple patterns for maximum compatibility
 
         // Pattern 1: Direct name (most common, fastest)
-        if let Ok(value) = env::var(name) {
+        if let Ok(value) = beardog_errors::process_env::var(name) {
             return Some(value);
         }
 
         // Pattern 2: With "sys." prefix (Android convention for some props)
         let env_name = format!("sys.{}", name.replace('.', "_"));
-        if let Ok(value) = env::var(&env_name) {
+        if let Ok(value) = beardog_errors::process_env::var(&env_name) {
             return Some(value);
         }
 
         // Pattern 3: With "ANDROID_" prefix (some custom ROMs)
         let android_name = format!("ANDROID_{}", name.replace('.', "_").to_uppercase());
-        if let Ok(value) = env::var(&android_name) {
+        if let Ok(value) = beardog_errors::process_env::var(&android_name) {
             return Some(value);
         }
 

@@ -46,7 +46,7 @@ impl Default for NetworkConfig {
             beardog_types::canonical::config::network::NetworkConfig::default();
 
         Self {
-            bind_address: std::env::var("BEARDOG_DISCOVERY_BIND_ADDRESS")
+            bind_address: beardog_errors::process_env::var("BEARDOG_DISCOVERY_BIND_ADDRESS")
                 .unwrap_or_else(|_| {
                     format!(
                         "{}:{}",
@@ -59,50 +59,56 @@ impl Default for NetworkConfig {
                     tracing::warn!("Failed to parse bind address, using fallback: {}", e);
                     SocketAddr::new(IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED), 8080)
                 }),
-            multicast_address: std::env::var("BEARDOG_DISCOVERY_MULTICAST_ADDRESS")
-                .unwrap_or_else(|_| "224.0.0.251".to_string())
-                .parse()
-                .unwrap_or_else(|e| {
-                    tracing::warn!("Failed to parse multicast address, using fallback: {}", e);
-                    IpAddr::V4(std::net::Ipv4Addr::new(224, 0, 0, 251))
-                }),
-            multicast_port: std::env::var("BEARDOG_DISCOVERY_MULTICAST_PORT")
+            multicast_address: beardog_errors::process_env::var(
+                "BEARDOG_DISCOVERY_MULTICAST_ADDRESS",
+            )
+            .unwrap_or_else(|_| "224.0.0.251".to_string())
+            .parse()
+            .unwrap_or_else(|e| {
+                tracing::warn!("Failed to parse multicast address, using fallback: {}", e);
+                IpAddr::V4(std::net::Ipv4Addr::new(224, 0, 0, 251))
+            }),
+            multicast_port: beardog_errors::process_env::var("BEARDOG_DISCOVERY_MULTICAST_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(5353),
             discovery_port_range: {
                 use beardog_config::global::BEARDOG_CONFIG;
-                let start = std::env::var("BEARDOG_DISCOVERY_PORT_START")
+                let start = beardog_errors::process_env::var("BEARDOG_DISCOVERY_PORT_START")
                     .ok()
                     .and_then(|p| p.parse().ok())
                     .unwrap_or_else(|| BEARDOG_CONFIG.network.discovery.port);
-                let end = std::env::var("BEARDOG_DISCOVERY_PORT_END")
+                let end = beardog_errors::process_env::var("BEARDOG_DISCOVERY_PORT_END")
                     .ok()
                     .and_then(|p| p.parse().ok())
                     .unwrap_or_else(|| BEARDOG_CONFIG.network.discovery.port + 9);
                 (start, end)
             },
-            max_packet_size: std::env::var("BEARDOG_DISCOVERY_MAX_PACKET_SIZE")
+            max_packet_size: beardog_errors::process_env::var("BEARDOG_DISCOVERY_MAX_PACKET_SIZE")
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(65536),
-            connection_timeout_ms: std::env::var("BEARDOG_DISCOVERY_CONNECTION_TIMEOUT_MS")
-                .ok()
-                .and_then(|p| p.parse().ok())
-                .unwrap_or(5000),
-            read_timeout_ms: std::env::var("BEARDOG_DISCOVERY_READ_TIMEOUT_MS")
+            connection_timeout_ms: beardog_errors::process_env::var(
+                "BEARDOG_DISCOVERY_CONNECTION_TIMEOUT_MS",
+            )
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(5000),
+            read_timeout_ms: beardog_errors::process_env::var("BEARDOG_DISCOVERY_READ_TIMEOUT_MS")
                 .ok()
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(3000),
-            write_timeout_ms: std::env::var("BEARDOG_DISCOVERY_WRITE_TIMEOUT_MS")
-                .ok()
-                .and_then(|p| p.parse().ok())
-                .unwrap_or(3000),
-            enable_ipv6: std::env::var("BEARDOG_DISCOVERY_ENABLE_IPV6")
+            write_timeout_ms: beardog_errors::process_env::var(
+                "BEARDOG_DISCOVERY_WRITE_TIMEOUT_MS",
+            )
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(3000),
+            enable_ipv6: beardog_errors::process_env::var("BEARDOG_DISCOVERY_ENABLE_IPV6")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(true),
-            interface: std::env::var("BEARDOG_DISCOVERY_INTERFACE").ok(),
+            interface: beardog_errors::process_env::var("BEARDOG_DISCOVERY_INTERFACE").ok(),
             tls_config: None,
         }
     }
@@ -302,7 +308,7 @@ impl NetworkUtils {
         // Use environment variable or network config default
         use beardog_types::canonical::config::network::NetworkConfig;
         let _network_config = NetworkConfig::default();
-        let bind_host = std::env::var("BEARDOG_BIND_HOST")
+        let bind_host = beardog_errors::process_env::var("BEARDOG_BIND_HOST")
             .unwrap_or_else(|_| NetworkConfig::default().default_host);
 
         for port in start..=end {

@@ -94,7 +94,7 @@ impl AdvancedSIMDOptimizer {
         }
     }
 
-    /// Pops from [`Self::fast_pool`] or [`Self::buffer_pool`], otherwise allocates a fresh [`Vec`].
+    /// Pops from the `fast_pool` deque or `buffer_pool` vector, otherwise allocates a fresh [`Vec`].
     pub fn get_fast_buffer(&mut self, size: usize) -> Vec<u8> {
         self.metrics.operations_count += 1;
 

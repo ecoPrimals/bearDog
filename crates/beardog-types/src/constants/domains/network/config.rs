@@ -38,50 +38,62 @@ pub fn default_service_port() -> u16 {
     BEARDOG_CONFIG.network.api.port
 }
 
-/// Get the default database URL from environment or fallback
+/// Default database URL from centralized config (no environment reads).
 pub fn default_database_url() -> String {
+    format!(
+        "postgresql://{}:{}/beardog",
+        default_service_host(),
+        DEFAULT_POSTGRES_PORT
+    )
+}
+
+/// `DATABASE_URL` / `BEARDOG_DATABASE_URL`, falling back to [`default_database_url`].
+pub fn default_database_url_from_env() -> String {
     std::env::var("DATABASE_URL")
         .or_else(|_| std::env::var("BEARDOG_DATABASE_URL"))
-        .unwrap_or_else(|_| {
-            format!(
-                "postgresql://{}:{}/beardog",
-                default_service_host(),
-                DEFAULT_POSTGRES_PORT
-            )
-        })
+        .unwrap_or_else(|_| default_database_url())
 }
 
-/// Get the default discovery endpoint from environment or fallback
+/// Default discovery URL from centralized config (no environment reads).
 pub fn default_discovery_endpoint() -> String {
+    format!(
+        "http://{}:{}/discovery",
+        default_service_host(),
+        default_service_port()
+    )
+}
+
+/// Discovery endpoint from env (`BEARDOG_DISCOVERY_ENDPOINT` / `DISCOVERY_URL`), falling back to [`default_discovery_endpoint`].
+pub fn default_discovery_endpoint_from_env() -> String {
     std::env::var("BEARDOG_DISCOVERY_ENDPOINT")
         .or_else(|_| std::env::var("DISCOVERY_URL"))
-        .unwrap_or_else(|_| {
-            format!(
-                "http://{}:{}/discovery",
-                default_service_host(),
-                default_service_port()
-            )
-        })
+        .unwrap_or_else(|_| default_discovery_endpoint())
 }
 
-/// Get the default compute endpoint from environment or fallback
+/// Default compute URL (no environment reads).
 pub fn default_compute_endpoint() -> String {
-    std::env::var("BEARDOG_COMPUTE_ENDPOINT").unwrap_or_else(|_| {
-        format!(
-            "http://{}:{}/compute",
-            default_service_host(),
-            default_service_port()
-        )
-    })
+    format!(
+        "http://{}:{}/compute",
+        default_service_host(),
+        default_service_port()
+    )
 }
 
-/// Get the default storage endpoint from environment or fallback  
+/// Compute endpoint from `BEARDOG_COMPUTE_ENDPOINT`, falling back to [`default_compute_endpoint`].
+pub fn default_compute_endpoint_from_env() -> String {
+    std::env::var("BEARDOG_COMPUTE_ENDPOINT").unwrap_or_else(|_| default_compute_endpoint())
+}
+
+/// Default storage URL (no environment reads).
 pub fn default_storage_endpoint() -> String {
-    std::env::var("BEARDOG_STORAGE_ENDPOINT").unwrap_or_else(|_| {
-        format!(
-            "http://{}:{}/storage",
-            default_service_host(),
-            default_service_port()
-        )
-    })
+    format!(
+        "http://{}:{}/storage",
+        default_service_host(),
+        default_service_port()
+    )
+}
+
+/// Storage endpoint from `BEARDOG_STORAGE_ENDPOINT`, falling back to [`default_storage_endpoint`].
+pub fn default_storage_endpoint_from_env() -> String {
+    std::env::var("BEARDOG_STORAGE_ENDPOINT").unwrap_or_else(|_| default_storage_endpoint())
 }

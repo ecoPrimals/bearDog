@@ -15,7 +15,7 @@ impl EnvUtils {
     /// Gets required
     /// Gets required
     pub fn get_required(key: &str) -> Result<String, BearDogError> {
-        env::var(key).map_err(|_| {
+        beardog_errors::process_env::var(key).map_err(|_| {
             BearDogError::configuration(format!("Required environment variable {} not set", key))
         })
     }
@@ -24,14 +24,14 @@ impl EnvUtils {
     /// Gets optional
     /// Gets optional
     pub fn get_optional(key: &str, default: &str) -> String {
-        env::var(key).unwrap_or_else(|_| default.to_string())
+        beardog_errors::process_env::var(key).unwrap_or_else(|_| default.to_string())
     }
 
     /// Get a boolean environment variable with a default value
     /// Gets bool
     /// Gets bool
     pub fn get_bool(key: &str, default: bool) -> bool {
-        env::var(key)
+        beardog_errors::process_env::var(key)
             .map(|v| v.to_lowercase() == "true" || v == "1")
             .unwrap_or(default)
     }
@@ -40,7 +40,7 @@ impl EnvUtils {
     /// Gets u16
     /// Gets u16
     pub fn get_u16(key: &str, default: u16) -> u16 {
-        env::var(key)
+        beardog_errors::process_env::var(key)
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(default)
@@ -50,7 +50,7 @@ impl EnvUtils {
     /// Gets u32
     /// Gets u32
     pub fn get_u32(key: &str, default: u32) -> u32 {
-        env::var(key)
+        beardog_errors::process_env::var(key)
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(default)
@@ -60,7 +60,7 @@ impl EnvUtils {
     /// Gets u64
     /// Gets u64
     pub fn get_u64(key: &str, default: u64) -> u64 {
-        env::var(key)
+        beardog_errors::process_env::var(key)
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(default)
@@ -78,7 +78,7 @@ impl EnvUtils {
     /// Gets csv_list
     /// Gets csv_list
     pub fn get_csv_list(key: &str, default: Vec<&str>) -> Vec<String> {
-        env::var(key)
+        beardog_errors::process_env::var(key)
             .map(|v| v.split(',').map(|s| s.trim().to_string()).collect())
             .unwrap_or_else(|_| default.into_iter().map(|s| s.to_string()).collect())
     }
@@ -120,7 +120,7 @@ impl EnvUtils {
         ];
 
         for (var, example) in &warnings {
-            if env::var(var).is_err() {
+            if beardog_errors::process_env::var(var).is_err() {
                 tracing::warn!(
                     "Environment variable {} not set, using default. Example: {}",
                     var,
@@ -216,7 +216,7 @@ impl EnvValidator {
         let optional_vars = ["BEARDOG_LOG_LEVEL", "BEARDOG_HOST", "BEARDOG_PORT"];
 
         for var in &optional_vars {
-            if env::var(var).is_err() {
+            if beardog_errors::process_env::var(var).is_err() {
                 tracing::debug!("Optional development variable {} not set", var);
             }
         }

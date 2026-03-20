@@ -1,15 +1,20 @@
-# BearDog Cargo Deny Configuration
+# BearDog Cargo Deny Configuration (v2)
 # Enforces dependency security, ecoBin purity, and quality standards
 
 [advisories]
-vulnerability = "deny"
-unmaintained = "warn"
+version = 2
 yanked = "warn"
-ignore = []
+ignore = [
+    # RSA Marvin Attack (RUSTSEC-2023-0071): No upstream fix available.
+    # RustCrypto RSA is the only pure-Rust RSA implementation.
+    # BearDog uses Ed25519/X25519 as primary; RSA is legacy/interop only.
+    "RUSTSEC-2023-0071",
+]
 
 [licenses]
-unlicensed = "deny"
+version = 2
 allow = [
+    "AGPL-3.0-only",
     "MIT",
     "Apache-2.0",
     "Apache-2.0 WITH LLVM-exception",
@@ -21,134 +26,9 @@ allow = [
     "Unicode-DFS-2016",
     "BSL-1.0",
     "CC0-1.0",
-]
-deny = [
-    "GPL-2.0",
-    "GPL-3.0",
-    "LGPL-2.1",
-    "LGPL-3.0",
+    "MPL-2.0",
 ]
 confidence-threshold = 0.8
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-core"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-types"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-tunnel"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-security"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-ipc"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-auth"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-genetics"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-adapters"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-monitoring"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-utils"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-traits"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-config"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-errors"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-cli"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-workflows"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-compliance"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-capabilities"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-discovery"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-threat"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-hid"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-installer"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-deploy"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-production"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-node-registry"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-tower-atomic"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-client"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-integration-tests"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "beardog-mixed-entropy-showcase"
-
-[[licenses.exceptions]]
-allow = ["AGPL-3.0-only"]
-crate = "benchmarks"
 
 [sources]
 unknown-registry = "deny"
@@ -157,8 +37,38 @@ allow-git = []
 
 [bans]
 multiple-versions = "deny"
-wildcards = "deny"
-skip = []
+wildcards = "allow"
+skip = [
+    # Transitive version splits from RustCrypto ecosystem migration (0.10 vs 0.11 families).
+    # Will resolve as upstream deps align to the same major versions.
+    { crate = "base64" },
+    { crate = "block-buffer" },
+    { crate = "cipher" },
+    { crate = "crypto-common" },
+    { crate = "digest" },
+    { crate = "getrandom" },
+    { crate = "hashbrown" },
+    { crate = "hickory-proto" },
+    { crate = "hickory-resolver" },
+    { crate = "hmac" },
+    { crate = "hostname" },
+    { crate = "inout" },
+    { crate = "linux-raw-sys" },
+    { crate = "mio" },
+    { crate = "pbkdf2" },
+    { crate = "rand" },
+    { crate = "rand_chacha" },
+    { crate = "rand_core" },
+    { crate = "rustix" },
+    { crate = "sha2" },
+    { crate = "socket2" },
+    { crate = "syn" },
+    { crate = "thiserror" },
+    { crate = "thiserror-impl" },
+    { crate = "toml_datetime" },
+    { crate = "toml_edit" },
+    { crate = "winnow" },
+]
 deny = [
     { crate = "openssl", wrappers = [] },
     { crate = "openssl-sys", wrappers = [] },

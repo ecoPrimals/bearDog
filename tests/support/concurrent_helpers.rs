@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Concurrent Test Helpers - Zero Sleep, Maximum Robustness
 //!
 //! This module provides utilities for truly concurrent testing without

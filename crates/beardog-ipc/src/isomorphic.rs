@@ -124,6 +124,33 @@ pub async fn discover_beardog_endpoint() -> Result<IpcEndpoint> {
     ))
 }
 
+/// Hints for Unix socket path discovery (injectable; no I/O in [`Default`]).
+#[derive(Debug, Clone, Default)]
+pub struct UnixSocketPathHints {
+    /// `BEARDOG_SOCKET` override.
+    pub beardog_socket: Option<String>,
+    /// `XDG_RUNTIME_DIR` for default socket layout.
+    pub xdg_runtime_dir: Option<String>,
+}
+
+/// Get Unix socket path candidates from explicit hints (tests avoid env mutation).
+#[must_use]
+pub fn get_unix_socket_paths_with(hints: &UnixSocketPathHints) -> Vec<PathBuf> {
+    let mut paths = Vec::new();
+
+    if let Some(ref path) = hints.beardog_socket {
+        paths.push(PathBuf::from(path));
+    }
+
+    if let Some(ref runtime_dir) = hints.xdg_runtime_dir {
+        paths.push(PathBuf::from(format!("{runtime_dir}/biomeos/beardog.sock")));
+    }
+
+    paths.push(PathBuf::from("/tmp/beardog.sock"));
+
+    paths
+}
+
 /// Get Unix socket path candidates (XDG-compliant)
 ///
 /// **Discovery Priority**:
@@ -133,22 +160,10 @@ pub async fn discover_beardog_endpoint() -> Result<IpcEndpoint> {
 ///
 /// **Zero Hardcoding**: Uses XDG Base Directory specification
 fn get_unix_socket_paths() -> Vec<PathBuf> {
-    let mut paths = Vec::new();
-
-    // 1. Environment variable override (highest priority)
-    if let Ok(path) = std::env::var("BEARDOG_SOCKET") {
-        paths.push(PathBuf::from(path));
-    }
-
-    // 2. XDG runtime directory (standard)
-    if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
-        paths.push(PathBuf::from(format!("{runtime_dir}/biomeos/beardog.sock")));
-    }
-
-    // 3. /tmp fallback (compatibility)
-    paths.push(PathBuf::from("/tmp/beardog.sock"));
-
-    paths
+    get_unix_socket_paths_with(&UnixSocketPathHints {
+        beardog_socket: beardog_errors::process_env::var("BEARDOG_SOCKET").ok(),
+        xdg_runtime_dir: beardog_errors::process_env::var("XDG_RUNTIME_DIR").ok(),
+    })
 }
 
 /// Discover TCP endpoint from discovery file
@@ -179,24 +194,39 @@ async fn discover_tcp_endpoint() -> Result<IpcEndpoint> {
     Err(anyhow::anyhow!("No TCP discovery file found"))
 }
 
-/// Get TCP discovery file path candidates (XDG-compliant)
-fn get_tcp_discovery_file_candidates() -> Vec<String> {
+/// Hints for TCP discovery file search paths.
+#[derive(Debug, Clone, Default)]
+pub struct TcpDiscoveryPathHints {
+    /// `XDG_RUNTIME_DIR`.
+    pub xdg_runtime_dir: Option<String>,
+    /// `HOME`.
+    pub home: Option<String>,
+}
+
+/// TCP discovery file candidates from explicit hints.
+#[must_use]
+pub fn get_tcp_discovery_file_candidates_with(hints: &TcpDiscoveryPathHints) -> Vec<String> {
     let mut files = Vec::new();
 
-    // 1. XDG runtime directory (preferred)
-    if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
+    if let Some(ref runtime_dir) = hints.xdg_runtime_dir {
         files.push(format!("{runtime_dir}/beardog-ipc-port"));
     }
 
-    // 2. Home directory .local/share (standard)
-    if let Ok(home) = std::env::var("HOME") {
+    if let Some(ref home) = hints.home {
         files.push(format!("{home}/.local/share/beardog-ipc-port"));
     }
 
-    // 3. /tmp (last resort)
     files.push("/tmp/beardog-ipc-port".to_string());
 
     files
+}
+
+/// Get TCP discovery file path candidates (XDG-compliant)
+fn get_tcp_discovery_file_candidates() -> Vec<String> {
+    get_tcp_discovery_file_candidates_with(&TcpDiscoveryPathHints {
+        xdg_runtime_dir: beardog_errors::process_env::var("XDG_RUNTIME_DIR").ok(),
+        home: beardog_errors::process_env::var("HOME").ok(),
+    })
 }
 
 /// Connect to BearDog IPC endpoint (polymorphic)
@@ -284,11 +314,11 @@ mod tests {
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_unix_socket_paths_env_override() {
-        beardog_errors::process_env::set_var("BEARDOG_SOCKET", "/custom/beardog.sock");
-        let paths = get_unix_socket_paths();
-        beardog_errors::process_env::remove_var("BEARDOG_SOCKET");
+        let paths = get_unix_socket_paths_with(&UnixSocketPathHints {
+            beardog_socket: Some("/custom/beardog.sock".to_string()),
+            ..Default::default()
+        });
         assert!(!paths.is_empty());
         assert!(paths[0].to_string_lossy().contains("custom"));
     }

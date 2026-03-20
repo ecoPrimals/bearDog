@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Chaos Testing for Network Partitions and Failures
 //!
 //! This test suite simulates real-world failure scenarios to verify

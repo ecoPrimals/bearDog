@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2025 EcoPrimals BearDog Team
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -6,6 +7,44 @@
 use super::errors::ConstraintViolationError;
 use crate::constraints::types::*;
 use chrono::Utc;
+
+/// Multisig and behavioral enforcement policy (configuration or [`Self::from_env`]).
+#[derive(Debug, Clone)]
+pub struct ConstraintEnforcementPolicy {
+    /// `permissionless` | `full` | `threshold` (default `threshold`).
+    pub multisig_mode: String,
+    /// Required co-signer count when `multisig_mode` is `threshold`; `None` uses the same default as a missing env var.
+    pub multisig_threshold: Option<usize>,
+    /// `permissionless` | `strict` | `relaxed` (default `relaxed`).
+    pub behavioral_mode: String,
+}
+
+impl Default for ConstraintEnforcementPolicy {
+    fn default() -> Self {
+        Self {
+            multisig_mode: "threshold".to_string(),
+            multisig_threshold: None,
+            behavioral_mode: "relaxed".to_string(),
+        }
+    }
+}
+
+impl ConstraintEnforcementPolicy {
+    /// Reads `BEARDOG_MULTISIG_MODE`, `BEARDOG_MULTISIG_THRESHOLD`, and `BEARDOG_BEHAVIORAL_MODE`.
+    pub fn from_env() -> Self {
+        Self {
+            multisig_mode: std::env::var("BEARDOG_MULTISIG_MODE")
+                .unwrap_or_else(|_| "threshold".to_string())
+                .to_lowercase(),
+            multisig_threshold: std::env::var("BEARDOG_MULTISIG_THRESHOLD")
+                .ok()
+                .and_then(|s| s.parse().ok()),
+            behavioral_mode: std::env::var("BEARDOG_BEHAVIORAL_MODE")
+                .unwrap_or_else(|_| "relaxed".to_string())
+                .to_lowercase(),
+        }
+    }
+}
 
 /// Enforces constraints on key operations
 pub struct ConstraintEnforcer;
@@ -19,6 +58,7 @@ impl ConstraintEnforcer {
         signed_constraints: &SignedConstraints,
         operation: &KeyOperation,
         public_key: &[u8], // For signature verification
+        policy: &ConstraintEnforcementPolicy,
     ) -> Result<(), ConstraintViolationError> {
         // 1. Verify signature (detect tampering)
         Self::verify_signature(signed_constraints, public_key)?;
@@ -33,12 +73,30 @@ impl ConstraintEnforcer {
         Self::check_data_access(&signed_constraints.constraints.data_access, operation)?;
 
         // 5. Check co-signer requirements
-        Self::check_co_signers(&signed_constraints.constraints.co_signers, operation)?;
+        Self::check_co_signers(
+            &signed_constraints.constraints.co_signers,
+            operation,
+            &policy.multisig_mode,
+            policy.multisig_threshold,
+        )?;
 
         // 6. Check behavioral constraints
-        Self::check_behavioral(&signed_constraints.constraints.behavioral)?;
+        Self::check_behavioral(
+            &signed_constraints.constraints.behavioral,
+            &policy.behavioral_mode,
+        )?;
 
         Ok(())
+    }
+
+    /// Like [`Self::verify_operation`] using [`ConstraintEnforcementPolicy::from_env`].
+    pub fn verify_operation_from_env(
+        signed_constraints: &SignedConstraints,
+        operation: &KeyOperation,
+        public_key: &[u8],
+    ) -> Result<(), ConstraintViolationError> {
+        let policy = ConstraintEnforcementPolicy::from_env();
+        Self::verify_operation(signed_constraints, operation, public_key, &policy)
     }
 
     /// Verify cryptographic signature on constraints
@@ -230,14 +288,14 @@ impl ConstraintEnforcer {
     pub(crate) fn check_co_signers(
         co_signers: &[String],
         _operation: &KeyOperation,
+        multisig_mode: &str,
+        multisig_threshold: Option<usize>,
     ) -> Result<(), ConstraintViolationError> {
         if co_signers.is_empty() {
             return Ok(());
         }
 
-        let multisig_mode = std::env::var("BEARDOG_MULTISIG_MODE")
-            .unwrap_or_else(|_| "threshold".to_string())
-            .to_lowercase();
+        let multisig_mode = multisig_mode.to_lowercase();
 
         match multisig_mode.as_str() {
             "permissionless" => {
@@ -258,10 +316,8 @@ impl ConstraintEnforcer {
                 Ok(())
             }
             "threshold" => {
-                let threshold = std::env::var("BEARDOG_MULTISIG_THRESHOLD")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or_else(|| std::cmp::min(1, co_signers.len()));
+                let threshold =
+                    multisig_threshold.unwrap_or_else(|| std::cmp::min(1, co_signers.len()));
 
                 if co_signers.len() < threshold {
                     return Err(ConstraintViolationError::CoSignerRequired {
@@ -281,10 +337,8 @@ impl ConstraintEnforcer {
                     "Unknown multisig mode '{}', defaulting to threshold",
                     multisig_mode
                 );
-                let threshold = std::env::var("BEARDOG_MULTISIG_THRESHOLD")
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or_else(|| std::cmp::min(1, co_signers.len()));
+                let threshold =
+                    multisig_threshold.unwrap_or_else(|| std::cmp::min(1, co_signers.len()));
 
                 if co_signers.len() < threshold {
                     return Err(ConstraintViolationError::CoSignerRequired {
@@ -300,10 +354,9 @@ impl ConstraintEnforcer {
     /// Check behavioral constraints
     pub(crate) fn check_behavioral(
         behavioral: &BehavioralConstraint,
+        behavioral_mode: &str,
     ) -> Result<(), ConstraintViolationError> {
-        let behavioral_mode = std::env::var("BEARDOG_BEHAVIORAL_MODE")
-            .unwrap_or_else(|_| "relaxed".to_string())
-            .to_lowercase();
+        let behavioral_mode = behavioral_mode.to_lowercase();
 
         match behavioral_mode.as_str() {
             "permissionless" => {

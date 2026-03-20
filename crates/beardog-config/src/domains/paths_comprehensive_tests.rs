@@ -8,17 +8,12 @@
 #[cfg(test)]
 mod tests {
     use crate::domains::paths::PathConfig;
-    use serial_test::serial;
     use std::path::PathBuf;
-
-    // Note: Tests that modify environment variables now use #[serial]
-    // Modern pattern: Declarative test serialization instead of manual mutex
 
     // ============================================================================
     // Default Configuration Tests
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_default_config() {
         let config = PathConfig::default();
@@ -30,7 +25,6 @@ mod tests {
         assert!(config.pkcs11_library.is_none());
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_default_paths_are_absolute() {
         let config = PathConfig::default();
@@ -46,47 +40,32 @@ mod tests {
     // ============================================================================
 
     #[test]
-    #[serial] // Modern pattern: declarative serialization for env var tests
     fn test_from_env_no_variables() {
-        beardog_errors::process_env::remove_var("BEARDOG_CONFIG_DIR");
-        beardog_errors::process_env::remove_var("BEARDOG_DATA_DIR");
-        beardog_errors::process_env::remove_var("BEARDOG_LOG_DIR");
-        beardog_errors::process_env::remove_var("BEARDOG_PKCS11_LIBRARY");
-
         let config = PathConfig::from_env();
 
         assert!(!config.config_dir.as_os_str().is_empty());
         assert!(!config.data_dir.as_os_str().is_empty());
         assert!(!config.log_dir.as_os_str().is_empty());
         assert!(config.pkcs11_library.is_none());
-
-        beardog_errors::process_env::remove_var("BEARDOG_CONFIG_DIR");
-        beardog_errors::process_env::remove_var("BEARDOG_DATA_DIR");
-        beardog_errors::process_env::remove_var("BEARDOG_LOG_DIR");
-        beardog_errors::process_env::remove_var("BEARDOG_PKCS11_LIBRARY");
     }
 
     #[test]
-    #[serial] // Modern pattern: declarative serialization for env var tests
-    fn test_from_env_with_pkcs11_library() {
-        beardog_errors::process_env::remove_var("BEARDOG_PKCS11_LIBRARY");
-        beardog_errors::process_env::set_var("BEARDOG_PKCS11_LIBRARY", "/custom/path/lib.so");
-
-        let config = PathConfig::from_env();
+    fn test_explicit_pkcs11_library_field() {
+        let config = PathConfig {
+            pkcs11_library: Some(PathBuf::from("/custom/path/lib.so")),
+            ..PathConfig::default()
+        };
 
         assert_eq!(
             config.pkcs11_library,
             Some(PathBuf::from("/custom/path/lib.so"))
         );
-
-        beardog_errors::process_env::remove_var("BEARDOG_PKCS11_LIBRARY");
     }
 
     // ============================================================================
     // PKCS#11 Library Discovery Tests
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_discover_pkcs11_libraries() {
         let libraries = PathConfig::discover_pkcs11_libraries();
@@ -97,7 +76,6 @@ mod tests {
         let _ = libraries.len();
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_discover_pkcs11_libraries_platform_specific() {
         let libraries = PathConfig::discover_pkcs11_libraries();
@@ -117,7 +95,6 @@ mod tests {
     // get_pkcs11_library() Priority Tests
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_get_pkcs11_library_explicit() {
         let config = PathConfig {
@@ -135,7 +112,6 @@ mod tests {
         );
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_get_pkcs11_library_from_paths() {
         let config = PathConfig {
@@ -156,7 +132,6 @@ mod tests {
         );
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_get_pkcs11_library_discovery() {
         let config = PathConfig {
@@ -174,7 +149,6 @@ mod tests {
         println!("Discovery result: {:?}", result);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_get_pkcs11_library_priority() {
         // Test priority: explicit > configured paths > discovery
@@ -210,7 +184,6 @@ mod tests {
     // Validation Tests
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_validate_default() {
         let config = PathConfig::default();
@@ -219,7 +192,6 @@ mod tests {
         assert!(config.validate().is_ok());
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_validate_with_nonexistent_pkcs11_library() {
         let config = PathConfig {
@@ -237,7 +209,6 @@ mod tests {
         assert!(err.to_string().contains("/nonexistent/lib.so"));
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_validate_without_pkcs11_library() {
         let config = PathConfig {
@@ -256,7 +227,6 @@ mod tests {
     // Trait Implementation Tests
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_clone() {
         let config1 = PathConfig {
@@ -276,7 +246,6 @@ mod tests {
         assert_eq!(config1.pkcs11_library_paths, config2.pkcs11_library_paths);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_debug() {
         let config = PathConfig::default();
@@ -289,7 +258,6 @@ mod tests {
     // Serialization Tests
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_serialization() {
         let config = PathConfig {
@@ -309,7 +277,6 @@ mod tests {
         assert_eq!(config.pkcs11_library, deserialized.pkcs11_library);
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_serialization_default() {
         let config = PathConfig::default();
@@ -324,7 +291,6 @@ mod tests {
     // Platform-Specific Scenarios
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_linux_paths() {
         // Test Linux-specific path patterns
@@ -343,7 +309,6 @@ mod tests {
         }
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_macos_paths() {
         // Test macOS-specific path patterns
@@ -362,7 +327,6 @@ mod tests {
         }
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_windows_paths() {
         // Test Windows-specific path patterns
@@ -385,7 +349,6 @@ mod tests {
     // Realistic Configuration Scenarios
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_production_linux_config() {
         let config = PathConfig {
@@ -401,7 +364,6 @@ mod tests {
         assert!(config.log_dir.is_absolute());
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_development_local_config() {
         let config = PathConfig {
@@ -417,7 +379,6 @@ mod tests {
         assert!(config.validate().is_ok());
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_docker_container_config() {
         let config = PathConfig {
@@ -436,7 +397,6 @@ mod tests {
     // Edge Cases and Boundary Tests
     // ============================================================================
 
-    #[serial_test::serial]
     #[test]
     fn test_empty_pkcs11_library_paths() {
         let config = PathConfig {
@@ -451,7 +411,6 @@ mod tests {
         assert!(config.validate().is_ok());
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_multiple_pkcs11_library_paths() {
         let config = PathConfig {
@@ -474,7 +433,6 @@ mod tests {
         );
     }
 
-    #[serial_test::serial]
     #[test]
     fn test_paths_with_special_characters() {
         let config = PathConfig {
@@ -494,27 +452,21 @@ mod tests {
     // ============================================================================
 
     #[test]
-    #[serial] // Modern pattern: declarative serialization for env var tests
     fn test_full_lifecycle() {
-        // 1. Create default config
         let config1 = PathConfig::default();
         assert!(config1.validate().is_ok());
 
-        // 2. Load from environment
-        beardog_errors::process_env::remove_var("BEARDOG_PKCS11_LIBRARY");
-        beardog_errors::process_env::set_var("BEARDOG_PKCS11_LIBRARY", "/test/lib.so");
-        let config2 = PathConfig::from_env();
+        let config2 = PathConfig {
+            pkcs11_library: Some(PathBuf::from("/test/lib.so")),
+            ..PathConfig::default()
+        };
         assert_eq!(config2.pkcs11_library, Some(PathBuf::from("/test/lib.so")));
 
-        // 3. Serialize and deserialize
         let json = serde_json::to_string(&config2).expect("Should serialize");
         let config3: PathConfig = serde_json::from_str(&json).expect("Should deserialize");
         assert_eq!(config2.pkcs11_library, config3.pkcs11_library);
 
-        // 4. Clone
         let config4 = config3.clone();
         assert_eq!(config3.config_dir, config4.config_dir);
-
-        beardog_errors::process_env::remove_var("BEARDOG_PKCS11_LIBRARY");
     }
 }

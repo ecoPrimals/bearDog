@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Quick Win Tests: Config Validation
 //!
 //! This module contains high-value unit tests designed to boost test coverage with minimal effort.

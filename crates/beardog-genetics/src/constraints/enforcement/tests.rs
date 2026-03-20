@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2025 EcoPrimals BearDog Team
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -252,50 +253,38 @@ fn test_data_access_allowed_path() {
 #[test]
 fn test_co_signers_empty() {
     let op = KeyOperation::Sign { domain: None };
-    assert!(ConstraintEnforcer::check_co_signers(&[], &op).is_ok());
+    assert!(ConstraintEnforcer::check_co_signers(&[], &op, "threshold", None).is_ok());
 }
 
 #[test]
 fn test_co_signers_permissionless() {
-    beardog_errors::process_env::set_var("BEARDOG_MULTISIG_MODE", "permissionless");
     let op = KeyOperation::Sign { domain: None };
     let co_signers = vec!["alice".to_string(), "bob".to_string()];
-    let result = ConstraintEnforcer::check_co_signers(&co_signers, &op);
-    beardog_errors::process_env::remove_var("BEARDOG_MULTISIG_MODE");
+    let result = ConstraintEnforcer::check_co_signers(&co_signers, &op, "permissionless", None);
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_co_signers_full_mode() {
-    beardog_errors::process_env::set_var("BEARDOG_MULTISIG_MODE", "full");
     let op = KeyOperation::Sign { domain: None };
     let co_signers = vec!["alice".to_string(), "bob".to_string()];
-    let result = ConstraintEnforcer::check_co_signers(&co_signers, &op);
-    beardog_errors::process_env::remove_var("BEARDOG_MULTISIG_MODE");
+    let result = ConstraintEnforcer::check_co_signers(&co_signers, &op, "full", None);
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_co_signers_threshold_mode() {
-    beardog_errors::process_env::set_var("BEARDOG_MULTISIG_MODE", "threshold");
-    beardog_errors::process_env::set_var("BEARDOG_MULTISIG_THRESHOLD", "2");
     let op = KeyOperation::Sign { domain: None };
     let co_signers = vec!["alice".to_string(), "bob".to_string()];
-    let result = ConstraintEnforcer::check_co_signers(&co_signers, &op);
-    beardog_errors::process_env::remove_var("BEARDOG_MULTISIG_MODE");
-    beardog_errors::process_env::remove_var("BEARDOG_MULTISIG_THRESHOLD");
+    let result = ConstraintEnforcer::check_co_signers(&co_signers, &op, "threshold", Some(2));
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_co_signers_threshold_insufficient() {
-    beardog_errors::process_env::set_var("BEARDOG_MULTISIG_MODE", "threshold");
-    beardog_errors::process_env::set_var("BEARDOG_MULTISIG_THRESHOLD", "5");
     let op = KeyOperation::Sign { domain: None };
     let co_signers = vec!["alice".to_string(), "bob".to_string()];
-    let result = ConstraintEnforcer::check_co_signers(&co_signers, &op);
-    beardog_errors::process_env::remove_var("BEARDOG_MULTISIG_MODE");
-    beardog_errors::process_env::remove_var("BEARDOG_MULTISIG_THRESHOLD");
+    let result = ConstraintEnforcer::check_co_signers(&co_signers, &op, "threshold", Some(5));
     assert!(result.is_err());
     assert!(matches!(
         result.unwrap_err(),
@@ -305,11 +294,9 @@ fn test_co_signers_threshold_insufficient() {
 
 #[test]
 fn test_co_signers_unknown_mode() {
-    beardog_errors::process_env::set_var("BEARDOG_MULTISIG_MODE", "unknown_mode");
     let op = KeyOperation::Sign { domain: None };
     let co_signers = vec!["alice".to_string()];
-    let result = ConstraintEnforcer::check_co_signers(&co_signers, &op);
-    beardog_errors::process_env::remove_var("BEARDOG_MULTISIG_MODE");
+    let result = ConstraintEnforcer::check_co_signers(&co_signers, &op, "unknown_mode", None);
     assert!(result.is_ok());
 }
 
@@ -317,57 +304,49 @@ fn test_co_signers_unknown_mode() {
 
 #[test]
 fn test_behavioral_permissionless() {
-    beardog_errors::process_env::set_var("BEARDOG_BEHAVIORAL_MODE", "permissionless");
     let behavioral = BehavioralConstraint {
         requires_biometric: true,
         requires_mfa: true,
         min_operation_interval_secs: Some(60),
         min_entropy_quality: None,
     };
-    let result = ConstraintEnforcer::check_behavioral(&behavioral);
-    beardog_errors::process_env::remove_var("BEARDOG_BEHAVIORAL_MODE");
+    let result = ConstraintEnforcer::check_behavioral(&behavioral, "permissionless");
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_behavioral_strict() {
-    beardog_errors::process_env::set_var("BEARDOG_BEHAVIORAL_MODE", "strict");
     let behavioral = BehavioralConstraint {
         requires_biometric: true,
         requires_mfa: true,
         min_operation_interval_secs: Some(30),
         min_entropy_quality: None,
     };
-    let result = ConstraintEnforcer::check_behavioral(&behavioral);
-    beardog_errors::process_env::remove_var("BEARDOG_BEHAVIORAL_MODE");
+    let result = ConstraintEnforcer::check_behavioral(&behavioral, "strict");
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_behavioral_relaxed() {
-    beardog_errors::process_env::set_var("BEARDOG_BEHAVIORAL_MODE", "relaxed");
     let behavioral = BehavioralConstraint {
         requires_biometric: true,
         requires_mfa: true,
         min_operation_interval_secs: Some(10),
         min_entropy_quality: None,
     };
-    let result = ConstraintEnforcer::check_behavioral(&behavioral);
-    beardog_errors::process_env::remove_var("BEARDOG_BEHAVIORAL_MODE");
+    let result = ConstraintEnforcer::check_behavioral(&behavioral, "relaxed");
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_behavioral_unknown_mode() {
-    beardog_errors::process_env::set_var("BEARDOG_BEHAVIORAL_MODE", "unknown_mode");
     let behavioral = BehavioralConstraint {
         requires_biometric: true,
         requires_mfa: true,
         min_operation_interval_secs: Some(5),
         min_entropy_quality: None,
     };
-    let result = ConstraintEnforcer::check_behavioral(&behavioral);
-    beardog_errors::process_env::remove_var("BEARDOG_BEHAVIORAL_MODE");
+    let result = ConstraintEnforcer::check_behavioral(&behavioral, "unknown_mode");
     assert!(result.is_ok());
 }
 
@@ -379,7 +358,7 @@ fn test_behavioral_no_requirements() {
         min_operation_interval_secs: None,
         min_entropy_quality: None,
     };
-    assert!(ConstraintEnforcer::check_behavioral(&behavioral).is_ok());
+    assert!(ConstraintEnforcer::check_behavioral(&behavioral, "relaxed").is_ok());
 }
 
 // === Display Tests ===

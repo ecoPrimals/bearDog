@@ -24,8 +24,7 @@
 //! let config = LimitsConfig::default();
 //! assert_eq!(config.buffer_size, DEFAULT_BUFFER_SIZE);
 //!
-//! // Load from environment
-//! std::env::set_var("BEARDOG_BUFFER_SIZE", "16384");
+//! // Load from environment (reads process environment at call time)
 //! let config = LimitsConfig::from_env();
 //! ```
 
@@ -109,7 +108,19 @@ impl LimitsConfig {
     /// Create a new limits configuration from environment variables
     #[must_use]
     pub fn from_env() -> Self {
-        Self::default()
+        Self {
+            buffer_size: env_or_default("BEARDOG_BUFFER_SIZE", DEFAULT_BUFFER_SIZE),
+            max_connections: env_or_default("BEARDOG_MAX_CONNECTIONS", DEFAULT_MAX_CONNECTIONS),
+            max_retries: env_or_default("BEARDOG_MAX_RETRIES", DEFAULT_MAX_RETRIES),
+            backoff_ms: env_or_default("BEARDOG_BACKOFF_MS", DEFAULT_BACKOFF_MS),
+            max_message_size: env_or_default("BEARDOG_MAX_MESSAGE_SIZE", DEFAULT_MAX_MESSAGE_SIZE),
+            queue_size: env_or_default("BEARDOG_QUEUE_SIZE", DEFAULT_QUEUE_SIZE),
+            thread_pool_size: env_or_default("BEARDOG_THREAD_POOL_SIZE", 0),
+            operation_timeout_secs: env_or_default(
+                "BEARDOG_OPERATION_TIMEOUT_SECS",
+                DEFAULT_OPERATION_TIMEOUT_SECS,
+            ),
+        }
     }
 
     /// Create a builder for constructing a `LimitsConfig`

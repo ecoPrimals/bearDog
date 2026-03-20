@@ -12,10 +12,15 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
+/// Injected environment-based discovery (same rules as [`crate::capability_env`]).
+pub type EnvironmentDiscoveryFn = dyn Fn(&str, u64) -> Vec<DiscoveredService> + Send + Sync;
+
 /// Capability-based service discovery
 pub struct CapabilityDiscovery {
     config: DiscoveryConfig,
     cache: Arc<RwLock<ServiceCache>>,
+    service_registry_url: Option<String>,
+    discover_env: Arc<EnvironmentDiscoveryFn>,
 }
 
 impl CapabilityDiscovery {
@@ -30,7 +35,28 @@ impl CapabilityDiscovery {
         Self {
             config,
             cache: Arc::new(RwLock::new(ServiceCache::new())),
+            service_registry_url: None,
+            discover_env: Arc::new(|cap, ttl| {
+                crate::capability_env::discovered_services_from_environment_from_env(cap, ttl)
+            }),
         }
+    }
+
+    /// Override the optional service registry URL used by the `service_registry` discovery method.
+    #[must_use]
+    pub fn with_service_registry_url(mut self, url: Option<String>) -> Self {
+        self.service_registry_url = url;
+        self
+    }
+
+    /// Replace environment-based discovery (for tests and custom injection).
+    #[must_use]
+    pub fn with_environment_discovery<F>(mut self, f: F) -> Self
+    where
+        F: Fn(&str, u64) -> Vec<DiscoveredService> + Send + Sync + 'static,
+    {
+        self.discover_env = Arc::new(f);
+        self
     }
 
     /// Find services by capability type
@@ -117,95 +143,10 @@ impl CapabilityDiscovery {
 
     /// Discover services via environment variables
     async fn discover_via_environment(&self, capability: &str) -> Result<Vec<DiscoveredService>> {
-        use std::env;
-
-        let mut services = Vec::new();
-
-        // Look for CAPABILITY_{TYPE}_ENDPOINT pattern
-        let capability_key = format!(
-            "CAPABILITY_{}_ENDPOINT",
-            capability.to_uppercase().replace('-', "_")
-        );
-
-        if let Ok(endpoint) = env::var(&capability_key) {
-            debug!(
-                "Found capability endpoint: {} = {}",
-                capability_key, endpoint
-            );
-
-            services.push(DiscoveredService {
-                id: format!("env-{capability}"),
-                service_type: "unknown".to_string(),
-                display_name: format!("Environment-discovered {capability} service"),
-                endpoint: crate::types::ServiceEndpoint {
-                    primary_url: endpoint,
-                    fallback_urls: vec![],
-                    use_tls: true,
-                    path_prefix: None,
-                },
-                capabilities: vec![crate::types::Capability {
-                    capability_type: capability.to_string(),
-                    version: "unknown".to_string(),
-                    features: vec![],
-                    parameters: std::collections::HashMap::new(),
-                }],
-                qos: crate::types::QoSMetrics::default(),
-                health: crate::types::HealthStatus::Unknown,
-                discovered_at: std::time::SystemTime::now(),
-                ttl_secs: self.config.discovery.cache_ttl_secs,
-                discovery_method: "environment".to_string(),
-                metadata: std::collections::HashMap::new(),
-            });
-        }
-
-        // Also look for PRIMAL_* pattern (discover any primal announcing itself)
-        // This allows services to self-announce without us knowing their name!
-        for (key, value) in env::vars() {
-            if key.starts_with("PRIMAL_") && key.ends_with("_ENDPOINT") {
-                // Extract primal name
-                let parts: Vec<&str> = key.split('_').collect();
-                if parts.len() >= 3 {
-                    let primal_name = parts[1..parts.len() - 1].join("_");
-
-                    // Check if this primal provides the capability we need
-                    let cap_key = format!("PRIMAL_{primal_name}_CAPABILITIES");
-                    if let Ok(caps) = env::var(&cap_key) {
-                        if caps.split(',').any(|c| c.trim() == capability) {
-                            debug!("Found primal {} providing {}", primal_name, capability);
-
-                            services.push(DiscoveredService {
-                                id: format!("primal-{}", primal_name.to_lowercase()),
-                                service_type: primal_name.to_lowercase(),
-                                display_name: format!("{primal_name} Primal"),
-                                endpoint: crate::types::ServiceEndpoint {
-                                    primary_url: value.clone(),
-                                    fallback_urls: vec![],
-                                    use_tls: value.starts_with("https"),
-                                    path_prefix: None,
-                                },
-                                capabilities: caps
-                                    .split(',')
-                                    .map(|c| crate::types::Capability {
-                                        capability_type: c.trim().to_string(),
-                                        version: "unknown".to_string(),
-                                        features: vec![],
-                                        parameters: std::collections::HashMap::new(),
-                                    })
-                                    .collect(),
-                                qos: crate::types::QoSMetrics::default(),
-                                health: crate::types::HealthStatus::Unknown,
-                                discovered_at: std::time::SystemTime::now(),
-                                ttl_secs: self.config.discovery.cache_ttl_secs,
-                                discovery_method: "environment".to_string(),
-                                metadata: std::collections::HashMap::new(),
-                            });
-                        }
-                    }
-                }
-            }
-        }
-
-        Ok(services)
+        Ok((self.discover_env)(
+            capability,
+            self.config.discovery.cache_ttl_secs,
+        ))
     }
 
     /// Discover services via mDNS
@@ -270,15 +211,15 @@ impl CapabilityDiscovery {
     /// Discover services via service registry (Consul, etcd, etc.)
     ///
     /// Discovers services through a centralized service registry.
-    /// Environment-driven configuration determines which registry to query.
+    /// The registry URL is supplied via [`CapabilityDiscovery::with_service_registry_url`].
     ///
     /// # Implementation Status
     /// Currently gracefully falls back to other discovery methods.
     /// Full implementation requires HTTP client and registry-specific protocols.
     ///
     /// # Configuration
-    /// Set `SERVICE_REGISTRY_URL` environment variable to enable.
-    /// Example: `http://consul:8500` or `http://etcd:2379`
+    /// Set [`CapabilityDiscovery::with_service_registry_url`] from the caller (e.g. after reading
+    /// `SERVICE_REGISTRY_URL`). Example: `http://consul:8500` or `http://etcd:2379`
     ///
     /// # Future Enhancement
     /// - Support Consul, etcd, Kubernetes service discovery
@@ -289,8 +230,7 @@ impl CapabilityDiscovery {
         &self,
         capability: &str,
     ) -> Result<Vec<DiscoveredService>> {
-        // Check if service registry is configured (environment-driven)
-        if let Ok(registry_url) = std::env::var("SERVICE_REGISTRY_URL") {
+        if let Some(registry_url) = self.service_registry_url.as_ref() {
             debug!(
                 "Service registry configured at {}, but client not yet implemented for '{}'",
                 registry_url, capability
@@ -301,7 +241,7 @@ impl CapabilityDiscovery {
             );
         } else {
             debug!(
-                "Service registry not configured (set SERVICE_REGISTRY_URL), trying other methods for '{}'",
+                "Service registry URL not injected, trying other methods for '{}'",
                 capability
             );
         }
@@ -374,5 +314,194 @@ impl ServiceCache {
         } else {
             Some(services)
         }
+    }
+}
+
+#[cfg(test)]
+mod discovery_tests {
+    use super::CapabilityDiscovery;
+    use crate::capability_env::discovered_services_from_environment_with;
+    use crate::config::DiscoveryConfig;
+    use crate::types::{Capability, DiscoveredService, HealthStatus, QoSMetrics, ServiceEndpoint};
+    use std::collections::HashMap;
+    use std::env::VarError;
+    use std::sync::Arc;
+    use std::time::SystemTime;
+
+    fn minimal_config_toml(methods: &str) -> String {
+        format!(
+            r#"
+[primal_self]
+primal_id = "t"
+primal_type = "test"
+version = "1"
+display_name = "T"
+self_capabilities = ["x"]
+
+[primal_self.endpoint]
+host = "127.0.0.1"
+port = 8443
+scheme = "https"
+path_prefix = "/api"
+
+[primal_self.announcement]
+enabled = false
+methods = []
+announcement_interval_secs = 60
+ttl_secs = 300
+
+[required_capabilities._placeholder]
+required = false
+preferred = false
+features = []
+fallback = "standalone"
+
+[discovery]
+methods = [{methods}]
+discovery_timeout_secs = 10
+discovery_interval_secs = 300
+cache_ttl_secs = 600
+
+[service_selection]
+strategy = "qos_based"
+
+[service_selection.qos_weights]
+latency = 0.25
+throughput = 0.25
+availability = 0.25
+reliability = 0.25
+"#
+        )
+    }
+
+    #[tokio::test]
+    async fn from_config_creates_discovery() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("d.toml");
+        std::fs::write(&path, minimal_config_toml("\"environment\"")).unwrap();
+        let d = CapabilityDiscovery::from_config(&path).await.unwrap();
+        assert_eq!(d.config.primal_self.primal_id, "t");
+    }
+
+    #[tokio::test]
+    async fn find_by_capability_environment_and_cache() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("d.toml");
+        let toml = minimal_config_toml("\"environment\"");
+        std::fs::write(&path, toml).unwrap();
+
+        let env = Arc::new({
+            let mut m = HashMap::new();
+            m.insert(
+                "CAPABILITY_ORCH_ENDPOINT".to_string(),
+                "http://127.0.0.1:9".to_string(),
+            );
+            m
+        });
+        let env_for_closure = env.clone();
+        let d = CapabilityDiscovery::from_config(&path)
+            .await
+            .unwrap()
+            .with_environment_discovery(move |cap, ttl| {
+                let e = env_for_closure.clone();
+                discovered_services_from_environment_with(
+                    cap,
+                    ttl,
+                    |k| e.get(k).cloned().ok_or(VarError::NotPresent),
+                    e.iter().map(|(a, b)| (a.clone(), b.clone())),
+                )
+            });
+        let first = d.find_by_capability("orch").await.unwrap();
+        assert_eq!(first.len(), 1);
+        let second = d.find_by_capability("orch").await.unwrap();
+        assert_eq!(second.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn discover_services_unknown_method_is_skipped() {
+        let toml = minimal_config_toml("\"not-a-real-method\"");
+        let config: DiscoveryConfig = toml::from_str(&toml).unwrap();
+        let d = CapabilityDiscovery::new(config);
+        let out = d.find_by_capability("anything").await.unwrap();
+        assert!(out.is_empty());
+    }
+
+    #[tokio::test]
+    async fn discover_methods_mdns_dns_sd_registry_branches() {
+        for methods in [
+            "\"mdns\"",
+            "\"dns_sd\"",
+            "\"service_registry\"",
+            "\"mdns\", \"dns_sd\"",
+        ] {
+            let toml = minimal_config_toml(methods);
+            let config: DiscoveryConfig = toml::from_str(&toml).unwrap();
+            let d = CapabilityDiscovery::new(config);
+            let out = d.find_by_capability("c").await.unwrap();
+            assert!(out.is_empty(), "expected empty for methods={methods}");
+        }
+    }
+
+    #[tokio::test]
+    async fn service_registry_branch_with_env_url() {
+        let toml = minimal_config_toml("\"service_registry\"");
+        let config: DiscoveryConfig = toml::from_str(&toml).unwrap();
+        let d = CapabilityDiscovery::new(config)
+            .with_service_registry_url(Some("http://127.0.0.1:8500".to_string()));
+        let out = d.find_by_capability("x").await.unwrap();
+        assert!(out.is_empty());
+    }
+
+    #[test]
+    fn select_best_empty_and_ranking() {
+        let toml = minimal_config_toml("\"environment\"");
+        let config: DiscoveryConfig = toml::from_str(&toml).unwrap();
+        let d = CapabilityDiscovery::new(config);
+
+        assert!(d.select_best(&[]).is_none());
+
+        let low = DiscoveredService {
+            id: "a".to_string(),
+            service_type: "t".to_string(),
+            display_name: "a".to_string(),
+            endpoint: ServiceEndpoint {
+                primary_url: "http://a".to_string(),
+                fallback_urls: vec![],
+                use_tls: false,
+                path_prefix: None,
+            },
+            capabilities: vec![Capability {
+                capability_type: "c".to_string(),
+                version: "1".to_string(),
+                features: vec![],
+                parameters: HashMap::new(),
+            }],
+            qos: QoSMetrics {
+                latency_ms: 90.0,
+                throughput_ops_sec: 1000.0,
+                availability: 0.5,
+                reliability: 0.5,
+                updated_at: SystemTime::now(),
+            },
+            health: HealthStatus::Unknown,
+            discovered_at: SystemTime::now(),
+            ttl_secs: 60,
+            discovery_method: "test".to_string(),
+            metadata: HashMap::new(),
+        };
+        let high = DiscoveredService {
+            id: "b".to_string(),
+            qos: QoSMetrics {
+                latency_ms: 5.0,
+                throughput_ops_sec: 9000.0,
+                availability: 1.0,
+                reliability: 1.0,
+                updated_at: SystemTime::now(),
+            },
+            ..low.clone()
+        };
+
+        let best = d.select_best(&[low.clone(), high.clone()]).unwrap();
+        assert_eq!(best.id, "b");
     }
 }

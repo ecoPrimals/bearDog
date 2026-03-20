@@ -209,6 +209,22 @@ impl CapabilityType {
         }
     }
 
+    /// Token for `CAPABILITY_{TOKEN}_ENDPOINT` environment discovery (hyphenated, lowercase).
+    ///
+    /// Aligns with `beardog_discovery::discovered_services_from_environment`: the capability
+    /// string passed there should match this token (e.g. `ipc`, `security`, `compute-intelligence`).
+    #[must_use]
+    pub fn discovery_env_token(&self) -> String {
+        let id = self.as_capability_id();
+        if let Some(rest) = id.strip_prefix("capability:custom:") {
+            rest.to_string()
+        } else if let Some(rest) = id.strip_prefix("capability:") {
+            rest.to_string()
+        } else {
+            id
+        }
+    }
+
     /// Returns `true` if this capability class is typically fulfilled by an external vendor API.
     #[must_use]
     #[inline]
@@ -373,17 +389,19 @@ impl Default for CircuitBreakerConfig {
 impl CircuitBreakerConfig {
     /// Load from environment or use defaults (production use)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            failure_threshold: std::env::var("BEARDOG_CIRCUIT_BREAKER_FAILURE_THRESHOLD")
-                .ok()
+            failure_threshold: get("BEARDOG_CIRCUIT_BREAKER_FAILURE_THRESHOLD")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(5),
-            timeout_ms: std::env::var("BEARDOG_CIRCUIT_BREAKER_TIMEOUT_MS")
-                .ok()
+            timeout_ms: get("BEARDOG_CIRCUIT_BREAKER_TIMEOUT_MS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(60000), // 60 seconds
-            success_threshold: std::env::var("BEARDOG_CIRCUIT_BREAKER_SUCCESS_THRESHOLD")
-                .ok()
+            success_threshold: get("BEARDOG_CIRCUIT_BREAKER_SUCCESS_THRESHOLD")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(3),
         }

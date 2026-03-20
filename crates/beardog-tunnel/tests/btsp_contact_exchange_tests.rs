@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Unit tests for BTSP contact exchange
 //!
 //! Tests the genetic lineage-based NAT traversal contact discovery.
@@ -11,7 +12,7 @@ use std::sync::Arc;
 #[ignore] // Requires HSM initialization
 async fn test_contact_exchange_same_family() {
     // Initialize components with auto_initialize for proper HSM provider registration
-    use std::env;
+
     beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "software");
     let hsm = Arc::new(
         HsmManager::auto_initialize()
@@ -75,8 +76,8 @@ async fn test_lineage_path_environment() {
     beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");
     beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "tower1");
 
-    let family = std::env::var("FAMILY_ID")
-        .or_else(|_| std::env::var("BEARDOG_FAMILY_ID"))
+    let family = beardog_errors::process_env::var("FAMILY_ID")
+        .or_else(|_| beardog_errors::process_env::var("BEARDOG_FAMILY_ID"))
         .unwrap();
 
     assert_eq!(family, "nat0");
@@ -90,7 +91,7 @@ async fn test_lineage_path_environment() {
 #[ignore] // Requires HSM initialization
 async fn test_contact_exchange_max_hops() {
     // Initialize components with auto_initialize for proper HSM provider registration
-    use std::env;
+
     beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "software");
     let hsm = Arc::new(
         HsmManager::auto_initialize()

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! HSM Implementation Types
+//! HSM implementation types (DTOs)
 //!
-//! Provides placeholder and simple implementation types for HSM systems.
+//! Lightweight, serializable identity types for software HSM and storage backends.
+//! Cryptographic behavior lives in `beardog-tunnel` / platform HSM providers, not here.
 
 use serde::{Deserialize, Serialize};
 

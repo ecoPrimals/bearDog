@@ -82,23 +82,26 @@ pub async fn safe_get_android_device_info() -> Result<AndroidDeviceInfo, BearDog
     info!("📱 Safe Android device detection starting");
 
     let device_info = AndroidDeviceInfo {
-        manufacturer: std::env::var("ANDROID_MANUFACTURER")
+        manufacturer: beardog_errors::process_env::var("ANDROID_MANUFACTURER")
             .unwrap_or_else(|_| "Unknown".to_string()),
-        model: std::env::var("ANDROID_MODEL").unwrap_or_else(|_| "Android Device".to_string()),
-        device: std::env::var("ANDROID_DEVICE").unwrap_or_else(|_| "unknown".to_string()),
-        hardware: std::env::var("ANDROID_HARDWARE").ok(),
-        board: std::env::var("ANDROID_BOARD").ok(),
-        brand: std::env::var("ANDROID_BRAND").ok(),
-        android_version: std::env::var("ANDROID_VERSION").unwrap_or_else(|_| "Unknown".to_string()),
-        api_level: std::env::var("ANDROID_API_LEVEL")
+        model: beardog_errors::process_env::var("ANDROID_MODEL")
+            .unwrap_or_else(|_| "Android Device".to_string()),
+        device: beardog_errors::process_env::var("ANDROID_DEVICE")
+            .unwrap_or_else(|_| "unknown".to_string()),
+        hardware: beardog_errors::process_env::var("ANDROID_HARDWARE").ok(),
+        board: beardog_errors::process_env::var("ANDROID_BOARD").ok(),
+        brand: beardog_errors::process_env::var("ANDROID_BRAND").ok(),
+        android_version: beardog_errors::process_env::var("ANDROID_VERSION")
+            .unwrap_or_else(|_| "Unknown".to_string()),
+        api_level: beardog_errors::process_env::var("ANDROID_API_LEVEL")
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(29),
-        security_patch: std::env::var("ANDROID_SECURITY_PATCH").ok(),
-        security_patch_level: std::env::var("ANDROID_SECURITY_PATCH")
+        security_patch: beardog_errors::process_env::var("ANDROID_SECURITY_PATCH").ok(),
+        security_patch_level: beardog_errors::process_env::var("ANDROID_SECURITY_PATCH")
             .unwrap_or_else(|_| "unknown".to_string()),
-        strongbox_version: std::env::var("ANDROID_STRONGBOX_VERSION").ok(),
-        titan_m_version: std::env::var("ANDROID_TITAN_M_VERSION").ok(),
+        strongbox_version: beardog_errors::process_env::var("ANDROID_STRONGBOX_VERSION").ok(),
+        titan_m_version: beardog_errors::process_env::var("ANDROID_TITAN_M_VERSION").ok(),
         verified_boot_state: VerifiedBootState::Unverified, // Runtime discovery
     };
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Debug `CTAPHID_INIT` Communication - Pure Rust Implementation
 //!
 //! This is a minimal test to debug the `CTAPHID_INIT` handshake.

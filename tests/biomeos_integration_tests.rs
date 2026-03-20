@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Integration tests for biomeOS Federation APIs
 //!
 //! Tests the 4 Unix socket JSON-RPC methods required for biomeOS spore federation:
@@ -16,7 +17,7 @@ use tokio::net::UnixStream;
 
 use beardog_genetics::EcosystemGeneticEngine;
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
-use beardog_tunnel::tunnel::hsm::HsmManager;
+use beardog_tunnel::tunnel::hsm::manager::{HsmAutoInitConfig, HsmManager};
 use beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer;
 use beardog_types::primal_identity::PrimalIdentity;
 
@@ -29,9 +30,14 @@ fn test_socket() -> (TempDir, std::path::PathBuf) {
 
 // Helper to create test BTSP provider
 async fn create_test_btsp_provider() -> Arc<BeardogBtspProvider> {
-    beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "software");
-    beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0"); // Set family ID for tests
-    let hsm = Arc::new(HsmManager::auto_initialize().await.expect("HSM init"));
+    let hsm = Arc::new(
+        HsmManager::auto_initialize_with_config(HsmAutoInitConfig {
+            mode: "software".to_string(),
+            auto_init: true,
+        })
+        .await
+        .expect("HSM init"),
+    );
     let genetics = Arc::new(EcosystemGeneticEngine::new().expect("Genetics init"));
     Arc::new(
         BeardogBtspProvider::new(hsm, genetics)
@@ -96,10 +102,6 @@ async fn send_jsonrpc(
 
 #[tokio::test]
 async fn test_verify_family_member() {
-    // Set environment for test
-    beardog_errors::process_env::set_var("FAMILY_ID", "nat0");
-    beardog_errors::process_env::set_var("NODE_ID", "node-alpha");
-
     let (_dir, socket_path) = test_socket();
     let (server_handle, _ready_flag, server) = start_server_ready(socket_path.clone()).await;
 
@@ -132,16 +134,10 @@ async fn test_verify_family_member() {
 
     server.stop().await.unwrap();
     server_handle.abort();
-
-    beardog_errors::process_env::remove_var("FAMILY_ID");
-    beardog_errors::process_env::remove_var("NODE_ID");
 }
 
 #[tokio::test]
 async fn test_verify_family_member_different_family() {
-    // Set environment for test
-    beardog_errors::process_env::set_var("FAMILY_ID", "nat0");
-
     let (_dir, socket_path) = test_socket();
     let (server_handle, _ready_flag, server) = start_server_ready(socket_path.clone()).await;
 
@@ -167,8 +163,6 @@ async fn test_verify_family_member_different_family() {
 
     server.stop().await.unwrap();
     server_handle.abort();
-
-    beardog_errors::process_env::remove_var("FAMILY_ID");
 }
 
 #[tokio::test]
@@ -369,10 +363,6 @@ async fn test_missing_required_params() {
 
 #[tokio::test]
 async fn test_all_methods_with_real_biomeos_data() {
-    // Test with real biomeOS spore data
-    beardog_errors::process_env::set_var("FAMILY_ID", "nat0");
-    beardog_errors::process_env::set_var("NODE_ID", "node-alpha");
-
     let (_dir, socket_path) = test_socket();
     let (server_handle, _ready_flag, server) = start_server_ready(socket_path.clone()).await;
 
@@ -448,7 +438,4 @@ async fn test_all_methods_with_real_biomeos_data() {
 
     server.stop().await.unwrap();
     server_handle.abort();
-
-    beardog_errors::process_env::remove_var("FAMILY_ID");
-    beardog_errors::process_env::remove_var("NODE_ID");
 }

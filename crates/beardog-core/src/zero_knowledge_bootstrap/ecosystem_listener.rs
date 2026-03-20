@@ -23,6 +23,109 @@ use tracing::{debug, info, warn};
 /// Placeholder URL for primals with no announced endpoints
 const UNKNOWN_ENDPOINT_URL: &str = "unknown";
 
+/// Injected configuration for [`EcosystemListener`] (poll intervals and HTTP discovery targets).
+#[derive(Debug, Clone)]
+#[allow(missing_docs)]
+pub struct EcosystemListenerEnvInputs {
+    pub mdns_poll_interval_secs: u64,
+    pub http_discovery_poll_interval_secs: u64,
+    pub env_check_interval_secs: u64,
+    pub mesh_discovery_interval_secs: u64,
+    pub mdns_discovery_enabled: bool,
+    pub discovery_base_port: u16,
+    pub beardog_discovery_endpoint: Option<String>,
+    pub ecosystem_discovery_endpoint: Option<String>,
+    pub discovery_host: Option<String>,
+    pub local_discovery_endpoint: Option<String>,
+    pub http_discovery_timeout_secs: u64,
+}
+
+impl Default for EcosystemListenerEnvInputs {
+    fn default() -> Self {
+        use beardog_config::domains::network_ports::DEFAULT_API_PORT;
+        Self {
+            mdns_poll_interval_secs: 5,
+            http_discovery_poll_interval_secs: 10,
+            env_check_interval_secs: 15,
+            mesh_discovery_interval_secs: 20,
+            mdns_discovery_enabled: false,
+            discovery_base_port: DEFAULT_API_PORT,
+            beardog_discovery_endpoint: None,
+            ecosystem_discovery_endpoint: None,
+            discovery_host: None,
+            local_discovery_endpoint: None,
+            http_discovery_timeout_secs: 5,
+        }
+    }
+}
+
+impl EcosystemListenerEnvInputs {
+    /// Read listener configuration from the process environment (read-only).
+    #[must_use]
+    pub fn from_env() -> Self {
+        use beardog_types::canonical::config::network::NetworkConfig;
+        let network_config = NetworkConfig::default();
+        let discovery_base_port = std::env::var("BEARDOG_DISCOVERY_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(network_config.service_ports.api_port);
+        Self {
+            mdns_poll_interval_secs: std::env::var("BEARDOG_MDNS_POLL_INTERVAL_SECS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(5),
+            http_discovery_poll_interval_secs: std::env::var(
+                "BEARDOG_HTTP_DISCOVERY_POLL_INTERVAL_SECS",
+            )
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(10),
+            env_check_interval_secs: std::env::var("BEARDOG_ENV_CHECK_INTERVAL_SECS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(15),
+            mesh_discovery_interval_secs: std::env::var("BEARDOG_MESH_DISCOVERY_INTERVAL_SECS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(20),
+            mdns_discovery_enabled: std::env::var("BEARDOG_MDNS_DISCOVERY")
+                .unwrap_or_else(|_| "false".to_string())
+                == "true",
+            discovery_base_port,
+            beardog_discovery_endpoint: std::env::var("BEARDOG_DISCOVERY_ENDPOINT").ok(),
+            ecosystem_discovery_endpoint: std::env::var("ECOSYSTEM_DISCOVERY_ENDPOINT").ok(),
+            discovery_host: std::env::var("DISCOVERY_HOST").ok(),
+            local_discovery_endpoint: std::env::var("LOCAL_DISCOVERY_ENDPOINT").ok(),
+            http_discovery_timeout_secs: std::env::var("BEARDOG_ECOSYSTEM_LISTENER_INTERVAL_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(5),
+        }
+    }
+
+    /// Resolved HTTP discovery URLs (primary + local fallback).
+    #[must_use]
+    pub fn discovery_endpoints(&self) -> Vec<String> {
+        use beardog_config::global::BEARDOG_CONFIG;
+        let bind_host = BEARDOG_CONFIG.network.api.bind_address.to_string();
+        let primary = self.beardog_discovery_endpoint.clone().unwrap_or_else(|| {
+            self.ecosystem_discovery_endpoint
+                .clone()
+                .unwrap_or_else(|| {
+                    let discovery_host = self
+                        .discovery_host
+                        .clone()
+                        .unwrap_or_else(|| "discovery.ecosystem.internal".to_string());
+                    format!("http://{discovery_host}:{}", self.discovery_base_port)
+                })
+        });
+        let local = self.local_discovery_endpoint.clone().unwrap_or_else(|| {
+            format!("http://{bind_host}:{}/discovery", self.discovery_base_port)
+        });
+        vec![primary, local]
+    }
+}
+
 /// Ecosystem Listener for Zero-Knowledge Discovery
 ///
 /// This component passively listens for announcements from other primals in the ecosystem,
@@ -40,7 +143,7 @@ const UNKNOWN_ENDPOINT_URL: &str = "unknown";
 /// ```ignore
 /// use beardog_core::zero_knowledge_bootstrap::EcosystemListener;
 ///
-/// let listener = EcosystemListener::new(config, primals, capabilities)?;
+/// let listener = EcosystemListener::from_env(config, primals, capabilities)?;
 /// listener.start_listening().await?;
 /// ```
 #[derive(Debug)]
@@ -50,6 +153,7 @@ pub struct EcosystemListener {
     discovered_capabilities: Arc<RwLock<HashMap<ServiceCapabilityType, Vec<UniversalCapability>>>>,
     listening_tasks: Vec<tokio::task::JoinHandle<()>>,
     metrics: EcosystemListenerMetrics,
+    env: EcosystemListenerEnvInputs,
 }
 
 /// Metrics for ecosystem listening operations
@@ -111,6 +215,7 @@ impl EcosystemListener {
         discovered_capabilities: Arc<
             RwLock<HashMap<ServiceCapabilityType, Vec<UniversalCapability>>>,
         >,
+        env: EcosystemListenerEnvInputs,
     ) -> Result<Self, BearDogError> {
         info!("👂 Initializing Ecosystem Listener");
         info!("🎯 Mission: Listen for other primals without hardcoded knowledge");
@@ -121,7 +226,24 @@ impl EcosystemListener {
             discovered_capabilities,
             listening_tasks: Vec::new(),
             metrics: EcosystemListenerMetrics::default(),
+            env,
         })
+    }
+
+    /// Create a listener using [`EcosystemListenerEnvInputs::from_env`].
+    pub fn from_env(
+        config: UnifiedBootstrapConfig,
+        discovered_primals: Arc<RwLock<HashMap<String, DiscoveredPrimal>>>,
+        discovered_capabilities: Arc<
+            RwLock<HashMap<ServiceCapabilityType, Vec<UniversalCapability>>>,
+        >,
+    ) -> Result<Self, BearDogError> {
+        Self::new(
+            config,
+            discovered_primals,
+            discovered_capabilities,
+            EcosystemListenerEnvInputs::from_env(),
+        )
     }
 
     /// Starts listening
@@ -220,15 +342,13 @@ impl EcosystemListener {
     fn start_mdns_listener(&self) -> tokio::task::JoinHandle<()> {
         let discovered_primals = self.discovered_primals.clone();
         let discovered_capabilities = self.discovered_capabilities.clone();
+        let env = self.env.clone();
 
         tokio::spawn(async move {
             info!("🔍 mDNS listener active - discovering primals via multicast DNS");
 
             // Modern interval-based polling (replaces sleep in loop)
-            let poll_interval = std::env::var("BEARDOG_MDNS_POLL_INTERVAL_SECS")
-                .ok()
-                .and_then(|v| v.parse::<u64>().ok())
-                .unwrap_or(5);
+            let poll_interval = env.mdns_poll_interval_secs;
 
             let mut interval = tokio::time::interval(std::time::Duration::from_secs(poll_interval));
             interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
@@ -237,7 +357,7 @@ impl EcosystemListener {
                 interval.tick().await;
 
                 // Listen for mDNS announcements
-                match Self::listen_mdns_announcements().await {
+                match Self::listen_mdns_announcements(&env).await {
                     Ok(announcements) => {
                         for announcement in announcements {
                             if let Err(e) = Self::process_primal_announcement(
@@ -264,15 +384,13 @@ impl EcosystemListener {
     fn start_http_listener(&self) -> tokio::task::JoinHandle<()> {
         let discovered_primals = self.discovered_primals.clone();
         let discovered_capabilities = self.discovered_capabilities.clone();
+        let env = self.env.clone();
 
         tokio::spawn(async move {
             info!("🌐 HTTP discovery listener active - polling discovery endpoints");
 
             // Modern interval-based polling (replaces sleep in loop)
-            let poll_interval = std::env::var("BEARDOG_HTTP_DISCOVERY_POLL_INTERVAL_SECS")
-                .ok()
-                .and_then(|v| v.parse::<u64>().ok())
-                .unwrap_or(10);
+            let poll_interval = env.http_discovery_poll_interval_secs;
 
             let mut interval = tokio::time::interval(std::time::Duration::from_secs(poll_interval));
             interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
@@ -281,7 +399,7 @@ impl EcosystemListener {
                 interval.tick().await;
 
                 // Poll HTTP discovery endpoints
-                match Self::poll_http_discovery().await {
+                match Self::poll_http_discovery(&env).await {
                     Ok(announcements) => {
                         for announcement in announcements {
                             if let Err(e) = Self::process_primal_announcement(
@@ -308,15 +426,13 @@ impl EcosystemListener {
     fn start_environment_listener(&self) -> tokio::task::JoinHandle<()> {
         let discovered_primals = self.discovered_primals.clone();
         let discovered_capabilities = self.discovered_capabilities.clone();
+        let env = self.env.clone();
 
         tokio::spawn(async move {
             info!("🔧 Environment listener active - monitoring environment variables");
 
             // Modern interval-based polling (replaces sleep in loop)
-            let check_interval = std::env::var("BEARDOG_ENV_CHECK_INTERVAL_SECS")
-                .ok()
-                .and_then(|v| v.parse::<u64>().ok())
-                .unwrap_or(15);
+            let check_interval = env.env_check_interval_secs;
 
             let mut interval =
                 tokio::time::interval(std::time::Duration::from_secs(check_interval));
@@ -353,15 +469,13 @@ impl EcosystemListener {
     fn start_service_mesh_listener(&self) -> tokio::task::JoinHandle<()> {
         let discovered_primals = self.discovered_primals.clone();
         let discovered_capabilities = self.discovered_capabilities.clone();
+        let env = self.env.clone();
 
         tokio::spawn(async move {
             info!("🕸️ Service mesh listener active - discovering via service mesh");
 
             // Modern interval-based polling (replaces sleep in loop)
-            let discovery_interval = std::env::var("BEARDOG_MESH_DISCOVERY_INTERVAL_SECS")
-                .ok()
-                .and_then(|v| v.parse::<u64>().ok())
-                .unwrap_or(20);
+            let discovery_interval = env.mesh_discovery_interval_secs;
 
             let mut interval =
                 tokio::time::interval(std::time::Duration::from_secs(discovery_interval));
@@ -387,14 +501,15 @@ impl EcosystemListener {
         })
     }
 
-    async fn listen_mdns_announcements() -> Result<Vec<PrimalAnnouncement>, BearDogError> {
+    async fn listen_mdns_announcements(
+        env: &EcosystemListenerEnvInputs,
+    ) -> Result<Vec<PrimalAnnouncement>, BearDogError> {
         debug!("🔍 Listening for mDNS primal announcements...");
 
         let announcements = Vec::new();
 
         // Check if mDNS discovery is enabled via environment
-        if std::env::var("BEARDOG_MDNS_DISCOVERY").unwrap_or_else(|_| "false".to_string()) == "true"
-        {
+        if env.mdns_discovery_enabled {
             // In a real implementation, this would use mdns-sd or similar
             // For now, we simulate by checking for known service patterns
             debug!("mDNS discovery enabled, scanning for services...");
@@ -420,52 +535,21 @@ impl EcosystemListener {
     }
 
     /// Poll HTTP discovery endpoints
-    async fn poll_http_discovery() -> Result<Vec<PrimalAnnouncement>, BearDogError> {
+    async fn poll_http_discovery(
+        env: &EcosystemListenerEnvInputs,
+    ) -> Result<Vec<PrimalAnnouncement>, BearDogError> {
         debug!("🌐 Polling HTTP discovery endpoints...");
 
         let mut announcements = Vec::new();
 
-        // Check common discovery endpoints - use config system instead of hardcoding
-        let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
-        // Use api_port for discovery endpoint (or environment override)
-        let discovery_base_port = std::env::var("BEARDOG_DISCOVERY_PORT")
-            .ok()
-            .and_then(|p| p.parse().ok())
-            .unwrap_or(network_config.service_ports.api_port);
-
-        let discovery_endpoints = vec![
-            // Primary: Environment-specified discovery endpoint
-            std::env::var("BEARDOG_DISCOVERY_ENDPOINT").unwrap_or_else(|_| {
-                // Secondary: Ecosystem-wide discovery endpoint from env
-                std::env::var("ECOSYSTEM_DISCOVERY_ENDPOINT").unwrap_or_else(|_| {
-                    // Fallback: Construct from config
-                    let discovery_host = std::env::var("DISCOVERY_HOST")
-                        .unwrap_or_else(|_| "discovery.ecosystem.internal".to_string());
-                    format!("http://{discovery_host}:{discovery_base_port}")
-                })
-            }),
-            // Local discovery endpoint
-            std::env::var("LOCAL_DISCOVERY_ENDPOINT").unwrap_or_else(|_| {
-                use beardog_types::canonical::config::network::NetworkConfig;
-                let network_config = NetworkConfig::default();
-                format!(
-                    "http://{}:{}/discovery",
-                    network_config.default_host, discovery_base_port
-                )
-            }),
-        ];
+        let discovery_endpoints = env.discovery_endpoints();
 
         for endpoint in discovery_endpoints {
             debug!("📡 Checking discovery endpoint: {}", endpoint);
 
             // Attempt HTTP discovery request with timeout
             match tokio::time::timeout(
-                std::time::Duration::from_secs(
-                    std::env::var("BEARDOG_ECOSYSTEM_LISTENER_INTERVAL_SECS")
-                        .ok()
-                        .and_then(|s| s.parse().ok())
-                        .unwrap_or(5),
-                ),
+                std::time::Duration::from_secs(env.http_discovery_timeout_secs),
                 std::future::ready(Self::make_discovery_request(&endpoint)),
             )
             .await
@@ -486,6 +570,16 @@ impl EcosystemListener {
     }
 
     fn check_environment_announcements() -> Result<Vec<PrimalAnnouncement>, BearDogError> {
+        Self::check_environment_announcements_with_lookup(|key| std::env::var(key))
+    }
+
+    /// Tests and injected maps: lookup function instead of reading global environment.
+    fn check_environment_announcements_with_lookup<G>(
+        mut get_var: G,
+    ) -> Result<Vec<PrimalAnnouncement>, BearDogError>
+    where
+        G: FnMut(&str) -> Result<String, std::env::VarError>,
+    {
         debug!("🔧 Checking environment for primal announcements...");
 
         let mut announcements = Vec::new();
@@ -499,7 +593,7 @@ impl EcosystemListener {
         ];
 
         for var in &env_vars {
-            if let Ok(endpoint) = std::env::var(var) {
+            if let Ok(endpoint) = get_var(var) {
                 debug!(
                     "🔍 Found primal endpoint in environment: {} = {}",
                     var, endpoint
@@ -547,6 +641,15 @@ impl EcosystemListener {
         }
 
         Ok(announcements)
+    }
+
+    #[cfg(test)]
+    fn check_environment_announcements_for_test(
+        vars: &HashMap<String, String>,
+    ) -> Result<Vec<PrimalAnnouncement>, BearDogError> {
+        Self::check_environment_announcements_with_lookup(|k| {
+            vars.get(k).cloned().ok_or(std::env::VarError::NotPresent)
+        })
     }
 
     /// Discover primals via service mesh
@@ -773,7 +876,12 @@ mod tests {
         let primals = Arc::new(RwLock::new(HashMap::new()));
         let capabilities = Arc::new(RwLock::new(HashMap::new()));
 
-        let listener = EcosystemListener::new(config, primals, capabilities)?;
+        let listener = EcosystemListener::new(
+            config,
+            primals,
+            capabilities,
+            EcosystemListenerEnvInputs::default(),
+        )?;
 
         assert_eq!(listener.listening_tasks.len(), 0);
         assert_eq!(listener.metrics.announcements_received, 0);
@@ -783,13 +891,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_environment_discovery() -> Result<(), Box<dyn std::error::Error>> {
-        // Simulate an environment-based announcement discovery
-        beardog_errors::process_env::set_var(
-            "COMPUTE_ENDPOINT",
-            "http://discovered-compute-service:8081",
+        let mut vars = HashMap::new();
+        vars.insert(
+            "BEARDOG_COMPUTE_ENDPOINT".to_string(),
+            "http://discovered-compute-service:8081".to_string(),
         );
 
-        let announcements = EcosystemListener::check_environment_announcements()?;
+        let announcements = EcosystemListener::check_environment_announcements_for_test(&vars)?;
 
         // Note: In unit test environment without actual environment variables set,
         // announcements may be empty. This is expected behavior for unit tests.
@@ -822,9 +930,6 @@ mod tests {
                 );
             }
         }
-
-        // Clean up
-        beardog_errors::process_env::remove_var("COMPUTE_ENDPOINT");
 
         Ok(())
     }
@@ -874,7 +979,13 @@ mod tests {
         config.discovery.enabled_protocols = vec![BootstrapDiscoveryProtocol::EnvironmentDiscovery];
         let primals = Arc::new(RwLock::new(HashMap::new()));
         let capabilities = Arc::new(RwLock::new(HashMap::new()));
-        let mut listener = EcosystemListener::new(config, primals, capabilities).expect("new");
+        let mut listener = EcosystemListener::new(
+            config,
+            primals,
+            capabilities,
+            EcosystemListenerEnvInputs::default(),
+        )
+        .expect("new");
         listener.start_listening().expect("start");
         assert_eq!(listener.listening_tasks.len(), 1);
         listener.stop_listening();
@@ -887,28 +998,40 @@ mod tests {
         config.discovery.enabled_protocols = vec![BootstrapDiscoveryProtocol::ContainerDiscovery];
         let primals = Arc::new(RwLock::new(HashMap::new()));
         let capabilities = Arc::new(RwLock::new(HashMap::new()));
-        let mut listener = EcosystemListener::new(config, primals, capabilities).expect("new");
+        let mut listener = EcosystemListener::new(
+            config,
+            primals,
+            capabilities,
+            EcosystemListenerEnvInputs::default(),
+        )
+        .expect("new");
         listener.start_listening().expect("start");
         assert!(listener.listening_tasks.is_empty());
     }
 
     #[tokio::test]
     async fn test_listen_mdns_poll_http_and_mesh_smoke() {
-        let _ = EcosystemListener::listen_mdns_announcements().await;
-        let _ = EcosystemListener::poll_http_discovery().await;
+        let env = EcosystemListenerEnvInputs::default();
+        let _ = EcosystemListener::listen_mdns_announcements(&env).await;
+        let _ = EcosystemListener::poll_http_discovery(&env).await;
         assert!(EcosystemListener::discover_service_mesh_primals().is_empty());
         let _ = EcosystemListener::make_discovery_request("http://127.0.0.1:1/");
     }
 
     #[test]
-    #[serial_test::serial]
     fn test_check_environment_announcements_beardog_vars() {
-        beardog_errors::process_env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://compute:8081");
-        beardog_errors::process_env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://storage:8083");
-        let announcements = EcosystemListener::check_environment_announcements().expect("ok");
+        let mut vars = HashMap::new();
+        vars.insert(
+            "BEARDOG_COMPUTE_ENDPOINT".to_string(),
+            "http://compute:8081".to_string(),
+        );
+        vars.insert(
+            "BEARDOG_STORAGE_ENDPOINT".to_string(),
+            "http://storage:8083".to_string(),
+        );
+        let announcements =
+            EcosystemListener::check_environment_announcements_for_test(&vars).expect("ok");
         assert!(announcements.len() >= 2);
-        beardog_errors::process_env::remove_var("BEARDOG_COMPUTE_ENDPOINT");
-        beardog_errors::process_env::remove_var("BEARDOG_STORAGE_ENDPOINT");
     }
 
     #[tokio::test]

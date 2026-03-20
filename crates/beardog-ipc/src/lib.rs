@@ -68,10 +68,15 @@ pub use client::SongbirdClient;
 pub use error::{IpcError, IpcResult};
 pub use types::{Capability, DiscoveryQuery, ServiceInfo};
 // Neural API auto-registration (Tower Atomic TRUE PRIMAL)
-pub use neural_registration::{discover_neural_api_socket, register_with_neural_api};
+pub use neural_registration::{
+    discover_neural_api_socket, discover_neural_api_socket_with, register_with_neural_api,
+};
 
 // Isomorphic IPC discovery (automatic Unix or TCP)
-pub use isomorphic::{AsyncStream, IpcEndpoint, connect_beardog, discover_beardog_endpoint};
+pub use isomorphic::{
+    AsyncStream, IpcEndpoint, TcpDiscoveryPathHints, UnixSocketPathHints, connect_beardog,
+    discover_beardog_endpoint, get_tcp_discovery_file_candidates_with, get_unix_socket_paths_with,
+};
 
 // Registry client for JSON-RPC registration
 pub use protocol::JsonRpcRequest as ProtocolJsonRpcRequest;
@@ -127,30 +132,83 @@ pub const DISCOVERY_SOCKET_DEV_FALLBACK: &str = "/tmp/beardog-discovery";
 ///     println!("IPC socket: {}", socket);
 /// }
 /// ```
-pub async fn discover_ipc_socket() -> String {
-    // 1. Check environment (highest priority - operator control)
-    if let Ok(socket) = std::env::var("IPC_SOCKET") {
+/// Inputs for [`discover_ipc_socket_with`] (injectable; [`Default`] is I/O-free).
+#[derive(Debug, Clone)]
+pub struct IpcSocketDiscoveryOptions {
+    /// `IPC_SOCKET` when set.
+    pub ipc_socket: Option<String>,
+    /// `DISCOVERY_SOCKET` when set.
+    pub discovery_socket: Option<String>,
+    /// `BEARDOG_DEV_DISCOVERY_SOCKET` when set.
+    pub beardog_dev_discovery_socket: Option<String>,
+    /// Pre-resolved `ipc` capability services (e.g. from [`beardog_discovery::discovered_services_from_environment_with`]).
+    pub ipc_capability_services: Vec<beardog_discovery::DiscoveredService>,
+}
+
+impl Default for IpcSocketDiscoveryOptions {
+    fn default() -> Self {
+        Self {
+            ipc_socket: None,
+            discovery_socket: None,
+            beardog_dev_discovery_socket: None,
+            ipc_capability_services: Vec::new(),
+        }
+    }
+}
+
+impl IpcSocketDiscoveryOptions {
+    /// Load from [`beardog_errors::process_env`] and capability env discovery.
+    pub fn from_env() -> Self {
+        let ttl = beardog_discovery::DEFAULT_ENV_DISCOVERY_TTL_SECS;
+        Self {
+            ipc_socket: beardog_errors::process_env::var("IPC_SOCKET").ok(),
+            discovery_socket: beardog_errors::process_env::var("DISCOVERY_SOCKET").ok(),
+            beardog_dev_discovery_socket: beardog_errors::process_env::var(
+                "BEARDOG_DEV_DISCOVERY_SOCKET",
+            )
+            .ok(),
+            ipc_capability_services:
+                beardog_discovery::discovered_services_from_environment_from_env("ipc", ttl),
+        }
+    }
+}
+
+/// Resolve IPC socket path from injected options (tests pass explicit values).
+#[must_use]
+pub async fn discover_ipc_socket_with(opts: IpcSocketDiscoveryOptions) -> String {
+    if let Some(socket) = opts.ipc_socket {
         tracing::info!("📡 IPC socket from IPC_SOCKET env: {}", socket);
         return socket;
     }
 
-    if let Ok(socket) = std::env::var("DISCOVERY_SOCKET") {
+    if let Some(socket) = opts.discovery_socket {
         tracing::info!("📡 IPC socket from DISCOVERY_SOCKET env: {}", socket);
         return socket;
     }
 
-    // 2. NOTE: beardog-discovery ready (45 tests pass), pending integration wiring
-    // This will use capability-based discovery to find IPC services dynamically
-    // Example: let ipc_services = beardog_discovery::discover_capability("ipc").await?;
+    if let Some(svc) = opts.ipc_capability_services.first() {
+        let path = beardog_discovery::primary_url_to_ipc_socket_path(&svc.endpoint.primary_url);
+        if !path.is_empty() {
+            tracing::info!("📡 IPC socket from capability discovery (ipc): {}", path);
+            return path;
+        }
+    }
 
-    // 3. Fallback (generic discovery endpoint - any primal can bind here)
-    // This follows the self-knowledge principle: we don't hardcode "songbird",
-    // we use a generic endpoint any discovery service can claim.
+    if let Some(dev) = opts.beardog_dev_discovery_socket {
+        tracing::info!("📡 IPC socket from BEARDOG_DEV_DISCOVERY_SOCKET: {}", dev);
+        return dev;
+    }
+
     tracing::debug!(
         "📡 IPC socket using fallback: {}",
         DISCOVERY_SOCKET_FALLBACK
     );
     DISCOVERY_SOCKET_FALLBACK.to_string()
+}
+
+/// Discover IPC socket path via [`IpcSocketDiscoveryOptions::from_env`].
+pub async fn discover_ipc_socket() -> String {
+    discover_ipc_socket_with(IpcSocketDiscoveryOptions::from_env()).await
 }
 
 /// JSON-RPC `ipc.resolve` params key for the target service instance id (legacy wire name).
@@ -160,14 +218,19 @@ pub const IPC_RESOLVE_TARGET_PARAM_KEY: &str = "primal";
 /// Override [`IPC_RESOLVE_TARGET_PARAM_KEY`] for registries that use a different field name.
 pub const ENV_IPC_RESOLVE_TARGET_PARAM_KEY: &str = "BEARDOG_IPC_RESOLVE_TARGET_PARAM_KEY";
 
-/// Returns the JSON-RPC parameter name used for `ipc.resolve` targets.
-///
+/// Returns the JSON-RPC parameter name used for `ipc.resolve` targets from an explicit override.
+#[must_use]
+pub fn ipc_resolve_target_param_key_with(override_name: Option<String>) -> String {
+    override_name.unwrap_or_else(|| IPC_RESOLVE_TARGET_PARAM_KEY.to_string())
+}
+
 /// Reads [`ENV_IPC_RESOLVE_TARGET_PARAM_KEY`] from the environment, or defaults to
 /// [`IPC_RESOLVE_TARGET_PARAM_KEY`] so registries can rename the field without recompiling clients.
 #[must_use]
 pub fn ipc_resolve_target_param_key() -> String {
-    std::env::var(ENV_IPC_RESOLVE_TARGET_PARAM_KEY)
-        .unwrap_or_else(|_| IPC_RESOLVE_TARGET_PARAM_KEY.to_string())
+    ipc_resolve_target_param_key_with(
+        beardog_errors::process_env::var(ENV_IPC_RESOLVE_TARGET_PARAM_KEY).ok(),
+    )
 }
 
 /// Default heartbeat interval (30 seconds)
@@ -176,47 +239,92 @@ pub const DEFAULT_HEARTBEAT_INTERVAL: std::time::Duration = std::time::Duration:
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
 
     #[tokio::test]
-    #[serial]
     async fn discover_ipc_socket_prefers_ipc_socket_env() {
-        beardog_errors::process_env::set_var("IPC_SOCKET", "/tmp/from-ipc-socket");
-        beardog_errors::process_env::remove_var("DISCOVERY_SOCKET");
-        assert_eq!(discover_ipc_socket().await, "/tmp/from-ipc-socket");
-        beardog_errors::process_env::remove_var("IPC_SOCKET");
+        let opts = IpcSocketDiscoveryOptions {
+            ipc_socket: Some("/tmp/from-ipc-socket".to_string()),
+            ..Default::default()
+        };
+        assert_eq!(discover_ipc_socket_with(opts).await, "/tmp/from-ipc-socket");
     }
 
     #[tokio::test]
-    #[serial]
     async fn discover_ipc_socket_uses_discovery_socket_when_ipc_socket_unset() {
-        beardog_errors::process_env::remove_var("IPC_SOCKET");
-        beardog_errors::process_env::set_var("DISCOVERY_SOCKET", "/tmp/from-discovery-socket");
-        assert_eq!(discover_ipc_socket().await, "/tmp/from-discovery-socket");
-        beardog_errors::process_env::remove_var("DISCOVERY_SOCKET");
+        let opts = IpcSocketDiscoveryOptions {
+            ipc_socket: None,
+            discovery_socket: Some("/tmp/from-discovery-socket".to_string()),
+            ..Default::default()
+        };
+        assert_eq!(
+            discover_ipc_socket_with(opts).await,
+            "/tmp/from-discovery-socket"
+        );
     }
 
     #[tokio::test]
-    #[serial]
     async fn discover_ipc_socket_fallback_when_no_env() {
-        beardog_errors::process_env::remove_var("IPC_SOCKET");
-        beardog_errors::process_env::remove_var("DISCOVERY_SOCKET");
-        assert_eq!(discover_ipc_socket().await, DISCOVERY_SOCKET_FALLBACK);
+        assert_eq!(
+            discover_ipc_socket_with(IpcSocketDiscoveryOptions::default()).await,
+            DISCOVERY_SOCKET_FALLBACK
+        );
+    }
+
+    #[tokio::test]
+    async fn discover_ipc_socket_uses_capability_ipc_endpoint() {
+        use beardog_discovery::types::{
+            Capability, DiscoveredService, HealthStatus, QoSMetrics, ServiceEndpoint,
+        };
+        use std::collections::HashMap;
+        use std::time::SystemTime;
+
+        let svc = DiscoveredService {
+            id: "env-ipc".to_string(),
+            service_type: "t".to_string(),
+            display_name: "d".to_string(),
+            endpoint: ServiceEndpoint {
+                primary_url: "unix:///tmp/from-capability-ipc".to_string(),
+                fallback_urls: vec![],
+                use_tls: false,
+                path_prefix: None,
+            },
+            capabilities: vec![Capability {
+                capability_type: "ipc".to_string(),
+                version: "1".to_string(),
+                features: vec![],
+                parameters: HashMap::new(),
+            }],
+            qos: QoSMetrics::default(),
+            health: HealthStatus::Unknown,
+            discovered_at: SystemTime::now(),
+            ttl_secs: 60,
+            discovery_method: "test".to_string(),
+            metadata: HashMap::new(),
+        };
+        let opts = IpcSocketDiscoveryOptions {
+            ipc_capability_services: vec![svc],
+            ..Default::default()
+        };
+        assert_eq!(
+            discover_ipc_socket_with(opts).await,
+            "/tmp/from-capability-ipc"
+        );
     }
 
     #[test]
-    #[serial]
     fn ipc_resolve_target_param_key_respects_env() {
-        beardog_errors::process_env::set_var(ENV_IPC_RESOLVE_TARGET_PARAM_KEY, "custom_target");
-        assert_eq!(ipc_resolve_target_param_key(), "custom_target");
-        beardog_errors::process_env::remove_var(ENV_IPC_RESOLVE_TARGET_PARAM_KEY);
+        assert_eq!(
+            ipc_resolve_target_param_key_with(Some("custom_target".to_string())),
+            "custom_target"
+        );
     }
 
     #[test]
-    #[serial]
     fn ipc_resolve_target_param_key_default() {
-        beardog_errors::process_env::remove_var(ENV_IPC_RESOLVE_TARGET_PARAM_KEY);
-        assert_eq!(ipc_resolve_target_param_key(), IPC_RESOLVE_TARGET_PARAM_KEY);
+        assert_eq!(
+            ipc_resolve_target_param_key_with(None),
+            IPC_RESOLVE_TARGET_PARAM_KEY
+        );
     }
 }
 

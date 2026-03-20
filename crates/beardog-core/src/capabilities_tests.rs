@@ -6,8 +6,8 @@
 
 /// Helper to get expected primal name from environment or default
 fn expected_primal_name() -> String {
-    std::env::var("PRIMAL_NAME")
-        .or_else(|_| std::env::var("BEARDOG_NAME"))
+    beardog_errors::process_env::var("PRIMAL_NAME")
+        .or_else(|_| beardog_errors::process_env::var("BEARDOG_NAME"))
         .unwrap_or_else(|_| "beardog".to_string())
 }
 

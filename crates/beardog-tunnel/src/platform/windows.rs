@@ -47,30 +47,13 @@ pub struct WindowsSocket;
 
 impl PlatformSocket for WindowsSocket {
     fn create_endpoint(primal_name: &str) -> std::io::Result<SocketEndpoint> {
-        // Named pipe naming: \\.\pipe\biomeos_{primal_name}
-        // The \\.\pipe\ prefix is Windows' named pipe namespace
-
-        // Priority 1: Exact override (for testing)
-        if let Ok(pipe_path) = std::env::var("BEARDOG_PIPE") {
-            info!("Using BEARDOG_PIPE override: {}", pipe_path);
-            return Ok(SocketEndpoint::NamedPipe(pipe_path));
-        }
-
-        // Priority 2: Custom pipe directory prefix
-        let pipe_name = if let Ok(custom_prefix) = std::env::var("BIOMEOS_PIPE_DIR") {
-            debug!("Using BIOMEOS_PIPE_DIR: {}", custom_prefix);
-            format!(r"{}_biomeos_{}", custom_prefix, primal_name)
-        } else {
-            // Priority 3: Standard Windows named pipe path
-            format!(r"\\.\pipe\biomeos_{}", primal_name)
-        };
-
-        info!(
-            "🪟 Windows named pipe (kernel-managed): {} (no filesystem)",
-            pipe_name
-        );
-
-        Ok(SocketEndpoint::NamedPipe(pipe_name))
+        let beardog_pipe = beardog_errors::process_env::var("BEARDOG_PIPE").ok();
+        let biomeos_pipe_dir = beardog_errors::process_env::var("BIOMEOS_PIPE_DIR").ok();
+        create_endpoint_with(
+            primal_name,
+            beardog_pipe.as_deref(),
+            biomeos_pipe_dir.as_deref(),
+        )
     }
 
     fn bind(endpoint: &SocketEndpoint) -> std::io::Result<UnixListener> {
@@ -122,6 +105,35 @@ impl PlatformSocket for WindowsSocket {
     }
 }
 
+/// Build named-pipe endpoint with explicit overrides (tests; DI).
+///
+/// `beardog_pipe`: exact pipe path (equivalent to `BEARDOG_PIPE`).
+/// `biomeos_pipe_dir`: custom prefix (equivalent to `BIOMEOS_PIPE_DIR`).
+pub fn create_endpoint_with(
+    primal_name: &str,
+    beardog_pipe: Option<&str>,
+    biomeos_pipe_dir: Option<&str>,
+) -> std::io::Result<SocketEndpoint> {
+    if let Some(pipe_path) = beardog_pipe {
+        info!("Using BEARDOG_PIPE override: {}", pipe_path);
+        return Ok(SocketEndpoint::NamedPipe(pipe_path.to_string()));
+    }
+
+    let pipe_name = if let Some(custom_prefix) = biomeos_pipe_dir {
+        debug!("Using BIOMEOS_PIPE_DIR: {}", custom_prefix);
+        format!(r"{}_biomeos_{}", custom_prefix, primal_name)
+    } else {
+        format!(r"\\.\pipe\biomeos_{}", primal_name)
+    };
+
+    info!(
+        "🪟 Windows named pipe (kernel-managed): {} (no filesystem)",
+        pipe_name
+    );
+
+    Ok(SocketEndpoint::NamedPipe(pipe_name))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -140,10 +152,8 @@ mod tests {
 
     #[test]
     fn test_environment_variable_override() {
-        // Test BEARDOG_PIPE override
-        beardog_errors::process_env::set_var("BEARDOG_PIPE", r"\\.\pipe\test_override");
-        let endpoint = WindowsSocket::create_endpoint("beardog").unwrap();
-        beardog_errors::process_env::remove_var("BEARDOG_PIPE");
+        let endpoint =
+            create_endpoint_with("beardog", Some(r"\\.\pipe\test_override"), None).unwrap();
 
         match endpoint {
             SocketEndpoint::NamedPipe(name) => {
@@ -156,13 +166,7 @@ mod tests {
 
     #[test]
     fn test_biomeos_pipe_dir() {
-        // Clear override first
-        beardog_errors::process_env::remove_var("BEARDOG_PIPE");
-
-        // Test BIOMEOS_PIPE_DIR
-        beardog_errors::process_env::set_var("BIOMEOS_PIPE_DIR", r"\\.\pipe\custom");
-        let endpoint = WindowsSocket::create_endpoint("beardog").unwrap();
-        beardog_errors::process_env::remove_var("BIOMEOS_PIPE_DIR");
+        let endpoint = create_endpoint_with("beardog", None, Some(r"\\.\pipe\custom")).unwrap();
 
         match endpoint {
             SocketEndpoint::NamedPipe(name) => {

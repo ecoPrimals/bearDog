@@ -264,14 +264,17 @@ impl FailoverConfiguration {
     /// - `BEARDOG_FAILOVER_DETECTION_TIMEOUT_SECS`: Detection timeout (default: 30)
     /// - `BEARDOG_FAILOVER_MAX_ATTEMPTS`: Maximum attempts (default: 3)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             enabled: true,
-            detection_timeout_seconds: std::env::var("BEARDOG_FAILOVER_DETECTION_TIMEOUT_SECS")
-                .ok()
+            detection_timeout_seconds: get("BEARDOG_FAILOVER_DETECTION_TIMEOUT_SECS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_DETECTION_TIMEOUT_SECS),
-            max_attempts: std::env::var("BEARDOG_FAILOVER_MAX_ATTEMPTS")
-                .ok()
+            max_attempts: get("BEARDOG_FAILOVER_MAX_ATTEMPTS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_ATTEMPTS),
             backoff_seconds: Self::DEFAULT_BACKOFF_SECS,
@@ -326,27 +329,28 @@ impl ConnectionPoolConfig {
     /// - `BEARDOG_CONNECTION_ACQUIRE_TIMEOUT_SECS`: Acquire timeout (default: 30)
     /// - `BEARDOG_CONNECTION_MAINTENANCE_INTERVAL_SECS`: Maintenance interval (default: 60)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             min_size: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE,
-            max_size: std::env::var("BEARDOG_CONNECTION_POOL_MAX_SIZE")
-                .ok()
+            max_size: get("BEARDOG_CONNECTION_POOL_MAX_SIZE")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_MAX_SIZE),
             idle_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_CONNECTION_IDLE_TIMEOUT_SECS")
-                    .ok()
+                get("BEARDOG_CONNECTION_IDLE_TIMEOUT_SECS")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_IDLE_TIMEOUT_SECS),
             ),
             max_lifetime: Some(Duration::from_secs(
-                std::env::var("BEARDOG_CONNECTION_MAX_LIFETIME_SECS")
-                    .ok()
+                get("BEARDOG_CONNECTION_MAX_LIFETIME_SECS")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_MAX_LIFETIME_SECS),
             )),
             acquire_timeout: Duration::from_secs(
-                std::env::var("BEARDOG_CONNECTION_ACQUIRE_TIMEOUT_SECS")
-                    .ok()
+                get("BEARDOG_CONNECTION_ACQUIRE_TIMEOUT_SECS")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_ACQUIRE_TIMEOUT_SECS),
             ),
@@ -356,8 +360,7 @@ impl ConnectionPoolConfig {
             test_while_idle: true,
             validation_query: Some("SELECT 1".to_string()),
             maintenance_interval: Duration::from_secs(
-                std::env::var("BEARDOG_CONNECTION_MAINTENANCE_INTERVAL_SECS")
-                    .ok()
+                get("BEARDOG_CONNECTION_MAINTENANCE_INTERVAL_SECS")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_MAINTENANCE_INTERVAL_SECS),
             ),
@@ -418,31 +421,31 @@ impl TimeoutConfiguration {
     /// - `BEARDOG_WRITE_TIMEOUT_SECS`: Write timeout (default: 30)
     /// - `BEARDOG_SHUTDOWN_TIMEOUT_SECS`: Shutdown timeout (default: 30)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             connection_timeout_seconds:
                 crate::constants::domains::network::defaults::DEFAULT_CONNECTION_TIMEOUT.as_secs(),
             request_timeout_seconds: crate::constants::domains::network::timeouts::REQUEST_TIMEOUT
                 .as_secs(),
-            keepalive_timeout_seconds: std::env::var("BEARDOG_KEEPALIVE_TIMEOUT_SECS")
-                .ok()
+            keepalive_timeout_seconds: get("BEARDOG_KEEPALIVE_TIMEOUT_SECS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_KEEPALIVE_TIMEOUT_SECS),
             dns_timeout_seconds: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE
                 as u64,
-            tls_handshake_timeout_seconds: std::env::var("BEARDOG_TLS_HANDSHAKE_TIMEOUT_SECS")
-                .ok()
+            tls_handshake_timeout_seconds: get("BEARDOG_TLS_HANDSHAKE_TIMEOUT_SECS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_TLS_HANDSHAKE_TIMEOUT_SECS),
-            read_timeout_seconds: std::env::var("BEARDOG_READ_TIMEOUT_SECS")
-                .ok()
+            read_timeout_seconds: get("BEARDOG_READ_TIMEOUT_SECS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_READ_TIMEOUT_SECS),
-            write_timeout_seconds: std::env::var("BEARDOG_WRITE_TIMEOUT_SECS")
-                .ok()
+            write_timeout_seconds: get("BEARDOG_WRITE_TIMEOUT_SECS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_WRITE_TIMEOUT_SECS),
-            shutdown_timeout_seconds: std::env::var("BEARDOG_SHUTDOWN_TIMEOUT_SECS")
-                .ok()
+            shutdown_timeout_seconds: get("BEARDOG_SHUTDOWN_TIMEOUT_SECS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_SHUTDOWN_TIMEOUT_SECS),
         }
@@ -501,18 +504,20 @@ impl LoadBalancerHealthCheckConfiguration {
     /// - `BEARDOG_LB_UNHEALTHY_THRESHOLD`: Unhealthy threshold (default: 3)
     /// - `BEARDOG_LB_HEALTHY_THRESHOLD`: Healthy threshold (default: 2)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
-            interval_seconds: std::env::var("BEARDOG_LB_HEALTH_CHECK_INTERVAL_SECS")
-                .ok()
+            interval_seconds: get("BEARDOG_LB_HEALTH_CHECK_INTERVAL_SECS")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_INTERVAL_SECS),
             timeout_seconds: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u64,
-            unhealthy_threshold: std::env::var("BEARDOG_LB_UNHEALTHY_THRESHOLD")
-                .ok()
+            unhealthy_threshold: get("BEARDOG_LB_UNHEALTHY_THRESHOLD")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_UNHEALTHY_THRESHOLD),
-            healthy_threshold: std::env::var("BEARDOG_LB_HEALTHY_THRESHOLD")
-                .ok()
+            healthy_threshold: get("BEARDOG_LB_HEALTHY_THRESHOLD")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_HEALTHY_THRESHOLD),
             path: "/health".to_string(),
@@ -558,20 +563,21 @@ impl CircuitBreakerConfiguration {
     /// - `BEARDOG_CIRCUIT_BREAKER_RECOVERY_TIMEOUT_SECS`: Recovery timeout (default: 60)
     /// - `BEARDOG_CIRCUIT_BREAKER_MIN_THROUGHPUT`: Minimum throughput (default: 20)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             enabled: true,
             failure_threshold: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE
                 as u32,
-            recovery_timeout_seconds: std::env::var(
-                "BEARDOG_CIRCUIT_BREAKER_RECOVERY_TIMEOUT_SECS",
-            )
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(Self::DEFAULT_RECOVERY_TIMEOUT_SECS),
+            recovery_timeout_seconds: get("BEARDOG_CIRCUIT_BREAKER_RECOVERY_TIMEOUT_SECS")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(Self::DEFAULT_RECOVERY_TIMEOUT_SECS),
             half_open_max_calls: crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE
                 as u32,
-            minimum_throughput: std::env::var("BEARDOG_CIRCUIT_BREAKER_MIN_THROUGHPUT")
-                .ok()
+            minimum_throughput: get("BEARDOG_CIRCUIT_BREAKER_MIN_THROUGHPUT")
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(Self::DEFAULT_MIN_THROUGHPUT),
         }

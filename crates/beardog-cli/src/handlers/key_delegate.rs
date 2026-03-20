@@ -13,6 +13,7 @@ use beardog_types::constraints::{
 };
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 
 /// Delegation constraints (simplified for storage)
 ///
@@ -125,12 +126,68 @@ pub async fn handle_key_delegate(
     memory_quota: Option<&str>,
     expires_in: &str,
 ) -> Result<(), BearDogError> {
+    let keys_home = key_store::home_dir_for_keys()?;
+    handle_key_delegate_impl(
+        master_key_id,
+        delegate_to,
+        output_key_id,
+        time_range,
+        weekdays,
+        cpu_quota,
+        memory_quota,
+        expires_in,
+        &keys_home,
+        std::path::Path::new("."),
+    )
+    .await
+}
+
+/// Same as [`handle_key_delegate`] but keys and receipts live under `home` (tests / DI).
+pub async fn handle_key_delegate_with_home(
+    master_key_id: &str,
+    delegate_to: &str,
+    output_key_id: &str,
+    time_range: Option<&str>,
+    weekdays: Option<&str>,
+    cpu_quota: Option<u8>,
+    memory_quota: Option<&str>,
+    expires_in: &str,
+    home: impl AsRef<Path>,
+) -> Result<(), BearDogError> {
+    let home = home.as_ref();
+    handle_key_delegate_impl(
+        master_key_id,
+        delegate_to,
+        output_key_id,
+        time_range,
+        weekdays,
+        cpu_quota,
+        memory_quota,
+        expires_in,
+        home,
+        home,
+    )
+    .await
+}
+
+async fn handle_key_delegate_impl(
+    master_key_id: &str,
+    delegate_to: &str,
+    output_key_id: &str,
+    time_range: Option<&str>,
+    weekdays: Option<&str>,
+    cpu_quota: Option<u8>,
+    memory_quota: Option<&str>,
+    expires_in: &str,
+    keys_home: &Path,
+    receipt_parent: &Path,
+) -> Result<(), BearDogError> {
     println!("🎫 BearDog Key Delegation");
     println!("========================\n");
 
     // Load master key
     println!("📥 Loading master key: {master_key_id}");
-    let master_key = key_store::load_key(master_key_id)?;
+    let master_key = key_store::load_key_from_home(master_key_id, keys_home)?;
 
     println!("✅ Master key loaded");
     println!("   Algorithm: {}", master_key.algorithm);
@@ -227,12 +284,12 @@ pub async fn handle_key_delegate(
     };
 
     // Save delegated key
-    key_store::save_key(&delegated_key)?;
+    key_store::save_key_to_home(&delegated_key, keys_home)?;
 
     // Update master key
     let mut updated_master = master_key.clone();
     updated_master.children.push(output_key_id.to_string());
-    key_store::save_key(&updated_master)?;
+    key_store::save_key_to_home(&updated_master, keys_home)?;
 
     // Generate operation receipt
     use beardog_types::receipt::{KeyInfo, OperationReceipt, generate_receipt_filename};
@@ -266,9 +323,9 @@ pub async fn handle_key_delegate(
         receipt = receipt.with_metadata("memory_quota", json!(mem));
     }
 
-    // Save receipt
-    let receipt_dir = std::path::Path::new("receipts");
-    std::fs::create_dir_all(receipt_dir)?;
+    // Save receipt (`./receipts` in production; under `home` when using `_with_home`)
+    let receipt_dir = receipt_parent.join("receipts");
+    std::fs::create_dir_all(&receipt_dir)?;
     let receipt_path = receipt_dir.join(generate_receipt_filename("key-delegate"));
     receipt.save_to_file(&receipt_path)?;
 
@@ -467,6 +524,9 @@ fn format_bytes(bytes: u64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::handlers::key_store;
+    use chrono::Utc;
+    use tempfile::TempDir;
 
     #[test]
     fn test_parse_time_range() {
@@ -528,5 +588,110 @@ mod tests {
         assert!(is_valid_weekday("fri"));
         assert!(!is_valid_weekday("invalid"));
         assert!(!is_valid_weekday("monday"));
+    }
+
+    #[test]
+    fn test_derive_delegated_key_deterministic() {
+        let master = [3u8; 32];
+        let a = derive_delegated_key(&master, b"delegate:alice").unwrap();
+        let b = derive_delegated_key(&master, b"delegate:alice").unwrap();
+        assert_eq!(a, b);
+        assert_eq!(a.len(), 32);
+        assert_ne!(derive_delegated_key(&master, b"delegate:bob").unwrap(), a);
+    }
+
+    #[test]
+    fn test_parse_time_range_missing_colon_in_part() {
+        assert!(parse_time_range("900-17:00").is_err());
+    }
+
+    #[test]
+    fn test_delegation_constraints_to_constraints_and_composite() {
+        let dc = DelegationConstraints {
+            time_range: Some(("09:00".to_string(), "17:00".to_string())),
+            weekdays: Some(vec!["mon".to_string()]),
+            cpu_quota: Some(50),
+            memory_quota: Some(1024),
+            expires_at: "2099-01-01T00:00:00Z".to_string(),
+            delegated_to: "user".to_string(),
+        };
+        let v = dc.to_constraints();
+        assert!(v.len() >= 4);
+        let _ = dc.as_composite();
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_delegate_full_flow() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+
+        let master = key_store::StoredKey {
+            key_id: "master-delegate".to_string(),
+            algorithm: "aes256-gcm".to_string(),
+            hsm_name: "hsm-x".to_string(),
+            created_at: Utc::now().to_rfc3339(),
+            key_material_b64: key_store::base64_encode(&[11u8; 32]),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: Some(key_store::KeyLineageInfo {
+                parent_key_id: None,
+                depth: 0,
+            }),
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        key_store::save_key_to_home(&master, home).unwrap();
+
+        handle_key_delegate_with_home(
+            "master-delegate",
+            "delegatee",
+            "delegated-out",
+            Some("9:00-17:00"),
+            Some("mon,wed"),
+            Some(25),
+            Some("512MB"),
+            "24h",
+            home,
+        )
+        .await
+        .expect("delegate");
+
+        let del = key_store::load_key_from_home("delegated-out", home).expect("delegated key");
+        assert_eq!(del.generation, 1);
+        assert_eq!(del.parent_key_id.as_deref(), Some("master-delegate"));
+    }
+
+    #[test]
+    fn test_parse_weekdays_invalid_day_in_list() {
+        assert!(parse_weekdays("mon,bad").is_err());
+    }
+
+    #[test]
+    fn test_parse_memory_quota_bytes_unit() {
+        assert_eq!(parse_memory_quota("4096B").unwrap(), 4096);
+        assert_eq!(parse_memory_quota("2TB").unwrap(), 2 * 1024_u64.pow(4));
+    }
+
+    #[test]
+    fn test_format_bytes_terabyte() {
+        let tb = 1024_u64.pow(4) * 3;
+        let s = format_bytes(tb);
+        assert!(s.contains("TB"));
+    }
+
+    #[test]
+    fn test_delegation_constraints_is_satisfied_expired() {
+        let dc = DelegationConstraints {
+            time_range: None,
+            weekdays: None,
+            cpu_quota: None,
+            memory_quota: None,
+            expires_at: "2000-01-01T00:00:00Z".to_string(),
+            delegated_to: "u".to_string(),
+        };
+        assert_eq!(dc.is_satisfied().unwrap(), false);
     }
 }

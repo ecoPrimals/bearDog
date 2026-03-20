@@ -9,7 +9,6 @@
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use std::env;
 
     // ========================================================================
     // Decision Field Tests
@@ -137,8 +136,8 @@ mod tests {
         beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "test-family");
 
         // Test fallback logic
-        let family = env::var("FAMILY_ID")
-            .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
+        let family = beardog_errors::process_env::var("FAMILY_ID")
+            .or_else(|_| beardog_errors::process_env::var("BEARDOG_FAMILY_ID"))
             .unwrap_or_else(|_| "unknown".to_string());
 
         assert_eq!(family, "test-family");
@@ -157,8 +156,8 @@ mod tests {
         beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "test-node");
 
         // Test fallback logic
-        let node = env::var("NODE_ID")
-            .or_else(|_| env::var("BEARDOG_NODE_ID"))
+        let node = beardog_errors::process_env::var("NODE_ID")
+            .or_else(|_| beardog_errors::process_env::var("BEARDOG_NODE_ID"))
             .unwrap_or_else(|_| "unknown".to_string());
 
         assert_eq!(node, "test-node");
@@ -174,8 +173,8 @@ mod tests {
         beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "fallback-family");
 
         // Primary should take precedence
-        let family = env::var("FAMILY_ID")
-            .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
+        let family = beardog_errors::process_env::var("FAMILY_ID")
+            .or_else(|_| beardog_errors::process_env::var("BEARDOG_FAMILY_ID"))
             .unwrap_or_else(|_| "unknown".to_string());
 
         assert_eq!(family, "primary-family");
@@ -192,8 +191,8 @@ mod tests {
         beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
 
         // Should fallback to "unknown"
-        let family = env::var("FAMILY_ID")
-            .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
+        let family = beardog_errors::process_env::var("FAMILY_ID")
+            .or_else(|_| beardog_errors::process_env::var("BEARDOG_FAMILY_ID"))
             .unwrap_or_else(|_| "unknown".to_string());
 
         assert_eq!(family, "unknown");
@@ -205,8 +204,8 @@ mod tests {
         beardog_errors::process_env::set_var("FAMILY_ID", "nat0");
         beardog_errors::process_env::set_var("NODE_ID", "tower1");
 
-        let family1 = env::var("FAMILY_ID").unwrap();
-        let node1 = env::var("NODE_ID").unwrap();
+        let family1 = beardog_errors::process_env::var("FAMILY_ID").unwrap();
+        let node1 = beardog_errors::process_env::var("NODE_ID").unwrap();
 
         assert_eq!(family1, "nat0");
         assert_eq!(node1, "tower1");
@@ -217,8 +216,8 @@ mod tests {
         beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");
         beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "tower1");
 
-        let family2 = env::var("BEARDOG_FAMILY_ID").unwrap();
-        let node2 = env::var("BEARDOG_NODE_ID").unwrap();
+        let family2 = beardog_errors::process_env::var("BEARDOG_FAMILY_ID").unwrap();
+        let node2 = beardog_errors::process_env::var("BEARDOG_NODE_ID").unwrap();
 
         assert_eq!(family2, "nat0");
         assert_eq!(node2, "tower1");
@@ -239,26 +238,26 @@ mod tests {
         beardog_errors::process_env::set_var("BEARDOG_NODE_ID", "prod-node");
 
         // Simulate capabilities method
-        let family_caps = env::var("FAMILY_ID")
-            .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
+        let family_caps = beardog_errors::process_env::var("FAMILY_ID")
+            .or_else(|_| beardog_errors::process_env::var("BEARDOG_FAMILY_ID"))
             .unwrap_or_else(|_| "unknown".to_string());
         assert_eq!(family_caps, "prod-family");
 
         // Simulate identity method
-        let family_identity = env::var("FAMILY_ID")
-            .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
+        let family_identity = beardog_errors::process_env::var("FAMILY_ID")
+            .or_else(|_| beardog_errors::process_env::var("BEARDOG_FAMILY_ID"))
             .unwrap_or_else(|_| "unknown".to_string());
         assert_eq!(family_identity, "prod-family");
 
         // Simulate trust method
-        let family_trust = env::var("FAMILY_ID")
-            .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
+        let family_trust = beardog_errors::process_env::var("FAMILY_ID")
+            .or_else(|_| beardog_errors::process_env::var("BEARDOG_FAMILY_ID"))
             .unwrap_or_else(|_| "unknown".to_string());
         assert_eq!(family_trust, "prod-family");
 
         // Simulate lineage method
-        let family_lineage = env::var("FAMILY_ID")
-            .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
+        let family_lineage = beardog_errors::process_env::var("FAMILY_ID")
+            .or_else(|_| beardog_errors::process_env::var("BEARDOG_FAMILY_ID"))
             .unwrap_or_else(|_| "unknown".to_string());
         assert_eq!(family_lineage, "prod-family");
 
@@ -278,11 +277,11 @@ mod tests {
         beardog_errors::process_env::set_var("NODE_ID", "tower1");
 
         // Simulate trust evaluation
-        let our_family = env::var("FAMILY_ID")
-            .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
+        let our_family = beardog_errors::process_env::var("FAMILY_ID")
+            .or_else(|_| beardog_errors::process_env::var("BEARDOG_FAMILY_ID"))
             .unwrap_or_else(|_| "unknown".to_string());
-        let our_node = env::var("NODE_ID")
-            .or_else(|_| env::var("BEARDOG_NODE_ID"))
+        let our_node = beardog_errors::process_env::var("NODE_ID")
+            .or_else(|_| beardog_errors::process_env::var("BEARDOG_NODE_ID"))
             .unwrap_or_else(|_| "unknown".to_string());
 
         let peer_family = "nat0";
@@ -319,8 +318,8 @@ mod tests {
         // Set environment
         beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");
 
-        let our_family = env::var("FAMILY_ID")
-            .or_else(|_| env::var("BEARDOG_FAMILY_ID"))
+        let our_family = beardog_errors::process_env::var("FAMILY_ID")
+            .or_else(|_| beardog_errors::process_env::var("BEARDOG_FAMILY_ID"))
             .unwrap_or_else(|_| "unknown".to_string());
 
         let peer_family = "other-family";

@@ -240,16 +240,16 @@ mod tests {
     }
 
     #[test]
-    fn test_prefers_environment_variable() {
-        beardog_errors::process_env::set_var("BEARDOG_BIND_ADDRESS", "127.0.0.1");
-
-        let discovery = NetworkDiscovery::with_defaults();
+    fn test_prioritizes_preferred_host_from_preferences() {
+        let prefs = NetworkPreferences {
+            preferred_host: Some("127.0.0.1".to_string()),
+            preferred_port: None,
+            port_range: (8080, 8099),
+        };
+        let discovery = NetworkDiscovery::new(prefs);
         let capabilities = discovery.discover().unwrap();
 
-        // Environment variable should be prioritized
         assert!(capabilities.local_addresses.first().unwrap().is_loopback());
-
-        beardog_errors::process_env::remove_var("BEARDOG_BIND_ADDRESS");
     }
 
     #[test]

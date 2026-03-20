@@ -155,12 +155,12 @@ impl CloudDiscoverer {
     /// Check for AWS credentials
     fn check_aws_credentials(&self) -> bool {
         // Check environment variables
-        if env::var("AWS_ACCESS_KEY_ID").is_ok() && env::var("AWS_SECRET_ACCESS_KEY").is_ok() {
+        if beardog_errors::process_env::var("AWS_ACCESS_KEY_ID").is_ok() && beardog_errors::process_env::var("AWS_SECRET_ACCESS_KEY").is_ok() {
             return true;
         }
 
         // Check for AWS credentials file
-        if let Ok(home) = env::var("HOME") {
+        if let Ok(home) = beardog_errors::process_env::var("HOME") {
             let aws_creds = Path::new(&home).join(".aws").join("credentials");
             if aws_creds.exists() {
                 return true;
@@ -168,7 +168,7 @@ impl CloudDiscoverer {
         }
 
         // Check for AWS config file
-        if let Ok(home) = env::var("HOME") {
+        if let Ok(home) = beardog_errors::process_env::var("HOME") {
             let aws_config = Path::new(&home).join(".aws").join("config");
             if aws_config.exists() {
                 return true;
@@ -183,9 +183,9 @@ impl CloudDiscoverer {
         let mut regions = Vec::new();
 
         // Check configured region
-        if let Ok(region) = env::var("AWS_REGION") {
+        if let Ok(region) = beardog_errors::process_env::var("AWS_REGION") {
             regions.push(region);
-        } else if let Ok(region) = env::var("AWS_DEFAULT_REGION") {
+        } else if let Ok(region) = beardog_errors::process_env::var("AWS_DEFAULT_REGION") {
             regions.push(region);
         } else {
             // Default to us-east-1
@@ -225,7 +225,7 @@ impl CloudDiscoverer {
     async fn check_aws_cloudhsm(&self, region: &str) -> Result<Option<DiscoveredHsm>, BearDogError> {
         // In a full implementation, this would query AWS CloudHSM API
         // For now, we'll check if CLOUDHSM_CLUSTER_ID env var is set
-        if let Ok(cluster_id) = env::var("CLOUDHSM_CLUSTER_ID") {
+        if let Ok(cluster_id) = beardog_errors::process_env::var("CLOUDHSM_CLUSTER_ID") {
             let now = Utc::now();
             
             Ok(Some(DiscoveredHsm {
@@ -267,12 +267,12 @@ impl CloudDiscoverer {
         }
 
         // Check for configured vault names
-        if let Ok(vault_name) = env::var("AZURE_KEYVAULT_NAME") {
+        if let Ok(vault_name) = beardog_errors::process_env::var("AZURE_KEYVAULT_NAME") {
             hsms.push(self.create_azure_key_vault_hsm(&vault_name));
         }
 
         // Check for Managed HSM
-        if let Ok(hsm_name) = env::var("AZURE_MANAGEDHSM_NAME") {
+        if let Ok(hsm_name) = beardog_errors::process_env::var("AZURE_MANAGEDHSM_NAME") {
             hsms.push(self.create_azure_managed_hsm(&hsm_name));
         }
 
@@ -286,19 +286,19 @@ impl CloudDiscoverer {
     /// Check for Azure credentials
     fn check_azure_credentials(&self) -> bool {
         // Check for service principal
-        if env::var("AZURE_CLIENT_ID").is_ok() 
-            && env::var("AZURE_CLIENT_SECRET").is_ok() 
-            && env::var("AZURE_TENANT_ID").is_ok() {
+        if beardog_errors::process_env::var("AZURE_CLIENT_ID").is_ok() 
+            && beardog_errors::process_env::var("AZURE_CLIENT_SECRET").is_ok() 
+            && beardog_errors::process_env::var("AZURE_TENANT_ID").is_ok() {
             return true;
         }
 
         // Check for managed identity
-        if env::var("AZURE_CLIENT_ID").is_ok() {
+        if beardog_errors::process_env::var("AZURE_CLIENT_ID").is_ok() {
             return true;
         }
 
         // Check for Azure CLI authentication
-        if let Ok(home) = env::var("HOME") {
+        if let Ok(home) = beardog_errors::process_env::var("HOME") {
             let azure_dir = Path::new(&home).join(".azure");
             if azure_dir.exists() {
                 return true;
@@ -371,7 +371,7 @@ impl CloudDiscoverer {
         }
 
         // Get project ID
-        if let Ok(project_id) = env::var("GCP_PROJECT_ID").or_else(|_| env::var("GOOGLE_CLOUD_PROJECT")) {
+        if let Ok(project_id) = beardog_errors::process_env::var("GCP_PROJECT_ID").or_else(|_| beardog_errors::process_env::var("GOOGLE_CLOUD_PROJECT")) {
             // Get regions
             let regions = self.get_gcp_regions();
             
@@ -390,14 +390,14 @@ impl CloudDiscoverer {
     /// Check for GCP credentials
     fn check_gcp_credentials(&self) -> bool {
         // Check for service account key
-        if let Ok(key_file) = env::var("GOOGLE_APPLICATION_CREDENTIALS") {
+        if let Ok(key_file) = beardog_errors::process_env::var("GOOGLE_APPLICATION_CREDENTIALS") {
             if Path::new(&key_file).exists() {
                 return true;
             }
         }
 
         // Check for gcloud config
-        if let Ok(home) = env::var("HOME") {
+        if let Ok(home) = beardog_errors::process_env::var("HOME") {
             let gcloud_config = Path::new(&home).join(".config").join("gcloud");
             if gcloud_config.exists() {
                 return true;
@@ -409,7 +409,7 @@ impl CloudDiscoverer {
 
     /// Get GCP regions
     fn get_gcp_regions(&self) -> Vec<String> {
-        if let Ok(region) = env::var("GCP_REGION") {
+        if let Ok(region) = beardog_errors::process_env::var("GCP_REGION") {
             vec![region]
         } else {
             vec!["us-central1".to_string()]

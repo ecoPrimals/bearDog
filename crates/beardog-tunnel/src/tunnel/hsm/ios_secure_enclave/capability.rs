@@ -74,7 +74,7 @@ impl CapabilityDetector {
 
     /// Gets safe_ios_version
     fn get_safe_ios_version() -> Result<IOSVersion, BearDogError> {
-        let version_string = std::env::var("IOS_VERSION").unwrap_or_else(|_| "15.0.0".to_string()); // Default to iOS 15
+        let version_string = beardog_errors::process_env::var("IOS_VERSION").unwrap_or_else(|_| "15.0.0".to_string()); // Default to iOS 15
         let parts: Vec<u32> = version_string
             .split('.')
             .filter_map(|s| s.parse().ok())
@@ -89,7 +89,7 @@ impl CapabilityDetector {
     /// Gets safe_device_type
     fn get_safe_device_type() -> Result<SecureEnclaveDevice, BearDogError> {
         let device_model =
-            std::env::var("IOS_DEVICE_MODEL").unwrap_or_else(|_| "iPhone".to_string());
+            beardog_errors::process_env::var("IOS_DEVICE_MODEL").unwrap_or_else(|_| "iPhone".to_string());
         if device_model.contains("iPhone") {
             Ok(SecureEnclaveDevice::IPhone)
         } else if device_model.contains("iPad") {
@@ -106,13 +106,13 @@ impl CapabilityDetector {
     fn get_safe_biometric_features() -> Result<Vec<BiometricFeature>, BearDogError> {
         let mut features = Vec::new();
 
-        if std::env::var("HAS_TOUCH_ID")
+        if beardog_errors::process_env::var("HAS_TOUCH_ID")
             .map(|v| v == "true")
             .unwrap_or(false)
         {
             features.push(BiometricFeature::TouchID);
         }
-        if std::env::var("HAS_FACE_ID")
+        if beardog_errors::process_env::var("HAS_FACE_ID")
             .map(|v| v == "true")
             .unwrap_or(false)
         {
@@ -141,7 +141,7 @@ impl CapabilityDetector {
     /// Returns an error if the operation fails.
     pub fn detect_device_type() -> Result<SecureEnclaveDevice, BearDogError> {
         let device_model =
-            std::env::var("IOS_DEVICE_MODEL").unwrap_or_else(|_| "iPhone".to_string());
+            beardog_errors::process_env::var("IOS_DEVICE_MODEL").unwrap_or_else(|_| "iPhone".to_string());
         if device_model.contains("iPhone") {
             Ok(SecureEnclaveDevice::IPhone)
         } else if device_model.contains("iPad") {
@@ -155,10 +155,10 @@ impl CapabilityDetector {
 
     /// Checks if t2 or apple silicon is present
     fn has_t2_or_apple_silicon() -> Result<bool, BearDogError> {
-        let has_t2 = std::env::var("HAS_T2_CHIP")
+        let has_t2 = beardog_errors::process_env::var("HAS_T2_CHIP")
             .map(|v| v == "true")
             .unwrap_or(false);
-        let has_apple_silicon = std::env::var("HAS_APPLE_SILICON")
+        let has_apple_silicon = beardog_errors::process_env::var("HAS_APPLE_SILICON")
             .map(|v| v == "true")
             .unwrap_or(false);
         Ok(has_t2 || has_apple_silicon)

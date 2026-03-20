@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Performance tests for Collaborative Intelligence graph security
 //!
 //! Tests throughput, latency, and concurrency under various loads

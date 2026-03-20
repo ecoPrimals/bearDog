@@ -15,6 +15,25 @@ use ed25519_dalek::{SigningKey, VerifyingKey};
 use std::sync::Arc;
 use tracing::{debug, info, warn};
 
+/// License material for [`CertificateIssuer`] (no environment reads in [`Default`]).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LicenseInputs {
+    /// `BEARDOG_LICENSE_KEY` value when present and non-empty.
+    pub license_key: Option<String>,
+}
+
+impl LicenseInputs {
+    /// Read `BEARDOG_LICENSE_KEY` via `std::env::var`.
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self {
+            license_key: std::env::var("BEARDOG_LICENSE_KEY")
+                .ok()
+                .filter(|s| !s.is_empty()),
+        }
+    }
+}
+
 /// Certificate issuer - determines adapter unlock eligibility
 ///
 /// This is the core enforcement point for the "open for humans, locked for
@@ -48,16 +67,36 @@ pub struct CertificateIssuer {
 
     /// Classification detector
     detector: Arc<CommercialExtractionDetector>,
+
+    /// Injected license material (use [`LicenseInputs::from_env`] at process entry if needed)
+    license: LicenseInputs,
 }
 
 impl CertificateIssuer {
     /// Create a new certificate issuer
     #[must_use]
     pub fn new(signing_key: SigningKey, detector: CommercialExtractionDetector) -> Self {
+        Self::with_license_inputs(signing_key, detector, LicenseInputs::default())
+    }
+
+    /// Create issuer with explicit license inputs (tests and non-env configuration).
+    #[must_use]
+    pub fn with_license_inputs(
+        signing_key: SigningKey,
+        detector: CommercialExtractionDetector,
+        license: LicenseInputs,
+    ) -> Self {
         Self {
             signing_key: Arc::new(signing_key),
             detector: Arc::new(detector),
+            license,
         }
+    }
+
+    /// Load license from the process environment ([`LicenseInputs::from_env`]).
+    #[must_use]
+    pub fn from_env(signing_key: SigningKey, detector: CommercialExtractionDetector) -> Self {
+        Self::with_license_inputs(signing_key, detector, LicenseInputs::from_env())
     }
 
     /// Issue a certificate for an adapter
@@ -104,14 +143,13 @@ impl CertificateIssuer {
 
     /// Check if a valid license exists for this request
     ///
-    /// Environment-driven license validation:
-    /// - Checks `BEARDOG_LICENSE_KEY` environment variable
+    /// Uses injected [`LicenseInputs::license_key`] when set:
     /// - Validates format and expiration date from the key payload
     ///
     /// The trailing segment is reserved for future cryptographic verification of the token.
     async fn has_valid_license(&self, context: &RequestContext) -> Result<bool, BearDogError> {
-        let license_key = match std::env::var("BEARDOG_LICENSE_KEY") {
-            Ok(key) if !key.is_empty() => key,
+        let license_key = match &self.license.license_key {
+            Some(key) if !key.is_empty() => key.clone(),
             _ => {
                 debug!(
                     "No license key found for {}, assuming free tier",
@@ -173,7 +211,6 @@ impl CertificateIssuer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
 
     #[tokio::test]
     async fn test_certificate_issuance_human() {
@@ -203,7 +240,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_certificate_issuance_commercial_high_risk_blocked() {
         let signing_key = SigningKey::from_bytes(&[2u8; 32]);
         let detector = CommercialExtractionDetector::default();

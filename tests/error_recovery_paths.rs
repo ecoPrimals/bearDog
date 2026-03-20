@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Error Recovery Path Tests
 //!
 //! `TEST_CATEGORY`: integration

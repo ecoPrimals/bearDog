@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Configuration Validation Tests
 //!
 //! This module contains unit tests for `BearDog` configuration validation,

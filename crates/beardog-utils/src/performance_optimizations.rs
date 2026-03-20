@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Clone interning, pooled [`BytesMut`], zero-copy [`Bytes`] views, and a tiny SIMD-style hasher.
+//! Clone interning, pooled [`bytes::BytesMut`], zero-copy [`bytes::Bytes`] views, and a tiny SIMD-style hasher.
 //!
 //! Types here favor amortized allocations and shared ownership for hot paths.
 

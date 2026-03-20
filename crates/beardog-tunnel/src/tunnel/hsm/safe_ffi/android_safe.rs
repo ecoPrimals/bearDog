@@ -35,7 +35,7 @@ impl SafeAndroidProvider {
 
     /// Checks if StrongBox is available on this device
     fn check_strongbox_availability() -> bool {
-        std::env::var("ANDROID_STRONGBOX_AVAILABLE")
+        beardog_errors::process_env::var("ANDROID_STRONGBOX_AVAILABLE")
             .map(|v| v == "true")
             .unwrap_or(false)
     }

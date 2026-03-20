@@ -185,7 +185,7 @@ impl Default for OptimizationConfig {
         Self {
             enabled: true,
             algorithm: OptimizationAlgorithm::Adam,
-            max_iterations: std::env::var("BEARDOG_AI_MAX_ITERATIONS")
+            max_iterations: beardog_errors::process_env::var("BEARDOG_AI_MAX_ITERATIONS")
                 .ok()
                 .and_then(|i| i.parse().ok())
                 .unwrap_or(1000), // 1000 iterations default

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 use super::ExternalFunctionHandler;
 use crate::licensing::LicenseManager;
 use beardog_errors::BearDogError;
@@ -18,7 +19,7 @@ use beardog_errors::BearDogError;
             )))
         }
 
-        let default_endpoint = std::env::var("BEARDOG_PROMETHEUS_ENDPOINT").unwrap_or_else(|_| {
+        let default_endpoint = beardog_errors::process_env::var("BEARDOG_PROMETHEUS_ENDPOINT").unwrap_or_else(|_| {
             use beardog_config::global::BEARDOG_CONFIG;
             format!(
                 "http://127.0.0.1:{}",

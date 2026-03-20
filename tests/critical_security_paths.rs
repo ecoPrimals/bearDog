@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Critical Security Path Tests
 // Tests for the most security-sensitive operations in BearDog
 //

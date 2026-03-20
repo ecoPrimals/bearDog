@@ -79,13 +79,15 @@ fn detect_android_device() -> Result<DeviceInfo, BearDogError> {
     info!("🤖 Detecting Android device");
 
     Ok(DeviceInfo {
-        manufacturer: std::env::var("ANDROID_MANUFACTURER")
+        manufacturer: beardog_errors::process_env::var("ANDROID_MANUFACTURER")
             .unwrap_or_else(|_| "Unknown".to_string()),
-        model: std::env::var("ANDROID_MODEL").unwrap_or_else(|_| "Unknown".to_string()),
-        os_version: std::env::var("ANDROID_VERSION").unwrap_or_else(|_| "Unknown".to_string()),
+        model: beardog_errors::process_env::var("ANDROID_MODEL")
+            .unwrap_or_else(|_| "Unknown".to_string()),
+        os_version: beardog_errors::process_env::var("ANDROID_VERSION")
+            .unwrap_or_else(|_| "Unknown".to_string()),
         platform: SmartphonePlatform::Android,
         security_capabilities: SecurityCapabilities {
-            has_strongbox: std::env::var("ANDROID_STRONGBOX")
+            has_strongbox: beardog_errors::process_env::var("ANDROID_STRONGBOX")
                 .map(|v| v == "true")
                 .unwrap_or(false),
             has_tee: true,
@@ -101,8 +103,10 @@ fn detect_ios_device() -> Result<DeviceInfo, BearDogError> {
 
     Ok(DeviceInfo {
         manufacturer: "Apple".to_string(),
-        model: std::env::var("IOS_MODEL").unwrap_or_else(|_| "iPhone".to_string()),
-        os_version: std::env::var("IOS_VERSION").unwrap_or_else(|_| "Unknown".to_string()),
+        model: beardog_errors::process_env::var("IOS_MODEL")
+            .unwrap_or_else(|_| "iPhone".to_string()),
+        os_version: beardog_errors::process_env::var("IOS_VERSION")
+            .unwrap_or_else(|_| "Unknown".to_string()),
         platform: SmartphonePlatform::iOS,
         security_capabilities: SecurityCapabilities {
             has_strongbox: false,

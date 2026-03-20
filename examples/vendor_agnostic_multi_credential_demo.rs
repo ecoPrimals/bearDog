@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 #![allow(
     unused_imports,
     unused_variables,
@@ -368,7 +369,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("   • Hierarchical credential relationships");
         println!("   • Hardware entropy generation (ready for Phase 2)");
         println!();
-        println!("📋 Phase 2 TODO (CTAP2 Implementation):");
+        println!("📋 Phase 2 Roadmap (CTAP2 Implementation):");
         println!("   • Implement MakeCredential command");
         println!("   • Implement GetAssertion command");
         println!("   • Implement credentialManagement enumerate");

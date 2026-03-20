@@ -107,11 +107,15 @@ impl MaintenanceConfig {
     /// # Environment Variables
     /// - `BEARDOG_MAINTENANCE_WINDOW_SECS`: Window duration (default: 3600)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             enabled: false,
             window_duration: Duration::from_secs(
-                std::env::var("BEARDOG_MAINTENANCE_WINDOW_SECS")
-                    .ok()
+                get("BEARDOG_MAINTENANCE_WINDOW_SECS")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_WINDOW_DURATION_SECS),
             ),
@@ -141,11 +145,15 @@ impl BackupConfig {
     /// # Environment Variables
     /// - `BEARDOG_BACKUP_INTERVAL_SECS`: Backup interval (default: 86400)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             enabled: true,
             interval: Duration::from_secs(
-                std::env::var("BEARDOG_BACKUP_INTERVAL_SECS")
-                    .ok()
+                get("BEARDOG_BACKUP_INTERVAL_SECS")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_INTERVAL_SECS),
             ),
@@ -175,11 +183,15 @@ impl DisasterRecoveryConfig {
     /// # Environment Variables
     /// - `BEARDOG_DR_RTO_SECS`: Recovery Time Objective (default: 3600)
     pub fn from_env() -> Self {
+        Self::from_env_provider(|k| std::env::var(k).ok())
+    }
+
+    /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             enabled: false,
             rto: Duration::from_secs(
-                std::env::var("BEARDOG_DR_RTO_SECS")
-                    .ok()
+                get("BEARDOG_DR_RTO_SECS")
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(Self::DEFAULT_RTO_SECS),
             ),

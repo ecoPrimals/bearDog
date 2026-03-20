@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 #![allow(
     unused_imports,
     unused_variables,
@@ -29,7 +30,7 @@
 //!
 //! #[tokio::test]
 //! async fn test_production_deployment() {
-//!     let framework = E2ETestFramework::new().await.unwrap();
+//!     let framework = E2ETestFramework::new().unwrap();
 //!     let result = framework.run_scenario(E2EScenario::ProductionDeployment).await;
 //!     assert!(result.is_ok());
 //! }
@@ -152,16 +153,16 @@ impl Default for E2ETestConfig {
 
 impl E2ETestFramework {
     /// Create a new E2E test framework
-    pub async fn new() -> Result<Self, BearDogError> {
-        Self::with_config(E2ETestConfig::default()).await
+    pub fn new() -> Result<Self, BearDogError> {
+        Self::with_config(E2ETestConfig::default())
     }
 
     /// Create with custom configuration
-    pub async fn with_config(config: E2ETestConfig) -> Result<Self, BearDogError> {
+    pub fn with_config(config: E2ETestConfig) -> Result<Self, BearDogError> {
         info!("Initializing E2E test framework");
 
         // Setup test environment
-        setup_test_environment(&config).await?;
+        setup_test_environment(&config)?;
 
         Ok(Self { config })
     }
@@ -177,7 +178,7 @@ impl E2ETestFramework {
             E2EScenario::FullStackIntegration => self.run_full_stack_integration().await,
             E2EScenario::SecurityFlow => self.run_security_flow().await,
             E2EScenario::DisasterRecovery => self.run_disaster_recovery().await,
-            E2EScenario::MultiServiceCoordination => self.run_multi_service_coordination().await,
+            E2EScenario::MultiServiceCoordination => self.run_multi_service_coordination(),
             E2EScenario::CrossPlatformDiscovery => self.run_cross_platform_discovery().await,
             E2EScenario::DeviceDeployment => self.run_device_deployment().await,
             E2EScenario::HsmOperations => Ok(E2EMetrics::default()),
@@ -256,7 +257,7 @@ impl E2ETestFramework {
         disaster_recovery::run_disaster_recovery_test(&self.config).await
     }
 
-    async fn run_multi_service_coordination(&self) -> Result<E2EMetrics, BearDogError> {
+    fn run_multi_service_coordination(&self) -> Result<E2EMetrics, BearDogError> {
         info!("Running multi-service coordination test");
 
         let mut metrics = E2EMetrics::default();
@@ -301,7 +302,7 @@ impl E2ETestFramework {
 }
 
 /// Setup test environment
-async fn setup_test_environment(_config: &E2ETestConfig) -> Result<(), BearDogError> {
+fn setup_test_environment(_config: &E2ETestConfig) -> Result<(), BearDogError> {
     info!("Setting up E2E test environment");
 
     // In a real implementation, this would:
@@ -314,7 +315,7 @@ async fn setup_test_environment(_config: &E2ETestConfig) -> Result<(), BearDogEr
 }
 
 /// Cleanup test environment
-pub async fn cleanup_test_environment() -> Result<(), BearDogError> {
+pub fn cleanup_test_environment() -> Result<(), BearDogError> {
     info!("Cleaning up E2E test environment");
 
     // In a real implementation, this would:
@@ -383,7 +384,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_framework_creation() {
-        let framework = E2ETestFramework::new().await;
+        let framework = E2ETestFramework::new();
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal

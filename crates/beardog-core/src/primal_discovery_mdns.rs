@@ -428,6 +428,20 @@ mod tests {
     }
 
     #[test]
+    fn get_local_addresses_includes_loopback() {
+        let addrs = super::get_local_addresses();
+        assert!(addrs.iter().any(|a| a.is_loopback()));
+    }
+
+    #[test]
+    fn mdns_client_default_matches_new() {
+        assert_eq!(
+            MdnsDiscoveryClient::default().timeout,
+            MdnsDiscoveryClient::new().timeout
+        );
+    }
+
+    #[test]
     fn test_mdns_discovered_primal_structure() {
         let primal = MdnsDiscoveredPrimal {
             instance_name: "test-node".to_string(),

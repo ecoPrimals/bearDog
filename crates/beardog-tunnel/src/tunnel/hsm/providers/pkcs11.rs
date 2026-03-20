@@ -43,17 +43,24 @@ impl Pkcs11UniversalProvider {
     /// # Errors
     /// Returns an error if initialization fails
     pub async fn new(library_path: String, slot_id: u64) -> Result<Self, BearDogError> {
-        let provider = Self {
-            capabilities: None,
-            library_path,
-            slot_id,
-            metadata: HashMap::with_capacity(16),
-        };
-
-        // Note: PKCS#11 integration requires the actual library
-        // This is a placeholder for future implementation
-
-        Ok(provider)
+        #[cfg(not(feature = "pkcs11-provider"))]
+        {
+            let _ = (library_path, slot_id);
+            return Err(BearDogError::not_implemented(
+                "PKCS#11 HSM provider: enable Cargo feature `pkcs11-provider` when PKCS#11 integration is wired",
+            ));
+        }
+        #[cfg(feature = "pkcs11-provider")]
+        {
+            let provider = Self {
+                capabilities: None,
+                library_path,
+                slot_id,
+                metadata: HashMap::with_capacity(16),
+            };
+            // Note: Session and crypto operations require PKCS#11 bindings beyond this stub.
+            Ok(provider)
+        }
     }
 
     /// Get security level (hardware HSM is level 3)
@@ -67,7 +74,7 @@ impl Pkcs11UniversalProvider {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "pkcs11-provider"))]
 mod tests {
     use super::*;
 

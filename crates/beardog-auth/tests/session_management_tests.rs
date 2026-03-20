@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Session management and security tests for BearDog authentication
 //!
 //! These tests verify session lifecycle, rate limiting, and security features.

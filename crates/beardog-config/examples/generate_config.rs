@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Generate example configuration file
 
 use beardog_config::BearDogConfig;

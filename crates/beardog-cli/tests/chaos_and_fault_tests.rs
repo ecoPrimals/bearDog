@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Chaos and Fault Injection Tests for BearDog UniBin
 //!
 //! **Philosophy**: "test issues will be production issues"

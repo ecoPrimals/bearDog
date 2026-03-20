@@ -512,13 +512,13 @@ pub async fn create_key_management() -> Result<Arc<dyn KeyManagementCapability>,
             tracing::info!("✅ Using discovered KMS: {}", kms.endpoint);
             // For now, return software fallback (real implementation coming)
             // Real implementation would instantiate actual provider based on endpoint
-            return Ok(Arc::new(SoftwareHsmProvider::new()));
+            return Ok(Arc::new(SoftwareHsmProvider::new()?));
         }
     }
 
     // Fallback to software HSM (always available)
     tracing::info!("📦 Using software HSM fallback (no cloud KMS detected)");
-    Ok(Arc::new(SoftwareHsmProvider::new()))
+    Ok(Arc::new(SoftwareHsmProvider::new()?))
 }
 
 // VENDOR-AGNOSTIC DISCOVERY FUNCTIONS
@@ -714,8 +714,10 @@ impl SoftwareHsmProvider {
     ///
     /// # Errors
     /// Returns an error if HSM initialization fails (extremely rare - only if OS entropy unavailable)
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new() -> Result<Self, KmsError> {
+        Ok(Self {
+            inner: Arc::new(super::software_hsm_impl::SecureSoftwareHsm::new()?),
+        })
     }
 
     /// Create with configuration
@@ -735,19 +737,7 @@ impl SoftwareHsmProvider {
     ) -> Result<Self, KmsError> {
         // For now, configuration is not used - SecureSoftwareHsm always uses secure defaults
         // Future: Could add options for key derivation params, memory limits, etc.
-        Ok(Self::new())
-    }
-}
-
-impl Default for SoftwareHsmProvider {
-    fn default() -> Self {
-        Self {
-            inner: Arc::new(
-                super::software_hsm_impl::SecureSoftwareHsm::new().unwrap_or_else(|e| {
-                    panic!("Failed to initialize SecureSoftwareHsm - OS entropy unavailable: {e:?}")
-                }),
-            ),
-        }
+        Self::new()
     }
 }
 
@@ -819,7 +809,8 @@ mod tests {
     // TEST: All 10 Software HSM operations
     #[tokio::test]
     async fn test_software_hsm_all_operations() {
-        let provider = SoftwareHsmProvider::new();
+        let provider =
+            SoftwareHsmProvider::new().expect("Software HSM init should succeed in tests");
 
         // 1. ✅ generate_key
         let key_spec = KeySpec {
@@ -939,5 +930,125 @@ mod tests {
 
         let display = format!("{}", error);
         assert!(display.contains("Key not found"));
+    }
+
+    #[test]
+    fn test_kms_error_display_all_variants() {
+        let cases: Vec<(KmsError, &'static [&'static str])> = vec![
+            (
+                KmsError::KeyNotFound { key_id: "k".into() },
+                &["Key not found", "k"],
+            ),
+            (
+                KmsError::ProviderUnavailable {
+                    provider: "p".into(),
+                    reason: "r".into(),
+                },
+                &["p", "r"],
+            ),
+            (
+                KmsError::OperationNotSupported {
+                    operation: "op".into(),
+                },
+                &["not supported", "op"],
+            ),
+            (
+                KmsError::InvalidKeySpec {
+                    reason: "bad".into(),
+                },
+                &["Invalid key", "bad"],
+            ),
+            (
+                KmsError::CryptoError {
+                    details: "c".into(),
+                },
+                &["Cryptographic", "c"],
+            ),
+            (
+                KmsError::PermissionDenied {
+                    resource: "res".into(),
+                },
+                &["Permission denied", "res"],
+            ),
+            (
+                KmsError::RateLimitExceeded {
+                    retry_after_seconds: 9,
+                },
+                &["Rate limit", "9"],
+            ),
+            (
+                KmsError::NetworkError {
+                    details: "n".into(),
+                },
+                &["Network error", "n"],
+            ),
+            (
+                KmsError::Other {
+                    message: "m".into(),
+                },
+                &["KMS error", "m"],
+            ),
+        ];
+        for (err, needles) in cases {
+            let s = err.to_string();
+            for needle in needles.iter() {
+                assert!(s.contains(*needle), "expected {needle:?} in {s:?}");
+            }
+        }
+        assert!(
+            std::error::Error::source(&KmsError::Other {
+                message: "x".into()
+            })
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn test_key_algorithm_key_usage_key_state_serde_roundtrip() {
+        let alg = KeyAlgorithm::EcdsaP384;
+        let json = serde_json::to_string(&alg).unwrap();
+        let back: KeyAlgorithm = serde_json::from_str(&json).unwrap();
+        assert_eq!(alg, back);
+
+        let usage = KeyUsage::Both;
+        let json = serde_json::to_string(&usage).unwrap();
+        assert_eq!(serde_json::from_str::<KeyUsage>(&json).unwrap(), usage);
+
+        let state = KeyState::PendingDeletion;
+        let json = serde_json::to_string(&state).unwrap();
+        assert_eq!(serde_json::from_str::<KeyState>(&json).unwrap(), state);
+    }
+
+    #[test]
+    fn test_kms_capabilities_serde_roundtrip() {
+        let caps = KmsCapabilities {
+            supports_symmetric: true,
+            supports_asymmetric: false,
+            supports_signing: true,
+            has_hardware_rng: false,
+            supports_rotation: true,
+            fips_compliant: false,
+            algorithms: vec![KeyAlgorithm::Aes, KeyAlgorithm::Ed25519],
+        };
+        let json = serde_json::to_string(&caps).unwrap();
+        let back: KmsCapabilities = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.algorithms.len(), 2);
+        assert!(back.supports_symmetric);
+    }
+
+    #[tokio::test]
+    async fn test_create_key_management_returns_software_hsm() {
+        let kms = create_key_management().await.expect("fallback HSM");
+        assert_eq!(kms.provider_name(), "SecureSoftwareHSM");
+        let caps = kms.capabilities();
+        assert!(caps.supports_symmetric);
+    }
+
+    #[tokio::test]
+    async fn test_software_hsm_with_config() {
+        let p = SoftwareHsmProvider::with_config(std::collections::HashMap::new())
+            .await
+            .expect("with_config");
+        assert_eq!(p.provider_name(), "SecureSoftwareHSM");
     }
 }

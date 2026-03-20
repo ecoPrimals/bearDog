@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2025 EcoPrimals BearDog Team
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -213,7 +214,7 @@ impl SignedConstraints {
         use blake3::Hasher;
 
         // Serialization is deterministic and should never fail for valid types
-        let serialized = bincode::serialize(constraints).unwrap_or_default();
+        let serialized = postcard::to_allocvec(constraints).unwrap_or_default();
 
         Hasher::new()
             .update(&serialized)

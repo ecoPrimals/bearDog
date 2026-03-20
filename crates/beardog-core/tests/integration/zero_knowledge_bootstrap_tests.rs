@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Integration tests for Zero-Knowledge Bootstrap
 //!
 //! Tests the self-discovery and capability registry mechanisms.

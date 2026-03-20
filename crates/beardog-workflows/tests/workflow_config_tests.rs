@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Configuration tests for BearDog workflows
 //!
 //! These tests verify workflow configuration validation and serialization.

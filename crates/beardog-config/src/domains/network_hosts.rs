@@ -31,7 +31,6 @@
 //! ```
 
 use serde::{Deserialize, Serialize};
-use std::env;
 
 // ============================================================================
 // Documented fallbacks (single source; overridable via env / config / discovery)
@@ -152,42 +151,35 @@ pub struct NetworkHostsConfig {
 
 /// Last-resort infrastructure hostname when no URL or specific `BEARDOG_*_HOST` is set.
 fn infrastructure_fallback_host() -> String {
-    env::var("BEARDOG_INFRASTRUCTURE_HOST_FALLBACK")
-        .unwrap_or_else(|_| FALLBACK_DEV_INFRASTRUCTURE_HOST.to_string())
+    FALLBACK_DEV_INFRASTRUCTURE_HOST.to_string()
 }
 
 fn default_api_host() -> String {
-    env::var("BEARDOG_API_HOST").unwrap_or_else(|_| DEFAULT_BIND_HOST.to_string())
+    DEFAULT_BIND_HOST.to_string()
 }
 
 fn default_client_host() -> String {
-    env::var("BEARDOG_CLIENT_HOST").unwrap_or_else(|_| DEFAULT_HOST.to_string())
+    DEFAULT_HOST.to_string()
 }
 
 fn default_discovery_host() -> String {
-    env::var("BEARDOG_DISCOVERY_HOST").unwrap_or_else(|_| DEFAULT_HOST.to_string())
+    DEFAULT_HOST.to_string()
 }
 
 fn default_database_host() -> String {
-    env::var("BEARDOG_DATABASE_HOST")
-        .or_else(|_| env::var("DATABASE_URL").map(|url| extract_host_from_url(&url)))
-        .unwrap_or_else(|_| infrastructure_fallback_host())
+    infrastructure_fallback_host()
 }
 
 fn default_redis_host() -> String {
-    env::var("BEARDOG_REDIS_HOST")
-        .or_else(|_| env::var("REDIS_URL").map(|url| extract_host_from_url(&url)))
-        .unwrap_or_else(|_| infrastructure_fallback_host())
+    infrastructure_fallback_host()
 }
 
 fn default_metrics_host() -> String {
-    env::var("BEARDOG_METRICS_HOST")
-        .or_else(|_| env::var("GRAFANA_URL").map(|url| extract_host_from_url(&url)))
-        .unwrap_or_else(|_| infrastructure_fallback_host())
+    infrastructure_fallback_host()
 }
 
 fn default_external_host() -> String {
-    env::var("BEARDOG_EXTERNAL_HOST").unwrap_or_else(|_| infrastructure_fallback_host())
+    infrastructure_fallback_host()
 }
 
 /// Extract host from URL (simple extraction, not full parsing)
@@ -257,7 +249,27 @@ impl NetworkHostsConfig {
     /// ```
     #[must_use]
     pub fn from_env() -> Self {
-        Self::default()
+        let infra = std::env::var("BEARDOG_INFRASTRUCTURE_HOST_FALLBACK")
+            .unwrap_or_else(|_| FALLBACK_DEV_INFRASTRUCTURE_HOST.to_string());
+
+        Self {
+            api_host: std::env::var("BEARDOG_API_HOST")
+                .unwrap_or_else(|_| DEFAULT_BIND_HOST.to_string()),
+            client_host: std::env::var("BEARDOG_CLIENT_HOST")
+                .unwrap_or_else(|_| DEFAULT_HOST.to_string()),
+            discovery_host: std::env::var("BEARDOG_DISCOVERY_HOST")
+                .unwrap_or_else(|_| DEFAULT_HOST.to_string()),
+            database_host: std::env::var("BEARDOG_DATABASE_HOST")
+                .or_else(|_| std::env::var("DATABASE_URL").map(|url| extract_host_from_url(&url)))
+                .unwrap_or_else(|_| infra.clone()),
+            redis_host: std::env::var("BEARDOG_REDIS_HOST")
+                .or_else(|_| std::env::var("REDIS_URL").map(|url| extract_host_from_url(&url)))
+                .unwrap_or_else(|_| infra.clone()),
+            metrics_host: std::env::var("BEARDOG_METRICS_HOST")
+                .or_else(|_| std::env::var("GRAFANA_URL").map(|url| extract_host_from_url(&url)))
+                .unwrap_or_else(|_| infra.clone()),
+            external_host: std::env::var("BEARDOG_EXTERNAL_HOST").unwrap_or_else(|_| infra),
+        }
     }
 
     /// Get bind address for a service

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Canonical Types Comprehensive Tests
 //!
 //! This module contains unit tests for canonical types, specifically `HealthStatus`

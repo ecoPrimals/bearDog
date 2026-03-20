@@ -4,76 +4,81 @@
 //!
 //! Common utilities used across multiple JSON-RPC handlers.
 //!
-//! # Self-Knowledge Pattern
+//! ## Self-Knowledge Pattern
 //!
-//! The self-knowledge pattern allows primals to discover their own identity
-//! at runtime from environment variables, eliminating hardcoded values.
-//!
-//! ## Environment Variables
-//!
-//! | Variable | Purpose | Example |
-//! |----------|---------|---------|
-//! | `PRIMAL_NAME` | Primary primal identifier | `songbird` |
-//! | `BEARDOG_NAME` | BearDog-specific name (fallback) | `beardog` |
-//! | `FAMILY_ID` | Genetic lineage family | `biomeOS` |
-//! | `NODE_ID` | Unique node identifier | `tower-01` |
+//! Identity values can be injected via [`IdentityHints`] for tests; production code uses
+//! [`IdentityHints::from_env`] or the `_from_env` convenience wrappers.
 
-/// Get the primal name using self-knowledge pattern.
-///
-/// Discovers the primal's name from environment variables at runtime,
-/// eliminating hardcoded names and enabling deployment flexibility.
-///
-/// # Priority Order
-///
-/// 1. `PRIMAL_NAME` - Universal primal identifier (runtime)
-/// 2. `env!("CARGO_PKG_NAME")` - Compile-time package name fallback
-///
-/// # Examples
-///
-/// ```rust
-/// // When PRIMAL_NAME=songbird
-/// // get_primal_name() returns "songbird"
-///
-/// // When no env var is set
-/// // get_primal_name() returns the crate's package name (e.g. "beardog-tunnel")
-/// ```
-///
-/// # See Also
-///
-/// - `get_family_id()` - Genetic lineage family discovery
-/// - `get_node_id()` - Unique node identifier discovery
+/// Identity strings for self-knowledge helpers (no I/O in [`Default`]).
+#[derive(Debug, Clone, Default)]
+pub struct IdentityHints {
+    /// `PRIMAL_NAME`
+    pub primal_name: Option<String>,
+    /// `FAMILY_ID`
+    pub family_id: Option<String>,
+    /// `BIOMEOS_FAMILY`
+    pub biomeos_family: Option<String>,
+    /// `NODE_ID`
+    pub node_id: Option<String>,
+    /// `HOSTNAME`
+    pub hostname: Option<String>,
+}
+
+impl IdentityHints {
+    /// Load from [`beardog_errors::process_env`].
+    pub fn from_env() -> Self {
+        Self {
+            primal_name: beardog_errors::process_env::var("PRIMAL_NAME").ok(),
+            family_id: beardog_errors::process_env::var("FAMILY_ID").ok(),
+            biomeos_family: beardog_errors::process_env::var("BIOMEOS_FAMILY").ok(),
+            node_id: beardog_errors::process_env::var("NODE_ID").ok(),
+            hostname: beardog_errors::process_env::var("HOSTNAME").ok(),
+        }
+    }
+}
+
+/// Resolves primal name from explicit hints.
+#[must_use]
+pub fn get_primal_name_with(h: &IdentityHints) -> String {
+    h.primal_name
+        .clone()
+        .unwrap_or_else(|| env!("CARGO_PKG_NAME").to_string())
+}
+
+/// Get the primal name using self-knowledge pattern (reads environment).
+#[must_use]
 pub fn get_primal_name() -> String {
-    std::env::var("PRIMAL_NAME").unwrap_or_else(|_| env!("CARGO_PKG_NAME").to_string())
+    get_primal_name_with(&IdentityHints::from_env())
 }
 
-/// Get the family ID using self-knowledge pattern.
-///
-/// Discovers the genetic lineage family from environment variables.
-///
-/// # Priority Order
-///
-/// 1. `FAMILY_ID` - Explicit family identifier
-/// 2. `BIOMEOS_FAMILY` - BiomeOS-specific fallback
-/// 3. `"unknown"` - Default when no env var is set
+/// Resolves family id from explicit hints.
+#[must_use]
+pub fn get_family_id_with(h: &IdentityHints) -> String {
+    h.family_id
+        .clone()
+        .or_else(|| h.biomeos_family.clone())
+        .unwrap_or_else(|| "unknown".to_string())
+}
+
+/// Get the family ID using self-knowledge pattern (reads environment).
+#[must_use]
 pub fn get_family_id() -> String {
-    std::env::var("FAMILY_ID")
-        .or_else(|_| std::env::var("BIOMEOS_FAMILY"))
-        .unwrap_or_else(|_| "unknown".to_string())
+    get_family_id_with(&IdentityHints::from_env())
 }
 
-/// Get the node ID using self-knowledge pattern.
-///
-/// Discovers the unique node identifier from environment variables.
-///
-/// # Priority Order
-///
-/// 1. `NODE_ID` - Explicit node identifier
-/// 2. `HOSTNAME` - System hostname fallback
-/// 3. `"unknown"` - Default when no env var is set
+/// Resolves node id from explicit hints.
+#[must_use]
+pub fn get_node_id_with(h: &IdentityHints) -> String {
+    h.node_id
+        .clone()
+        .or_else(|| h.hostname.clone())
+        .unwrap_or_else(|| "unknown".to_string())
+}
+
+/// Get the node ID using self-knowledge pattern (reads environment).
+#[must_use]
 pub fn get_node_id() -> String {
-    std::env::var("NODE_ID")
-        .or_else(|_| std::env::var("HOSTNAME"))
-        .unwrap_or_else(|_| "unknown".to_string())
+    get_node_id_with(&IdentityHints::from_env())
 }
 
 #[cfg(test)]
@@ -82,31 +87,33 @@ mod tests {
 
     #[test]
     fn test_get_primal_name_default() {
-        // Remove env var to test compile-time fallback
-        beardog_errors::process_env::remove_var("PRIMAL_NAME");
-
-        assert_eq!(get_primal_name(), env!("CARGO_PKG_NAME"));
+        // No PRIMAL_NAME in hints → compile-time package name
+        assert_eq!(
+            get_primal_name_with(&IdentityHints::default()),
+            env!("CARGO_PKG_NAME")
+        );
     }
 
     #[test]
     fn test_get_primal_name_from_env() {
-        beardog_errors::process_env::set_var("PRIMAL_NAME", "test_primal");
-        assert_eq!(get_primal_name(), "test_primal");
-        beardog_errors::process_env::remove_var("PRIMAL_NAME");
+        let h = IdentityHints {
+            primal_name: Some("test_primal".to_string()),
+            ..Default::default()
+        };
+        assert_eq!(get_primal_name_with(&h), "test_primal");
     }
 
     #[test]
     fn test_get_family_id_default() {
-        beardog_errors::process_env::remove_var("FAMILY_ID");
-        beardog_errors::process_env::remove_var("BIOMEOS_FAMILY");
-        assert_eq!(get_family_id(), "unknown");
+        assert_eq!(get_family_id_with(&IdentityHints::default()), "unknown");
     }
 
     #[test]
     fn test_get_node_id_default() {
-        beardog_errors::process_env::remove_var("NODE_ID");
-        // HOSTNAME might be set by the system, so just verify it returns something
-        let node_id = get_node_id();
-        assert!(!node_id.is_empty());
+        let h = IdentityHints {
+            node_id: Some("node-1".to_string()),
+            ..Default::default()
+        };
+        assert_eq!(get_node_id_with(&h), "node-1");
     }
 }

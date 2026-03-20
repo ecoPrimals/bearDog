@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Re-exports core health/metrics traits plus a minimal pub/sub [`Observable`] surface.
+//! Re-exports core health/metrics traits plus a minimal pub/sub [`Observable`](crate::unified::monitoring::Observable) surface.
 
 pub use super::core::{HealthMonitored, MetricsCollector};
 

@@ -71,7 +71,9 @@ pub async fn handle_derive_device_seed(params: Value) -> Result<Value, BearDogEr
     let mut info = format!("{}:{}", domain.escape_ascii(), request.device_id);
     if let Some(ts) = request.enrollment_timestamp {
         use std::fmt::Write as _;
-        write!(&mut info, ":{ts}").unwrap();
+        write!(&mut info, ":{ts}").map_err(|_| {
+            BearDogError::internal("enrollment HKDF info string formatting failed".to_string())
+        })?;
     }
 
     let mut device_seed = [0u8; 32];
