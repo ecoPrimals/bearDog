@@ -94,8 +94,14 @@ impl SecureSoftwareHsm {
 
     /// Derive a key-specific encryption key from primary key
     /// Reserved for Phase 2: encryption-at-rest of stored keys
-    #[allow(dead_code)]
-    #[allow(clippy::expect_used)] // HKDF expand cannot fail with correct length
+    #[expect(
+        dead_code,
+        reason = "Phase 2 encryption-at-rest hook; not yet called from store path"
+    )]
+    #[expect(
+        clippy::expect_used,
+        reason = "HKDF expand with fixed 32-byte output cannot fail for valid PRK"
+    )]
     fn derive_key_encryption_key(&self, key_id: &str) -> Zeroizing<[u8; 32]> {
         let hkdf = Hkdf::<Sha256>::new(None, &self._primary_key[..]);
         let mut okm = Zeroizing::new([0u8; 32]);
@@ -124,7 +130,10 @@ impl SecureSoftwareHsm {
 }
 
 impl Default for SecureSoftwareHsm {
-    #[allow(clippy::expect_used)] // Default impl, panic is acceptable for initialization failure
+    #[expect(
+        clippy::expect_used,
+        reason = "Default must construct HSM; new() only fails on OS RNG failure"
+    )]
     fn default() -> Self {
         Self::new().expect("Failed to initialize secure software HSM")
     }

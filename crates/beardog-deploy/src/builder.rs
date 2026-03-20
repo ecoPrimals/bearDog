@@ -257,7 +257,10 @@ impl RustBuilder {
     ///
     /// # Errors
     /// Returns error if example app compilation fails
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Example Android app build path reserved for tooling"
+    )]
     async fn build_example_app(&self, release: bool, target: &str) -> Result<(), BearDogError> {
         let android_dir = self.project_root.join("android");
 

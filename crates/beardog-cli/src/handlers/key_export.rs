@@ -138,12 +138,11 @@ pub async fn handle_key_export(
         exported.encrypted = true;
 
         println!("✅ Key material encrypted");
-        println!();
     } else {
         println!("⚠️  WARNING: Key material will be exported in plaintext!");
         println!("   Consider using --encrypt flag for secure transmission");
-        println!();
     }
+    println!();
 
     // Serialize to JSON
     let json = serde_json::to_string_pretty(&exported)

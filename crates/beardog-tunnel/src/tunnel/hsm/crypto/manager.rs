@@ -100,9 +100,8 @@ impl CryptoProviderManager {
 
         // Get capabilities
         let cache = self.capabilities_cache.read().await;
-        let capabilities = match cache.get(provider.provider_name()) {
-            Some(caps) => caps,
-            None => return false,
+        let Some(capabilities) = cache.get(provider.provider_name()) else {
+            return false;
         };
 
         // Check constant-time requirement
@@ -161,9 +160,8 @@ impl CryptoProviderManager {
     ) -> f64 {
         let mut score = 0.0;
 
-        let capabilities = match cache.get(provider.provider_name()) {
-            Some(caps) => caps,
-            None => return 0.0,
+        let Some(capabilities) = cache.get(provider.provider_name()) else {
+            return 0.0;
         };
 
         // Base score for meeting requirements

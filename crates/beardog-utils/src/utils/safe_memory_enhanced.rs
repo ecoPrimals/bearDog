@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 //! Async-safe pinned buffers and Tokio [`Mutex`] pools sized from canonical constants.
+//!
+//! Sensitive slabs use [`zeroize`] so backing bytes are cleared on drop; use [`SensitiveByteBuf`]
+//! for small secrets that should use [`ZeroizeOnDrop`].
 
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 /// Canonical small/medium/large buffer capacities from `beardog-types`.
 pub use beardog_types::constants::domains::buffers::{
@@ -17,9 +21,7 @@ pub mod buffer_sizes {
     };
 }
 
-/// Global buffer pool manager for reusable memory buffers
-///
-/// This is a stub implementation. Full buffer pooling will be implemented in future.
+/// Global buffer pool manager for reusable memory buffers.
 pub struct GlobalBufferPools {
     _marker: std::marker::PhantomData<()>,
 }
@@ -115,6 +117,61 @@ impl SafePinnedBuffer {
         F: FnOnce(&mut [u8]) -> R,
     {
         f(&mut self.data)
+    }
+}
+
+impl Drop for SafePinnedBuffer {
+    fn drop(&mut self) {
+        self.data.zeroize();
+        self.size = 0;
+    }
+}
+
+/// Heap-allocated sensitive bytes; cleared on drop via [`ZeroizeOnDrop`].
+#[derive(Zeroize, ZeroizeOnDrop)]
+pub struct SensitiveByteBuf {
+    #[zeroize(skip)]
+    label: String,
+    data: Vec<u8>,
+}
+
+impl SensitiveByteBuf {
+    /// Allocates `len` zero bytes under a diagnostic `label` (not secret; not zeroized).
+    #[must_use]
+    pub fn alloc_zeroized(len: usize, label: impl Into<String>) -> Self {
+        Self {
+            label: label.into(),
+            data: vec![0u8; len],
+        }
+    }
+
+    /// Borrows the secret slice.
+    #[must_use]
+    pub fn as_slice(&self) -> &[u8] {
+        &self.data
+    }
+
+    /// Borrows the secret slice mutably.
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
+        &mut self.data
+    }
+
+    /// Logical length.
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
+
+    /// Returns true when no bytes are allocated.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.data.is_empty()
+    }
+
+    /// Non-secret label for logging/metrics.
+    #[must_use]
+    pub fn label(&self) -> &str {
+        &self.label
     }
 }
 

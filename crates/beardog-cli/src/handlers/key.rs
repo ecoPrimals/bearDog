@@ -41,13 +41,19 @@ fn generate_aes_key_with_seed(seed_data: Option<&[u8]>) -> Result<Vec<u8>, BearD
 }
 
 /// Generate AES-256 key using only system entropy (no human seed)
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "Legacy helper kept for callers not using human seed path"
+)]
 fn generate_aes_key() -> Result<Vec<u8>, BearDogError> {
     generate_aes_key_with_seed(None)
 }
 
 /// Handle key generation command
-#[allow(dead_code)] // Legacy; main uses handle_key_generate_v2
+#[allow(
+    dead_code,
+    reason = "Legacy public handler kept for API stability; main uses handle_key_generate_v2"
+)]
 pub async fn handle_key_generate(
     key_id: &str,
     algorithm: &str,
@@ -280,7 +286,10 @@ pub async fn handle_key_delete(key_id: &str, skip_confirm: bool) -> Result<(), B
 }
 
 /// Handle key generate with KDF and restrictions (v2)
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Key generation CLI surfaces algorithm, HSM, KDF, and policy fields together"
+)]
 pub async fn handle_key_generate_v2(
     key_id: &str,
     algorithm: &str,

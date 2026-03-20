@@ -1,9 +1,10 @@
-#![allow(
+#![expect(
     unused_imports,
-    unused_variables,
+    reason = "E2E test scaffolding imports used conditionally"
+)]
+#![expect(
     dead_code,
-    unused_comparisons,
-    clippy::all
+    reason = "E2E helper functions called from test orchestrator"
 )]
 
 //! Configuration Management E2E Tests
@@ -70,7 +71,7 @@ pub async fn test_config_validation_errors() -> Result<ConfigE2EMetrics, BearDog
     ];
 
     for config_type in invalid_configs {
-        if let Ok(()) = simulate_invalid_config_load(config_type).await {
+        if simulate_invalid_config_load(config_type).await == Ok(()) {
             return Err(BearDogError::internal(format!(
                 "Expected validation error for: {config_type}"
             )));

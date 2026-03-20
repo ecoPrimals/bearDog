@@ -17,7 +17,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - 91+ JSON-RPC crypto methods (semantic naming)
 - 0 clippy warnings (pedantic + nursery, workspace-centralized)
 - 0 missing documentation warnings (all public items documented)
-- 0 unsafe code blocks (`deny(unsafe_code)` via workspace)
+- 0 unsafe code blocks (`forbid(unsafe_code)` per-crate; 1 justified exception in `process_env.rs`)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 1000 lines of code
 - Multi-family socket support (`--family-id` flag)
@@ -58,11 +58,13 @@ Coverage measured via `cargo-llvm-cov`. Top crates at or above target; lower cra
 |-------|-------------|--------|
 | beardog-utils | 92.3% | Above target |
 | beardog-genetics | 89.9% | At target |
-| beardog-types | 82.0% | In progress |
-| beardog-core | 75.1% | In progress |
-| beardog-tunnel | 74.2% | In progress |
-| beardog-security | 63.8% | Platform-gated code |
-| beardog-ipc | 54.7% | Needs integration tests |
+| beardog-ipc | 86.0% | Above target |
+| beardog-auth | 84.0% | In progress |
+| beardog-types | 80.8% | In progress |
+| beardog-errors | 77.0% | In progress |
+| beardog-security | 73.7% | Platform-gated code |
+| beardog-tunnel | 71.0% | In progress |
+| beardog-core | 62.2% | In progress |
 
 ### primalSpring Capability Audit Fixes
 

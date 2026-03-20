@@ -208,7 +208,10 @@ pub trait UniversalOptimizationService: Send + Sync {
 /// Coordinates optimization requests across the ecosystem using service
 /// discovery and fallback optimization strategies.
 pub struct EcosystemOptimizationService<D, L> {
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Discovery service wired when distributed optimization is on"
+    )]
     discovery_service: D,
     fallback_optimizer: L,
 }

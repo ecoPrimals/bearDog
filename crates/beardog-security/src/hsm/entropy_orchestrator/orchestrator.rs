@@ -130,7 +130,10 @@ impl HsmEntropyOrchestrator {
             None
         };
 
-        #[allow(unused_mut)] // Mutated conditionally by feature flags
+        #[allow(
+            unused_mut,
+            reason = "Mutated only when target/feature cfgs enable providers"
+        )]
         let mut total_devices = 0;
 
         #[cfg(feature = "fido2")]
@@ -172,7 +175,7 @@ impl HsmEntropyOrchestrator {
     ///
     /// Returns device information for user selection or display.
     pub async fn list_available_devices(&self) -> Vec<HsmDeviceInfo> {
-        #[allow(unused_mut)]
+        #[allow(unused_mut, reason = "Appended only when fido2/android/ios cfgs match")]
         let mut devices = Vec::new();
 
         // Add FIDO2 devices
@@ -400,7 +403,10 @@ impl HsmEntropyOrchestrator {
             #[cfg(feature = "fido2")]
             HsmSource::Fido2(_) => 2, // FIDO2 = Tier 2 (can be Tier 3 with human input)
 
-            #[allow(unreachable_patterns)]
+            #[allow(
+                unreachable_patterns,
+                reason = "Fallback when optional HsmSource variants are cfg-disabled"
+            )]
             _ => 1,
         }
     }
@@ -427,7 +433,10 @@ impl HsmEntropyOrchestrator {
             #[cfg(target_os = "ios")]
             HsmSource::IOS => "iOS Secure Enclave".to_string(),
 
-            #[allow(unreachable_patterns)]
+            #[allow(
+                unreachable_patterns,
+                reason = "Fallback when optional HsmSource variants are cfg-disabled"
+            )]
             _ => "Unknown Device".to_string(),
         }
     }

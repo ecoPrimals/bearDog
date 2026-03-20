@@ -23,12 +23,18 @@ use tokio::sync::{RwLock, broadcast};
 pub struct AdvancedMetricsSystem {
     /// Real-time metrics store
     metrics_store: Arc<RwLock<MetricsStore>>,
-    #[allow(dead_code)] // Reserved for future performance analysis features
+    #[expect(
+        dead_code,
+        reason = "PerformanceAnalyzer wired in new(); analysis API not exposed yet"
+    )]
     performance_analyzer: Arc<PerformanceAnalyzer>,
     /// Security metrics collector
     security_metrics: Arc<RwLock<SecurityMetrics>>,
     /// Ecosystem health monitor
-    #[allow(dead_code)] // Reserved for future health monitoring features
+    #[expect(
+        dead_code,
+        reason = "EcosystemHealthMonitor held for upcoming health aggregation APIs"
+    )]
     health_monitor: Arc<EcosystemHealthMonitor>,
     broadcaster: broadcast::Sender<MetricEvent>,
     /// Configuration

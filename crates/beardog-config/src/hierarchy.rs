@@ -327,7 +327,7 @@ fn apply_env_overrides(
 
     // Monitoring
     if let Some(level) = env_vars.get("BEARDOG_LOG_LEVEL") {
-        config.monitoring.log_level = level.clone();
+        config.monitoring.log_level.clone_from(level);
     }
 
     Ok(config)
@@ -354,11 +354,11 @@ fn apply_cli_overrides(
     if let Some(config_file) = cli_args.get("config") {
         config.paths.config_dir = PathBuf::from(config_file)
             .parent()
-            .unwrap_or(Path::new("."))
+            .unwrap_or_else(|| Path::new("."))
             .to_path_buf();
     }
     if let Some(level) = cli_args.get("log-level") {
-        config.monitoring.log_level = level.clone();
+        config.monitoring.log_level.clone_from(level);
     }
 
     Ok(config)

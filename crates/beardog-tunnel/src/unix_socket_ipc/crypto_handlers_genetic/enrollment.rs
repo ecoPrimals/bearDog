@@ -70,7 +70,8 @@ pub async fn handle_derive_device_seed(params: Value) -> Result<Value, BearDogEr
 
     let mut info = format!("{}:{}", domain.escape_ascii(), request.device_id);
     if let Some(ts) = request.enrollment_timestamp {
-        info.push_str(&format!(":{ts}"));
+        use std::fmt::Write as _;
+        write!(&mut info, ":{ts}").unwrap();
     }
 
     let mut device_seed = [0u8; 32];

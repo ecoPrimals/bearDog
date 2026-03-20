@@ -14,7 +14,10 @@ use std::collections::HashMap;
 ///
 /// Provides methods for querying primal capabilities, resource availability,
 /// and requesting primal spawning operations.
-#[allow(async_fn_in_trait)]
+#[allow(
+    async_fn_in_trait,
+    reason = "Async ecosystem hooks for async trait ecosystem integration"
+)]
 pub trait EcosystemPrimalClient: Send + Sync {
     /// Checks if a primal with given capabilities exists
     ///

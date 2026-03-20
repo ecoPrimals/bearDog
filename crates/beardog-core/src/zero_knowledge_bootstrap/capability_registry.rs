@@ -234,7 +234,6 @@ impl CapabilityRegistry {
     /// # Ok(())
     /// # }
     /// ```
-    #[allow(clippy::cognitive_complexity)] // Capability registration requires validation, storage, and index updates
     pub async fn register(
         &self,
         capability: UniversalCapability,
@@ -298,7 +297,6 @@ impl CapabilityRegistry {
     /// # Ok(())
     /// # }
     /// ```
-    #[allow(clippy::cognitive_complexity)] // Discovery by type requires index lookup, filtering, and health checks
     pub async fn discover_by_type(
         &self,
         capability_type: ServiceCapabilityType,
@@ -404,7 +402,6 @@ impl CapabilityRegistry {
     ///
     /// # Errors
     /// Returns an error if the capability is not found or if the removal operation fails.
-    #[allow(clippy::cognitive_complexity)] // Capability removal requires index cleanup and validation across multiple data structures
     pub async fn remove(&self, id: &CapabilityId) -> Result<(), BearDogError> {
         debug!("Removing capability: {}", id);
 
@@ -493,7 +490,6 @@ impl CapabilityRegistry {
     ///
     /// # Errors
     /// Returns an error if the cleanup operation fails or if capability removal encounters issues.
-    #[allow(clippy::cognitive_complexity)] // Health-based cleanup requires iterating, filtering, and coordinated removal
     pub async fn cleanup_unhealthy(&self) -> Result<usize, BearDogError> {
         let mut removed_count = 0;
         let capabilities = self.capabilities.read().await;

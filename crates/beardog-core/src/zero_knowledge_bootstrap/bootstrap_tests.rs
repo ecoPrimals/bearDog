@@ -4,8 +4,10 @@
 // Focus: Bootstrap process, discovery, configuration, metrics
 
 #[cfg(test)]
+#[allow(deprecated)]
 mod tests {
-    use super::super::{BootstrapMetrics, DiscoveryProtocol};
+    use super::super::{BootstrapConfig, BootstrapMetrics, DiscoveryProtocol};
+    use beardog_types::canonical::config::domains::bootstrap::UnifiedBootstrapConfig;
 
     // Note: SelfIdentity tests omitted due to complex external dependencies
     // Focus on testable metrics and protocol types
@@ -264,5 +266,18 @@ mod tests {
         assert!(all_protocols.contains(&DiscoveryProtocol::EnvironmentDiscovery));
         assert!(all_protocols.contains(&DiscoveryProtocol::ServiceMeshDiscovery));
         assert!(all_protocols.contains(&DiscoveryProtocol::ContainerDiscovery));
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_legacy_bootstrap_config_maps_into_unified() {
+        let old = BootstrapConfig::default();
+        let expected_timeout = old.discovery_timeout_ms;
+        let unified: UnifiedBootstrapConfig = old.into();
+        assert_eq!(unified.core.discovery_timeout_ms, expected_timeout);
+        assert_eq!(
+            unified.core.max_discovery_attempts,
+            BootstrapConfig::default().max_discovery_attempts
+        );
     }
 }

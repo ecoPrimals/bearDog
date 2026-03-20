@@ -380,7 +380,10 @@ impl AuditManager {
         }
     }
 
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Audit log_event mirrors structured audit record fields"
+    )]
     /// Log Event operation.
     pub fn log_event(
         &self,

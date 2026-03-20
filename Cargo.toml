@@ -29,8 +29,9 @@ homepage = "https://beardog.dev"
 documentation = "https://docs.beardog.dev"
 
 [workspace.lints.rust]
-# `forbid` cannot be relaxed in child modules; edition 2024 requires `unsafe` for
-# `std::env::set_var` / `remove_var`, which we centralize in `beardog_errors::process_env`.
+# `deny` at workspace catches most unsafe; individual crate lib.rs files add
+# `#![forbid(unsafe_code)]` (cannot be relaxed). Only `beardog-errors` keeps
+# `deny` for Rust 2024's `unsafe { std::env::set_var / remove_var }`.
 unsafe_code = "deny"
 missing_docs = "warn"
 deprecated = "warn"
@@ -41,85 +42,85 @@ pedantic = "warn"
 perf = "warn"
 nursery = "warn"
 
-struct_excessive_bools = { level = "allow", priority = 1 }
-items_after_statements = { level = "allow", priority = 1 }
+# ── Genuinely noisy / opinionated — silenced with justification ──────────────
+# Trait impls often require `self` / `async` even when unused by the impl.
 unused_async = { level = "allow", priority = 1 }
 unused_self = { level = "allow", priority = 1 }
+# Some trait method wrappers must return Result even on infallible paths.
 unnecessary_wraps = { level = "allow", priority = 1 }
+# Explicit naming (e.g. `BearDogError` inside `beardog_errors`) aids grep-ability.
+module_name_repetitions = { level = "allow", priority = 1 }
+# `#[must_use]` on every pure function is extremely noisy for a large codebase.
+must_use_candidate = { level = "allow", priority = 1 }
+return_self_not_must_use = { level = "allow", priority = 1 }
+# Not all PartialEq types satisfy Eq (floats, etc.).
+derive_partial_eq_without_eq = { level = "allow", priority = 1 }
+# `significant_drop` lints have high false-positive rates in async code.
+significant_drop_tightening = { level = "allow", priority = 1 }
+significant_drop_in_scrutinee = { level = "allow", priority = 1 }
+# Async futures in this codebase often hold non-Send types (design choice).
+future_not_send = { level = "allow", priority = 1 }
+# Struct fields may intentionally share prefixes with the struct name.
+struct_field_names = { level = "allow", priority = 1 }
+# Debug impls intentionally omit sensitive fields.
+missing_fields_in_debug = { level = "allow", priority = 1 }
+# Style preferences that don't affect correctness:
+items_after_statements = { level = "allow", priority = 1 }
+similar_names = { level = "allow", priority = 1 }
+option_if_let_else = { level = "allow", priority = 1 }
 match_same_arms = { level = "allow", priority = 1 }
+ref_option = { level = "allow", priority = 1 }
 redundant_pub_crate = { level = "allow", priority = 1 }
+no_effect_underscore_binding = { level = "allow", priority = 1 }
 used_underscore_binding = { level = "allow", priority = 1 }
 used_underscore_items = { level = "allow", priority = 1 }
-
+empty_line_after_doc_comments = { level = "allow", priority = 1 }
+empty_line_after_outer_attr = { level = "allow", priority = 1 }
+duplicated_attributes = { level = "allow", priority = 1 }
+# `&bool` / `&u8` vs by-value: marginal perf difference, noisy on public APIs.
 trivially_copy_pass_by_ref = { level = "allow", priority = 1 }
+struct_excessive_bools = { level = "allow", priority = 1 }
+# Many functions could be const but call non-const methods or are async-adjacent.
+missing_const_for_fn = { level = "allow", priority = 1 }
+# Passing by value is sometimes intentional for API ergonomics / ownership semantics.
+needless_pass_by_value = { level = "allow", priority = 1 }
+# `type_complexity` triggers on deeply nested generic types that are readable as-is.
+type_complexity = { level = "allow", priority = 1 }
+# `too_many_lines` — enforced via 1000-line file limit + PR review, not per-function.
+too_many_lines = { level = "allow", priority = 1 }
+# `cognitive_complexity` — tracked via crate-level metrics, not per-function lint.
+cognitive_complexity = { level = "allow", priority = 1 }
+# `inline_always` — specific hot paths are profiled and intentionally force-inlined.
+inline_always = { level = "allow", priority = 1 }
+# Wildcard imports used in prelude patterns and conditional compilation paths.
+wildcard_imports = { level = "allow", priority = 1 }
+# `Default::default()` vs `Type::default()` — both are clear; migrate incrementally.
+default_trait_access = { level = "allow", priority = 1 }
+field_reassign_with_default = { level = "allow", priority = 1 }
+# `&mut` on params not mutated: common in trait impls where the signature requires it.
+needless_pass_by_ref_mut = { level = "allow", priority = 1 }
+# Match arms using `_` for single remaining variant — sometimes clearer than naming it.
+match_wildcard_for_single_variants = { level = "allow", priority = 1 }
+
+# ── Pedantic doc lints — kept allow while doc coverage ramps up ──────────────
+missing_errors_doc = { level = "allow", priority = 1 }
+missing_panics_doc = { level = "allow", priority = 1 }
+doc_markdown = { level = "allow", priority = 1 }
+doc_link_with_quotes = { level = "allow", priority = 1 }
+doc_lazy_continuation = { level = "allow", priority = 1 }
+too_long_first_doc_paragraph = { level = "allow", priority = 1 }
+empty_docs = { level = "allow", priority = 1 }
+
+# ── Cast safety — allowed globally during audit tightening; migrate to
+#    per-site #[expect(clippy::cast_*, reason = "...")] over time ─────────────
 cast_possible_truncation = { level = "allow", priority = 1 }
 cast_precision_loss = { level = "allow", priority = 1 }
 cast_sign_loss = { level = "allow", priority = 1 }
 cast_lossless = { level = "allow", priority = 1 }
-if_same_then_else = { level = "allow", priority = 1 }
-field_reassign_with_default = { level = "allow", priority = 1 }
-default_trait_access = { level = "allow", priority = 1 }
-needless_borrows_for_generic_args = { level = "allow", priority = 1 }
-useless_format = { level = "allow", priority = 1 }
-print_literal = { level = "allow", priority = 1 }
-vec_init_then_push = { level = "allow", priority = 1 }
-unnecessary_literal_unwrap = { level = "allow", priority = 1 }
-assertions_on_constants = { level = "allow", priority = 1 }
-module_name_repetitions = { level = "allow", priority = 1 }
-must_use_candidate = { level = "allow", priority = 1 }
-missing_errors_doc = { level = "allow", priority = 1 }
-missing_panics_doc = { level = "allow", priority = 1 }
-return_self_not_must_use = { level = "allow", priority = 1 }
-doc_markdown = { level = "allow", priority = 1 }
-redundant_else = { level = "allow", priority = 1 }
-wildcard_imports = { level = "allow", priority = 1 }
-too_many_lines = { level = "allow", priority = 1 }
-cognitive_complexity = { level = "allow", priority = 1 }
-similar_names = { level = "allow", priority = 1 }
-option_if_let_else = { level = "allow", priority = 1 }
-significant_drop_tightening = { level = "allow", priority = 1 }
-ref_option = { level = "allow", priority = 1 }
-empty_docs = { level = "allow", priority = 1 }
-missing_const_for_fn = { level = "allow", priority = 1 }
-redundant_clone = { level = "allow", priority = 1 }
-future_not_send = { level = "allow", priority = 1 }
-suboptimal_flops = { level = "allow", priority = 1 }
-derive_partial_eq_without_eq = { level = "allow", priority = 1 }
-needless_pass_by_value = { level = "allow", priority = 1 }
-single_match_else = { level = "allow", priority = 1 }
-type_complexity = { level = "allow", priority = 1 }
 cast_possible_wrap = { level = "allow", priority = 1 }
-needless_pass_by_ref_mut = { level = "allow", priority = 1 }
-doc_link_with_quotes = { level = "allow", priority = 1 }
-assigning_clones = { level = "allow", priority = 1 }
-match_wildcard_for_single_variants = { level = "allow", priority = 1 }
-or_fun_call = { level = "allow", priority = 1 }
-map_unwrap_or = { level = "allow", priority = 1 }
-redundant_closure_for_method_calls = { level = "allow", priority = 1 }
-case_sensitive_file_extension_comparisons = { level = "allow", priority = 1 }
-doc_lazy_continuation = { level = "allow", priority = 1 }
-too_long_first_doc_paragraph = { level = "allow", priority = 1 }
-empty_line_after_doc_comments = { level = "allow", priority = 1 }
-empty_line_after_outer_attr = { level = "allow", priority = 1 }
-duplicated_attributes = { level = "allow", priority = 1 }
-iter_without_into_iter = { level = "allow", priority = 1 }
-fn_to_numeric_cast_any = { level = "allow", priority = 1 }
-manual_string_new = { level = "allow", priority = 1 }
-struct_field_names = { level = "allow", priority = 1 }
-missing_fields_in_debug = { level = "allow", priority = 1 }
-significant_drop_in_scrutinee = { level = "allow", priority = 1 }
-uninlined_format_args = { level = "allow", priority = 1 }
-match_bool = { level = "allow", priority = 1 }
-branches_sharing_code = { level = "allow", priority = 1 }
-format_push_string = { level = "allow", priority = 1 }
-inline_always = { level = "allow", priority = 1 }
-match_wild_err_arm = { level = "allow", priority = 1 }
-needless_continue = { level = "allow", priority = 1 }
-no_effect_underscore_binding = { level = "allow", priority = 1 }
-pub_underscore_fields = { level = "allow", priority = 1 }
-useless_let_if_seq = { level = "allow", priority = 1 }
-manual_let_else = { level = "allow", priority = 1 }
 
+# ── Unwrap / expect — allowed in test code only. Library code must use
+#    Result<T, E>.  Migrate violations to per-site #[expect] with reason. ─────
 expect_used = { level = "allow", priority = 2 }
 unwrap_used = { level = "allow", priority = 2 }
 
@@ -236,6 +237,7 @@ beardog-utils = { path = "crates/beardog-utils" }
 beardog-workflows = { path = "crates/beardog-workflows" }
 beardog-compliance = { path = "crates/beardog-compliance" }
 beardog-cli = { path = "crates/beardog-cli" }
+beardog-capabilities = { path = "crates/beardog-capabilities" }
 beardog-deploy = { path = "crates/beardog-deploy" }
 beardog-production = { path = "crates/beardog-production" }
 beardog-node-registry = { path = "crates/beardog-node-registry" }
@@ -324,6 +326,9 @@ debug-assertions = true
 overflow-checks = true
 incremental = true
 
+# Workspace-wide only (per-crate `[profile.*]` is ignored). `beardog-installer` previously
+# duplicated release with `lto = true` (fat LTO); workspace release uses thin LTO for
+# faster builds. Use `--profile production` for fat LTO when shipping binaries.
 [profile.release]
 opt-level = 3
 lto = "thin"

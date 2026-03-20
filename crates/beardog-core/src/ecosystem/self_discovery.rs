@@ -147,7 +147,6 @@ impl SelfDiscoveryManager {
     ///
     /// # Errors
     /// - Returns `BearDogError` if registration with discovery endpoints fails
-    #[allow(clippy::cognitive_complexity)] // Will refactor when adding more registration logic
     pub fn register_self(&self) -> Result<(), BearDogError> {
         info!(
             "📡 Registering {} capabilities with ecosystem",
@@ -177,7 +176,6 @@ impl SelfDiscoveryManager {
     ///
     /// # Errors
     /// - Returns `BearDogError` if required capabilities are not found or discovery fails
-    #[allow(clippy::cognitive_complexity)] // Will refactor when adding more discovery logic
     pub fn discover_required_capabilities(
         &self,
     ) -> Result<HashMap<ServiceCapabilityType, Vec<DiscoveredService>>, BearDogError> {
@@ -216,7 +214,6 @@ impl SelfDiscoveryManager {
     ///
     /// # Errors
     /// - Returns `BearDogError` if discovery process fails
-    #[allow(clippy::cognitive_complexity)] // Will refactor when adding more discovery logic
     pub fn discover_optional_capabilities(
         &self,
     ) -> Result<HashMap<ServiceCapabilityType, Vec<DiscoveredService>>, BearDogError> {
@@ -270,8 +267,7 @@ impl SelfDiscoveryManager {
     }
 
     /// Register with a specific discovery endpoint
-    #[allow(clippy::unused_self)] // Will use self when implementing actual registration
-    #[allow(clippy::unnecessary_wraps)] // Result for future error handling
+    #[allow(clippy::unused_self, reason = "will use self when fully implemented")]
     fn register_with_endpoint(&self, endpoint: &str) -> Result<(), BearDogError> {
         debug!("Registering with discovery endpoint: {}", endpoint);
 

@@ -114,7 +114,10 @@ pub struct HealthMonitor {
     /// Health check configuration settings
     config: HealthCheckConfig,
     /// Currently monitored services and their health states
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Registry populated when health polling is enabled"
+    )]
     monitored_services: Arc<RwLock<HashMap<String, ServiceHealthState>>>,
 }
 

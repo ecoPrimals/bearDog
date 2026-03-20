@@ -12,13 +12,13 @@ pub struct Pkcs11UniversalProvider {
     /// HSM capabilities
     capabilities: Option<Pkcs11Capabilities>,
     /// PKCS#11 library path
-    #[allow(dead_code)] // Used when PKCS#11 library is loaded
+    #[expect(dead_code, reason = "PKCS#11 session wiring uses library path")]
     library_path: String,
     /// Slot ID
-    #[allow(dead_code)] // Used when PKCS#11 library is loaded
+    #[expect(dead_code, reason = "PKCS#11 session wiring uses slot id")]
     slot_id: u64,
     /// Provider metadata
-    #[allow(dead_code)] // Used for provider information queries
+    #[expect(dead_code, reason = "Metadata queried when provider is active")]
     metadata: HashMap<String, String>,
 }
 

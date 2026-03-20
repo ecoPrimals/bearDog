@@ -338,7 +338,6 @@ impl SystemMonitor {
     }
 
     /// Processes alerts
-    #[allow(clippy::cognitive_complexity)]
     async fn process_alerts(
         metrics: &Arc<RwLock<SystemMetrics>>,
         health_checks: &Arc<RwLock<HashMap<String, ComponentHealth>>>,

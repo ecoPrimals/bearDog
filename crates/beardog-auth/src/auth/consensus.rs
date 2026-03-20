@@ -4,16 +4,63 @@
 
 use super::types::*;
 use beardog_errors::BearDogError;
+use chrono::Utc;
 
 impl CrossNodeAuthEngine {
-    /// Get trusted nodes for consensus
+    /// Get trusted nodes for consensus (healthy entries only, sorted by node id).
     pub fn get_trusted_nodes(&self) -> Result<Vec<String>, BearDogError> {
-        // Stub implementation - would query node registry
-        Ok(vec![
-            "node_1".to_string(),
-            "node_2".to_string(),
-            "node_3".to_string(),
-        ])
+        Ok(self
+            .consensus_registry
+            .iter()
+            .filter(|(_, r)| r.health == ConsensusNodeHealth::Healthy)
+            .map(|(id, _)| id.clone())
+            .collect())
+    }
+
+    /// Register or replace a node in the in-memory consensus registry.
+    pub fn register_consensus_node(
+        &mut self,
+        node_id: String,
+        health: ConsensusNodeHealth,
+    ) -> Result<(), BearDogError> {
+        if node_id.is_empty() {
+            return Err(BearDogError::invalid_input(
+                "consensus node id must not be empty",
+            ));
+        }
+        self.consensus_registry.insert(
+            node_id,
+            ConsensusNodeRecord {
+                health,
+                last_seen: Utc::now(),
+            },
+        );
+        Ok(())
+    }
+
+    /// Look up health for a consensus participant.
+    pub fn get_consensus_node_health(
+        &self,
+        node_id: &str,
+    ) -> Result<ConsensusNodeHealth, BearDogError> {
+        self.consensus_registry
+            .get(node_id)
+            .map(|r| r.health)
+            .ok_or_else(|| BearDogError::not_found(format!("Consensus node not found: {node_id}")))
+    }
+
+    /// Update health (and last-seen) for a registered consensus node.
+    pub fn set_consensus_node_health(
+        &mut self,
+        node_id: &str,
+        health: ConsensusNodeHealth,
+    ) -> Result<(), BearDogError> {
+        let entry = self.consensus_registry.get_mut(node_id).ok_or_else(|| {
+            BearDogError::not_found(format!("Consensus node not found: {node_id}"))
+        })?;
+        entry.health = health;
+        entry.last_seen = Utc::now();
+        Ok(())
     }
 
     /// Get consensus threshold

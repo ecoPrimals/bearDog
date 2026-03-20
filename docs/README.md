@@ -1,7 +1,7 @@
 # 📚 BearDog Documentation Index
 
-**Last Updated**: December 6, 2025  
-**Status**: Production Ready (Grade: A - 93/100)
+**Last Updated**: March 19, 2026  
+**Status**: Production Ready
 
 ---
 
@@ -10,8 +10,8 @@
 New to BearDog? Read these in order:
 1. **[START_HERE.md](../START_HERE.md)** - Quick orientation
 2. **[README.md](../README.md)** - Project overview
-3. **[QUICK_START.md](../QUICK_START.md)** - Get running in 5 minutes
-4. **[NAVIGATION.md](../NAVIGATION.md)** - Find what you need
+3. **[STATUS.md](../STATUS.md)** - Current build status and metrics
+4. **[ROADMAP.md](../ROADMAP.md)** - Completed work and future plans
 
 ---
 

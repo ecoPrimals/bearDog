@@ -493,7 +493,7 @@ simd_acceleration = true
 ### Docker Deployment
 
 ```dockerfile
-FROM rust:1.75-alpine AS builder
+FROM rust:1.85-alpine AS builder
 WORKDIR /app
 COPY . .
 RUN cargo build --release --features="production,quantum-resistant,simd"

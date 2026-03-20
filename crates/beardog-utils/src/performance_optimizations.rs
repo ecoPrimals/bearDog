@@ -53,13 +53,12 @@ impl CloneOptimizer {
                 self.stats.cache_hits += 1;
                 self.stats.clones_avoided += 1;
                 return Cow::Owned(cached.to_string());
-            } else {
-                let interned = Arc::<str>::from(input);
-                self.string_cache
-                    .insert(input.to_string(), interned.clone());
-                self.stats.cache_misses += 1;
-                return Cow::Owned(interned.to_string());
             }
+            let interned = Arc::<str>::from(input);
+            self.string_cache
+                .insert(input.to_string(), interned.clone());
+            self.stats.cache_misses += 1;
+            return Cow::Owned(interned.to_string());
         }
 
         Cow::Borrowed(input)

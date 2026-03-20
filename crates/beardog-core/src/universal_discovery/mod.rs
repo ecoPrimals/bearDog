@@ -510,7 +510,6 @@ impl UniversalServiceDiscovery {
     ///
     /// # Errors
     /// Returns an error if the service name is invalid, if discovery operations fail, or if network issues occur.
-    #[allow(clippy::cognitive_complexity)] // Service discovery inherently requires coordinating multiple protocols
     pub async fn discover_services(
         &self,
         service_name: &str,
@@ -531,7 +530,6 @@ impl UniversalServiceDiscovery {
     }
 
     /// Query all protocol handlers for services
-    #[allow(clippy::cognitive_complexity)] // Polling multiple protocols with error handling requires branches
     fn query_all_protocols(&self, service_name: &str) -> Vec<ServiceInfo> {
         let mut discovered_services = Vec::new();
 

@@ -8,6 +8,7 @@ use argon2::{Argon2, PasswordVerifier};
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::OnceLock;
 
 /// Tunable limits for interactive login sessions and lockout policy.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -216,7 +217,7 @@ impl AuthenticationHandler {
         let Some(stored_credential) = self.credential_store.get(username) else {
             // User not found - perform dummy hash verification to prevent timing attacks
             // This ensures consistent timing whether user exists or not
-            let _ = Self::verify_dummy_password(password);
+            Self::verify_dummy_password(password)?;
             return Ok(false);
         };
 
@@ -241,19 +242,29 @@ impl AuthenticationHandler {
     ///
     /// This ensures that failed authentication attempts take the same time
     /// whether the user exists or not, preventing username enumeration.
-    fn verify_dummy_password(_password: &str) -> bool {
-        // Use a pre-computed dummy hash to maintain consistent timing
-        const DUMMY_HASH: &str = "$argon2id$v=19$m=19456,t=2,p=1$\
+    /// Parsed dummy PHC string, validated once on first use (see `wateringHole` error propagation).
+    fn dummy_password_hash() -> Result<&'static PasswordHash<'static>, BearDogError> {
+        static DUMMY_HASH: &str = "$argon2id$v=19$m=19456,t=2,p=1$\
             YW5vdGhlcmR1bW15c2FsdA$\
             /Yqo9o6/9ZqJmYqGmZqamw";
+        static PARSED: OnceLock<Result<PasswordHash<'static>, String>> = OnceLock::new();
+        let init = PARSED.get_or_init(|| PasswordHash::new(DUMMY_HASH).map_err(|e| e.to_string()));
+        match init {
+            Ok(h) => Ok(h),
+            Err(msg) => Err(BearDogError::Security {
+                message: format!(
+                    "Invalid timing-mitigation dummy password hash (build/configuration error): {msg}"
+                ),
+                category: beardog_errors::SecurityErrorCategory::Authentication,
+            }),
+        }
+    }
 
-        let parsed_hash = PasswordHash::new(DUMMY_HASH)
-            .unwrap_or_else(|e| {
-                panic!("CRITICAL: Invalid DUMMY_HASH constant in timing attack mitigation - this should never fail: {e}")
-            });
-        Argon2::default()
-            .verify_password(b"dummy", &parsed_hash)
-            .is_ok()
+    /// Constant-time work for unknown users; returns `Err` only if the dummy PHC is invalid.
+    fn verify_dummy_password(_password: &str) -> Result<(), BearDogError> {
+        let parsed_hash = Self::dummy_password_hash()?;
+        let _timing = Argon2::default().verify_password(b"dummy", parsed_hash);
+        Ok(())
     }
 
     /// Get user permissions from credential store

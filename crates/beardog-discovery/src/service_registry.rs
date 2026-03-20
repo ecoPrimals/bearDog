@@ -254,9 +254,8 @@ impl ServiceRegistryDiscovery {
             if age < cached.ttl_secs {
                 debug!("✅ Cache hit for {} (age: {}s)", capability, age);
                 return Some(cached.services.clone());
-            } else {
-                debug!("⚠️  Cache expired for {} (age: {}s)", capability, age);
             }
+            debug!("⚠️  Cache expired for {} (age: {}s)", capability, age);
         }
         None
     }

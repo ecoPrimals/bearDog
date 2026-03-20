@@ -29,7 +29,10 @@ use super::types::{
 /// - Broadcast encryption (encrypting for specific lineages)
 /// - Key distribution (sharing keys with descendants)
 pub struct BirdSongManager {
-    #[allow(dead_code)] // Used for future configuration options
+    #[expect(
+        dead_code,
+        reason = "BirdSongConfig retained for future manager options"
+    )]
     config: BirdSongConfig,
     chain_manager: Arc<LineageChainManager>,
     proof_manager: Arc<LineageProofManager>,

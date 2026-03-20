@@ -5,6 +5,7 @@
 use super::super::types::{AuditLogEntry, AuditLogFilter, AuditLogger, OperationResult};
 use super::storage::PersistentAuditStorage;
 use beardog_errors::BearDogError;
+use std::fmt::Write as _;
 use tracing::debug;
 // NOTE: beardog_security::handlers doesn't exist yet - commented out
 // use beardog_security::handlers::audit_management::AuditStatistics;
@@ -251,15 +252,17 @@ impl DefaultAuditLogger {
                 OperationResult::Failure(ref msg) => msg.as_str(),
                 _ => "",
             };
-            csv.push_str(&format!(
-                "{},{},{},{},{},{}\n",
+            writeln!(
+                csv,
+                "{},{},{},{},{},{}",
                 entry.timestamp,
                 entry.operation,
                 entry.user_id.as_deref().unwrap_or(""),
                 entry.key_id.as_deref().unwrap_or(""),
                 success,
                 error
-            ));
+            )
+            .unwrap();
         }
 
         Ok(csv.into_bytes())

@@ -415,7 +415,7 @@ impl SovereignEntropyMigrationManager {
             record.insert(
                 "timestamp".to_string(),
                 serde_json::to_value(chrono::Utc::now())
-                    .unwrap_or(Value::String(chrono::Utc::now().to_rfc3339())),
+                    .unwrap_or_else(|_| Value::String(chrono::Utc::now().to_rfc3339())),
             );
             record.insert(
                 "migration_event".to_string(),

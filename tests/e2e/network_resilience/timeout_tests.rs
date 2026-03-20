@@ -29,7 +29,7 @@ pub async fn test_network_timeout_handling() -> Result<NetworkE2EMetrics, BearDo
         )
         .await;
 
-        if let Ok(()) = result {
+        if result == Ok(()) {
             info!("Operation {} completed within timeout", i);
             metrics.successful_connections += 1;
         } else {

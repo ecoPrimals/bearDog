@@ -161,7 +161,10 @@ impl PrometheusExporter {
                     let avg = if vals.is_empty() {
                         0.0
                     } else {
-                        #[allow(clippy::cast_precision_loss)]
+                        #[expect(
+                            clippy::cast_precision_loss,
+                            reason = "Histogram averages; usize count fits f64 for typical metric cardinalities"
+                        )]
                         let len_f64 = vals.len() as f64;
                         vals.iter().sum::<f64>() / len_f64
                     };

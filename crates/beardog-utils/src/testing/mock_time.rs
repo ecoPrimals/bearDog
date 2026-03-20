@@ -46,7 +46,7 @@ impl TimeSource for SystemTimeSource {
 ///
 /// ## Example
 /// ```rust
-/// use beardog_utils::testing::MockTimeSource;
+/// use beardog_utils::testing::{MockTimeSource, TimeSource};
 /// use std::time::Duration;
 ///
 /// let time = MockTimeSource::new();
@@ -94,7 +94,7 @@ impl MockTimeSource {
     ///
     /// ## Example
     /// ```rust
-    /// # use beardog_utils::testing::MockTimeSource;
+    /// # use beardog_utils::testing::{MockTimeSource, TimeSource};
     /// # use std::time::Duration;
     /// let time = MockTimeSource::new();
     /// let start = time.now();

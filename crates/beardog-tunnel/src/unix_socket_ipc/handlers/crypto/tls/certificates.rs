@@ -113,7 +113,7 @@ pub async fn handle_tls_verify_certificate(params: Option<&Value>) -> Result<Val
     for (i, cert_value) in certificate_chain.iter().enumerate() {
         let cert_b64 = cert_value
             .as_str()
-            .ok_or(format!("Certificate {i} is not a string"))?;
+            .ok_or_else(|| format!("Certificate {i} is not a string"))?;
 
         let cert_der = base64::engine::general_purpose::STANDARD
             .decode(cert_b64)
@@ -154,12 +154,7 @@ pub async fn handle_tls_verify_certificate(params: Option<&Value>) -> Result<Val
 
     // 2. Verify server name (CN or SubjectAlternativeName)
     let subject = server_cert.subject().to_string();
-    let mut name_matches = false;
-
-    // Check Common Name (CN)
-    if subject.contains(&format!("CN={server_name}")) {
-        name_matches = true;
-    }
+    let mut name_matches = subject.contains(&format!("CN={server_name}"));
 
     // Check SubjectAlternativeName extension
     if !name_matches {

@@ -207,7 +207,10 @@ pub struct ResourceUsageStats {
 #[derive(Debug)]
 pub struct UniversalComputeClient {
     /// Configuration
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Config applied when compute client gains full routing"
+    )]
     config: UniversalComputeConfig,
     /// Discovered compute capabilities
     discovered_capabilities: Arc<tokio::sync::RwLock<Vec<UniversalCapability>>>,
@@ -275,7 +278,6 @@ impl UniversalComputeClient {
     ///
     /// # Errors
     /// Returns `Err(BearDogError)` if client initialization fails
-    #[allow(clippy::cognitive_complexity)]
     pub fn new(discovered_capabilities: Vec<UniversalCapability>) -> Result<Self, BearDogError> {
         let config = UniversalComputeConfig::default();
 
@@ -299,11 +301,6 @@ impl UniversalComputeClient {
     ///
     /// # Errors
     /// Returns `Err(BearDogError)` if the compute request submission or processing fails
-    #[allow(
-        clippy::cognitive_complexity,
-        clippy::cast_possible_truncation,
-        clippy::cast_precision_loss
-    )]
     pub async fn submit_compute(
         &self,
         request: UniversalComputeRequest,
@@ -338,7 +335,10 @@ impl UniversalComputeClient {
         Ok(response)
     }
 
-    #[allow(clippy::significant_drop_tightening)]
+    #[expect(
+        clippy::significant_drop_tightening,
+        reason = "RwLock read guard for capability scan"
+    )]
     async fn discover_best_provider(
         &self,
         _request: &UniversalComputeRequest,
@@ -378,10 +378,17 @@ impl UniversalComputeClient {
 
     /// Execute compute request through discovered provider
     /// Executes `compute_request`
-    #[allow(
+    #[expect(
         clippy::unused_self,
+        reason = "Instance reserved for real provider RPC calls"
+    )]
+    #[expect(
         clippy::unnecessary_wraps,
-        clippy::cast_possible_truncation
+        reason = "Result reserved for remote compute errors"
+    )]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Processing duration ms from Instant"
     )]
     fn execute_compute_request(
         &self,
@@ -438,7 +445,14 @@ impl UniversalComputeClient {
     }
 
     /// Updates metrics
-    #[allow(dead_code, clippy::cast_precision_loss)]
+    #[expect(
+        dead_code,
+        reason = "Metrics helper for when submit_compute wires averaging"
+    )]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Moving average over integer request counts"
+    )]
     async fn update_metrics(&self, response: &UniversalComputeResponse) {
         let mut metrics = self.metrics.write().await;
         metrics.total_requests += 1;
@@ -469,7 +483,6 @@ impl UniversalComputeClient {
     ///
     /// # Errors
     /// Returns `Err(BearDogError)` if the capability refresh fails
-    #[allow(clippy::cognitive_complexity)]
     pub async fn refresh_capabilities(&self) -> Result<(), BearDogError> {
         info!("🔄 Refreshing compute capabilities through universal discovery");
 

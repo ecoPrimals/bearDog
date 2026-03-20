@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### March 19, 2026 -- Deep Debt Execution & Stub Evolution
+
+- **Zero source clippy warnings**: Fixed all 49 remaining library warnings (redundant borrows,
+  `clone_from`, `unwrap_or_else`, `let...else`, redundant closures, format appends, etc.)
+- **58 unfulfilled `#[expect]` attributes** fixed (over-converted `#[allow]` reverted or removed)
+- **Production stubs evolved to real implementations**:
+  - Threat incident handler: typed lifecycle engine with `ManagedIncident`, `BTreeMap` storage, `tracing`
+  - Auth genetics: BLAKE3-based nuclear + mitochondrial lineage verification
+  - Auth ecosystem: dynamic capability discovery from node registry + security policy
+  - Auth consensus: in-memory `BTreeMap<String, ConsensusNodeRecord>` with health tracking
+  - Safe memory: real `zeroize::Zeroize` + `ZeroizeOnDrop` for `SafePinnedBuffer`, `SensitiveByteBuf`
+- **`#[allow]` → `#[expect(reason)]` sweep** across beardog-core, beardog-tunnel, beardog-utils, beardog-security
+- **Test coverage improved**: beardog-ipc 72% → 86%, beardog-core 59% → 62%
+- **Failing doctests fixed** in beardog-utils `mock_time.rs` (missing trait import)
+- **`primal_discovery.rs`** tests extracted to separate file (1026 → 756 lines)
+- **Dockerfile** updated: MSRV 1.85, removed C dependencies, fixed license label
+- **`.pedantic_clippy.toml`** MSRV updated to 1.85.0
+- 1,072 tests passing, 0 failures, 0 files over 1000 lines
+
 ### March 19, 2026 -- Deep Compliance & Coverage Wave 2
 
 - SPDX license headers (`AGPL-3.0-only`) added to 1,634 .rs files

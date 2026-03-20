@@ -40,7 +40,10 @@ pub enum Ctap2Command {
 ///
 /// Note: Phase 2 implementation pending
 #[cfg(feature = "fido2")]
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "pub CTAP2 API reserved for Phase-2 HID integration"
+)]
 pub async fn send_ctap2_command(
     _device: &mut Box<dyn beardog_hid::HidDevice>,
     _command: Ctap2Command,
@@ -62,7 +65,10 @@ pub async fn send_ctap2_command(
 ///
 /// Note: Phase 2 implementation pending
 #[cfg(feature = "fido2")]
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "pub CTAP2 API reserved for Phase-2 HID integration"
+)]
 pub async fn get_device_info(
     _device: &mut Box<dyn beardog_hid::HidDevice>,
 ) -> Result<super::types::Fido2DeviceInfo, BearDogError> {
@@ -79,7 +85,10 @@ pub async fn get_device_info(
 ///
 /// Note: Phase 2 implementation pending
 #[cfg(feature = "fido2")]
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "pub CTAP2 API reserved for Phase-2 HID integration"
+)]
 pub async fn generate_entropy_via_hmac_secret(
     _device: &mut Box<dyn beardog_hid::HidDevice>,
     _size: usize,

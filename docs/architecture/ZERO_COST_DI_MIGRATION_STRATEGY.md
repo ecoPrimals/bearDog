@@ -146,7 +146,7 @@ pub trait WorkflowProcessor {
     async fn process(&self, input: WorkflowInput) -> BearDogResult<WorkflowOutput>;
 }
 
-// ✅ AFTER: Native async (Rust 1.75+)
+// ✅ AFTER: Native async (Rust 1.85+, Edition 2024)
 pub trait ZeroCostWorkflowProcessor {
     async fn process(&self, input: WorkflowInput) -> BearDogResult<WorkflowOutput>;
 }

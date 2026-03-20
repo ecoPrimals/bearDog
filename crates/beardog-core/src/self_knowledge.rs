@@ -51,6 +51,7 @@
 
 use std::env;
 use std::net::{SocketAddr, ToSocketAddrs};
+use std::path::PathBuf;
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -231,13 +232,19 @@ impl PrimalIdentity {
 }
 
 /// Network endpoint (where this primal listens)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Endpoint {
     /// Protocol (HTTP, gRPC, etc.)
     pub protocol: Protocol,
 
-    /// Socket address (OS-assigned or configured)
+    /// Socket address (OS-assigned or configured).
+    ///
+    /// For [`Protocol::UnixSocket`], this is a placeholder; use [`Self::unix_socket_path`].
     pub address: SocketAddr,
+
+    /// Unix domain socket path when `protocol` is [`Protocol::UnixSocket`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unix_socket_path: Option<PathBuf>,
 }
 
 impl Endpoint {
@@ -247,15 +254,59 @@ impl Endpoint {
     /// - `127.0.0.1:8900` (defaults to HTTP)
     /// - `http://127.0.0.1:8900`
     /// - `grpc://127.0.0.1:8900`
+    /// - `unix:///run/user/1000/biomeos/foo.sock` (PRIMAL IPC)
+    /// - On Unix, an absolute path `/run/.../foo.sock` is treated as a Unix socket
     pub fn parse(s: &str) -> Result<Self, BearDogError> {
+        let trimmed = s.trim();
+        if let Some(rest) = trimmed
+            .strip_prefix("unix://")
+            .or_else(|| trimmed.strip_prefix("unix:"))
+        {
+            let path = PathBuf::from(rest);
+            if path.as_os_str().is_empty() {
+                return Err(BearDogError::network(
+                    "Empty unix:// path in endpoint".to_string(),
+                ));
+            }
+            #[expect(
+                clippy::expect_used,
+                reason = "0.0.0.0:0 is a valid placeholder SocketAddr"
+            )]
+            let placeholder = "0.0.0.0:0"
+                .parse::<SocketAddr>()
+                .expect("placeholder socket addr");
+            return Ok(Self {
+                protocol: Protocol::UnixSocket,
+                address: placeholder,
+                unix_socket_path: Some(path),
+            });
+        }
+
+        #[cfg(unix)]
+        if trimmed.starts_with('/') {
+            let path = PathBuf::from(trimmed);
+            #[expect(
+                clippy::expect_used,
+                reason = "0.0.0.0:0 is a valid placeholder SocketAddr"
+            )]
+            let placeholder = "0.0.0.0:0"
+                .parse::<SocketAddr>()
+                .expect("placeholder socket addr");
+            return Ok(Self {
+                protocol: Protocol::UnixSocket,
+                address: placeholder,
+                unix_socket_path: Some(path),
+            });
+        }
+
         // Check for protocol prefix
-        let (protocol, addr_str) = if let Some(rest) = s.strip_prefix("http://") {
+        let (protocol, addr_str) = if let Some(rest) = trimmed.strip_prefix("http://") {
             (Protocol::Http, rest)
-        } else if let Some(rest) = s.strip_prefix("grpc://") {
+        } else if let Some(rest) = trimmed.strip_prefix("grpc://") {
             (Protocol::Grpc, rest)
         } else {
             // Default to HTTP for bare addresses
-            (Protocol::Http, s)
+            (Protocol::Http, trimmed)
         };
 
         // Parse socket address
@@ -263,7 +314,11 @@ impl Endpoint {
             BearDogError::network(format!("Invalid endpoint address '{addr_str}': {e}"))
         })?;
 
-        Ok(Self { protocol, address })
+        Ok(Self {
+            protocol,
+            address,
+            unix_socket_path: None,
+        })
     }
 }
 
@@ -320,12 +375,11 @@ impl VersionInfo {
 /// Introspects what capabilities this primal actually implements.
 /// This is done at runtime by checking feature flags, available modules, etc.
 fn discover_capabilities() -> Vec<SimpleCapability> {
-    let mut capabilities = Vec::new();
-
-    // Core capabilities (always available in BearDog)
-    capabilities.push(SimpleCapability::SecureTunneling);
-    capabilities.push(SimpleCapability::GeneticLineage);
-    capabilities.push(SimpleCapability::Cryptography);
+    let mut capabilities = vec![
+        SimpleCapability::SecureTunneling,
+        SimpleCapability::GeneticLineage,
+        SimpleCapability::Cryptography,
+    ];
 
     // Conditional capabilities based on features
     #[cfg(feature = "hsm-integration")]
@@ -367,6 +421,7 @@ fn discover_endpoints() -> Result<Vec<Endpoint>, BearDogError> {
         endpoints.push(Endpoint {
             protocol: Protocol::Http,
             address: addr,
+            unix_socket_path: None,
         });
 
         return Ok(endpoints);
@@ -383,6 +438,7 @@ fn discover_endpoints() -> Result<Vec<Endpoint>, BearDogError> {
         endpoints.push(Endpoint {
             protocol: Protocol::Http,
             address: SocketAddr::from(([127, 0, 0, 1], port)),
+            unix_socket_path: None,
         });
 
         return Ok(endpoints);
@@ -390,12 +446,16 @@ fn discover_endpoints() -> Result<Vec<Endpoint>, BearDogError> {
 
     // Default: Let OS assign port (port 0)
     debug!("No explicit endpoint configured, using OS-assigned port");
-    #[allow(clippy::expect_used)] // Hardcoded address is guaranteed valid
+    #[expect(
+        clippy::expect_used,
+        reason = "127.0.0.1:0 is a valid hardcoded default listen address"
+    )]
     endpoints.push(Endpoint {
         protocol: Protocol::Http,
         address: "127.0.0.1:0"
             .parse()
             .expect("hardcoded localhost address should always parse"),
+        unix_socket_path: None,
     });
 
     Ok(endpoints)
@@ -495,6 +555,18 @@ mod tests {
     }
 
     #[test]
+    fn test_endpoint_parse_unix_uri() {
+        let ep = Endpoint::parse("unix:///run/user/1000/biomeos/example.sock").unwrap();
+        assert_eq!(ep.protocol, Protocol::UnixSocket);
+        assert_eq!(
+            ep.unix_socket_path
+                .as_ref()
+                .map(|p| p.to_string_lossy().into_owned()),
+            Some("/run/user/1000/biomeos/example.sock".to_string())
+        );
+    }
+
+    #[test]
     fn test_provides_capability() {
         let sk = PrimalSelfKnowledge::discover().unwrap();
         assert!(sk.provides_capability(&SimpleCapability::SecureTunneling));
@@ -507,5 +579,98 @@ mod tests {
         let sk = PrimalSelfKnowledge::discover().expect("discover should succeed");
         assert_eq!(sk.my_name(), "test-name");
         beardog_errors::process_env::remove_var("PRIMAL_NAME");
+    }
+
+    #[test]
+    fn test_endpoint_parse_http_grpc_and_bare_tcp() {
+        let h = Endpoint::parse("http://127.0.0.1:9001").expect("http");
+        assert_eq!(h.protocol, Protocol::Http);
+        assert_eq!(h.address.port(), 9001);
+
+        let g = Endpoint::parse("grpc://[::1]:50051").expect("grpc");
+        assert_eq!(g.protocol, Protocol::Grpc);
+        assert_eq!(g.address.port(), 50051);
+
+        let b = Endpoint::parse("10.0.0.5:7777").expect("bare");
+        assert_eq!(b.protocol, Protocol::Http);
+        assert_eq!(b.address.port(), 7777);
+    }
+
+    #[test]
+    fn test_endpoint_parse_unix_prefix_without_slashes() {
+        let ep = Endpoint::parse("unix:/tmp/no-double-slash.sock").expect("unix:");
+        assert_eq!(ep.protocol, Protocol::UnixSocket);
+        assert_eq!(
+            ep.unix_socket_path
+                .as_ref()
+                .map(|p| p.to_string_lossy().into_owned()),
+            Some("/tmp/no-double-slash.sock".to_string())
+        );
+    }
+
+    #[test]
+    fn test_endpoint_parse_empty_unix_errors() {
+        assert!(Endpoint::parse("unix://").is_err());
+    }
+
+    #[test]
+    fn test_endpoint_parse_invalid_address_errors() {
+        assert!(Endpoint::parse("http://not-a-socket-addr").is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_endpoint_parse_absolute_path_unix_socket() {
+        let ep = Endpoint::parse("/tmp/beardog_test_abs.sock").expect("abs path");
+        assert_eq!(ep.protocol, Protocol::UnixSocket);
+        assert!(
+            ep.unix_socket_path
+                .as_ref()
+                .is_some_and(|p| p.ends_with("beardog_test_abs.sock"))
+        );
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn test_identity_from_beardog_name() {
+        beardog_errors::process_env::remove_var("PRIMAL_NAME");
+        beardog_errors::process_env::set_var("BEARDOG_NAME", "from-beardog-name");
+        let id = PrimalIdentity::discover();
+        assert_eq!(id.name, "from-beardog-name");
+        beardog_errors::process_env::remove_var("BEARDOG_NAME");
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn test_discover_endpoints_invalid_listen_addr_errors() {
+        beardog_errors::process_env::set_var("BEARDOG_LISTEN_ADDR", "127.0.0.1:99999");
+        let err = discover_endpoints();
+        assert!(err.is_err());
+        beardog_errors::process_env::remove_var("BEARDOG_LISTEN_ADDR");
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn test_discover_endpoints_invalid_port_errors() {
+        beardog_errors::process_env::remove_var("BEARDOG_LISTEN_ADDR");
+        beardog_errors::process_env::set_var("BEARDOG_PORT", "not-a-u16");
+        let err = discover_endpoints();
+        assert!(err.is_err());
+        beardog_errors::process_env::remove_var("BEARDOG_PORT");
+    }
+
+    #[test]
+    fn test_protocol_display() {
+        assert_eq!(format!("{}", Protocol::Http), "HTTP");
+        assert_eq!(format!("{}", Protocol::Grpc), "gRPC");
+        assert_eq!(format!("{}", Protocol::UnixSocket), "Unix Socket");
+    }
+
+    #[test]
+    fn test_primal_self_knowledge_accessors() {
+        let sk = PrimalSelfKnowledge::discover().expect("discover");
+        assert!(!sk.my_capabilities().is_empty());
+        assert!(!sk.my_endpoints().is_empty());
+        assert!(!sk.my_version().version.is_empty());
     }
 }

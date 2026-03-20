@@ -362,8 +362,8 @@ impl AdapterUnlockCertificate {
             &bincode::serialize(classification)
                 .map_err(|e| BearDogError::serialization(&format!("Failed to serialize: {e}")))?,
         );
-        hasher.update(&issued_at.timestamp().to_le_bytes());
-        hasher.update(&expires_at.timestamp().to_le_bytes());
+        hasher.update(issued_at.timestamp().to_le_bytes());
+        hasher.update(expires_at.timestamp().to_le_bytes());
         hasher.update(b"BearDog-AdapterCertificate-v1");
 
         Ok(hasher.finalize().to_vec())

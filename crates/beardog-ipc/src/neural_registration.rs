@@ -297,9 +297,8 @@ pub fn discover_neural_api_socket() -> Option<String> {
         if Path::new(path).exists() {
             info!("🔍 Found Neural API socket at default path: {}", path);
             return Some((*path).to_string());
-        } else {
-            debug!("Checked default path (not found): {}", path);
         }
+        debug!("Checked default path (not found): {}", path);
     }
 
     info!(

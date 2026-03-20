@@ -512,10 +512,14 @@ impl BearDogConfig for UnifiedSecurityConfig {
         merged.hsm_enabled = other.hsm_enabled;
 
         if !other.supported_auth_methods.is_empty() {
-            merged.supported_auth_methods = other.supported_auth_methods.clone();
+            merged
+                .supported_auth_methods
+                .clone_from(&other.supported_auth_methods);
         }
         if !other.crypto_algorithms.is_empty() {
-            merged.crypto_algorithms = other.crypto_algorithms.clone();
+            merged
+                .crypto_algorithms
+                .clone_from(&other.crypto_algorithms);
         }
 
         Ok(merged)

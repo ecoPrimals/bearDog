@@ -347,7 +347,11 @@ pub async fn handle_tls_compute_finished_verify_data(
 
             (finished_key, verify_data)
         }
-        _ => unreachable!("Cipher suite validation already done"),
+        _ => {
+            return Err(format!(
+                "unsupported TLS 1.3 cipher suite variant in Finished verify_data derivation: 0x{cipher_suite:04x} (expected 0x1301, 0x1302, or 0x1303 after prior validation)"
+            ));
+        }
     };
 
     info!("✅ Computed verify_data: {} bytes", verify_data.len());

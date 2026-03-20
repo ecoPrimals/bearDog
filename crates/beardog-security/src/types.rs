@@ -390,7 +390,10 @@ impl AuditManager {
     }
 
     /// Logs a security audit event with the given details.
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Audit log_event mirrors structured audit record fields"
+    )]
     pub async fn log_event(
         &self,
         event_type: &str,

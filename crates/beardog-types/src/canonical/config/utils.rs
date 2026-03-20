@@ -511,7 +511,6 @@ impl UnifiedConfigUtils {
 // =============================================================================
 
 /// Global shared configuration manager
-#[allow(clippy::incompatible_msrv)] // LazyLock requires 1.80.0, but worth it for thread safety
 static SHARED_CONFIG_MANAGER: LazyLock<SharedConfigManager> =
     LazyLock::new(SharedConfigManager::new);
 

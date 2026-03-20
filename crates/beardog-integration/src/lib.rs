@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![forbid(unsafe_code)]
 
 //! # BearDog-Songbird Integration
 //!
@@ -34,7 +35,6 @@
 //! └─────────────────────────────────────────┘
 //! ```
 
-#![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
 pub mod api_server;

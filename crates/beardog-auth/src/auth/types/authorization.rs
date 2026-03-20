@@ -227,7 +227,7 @@ pub enum VerificationMode {
 }
 
 /// Enables or disables automatic primal spawning flows tied to authorization decisions.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum SpawningMode {
     /// Active or enabled state
     Enabled,

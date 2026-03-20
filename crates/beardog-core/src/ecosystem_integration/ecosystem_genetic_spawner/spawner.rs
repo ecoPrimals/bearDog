@@ -142,7 +142,6 @@ impl EcosystemGeneticSpawner {
     ///
     /// # Errors
     /// Returns an error if spawning fails at any stage.
-    #[allow(clippy::cognitive_complexity)]
     pub async fn spawn_ecosystem_hybrid_node(
         &self,
         requirements: EcosystemSpawningRequirements,
@@ -197,7 +196,6 @@ impl EcosystemGeneticSpawner {
 
     /// Execute Ecosystem Spawning operation.
     /// Executes `ecosystem_spawning`
-    #[allow(clippy::cognitive_complexity)]
     fn execute_ecosystem_spawning(
         operation: &mut EcosystemSpawningOperation,
     ) -> Result<EcosystemHybridNode, BearDogError> {

@@ -46,7 +46,10 @@ use tracing::{debug, info};
 /// AI systems respect human control and dignity.
 #[derive(Debug, Clone)]
 pub struct SovereignRng {
-    #[allow(dead_code)] // Used for entropy management but not yet fully implemented
+    #[expect(
+        dead_code,
+        reason = "EntropyHierarchyManager reserved for full entropy pipeline"
+    )]
     entropy_manager: EntropyHierarchyManager,
     /// Cached entropy seeds by human identity
     entropy_cache: HashMap<String, CachedEntropySeed>,
@@ -82,7 +85,10 @@ struct CachedEntropySeed {
     /// Cache timestamp
     cached_at: chrono::DateTime<chrono::Utc>,
     /// Human identity that generated this entropy
-    #[allow(dead_code)] // Used for identity verification but not yet fully implemented
+    #[expect(
+        dead_code,
+        reason = "Stored for future identity verification on cache entries"
+    )]
     human_identity: String,
 }
 
@@ -117,7 +123,6 @@ impl Default for SovereignRngConfig {
 impl SovereignRng {
     /// Create a new sovereign RNG with entropy hierarchy integration
     /// Creates a new instance
-    #[allow(clippy::cognitive_complexity)]
     pub fn new(entropy_manager: EntropyHierarchyManager, config: SovereignRngConfig) -> Self {
         info!("🎲 Initializing Sovereign Entropy-Driven RNG for Neural Networks");
         info!("   Min entropy tier: {}", config.min_entropy_tier);
@@ -136,7 +141,6 @@ impl SovereignRng {
     /// # Errors
     ///
     /// Returns an error if entropy generation fails or weight initialization cannot be completed.
-    #[allow(clippy::cognitive_complexity)]
     pub fn initialize_weights(
         &mut self,
         initializer: &HumanEntropyWeightInitializer,
@@ -206,7 +210,6 @@ impl SovereignRng {
     }
 
     /// Generate fresh entropy from the hierarchy
-    #[allow(clippy::cognitive_complexity)]
     fn generate_fresh_entropy(
         human_identity_id: &str,
         required_tier: u8,
@@ -308,10 +311,11 @@ impl SovereignRng {
     }
 
     /// Generate weight matrix using specified distribution
-    #[allow(
+    #[expect(
         clippy::unnecessary_wraps,
         clippy::needless_range_loop,
-        clippy::cast_precision_loss
+        clippy::cast_precision_loss,
+        reason = "Neural weight matrix loops and float conversions"
     )]
     fn generate_weight_matrix(
         rng: &mut ChaCha20Rng,
@@ -367,7 +371,10 @@ impl SovereignRng {
 
     /// Check if cached entropy is still valid
     /// Checks if cache valid
-    #[allow(clippy::cast_sign_loss)] // Age is always positive duration
+    #[expect(
+        clippy::cast_sign_loss,
+        reason = "Cache age in seconds is non-negative for valid entries"
+    )]
     fn is_cache_valid(&self, cached: &CachedEntropySeed) -> bool {
         let age = chrono::Utc::now()
             .signed_duration_since(cached.cached_at)
@@ -378,7 +385,10 @@ impl SovereignRng {
     /// Clear expired cache entries
     /// Cleans up cache
     /// Cleans up cache
-    #[allow(clippy::cast_sign_loss)] // Age is always positive duration
+    #[expect(
+        clippy::cast_sign_loss,
+        reason = "Cache age in seconds is non-negative for valid entries"
+    )]
     pub fn cleanup_cache(&mut self) {
         let initial_count = self.entropy_cache.len();
         let max_age = self.config.cache_max_age_seconds;

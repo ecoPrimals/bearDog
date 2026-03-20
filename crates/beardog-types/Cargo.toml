@@ -1,6 +1,6 @@
 [package]
 name = "beardog-types"
-version = "3.0.0"
+version.workspace = true
 edition = "2024"
 description = "Canonical type system for the BearDog distributed security ecosystem"
 license = "AGPL-3.0-only"

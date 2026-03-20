@@ -504,6 +504,7 @@ impl ProtocolSelector {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[test]
     fn test_config_from_env() {
@@ -559,5 +560,110 @@ mod tests {
             ProtocolSelector::for_frequency(5, &available),
             Protocol::JsonRpc
         );
+    }
+
+    #[test]
+    fn test_protocol_selector_empty_falls_back_to_http() {
+        let empty: Vec<Protocol> = vec![];
+        assert_eq!(ProtocolSelector::for_throughput(&empty), Protocol::Http);
+        assert_eq!(ProtocolSelector::for_debugging(&empty), Protocol::Http);
+        assert_eq!(ProtocolSelector::for_occasional(&empty), Protocol::Http);
+        assert_eq!(ProtocolSelector::for_frequency(50, &empty), Protocol::Http);
+    }
+
+    #[test]
+    fn test_protocol_selector_tarpc_only_and_jsonrpc_only() {
+        assert_eq!(
+            ProtocolSelector::for_throughput(&[Protocol::Tarpc]),
+            Protocol::Tarpc
+        );
+        assert_eq!(
+            ProtocolSelector::for_debugging(&[Protocol::Tarpc]),
+            Protocol::Tarpc
+        );
+        assert_eq!(
+            ProtocolSelector::for_throughput(&[Protocol::JsonRpc]),
+            Protocol::JsonRpc
+        );
+        assert_eq!(
+            ProtocolSelector::for_debugging(&[Protocol::JsonRpc]),
+            Protocol::JsonRpc
+        );
+    }
+
+    #[test]
+    fn test_from_router_config_and_capabilities_jsonrpc_preferred() {
+        let router = RouterConfig::jsonrpc_only();
+        let cfg = MultiTransportConfig::from_router_config(&router, 9950);
+        assert!(!cfg.enable_tarpc);
+        assert!(cfg.enable_jsonrpc);
+        let caps = cfg.capabilities();
+        assert_eq!(caps.recommended, "json-rpc");
+    }
+
+    #[test]
+    #[serial]
+    fn test_default_config_invalid_bind_addr_fallback() {
+        beardog_errors::process_env::set_var("BEARDOG_BIND_ADDR", "not-a-valid-host!!!");
+        beardog_errors::process_env::remove_var("BEARDOG_TARPC_PORT");
+        beardog_errors::process_env::remove_var("BEARDOG_JSONRPC_PORT");
+        let cfg = MultiTransportConfig::default();
+        assert_eq!(cfg.tarpc_addr.port(), DEFAULT_TARPC_PORT);
+        assert_eq!(cfg.jsonrpc_addr.port(), DEFAULT_JSONRPC_PORT);
+        beardog_errors::process_env::remove_var("BEARDOG_BIND_ADDR");
+    }
+
+    #[test]
+    #[serial]
+    fn test_from_env_enable_flags() {
+        beardog_errors::process_env::set_var("BEARDOG_ENABLE_TARPC", "0");
+        beardog_errors::process_env::set_var("BEARDOG_ENABLE_JSONRPC", "false");
+        let cfg = MultiTransportConfig::from_env();
+        assert!(!cfg.enable_tarpc);
+        assert!(!cfg.enable_jsonrpc);
+        beardog_errors::process_env::remove_var("BEARDOG_ENABLE_TARPC");
+        beardog_errors::process_env::remove_var("BEARDOG_ENABLE_JSONRPC");
+    }
+
+    #[tokio::test]
+    async fn test_multi_transport_server_jsonrpc_only_ephemeral_port() {
+        let addr: std::net::SocketAddr = "127.0.0.1:0".parse().unwrap();
+        let config = MultiTransportConfig {
+            tarpc_addr: addr,
+            jsonrpc_addr: addr,
+            enable_tarpc: false,
+            enable_jsonrpc: true,
+            shutdown_timeout: std::time::Duration::from_millis(200),
+        };
+        let server = MultiTransportServer::new(config);
+        let handle = server.start().await.expect("start");
+        assert!(handle.jsonrpc_addr().is_some());
+        assert!(handle.tarpc_addr().is_none());
+        handle.shutdown();
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    }
+
+    #[tokio::test]
+    async fn test_multi_transport_handle_shutdown_no_receivers() {
+        let config = MultiTransportConfig {
+            tarpc_addr: "127.0.0.1:0".parse().unwrap(),
+            jsonrpc_addr: "127.0.0.1:0".parse().unwrap(),
+            enable_tarpc: false,
+            enable_jsonrpc: false,
+            shutdown_timeout: std::time::Duration::from_millis(50),
+        };
+        let handle = MultiTransportServer::new(config)
+            .start()
+            .await
+            .expect("start");
+        handle.shutdown();
+        handle.shutdown();
+    }
+
+    #[test]
+    fn test_multi_transport_server_constructors() {
+        let _ = MultiTransportServer::with_defaults();
+        let _ = MultiTransportServer::from_env();
+        let _ = MultiTransportServer::new(MultiTransportConfig::default());
     }
 }

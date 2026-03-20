@@ -55,6 +55,9 @@ workspace = true
 [dependencies.sha2]
 workspace = true
 
+[dependencies.zeroize]
+workspace = true
+
 # Crypto dependencies (100% Pure Rust!)
 [dependencies.pbkdf2]
 version = "0.12"

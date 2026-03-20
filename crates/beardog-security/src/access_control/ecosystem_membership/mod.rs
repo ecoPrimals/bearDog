@@ -99,6 +99,11 @@ impl EcosystemMembershipManager {
         })
     }
 
+    /// Build a manager from [`MembershipConfig::default`], propagating initialization errors.
+    pub fn try_default() -> Result<Self, BearDogError> {
+        Self::new(MembershipConfig::default())
+    }
+
     pub fn check_access(
         &self,
         entity_id: &str,
@@ -225,18 +230,6 @@ impl EcosystemMembershipManager {
         
         let final_trust = (base_trust + genetic_adjustment).clamp(0.0, 1.0);
         Ok(final_trust)
-    }
-}
-
-impl Default for EcosystemMembershipManager {
-    fn default() -> Self {
-        // SAFETY: Default configuration should always be valid.
-        // If this fails, it indicates a programming error in MembershipConfig::default()
-        // or TrustEvolutionTracker/GeneticsIntegration initialization.
-        Self::new(MembershipConfig::default())
-            .unwrap_or_else(|e| {
-                panic!("CRITICAL: Failed to create default EcosystemMembershipManager - this indicates a programming error: {}", e)
-            })
     }
 }
 

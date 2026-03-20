@@ -11,6 +11,8 @@ use chrono::{Duration, Utc};
 use std::collections::HashMap;
 use uuid::Uuid;
 
+use super::types::default_consensus_registry;
+
 impl CrossNodeAuthEngine {
     /// Creates a new instance
     pub fn new(
@@ -26,6 +28,7 @@ impl CrossNodeAuthEngine {
             node_registry,
             proof_verifier,
             workflow_engine: None,
+            consensus_registry: default_consensus_registry(),
         }
     }
 

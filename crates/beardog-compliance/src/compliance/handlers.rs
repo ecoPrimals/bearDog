@@ -270,7 +270,6 @@ impl ComplianceHandler {
     }
 
     /// Helper function to create a `ComplianceViolation` with proper structure
-    #[allow(clippy::too_many_arguments)]
     /// Creates violation
     fn create_violation(
         &self,

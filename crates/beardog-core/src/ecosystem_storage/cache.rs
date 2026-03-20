@@ -182,7 +182,10 @@ impl CacheManager {
     }
 
     /// Updates `hit_rate`
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Hit rate as f64 from integer hit/miss counts"
+    )]
     fn update_hit_rate(&mut self) {
         let total_requests = self.metrics.hits + self.metrics.misses;
         if total_requests > 0 {

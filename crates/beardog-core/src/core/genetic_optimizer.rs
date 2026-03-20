@@ -108,7 +108,6 @@ impl GeneticOptimizer {
     ///
     /// # Errors
     /// Returns an error if initialization fails.
-    #[allow(clippy::cognitive_complexity)]
     pub async fn initialize(&self) -> Result<(), BearDogError> {
         info!(
             "🧬 Initializing GeneticOptimizer with population size: {}",
@@ -132,7 +131,6 @@ impl GeneticOptimizer {
     ///
     /// # Errors
     /// Returns an error if population initialization fails or optimization encounters an error.
-    #[allow(clippy::cognitive_complexity)]
     pub async fn optimize(
         &self,
         fitness_function: impl Fn(&[f64]) -> f64 + Send + Sync,

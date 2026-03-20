@@ -653,22 +653,40 @@ fn select_best_kms(available: &[KmsDiscoveryResult]) -> Option<&KmsDiscoveryResu
 struct KmsDiscoveryResult {
     endpoint: String,
     capabilities: KmsProviderCapabilities,
-    #[allow(dead_code)] // Metadata reserved for provider-specific info
+    #[expect(
+        dead_code,
+        reason = "Discovery metadata reserved for provider-specific fields"
+    )]
     metadata: std::collections::HashMap<String, String>,
 }
 
 /// KMS provider capabilities (what it can do, not who provides it)
 #[derive(Debug, Clone)]
 struct KmsProviderCapabilities {
-    #[allow(dead_code)] // Reserved for capability-based provider selection
+    #[expect(
+        dead_code,
+        reason = "Capability flags reserved for future KMS selection"
+    )]
     can_generate: bool,
-    #[allow(dead_code)] // Reserved for capability-based provider selection
+    #[expect(
+        dead_code,
+        reason = "Capability flags reserved for future KMS selection"
+    )]
     can_encrypt: bool,
-    #[allow(dead_code)] // Reserved for capability-based provider selection
+    #[expect(
+        dead_code,
+        reason = "Capability flags reserved for future KMS selection"
+    )]
     can_decrypt: bool,
-    #[allow(dead_code)] // Reserved for capability-based provider selection
+    #[expect(
+        dead_code,
+        reason = "Capability flags reserved for future KMS selection"
+    )]
     can_sign: bool,
-    #[allow(dead_code)] // Reserved for capability-based provider selection
+    #[expect(
+        dead_code,
+        reason = "Capability flags reserved for future KMS selection"
+    )]
     can_verify: bool,
     hardware_backed: bool,
 }
@@ -704,9 +722,16 @@ impl SoftwareHsmProvider {
     ///
     /// # Errors
     /// Returns an error if HSM initialization fails
-    #[allow(dead_code)]
+    #[allow(
+        dead_code,
+        reason = "Public API hook for tunable software HSM; not referenced internally yet"
+    )]
     pub async fn with_config(
-        #[allow(unused_variables)] config: std::collections::HashMap<String, String>,
+        #[allow(
+            unused_variables,
+            reason = "Parameter reserved for future SecureSoftwareHsm options"
+        )]
+        config: std::collections::HashMap<String, String>,
     ) -> Result<Self, KmsError> {
         // For now, configuration is not used - SecureSoftwareHsm always uses secure defaults
         // Future: Could add options for key derivation params, memory limits, etc.

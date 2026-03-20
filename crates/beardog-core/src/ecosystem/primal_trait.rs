@@ -9,7 +9,10 @@ use super::primal_types::{
 ///
 /// Defines the standard interface that all primals must implement to participate
 /// in the ecosystem, enabling universal discovery, integration, and management.
-#[allow(async_fn_in_trait)]
+#[allow(
+    async_fn_in_trait,
+    reason = "Async primal trait methods for ecosystem integration"
+)]
 pub trait EcoPrimal: Send + Sync {
     /// Returns metadata describing this primal's identity and characteristics
     fn metadata(&self) -> &PrimalMetadata;

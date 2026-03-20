@@ -402,7 +402,11 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
                 key_len,
             )?
         }
-        _ => unreachable!("Cipher suite already validated"),
+        _ => {
+            return Err(format!(
+                "unsupported cipher suite variant reached in TLS 1.3 handshake key derivation: 0x{cipher_suite:04x} (expected 0x1301, 0x1302, or 0x1303 after validation)"
+            ));
+        }
     };
 
     debug!(
@@ -673,7 +677,11 @@ pub async fn handle_tls_derive_application_secrets(
                 key_len,
             )?
         }
-        _ => unreachable!("Cipher suite already validated"),
+        _ => {
+            return Err(format!(
+                "unsupported cipher suite variant reached in TLS 1.3 application key derivation: 0x{cipher_suite:04x} (expected 0x1301, 0x1302, or 0x1303 after validation)"
+            ));
+        }
     };
 
     info!("────────────────────────────────────────────────────────────");

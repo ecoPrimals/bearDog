@@ -1,6 +1,6 @@
 # 🏆 BearDog Types - Canonical Type System
 
-[![Rust](https://img.shields.io/badge/rust-1.75%2B-orange.svg)](https://www.rust-lang.org)
+[![Rust](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://www.rust-lang.org)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/ecoPrimals/beardog)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://docs.rs/beardog-types)

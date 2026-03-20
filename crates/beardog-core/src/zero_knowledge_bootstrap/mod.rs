@@ -359,7 +359,6 @@ impl ZeroKnowledgeBootstrap {
     /// # Errors
     /// Returns an error if bootstrapping fails at any phase, if ecosystem announcement encounters issues,
     /// or if capability discovery or registry operations fail.
-    #[allow(clippy::cognitive_complexity)] // Orchestration function - complexity is from coordinating many phases
     pub async fn bootstrap(&mut self) -> Result<(), BearDogError> {
         let start_time = std::time::Instant::now();
 
@@ -413,7 +412,6 @@ impl ZeroKnowledgeBootstrap {
     }
 
     /// Announce self to ecosystem (broadcast our capabilities)
-    #[allow(clippy::cognitive_complexity)] // Multi-protocol announcement - inherently complex
     fn announce_self_to_ecosystem(&mut self) -> Result<(), BearDogError> {
         info!("📢 Announcing self to ecosystem...");
 
@@ -479,7 +477,6 @@ impl ZeroKnowledgeBootstrap {
     }
 
     /// Discover ecosystem capabilities through active probing
-    #[allow(clippy::cognitive_complexity)] // Multi-protocol discovery with retries - complexity is necessary
     async fn discover_ecosystem_capabilities(&mut self) -> Result<(), BearDogError> {
         info!("🔍 Discovering ecosystem capabilities...");
 
@@ -534,7 +531,6 @@ impl ZeroKnowledgeBootstrap {
 
     /// Build dynamic capability registry from discoveries
     /// Builds `capability_registry`
-    #[allow(clippy::cognitive_complexity)] // Registry building with validation - complexity is inherent
     async fn build_capability_registry(&mut self) -> Result<(), BearDogError> {
         info!("🏗️ Building dynamic capability registry...");
 
@@ -667,19 +663,18 @@ impl ZeroKnowledgeBootstrap {
         // Factor 4: Bootstrap efficiency (weighted 10%)
         // Faster bootstrap = healthier ecosystem
         // Target: <100ms = perfect, <500ms = good, <1000ms = acceptable, >1000ms = degraded
-        let efficiency_score = if metrics.bootstrap_duration_ms == 0 {
-            1.0 // Not yet measured
-        } else if metrics.bootstrap_duration_ms < 100 {
-            1.0 // Perfect
-        } else if metrics.bootstrap_duration_ms < 500 {
-            0.9 // Good
-        } else if metrics.bootstrap_duration_ms < 1000 {
-            0.7 // Acceptable
-        } else if metrics.bootstrap_duration_ms < 2000 {
-            0.5 // Degraded
-        } else {
-            0.3 // Poor
-        };
+        let efficiency_score =
+            if metrics.bootstrap_duration_ms == 0 || metrics.bootstrap_duration_ms < 100 {
+                1.0 // Not yet measured or perfect (<100ms)
+            } else if metrics.bootstrap_duration_ms < 500 {
+                0.9 // Good
+            } else if metrics.bootstrap_duration_ms < 1000 {
+                0.7 // Acceptable
+            } else if metrics.bootstrap_duration_ms < 2000 {
+                0.5 // Degraded
+            } else {
+                0.3 // Poor
+            };
         let efficiency_factor = efficiency_score * 0.1;
 
         // Calculate total health score
@@ -776,6 +771,16 @@ mod tests {
             "Capability discovery system initialized"
         );
 
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_ecosystem_health_score_in_range_after_bootstrap()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let mut bootstrap = ZeroKnowledgeBootstrap::new()?;
+        bootstrap.bootstrap().await?;
+        let state = bootstrap.get_ecosystem_state().await;
+        assert!(state.ecosystem_health >= 0.0 && state.ecosystem_health <= 1.0);
         Ok(())
     }
 }

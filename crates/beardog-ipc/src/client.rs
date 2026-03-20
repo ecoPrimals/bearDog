@@ -307,6 +307,30 @@ impl Default for SongbirdClient {
     }
 }
 
+#[cfg(test)]
+impl SongbirdClient {
+    pub(crate) fn with_socket_path_for_test(path: impl Into<String>) -> Self {
+        Self {
+            socket_path: path.into(),
+            request_id: Arc::new(AtomicU64::new(1)),
+            primal_name: Arc::new(RwLock::new(None)),
+        }
+    }
+
+    /// Same validation as [`SongbirdClient::connect`], but uses a caller-provided socket path.
+    pub(crate) async fn connect_test(self) -> IpcResult<Self> {
+        let _stream = UnixStream::connect(&self.socket_path).await.map_err(|e| {
+            IpcError::Connection(format!(
+                "Cannot connect to Songbird at {}: {}",
+                self.socket_path, e
+            ))
+        })?;
+
+        info!("✅ Connected to Songbird at {}", self.socket_path);
+        Ok(self)
+    }
+}
+
 /// Handle for automatic heartbeat task
 pub struct HeartbeatHandle {
     _stop_tx: tokio::sync::oneshot::Sender<()>,
@@ -316,6 +340,198 @@ pub struct HeartbeatHandle {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::Path;
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+    use tokio::net::UnixListener;
+    use tokio::time::Duration;
+
+    fn unique_sock_path() -> std::path::PathBuf {
+        std::env::temp_dir().join(format!(
+            "beardog_songbird_test_{}_{}.sock",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ))
+    }
+
+    fn spawn_line_json_mock(path: &Path, register_ok: bool) -> tokio::task::JoinHandle<()> {
+        let path = path.to_path_buf();
+        tokio::spawn(async move {
+            let _ = std::fs::remove_file(&path);
+            let listener = UnixListener::bind(&path).expect("bind mock unix socket");
+            loop {
+                let Ok((mut stream, _)) = listener.accept().await else {
+                    break;
+                };
+                let mut reader = BufReader::new(&mut stream);
+                let mut line = String::new();
+                if reader.read_line(&mut line).await.is_err() || line.trim().is_empty() {
+                    continue;
+                }
+                let Ok(v) = serde_json::from_str::<serde_json::Value>(line.trim()) else {
+                    let stream = reader.into_inner();
+                    let _ = stream
+                        .write_all(br#"{"jsonrpc":"2.0","error":{"code":-32700,"message":"parse"},"id":null}"#)
+                        .await;
+                    continue;
+                };
+                let method = v["method"].as_str().unwrap_or("");
+                let id = v["id"].as_u64().unwrap_or(1);
+                let cap = v["params"]["capability"].as_str().unwrap_or("");
+                let response = match method {
+                    "ipc.register" => serde_json::json!({
+                        "jsonrpc": "2.0",
+                        "result": { "registered": register_ok },
+                        "id": id
+                    }),
+                    "ipc.find_capability" if cap == "fail" => serde_json::json!({
+                        "jsonrpc": "2.0",
+                        "error": { "code": -1, "message": "find failed" },
+                        "id": id
+                    }),
+                    "ipc.find_capability" => serde_json::json!({
+                        "jsonrpc": "2.0",
+                        "result": {
+                            "services": [{
+                                "name": "svc",
+                                "endpoint": "/primal/svc",
+                                "capabilities": ["crypto"],
+                                "version": "1.0.0",
+                                "available": true
+                            }]
+                        },
+                        "id": id
+                    }),
+                    "ipc.resolve" => serde_json::json!({
+                        "jsonrpc": "2.0",
+                        "result": {
+                            "name": "resolved",
+                            "endpoint": "/primal/resolved",
+                            "capabilities": [],
+                            "version": "1.0.0",
+                            "available": true
+                        },
+                        "id": id
+                    }),
+                    "ipc.heartbeat" => serde_json::json!({
+                        "jsonrpc": "2.0",
+                        "result": { "ok": true },
+                        "id": id
+                    }),
+                    _ => serde_json::json!({
+                        "jsonrpc": "2.0",
+                        "error": { "code": -32601, "message": "unknown" },
+                        "id": id
+                    }),
+                };
+                let stream = reader.into_inner();
+                let _ = stream
+                    .write_all(serde_json::to_string(&response).unwrap().as_bytes())
+                    .await;
+            }
+        })
+    }
+
+    #[tokio::test]
+    async fn test_connect_and_register_find_resolve_heartbeat() {
+        let path = unique_sock_path();
+        let _guard = spawn_line_json_mock(&path, true);
+        tokio::time::sleep(Duration::from_millis(20)).await;
+
+        let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
+        let client = client.connect_test().await.expect("connect mock");
+
+        client
+            .register("beardog", vec![Capability::Crypto])
+            .await
+            .expect("register");
+
+        let services = client.find_capability("crypto").await.expect("find");
+        assert_eq!(services.len(), 1);
+        assert_eq!(services[0].name, "svc");
+
+        let resolved = client.resolve("any").await.expect("resolve");
+        assert_eq!(resolved.name, "resolved");
+
+        client.heartbeat().await.expect("heartbeat");
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[tokio::test]
+    async fn test_register_failure_branch() {
+        let path = unique_sock_path();
+        let _guard = spawn_line_json_mock(&path, false);
+        tokio::time::sleep(Duration::from_millis(20)).await;
+
+        let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
+        let client = client.connect_test().await.unwrap();
+
+        let err = client
+            .register("x", vec![Capability::Crypto])
+            .await
+            .err()
+            .expect("expected err");
+        assert!(matches!(err, IpcError::Protocol(_)), "{err:?}");
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[tokio::test]
+    async fn test_find_capability_error_branch() {
+        let path = unique_sock_path();
+        let _guard = spawn_line_json_mock(&path, true);
+        tokio::time::sleep(Duration::from_millis(20)).await;
+
+        let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
+        let client = client.connect_test().await.unwrap();
+
+        let err = client
+            .find_capability("fail")
+            .await
+            .err()
+            .expect("expected err");
+        assert!(matches!(err, IpcError::Protocol(_)), "{err:?}");
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[tokio::test]
+    async fn test_send_request_invalid_json_response() {
+        let path = unique_sock_path();
+        let path_clone = path.clone();
+        let _guard = tokio::spawn(async move {
+            let _ = std::fs::remove_file(&path_clone);
+            let listener = UnixListener::bind(&path_clone).expect("bind");
+            let Ok((mut stream, _)) = listener.accept().await else {
+                return;
+            };
+            let _ = stream.write_all(b"not-json").await;
+        });
+        tokio::time::sleep(Duration::from_millis(30)).await;
+
+        let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
+        let err = client
+            .find_capability("crypto")
+            .await
+            .err()
+            .expect("expected serialization err");
+        assert!(matches!(err, IpcError::Serialization(_)), "{err:?}");
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[tokio::test]
+    async fn test_heartbeat_not_registered() {
+        let path = unique_sock_path();
+        let _guard = spawn_line_json_mock(&path, true);
+        tokio::time::sleep(Duration::from_millis(20)).await;
+
+        let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
+        let client = client.connect_test().await.unwrap();
+
+        let err = client.heartbeat().await.err().expect("expected err");
+        assert!(matches!(err, IpcError::Protocol(_)), "{err:?}");
+        let _ = std::fs::remove_file(&path);
+    }
 
     #[test]
     fn test_client_creation() {

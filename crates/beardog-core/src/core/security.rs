@@ -39,7 +39,10 @@ use std::sync::OnceLock;
 /// This provider focuses on software-based crypto suitable for most use cases.
 #[derive(Debug, Clone)]
 pub struct CoreSecurityProvider {
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "BearDogConfig stored for future provider-scoped policy and key paths"
+    )]
     config: BearDogConfig,
 }
 
@@ -103,7 +106,7 @@ impl CoreSecurityProvider {
         // Encrypt
         let ciphertext = cipher
             .encrypt(nonce, data)
-            .map_err(|e| BearDogError::crypto_error(&format!("Encryption failed: {e}")))?;
+            .map_err(|e| BearDogError::crypto_error(format!("Encryption failed: {e}")))?;
 
         // Pack: nonce || ciphertext
         let mut result = nonce_bytes.to_vec();
@@ -140,7 +143,7 @@ impl CoreSecurityProvider {
         // Decrypt
         let plaintext = cipher
             .decrypt(nonce, ciphertext)
-            .map_err(|e| BearDogError::crypto_error(&format!("Decryption failed: {e}")))?;
+            .map_err(|e| BearDogError::crypto_error(format!("Decryption failed: {e}")))?;
 
         Ok(plaintext)
     }

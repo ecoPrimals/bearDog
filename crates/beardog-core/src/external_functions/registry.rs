@@ -220,7 +220,10 @@ impl ExternalFunctionRegistry {
                     "Function called successfully".to_string(),
                 )),
                 error: None,
-                #[allow(clippy::cast_possible_truncation)]
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "Microseconds clamped to u64::MAX before cast"
+                )]
                 execution_time_us: start_time.elapsed().as_micros().min(u128::from(u64::MAX))
                     as u64,
             };
@@ -246,7 +249,10 @@ impl ExternalFunctionRegistry {
 
     /// Checks if a library path is allowed
     /// Checks if library path allowed
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Path allowlist for future dynamic library loading"
+    )]
     fn is_library_path_allowed(&self, path: &str) -> bool {
         let path_buf = std::path::PathBuf::from(path);
 

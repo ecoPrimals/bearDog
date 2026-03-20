@@ -48,7 +48,6 @@ impl UniversalAdapter {
     ///
     /// # Errors
     /// Returns `Err(BearDogError)` if the request processing fails
-    #[allow(clippy::cognitive_complexity)]
     pub async fn process_request(
         &self,
         request: AdapterRequest,

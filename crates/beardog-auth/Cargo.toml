@@ -35,6 +35,9 @@ workspace = true
 [dependencies.beardog-security]
 workspace = true
 
+[dependencies.beardog-capabilities]
+workspace = true
+
 [dependencies.tokio]
 workspace = true
 
@@ -73,6 +76,9 @@ version = "2.1"
 
 [dependencies.sha3]
 version = "0.10"
+
+[dependencies.blake3]
+workspace = true
 
 [dev-dependencies]
 serial_test = "3.0"  # For serial test execution (env tests)

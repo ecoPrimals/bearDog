@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![forbid(unsafe_code)]
 
 //! # beardog-ipc - Primal IPC Protocol Implementation
 //!
@@ -171,6 +172,53 @@ pub fn ipc_resolve_target_param_key() -> String {
 
 /// Default heartbeat interval (30 seconds)
 pub const DEFAULT_HEARTBEAT_INTERVAL: std::time::Duration = std::time::Duration::from_secs(30);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serial_test::serial;
+
+    #[tokio::test]
+    #[serial]
+    async fn discover_ipc_socket_prefers_ipc_socket_env() {
+        beardog_errors::process_env::set_var("IPC_SOCKET", "/tmp/from-ipc-socket");
+        beardog_errors::process_env::remove_var("DISCOVERY_SOCKET");
+        assert_eq!(discover_ipc_socket().await, "/tmp/from-ipc-socket");
+        beardog_errors::process_env::remove_var("IPC_SOCKET");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn discover_ipc_socket_uses_discovery_socket_when_ipc_socket_unset() {
+        beardog_errors::process_env::remove_var("IPC_SOCKET");
+        beardog_errors::process_env::set_var("DISCOVERY_SOCKET", "/tmp/from-discovery-socket");
+        assert_eq!(discover_ipc_socket().await, "/tmp/from-discovery-socket");
+        beardog_errors::process_env::remove_var("DISCOVERY_SOCKET");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn discover_ipc_socket_fallback_when_no_env() {
+        beardog_errors::process_env::remove_var("IPC_SOCKET");
+        beardog_errors::process_env::remove_var("DISCOVERY_SOCKET");
+        assert_eq!(discover_ipc_socket().await, DISCOVERY_SOCKET_FALLBACK);
+    }
+
+    #[test]
+    #[serial]
+    fn ipc_resolve_target_param_key_respects_env() {
+        beardog_errors::process_env::set_var(ENV_IPC_RESOLVE_TARGET_PARAM_KEY, "custom_target");
+        assert_eq!(ipc_resolve_target_param_key(), "custom_target");
+        beardog_errors::process_env::remove_var(ENV_IPC_RESOLVE_TARGET_PARAM_KEY);
+    }
+
+    #[test]
+    #[serial]
+    fn ipc_resolve_target_param_key_default() {
+        beardog_errors::process_env::remove_var(ENV_IPC_RESOLVE_TARGET_PARAM_KEY);
+        assert_eq!(ipc_resolve_target_param_key(), IPC_RESOLVE_TARGET_PARAM_KEY);
+    }
+}
 
 #[cfg(test)]
 mod coverage_tests;

@@ -164,12 +164,11 @@ impl NetworkDiscovery {
                 available.push(preferred);
                 info!("✅ Preferred port {} is available", preferred);
                 return Ok(available); // Use preferred if available
-            } else {
-                warn!(
-                    "⚠️  Preferred port {} not available, searching range",
-                    preferred
-                );
             }
+            warn!(
+                "⚠️  Preferred port {} not available, searching range",
+                preferred
+            );
         }
 
         // Search configured range for available ports

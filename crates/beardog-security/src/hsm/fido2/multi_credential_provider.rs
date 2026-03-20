@@ -35,7 +35,7 @@ pub struct Fido2MultiCredentialProvider {
 
     /// FIDO2-specific configuration
     /// Note: Used for future protocol operations (makeCredential, getAssertion)
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "Config used when CTAP2 credential ops are wired")]
     config: Fido2ProviderConfig,
 }
 

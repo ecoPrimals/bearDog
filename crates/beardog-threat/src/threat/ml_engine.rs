@@ -224,13 +224,15 @@ impl MlEngine {
         let reasoning = response
             .get("reasoning")
             .and_then(|v| v.as_array())
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|v| v.as_str())
-                    .map(String::from)
-                    .collect()
-            })
-            .unwrap_or_else(|| vec!["Network ML analysis".to_string()]);
+            .map_or_else(
+                || vec!["Network ML analysis".to_string()],
+                |arr| {
+                    arr.iter()
+                        .filter_map(|v| v.as_str())
+                        .map(String::from)
+                        .collect()
+                },
+            );
 
         Ok(MlPrediction {
             confidence,

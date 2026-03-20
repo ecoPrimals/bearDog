@@ -70,9 +70,8 @@ pub async fn initialize_mobile_hsm_manager(
                 return Err(BearDogError::unavailable(format!(
                     "Mobile HSM required but unavailable: {e}"
                 )));
-            } else {
-                warn!("⚠️ Mobile HSM unavailable, using software-only mode: {}", e);
             }
+            warn!("⚠️ Mobile HSM unavailable, using software-only mode: {}", e);
         }
     }
 

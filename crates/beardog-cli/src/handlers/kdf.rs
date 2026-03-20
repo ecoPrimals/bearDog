@@ -142,7 +142,10 @@ impl KdfConfig {
     }
 
     /// Get KDF metadata for storage
-    #[allow(dead_code)] // Planned for key metadata persistence
+    #[allow(
+        dead_code,
+        reason = "Public metadata helper for future persisted key records"
+    )]
     pub fn to_metadata(&self) -> serde_json::Value {
         serde_json::json!({
             "kdf_type": self.kdf_type,

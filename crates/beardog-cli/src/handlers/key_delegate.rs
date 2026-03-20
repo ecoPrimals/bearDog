@@ -39,7 +39,10 @@ impl DelegationConstraints {
     ///
     /// This creates a `Vec<Box<dyn Constraint>>` that can be evaluated
     /// using the universal constraint system.
-    #[allow(dead_code)] // Planned for constraint evaluation in delegation flow
+    #[allow(
+        dead_code,
+        reason = "Public builder for upcoming delegation constraint evaluation"
+    )]
     pub fn to_constraints(&self) -> Vec<Box<dyn Constraint>> {
         let mut constraints: Vec<Box<dyn Constraint>> = Vec::new();
 
@@ -79,7 +82,10 @@ impl DelegationConstraints {
     /// Check if constraints are currently satisfied
     ///
     /// MODERNIZED: Uses trait-based constraint evaluation
-    #[allow(dead_code)] // Planned for delegation validation
+    #[allow(
+        dead_code,
+        reason = "Public API for future delegation validation before issuance"
+    )]
     pub fn is_satisfied(&self) -> Result<bool, BearDogError> {
         let constraints = self.to_constraints();
         let context = ConstraintContext::new().with_user(self.delegated_to.clone());
@@ -95,14 +101,20 @@ impl DelegationConstraints {
     }
 
     /// Get composite constraint (all constraints with AND logic)
-    #[allow(dead_code)] // Planned for delegation validation
+    #[allow(
+        dead_code,
+        reason = "Public API for exporting composite constraints in delegation"
+    )]
     pub fn as_composite(&self) -> CompositeConstraint {
         CompositeConstraint::and(self.to_constraints())
     }
 }
 
 /// Handle key delegation command
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "CLI maps many optional delegation flags into one handler"
+)]
 pub async fn handle_key_delegate(
     master_key_id: &str,
     delegate_to: &str,

@@ -69,13 +69,19 @@ pub struct SovereigntyManager {
     /// Sovereignty configuration
     config: PrimalSovereigntyConfig,
     /// Genetic spawning engine for primal evolution
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "Reserved for future sovereignty genetic pathways")]
     genetics: GeneticSpawningEngine,
     /// Encryption configuration
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Reserved for future sovereignty crypto integration"
+    )]
     crypto_config: EncryptionConfig,
     /// Human entropy hierarchy manager
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Reserved for future entropy hierarchy enforcement"
+    )]
     hierarchy_manager: EntropyHierarchyManager,
     /// Current sovereignty state
     sovereignty_state: SovereigntyState,
@@ -114,7 +120,6 @@ impl SovereigntyManager {
     /// - Sovereignty validation fails
     /// - Configuration is invalid
     /// - Required dependencies are not met
-    #[allow(clippy::cognitive_complexity)]
     pub fn validate_sovereignty(&mut self) -> Result<bool, BearDogError> {
         info!("🔍 Validating primal sovereignty status");
 

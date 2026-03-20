@@ -11,7 +11,44 @@ use super::workflow::{CrossNodeWorkflowRequest, WorkflowStatus};
 use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
+
+/// Health signal for a node participating in cross-node consensus.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ConsensusNodeHealth {
+    /// Fully trusted for quorum participation.
+    Healthy,
+    /// Still listed but should be deprioritized.
+    Degraded,
+    /// Excluded from [`CrossNodeAuthEngine::get_trusted_nodes`] results.
+    Offline,
+}
+
+/// In-memory consensus registry entry (paired with [`CrossNodeAuthEngine::consensus_registry`]).
+#[derive(Debug, Clone)]
+pub struct ConsensusNodeRecord {
+    /// Liveness / trust tier for quorum selection.
+    pub health: ConsensusNodeHealth,
+    /// Last time this record was created or updated.
+    pub last_seen: DateTime<Utc>,
+}
+
+/// Default trusted quorum nodes matching the historical stub (`node_1` … `node_3`).
+pub fn default_consensus_registry() -> BTreeMap<String, ConsensusNodeRecord> {
+    let now = Utc::now();
+    ["node_1", "node_2", "node_3"]
+        .into_iter()
+        .map(|id| {
+            (
+                id.to_string(),
+                ConsensusNodeRecord {
+                    health: ConsensusNodeHealth::Healthy,
+                    last_seen: now,
+                },
+            )
+        })
+        .collect()
+}
 
 /// Snapshot of a peer primal used for trust scoring, routing, and capability discovery.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -92,6 +129,9 @@ pub struct CrossNodeAuthEngine {
 
     /// Optional workflow orchestrator for multi-step approvals.
     pub workflow_engine: Option<Box<dyn WorkflowEngine + Send + Sync>>,
+
+    /// Ordered in-memory consensus participants (health, last seen).
+    pub consensus_registry: BTreeMap<String, ConsensusNodeRecord>,
 }
 
 #[cfg(test)]
@@ -105,6 +145,7 @@ impl Default for CrossNodeAuthEngine {
             node_registry: Box::new(test_helpers::MockNodeRegistry::default()),
             proof_verifier: Box::new(test_helpers::MockProofVerifier),
             workflow_engine: None,
+            consensus_registry: default_consensus_registry(),
         }
     }
 }

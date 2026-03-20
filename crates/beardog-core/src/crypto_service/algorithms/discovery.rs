@@ -83,7 +83,10 @@ pub enum PerformanceTier {
 /// Vector of algorithm capabilities, sorted by preference
 /// (hardware-accelerated and faster algorithms first)
 #[must_use]
-#[allow(clippy::too_many_lines)]
+#[expect(
+    clippy::too_many_lines,
+    reason = "Single table enumerates all supported algorithm capabilities"
+)]
 pub fn discover_algorithms() -> Vec<AlgorithmCapability> {
     let mut capabilities = Vec::new();
 

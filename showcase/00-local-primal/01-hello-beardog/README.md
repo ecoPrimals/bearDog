@@ -24,7 +24,7 @@ This is your introduction to BearDog's sovereign key management.
 
 **Software**:
 ```bash
-# Rust toolchain (1.75+)
+# Rust toolchain (1.85+, Edition 2024)
 rustc --version
 
 # BearDog built

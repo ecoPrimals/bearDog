@@ -42,20 +42,6 @@ pub fn try_get_env_required(key: &str) -> Result<String, beardog_errors::BearDog
     })
 }
 
-/// Get a required environment variable or panic with a helpful message
-///
-/// # Panics
-///
-/// Panics if the environment variable is not set. Prefer `try_get_env_required`
-/// for graceful error handling.
-#[deprecated(
-    since = "0.10.0",
-    note = "Use try_get_env_required for Result-based error handling"
-)]
-pub fn get_env_required(key: &str) -> String {
-    try_get_env_required(key).unwrap_or_else(|e| panic!("{}", e))
-}
-
 /// Configuration for network endpoints
 #[derive(Debug, Clone)]
 pub struct NetworkConfig {
@@ -286,18 +272,20 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Required environment variable")]
-    #[allow(deprecated)] // Exercises legacy `get_env_required` panic path
-    fn test_get_env_required_missing() {
+    fn test_try_get_env_required_missing() {
         beardog_errors::process_env::remove_var("REQUIRED_VAR_MISSING");
-        let _ = get_env_required("REQUIRED_VAR_MISSING");
+        let err = try_get_env_required("REQUIRED_VAR_MISSING").expect_err("missing var should err");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("REQUIRED_VAR_MISSING") && msg.contains("not set"),
+            "unexpected message: {msg}"
+        );
     }
 
     #[test]
-    #[allow(deprecated)]
-    fn test_get_env_required_present() {
+    fn test_try_get_env_required_present() {
         beardog_errors::process_env::set_var("REQUIRED_VAR_PRESENT", "required_value");
-        let result = get_env_required("REQUIRED_VAR_PRESENT");
+        let result = try_get_env_required("REQUIRED_VAR_PRESENT").expect("var is set");
         assert_eq!(result, "required_value");
         beardog_errors::process_env::remove_var("REQUIRED_VAR_PRESENT");
     }

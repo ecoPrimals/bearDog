@@ -22,7 +22,10 @@ impl UniversalProvider for BearDogCore {
         &self.primal_capabilities
     }
 
-    #[allow(clippy::vec_init_then_push)] // Complex service definitions are clearer with push
+    #[expect(
+        clippy::vec_init_then_push,
+        reason = "Service list built incrementally for readability"
+    )]
     fn services(&self) -> Result<Vec<PrimalService>, BearDogError> {
         let mut services = Vec::new();
 

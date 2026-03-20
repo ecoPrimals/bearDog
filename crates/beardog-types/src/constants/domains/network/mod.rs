@@ -13,6 +13,7 @@ pub mod defaults;
 pub mod headers;
 pub mod http;
 pub mod intervals;
+pub mod ipc_discovery;
 pub mod limits;
 pub mod load_balancing;
 pub mod nodes;

@@ -59,7 +59,6 @@ pub struct SafetyChecker {
     /// Current security clearance level
     security_clearance: SecurityClearance,
     /// Loaded safety policies by policy ID
-    #[allow(dead_code)] // Will be used when policy loading is implemented
     loaded_policies: HashMap<String, SafetyPolicy>,
 }
 

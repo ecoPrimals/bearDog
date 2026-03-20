@@ -52,7 +52,7 @@ struct CacheAlignedStats {
 }
 
 /// SIMD-optimized buffer pool for vectorized operations
-#[allow(dead_code)]
+#[allow(dead_code, reason = "pub struct reserved for SIMD buffer pool wiring")]
 pub struct SIMDOptimizedBufferPool {
     /// Aligned buffers for SIMD operations (32-byte alignment for AVX2)
     aligned_buffers: Vec<AlignedBuffer>,
@@ -74,9 +74,11 @@ struct AlignedBuffer {
 ///
 /// A full lock-free queue is not yet wired into hot paths; this type keeps the
 /// public shape and capacity contract for callers and tests.
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "pub struct placeholder for future lock-free queue"
+)]
 pub struct LockFreeQueue<T> {
-    #[allow(dead_code)]
     _marker: PhantomData<T>,
     /// Maximum elements reserved for a future queue implementation.
     pub capacity: usize,
@@ -84,7 +86,7 @@ pub struct LockFreeQueue<T> {
 
 /// Unit of work passed through the experimental ultimate-performance pipeline.
 #[derive(Debug)]
-#[allow(dead_code)]
+#[allow(dead_code, reason = "pub struct for pipeline operation shape")]
 pub struct ProcessingOperation {
     /// Operation type for dispatch optimization
     op_type: OperationType,
@@ -111,7 +113,7 @@ pub enum OperationType {
 
 /// Memory prefetch controller for reduced latency
 /// Holds learned stride patterns and coarse prefetch effectiveness counters.
-#[allow(dead_code)]
+#[allow(dead_code, reason = "pub struct for prefetch controller integration")]
 pub struct MemoryPrefetchController {
     /// Prefetch patterns learned from access history
     access_patterns: Vec<MemoryAccessPattern>,
@@ -121,7 +123,10 @@ pub struct MemoryPrefetchController {
 
 /// Memory access pattern for intelligent prefetching
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "Prefetch pattern record for future stride learning"
+)]
 struct MemoryAccessPattern {
     base_address: usize,
     stride: usize,
@@ -131,7 +136,7 @@ struct MemoryAccessPattern {
 
 /// SIMD capability detection and optimization
 /// Best-effort SIMD flags (x86 via `is_x86_feature_detected!`, conservative elsewhere).
-#[allow(dead_code)]
+#[allow(dead_code, reason = "pub struct for SIMD capability reporting")]
 pub struct SIMDCapabilities {
     /// Target reports AVX2 support.
     has_avx2: bool,
@@ -221,7 +226,7 @@ impl UltimatePerformanceProcessor {
     /// without the maintenance burden and safety concerns of manual unsafe SIMD.
     /// Scalar optimization for maximum compatibility
     #[inline(always)]
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "Scalar path kept as LLVM comparison baseline")]
     fn process_with_scalar_optimization(&self, data: &[u8]) -> Vec<u8> {
         // Use optimized scalar processing with manual loop unrolling
         let mut result = Vec::with_capacity(data.len());

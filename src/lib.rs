@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 //! # BearDog: Sovereign Computing Platform
 //!
 //! BearDog is a sovereign computing platform for distributed, capability-oriented workflows

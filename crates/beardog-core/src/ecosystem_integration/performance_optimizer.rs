@@ -22,15 +22,20 @@ use tracing::debug;
 /// Activation pending ecosystem performance requirements.
 #[derive(Debug)]
 pub struct EcosystemPerformanceOptimizer {
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Pool wiring pending ecosystem performance rollout"
+    )]
     capability_pool: Arc<CapabilityConnectionPool>,
-    #[allow(dead_code)]
     compute_cache: Arc<RwLock<ComputeCache>>,
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "Performance metrics reserved for future export")]
     metrics: Arc<RwLock<PerformanceMetrics>>,
     rate_limiter: Arc<Semaphore>,
     /// Configuration
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Full optimizer config applied when features activate"
+    )]
     config: EcosystemOptimizerConfig,
 }
 
@@ -43,13 +48,16 @@ pub struct CapabilityConnectionPool {
     /// Active connections to service mesh capabilities
     service_mesh_connections: RwLock<HashMap<String, PooledConnection>>,
     /// Active connections to compute capabilities
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Compute pool reserved for multi-capability routing"
+    )]
     compute_connections: RwLock<HashMap<String, PooledConnection>>,
     /// Connection health monitor
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "Health map reserved for pool maintenance")]
     health_monitor: RwLock<HashMap<String, ConnectionHealth>>,
     /// Pool configuration
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "Pool tuning applied when pooling is active")]
     config: PoolConfig,
 }
 
@@ -121,10 +129,9 @@ pub enum ConnectionState {
 #[derive(Debug)]
 pub struct ComputeCache {
     /// Cached compute results
-    #[allow(dead_code)]
     cache: HashMap<String, CachedResult>,
     /// Cache statistics
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "Hit/miss stats for future tuning")]
     stats: CacheStats,
 }
 
@@ -285,7 +292,11 @@ impl EcosystemPerformanceOptimizer {
     }
 
     /// Gets `cached_result`
-    #[allow(dead_code, clippy::significant_drop_tightening)]
+    #[expect(dead_code, reason = "Cache read path reserved for compute integration")]
+    #[expect(
+        clippy::significant_drop_tightening,
+        reason = "RwLock guard scope matches cache lookup semantics"
+    )]
     async fn get_cached_result(
         &self,
         request_id: &str,
@@ -301,7 +312,15 @@ impl EcosystemPerformanceOptimizer {
     }
 
     /// Executes `compute_request`
-    #[allow(dead_code, clippy::unused_self, clippy::unnecessary_wraps)]
+    #[expect(dead_code, reason = "Compute execution stub for future pooling")]
+    #[expect(
+        clippy::unused_self,
+        reason = "Self reserved when routing through pooled connections"
+    )]
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Result reserved for compute errors"
+    )]
     fn execute_compute_request(
         &self,
         _connection: &PooledConnection,
@@ -346,7 +365,10 @@ impl CapabilityConnectionPool {
     ///
     /// # Errors
     /// Returns `Err(BearDogError)` if adding the connection fails
-    #[allow(clippy::significant_drop_tightening)]
+    #[expect(
+        clippy::significant_drop_tightening,
+        reason = "RwLock write guard for pooled connection insert"
+    )]
     pub async fn add_connection(
         &self,
         capability: String,

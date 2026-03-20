@@ -1,9 +1,10 @@
-#![allow(
+#![expect(
     unused_imports,
-    unused_variables,
+    reason = "E2E test scaffolding imports used conditionally"
+)]
+#![expect(
     dead_code,
-    unused_comparisons,
-    clippy::all
+    reason = "E2E helper functions called from test orchestrator"
 )]
 // Production Deployment E2E Test
 // Created October 7, 2025

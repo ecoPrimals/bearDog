@@ -72,7 +72,7 @@ sudo systemctl status beardog
 
 **Dockerfile**:
 ```dockerfile
-FROM rust:1.75 as builder
+FROM rust:1.85 AS builder
 WORKDIR /build
 COPY . .
 RUN cargo build --release --bin beardog-server

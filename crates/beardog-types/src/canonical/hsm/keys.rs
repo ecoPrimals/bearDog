@@ -552,7 +552,10 @@ impl KeyManager {
         }
     }
 
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "Reserved helper for default key sizes; not yet wired into public API"
+    )]
     /// Gets `default_key_size`
     fn get_default_key_size(algorithm: &str) -> Option<usize> {
         match algorithm {

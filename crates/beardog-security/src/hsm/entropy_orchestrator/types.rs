@@ -67,7 +67,7 @@ pub enum SecurityLevel {
 }
 
 /// HSM source selection (internal use)
-#[allow(dead_code)]
+#[expect(dead_code, reason = "Variants used as orchestrator integration lands")]
 enum HsmSource {
     /// FIDO2 device
     Fido2(usize), // Index in fido2_providers vec
@@ -76,7 +76,7 @@ enum HsmSource {
     Android,
 
     /// iOS Secure Enclave
-    #[allow(clippy::upper_case_acronyms)]
+    #[expect(clippy::upper_case_acronyms, reason = "iOS is the platform name")]
     IOS,
 }
 

@@ -4,7 +4,7 @@ path = "src/main.rs"
 
 [package]
 name = "beardog-deploy"
-version = "1.0.0"
+version.workspace = true
 edition = "2024"
 description = "Pure Rust deployment tool for BearDog on Android devices"
 repository = "https://github.com/eastgate-software/beardog"

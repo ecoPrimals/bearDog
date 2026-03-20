@@ -14,7 +14,7 @@
 | **Clippy** | 0 warnings | Pedantic + nursery, workspace-centralized |
 | **Missing Docs** | 0 warnings | All public items documented |
 | **Pure Rust** | 100% | Zero C dependencies (ecoBin) |
-| **Unsafe Code** | 0 blocks | `deny(unsafe_code)` via workspace |
+| **Unsafe Code** | 1 justified module | `forbid(unsafe_code)` per-crate, `deny` workspace; `process_env.rs` exception |
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All 1,740 .rs files compliant |
@@ -38,11 +38,13 @@
 |-------|--------------|-------------------|
 | beardog-utils | 92.3% | 90.6% |
 | beardog-genetics | 89.9% | 84.0% |
-| beardog-types | 82.0% | 73.5% |
-| beardog-core | 75.1% | 72.6% |
-| beardog-tunnel | 74.2% | 66.4% |
-| beardog-security | 63.8% | 67.9% |
-| beardog-ipc | 54.7% | 52.5% |
+| beardog-ipc | 86.0% | — |
+| beardog-auth | 84.0% | — |
+| beardog-types | 80.8% | 73.5% |
+| beardog-errors | 77.0% | — |
+| beardog-tunnel | 71.0% | 66.4% |
+| beardog-security | 73.7% | 67.9% |
+| beardog-core | 62.2% | 72.6% |
 
 ---
 
@@ -57,7 +59,7 @@
 | Self-Knowledge | Primals discover peers at runtime |
 | JSON-RPC + tarpc | Both protocols supported |
 | AGPL-3.0-only | License verified; SPDX headers on all .rs files |
-| `deny(unsafe_code)` | All 29 crates via workspace inheritance |
+| `forbid(unsafe_code)` | Per-crate `lib.rs`; 1 justified exception (`process_env.rs`) |
 | Workspace Lints | Centralized clippy pedantic + nursery |
 | All Public Items Documented | 0 missing_docs warnings |
 | File Size | 0 files > 1000 LOC |
@@ -65,6 +67,16 @@
 ---
 
 ## Recent Improvements (March 20, 2026)
+
+### Wave 4: Deep Debt Execution & Stub Evolution
+
+- Eliminated all 49 remaining library clippy warnings — **0 source warnings**
+- Evolved 5 production stubs to real implementations (threat lifecycle, auth genetics/ecosystem/consensus, safe memory)
+- Swept `#[allow]` → `#[expect(reason)]` across core crates
+- beardog-ipc coverage 72% → 86%, beardog-core 59% → 62%
+- Fixed failing doctests, extracted oversized test module
+- `#![forbid(unsafe_code)]` on all crate `lib.rs` files (except beardog-errors)
+- Dockerfile and `.pedantic_clippy.toml` updated to MSRV 1.85
 
 ### Wave 3: Edition 2024 + Total Documentation
 

@@ -394,7 +394,7 @@ impl CapabilityRouter {
                 use std::hash::BuildHasher;
 
                 let s = RandomState::new();
-                let hash = s.hash_one(&Instant::now());
+                let hash = s.hash_one(Instant::now());
                 // Truncation is fine: we only need a uniform index into a small slice
                 let idx = usize::try_from(hash % primals.len() as u64).unwrap_or(0);
                 (idx, "random selection".to_string())

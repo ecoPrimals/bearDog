@@ -12,7 +12,7 @@ path = "tests/concurrency_stress_tests.rs"
 
 [package]
 name = "beardog-integration-tests"
-version = "3.0.0"
+version.workspace = true
 edition = "2024"
 description = "beardog-integration-tests component of BearDog security ecosystem"
 readme = "README.md"

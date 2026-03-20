@@ -126,7 +126,7 @@ impl ConsolidatedAiConfigBuilder {
     }
 
     /// Build the configuration
-    pub fn build(self) -> Result<ConsolidatedAiConfig> {
+    pub fn build(self) -> std::result::Result<ConsolidatedAiConfig, BearDogError> {
         Ok(ConsolidatedAiConfig {
             enabled: self.enabled,
             hybrid_intelligence: self.hybrid_intelligence.unwrap_or_default(),
@@ -136,25 +136,15 @@ impl ConsolidatedAiConfigBuilder {
     }
 
     /// Preset: Production AI configuration with human oversight
-    pub fn production_safe() -> Self {
-        Self::default().enabled(true).hybrid_intelligence(
-            super::HybridIntelligenceConfigBuilder::human_centric()
-                .build()
-                .unwrap_or_else(|e| {
-                    panic!("CRITICAL: Preset configuration should always be valid - this indicates a programming error in HybridIntelligenceConfigBuilder: {}", e)
-                }),
-        )
+    pub fn production_safe() -> std::result::Result<Self, BearDogError> {
+        let hybrid = super::HybridIntelligenceConfigBuilder::human_centric().build()?;
+        Ok(Self::default().enabled(true).hybrid_intelligence(hybrid))
     }
 
     /// Preset: Development AI configuration with full automation
-    pub fn development() -> Self {
-        Self::default().enabled(true).hybrid_intelligence(
-            super::HybridIntelligenceConfigBuilder::full_automation()
-                .build()
-                .unwrap_or_else(|e| {
-                    panic!("CRITICAL: Preset configuration should always be valid - this indicates a programming error in HybridIntelligenceConfigBuilder: {}", e)
-                }),
-        )
+    pub fn development() -> std::result::Result<Self, BearDogError> {
+        let hybrid = super::HybridIntelligenceConfigBuilder::full_automation().build()?;
+        Ok(Self::default().enabled(true).hybrid_intelligence(hybrid))
     }
 }
 
@@ -180,12 +170,10 @@ mod tests {
     // TEST_PRIORITY: normal
     #[test]
     fn test_presets() {
-        let prod = ConsolidatedAiConfigBuilder::production_safe()
-            .build()
-            ?;
+        let prod = ConsolidatedAiConfigBuilder::production_safe()?.build()?;
         assert!(prod.is_enabled());
 
-        let dev = ConsolidatedAiConfigBuilder::development().build()?;
+        let dev = ConsolidatedAiConfigBuilder::development()?.build()?;
         assert!(dev.is_enabled());
     }
 }

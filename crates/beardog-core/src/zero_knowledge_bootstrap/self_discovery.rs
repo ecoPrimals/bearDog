@@ -103,7 +103,7 @@ impl SelfDiscoveryEngine {
     }
 
     /// Logs the discovery plan
-    #[allow(clippy::unused_self, clippy::cognitive_complexity)] // Complex logging function
+    #[allow(clippy::unused_self, reason = "will use self when fully implemented")]
     fn log_discovery_plan(&self) {
         info!("🔍 Starting self-identity discovery...");
         info!("📋 Discovery Plan:");
@@ -118,7 +118,6 @@ impl SelfDiscoveryEngine {
     ///
     /// # Errors
     /// Returns an error if any discovery phase fails
-    #[allow(clippy::cognitive_complexity)] // Multi-phase discovery orchestration - complexity is necessary
     fn execute_discovery_phases(
         &mut self,
     ) -> Result<
@@ -173,8 +172,6 @@ impl SelfDiscoveryEngine {
     }
 
     /// Logs the final discovery results
-    #[allow(clippy::cognitive_complexity)] // Comprehensive logging function - complexity is from detailed output
-    #[allow(clippy::cast_possible_truncation)] // Duration clamped to u64::MAX, truncation is intentional
     fn log_discovery_results(self_identity: &SelfIdentity, start_time: std::time::Instant) {
         let discovery_duration = start_time.elapsed().as_millis().min(u128::from(u64::MAX)) as u64;
 
@@ -219,7 +216,6 @@ impl SelfDiscoveryEngine {
     }
 
     /// Auto-detect available capabilities by examining the runtime environment
-    #[allow(clippy::cognitive_complexity)] // Comprehensive capability detection - complexity is from thorough checks
     fn auto_detect_capabilities(&mut self) -> Vec<SelfCapabilityDetection> {
         info!("🔍 Auto-detecting capabilities...");
         let mut capabilities = Vec::new();
@@ -496,7 +492,6 @@ impl SelfDiscoveryEngine {
 
     /// Validate self-knowledge
     /// Validates `self_knowledge`
-    #[allow(clippy::cognitive_complexity)] // Thorough validation with multiple checks - complexity is necessary
     fn validate_self_knowledge(
         capabilities: &[SelfCapabilityDetection],
     ) -> Result<(), BearDogError> {

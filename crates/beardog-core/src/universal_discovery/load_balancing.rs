@@ -280,7 +280,10 @@ impl LoadBalancer {
         let mut services_with_connections: Vec<(ServiceInfo, u32)> = services
             .iter()
             .map(|service| {
-                #[allow(clippy::cast_possible_truncation)]
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "Simulated connection count from name hash"
+                )]
                 let connection_count = (service.name.len() % 10) as u32; // Simulated connection count
                 (service.clone(), connection_count)
             })
@@ -302,7 +305,10 @@ impl LoadBalancer {
         let mut weighted_services: Vec<(ServiceInfo, u32)> = services
             .into_iter()
             .map(|service| {
-                #[allow(clippy::cast_possible_truncation)]
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "Simulated weight from name length"
+                )]
                 let weight = (service.name.len() % 5 + 1) as u32; // Weight 1-5 based on name length
                 (service, weight)
             })
@@ -330,7 +336,10 @@ impl LoadBalancer {
             .as_nanos()
             .hash(&mut hasher);
 
-        #[allow(clippy::cast_possible_truncation)]
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "Hash seed for deterministic shuffle"
+        )]
         let seed = hasher.finish() as usize;
 
         // Simple shuffle algorithm
@@ -372,7 +381,6 @@ impl LoadBalancer {
         let mut services_with_response_time: Vec<(ServiceInfo, u64)> = services
             .into_iter()
             .map(|service| {
-                #[allow(clippy::cast_possible_truncation)]
                 let response_time_ms = (service.address.len() % 100 + 10) as u64; // 10-109ms simulated
                 (service, response_time_ms)
             })
@@ -394,7 +402,10 @@ impl LoadBalancer {
         let mut services_with_resources: Vec<(ServiceInfo, f64)> = services
             .into_iter()
             .map(|service| {
-                #[allow(clippy::cast_precision_loss)]
+                #[expect(
+                    clippy::cast_precision_loss,
+                    reason = "Simulated resource score from metadata size"
+                )]
                 let resource_usage = (service.metadata.len() as f64 * 0.1).min(1.0); // 0.0-1.0 usage
                 (service, resource_usage)
             })

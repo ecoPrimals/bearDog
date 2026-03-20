@@ -420,8 +420,14 @@ impl StorageBackendTrait for FileStorageBackend {
         let mut keys = Vec::new();
         for entry in entries.flatten() {
             if let Some(name) = entry.file_name().to_str() {
-                if name.ends_with(".key") {
-                    keys.push(name.trim_end_matches(".key").to_string());
+                let path = std::path::Path::new(name);
+                if path
+                    .extension()
+                    .is_some_and(|ext| ext.eq_ignore_ascii_case("key"))
+                {
+                    if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+                        keys.push(stem.to_string());
+                    }
                 }
             }
         }

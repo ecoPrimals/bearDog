@@ -25,10 +25,14 @@
 //!
 //! # Environment Variables
 //!
-//! - `PRIMAL_DISCOVERY_METHOD` - Discovery method (upa, mdns, dns-sd, env)
-//! - `UPA_REGISTRY_ADDR` - UPA registry address (for UPA method)
+//! - `PRIMAL_DISCOVERY_METHOD` - Discovery method (upa, mdns, dns-sd, env, multi)
+//! - `BEARDOG_REGISTRY_ENDPOINT` - Registry / UPA endpoint (URI or `unix://` path), highest precedence
+//! - `BEARDOG_SERVICE_REGISTRY_ENDPOINT` - Alternate registry env (workspace convention)
+//! - `UPA_REGISTRY_ADDR` - Legacy UPA registry address
+//! - `BEARDOG_BIOMEOS_SOCKET_DIR` - Override `$XDG_RUNTIME_DIR/biomeos` for IPC socket scan
 //! - `DISCOVERY_TIMEOUT_MS` - Discovery timeout in milliseconds
-//! - `PRIMAL_<NAME>_ADDR` - Explicit primal address (development override)
+//! - `PRIMAL_<NAME>_ADDR` - Explicit primal address (`http://…`, `unix://…`, or absolute socket path on Unix)
+//! - `PRIMAL_<NAME>_CAPABILITIES` - Comma-separated capabilities for env- or socket-discovered primals
 //!
 //! # Usage Example
 //!
@@ -51,9 +55,11 @@
 
 use crate::self_knowledge::{Endpoint, SimpleCapability};
 use beardog_errors::BearDogError;
+use beardog_types::constants::domains::network::ipc_discovery as ipc;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::env;
+use std::ffi::OsStr;
 use std::time::Duration;
 use tracing::{debug, info, warn};
 
@@ -228,11 +234,7 @@ impl PrimalDiscovery {
                 Ok(DiscoveryMethod::Environment)
             }
             Some("upa") => {
-                let registry_addr = env::var("UPA_REGISTRY_ADDR").map_err(|_| {
-                    BearDogError::configuration(
-                        "UPA_REGISTRY_ADDR required for UPA discovery method",
-                    )
-                })?;
+                let registry_addr = ipc::resolve_upa_registry_endpoint();
                 info!("Using UPA registry at: {}", registry_addr);
                 Ok(DiscoveryMethod::UniversalPrimalAuthority { registry_addr })
             }
@@ -248,11 +250,14 @@ impl PrimalDiscovery {
                 Ok(DiscoveryMethod::DnsSd { domain })
             }
             Some("multi") | None => {
-                // Default: Try multiple methods in order
-                info!("Using multi-method discovery (env → UPA → mDNS)");
+                let registry_addr = ipc::resolve_upa_registry_endpoint();
+                info!(
+                    "Using multi-method discovery (environment + biomeOS sockets → UPA at {})",
+                    registry_addr
+                );
                 Ok(DiscoveryMethod::Multi(vec![
                     DiscoveryMethod::Environment,
-                    // UPA and mDNS would be added if configured
+                    DiscoveryMethod::UniversalPrimalAuthority { registry_addr },
                 ]))
             }
             Some(other) => Err(BearDogError::invalid_input(&format!(
@@ -391,6 +396,8 @@ impl PrimalDiscovery {
             }
         }
 
+        Self::append_biomeos_socket_primals(env_vars, query, &mut discovered);
+
         // Filter by capabilities if specified in query
         let discovered = if query.capabilities.is_empty() {
             discovered
@@ -414,6 +421,85 @@ impl PrimalDiscovery {
         }
 
         Ok(discovered)
+    }
+
+    /// Discover peer primals from `*.sock` entries under the resolved biomeOS runtime directory.
+    ///
+    /// Resolution order for the directory: `BEARDOG_BIOMEOS_SOCKET_DIR`, then
+    /// `$XDG_RUNTIME_DIR/biomeos`, then [`ipc::biomeos_ipc_socket_dir`].
+    /// The registry listener ([`ipc::DEFAULT_UPA_REGISTRY_SOCKET_STEM`]) is skipped; use UPA discovery for that.
+    fn append_biomeos_socket_primals(
+        env_vars: &HashMap<String, String>,
+        query: &DiscoveryQuery,
+        discovered: &mut Vec<DiscoveredPrimal>,
+    ) {
+        let dir = ipc::biomeos_ipc_socket_dir_from_components(
+            env_vars
+                .get(ipc::ENV_BIOMEOS_SOCKET_DIR_OVERRIDE)
+                .map(String::as_str),
+            env_vars.get("XDG_RUNTIME_DIR").map(String::as_str),
+        );
+
+        let entries = match std::fs::read_dir(&dir) {
+            Ok(e) => e,
+            Err(e) => {
+                debug!(
+                    "BiomeOS IPC socket directory not readable ({}): {}",
+                    dir.display(),
+                    e
+                );
+                return;
+            }
+        };
+
+        let mut seen: HashSet<String> = discovered.iter().map(|p| p.name.to_lowercase()).collect();
+
+        for entry in entries.filter_map(Result::ok) {
+            let path = entry.path();
+            let ext = path.extension();
+            if ext != Some(OsStr::new("sock")) {
+                continue;
+            }
+            let Ok(meta) = std::fs::metadata(&path) else {
+                continue;
+            };
+            if meta.is_dir() {
+                continue;
+            }
+            let Some(stem) = path.file_stem().and_then(|s| s.to_str()) else {
+                continue;
+            };
+            if stem.eq_ignore_ascii_case(ipc::DEFAULT_UPA_REGISTRY_SOCKET_STEM) {
+                continue;
+            }
+            if let Some(want) = &query.name {
+                if !want.eq_ignore_ascii_case(stem) {
+                    continue;
+                }
+            }
+            let lname = stem.to_lowercase();
+            if seen.contains(&lname) {
+                continue;
+            }
+            let Ok(endpoint) = Endpoint::parse(&format!("unix://{}", path.display())) else {
+                continue;
+            };
+            let caps_key = format!("PRIMAL_{}_CAPABILITIES", stem.to_uppercase());
+            let capabilities = Self::parse_capabilities_from_env_map(env_vars, &caps_key);
+            info!(
+                "Found primal '{}' at {} (runtime socket scan)",
+                lname,
+                path.display()
+            );
+            seen.insert(lname.clone());
+            discovered.push(DiscoveredPrimal {
+                name: lname,
+                endpoints: vec![endpoint],
+                capabilities,
+                trust_score: Some(0.85),
+                discovered_at: std::time::SystemTime::now(),
+            });
+        }
     }
 
     /// Parse capabilities from environment variable
@@ -665,141 +751,6 @@ impl PrimalDiscovery {
     }
 }
 
-// =============================================================================
-// TESTS
-// =============================================================================
-
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_discovery_query_by_name() {
-        let query = DiscoveryQuery::by_name("Songbird");
-        assert_eq!(query.name.as_deref(), Some("Songbird"));
-        assert!(query.capabilities.is_empty());
-    }
-
-    #[test]
-    fn test_discovery_query_by_capability() {
-        let query = DiscoveryQuery::by_capability(SimpleCapability::SecureTunneling);
-        assert!(query.name.is_none());
-        assert_eq!(query.capabilities.len(), 1);
-    }
-
-    #[test]
-    fn test_discovery_query_builder() {
-        let query = DiscoveryQuery::by_name("Songbird")
-            .with_capability(SimpleCapability::Cryptography)
-            .with_timeout(Duration::from_secs(10));
-
-        assert_eq!(query.name.as_deref(), Some("Songbird"));
-        assert_eq!(query.capabilities.len(), 1);
-        assert_eq!(query.timeout, Duration::from_secs(10));
-    }
-
-    #[tokio::test]
-    async fn test_discover_from_env_specific_primal() {
-        // ✅ Concurrent-safe: Explicit configuration, no global state modification
-        let mut discovery = PrimalDiscovery::new(DiscoveryMethod::Environment);
-
-        let mut env_vars = HashMap::new();
-        env_vars.insert(
-            "PRIMAL_SONGBIRD_ADDR".to_string(),
-            "127.0.0.1:9100".to_string(),
-        );
-
-        let query = DiscoveryQuery::by_name("Songbird");
-        let primals = discovery.discover_with_env(query, env_vars).await.unwrap();
-
-        assert_eq!(
-            primals.len(),
-            1,
-            "Expected 1 primal, got {}. Primals: {:?}",
-            primals.len(),
-            primals
-        );
-        assert_eq!(primals[0].name, "Songbird");
-        assert_eq!(primals[0].endpoints.len(), 1);
-    }
-
-    #[tokio::test]
-    async fn test_discover_from_env_scan_all() {
-        // ✅ Concurrent-safe: Explicit configuration, no global state modification
-        let mut discovery = PrimalDiscovery::new(DiscoveryMethod::Environment);
-
-        let mut env_vars = HashMap::new();
-        env_vars.insert(
-            "PRIMAL_SONGBIRD_ADDR".to_string(),
-            "127.0.0.1:9100".to_string(),
-        );
-        env_vars.insert(
-            "PRIMAL_BEARDOG_ADDR".to_string(),
-            "127.0.0.1:8900".to_string(),
-        );
-
-        // Query without capability filter to test scanning all primals
-        let query = DiscoveryQuery {
-            name: None,
-            capabilities: Vec::new(),
-            timeout: std::time::Duration::from_secs(5),
-        };
-        let primals = discovery.discover_with_env(query, env_vars).await.unwrap();
-
-        assert!(primals.len() >= 2);
-    }
-
-    #[test]
-    fn test_discovery_method_detection_env() {
-        // ✅ Concurrent-safe: Explicit configuration, no env var modification
-        let discovery = PrimalDiscovery::new(DiscoveryMethod::Environment);
-        assert!(matches!(discovery.method, DiscoveryMethod::Environment));
-    }
-
-    #[test]
-    fn test_discovery_method_detection_upa() {
-        // ✅ Concurrent-safe: Explicit configuration, no env var modification
-        let discovery = PrimalDiscovery::new(DiscoveryMethod::UniversalPrimalAuthority {
-            registry_addr: "127.0.0.1:7000".to_string(),
-        });
-        assert!(matches!(
-            discovery.method,
-            DiscoveryMethod::UniversalPrimalAuthority { .. }
-        ));
-    }
-
-    #[test]
-    fn test_discovery_method_detection_mdns() {
-        // ✅ Concurrent-safe: Explicit configuration, no env var modification
-        let discovery = PrimalDiscovery::new(DiscoveryMethod::Mdns {
-            service_type: "_ecoprimal._tcp".to_string(),
-        });
-        assert!(matches!(discovery.method, DiscoveryMethod::Mdns { .. }));
-    }
-
-    #[test]
-    fn test_discovery_method_detection_multi_default() {
-        // ✅ Concurrent-safe: Explicit configuration, no env var modification
-        let discovery =
-            PrimalDiscovery::new(DiscoveryMethod::Multi(vec![DiscoveryMethod::Environment]));
-        assert!(matches!(discovery.method, DiscoveryMethod::Multi(_)));
-    }
-
-    #[tokio::test]
-    async fn test_discovered_primal_trust_score() {
-        // ✅ Concurrent-safe: Explicit configuration, no global state modification
-        let mut discovery = PrimalDiscovery::new(DiscoveryMethod::Environment);
-
-        let mut env_vars = HashMap::new();
-        env_vars.insert(
-            "PRIMAL_TRUSTED_ADDR".to_string(),
-            "127.0.0.1:9999".to_string(),
-        );
-
-        let query = DiscoveryQuery::by_name("Trusted");
-        let primals = discovery.discover_with_env(query, env_vars).await.unwrap();
-
-        assert_eq!(primals.len(), 1);
-        assert_eq!(primals[0].trust_score, Some(1.0)); // Explicit config = trusted
-    }
-}
+#[path = "primal_discovery_tests.rs"]
+mod tests;

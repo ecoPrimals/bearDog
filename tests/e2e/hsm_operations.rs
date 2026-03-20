@@ -1,9 +1,10 @@
-#![allow(
+#![expect(
     unused_imports,
-    unused_variables,
+    reason = "E2E test scaffolding imports used conditionally"
+)]
+#![expect(
     dead_code,
-    unused_comparisons,
-    clippy::all
+    reason = "E2E helper functions called from test orchestrator"
 )]
 
 //! HSM Operations E2E Tests
@@ -76,7 +77,7 @@ pub async fn test_hsm_failover_scenario() -> Result<HsmE2EMetrics, BearDogError>
     let mut metrics = HsmE2EMetrics::default();
 
     // 1. Attempt hardware HSM (may fail)
-    if let Ok(()) = simulate_key_generation("hardware").await {
+    if simulate_key_generation("hardware").await == Ok(()) {
         metrics.key_generations += 1;
     } else {
         warn!("Hardware HSM unavailable, testing fallback");

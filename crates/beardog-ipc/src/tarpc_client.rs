@@ -579,6 +579,138 @@ impl TarpcCryptoClient {
 mod tests {
     use super::*;
 
+    #[tokio::test]
+    async fn test_connect_and_health_roundtrip() {
+        let probe = std::net::TcpListener::bind("127.0.0.1:0").expect("bind probe");
+        let addr = probe.local_addr().expect("local_addr");
+        drop(probe);
+
+        let server = crate::tarpc_server::BearDogCryptoServer::new();
+        let srv = tokio::spawn(async move {
+            let _ = server.run(addr).await;
+        });
+
+        tokio::time::sleep(Duration::from_millis(100)).await;
+
+        let client = TarpcCryptoClient::connect(addr)
+            .await
+            .expect("tarpc connect");
+
+        let _ = client.health().await.expect("health");
+        let _ = client.primal_info().await.expect("primal_info");
+        let _ = client.rpc_methods().await.expect("rpc_methods");
+        let _ = client
+            .primal_capabilities()
+            .await
+            .expect("primal_capabilities");
+        let _ = client.generate_ed25519().await.expect("generate_ed25519");
+        let _ = client.generate_x25519_ephemeral().await.expect("x25519");
+        let _ = client.generate_ecdh_p256().await.expect("ecdh_p256");
+        let _ = client.generate_ecdh_p384().await.expect("ecdh_p384");
+        let _ = client.blake3_hash(vec![1, 2, 3]).await.expect("blake3");
+        let _ = client.sha256_hash(vec![4]).await.expect("sha256");
+
+        let ed = client.generate_ed25519().await.expect("ed").expect("ed ok");
+        let sig = client
+            .sign_ed25519(b"payload".to_vec(), ed.private_key.clone())
+            .await
+            .expect("sign")
+            .expect("sign ok");
+        let _ = client
+            .verify_ed25519(
+                b"payload".to_vec(),
+                sig.signature.clone(),
+                ed.public_key.clone(),
+            )
+            .await
+            .expect("verify")
+            .expect("verify ok");
+
+        let xa = client
+            .generate_x25519_ephemeral()
+            .await
+            .expect("xa")
+            .expect("xa ok");
+        let xb = client
+            .generate_x25519_ephemeral()
+            .await
+            .expect("xb")
+            .expect("xb ok");
+        let _ = client
+            .x25519_key_exchange(xa.private_key.clone(), xb.public_key.clone())
+            .await
+            .expect("kx")
+            .expect("kx ok");
+
+        let sym_key = vec![0xABu8; 32];
+        let enc = client
+            .chacha20_poly1305_encrypt(b"plain".to_vec(), sym_key.clone(), None)
+            .await
+            .expect("enc")
+            .expect("enc ok");
+        let _ = client
+            .chacha20_poly1305_decrypt(
+                enc.ciphertext.clone(),
+                sym_key.clone(),
+                enc.nonce.clone(),
+                enc.tag.clone(),
+            )
+            .await
+            .expect("dec")
+            .expect("dec ok");
+
+        let _ = client
+            .hmac_sha256(b"data".to_vec(), sym_key.clone())
+            .await
+            .expect("hmac")
+            .expect("hmac ok");
+
+        let aes_enc = client
+            .aes256_gcm_encrypt(b"a".to_vec(), sym_key.clone(), None)
+            .await
+            .expect("aenc")
+            .expect("aenc ok");
+        let _ = client
+            .aes256_gcm_decrypt(
+                aes_enc.ciphertext.clone(),
+                sym_key.clone(),
+                aes_enc.nonce.clone(),
+                aes_enc.tag.clone(),
+            )
+            .await
+            .expect("adec")
+            .expect("adec ok");
+
+        let pa = client
+            .generate_ecdh_p256()
+            .await
+            .expect("pa")
+            .expect("pa ok");
+        let pb = client
+            .generate_ecdh_p256()
+            .await
+            .expect("pb")
+            .expect("pb ok");
+        let _ = client
+            .ecdh_p256_key_exchange(pa.private_key.clone(), pb.public_key.clone())
+            .await
+            .expect("p256kx")
+            .expect("p256kx ok");
+
+        let ecdsa_kp = client
+            .generate_ecdh_p256()
+            .await
+            .expect("ecdsa kp")
+            .expect("ecdsa kp ok");
+        let _ = client
+            .sign_ecdsa_p256(b"msg".to_vec(), ecdsa_kp.private_key.clone())
+            .await
+            .expect("ecdsa sign")
+            .expect("ecdsa sign ok");
+
+        srv.abort();
+    }
+
     #[test]
     fn test_context_has_deadline() {
         let client = TarpcClientInner {

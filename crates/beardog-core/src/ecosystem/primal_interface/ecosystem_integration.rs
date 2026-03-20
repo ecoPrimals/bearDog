@@ -13,7 +13,6 @@ impl BearDogCore {
     ///
     /// # Errors
     /// Returns error if insufficient services available or coordination fails
-    #[allow(clippy::cognitive_complexity)] // Complex coordination logic justified
     pub async fn coordinate_ecosystem_operation(
         &self,
         operation_id: Uuid,
@@ -115,7 +114,10 @@ impl BearDogCore {
 
     /// Execute coordinated operation with available services
     /// Executes `coordinated_operation`
-    #[allow(clippy::unnecessary_wraps)] // Result for future error cases
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Result return type reserved for future coordination errors"
+    )]
     fn execute_coordinated_operation(
         operation_id: Uuid,
         available_services: &[CapabilityType],
@@ -147,9 +149,12 @@ impl BearDogCore {
         Ok(result)
     }
 
-    #[allow(dead_code)]
-    #[allow(clippy::unused_self)] // Method signature required for future health check implementation
-    #[allow(clippy::unnecessary_wraps)] // Result for future error cases
+    #[expect(dead_code, reason = "Probe helper not yet wired into discovery paths")]
+    #[expect(
+        clippy::unused_self,
+        reason = "Instance parameter reserved for future authenticated health probes"
+    )]
+    #[expect(clippy::unnecessary_wraps, reason = "Result for future probe errors")]
     fn probe_service_endpoint(
         &self,
         capability: &CapabilityType,

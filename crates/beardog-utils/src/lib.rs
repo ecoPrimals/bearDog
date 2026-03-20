@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![forbid(unsafe_code)]
 
 //! # `BearDog` Utilities Crate
 //!
@@ -15,7 +16,6 @@
 //! - **AI Optimization**: Intelligent performance optimization
 //! - **100% Safe**: Zero unsafe code in all utilities
 
-#![deny(unsafe_code)]
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
 //!

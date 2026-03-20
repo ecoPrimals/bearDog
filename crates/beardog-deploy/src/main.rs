@@ -70,7 +70,7 @@ enum Commands {
 }
 
 #[derive(Debug)]
-#[allow(dead_code)]
+#[expect(dead_code, reason = "DeployConfig shape kept for future CLI wiring")]
 struct DeployConfig {
     release: bool,
     skip_build: bool,
@@ -169,7 +169,10 @@ async fn build_command(
     Ok(())
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Deploy flow passes builder, deployment, device manager, and build flags together"
+)]
 async fn deploy_command(
     builder: &RustBuilder,
     android_deployment: &AndroidDeployment,

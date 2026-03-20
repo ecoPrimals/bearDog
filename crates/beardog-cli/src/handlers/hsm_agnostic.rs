@@ -22,7 +22,7 @@ pub struct CliHsmInfo {
     /// High-level interface kind (USB, TPM, Software, …)
     pub hsm_type: String,
     /// Endpoint or device path detail (reserved for diagnostics)
-    pub _path: String,
+    pub path: String,
     /// Single-line description of interface and path
     pub interface_detail: String,
 }
@@ -86,7 +86,7 @@ impl From<DiscoveredHsm> for CliHsmInfo {
             model: hsm.model,
             tier: tier_str.to_string(),
             hsm_type: hsm_type.clone(),
-            _path: path.clone(),
+            path: path.clone(),
             interface_detail: format!("{hsm_type} via {path}"),
         }
     }
@@ -228,7 +228,7 @@ mod tests {
                 model: "SoftHSM".to_string(),
                 tier: "Software".to_string(),
                 hsm_type: "PKCS#11".to_string(),
-                _path: "/usr/lib/softhsm/libsofthsm2.so".to_string(),
+                path: "/usr/lib/softhsm/libsofthsm2.so".to_string(),
                 interface_detail: "PKCS#11 Software HSM".to_string(),
             },
             CliHsmInfo {
@@ -238,7 +238,7 @@ mod tests {
                 model: "Solo 2".to_string(),
                 tier: "Hardware".to_string(),
                 hsm_type: "USB Token".to_string(),
-                _path: "USB".to_string(),
+                path: "USB".to_string(),
                 interface_detail: "FIDO2/CTAP2 Hardware Token".to_string(),
             },
         ];
@@ -259,7 +259,7 @@ mod tests {
             model: "Software HSM".to_string(),
             tier: "Software".to_string(),
             hsm_type: "PKCS#11".to_string(),
-            _path: "discovered-via-pkcs11-scan".to_string(),
+            path: "discovered-via-pkcs11-scan".to_string(),
             interface_detail: "PKCS#11".to_string(),
         }];
 

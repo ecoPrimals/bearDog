@@ -163,7 +163,6 @@ impl PrimalTrait for BearDogCore {
     }
 
     #[allow(deprecated)]
-    #[allow(clippy::cognitive_complexity)] // Initialization logic requires sequential steps
     /// Initializes componentialize
     async fn initialize(&self, config: &UniversalIntegrationConfig) -> Result<(), PrimalError> {
         info!("🚀 Initializing BearDog primal with ecosystem integration");
@@ -246,7 +245,7 @@ impl PrimalTrait for BearDogCore {
                     data.insert(
                         "timestamp".to_string(),
                         serde_json::to_value(chrono::Utc::now())
-                            .unwrap_or(Value::String(chrono::Utc::now().to_rfc3339())),
+                            .unwrap_or_else(|_| Value::String(chrono::Utc::now().to_rfc3339())),
                     );
                     Value::Object(data)
                 };
@@ -267,7 +266,6 @@ impl PrimalTrait for BearDogCore {
         }
     }
 
-    #[allow(clippy::cognitive_complexity)] // Capability discovery logic is inherently complex
     async fn discover_ai_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError> {
         info!("🤖 Discovering AI capabilities through universal adapter");
 
@@ -293,7 +291,6 @@ impl PrimalTrait for BearDogCore {
         Ok(capabilities)
     }
 
-    #[allow(clippy::cognitive_complexity)] // Complexity from comprehensive capability discovery
     async fn discover_compute_capabilities(
         &self,
     ) -> Result<Vec<ServiceCapabilityType>, BearDogError> {
@@ -321,7 +318,6 @@ impl PrimalTrait for BearDogCore {
         Ok(capabilities)
     }
 
-    #[allow(clippy::cognitive_complexity)] // Complexity from comprehensive capability discovery
     async fn discover_storage_capabilities(
         &self,
     ) -> Result<Vec<ServiceCapabilityType>, BearDogError> {
@@ -385,7 +381,6 @@ impl BearDogCore {
     }
 
     /// Generic capability discovery method (private helper)
-    #[allow(clippy::cognitive_complexity)] // Complexity from comprehensive capability matching
     async fn discover_capability(
         &self,
         capability: &ServiceCapabilityType,

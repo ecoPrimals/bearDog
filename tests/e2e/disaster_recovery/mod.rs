@@ -91,7 +91,7 @@ impl E2EMetrics {
     ///
     /// Design: Complete implementation, no "TODO: merge other fields"
     /// Pattern: Explicit field handling ensures nothing is forgotten
-    fn merge(&mut self, other: E2EMetrics) {
+    fn merge(&mut self, other: Self) {
         // Accumulate counters
         self.total_requests += other.total_requests;
         self.successful_requests += other.successful_requests;

@@ -414,10 +414,12 @@ version = "0.9.0"
 dependencies = [
  "argon2",
  "base64 0.22.1",
+ "beardog-capabilities",
  "beardog-errors",
  "beardog-security",
  "beardog-traits",
  "beardog-types",
+ "blake3",
  "chrono",
  "ed25519-dalek",
  "parking_lot",
@@ -600,7 +602,7 @@ dependencies = [
 
 [[package]]
 name = "beardog-deploy"
-version = "1.0.0"
+version = "0.9.0"
 dependencies = [
  "beardog-errors",
  "chrono",
@@ -714,7 +716,7 @@ dependencies = [
 
 [[package]]
 name = "beardog-integration-tests"
-version = "3.0.0"
+version = "0.9.0"
 dependencies = [
  "beardog-auth",
  "beardog-core",
@@ -994,7 +996,7 @@ dependencies = [
 
 [[package]]
 name = "beardog-types"
-version = "3.0.0"
+version = "0.9.0"
 dependencies = [
  "aes-gcm",
  "async-trait",
@@ -1052,6 +1054,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tracing",
+ "zeroize",
 ]
 
 [[package]]

@@ -503,7 +503,10 @@ impl<T> AIFirstResponseBuilder<T> {
     /// Build operation.
     /// Builds component
     /// Builds component
-    #[allow(clippy::cast_possible_truncation)] // Explicitly bounded to u64::MAX
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Millis duration clamped to u64::MAX before cast"
+    )]
     pub fn build(self) -> AIFirstResponse<T> {
         let processing_time_ms = self
             .start_time

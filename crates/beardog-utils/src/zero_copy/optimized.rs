@@ -36,7 +36,7 @@ pub struct ZeroCopyManager {
     /// Shared string cache to avoid duplicates
     string_cache: Arc<RwLock<HashMap<String, Weak<str>>>>,
     /// Configuration cache
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "Config JSON cache for future optimize_config path")]
     config_cache: Arc<RwLock<HashMap<String, Arc<serde_json::Value>>>>,
     /// Last cleanup time
     last_cleanup: Arc<RwLock<Instant>>,
@@ -218,7 +218,10 @@ impl ZeroCopyManager {
         info!(
             "   ⚡ Cache hit rate: {:.1}%",
             if cache_hits + cache_misses > 0 {
-                #[allow(clippy::cast_precision_loss)]
+                #[expect(
+                    clippy::cast_precision_loss,
+                    reason = "Percentage from integer hit counts"
+                )]
                 {
                     (cache_hits as f64 / (cache_hits + cache_misses) as f64) * 100.0
                 }
@@ -229,7 +232,10 @@ impl ZeroCopyManager {
         info!("   🔧 Optimizations applied: {}", optimizations);
 
         if clones_avoided > 0 {
-            #[allow(clippy::cast_precision_loss)]
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "Heuristic gain estimate from clone count"
+            )]
             let estimated_performance_gain = (clones_avoided as f64 * 0.1).min(30.0);
             info!(
                 "   🚀 Estimated performance improvement: {:.1}%",

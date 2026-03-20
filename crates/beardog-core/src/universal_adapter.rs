@@ -414,25 +414,29 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial_test::serial]
     async fn test_discover_capability_from_environment() {
         beardog_errors::process_env::set_var("PRIMAL_NAME", "BearDog");
         beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
-        beardog_errors::process_env::set_var("PRIMAL_TESTPRIMAL_ADDR", "http://127.0.0.1:9999");
-        beardog_errors::process_env::set_var("PRIMAL_TESTPRIMAL_CAPABILITIES", "Discovery,Query"); // Multiple capabilities
+        let dir = tempfile::tempdir().unwrap();
+        let sock = dir.path().join("testprimal.sock");
+        std::fs::File::create(&sock).unwrap();
+        let uri = format!("unix://{}", sock.display());
+        beardog_errors::process_env::set_var("PRIMAL_TESTPRIMAL_ADDR", &uri);
+        beardog_errors::process_env::set_var("PRIMAL_TESTPRIMAL_CAPABILITIES", "Discovery");
 
         let adapter = UniversalAdapter::new().unwrap();
 
-        // Discover any capability (will find TestPrimal from env)
         let primals = adapter
             .discover_capability(SimpleCapability::Discovery)
             .await
             .unwrap();
 
-        // May be empty if env discovery isn't fully implemented yet
-        // This is acceptable as long as the query doesn't error
-        if primals.is_empty() {
-            eprintln!("Note: No primals discovered - env discovery may need implementation");
-        }
+        assert!(
+            primals.iter().any(|p| p.name == "testprimal"),
+            "expected testprimal from env + capability filter, got {:?}",
+            primals
+        );
 
         beardog_errors::process_env::remove_var("PRIMAL_NAME");
         beardog_errors::process_env::remove_var("PRIMAL_DISCOVERY_METHOD");
@@ -441,13 +445,17 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial_test::serial]
     async fn test_cache_behavior() {
         beardog_errors::process_env::set_var("PRIMAL_NAME", "BearDog");
         beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "env");
         beardog_errors::process_env::set_var("UNIVERSAL_ADAPTER_CACHE_TTL_SECS", "60");
 
-        // Set up environment to provide a discoverable primal with capabilities
-        beardog_errors::process_env::set_var("PRIMAL_TESTPRIMAL_ADDR", "http://127.0.0.1:9000");
+        let dir = tempfile::tempdir().unwrap();
+        let sock = dir.path().join("testprimal.sock");
+        std::fs::File::create(&sock).unwrap();
+        let uri = format!("unix://{}", sock.display());
+        beardog_errors::process_env::set_var("PRIMAL_TESTPRIMAL_ADDR", &uri);
         beardog_errors::process_env::set_var(
             "PRIMAL_TESTPRIMAL_CAPABILITIES",
             "Discovery,SecureTunneling",
@@ -455,42 +463,28 @@ mod tests {
 
         let adapter = UniversalAdapter::new().unwrap();
 
-        // Initially no cached capabilities
         assert_eq!(adapter.cached_capabilities().await.len(), 0);
 
-        // Discover triggers caching
-        // NOTE: This test is being evolved as part of beardog-discovery integration
-        // Currently returns mock data - will be real discovery once beardog-discovery crate is complete
         let result = adapter
             .discover_capability(SimpleCapability::Discovery)
             .await;
         assert!(result.is_ok(), "Discovery should succeed");
         let primals = result.unwrap();
 
-        // EVOLUTION: Accept empty results during beardog-discovery integration
-        // The important behavior is: (1) discovery doesn't error, (2) caching works when results exist
-        if primals.is_empty() {
-            eprintln!(
-                "⚠️  Discovery returned no results - beardog-discovery integration in progress"
-            );
-            eprintln!("   This is expected during evolution - see primal_discovery.rs:551");
-        } else {
-            assert_eq!(
-                primals.len(),
-                1,
-                "Should discover 1 primal with Discovery capability"
-            );
+        assert_eq!(
+            primals.len(),
+            1,
+            "Should discover 1 primal with Discovery capability, got {:?}",
+            primals
+        );
 
-            // Now should have cached capability (only test if discovery worked)
-            assert_eq!(adapter.cached_capabilities().await.len(), 1);
-            assert!(adapter.has_capability(&SimpleCapability::Discovery).await);
+        assert_eq!(adapter.cached_capabilities().await.len(), 1);
+        assert!(adapter.has_capability(&SimpleCapability::Discovery).await);
 
-            // Clear specific cache
-            adapter
-                .clear_capability_cache(&SimpleCapability::Discovery)
-                .await;
-            assert!(!adapter.has_capability(&SimpleCapability::Discovery).await);
-        }
+        adapter
+            .clear_capability_cache(&SimpleCapability::Discovery)
+            .await;
+        assert!(!adapter.has_capability(&SimpleCapability::Discovery).await);
 
         beardog_errors::process_env::remove_var("PRIMAL_NAME");
         beardog_errors::process_env::remove_var("PRIMAL_DISCOVERY_METHOD");
@@ -500,6 +494,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_self_knowledge_access() {
         beardog_errors::process_env::set_var("PRIMAL_NAME", "beardog"); // lowercase to match actual primal name
         beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "env");

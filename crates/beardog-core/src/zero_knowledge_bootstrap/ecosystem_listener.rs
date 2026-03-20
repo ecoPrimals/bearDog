@@ -140,7 +140,6 @@ impl EcosystemListener {
     }
 
     /// Logs the listening plan to inform about upcoming operations
-    #[allow(clippy::cognitive_complexity)] // Simple logging function - clippy false positive
     fn log_listening_plan() {
         info!("🎧 Starting ecosystem listening...");
         info!("📋 Listening Plan:");
@@ -162,7 +161,6 @@ impl EcosystemListener {
     }
 
     /// Starts a specific listener if the protocol is enabled
-    #[allow(clippy::cognitive_complexity)] // Protocol selection inherently requires branching on protocol type
     fn start_listener_if_enabled(
         &mut self,
         protocol: beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol,
@@ -199,15 +197,10 @@ impl EcosystemListener {
 
     /// Records startup metrics
     fn record_startup_metrics(&mut self, start_time: std::time::Instant) {
-        // Safe cast: Duration is unlikely to exceed u64::MAX milliseconds in practice
-        #[allow(clippy::cast_possible_truncation)]
-        {
-            self.metrics.listening_duration_ms = start_time.elapsed().as_millis() as u64;
-        }
+        self.metrics.listening_duration_ms = start_time.elapsed().as_millis() as u64;
     }
 
     /// Logs the final listening status
-    #[allow(clippy::cognitive_complexity)]
     fn log_listening_status(&self) {
         info!("🎉 Ecosystem listening active!");
         info!("📊 Listening Status:");
@@ -394,7 +387,6 @@ impl EcosystemListener {
         })
     }
 
-    #[allow(clippy::cognitive_complexity)]
     async fn listen_mdns_announcements() -> Result<Vec<PrimalAnnouncement>, BearDogError> {
         debug!("🔍 Listening for mDNS primal announcements...");
 
@@ -428,7 +420,6 @@ impl EcosystemListener {
     }
 
     /// Poll HTTP discovery endpoints
-    #[allow(clippy::cognitive_complexity)]
     async fn poll_http_discovery() -> Result<Vec<PrimalAnnouncement>, BearDogError> {
         debug!("🌐 Polling HTTP discovery endpoints...");
 
@@ -494,7 +485,6 @@ impl EcosystemListener {
         Ok(announcements)
     }
 
-    #[allow(clippy::cognitive_complexity)]
     fn check_environment_announcements() -> Result<Vec<PrimalAnnouncement>, BearDogError> {
         debug!("🔧 Checking environment for primal announcements...");
 
@@ -570,8 +560,6 @@ impl EcosystemListener {
 
     /// Process primal announcement
     /// Processes `primal_announcement`
-    #[allow(clippy::cognitive_complexity)]
-    #[allow(clippy::too_many_lines)]
     async fn process_primal_announcement(
         announcement: PrimalAnnouncement,
         discovered_primals: &Arc<RwLock<HashMap<String, DiscoveredPrimal>>>,
@@ -713,7 +701,6 @@ impl EcosystemListener {
     /// Stop all listening tasks
     /// Stops listening
     /// Stops listening
-    #[allow(clippy::cognitive_complexity)] // Cleanup of multiple listener tasks - complexity is necessary
     pub fn stop_listening(&mut self) {
         info!("🛑 Stopping ecosystem listening...");
 
@@ -778,6 +765,7 @@ impl EcosystemListener {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use beardog_types::canonical::config::domains::bootstrap::DiscoveryProtocol as BootstrapDiscoveryProtocol;
 
     #[tokio::test]
     async fn test_ecosystem_listener_creation() -> Result<(), Box<dyn std::error::Error>> {
@@ -878,5 +866,111 @@ mod tests {
         let primals_guard = primals.read().await;
         assert!(primals_guard.contains_key("compute-service-001"));
         drop(primals_guard);
+    }
+
+    #[tokio::test]
+    async fn test_listener_lifecycle_env_only() {
+        let mut config = UnifiedBootstrapConfig::default();
+        config.discovery.enabled_protocols = vec![BootstrapDiscoveryProtocol::EnvironmentDiscovery];
+        let primals = Arc::new(RwLock::new(HashMap::new()));
+        let capabilities = Arc::new(RwLock::new(HashMap::new()));
+        let mut listener = EcosystemListener::new(config, primals, capabilities).expect("new");
+        listener.start_listening().expect("start");
+        assert_eq!(listener.listening_tasks.len(), 1);
+        listener.stop_listening();
+        assert!(listener.listening_tasks.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_container_discovery_emits_no_background_tasks() {
+        let mut config = UnifiedBootstrapConfig::default();
+        config.discovery.enabled_protocols = vec![BootstrapDiscoveryProtocol::ContainerDiscovery];
+        let primals = Arc::new(RwLock::new(HashMap::new()));
+        let capabilities = Arc::new(RwLock::new(HashMap::new()));
+        let mut listener = EcosystemListener::new(config, primals, capabilities).expect("new");
+        listener.start_listening().expect("start");
+        assert!(listener.listening_tasks.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_listen_mdns_poll_http_and_mesh_smoke() {
+        let _ = EcosystemListener::listen_mdns_announcements().await;
+        let _ = EcosystemListener::poll_http_discovery().await;
+        assert!(EcosystemListener::discover_service_mesh_primals().is_empty());
+        let _ = EcosystemListener::make_discovery_request("http://127.0.0.1:1/");
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn test_check_environment_announcements_beardog_vars() {
+        beardog_errors::process_env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://compute:8081");
+        beardog_errors::process_env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://storage:8083");
+        let announcements = EcosystemListener::check_environment_announcements().expect("ok");
+        assert!(announcements.len() >= 2);
+        beardog_errors::process_env::remove_var("BEARDOG_COMPUTE_ENDPOINT");
+        beardog_errors::process_env::remove_var("BEARDOG_STORAGE_ENDPOINT");
+    }
+
+    #[tokio::test]
+    async fn test_process_announcement_empty_id_skipped() {
+        let primals = Arc::new(RwLock::new(HashMap::new()));
+        let capabilities = Arc::new(RwLock::new(HashMap::new()));
+        let announcement = PrimalAnnouncement {
+            primal_id: String::new(),
+            capabilities: vec![ServiceCapabilityType::ComputeIntelligence],
+            endpoints: vec![],
+            metadata: PrimalMetadata {
+                display_name: None,
+                version: "1.0".to_string(),
+                protocol_versions: vec!["1.0".to_string()],
+                security_attestations: vec![],
+                custom_fields: HashMap::new(),
+                capabilities: vec![],
+                dependencies: vec![],
+                health_check_endpoint: String::new(),
+                metrics_endpoint: String::new(),
+                supported_protocols: vec![],
+            },
+            announcement_timestamp: std::time::SystemTime::now(),
+            source_protocol: "test".to_string(),
+        };
+        EcosystemListener::process_primal_announcement(announcement, &primals, &capabilities)
+            .await
+            .expect("ok");
+        assert!(primals.read().await.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_process_announcement_sovereignty_warning_path() {
+        let primals = Arc::new(RwLock::new(HashMap::new()));
+        let capabilities = Arc::new(RwLock::new(HashMap::new()));
+        let announcement = PrimalAnnouncement {
+            primal_id: "hardcoded-legacy-primal".to_string(),
+            capabilities: vec![ServiceCapabilityType::ComputeIntelligence],
+            endpoints: vec![UniversalEndpoint {
+                url: "http://127.0.0.1:1".to_string(),
+                protocols: vec!["HTTP".to_string()],
+                auth_requirements: crate::ecosystem::primal_types::AuthRequirements::default(),
+                security_config: crate::ecosystem::primal_types::EndpointSecurityConfig::default(),
+            }],
+            metadata: PrimalMetadata {
+                display_name: Some("x".to_string()),
+                version: "1.0".to_string(),
+                protocol_versions: vec!["1.0".to_string()],
+                security_attestations: vec![],
+                custom_fields: HashMap::new(),
+                capabilities: vec![],
+                dependencies: vec![],
+                health_check_endpoint: "/health".to_string(),
+                metrics_endpoint: "/metrics".to_string(),
+                supported_protocols: vec!["http".to_string()],
+            },
+            announcement_timestamp: std::time::SystemTime::now(),
+            source_protocol: "test".to_string(),
+        };
+        EcosystemListener::process_primal_announcement(announcement, &primals, &capabilities)
+            .await
+            .expect("ok");
+        assert!(primals.read().await.contains_key("hardcoded-legacy-primal"));
     }
 }

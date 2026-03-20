@@ -28,7 +28,7 @@ thiserror = "1.0"
 tracing = "0.1"
 
 # BearDog types
-beardog-types = { version = "3.0.0", path = "../beardog-types" }
+beardog-types = { workspace = true }
 beardog-errors = { path = "../beardog-errors" }
 
 [dev-dependencies]

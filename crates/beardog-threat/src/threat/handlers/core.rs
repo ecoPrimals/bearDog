@@ -4,14 +4,15 @@
 
 use crate::threat::ml_engine::SmartThreatMLEngine;
 use crate::threat::types::engine::threat_engine::ThreatDetectionStats;
+use crate::threat::types::incidents::ManagedIncident;
 use crate::threat::types::{
     DetectionRule, IncidentResponse, MlModel, ThreatDetectionConfig, ThreatEvent,
     ThreatIntelligenceFeed,
 };
 use beardog_errors::BearDogError;
 
-use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
+use std::collections::{BTreeMap, HashMap, HashSet};
+use std::sync::{Arc, RwLock as StdRwLock};
 use tokio::sync::RwLock;
 use tracing::info;
 
@@ -58,6 +59,9 @@ pub struct ThreatDetectionEngine {
 
     /// Open incidents keyed by incident id, shared with async maintenance tasks.
     pub active_incidents: Arc<RwLock<HashMap<String, IncidentResponse>>>,
+
+    /// Phase 1 in-memory lifecycle store (sync API); ordered by incident id.
+    pub managed_incidents: Arc<StdRwLock<BTreeMap<String, ManagedIncident>>>,
 }
 impl ThreatDetectionEngine {
     /// New operation.
@@ -83,6 +87,7 @@ impl ThreatDetectionEngine {
             },
             event_history: Arc::new(RwLock::new(Vec::new())),
             active_incidents: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+            managed_incidents: Arc::new(StdRwLock::new(BTreeMap::new())),
         };
 
         if ml_enhancement {

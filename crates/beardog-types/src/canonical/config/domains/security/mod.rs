@@ -142,7 +142,7 @@ impl ConsolidatedSecurityConfiguration {
                 legacy_auth_methods: vec!["basic".to_string()],
                 migration_deadline: std::env::var("BEARDOG_LEGACY_MIGRATION_DEADLINE")
                     .ok()
-                    .or(Some("2025-12-31".to_string())),
+                    .or_else(|| Some("2025-12-31".to_string())),
             },
             health_monitoring: HealthMonitoringConfiguration {
                 enable_monitoring: std::env::var("BEARDOG_HEALTH_MONITORING_ENABLED")

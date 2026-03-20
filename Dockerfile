@@ -2,13 +2,10 @@
 # Multi-stage build for optimized production container
 
 # Build stage
-FROM rust:1.75-slim as builder
+FROM rust:1.85-slim AS builder
 
-# Install build dependencies
+# Install minimal build dependencies (pure Rust — no C libs needed)
 RUN apt-get update && apt-get install -y \
-    pkg-config \
-    libssl-dev \
-    libpq-dev \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -37,11 +34,9 @@ RUN cargo build --release --workspace --features="production,quantum-resistant,s
 # Runtime stage
 FROM debian:bookworm-slim
 
-# Install runtime dependencies
+# Install minimal runtime dependencies (pure Rust binary — no C libs)
 RUN apt-get update && apt-get install -y \
     ca-certificates \
-    libssl3 \
-    libpq5 \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -83,8 +78,8 @@ CMD ["./beardog-core"]
 
 # Metadata
 LABEL maintainer="BearDog Project <beardog@ecoprimal.io>"
-LABEL version="1.0.0"
-LABEL description="BearDog - Secure Decentralized Cryptographic Infrastructure"
+LABEL version="0.9.0"
+LABEL description="BearDog - ecoPrimals Cryptographic Service Provider"
 LABEL org.opencontainers.image.source="https://github.com/ecoprimal/beardog"
 LABEL org.opencontainers.image.documentation="https://beardog.ecoprimal.io/docs"
-LABEL org.opencontainers.image.licenses="MIT" 
+LABEL org.opencontainers.image.licenses="AGPL-3.0-only"

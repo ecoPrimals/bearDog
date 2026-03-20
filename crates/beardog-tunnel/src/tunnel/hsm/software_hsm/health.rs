@@ -118,13 +118,12 @@ impl SoftwareHealthMonitor {
     pub async fn perform_health_check(&self) -> Result<HsmHealthStatus, BearDogError> {
         info!("Performing health check");
         let mut healthy = true;
-        let mut error_message = None;
-
-        // Check keystore health
-        if self.check_keystore_health().await.is_err() {
+        let mut error_message = if self.check_keystore_health().await.is_err() {
             healthy = false;
-            error_message = Some("Key store is unhealthy".to_string());
-        }
+            Some("Key store is unhealthy".to_string())
+        } else {
+            None
+        };
 
         // Check crypto provider health
         if self.check_crypto_provider_health().await.is_err() {

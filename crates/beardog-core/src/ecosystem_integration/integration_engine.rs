@@ -78,9 +78,6 @@ impl IntegrationEngine {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    #[allow(clippy::cognitive_complexity)]
-    #[allow(clippy::used_underscore_binding)]
-    #[allow(clippy::option_if_let_else)]
     pub fn integrate_with_ecosystem(&mut self) -> Result<(), BearDogError> {
         info!("🌐 Starting Phase 4: Ecosystem Integration");
 
@@ -153,7 +150,10 @@ impl IntegrationEngine {
     }
 
     /// Discover Ecosystem Services operation.
-    #[allow(clippy::option_if_let_else)]
+    #[expect(
+        clippy::option_if_let_else,
+        reason = "Explicit branch when universal HSM is absent"
+    )]
     fn discover_ecosystem_services(&self) -> Result<Vec<String>, BearDogError> {
         if let Some(_universal_hsm) = self.universal_hsm.clone() {
             // Simulate service discovery
@@ -171,9 +171,18 @@ impl IntegrationEngine {
 
     /// Get Discovered Services Count operation.
     /// Gets `discovered_services_count`
-    #[allow(clippy::unnecessary_wraps)]
-    #[allow(clippy::option_if_let_else)]
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Result reserved for discovery errors"
+    )]
+    #[expect(
+        clippy::option_if_let_else,
+        reason = "Explicit branch when universal HSM is absent"
+    )]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Provider count fits u32 for stub discovery"
+    )]
     fn get_discovered_services_count(&self) -> Result<u32, BearDogError> {
         if let Some(_universal_hsm) = self.universal_hsm.clone() {
             match self.discover_ecosystem_services() {
@@ -264,14 +273,28 @@ impl IntegrationEngine {
         Ok(serde_json::Value::Object(health_status))
     }
 
-    #[allow(clippy::unused_self, clippy::unnecessary_wraps)]
+    #[expect(
+        clippy::unused_self,
+        reason = "Instance reserved for real adapter health checks"
+    )]
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Result reserved for health check errors"
+    )]
     const fn check_universal_adapter_health(&self) -> Result<(), BearDogError> {
         // Universal adapter health check implementation
         // This is a placeholder for future health check logic
         Ok(())
     }
 
-    #[allow(clippy::unused_self, clippy::unnecessary_wraps)]
+    #[expect(
+        clippy::unused_self,
+        reason = "Instance reserved for real discovery health checks"
+    )]
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Result reserved for health check errors"
+    )]
     const fn check_capability_discovery_health(&self) -> Result<(), BearDogError> {
         // Capability discovery health check implementation
         // This is a placeholder for future health check logic

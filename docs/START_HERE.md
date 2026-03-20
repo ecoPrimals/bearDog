@@ -34,7 +34,7 @@ BearDog is a **sovereign cryptographic security platform** where keys are self-s
 
 1. **Install Prerequisites**
    ```bash
-   # Rust 1.75+
+   # Rust 1.85+ (Edition 2024)
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
    ```
 

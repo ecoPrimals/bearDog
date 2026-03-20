@@ -447,59 +447,55 @@ impl BeardogBtspProvider {
         let socket_paths = Self::get_discovery_socket_paths();
 
         for socket_path in socket_paths {
-            match UnixStream::connect(&socket_path).await {
-                Ok(mut stream) => {
-                    // Build JSON-RPC request per Primal IPC Protocol (param key overridable via
-                    // `beardog_ipc::ENV_IPC_RESOLVE_TARGET_PARAM_KEY`; value is opaque instance id).
-                    let mut params = serde_json::Map::new();
-                    params.insert(
-                        beardog_ipc::ipc_resolve_target_param_key(),
-                        serde_json::Value::String(peer_id.to_string()),
-                    );
-                    let request = serde_json::json!({
-                        "jsonrpc": "2.0",
-                        "method": "ipc.resolve",
-                        "params": params,
-                        "id": 1
-                    });
+            if let Ok(mut stream) = UnixStream::connect(&socket_path).await {
+                // Build JSON-RPC request per Primal IPC Protocol (param key overridable via
+                // `beardog_ipc::ENV_IPC_RESOLVE_TARGET_PARAM_KEY`; value is opaque instance id).
+                let mut params = serde_json::Map::new();
+                params.insert(
+                    beardog_ipc::ipc_resolve_target_param_key(),
+                    serde_json::Value::String(peer_id.to_string()),
+                );
+                let request = serde_json::json!({
+                    "jsonrpc": "2.0",
+                    "method": "ipc.resolve",
+                    "params": params,
+                    "id": 1
+                });
 
-                    // Send request
-                    let request_bytes = serde_json::to_vec(&request).map_err(|e| {
-                        BearDogError::system(format!("JSON serialization failed: {e}"))
-                    })?;
+                // Send request
+                let request_bytes = serde_json::to_vec(&request)
+                    .map_err(|e| BearDogError::system(format!("JSON serialization failed: {e}")))?;
 
-                    stream
-                        .write_all(&request_bytes)
-                        .await
-                        .map_err(|e| BearDogError::system(format!("Socket write failed: {e}")))?;
-                    stream
-                        .write_all(b"\n")
-                        .await
-                        .map_err(|e| BearDogError::system(format!("Socket write failed: {e}")))?;
+                stream
+                    .write_all(&request_bytes)
+                    .await
+                    .map_err(|e| BearDogError::system(format!("Socket write failed: {e}")))?;
+                stream
+                    .write_all(b"\n")
+                    .await
+                    .map_err(|e| BearDogError::system(format!("Socket write failed: {e}")))?;
 
-                    // Read response
-                    let mut buffer = vec![0u8; 4096];
-                    let n = stream
-                        .read(&mut buffer)
-                        .await
-                        .map_err(|e| BearDogError::system(format!("Socket read failed: {e}")))?;
+                // Read response
+                let mut buffer = vec![0u8; 4096];
+                let n = stream
+                    .read(&mut buffer)
+                    .await
+                    .map_err(|e| BearDogError::system(format!("Socket read failed: {e}")))?;
 
-                    if n == 0 {
-                        continue; // No data, try next socket
-                    }
+                if n == 0 {
+                    continue; // No data, try next socket
+                }
 
-                    // Parse JSON-RPC response
-                    let response: serde_json::Value = serde_json::from_slice(&buffer[..n])
-                        .map_err(|e| BearDogError::system(format!("JSON parse failed: {e}")))?;
+                // Parse JSON-RPC response
+                let response: serde_json::Value = serde_json::from_slice(&buffer[..n])
+                    .map_err(|e| BearDogError::system(format!("JSON parse failed: {e}")))?;
 
-                    // Extract endpoint from response
-                    if let Some(result) = response.get("result") {
-                        if let Some(endpoint) = result.get("endpoint").and_then(|e| e.as_str()) {
-                            return Ok(vec![endpoint.to_string()]);
-                        }
+                // Extract endpoint from response
+                if let Some(result) = response.get("result") {
+                    if let Some(endpoint) = result.get("endpoint").and_then(|e| e.as_str()) {
+                        return Ok(vec![endpoint.to_string()]);
                     }
                 }
-                Err(_) => continue, // Socket not available, try next
             }
         }
 

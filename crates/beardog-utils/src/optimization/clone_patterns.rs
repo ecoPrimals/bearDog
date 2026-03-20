@@ -63,7 +63,7 @@ pub mod string_optimization {
 
     /// Convert `Vec<String>` to `Vec<&str>` for temporary operations
     pub fn string_vec_to_str_vec(strings: &[String]) -> Vec<&str> {
-        strings.iter().map(|s| s.as_str()).collect()
+        strings.iter().map(String::as_str).collect()
     }
 }
 
@@ -246,7 +246,7 @@ pub mod collection_optimization {
     where
         T: AsRef<str>,
     {
-        items.iter().map(|item| item.as_ref()).collect()
+        items.iter().map(AsRef::<str>::as_ref).collect()
     }
 
     /// Collect IDs using Cow for flexibility

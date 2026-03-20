@@ -209,7 +209,6 @@ impl HybridIntelligenceSystem {
     ///
     /// # Errors
     /// Returns an error if initialization fails.
-    #[allow(clippy::cognitive_complexity)]
     pub fn initialize(&self) -> Result<(), BearDogError> {
         info!(
             "Initializing hybrid intelligence system: {}",
@@ -339,7 +338,10 @@ impl HybridIntelligenceSystem {
             let mut metrics = self.metrics.write().await;
             metrics.total_decisions += 1;
             // Update average confidence (simple moving average)
-            #[allow(clippy::cast_precision_loss)]
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "Moving average over u64 decision count"
+            )]
             let total_decisions = metrics.total_decisions as f64;
             metrics.avg_decision_confidence = metrics
                 .avg_decision_confidence
@@ -403,8 +405,14 @@ impl HybridIntelligenceSystem {
 
     /// Initializes a capability
     /// Initializes `componentialize_capability`
-    #[allow(clippy::unnecessary_wraps)]
-    #[allow(clippy::unused_self)]
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Result type reserved for capability-specific init errors"
+    )]
+    #[expect(
+        clippy::unused_self,
+        reason = "Instance used when capability init gains state"
+    )]
     fn initialize_capability(
         &self,
         capability: IntelligenceCapability,
@@ -436,7 +444,10 @@ impl HybridIntelligenceSystem {
 
                 // Update uptime
                 let mut metrics_guard = metrics.write().await;
-                #[allow(clippy::cast_sign_loss)]
+                #[expect(
+                    clippy::cast_sign_loss,
+                    reason = "Uptime duration from start is non-negative"
+                )]
                 {
                     metrics_guard.uptime_secs =
                         Utc::now().signed_duration_since(start_time).num_seconds() as u64;
@@ -446,8 +457,14 @@ impl HybridIntelligenceSystem {
     }
 
     /// Compute statistical predictions from input data
-    #[allow(clippy::unnecessary_wraps)]
-    #[allow(clippy::unused_self)]
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "Result reserved for richer statistical models"
+    )]
+    #[expect(
+        clippy::unused_self,
+        reason = "Self reserved for model-backed predictions"
+    )]
     fn compute_statistical_predictions(
         &self,
         input_data: &[f64],
@@ -460,7 +477,10 @@ impl HybridIntelligenceSystem {
                 value * 1.05 // Simple 5% increase prediction for first value
             } else {
                 // Use previous values to predict trend
-                #[allow(clippy::cast_precision_loss)]
+                #[expect(
+                    clippy::cast_precision_loss,
+                    reason = "Index to f64 for mean of slice prefix"
+                )]
                 let avg = input_data[..=i].iter().sum::<f64>() / (i + 1) as f64;
                 let trend = if i > 1 {
                     (input_data[i] - input_data[i - 1]) * 0.7 // Damped trend continuation
@@ -475,7 +495,10 @@ impl HybridIntelligenceSystem {
         Ok(predictions)
     }
 
-    #[allow(clippy::unused_self)]
+    #[expect(
+        clippy::unused_self,
+        reason = "Instance reserved for model-specific intervals"
+    )]
     fn compute_confidence_intervals(
         &self,
         predictions: &[f64],
@@ -492,7 +515,10 @@ impl HybridIntelligenceSystem {
     }
 
     /// Compute uncertainty estimates
-    #[allow(clippy::unused_self)]
+    #[expect(
+        clippy::unused_self,
+        reason = "Instance reserved for model-specific uncertainty"
+    )]
     fn compute_uncertainty_estimates(&self, predictions: &[f64], input_data: &[f64]) -> Vec<f64> {
         predictions
             .iter()
