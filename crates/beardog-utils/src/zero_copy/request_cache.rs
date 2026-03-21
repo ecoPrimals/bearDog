@@ -53,10 +53,10 @@ impl<T: Clone> RequestCache<T> {
     pub fn get(&self, key: &str) -> Option<T> {
         // parking_lot::RwLock never panics - cleaner API!
         let cache = self.cache.read();
-        if let Some(entry) = cache.get(key) {
-            if entry.timestamp.elapsed() < entry.ttl {
-                return Some(entry.data.clone());
-            }
+        if let Some(entry) = cache.get(key)
+            && entry.timestamp.elapsed() < entry.ttl
+        {
+            return Some(entry.data.clone());
         }
         None
     }

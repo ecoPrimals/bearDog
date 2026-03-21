@@ -12,8 +12,7 @@ use uuid::Uuid;
 /// Tracks aggregate statistics and performs scheduled cleanup of expired seeds.
 #[derive(Debug, Clone, Default)]
 pub struct EntropyMonitor {
-    #[allow(dead_code)] // Used for configuration but not yet fully implemented
-    config: EntropyMonitoringConfig,
+    _config: EntropyMonitoringConfig,
     metrics: PerformanceMetrics,
 }
 
@@ -23,7 +22,7 @@ impl EntropyMonitor {
     #[must_use]
     pub fn new(config: &EntropyHierarchyConfig) -> Self {
         Self {
-            config: EntropyMonitoringConfig {
+            _config: EntropyMonitoringConfig {
                 enable_detailed_analytics: true,
                 cleanup_interval_seconds: 3600, // 1 hour
                 max_seed_age_days: 30,
@@ -41,10 +40,10 @@ impl EntropyMonitor {
         let mut expired_seeds = Vec::new();
 
         for (seed_id, seed) in active_seeds.iter() {
-            if let Some(expires_at) = seed.metadata.expires_at {
-                if now > expires_at {
-                    expired_seeds.push(*seed_id);
-                }
+            if let Some(expires_at) = seed.metadata.expires_at
+                && now > expires_at
+            {
+                expired_seeds.push(*seed_id);
             }
         }
 
@@ -381,8 +380,8 @@ mod tests {
     fn test_entropy_monitor_creation_with_default_config() {
         let config = EntropyHierarchyConfig::default();
         let monitor = EntropyMonitor::new(&config);
-        assert_eq!(monitor.config.cleanup_interval_seconds, 3600);
-        assert_eq!(monitor.config.max_seed_age_days, 30);
+        assert_eq!(monitor._config.cleanup_interval_seconds, 3600);
+        assert_eq!(monitor._config.max_seed_age_days, 30);
     }
 
     // TEST_CATEGORY: unit

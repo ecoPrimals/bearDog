@@ -10,14 +10,13 @@ use beardog_errors::BearDogError;
 /// Export and integration engine
 #[derive(Debug)]
 pub struct ExportEngine {
-    #[allow(dead_code)] // Config reserved for future export features
-    config: ExportConfig,
+    _config: ExportConfig,
 }
 
 impl ExportEngine {
     /// Creates a new instance
     pub const fn new(config: ExportConfig) -> Result<Self, BearDogError> {
-        Ok(Self { config })
+        Ok(Self { _config: config })
     }
 
     /// Starts service

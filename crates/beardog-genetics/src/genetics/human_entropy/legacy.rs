@@ -10,15 +10,14 @@ use serde::{Deserialize, Serialize};
 /// Multi-modal human entropy collector
 #[derive(Debug, Clone)]
 pub struct MultiModalHumanEntropyCollector {
-    #[allow(dead_code)] // Used for configuration but not yet fully implemented
-    config: HumanEntropyConfig,
+    _config: HumanEntropyConfig,
 }
 
 impl MultiModalHumanEntropyCollector {
     /// Creates a new instance
     #[must_use]
     pub const fn new(config: HumanEntropyConfig) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     /// Collect high-quality entropy from available sources
@@ -101,11 +100,11 @@ impl MultiModalHumanEntropyCollector {
         // Calculate entropy quality score (simplified Shannon entropy estimate)
         let quality_score = calculate_entropy_quality(&entropy_bytes);
 
-        if quality_score < self.config.quality_threshold {
+        if quality_score < self._config.quality_threshold {
             return Err(BearDogError::Security {
                 message: format!(
                     "Entropy quality ({:.2}) below threshold ({:.2})",
-                    quality_score, self.config.quality_threshold
+                    quality_score, self._config.quality_threshold
                 ),
                 category: beardog_errors::SecurityErrorCategory::Encryption,
             });

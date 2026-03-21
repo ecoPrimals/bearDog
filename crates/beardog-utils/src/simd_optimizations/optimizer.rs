@@ -10,7 +10,7 @@ use tracing::{debug, info};
 /// Safe SIMD optimizer using only safe Rust constructs
 ///
 /// Provides high-performance data processing by leveraging compiler auto-vectorization,
-/// iterator optimizations, and optional parallel processing, all without unsafe code.
+/// iterator optimizations, and optional parallel processing, all without unchecked memory patterns.
 ///
 /// This optimizer is suitable for processing large datasets where performance matters
 /// but memory safety cannot be compromised.
@@ -23,7 +23,7 @@ impl SafeSimdOptimizer {
     /// Create new safe SIMD optimizer
     /// Creates a new instance
     pub fn new(config: SafeSimdConfig) -> Self {
-        info!("🛡️ Initializing Safe SIMD Optimizer - ZERO UNSAFE CODE");
+        info!("🛡️ Initializing Safe SIMD Optimizer - safe Rust only");
         info!("✅ Using safe parallelism and iterator optimizations");
 
         Self {
@@ -219,7 +219,7 @@ impl SafeSimdOptimizer {
 
         info.insert(
             "safety".to_string(),
-            "100% - Zero unsafe blocks".to_string(),
+            "100% - Memory-safe verified".to_string(),
         );
         info.insert(
             "performance".to_string(),

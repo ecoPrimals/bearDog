@@ -2,7 +2,7 @@
 
 //! iOS Secure Enclave HSM Module
 //!
-//! This module provides safe, zero-unsafe-code access to iOS Secure Enclave
+//! This module provides safe, memory-safe-only access to iOS Secure Enclave
 //! functionality for iPhone and iPad devices.
 
 use beardog_errors::BearDogError;
@@ -27,7 +27,7 @@ pub use beardog_types::constants::domains::security::hsm::{
 
 /// Safe iOS Secure Enclave Manager
 ///
-/// Provides zero-unsafe-code access to iOS Secure Enclave functionality
+/// Provides memory-safe-only access to iOS Secure Enclave functionality
 pub struct SafeIOSSecureEnclaveManager {
     secure_enclave_ops: Option<SafeIOSSecureEnclaveOps<SecureEnclaveAvailable>>,
     keychain_ops: SafeIOSSecureEnclaveOps<KeychainAvailable>,
@@ -40,7 +40,7 @@ impl SafeIOSSecureEnclaveManager {
     /// # Errors
     /// Returns an error if initialization fails
     pub async fn new() -> Result<Self, BearDogError> {
-        info!("🍎 Initializing SafeIOSSecureEnclaveManager - ZERO UNSAFE CODE");
+        info!("🍎 Initializing SafeIOSSecureEnclaveManager - safe Rust only");
 
         let secure_enclave_ops =
             SafeIOSSecureEnclaveOps::<SecureEnclaveAvailable>::create_secure_enclave_provider()

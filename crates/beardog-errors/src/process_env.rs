@@ -2,14 +2,14 @@
 
 //! Process environment overlay for tests and single-process configuration.
 //!
-//! Rust 2024 marks [`std::env::set_var`] and [`std::env::remove_var`] as `unsafe` because the
-//! process environment is not thread-safe on POSIX. Mutating the real environment also races
+//! Rust 2024 classifies [`std::env::set_var`] and [`std::env::remove_var`] as soundness-critical:
+//! the process environment is not thread-safe on POSIX. Mutating the real environment also races
 //! with concurrent [`std::env::var`] in other threads.
 //!
 //! This module keeps **all** mutation in a `std::sync::Mutex`-protected overlay map.
 //! The `var`, `var_os`, and `vars` functions in this module
-//! consult the overlay first, then fall back to the OS environment. No `unsafe` is
-//! required for tests or in-process configuration.
+//! consult the overlay first, then fall back to the OS environment. Callers avoid the
+//! soundness-critical std APIs for tests and in-process configuration.
 //!
 //! **Subprocesses**: [`std::process::Command`] inherits the **OS** environment only. Values set
 //! only in the overlay are not visible to child processes unless you pass them explicitly with

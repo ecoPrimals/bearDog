@@ -79,13 +79,13 @@ impl PathConfig {
         }
 
         // Validate PKCS#11 library if specified
-        if let Some(ref lib) = self.pkcs11_library {
-            if !lib.exists() {
-                return Err(ConfigError::PathNotFound(format!(
-                    "PKCS#11 library not found: {}",
-                    lib.display()
-                )));
-            }
+        if let Some(ref lib) = self.pkcs11_library
+            && !lib.exists()
+        {
+            return Err(ConfigError::PathNotFound(format!(
+                "PKCS#11 library not found: {}",
+                lib.display()
+            )));
         }
 
         Ok(())

@@ -187,58 +187,50 @@ impl CapacityConfig {
     {
         let mut config = Self::default();
 
-        if let Some(val) = env_provider("BEARDOG_CHANNEL_BUFFER") {
-            if let Ok(parsed) = val.parse() {
-                config.default_channel_buffer = parsed;
-            }
+        if let Some(val) = env_provider("BEARDOG_CHANNEL_BUFFER")
+            && let Ok(parsed) = val.parse()
+        {
+            config.default_channel_buffer = parsed;
         }
-
-        if let Some(val) = env_provider("BEARDOG_DISCOVERY_QUEUE_SIZE") {
-            if let Ok(parsed) = val.parse() {
-                config.discovery_queue_size = parsed;
-            }
+        if let Some(val) = env_provider("BEARDOG_DISCOVERY_QUEUE_SIZE")
+            && let Ok(parsed) = val.parse()
+        {
+            config.discovery_queue_size = parsed;
         }
-
-        if let Some(val) = env_provider("BEARDOG_EVENT_BUS_CAPACITY") {
-            if let Ok(parsed) = val.parse() {
-                config.event_bus_capacity = parsed;
-            }
+        if let Some(val) = env_provider("BEARDOG_EVENT_BUS_CAPACITY")
+            && let Ok(parsed) = val.parse()
+        {
+            config.event_bus_capacity = parsed;
         }
-
-        if let Some(val) = env_provider("BEARDOG_MAX_CONNECTIONS") {
-            if let Ok(parsed) = val.parse() {
-                config.max_connections = parsed;
-            }
+        if let Some(val) = env_provider("BEARDOG_MAX_CONNECTIONS")
+            && let Ok(parsed) = val.parse()
+        {
+            config.max_connections = parsed;
         }
-
-        if let Some(val) = env_provider("BEARDOG_MIN_IDLE_CONNECTIONS") {
-            if let Ok(parsed) = val.parse() {
-                config.min_idle_connections = parsed;
-            }
+        if let Some(val) = env_provider("BEARDOG_MIN_IDLE_CONNECTIONS")
+            && let Ok(parsed) = val.parse()
+        {
+            config.min_idle_connections = parsed;
         }
-
-        if let Some(val) = env_provider("BEARDOG_CONNECTION_POOL_TIMEOUT_SECS") {
-            if let Ok(parsed) = val.parse() {
-                config.connection_pool_timeout_secs = parsed;
-            }
+        if let Some(val) = env_provider("BEARDOG_CONNECTION_POOL_TIMEOUT_SECS")
+            && let Ok(parsed) = val.parse()
+        {
+            config.connection_pool_timeout_secs = parsed;
         }
-
-        if let Some(val) = env_provider("BEARDOG_MAX_MESSAGE_SIZE_BYTES") {
-            if let Ok(parsed) = val.parse() {
-                config.max_message_size_bytes = parsed;
-            }
+        if let Some(val) = env_provider("BEARDOG_MAX_MESSAGE_SIZE_BYTES")
+            && let Ok(parsed) = val.parse()
+        {
+            config.max_message_size_bytes = parsed;
         }
-
-        if let Some(val) = env_provider("BEARDOG_BUFFER_POOL_SIZE") {
-            if let Ok(parsed) = val.parse() {
-                config.buffer_pool_size = parsed;
-            }
+        if let Some(val) = env_provider("BEARDOG_BUFFER_POOL_SIZE")
+            && let Ok(parsed) = val.parse()
+        {
+            config.buffer_pool_size = parsed;
         }
-
-        if let Some(val) = env_provider("BEARDOG_CACHE_MAX_ENTRIES") {
-            if let Ok(parsed) = val.parse() {
-                config.cache_max_entries = parsed;
-            }
+        if let Some(val) = env_provider("BEARDOG_CACHE_MAX_ENTRIES")
+            && let Ok(parsed) = val.parse()
+        {
+            config.cache_max_entries = parsed;
         }
 
         config

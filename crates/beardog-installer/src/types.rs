@@ -11,31 +11,23 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+/// Bundled default genome artifact keys (manifest/registry metadata, not runtime peer discovery).
+const DEFAULT_GENOME_TARGETS_RAW: &str = include_str!("../data/default_genome_targets.txt");
+
 /// Primal name - capability-based identifier
 ///
-/// A newtype wrapper around `String` that accepts any primal name at runtime.
-/// Well-known constants are provided for convenience when deploying known primals.
-/// Primals are discovered at runtime via capability-based discovery, not hardcoded.
+/// A newtype wrapper around `String` that accepts any genome artifact key at runtime.
+/// Default bundle lists live in [`DEFAULT_GENOME_TARGETS_RAW`] (manifest metadata).
+/// Runtime peer discovery uses capabilities, not these labels.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct PrimalName(
-    /// Canonical primal name string (typically lowercase, e.g. `beardog`).
+    /// Canonical artifact key string (lowercase slug).
     pub String,
 );
 
 impl PrimalName {
-    /// BearDog genomeBin primal name.
-    pub const BEARDOG: &'static str = "beardog";
-    /// Songbird genomeBin primal name.
-    pub const SONGBIRD: &'static str = "songbird";
-    /// Squirrel genomeBin
-    pub const SQUIRREL: &'static str = "squirrel";
-    /// ToadStool genomeBin
-    pub const TOADSTOOL: &'static str = "toadstool";
-    /// NestGate genomeBin
-    pub const NESTGATE: &'static str = "nestgate";
-
-    /// Create from any string (capability-based)
+    /// Create from any string (typically a genome manifest key).
     pub fn new(s: impl Into<String>) -> Self {
         Self(s.into())
     }
@@ -45,45 +37,80 @@ impl PrimalName {
         &self.0
     }
 
-    /// Display name (proper case for well-known, else capitalized)
+    /// Human-readable label (generic title-case; no special-casing by ecosystem member name).
     pub fn display_name(&self) -> String {
-        match self.0.to_lowercase().as_str() {
-            Self::BEARDOG => "BearDog".to_string(),
-            Self::SONGBIRD => "Songbird".to_string(),
-            Self::SQUIRREL => "Squirrel".to_string(),
-            Self::TOADSTOOL => "Toadstool".to_string(),
-            Self::NESTGATE => "NestGate".to_string(),
-            other => {
-                let mut chars = other.chars();
-                match chars.next() {
-                    None => String::new(),
-                    Some(c) => c.to_uppercase().chain(chars).collect(),
-                }
-            }
-        }
+        title_case_slug(&self.0)
     }
 
-    /// Well-known primals (for default "deploy all" - not exhaustive)
+    /// Default genome bundle targets from manifest data, optionally overridden by
+    /// `ECOPRIMALS_GENOME_TARGETS` (comma-separated slugs).
+    pub fn genome_bundle_defaults() -> Vec<Self> {
+        if let Ok(s) = beardog_errors::process_env::var("ECOPRIMALS_GENOME_TARGETS") {
+            let parsed: Vec<Self> = s
+                .split(',')
+                .filter_map(|p| Self::parse_name(p.trim()))
+                .collect();
+            if !parsed.is_empty() {
+                return parsed;
+            }
+        }
+        parse_manifest_lines(DEFAULT_GENOME_TARGETS_RAW)
+    }
+
+    /// Backwards-compatible alias for [`Self::genome_bundle_defaults`].
     pub fn well_known() -> Vec<Self> {
-        vec![
-            Self(Self::BEARDOG.to_string()),
-            Self(Self::SONGBIRD.to_string()),
-            Self(Self::SQUIRREL.to_string()),
-            Self(Self::TOADSTOOL.to_string()),
-            Self(Self::NESTGATE.to_string()),
-        ]
+        Self::genome_bundle_defaults()
     }
 
-    /// Parse primal name from string (validates against well-known)
+    /// Parse a genome artifact slug: lowercase letters, digits, `-`, `_`.
     pub fn parse_name(s: &str) -> Option<Self> {
-        let s = s.to_lowercase();
-        match s.as_str() {
-            Self::BEARDOG | Self::SONGBIRD | Self::SQUIRREL | Self::TOADSTOOL | Self::NESTGATE => {
-                Some(Self(s))
-            }
-            _ => None,
+        let s = s.trim();
+        if s.is_empty() {
+            return None;
         }
+        let lower = s.to_lowercase();
+        if !lower
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_' || c == '-')
+        {
+            return None;
+        }
+        if !lower
+            .chars()
+            .next()
+            .is_some_and(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+        {
+            return None;
+        }
+        Some(Self(lower))
     }
+}
+
+fn parse_manifest_lines(raw: &str) -> Vec<PrimalName> {
+    raw.lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty() && !l.starts_with('#'))
+        .filter_map(PrimalName::parse_name)
+        .collect()
+}
+
+fn title_case_slug(s: &str) -> String {
+    let parts: Vec<&str> = s.split(['-', '_']).filter(|p| !p.is_empty()).collect();
+    if parts.is_empty() {
+        return String::new();
+    }
+    parts
+        .into_iter()
+        .map(|word| {
+            let mut c = word.chars();
+            let first = c.next().unwrap_or_default();
+            first
+                .to_uppercase()
+                .chain(c.flat_map(char::to_lowercase))
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 impl fmt::Display for PrimalName {
@@ -237,64 +264,52 @@ mod tests {
 
     #[test]
     fn test_primal_name() {
-        assert_eq!(PrimalName::new(PrimalName::BEARDOG).name(), "beardog");
-        assert_eq!(PrimalName::new(PrimalName::SONGBIRD).name(), "songbird");
-        assert_eq!(PrimalName::new(PrimalName::SQUIRREL).name(), "squirrel");
-        assert_eq!(PrimalName::new(PrimalName::TOADSTOOL).name(), "toadstool");
-        assert_eq!(PrimalName::new(PrimalName::NESTGATE).name(), "nestgate");
+        assert_eq!(PrimalName::new("beardog").name(), "beardog");
+        assert_eq!(PrimalName::new("songbird").name(), "songbird");
+        assert_eq!(PrimalName::new("squirrel").name(), "squirrel");
+        assert_eq!(PrimalName::new("toadstool").name(), "toadstool");
+        assert_eq!(PrimalName::new("nestgate").name(), "nestgate");
     }
 
     #[test]
     fn test_primal_display_name() {
-        assert_eq!(
-            PrimalName::new(PrimalName::BEARDOG).display_name(),
-            "BearDog"
-        );
-        assert_eq!(
-            PrimalName::new(PrimalName::SONGBIRD).display_name(),
-            "Songbird"
-        );
+        assert_eq!(PrimalName::new("beardog").display_name(), "Beardog");
+        assert_eq!(PrimalName::new("song-bird").display_name(), "Song Bird");
     }
 
     #[test]
     fn test_primal_well_known() {
         let all = PrimalName::well_known();
-        assert_eq!(all.len(), 5);
-        assert!(all.contains(&PrimalName::new(PrimalName::BEARDOG)));
-        assert!(all.contains(&PrimalName::new(PrimalName::SONGBIRD)));
-        assert!(all.contains(&PrimalName::new(PrimalName::SQUIRREL)));
-        assert!(all.contains(&PrimalName::new(PrimalName::TOADSTOOL)));
-        assert!(all.contains(&PrimalName::new(PrimalName::NESTGATE)));
+        assert!(!all.is_empty());
+        assert!(all.contains(&PrimalName::new("beardog")));
     }
 
     #[test]
     fn test_primal_from_str() {
         assert_eq!(
             PrimalName::parse_name("beardog"),
-            Some(PrimalName::new(PrimalName::BEARDOG))
+            Some(PrimalName::new("beardog"))
         );
         assert_eq!(
             PrimalName::parse_name("BearDog"),
-            Some(PrimalName::new(PrimalName::BEARDOG))
+            Some(PrimalName::new("beardog"))
         );
         assert_eq!(
             PrimalName::parse_name("BEARDOG"),
-            Some(PrimalName::new(PrimalName::BEARDOG))
+            Some(PrimalName::new("beardog"))
         );
         assert_eq!(
             PrimalName::parse_name("songbird"),
-            Some(PrimalName::new(PrimalName::SONGBIRD))
+            Some(PrimalName::new("songbird"))
         );
-        assert_eq!(PrimalName::parse_name("invalid"), None);
+        assert_eq!(PrimalName::parse_name(""), None);
+        assert_eq!(PrimalName::parse_name("bad name"), None);
     }
 
     #[test]
     fn test_primal_display() {
-        assert_eq!(PrimalName::new(PrimalName::BEARDOG).to_string(), "BearDog");
-        assert_eq!(
-            PrimalName::new(PrimalName::SONGBIRD).to_string(),
-            "Songbird"
-        );
+        assert_eq!(PrimalName::new("beardog").to_string(), "Beardog");
+        assert_eq!(PrimalName::new("songbird").to_string(), "Songbird");
     }
 
     #[test]
@@ -312,8 +327,8 @@ mod tests {
 
     #[test]
     fn test_deployment_progress() {
-        let progress = DeploymentProgress::pending(PrimalName::new(PrimalName::BEARDOG));
-        assert_eq!(progress.primal, PrimalName::new(PrimalName::BEARDOG));
+        let progress = DeploymentProgress::pending(PrimalName::new("beardog"));
+        assert_eq!(progress.primal, PrimalName::new("beardog"));
         assert_eq!(progress.status, DeploymentStatus::Pending);
         assert_eq!(progress.percent, 0);
     }
@@ -326,10 +341,7 @@ mod tests {
         let report = DeploymentReport {
             total: 5,
             successes: 4,
-            failures: vec![(
-                PrimalName::new(PrimalName::SQUIRREL),
-                "test failure".to_string(),
-            )],
+            failures: vec![(PrimalName::new("squirrel"), "test failure".to_string())],
             arch: Architecture::X86_64,
             os: OperatingSystem::Linux,
         };
@@ -357,12 +369,12 @@ mod tests {
 
     #[test]
     fn test_serialization() {
-        let primal = PrimalName::new(PrimalName::BEARDOG);
+        let primal = PrimalName::new("beardog");
         let json = serde_json::to_string(&primal).expect("serialize primal");
         assert_eq!(json, "\"beardog\"");
 
         let deserialized: PrimalName = serde_json::from_str(&json).expect("deserialize primal");
-        assert_eq!(deserialized, PrimalName::new(PrimalName::BEARDOG));
+        assert_eq!(deserialized, PrimalName::new("beardog"));
     }
 
     #[test]

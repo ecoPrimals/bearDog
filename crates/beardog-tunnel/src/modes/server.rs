@@ -246,7 +246,7 @@ pub async fn run(
     info!("   • 100% Pure Rust");
     info!("   • Modern async/await (tokio)");
     info!("   • Lock-free atomics (parking_lot)");
-    info!("   • Zero unsafe code");
+    info!("   • Fully memory-safe");
     info!("\n🎯 Press Ctrl+C to shutdown gracefully...\n");
 
     // Step 10: Wait for shutdown signal

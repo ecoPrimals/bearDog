@@ -432,7 +432,10 @@ impl DeviceManager {
     ///
     /// # Errors
     /// Returns an error if adb is not available or device detection fails.
-    #[allow(dead_code)]
+    #[allow(
+        dead_code,
+        reason = "Public Android adb discovery API for tooling; not yet wired into default deploy flows."
+    )]
     pub fn detect_android_devices(&self) -> Result<Vec<DeviceInfo>, BearDogError> {
         debug!("🔍 Detecting Android devices via adb...");
 
@@ -564,7 +567,10 @@ impl DeviceManager {
     ///
     /// # Errors
     /// Returns an error if deployment fails.
-    #[allow(dead_code)]
+    #[allow(
+        dead_code,
+        reason = "Public APK install hook for Android workflows; callers integrate explicitly."
+    )]
     pub fn deploy_to_android(&self, device_id: &str, apk_path: &str) -> Result<(), BearDogError> {
         info!(
             "📲 Deploying to Android device: {} with APK: {}",

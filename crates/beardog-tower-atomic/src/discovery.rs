@@ -19,7 +19,7 @@ impl DiscoverSocketEnv {
     /// Read `XDG_RUNTIME_DIR` and `HOME` from the process environment.
     ///
     /// Uses [`beardog_errors::process_env::var`] so tests can override values via the overlay
-    /// without `unsafe` [`std::env::set_var`].
+    /// instead of calling the soundness-critical [`std::env::set_var`] API directly.
     #[must_use]
     pub fn from_process_env() -> Self {
         Self {

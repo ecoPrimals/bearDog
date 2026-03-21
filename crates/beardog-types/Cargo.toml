@@ -10,7 +10,7 @@ readme = "README.md"
 keywords = ["types", "security", "distributed", "canonical", "beardog"]
 categories = ["data-structures", "rust-patterns"]
 documentation = "https://docs.rs/beardog-types"
-rust-version = "1.85.0"
+rust-version = "1.93.0"
 homepage.workspace = true
 
 [lints]

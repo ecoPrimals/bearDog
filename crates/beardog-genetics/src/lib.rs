@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-#![forbid(unsafe_code)]
 
 //! # `BearDog` Genetics - Advanced Genetic Algorithms and Entropy Management
 //!
@@ -43,7 +42,7 @@
 //!
 //! ## Safety
 //!
-//! All genetic operations maintain memory safety with zero unsafe code.
+//! All genetic operations maintain memory safety with full memory safety.
 
 use serde::{Deserialize, Serialize};
 

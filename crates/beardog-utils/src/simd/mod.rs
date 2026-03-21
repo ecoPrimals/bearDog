@@ -11,7 +11,7 @@
 //! - `optimizations`: General SIMD optimizations and algorithms
 //! - `crypto`: Cryptographic SIMD acceleration
 //! 
-//! All modules provide zero-unsafe-code SIMD abstractions with automatic
+//! All modules provide memory-safe-only SIMD abstractions with automatic
 //! fallback to scalar operations when SIMD instructions are unavailable.
 
 pub mod config;

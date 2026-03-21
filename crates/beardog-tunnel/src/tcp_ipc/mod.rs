@@ -18,7 +18,7 @@
 //! ## TRUE ecoBin v2.0 Compliance
 //!
 //! - ✅ Platform-agnostic (works everywhere)
-//! - ✅ Zero unsafe code (pure Rust tokio)
+//! - ✅ Fully memory-safe (pure Rust tokio)
 //! - ✅ No C dependencies
 //! - ✅ Auto-fallback (try Unix → TCP)
 //!

@@ -174,12 +174,12 @@ impl GenesisWitnessVerifier {
         &self,
         witness: &GenesisWitness,
     ) -> Result<(), WitnessVerificationError> {
-        if let Some(ref trusted) = self.trusted_witnesses {
-            if !trusted.contains(&witness.device_id) {
-                return Err(WitnessVerificationError::UnauthorizedWitness {
-                    device_id: witness.device_id.clone(),
-                });
-            }
+        if let Some(ref trusted) = self.trusted_witnesses
+            && !trusted.contains(&witness.device_id)
+        {
+            return Err(WitnessVerificationError::UnauthorizedWitness {
+                device_id: witness.device_id.clone(),
+            });
         }
         Ok(())
     }

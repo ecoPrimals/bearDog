@@ -1,4 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(
+    missing_docs,
+    clippy::float_cmp,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::redundant_clone,
+    clippy::needless_collect
+)]
 //! End-to-End Test Scenarios for `BearDog`
 //!
 //! Comprehensive E2E tests covering multi-component interactions,

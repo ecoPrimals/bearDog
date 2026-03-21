@@ -9,9 +9,9 @@
 //! ## Architecture Principle: "Discover, Don't Hardcode"
 //!
 //! BearDog knows:
-//! - ✅ Itself ("beardog")
+//! - ✅ Itself (from [`crate::primal_self_knowledge::PrimalIdentity`] / environment)
 //! - ✅ What capabilities it needs (e.g., "network routing", "key ceremony")
-//! - ❌ NO hardcoded primal names (not "songbird", "toadstool", etc.)
+//! - ❌ NO hardcoded peer primal names (discovered at runtime)
 //!
 //! ## Usage Example
 //!
@@ -21,7 +21,7 @@
 //! # async fn example() -> Result<(), beardog_errors::BearDogError> {
 //! let messenger = SecureCrossPrimalMessenger::new(discovery_client).await?;
 //!
-//! // Send to ANY primal with network capability (could be songbird, or anything else)
+//! // Send to ANY primal with network capability (whoever advertises it)
 //! let response = messenger.send_to_network_primal(b"hello", metadata).await?;
 //! # Ok(())
 //! # }
@@ -30,6 +30,7 @@
 // Trait-based approach for primal discovery
 // This allows flexibility in implementation without tight coupling
 // to beardog-adapters internal structure
+use crate::primal_self_knowledge::{PrimalIdentity, PrimalIdentityEnvInputs};
 use beardog_errors::BearDogError;
 use beardog_types::canonical::discovery::{
     ComputeAbility, NetworkFunction, SecurityService, StorageCharacteristic,
@@ -155,9 +156,11 @@ impl SecureCrossPrimalMessenger {
 
         info!("✅ Genetic key exchange engine initialized");
 
+        let our_identity = PrimalIdentity::from_inputs(&PrimalIdentityEnvInputs::from_env())?.name;
+
         Ok(Self {
             discovery_service,
-            our_identity: "beardog".to_string(), // We only know ourselves
+            our_identity,
             active_sessions: Arc::new(RwLock::new(HashMap::new())),
             key_exchange: Arc::new(key_exchange),
             metrics: Arc::new(RwLock::new(MessengerMetrics::default())),
@@ -167,7 +170,7 @@ impl SecureCrossPrimalMessenger {
     /// Send secure message to ANY primal with network capability
     ///
     /// Discovers primals with network routing capability and sends message.
-    /// Works with ANY primal that advertises the capability (songbird, or others).
+    /// Works with ANY primal that advertises the capability.
     ///
     /// # Errors
     /// Returns an error if no network primals are discovered or communication fails
@@ -176,7 +179,7 @@ impl SecureCrossPrimalMessenger {
         plaintext: &[u8],
         metadata: HashMap<String, String>,
     ) -> Result<SecurePrimalResponse, BearDogError> {
-        // Discover primals with network routing capability (ANY primal, not just songbird)
+        // Discover primals with network routing capability (capability-based)
         let network_capability = UniversalCapabilityType::Network {
             functions: vec![NetworkFunction::TrafficRouting],
         };
@@ -485,7 +488,7 @@ impl SecureCrossPrimalMessenger {
         // Derive encryption key from shared secret
         let mut hasher = Sha256::new();
         hasher.update(shared_secret);
-        hasher.update(b"beardog-encryption-v1");
+        hasher.update(b"cross-primal-msg-kdf-v1");
         let encryption_key = hasher.finalize();
 
         // Phase 1.2: ChaCha20-Poly1305 AEAD encryption
@@ -605,6 +608,7 @@ impl SecureCrossPrimalMessenger {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::primal_self_knowledge::{PrimalIdentity, PrimalIdentityEnvInputs};
 
     // Mock discovery service for testing
     #[derive(Debug)]
@@ -640,7 +644,10 @@ mod tests {
         assert!(result.is_ok());
 
         let messenger = result.unwrap();
-        assert_eq!(messenger.our_identity, "beardog");
+        let expected = PrimalIdentity::from_inputs(&PrimalIdentityEnvInputs::from_env())
+            .expect("identity")
+            .name;
+        assert_eq!(messenger.our_identity, expected);
     }
 
     #[tokio::test]
@@ -652,8 +659,10 @@ mod tests {
 
         let messenger = SecureCrossPrimalMessenger::new(mock_service).unwrap();
 
-        // The only identity should be "beardog" (ourselves)
-        assert_eq!(messenger.our_identity, "beardog");
+        let expected = PrimalIdentity::from_inputs(&PrimalIdentityEnvInputs::from_env())
+            .expect("identity")
+            .name;
+        assert_eq!(messenger.our_identity, expected);
 
         // Verify we discover primals, not hardcode them
         let result = messenger

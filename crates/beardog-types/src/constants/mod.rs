@@ -22,10 +22,11 @@
 /// Constants grouped by domain (system, network, security, validation, etc.).
 pub mod domains;
 
-/// Network port constants from IANA registry.
+/// Network port constants from IANA registry and common conventions.
 ///
-/// These are **universal standards**, not arbitrary choices.
-/// They can be overridden via configuration if needed.
+/// Names use industry-standard values (IANA, RFC). These are **default fallbacks** for
+/// documentation and static helpers; production code should prefer `beardog_config` /
+/// environment (`BEARDOG_*_PORT`) or discovery.
 pub mod network {
 
     /// HTTPS standard port (IANA assigned)

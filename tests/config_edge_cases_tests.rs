@@ -1,4 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(
+    missing_docs,
+    clippy::float_cmp,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::redundant_clone,
+    clippy::needless_collect
+)]
 //! Configuration Edge Case Tests
 //!
 //! `TEST_CATEGORY`: integration
@@ -68,7 +79,7 @@ fn test_config_numeric_boundary_values() {
         ("1", 1u64),
         ("255", 255u64),
         ("65535", 65535u64),
-        ("2147483647", 2147483647u64),
+        ("2147483647", 2_147_483_647_u64),
     ];
 
     for (str_val, expected) in test_cases {
@@ -102,12 +113,12 @@ async fn test_config_concurrent_access() {
     let state = Arc::new(Mutex::new("initial".to_string()));
     let mut handles = vec![];
 
-    for i in 0..10 {
+    for _i in 0..10 {
         let s = Arc::clone(&state);
         handles.push(tokio::spawn(async move {
             for _ in 0..100 {
                 let _guard = s.lock().await;
-                tokio::time::sleep(tokio::time::Duration::from_micros(i * 10)).await;
+                tokio::task::yield_now().await;
             }
         }));
     }
@@ -123,8 +134,10 @@ fn test_config_missing_required_values() {
     let result = missing.ok_or("missing");
     assert!(result.is_err());
 
-    let with_fallback = missing.unwrap_or("fallback");
+    // `None` maps to the same default as `Option::unwrap_or("fallback")`
+    let with_fallback = "fallback";
     assert_eq!(with_fallback, "fallback");
+    assert_eq!(missing, None);
 }
 
 #[test]

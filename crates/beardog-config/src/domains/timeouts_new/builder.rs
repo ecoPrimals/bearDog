@@ -121,58 +121,58 @@ impl TimeoutConfigBuilder {
     /// Only updates values that have environment variables set.
     /// Falls back to builder values or defaults.
     pub fn from_env(mut self) -> Self {
-        if let Ok(val) = std::env::var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS") {
-            if let Ok(secs) = val.parse() {
-                self.health_check_secs = Some(secs);
-            }
+        if let Ok(val) = std::env::var("BEARDOG_HEALTH_CHECK_TIMEOUT_SECS")
+            && let Ok(secs) = val.parse()
+        {
+            self.health_check_secs = Some(secs);
         }
 
-        if let Ok(val) = std::env::var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS") {
-            if let Ok(secs) = val.parse() {
-                self.hsm_operation_secs = Some(secs);
-            }
+        if let Ok(val) = std::env::var("BEARDOG_HSM_OPERATION_TIMEOUT_SECS")
+            && let Ok(secs) = val.parse()
+        {
+            self.hsm_operation_secs = Some(secs);
         }
 
-        if let Ok(val) = std::env::var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS") {
-            if let Ok(millis) = val.parse() {
-                self.hsm_probe_millis = Some(millis);
-            }
+        if let Ok(val) = std::env::var("BEARDOG_HSM_PROBE_TIMEOUT_MILLIS")
+            && let Ok(millis) = val.parse()
+        {
+            self.hsm_probe_millis = Some(millis);
         }
 
-        if let Ok(val) = std::env::var("BEARDOG_DISCOVERY_TIMEOUT_SECS") {
-            if let Ok(secs) = val.parse() {
-                self.discovery_operation_secs = Some(secs);
-            }
+        if let Ok(val) = std::env::var("BEARDOG_DISCOVERY_TIMEOUT_SECS")
+            && let Ok(secs) = val.parse()
+        {
+            self.discovery_operation_secs = Some(secs);
         }
 
-        if let Ok(val) = std::env::var("BEARDOG_DECISION_TIMEOUT_SECS") {
-            if let Ok(secs) = val.parse() {
-                self.ai_decision_secs = Some(secs);
-            }
+        if let Ok(val) = std::env::var("BEARDOG_DECISION_TIMEOUT_SECS")
+            && let Ok(secs) = val.parse()
+        {
+            self.ai_decision_secs = Some(secs);
         }
 
-        if let Ok(val) = std::env::var("BEARDOG_AI_REQUEST_TIMEOUT_SECS") {
-            if let Ok(secs) = val.parse() {
-                self.ai_request_secs = Some(secs);
-            }
+        if let Ok(val) = std::env::var("BEARDOG_AI_REQUEST_TIMEOUT_SECS")
+            && let Ok(secs) = val.parse()
+        {
+            self.ai_request_secs = Some(secs);
         }
 
-        if let Ok(val) = std::env::var("BEARDOG_AI_BATCH_TIMEOUT_MS") {
-            if let Ok(millis) = val.parse() {
-                self.ai_batch_timeout_millis = Some(millis);
-            }
+        if let Ok(val) = std::env::var("BEARDOG_AI_BATCH_TIMEOUT_MS")
+            && let Ok(millis) = val.parse()
+        {
+            self.ai_batch_timeout_millis = Some(millis);
         }
 
-        if let Ok(val) = std::env::var("BEARDOG_POOL_IDLE_TIMEOUT_SECS") {
-            if let Ok(secs) = val.parse() {
-                self.pool_idle_secs = Some(secs);
-            }
+        if let Ok(val) = std::env::var("BEARDOG_POOL_IDLE_TIMEOUT_SECS")
+            && let Ok(secs) = val.parse()
+        {
+            self.pool_idle_secs = Some(secs);
         }
 
-        if let Ok(val) = std::env::var("BEARDOG_MAX_CONNECTION_AGE_SECS") {
-            if let Ok(secs) = val.parse() {
-                self.max_connection_age_secs = Some(secs);
-            }
+        if let Ok(val) = std::env::var("BEARDOG_MAX_CONNECTION_AGE_SECS")
+            && let Ok(secs) = val.parse()
+        {
+            self.max_connection_age_secs = Some(secs);
         }
 
         self

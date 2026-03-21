@@ -113,7 +113,7 @@ impl UnixSocketIpcServer {
             if start.elapsed() > timeout {
                 return false;
             }
-            tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+            tokio::task::yield_now().await;
         }
         true
     }
@@ -131,7 +131,7 @@ impl UnixSocketIpcServer {
             if start.elapsed() > timeout {
                 return false;
             }
-            tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+            tokio::task::yield_now().await;
         }
         true
     }

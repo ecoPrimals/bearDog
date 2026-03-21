@@ -60,7 +60,7 @@ where
     /// Create a new safe concurrent hash map
     /// Creates a new instance
     pub fn new() -> Self {
-        info!("🛡️ Creating SafeConcurrentHashMap - ZERO UNSAFE CODE");
+        info!("🛡️ Creating SafeConcurrentHashMap - safe Rust only");
 
         Self {
             inner: DashMap::new(),
@@ -72,7 +72,7 @@ where
     /// Creates instance with capacity
     pub fn with_capacity(capacity: usize) -> Self {
         info!(
-            "🛡️ Creating SafeConcurrentHashMap with capacity {} - ZERO UNSAFE CODE",
+            "🛡️ Creating SafeConcurrentHashMap with capacity {} - safe Rust only",
             capacity
         );
 
@@ -178,7 +178,7 @@ where
     /// Creates a new instance
     pub fn new(max_size: usize) -> Self {
         info!(
-            "🛡️ Creating SafeConcurrentCache with max_size {} - ZERO UNSAFE CODE",
+            "🛡️ Creating SafeConcurrentCache with max_size {} - safe Rust only",
             max_size
         );
 
@@ -324,7 +324,7 @@ where
     /// Create a new safe concurrent queue
     /// Creates a new instance
     pub fn new() -> Self {
-        info!("🛡️ Creating SafeConcurrentQueue - ZERO UNSAFE CODE");
+        info!("🛡️ Creating SafeConcurrentQueue - safe Rust only");
 
         Self {
             inner: crossbeam::queue::SegQueue::new(),

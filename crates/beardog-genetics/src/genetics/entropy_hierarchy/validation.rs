@@ -3,7 +3,6 @@
 use crate::genetics::entropy_hierarchy::{EntropyClass, EntropyHierarchyConfig};
 use beardog_errors::BearDogError;
 use chrono::{Duration, Utc};
-use sha3::{Digest, Sha3_256};
 
 // Re-export from live_feed_validator module
 pub use super::live_feed_validator::{LiveFeedConfig, LiveFeedValidationResult, LiveFeedValidator};
@@ -209,91 +208,6 @@ impl EntropyValidator {
                 Ok(true)
             }
         }
-    }
-
-    /// Generate cryptographic proof of entropy hierarchy compliance
-    #[allow(dead_code)] // Used for entropy validation but not yet fully implemented
-    fn generate_compliance_proof(&self, entropy: &EntropyClass) -> Result<Vec<u8>, BearDogError> {
-        let mut hasher = Sha3_256::new();
-
-        // Add entropy class type
-        match entropy {
-            EntropyClass::HumanLivedExperience { .. } => hasher.update(b"HumanLivedExperience"),
-            EntropyClass::HumanSupervisedMachine { .. } => hasher.update(b"HumanSupervisedMachine"),
-            EntropyClass::StoreBoughtMachine { .. } => hasher.update(b"StoreBoughtMachine"),
-        }
-
-        // Add timestamp
-        let timestamp = match entropy {
-            EntropyClass::HumanLivedExperience {
-                capture_timestamp, ..
-            } => capture_timestamp,
-            EntropyClass::HumanSupervisedMachine {
-                validation_timestamp,
-                ..
-            } => validation_timestamp,
-            EntropyClass::StoreBoughtMachine {
-                generation_timestamp,
-                ..
-            } => generation_timestamp,
-        };
-        hasher.update(timestamp.timestamp().to_le_bytes());
-
-        // Add quality score
-        let quality = match entropy {
-            EntropyClass::HumanLivedExperience { quality_score, .. } => quality_score,
-            EntropyClass::HumanSupervisedMachine { quality_score, .. } => quality_score,
-            EntropyClass::StoreBoughtMachine { quality_score, .. } => quality_score,
-        };
-        hasher.update(quality.to_le_bytes());
-
-        Ok(hasher.finalize().to_vec())
-    }
-
-    /// Generate ownership signature
-    #[allow(dead_code)] // Used for entropy validation but not yet fully implemented
-    fn generate_ownership_signature(
-        &self,
-        _entropy: &EntropyClass,
-    ) -> Result<Vec<u8>, BearDogError> {
-        let mut hasher = Sha3_256::new();
-        hasher.update(Utc::now().timestamp().to_le_bytes());
-        hasher.update(b"ownership_signature");
-        Ok(hasher.finalize().to_vec())
-    }
-
-    /// Generate entropy commitment
-    #[allow(dead_code)] // Used for entropy validation but not yet fully implemented
-    fn generate_entropy_commitment(&self, entropy_data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        let mut hasher = Sha3_256::new();
-        hasher.update(entropy_data);
-        hasher.update(b"entropy_commitment");
-        Ok(hasher.finalize().to_vec())
-    }
-
-    /// Generate temporal proof
-    #[allow(dead_code)] // Used for entropy validation but not yet fully implemented
-    fn generate_temporal_proof(
-        &self,
-        _entropy_class: &EntropyClass,
-    ) -> Result<Vec<u8>, BearDogError> {
-        let mut hasher = Sha3_256::new();
-        hasher.update(Utc::now().timestamp().to_le_bytes());
-        hasher.update(b"temporal_proof");
-        Ok(hasher.finalize().to_vec())
-    }
-
-    /// Generate uniqueness proof
-    #[allow(dead_code)] // Used for entropy validation but not yet fully implemented
-    fn generate_uniqueness_proof(
-        &self,
-        entropy_data: &[u8],
-        _entropy_class: &EntropyClass,
-    ) -> Result<Vec<u8>, BearDogError> {
-        let mut hasher = Sha3_256::new();
-        hasher.update(entropy_data);
-        hasher.update(b"uniqueness_proof");
-        Ok(hasher.finalize().to_vec())
     }
 }
 

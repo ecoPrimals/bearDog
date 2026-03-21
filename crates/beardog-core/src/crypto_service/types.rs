@@ -122,10 +122,10 @@ impl CryptoServiceConfig {
         }
 
         // Max data size
-        if let Ok(size) = beardog_errors::process_env::var("BEARDOG_CRYPTO_MAX_DATA_SIZE") {
-            if let Ok(parsed) = size.parse() {
-                config.max_data_size = parsed;
-            }
+        if let Ok(size) = beardog_errors::process_env::var("BEARDOG_CRYPTO_MAX_DATA_SIZE")
+            && let Ok(parsed) = size.parse()
+        {
+            config.max_data_size = parsed;
         }
 
         // Audit enabled

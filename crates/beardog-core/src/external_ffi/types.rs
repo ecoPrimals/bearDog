@@ -132,14 +132,14 @@ pub enum SafetyLevel {
     #[default]
     Safe,
 
-    /// Potentially unsafe but verified
+    /// Potentially hazardous but verified
     Verified,
 
-    /// Unsafe but sandboxed
+    /// High-risk but sandboxed
     Sandboxed,
 
-    /// Unsafe and unsandboxed - use with caution
-    Unsafe,
+    /// High-risk and unsandboxed — use with caution
+    Exposed,
 }
 
 // ============================================================

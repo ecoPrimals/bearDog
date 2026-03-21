@@ -330,12 +330,12 @@ impl RateLimitConfig {
                 ));
             }
 
-            if let Some(burst) = self.burst_size {
-                if burst > self.max_requests * 2 {
-                    return Err(BearDogError::configuration(
-                        "Burst size should not exceed 2x max_requests",
-                    ));
-                }
+            if let Some(burst) = self.burst_size
+                && burst > self.max_requests * 2
+            {
+                return Err(BearDogError::configuration(
+                    "Burst size should not exceed 2x max_requests",
+                ));
             }
         }
 

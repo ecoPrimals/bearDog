@@ -164,15 +164,15 @@ impl SocketConfig {
             .unwrap_or_else(|| "default".to_string());
 
         // Tier 1: primal-specific BEARDOG_SOCKET
-        if let Some(ref socket_path) = inputs.beardog_socket {
-            if !socket_path.is_empty() {
-                return Self {
-                    socket_path: PathBuf::from(socket_path),
-                    family_id,
-                    node_id,
-                    source: SocketPathSource::PrimalEnvVar,
-                };
-            }
+        if let Some(ref socket_path) = inputs.beardog_socket
+            && !socket_path.is_empty()
+        {
+            return Self {
+                socket_path: PathBuf::from(socket_path),
+                family_id,
+                node_id,
+                source: SocketPathSource::PrimalEnvVar,
+            };
         }
 
         // Tier 2: BIOMEOS_SOCKET_PATH or BIOMEOS_SOCKET_DIR
@@ -185,15 +185,15 @@ impl SocketConfig {
                     source: SocketPathSource::OrchestratorEnvVar,
                 };
             }
-        } else if let Some(ref socket_dir) = inputs.biomeos_socket_dir {
-            if !socket_dir.is_empty() {
-                return Self {
-                    socket_path: PathBuf::from(socket_dir).join("beardog.sock"),
-                    family_id,
-                    node_id,
-                    source: SocketPathSource::OrchestratorEnvVar,
-                };
-            }
+        } else if let Some(ref socket_dir) = inputs.biomeos_socket_dir
+            && !socket_dir.is_empty()
+        {
+            return Self {
+                socket_path: PathBuf::from(socket_dir).join("beardog.sock"),
+                family_id,
+                node_id,
+                source: SocketPathSource::OrchestratorEnvVar,
+            };
         }
 
         let primal_name = inputs
@@ -296,16 +296,16 @@ impl SocketConfig {
     /// Call this before binding to the socket.
     pub fn prepare(&self) -> Result<(), String> {
         // Ensure parent directory exists
-        if let Some(parent) = self.socket_path.parent() {
-            if !parent.exists() {
-                fs::create_dir_all(parent).map_err(|e| {
-                    format!(
-                        "Failed to create socket directory {}: {}",
-                        parent.display(),
-                        e
-                    )
-                })?;
-            }
+        if let Some(parent) = self.socket_path.parent()
+            && !parent.exists()
+        {
+            fs::create_dir_all(parent).map_err(|e| {
+                format!(
+                    "Failed to create socket directory {}: {}",
+                    parent.display(),
+                    e
+                )
+            })?;
         }
 
         // Remove old socket file if it exists

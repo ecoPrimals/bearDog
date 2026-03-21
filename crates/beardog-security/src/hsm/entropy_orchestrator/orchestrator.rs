@@ -175,7 +175,10 @@ impl HsmEntropyOrchestrator {
     ///
     /// Returns device information for user selection or display.
     pub async fn list_available_devices(&self) -> Vec<HsmDeviceInfo> {
-        #[allow(unused_mut, reason = "Appended only when fido2/android/ios cfgs match")]
+        #[cfg_attr(
+            not(any(feature = "fido2", target_os = "android", target_os = "ios")),
+            allow(unused_mut)
+        )]
         let mut devices = Vec::new();
 
         // Add FIDO2 devices

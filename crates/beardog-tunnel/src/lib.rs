@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-#![forbid(unsafe_code)]
 
 //! # BearDog Tunnel - Secure Communication and HSM Integration
 //!
@@ -90,7 +89,7 @@
 //!
 //! ## Safety
 //!
-//! All tunnel operations are memory-safe with zero unsafe code.
+//! All tunnel operations are memory-safe with full memory safety.
 
 /// Core tunnel and session management functionality
 pub mod tunnel;

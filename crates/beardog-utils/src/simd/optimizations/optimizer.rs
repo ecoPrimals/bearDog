@@ -17,7 +17,7 @@ impl SafeSimdOptimizer {
     /// Create new safe SIMD optimizer
     /// Creates a new instance
     pub fn new(config: SafeSimdConfig) -> Self {
-        info!("🛡️ Initializing Safe SIMD Optimizer - ZERO UNSAFE CODE");
+        info!("🛡️ Initializing Safe SIMD Optimizer - safe Rust only");
         info!("✅ Using safe parallelism and iterator optimizations");
 
         Self {
@@ -211,7 +211,7 @@ impl SafeSimdOptimizer {
 
         info.insert(
             "safety".to_string(),
-            "100% - Zero unsafe blocks".to_string(),
+            "100% - Memory-safe verified".to_string(),
         );
         info.insert(
             "performance".to_string(),

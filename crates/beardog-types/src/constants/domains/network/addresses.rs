@@ -2,15 +2,23 @@
 
 //! Bind addresses, DNS, and multicast defaults.
 
-/// Localhost addresses (these are universal constants)
-/// IPv4 localhost address
-pub const LOCALHOST_IPV4: &str = "127.0.0.1";
-/// IPv6 localhost address
-pub const LOCALHOST_IPV6: &str = "::1";
-/// IPv4 wildcard address (bind to all interfaces)
-pub const WILDCARD_IPV4: &str = "0.0.0.0";
-/// IPv6 wildcard address (bind to all interfaces)
-pub const WILDCARD_IPV6: &str = "::";
+/// **Fallback** IPv4 loopback literal (IANA); prefer env/config (`BEARDOG_LOCALHOST_IPV4`, etc.).
+pub const DEFAULT_LOCALHOST_IPV4_STR: &str = "127.0.0.1";
+/// **Fallback** IPv6 loopback literal.
+pub const DEFAULT_LOCALHOST_IPV6_STR: &str = "::1";
+/// **Fallback** IPv4 “all interfaces” bind literal.
+pub const DEFAULT_WILDCARD_IPV4_STR: &str = "0.0.0.0";
+/// **Fallback** IPv6 unspecified bind literal.
+pub const DEFAULT_WILDCARD_IPV6_STR: &str = "::";
+
+/// Back-compat alias for [`DEFAULT_LOCALHOST_IPV4_STR`].
+pub const LOCALHOST_IPV4: &str = DEFAULT_LOCALHOST_IPV4_STR;
+/// Back-compat alias for [`DEFAULT_LOCALHOST_IPV6_STR`].
+pub const LOCALHOST_IPV6: &str = DEFAULT_LOCALHOST_IPV6_STR;
+/// Back-compat alias for [`DEFAULT_WILDCARD_IPV4_STR`].
+pub const WILDCARD_IPV4: &str = DEFAULT_WILDCARD_IPV4_STR;
+/// Back-compat alias for [`DEFAULT_WILDCARD_IPV6_STR`].
+pub const WILDCARD_IPV6: &str = DEFAULT_WILDCARD_IPV6_STR;
 
 /// Get default bind address from environment or fallback to 0.0.0.0
 ///

@@ -1,4 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(
+    missing_docs,
+    clippy::float_cmp,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::redundant_clone,
+    clippy::needless_collect
+)]
 //! Debug `CTAPHID_INIT` Communication - Pure Rust Implementation
 //!
 //! This is a minimal test to debug the `CTAPHID_INIT` handshake.
@@ -72,7 +83,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
         // Generate nonce
         let mut nonce = [0u8; 8];
         for (i, byte) in nonce.iter_mut().enumerate() {
-            *byte = ((i * 17 + 42) & 0xFF) as u8; // Deterministic for debugging
+            *byte = u8::try_from((i * 17 + 42) & 0xFF).expect("masked to u8"); // Deterministic for debugging
         }
 
         println!("📋 Building CTAPHID_INIT packet:");

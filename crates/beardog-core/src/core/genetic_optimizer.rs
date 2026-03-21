@@ -154,11 +154,10 @@ impl GeneticOptimizer {
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                && current_best_fitness > best_fitness
             {
-                if current_best_fitness > best_fitness {
-                    best_fitness = current_best_fitness;
-                    best_solution.clone_from(&population[best_idx]);
-                }
+                best_fitness = current_best_fitness;
+                best_solution.clone_from(&population[best_idx]);
             }
 
             // Update optimization state

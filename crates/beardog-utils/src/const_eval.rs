@@ -124,7 +124,7 @@ impl ConstMath {
             1 => base,
             _ => {
                 let half = Self::pow(base, exp / 2);
-                if exp % 2 == 0 {
+                if exp.is_multiple_of(2) {
                     half * half
                 } else {
                     base * half * half
@@ -154,13 +154,13 @@ impl ConstMath {
         if n == 2 {
             return true;
         }
-        if n % 2 == 0 {
+        if n.is_multiple_of(2) {
             return false;
         }
 
         let mut i = 3;
         while i * i <= n {
-            if n % i == 0 {
+            if n.is_multiple_of(i) {
                 return false;
             }
             i += 2;

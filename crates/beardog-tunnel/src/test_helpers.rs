@@ -172,7 +172,7 @@ pub mod mocks {
 
     /// Create a minimal safe BeardogBtspProvider for testing
     ///
-    /// This provides a safe alternative to `unsafe { std::mem::zeroed() }`
+    /// This provides a safe alternative to [`std::mem::zeroed`] for types that allow it
     /// for tests that need to pass a BeardogBtspProvider but don't actually use it.
     ///
     /// Uses `new_for_testing()` which bypasses HSM initialization, making it suitable

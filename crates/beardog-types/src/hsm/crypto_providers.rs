@@ -45,7 +45,7 @@ impl Default for OpenSslCryptoProvider {
 /// RustCrypto Cryptographic Provider
 ///
 /// Pure Rust cryptographic provider using RustCrypto libraries.
-/// No unsafe code, fully audited cryptographic primitives.
+/// No unchecked memory patterns, fully audited cryptographic primitives.
 ///
 /// # Features
 /// - ChaCha20-Poly1305 encryption

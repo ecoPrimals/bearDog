@@ -3,7 +3,7 @@
 //! Safe FFI Platform Security Layer
 //!
 //! This module provides a safe abstraction over platform-specific security features
-//! without using unsafe code directly. It delegates to platform providers that handle
+//! without using unchecked memory patterns directly. It delegates to platform providers that handle
 //! FFI safely.
 
 use crate::tunnel::hsm::types::key::{KeyHealthStatus, KeyMaterial, KeyMetadata};

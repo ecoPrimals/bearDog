@@ -156,8 +156,7 @@ impl EntropyMixingEngine {
 /// Entropy source manager
 #[derive(Debug, Clone)]
 pub struct EntropySourceManager {
-    #[allow(dead_code)] // Used for entropy mixing but not yet fully implemented
-    mixing_engine: EntropyMixingEngine,
+    _mixing_engine: EntropyMixingEngine,
     source_registry: HashMap<String, HumanEntropySource>,
 }
 
@@ -167,7 +166,7 @@ impl EntropySourceManager {
     #[must_use]
     pub fn new(config: &EntropyHierarchyConfig) -> Self {
         Self {
-            mixing_engine: EntropyMixingEngine::new(config),
+            _mixing_engine: EntropyMixingEngine::new(config),
             source_registry: HashMap::new(),
         }
     }

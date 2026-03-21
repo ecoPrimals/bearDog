@@ -24,8 +24,7 @@ pub struct OptimizationConfig {
 /// Placeholder optimizer handle; hooks accept [`OptimizationConfig`] for future engines.
 #[derive(Debug)]
 pub struct PerformanceOptimizer {
-    #[allow(dead_code)]
-    config: OptimizationConfig,
+    _config: OptimizationConfig,
 }
 
 impl PerformanceOptimizer {
@@ -33,7 +32,7 @@ impl PerformanceOptimizer {
     /// Creates a new instance
     pub fn new(config: &OptimizationConfig) -> Result<Self, BearDogError> {
         Ok(Self {
-            config: config.clone(),
+            _config: config.clone(),
         })
     }
 

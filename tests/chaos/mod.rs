@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![allow(
+    missing_docs,
     unused_imports,
     unused_variables,
     dead_code,
     unused_comparisons,
-    clippy::all
+    clippy::all,
+    clippy::unreadable_literal
 )]
 
 //! Chaos Testing Framework for `BearDog`
@@ -127,6 +129,7 @@ pub struct ChaosMetrics {
 impl ChaosMetrics {
     /// Calculate success rate
     #[must_use]
+    #[allow(clippy::cast_precision_loss)]
     pub fn success_rate(&self) -> f64 {
         if self.operations_attempted == 0 {
             return 0.0;
@@ -351,7 +354,7 @@ impl ResourceChaos {
                     while start.elapsed() < duration {
                         // CPU-intensive work
                         let mut sum = 0u64;
-                        for i in 0..1000000 {
+                        for i in 0..1_000_000 {
                             sum = sum.wrapping_add(i);
                         }
                         // Prevent optimization
@@ -421,7 +424,7 @@ mod tests {
         metrics.operations_succeeded = 95;
         metrics.operations_failed = 5;
 
-        assert_eq!(metrics.success_rate(), 0.95);
+        assert!((metrics.success_rate() - 0.95).abs() < 1e-9);
     }
 
     #[tokio::test]

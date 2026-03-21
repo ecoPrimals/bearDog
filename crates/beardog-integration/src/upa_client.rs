@@ -4,7 +4,7 @@
 //!
 //! **EVOLVED**: Now uses Tower Atomic (Unix sockets + JSON-RPC) instead of HTTP!
 //!
-//! Modern async client for Songbird's Universal Port Authority (UPA).
+//! Modern async client for Universal Port Authority (UPA) over Tower Atomic IPC.
 //!
 //! ## Evolution
 //!
@@ -23,18 +23,21 @@
 //! - Tokio async/await throughout
 //! - No blocking operations
 
+use std::path::Path;
 use std::sync::Arc;
-use std::time::Duration;
 
 use arc_swap::ArcSwap;
+use beardog_discovery::{discovered_services_from_environment_from_env, primary_url_to_ipc_socket_path};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info};
 
 use beardog_errors::BearDogError;
 
-// Tower Atomic client for Songbird
 use beardog_tower_atomic::Client as AtomicClient;
+
+/// Environment capability key: `CAPABILITY_UPA_REGISTER_ENDPOINT` (see `beardog_discovery::capability_env`).
+const UPA_REGISTER_CAPABILITY: &str = "upa_register";
 
 /// UPA registration request payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -63,13 +66,42 @@ pub struct RegistrationResponse {
     pub registered_at: String,
 }
 
-/// Default UPA service provider (environment-discoverable)
+/// Connect to the UPA JSON-RPC peer using capability-first resolution.
 ///
 /// Priority:
-/// 1. `UPA_PROVIDER` env var (operator override)
-/// 2. `"songbird"` (default UPA implementation)
-fn discover_upa_provider() -> String {
-    beardog_errors::process_env::var("UPA_PROVIDER").unwrap_or_else(|_| "songbird".to_string())
+/// 1. `UPA_UNIX_SOCKET` — explicit filesystem path to the Unix socket
+/// 2. `CAPABILITY_UPA_REGISTER_ENDPOINT` — capability env discovery (`upa_register`)
+/// 3. `UPA_PROVIDER` — legacy socket filename key under the standard ecoPrimals search paths
+async fn connect_upa_atomic() -> Result<AtomicClient, BearDogError> {
+    if let Ok(path) = beardog_errors::process_env::var("UPA_UNIX_SOCKET") {
+        return AtomicClient::connect_unix_path(Path::new(&path), "upa_unix_socket")
+            .await
+            .map_err(|e| {
+                BearDogError::network(format!("UPA UPA_UNIX_SOCKET connect failed: {e}"))
+            });
+    }
+
+    let services = discovered_services_from_environment_from_env(UPA_REGISTER_CAPABILITY, 600);
+    if let Some(s) = services.first() {
+        let path = primary_url_to_ipc_socket_path(&s.endpoint.primary_url);
+        return AtomicClient::connect_unix_path(Path::new(&path), "upa_register_capability")
+            .await
+            .map_err(|e| {
+                BearDogError::network(format!(
+                    "UPA capability endpoint (upa_register / CAPABILITY_UPA_REGISTER_ENDPOINT): {e}"
+                ))
+            });
+    }
+
+    if let Ok(name) = beardog_errors::process_env::var("UPA_PROVIDER") {
+        return AtomicClient::connect(&name).await.map_err(|e| {
+            BearDogError::network(format!("UPA UPA_PROVIDER connect failed: {e}"))
+        });
+    }
+
+    Err(BearDogError::network(
+        "UPA: set UPA_UNIX_SOCKET, CAPABILITY_UPA_REGISTER_ENDPOINT, or UPA_PROVIDER",
+    ))
 }
 
 /// UPA client for service registration and discovery
@@ -83,9 +115,7 @@ pub struct UpaClient {
 impl UpaClient {
     /// Create a new UPA client
     ///
-    /// Discovers the UPA provider at runtime:
-    /// 1. `UPA_PROVIDER` env var (operator override)
-    /// 2. Default: `"songbird"` (standard UPA implementation)
+    /// Discovers the UPA provider at runtime (`UPA_UNIX_SOCKET`, capability env, or `UPA_PROVIDER`).
     ///
     /// Connects via Tower Atomic (Unix socket).
     ///
@@ -101,19 +131,11 @@ impl UpaClient {
     /// }
     /// ```
     pub async fn new() -> Result<Self, BearDogError> {
-        let provider = discover_upa_provider();
-        info!("🔌 Connecting to UPA provider '{}' via Tower Atomic", provider);
+        info!("🔌 Connecting to UPA via Tower Atomic (capability-first discovery)");
 
-        let client = AtomicClient::connect(&provider)
-            .await
-            .map_err(|e| {
-                BearDogError::ConnectionFailed(format!(
-                    "Failed to connect to UPA provider '{}': {}",
-                    provider, e
-                ))
-            })?;
+        let client = connect_upa_atomic().await?;
 
-        info!("✅ Connected to UPA provider '{}'", provider);
+        info!("✅ Connected to UPA provider");
 
         Ok(Self {
             client,
@@ -229,12 +251,12 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    #[ignore] // Requires running Songbird instance
+    #[ignore] // Requires a UPA endpoint (env / capability)
     async fn test_connect() {
         let client = UpaClient::new().await;
         match client {
-            Ok(_) => println!("✅ Connected to Songbird UPA"),
-            Err(e) => println!("⚠️  Songbird not running: {}", e),
+            Ok(_) => println!("✅ Connected to UPA"),
+            Err(e) => println!("⚠️  UPA not available: {}", e),
         }
     }
 }

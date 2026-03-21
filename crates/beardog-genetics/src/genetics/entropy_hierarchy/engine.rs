@@ -81,10 +81,10 @@ impl EntropyHierarchyManager {
             .ok_or_else(|| BearDogError::invalid_input("Seed not found"))?;
 
         // Check usage limits
-        if let Some(max_usage) = seed.metadata.max_usage {
-            if seed.metadata.usage_count >= max_usage {
-                return Err(BearDogError::invalid_input("Seed usage limit exceeded"));
-            }
+        if let Some(max_usage) = seed.metadata.max_usage
+            && seed.metadata.usage_count >= max_usage
+        {
+            return Err(BearDogError::invalid_input("Seed usage limit exceeded"));
         }
 
         // Update usage count
@@ -136,10 +136,10 @@ impl EntropyHierarchyManager {
         let mut to_remove = Vec::new();
 
         for (seed_id, seed) in &self.active_seeds {
-            if let Some(expires_at) = seed.metadata.expires_at {
-                if chrono::Utc::now() > expires_at {
-                    to_remove.push(*seed_id);
-                }
+            if let Some(expires_at) = seed.metadata.expires_at
+                && chrono::Utc::now() > expires_at
+            {
+                to_remove.push(*seed_id);
             }
         }
 

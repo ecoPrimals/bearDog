@@ -2,12 +2,12 @@
 
 //! # Ultimate Safety Module
 //!
-//! This module provides **ultimate safety guarantees** by eliminating all unsafe
-//! patterns and providing safe, high-performance alternatives to unsafe operations.
+//! This module provides **ultimate safety guarantees** by eliminating non-idiomatic patterns
+//! and providing safe, high-performance alternatives to high-risk operations.
 //!
 //! ## 🛡️ **Safety Guarantees**
 //!
-//! - **Zero Unsafe Code**: All operations are memory-safe by construction
+//! - **Safe Rust only**: all operations are memory-safe by construction
 //! - **Compile-Time Verification**: Safety verified at compile time
 //! - **Runtime Safety**: Additional runtime checks where needed
 //! - **Type Safety**: Strong typing prevents common errors
@@ -24,9 +24,9 @@ use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
 
-/// Ultimate safe buffer that provides bounds-checked access with zero unsafe code
+/// Ultimate safe buffer with bounds-checked access and full memory safety guarantees
 ///
-/// This buffer provides all the performance benefits of unsafe buffer operations
+/// This buffer provides all the performance benefits of unchecked buffer operations
 /// while maintaining complete memory safety through compile-time verification.
 #[derive(Debug, Clone)]
 pub struct UltimateSafeBuffer {
@@ -55,11 +55,14 @@ pub struct SafetyStatistics {
     pub allocations_tracked: u64,
 }
 
-/// Ultimate safe memory pool that eliminates all unsafe memory management
+/// Ultimate safe memory pool that eliminates manual unchecked memory management
 ///
 /// Provides high-performance memory pooling with complete safety guarantees
 /// and automatic cleanup to prevent memory leaks.
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "Public pool API for future safe pooling wiring in consumers."
+)]
 pub struct UltimateSafeMemoryPool<T> {
     /// Pool of available objects
     pool: Arc<Mutex<VecDeque<T>>>,
@@ -94,7 +97,10 @@ pub struct PoolStatistics {
 ///
 /// This wrapper provides compile-time guarantees that references remain valid
 /// for their entire lifetime, eliminating common memory safety issues.
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "Public reference wrapper for documented safe-memory patterns."
+)]
 pub struct SafeReference<T> {
     /// The referenced data with lifetime tracking
     data: Arc<RwLock<T>>,
@@ -108,7 +114,10 @@ pub struct SafeReference<T> {
 
 /// Safety token for compile-time verification of safe operations
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "Token type for future compile-time safety verification hooks."
+)]
 pub struct SafetyToken {
     /// Unique identifier for this safety context
     context_id: u64,
@@ -132,7 +141,10 @@ pub enum SafetyLevel {
 /// RwLock-backed “atomic” with validity flag and token for extra defensive checks.
 ///
 /// Prefer real atomics for numeric types; this trades throughput for auditability.
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "Public defensive atomic wrapper for auditability-oriented call sites."
+)]
 pub struct SafeAtomic<T> {
     /// The atomic value with additional safety wrapping
     value: Arc<RwLock<T>>,

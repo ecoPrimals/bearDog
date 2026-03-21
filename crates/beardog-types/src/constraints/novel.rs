@@ -63,7 +63,7 @@ impl Constraint for ProximityConstraint {
                 .map_err(|e| BearDogError::serialization(&format!("Invalid location data: {e}")))?
         } else {
             return Err(BearDogError::not_found(format!(
-                "Location for '{}' not available. In production, would discover via Songbird.",
+                "Location for '{}' not available. In production, discover a peer advertising the location/presence capability.",
                 self.other_party
             )));
         };
@@ -144,17 +144,17 @@ impl Constraint for EnvironmentalConstraint {
         })?;
 
         // Check min constraint
-        if let Some(min) = self.min_value {
-            if value < min {
-                return Ok(false);
-            }
+        if let Some(min) = self.min_value
+            && value < min
+        {
+            return Ok(false);
         }
 
         // Check max constraint
-        if let Some(max) = self.max_value {
-            if value > max {
-                return Ok(false);
-            }
+        if let Some(max) = self.max_value
+            && value > max
+        {
+            return Ok(false);
         }
 
         Ok(true)
@@ -240,10 +240,10 @@ impl Constraint for NetworkSsidConstraint {
 /// # Example
 /// ```rust,ignore
 /// let constraint = VpnConstraint {
-///     required_tunnel: "songbird".to_string(),
+///     required_tunnel: "corp-wireguard".to_string(),
 /// };
 ///
-/// // Satisfied when connected via Songbird VPN
+/// // Satisfied when connected via that VPN profile
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VpnConstraint {
@@ -602,12 +602,12 @@ mod tests {
     #[test]
     fn test_vpn_constraint() {
         let constraint = VpnConstraint {
-            required_tunnel: "songbird".to_string(),
+            required_tunnel: "corp-wireguard".to_string(),
         };
 
         let mut context = ConstraintContext::new();
         context.network_state.vpn_active = true;
-        context.network_state.vpn_name = Some("songbird".to_string());
+        context.network_state.vpn_name = Some("corp-wireguard".to_string());
 
         assert!(constraint.is_satisfied(&context).unwrap());
 

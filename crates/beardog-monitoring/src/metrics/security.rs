@@ -10,14 +10,13 @@ use serde::{Deserialize, Serialize};
 /// Records security-category [`super::MetricEvent`] values and exposes aggregate counters.
 #[derive(Debug)]
 pub struct SecurityMetricsEngine {
-    #[allow(dead_code)] // Config reserved for future security metrics
-    config: SecurityMetricsConfig,
+    _config: SecurityMetricsConfig,
 }
 
 impl SecurityMetricsEngine {
     /// Creates a new instance
     pub const fn new(config: SecurityMetricsConfig) -> Result<Self, BearDogError> {
-        Ok(Self { config })
+        Ok(Self { _config: config })
     }
 
     /// Starts service

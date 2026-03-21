@@ -424,10 +424,9 @@ impl StorageBackendTrait for FileStorageBackend {
                 if path
                     .extension()
                     .is_some_and(|ext| ext.eq_ignore_ascii_case("key"))
+                    && let Some(stem) = path.file_stem().and_then(|s| s.to_str())
                 {
-                    if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
-                        keys.push(stem.to_string());
-                    }
+                    keys.push(stem.to_string());
                 }
             }
         }

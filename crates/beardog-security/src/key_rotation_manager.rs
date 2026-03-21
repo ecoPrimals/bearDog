@@ -215,16 +215,16 @@ impl KeyRotationManager {
             let metadata = self.metadata_store.read().await;
 
             for (key_id, meta) in metadata.iter() {
-                if meta.state == KeyLifecycleState::Deprecated {
-                    if let Some(deprecated_at) = meta.deprecated_at {
-                        let age = now.signed_duration_since(deprecated_at);
-                        let retention_period =
-                            chrono::Duration::from_std(self.config.deprecation_period)
-                                .unwrap_or_else(|_| chrono::Duration::zero());
+                if meta.state == KeyLifecycleState::Deprecated
+                    && let Some(deprecated_at) = meta.deprecated_at
+                {
+                    let age = now.signed_duration_since(deprecated_at);
+                    let retention_period =
+                        chrono::Duration::from_std(self.config.deprecation_period)
+                            .unwrap_or_else(|_| chrono::Duration::zero());
 
-                        if age >= retention_period {
-                            keys_to_revoke.push(key_id.clone());
-                        }
+                    if age >= retention_period {
+                        keys_to_revoke.push(key_id.clone());
                     }
                 }
             }

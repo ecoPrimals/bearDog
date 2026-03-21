@@ -4,11 +4,11 @@
 //!
 //! This module provides high-performance data processing using only safe Rust,
 //! leveraging compiler auto-vectorization, iterator chains, and parallel processing
-//! without any unsafe SIMD intrinsics.
+//! without hand-written SIMD intrinsics.
 //!
 //! # Features
 //!
-//! - **Zero Unsafe Code**: All optimizations use safe Rust constructs
+//! - **Memory-safe only**: All optimizations use safe Rust constructs
 //! - **Auto-Vectorization**: Compiler automatically vectorizes hot loops
 //! - **Parallel Processing**: Optional Rayon-based parallelism
 //! - **Iterator Chains**: Efficient functional-style data transformation

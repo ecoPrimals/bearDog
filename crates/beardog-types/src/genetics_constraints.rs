@@ -480,12 +480,12 @@ impl KeyConstraints {
                     _ => &None,
                 };
 
-                if let Some(op_proj) = op_project {
-                    if op_proj != name {
-                        return Err(BearDogError::unauthorized(format!(
-                            "Key scoped to project '{name}', cannot access '{op_proj}'"
-                        )));
-                    }
+                if let Some(op_proj) = op_project
+                    && op_proj != name
+                {
+                    return Err(BearDogError::unauthorized(format!(
+                        "Key scoped to project '{name}', cannot access '{op_proj}'"
+                    )));
                 }
                 Ok(())
             }
@@ -543,17 +543,16 @@ impl KeyConstraints {
     }
 
     fn verify_data_access(&self, operation: &KeyOperation) -> Result<(), BearDogError> {
-        if let KeyOperation::Delete { path } = operation {
-            if self
+        if let KeyOperation::Delete { path } = operation
+            && self
                 .data_access
                 .immutable_paths
                 .iter()
                 .any(|p| Self::path_matches(path, p))
-            {
-                return Err(BearDogError::unauthorized(format!(
-                    "cannot delete protected path: {path} (cryptographically enforced)"
-                )));
-            }
+        {
+            return Err(BearDogError::unauthorized(format!(
+                "cannot delete protected path: {path} (cryptographically enforced)"
+            )));
         }
 
         Ok(())

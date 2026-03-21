@@ -2,11 +2,12 @@
 name = "beardog-core"
 description = "BearDog core module"
 repository = "https://github.com/eastgate-software/beardog"
-rust-version = "1.85.0"
+rust-version = "1.93.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "core", "ecosystem", "beardog", "orchestration", "management",]
 categories = [ "development-tools", "ecosystem", "orchestration",]
+license = "AGPL-3.0-only"
 
 [lints]
 workspace = true
@@ -55,9 +56,6 @@ serial_test = "3.0"  # For serial test execution (env tests)
 workspace = true
 
 [package.edition]
-workspace = true
-
-[package.license]
 workspace = true
 
 [package.authors]

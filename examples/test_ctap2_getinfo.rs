@@ -1,4 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(
+    missing_docs,
+    clippy::float_cmp,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::redundant_clone,
+    clippy::needless_collect
+)]
 //! Test CTAP2 `GetInfo` Command with Real Hardware (Pure Rust)
 //!
 //! This example tests the CTAP2 `GetInfo` command implementation
@@ -38,7 +49,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
 
 #[cfg(feature = "fido2")]
 async fn run_ctap2_test() -> Result<(), beardog_errors::BearDogError> {
-    use beardog_hid::{HidDevice, discover, open_device};
+    use beardog_hid::{discover, open_device};
 
     // Step 1: Discover HID devices using Pure Rust
     println!("Step 1: Discovering HID devices (Pure Rust /dev/hidraw)...");

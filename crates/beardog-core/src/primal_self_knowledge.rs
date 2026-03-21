@@ -152,7 +152,7 @@ pub struct PrimalIdentity {
     /// This primal's unique name (from config/environment)
     pub name: String,
 
-    /// This primal's type (e.g., "beardog", "songbird", "squirrel")
+    /// This primal's type (from configuration; e.g. crypto tower, ingress gateway)
     pub primal_type: String,
 
     /// Capabilities this primal provides
@@ -344,17 +344,17 @@ impl PrimalDiscovery {
         }
 
         // 2. mDNS discovery (if no primals found)
-        if primals.is_empty() {
-            if let Ok(mdns_primals) = self.discover_via_mdns(capability).await {
-                primals.extend(mdns_primals);
-            }
+        if primals.is_empty()
+            && let Ok(mdns_primals) = self.discover_via_mdns(capability).await
+        {
+            primals.extend(mdns_primals);
         }
 
         // 3. Service registry (if configured)
-        if primals.is_empty() {
-            if let Ok(registry_primals) = self.discover_via_registry(capability) {
-                primals.extend(registry_primals);
-            }
+        if primals.is_empty()
+            && let Ok(registry_primals) = self.discover_via_registry(capability)
+        {
+            primals.extend(registry_primals);
         }
 
         Ok(primals)

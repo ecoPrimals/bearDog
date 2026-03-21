@@ -36,10 +36,10 @@ impl SharedConfigManager {
                 tracing::warn!("Shared config lock poisoned on read, recovering");
                 poisoned.into_inner()
             });
-            if let Some(config) = configs.get(key) {
-                if let Ok(typed_config) = config.clone().downcast::<T>() {
-                    return typed_config;
-                }
+            if let Some(config) = configs.get(key)
+                && let Ok(typed_config) = config.clone().downcast::<T>()
+            {
+                return typed_config;
             }
         }
 
@@ -50,10 +50,10 @@ impl SharedConfigManager {
         });
 
         // Double-check: Another thread might have inserted while we waited for write lock
-        if let Some(config) = configs.get(key) {
-            if let Ok(typed_config) = config.clone().downcast::<T>() {
-                return typed_config;
-            }
+        if let Some(config) = configs.get(key)
+            && let Ok(typed_config) = config.clone().downcast::<T>()
+        {
+            return typed_config;
         }
 
         // Now create and insert while holding write lock (prevents race)

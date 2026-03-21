@@ -19,7 +19,7 @@
 //! 1. **Sovereignty Preserving**: Each primal only knows its own keys
 //! 2. **Runtime Discovery**: No hardcoded cross-primal relationships
 //! 3. **Capability-Based**: Exchange based on advertised capabilities
-//! 4. **Memory Safe**: Zero unsafe code, all operations verified
+//! 4. **Memory Safe**: Fully memory-safe, all operations verified
 //! 5. **Idiomatic Rust**: Modern patterns, explicit error handling
 //!
 //! ## Example
@@ -50,7 +50,6 @@
 //! # }
 //! ```
 
-#![deny(unsafe_code)]
 #![warn(clippy::pedantic)]
 
 use beardog_errors::BearDogError;
@@ -348,12 +347,11 @@ impl GeneticKeyExchange {
 
         // Check evolution triggers
         for trigger in &lineage.evolution_triggers {
-            if let EvolutionTrigger::TimeElapsed(duration) = trigger {
-                if let Ok(elapsed) = lineage.created_at.elapsed() {
-                    if elapsed > *duration {
-                        return Ok(true);
-                    }
-                }
+            if let EvolutionTrigger::TimeElapsed(duration) = trigger
+                && let Ok(elapsed) = lineage.created_at.elapsed()
+                && elapsed > *duration
+            {
+                return Ok(true);
             }
             // Other triggers (SecurityEvent, MutualConsent, etc.) not yet implemented
         }

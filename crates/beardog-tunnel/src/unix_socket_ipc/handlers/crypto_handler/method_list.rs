@@ -1,0 +1,114 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
+//! Registered JSON-RPC method names for [`super::CryptoHandler`].
+
+/// All crypto RPC method names (must stay in sync with routing).
+pub fn crypto_method_names() -> Vec<&'static str> {
+    vec![
+        // Core crypto operations (EdDSA)
+        "crypto.ed25519_generate_keypair",
+        "crypto.sign_ed25519",
+        "crypto.verify_ed25519",
+        // ECDSA signature algorithms (TLS 1.3)
+        "crypto.sign_ecdsa_secp256r1",
+        "crypto.verify_ecdsa_secp256r1",
+        "crypto.sign_ecdsa_secp384r1",
+        "crypto.verify_ecdsa_secp384r1",
+        // RSA signature algorithms (legacy + modern)
+        "crypto.sign_rsa_pkcs1_sha256",
+        "crypto.verify_rsa_pkcs1_sha256",
+        "crypto.sign_rsa_pss_sha256",
+        "crypto.verify_rsa_pss_sha256",
+        // Key exchange (X25519 + ECDH)
+        "crypto.x25519_generate_ephemeral",
+        "crypto.x25519_derive_secret",
+        "crypto.ecdh_p256_generate",
+        "crypto.ecdh_p256_derive",
+        "crypto.ecdh_p384_generate",
+        "crypto.ecdh_p384_derive",
+        // AEAD encryption
+        "crypto.chacha20_poly1305_encrypt",
+        "crypto.chacha20_poly1305_decrypt",
+        "crypto.aes256_gcm_encrypt",
+        "crypto.aes256_gcm_decrypt",
+        "crypto.aes128_gcm_encrypt",
+        "crypto.aes128_gcm_decrypt",
+        // Hashing
+        "crypto.blake3_hash",
+        "crypto.hmac_sha256",
+        "crypto.hash_for_cipher",
+        "crypto.sha256",
+        "crypto.sha384",
+        "crypto.sha512",
+        "crypto.sha1",
+        "crypto.sha3_256",
+        "crypto.hmac_sha384",
+        "crypto.hmac_sha512",
+        "crypto.hmac_blake3",
+        // Password hashing
+        "crypto.argon2id_hash",
+        "crypto.argon2id_verify",
+        "crypto.pbkdf2_sha256",
+        "crypto.bcrypt_hash",
+        "crypto.bcrypt_verify",
+        "crypto.scrypt",
+        // TLS crypto operations
+        "tls.derive_secrets",
+        "tls.derive_handshake_secrets",
+        "tls.derive_application_secrets",
+        "tls.compute_finished_verify_data",
+        "tls.sign_handshake",
+        "tls.verify_certificate",
+        // TLS 1.2 crypto operations
+        "crypto.ecdhe.p256.generate",
+        "crypto.ecdhe.p256.compute_shared",
+        "crypto.ecdhe.p384.generate",
+        "crypto.ecdhe.p384.compute_shared",
+        "crypto.aead.aes_128_gcm.encrypt",
+        "crypto.aead.aes_128_gcm.decrypt",
+        "crypto.aead.aes_256_gcm.encrypt",
+        "crypto.aead.aes_256_gcm.decrypt",
+        "crypto.kdf.tls12_prf",
+        // Genetic crypto operations (Phase 5)
+        "genetic.derive_lineage_key",
+        "genetic.mix_entropy",
+        "genetic.verify_lineage",
+        "genetic.generate_lineage_proof",
+        "genetic.generate_challenge",
+        "genetic.respond_to_challenge",
+        "genetic.verify_challenge_response",
+        // Device enrollment
+        "genetic.derive_device_seed",
+        "genetic.sign_lineage_certificate",
+        "genetic.verify_lineage_certificate",
+        // Semantic aliases
+        "crypto.hash",
+        "crypto.hmac",
+        "crypto.sign",
+        "crypto.verify",
+        "crypto.encrypt",
+        "crypto.decrypt",
+        "crypto.generate_keypair",
+        "crypto.derive_secret",
+        // Cross-Primal namespace (beardog.crypto.*)
+        "beardog.crypto.sha3_256",
+        "beardog.crypto.ed25519_generate_keypair",
+        "beardog.crypto.sign_ed25519",
+        "beardog.crypto.verify_ed25519",
+        "beardog.crypto.x25519_generate_ephemeral",
+        "beardog.crypto.x25519_derive_secret",
+        "beardog.crypto.chacha20_poly1305_encrypt",
+        "beardog.crypto.chacha20_poly1305_decrypt",
+        "beardog.crypto.hmac_sha256",
+        "beardog.crypto.blake3_hash",
+        "beardog.crypto.derive_onion_address",
+        "beardog.crypto.generate_onion_identity",
+        // Tor Phase 2
+        "beardog.crypto.tor_ntor_client_init",
+        "beardog.crypto.tor_ntor_client_finish",
+        "beardog.crypto.tor_ntor_server_respond",
+        "beardog.crypto.tor_cell_encrypt",
+        "beardog.crypto.tor_cell_decrypt",
+        "beardog.crypto.tor_kdf",
+    ]
+}

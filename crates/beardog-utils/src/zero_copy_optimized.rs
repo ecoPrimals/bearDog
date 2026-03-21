@@ -62,20 +62,20 @@ impl ZeroCopyManager {
         // Check cache first
         {
             let cache = self.string_cache.read();
-            if let Some(weak_str) = cache.get(s_ref) {
-                if let Some(arc_str) = weak_str.upgrade() {
-                    self.stats
-                        .cache_hits
-                        .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                    self.stats
-                        .clones_avoided
-                        .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                    self.stats
-                        .memory_saved
-                        .fetch_add(s_ref.len() as u64, std::sync::atomic::Ordering::Relaxed);
-                    trace!("Zero-copy string cache hit: {}", s_ref);
-                    return arc_str;
-                }
+            if let Some(weak_str) = cache.get(s_ref)
+                && let Some(arc_str) = weak_str.upgrade()
+            {
+                self.stats
+                    .cache_hits
+                    .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                self.stats
+                    .clones_avoided
+                    .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                self.stats
+                    .memory_saved
+                    .fetch_add(s_ref.len() as u64, std::sync::atomic::Ordering::Relaxed);
+                trace!("Zero-copy string cache hit: {}", s_ref);
+                return arc_str;
             }
         }
 

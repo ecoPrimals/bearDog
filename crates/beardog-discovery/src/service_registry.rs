@@ -48,7 +48,7 @@ pub struct ServiceRegistryDiscovery {
 /// Discovered service registry provider
 #[derive(Debug, Clone)]
 struct DiscoveredProvider {
-    /// Provider name (e.g., "consul", "etcd", "nestgate")
+    /// Provider name from discovery metadata (opaque label)
     name: String,
     /// Provider capabilities
     _capabilities: Vec<String>,

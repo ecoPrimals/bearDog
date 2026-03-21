@@ -9,7 +9,7 @@ homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 readme = "README.md"
 authors = ["BearDog Team <beardog@ecoprimals.dev>"]
-rust-version = "1.85.0"
+rust-version = "1.93.0"
 keywords = ["error-handling", "security", "distributed", "rust", "beardog"]
 categories = ["development-tools::debugging", "rust-patterns"]
 

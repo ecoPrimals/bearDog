@@ -21,8 +21,7 @@ pub struct AndroidDeployment {
     /// Android NDK path (if configured)
     ndk_path: Option<String>,
     /// Target Android API level
-    #[allow(dead_code)] // Will be used in future API-level specific operations
-    api_level: u32,
+    _api_level: u32,
 }
 
 impl AndroidDeployment {
@@ -38,7 +37,7 @@ impl AndroidDeployment {
     pub const fn new(ndk_path: Option<String>, api_level: u32) -> Self {
         Self {
             ndk_path,
-            api_level,
+            _api_level: api_level,
         }
     }
 
@@ -228,23 +227,23 @@ impl AndroidDeployment {
     /// Returns error if NDK cannot be located
     fn find_ndk_path(&self) -> Result<String> {
         // Check provided path first
-        if let Some(ref path) = self.ndk_path {
-            if std::path::Path::new(path).exists() {
-                return Ok(path.clone());
-            }
+        if let Some(ref path) = self.ndk_path
+            && std::path::Path::new(path).exists()
+        {
+            return Ok(path.clone());
         }
 
         // Check environment variables
-        if let Ok(ndk_home) = beardog_errors::process_env::var("ANDROID_NDK_HOME") {
-            if std::path::Path::new(&ndk_home).exists() {
-                return Ok(ndk_home);
-            }
+        if let Ok(ndk_home) = beardog_errors::process_env::var("ANDROID_NDK_HOME")
+            && std::path::Path::new(&ndk_home).exists()
+        {
+            return Ok(ndk_home);
         }
 
-        if let Ok(ndk_root) = beardog_errors::process_env::var("NDK_HOME") {
-            if std::path::Path::new(&ndk_root).exists() {
-                return Ok(ndk_root);
-            }
+        if let Ok(ndk_root) = beardog_errors::process_env::var("NDK_HOME")
+            && std::path::Path::new(&ndk_root).exists()
+        {
+            return Ok(ndk_root);
         }
 
         Err(BearDogError::system(

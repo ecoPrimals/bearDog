@@ -257,31 +257,29 @@ async fn scan_vulnerabilities(
     // Check for resource abuse patterns
     for node in &template.nodes {
         // Check for excessive resource requests
-        if let Some(cpu) = node.config.get("cpu") {
-            if let Some(cpu_val) = cpu.as_u64() {
-                if cpu_val > 64 {
-                    issues.push(ValidationIssue {
-                        severity: IssueSeverity::Medium,
-                        category: ThreatCategory::ResourceAbuse,
-                        description: format!("Excessive CPU request: {cpu_val}"),
-                        location: Some(format!("node {}", node.id)),
-                    });
-                }
-            }
+        if let Some(cpu) = node.config.get("cpu")
+            && let Some(cpu_val) = cpu.as_u64()
+            && cpu_val > 64
+        {
+            issues.push(ValidationIssue {
+                severity: IssueSeverity::Medium,
+                category: ThreatCategory::ResourceAbuse,
+                description: format!("Excessive CPU request: {cpu_val}"),
+                location: Some(format!("node {}", node.id)),
+            });
         }
 
         // Check for excessive memory requests
-        if let Some(memory) = node.config.get("memory") {
-            if let Some(mem_str) = memory.as_str() {
-                if mem_str.contains("TB") || mem_str.contains("PB") {
-                    issues.push(ValidationIssue {
-                        severity: IssueSeverity::High,
-                        category: ThreatCategory::ResourceAbuse,
-                        description: format!("Excessive memory request: {mem_str}"),
-                        location: Some(format!("node {}", node.id)),
-                    });
-                }
-            }
+        if let Some(memory) = node.config.get("memory")
+            && let Some(mem_str) = memory.as_str()
+            && (mem_str.contains("TB") || mem_str.contains("PB"))
+        {
+            issues.push(ValidationIssue {
+                severity: IssueSeverity::High,
+                category: ThreatCategory::ResourceAbuse,
+                description: format!("Excessive memory request: {mem_str}"),
+                location: Some(format!("node {}", node.id)),
+            });
         }
     }
 

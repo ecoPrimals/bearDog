@@ -5,10 +5,7 @@
 // This module provides utilities to migrate fragmented HSM configurations
 // from beardog-tunnel and other crates into the unified canonical system.
 
-use super::{
-    CanonicalHsmConfig, HsmCoreConfig, HsmMonitoringConfig, HsmPerformanceConfig,
-    HsmProviderConfig, MobileHsmConfig,
-};
+use super::CanonicalHsmConfig;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -187,15 +184,15 @@ impl HsmMigrationService {
         }
 
         // Validate the unified configuration if requested
-        if self.options.validate_after_migration {
-            if let Err(e) = self.validate_unified_config(&unified_config) {
-                warn!("Unified configuration validation failed: {}", e);
-                report.warnings.push(MigrationWarning {
-                    config_type: "Unified".to_string(),
-                    message: format!("Validation failed: {e}"),
-                    recommendation: Some("Review and adjust configuration manually".to_string()),
-                });
-            }
+        if self.options.validate_after_migration
+            && let Err(e) = self.validate_unified_config(&unified_config)
+        {
+            warn!("Unified configuration validation failed: {}", e);
+            report.warnings.push(MigrationWarning {
+                config_type: "Unified".to_string(),
+                message: format!("Validation failed: {e}"),
+                recommendation: Some("Review and adjust configuration manually".to_string()),
+            });
         }
 
         info!(
@@ -307,91 +304,30 @@ impl HsmMigrationService {
         unified_config: &mut CanonicalHsmConfig,
     ) {
         // Extract relevant settings from manager config and apply to unified config
-        if let Some(enabled) = manager_config.get("enabled") {
-            if let Some(enabled_bool) = enabled.as_bool() {
-                unified_config.core.enabled = enabled_bool;
-            }
+        if let Some(enabled) = manager_config.get("enabled")
+            && let Some(enabled_bool) = enabled.as_bool()
+        {
+            unified_config.core.enabled = enabled_bool;
         }
 
         // Extract performance settings
-        if let Some(batch_enabled) = manager_config.get("batch_operations_enabled") {
-            if let Some(batch_bool) = batch_enabled.as_bool() {
-                unified_config.performance.batch_operations_enabled = batch_bool;
-            }
+        if let Some(batch_enabled) = manager_config.get("batch_operations_enabled")
+            && let Some(batch_bool) = batch_enabled.as_bool()
+        {
+            unified_config.performance.batch_operations_enabled = batch_bool;
         }
 
-        if let Some(pool_enabled) = manager_config.get("connection_pooling_enabled") {
-            if let Some(pool_bool) = pool_enabled.as_bool() {
-                unified_config.performance.connection_pooling_enabled = pool_bool;
-            }
+        if let Some(pool_enabled) = manager_config.get("connection_pooling_enabled")
+            && let Some(pool_bool) = pool_enabled.as_bool()
+        {
+            unified_config.performance.connection_pooling_enabled = pool_bool;
         }
 
-        if let Some(cache_enabled) = manager_config.get("cache_enabled") {
-            if let Some(cache_bool) = cache_enabled.as_bool() {
-                unified_config.performance.cache_enabled = cache_bool;
-            }
+        if let Some(cache_enabled) = manager_config.get("cache_enabled")
+            && let Some(cache_bool) = cache_enabled.as_bool()
+        {
+            unified_config.performance.cache_enabled = cache_bool;
         }
-    }
-
-    // Helper methods for specific config migrations
-    #[allow(dead_code, clippy::unused_self, clippy::unnecessary_wraps)]
-    fn migrate_hardware_config(
-        &self,
-        _hw_config: HashMap<String, serde_json::Value>,
-        _provider_config: &mut HsmProviderConfig,
-    ) -> Result<(), BearDogError> {
-        // Implementation would extract hardware-specific settings
-        Ok(())
-    }
-
-    #[allow(dead_code, clippy::unused_self, clippy::unnecessary_wraps)]
-    fn migrate_software_config(
-        &self,
-        _sw_config: HashMap<String, serde_json::Value>,
-        _core_config: &mut HsmCoreConfig,
-    ) -> Result<(), BearDogError> {
-        // Implementation would extract software HSM settings
-        Ok(())
-    }
-
-    #[allow(dead_code, clippy::unused_self, clippy::unnecessary_wraps)]
-    fn migrate_mobile_config(
-        &self,
-        _mobile_config: HashMap<String, serde_json::Value>,
-        _mobile_hsm_config: &mut MobileHsmConfig,
-    ) -> Result<(), BearDogError> {
-        // Implementation would extract mobile HSM settings
-        Ok(())
-    }
-
-    #[allow(dead_code, clippy::unused_self, clippy::unnecessary_wraps)]
-    fn migrate_provider_config(
-        &self,
-        _provider_config: HashMap<String, serde_json::Value>,
-        _unified_provider: &mut HsmProviderConfig,
-    ) -> Result<(), BearDogError> {
-        // Implementation would merge provider settings
-        Ok(())
-    }
-
-    #[allow(dead_code, clippy::unused_self, clippy::unnecessary_wraps)]
-    fn migrate_monitoring_config(
-        &self,
-        _monitoring_config: HashMap<String, serde_json::Value>,
-        _unified_monitoring: &mut HsmMonitoringConfig,
-    ) -> Result<(), BearDogError> {
-        // Implementation would extract monitoring settings
-        Ok(())
-    }
-
-    #[allow(dead_code, clippy::unused_self, clippy::unnecessary_wraps)]
-    fn migrate_performance_config(
-        &self,
-        _perf_config: HashMap<String, serde_json::Value>,
-        _unified_performance: &mut HsmPerformanceConfig,
-    ) -> Result<(), BearDogError> {
-        // Implementation would extract performance settings
-        Ok(())
     }
 
     /// Validate the unified configuration
@@ -447,23 +383,22 @@ pub fn create_tunnel_legacy_config(
     let mut software_config = None;
     let mut mobile_config = None;
 
-    if let Some(hw) = hardware_settings {
-        if let Ok(hw_map) = serde_json::from_value::<HashMap<String, serde_json::Value>>(hw) {
-            hardware_config = Some(hw_map);
-        }
+    if let Some(hw) = hardware_settings
+        && let Ok(hw_map) = serde_json::from_value::<HashMap<String, serde_json::Value>>(hw)
+    {
+        hardware_config = Some(hw_map);
     }
 
-    if let Some(sw) = software_settings {
-        if let Ok(sw_map) = serde_json::from_value::<HashMap<String, serde_json::Value>>(sw) {
-            software_config = Some(sw_map);
-        }
+    if let Some(sw) = software_settings
+        && let Ok(sw_map) = serde_json::from_value::<HashMap<String, serde_json::Value>>(sw)
+    {
+        software_config = Some(sw_map);
     }
 
-    if let Some(mobile) = mobile_settings {
-        if let Ok(mobile_map) = serde_json::from_value::<HashMap<String, serde_json::Value>>(mobile)
-        {
-            mobile_config = Some(mobile_map);
-        }
+    if let Some(mobile) = mobile_settings
+        && let Ok(mobile_map) = serde_json::from_value::<HashMap<String, serde_json::Value>>(mobile)
+    {
+        mobile_config = Some(mobile_map);
     }
 
     LegacyHsmConfig::TunnelHsm {

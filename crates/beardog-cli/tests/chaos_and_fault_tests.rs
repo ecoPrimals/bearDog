@@ -15,7 +15,7 @@
 mod chaos_tests {
     use std::sync::Arc;
     use std::sync::atomic::{AtomicUsize, Ordering};
-    use tokio::sync::{RwLock, Semaphore};
+    use tokio::sync::{Barrier, RwLock, Semaphore};
 
     // ========================================================================
     // CHAOS TESTS: Extreme Concurrent Stress
@@ -436,53 +436,44 @@ mod chaos_tests {
 
     #[tokio::test]
     async fn recovery_test_graceful_shutdown() {
-        // Test graceful shutdown behavior
-        let (shutdown_tx, _shutdown_rx) = tokio::sync::broadcast::channel(10);
+        let (shutdown_tx, _shutdown_rx) = tokio::sync::broadcast::channel::<()>(10);
         let counter = Arc::new(AtomicUsize::new(0));
+        let started = Arc::new(tokio::sync::Barrier::new(11)); // 10 workers + 1 test
 
-        // Spawn worker tasks
         let mut handles = Vec::new();
         for _ in 0..10 {
             let counter_clone = Arc::clone(&counter);
+            let started_clone = Arc::clone(&started);
             let mut shutdown_rx_clone = shutdown_tx.subscribe();
 
             let handle = tokio::spawn(async move {
-                loop {
-                    tokio::select! {
-                        _ = shutdown_rx_clone.recv() => {
-                            // Graceful shutdown
-                            break;
-                        }
-                        _ = tokio::time::sleep(tokio::time::Duration::from_millis(1)) => {
-                            counter_clone.fetch_add(1, Ordering::SeqCst);
-                        }
-                    }
-                }
+                // Do work before waiting for shutdown
+                counter_clone.fetch_add(1, Ordering::SeqCst);
+                started_clone.wait().await;
+
+                // Now wait for shutdown signal
+                let _ = shutdown_rx_clone.recv().await;
             });
             handles.push(handle);
         }
 
-        // Let them run briefly
-        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+        // Wait until all workers have incremented and are ready
+        started.wait().await;
 
-        // Signal shutdown
         shutdown_tx.send(()).expect("shutdown signal");
         drop(shutdown_tx);
 
-        // Wait for all to complete
         for handle in handles {
             let result = tokio::time::timeout(tokio::time::Duration::from_secs(1), handle).await;
-
             assert!(
                 result.is_ok(),
                 "Task should complete gracefully within timeout"
             );
         }
 
-        // Verify work was done
         assert!(
-            counter.load(Ordering::SeqCst) > 0,
-            "Tasks should have done some work"
+            counter.load(Ordering::SeqCst) >= 10,
+            "All tasks should have done work"
         );
     }
 }

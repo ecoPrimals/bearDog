@@ -11,7 +11,7 @@
 //! - **Owned types**: Avoids lifetime complexity across async boundaries  
 //! - **Result-based**: All operations can fail gracefully
 //! - **Auditable**: Operations include context for audit trails
-//! - **Zero unsafe**: Pure safe Rust
+//! - **Memory-safe only**: pure safe Rust
 
 use async_trait::async_trait;
 use beardog_types::crypto_service::{

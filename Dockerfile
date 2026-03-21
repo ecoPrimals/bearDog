@@ -2,7 +2,7 @@
 # Multi-stage build for optimized production container
 
 # Build stage
-FROM rust:1.85-slim AS builder
+FROM rust:1.93-slim AS builder
 
 # Install minimal build dependencies (pure Rust — no C libs needed)
 RUN apt-get update && apt-get install -y \

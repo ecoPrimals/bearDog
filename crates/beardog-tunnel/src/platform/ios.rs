@@ -26,7 +26,7 @@
 //!
 //! ## TRUE ecoBin v2.0 Compliance
 //!
-//! - ✅ Pure Rust (zero unsafe code in this module)
+//! - ✅ Pure Rust (memory-safe in this module)
 //! - ✅ macOS fully functional (delegates to Unix sockets)
 //! - ⏳ iOS documented (awaiting Pure Rust XPC bindings)
 //! - ✅ No hardcoding (environment-driven paths)
@@ -196,7 +196,7 @@ mod tests {
 
     #[test]
     fn test_primal_name_variations() {
-        for primal in &["beardog", "songbird", "nestgate", "toadstool", "squirrel"] {
+        for primal in &["alpha", "beta", "gamma", "delta", "epsilon"] {
             let endpoint = IOSSocket::create_endpoint(primal).unwrap();
 
             #[cfg(target_os = "macos")]

@@ -13,6 +13,8 @@
 //! These tests use atomic readiness flags instead of sleep-based polling,
 //! ensuring true concurrency and fast test execution. This is modern idiomatic Rust!
 
+mod support;
+
 use anyhow::Result;
 use serde_json::json;
 use std::path::PathBuf;
@@ -27,6 +29,8 @@ use beardog_tunnel::btsp_provider::BeardogBtspProvider;
 use beardog_tunnel::tunnel::hsm::manager::{HsmAutoInitConfig, HsmManager};
 use beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer;
 use beardog_types::primal_identity::PrimalIdentity;
+
+use support::wait_for_deletion;
 
 // Helper to create a test socket path with temp dir
 fn test_socket() -> (TempDir, PathBuf) {
@@ -316,9 +320,7 @@ async fn test_socket_cleanup_on_crash() {
         // Simulate crash (just abort without graceful stop)
         server_handle.abort();
 
-        // Wait for socket to actually be deleted (not arbitrary time)
-        // Server cleanup happens asynchronously, so wait for actual completion
-        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+        let _ = wait_for_deletion(&socket_path, std::time::Duration::from_secs(2)).await;
 
         // If socket still exists after crash, it will be cleaned up by next server
         // This is the expected behavior - no need to wait longer

@@ -44,7 +44,7 @@ pub(super) struct Tunnel {
     /// EVOLUTION: Changed from Arc<Mutex<u64>> to AtomicU64 (Jan 29, 2026)
     /// - Lock-free: No mutex contention
     /// - Fast: Direct atomic operations  
-    /// - Safe: No unsafe code needed
+    /// - Safe: No unchecked memory patterns needed
     pub bytes_sent: AtomicU64,
 
     /// Bytes received through this tunnel (lock-free atomic counter)

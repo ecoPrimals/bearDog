@@ -71,22 +71,22 @@ impl CertificateVerifier {
     /// Verify license if present
     fn verify_license(&self, cert: &AdapterUnlockCertificate) -> Result<(), VerificationError> {
         // Check if commercial classification requires license
-        if let CommercialClassification::Commercial { risk, .. } = &cert.classification {
-            if matches!(risk, RiskLevel::High | RiskLevel::Critical) {
-                // High risk must have valid license
-                let license =
-                    cert.license
-                        .as_ref()
-                        .ok_or_else(|| VerificationError::LicenseRequired {
-                            classification: format!("{:?}", cert.classification),
-                        })?;
+        if let CommercialClassification::Commercial { risk, .. } = &cert.classification
+            && matches!(risk, RiskLevel::High | RiskLevel::Critical)
+        {
+            // High risk must have valid license
+            let license =
+                cert.license
+                    .as_ref()
+                    .ok_or_else(|| VerificationError::LicenseRequired {
+                        classification: format!("{:?}", cert.classification),
+                    })?;
 
-                // Check license expiry
-                if license.expires_at < Utc::now() {
-                    return Err(VerificationError::LicenseExpired {
-                        expired_at: license.expires_at,
-                    });
-                }
+            // Check license expiry
+            if license.expires_at < Utc::now() {
+                return Err(VerificationError::LicenseExpired {
+                    expired_at: license.expires_at,
+                });
             }
         }
 

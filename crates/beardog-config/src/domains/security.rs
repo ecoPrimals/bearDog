@@ -121,7 +121,7 @@ impl Default for SecurityConfig {
         Self {
             strict_mode: false,
             require_mtls: false,
-            min_tls_version: "1.2".to_string(),
+            min_tls_version: DEFAULT_MIN_TLS_VERSION_FALLBACK.to_string(),
             allow_localhost_bypass: true,
             enable_audit_log: true,
             enable_rate_limiting: true,

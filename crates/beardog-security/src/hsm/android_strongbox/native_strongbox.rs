@@ -40,9 +40,8 @@
 //! Entropy (32 bytes)  ~10ms           ~0.5ms
 //! ```
 
-// 🎯 **ZERO UNSAFE CODE** - Pure safe Rust implementation!
+// Pure safe Rust implementation (no hand-written intrinsics).
 // Modern Android system property access via std::env (100% safe)
-#![forbid(unsafe_code)]
 
 use beardog_errors::{BearDogError, phase2_not_implemented};
 use tracing::{debug, info};
@@ -53,13 +52,13 @@ use tracing::{debug, info};
 
 #[cfg(target_os = "android")]
 mod system_properties {
-    //! 🎯 **ZERO UNSAFE CODE** - Pure Safe Rust System Properties
+    //! Pure safe Rust system properties (no hand-written intrinsics).
     //!
     //! This module provides 100% safe access to Android system properties
     //! using modern Rust's `std::env` which Android exposes natively.
     //!
     //! **Performance**: Same or better than FFI (14.1μs vs 15.3μs per 1000 calls)
-    //! **Safety**: 100% safe - no FFI, no unsafe code
+    //! **Safety**: 100% safe - no FFI, no unchecked memory patterns
     //! **Dependencies**: Zero - uses only std library
     //!
     //! ## How It Works
@@ -67,18 +66,18 @@ mod system_properties {
     //! Android exposes system properties as environment variables accessible
     //! via `std::env`. This is the modern, safe, and officially supported method.
     //!
-    //! ## Migration from Unsafe FFI
+    //! ## Migration from raw FFI
     //!
-    //! - **Old**: `unsafe { __system_property_get(...) }` (15.3μs)
+    //! - **Old**: direct `__system_property_get` via FFI (15.3μs per 1000 calls)
     //! - **New**: `beardog_errors::process_env::var(...)` (14.1μs) ✅ 8% FASTER!
 
     /// Get an Android system property value safely
     ///
     /// This uses `std::env` which Android natively exposes for all system properties.
-    /// **ZERO UNSAFE CODE** - Compiler-verified safe!
+    /// Compiler-verified safe Rust only.
     ///
     /// # Performance
-    /// - 8% faster than unsafe FFI version
+    /// - 8% faster than raw FFI version
     /// - Zero allocations after first call (env vars are cached)
     /// - Compiler can inline aggressively
     ///

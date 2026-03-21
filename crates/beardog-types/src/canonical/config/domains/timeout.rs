@@ -457,16 +457,16 @@ impl CanonicalTimeoutConfig {
         }
 
         // Check optional timeouts if present
-        if let Some(idle) = self.idle_timeout {
-            if idle.is_zero() {
-                return Err("idle_timeout, if set, must be non-zero".to_string());
-            }
+        if let Some(idle) = self.idle_timeout
+            && idle.is_zero()
+        {
+            return Err("idle_timeout, if set, must be non-zero".to_string());
         }
 
-        if let Some(keepalive) = self.keepalive_timeout {
-            if keepalive.is_zero() {
-                return Err("keepalive_timeout, if set, must be non-zero".to_string());
-            }
+        if let Some(keepalive) = self.keepalive_timeout
+            && keepalive.is_zero()
+        {
+            return Err("keepalive_timeout, if set, must be non-zero".to_string());
         }
 
         Ok(())

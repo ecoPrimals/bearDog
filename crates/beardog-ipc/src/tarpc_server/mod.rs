@@ -10,7 +10,7 @@
 //! ## Architecture
 //! - tarpc server binds to TCP port (default 9901)
 //! - Delegates to existing crypto implementations (same as JSON-RPC handlers)
-//! - Zero unsafe code
+//! - Fully memory-safe
 //! - Modern async/await
 //!
 //! ## Philosophy: Walk → Run

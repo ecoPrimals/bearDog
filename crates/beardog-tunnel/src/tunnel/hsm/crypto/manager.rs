@@ -92,10 +92,10 @@ impl CryptoProviderManager {
         requirements: &CryptoRequirements,
     ) -> bool {
         // Check algorithm support
-        if let Some(ref algorithm) = requirements.algorithm {
-            if !provider.supports_algorithm(algorithm).await {
-                return false;
-            }
+        if let Some(ref algorithm) = requirements.algorithm
+            && !provider.supports_algorithm(algorithm).await
+        {
+            return false;
         }
 
         // Get capabilities
@@ -105,25 +105,25 @@ impl CryptoProviderManager {
         };
 
         // Check constant-time requirement
-        if requirements.require_constant_time {
-            if let Some(ref alg) = requirements.algorithm {
-                let alg_name = alg.to_string();
-                if !capabilities.constant_time_ops.contains(&alg_name) {
-                    return false;
-                }
+        if requirements.require_constant_time
+            && let Some(ref alg) = requirements.algorithm
+        {
+            let alg_name = alg.to_string();
+            if !capabilities.constant_time_ops.contains(&alg_name) {
+                return false;
             }
         }
 
         // Check performance requirements
-        if let Some(max_latency) = requirements.max_latency_us {
-            if let Some(ref alg) = requirements.algorithm {
-                let alg_name = alg.to_string();
-                if let Some(&latency) = capabilities.performance_profile.latency_us.get(&alg_name) {
-                    #[expect(clippy::cast_precision_loss, reason = "compare latency budget in f64")]
-                    let max_us = max_latency as f64;
-                    if latency > max_us {
-                        return false;
-                    }
+        if let Some(max_latency) = requirements.max_latency_us
+            && let Some(ref alg) = requirements.algorithm
+        {
+            let alg_name = alg.to_string();
+            if let Some(&latency) = capabilities.performance_profile.latency_us.get(&alg_name) {
+                #[expect(clippy::cast_precision_loss, reason = "compare latency budget in f64")]
+                let max_us = max_latency as f64;
+                if latency > max_us {
+                    return false;
                 }
             }
         }

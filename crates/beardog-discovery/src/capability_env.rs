@@ -74,37 +74,37 @@ where
                 let primal_name = parts[1..parts.len() - 1].join("_");
 
                 let cap_key = format!("PRIMAL_{primal_name}_CAPABILITIES");
-                if let Ok(caps) = get_var(&cap_key) {
-                    if caps.split(',').any(|c| c.trim() == capability) {
-                        debug!("Found primal {} providing {}", primal_name, capability);
+                if let Ok(caps) = get_var(&cap_key)
+                    && caps.split(',').any(|c| c.trim() == capability)
+                {
+                    debug!("Found primal {} providing {}", primal_name, capability);
 
-                        services.push(DiscoveredService {
-                            id: format!("primal-{}", primal_name.to_lowercase()),
-                            service_type: primal_name.to_lowercase(),
-                            display_name: format!("{primal_name} Primal"),
-                            endpoint: ServiceEndpoint {
-                                primary_url: value.clone(),
-                                fallback_urls: vec![],
-                                use_tls: value.starts_with("https"),
-                                path_prefix: None,
-                            },
-                            capabilities: caps
-                                .split(',')
-                                .map(|c| Capability {
-                                    capability_type: c.trim().to_string(),
-                                    version: "unknown".to_string(),
-                                    features: vec![],
-                                    parameters: HashMap::new(),
-                                })
-                                .collect(),
-                            qos: QoSMetrics::default(),
-                            health: HealthStatus::Unknown,
-                            discovered_at: std::time::SystemTime::now(),
-                            ttl_secs: cache_ttl_secs,
-                            discovery_method: "environment".to_string(),
-                            metadata: HashMap::new(),
-                        });
-                    }
+                    services.push(DiscoveredService {
+                        id: format!("primal-{}", primal_name.to_lowercase()),
+                        service_type: primal_name.to_lowercase(),
+                        display_name: format!("{primal_name} Primal"),
+                        endpoint: ServiceEndpoint {
+                            primary_url: value.clone(),
+                            fallback_urls: vec![],
+                            use_tls: value.starts_with("https"),
+                            path_prefix: None,
+                        },
+                        capabilities: caps
+                            .split(',')
+                            .map(|c| Capability {
+                                capability_type: c.trim().to_string(),
+                                version: "unknown".to_string(),
+                                features: vec![],
+                                parameters: HashMap::new(),
+                            })
+                            .collect(),
+                        qos: QoSMetrics::default(),
+                        health: HealthStatus::Unknown,
+                        discovered_at: std::time::SystemTime::now(),
+                        ttl_secs: cache_ttl_secs,
+                        discovery_method: "environment".to_string(),
+                        metadata: HashMap::new(),
+                    });
                 }
             }
         }

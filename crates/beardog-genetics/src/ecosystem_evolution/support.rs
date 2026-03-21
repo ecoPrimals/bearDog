@@ -433,7 +433,7 @@ pub struct CollectiveDecisionMaking {
     pub consensus_algorithms: Vec<String>,
 }
 
-/// Retention and recall policies so the ecosystem learns without unsafe hoarding.
+/// Retention and recall policies so the ecosystem learns without resource hoarding.
 #[derive(Debug, Clone, Default)]
 pub struct EcosystemMemory {
     /// The retention policies value

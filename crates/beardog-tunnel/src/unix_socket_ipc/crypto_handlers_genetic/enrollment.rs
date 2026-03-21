@@ -288,14 +288,14 @@ pub async fn handle_verify_lineage_certificate(params: Value) -> Result<Value, B
         }
     }
 
-    if let Some(expected) = &request.expected_family_id {
-        if &cert.family_id != expected {
-            details.family_id_matches = false;
-            details.failure_reason = Some(format!(
-                "Family ID mismatch: expected '{}', got '{}'",
-                expected, cert.family_id
-            ));
-        }
+    if let Some(expected) = &request.expected_family_id
+        && &cert.family_id != expected
+    {
+        details.family_id_matches = false;
+        details.failure_reason = Some(format!(
+            "Family ID mismatch: expected '{}', got '{}'",
+            expected, cert.family_id
+        ));
     }
 
     if !request.trust_anchors.is_empty() {

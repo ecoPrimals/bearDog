@@ -568,7 +568,7 @@ mod tests {
         rt.block_on(async {
             let sk_in = PrimalSelfKnowledge::discover_from_inputs(&SelfKnowledgeInputs {
                 identity: IdentityInputs {
-                    primal_name: Some("beardog".to_string()),
+                    primal_name: Some("adapter-test-primal".to_string()),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -583,7 +583,7 @@ mod tests {
             .unwrap();
 
             let sk = adapter.self_knowledge();
-            assert_eq!(sk.my_name(), "beardog");
+            assert_eq!(sk.my_name(), "adapter-test-primal");
         });
     }
 }

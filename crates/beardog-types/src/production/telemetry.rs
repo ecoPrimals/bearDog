@@ -28,8 +28,7 @@ pub struct TelemetryConfig {
 /// Telemetry collector
 #[derive(Debug)]
 pub struct TelemetryCollector {
-    #[allow(dead_code)]
-    config: TelemetryConfig,
+    _config: TelemetryConfig,
 }
 
 impl TelemetryCollector {
@@ -37,7 +36,7 @@ impl TelemetryCollector {
     /// Creates a new instance
     pub fn new(config: &TelemetryConfig) -> Result<Self, BearDogError> {
         Ok(Self {
-            config: config.clone(),
+            _config: config.clone(),
         })
     }
 

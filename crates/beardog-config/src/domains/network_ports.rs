@@ -154,6 +154,15 @@ pub const DEFAULT_JAEGER_PORT: u16 = 14268;
 /// Default profiling / diagnostic HTTP port (6060, common pprof convention)
 pub const DEFAULT_PROFILING_PORT: u16 = 6060;
 
+/// Default gRPC server port (common convention when not using ALPN on 443)
+pub const DEFAULT_GRPC_PORT: u16 = 50051;
+
+/// Default Consul HTTP API port (HashiCorp standard)
+pub const DEFAULT_CONSUL_PORT: u16 = 8500;
+
+/// Default Redis server port (IANA assigned)
+pub const DEFAULT_REDIS_PORT: u16 = 6379;
+
 fn default_api_port() -> u16 {
     DEFAULT_API_PORT
 }

@@ -16,17 +16,17 @@ pub async fn detect_modification_threats(
     _graph: &Graph,
 ) -> Result<Option<ThreatDetails>, BearDogError> {
     // Check for code injection in node config
-    if let Some(node) = &modification.node {
-        if let Some(threat) = check_code_injection(node).await? {
-            return Ok(Some(threat));
-        }
+    if let Some(node) = &modification.node
+        && let Some(threat) = check_code_injection(node).await?
+    {
+        return Ok(Some(threat));
     }
 
     // Check for suspicious changes
-    if let Some(changes) = &modification.changes {
-        if let Some(threat) = check_suspicious_changes(changes).await? {
-            return Ok(Some(threat));
-        }
+    if let Some(changes) = &modification.changes
+        && let Some(threat) = check_suspicious_changes(changes).await?
+    {
+        return Ok(Some(threat));
     }
 
     Ok(None)

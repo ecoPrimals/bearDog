@@ -27,13 +27,13 @@ pub async fn create_key_management() -> Result<Arc<dyn KeyManagementCapability>,
     let available_kms = discover_kms_services().await;
 
     // Step 2: Select best KMS based on capabilities
-    if let Ok(kms_list) = available_kms {
-        if let Some(kms) = select_best_kms(&kms_list) {
-            tracing::info!("✅ Using discovered KMS: {}", kms.endpoint);
-            // For now, return software fallback (real implementation coming)
-            // Real implementation would instantiate actual provider based on endpoint
-            return Ok(Arc::new(SoftwareHsmProvider::new()?));
-        }
+    if let Ok(kms_list) = available_kms
+        && let Some(kms) = select_best_kms(&kms_list)
+    {
+        tracing::info!("✅ Using discovered KMS: {}", kms.endpoint);
+        // For now, return software fallback (real implementation coming)
+        // Real implementation would instantiate actual provider based on endpoint
+        return Ok(Arc::new(SoftwareHsmProvider::new()?));
     }
 
     // Fallback to software HSM (always available)

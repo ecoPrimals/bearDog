@@ -9,6 +9,11 @@ mod root_lib_coverage_extension_tests {
     use super::super::*;
     use std::time::Duration;
 
+    fn assert_f64_approx_eq(a: f64, b: f64) {
+        const EPS: f64 = 1e-9;
+        assert!((a - b).abs() < EPS, "expected {b}, got {a}");
+    }
+
     // ============================================================================
     // FrameworkConfig Tests
     // ============================================================================
@@ -17,7 +22,7 @@ mod root_lib_coverage_extension_tests {
     fn test_framework_config_default() {
         let config = FrameworkConfig::default();
 
-        assert_eq!(config.confidence_level, 0.95);
+        assert_f64_approx_eq(config.confidence_level, 0.95);
         assert_eq!(config.sample_size, 1000);
         assert_eq!(config.timeout, Duration::from_secs(30));
     }
@@ -32,7 +37,7 @@ mod root_lib_coverage_extension_tests {
             storage_endpoint: None,
         };
 
-        assert_eq!(config.confidence_level, 0.99);
+        assert_f64_approx_eq(config.confidence_level, 0.99);
         assert_eq!(config.sample_size, 5000);
         assert_eq!(config.timeout, Duration::from_secs(120));
     }
@@ -42,7 +47,7 @@ mod root_lib_coverage_extension_tests {
         let config1 = FrameworkConfig::default();
         let config2 = config1.clone();
 
-        assert_eq!(config1.confidence_level, config2.confidence_level);
+        assert_f64_approx_eq(config1.confidence_level, config2.confidence_level);
         assert_eq!(config1.sample_size, config2.sample_size);
         assert_eq!(config1.timeout, config2.timeout);
     }
@@ -67,7 +72,7 @@ mod root_lib_coverage_extension_tests {
         assert_eq!(stats.services_discovered, 0);
         assert_eq!(stats.zero_copy_operations, 0);
         assert_eq!(stats.memory_ops_avoided, 0);
-        assert_eq!(stats.cache_hit_ratio, 0.0);
+        assert_f64_approx_eq(stats.cache_hit_ratio, 0.0);
     }
 
     #[test]
@@ -83,7 +88,7 @@ mod root_lib_coverage_extension_tests {
         assert_eq!(stats1.services_discovered, stats2.services_discovered);
         assert_eq!(stats1.zero_copy_operations, stats2.zero_copy_operations);
         assert_eq!(stats1.memory_ops_avoided, stats2.memory_ops_avoided);
-        assert_eq!(stats1.cache_hit_ratio, stats2.cache_hit_ratio);
+        assert_f64_approx_eq(stats1.cache_hit_ratio, stats2.cache_hit_ratio);
     }
 
     #[test]
@@ -203,7 +208,7 @@ mod root_lib_coverage_extension_tests {
 
         assert!(framework.is_ok());
         let framework = framework.unwrap();
-        assert_eq!(framework.config.confidence_level, 0.95);
+        assert_f64_approx_eq(framework.config.confidence_level, 0.95);
         assert_eq!(framework.stats.services_discovered, 0);
     }
 
@@ -221,7 +226,7 @@ mod root_lib_coverage_extension_tests {
 
         assert!(framework.is_ok());
         let framework = framework.unwrap();
-        assert_eq!(framework.config.confidence_level, 0.99);
+        assert_f64_approx_eq(framework.config.confidence_level, 0.99);
         assert_eq!(framework.config.sample_size, 2000);
     }
 
@@ -314,14 +319,14 @@ mod root_lib_coverage_extension_tests {
 
         assert_eq!(framework.stats.zero_copy_operations, 0);
         assert_eq!(framework.stats.memory_ops_avoided, 0);
-        assert_eq!(framework.stats.cache_hit_ratio, 0.0);
+        assert_f64_approx_eq(framework.stats.cache_hit_ratio, 0.0);
 
         let result = framework.demonstrate_zero_copy_performance().await;
 
         assert!(result.is_ok());
         assert_eq!(framework.stats.zero_copy_operations, 1000);
         assert_eq!(framework.stats.memory_ops_avoided, 1000);
-        assert_eq!(framework.stats.cache_hit_ratio, 0.95);
+        assert_f64_approx_eq(framework.stats.cache_hit_ratio, 0.95);
     }
 
     #[tokio::test]
@@ -341,7 +346,7 @@ mod root_lib_coverage_extension_tests {
         let framework = BearDogFramework::new().await.unwrap();
 
         let config = framework.config();
-        assert_eq!(config.confidence_level, 0.95);
+        assert_f64_approx_eq(config.confidence_level, 0.95);
         assert_eq!(config.sample_size, 1000);
     }
 
@@ -362,7 +367,7 @@ mod root_lib_coverage_extension_tests {
         assert_eq!(framework.stats.services_discovered, 0);
         assert_eq!(framework.stats.zero_copy_operations, 0);
         assert_eq!(framework.stats.memory_ops_avoided, 0);
-        assert_eq!(framework.stats.cache_hit_ratio, 0.0);
+        assert_f64_approx_eq(framework.stats.cache_hit_ratio, 0.0);
     }
 
     #[tokio::test]
@@ -389,7 +394,7 @@ mod root_lib_coverage_extension_tests {
         // Check combined stats
         assert_eq!(framework.stats.services_discovered, 2);
         assert_eq!(framework.stats.zero_copy_operations, 1000);
-        assert_eq!(framework.stats.cache_hit_ratio, 0.95);
+        assert_f64_approx_eq(framework.stats.cache_hit_ratio, 0.95);
     }
 
     #[tokio::test]
@@ -404,7 +409,7 @@ mod root_lib_coverage_extension_tests {
 
         let framework = BearDogFramework::with_config(config).await.unwrap();
 
-        assert_eq!(framework.config.confidence_level, 0.999);
+        assert_f64_approx_eq(framework.config.confidence_level, 0.999);
         assert_eq!(framework.config.sample_size, 10000);
         assert_eq!(framework.config.timeout, Duration::from_secs(300));
     }
@@ -421,7 +426,7 @@ mod root_lib_coverage_extension_tests {
 
         let framework = BearDogFramework::with_config(config).await.unwrap();
 
-        assert_eq!(framework.config.confidence_level, 0.5);
+        assert_f64_approx_eq(framework.config.confidence_level, 0.5);
         assert_eq!(framework.config.sample_size, 100);
         assert_eq!(framework.config.timeout, Duration::from_secs(5));
     }

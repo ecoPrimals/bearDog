@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-#![forbid(unsafe_code)]
 
 //! # `BearDog` Workflows - Process Orchestration
 //!
@@ -49,7 +48,7 @@
 //!
 //! ## Safety
 //!
-//! All workflow operations are memory-safe with zero unsafe code.
+//! All workflow operations are memory-safe with full memory safety.
 
 /// Core workflow functionality and types
 pub mod workflows;

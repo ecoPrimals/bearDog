@@ -133,23 +133,24 @@ impl HsmConfig {
         }
 
         // Validate SoftHSM config path if specified
-        if let Some(ref config) = self.softhsm_config {
-            if !config.exists() {
-                return Err(ConfigError::PathNotFound(format!(
-                    "SoftHSM2 config not found: {}",
-                    config.display()
-                )));
-            }
+        if let Some(ref config) = self.softhsm_config
+            && !config.exists()
+        {
+            return Err(ConfigError::PathNotFound(format!(
+                "SoftHSM2 config not found: {}",
+                config.display()
+            )));
         }
 
         // Validate YubiHSM connector URL if specified
-        if let Some(ref url) = self.yubihsm_connector {
-            if !url.starts_with("http://") && !url.starts_with("https://") {
-                return Err(ConfigError::invalid_value(
-                    "hsm.yubihsm_connector",
-                    "Must be a valid HTTP(S) URL",
-                ));
-            }
+        if let Some(ref url) = self.yubihsm_connector
+            && !url.starts_with("http://")
+            && !url.starts_with("https://")
+        {
+            return Err(ConfigError::invalid_value(
+                "hsm.yubihsm_connector",
+                "Must be a valid HTTP(S) URL",
+            ));
         }
 
         Ok(())

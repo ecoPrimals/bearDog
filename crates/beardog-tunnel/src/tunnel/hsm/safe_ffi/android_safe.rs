@@ -3,7 +3,7 @@
 //! Safe Android Provider Implementation
 //!
 //! This module provides a safe interface to Android security features
-//! without using unsafe code directly.
+//! without using unchecked memory patterns directly.
 
 use super::traits::PlatformSecurityProvider;
 use crate::tunnel::hsm::types::{HsmKey, KeyType};

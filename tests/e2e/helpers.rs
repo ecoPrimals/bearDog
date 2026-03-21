@@ -1,10 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![allow(
+    missing_docs,
     unused_imports,
     unused_variables,
     dead_code,
     unused_comparisons,
-    clippy::all
+    clippy::all,
+    clippy::float_cmp,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::redundant_clone,
+    clippy::needless_collect
 )]
 // E2E Testing Helpers
 // Created October 7, 2025

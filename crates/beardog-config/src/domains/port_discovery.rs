@@ -414,16 +414,14 @@ impl PortDiscoverer {
     ///
     /// **Zero-Cost Check**: Immediately drops listener, no resources held.
     ///
-    /// Bind address is **configuration-driven**: `BEARDOG_PORT_PROBE_BIND` (IP), else the documented
-    /// loopback fallback from `network_addresses::LOCALHOST_IPV4` (self-knowledge probe only).
+    /// Bind address is **configuration-driven**: `BEARDOG_PORT_PROBE_BIND` (IP), else documented
+    /// loopback from [`NetworkAddressesConfig`](crate::domains::network_addresses::NetworkAddressesConfig) (same as `BEARDOG_LOCALHOST_IPV4`).
     fn is_port_available(&self, port: u16) -> bool {
         let ip: IpAddr = std::env::var("BEARDOG_PORT_PROBE_BIND")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or_else(|| {
-                crate::domains::network_addresses::LOCALHOST_IPV4
-                    .parse()
-                    .expect("LOCALHOST_IPV4 must parse as IpAddr")
+                crate::domains::network_addresses::NetworkAddressesConfig::from_env().localhost_ipv4
             });
         TcpListener::bind(SocketAddr::new(ip, port)).is_ok()
     }
@@ -469,11 +467,11 @@ pub async fn discover_port_hierarchical(
     }
 
     // 2. Environment variable (human configuration)
-    if let Ok(port_str) = std::env::var(env_var) {
-        if let Ok(port) = port_str.parse::<u16>() {
-            tracing::debug!("Using environment variable {} = {}", env_var, port);
-            return Ok(port);
-        }
+    if let Ok(port_str) = std::env::var(env_var)
+        && let Ok(port) = port_str.parse::<u16>()
+    {
+        tracing::debug!("Using environment variable {} = {}", env_var, port);
+        return Ok(port);
     }
 
     // 3. Config file value (persistent configuration)

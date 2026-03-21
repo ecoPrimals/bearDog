@@ -157,21 +157,17 @@ pub async fn handle_tls_verify_certificate(params: Option<&Value>) -> Result<Val
     let mut name_matches = subject.contains(&format!("CN={server_name}"));
 
     // Check SubjectAlternativeName extension
-    if !name_matches {
-        if let Ok(Some(san_ext)) =
+    if !name_matches
+        && let Ok(Some(san_ext)) =
             server_cert.get_extension_unique(&oid_registry::OID_X509_EXT_SUBJECT_ALT_NAME)
-        {
-            if let ParsedExtension::SubjectAlternativeName(san) = san_ext.parsed_extension() {
-                for name in &san.general_names {
-                    if let GeneralName::DNSName(dns_name) = name {
-                        if *dns_name == server_name
-                            || dns_name.ends_with(&format!(".{server_name}"))
-                        {
-                            name_matches = true;
-                            break;
-                        }
-                    }
-                }
+        && let ParsedExtension::SubjectAlternativeName(san) = san_ext.parsed_extension()
+    {
+        for name in &san.general_names {
+            if let GeneralName::DNSName(dns_name) = name
+                && (*dns_name == server_name || dns_name.ends_with(&format!(".{server_name}")))
+            {
+                name_matches = true;
+                break;
             }
         }
     }

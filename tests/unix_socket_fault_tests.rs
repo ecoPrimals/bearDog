@@ -70,7 +70,6 @@ async fn start_server_ready(
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn fault_test_socket_deletion_during_operation() {
     // Fault: Delete socket file while server is running
     let (_dir, socket_path) = test_socket();
@@ -110,7 +109,6 @@ async fn fault_test_socket_deletion_during_operation() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn fault_test_connection_timeout() {
     // Fault: Simulate slow/hanging connections
     let (_dir, socket_path) = test_socket();
@@ -143,7 +141,6 @@ async fn fault_test_connection_timeout() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn fault_test_malformed_requests() {
     // Fault: Send malformed/corrupted data
     let (_dir, socket_path) = test_socket();
@@ -172,7 +169,6 @@ async fn fault_test_malformed_requests() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn fault_test_rapid_server_restart() {
     // Fault: Rapidly stop and restart server
     let (_dir, socket_path) = test_socket();
@@ -222,7 +218,6 @@ async fn fault_test_rapid_server_restart() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn fault_test_partial_writes() {
     // Fault: Simulate partial/incomplete writes
     let (_dir, socket_path) = test_socket();
@@ -238,10 +233,10 @@ async fn fault_test_partial_writes() {
         .unwrap();
     stream.flush().await.unwrap();
 
-    // Small delay to ensure server has buffered the partial message
-    // This tests that the server correctly handles fragmented protocol messages
-    // NOTE: This is a legitimate protocol test, not an arbitrary wait
-    tokio::time::sleep(Duration::from_millis(10)).await;
+    // Let the runtime schedule other tasks so the server can observe the partial frame
+    for _ in 0..32 {
+        tokio::task::yield_now().await;
+    }
 
     // Complete the request
     stream.write_all(b",\"id\":1}\n").await.unwrap();
@@ -260,7 +255,6 @@ async fn fault_test_partial_writes() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn fault_test_concurrent_stop_calls() {
     // Fault: Multiple concurrent stop() calls
     let (_dir, socket_path) = test_socket();
@@ -284,7 +278,6 @@ async fn fault_test_concurrent_stop_calls() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn fault_test_readiness_check_before_start() {
     // Fault: Check readiness before server starts
     let (_dir, socket_path) = test_socket();
@@ -308,7 +301,6 @@ async fn fault_test_readiness_check_before_start() {
 }
 
 #[tokio::test]
-#[serial_test::serial]
 async fn fault_test_connection_after_stop() {
     // Fault: Try to connect after server has stopped
     let (_dir, socket_path) = test_socket();

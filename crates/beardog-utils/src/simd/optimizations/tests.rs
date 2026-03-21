@@ -241,7 +241,7 @@ fn test_get_performance_info() {
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     assert!(info.contains_key("parallelism"));
-    assert_eq!(info.get("safety"), Some(&"100% - Zero unsafe blocks".to_string()));
+    assert_eq!(info.get("safety"), Some(&"100% - Memory-safe verified".to_string()));
 }
 
 // Tests for safe_utils module
@@ -441,7 +441,7 @@ fn test_performance_report() {
     let report = optimizer.performance_report();
     assert!(report.contains_key("operations_count"));
     assert!(report.contains_key("safety"));
-    assert_eq!(report.get("safety"), Some(&"100% - Zero unsafe blocks".to_string()));
+    assert_eq!(report.get("safety"), Some(&"100% - Memory-safe verified".to_string()));
 }
 
 // TEST_CATEGORY: unit

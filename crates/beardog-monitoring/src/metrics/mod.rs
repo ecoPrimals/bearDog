@@ -69,9 +69,8 @@ pub struct UnifiedMetricsSystem {
     /// Real-time event broadcaster
     broadcaster: broadcast::Sender<MetricEvent>,
 
-    /// System configuration
-    #[allow(dead_code)] // Config reserved for future metrics features
-    config: UnifiedMetricsConfig,
+    /// System configuration (retained for future unified tuning; subsystems clone from `new` input).
+    _config: UnifiedMetricsConfig,
 }
 
 impl UnifiedMetricsSystem {
@@ -98,7 +97,7 @@ impl UnifiedMetricsSystem {
             analytics,
             export,
             broadcaster,
-            config,
+            _config: config,
         })
     }
 

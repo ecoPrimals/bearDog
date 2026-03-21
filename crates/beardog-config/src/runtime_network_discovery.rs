@@ -113,17 +113,17 @@ impl NetworkDiscovery {
         }
 
         // Check environment variable override
-        if let Ok(host) = std::env::var("BEARDOG_BIND_ADDRESS") {
-            if let Ok(addr) = host.parse::<IpAddr>() {
-                addresses.insert(0, addr); // Prioritize env var
-            }
+        if let Ok(host) = std::env::var("BEARDOG_BIND_ADDRESS")
+            && let Ok(addr) = host.parse::<IpAddr>()
+        {
+            addresses.insert(0, addr); // Prioritize env var
         }
 
         // Check configuration preference
-        if let Some(ref preferred) = self.preferences.preferred_host {
-            if let Ok(addr) = preferred.parse::<IpAddr>() {
-                addresses.insert(0, addr); // Prioritize config
-            }
+        if let Some(ref preferred) = self.preferences.preferred_host
+            && let Ok(addr) = preferred.parse::<IpAddr>()
+        {
+            addresses.insert(0, addr); // Prioritize config
         }
 
         Ok(addresses)

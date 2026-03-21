@@ -359,58 +359,57 @@ impl UnifiedDiscoveryConfig {
             config.registry.endpoints =
                 endpoints.split(',').map(|s| s.trim().to_string()).collect();
         }
-        if let Some(ttl) = get("BEARDOG_REGISTRY_SERVICE_TTL_SECS") {
-            if let Ok(secs) = ttl.parse::<u64>() {
-                config.registry.service_ttl = Duration::from_secs(secs);
-            }
+        if let Some(ttl) = get("BEARDOG_REGISTRY_SERVICE_TTL_SECS")
+            && let Ok(secs) = ttl.parse::<u64>()
+        {
+            config.registry.service_ttl = Duration::from_secs(secs);
         }
-        if let Some(health_interval) = get("BEARDOG_REGISTRY_HEALTH_CHECK_INTERVAL_SECS") {
-            if let Ok(secs) = health_interval.parse::<u64>() {
-                config.registry.health_check_interval = Duration::from_secs(secs);
-            }
+        if let Some(health_interval) = get("BEARDOG_REGISTRY_HEALTH_CHECK_INTERVAL_SECS")
+            && let Ok(secs) = health_interval.parse::<u64>()
+        {
+            config.registry.health_check_interval = Duration::from_secs(secs);
         }
-        if let Some(cleanup_interval) = get("BEARDOG_REGISTRY_CLEANUP_INTERVAL_SECS") {
-            if let Ok(secs) = cleanup_interval.parse::<u64>() {
-                config.registry.cleanup_interval = Duration::from_secs(secs);
-            }
+        if let Some(cleanup_interval) = get("BEARDOG_REGISTRY_CLEANUP_INTERVAL_SECS")
+            && let Ok(secs) = cleanup_interval.parse::<u64>()
+        {
+            config.registry.cleanup_interval = Duration::from_secs(secs);
         }
 
-        if let Some(ports) = get("BEARDOG_DISCOVERY_PORTS") {
-            if let Some(port_vec) = ports
+        if let Some(ports) = get("BEARDOG_DISCOVERY_PORTS")
+            && let Some(port_vec) = ports
                 .split(',')
                 .map(|p| p.trim().parse::<u16>().ok())
                 .collect::<Option<Vec<u16>>>()
-            {
-                config.network.ports = port_vec;
-            }
+        {
+            config.network.ports = port_vec;
         }
-        if let Some(timeout) = get("BEARDOG_DISCOVERY_TIMEOUT_SECS") {
-            if let Ok(secs) = timeout.parse::<u64>() {
-                config.network.timeout = Duration::from_secs(secs);
-            }
+        if let Some(timeout) = get("BEARDOG_DISCOVERY_TIMEOUT_SECS")
+            && let Ok(secs) = timeout.parse::<u64>()
+        {
+            config.network.timeout = Duration::from_secs(secs);
         }
 
         if let Some(cache_enabled) = get("BEARDOG_DISCOVERY_CACHE_ENABLED") {
             config.cache.enabled = cache_enabled.parse().unwrap_or(true);
         }
-        if let Some(cache_size) = get("BEARDOG_DISCOVERY_CACHE_SIZE") {
-            if let Ok(size) = cache_size.parse::<usize>() {
-                config.cache.size = size;
-            }
+        if let Some(cache_size) = get("BEARDOG_DISCOVERY_CACHE_SIZE")
+            && let Ok(size) = cache_size.parse::<usize>()
+        {
+            config.cache.size = size;
         }
-        if let Some(cache_ttl) = get("BEARDOG_DISCOVERY_CACHE_TTL_SECS") {
-            if let Ok(secs) = cache_ttl.parse::<u64>() {
-                config.cache.ttl = Duration::from_secs(secs);
-            }
+        if let Some(cache_ttl) = get("BEARDOG_DISCOVERY_CACHE_TTL_SECS")
+            && let Ok(secs) = cache_ttl.parse::<u64>()
+        {
+            config.cache.ttl = Duration::from_secs(secs);
         }
 
         if let Some(quantum_enabled) = get("BEARDOG_QUANTUM_DISCOVERY_ENABLED") {
             config.quantum.enabled = quantum_enabled.parse().unwrap_or(false);
         }
-        if let Some(coherence) = get("BEARDOG_QUANTUM_COHERENCE_TIME_MS") {
-            if let Ok(ms) = coherence.parse::<u64>() {
-                config.quantum.coherence_time = Duration::from_millis(ms);
-            }
+        if let Some(coherence) = get("BEARDOG_QUANTUM_COHERENCE_TIME_MS")
+            && let Ok(ms) = coherence.parse::<u64>()
+        {
+            config.quantum.coherence_time = Duration::from_millis(ms);
         }
 
         if let Some(security_enabled) = get("BEARDOG_DISCOVERY_SECURITY_ENABLED") {

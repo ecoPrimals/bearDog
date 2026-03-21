@@ -2,19 +2,17 @@
 name = "beardog"
 description = "BearDog Security Provider - Quantum-resistant cryptography and HSM integration for the ecoPrimals ecosystem"
 repository = "https://github.com/eastgate-software/beardog"
-rust-version = "1.85.0"
+rust-version = "1.93.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = ["security", "cryptography", "hsm", "quantum-resistant", "ecosystem"]
 categories = ["cryptography", "authentication", "hardware-support"]
+license = "AGPL-3.0-only"
 
 [package.version]
 workspace = true
 
 [package.edition]
-workspace = true
-
-[package.license]
 workspace = true
 
 [package.authors]

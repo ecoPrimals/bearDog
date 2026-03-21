@@ -246,10 +246,10 @@ impl DnsSdDiscovery {
 
         for txt in txt_records {
             for data in txt.iter() {
-                if let Ok(text) = std::str::from_utf8(data) {
-                    if let Some((key, value)) = text.split_once('=') {
-                        properties.insert(key.to_string(), value.to_string());
-                    }
+                if let Ok(text) = std::str::from_utf8(data)
+                    && let Some((key, value)) = text.split_once('=')
+                {
+                    properties.insert(key.to_string(), value.to_string());
                 }
             }
         }

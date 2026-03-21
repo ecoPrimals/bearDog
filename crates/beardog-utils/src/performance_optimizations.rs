@@ -68,11 +68,11 @@ impl CloneOptimizer {
     pub fn get_optimized_buffer(&mut self, size: usize) -> BytesMut {
         let size_class = self.get_size_class(size);
 
-        if let Some(pool) = self.buffer_pools.get_mut(&size_class) {
-            if let Some(buffer) = pool.pop() {
-                self.stats.cache_hits += 1;
-                return buffer;
-            }
+        if let Some(pool) = self.buffer_pools.get_mut(&size_class)
+            && let Some(buffer) = pool.pop()
+        {
+            self.stats.cache_hits += 1;
+            return buffer;
         }
 
         self.stats.cache_misses += 1;
@@ -221,11 +221,11 @@ impl ZeroCopyProcessor {
         start: usize,
         len: usize,
     ) -> Option<Arc<Bytes>> {
-        if let Some(shared_ref) = self.shared_refs.get(name) {
-            if start + len <= shared_ref.len() {
-                let sliced = shared_ref.slice(start..start + len);
-                return Some(Arc::new(sliced));
-            }
+        if let Some(shared_ref) = self.shared_refs.get(name)
+            && start + len <= shared_ref.len()
+        {
+            let sliced = shared_ref.slice(start..start + len);
+            return Some(Arc::new(sliced));
         }
         None
     }
@@ -399,7 +399,7 @@ impl SimdAccelerator {
     /// Chunked folding hash over `buffer_data` (not a cryptographic digest).
     #[must_use]
     pub fn accelerated_hash(&self, buffer_data: &[u8]) -> u64 {
-        // Safe SIMD-style acceleration without unsafe code
+        // Safe SIMD-style acceleration without unchecked memory patterns
         buffer_data
             .chunks(8)
             .map(|chunk| {

@@ -1,7 +1,7 @@
 # BearDog Clippy Configuration
 # See: https://doc.rust-lang.org/clippy/
 
-msrv = "1.85.0"
+msrv = "1.93.0"
 
 # Disallowed methods - methods that should not be used in production code
 # NOTE: unwrap() methods are commonly used in test code for assertions

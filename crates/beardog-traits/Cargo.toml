@@ -8,7 +8,7 @@ license = "AGPL-3.0-only"
 repository = "https://github.com/beardog/beardog"
 keywords = [ "beardog", "traits", "security", "genetics", "abstraction",]
 categories = [ "cryptography", "security", "data-structures",]
-rust-version = "1.85.0"
+rust-version = "1.93.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 

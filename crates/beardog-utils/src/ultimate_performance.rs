@@ -169,15 +169,15 @@ impl UltimatePerformanceProcessor {
         self.prefetch_controller.prefetch_sequential(data);
 
         // 🛡️ 100% SAFE: LLVM auto-vectorizes this to AVX2/SSE/NEON!
-        // No unsafe code needed - modern LLVM is smarter than manual SIMD.
+        // No unchecked memory patterns needed - modern LLVM is smarter than manual SIMD.
         // This compiles to optimal SIMD instructions for ANY CPU architecture.
         self.safe_process_auto_vectorized(data)
     }
 
-    /// 🛡️ Safe auto-vectorized processing - ZERO UNSAFE CODE!
+    /// 🛡️ Safe auto-vectorized processing (safe Rust only).
     ///
     /// LLVM automatically generates optimal SIMD instructions (AVX2, SSE4.2, NEON, etc.)
-    /// based on the target CPU. This is often FASTER than manual unsafe SIMD because:
+    /// based on the target CPU. This is often FASTER than hand-written SIMD intrinsics because:
     ///
     /// 1. LLVM has more optimization freedom with safe code
     /// 2. No runtime CPU detection overhead
@@ -216,14 +216,14 @@ impl UltimatePerformanceProcessor {
         result
     }
 
-    /// 🛡️ DEPRECATED: Old unsafe SIMD functions removed!
+    /// 🛡️ DEPRECATED: Old hand-written SIMD functions removed!
     ///
     /// Removed functions:
-    /// - unsafe fn process_with_avx2_simd() - Replaced with safe auto-vectorization
-    /// - unsafe fn process_with_sse42_simd() - Replaced with safe auto-vectorization
+    /// - removed: AVX2 SIMD helper — Replaced with safe auto-vectorization
+    /// - removed: SSE4.2 SIMD helper — Replaced with safe auto-vectorization
     ///
     /// The compiler's auto-vectorization provides equivalent or better performance
-    /// without the maintenance burden and safety concerns of manual unsafe SIMD.
+    /// without the maintenance burden and safety concerns of hand-written SIMD intrinsics.
     /// Scalar optimization for maximum compatibility
     #[inline(always)]
     #[expect(dead_code, reason = "Scalar path kept as LLVM comparison baseline")]

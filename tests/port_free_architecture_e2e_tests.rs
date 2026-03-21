@@ -8,6 +8,7 @@
 //! - Environment variable handling
 
 use std::time::Duration;
+use tokio::sync::Barrier;
 
 // ============================================================================
 // E2E Test: Unix Socket Communication
@@ -76,21 +77,13 @@ async fn test_e2e_capabilities_query() {
 #[tokio::test]
 async fn test_e2e_zero_http_ports_by_default() {
     // Same parsing logic as config layers that treat unset as false
-    let http_flag: Option<&str> = None;
-    let http_enabled = http_flag
-        .unwrap_or("false")
-        .parse::<bool>()
-        .unwrap_or(false);
+    let http_enabled = "false".parse::<bool>().unwrap_or(false);
     assert!(!http_enabled, "HTTP should be disabled by default");
 }
 
 #[tokio::test]
 async fn test_e2e_http_only_when_explicitly_enabled() {
-    let http_flag: Option<&str> = Some("true");
-    let http_enabled = http_flag
-        .unwrap_or("false")
-        .parse::<bool>()
-        .unwrap_or(false);
+    let http_enabled = "true".parse::<bool>().unwrap_or(false);
     assert!(http_enabled, "HTTP should be enabled when explicitly set");
 }
 
@@ -144,7 +137,11 @@ async fn test_e2e_multiple_socket_paths_no_conflict() {
     // Verify they follow naming convention
     for socket in sockets {
         assert!(socket.starts_with("/tmp/beardog-"));
-        assert!(socket.ends_with(".sock"));
+        assert!(
+            std::path::Path::new(socket)
+                .extension()
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("sock"))
+        );
     }
 }
 
@@ -227,13 +224,15 @@ async fn test_e2e_graceful_shutdown_signal() {
 async fn test_e2e_concurrent_service_spawn() {
     // Simulate spawning multiple services concurrently
     let services = vec!["ipc", "registry", "http"];
+    let n = services.len();
+    let barrier = std::sync::Arc::new(Barrier::new(n));
 
     let handles: Vec<_> = services
         .into_iter()
         .map(|service| {
+            let barrier = barrier.clone();
             tokio::spawn(async move {
-                // Simulate service initialization
-                tokio::time::sleep(Duration::from_millis(10)).await;
+                barrier.wait().await;
                 Ok::<_, anyhow::Error>(service)
             })
         })

@@ -65,7 +65,10 @@ pub async fn handle_hsm_discover(verbose: bool) -> Result<(), BearDogError> {
 }
 
 /// Handle HSM list command (alias for discover with less verbose output)
-#[allow(dead_code)] // Used in tests, planned for CLI subcommand
+#[allow(
+    dead_code,
+    reason = "Exposed for tests and future hsm list subcommand wiring."
+)]
 pub async fn handle_hsm_list() -> Result<(), BearDogError> {
     println!("🔍 BearDog HSM Discovery");
     println!("========================");

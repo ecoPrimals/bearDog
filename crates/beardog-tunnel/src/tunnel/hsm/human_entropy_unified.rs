@@ -168,7 +168,7 @@ impl UnifiedHumanEntropyClassifier {
 }
 
 // NOTE: Default implementation removed - use Type::new() instead since it returns Result
-// Previous unsafe implementation used ? which could panic
+// Previous unsound implementation used ? which could panic
 // Use Type::new()? or Type::new().unwrap_or_else(|e| { /* handle error */ }) instead
 
 /// Human entropy classification result
@@ -210,7 +210,7 @@ impl Default for HsmCapabilities {
 }
 
 // NOTE: Default implementation removed - use Type::new() instead since it returns Result
-// Previous unsafe implementation used ? which could panic
+// Previous unsound implementation used ? which could panic
 // Use Type::new()? or Type::new().unwrap_or_else(|e| { /* handle error */ }) instead
 
 /// Entropy source types

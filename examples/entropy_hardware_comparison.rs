@@ -1,4 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(
+    missing_docs,
+    dead_code,
+    clippy::float_cmp,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::redundant_clone,
+    clippy::needless_collect,
+    clippy::suspicious_operation_groupings,
+    clippy::suboptimal_flops
+)]
 //! Hardware Entropy Comparison Suite
 //!
 //! Compare entropy generation across multiple hardware platforms:
@@ -30,7 +44,7 @@ use std::time::Instant;
 #[derive(Debug, Clone)]
 struct EntropyTestResult {
     source: String,
-    entropy_bytes: Vec<u8>,
+    _entropy_bytes: Vec<u8>,
     generation_time_ms: u128,
     quality_score: f64,
     shannon_entropy: f64,
@@ -199,7 +213,7 @@ fn test_software_hsm(size: usize) -> Result<EntropyTestResult, BearDogError> {
 
     Ok(EntropyTestResult {
         source: "Software HSM (RustCrypto)".to_string(),
-        entropy_bytes: entropy,
+        _entropy_bytes: entropy,
         generation_time_ms,
         quality_score,
         shannon_entropy: shannon,
@@ -244,7 +258,7 @@ async fn test_solokey_entropy(size: usize) -> Result<EntropyTestResult, BearDogE
 
     Ok(EntropyTestResult {
         source: format!("SoloKey: {}", devices[0].product),
-        entropy_bytes: mixed_entropy,
+        _entropy_bytes: mixed_entropy,
         generation_time_ms,
         quality_score,
         shannon_entropy: shannon,
@@ -291,7 +305,7 @@ async fn test_pixel_titan_m(size: usize) -> Result<EntropyTestResult, BearDogErr
 
     Ok(EntropyTestResult {
         source: format!("Titan M ({})", info.model),
-        entropy_bytes: entropy,
+        _entropy_bytes: entropy,
         generation_time_ms,
         quality_score,
         shannon_entropy: shannon,
@@ -343,7 +357,7 @@ fn test_human_entropy() -> Result<EntropyTestResult, BearDogError> {
 
     Ok(EntropyTestResult {
         source: "Human Interaction (Tier 3)".to_string(),
-        entropy_bytes: entropy.clone(),
+        _entropy_bytes: entropy.clone(),
         generation_time_ms,
         quality_score: quality_score * 1.05, // Sovereignty bonus
         shannon_entropy: shannon,

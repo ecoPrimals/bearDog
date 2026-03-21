@@ -2,7 +2,7 @@
 
 **Last Updated**: March 21, 2026
 **Status**: Production Ready
-**Crates**: 29 | **Tests**: 13,850+ | **Coverage**: 85%
+**Crates**: 29 | **Tests**: 12,337+ | **Coverage**: 85.1% | **MSRV**: 1.93.0
 
 ---
 
@@ -189,13 +189,16 @@ Key material derived from family seed. Family A never shares keys with Family B.
 | Standard | Enforcement |
 |----------|-------------|
 | Pure Rust | Zero C dependencies, RustCrypto suite only |
-| Zero unsafe | No `unsafe` blocks in production code |
-| Zero panics | No `unwrap()`/`expect()` in production paths |
+| Zero unsafe | `forbid(unsafe_code)` workspace-wide |
+| Zero panics | No `unwrap()` in production; `expect()` only on documented infallible invariants |
 | Zero hardcoding | Environment variables and capability discovery |
 | File size | < 1000 LOC per file (exceptions justified) |
 | std preferred | `std::sync::LazyLock` over `once_cell`, etc. |
-| Mock isolation | All mocks behind `#[cfg(test)]` |
+| Mock isolation | All mocks behind `#[cfg(test)]` or `test-utils` feature |
+| Zero `#[serial]` | All tests concurrent via unique isolated resources |
+| Zero test sleeps | Barriers, channels, notifications — no timing dependencies |
+| Toolchain pinned | `rust-toolchain.toml` at 1.93.0 with cross-compile targets |
 
 ---
 
-**Last Updated**: February 11, 2026
+**Last Updated**: March 21, 2026

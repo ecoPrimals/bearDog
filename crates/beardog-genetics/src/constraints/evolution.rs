@@ -198,10 +198,10 @@ impl ConstraintEvolutionEngine {
     /// Prepare constraints for renewal
     fn prepare_for_renewal(&self, mut constraints: KeyConstraints) -> KeyConstraints {
         // Extend lifetime for well-behaved keys
-        if let LifetimeConstraint::Duration { ref mut months, .. } = constraints.lifetime {
-            if self.trust_score > 0.8 {
-                *months += 6; // Add 6 months
-            }
+        if let LifetimeConstraint::Duration { ref mut months, .. } = constraints.lifetime
+            && self.trust_score > 0.8
+        {
+            *months += 6; // Add 6 months
         }
 
         constraints

@@ -56,8 +56,7 @@ impl AnomalyDetector {
 /// Trend analyzer
 #[derive(Debug)]
 pub struct TrendAnalyzer {
-    #[allow(dead_code)] // Config reserved for future trend analysis features
-    config: TrendConfig,
+    _config: TrendConfig,
 }
 
 impl TrendAnalyzer {
@@ -65,7 +64,7 @@ impl TrendAnalyzer {
     /// Creates a new instance
     #[must_use]
     pub const fn new(config: TrendConfig) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     /// Analyze trends in metric data

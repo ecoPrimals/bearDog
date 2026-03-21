@@ -49,12 +49,19 @@
 //! # }
 //! ```
 
-use std::net::{SocketAddr, ToSocketAddrs};
+use std::net::{Ipv4Addr, SocketAddr, ToSocketAddrs};
 use std::path::PathBuf;
 
+use beardog_config::domains::network_addresses::NetworkAddressesConfig;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
+
+/// Placeholder [`SocketAddr`] for [`Protocol::UnixSocket`] (`Endpoint::address` is unused for UDS).
+#[inline]
+fn unix_socket_placeholder_addr() -> SocketAddr {
+    SocketAddr::from((Ipv4Addr::UNSPECIFIED, 0))
+}
 
 /// Inputs for [`PrimalIdentity::from_inputs`] (no environment reads).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -359,13 +366,7 @@ impl Endpoint {
                     "Empty unix:// path in endpoint".to_string(),
                 ));
             }
-            #[expect(
-                clippy::expect_used,
-                reason = "0.0.0.0:0 is a valid placeholder SocketAddr"
-            )]
-            let placeholder = "0.0.0.0:0"
-                .parse::<SocketAddr>()
-                .expect("placeholder socket addr");
+            let placeholder = unix_socket_placeholder_addr();
             return Ok(Self {
                 protocol: Protocol::UnixSocket,
                 address: placeholder,
@@ -376,13 +377,7 @@ impl Endpoint {
         #[cfg(unix)]
         if trimmed.starts_with('/') {
             let path = PathBuf::from(trimmed);
-            #[expect(
-                clippy::expect_used,
-                reason = "0.0.0.0:0 is a valid placeholder SocketAddr"
-            )]
-            let placeholder = "0.0.0.0:0"
-                .parse::<SocketAddr>()
-                .expect("placeholder socket addr");
+            let placeholder = unix_socket_placeholder_addr();
             return Ok(Self {
                 protocol: Protocol::UnixSocket,
                 address: placeholder,
@@ -491,6 +486,8 @@ pub fn discover_endpoints_from_inputs(
     inputs: &EndpointInputs,
 ) -> Result<Vec<Endpoint>, BearDogError> {
     let mut endpoints = Vec::new();
+    let network_addrs = NetworkAddressesConfig::from_env();
+    let bind_loopback = network_addrs.localhost_ipv4;
 
     if let Some(ref addr_str) = inputs.beardog_listen_addr {
         debug!("Using BEARDOG_LISTEN_ADDR: {}", addr_str);
@@ -525,7 +522,7 @@ pub fn discover_endpoints_from_inputs(
 
         endpoints.push(Endpoint {
             protocol: Protocol::Http,
-            address: SocketAddr::from(([127, 0, 0, 1], port)),
+            address: SocketAddr::new(bind_loopback, port),
             unix_socket_path: None,
         });
 
@@ -533,15 +530,9 @@ pub fn discover_endpoints_from_inputs(
     }
 
     debug!("No explicit endpoint configured, using OS-assigned port");
-    #[expect(
-        clippy::expect_used,
-        reason = "127.0.0.1:0 is a valid hardcoded default listen address"
-    )]
     endpoints.push(Endpoint {
         protocol: Protocol::Http,
-        address: "127.0.0.1:0"
-            .parse()
-            .expect("hardcoded localhost address should always parse"),
+        address: SocketAddr::new(bind_loopback, 0),
         unix_socket_path: None,
     });
 

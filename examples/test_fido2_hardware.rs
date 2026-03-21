@@ -1,10 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![allow(
+    missing_docs,
     unused_imports,
     unused_variables,
     dead_code,
     unused_comparisons,
-    clippy::all
+    clippy::all,
+    clippy::float_cmp,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::redundant_clone,
+    clippy::needless_collect
 )]
 
 //! Test FIDO2 Device Discovery
@@ -49,7 +58,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("Device #{}", idx + 1);
                     println!("  Product:      {}", device.product);
                     println!("  Manufacturer: {}", device.manufacturer);
-                    println!("  Path:         {:?}", device.device_path);
+                    println!("  Path:         {}", device.device_path.display());
                     println!(
                         "  VID:PID:      {:04X}:{:04X}",
                         device.vendor_id, device.product_id

@@ -264,9 +264,9 @@ fn test_get_performance_info() {
     assert!(info.contains_key("parallelism"));
     assert_eq!(
         info.get("safety"),
-        Some(&"100% - Zero unsafe blocks".to_string()) // TEST_CATEGORY: unit
-                                                       // TEST_DOMAIN: core
-                                                       // TEST_PRIORITY: normal
+        Some(&"100% - Memory-safe verified".to_string()) // TEST_CATEGORY: unit
+                                                         // TEST_DOMAIN: core
+                                                         // TEST_PRIORITY: normal
     );
 }
 
@@ -505,7 +505,7 @@ fn test_performance_report() {
     assert!(report.contains_key("safety"));
     assert_eq!(
         report.get("safety"),
-        Some(&"100% - Zero unsafe blocks".to_string())
+        Some(&"100% - Memory-safe verified".to_string())
     );
 }
 

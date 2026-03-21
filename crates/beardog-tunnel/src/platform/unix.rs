@@ -13,7 +13,7 @@
 //!
 //! ## TRUE ecoBin v2.0 Compliance
 //!
-//! - ✅ Pure Rust (zero unsafe code)
+//! - ✅ Pure Rust (memory-safe)
 //! - ✅ Zero C dependencies (tokio handles syscalls)
 //! - ✅ Platform-agnostic (universal trait)
 //! - ✅ No hardcoding (XDG Base Directory + runtime discovery)
@@ -257,7 +257,7 @@ mod tests {
 
     #[test]
     fn test_primal_name_variations() {
-        for primal in &["beardog", "songbird", "nestgate", "toadstool", "squirrel"] {
+        for primal in &["alpha", "beta", "gamma", "delta", "epsilon"] {
             let endpoint =
                 UnixSocket::create_endpoint_with(primal, &UnixListenHints::default()).unwrap();
             match endpoint {

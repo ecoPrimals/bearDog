@@ -11,7 +11,7 @@
 //! - Connects to TCP port (default 9901)
 //! - Automatic reconnection with exponential backoff
 //! - Thread-safe (Clone + Send + Sync)
-//! - Zero unsafe code
+//! - Fully memory-safe
 //!
 //! ## Usage Pattern: Protocol Graduation
 //! ```ignore

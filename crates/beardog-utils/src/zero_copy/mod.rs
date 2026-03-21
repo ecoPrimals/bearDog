@@ -109,14 +109,14 @@ impl ZeroCopyManager {
                 tracing::warn!("String cache lock poisoned on read, recovering");
                 poisoned.into_inner()
             });
-            if let Some(weak_str) = cache.get(s_ref) {
-                if let Some(arc_str) = weak_str.upgrade() {
-                    self.stats
-                        .string_cache_hits
-                        .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                    trace!("String cache hit for: {}", s_ref);
-                    return arc_str;
-                }
+            if let Some(weak_str) = cache.get(s_ref)
+                && let Some(arc_str) = weak_str.upgrade()
+            {
+                self.stats
+                    .string_cache_hits
+                    .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                trace!("String cache hit for: {}", s_ref);
+                return arc_str;
             }
         }
 
@@ -151,14 +151,14 @@ impl ZeroCopyManager {
                 tracing::warn!("Config cache lock poisoned on read, recovering");
                 poisoned.into_inner()
             });
-            if let Some(any_config) = cache.get(&type_key) {
-                if let Ok(typed_config) = any_config.clone().downcast::<T>() {
-                    self.stats
-                        .config_cache_hits
-                        .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                    trace!("Config cache hit for: {}", key);
-                    return typed_config;
-                }
+            if let Some(any_config) = cache.get(&type_key)
+                && let Ok(typed_config) = any_config.clone().downcast::<T>()
+            {
+                self.stats
+                    .config_cache_hits
+                    .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                trace!("Config cache hit for: {}", key);
+                return typed_config;
             }
         }
 

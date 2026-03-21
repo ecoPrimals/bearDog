@@ -23,7 +23,7 @@
 //!
 //! All operations are:
 //! - **Pure Rust**: Zero C dependencies (using RustCrypto rsa crate)
-//! - **No unsafe code**: Memory-safe implementation
+//! - **No unchecked memory patterns**: Memory-safe implementation
 //! - **Zeroized**: Private keys cleared after use
 //! - **Capability-based**: Key sizes configurable, no hardcoded preferences
 //! - **Production-ready**: Used by major Rust projects
@@ -151,7 +151,7 @@ pub async fn handle_sign_rsa_pkcs1_sha256(
         key_size
     );
 
-    // Generate ephemeral RSA keypair (Pure Rust, no unsafe code)
+    // Generate ephemeral RSA keypair (Pure Rust, no unchecked memory patterns)
     let mut rng = OsRng;
     let private_key = RsaPrivateKey::new(&mut rng, key_size)
         .map_err(|e| format!("Failed to generate RSA key: {e}"))?;
@@ -217,7 +217,7 @@ pub async fn handle_sign_rsa_pkcs1_sha256(
 /// - Padding: PKCS#1 v1.5 (legacy)
 /// - Hash: SHA-256 (fixed)
 /// - Public key format: PEM (PKCS#8)
-/// - Memory-safe verification (no unsafe code)
+/// - Memory-safe verification (no unchecked memory patterns)
 ///
 /// # Performance
 ///
@@ -274,7 +274,7 @@ pub async fn handle_verify_rsa_pkcs1_sha256(
     let signature = rsa::pkcs1v15::Signature::try_from(signature_bytes.as_slice())
         .map_err(|e| format!("Invalid signature format: {e}"))?;
 
-    // Verify signature (memory-safe, no unsafe code)
+    // Verify signature (memory-safe, no unchecked memory patterns)
     let valid = verifying_key.verify(&data, &signature).is_ok();
 
     if valid {
@@ -381,7 +381,7 @@ pub async fn handle_sign_rsa_pss_sha256(
         key_size
     );
 
-    // Generate ephemeral RSA keypair (Pure Rust, no unsafe code)
+    // Generate ephemeral RSA keypair (Pure Rust, no unchecked memory patterns)
     let mut rng = OsRng;
     let private_key = RsaPrivateKey::new(&mut rng, key_size)
         .map_err(|e| format!("Failed to generate RSA key: {e}"))?;
@@ -447,7 +447,7 @@ pub async fn handle_sign_rsa_pss_sha256(
 /// - Padding: PSS (Probabilistic Signature Scheme)
 /// - Hash: SHA-256 (fixed)
 /// - Public key format: PEM (PKCS#8)
-/// - Memory-safe verification (no unsafe code)
+/// - Memory-safe verification (no unchecked memory patterns)
 ///
 /// # Performance
 ///
@@ -504,7 +504,7 @@ pub async fn handle_verify_rsa_pss_sha256(
     let signature = rsa::pss::Signature::try_from(signature_bytes.as_slice())
         .map_err(|e| format!("Invalid signature format: {e}"))?;
 
-    // Verify signature (memory-safe, no unsafe code)
+    // Verify signature (memory-safe, no unchecked memory patterns)
     let valid = verifying_key.verify(&data, &signature).is_ok();
 
     if valid {

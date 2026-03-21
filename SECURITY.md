@@ -1,6 +1,6 @@
 # BearDog Security
 
-**Last Updated**: February 11, 2026
+**Last Updated**: March 21, 2026
 **Status**: Production Ready
 
 ---
@@ -37,8 +37,8 @@
 
 ### Code Safety
 
-- **Zero unsafe code** — `#![forbid(unsafe_code)]` in all production crates
-- **Zero panic paths** — No `unwrap()`/`expect()` in production
+- **Zero unsafe code** — `forbid(unsafe_code)` workspace-wide
+- **Zero panic paths** — No `unwrap()` in production; `expect()` only on documented infallible invariants (e.g., mutex poisoning, constant parsing)
 - **Result-based errors** — All fallible operations return `Result<T, E>`
 - **Constant-time comparisons** — Uses `subtle::ConstantTimeEq` for secrets
 - **Zeroize secrets** — Sensitive memory zeroized on drop

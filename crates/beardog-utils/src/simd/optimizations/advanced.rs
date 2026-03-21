@@ -7,8 +7,7 @@ use std::sync::{Arc, Mutex};
 use tracing::{debug, info};
 
 pub struct AdvancedSIMDOptimizer {
-    #[allow(dead_code)]
-    cache: HashMap<String, Vec<u8>>,
+    _cache: HashMap<String, Vec<u8>>,
     buffer_pool: Vec<Vec<u8>>,
     fast_pool: VecDeque<Vec<u8>>,
     aligned_buffers: Vec<AlignedBuffer>,
@@ -43,7 +42,7 @@ impl AdvancedSIMDOptimizer {
         info!("🛡️ Initializing Advanced SIMD Optimizer - Enhanced Performance Mode");
 
         Self {
-            cache: HashMap::with_capacity(1024),
+            _cache: HashMap::with_capacity(1024),
             buffer_pool: Vec::with_capacity(64),
             fast_pool: VecDeque::with_capacity(32),
             aligned_buffers: Vec::with_capacity(16),
@@ -309,7 +308,7 @@ impl AdvancedSIMDOptimizer {
         );
         report.insert(
             "safety".to_string(),
-            "100% - Zero unsafe blocks".to_string(),
+            "100% - Memory-safe verified".to_string(),
         );
         report.insert(
             "memory_efficiency".to_string(),

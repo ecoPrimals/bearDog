@@ -26,7 +26,7 @@
 //!
 //! ## TRUE ecoBin v2.0 Compliance
 //!
-//! - ✅ Pure Rust (zero unsafe code)
+//! - ✅ Pure Rust (memory-safe)
 //! - ✅ Platform-agnostic (works in any WASM runtime)
 //! - ⚠️  No true IPC (WASM limitation, not code limitation)
 //! - ✅ In-process channels for single-binary deployment
@@ -126,7 +126,7 @@ mod tests {
 
     #[test]
     fn test_primal_name_variations() {
-        for primal in &["beardog", "songbird", "nestgate", "toadstool", "squirrel"] {
+        for primal in &["alpha", "beta", "gamma", "delta", "epsilon"] {
             let endpoint = WASMSocket::create_endpoint(primal).unwrap();
             match endpoint {
                 SocketEndpoint::InProcess(channel) => {

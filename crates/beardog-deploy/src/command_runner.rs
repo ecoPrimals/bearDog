@@ -8,9 +8,6 @@ use std::io;
 use std::process::{Command, Output};
 use std::time::{Duration, Instant};
 
-#[cfg(test)]
-use std::sync::OnceLock;
-
 /// Runs external programs (default: real `std::process::Command`).
 pub trait CommandRunner: Send + Sync {
     /// Run `program` with `args` and wait for completion (captures stdout/stderr).
@@ -65,9 +62,12 @@ impl CommandRunner for SystemCommandRunner {
 }
 
 /// Test-only mock implementations for ADB command execution.
+///
+/// Test-only mock implementations for ADB command execution.
 #[cfg(test)]
 pub(crate) mod mock {
     use super::*;
+    use std::sync::OnceLock;
 
     fn exit_ok() -> std::process::ExitStatus {
         static OK: OnceLock<std::process::ExitStatus> = OnceLock::new();

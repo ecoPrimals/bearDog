@@ -93,17 +93,17 @@ pub enum LibraryStatus {
 /// Safety level for external function calls
 ///
 /// Classifies the safety guarantees of FFI function calls,
-/// from fully safe to potentially unsafe operations.
+/// from fully safe to potentially high-risk operations.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SafetyLevel {
-    /// Safe to call without restrictions (no unsafe operations)
+    /// Safe to call without restrictions (no high-risk operations)
     Safe,
-    /// Potentially unsafe but verified through testing and audits
+    /// Potentially hazardous but verified through testing and audits
     Verified,
-    /// Unsafe operations contained within a sandbox
+    /// High-risk operations contained within a sandbox
     Sandboxed,
-    /// Unsafe operations without sandbox protection
-    Unsafe,
+    /// High-risk operations without sandbox protection
+    Exposed,
 }
 
 /// Handle to a cached function

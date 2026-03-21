@@ -29,7 +29,7 @@ pub type LineageDepth = u32;
 /// Metadata associated with a lineage node
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct LineageMetadata {
-    /// Node biome type (e.g., "beardog", "songbird")
+    /// Node biome type (opaque label from discovery / metadata)
     pub biome_type: Option<String>,
     /// Node capabilities
     pub capabilities: Vec<String>,

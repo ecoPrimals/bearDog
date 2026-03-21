@@ -299,10 +299,10 @@ fn calculate_trust_score(
     }
 
     // Boost for high success rate
-    if let Some(success_rate) = community.success_rate {
-        if success_rate > 0.90 {
-            score += 0.05;
-        }
+    if let Some(success_rate) = community.success_rate
+        && success_rate > 0.90
+    {
+        score += 0.05;
     }
 
     // Penalty for vulnerabilities

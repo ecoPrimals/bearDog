@@ -2,7 +2,7 @@
 
 // Safe Zero-Cost Memory Management for BearDog Types
 //
-// This module provides memory-efficient operations without unsafe code,
+// This module provides memory-efficient operations without unchecked memory patterns,
 // using safe Rust patterns and high-performance data structures.
 
 use crossbeam::queue::SegQueue;
@@ -76,13 +76,13 @@ impl SafeZeroCopyMemoryPool {
         // Try to get from pool first
         {
             let pools = self.pools.read();
-            if let Some(pool) = pools.get(&aligned_size) {
-                if let Some(mut buffer) = pool.pop() {
-                    buffer.clear();
-                    buffer.resize(size, 0);
-                    self.stats.cache_hits.fetch_add(1, Ordering::Relaxed);
-                    return buffer;
-                }
+            if let Some(pool) = pools.get(&aligned_size)
+                && let Some(mut buffer) = pool.pop()
+            {
+                buffer.clear();
+                buffer.resize(size, 0);
+                self.stats.cache_hits.fetch_add(1, Ordering::Relaxed);
+                return buffer;
             }
         }
 

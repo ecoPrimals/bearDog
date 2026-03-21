@@ -101,11 +101,11 @@ impl EcosystemStorageManager {
             let response = backend.store(request.clone())?;
 
             // Cache the stored data if successful
-            if response.status == StorageStatus::Success {
-                if let Some(data) = &request.data {
-                    let mut cache = self.cache.write().await;
-                    cache.put(request.key, data.clone());
-                }
+            if response.status == StorageStatus::Success
+                && let Some(data) = &request.data
+            {
+                let mut cache = self.cache.write().await;
+                cache.put(request.key, data.clone());
             }
 
             Ok(response)
@@ -136,11 +136,11 @@ impl EcosystemStorageManager {
             let response = backend.retrieve(request.clone())?;
 
             // Cache the retrieved data if successful
-            if response.status == StorageStatus::Success {
-                if let Some(data) = &response.data {
-                    let mut cache = self.cache.write().await;
-                    cache.put(request.key, data.clone());
-                }
+            if response.status == StorageStatus::Success
+                && let Some(data) = &response.data
+            {
+                let mut cache = self.cache.write().await;
+                cache.put(request.key, data.clone());
             }
 
             Ok(response)

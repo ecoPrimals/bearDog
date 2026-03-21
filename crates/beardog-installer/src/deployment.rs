@@ -346,9 +346,7 @@ mod tests {
             .await
             .expect("deployment manager");
 
-        let result = manager
-            .deploy_primals(&[PrimalName::new(PrimalName::BEARDOG)])
-            .await;
+        let result = manager.deploy_primals(&[PrimalName::new("beardog")]).await;
         assert!(result.is_ok());
 
         let report = result.expect("deploy result");
@@ -404,10 +402,7 @@ mod tests {
         let report = DeploymentReport {
             total: 5,
             successes: 4,
-            failures: vec![(
-                PrimalName::new(PrimalName::SQUIRREL),
-                "test error".to_string(),
-            )],
+            failures: vec![(PrimalName::new("squirrel"), "test error".to_string())],
             arch: Architecture::X86_64,
             os: OperatingSystem::Linux,
         };

@@ -181,13 +181,13 @@ impl SovereignRng {
         required_tier: u8,
     ) -> Result<Vec<u8>, BearDogError> {
         // Check cache first
-        if self.config.cache_entropy {
-            if let Some(cached) = self.entropy_cache.get(human_identity_id) {
-                if self.is_cache_valid(cached) && cached.entropy_tier >= required_tier {
-                    debug!("Using cached entropy seed for {}", human_identity_id);
-                    return Ok(cached.seed_bytes.clone());
-                }
-            }
+        if self.config.cache_entropy
+            && let Some(cached) = self.entropy_cache.get(human_identity_id)
+            && self.is_cache_valid(cached)
+            && cached.entropy_tier >= required_tier
+        {
+            debug!("Using cached entropy seed for {}", human_identity_id);
+            return Ok(cached.seed_bytes.clone());
         }
 
         // Generate fresh entropy from hierarchy

@@ -131,7 +131,7 @@ impl BinaryValidator {
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let validator = BinaryValidator::new();
     /// let binary_path = std::path::Path::new("/usr/local/bin/beardog");
-    /// let report = validator.validate_binary(PrimalName::new(PrimalName::BEARDOG), binary_path).await?;
+    /// let report = validator.validate_binary(PrimalName::new("beardog"), binary_path).await?;
     ///
     /// if report.is_healthy() {
     ///     println!("Binary is healthy!");
@@ -306,7 +306,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_validation_report_display() {
-        let mut report = ValidationReport::new(PrimalName::new(PrimalName::BEARDOG));
+        let mut report = ValidationReport::new(PrimalName::new("beardog"));
         report.file_exists = true;
         report.is_executable = true;
         report.size_bytes = 5_000_000;
@@ -315,7 +315,7 @@ mod tests {
         report.healthy = true;
 
         let display = format!("{}", report);
-        assert!(display.contains("BearDog"));
+        assert!(display.contains("Beardog"));
         assert!(display.contains("✓ HEALTHY"));
     }
 
@@ -325,7 +325,7 @@ mod tests {
         let path = Path::new("/nonexistent/binary");
 
         let report = validator
-            .validate_binary(PrimalName::new(PrimalName::BEARDOG), path)
+            .validate_binary(PrimalName::new("beardog"), path)
             .await
             .expect("validate missing binary should return Ok(report)");
 
@@ -358,7 +358,7 @@ mod tests {
 
         let validator = BinaryValidator::new();
         let report = validator
-            .validate_binary(PrimalName::new(PrimalName::BEARDOG), &binary_path)
+            .validate_binary(PrimalName::new("beardog"), &binary_path)
             .await
             .expect("validate existing binary");
 
@@ -394,12 +394,12 @@ mod tests {
         // Create multiple fake binaries
         let binaries = vec![
             (
-                PrimalName::new(PrimalName::BEARDOG),
-                temp.path().join("beardog"),
+                PrimalName::new("artifact-a"),
+                temp.path().join("artifact-a"),
             ),
             (
-                PrimalName::new(PrimalName::SONGBIRD),
-                temp.path().join("songbird"),
+                PrimalName::new("artifact-b"),
+                temp.path().join("artifact-b"),
             ),
         ];
 
@@ -428,7 +428,7 @@ mod tests {
 
     #[test]
     fn test_validation_report_is_healthy() {
-        let mut report = ValidationReport::new(PrimalName::new(PrimalName::BEARDOG));
+        let mut report = ValidationReport::new(PrimalName::new("beardog"));
         assert!(!report.is_healthy());
 
         report.file_exists = true;

@@ -43,13 +43,13 @@ impl SafeBufferPool {
     pub fn get_buffer(&mut self, size: usize) -> BytesMut {
         let size_class = self.get_size_class(size);
 
-        if let Some(pool) = self.pools.get_mut(&size_class) {
-            if let Some(mut buffer) = pool.pop() {
-                buffer.clear();
-                buffer.resize(size, 0);
-                self.stats.buffers_reused += 1;
-                return buffer;
-            }
+        if let Some(pool) = self.pools.get_mut(&size_class)
+            && let Some(mut buffer) = pool.pop()
+        {
+            buffer.clear();
+            buffer.resize(size, 0);
+            self.stats.buffers_reused += 1;
+            return buffer;
         }
 
         self.stats.buffers_allocated += 1;

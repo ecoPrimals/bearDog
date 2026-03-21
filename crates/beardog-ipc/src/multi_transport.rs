@@ -261,6 +261,9 @@ pub struct MultiTransportHandle {
 
     /// Configuration (for introspection)
     config: MultiTransportConfig,
+
+    /// Background server tasks (tarpc / JSON-RPC) — await after shutdown for clean teardown
+    server_tasks: Vec<tokio::task::JoinHandle<()>>,
 }
 
 impl MultiTransportHandle {
@@ -269,6 +272,19 @@ impl MultiTransportHandle {
         if let Err(e) = self.shutdown_tx.send(()) {
             warn!("No receivers for shutdown signal: {}", e);
         }
+    }
+
+    /// Wait for spawned server tasks to finish, bounded by `timeout`.
+    ///
+    /// Call after [`Self::shutdown`] so listeners exit their `select!` loops.
+    pub async fn join_servers_with_timeout(self, timeout: Duration) {
+        let MultiTransportHandle { server_tasks, .. } = self;
+        let _ = tokio::time::timeout(timeout, async move {
+            for task in server_tasks {
+                let _ = task.await;
+            }
+        })
+        .await;
     }
 
     /// Get server configuration
@@ -324,6 +340,7 @@ impl MultiTransportServer {
     /// This function spawns server tasks and returns immediately.
     pub async fn start(self) -> anyhow::Result<MultiTransportHandle> {
         let (shutdown_tx, _) = broadcast::channel(1);
+        let mut server_tasks: Vec<tokio::task::JoinHandle<()>> = Vec::new();
 
         info!("🌐 Starting BearDog Multi-Transport Server");
         info!("   Configuration:");
@@ -351,7 +368,7 @@ impl MultiTransportServer {
             let tarpc_addr = self.config.tarpc_addr;
             let mut shutdown_rx = shutdown_tx.subscribe();
 
-            tokio::spawn(async move {
+            let h = tokio::spawn(async move {
                 let server = BearDogCryptoServer::new();
 
                 tokio::select! {
@@ -365,6 +382,7 @@ impl MultiTransportServer {
                     }
                 }
             });
+            server_tasks.push(h);
         }
 
         // Start JSON-RPC server
@@ -372,7 +390,7 @@ impl MultiTransportServer {
             let jsonrpc_addr = self.config.jsonrpc_addr;
             let mut shutdown_rx = shutdown_tx.subscribe();
 
-            tokio::spawn(async move {
+            let h = tokio::spawn(async move {
                 // JSON-RPC server implementation would go here
                 // For now, we just listen and respond with capabilities
                 let listener = match tokio::net::TcpListener::bind(jsonrpc_addr).await {
@@ -436,11 +454,13 @@ impl MultiTransportServer {
                     }
                 }
             });
+            server_tasks.push(h);
         }
 
         Ok(MultiTransportHandle {
             shutdown_tx,
             config: self.config,
+            server_tasks,
         })
     }
 
@@ -454,10 +474,9 @@ impl MultiTransportServer {
         tokio::signal::ctrl_c().await?;
 
         info!("Shutdown signal received, stopping servers...");
+        let shutdown_timeout = handle.config.shutdown_timeout;
         handle.shutdown();
-
-        // Give servers time to clean up
-        tokio::time::sleep(Duration::from_millis(100)).await;
+        handle.join_servers_with_timeout(shutdown_timeout).await;
 
         info!("Multi-transport server stopped");
         Ok(())
@@ -654,7 +673,9 @@ mod tests {
         assert!(handle.jsonrpc_addr().is_some());
         assert!(handle.tarpc_addr().is_none());
         handle.shutdown();
-        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        handle
+            .join_servers_with_timeout(std::time::Duration::from_millis(200))
+            .await;
     }
 
     #[tokio::test]

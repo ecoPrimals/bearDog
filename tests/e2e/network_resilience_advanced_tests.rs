@@ -11,7 +11,18 @@
 //! - Concurrent connection handling
 //! - Error recovery paths
 
-#![allow(clippy::unwrap_used)] // Allow in tests
+#![allow(
+    missing_docs,
+    clippy::unwrap_used,
+    clippy::float_cmp,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::redundant_clone,
+    clippy::needless_collect
+)]
 
 use beardog_errors::BearDogError;
 use std::sync::Arc;
@@ -337,6 +348,9 @@ async fn test_circuit_breaker_reopen_on_half_open_failure() {
     metrics.circuit_opens += 1;
 
     assert_eq!(circuit_state, CircuitState::Open);
+    assert_eq!(metrics.total_attempts, 1);
+    assert_eq!(metrics.failed_connections, 1);
+    assert_eq!(metrics.circuit_opens, 1);
 }
 
 #[tokio::test]
@@ -383,6 +397,8 @@ async fn test_partition_detection() {
 
     assert!(partition_detected);
     assert_eq!(consecutive_failures, 3);
+    assert_eq!(metrics.total_attempts, 3);
+    assert_eq!(metrics.failed_connections, 3);
 }
 
 #[tokio::test]
@@ -448,7 +464,9 @@ async fn test_degraded_mode_activation() {
         }
     }
 
-    let actual_error_rate = metrics.failed_connections as f64 / metrics.total_attempts as f64;
+    let actual_error_rate =
+        f64::from(u32::try_from(metrics.failed_connections).unwrap_or(u32::MAX))
+            / f64::from(u32::try_from(metrics.total_attempts).unwrap_or(1));
 
     if actual_error_rate > 0.5 {
         degraded_mode = true;
@@ -462,8 +480,7 @@ async fn test_degradation_reduces_load() {
     let normal_load = 100;
     let degraded_load = 20;
 
-    // In degraded mode, reduce load to 20% of normal
-    let reduced_load = (normal_load as f64 * 0.2) as usize;
+    let reduced_load = normal_load / 5;
 
     assert_eq!(reduced_load, degraded_load);
     assert!(degraded_load < normal_load);

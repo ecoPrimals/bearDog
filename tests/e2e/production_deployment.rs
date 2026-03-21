@@ -1,4 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(
+    missing_docs,
+    clippy::float_cmp,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::redundant_clone,
+    clippy::needless_collect
+)]
 // Production Deployment E2E Test
 // Created October 7, 2025
 
@@ -111,7 +122,6 @@ pub async fn run_production_deployment_test(
     for data_id in &test_data {
         let integrity_ok = verify_data_integrity(data_id).await?;
         if !integrity_ok {
-            metrics.failed_requests += 1;
             return Err(BearDogError::internal(format!(
                 "Data integrity check failed for: {data_id}"
             )));

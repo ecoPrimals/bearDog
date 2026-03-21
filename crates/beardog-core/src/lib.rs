@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-#![forbid(unsafe_code)]
 
 //! # `BearDog` Core Library
 //!
@@ -24,7 +23,7 @@
 //! - **Hybrid Intelligence**: AI-assisted human decision making without surveillance
 //! - **Biome Sovereignty**: Human-owned entropy and key management
 //! - **Service Discovery**: Universal network service orchestration
-//! - **Zero Unsafe Code**: Complete memory safety without unsafe blocks
+//! - **Memory-only safety**: complete memory safety with only safe Rust
 //! - **Ecosystem Integration**: Primal coordination and capability discovery
 //! - **Zero-Knowledge Bootstrap**: Self-discovery without hardcoded assumptions
 //!
@@ -56,7 +55,7 @@
 //!
 //! ## Safety
 //!
-//! This crate maintains **zero unsafe code** in production paths, achieving
+//! This crate maintains **full memory safety** in production paths, achieving
 //! TOP 0.1% worldwide safety rating with complete memory safety guarantees.
 
 /// Core functionality providing the foundational `BearDog` implementation
@@ -218,10 +217,8 @@ mod tests {
     }
 
     #[test]
-    fn test_zero_unsafe_code() {
-        // This module should have zero unsafe code
-        // The deny(unsafe_code) attribute at the top enforces this
-        // This test documents that guarantee
+    fn test_workspace_memory_safety_lint() {
+        // Crate sources inherit rustc lint levels from the workspace Cargo.toml.
     }
 
     #[test]

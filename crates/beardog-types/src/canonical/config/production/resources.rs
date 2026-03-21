@@ -485,14 +485,12 @@ impl ResourceManagementConfig {
         if let (Some(initial), Some(max)) = (
             self.memory.initial_heap_size_mb,
             self.memory.max_heap_size_mb,
-        ) {
-            if initial > max {
-                return Err(BearDogError::Business {
-                    message: "Initial heap size cannot be larger than maximum heap size"
-                        .to_string(),
-                    category: beardog_errors::BusinessErrorCategory::Validation,
-                });
-            }
+        ) && initial > max
+        {
+            return Err(BearDogError::Business {
+                message: "Initial heap size cannot be larger than maximum heap size".to_string(),
+                category: beardog_errors::BusinessErrorCategory::Validation,
+            });
         }
 
         // Validate network settings

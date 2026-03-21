@@ -1,4 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(
+    missing_docs,
+    clippy::float_cmp,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::redundant_clone,
+    clippy::needless_collect
+)]
 //! End-to-End Tests for BTSP Contact Exchange (January 7, 2026)
 //!
 //! These tests verify the complete integration of genetic lineage-based
@@ -103,8 +114,7 @@ async fn test_e2e_lineage_path_max_hops() {
 async fn test_e2e_lineage_proof_validation() {
     let lineage_proof = "lineage_proof_abc123";
 
-    // Proof should be non-empty and follow format
-    assert!(!lineage_proof.is_empty());
+    // Proof should follow expected prefix (non-empty prefix implies non-empty string)
     assert!(lineage_proof.starts_with("lineage_proof_"));
 }
 

@@ -3,7 +3,7 @@
 // ! Lineage ID wrapper for biomeOS integration
 //!
 //! Provides a simplified LineageID type that wraps chain_id + node_id
-//! for easier API integration with biomeOS/Songbird.
+//! for easier API integration with biomeOS / HTTP gateway peers.
 
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -42,7 +42,7 @@ impl LineageID {
     ///
     /// # Arguments
     ///
-    /// * `service_type` - Type of service (e.g., "tower", "songbird")
+    /// * `service_type` - Type of service (e.g., "tower", "mesh-relay")
     /// * `chain_id` - Internal chain ID
     /// * `node_id` - Internal node ID
     ///
@@ -213,14 +213,14 @@ mod tests {
 
     #[test]
     fn test_lineage_id_node_id() {
-        let id = LineageID::new("lineage:songbird:1735000000:xyz789:songbird-node-1");
-        assert_eq!(id.node_id().unwrap(), "songbird-node-1");
+        let id = LineageID::new("lineage:mesh-relay:1735000000:xyz789:relay-node-1");
+        assert_eq!(id.node_id().unwrap(), "relay-node-1");
     }
 
     #[test]
     fn test_lineage_id_service_type() {
-        let id = LineageID::new("lineage:songbird:1735000000:xyz789:node-1");
-        assert_eq!(id.service_type().unwrap(), "songbird");
+        let id = LineageID::new("lineage:mesh-relay:1735000000:xyz789:node-1");
+        assert_eq!(id.service_type().unwrap(), "mesh-relay");
     }
 
     #[test]

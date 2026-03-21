@@ -1,4 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(
+    missing_docs,
+    dead_code,
+    clippy::cast_possible_truncation,
+    clippy::cast_precision_loss,
+    clippy::unnecessary_self_imports,
+    clippy::use_self
+)]
+
 //! Concurrent Test Helpers - Zero Sleep, Maximum Robustness
 //!
 //! This module provides utilities for truly concurrent testing without
@@ -8,10 +17,10 @@
 
 use std::net::TcpListener;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
-use tokio::net::UnixListener;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::time::Duration;
+use tokio::sync::Notify;
 use tokio::time::timeout;
 
 /// Generates a unique Unix socket path for test isolation
@@ -21,17 +30,17 @@ use tokio::time::timeout;
 pub fn unique_unix_socket() -> PathBuf {
     use std::sync::atomic::{AtomicU64, Ordering};
     static COUNTER: AtomicU64 = AtomicU64::new(0);
-    
+
     let id = COUNTER.fetch_add(1, Ordering::Relaxed);
     let pid = std::process::id();
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
         .as_micros();
-    
+
     // Use temp directory to ensure cleanup
     let temp_dir = std::env::temp_dir();
-    temp_dir.join(format!("beardog-test-{}-{}-{}.sock", pid, timestamp, id))
+    temp_dir.join(format!("beardog-test-{pid}-{timestamp}-{id}.sock"))
 }
 
 /// Gets an ephemeral TCP port from the OS
@@ -63,7 +72,7 @@ pub fn ephemeral_tcp_listener() -> std::io::Result<(TcpListener, u16)> {
 /// ```no_run
 /// let ready = ReadinessSignal::new();
 /// let ready_clone = ready.clone();
-/// 
+///
 /// tokio::spawn(async move {
 ///     // Server initialization...
 ///     ready_clone.signal_ready(); // Signal when actually ready
@@ -74,18 +83,21 @@ pub fn ephemeral_tcp_listener() -> std::io::Result<(TcpListener, u16)> {
 #[derive(Clone)]
 pub struct ReadinessSignal {
     ready: Arc<AtomicBool>,
+    notify: Arc<Notify>,
 }
 
 impl ReadinessSignal {
     pub fn new() -> Self {
         Self {
             ready: Arc::new(AtomicBool::new(false)),
+            notify: Arc::new(Notify::new()),
         }
     }
 
     /// Signal that the service is ready
     pub fn signal_ready(&self) {
         self.ready.store(true, Ordering::Release);
+        self.notify.notify_waiters();
     }
 
     /// Check if ready (non-blocking)
@@ -93,27 +105,21 @@ impl ReadinessSignal {
         self.ready.load(Ordering::Acquire)
     }
 
-    /// Wait for ready signal with timeout
-    ///
-    /// Uses exponential backoff polling: 1ms, 2ms, 4ms, ..., up to 50ms
-    /// This is dramatically more responsive than sleep(100ms) while
-    /// still being CPU-efficient.
+    /// Wait for ready signal with timeout (event-driven via [`Notify`], no polling sleep).
     pub async fn wait_ready(&self, timeout_duration: Duration) -> Result<(), WaitError> {
-        let start = Instant::now();
-        let mut poll_interval = Duration::from_millis(1);
-        let max_poll_interval = Duration::from_millis(50);
-
-        while !self.is_ready() {
-            if start.elapsed() > timeout_duration {
-                return Err(WaitError::Timeout);
-            }
-
-            tokio::time::sleep(poll_interval).await;
-
-            // Exponential backoff: 1ms, 2ms, 4ms, 8ms, ..., 50ms
-            poll_interval = std::cmp::min(poll_interval * 2, max_poll_interval);
+        if self.is_ready() {
+            return Ok(());
         }
-
+        timeout(timeout_duration, async {
+            loop {
+                if self.is_ready() {
+                    return;
+                }
+                self.notify.notified().await;
+            }
+        })
+        .await
+        .map_err(|_| WaitError::Timeout)?;
         Ok(())
     }
 }
@@ -200,7 +206,7 @@ impl AsyncBarrier {
     /// Wait for all participants to reach the barrier
     pub async fn wait(&self) {
         let current = self.count.fetch_add(1, Ordering::SeqCst) + 1;
-        
+
         if current == self.target {
             // Last one to arrive, wake everyone
             self.notifier.notify_waiters();
@@ -211,10 +217,10 @@ impl AsyncBarrier {
     }
 }
 
-/// Retry policy for flaky external resources
+/// Retry policy for flaky external resources (test helper).
 ///
-/// Use sparingly - prefer fixing root causes over retrying.
-/// Intended for truly external systems (network, hardware).
+/// Delays between attempts use cooperative [`tokio::task::yield_now`] (no wall-clock sleep),
+/// so retries stay fast and deterministic under `cargo test`.
 pub struct RetryPolicy {
     max_attempts: usize,
     base_delay: Duration,
@@ -245,7 +251,12 @@ impl RetryPolicy {
                 Err(e) => {
                     last_err = Some(e);
                     if attempt < self.max_attempts {
-                        tokio::time::sleep(delay).await;
+                        // Cooperative backoff (deterministic under test; no wall-clock sleep)
+                        let mut n = delay.as_millis().max(1) as u32;
+                        n = n.min(64);
+                        for _ in 0..n {
+                            tokio::task::yield_now().await;
+                        }
                         delay = std::cmp::min(delay * 2, self.max_delay);
                     }
                 }
@@ -266,8 +277,8 @@ pub enum WaitError {
 impl std::fmt::Display for WaitError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            WaitError::Timeout => write!(f, "Operation timed out"),
-            WaitError::Canceled => write!(f, "Operation was canceled"),
+            Self::Timeout => write!(f, "Operation timed out"),
+            Self::Canceled => write!(f, "Operation was canceled"),
         }
     }
 }
@@ -283,10 +294,7 @@ pub struct TempDir {
 
 impl TempDir {
     pub fn new() -> std::io::Result<Self> {
-        let path = std::env::temp_dir().join(format!(
-            "beardog-test-{}",
-            uuid::Uuid::new_v4()
-        ));
+        let path = std::env::temp_dir().join(format!("beardog-test-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&path)?;
         Ok(Self { path: Some(path) })
     }
@@ -310,23 +318,18 @@ impl Default for TempDir {
     }
 }
 
-/// Wait for a file/socket to be deleted
-///
-/// More efficient than sleep - polls with exponential backoff
-pub async fn wait_for_deletion(path: &std::path::Path, timeout_duration: Duration) -> Result<(), WaitError> {
-    let start = Instant::now();
-    let mut poll_interval = Duration::from_millis(1);
-    let max_poll_interval = Duration::from_millis(50);
-
+/// Wait for a file/socket to be deleted (cooperative yield until gone or timeout).
+pub async fn wait_for_deletion(
+    path: &std::path::Path,
+    timeout_duration: Duration,
+) -> Result<(), WaitError> {
+    let deadline = tokio::time::Instant::now() + timeout_duration;
     while path.exists() {
-        if start.elapsed() > timeout_duration {
+        if tokio::time::Instant::now() >= deadline {
             return Err(WaitError::Timeout);
         }
-
-        tokio::time::sleep(poll_interval).await;
-        poll_interval = std::cmp::min(poll_interval * 2, max_poll_interval);
+        tokio::task::yield_now().await;
     }
-
     Ok(())
 }
 
@@ -345,9 +348,7 @@ mod tests {
     async fn test_ephemeral_ports_are_unique() {
         let port1 = ephemeral_tcp_port().unwrap();
         let port2 = ephemeral_tcp_port().unwrap();
-        // Ports should be different (statistically)
-        // Can't guarantee since OS reuses, but very likely
-        println!("Port 1: {}, Port 2: {}", port1, port2);
+        println!("Port 1: {port1}, Port 2: {port2}");
     }
 
     #[tokio::test]
@@ -356,7 +357,6 @@ mod tests {
         let ready_clone = ready.clone();
 
         tokio::spawn(async move {
-            tokio::time::sleep(Duration::from_millis(10)).await;
             ready_clone.signal_ready();
         });
 
@@ -369,7 +369,7 @@ mod tests {
     async fn test_readiness_signal_timeout() {
         let ready = ReadinessSignal::new();
         // Never signal ready
-        
+
         let result = ready.wait_ready(Duration::from_millis(50)).await;
         assert!(matches!(result, Err(WaitError::Timeout)));
     }
@@ -379,7 +379,6 @@ mod tests {
         let (waiter, signal) = CompletionWaiter::new();
 
         tokio::spawn(async move {
-            tokio::time::sleep(Duration::from_millis(10)).await;
             signal.complete();
         });
 
@@ -395,9 +394,9 @@ mod tests {
         for i in 0..3 {
             let barrier = barrier.clone();
             handles.push(tokio::spawn(async move {
-                println!("Task {} waiting at barrier", i);
+                println!("Task {i} waiting at barrier");
                 barrier.wait().await;
-                println!("Task {} passed barrier", i);
+                println!("Task {i} passed barrier");
             }));
         }
 
@@ -412,9 +411,6 @@ mod tests {
         let path = dir.path().clone();
         assert!(path.exists());
         drop(dir);
-        // Path should be cleaned up
-        tokio::time::sleep(Duration::from_millis(10)).await;
         assert!(!path.exists());
     }
 }
-

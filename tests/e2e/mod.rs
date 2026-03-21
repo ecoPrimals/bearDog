@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![allow(
+    missing_docs,
     unused_imports,
     unused_variables,
     dead_code,
@@ -198,8 +199,9 @@ impl E2ETestFramework {
                     scenario,
                     success: true,
                     duration,
-                    steps_completed: metrics.successful_requests as usize,
-                    steps_total: metrics.total_requests as usize,
+                    steps_completed: usize::try_from(metrics.successful_requests)
+                        .unwrap_or(usize::MAX),
+                    steps_total: usize::try_from(metrics.total_requests).unwrap_or(usize::MAX),
                     error_message: None,
                     metrics,
                 })
@@ -327,6 +329,7 @@ pub fn cleanup_test_environment() -> Result<(), BearDogError> {
 }
 
 /// Print E2E test report
+#[allow(clippy::cast_precision_loss)]
 pub fn print_e2e_report(results: &[E2ETestResult]) {
     println!("\n╔════════════════════════════════════════════════╗");
     println!("║        E2E TESTING REPORT                      ║");
@@ -340,10 +343,12 @@ pub fn print_e2e_report(results: &[E2ETestResult]) {
     println!("   Total Scenarios:    {total}");
     println!("   Passed:             {passed} ✅");
     println!("   Failed:             {failed} ❌");
-    println!(
-        "   Success Rate:       {:.1}%",
+    let success_pct = if total == 0 {
+        0.0
+    } else {
         (passed as f64 / total as f64) * 100.0
-    );
+    };
+    println!("   Success Rate:       {success_pct:.1}%");
 
     println!("\n🔍 Scenario Details:");
     for result in results {

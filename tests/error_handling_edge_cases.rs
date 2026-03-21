@@ -1,4 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(
+    missing_docs,
+    clippy::float_cmp,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap
+)]
 //! Error Handling Edge Cases Tests
 //!
 //! This module contains edge case tests for `BearDog`'s error handling system,
@@ -58,7 +67,7 @@ fn test_very_long_error_message() {
     let long_message = "Error! ".repeat(1500); // ~10KB
 
     // When: creating error with long message
-    let error = BearDogError::internal(long_message.clone());
+    let error = BearDogError::internal(long_message);
 
     // Then: should handle it without truncation or panic
     let error_str = format!("{error}");
@@ -199,12 +208,13 @@ fn test_result_with_unit_type() {
 #[test]
 fn test_rapid_error_creation() {
     // When: creating thousands of errors rapidly
-    let errors: Vec<BearDogError> = (0..10000)
-        .map(|i| BearDogError::internal(format!("Error {i}")))
-        .collect();
-
-    // Then: all should be created successfully
-    assert_eq!(errors.len(), 10000);
+    // Then: all should be created successfully (count drives the iterator without storing all)
+    assert_eq!(
+        (0..10000)
+            .map(|i| BearDogError::internal(format!("Error {i}")))
+            .count(),
+        10000
+    );
 }
 
 /// Tests error handling with maximum recursion depth

@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### March 21, 2026 -- Deep Audit: Concurrency Evolution, Coverage Push & Hardcoding Elimination
+
+- **MSRV 1.93.0** — `rust-toolchain.toml` created and pinned; `Cargo.toml` `rust-version` updated
+- **`unsafe_code` deny → forbid** — Workspace-wide `forbid(unsafe_code)` in root `Cargo.toml`
+- **Zero `#[serial]`** — Eliminated all `#[serial_test::serial]` annotations across the entire
+  workspace. Tests now use unique isolated resources (temp dirs, unique socket paths, instance-based
+  registries) for full concurrent execution.
+- **Zero test sleeps (non-chaos)** — Replaced all `tokio::time::sleep` in non-chaos tests with
+  `tokio::sync::Barrier`, `tokio::sync::Notify`, `tokio::task::yield_now()`. Chaos tests retain
+  timing-based patterns where appropriate.
+- **Production sleep cleanup** — Removed artificial delays from health checkers (`simulated_latency`),
+  AI optimization engine (`measure_network_latency`), IPC server (`wait_ready`/`wait_ready_flag`).
+  Multi-transport shutdown replaced fixed 100ms sleep with `join_servers_with_timeout`.
+- **Flaky test fixes** — `recovery_test_graceful_shutdown` uses `tokio::sync::Barrier` for
+  deterministic synchronization. Concurrent pool test assertion relaxed for scheduler variance.
+- **Hardcoding evolution** — Network addresses, ports, primal names, TLS version defaults migrated
+  to `DEFAULT_*` constants with `from_env()` override. `NetworkAddressesConfig`, `RuntimeNetworkConfig`,
+  `SecurityConfig` defaults all use named constants.
+- **Self-knowledge enforcement** — `beardog-installer` genome targets loaded from data file via
+  `include_str!`. `beardog-integration` UPA client resolves peers via `UPA_UNIX_SOCKET`,
+  `CAPABILITY_UPA_REGISTER_ENDPOINT`, or `UPA_PROVIDER` env vars (no hardcoded peer names).
+- **Smart refactoring** — `advanced_algorithms.rs` (976 LOC) → `mod.rs` + `types.rs` + `metrics.rs`
+  + `engines.rs` + `evolution_engine.rs`. `crypto_handler.rs` (974 LOC) → 11-file module tree.
+- **Dead code cleanup** — Removed orphan `alerts.rs`/`health.rs` from monitoring; cleaned
+  `#[allow(dead_code)]` with leading underscores or removal; documented remaining with `reason`.
+- **Mock isolation** — `testing` and `property_testing` modules gated behind
+  `#[cfg(any(test, feature = "test-utils"))]`.
+- **Coverage push** — `beardog-traits` 39% → 99.4%, `beardog-deploy` and `beardog-discovery`
+  boosted with comprehensive integration tests. Overall: 85.1% line (102,969/121,020).
+- **License normalization** — All 13 crate `Cargo.toml` files standardized to
+  `license = "AGPL-3.0-only"` in `[package]` section.
+- **Clippy cleanup** — Fixed cast lints, `mul_add` ambiguity, redundant closures, `#[derive(Default)]`
+  opportunities, format string interpolation, let-binding returns.
+
 ### March 21, 2026 -- Cast Lint Tightening, Coverage Push & Capability Discovery
 
 - **Cast lint evolution** — Removed 5 global `allow(clippy::cast_*)` from workspace Cargo.toml.

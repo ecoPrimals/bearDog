@@ -11,14 +11,13 @@ use serde::{Deserialize, Serialize};
 /// Collects and surfaces performance-related [`super::MetricEvent`] values.
 #[derive(Debug)]
 pub struct PerformanceEngine {
-    #[allow(dead_code)] // Config reserved for future performance monitoring
-    config: PerformanceConfig,
+    _config: PerformanceConfig,
 }
 
 impl PerformanceEngine {
     /// Creates a new instance
     pub const fn new(config: PerformanceConfig) -> Result<Self, BearDogError> {
-        Ok(Self { config })
+        Ok(Self { _config: config })
     }
 
     /// Starts service

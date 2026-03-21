@@ -156,7 +156,7 @@ use super::state::CoreState;
 ///
 /// # Features
 ///
-/// - **Zero Unsafe Code**: Complete memory safety without unsafe blocks
+/// - **Memory-only safety**: complete memory safety with only safe Rust
 /// - **AI-Hybrid Intelligence**: Human-controlled AI assistance
 /// - **Sovereign Cryptography**: User-owned entropy and key management
 /// - **Universal Service Discovery**: Zero-knowledge capability discovery

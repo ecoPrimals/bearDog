@@ -307,19 +307,6 @@ impl MonitoringMigrationService {
         _security: Option<HashMap<String, serde_json::Value>>,
         _unified_config: &mut MonitoringConfig,
     ) -> Result<(), BearDogError> {
-        // Migrate observability settings to production config
-        // self.migrate_observability_config(observability, &mut unified_config.metrics)?;
-
-        // Migrate performance monitoring
-        // if let Some(perf_config) = performance {
-        //     self.migrate_performance_monitoring_config(perf_config, &mut unified_config.performance)?;
-        // }
-
-        // Migrate security monitoring
-        // if let Some(sec_config) = security {
-        //     self.migrate_security_monitoring_config(sec_config, &mut unified_config.security)?;
-        // }
-
         Ok(())
     }
 
@@ -329,17 +316,17 @@ impl MonitoringMigrationService {
         unified_config: &mut MonitoringConfig,
     ) {
         // Extract core monitoring settings
-        if let Some(enabled) = config.get("enabled") {
-            if let Some(enabled_bool) = enabled.as_bool() {
-                unified_config.enabled = enabled_bool;
-            }
+        if let Some(enabled) = config.get("enabled")
+            && let Some(enabled_bool) = enabled.as_bool()
+        {
+            unified_config.enabled = enabled_bool;
         }
 
         // Extract interval settings
-        if let Some(interval) = config.get("interval_seconds") {
-            if let Some(_interval_num) = interval.as_u64() {
-                // unified_config.interval_seconds = interval_num; // Field doesn't exist in new structure
-            }
+        if let Some(interval) = config.get("interval_seconds")
+            && let Some(_interval_num) = interval.as_u64()
+        {
+            // unified_config.interval_seconds = interval_num; // Field doesn't exist in new structure
         }
     }
 
@@ -389,30 +376,6 @@ impl MonitoringMigrationService {
         _unified_alerting: &mut UnifiedAlertingConfig,
     ) {
         // Implementation would extract alerting settings
-    }
-
-    #[allow(dead_code)]
-    fn migrate_observability_config(
-        _observability_config: HashMap<String, serde_json::Value>,
-        _production_config: &mut crate::canonical::monitoring::MonitoringConfig,
-    ) {
-        // Implementation would extract observability settings
-    }
-
-    #[allow(dead_code)]
-    fn migrate_performance_monitoring_config(
-        _perf_config: HashMap<String, serde_json::Value>,
-        _production_config: &mut crate::canonical::monitoring::MonitoringConfig,
-    ) {
-        // Implementation would extract performance monitoring settings
-    }
-
-    #[allow(dead_code)]
-    fn migrate_security_monitoring_config(
-        _sec_config: HashMap<String, serde_json::Value>,
-        _production_config: &mut crate::canonical::monitoring::MonitoringConfig,
-    ) {
-        // Implementation would extract security monitoring settings
     }
 
     /// Validate the unified monitoring configuration
@@ -467,34 +430,34 @@ pub fn create_configuration_legacy_monitoring(
     let mut health = None;
     let mut alerting = None;
 
-    if let Some(m) = metrics_settings {
-        if let Ok(m_map) = serde_json::from_value::<HashMap<String, serde_json::Value>>(m) {
-            metrics = Some(m_map);
-        }
+    if let Some(m) = metrics_settings
+        && let Ok(m_map) = serde_json::from_value::<HashMap<String, serde_json::Value>>(m)
+    {
+        metrics = Some(m_map);
     }
 
-    if let Some(t) = tracing_settings {
-        if let Ok(t_map) = serde_json::from_value::<HashMap<String, serde_json::Value>>(t) {
-            tracing = Some(t_map);
-        }
+    if let Some(t) = tracing_settings
+        && let Ok(t_map) = serde_json::from_value::<HashMap<String, serde_json::Value>>(t)
+    {
+        tracing = Some(t_map);
     }
 
-    if let Some(l) = logging_settings {
-        if let Ok(l_map) = serde_json::from_value::<HashMap<String, serde_json::Value>>(l) {
-            logging = Some(l_map);
-        }
+    if let Some(l) = logging_settings
+        && let Ok(l_map) = serde_json::from_value::<HashMap<String, serde_json::Value>>(l)
+    {
+        logging = Some(l_map);
     }
 
-    if let Some(h) = health_settings {
-        if let Ok(h_map) = serde_json::from_value::<HashMap<String, serde_json::Value>>(h) {
-            health = Some(h_map);
-        }
+    if let Some(h) = health_settings
+        && let Ok(h_map) = serde_json::from_value::<HashMap<String, serde_json::Value>>(h)
+    {
+        health = Some(h_map);
     }
 
-    if let Some(a) = alerting_settings {
-        if let Ok(a_map) = serde_json::from_value::<HashMap<String, serde_json::Value>>(a) {
-            alerting = Some(a_map);
-        }
+    if let Some(a) = alerting_settings
+        && let Ok(a_map) = serde_json::from_value::<HashMap<String, serde_json::Value>>(a)
+    {
+        alerting = Some(a_map);
     }
 
     LegacyMonitoringConfig::ConfigurationMonitoring {

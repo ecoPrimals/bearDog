@@ -3,7 +3,6 @@
 //! Health Checker Implementations
 //!
 //! Concrete implementations of health checkers for different system components.
-//! These are production-ready implementations with mock fallbacks for testing.
 
 use super::super::types::ComponentHealth;
 use super::traits::HealthChecker;
@@ -11,7 +10,9 @@ use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;
 use chrono::Utc;
 use std::collections::HashMap;
-use std::time::{Duration, Instant};
+#[cfg(test)]
+use std::time::Duration;
+use std::time::Instant;
 
 /// Health checker enum for type-safe health checking
 #[derive(Debug)]
@@ -24,6 +25,9 @@ pub enum HealthCheckerType {
     ExternalApi(ExternalApiHealthChecker),
     /// HSM health checker
     Hsm(HsmHealthChecker),
+    /// Test-only: injects delay then runs a real checker (for timeout / latency tests)
+    #[cfg(test)]
+    TestDelayed(TestDelayedChecker),
 }
 
 impl HealthChecker for HealthCheckerType {
@@ -33,6 +37,8 @@ impl HealthChecker for HealthCheckerType {
             Self::Cache(checker) => checker.check_health().await,
             Self::ExternalApi(checker) => checker.check_health().await,
             Self::Hsm(checker) => checker.check_health().await,
+            #[cfg(test)]
+            Self::TestDelayed(checker) => checker.check_health().await,
         }
     }
 
@@ -42,6 +48,8 @@ impl HealthChecker for HealthCheckerType {
             Self::Cache(checker) => checker.component_name(),
             Self::ExternalApi(checker) => checker.component_name(),
             Self::Hsm(checker) => checker.component_name(),
+            #[cfg(test)]
+            Self::TestDelayed(checker) => checker.component_name(),
         }
     }
 }
@@ -49,11 +57,8 @@ impl HealthChecker for HealthCheckerType {
 /// Database health checker
 ///
 /// Checks database connectivity and responsiveness.
-/// Supports simulated latency for testing scenarios.
 #[derive(Debug)]
-pub struct DatabaseHealthChecker {
-    simulated_latency: Option<Duration>,
-}
+pub struct DatabaseHealthChecker;
 
 impl Default for DatabaseHealthChecker {
     fn default() -> Self {
@@ -62,20 +67,10 @@ impl Default for DatabaseHealthChecker {
 }
 
 impl DatabaseHealthChecker {
-    /// Creates a new database health checker with instant responses
+    /// Creates a new database health checker
     #[must_use]
     pub const fn new() -> Self {
-        Self {
-            simulated_latency: None,
-        }
-    }
-
-    /// Creates a health checker with simulated latency for timeout testing
-    #[must_use]
-    pub const fn with_simulated_latency(latency: Duration) -> Self {
-        Self {
-            simulated_latency: Some(latency),
-        }
+        Self
     }
 }
 
@@ -86,11 +81,6 @@ impl HealthChecker for DatabaseHealthChecker {
     )]
     async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         let start = Instant::now();
-
-        // Only sleep if explicitly configured for latency testing
-        if let Some(latency) = self.simulated_latency {
-            tokio::time::sleep(latency).await;
-        }
 
         Ok(ComponentHealth {
             name: "Database".to_string(),
@@ -119,9 +109,7 @@ impl HealthChecker for DatabaseHealthChecker {
 ///
 /// Checks cache connectivity and hit rates.
 #[derive(Debug)]
-pub struct CacheHealthChecker {
-    simulated_latency: Option<Duration>,
-}
+pub struct CacheHealthChecker;
 
 impl Default for CacheHealthChecker {
     fn default() -> Self {
@@ -133,17 +121,7 @@ impl CacheHealthChecker {
     /// Creates a new cache health checker
     #[must_use]
     pub const fn new() -> Self {
-        Self {
-            simulated_latency: None,
-        }
-    }
-
-    /// Creates a health checker with simulated latency
-    #[must_use]
-    pub const fn with_simulated_latency(latency: Duration) -> Self {
-        Self {
-            simulated_latency: Some(latency),
-        }
+        Self
     }
 }
 
@@ -154,10 +132,6 @@ impl HealthChecker for CacheHealthChecker {
     )]
     async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         let start = Instant::now();
-
-        if let Some(latency) = self.simulated_latency {
-            tokio::time::sleep(latency).await;
-        }
 
         Ok(ComponentHealth {
             name: "Cache".to_string(),
@@ -189,8 +163,6 @@ impl HealthChecker for CacheHealthChecker {
 pub struct ExternalApiHealthChecker {
     /// API endpoint URL
     pub url: String,
-    /// Simulated latency for testing
-    simulated_latency: Option<Duration>,
 }
 
 impl Default for ExternalApiHealthChecker {
@@ -198,7 +170,6 @@ impl Default for ExternalApiHealthChecker {
         Self {
             url: beardog_errors::process_env::var("BEARDOG_EXTERNAL_API_URL")
                 .unwrap_or_else(|_| "not_configured".to_string()),
-            simulated_latency: None,
         }
     }
 }
@@ -207,19 +178,7 @@ impl ExternalApiHealthChecker {
     /// Creates a new external API health checker
     #[must_use]
     pub const fn new(url: String) -> Self {
-        Self {
-            url,
-            simulated_latency: None,
-        }
-    }
-
-    /// Creates a health checker with simulated latency
-    #[must_use]
-    pub const fn with_simulated_latency(url: String, latency: Duration) -> Self {
-        Self {
-            url,
-            simulated_latency: Some(latency),
-        }
+        Self { url }
     }
 }
 
@@ -230,10 +189,6 @@ impl HealthChecker for ExternalApiHealthChecker {
     )]
     async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         let start = Instant::now();
-
-        if let Some(latency) = self.simulated_latency {
-            tokio::time::sleep(latency).await;
-        }
 
         Ok(ComponentHealth {
             name: "ExternalAPI".to_string(),
@@ -258,9 +213,7 @@ impl HealthChecker for ExternalApiHealthChecker {
 ///
 /// Checks HSM availability and cryptographic capabilities.
 #[derive(Debug)]
-pub struct HsmHealthChecker {
-    simulated_latency: Option<Duration>,
-}
+pub struct HsmHealthChecker;
 
 impl Default for HsmHealthChecker {
     fn default() -> Self {
@@ -272,17 +225,7 @@ impl HsmHealthChecker {
     /// Creates a new HSM health checker
     #[must_use]
     pub const fn new() -> Self {
-        Self {
-            simulated_latency: None,
-        }
-    }
-
-    /// Creates a health checker with simulated latency
-    #[must_use]
-    pub const fn with_simulated_latency(latency: Duration) -> Self {
-        Self {
-            simulated_latency: Some(latency),
-        }
+        Self
     }
 }
 
@@ -293,10 +236,6 @@ impl HealthChecker for HsmHealthChecker {
     )]
     async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         let start = Instant::now();
-
-        if let Some(latency) = self.simulated_latency {
-            tokio::time::sleep(latency).await;
-        }
 
         Ok(ComponentHealth {
             name: "HSM".to_string(),
@@ -317,5 +256,93 @@ impl HealthChecker for HsmHealthChecker {
 
     fn component_name(&self) -> &'static str {
         "HSM"
+    }
+}
+
+/// Test harness: sleeps before delegating to a production checker so timeout/latency tests
+/// do not embed artificial delays in production implementations.
+#[cfg(test)]
+#[derive(Debug)]
+pub struct TestDelayedChecker {
+    delay: Duration,
+    kind: TestDelayedKind,
+}
+
+#[cfg(test)]
+#[derive(Debug, Clone, Copy)]
+enum TestDelayedKind {
+    Database,
+    Cache,
+    ExternalApi(&'static str),
+    Hsm,
+}
+
+#[cfg(test)]
+impl TestDelayedChecker {
+    #[must_use]
+    pub fn database(delay: Duration) -> Self {
+        Self {
+            delay,
+            kind: TestDelayedKind::Database,
+        }
+    }
+
+    #[must_use]
+    pub fn cache(delay: Duration) -> Self {
+        Self {
+            delay,
+            kind: TestDelayedKind::Cache,
+        }
+    }
+
+    #[must_use]
+    pub fn external_api(url: &'static str, delay: Duration) -> Self {
+        Self {
+            delay,
+            kind: TestDelayedKind::ExternalApi(url),
+        }
+    }
+
+    #[must_use]
+    pub fn hsm(delay: Duration) -> Self {
+        Self {
+            delay,
+            kind: TestDelayedKind::Hsm,
+        }
+    }
+}
+
+#[cfg(test)]
+impl HealthChecker for TestDelayedChecker {
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Health check elapsed millis fit in u64 for reporting"
+    )]
+    async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
+        let start = Instant::now();
+        tokio::time::sleep(self.delay).await;
+        let total_ms = start.elapsed().as_millis() as u64;
+
+        let mut health = match self.kind {
+            TestDelayedKind::Database => DatabaseHealthChecker::new().check_health().await?,
+            TestDelayedKind::Cache => CacheHealthChecker::new().check_health().await?,
+            TestDelayedKind::ExternalApi(url) => {
+                ExternalApiHealthChecker::new(url.to_string())
+                    .check_health()
+                    .await?
+            }
+            TestDelayedKind::Hsm => HsmHealthChecker::new().check_health().await?,
+        };
+        health.check_duration_ms = total_ms;
+        Ok(health)
+    }
+
+    fn component_name(&self) -> &str {
+        match self.kind {
+            TestDelayedKind::Database => "Database",
+            TestDelayedKind::Cache => "Cache",
+            TestDelayedKind::ExternalApi(_) => "ExternalAPI",
+            TestDelayedKind::Hsm => "HSM",
+        }
     }
 }

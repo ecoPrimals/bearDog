@@ -5,7 +5,7 @@
 // **MODERNIZED**: Simplified implementation to resolve compilation issues
 // while maintaining the public API for the threat response system.
 
-use crate::threat::{MitigationStep, ThreatEvent, ThreatSeverity};
+use crate::threat::{ThreatEvent, ThreatSeverity};
 use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -92,50 +92,5 @@ impl AutomatedThreatResponseHandler {
     ) -> Result<Vec<String>, BearDogError> {
         let _ = threat_event; // Acknowledge parameter
         Ok(vec![])
-    }
-
-    /// Execute mitigation - SIMPLIFIED
-    #[allow(dead_code)]
-    /// Executes `mitigation_step`
-    const fn execute_mitigation_step(
-        &self,
-        mitigation: &MitigationStep,
-    ) -> Result<(), BearDogError> {
-        let _ = mitigation; // Acknowledge parameter
-        Ok(())
-    }
-
-    /// Isolate system - SIMPLIFIED
-    #[allow(dead_code)]
-    const fn isolate_system(&self, target: &str) -> Result<(), BearDogError> {
-        let _ = target; // Acknowledge parameter
-        Ok(())
-    }
-
-    /// Block IP address - SIMPLIFIED
-    #[allow(dead_code)]
-    const fn block_ip_address(&self, ip: &str) -> Result<(), BearDogError> {
-        let _ = ip; // Acknowledge parameter
-        Ok(())
-    }
-
-    /// Quarantine file - SIMPLIFIED
-    #[allow(dead_code)]
-    const fn quarantine_file(&self, file_path: &str) -> Result<(), BearDogError> {
-        let _ = file_path; // Acknowledge parameter
-        Ok(())
-    }
-
-    /// Disable user account - SIMPLIFIED
-    #[allow(dead_code)]
-    const fn disable_user_account(&self, username: &str) -> Result<(), BearDogError> {
-        let _ = username; // Acknowledge parameter
-        Ok(())
-    }
-
-    /// Send alert - SIMPLIFIED
-    #[allow(dead_code)]
-    const fn send_alert(&self, _message: &str) -> Result<(), BearDogError> {
-        Ok(())
     }
 }

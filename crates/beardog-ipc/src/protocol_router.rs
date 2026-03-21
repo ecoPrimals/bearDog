@@ -148,16 +148,16 @@ impl ProtocolDetector {
         let trimmed = bytes
             .iter()
             .skip_while(|&&b| b == b' ' || b == b'\t' || b == b'\n' || b == b'\r');
-        if let Some(&first_char) = trimmed.clone().next() {
-            if first_char == b'{' {
-                // Likely JSON - check for JSON-RPC fields
-                if let Ok(text) = std::str::from_utf8(bytes) {
-                    if text.contains("jsonrpc") || text.contains("method") || text.contains("id") {
-                        return Protocol::JsonRpc;
-                    }
-                    // Generic JSON, treat as JSON-RPC
+        if let Some(&first_char) = trimmed.clone().next()
+            && first_char == b'{'
+        {
+            // Likely JSON - check for JSON-RPC fields
+            if let Ok(text) = std::str::from_utf8(bytes) {
+                if text.contains("jsonrpc") || text.contains("method") || text.contains("id") {
                     return Protocol::JsonRpc;
                 }
+                // Generic JSON, treat as JSON-RPC
+                return Protocol::JsonRpc;
             }
         }
 

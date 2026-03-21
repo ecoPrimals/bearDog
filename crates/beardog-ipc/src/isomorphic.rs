@@ -205,11 +205,11 @@ async fn discover_tcp_endpoint() -> Result<IpcEndpoint> {
     for file in discovery_files {
         if let Ok(contents) = tokio::fs::read_to_string(&file).await {
             // Parse format: tcp:<SocketAddr>
-            if let Some(addr_str) = contents.trim().strip_prefix("tcp:") {
-                if let Ok(addr) = addr_str.parse::<SocketAddr>() {
-                    debug!("📁 Found TCP discovery file: {} -> {}", file, addr);
-                    return Ok(IpcEndpoint::TcpLocal(addr));
-                }
+            if let Some(addr_str) = contents.trim().strip_prefix("tcp:")
+                && let Ok(addr) = addr_str.parse::<SocketAddr>()
+            {
+                debug!("📁 Found TCP discovery file: {} -> {}", file, addr);
+                return Ok(IpcEndpoint::TcpLocal(addr));
             }
         }
     }

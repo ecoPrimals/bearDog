@@ -2,6 +2,8 @@
 
 //! Genetic primitives: entropy classification, human collection, key exchange, and spawning.
 
+/// Advanced genetic algorithms (evolution engine, population, fitness).
+pub mod advanced_algorithms;
 /// Classifies and mixes human vs machine entropy for key derivation policy.
 pub mod entropy_hierarchy;
 /// Live and legacy human entropy capture (keyboard, mouse, multi-modal).

@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-#![forbid(unsafe_code)]
 
 //! # BearDog: Sovereign Computing Platform
 //!
@@ -283,10 +282,15 @@ mod lib_coverage_extension;
 mod tests {
     use super::*;
 
+    fn assert_f64_approx_eq(a: f64, b: f64) {
+        const EPS: f64 = 1e-9;
+        assert!((a - b).abs() < EPS, "expected {b}, got {a}");
+    }
+
     #[tokio::test]
     async fn test_framework_initialization() {
         let framework = BearDogFramework::new().await.unwrap();
-        assert_eq!(framework.config.confidence_level, 0.95);
+        assert_f64_approx_eq(framework.config.confidence_level, 0.95);
         assert_eq!(framework.config.sample_size, 1000);
     }
 
@@ -327,7 +331,7 @@ mod tests {
             storage_endpoint: None,
         };
 
-        assert_eq!(config.confidence_level, 0.99);
+        assert_f64_approx_eq(config.confidence_level, 0.99);
         assert_eq!(config.sample_size, 2000);
         assert_eq!(config.timeout, Duration::from_secs(60));
     }
@@ -341,8 +345,8 @@ mod tests {
         let config_ref2 = framework.config();
 
         // Both references point to the same data (zero copy)
-        assert_eq!(config_ref1.confidence_level, 0.95);
-        assert_eq!(config_ref2.confidence_level, 0.95);
+        assert_f64_approx_eq(config_ref1.confidence_level, 0.95);
+        assert_f64_approx_eq(config_ref2.confidence_level, 0.95);
 
         // Verify it's the default config
         assert_eq!(config_ref1.sample_size, 1000);

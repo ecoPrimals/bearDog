@@ -135,7 +135,7 @@ pub enum BreachType {
     SystemBreach,
     /// Credential or permission abuse.
     AccessBreach,
-    /// Unsafe or unauthorized configuration change.
+    /// Unapproved or unauthorized configuration change.
     ConfigurationBreach,
 }
 

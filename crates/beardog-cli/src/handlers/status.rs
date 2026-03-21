@@ -115,7 +115,10 @@ pub async fn handle_status(verbose: bool) -> Result<(), BearDogError> {
 }
 
 /// Handle version command
-#[allow(dead_code)] // Used in tests, planned for CLI subcommand
+#[allow(
+    dead_code,
+    reason = "Exposed for tests and future version subcommand wiring."
+)]
 pub async fn handle_version() -> Result<(), BearDogError> {
     let build_info = get_build_info();
     println!("BearDog {}", build_info.version);

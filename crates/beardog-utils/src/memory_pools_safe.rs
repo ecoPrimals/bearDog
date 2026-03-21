@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 // Safe memory pools for BearDog
-// Provides thread-safe memory management without unsafe code
+// Provides thread-safe memory management without unchecked memory patterns
 
 use crossbeam::queue::ArrayQueue;
 use std::sync::{Arc, Mutex};

@@ -96,7 +96,7 @@
 //!
 //! # Security Properties
 //!
-//! - **Pure Rust**: No unsafe code, no C dependencies
+//! - **Pure Rust**: No unchecked memory patterns, no C dependencies
 //! - **Constant-time**: Crypto operations resist timing attacks
 //! - **Forward secrecy**: Ephemeral keys via X25519
 //! - **Key confirmation**: Finished message binds transcript

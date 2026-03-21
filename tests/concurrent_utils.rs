@@ -106,15 +106,18 @@ where
         let _ = tx.send(true);
     });
 
-    let result = tokio::select! {
-        _ = rx.changed() => Ok(()),
-        () = tokio::time::sleep(timeout) => {
+    match tokio::time::timeout(timeout, rx.changed()).await {
+        Ok(Ok(())) => Ok(()),
+        Ok(Err(_)) => Err(BearDogError::internal(
+            "Condition channel closed".to_string(),
+        )),
+        Err(_) => {
             handle.abort();
-            Err(BearDogError::internal("Timeout waiting for condition".to_string()))
+            Err(BearDogError::internal(
+                "Timeout waiting for condition".to_string(),
+            ))
         }
-    };
-
-    result
+    }
 }
 
 /// Wait for multiple conditions concurrently
@@ -231,7 +234,7 @@ where
     T: Clone,
     F: FnMut(&T) -> bool,
 {
-    let result = tokio::time::timeout(timeout, async move {
+    tokio::time::timeout(timeout, async move {
         loop {
             let current = rx.borrow_and_update().clone();
             if predicate(&current) {
@@ -243,9 +246,7 @@ where
         }
     })
     .await
-    .map_err(|_| BearDogError::internal("Timeout waiting for state".to_string()))?;
-
-    result
+    .map_err(|_| BearDogError::internal("Timeout waiting for state".to_string()))?
 }
 
 /// Run multiple async tasks concurrently

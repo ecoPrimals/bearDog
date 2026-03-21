@@ -10,14 +10,13 @@ use serde::{Deserialize, Serialize};
 /// Ecosystem interaction monitor
 #[derive(Debug)]
 pub struct EcosystemMonitor {
-    #[allow(dead_code)] // Config reserved for future ecosystem monitoring
-    config: EcosystemConfig,
+    _config: EcosystemConfig,
 }
 
 impl EcosystemMonitor {
     /// Creates a new instance
     pub const fn new(config: EcosystemConfig) -> Result<Self, BearDogError> {
-        Ok(Self { config })
+        Ok(Self { _config: config })
     }
 
     /// Starts service

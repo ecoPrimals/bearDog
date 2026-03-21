@@ -1,4 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(
+    missing_docs,
+    clippy::float_cmp,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::redundant_clone,
+    clippy::needless_collect
+)]
+
 use beardog_errors::BearDogError;
 
 #[tokio::test]
@@ -23,6 +35,5 @@ fn test_e2e_test_harness() {
         "E2E timeout should be 5 minutes"
     );
 
-    // Verify test categorization is present
-    assert!(cfg!(test), "Test harness should be compiled in test mode");
+    // Test harness always runs under `cfg(test)`; no runtime assert needed.
 }

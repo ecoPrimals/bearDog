@@ -491,10 +491,10 @@ impl BeardogBtspProvider {
                     .map_err(|e| BearDogError::system(format!("JSON parse failed: {e}")))?;
 
                 // Extract endpoint from response
-                if let Some(result) = response.get("result") {
-                    if let Some(endpoint) = result.get("endpoint").and_then(|e| e.as_str()) {
-                        return Ok(vec![endpoint.to_string()]);
-                    }
+                if let Some(result) = response.get("result")
+                    && let Some(endpoint) = result.get("endpoint").and_then(|e| e.as_str())
+                {
+                    return Ok(vec![endpoint.to_string()]);
                 }
             }
         }
@@ -512,10 +512,11 @@ impl BeardogBtspProvider {
     fn get_discovery_socket_paths() -> Vec<String> {
         let mut paths = Vec::new();
         for key in ["IPC_SOCKET", "DISCOVERY_SOCKET"] {
-            if let Ok(s) = beardog_errors::process_env::var(key) {
-                if !s.is_empty() && !paths.contains(&s) {
-                    paths.push(s);
-                }
+            if let Ok(s) = beardog_errors::process_env::var(key)
+                && !s.is_empty()
+                && !paths.contains(&s)
+            {
+                paths.push(s);
             }
         }
         let generic = beardog_ipc::DISCOVERY_SOCKET_FALLBACK.to_string();

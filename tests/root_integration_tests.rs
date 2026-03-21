@@ -1,4 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(
+    missing_docs,
+    clippy::float_cmp,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::redundant_clone,
+    clippy::needless_collect
+)]
 //! Root Integration Tests
 //!
 //! Comprehensive integration tests for the root `beardog` crate.
@@ -16,6 +27,11 @@
 
 use beardog::{BearDogError, BearDogFramework, FrameworkConfig, ServiceInfo};
 use std::time::Duration;
+
+fn assert_f64_approx_eq(a: f64, b: f64) {
+    const EPS: f64 = 1e-9;
+    assert!((a - b).abs() < EPS, "expected {b}, got {a}");
+}
 
 /// Create test config with explicit endpoints - NO env vars
 fn test_config_with_endpoints(compute: &str, storage: &str) -> FrameworkConfig {
@@ -60,7 +76,7 @@ async fn test_framework_new_success() {
     assert!(result.is_ok(), "Framework creation should succeed");
 
     let framework = result.unwrap();
-    assert_eq!(framework.config.confidence_level, 0.95);
+    assert_f64_approx_eq(framework.config.confidence_level, 0.95);
     assert_eq!(framework.config.sample_size, 1000);
     assert_eq!(framework.config.timeout, Duration::from_secs(30));
 }
@@ -79,7 +95,7 @@ async fn test_framework_with_custom_config() {
     assert!(result.is_ok());
 
     let framework = result.unwrap();
-    assert_eq!(framework.config.confidence_level, 0.99);
+    assert_f64_approx_eq(framework.config.confidence_level, 0.99);
     assert_eq!(framework.config.sample_size, 5000);
     assert_eq!(framework.config.timeout, Duration::from_secs(120));
 }
@@ -87,7 +103,7 @@ async fn test_framework_with_custom_config() {
 #[tokio::test]
 async fn test_framework_config_defaults() {
     let config = FrameworkConfig::default();
-    assert_eq!(config.confidence_level, 0.95);
+    assert_f64_approx_eq(config.confidence_level, 0.95);
     assert_eq!(config.sample_size, 1000);
     assert_eq!(config.timeout, Duration::from_secs(30));
 }
@@ -97,7 +113,7 @@ async fn test_framework_config_cloning() {
     let config1 = FrameworkConfig::default();
     let config2 = config1.clone();
 
-    assert_eq!(config1.confidence_level, config2.confidence_level);
+    assert_f64_approx_eq(config1.confidence_level, config2.confidence_level);
     assert_eq!(config1.sample_size, config2.sample_size);
     assert_eq!(config1.timeout, config2.timeout);
 }
@@ -260,7 +276,7 @@ async fn test_get_stats() {
     assert_eq!(stats.services_discovered, 0);
     assert_eq!(stats.zero_copy_operations, 0);
     assert_eq!(stats.memory_ops_avoided, 0);
-    assert_eq!(stats.cache_hit_ratio, 0.0);
+    assert_f64_approx_eq(stats.cache_hit_ratio, 0.0);
 }
 
 #[tokio::test]
@@ -280,7 +296,7 @@ async fn test_reset_stats() {
     assert_eq!(framework.stats.services_discovered, 0);
     assert_eq!(framework.stats.zero_copy_operations, 0);
     assert_eq!(framework.stats.memory_ops_avoided, 0);
-    assert_eq!(framework.stats.cache_hit_ratio, 0.0);
+    assert_f64_approx_eq(framework.stats.cache_hit_ratio, 0.0);
 }
 
 #[tokio::test]

@@ -11,7 +11,7 @@ BearDog is the cryptographic service provider for the ecoPrimals ecosystem. It p
 ### 1. Prerequisites
 
 ```bash
-# Rust 1.85+ (edition 2024)
+# Rust 1.93+ (edition 2024, pinned via rust-toolchain.toml)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
@@ -61,7 +61,7 @@ cargo run --release --example api_demo
 
 ### Tower Atomic Pattern
 
-BearDog provides **crypto atoms** via JSON-RPC. Other primals (Songbird, Squirrel, NestGate, etc.) delegate all crypto to BearDog rather than implementing their own:
+BearDog provides **crypto atoms** via JSON-RPC. Other ecosystem primals delegate all crypto to BearDog rather than implementing their own:
 
 ```
 ┌─────────────┐                    ┌─────────────┐
@@ -107,13 +107,13 @@ Introspection: `discover_capabilities`, `primal.info`, `rpc.methods`
 
 ### Standards
 
-- **Edition 2024** — Rust 2024 with MSRV 1.85.0
+- **Edition 2024** — Rust 2024 with MSRV 1.93.0 (`rust-toolchain.toml` pinned)
 - **Pure Rust** — No C dependencies
 - **Dependency Injection** — Pure `Default` (no I/O), `from_env()` at boundaries, `from_env_provider()` in tests
 - **Zero Hardcoding** — Config flows through parameters, capability-based discovery
-- **Result<T, E>** — No `unwrap()`/`expect()` in production code
-- **Fully Concurrent Tests** — No `#[serial]` outside chaos/fault suites
-- **< 1000 LOC** — File size discipline
+- **Result<T, E>** — Zero `unwrap()` in production; `expect()` only on documented invariants
+- **Fully Concurrent Tests** — Zero `#[serial]`, zero sleeps in non-chaos tests
+- **< 1000 LOC** — File size discipline (production code)
 - **Constant-Time** — Use `subtle` crate for secret comparisons
 
 ### Workflow
@@ -142,13 +142,14 @@ cargo build --release                # Build
 
 | Metric | Value |
 |--------|-------|
-| Clippy | 0 warnings |
+| Clippy | 0 warnings (pedantic + nursery + cast) |
 | Missing Docs | 0 |
-| Unsafe | 0 blocks |
+| Unsafe | `forbid(unsafe_code)` workspace-wide |
 | Pure Rust | 100% |
-| Tests | 13,400+ (concurrent) |
-| Coverage | 84% line (llvm-cov) |
-| Files > 1000 LOC | 0 |
+| Tests | 12,337+ (fully concurrent) |
+| Coverage | 85.1% line (llvm-cov) |
+| `#[serial]` | 0 |
+| Files > 1000 LOC | 0 (production) |
 
 ---
 
@@ -164,4 +165,4 @@ cargo build --release                # Build
 
 ---
 
-**Last Updated**: March 20, 2026
+**Last Updated**: March 21, 2026

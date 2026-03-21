@@ -53,7 +53,7 @@ impl BinaryInstaller {
     ///
     /// let arch = Architecture::X86_64;
     /// let os = OperatingSystem::Linux;
-    /// let binary = installer.locate_binary(PrimalName::new(PrimalName::BEARDOG), &arch, &os)?;
+    /// let binary = installer.locate_binary(PrimalName::new("beardog"), &arch, &os)?;
     /// # Ok(())
     /// # }
     /// ```
@@ -269,7 +269,7 @@ mod tests {
 
         // Install
         let installed = installer
-            .install_binary(PrimalName::new(PrimalName::BEARDOG), &fake_binary)
+            .install_binary(PrimalName::new("beardog"), &fake_binary)
             .await
             .expect("install binary");
 
@@ -315,7 +315,7 @@ mod tests {
 
         // Uninstall
         installer
-            .uninstall_binary(PrimalName::new(PrimalName::BEARDOG))
+            .uninstall_binary(PrimalName::new("beardog"))
             .await
             .expect("uninstall");
 
@@ -340,11 +340,7 @@ mod tests {
         let installer = BinaryInstaller::new(paths, temp.path().to_path_buf());
 
         // Not installed initially
-        assert!(
-            !installer
-                .is_installed(PrimalName::new(PrimalName::BEARDOG))
-                .await
-        );
+        assert!(!installer.is_installed(PrimalName::new("beardog")).await);
 
         // Create binary
         fs::write(bin_dir.join("beardog"), b"test")
@@ -352,11 +348,7 @@ mod tests {
             .expect("write binary");
 
         // Now installed
-        assert!(
-            installer
-                .is_installed(PrimalName::new(PrimalName::BEARDOG))
-                .await
-        );
+        assert!(installer.is_installed(PrimalName::new("beardog")).await);
     }
 
     #[test]
@@ -375,7 +367,7 @@ mod tests {
         let installer = BinaryInstaller::new(paths, temp.path().to_path_buf());
 
         assert_eq!(
-            installer.binary_path(PrimalName::new(PrimalName::BEARDOG)),
+            installer.binary_path(PrimalName::new("beardog")),
             bin_dir.join("beardog")
         );
     }

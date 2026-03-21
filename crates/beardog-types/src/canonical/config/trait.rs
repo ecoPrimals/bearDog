@@ -169,7 +169,7 @@ pub trait ConfigBuilder<T: BearDogConfig> {
     /// Build the configuration with validation
     fn build(self) -> Result<T, BearDogError>;
 
-    /// Build the configuration without validation (unsafe)
+    /// Build the configuration without validation (unchecked)
     fn build_unchecked(self) -> T;
 }
 

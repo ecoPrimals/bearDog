@@ -12,7 +12,7 @@ pub struct DiscoveredService {
     /// Unique service ID
     pub id: String,
 
-    /// Service type (e.g., "songbird", "toadstool", but discovered not hardcoded!)
+    /// Service type label from discovery (opaque; do not branch runtime logic on fixed names)
     pub service_type: String,
 
     /// Display name

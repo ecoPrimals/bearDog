@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-#![forbid(unsafe_code)]
 
 //! # `BearDog` Traits - Unified Trait System
 //!
 //! Unified trait system for the `BearDog` ecosystem, providing consistent interfaces
-//! across all components with zero unsafe code and strong type safety.
+//! across all components with strong memory safety and strong type safety.
 //!
 //! ## Features
 //!
 //! - **Unified Traits**: Single consistent trait system across ecosystem
 //! - **Provider Abstractions**: Universal provider interfaces
-//! - **Zero Unsafe**: Complete memory safety guarantees
+//! - **Memory-safe only**: complete memory safety guarantees
 //! - **Type Safety**: Compile-time interface validation
 //! - **Backward Compatibility**: Legacy canonical traits maintained
 //!
@@ -43,7 +42,7 @@
 //!
 //! ## Safety
 //!
-//! All traits enforce memory safety with workspace `unsafe_code = "forbid"`.
+//! All traits enforce memory safety; workspace rustc lint levels are set in the root Cargo.toml.
 
 #![warn(rust_2018_idioms)]
 

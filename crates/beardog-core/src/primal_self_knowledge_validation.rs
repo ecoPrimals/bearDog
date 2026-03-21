@@ -51,12 +51,12 @@ mod self_knowledge_tests {
 
         // The identity should be dynamically determined, not hardcoded
         // Check that common primal names are NOT hardcoded
-        let hardcoded_names = vec!["songbird", "toadstool", "squirrel", "nestgate", "biomeos"];
+        let forbidden_peer_markers = ["-peer-", "other-primal:", "hardcoded-peer:"];
 
-        for name in hardcoded_names {
+        for marker in forbidden_peer_markers {
             assert!(
-                !identity.to_lowercase().contains(name),
-                "Self-knowledge should not contain hardcoded primal name: {name}"
+                !identity.to_lowercase().contains(marker),
+                "Self-knowledge should not embed hardcoded peer markers: {marker}"
             );
         }
     }
@@ -178,7 +178,7 @@ mod integration_validation {
 
         // Identity should be from environment/config, not hardcoded
         // Common hardcoded names should NOT appear
-        assert!(!identity.contains("songbird-12345")); // No specific instances
-        assert!(!identity.contains("toadstool-67890")); // No specific instances
+        assert!(!identity.contains("other-primal-12345")); // No specific peer instances
+        assert!(!identity.contains("hardcoded-peer-67890")); // No specific peer instances
     }
 }

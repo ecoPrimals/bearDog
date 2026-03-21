@@ -76,11 +76,11 @@ impl CapabilityDiscovery {
         // Check cache first
         {
             let cache = self.cache.read().await;
-            if let Some(services) = cache.get_by_capability(capability) {
-                if !services.is_empty() {
-                    debug!("Found {} services in cache", services.len());
-                    return Ok(services);
-                }
+            if let Some(services) = cache.get_by_capability(capability)
+                && !services.is_empty()
+            {
+                debug!("Found {} services in cache", services.len());
+                return Ok(services);
             }
         }
 

@@ -63,38 +63,56 @@ pub mod service_ids {
 
 /// Common endpoint URLs used throughout BearDog
 ///
-/// NOTE: These use centralized port constants from beardog_types::constants.
-/// For runtime configuration, use beardog_config::BearDogConfig instead.
+/// NOTE: Host comes from [`DEFAULT_EXTERNAL_HOST`](beardog_config::domains::network_addresses::DEFAULT_EXTERNAL_HOST)
+/// (overridable via `BEARDOG_EXTERNAL_HOST`); ports use [`beardog_config::domains::network_ports`] fallbacks.
+/// For full runtime configuration, use `beardog_config::BearDogConfig`.
 pub mod endpoints {
     use super::*;
-    use beardog_types::constants::domains::network::addresses::{
-        DEFAULT_API_PORT, DEFAULT_METRICS_PORT, DEFAULT_HEALTH_PORT,
+    use beardog_config::domains::network_addresses::DEFAULT_EXTERNAL_HOST;
+    use beardog_config::domains::network_ports::{
+        DEFAULT_API_PORT, DEFAULT_HEALTH_PORT, DEFAULT_METRICS_PORT,
     };
     use beardog_types::constants::domains::network::ports::HTTPS_PORT;
 
     /// Default localhost HTTP endpoint (uses DEFAULT_API_PORT)
     pub fn localhost_http() -> Arc<str> {
-        shared_string(&format!("http://localhost:{}", DEFAULT_API_PORT))
+        shared_string(&format!(
+            "http://{}:{}",
+            DEFAULT_EXTERNAL_HOST, DEFAULT_API_PORT
+        ))
     }
 
     /// Default localhost HTTPS endpoint (uses standard HTTPS_PORT)
     pub fn localhost_https() -> Arc<str> {
-        shared_string(&format!("https://localhost:{}", HTTPS_PORT))
+        shared_string(&format!(
+            "https://{}:{}",
+            DEFAULT_EXTERNAL_HOST, HTTPS_PORT
+        ))
     }
 
     /// Default discovery endpoint (uses DEFAULT_METRICS_PORT for service discovery)
     pub fn discovery() -> Arc<str> {
-        shared_string(&format!("http://localhost:{}", DEFAULT_METRICS_PORT))
+        shared_string(&format!(
+            "http://{}:{}",
+            DEFAULT_EXTERNAL_HOST, DEFAULT_METRICS_PORT
+        ))
     }
 
     /// Default metrics endpoint (uses DEFAULT_METRICS_PORT + 1)
     pub fn metrics() -> Arc<str> {
-        shared_string(&format!("http://localhost:{}/metrics", DEFAULT_METRICS_PORT + 1))
+        shared_string(&format!(
+            "http://{}:{}/metrics",
+            DEFAULT_EXTERNAL_HOST,
+            DEFAULT_METRICS_PORT + 1
+        ))
     }
 
     /// Default health endpoint (uses DEFAULT_HEALTH_PORT)
     pub fn health() -> Arc<str> {
-        shared_string(&format!("http://localhost:{}/health", DEFAULT_HEALTH_PORT))
+        shared_string(&format!(
+            "http://{}:{}/health",
+            DEFAULT_EXTERNAL_HOST, DEFAULT_HEALTH_PORT
+        ))
     }
 }
 
@@ -217,17 +235,18 @@ mod tests {
 
     #[test]
     fn test_endpoint_values() {
-        use beardog_types::constants::domains::network::addresses::DEFAULT_API_PORT;
+        use beardog_config::domains::network_addresses::DEFAULT_EXTERNAL_HOST;
+        use beardog_config::domains::network_ports::DEFAULT_API_PORT;
         use beardog_types::constants::domains::network::ports::HTTPS_PORT;
         
         // Verify endpoints use centralized port constants
         assert_eq!(
             endpoints::localhost_http().as_ref(),
-            &format!("http://localhost:{}", DEFAULT_API_PORT)
+            &format!("http://{DEFAULT_EXTERNAL_HOST}:{DEFAULT_API_PORT}")
         );
         assert_eq!(
             endpoints::localhost_https().as_ref(),
-            &format!("https://localhost:{}", HTTPS_PORT)
+            &format!("https://{DEFAULT_EXTERNAL_HOST}:{HTTPS_PORT}")
         );
     }
 

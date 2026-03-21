@@ -302,11 +302,11 @@ impl EcosystemPerformanceOptimizer {
         request_id: &str,
     ) -> Result<Option<Arc<Vec<u8>>>, BearDogError> {
         let cache = self.compute_cache.read().await;
-        if let Some(cached) = cache.cache.get(request_id) {
-            if cached.cached_at.elapsed() < cached.ttl {
-                // ⚡ ZERO-COPY OPTIMIZATION: Return Arc reference directly (no data clone!)
-                return Ok(Some(cached.data.clone()));
-            }
+        if let Some(cached) = cache.cache.get(request_id)
+            && cached.cached_at.elapsed() < cached.ttl
+        {
+            // ⚡ ZERO-COPY OPTIMIZATION: Return Arc reference directly (no data clone!)
+            return Ok(Some(cached.data.clone()));
         }
         Ok(None)
     }

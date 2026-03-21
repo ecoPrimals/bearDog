@@ -360,8 +360,8 @@ impl AIOptimizationEngine {
         // Simple latency measurement
         let start = std::time::Instant::now();
 
-        // Simulate network operation
-        tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+        // Yield so other tasks can run; real latency comes from actual I/O when wired in.
+        tokio::task::yield_now().await;
 
         #[expect(
             clippy::cast_precision_loss,

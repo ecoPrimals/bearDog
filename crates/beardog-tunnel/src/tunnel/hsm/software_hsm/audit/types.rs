@@ -80,34 +80,34 @@ pub struct AuditLogFilter {
 impl AuditLogFilter {
     /// Check if entry matches filter
     pub fn matches(&self, entry: &AuditLogEntry) -> bool {
-        if let Some(ref op) = self.operation {
-            if &entry.operation != op {
-                return false;
-            }
+        if let Some(ref op) = self.operation
+            && &entry.operation != op
+        {
+            return false;
         }
 
-        if let Some(ref user) = self.user_id {
-            if entry.user_id.as_ref() != Some(user) {
-                return false;
-            }
+        if let Some(ref user) = self.user_id
+            && entry.user_id.as_ref() != Some(user)
+        {
+            return false;
         }
 
-        if let Some(ref key) = self.key_id {
-            if entry.key_id.as_ref() != Some(key) {
-                return false;
-            }
+        if let Some(ref key) = self.key_id
+            && entry.key_id.as_ref() != Some(key)
+        {
+            return false;
         }
 
-        if let Some(ref from) = self.from_time {
-            if entry.timestamp < *from {
-                return false;
-            }
+        if let Some(ref from) = self.from_time
+            && entry.timestamp < *from
+        {
+            return false;
         }
 
-        if let Some(ref to) = self.to_time {
-            if entry.timestamp > *to {
-                return false;
-            }
+        if let Some(ref to) = self.to_time
+            && entry.timestamp > *to
+        {
+            return false;
         }
 
         true

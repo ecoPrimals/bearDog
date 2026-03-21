@@ -28,13 +28,13 @@ pub(crate) fn prepare_daemon_pid_file(pid_file: &str) -> Result<(), BearDogError
             {
                 use std::process::Command;
                 // Use if let instead of is_ok().unwrap() pattern
-                if let Ok(output) = Command::new("kill").args(["-0", &pid.to_string()]).output() {
-                    if output.status.success() {
-                        return Err(BearDogError::Business {
-                            message: format!("BearDog daemon already running (PID: {pid})"),
-                            category: Default::default(),
-                        });
-                    }
+                if let Ok(output) = Command::new("kill").args(["-0", &pid.to_string()]).output()
+                    && output.status.success()
+                {
+                    return Err(BearDogError::Business {
+                        message: format!("BearDog daemon already running (PID: {pid})"),
+                        category: Default::default(),
+                    });
                 }
             }
         }

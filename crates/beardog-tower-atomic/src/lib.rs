@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-#![forbid(unsafe_code)]
 
 //! # BearDog Tower Atomic
 //!
@@ -24,18 +23,18 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     // Connect to Songbird for HTTP
-//!     let mut songbird = Client::connect("songbird").await?;
-//!     
-//!     // Delegate HTTP to Songbird
-//!     let response = songbird.call("http.get", json!({
+//!     // Peer is chosen by operator (env / capability discovery), not by hardcoded primal name.
+//!     let peer_socket_name = std::env::var("TOWER_ATOMIC_PEER").unwrap_or_default();
+//!     let mut peer = Client::connect(&peer_socket_name).await?;
+//!
+//!     let response = peer.call("http.get", json!({
 //!         "url": "https://api.example.com/data",
 //!         "headers": { "Authorization": "Bearer ..." }
 //!     })).await?;
-//!     
+//!
 //!     println!("Status: {}", response["status"]);
 //!     println!("Body: {}", response["body"]);
-//!     
+//!
 //!     Ok(())
 //! }
 //! ```
@@ -44,8 +43,8 @@
 //!
 //! ```text
 //! ┌─────────────┐                          ┌─────────────┐
-//! │   BearDog   │  Unix Socket JSON-RPC    │  Songbird   │
-//! │   (Crypto)  │ ───────────────────────> │  (TLS/HTTP) │
+//! │  This primal │  Unix Socket JSON-RPC   │ HTTP peer   │
+//! │   (Crypto)   │ ───────────────────────> │ (discovered)│
 //! └─────────────┘                          └─────────────┘
 //!       ↓                                         ↓
 //!   Ed25519, X25519                        HTTPS to external
@@ -54,6 +53,7 @@
 
 use serde::Deserialize;
 use serde_json::{Value, json};
+use std::path::Path;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 use tracing::{debug, info, warn};
@@ -93,30 +93,39 @@ impl Client {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let songbird = Client::connect("songbird").await?;
+    ///     let peer = Client::connect(&std::env::var("TOWER_ATOMIC_PEER").unwrap_or_default()).await?;
     ///     Ok(())
     /// }
     /// ```
     pub async fn connect(primal_name: &str) -> Result<Self> {
-        info!("🔌 Connecting to primal: {}", primal_name);
+        info!(
+            "🔌 Connecting via Tower Atomic (socket key: {})",
+            primal_name
+        );
 
         // Discover primal's Unix socket
         let socket_path = discover_primal_socket(primal_name).await?;
         debug!("📍 Found socket at: {:?}", socket_path);
 
-        // Connect to Unix socket
-        let stream = UnixStream::connect(&socket_path).await.map_err(|e| {
+        Self::connect_unix_path(&socket_path, primal_name).await
+    }
+
+    /// Connect to an existing Unix socket path (capability / env resolved).
+    ///
+    /// `peer_label` is used only for logging (e.g. socket path or discovery id).
+    pub async fn connect_unix_path(socket_path: &Path, peer_label: &str) -> Result<Self> {
+        let stream = UnixStream::connect(socket_path).await.map_err(|e| {
             Error::ConnectionFailed(format!(
-                "Failed to connect to {primal_name} at {}: {e}",
+                "Failed to connect Tower Atomic peer `{peer_label}` at {}: {e}",
                 socket_path.display()
             ))
         })?;
 
-        info!("✅ Connected to {} via Tower Atomic", primal_name);
+        info!("✅ Tower Atomic connected ({peer_label})");
 
         Ok(Self {
             stream,
-            primal_name: primal_name.to_string(),
+            primal_name: peer_label.to_string(),
             request_id: 0,
         })
     }
@@ -140,12 +149,12 @@ impl Client {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let mut songbird = Client::connect("songbird").await?;
-    ///     
-    ///     let response = songbird.call("http.get", json!({
+    ///     let mut peer = Client::connect(&std::env::var("TOWER_ATOMIC_PEER").unwrap_or_default()).await?;
+    ///
+    ///     let response = peer.call("http.get", json!({
     ///         "url": "https://api.example.com"
     ///     })).await?;
-    ///     
+    ///
     ///     println!("Response: {:?}", response);
     ///     Ok(())
     /// }
@@ -155,7 +164,7 @@ impl Client {
         self.request_id += 1;
         let id = self.request_id;
 
-        debug!("📤 Calling {}.{} (id={})", self.primal_name, method, id);
+        debug!("📤 Tower Atomic JSON-RPC `{}` (id={})", method, id);
 
         // Build JSON-RPC 2.0 request
         let request = json!({

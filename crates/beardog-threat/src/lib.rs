@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-#![forbid(unsafe_code)]
 
 //! # `BearDog` Threat Detection and Analysis
 //!
@@ -44,7 +43,7 @@
 //!
 //! ## Safety
 //!
-//! All threat detection operations maintain memory safety with zero unsafe code.
+//! All threat detection operations maintain memory safety with full memory safety.
 
 // October 27, 2025: Comprehensive test expansion
 #[allow(

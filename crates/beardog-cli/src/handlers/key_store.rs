@@ -140,7 +140,10 @@ pub fn load_key(key_id: &str) -> Result<StoredKey, BearDogError> {
 
 /// List all stored keys
 // Public API for callers using default HOME; CLI handlers use `list_keys_from_home` for DI.
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "Stable HOME-based API; handlers use list_keys_from_home for DI."
+)]
 pub fn list_keys() -> Result<Vec<StoredKey>, BearDogError> {
     let keys_dir = get_keys_dir()?;
     list_keys_in_dir(&keys_dir)
@@ -165,12 +168,11 @@ fn list_keys_in_dir(keys_dir: &std::path::Path) -> Result<Vec<StoredKey>, BearDo
         let entry = entry?;
         let path = entry.path();
 
-        if path.extension().and_then(|s| s.to_str()) == Some("json") {
-            if let Ok(json) = fs::read_to_string(&path) {
-                if let Ok(key) = serde_json::from_str::<StoredKey>(&json) {
-                    keys.push(key);
-                }
-            }
+        if path.extension().and_then(|s| s.to_str()) == Some("json")
+            && let Ok(json) = fs::read_to_string(&path)
+            && let Ok(key) = serde_json::from_str::<StoredKey>(&json)
+        {
+            keys.push(key);
         }
     }
 
@@ -179,7 +181,10 @@ fn list_keys_in_dir(keys_dir: &std::path::Path) -> Result<Vec<StoredKey>, BearDo
 
 /// Delete a key from storage
 // Public API for callers using default HOME; CLI handlers use `delete_key_from_home` for DI.
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "Stable HOME-based API; handlers use delete_key_from_home for DI."
+)]
 pub fn delete_key(key_id: &str) -> Result<(), BearDogError> {
     let keys_dir = get_keys_dir()?;
     delete_key_in_dir(key_id, &keys_dir)

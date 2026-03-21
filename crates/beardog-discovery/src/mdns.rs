@@ -308,7 +308,7 @@ impl MdnsDiscovery {
 
 impl Default for MdnsDiscovery {
     fn default() -> Self {
-        Self::new().expect("Failed to create default mDNS discovery")
+        Self::new().expect("mDNS ServiceDaemon requires a working network stack to initialize")
     }
 }
 

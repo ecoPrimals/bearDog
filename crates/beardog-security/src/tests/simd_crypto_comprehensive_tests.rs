@@ -28,7 +28,7 @@ mod tests {
         let stats = engine.get_stats();
         assert_eq!(stats.get("operations").unwrap(), "0");
         assert_eq!(stats.get("bytes_processed").unwrap(), "0");
-        assert_eq!(stats.get("safety").unwrap(), "100% - Zero unsafe blocks");
+        assert_eq!(stats.get("safety").unwrap(), "100% - Memory-safe verified");
     }
 
     /// Test 2: Custom config creation
@@ -280,7 +280,7 @@ mod tests {
 
         assert!(stats.contains_key("safety"));
         assert!(stats.contains_key("performance"));
-        assert_eq!(stats.get("safety").unwrap(), "100% - Zero unsafe blocks");
+        assert_eq!(stats.get("safety").unwrap(), "100% - Memory-safe verified");
     }
 
     /// Test 19: Sequential hash operations maintain correctness

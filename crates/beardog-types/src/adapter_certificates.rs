@@ -214,10 +214,10 @@ impl AdapterUnlockCertificate {
         hasher.update([classification_byte]);
 
         // Constraints (if present)
-        if let Some(ref constraints) = self.constraints {
-            if let Ok(constraint_hash) = constraints.hash() {
-                hasher.update(constraint_hash);
-            }
+        if let Some(ref constraints) = self.constraints
+            && let Ok(constraint_hash) = constraints.hash()
+        {
+            hasher.update(constraint_hash);
         }
 
         // Timestamps
@@ -273,13 +273,13 @@ impl AdapterUnlockCertificate {
         }
 
         // 3. Check adapter ID if specified
-        if let Some(expected) = expected_adapter_id {
-            if expected != self.adapter_id {
-                return Ok(CertificateVerificationResult::WrongAdapter {
-                    expected: expected.to_string(),
-                    found: self.adapter_id.clone(),
-                });
-            }
+        if let Some(expected) = expected_adapter_id
+            && expected != self.adapter_id
+        {
+            return Ok(CertificateVerificationResult::WrongAdapter {
+                expected: expected.to_string(),
+                found: self.adapter_id.clone(),
+            });
         }
 
         // 4. Verify cryptographic signature

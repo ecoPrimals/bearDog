@@ -106,13 +106,22 @@ pub const DEFAULT_EXTERNAL_HOST: &str = "localhost";
 pub const DEFAULT_MULTICAST_ADDRESS: &str = "239.255.0.1";
 
 /// **Fallback** loopback IPv4 string (self-knowledge / parsing); prefer config or `localhost_ipv4`.
-pub const LOCALHOST_IPV4: &str = "127.0.0.1";
+pub const DEFAULT_LOCALHOST_IPV4_STR: &str = "127.0.0.1";
 
 /// **Fallback** loopback IPv6 string (self-knowledge / parsing).
-pub const LOCALHOST_IPV6: &str = "::1";
+pub const DEFAULT_LOCALHOST_IPV6_STR: &str = "::1";
 
 /// **Fallback** IPv4 “all interfaces” string for production-style bind when explicitly chosen.
-pub const WILDCARD_IPV4: &str = "0.0.0.0";
+pub const DEFAULT_WILDCARD_IPV4_STR: &str = "0.0.0.0";
+
+/// Back-compat alias for [`DEFAULT_LOCALHOST_IPV4_STR`].
+pub const LOCALHOST_IPV4: &str = DEFAULT_LOCALHOST_IPV4_STR;
+
+/// Back-compat alias for [`DEFAULT_LOCALHOST_IPV6_STR`].
+pub const LOCALHOST_IPV6: &str = DEFAULT_LOCALHOST_IPV6_STR;
+
+/// Back-compat alias for [`DEFAULT_WILDCARD_IPV4_STR`].
+pub const WILDCARD_IPV4: &str = DEFAULT_WILDCARD_IPV4_STR;
 
 fn default_api_host() -> String {
     DEFAULT_API_HOST.to_string()
@@ -218,7 +227,7 @@ impl NetworkAddressesConfig {
     /// Creates production-ready configuration
     ///
     /// Suitable for production environments:
-    /// - Bind address: **fallback** all-interfaces IPv4 (`WILDCARD_IPV4`) unless `BEARDOG_BIND_ADDRESS` is set
+    /// - Bind address: **fallback** all-interfaces IPv4 (`DEFAULT_WILDCARD_IPV4_STR`) unless `BEARDOG_BIND_ADDRESS` is set
     /// - API host: resolved from environment or kept as configured
     /// - External host: resolved from environment
     ///
@@ -226,10 +235,10 @@ impl NetworkAddressesConfig {
     ///
     /// ```rust
     /// use beardog_config::NetworkAddressesConfig;
-    /// use beardog_config::domains::network_addresses::WILDCARD_IPV4;
+    /// use beardog_config::domains::network_addresses::DEFAULT_WILDCARD_IPV4_STR;
     ///
     /// let addresses = NetworkAddressesConfig::for_production();
-    /// assert_eq!(addresses.bind_address, WILDCARD_IPV4);
+    /// assert_eq!(addresses.bind_address, DEFAULT_WILDCARD_IPV4_STR);
     /// ```
     #[must_use]
     pub fn for_production() -> Self {
@@ -330,7 +339,7 @@ mod tests {
         let config = NetworkAddressesConfig::with_defaults();
 
         assert_eq!(config.wildcard_ipv4, IpAddr::V4(Ipv4Addr::UNSPECIFIED));
-        assert_eq!(config.wildcard_bind(), WILDCARD_IPV4);
+        assert_eq!(config.wildcard_bind(), DEFAULT_WILDCARD_IPV4_STR);
     }
 
     #[test]
@@ -338,7 +347,7 @@ mod tests {
         let config = NetworkAddressesConfig::for_production();
 
         // Production should bind to all interfaces
-        assert_eq!(config.bind_address, WILDCARD_IPV4);
+        assert_eq!(config.bind_address, DEFAULT_WILDCARD_IPV4_STR);
     }
 
     #[test]
@@ -386,7 +395,7 @@ mod tests {
     #[test]
     fn test_localhost_bind_helper() {
         let config = NetworkAddressesConfig::with_defaults();
-        assert_eq!(config.localhost_bind(), LOCALHOST_IPV4);
+        assert_eq!(config.localhost_bind(), DEFAULT_LOCALHOST_IPV4_STR);
     }
 
     #[test]

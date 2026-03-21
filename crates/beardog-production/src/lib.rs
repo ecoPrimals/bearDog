@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-#![forbid(unsafe_code)]
 
 //! # BearDog Production Utilities
 //!
@@ -36,7 +35,7 @@
 #![cfg_attr(test, allow(clippy::unwrap_used))]
 //! ## Safety
 //!
-//! All production utilities maintain memory safety with zero unsafe code.
+//! All production utilities maintain memory safety with full memory safety.
 
 // October 27, 2025: Comprehensive test expansion
 #[cfg(test)]

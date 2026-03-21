@@ -34,13 +34,12 @@ pub(crate) async fn listen_mdns_announcements(
             .args(["-t", "_beardog._tcp"])
             .output()
             .await
+            && response.status.success()
         {
-            if response.status.success() {
-                let output = String::from_utf8_lossy(&response.stdout);
-                for line in output.lines() {
-                    if line.contains("beardog ") {
-                        debug!("Found potential BearDog service via mDNS: {}", line);
-                    }
+            let output = String::from_utf8_lossy(&response.stdout);
+            for line in output.lines() {
+                if line.contains("beardog ") {
+                    debug!("Found potential BearDog service via mDNS: {}", line);
                 }
             }
         }

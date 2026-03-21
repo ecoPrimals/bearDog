@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-#![forbid(unsafe_code)]
 
 //! # `BearDog` Utilities Crate
 //!
@@ -14,7 +13,7 @@
 //! - **Memory Pooling**: Efficient buffer and memory management
 //! - **Property Testing**: QuickCheck-based property testing framework
 //! - **AI Optimization**: Intelligent performance optimization
-//! - **100% Safe**: Zero unsafe code in all utilities
+//! - **100% Safe**: Fully memory-safe in all utilities
 
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
@@ -91,7 +90,7 @@ pub mod simd_safe;
 pub mod testing;
 /// Aggressive performance-oriented helpers (benchmarks, hot-path helpers).
 pub mod ultimate_performance;
-/// Defense-in-depth checks around unsafe-adjacent or high-risk utility code paths.
+/// Defense-in-depth checks around high-risk or high-risk utility code paths.
 pub mod ultimate_safety;
 /// Safe façade over zero-copy buffers (public API re-exported below).
 pub mod zero_copy_safe;

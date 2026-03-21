@@ -8,7 +8,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **Crates**: 29 | **Tests**: 13,850+ | **Coverage**: 85%
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 29 | **Tests**: 15,723+ | **Coverage**: 85.1%
 
 ---
 
@@ -27,7 +27,7 @@ BearDog provides secure cryptographic operations for all primals through the **T
 ### Key Features
 
 - **100% Pure Rust** — Zero C dependencies (RustCrypto suite, postcard, hickory-dns)
-- **Rust 2024 Edition** — Modern idioms, MSRV 1.85.0
+- **Rust 2024 Edition** — Modern idioms, MSRV 1.93.0
 - **Fully Concurrent** — Dependency injection architecture, no global mutable state
 - **91+ Crypto Methods** — Complete JSON-RPC API
 - **Tor v3 Support** — Onion address derivation + ntor handshake + cell crypto
@@ -46,7 +46,7 @@ BearDog provides secure cryptographic operations for all primals through the **T
 ### Prerequisites
 
 ```bash
-# Rust 1.85+ required (edition 2024)
+# Rust 1.93+ (edition 2024, pinned via rust-toolchain.toml)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
@@ -162,30 +162,31 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | Metric | Value |
 |--------|-------|
 | **Build** | Clean, 0 errors |
-| **Clippy** | 0 warnings (pedantic + nursery) |
+| **Clippy** | 0 warnings (pedantic + nursery + cast lints) |
 | **Missing Docs** | 0 warnings |
 | **Pure Rust** | 100% — zero C dependencies |
-| **Unsafe Code** | 0 production blocks (`deny(unsafe_code)`) |
+| **Unsafe Code** | 0 production blocks (`forbid(unsafe_code)` workspace-wide) |
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
-| **Files > 1000 LOC** | 0 |
-| **Tests** | 13,850+ (fully concurrent, 8 threads) |
-| **Coverage** | 85% region / 86% line (llvm-cov) |
-| **Serial Tests** | 15 (chaos/fault only) |
+| **Files > 1000 LOC** | 0 (production code) |
+| **Tests** | 15,723+ (fully concurrent, zero sleeps in non-chaos) |
+| **Coverage** | 85.1% line (llvm-cov, 102,969/121,020 lines) |
+| **Serial Tests** | 0 (`#[serial]` fully eliminated) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |
 | **License** | AGPL-3.0-only (SPDX headers on all .rs files) |
 
 ### Standards
 
-- **Edition 2024** — Modern Rust with latest language features
+- **Edition 2024** — Modern Rust with latest language features (MSRV 1.93.0)
 - **Pure Rust** — No C dependencies anywhere (ecoBin compliant)
 - **Dependency Injection** — Config flows through parameters, `Default` is pure (no I/O), `from_env()` at boundaries only
-- **Zero Hardcoding** — Environment variables and capability discovery
-- **Result<T, E>** — No `unwrap()`/`expect()` in production code
-- **Fully Concurrent Tests** — No `#[serial]` outside chaos/fault suites
-- **< 1000 LOC** — File size discipline across all 1,773+ .rs files
-- **Workspace Lints** — Centralized clippy pedantic + nursery configuration
+- **Zero Hardcoding** — Environment variables and capability-based discovery
+- **Result<T, E>** — Zero `unwrap()` in production code; `expect()` only on infallible operations with documented invariants
+- **Fully Concurrent Tests** — Zero `#[serial]`, zero sleeps in non-chaos tests
+- **< 1000 LOC** — File size discipline across all production .rs files
+- **Workspace Lints** — Centralized clippy pedantic + nursery + cast lints
 - **SPDX headers** — Every `.rs` file has `// SPDX-License-Identifier: AGPL-3.0-only`
+- **`rust-toolchain.toml`** — Pinned toolchain with cross-compile targets
 
 ---
 

@@ -133,7 +133,10 @@ pub async fn discover_all_hsms() -> Result<Vec<CliHsmInfo>, BearDogError> {
 }
 
 /// Select best HSM based on user preference
-#[allow(dead_code)] // Used in tests, planned for interactive HSM selection
+#[allow(
+    dead_code,
+    reason = "Exposed for tests and future interactive HSM selection."
+)]
 pub fn select_hsm<'a>(
     hsms: &'a [CliHsmInfo],
     preference: &str,

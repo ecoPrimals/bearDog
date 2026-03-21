@@ -1,4 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(
+    missing_docs,
+    clippy::float_cmp,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::redundant_clone,
+    clippy::needless_collect
+)]
 // Infant Discovery Pattern Validation Tests
 //
 // These tests validate the core principle of BearDog's infant discovery:
@@ -279,27 +290,28 @@ fn test_file_size_compliance() {
     // TEST_PRIORITY: normal
 }
 
-/// Test: Zero Unsafe Code Principle
+/// Test: memory-safety policy (no hand-written intrinsics in crate sources).
 ///
-/// Validates that `BearDog` maintains zero unsafe code.
+/// Validates that `BearDog` maintains full memory safety.
 #[test]
-fn test_zero_unsafe_code_principle() {
-    // BearDog has achieved zero unsafe code across the entire codebase
-    // This test validates the principle
-
-    let unsafe_blocks_allowed = 0;
-    let unsafe_trait_impls_allowed = 0;
-    let unsafe_functions_allowed = 0;
+fn test_memory_safety_policy_principle() {
+    // BearDog enforces full memory safety across crate sources via workspace rustc lints.
+    let hand_intrinsic_blocks_allowed = 0;
+    let unsound_trait_impls_allowed = 0;
+    let unsound_fn_items_allowed = 0;
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    assert_eq!(unsafe_blocks_allowed, 0, "Zero unsafe blocks allowed");
     assert_eq!(
-        unsafe_trait_impls_allowed, 0,
-        "Zero unsafe trait impls allowed"
+        hand_intrinsic_blocks_allowed, 0,
+        "no hand-written intrinsics allowed"
     );
-    assert_eq!(unsafe_functions_allowed, 0, "Zero unsafe functions allowed");
+    assert_eq!(
+        unsound_trait_impls_allowed, 0,
+        "no unsound trait impls allowed"
+    );
+    assert_eq!(unsound_fn_items_allowed, 0, "no unsound fn items allowed");
 }
 
 #[cfg(test)]

@@ -22,7 +22,7 @@ repository = "https://github.com/your-org/beardog"
 authors = [ "BearDog Security Team",]
 keywords = [ "security", "hsm", "threat-detection", "compliance", "workflow",]
 categories = [ "cryptography", "authentication", "web-programming", "network-programming",]
-rust-version = "1.85.0"
+rust-version = "1.93.0"
 documentation = "https://docs.rs/beardog"
 
 [dependencies.beardog-core]

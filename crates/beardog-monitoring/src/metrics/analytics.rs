@@ -10,14 +10,13 @@ use serde::{Deserialize, Serialize};
 /// Analytics and reporting engine
 #[derive(Debug)]
 pub struct AnalyticsEngine {
-    #[allow(dead_code)] // Config reserved for future analytics features
-    config: AnalyticsConfig,
+    _config: AnalyticsConfig,
 }
 
 impl AnalyticsEngine {
     /// Creates a new instance
     pub const fn new(config: AnalyticsConfig) -> Result<Self, BearDogError> {
-        Ok(Self { config })
+        Ok(Self { _config: config })
     }
 
     /// Starts service

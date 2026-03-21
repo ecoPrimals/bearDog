@@ -5,7 +5,7 @@
 //! **Principle**: "Primals only have self-knowledge"
 //!
 //! This service discovers collaboration capabilities at runtime.
-//! NO hardcoded "NestGate" - pure capability-based discovery.
+//! No hardcoded vendor primal names — capability-based discovery only.
 //!
 //! # Implementation Status (Deep Debt Evolution - Feb 4, 2026)
 //!
@@ -44,7 +44,7 @@ impl CollaborationService {
         Self::new()
     }
 
-    /// Get template information (replaces NestGate::get_template_info)
+    /// Get template information (replaces legacy `get_template_info` on a collaboration provider)
     ///
     /// Discovers any primal with Collaboration::TemplateStorage capability
     pub async fn get_template_info(&self, template_id: &str) -> Result<TemplateInfo> {
@@ -58,7 +58,7 @@ impl CollaborationService {
         Ok(Self::default_template_info(template_id))
     }
 
-    /// Get user permissions (replaces NestGate::get_collaborators)
+    /// Get user permissions (replaces legacy collaborator listing on a collaboration provider)
     ///
     /// Discovers any primal with Collaboration::PermissionManagement capability
     pub async fn get_user_permissions(
@@ -74,7 +74,7 @@ impl CollaborationService {
         Ok(Self::default_user_permissions(user_id))
     }
 
-    /// Get template lineage (replaces NestGate::get_lineage)
+    /// Get template lineage (replaces legacy lineage query on a collaboration provider)
     ///
     /// Discovers any primal with Collaboration::LineageTracking capability
     pub async fn get_lineage(&self, template_id: &str) -> Result<Vec<LineageVersion>> {
@@ -85,7 +85,7 @@ impl CollaborationService {
         Ok(Self::default_lineage(template_id))
     }
 
-    /// Get community metrics (replaces NestGate::get_usage)
+    /// Get community metrics (replaces legacy usage metrics on a collaboration provider)
     ///
     /// Discovers any primal with Collaboration::CommunityMetrics capability
     pub async fn get_community_metrics(&self, template_id: &str) -> Result<CommunityMetrics> {
@@ -97,7 +97,7 @@ impl CollaborationService {
         Ok(Self::default_community_metrics())
     }
 
-    /// Get security assessment (replaces NestGate::get_security_assessment)
+    /// Get security assessment (replaces legacy security assessment on a collaboration provider)
     ///
     /// Discovers any primal with Collaboration::SecurityAssessment capability
     pub async fn get_security_assessment(&self, template_id: &str) -> Result<SecurityAssessment> {

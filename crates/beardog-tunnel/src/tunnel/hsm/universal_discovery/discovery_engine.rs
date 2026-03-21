@@ -221,10 +221,10 @@ impl Pkcs11Discoverer {
             if let Ok(entries) = std::fs::read_dir(search_path) {
                 for entry in entries.flatten() {
                     let path = entry.path();
-                    if self.is_pkcs11_library(&path) {
-                        if let Ok(hsm) = self.probe_pkcs11_library(&path) {
-                            discovered.push(hsm);
-                        }
+                    if self.is_pkcs11_library(&path)
+                        && let Ok(hsm) = self.probe_pkcs11_library(&path)
+                    {
+                        discovered.push(hsm);
                     }
                 }
             }

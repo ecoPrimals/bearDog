@@ -221,14 +221,14 @@ impl LoadBalancer {
         }
 
         // Check for sticky session
-        if let Some(session_id) = session_id {
-            if self.config.enable_sticky_sessions {
-                let state = self.state.read().await;
-                if let Some(service_id) = state.session_map.get(session_id) {
-                    if let Some(service) = services.iter().find(|s| s.name == *service_id) {
-                        return Ok(Some(service.clone()));
-                    }
-                }
+        if let Some(session_id) = session_id
+            && self.config.enable_sticky_sessions
+        {
+            let state = self.state.read().await;
+            if let Some(service_id) = state.session_map.get(session_id)
+                && let Some(service) = services.iter().find(|s| s.name == *service_id)
+            {
+                return Ok(Some(service.clone()));
             }
         }
 
@@ -237,13 +237,13 @@ impl LoadBalancer {
         let selected_service = balanced_services.first().cloned();
 
         // Update sticky session if enabled
-        if let (Some(session_id), Some(service)) = (session_id, &selected_service) {
-            if self.config.enable_sticky_sessions {
-                let mut state = self.state.write().await;
-                state
-                    .session_map
-                    .insert(session_id.to_string(), service.name.clone());
-            }
+        if let (Some(session_id), Some(service)) = (session_id, &selected_service)
+            && self.config.enable_sticky_sessions
+        {
+            let mut state = self.state.write().await;
+            state
+                .session_map
+                .insert(session_id.to_string(), service.name.clone());
         }
 
         Ok(selected_service)
@@ -463,10 +463,10 @@ impl LoadBalancer {
     /// Returns error if state update fails
     pub async fn decrement_connections(&self, service_id: &str) -> Result<(), BearDogError> {
         let mut state = self.state.write().await;
-        if let Some(count) = state.service_connections.get_mut(service_id) {
-            if *count > 0 {
-                *count -= 1;
-            }
+        if let Some(count) = state.service_connections.get_mut(service_id)
+            && *count > 0
+        {
+            *count -= 1;
         }
         drop(state); // Drop lock early
         Ok(())

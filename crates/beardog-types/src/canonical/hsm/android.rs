@@ -417,13 +417,13 @@ impl AndroidHsmConfig {
         }
 
         // Validate manufacturer if restricted
-        if let Some(ref allowed) = self.security_requirements.allowed_manufacturers {
-            if !allowed.contains(&self.device_info.manufacturer) {
-                return Err(format!(
-                    "Device manufacturer {} is not in allowed list",
-                    self.device_info.manufacturer
-                ));
-            }
+        if let Some(ref allowed) = self.security_requirements.allowed_manufacturers
+            && !allowed.contains(&self.device_info.manufacturer)
+        {
+            return Err(format!(
+                "Device manufacturer {} is not in allowed list",
+                self.device_info.manufacturer
+            ));
         }
 
         // Validate StrongBox requirements

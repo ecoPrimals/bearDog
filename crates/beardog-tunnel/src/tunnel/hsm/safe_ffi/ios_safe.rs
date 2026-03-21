@@ -3,7 +3,7 @@
 //! Safe iOS Provider Implementation
 //!
 //! This module provides a safe interface to iOS Secure Enclave
-//! without using unsafe code directly.
+//! without using unchecked memory patterns directly.
 
 use super::traits::PlatformSecurityProvider;
 use crate::tunnel::hsm::types::{

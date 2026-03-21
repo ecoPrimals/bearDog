@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn test_primal_name_variations() {
-        for primal in &["beardog", "songbird", "nestgate", "toadstool", "squirrel"] {
+        for primal in &["alpha", "beta", "gamma", "delta", "epsilon"] {
             let endpoint = WindowsSocket::create_endpoint(primal).unwrap();
             match endpoint {
                 SocketEndpoint::NamedPipe(name) => {

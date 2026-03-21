@@ -1,0 +1,9 @@
+# Default genome bundle artifact keys (one per line).
+# These are manifest/registry labels for packaged binaries, not runtime peer discovery.
+# Override with ECOPRIMALS_GENOME_TARGETS (comma-separated) or pass --primals explicitly.
+
+beardog
+songbird
+squirrel
+toadstool
+nestgate

@@ -163,7 +163,7 @@ impl MultiTransportServer {
 
     /// Start all bound transports
     ///
-    /// **Deep Debt Principle #3**: Fast AND Safe (async, no unsafe blocks)
+    /// **Deep Debt Principle #3**: Fast AND Safe (async, no hand-written intrinsics)
     ///
     /// Spawns a task for each transport, runs them concurrently.
     /// If any transport fails, others continue running.

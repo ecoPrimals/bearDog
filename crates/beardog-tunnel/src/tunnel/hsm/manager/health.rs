@@ -122,13 +122,13 @@ impl HealthMonitor {
     pub async fn update_health_status(&self, provider_id: String, status: HsmHealthStatus) {
         let mut cache = self.health_cache.write().await;
 
-        if let Some(previous_status) = cache.get(&provider_id) {
-            if previous_status.is_healthy != status.is_healthy {
-                if status.is_healthy {
-                    info!("✅ Provider {} recovered", provider_id);
-                } else {
-                    warn!("❌ Provider {} became unhealthy", provider_id);
-                }
+        if let Some(previous_status) = cache.get(&provider_id)
+            && previous_status.is_healthy != status.is_healthy
+        {
+            if status.is_healthy {
+                info!("✅ Provider {} recovered", provider_id);
+            } else {
+                warn!("❌ Provider {} became unhealthy", provider_id);
             }
         }
 

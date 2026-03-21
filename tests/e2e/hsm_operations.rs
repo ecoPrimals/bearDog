@@ -1,4 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(
+    missing_docs,
+    clippy::float_cmp,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::redundant_clone,
+    clippy::needless_collect
+)]
 //! HSM Operations E2E Tests
 //!
 //! End-to-end tests for Hardware Security Module operations across different providers
@@ -68,17 +79,16 @@ pub async fn test_hsm_failover_scenario() -> Result<HsmE2EMetrics, BearDogError>
 
     let mut metrics = HsmE2EMetrics::default();
 
-    // 1. Attempt hardware HSM (may fail)
+    // 1. Attempt hardware HSM (may fail); on failure fall back to software
     if simulate_key_generation("hardware").await == Ok(()) {
-        metrics.key_generations += 1;
     } else {
         warn!("Hardware HSM unavailable, testing fallback");
         metrics.fallback_triggers += 1;
 
         // 2. Fallback to software HSM
         simulate_key_generation("software").await?;
-        metrics.key_generations += 1;
     }
+    metrics.key_generations += 1;
 
     info!("✅ HSM failover scenario complete");
     Ok(metrics)
@@ -303,7 +313,7 @@ mod tests {
     /// - All detected HSMs initialize successfully
     /// - Key generation works on primary HSM
     #[tokio::test]
-    #[ignore] // Hardware detection may hang - run explicitly with: cargo test -- --ignored
+    #[ignore = "hardware detection may hang; run with: cargo test -- --ignored"]
     async fn test_e2e_hsm_001_hardware_detection_and_initialization() {
         info!("🧪 E2E-HSM-001: Hardware HSM Detection & Initialization");
 
@@ -393,7 +403,7 @@ mod tests {
     /// - All crypto operations succeed
     /// - Performance acceptable
     #[tokio::test]
-    #[ignore] // Hardware detection may hang - run explicitly with: cargo test -- --ignored
+    #[ignore = "hardware detection may hang; run with: cargo test -- --ignored"]
     async fn test_e2e_hsm_002_softhsm2_fallback_and_operations() {
         info!("🧪 E2E-HSM-002: SoftHSM2 Fallback & Operations");
 
@@ -679,7 +689,7 @@ mod tests {
     /// - Zero operation failures during failover
     /// - Recovery to primary succeeds
     #[tokio::test]
-    #[ignore] // Hardware detection may hang - run explicitly with: cargo test -- --ignored
+    #[ignore = "hardware detection may hang; run with: cargo test -- --ignored"]
     async fn test_e2e_hsm_005_failure_and_recovery() {
         info!("🧪 E2E-HSM-005: HSM Failure & Recovery");
 

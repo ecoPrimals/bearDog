@@ -49,6 +49,7 @@ uuid = { version = "1.6", features = ["v4", "serde"] }
 
 # BearDog dependencies
 beardog-errors = { path = "../beardog-errors" }
+beardog-discovery = { path = "../beardog-discovery" }
 beardog-tunnel = { path = "../beardog-tunnel" }
 beardog-genetics = { path = "../beardog-genetics" }
 beardog-types = { path = "../beardog-types" }

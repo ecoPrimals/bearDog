@@ -64,10 +64,21 @@ impl CapabilityRegistry {
         capability_profile: impl Into<String>,
         http_base: impl Into<String>,
     ) -> Self {
-        let instance_id = instance_id.into();
-        let base = http_base.into().trim_end_matches('/').to_string();
         let path = beardog_errors::process_env::var(crate::metadata::ENV_CAPABILITY_HTTP_PATH)
             .unwrap_or_else(|_| crate::metadata::DEFAULT_CAPABILITY_HTTP_PATH.to_string());
+        Self::with_http_base_and_capability_path(instance_id, capability_profile, http_base, path)
+    }
+
+    /// Like [`Self::with_http_base`] but supplies the capability path explicitly (no env; parallel-test safe).
+    pub fn with_http_base_and_capability_path(
+        instance_id: impl Into<String>,
+        capability_profile: impl Into<String>,
+        http_base: impl Into<String>,
+        capability_path: impl Into<String>,
+    ) -> Self {
+        let instance_id = instance_id.into();
+        let base = http_base.into().trim_end_matches('/').to_string();
+        let path = capability_path.into();
         let discovery_http = if path.starts_with('/') {
             format!("{base}{path}")
         } else {
@@ -284,8 +295,6 @@ impl CapabilityRegistry {
 
 #[cfg(test)]
 mod tests {
-    use serial_test::serial;
-
     use super::*;
 
     /// Test-scoped HTTP base only; production URLs come from env / discovery.
@@ -429,13 +438,12 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn test_discovery_config() {
-        beardog_errors::process_env::remove_var(crate::metadata::ENV_CAPABILITY_HTTP_PATH);
-        let registry = CapabilityRegistry::with_http_base(
+        let registry = CapabilityRegistry::with_http_base_and_capability_path(
             "7c9e6679-7425-40de-944b-e07fc1f90ae7",
             "storage",
             TEST_ALT_HTTP_BASE,
+            crate::metadata::DEFAULT_CAPABILITY_HTTP_PATH,
         );
 
         let config = registry.discovery_config();

@@ -37,11 +37,11 @@ impl SharedConfigManager {
                     poisoned.into_inner()
                 }
             };
-            if let Some(config) = configs.get(key) {
-                if let Ok(typed_config) = config.clone().downcast::<T>() {
-                    debug!("📋 Retrieved shared config: {}", key);
-                    return typed_config;
-                }
+            if let Some(config) = configs.get(key)
+                && let Ok(typed_config) = config.clone().downcast::<T>()
+            {
+                debug!("📋 Retrieved shared config: {}", key);
+                return typed_config;
             }
         }
 

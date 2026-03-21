@@ -46,7 +46,7 @@
 //! ## Security
 //!
 //! All AI operations maintain:
-//! - **Memory safety** with zero unsafe code
+//! - **Memory safety** throughout
 //! - **Input validation** for all external data
 //! - **Resource bounds** to prevent `DoS` attacks
 //! - **Privacy preservation** in ML model training

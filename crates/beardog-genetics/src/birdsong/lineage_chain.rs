@@ -284,11 +284,11 @@ impl LineageChainManager {
         while let Some(current_id) = to_process.pop() {
             // Find children of current node
             for relationship in &chain.relationships {
-                if relationship.parent_id == current_id {
-                    if let Some(child) = chain.nodes.get(&relationship.child_id) {
-                        descendants.push(child.clone());
-                        to_process.push(relationship.child_id.clone());
-                    }
+                if relationship.parent_id == current_id
+                    && let Some(child) = chain.nodes.get(&relationship.child_id)
+                {
+                    descendants.push(child.clone());
+                    to_process.push(relationship.child_id.clone());
                 }
             }
         }

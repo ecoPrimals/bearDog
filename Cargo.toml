@@ -21,7 +21,7 @@ exclude = [
 [workspace.package]
 version = "0.9.0"
 edition = "2024"
-rust-version = "1.85.0"
+rust-version = "1.93.0"
 authors = ["BearDog Team"]
 license = "AGPL-3.0-only"
 repository = "https://github.com/ecoPrimals/beardog"
@@ -110,13 +110,14 @@ doc_lazy_continuation = { level = "allow", priority = 1 }
 too_long_first_doc_paragraph = { level = "allow", priority = 1 }
 empty_docs = { level = "allow", priority = 1 }
 
-# ── Cast safety — all sites annotated with per-site #[expect(clippy::cast_*,
-#    reason = "...")] as of 2026-03 audit.  New casts must use #[expect]. ───
-cast_possible_truncation = { level = "warn", priority = 1 }
-cast_precision_loss = { level = "warn", priority = 1 }
-cast_sign_loss = { level = "warn", priority = 1 }
-cast_lossless = { level = "warn", priority = 1 }
-cast_possible_wrap = { level = "warn", priority = 1 }
+# ── Cast safety — workspace allow remains required (2026-03 audit: removing any
+#    of these trips `cargo clippy --workspace --all-features -- -D warnings`).
+#    Prefer per-site #[expect(clippy::cast_*, reason = "...")] for new code. ───
+cast_possible_truncation = { level = "allow", priority = 1 }
+cast_precision_loss = { level = "allow", priority = 1 }
+cast_sign_loss = { level = "allow", priority = 1 }
+cast_lossless = { level = "allow", priority = 1 }
+cast_possible_wrap = { level = "allow", priority = 1 }
 
 # ── Unwrap / expect — allowed in test code only. Library code must use
 #    Result<T, E>.  Migrate violations to per-site #[expect] with reason. ─────

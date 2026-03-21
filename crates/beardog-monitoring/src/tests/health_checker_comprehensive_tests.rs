@@ -11,7 +11,7 @@ use crate::monitoring::health::{
     aggregator::HealthCheckAggregator,
     checkers::{
         CacheHealthChecker, DatabaseHealthChecker, ExternalApiHealthChecker, HealthCheckerType,
-        HsmHealthChecker,
+        HsmHealthChecker, TestDelayedChecker,
     },
     traits::HealthChecker,
 };
@@ -40,7 +40,7 @@ async fn test_database_health_check_success() {
 #[tokio::test]
 async fn test_database_health_check_with_latency() {
     // Real scenario: Database under load with slow responses
-    let checker = DatabaseHealthChecker::with_simulated_latency(Duration::from_millis(200));
+    let checker = TestDelayedChecker::database(Duration::from_millis(200));
     let health = checker.check_health().await.expect("should complete");
 
     assert_eq!(health.status, HealthStatus::Healthy);
@@ -54,7 +54,7 @@ async fn test_database_health_check_with_latency() {
 #[tokio::test]
 async fn test_database_health_check_timeout_detection() {
     // Real scenario: Database times out - health check should detect this
-    let checker = DatabaseHealthChecker::with_simulated_latency(Duration::from_millis(2000));
+    let checker = TestDelayedChecker::database(Duration::from_millis(2000));
 
     // Set aggressive timeout to simulate real timeout scenario
     let result = timeout(Duration::from_millis(500), checker.check_health()).await;
@@ -89,7 +89,7 @@ async fn test_cache_health_check_success() {
 #[tokio::test]
 async fn test_cache_health_check_with_latency() {
     // Real scenario: Cache warming up or under pressure
-    let checker = CacheHealthChecker::with_simulated_latency(Duration::from_millis(150));
+    let checker = TestDelayedChecker::cache(Duration::from_millis(150));
     let health = checker.check_health().await.expect("should complete");
 
     assert_eq!(health.status, HealthStatus::Healthy);
@@ -134,10 +134,7 @@ async fn test_external_api_health_check_success() {
 #[tokio::test]
 async fn test_external_api_health_check_slow_response() {
     // Real scenario: External API experiencing latency
-    let checker = ExternalApiHealthChecker::with_simulated_latency(
-        "slow-api".to_string(),
-        Duration::from_millis(300),
-    );
+    let checker = TestDelayedChecker::external_api("slow-api", Duration::from_millis(300));
     let health = checker.check_health().await.expect("should complete");
 
     assert_eq!(health.status, HealthStatus::Healthy);
@@ -148,10 +145,7 @@ async fn test_external_api_health_check_slow_response() {
 #[tokio::test]
 async fn test_external_api_timeout_scenario() {
     // Real scenario: External API completely unavailable
-    let checker = ExternalApiHealthChecker::with_simulated_latency(
-        "timeout-api".to_string(),
-        Duration::from_secs(5),
-    );
+    let checker = TestDelayedChecker::external_api("timeout-api", Duration::from_secs(5));
 
     let result = timeout(Duration::from_millis(500), checker.check_health()).await;
     assert!(result.is_err(), "Should timeout on unavailable API");
@@ -182,7 +176,7 @@ async fn test_hsm_health_check_success() {
 #[tokio::test]
 async fn test_hsm_health_check_with_latency() {
     // Real scenario: HSM under cryptographic load
-    let checker = HsmHealthChecker::with_simulated_latency(Duration::from_millis(100));
+    let checker = TestDelayedChecker::hsm(Duration::from_millis(100));
     let health = checker.check_health().await.expect("should complete");
 
     assert_eq!(health.status, HealthStatus::Healthy);
@@ -270,9 +264,9 @@ async fn test_aggregator_degraded_performance() {
     // Real scenario: Some components slow but functional
     let mut aggregator = HealthCheckAggregator::new();
     aggregator.add_checker(HealthCheckerType::Database(DatabaseHealthChecker::new()));
-    aggregator.add_checker(HealthCheckerType::Cache(
-        CacheHealthChecker::with_simulated_latency(Duration::from_millis(500)),
-    ));
+    aggregator.add_checker(HealthCheckerType::TestDelayed(TestDelayedChecker::cache(
+        Duration::from_millis(500),
+    )));
 
     let overall = aggregator
         .get_overall_status()
@@ -287,9 +281,9 @@ async fn test_aggregator_cascading_failure_detection() {
     // Real scenario: Database fails, affecting dependent services
     let mut aggregator = HealthCheckAggregator::new();
 
-    // Simul database that times out
-    aggregator.add_checker(HealthCheckerType::Database(
-        DatabaseHealthChecker::with_simulated_latency(Duration::from_secs(10)),
+    // Simulated database that times out
+    aggregator.add_checker(HealthCheckerType::TestDelayed(
+        TestDelayedChecker::database(Duration::from_secs(10)),
     ));
     aggregator.add_checker(HealthCheckerType::Cache(CacheHealthChecker::new()));
 
@@ -306,9 +300,9 @@ async fn test_aggregator_partial_failure() {
     let mut aggregator = HealthCheckAggregator::new();
     aggregator.add_checker(HealthCheckerType::Database(DatabaseHealthChecker::new()));
     // Add a cache that will timeout
-    aggregator.add_checker(HealthCheckerType::Cache(
-        CacheHealthChecker::with_simulated_latency(Duration::from_secs(10)),
-    ));
+    aggregator.add_checker(HealthCheckerType::TestDelayed(TestDelayedChecker::cache(
+        Duration::from_secs(10),
+    )));
 
     // With timeout, should detect partial failure
     let result = timeout(Duration::from_secs(1), aggregator.get_overall_status()).await;
@@ -323,8 +317,8 @@ async fn test_aggregator_recovery_after_failure() {
     let mut aggregator = HealthCheckAggregator::new();
 
     // Initially use slow checker
-    let slow_db = DatabaseHealthChecker::with_simulated_latency(Duration::from_millis(100));
-    aggregator.add_checker(HealthCheckerType::Database(slow_db));
+    let slow_db = TestDelayedChecker::database(Duration::from_millis(100));
+    aggregator.add_checker(HealthCheckerType::TestDelayed(slow_db));
 
     // First check should succeed (within timeout)
     let status1 = timeout(Duration::from_secs(1), aggregator.get_overall_status()).await;
@@ -388,7 +382,7 @@ async fn test_concurrent_health_checks() {
 #[tokio::test]
 async fn test_health_check_duration_tracking() {
     // Verify that duration tracking is accurate
-    let checker = DatabaseHealthChecker::with_simulated_latency(Duration::from_millis(50));
+    let checker = TestDelayedChecker::database(Duration::from_millis(50));
     let health = checker.check_health().await.expect("should succeed");
 
     // Duration should be at least the simulated latency

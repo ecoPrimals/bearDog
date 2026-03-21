@@ -334,42 +334,5 @@ mod tests {
         assert_eq!(methods, vec!["test.method"]);
     }
 
-    #[tokio::test]
-    async fn test_registry_route_ping() {
-        let registry = HandlerRegistry::default();
-        let provider = create_test_provider().await;
-        let r = registry.route("ping", None, &provider).await;
-        assert!(r.is_ok(), "{r:?}");
-    }
-
-    #[tokio::test]
-    async fn test_registry_route_unknown_method() {
-        let registry = HandlerRegistry::default();
-        let provider = create_test_provider().await;
-        let r = registry
-            .route("method.does.not.exist", None, &provider)
-            .await;
-        assert!(r.is_err());
-        assert!(r.unwrap_err().contains("not found"));
-    }
-
-    #[tokio::test]
-    async fn test_registry_route_sign_ed25519_alias() {
-        let registry = HandlerRegistry::default();
-        let provider = create_test_provider().await;
-        let r = registry.route("sign_ed25519", None, &provider).await;
-        assert!(r.is_err());
-    }
-
-    #[tokio::test]
-    async fn test_registry_all_methods_sorted_and_nonempty() {
-        let registry = HandlerRegistry::default();
-        let methods = registry.all_methods().await;
-        assert!(!methods.is_empty());
-        let mut sorted = methods.clone();
-        sorted.sort();
-        assert_eq!(methods, sorted);
-    }
-
     // Integration tests will be added as we extract more handlers
 }

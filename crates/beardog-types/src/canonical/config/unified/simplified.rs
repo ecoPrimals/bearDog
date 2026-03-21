@@ -253,10 +253,10 @@ impl SimplifiedBearDogConfig {
     pub fn from_env() -> Result<Self, BearDogError> {
         let mut config = Self::default();
 
-        if let Ok(port) = std::env::var("BEARDOG_PORT") {
-            if let Ok(port_num) = port.parse::<u16>() {
-                config.network.port = port_num;
-            }
+        if let Ok(port) = std::env::var("BEARDOG_PORT")
+            && let Ok(port_num) = port.parse::<u16>()
+        {
+            config.network.port = port_num;
         }
 
         if let Ok(log_level) = std::env::var("BEARDOG_LOG_LEVEL") {

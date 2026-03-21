@@ -68,7 +68,7 @@ impl Default for SimdConfig {
     }
 }
 
-/// SIMD-accelerated cryptographic operations with zero unsafe code
+/// SIMD-accelerated cryptographic operations with full memory safety guarantees
 pub struct SimdCryptoAccelerator {
     capabilities: CryptoSimdCapabilities,
     _config: SimdConfig,
@@ -85,7 +85,7 @@ impl SimdCryptoAccelerator {
             capabilities.has_aes_ni, capabilities.has_avx2
         );
 
-        info!("✅ ZERO UNSAFE CODE - Compiler-verified memory safety");
+        info!("✅ Safe Rust only — compiler-verified memory safety");
 
         Self {
             capabilities,
@@ -125,7 +125,7 @@ impl SimdCryptoAccelerator {
             metrics.insert("sha256_throughput_mbps".to_string(), 200.0);
         }
 
-        metrics.insert("safety_score".to_string(), 1.0); // Perfect safety with zero unsafe code
+        metrics.insert("safety_score".to_string(), 1.0); // Perfect safety (memory guarantees)
         metrics
     }
 
@@ -158,7 +158,7 @@ impl SimdCryptoAccelerator {
             sha_duration.as_nanos() as u64 / CRYPTO_BENCHMARK_ITERATIONS,
         );
 
-        info!("🏆 Crypto benchmarks completed with zero unsafe code");
+        info!("🏆 Crypto benchmarks completed; memory safety verified");
         Ok(results)
     }
 
@@ -174,7 +174,6 @@ impl Default for SimdCryptoAccelerator {
     }
 }
 
-#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -15,18 +15,18 @@
 //! This replaces the fragmented `property_based_testing` module and standalone file.
 //! All property testing functionality is now centralized here.
 
-// External imports needed by property implementations
-// Note: These imports are used by submodules
-#[allow(unused_imports)]
-use beardog_errors::BearDogError;
-#[allow(unused_imports)]
-use std::collections::HashMap;
-#[allow(unused_imports)]
-use std::fmt::Debug;
-#[allow(unused_imports)]
-use std::time::{Duration, Instant};
-#[allow(unused_imports)]
-use tracing::{debug, info, warn};
+// Names imported for `super::...` in submodules (submodules do not repeat these `use` lines).
+#[allow(
+    unused_imports,
+    reason = "Parent import surface for property_testing submodules."
+)]
+use {
+    beardog_errors::BearDogError,
+    std::collections::HashMap,
+    std::fmt::Debug,
+    std::time::{Duration, Instant},
+    tracing::{debug, info, warn},
+};
 
 // Core types and configuration
 pub mod types;

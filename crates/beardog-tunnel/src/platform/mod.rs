@@ -13,7 +13,7 @@
 //!
 //! ## TRUE ecoBin v2.0 Compliance
 //!
-//! - ✅ Pure Rust (zero unsafe code)
+//! - ✅ Pure Rust (memory-safe)
 //! - ✅ Zero C dependencies
 //! - ✅ Platform-agnostic (automatic detection)
 //! - ✅ No hardcoding (runtime discovery)

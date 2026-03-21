@@ -3,7 +3,7 @@
 //! Safe Android StrongBox HSM Implementation
 //!
 //! This module provides a memory-safe interface to Android StrongBox hardware security.
-//! All operations are designed to avoid unsafe code while maintaining security guarantees.
+//! All operations are designed to avoid unchecked memory patterns while maintaining security guarantees.
 
 use beardog_errors::BearDogError;
 use tracing::info;
@@ -40,7 +40,7 @@ pub use types::AndroidDeviceInfo;
 /// Safe Android StrongBox Manager
 ///
 /// Provides high-level interface to Android StrongBox hardware security module
-/// without using unsafe code.
+/// without using unchecked memory patterns.
 pub struct SafeAndroidStrongBoxManager {
     keystore: SafeAndroidKeystore,
     device_info: AndroidDeviceInfo,
@@ -52,7 +52,7 @@ impl SafeAndroidStrongBoxManager {
     /// # Errors
     /// Returns an error if device detection or keystore initialization fails.
     pub async fn new() -> Result<Self, BearDogError> {
-        info!("🤖 Initializing SafeAndroidStrongBoxManager - ZERO UNSAFE CODE");
+        info!("🤖 Initializing SafeAndroidStrongBoxManager - safe Rust only");
 
         let device_info = safe_get_android_device_info().await?;
         let keystore = SafeAndroidKeystore::new(); // Returns SafeAndroidStrongBoxWrapper directly, not Result

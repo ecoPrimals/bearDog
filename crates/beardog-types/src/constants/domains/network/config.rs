@@ -2,12 +2,15 @@
 
 //! Host/port helpers and industry default ports for services.
 
-/// IPv4 localhost address
-pub const LOCALHOST_IPV4: &str = "127.0.0.1";
-/// IPv6 localhost address  
-pub const LOCALHOST_IPV6: &str = "::1";
-/// Standard localhost name
-pub const LOCALHOST_NAME: &str = "localhost";
+pub use super::addresses::{
+    DEFAULT_LOCALHOST_IPV4_STR as LOCALHOST_IPV4, DEFAULT_LOCALHOST_IPV6_STR as LOCALHOST_IPV6,
+};
+
+/// **Fallback** localhost hostname (override with `BEARDOG_EXTERNAL_HOST` / config).
+pub const DEFAULT_LOCALHOST_NAME_STR: &str = "localhost";
+
+/// Back-compat alias for [`DEFAULT_LOCALHOST_NAME_STR`].
+pub const LOCALHOST_NAME: &str = DEFAULT_LOCALHOST_NAME_STR;
 
 // ✅ REMOVED DEPRECATED CONSTANTS - Use config system instead:
 // - Use beardog_config::global::BEARDOG_CONFIG.network.api.port (not DEFAULT_HTTP_PORT)

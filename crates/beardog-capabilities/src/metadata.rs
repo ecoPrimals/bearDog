@@ -6,6 +6,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::env::VarError;
 
 /// Capability metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -149,17 +150,24 @@ pub const ENV_CAPABILITY_MDNS_SERVICE: &str = "BEARDOG_CAPABILITY_MDNS_SERVICE";
 /// 1. [`ENV_CAPABILITY_HTTP_BASE`]
 /// 2. `BEARDOG_API_HOST` or `BEARDOG_BIND_ADDRESS` + `BEARDOG_API_PORT` (or [`beardog_config::DEFAULT_API_PORT`])
 pub fn resolve_capability_http_base() -> String {
-    if let Ok(base) = beardog_errors::process_env::var(ENV_CAPABILITY_HTTP_BASE) {
+    resolve_capability_http_base_from_env(|k| beardog_errors::process_env::var(k))
+}
+
+/// Same as [`resolve_capability_http_base`] but reads configuration via `get` (tests use a local map; production uses [`beardog_errors::process_env::var`]).
+pub fn resolve_capability_http_base_from_env(
+    mut get: impl FnMut(&str) -> Result<String, VarError>,
+) -> String {
+    if let Ok(base) = get(ENV_CAPABILITY_HTTP_BASE) {
         return base.trim_end_matches('/').to_string();
     }
 
-    let host = beardog_errors::process_env::var("BEARDOG_API_HOST")
-        .or_else(|_| beardog_errors::process_env::var("BEARDOG_BIND_ADDRESS"))
+    let host = get("BEARDOG_API_HOST")
+        .or_else(|_| get("BEARDOG_BIND_ADDRESS"))
         .unwrap_or_else(|_| {
             beardog_config::domains::network_addresses::DEFAULT_BIND_ADDRESS.to_string()
         });
 
-    let port: u16 = beardog_errors::process_env::var("BEARDOG_API_PORT")
+    let port: u16 = get("BEARDOG_API_PORT")
         .ok()
         .and_then(|p| p.parse().ok())
         .unwrap_or(beardog_config::DEFAULT_API_PORT);
@@ -169,9 +177,16 @@ pub fn resolve_capability_http_base() -> String {
 
 /// Full HTTP URL for the capability discovery document.
 pub fn resolve_capability_http_discovery_url() -> String {
-    let path = beardog_errors::process_env::var(ENV_CAPABILITY_HTTP_PATH)
-        .unwrap_or_else(|_| DEFAULT_CAPABILITY_HTTP_PATH.to_string());
-    let base = resolve_capability_http_base();
+    resolve_capability_http_discovery_url_from_env(|k| beardog_errors::process_env::var(k))
+}
+
+/// Same as [`resolve_capability_http_discovery_url`] with injectable env lookup (parallel-test safe).
+pub fn resolve_capability_http_discovery_url_from_env(
+    mut get: impl FnMut(&str) -> Result<String, VarError>,
+) -> String {
+    let path =
+        get(ENV_CAPABILITY_HTTP_PATH).unwrap_or_else(|_| DEFAULT_CAPABILITY_HTTP_PATH.to_string());
+    let base = resolve_capability_http_base_from_env(&mut get);
     if path.starts_with('/') {
         format!("{base}{path}")
     } else {
@@ -179,13 +194,18 @@ pub fn resolve_capability_http_discovery_url() -> String {
     }
 }
 
-fn resolve_mdns_instance_label(instance_id: &str) -> String {
-    beardog_errors::process_env::var(ENV_CAPABILITY_MDNS_INSTANCE)
-        .unwrap_or_else(|_| instance_id.to_string())
+fn resolve_mdns_instance_label_from_env<F>(instance_id: &str, get: &mut F) -> String
+where
+    F: FnMut(&str) -> Result<String, VarError>,
+{
+    get(ENV_CAPABILITY_MDNS_INSTANCE).unwrap_or_else(|_| instance_id.to_string())
 }
 
-fn resolve_mdns_service_type() -> String {
-    beardog_errors::process_env::var(ENV_CAPABILITY_MDNS_SERVICE)
+fn resolve_mdns_service_type_from_env<F>(get: &mut F) -> String
+where
+    F: FnMut(&str) -> Result<String, VarError>,
+{
+    get(ENV_CAPABILITY_MDNS_SERVICE)
         .unwrap_or_else(|_| DEFAULT_CAPABILITY_MDNS_SERVICE_TYPE.to_string())
 }
 
@@ -194,8 +214,16 @@ fn resolve_mdns_service_type() -> String {
 /// Uses sovereign `instance_id` only as the default instance label; operators may override via
 /// [`ENV_CAPABILITY_MDNS_INSTANCE`]. This is discovery metadata, not a coupled primal name.
 pub fn resolve_capability_mdns_full_name(instance_id: &str) -> String {
-    let instance = resolve_mdns_instance_label(instance_id);
-    let svc = resolve_mdns_service_type();
+    resolve_capability_mdns_full_name_from_env(instance_id, |k| beardog_errors::process_env::var(k))
+}
+
+/// Same as [`resolve_capability_mdns_full_name`] with injectable env lookup (parallel-test safe).
+pub fn resolve_capability_mdns_full_name_from_env(
+    instance_id: &str,
+    mut get: impl FnMut(&str) -> Result<String, VarError>,
+) -> String {
+    let instance = resolve_mdns_instance_label_from_env(instance_id, &mut get);
+    let svc = resolve_mdns_service_type_from_env(&mut get);
     format!("{instance}.{svc}.local")
 }
 
@@ -246,7 +274,8 @@ impl CapabilityEndpoint {
 
 #[cfg(test)]
 mod tests {
-    use serial_test::serial;
+    use std::collections::HashMap;
+    use std::env::VarError;
 
     use super::*;
 
@@ -400,78 +429,99 @@ mod tests {
         );
     }
 
+    fn get_from_map(m: &HashMap<String, String>, key: &str) -> Result<String, VarError> {
+        m.get(key).cloned().ok_or(VarError::NotPresent)
+    }
+
     #[test]
-    #[serial]
     fn test_resolve_capability_http_base_from_env_override() {
-        beardog_errors::process_env::set_var(ENV_CAPABILITY_HTTP_BASE, "http://caps.example:9443/");
-        let base = resolve_capability_http_base();
-        beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_BASE);
+        let m = HashMap::from([(
+            ENV_CAPABILITY_HTTP_BASE.to_string(),
+            "http://caps.example:9443/".to_string(),
+        )]);
+        let base = resolve_capability_http_base_from_env(|k| get_from_map(&m, k));
         assert_eq!(base, "http://caps.example:9443");
     }
 
     #[test]
-    #[serial]
     fn test_resolve_capability_http_base_from_host_and_port() {
-        beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_BASE);
-        beardog_errors::process_env::set_var("BEARDOG_API_HOST", "192.0.2.10");
-        beardog_errors::process_env::set_var("BEARDOG_API_PORT", "65000");
-        let base = resolve_capability_http_base();
-        beardog_errors::process_env::remove_var("BEARDOG_API_HOST");
-        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
+        let m = HashMap::from([
+            ("BEARDOG_API_HOST".to_string(), "192.0.2.10".to_string()),
+            ("BEARDOG_API_PORT".to_string(), "65000".to_string()),
+        ]);
+        let base = resolve_capability_http_base_from_env(|k| get_from_map(&m, k));
         assert_eq!(base, "http://192.0.2.10:65000");
     }
 
     #[test]
-    #[serial]
     fn test_resolve_capability_http_discovery_url_paths() {
-        beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_BASE);
-        beardog_errors::process_env::set_var("BEARDOG_API_HOST", "127.0.0.1");
-        beardog_errors::process_env::set_var("BEARDOG_API_PORT", "1");
-
-        beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_PATH);
-        let default_path = resolve_capability_http_discovery_url();
+        let m_default_path = HashMap::from([
+            ("BEARDOG_API_HOST".to_string(), "127.0.0.1".to_string()),
+            ("BEARDOG_API_PORT".to_string(), "1".to_string()),
+        ]);
+        let default_path =
+            resolve_capability_http_discovery_url_from_env(|k| get_from_map(&m_default_path, k));
         assert!(default_path.ends_with(DEFAULT_CAPABILITY_HTTP_PATH));
 
-        beardog_errors::process_env::set_var(ENV_CAPABILITY_HTTP_PATH, "/v2/capabilities");
-        let abs = resolve_capability_http_discovery_url();
+        let m_abs = HashMap::from([
+            ("BEARDOG_API_HOST".to_string(), "127.0.0.1".to_string()),
+            ("BEARDOG_API_PORT".to_string(), "1".to_string()),
+            (
+                ENV_CAPABILITY_HTTP_PATH.to_string(),
+                "/v2/capabilities".to_string(),
+            ),
+        ]);
+        let abs = resolve_capability_http_discovery_url_from_env(|k| get_from_map(&m_abs, k));
         assert!(abs.contains("/v2/capabilities"));
         assert!(!abs.ends_with("//v2/capabilities"));
 
-        beardog_errors::process_env::set_var(ENV_CAPABILITY_HTTP_PATH, "manifest.json");
-        let rel = resolve_capability_http_discovery_url();
+        let m_rel = HashMap::from([
+            ("BEARDOG_API_HOST".to_string(), "127.0.0.1".to_string()),
+            ("BEARDOG_API_PORT".to_string(), "1".to_string()),
+            (
+                ENV_CAPABILITY_HTTP_PATH.to_string(),
+                "manifest.json".to_string(),
+            ),
+        ]);
+        let rel = resolve_capability_http_discovery_url_from_env(|k| get_from_map(&m_rel, k));
         assert!(rel.ends_with("/manifest.json"));
-
-        beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_PATH);
-        beardog_errors::process_env::remove_var("BEARDOG_API_HOST");
-        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
     }
 
     #[test]
-    #[serial]
     fn test_resolve_capability_mdns_full_name_defaults_and_overrides() {
-        let def = resolve_capability_mdns_full_name("sovereign-1");
+        let m_empty = HashMap::<String, String>::new();
+        let def = resolve_capability_mdns_full_name_from_env("sovereign-1", |k| {
+            get_from_map(&m_empty, k)
+        });
         assert!(def.contains("sovereign-1"));
         assert!(def.ends_with(".local"));
         assert!(def.contains("_beardog-cap._tcp"));
 
-        beardog_errors::process_env::set_var(ENV_CAPABILITY_MDNS_INSTANCE, "my-instance");
-        beardog_errors::process_env::set_var(ENV_CAPABILITY_MDNS_SERVICE, "_custom._tcp");
-        let custom = resolve_capability_mdns_full_name("ignored");
-        beardog_errors::process_env::remove_var(ENV_CAPABILITY_MDNS_INSTANCE);
-        beardog_errors::process_env::remove_var(ENV_CAPABILITY_MDNS_SERVICE);
+        let m_custom = HashMap::from([
+            (
+                ENV_CAPABILITY_MDNS_INSTANCE.to_string(),
+                "my-instance".to_string(),
+            ),
+            (
+                ENV_CAPABILITY_MDNS_SERVICE.to_string(),
+                "_custom._tcp".to_string(),
+            ),
+        ]);
+        let custom =
+            resolve_capability_mdns_full_name_from_env("ignored", |k| get_from_map(&m_custom, k));
         assert_eq!(custom, "my-instance._custom._tcp.local");
     }
 
     #[test]
-    #[serial]
     fn test_resolve_capability_http_base_uses_bind_address_when_api_host_unset() {
-        beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_BASE);
-        beardog_errors::process_env::remove_var("BEARDOG_API_HOST");
-        beardog_errors::process_env::set_var("BEARDOG_BIND_ADDRESS", "198.51.100.7");
-        beardog_errors::process_env::set_var("BEARDOG_API_PORT", "9090");
-        let base = resolve_capability_http_base();
-        beardog_errors::process_env::remove_var("BEARDOG_BIND_ADDRESS");
-        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
+        let m = HashMap::from([
+            (
+                "BEARDOG_BIND_ADDRESS".to_string(),
+                "198.51.100.7".to_string(),
+            ),
+            ("BEARDOG_API_PORT".to_string(), "9090".to_string()),
+        ]);
+        let base = resolve_capability_http_base_from_env(|k| get_from_map(&m, k));
         assert!(
             base.contains("198.51.100.7"),
             "expected bind address in base URL, got: {base}"
@@ -479,14 +529,12 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn test_resolve_capability_http_base_invalid_api_port_falls_back_to_default() {
-        beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_BASE);
-        beardog_errors::process_env::set_var("BEARDOG_API_HOST", "127.0.0.1");
-        beardog_errors::process_env::set_var("BEARDOG_API_PORT", "not-a-port");
-        let base = resolve_capability_http_base();
-        beardog_errors::process_env::remove_var("BEARDOG_API_HOST");
-        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
+        let m = HashMap::from([
+            ("BEARDOG_API_HOST".to_string(), "127.0.0.1".to_string()),
+            ("BEARDOG_API_PORT".to_string(), "not-a-port".to_string()),
+        ]);
+        let base = resolve_capability_http_base_from_env(|k| get_from_map(&m, k));
         assert_eq!(
             base,
             format!("http://127.0.0.1:{}", beardog_config::DEFAULT_API_PORT)

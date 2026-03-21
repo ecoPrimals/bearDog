@@ -1,10 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![allow(
+    missing_docs,
     unused_imports,
     unused_variables,
     dead_code,
     unused_comparisons,
-    clippy::all
+    clippy::all,
+    clippy::float_cmp,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::redundant_clone,
+    clippy::needless_collect
 )]
 
 //! Cross-Platform HSM Discovery E2E Tests
@@ -45,7 +54,6 @@ pub async fn run_cross_platform_discovery_test(
         metrics.successful_requests += 1;
         info!("✅ Discovery engine initialized");
     } else {
-        metrics.failed_requests += 1;
         return Err(BearDogError::internal(
             "Discovery engine initialization failed".to_string(),
         ));
@@ -85,7 +93,6 @@ pub async fn run_cross_platform_discovery_test(
 
     // At minimum, software HSM should always be available
     if total_hsms == 0 {
-        metrics.failed_requests += 1;
         return Err(BearDogError::internal(
             "No HSMs discovered (expected at least software HSM)".to_string(),
         ));

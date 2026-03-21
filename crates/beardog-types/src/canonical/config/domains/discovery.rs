@@ -219,17 +219,17 @@ impl DiscoveryConfig {
         }
 
         // Timeout
-        if let Ok(val) = std::env::var("BEARDOG_DISCOVERY_TIMEOUT_SECS") {
-            if let Ok(secs) = val.parse::<u64>() {
-                config.timeout = Duration::from_secs(secs);
-            }
+        if let Ok(val) = std::env::var("BEARDOG_DISCOVERY_TIMEOUT_SECS")
+            && let Ok(secs) = val.parse::<u64>()
+        {
+            config.timeout = Duration::from_secs(secs);
         }
 
         // Max attempts
-        if let Ok(val) = std::env::var("BEARDOG_DISCOVERY_MAX_ATTEMPTS") {
-            if let Ok(attempts) = val.parse::<u32>() {
-                config.max_attempts = attempts;
-            }
+        if let Ok(val) = std::env::var("BEARDOG_DISCOVERY_MAX_ATTEMPTS")
+            && let Ok(attempts) = val.parse::<u32>()
+        {
+            config.max_attempts = attempts;
         }
 
         // Cache enabled

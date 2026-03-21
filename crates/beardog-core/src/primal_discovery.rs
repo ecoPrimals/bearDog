@@ -494,10 +494,10 @@ impl PrimalDiscovery {
             if stem.eq_ignore_ascii_case(ipc::DEFAULT_UPA_REGISTRY_SOCKET_STEM) {
                 continue;
             }
-            if let Some(want) = &query.name {
-                if !want.eq_ignore_ascii_case(stem) {
-                    continue;
-                }
+            if let Some(want) = &query.name
+                && !want.eq_ignore_ascii_case(stem)
+            {
+                continue;
             }
             let lname = stem.to_lowercase();
             if seen.contains(&lname) {
@@ -618,19 +618,17 @@ impl PrimalDiscovery {
                         category: beardog_errors::NetworkErrorCategory::Connection,
                     })?;
 
-                if let Some(result) = response.get("result") {
-                    if let Some(primals_array) = result.as_array() {
-                        info!("✅ UPA discovered {} primals", primals_array.len());
+                if let Some(result) = response.get("result")
+                    && let Some(primals_array) = result.as_array()
+                {
+                    info!("✅ UPA discovered {} primals", primals_array.len());
 
-                        let primals = primals_array
-                            .iter()
-                            .filter_map(|p| {
-                                serde_json::from_value::<DiscoveredPrimal>(p.clone()).ok()
-                            })
-                            .collect();
+                    let primals = primals_array
+                        .iter()
+                        .filter_map(|p| serde_json::from_value::<DiscoveredPrimal>(p.clone()).ok())
+                        .collect();
 
-                        return Ok(primals);
-                    }
+                    return Ok(primals);
                 }
 
                 warn!("UPA returned no results");

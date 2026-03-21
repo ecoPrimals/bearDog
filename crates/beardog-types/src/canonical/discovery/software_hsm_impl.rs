@@ -3,7 +3,7 @@
 //! Software HSM Implementation - Secure Cryptographic Operations
 //!
 //! Modern, idiomatic Rust implementation using the RustCrypto ecosystem.
-//! All operations are memory-safe with zero unsafe code.
+//! All operations are memory-safe with full memory safety.
 
 use super::key_management_capability::{
     KeyManagementCapability, KeySpec, KmsCapabilities, KmsError, KmsHealthStatus,

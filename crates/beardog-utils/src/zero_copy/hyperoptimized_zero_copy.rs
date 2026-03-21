@@ -2,7 +2,7 @@
 
 // Hyperoptimized Zero-Copy Memory Management - 100% Safe Implementation
 //
-// This module provides SIMD-aligned memory management with zero unsafe code,
+// This module provides SIMD-aligned memory management with full memory safety,
 // achieving near-optimal performance through safe Rust abstractions.
 
 use std::collections::HashMap;
@@ -100,9 +100,9 @@ impl AlignedBuffer {
 // 🛡️ SAFETY: AlignedBuffer is automatically Send + Sync!
 // - Vec<u8> is Send + Sync (standard library guarantee)
 // - usize is Copy + Send + Sync (primitive type guarantee)
-// - No manual unsafe impl needed - Rust auto-derives these traits!
+// - No manual Send/Sync impl needed - Rust auto-derives these traits!
 //
-// Previously had unsafe impl Send/Sync, but they're unnecessary.
+// Previously had manual impl Send/Sync, but they're unnecessary.
 // Rust's type system automatically implements these traits when all fields
 // are Send/Sync, which they are. This is safer and more maintainable.
 

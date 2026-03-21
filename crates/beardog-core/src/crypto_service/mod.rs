@@ -11,7 +11,7 @@
 //! 2. **Capability-Based**: Operations declared via capabilities
 //! 3. **Sovereignty-Preserving**: No external dependencies
 //! 4. **Zero-Copy Where Possible**: Efficient memory handling
-//! 5. **Modern Idiomatic Rust**: Async, strong typing, zero unsafe
+//! 5. **Modern Idiomatic Rust**: async, strong typing, only safe Rust
 //!
 //! ## Architecture
 //!

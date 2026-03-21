@@ -49,7 +49,10 @@ impl RevocationList {
     }
 
     /// Load revocation list from disk (`$HOME/.beardog/revocation_list.json`).
-    #[allow(dead_code)] // Stable public API; in-crate paths use `load_from_home`.
+    #[allow(
+        dead_code,
+        reason = "Stable public API using HOME; in-crate paths use load_from_home."
+    )]
     pub fn load() -> Result<Self, BearDogError> {
         let home = std::env::var("HOME")
             .map_err(|_| BearDogError::system("HOME environment variable not set".to_string()))?;
@@ -75,7 +78,10 @@ impl RevocationList {
     }
 
     /// Save revocation list to disk (`$HOME/.beardog/revocation_list.json`).
-    #[allow(dead_code)] // Stable public API; in-crate paths use `save_to_home`.
+    #[allow(
+        dead_code,
+        reason = "Stable public API using HOME; in-crate paths use save_to_home."
+    )]
     pub fn save(&self) -> Result<(), BearDogError> {
         let home = std::env::var("HOME")
             .map_err(|_| BearDogError::system("HOME environment variable not set".to_string()))?;
@@ -129,7 +135,10 @@ impl RevocationList {
     }
 
     /// Export revocation list to file
-    #[allow(dead_code)] // Used by handle_revocation_export (planned CLI command)
+    #[allow(
+        dead_code,
+        reason = "Used by revocation export handlers and future CLI wiring."
+    )]
     pub fn export(&self, path: &str) -> Result<(), BearDogError> {
         let json = serde_json::to_string_pretty(self).map_err(|e| {
             BearDogError::serialization(&format!("Failed to serialize revocation list: {e}"))
@@ -139,7 +148,10 @@ impl RevocationList {
     }
 
     /// Import revocation list from file
-    #[allow(dead_code)] // Used by handle_revocation_import (planned CLI command)
+    #[allow(
+        dead_code,
+        reason = "Used by revocation import handlers and future CLI wiring."
+    )]
     pub fn import(path: &str) -> Result<Self, BearDogError> {
         let json = fs::read_to_string(path)?;
         let list: Self = serde_json::from_str(&json).map_err(|e| {
@@ -149,7 +161,10 @@ impl RevocationList {
     }
 
     /// Merge another revocation list into this one
-    #[allow(dead_code)] // Used by handle_revocation_import (planned CLI command)
+    #[allow(
+        dead_code,
+        reason = "Used by revocation import handlers and future CLI wiring."
+    )]
     pub fn merge(&mut self, other: &Self) {
         for (key_id, entry) in &other.revoked_keys {
             // Only add if not already present or if other entry is newer
@@ -167,7 +182,7 @@ impl RevocationList {
     }
 
     /// Unrevoke a key (for testing or if revocation was mistake)
-    #[allow(dead_code)] // Admin/testing use
+    #[allow(dead_code, reason = "Administrative and test-only recovery API.")]
     pub fn unrevoke(&mut self, key_id: &str) -> bool {
         let removed = self.revoked_keys.remove(key_id).is_some();
         if removed {
@@ -305,14 +320,20 @@ fn get_child_keys_in_home(parent_key_id: &str, home: &Path) -> Result<Vec<String
 }
 
 /// Handle revocation list export
-#[allow(dead_code)] // Planned for CLI: beardog key revoke --export
+#[allow(
+    dead_code,
+    reason = "Planned for beardog key revoke --export; use *_with_home for tests."
+)]
 pub async fn handle_revocation_export(output_path: &str) -> Result<(), BearDogError> {
     let home = revocation_home_from_env()?;
     handle_revocation_export_with_home(output_path, &home).await
 }
 
 /// Export the revocation list to a file, using a custom home directory (tests / DI).
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "Test and DI entry point; primary export may call the HOME-based wrapper."
+)]
 pub async fn handle_revocation_export_with_home(
     output_path: &str,
     home: &Path,
@@ -335,14 +356,20 @@ pub async fn handle_revocation_export_with_home(
 }
 
 /// Handle revocation list import
-#[allow(dead_code)] // Planned for CLI: beardog key revoke --import
+#[allow(
+    dead_code,
+    reason = "Planned for beardog key revoke --import; use *_with_home for tests."
+)]
 pub async fn handle_revocation_import(input_path: &str) -> Result<(), BearDogError> {
     let home = revocation_home_from_env()?;
     handle_revocation_import_with_home(input_path, &home).await
 }
 
 /// Import and merge a revocation list from a file, using a custom home directory (tests / DI).
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "Test and DI entry point; primary import may call the HOME-based wrapper."
+)]
 pub async fn handle_revocation_import_with_home(
     input_path: &str,
     home: &Path,
@@ -394,19 +421,19 @@ pub async fn handle_key_check_revocation_with_home(
 
     println!("Checking key: {key_id}\n");
 
-    if revocation_list.is_revoked(key_id) {
-        if let Some(entry) = revocation_list.revoked_keys.get(key_id) {
-            println!("❌ Key IS REVOKED\n");
-            println!("📋 Revocation Details:");
-            println!("   Revoked At: {}", entry.revoked_at);
-            println!("   Revoked By: {}", entry.revoked_by);
-            if let Some(reason) = &entry.reason {
-                println!("   Reason: {reason}");
-            }
-
-            println!("\n⚠️  This key should NOT be used!");
-            return Ok(());
+    if revocation_list.is_revoked(key_id)
+        && let Some(entry) = revocation_list.revoked_keys.get(key_id)
+    {
+        println!("❌ Key IS REVOKED\n");
+        println!("📋 Revocation Details:");
+        println!("   Revoked At: {}", entry.revoked_at);
+        println!("   Revoked By: {}", entry.revoked_by);
+        if let Some(reason) = &entry.reason {
+            println!("   Reason: {reason}");
         }
+
+        println!("\n⚠️  This key should NOT be used!");
+        return Ok(());
     }
 
     println!("✅ Key is NOT revoked\n");

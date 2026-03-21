@@ -637,10 +637,10 @@ impl BearDogConfig for ConsolidatedMonitoringConfig {
             config.enabled = enabled.parse().unwrap_or(true);
         }
 
-        if let Ok(interval) = std::env::var("BEARDOG_MONITORING_INTERVAL") {
-            if let Ok(secs) = interval.parse::<u64>() {
-                config.metrics.interval = Duration::from_secs(secs);
-            }
+        if let Ok(interval) = std::env::var("BEARDOG_MONITORING_INTERVAL")
+            && let Ok(secs) = interval.parse::<u64>()
+        {
+            config.metrics.interval = Duration::from_secs(secs);
         }
 
         if let Ok(buffer_size) = std::env::var("BEARDOG_MONITORING_BUFFER_SIZE") {

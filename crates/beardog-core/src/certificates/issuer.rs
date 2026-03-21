@@ -117,18 +117,16 @@ impl CertificateIssuer {
             automation_percent,
             ..
         } = &classification
+            && matches!(risk_level, ExtractionRisk::High)
+            && !self.has_valid_license(request_context).await?
         {
-            if matches!(risk_level, ExtractionRisk::High)
-                && !self.has_valid_license(request_context).await?
-            {
-                warn!(
-                    "High-risk commercial request without license (automation: {}%)",
-                    automation_percent
-                );
-                return Err(BearDogError::unauthorized(format!(
-                    "Adapter '{adapter_id}' requires commercial license for automated extraction"
-                )));
-            }
+            warn!(
+                "High-risk commercial request without license (automation: {}%)",
+                automation_percent
+            );
+            return Err(BearDogError::unauthorized(format!(
+                "Adapter '{adapter_id}' requires commercial license for automated extraction"
+            )));
         }
 
         AdapterUnlockCertificate::issue(adapter_id, classification, &self.signing_key)

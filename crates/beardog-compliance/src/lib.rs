@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-#![forbid(unsafe_code)]
 
 //! # `BearDog` Compliance Framework
 //!
@@ -40,7 +39,7 @@
 //!
 //! ## Safety
 //!
-//! All compliance operations are memory-safe with zero unsafe code.
+//! All compliance operations are memory-safe with full memory safety.
 
 /// Audit logging and event tracking
 ///

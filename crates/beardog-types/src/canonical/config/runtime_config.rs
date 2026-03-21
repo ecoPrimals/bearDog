@@ -188,7 +188,10 @@ pub struct RuntimeNetworkConfig {
 impl Default for RuntimeNetworkConfig {
     fn default() -> Self {
         // Constants must be declared before any other statements
-        use beardog_config::domains::network_ports::{DEFAULT_ADMIN_PORT, DEFAULT_DATABASE_PORT};
+        use beardog_config::domains::network_ports::{
+            DEFAULT_ADMIN_PORT, DEFAULT_CONSUL_PORT, DEFAULT_DATABASE_PORT, DEFAULT_GRPC_PORT,
+            DEFAULT_REDIS_PORT,
+        };
 
         const DEFAULT_TIMEOUT_SECONDS: u64 = 30;
         const DEFAULT_MAX_CONNECTIONS: usize = 1000;
@@ -202,11 +205,11 @@ impl Default for RuntimeNetworkConfig {
         let default_metrics_port = network_defaults.service_ports.metrics_port;
         let default_health_port = network_defaults.service_ports.health_port;
         let default_ws_port = network_defaults.service_ports.websocket_port;
-        let default_grpc_port = 50051; // GRPC not in ServicePorts yet, use constant for now
+        let default_grpc_port = DEFAULT_GRPC_PORT;
         let default_admin_port = DEFAULT_ADMIN_PORT;
         let default_database_port = DEFAULT_DATABASE_PORT;
-        let default_consul_port = 8500; // Consul standard port (not in defaults yet)
-        let default_redis_port = 6379; // Redis standard port (aligns with industry standard)
+        let default_consul_port = DEFAULT_CONSUL_PORT;
+        let default_redis_port = DEFAULT_REDIS_PORT;
 
         Self {
             discovery_endpoint: std::env::var("BEARDOG_DISCOVERY_ENDPOINT").unwrap_or_else(|_| {
