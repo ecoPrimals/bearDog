@@ -49,7 +49,17 @@ impl OperationMetrics {
         if self.total_operations == 0 {
             0.0
         } else {
-            (self.successful_operations as f64 / self.total_operations as f64) * 100.0
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "percentage from operation counters"
+            )]
+            let succ = self.successful_operations as f64;
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "percentage from operation counters"
+            )]
+            let tot = self.total_operations as f64;
+            (succ / tot) * 100.0
         }
     }
 
@@ -122,6 +132,10 @@ impl HsmPerformanceTracker {
         }
 
         // Update latency stats
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "rolling average over operation count"
+        )]
         let total_ops = provider_metrics.total_operations as f64;
         provider_metrics.average_latency_ms = provider_metrics
             .average_latency_ms

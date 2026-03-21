@@ -198,4 +198,60 @@ mod tests {
 
         assert_ne!(key1, key2);
     }
+
+    #[test]
+    fn test_unknown_kdf_type() {
+        let config = KdfConfig::new("scrypt".to_string(), None, None, None);
+        let err = config.derive_key(b"p", b"salt", 32).unwrap_err();
+        assert!(format!("{err}").to_lowercase().contains("unknown"));
+    }
+
+    #[test]
+    fn test_pbkdf2_rejects_low_iterations() {
+        let config = KdfConfig::new("pbkdf2".to_string(), Some(500), None, None);
+        let err = config.derive_key(b"p", b"saltbytes123456", 16).unwrap_err();
+        assert!(format!("{err}").to_lowercase().contains("iteration"));
+    }
+
+    #[test]
+    fn test_argon2_derivation() {
+        let config = KdfConfig::new("argon2".to_string(), None, Some(8192), Some(1));
+        let k1 = config.derive_key(b"pw", b"salt123456789012", 32).unwrap();
+        assert_eq!(k1.len(), 32);
+        let k2 = config.derive_key(b"pw", b"salt123456789012", 32).unwrap();
+        assert_eq!(k1, k2);
+    }
+
+    #[test]
+    fn test_to_metadata_json() {
+        let c = KdfConfig::new("pbkdf2".to_string(), Some(10_000), Some(4096), Some(2));
+        let v = c.to_metadata();
+        assert_eq!(v["kdf_type"], "pbkdf2");
+        assert_eq!(v["iterations"], 10_000);
+    }
+
+    #[test]
+    fn test_pbkdf2_case_insensitive() {
+        let config = KdfConfig::new("PBKDF2".to_string(), Some(5000), None, None);
+        let k = config
+            .derive_key(b"p", b"salt12345678901234", 24)
+            .expect("derive");
+        assert_eq!(k.len(), 24);
+    }
+
+    #[test]
+    fn test_hkdf_case_insensitive() {
+        let config = KdfConfig::new("HKDF".to_string(), None, None, None);
+        let k = config.derive_key(b"p", b"s", 16).expect("hkdf");
+        assert_eq!(k.len(), 16);
+    }
+
+    #[test]
+    fn test_argon2_case_insensitive() {
+        let config = KdfConfig::new("ARGON2".to_string(), None, Some(4096), Some(1));
+        let k = config
+            .derive_key(b"p", b"salt123456789012", 32)
+            .expect("argon");
+        assert_eq!(k.len(), 32);
+    }
 }

@@ -248,6 +248,10 @@ impl SelfDiscoveryEngine {
     }
 
     /// Logs the final discovery results
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Capped discovery duration ms fits u64 for logging"
+    )]
     fn log_discovery_results(self_identity: &SelfIdentity, start_time: std::time::Instant) {
         let discovery_duration = start_time.elapsed().as_millis().min(u128::from(u64::MAX)) as u64;
 

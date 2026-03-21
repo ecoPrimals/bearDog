@@ -595,11 +595,19 @@ pub async fn handle_tor_kdf(params: Option<&Value>) -> Result<Value, BearDogErro
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 key_seed: {e}")))?;
 
     // Extract key count and length
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "HKDF key count from JSON parameters"
+    )]
     let key_count = params
         .get("key_count")
         .and_then(serde_json::Value::as_u64)
         .unwrap_or(4) as usize;
 
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "HKDF key byte length from JSON parameters"
+    )]
     let key_length = params
         .get("key_length")
         .and_then(serde_json::Value::as_u64)
@@ -761,163 +769,6 @@ fn constant_time_compare(a: &[u8], b: &[u8]) -> bool {
     diff == 0
 }
 
-// ============================================================================
-// TESTS
-// ============================================================================
-
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn json_str<'a>(v: &'a Value, key: &'static str) -> Result<&'a str, BearDogError> {
-        v.get(key)
-            .and_then(|x| x.as_str())
-            .ok_or_else(|| BearDogError::invalid_input("missing JSON string field"))
-    }
-
-    #[tokio::test]
-    async fn test_ntor_client_init_basic() -> Result<(), BearDogError> {
-        let node_id = [0u8; 20];
-        let onion_key = [1u8; 32];
-
-        let params = json!({
-            "node_id": BASE64.encode(&node_id),
-            "node_onion_key": BASE64.encode(&onion_key)
-        });
-
-        let result = handle_tor_ntor_client_init(Some(&params)).await?;
-
-        assert!(result.get("ephemeral_public").is_some());
-        let ephem_b64 = json_str(&result, "ephemeral_public")?;
-        let ephem = BASE64
-            .decode(ephem_b64)
-            .map_err(|e| BearDogError::invalid_input(&format!("base64: {e}")))?;
-        assert_eq!(ephem.len(), 32);
-        assert!(result.get("client_state").is_some());
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_ntor_full_handshake() -> Result<(), BearDogError> {
-        let server_secret = StaticSecret::random_from_rng(rand::thread_rng());
-        let server_public = PublicKey::from(&server_secret);
-        let node_id = [42u8; 20];
-
-        let init_params = json!({
-            "node_id": BASE64.encode(&node_id),
-            "node_onion_key": BASE64.encode(server_public.as_bytes())
-        });
-
-        let init_result = handle_tor_ntor_client_init(Some(&init_params)).await?;
-        let client_state = json_str(&init_result, "client_state")?;
-        let client_public = json_str(&init_result, "ephemeral_public")?;
-
-        let server_params = json!({
-            "client_public": client_public,
-            "node_id": BASE64.encode(&node_id),
-            "onion_secret_key": BASE64.encode(server_secret.as_bytes()),
-            "onion_public_key": BASE64.encode(server_public.as_bytes())
-        });
-
-        let server_result = handle_tor_ntor_server_respond(Some(&server_params)).await?;
-        let server_ephem = json_str(&server_result, "ephemeral_public")?;
-        let server_auth = json_str(&server_result, "server_auth")?;
-
-        let finish_params = json!({
-            "client_state": client_state,
-            "server_public": server_ephem,
-            "server_auth": server_auth
-        });
-
-        let finish_result = handle_tor_ntor_client_finish(Some(&finish_params)).await?;
-
-        assert_eq!(
-            finish_result
-                .get("valid")
-                .and_then(|v| v.as_bool())
-                .ok_or_else(|| BearDogError::invalid_input("missing valid"))?,
-            true
-        );
-
-        let client_kf = json_str(&finish_result, "forward_key")?;
-        let server_kf = json_str(&server_result, "forward_key")?;
-        assert_eq!(client_kf, server_kf);
-
-        let client_kb = json_str(&finish_result, "backward_key")?;
-        let server_kb = json_str(&server_result, "backward_key")?;
-        assert_eq!(client_kb, server_kb);
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_cell_encrypt_decrypt_roundtrip() -> Result<(), BearDogError> {
-        let key = [0xABu8; 32];
-        let plaintext = b"Hello, Tor cell encryption!";
-        let counter = 0u64;
-
-        let encrypt_params = json!({
-            "key": BASE64.encode(&key),
-            "counter": counter,
-            "data": BASE64.encode(plaintext)
-        });
-
-        let encrypt_result = handle_tor_cell_encrypt(Some(&encrypt_params)).await?;
-        let ciphertext = json_str(&encrypt_result, "ciphertext")?;
-
-        let decrypt_params = json!({
-            "key": BASE64.encode(&key),
-            "counter": counter,
-            "ciphertext": ciphertext
-        });
-
-        let decrypt_result = handle_tor_cell_decrypt(Some(&decrypt_params)).await?;
-        let decrypted_b64 = json_str(&decrypt_result, "plaintext")?;
-        let decrypted = BASE64
-            .decode(decrypted_b64)
-            .map_err(|e| BearDogError::invalid_input(&format!("base64: {e}")))?;
-
-        assert_eq!(decrypted, plaintext);
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_tor_kdf() -> Result<(), BearDogError> {
-        let key_seed = [0x42u8; 32];
-
-        let params = json!({
-            "key_seed": BASE64.encode(&key_seed),
-            "key_count": 4,
-            "key_length": 20
-        });
-
-        let result = handle_tor_kdf(Some(&params)).await?;
-
-        let keys = result
-            .get("keys")
-            .and_then(|v| v.as_array())
-            .ok_or_else(|| BearDogError::invalid_input("missing keys array"))?;
-        assert_eq!(keys.len(), 4);
-
-        for key in keys {
-            let s = key
-                .as_str()
-                .ok_or_else(|| BearDogError::invalid_input("key entry not a string"))?;
-            let key_bytes = BASE64
-                .decode(s)
-                .map_err(|e| BearDogError::invalid_input(&format!("base64: {e}")))?;
-            assert_eq!(key_bytes.len(), 20);
-        }
-        Ok(())
-    }
-
-    #[test]
-    fn test_constant_time_compare() {
-        let a = [1, 2, 3, 4];
-        let b = [1, 2, 3, 4];
-        let c = [1, 2, 3, 5];
-
-        assert!(constant_time_compare(&a, &b));
-        assert!(!constant_time_compare(&a, &c));
-        assert!(!constant_time_compare(&a, &[1, 2, 3]));
-    }
-}
+#[path = "crypto_handlers_tor_tests.rs"]
+mod tests;

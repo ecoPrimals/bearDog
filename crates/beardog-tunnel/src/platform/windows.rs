@@ -39,6 +39,7 @@
 //! Ready for testing on Windows (x86_64, ARM64)
 
 use super::{PlatformSocket, SocketEndpoint};
+use beardog_types::constants::domains::network::ipc_discovery as ipc_layout;
 use tokio::net::UnixListener;
 use tracing::{debug, info, warn};
 
@@ -119,11 +120,12 @@ pub fn create_endpoint_with(
         return Ok(SocketEndpoint::NamedPipe(pipe_path.to_string()));
     }
 
+    let ns = ipc_layout::resolve_biomeos_ipc_subdir_from_optional(None);
     let pipe_name = if let Some(custom_prefix) = biomeos_pipe_dir {
         debug!("Using BIOMEOS_PIPE_DIR: {}", custom_prefix);
-        format!(r"{}_biomeos_{}", custom_prefix, primal_name)
+        format!(r"{}_{}_{}", custom_prefix, ns, primal_name)
     } else {
-        format!(r"\\.\pipe\biomeos_{}", primal_name)
+        format!(r"\\.\pipe\{}_{}", ns, primal_name)
     };
 
     info!(

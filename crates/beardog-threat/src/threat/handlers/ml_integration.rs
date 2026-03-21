@@ -85,6 +85,10 @@ impl ThreatDetectionEngine {
     }
 
     /// Calculate threat score using ML model
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Hash mod 1000 as score; acceptable precision for heuristic threat metric"
+    )]
     pub fn calculate_threat_score(
         &self,
         _model: &MlModel,

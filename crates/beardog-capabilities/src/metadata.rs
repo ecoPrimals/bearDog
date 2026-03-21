@@ -246,6 +246,8 @@ impl CapabilityEndpoint {
 
 #[cfg(test)]
 mod tests {
+    use serial_test::serial;
+
     use super::*;
 
     /// Fixture URLs for unit tests only.
@@ -399,6 +401,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_capability_http_base_from_env_override() {
         beardog_errors::process_env::set_var(ENV_CAPABILITY_HTTP_BASE, "http://caps.example:9443/");
         let base = resolve_capability_http_base();
@@ -407,6 +410,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_capability_http_base_from_host_and_port() {
         beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_BASE);
         beardog_errors::process_env::set_var("BEARDOG_API_HOST", "192.0.2.10");
@@ -418,6 +422,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_capability_http_discovery_url_paths() {
         beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_BASE);
         beardog_errors::process_env::set_var("BEARDOG_API_HOST", "127.0.0.1");
@@ -442,6 +447,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_capability_mdns_full_name_defaults_and_overrides() {
         let def = resolve_capability_mdns_full_name("sovereign-1");
         assert!(def.contains("sovereign-1"));
@@ -457,6 +463,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_capability_http_base_uses_bind_address_when_api_host_unset() {
         beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_BASE);
         beardog_errors::process_env::remove_var("BEARDOG_API_HOST");
@@ -472,6 +479,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_resolve_capability_http_base_invalid_api_port_falls_back_to_default() {
         beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_BASE);
         beardog_errors::process_env::set_var("BEARDOG_API_HOST", "127.0.0.1");
@@ -526,5 +534,15 @@ mod tests {
         let back: CapabilityAdvertisement = serde_json::from_str(&json).unwrap();
         assert_eq!(back.capabilities.len(), 1);
         assert_eq!(back.discovery.http, "http://h/c");
+    }
+
+    #[test]
+    fn test_capability_metadata_new_defaults_and_rate_limit_auth() {
+        let m = CapabilityMetadata::new("id", "v1");
+        assert_eq!(m.protocols, vec!["http".to_string()]);
+        assert!(!m.requires_auth);
+        let m2 = m.with_rate_limit(9).with_auth(true);
+        assert_eq!(m2.rate_limit, Some(9));
+        assert!(m2.requires_auth);
     }
 }

@@ -589,4 +589,85 @@ mod tests {
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("32 bytes"));
     }
+
+    #[tokio::test]
+    async fn test_sign_ed25519_missing_params() {
+        let r = handle_sign_ed25519(None).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_verify_ed25519_invalid_message_base64() {
+        let params = json!({
+            "message": "@@@",
+            "signature": BASE64.encode(&[1u8; 64]),
+            "public_key": BASE64.encode(&[2u8; 32]),
+        });
+        let r = handle_verify_ed25519(Some(&params)).await;
+        assert!(r.is_err());
+        assert!(r.unwrap_err().contains("base64"));
+    }
+
+    #[tokio::test]
+    async fn test_verify_ed25519_invalid_signature_base64() {
+        let params = json!({
+            "message": BASE64.encode(b"m"),
+            "signature": "not-b64",
+            "public_key": BASE64.encode(&[2u8; 32]),
+        });
+        let r = handle_verify_ed25519(Some(&params)).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_verify_ed25519_invalid_public_key_base64() {
+        let params = json!({
+            "message": BASE64.encode(b"m"),
+            "signature": BASE64.encode(&[1u8; 64]),
+            "public_key": "???",
+        });
+        let r = handle_verify_ed25519(Some(&params)).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_x25519_derive_invalid_base64_secret() {
+        let params = json!({
+            "our_secret": "bad",
+            "their_public": BASE64.encode(&[0u8; 32]),
+        });
+        let r = handle_x25519_derive_secret(Some(&params)).await;
+        assert!(r.is_err());
+        assert!(r.unwrap_err().contains("our_secret"));
+    }
+
+    #[tokio::test]
+    async fn test_ed25519_generate_keypair_with_purpose() {
+        let params = json!({ "purpose": "birdsong" });
+        let r = handle_ed25519_generate_keypair(Some(&params))
+            .await
+            .expect("kp");
+        assert_eq!(r["algorithm"], "Ed25519");
+    }
+
+    #[tokio::test]
+    async fn test_ed25519_sign_verify_roundtrip() {
+        use beardog_core::crypto_service::algorithms::asymmetric;
+        let msg = BASE64.encode(b"roundtrip");
+        let sign_p = json!({ "message": msg, "key_id": "rt-key", "purpose": "t" });
+        let signed = handle_sign_ed25519(Some(&sign_p)).await.expect("sign");
+        let sig = signed["signature"].as_str().expect("sig");
+        let seed = super::super::utils::derive_key_from_id("rt-key", "t").expect("seed");
+        let (_sk, pk) = asymmetric::generate_ed25519_from_seed(&seed).expect("kp");
+        let pk_b64 = BASE64.encode(pk);
+        let verify_p = json!({
+            "message": msg,
+            "signature": sig,
+            "public_key": pk_b64,
+        });
+        let v = handle_verify_ed25519(Some(&verify_p))
+            .await
+            .expect("verify");
+        assert_eq!(v["valid"], true);
+    }
 }

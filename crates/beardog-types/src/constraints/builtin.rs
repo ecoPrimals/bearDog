@@ -127,7 +127,7 @@ pub struct CpuQuotaConstraint {
 impl Constraint for CpuQuotaConstraint {
     fn is_satisfied(&self, context: &ConstraintContext) -> Result<bool, BearDogError> {
         match context.system_state.cpu_usage_percent {
-            Some(usage) => Ok(usage <= self.max_percent as f64),
+            Some(usage) => Ok(usage <= f64::from(self.max_percent)),
             None => {
                 // If CPU usage not available, be conservative and allow
                 // (sovereignty: default to permissive when data unavailable)
@@ -455,5 +455,26 @@ mod tests {
         assert_eq!(format_bytes(1024), "1.00 KB");
         assert_eq!(format_bytes(1024 * 1024), "1.00 MB");
         assert_eq!(format_bytes(8 * 1024 * 1024 * 1024), "8.00 GB");
+    }
+
+    #[test]
+    fn test_time_range_constraint_serialize_json_roundtrip() {
+        let c = TimeRangeConstraint {
+            start: "08:00".to_string(),
+            end: "18:00".to_string(),
+        };
+        let s = c.serialize_json().expect("serialize");
+        let back: TimeRangeConstraint = serde_json::from_str(&s).expect("deserialize");
+        assert_eq!(back.start, "08:00");
+        assert_eq!(c.constraint_type(), "time_range");
+    }
+
+    #[test]
+    fn test_weekday_constraint_description() {
+        let c = WeekdayConstraint {
+            allowed_days: vec!["mon".to_string(), "fri".to_string()],
+        };
+        assert!(c.description().contains("mon"));
+        assert_eq!(c.constraint_type(), "weekday");
     }
 }

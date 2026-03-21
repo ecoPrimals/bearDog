@@ -208,7 +208,17 @@ impl HsmOperationRouter {
             .get(&provider_id)
             .copied()
             .unwrap_or(0);
-        let success_rate = 1.0 - (errors as f64 / total_ops as f64);
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "success rate from operation counts"
+        )]
+        let err_f = errors as f64;
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "success rate from operation counts"
+        )]
+        let tot_f = total_ops as f64;
+        let success_rate = 1.0 - (err_f / tot_f);
         self.stats.success_rate.insert(provider_id, success_rate);
     }
 

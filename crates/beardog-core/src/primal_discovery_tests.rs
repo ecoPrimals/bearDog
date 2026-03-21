@@ -251,3 +251,9 @@ fn test_discovery_method_explicit_constructors() {
     });
     assert!(matches!(d.method, DiscoveryMethod::DnsSd { .. }));
 }
+
+#[test]
+fn discovery_query_by_name_sets_timeout() {
+    let q = DiscoveryQuery::by_name("X").with_timeout(Duration::from_secs(3));
+    assert_eq!(q.timeout, Duration::from_secs(3));
+}

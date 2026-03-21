@@ -27,6 +27,14 @@ pub async fn handle_streaming_encrypt(
 }
 
 /// Same as [`handle_streaming_encrypt`] but with an explicit home directory for the key store (tests / DI).
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "Progress ratio for large files; acceptable precision for CLI display"
+)]
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "Chunk ciphertext length fits u32 length-prefix wire format"
+)]
 pub async fn handle_streaming_encrypt_with_home(
     key_id: &str,
     input_path: &str,
@@ -118,6 +126,10 @@ pub async fn handle_streaming_decrypt(
 }
 
 /// Same as [`handle_streaming_decrypt`] but with an explicit home directory for the key store (tests / DI).
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "Progress ratio for large files; acceptable precision for CLI display"
+)]
 pub async fn handle_streaming_decrypt_with_home(
     input_path: &str,
     output_path: &str,
@@ -413,5 +425,33 @@ mod tests {
             .expect("decrypt");
 
         assert_eq!(std::fs::read(&out).unwrap(), b"streaming-roundtrip-data");
+    }
+
+    #[tokio::test]
+    async fn test_streaming_decrypt_rejects_bad_header_with_home() {
+        let dir = TempDir::new().unwrap();
+        let enc = dir.path().join("bad.enc");
+        let out = dir.path().join("out.bin");
+        std::fs::write(&enc, b"NOT_BEARDOG\n").unwrap();
+        let r = handle_streaming_decrypt_with_home(
+            enc.to_str().unwrap(),
+            out.to_str().unwrap(),
+            dir.path(),
+        )
+        .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_streaming_encrypt_with_home_missing_input() {
+        let dir = TempDir::new().unwrap();
+        let r = handle_streaming_encrypt_with_home(
+            "kid",
+            "/nonexistent/in.bin",
+            "/tmp/out.bin",
+            dir.path(),
+        )
+        .await;
+        assert!(r.is_err());
     }
 }

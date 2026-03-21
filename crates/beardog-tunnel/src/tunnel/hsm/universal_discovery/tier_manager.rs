@@ -141,6 +141,7 @@ impl TierManager {
     /// Calculates compliance score
     fn calculate_compliance_score(&self, hsm: &DiscoveredHsm) -> f64 {
         let compliance_count = hsm.capabilities.security.compliance_reporting.len();
+        #[expect(clippy::cast_precision_loss, reason = "compliance score normalization")]
         (compliance_count as f64 / 5.0).min(1.0)
     }
 

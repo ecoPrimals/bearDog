@@ -5,9 +5,10 @@
 //! Implements the client side of the Primal IPC Protocol for communicating with Songbird.
 
 use crate::{
-    DISCOVERY_SOCKET_FALLBACK,
+    DISCOVERY_SOCKET_FALLBACK, IpcSocketDiscoveryOptions,
     error::{IpcError, IpcResult},
     protocol::{JsonRpcRequest, JsonRpcResponse},
+    resolve_ipc_socket_from_options,
     types::{Capability, ServiceInfo},
 };
 use serde_json::json;
@@ -42,7 +43,12 @@ impl SongbirdClient {
 
     /// Connect to Songbird (validates socket exists)
     pub async fn connect() -> IpcResult<Self> {
-        let client = Self::new();
+        let socket_path = resolve_ipc_socket_from_options(&IpcSocketDiscoveryOptions::from_env());
+        let client = Self {
+            socket_path,
+            request_id: Arc::new(AtomicU64::new(1)),
+            primal_name: Arc::new(RwLock::new(None)),
+        };
 
         // Test connection
         let _stream = UnixStream::connect(&client.socket_path)
@@ -580,5 +586,12 @@ mod tests {
         let id2 = c2.next_request_id();
         assert_eq!(id1, 1);
         assert_eq!(id2, 1);
+    }
+
+    #[test]
+    fn songbird_client_debug_includes_socket() {
+        let c = SongbirdClient::with_socket_path_for_test("/tmp/unit-test.sock");
+        let s = format!("{c:?}");
+        assert!(s.contains("SongbirdClient") || s.contains("socket"));
     }
 }

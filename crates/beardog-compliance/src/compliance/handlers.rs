@@ -40,6 +40,10 @@ impl ComplianceHandler {
     }
 
     /// Runs all [`Self::enabled_standards`] against `event`, records an [`AuditEntry`], and returns scored results.
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Violation count scales score; acceptable f64 precision for compliance display"
+    )]
     pub fn evaluate_compliance(
         &mut self,
         event: &ComplianceEvent,

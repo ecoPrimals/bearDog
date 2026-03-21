@@ -407,7 +407,12 @@ mod humantime_serde_millis {
     where
         S: Serializer,
     {
-        serializer.serialize_u64(duration.as_millis() as u64)
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "duration millis serialized as u64 for wire format"
+        )]
+        let millis = duration.as_millis() as u64;
+        serializer.serialize_u64(millis)
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Duration, D::Error>

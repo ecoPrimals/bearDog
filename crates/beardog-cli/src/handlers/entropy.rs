@@ -91,6 +91,10 @@ pub(crate) fn select_hsm_by_preference<'a>(
 }
 
 /// Handle entropy collection command
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "Display duration ms as seconds; acceptable precision for CLI output"
+)]
 pub async fn handle_entropy_collect(
     human_input: bool,
     device_preference: &str,
@@ -278,15 +282,7 @@ pub async fn handle_entropy_collect(
     println!("   Quality Score: {:.2}%", quality_score * 100.0);
     println!(
         "   Assessment: {}",
-        if quality_score > 0.95 {
-            "✅ Excellent"
-        } else if quality_score > 0.85 {
-            "✅ Good"
-        } else if quality_score > 0.70 {
-            "⚠️  Acceptable"
-        } else {
-            "❌ Poor"
-        }
+        entropy_quality_assessment_label(quality_score)
     );
     println!();
 
@@ -389,6 +385,10 @@ pub fn base64_decode(data: &str) -> Result<Vec<u8>, BearDogError> {
 }
 
 /// Shannon entropy of `bytes`, normalized to approximately 0.0–1.0 (8 bits max).
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "Byte length as divisor; acceptable precision for normalized Shannon entropy"
+)]
 pub fn calculate_entropy_quality(bytes: &[u8]) -> f64 {
     if bytes.is_empty() {
         return 0.0;
@@ -405,7 +405,7 @@ pub fn calculate_entropy_quality(bytes: &[u8]) -> f64 {
 
     for &count in &counts {
         if count > 0 {
-            let p = count as f64 / len;
+            let p = f64::from(count) / len;
             entropy -= p * p.log2();
         }
     }
@@ -432,6 +432,18 @@ pub fn save_entropy_file(data: &[u8], path: &str) -> Result<(), BearDogError> {
 pub fn load_entropy_file(path: &str) -> Result<Vec<u8>, BearDogError> {
     std::fs::read(path)
         .map_err(|e| BearDogError::io_error(&format!("Failed to load entropy file: {e}")))
+}
+
+fn entropy_quality_assessment_label(quality_score: f64) -> &'static str {
+    if quality_score > 0.95 {
+        "✅ Excellent"
+    } else if quality_score > 0.85 {
+        "✅ Good"
+    } else if quality_score > 0.70 {
+        "⚠️  Acceptable"
+    } else {
+        "❌ Poor"
+    }
 }
 
 fn generate_system_entropy(size: usize) -> Result<Vec<u8>, BearDogError> {
@@ -722,9 +734,7 @@ mod entropy_handler_tests {
             hsms[1].clone(),
         ];
         assert_eq!(
-            select_hsm_by_preference(&with_mobile, "auto")
-                .unwrap()
-                .tier,
+            select_hsm_by_preference(&with_mobile, "auto").unwrap().tier,
             "Mobile"
         );
     }
@@ -770,5 +780,44 @@ mod entropy_handler_tests {
             hsm_type: "Software".to_string(),
         }];
         assert!(select_hsm_by_preference(&hsms, "hardware").is_err());
+    }
+
+    #[test]
+    fn test_calculate_entropy_quality_moderate_distribution() {
+        let mut v = vec![0u8; 256];
+        for i in 0..256 {
+            v[i] = (i % 17) as u8;
+        }
+        let q = calculate_entropy_quality(&v);
+        assert!(q > 0.2 && q < 0.99, "unexpected quality {q}");
+    }
+
+    #[test]
+    fn test_entropy_quality_assessment_label_branches() {
+        assert!(entropy_quality_assessment_label(0.96).contains("Excellent"));
+        assert!(entropy_quality_assessment_label(0.90).contains("Good"));
+        assert!(entropy_quality_assessment_label(0.75).contains("Acceptable"));
+        assert!(entropy_quality_assessment_label(0.50).contains("Poor"));
+    }
+
+    #[tokio::test]
+    async fn test_handle_entropy_info_with_identity_and_short_entropy() {
+        let dir = TempDir::new().unwrap();
+        let seed_path = dir.path().join("tiny.json");
+        let meta = EntropySeedMetadata {
+            seed_id: "id-2".to_string(),
+            quality_tier: 4,
+            quality_score: 0.91,
+            device_used: "dev".to_string(),
+            device_tier: "Software".to_string(),
+            timestamp: "2025-06-01T12:00:00Z".to_string(),
+            human_input: true,
+            identity: Some("bob".to_string()),
+            entropy_bytes_b64: base64_encode(&[1u8, 2, 3]),
+        };
+        std::fs::write(&seed_path, serde_json::to_string_pretty(&meta).unwrap()).unwrap();
+        handle_entropy_info(seed_path.to_str().unwrap())
+            .await
+            .unwrap();
     }
 }

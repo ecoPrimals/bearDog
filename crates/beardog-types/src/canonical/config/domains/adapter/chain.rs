@@ -179,14 +179,25 @@ impl RetryStrategy for RetryConfig {
     fn delay_for_attempt(&self, attempt: u32) -> Duration {
         if self.exponential_backoff {
             // Exponential backoff with multiplier and optional jitter
-            #[allow(
+            #[expect(
+                clippy::cast_possible_truncation,
+                reason = "backoff delay clamped to millis as u64 for Duration::from_millis"
+            )]
+            #[expect(
                 clippy::cast_precision_loss,
+                reason = "acceptable imprecision for non-cryptographic backoff math"
+            )]
+            #[expect(
+                clippy::cast_sign_loss,
+                reason = "delay clamped non-negative before f64 to u64"
+            )]
+            #[expect(
                 clippy::cast_possible_wrap,
-                clippy::cast_sign_loss
+                reason = "retry attempt capped at 30 for powi exponent"
             )]
             let delay_ms = {
-                let initial_ms = self.initial_delay.as_millis().min(u64::MAX as u128) as f64;
-                let max_ms = self.max_delay.as_millis().min(u64::MAX as u128) as u64;
+                let initial_ms = self.initial_delay.as_millis().min(u128::from(u64::MAX)) as f64;
+                let max_ms = self.max_delay.as_millis().min(u128::from(u64::MAX)) as u64;
                 let base_delay = initial_ms * self.backoff_multiplier.powi(attempt.min(30) as i32);
 
                 let jitter = if self.jitter_factor > 0.0 {

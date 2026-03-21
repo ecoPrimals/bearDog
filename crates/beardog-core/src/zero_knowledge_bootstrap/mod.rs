@@ -379,6 +379,10 @@ impl ZeroKnowledgeBootstrap {
     /// # Errors
     /// Returns an error if bootstrapping fails at any phase, if ecosystem announcement encounters issues,
     /// or if capability discovery or registry operations fail.
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Bootstrap duration ms capped to u64::MAX for metrics"
+    )]
     pub async fn bootstrap(&mut self) -> Result<(), BearDogError> {
         let start_time = std::time::Instant::now();
 
@@ -497,6 +501,14 @@ impl ZeroKnowledgeBootstrap {
     }
 
     /// Discover ecosystem capabilities through active probing
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Capability count clamped to u32::MAX for metrics field"
+    )]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Discovery success ratio for display; acceptable f64 precision"
+    )]
     async fn discover_ecosystem_capabilities(&mut self) -> Result<(), BearDogError> {
         info!("🔍 Discovering ecosystem capabilities...");
 

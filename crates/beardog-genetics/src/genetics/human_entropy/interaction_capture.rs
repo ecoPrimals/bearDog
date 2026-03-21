@@ -97,7 +97,7 @@ pub enum InteractionData {
 }
 
 /// Mouse button identity without UI context.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum MouseButton {
     /// Primary button.
     Left,
@@ -235,6 +235,10 @@ impl InteractionEntropyCollector {
             }
         }
 
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "collection duration millis fit u64 for metrics"
+        )]
         let duration_ms = start_instant.elapsed().as_millis() as u64;
 
         // Calculate metrics and derive entropy
@@ -285,6 +289,10 @@ impl InteractionEntropyCollector {
     }
 
     /// Process a mouse event into an interaction
+    #[expect(
+        clippy::cast_possible_wrap,
+        reason = "mouse delta fits i16 for terminal coordinate differences"
+    )]
     fn process_mouse_event(
         &self,
         mouse_event: MouseEvent,
@@ -339,6 +347,10 @@ impl InteractionEntropyCollector {
     }
 
     /// Calculate entropy metrics from interactions
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "timing analytics use f64; nanosecond deltas may lose precision"
+    )]
     fn calculate_metrics(
         interactions: &[InteractionEvent],
         duration_ms: u64,
@@ -403,6 +415,18 @@ impl InteractionEntropyCollector {
     }
 
     /// Calculate Shannon entropy of timing intervals
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "histogram buckets sized from interval range"
+    )]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "entropy bins and counts use f64 histogram math"
+    )]
+    #[expect(
+        clippy::cast_sign_loss,
+        reason = "intervals are non-negative before usize indexing"
+    )]
     fn calculate_shannon_entropy(intervals: &[f64]) -> f64 {
         if intervals.is_empty() {
             return 0.0;
@@ -440,6 +464,10 @@ impl InteractionEntropyCollector {
     }
 
     /// Calculate entropy from mouse movement patterns
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "variance statistics use f64 over i16 mouse deltas"
+    )]
     fn calculate_movement_entropy(interactions: &[InteractionEvent]) -> f64 {
         let movements: Vec<(i16, i16)> = interactions
             .iter()
@@ -458,21 +486,22 @@ impl InteractionEntropyCollector {
 
         // Calculate variance in movement
         let (sum_x, sum_y): (i32, i32) = movements.iter().fold((0, 0), |(sx, sy), &(dx, dy)| {
-            (sx + dx as i32, sy + dy as i32)
+            (sx + i32::from(dx), sy + i32::from(dy))
         });
 
-        let mean_x = sum_x as f64 / movements.len() as f64;
-        let mean_y = sum_y as f64 / movements.len() as f64;
+        let len = movements.len() as f64;
+        let mean_x = f64::from(sum_x) / len;
+        let mean_y = f64::from(sum_y) / len;
 
         let variance: f64 = movements
             .iter()
             .map(|&(dx, dy)| {
-                let diff_x = dx as f64 - mean_x;
-                let diff_y = dy as f64 - mean_y;
+                let diff_x = f64::from(dx) - mean_x;
+                let diff_y = f64::from(dy) - mean_y;
                 diff_x.mul_add(diff_x, diff_y * diff_y)
             })
             .sum::<f64>()
-            / movements.len() as f64;
+            / len;
 
         // Normalize variance to 0.0-1.0 (higher variance = more entropy)
         // Typical mouse movement variance is 0-1000, so we normalize
@@ -480,6 +509,10 @@ impl InteractionEntropyCollector {
     }
 
     /// Calculate overall quality score
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "quality score combines f64 ratios with usize counts"
+    )]
     fn calculate_overall_quality(
         timing_entropy: f64,
         movement_entropy: f64,
@@ -529,7 +562,7 @@ impl InteractionEntropyCollector {
                     is_char,
                     is_modifier,
                 } => {
-                    hasher.update([*is_char as u8, *is_modifier as u8]);
+                    hasher.update([u8::from(*is_char), u8::from(*is_modifier)]);
                 }
                 InteractionData::Mouse { delta_x, delta_y } => {
                     hasher.update(delta_x.to_le_bytes());
@@ -630,6 +663,18 @@ impl InteractionEntropyCollector {
     }
 
     /// Display progress during collection
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "progress percent fits usize for bar display"
+    )]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "progress ratio uses f64 division of counts"
+    )]
+    #[expect(
+        clippy::cast_sign_loss,
+        reason = "progress uses non-negative counts and targets"
+    )]
     fn display_progress(&self, collected: usize) -> Result<(), BearDogError> {
         use crossterm::{cursor, execute, style};
         use std::io::{Write, stdout};
@@ -685,168 +730,5 @@ impl Drop for RawModeGuard {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_interaction_capture_config_default() {
-        let config = InteractionCaptureConfig::default();
-        assert_eq!(config.target_interactions, 50);
-        assert_eq!(config.timeout_seconds, 120);
-        assert!(config.enable_keyboard);
-        assert!(config.enable_mouse);
-    }
-
-    #[test]
-    fn test_shannon_entropy_calculation() {
-        // Uniform distribution should have high entropy
-        let uniform = vec![10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0];
-        let entropy = InteractionEntropyCollector::calculate_shannon_entropy(&uniform);
-        assert!(
-            entropy > 0.8,
-            "Uniform distribution should have high entropy"
-        );
-
-        // Identical values should have low entropy
-        let identical = vec![50.0; 8];
-        let entropy = InteractionEntropyCollector::calculate_shannon_entropy(&identical);
-        assert!(entropy < 0.1, "Identical values should have low entropy");
-    }
-
-    #[test]
-    fn test_overall_quality_calculation() {
-        // Good quality interaction
-        let quality = InteractionEntropyCollector::calculate_overall_quality(
-            0.8,   // Good timing entropy
-            0.7,   // Good movement entropy
-            50,    // Target number of interactions
-            25000, // 25 seconds (500ms average interval)
-        );
-        assert!(quality > 0.7, "Good interaction should have high quality");
-
-        // Poor quality interaction
-        let quality = InteractionEntropyCollector::calculate_overall_quality(
-            0.2,   // Poor timing entropy
-            0.3,   // Poor movement entropy
-            10,    // Too few interactions
-            50000, // 50 seconds (5000ms average interval - too slow)
-        );
-        assert!(quality < 0.5, "Poor interaction should have low quality");
-    }
-
-    #[test]
-    fn test_calculate_metrics_empty_and_mixed_events() {
-        let empty = InteractionEntropyCollector::calculate_metrics(&[], 0);
-        assert_eq!(empty.total_interactions, 0);
-        assert_eq!(empty.avg_interval_ms, 0.0);
-
-        let events = vec![
-            InteractionEvent {
-                interaction_type: InteractionType::KeyPress,
-                timestamp_nanos: 0,
-                data: InteractionData::Keyboard {
-                    is_char: true,
-                    is_modifier: false,
-                },
-            },
-            InteractionEvent {
-                interaction_type: InteractionType::MouseMove,
-                timestamp_nanos: 10_000_000,
-                data: InteractionData::Mouse {
-                    delta_x: 3,
-                    delta_y: -2,
-                },
-            },
-            InteractionEvent {
-                interaction_type: InteractionType::MouseScroll,
-                timestamp_nanos: 25_000_000,
-                data: InteractionData::Scroll { delta: 1 },
-            },
-        ];
-        let m = InteractionEntropyCollector::calculate_metrics(&events, 30);
-        assert_eq!(m.total_interactions, 3);
-        assert_eq!(m.keyboard_events, 1);
-        assert_eq!(m.mouse_events, 2);
-        assert!(m.movement_entropy >= 0.0);
-    }
-
-    #[test]
-    fn test_derive_entropy_bytes_deterministic_for_same_inputs() {
-        let events = vec![InteractionEvent {
-            interaction_type: InteractionType::KeyRelease,
-            timestamp_nanos: 99,
-            data: InteractionData::Keyboard {
-                is_char: false,
-                is_modifier: true,
-            },
-        }];
-        let metrics = InteractionEntropyCollector::calculate_metrics(&events, 1);
-        let a = InteractionEntropyCollector::derive_entropy_bytes(&events, &metrics);
-        let b = InteractionEntropyCollector::derive_entropy_bytes(&events, &metrics);
-        assert_eq!(a, b);
-        assert_eq!(a.len(), 32);
-    }
-
-    #[test]
-    fn test_calculate_movement_entropy_neutral_without_mouse() {
-        let events = vec![InteractionEvent {
-            interaction_type: InteractionType::KeyPress,
-            timestamp_nanos: 0,
-            data: InteractionData::Keyboard {
-                is_char: true,
-                is_modifier: false,
-            },
-        }];
-        let m = InteractionEntropyCollector::calculate_movement_entropy(&events);
-        assert!((m - 0.5).abs() < f64::EPSILON);
-    }
-
-    #[test]
-    fn test_shannon_empty_intervals() {
-        assert_eq!(
-            InteractionEntropyCollector::calculate_shannon_entropy(&[]),
-            0.0
-        );
-    }
-
-    #[test]
-    fn test_process_key_event_classifies_printable_vs_modifier() {
-        use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers};
-        let collector = InteractionEntropyCollector::new(InteractionCaptureConfig::default());
-        let printable = KeyEvent {
-            code: KeyCode::Char('z'),
-            modifiers: KeyModifiers::NONE,
-            kind: KeyEventKind::Press,
-            state: KeyEventState::empty(),
-        };
-        let ev = collector.process_key_event(printable, 100u128);
-        match ev.data {
-            InteractionData::Keyboard {
-                is_char,
-                is_modifier,
-            } => {
-                assert!(is_char);
-                assert!(!is_modifier);
-            }
-            _ => panic!("expected keyboard data"),
-        }
-
-        let modifier = KeyEvent {
-            code: KeyCode::Modifier(crossterm::event::ModifierKeyCode::LeftShift),
-            modifiers: KeyModifiers::SHIFT,
-            kind: KeyEventKind::Press,
-            state: KeyEventState::empty(),
-        };
-        let ev2 = collector.process_key_event(modifier, 200u128);
-        match ev2.data {
-            InteractionData::Keyboard {
-                is_char,
-                is_modifier,
-            } => {
-                assert!(!is_char);
-                assert!(is_modifier);
-            }
-            _ => panic!("expected keyboard data"),
-        }
-    }
-}
+#[path = "interaction_capture_tests.rs"]
+mod tests;

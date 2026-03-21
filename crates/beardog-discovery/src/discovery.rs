@@ -504,4 +504,13 @@ reliability = 0.25
         let best = d.select_best(&[low.clone(), high.clone()]).unwrap();
         assert_eq!(best.id, "b");
     }
+
+    #[tokio::test]
+    async fn builder_with_service_registry_url_none_still_runs() {
+        let toml = minimal_config_toml("\"environment\"");
+        let config: DiscoveryConfig = toml::from_str(&toml).unwrap();
+        let d = CapabilityDiscovery::new(config).with_service_registry_url(None);
+        let out = d.find_by_capability("noop").await.unwrap();
+        assert!(out.is_empty());
+    }
 }

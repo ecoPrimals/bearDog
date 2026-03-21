@@ -76,6 +76,10 @@ impl beardog_traits::unified::BearDogProvider for Fido2MultiCredentialProvider {
         })
     }
 
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Credential counts as f64 for provider metrics display"
+    )]
     async fn metrics(&self) -> Result<ProviderMetrics, Self::Error> {
         use beardog_types::canonical::providers_unified::traits::CustomMetric;
 

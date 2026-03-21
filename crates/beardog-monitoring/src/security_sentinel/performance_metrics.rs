@@ -258,6 +258,10 @@ impl PerformanceMetricsCollector {
     ///
     /// # Errors
     /// Returns an error if trend analysis fails.
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Averages over sample count; acceptable precision for dashboard metrics"
+    )]
     pub async fn analyze_trends(
         &self,
         window_size: usize,
@@ -294,6 +298,10 @@ impl PerformanceMetricsCollector {
     }
 
     /// Calculate trend for a metric
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Half-window means; acceptable precision for trend comparison"
+    )]
     fn calculate_trend<F>(&self, metrics: &[PerformanceMetrics], extractor: F) -> MetricTrend
     where
         F: Fn(&PerformanceMetrics) -> f64,

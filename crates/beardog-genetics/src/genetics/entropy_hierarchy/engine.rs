@@ -195,7 +195,12 @@ impl EntropyHierarchyManager {
             })
             .sum();
 
-        total_quality / self.active_seeds.len() as f64
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "mean quality over seed count; usize to f64 acceptable for analytics"
+        )]
+        let divisor = self.active_seeds.len() as f64;
+        total_quality / divisor
     }
 
     /// Initialize the manager

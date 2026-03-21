@@ -539,6 +539,10 @@ impl CacheStrategy for CanonicalCacheConfig {
             return 0;
         }
         // Estimate entries from MB: assume ~4KB per entry
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "cache size MB converted to byte count for entry estimate"
+        )]
         let bytes = (self.max_size_mb * 1024 * 1024) as usize;
         bytes / 4096
     }

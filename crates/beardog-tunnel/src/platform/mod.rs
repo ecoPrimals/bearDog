@@ -109,9 +109,23 @@ impl SocketEndpoint {
 /// This enables universal deployment without user intervention.
 #[cfg(target_os = "android")]
 pub fn default_socket_endpoint() -> SocketEndpoint {
-    // Android: Use abstract sockets to bypass SELinux restrictions
-    // Abstract sockets exist in a separate namespace and don't require filesystem access
-    SocketEndpoint::Abstract("@biomeos_beardog".to_string())
+    default_socket_endpoint_for_primal(
+        beardog_errors::process_env::var("PRIMAL_NAME")
+            .ok()
+            .as_deref(),
+    )
+}
+
+/// Android abstract socket: `@{namespace}_{primal}` (namespace from [`beardog_types::constants::domains::network::ipc_discovery`]).
+#[cfg(target_os = "android")]
+pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEndpoint {
+    let primal_name = primal_name
+        .map(str::to_string)
+        .or_else(|| beardog_errors::process_env::var("PRIMAL_NAME").ok())
+        .or_else(|| beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME").ok())
+        .unwrap_or_else(|| "beardog".to_string());
+    let ns = beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_ipc_subdir_from_optional(None);
+    SocketEndpoint::Abstract(format!("@{ns}_{primal_name}"))
 }
 
 /// Returns the default socket endpoint for the current Unix platform
@@ -120,10 +134,14 @@ pub fn default_socket_endpoint() -> SocketEndpoint {
     default_socket_endpoint_for_primal(None)
 }
 
-/// Default Unix filesystem socket using an optional primal name (`None` → `env!("CARGO_PKG_NAME")`).
+/// Default Unix filesystem socket using an optional primal name (`None` → env / `beardog`).
 #[cfg(all(unix, not(target_os = "android")))]
 pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEndpoint {
-    let primal_name = primal_name.unwrap_or(env!("CARGO_PKG_NAME"));
+    let primal_name = primal_name
+        .map(str::to_string)
+        .or_else(|| beardog_errors::process_env::var("PRIMAL_NAME").ok())
+        .or_else(|| beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME").ok())
+        .unwrap_or_else(|| "beardog".to_string());
     SocketEndpoint::Filesystem(PathBuf::from(format!("/tmp/{primal_name}.sock")))
 }
 
@@ -139,8 +157,19 @@ pub fn default_socket_endpoint_from_env() -> SocketEndpoint {
 
 #[cfg(windows)]
 pub fn default_socket_endpoint() -> SocketEndpoint {
-    // Windows: Use named pipes (Windows' IPC mechanism)
-    SocketEndpoint::NamedPipe(r"\\.\pipe\biomeos_beardog".to_string())
+    let primal_name = beardog_errors::process_env::var("PRIMAL_NAME")
+        .or_else(|_| beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME"))
+        .unwrap_or_else(|_| "beardog".to_string());
+    windows::create_endpoint_with(
+        &primal_name,
+        beardog_errors::process_env::var("BEARDOG_PIPE")
+            .ok()
+            .as_deref(),
+        beardog_errors::process_env::var("BIOMEOS_PIPE_DIR")
+            .ok()
+            .as_deref(),
+    )
+    .expect("Windows named pipe path")
 }
 
 #[cfg(target_os = "ios")]
@@ -156,8 +185,12 @@ pub fn default_socket_endpoint() -> SocketEndpoint {
 
 #[cfg(target_family = "wasm")]
 pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEndpoint {
-    let primal_name = primal_name.unwrap_or(env!("CARGO_PKG_NAME"));
-    SocketEndpoint::InProcess(primal_name.to_string())
+    let primal_name = primal_name
+        .map(str::to_string)
+        .or_else(|| beardog_errors::process_env::var("PRIMAL_NAME").ok())
+        .or_else(|| beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME").ok())
+        .unwrap_or_else(|| "beardog".to_string());
+    SocketEndpoint::InProcess(primal_name)
 }
 
 #[cfg(target_family = "wasm")]

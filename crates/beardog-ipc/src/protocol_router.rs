@@ -550,4 +550,13 @@ mod tests {
         let protocol = ProtocolDetector::detect_from_bytes(&bytes);
         assert_ne!(protocol, Protocol::Tarpc);
     }
+
+    #[test]
+    fn test_protocol_unknown_display_name_and_high_performance() {
+        assert_eq!(format!("{}", Protocol::Unknown), "unknown");
+        assert_eq!(Protocol::Unknown.name(), "unknown");
+        assert_eq!(Protocol::Unknown.priority(), 0);
+        assert!(!Protocol::JsonRpc.is_high_performance());
+        assert!(Protocol::Tarpc.is_high_performance());
+    }
 }

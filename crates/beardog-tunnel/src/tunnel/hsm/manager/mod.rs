@@ -546,10 +546,16 @@ impl HsmManager {
                         format!("{provider_id}_failed_ops"),
                         op_metrics.failed_operations,
                     );
-                    result.insert(
-                        format!("{provider_id}_avg_latency_ms"),
-                        op_metrics.average_latency_ms as u64,
-                    );
+                    #[expect(
+                        clippy::cast_sign_loss,
+                        reason = "latency ms is non-negative from rolling average"
+                    )]
+                    #[expect(
+                        clippy::cast_possible_truncation,
+                        reason = "store ms as integer metric"
+                    )]
+                    let avg_ms = op_metrics.average_latency_ms as u64;
+                    result.insert(format!("{provider_id}_avg_latency_ms"), avg_ms);
 
                     total_ops += op_metrics.total_operations;
                     total_success += op_metrics.successful_operations;

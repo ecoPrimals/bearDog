@@ -141,10 +141,12 @@ impl SimdCryptoAccelerator {
             let _ = self.safe_aes_encrypt(&test_data, &test_key)?;
         }
         let aes_duration = start.elapsed();
-        results.insert(
-            "aes_encrypt_ns_per_kb".to_string(),
-            aes_duration.as_nanos() as u64 / CRYPTO_BENCHMARK_ITERATIONS,
-        );
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "benchmark nanos per iteration"
+        )]
+        let aes_ns = aes_duration.as_nanos() as u64 / CRYPTO_BENCHMARK_ITERATIONS;
+        results.insert("aes_encrypt_ns_per_kb".to_string(), aes_ns);
 
         // Benchmark SHA-256 hashing
         let start = std::time::Instant::now();
@@ -152,10 +154,12 @@ impl SimdCryptoAccelerator {
             let _ = self.safe_sha256(&test_data)?;
         }
         let sha_duration = start.elapsed();
-        results.insert(
-            "sha256_hash_ns_per_kb".to_string(),
-            sha_duration.as_nanos() as u64 / CRYPTO_BENCHMARK_ITERATIONS,
-        );
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "benchmark nanos per iteration"
+        )]
+        let sha_ns = sha_duration.as_nanos() as u64 / CRYPTO_BENCHMARK_ITERATIONS;
+        results.insert("sha256_hash_ns_per_kb".to_string(), sha_ns);
 
         info!("🏆 Crypto benchmarks completed with zero unsafe code");
         Ok(results)

@@ -8,7 +8,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **Crates**: 29 | **Tests**: 13,400+ | **Coverage**: 84%
+**Status**: Production Ready | **Edition**: 2024 | **Crates**: 29 | **Tests**: 13,850+ | **Coverage**: 85%
 
 ---
 
@@ -169,8 +169,8 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
 | **Files > 1000 LOC** | 0 |
-| **Tests** | 13,400+ (fully concurrent, 8 threads) |
-| **Coverage** | 84% line (llvm-cov) |
+| **Tests** | 13,850+ (fully concurrent, 8 threads) |
+| **Coverage** | 85% region / 86% line (llvm-cov) |
 | **Serial Tests** | 15 (chaos/fault only) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |
 | **License** | AGPL-3.0-only (SPDX headers on all .rs files) |
@@ -183,7 +183,7 @@ Key material is derived from the family seed. A BearDog instance serving family 
 - **Zero Hardcoding** — Environment variables and capability discovery
 - **Result<T, E>** — No `unwrap()`/`expect()` in production code
 - **Fully Concurrent Tests** — No `#[serial]` outside chaos/fault suites
-- **< 1000 LOC** — File size discipline across all 1,740 .rs files
+- **< 1000 LOC** — File size discipline across all 1,773+ .rs files
 - **Workspace Lints** — Centralized clippy pedantic + nursery configuration
 - **SPDX headers** — Every `.rs` file has `// SPDX-License-Identifier: AGPL-3.0-only`
 

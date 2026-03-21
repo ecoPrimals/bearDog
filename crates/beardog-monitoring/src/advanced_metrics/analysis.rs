@@ -21,6 +21,10 @@ impl AnomalyDetector {
 
     /// Detect anomalies in metric data
     #[must_use]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Mean over sample count; f64 precision sufficient for anomaly thresholds"
+    )]
     pub fn detect_anomalies(&self, metrics: &[MetricDataPoint]) -> Vec<AnomalyDetection> {
         let mut anomalies = Vec::new();
 
@@ -99,6 +103,10 @@ impl TrendAnalyzer {
     }
 
     /// Calculate trend strength using simple slope calculation
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Slope divides by sample count; acceptable precision for trend strength"
+    )]
     fn calculate_trend_strength(&self, metrics: &[MetricDataPoint]) -> f64 {
         if metrics.len() < 2 {
             return 0.0;

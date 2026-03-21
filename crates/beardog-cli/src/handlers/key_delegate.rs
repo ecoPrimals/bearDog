@@ -503,6 +503,10 @@ fn parse_memory_quota(quota: &str) -> Result<u64, BearDogError> {
 }
 
 /// Format bytes to human-readable string
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "Human-readable byte units; mantissa loss acceptable for display"
+)]
 fn format_bytes(bytes: u64) -> String {
     const KB: u64 = 1024;
     const MB: u64 = KB * 1024;

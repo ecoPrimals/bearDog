@@ -31,6 +31,14 @@ impl Default for BenchmarkStats {
 }
 
 /// Calculate statistics from a set of measurements
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "Summed benchmark nanoseconds capped to u64 for aggregate stats"
+)]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "Benchmark mean/variance/min/max; f64 precision sufficient for timing stats"
+)]
 pub fn calculate_stats(measurements: &[Duration]) -> BenchmarkStats {
     if measurements.is_empty() {
         return BenchmarkStats::default();

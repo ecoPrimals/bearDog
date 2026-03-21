@@ -524,4 +524,11 @@ mod tests {
         discovery.clear_cache().await;
         assert!(discovery.get_cached("_test._tcp.local.").await.is_none());
     }
+
+    #[test]
+    fn mdns_config_default_values() {
+        let c = MdnsConfig::default();
+        assert!(c.domain.contains("local"));
+        assert!(c.timeout.as_secs() >= 1);
+    }
 }

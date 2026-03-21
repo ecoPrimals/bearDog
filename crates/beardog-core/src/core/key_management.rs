@@ -831,4 +831,85 @@ mod tests {
         store.delete_key("sym-del").await.expect("delete");
         assert!(!dir.join("sym-del.key").exists());
     }
+
+    #[tokio::test]
+    async fn test_generate_signing_key_file_storage_without_store_dir_fails() {
+        let store = KeyStore::new(None);
+        let err = store
+            .generate_signing_key(
+                "x".to_string(),
+                vec![KeyUsage::Sign],
+                KeyStorage::File(std::path::PathBuf::from("/tmp/unused")),
+                None,
+            )
+            .await
+            .expect_err("needs storage_dir");
+        assert!(format!("{err}").to_lowercase().contains("storage"));
+    }
+
+    #[tokio::test]
+    async fn test_get_verifying_and_symmetric_and_metadata_missing() {
+        let store = KeyStore::new(None);
+        assert!(store.get_verifying_key("n").await.is_err());
+        assert!(store.get_symmetric_key("n").await.is_err());
+        assert!(store.get_metadata("n").await.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_load_from_storage_skips_orphan_key_without_metadata() {
+        let temp = TempDir::new().unwrap();
+        let dir = temp.path();
+        std::fs::write(dir.join("lonely.key"), [7u8; 32]).unwrap();
+        let store = KeyStore::new(Some(dir.to_path_buf()));
+        let n = store.load_from_storage().await.unwrap();
+        assert_eq!(n, 0);
+    }
+
+    #[tokio::test]
+    async fn test_load_from_storage_skips_unsupported_key_type() {
+        let temp = TempDir::new().unwrap();
+        let dir = temp.path();
+        std::fs::write(dir.join("rsa.key"), b"dummy-key-material").unwrap();
+        let meta = KeyMetadata {
+            key_id: "rsa".to_string(),
+            key_type: KeyType::Rsa2048,
+            usage: vec![KeyUsage::Sign],
+            storage: KeyStorage::File(dir.to_path_buf()),
+            created_at: chrono::Utc::now(),
+            expires_at: None,
+            description: None,
+        };
+        std::fs::write(
+            dir.join("rsa.meta.json"),
+            serde_json::to_string_pretty(&meta).unwrap(),
+        )
+        .unwrap();
+        let store = KeyStore::new(Some(dir.to_path_buf()));
+        let n = store.load_from_storage().await.unwrap();
+        assert_eq!(n, 0);
+    }
+
+    #[tokio::test]
+    async fn test_import_signing_key_matches_verifying_key() {
+        let store = KeyStore::new(None);
+        let mut sk_bytes = [0u8; SECRET_KEY_LENGTH];
+        rand::rngs::OsRng.fill_bytes(&mut sk_bytes);
+        store
+            .import_signing_key(
+                "imported-ed25519".to_string(),
+                &sk_bytes,
+                vec![KeyUsage::Sign],
+                KeyStorage::Ephemeral,
+                None,
+            )
+            .await
+            .expect("import");
+
+        let vk = store
+            .get_verifying_key("imported-ed25519")
+            .await
+            .expect("verifying key");
+        let expected = SigningKey::from_bytes(&sk_bytes).verifying_key();
+        assert_eq!(vk.as_bytes(), expected.as_bytes());
+    }
 }

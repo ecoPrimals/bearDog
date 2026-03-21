@@ -268,6 +268,10 @@ impl GeneticSpawningEngine {
 
     /// Calculate fitness score based on genetics
     fn calculate_fitness(&self, genetics: &BearDogGenetics) -> Result<f64, BearDogError> {
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "capability count as f64 for fitness heuristic"
+        )]
         let capability_score = (genetics.capabilities.len() as f64) * 0.1;
         let generation_bonus = if genetics.generation > 0 { 0.1 } else { 0.0 };
         let base_score = 0.5;

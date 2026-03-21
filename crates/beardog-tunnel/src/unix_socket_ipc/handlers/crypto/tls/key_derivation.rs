@@ -60,6 +60,7 @@ use super::super::sslkeylog::export_to_sslkeylogfile;
 // Internal helper functions for TLS 1.3 key derivation (SHA-256 and SHA-384)
 #[path = "key_derivation_helpers.rs"]
 mod helpers;
+pub(crate) use helpers::append_tls13_hkdf_label;
 use helpers::{
     derive_application_secrets_sha256, derive_application_secrets_sha384,
     derive_handshake_secrets_sha256, derive_handshake_secrets_sha384,
@@ -286,6 +287,10 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
         .ok_or("Missing required parameter: transcript_hash")?;
 
     // REQUIRED: cipher_suite (RFC 8446 Section 7.3 - determines key length!)
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "IANA TLS cipher suite identifier"
+    )]
     let cipher_suite = params
         .get("cipher_suite")
         .and_then(serde_json::Value::as_u64)
@@ -556,6 +561,10 @@ pub async fn handle_tls_derive_application_secrets(
         .ok_or("Missing required parameter: transcript_hash (SHA-256 of all handshake messages)")?;
 
     // Extract cipher_suite (for dynamic key length derivation)
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "IANA TLS cipher suite identifier"
+    )]
     let cipher_suite = params
         .get("cipher_suite")
         .and_then(serde_json::Value::as_u64)
@@ -821,5 +830,89 @@ mod tests {
                 .await
                 .is_err()
         );
+    }
+
+    #[tokio::test]
+    async fn derive_application_secrets_chacha_poly1305() {
+        let params = serde_json::json!({
+            "handshake_secret": B64.encode([9u8; 32]),
+            "transcript_hash": B64.encode([3u8; 32]),
+            "cipher_suite": 0x1303u64,
+        });
+        let out = handle_tls_derive_application_secrets(Some(&params))
+            .await
+            .expect("application secrets");
+        assert!(out.get("client_write_key").is_some());
+        assert_eq!(out["cipher_suite"], 0x1303);
+    }
+
+    #[tokio::test]
+    async fn derive_application_secrets_missing_handshake_secret() {
+        let params = serde_json::json!({
+            "transcript_hash": B64.encode([3u8; 32]),
+        });
+        assert!(
+            handle_tls_derive_application_secrets(Some(&params))
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn derive_application_secrets_unsupported_cipher_suite() {
+        let params = serde_json::json!({
+            "handshake_secret": B64.encode([9u8; 32]),
+            "transcript_hash": B64.encode([3u8; 32]),
+            "cipher_suite": 0x9999u64,
+        });
+        assert!(
+            handle_tls_derive_application_secrets(Some(&params))
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn derive_application_secrets_wrong_handshake_length_for_suite() {
+        let params = serde_json::json!({
+            "handshake_secret": B64.encode([9u8; 16]),
+            "transcript_hash": B64.encode([3u8; 32]),
+            "cipher_suite": 0x1303u64,
+        });
+        assert!(
+            handle_tls_derive_application_secrets(Some(&params))
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn derive_handshake_secrets_sha384_cipher_0x1302() {
+        let params = serde_json::json!({
+            "pre_master_secret": B64.encode([11u8; 32]),
+            "client_random": B64.encode(rand32()),
+            "server_random": B64.encode(rand32()),
+            "transcript_hash": B64.encode([4u8; 48]),
+            "cipher_suite": 0x1302u64,
+        });
+        let out = handle_tls_derive_handshake_secrets(Some(&params))
+            .await
+            .expect("handshake secrets sha384");
+        assert!(out.get("client_write_key").is_some());
+        assert_eq!(out["hash_algorithm"], "SHA-384");
+    }
+
+    #[tokio::test]
+    async fn derive_application_secrets_sha384_cipher_0x1302() {
+        let params = serde_json::json!({
+            "handshake_secret": B64.encode([12u8; 48]),
+            "transcript_hash": B64.encode([4u8; 48]),
+            "cipher_suite": 0x1302u64,
+        });
+        let out = handle_tls_derive_application_secrets(Some(&params))
+            .await
+            .expect("application secrets sha384");
+        assert!(out.get("server_write_key").is_some());
+        assert_eq!(out["hash_algorithm"], "SHA-384");
     }
 }

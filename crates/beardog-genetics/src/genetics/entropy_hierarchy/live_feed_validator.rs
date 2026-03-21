@@ -170,6 +170,10 @@ impl LiveFeedValidator {
         }
 
         // Calculate Shannon entropy
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "byte length as f64 for Shannon normalization"
+        )]
         let len = data.len() as f64;
         let mut entropy = 0.0;
 
@@ -202,7 +206,7 @@ impl LiveFeedValidator {
         let used_values = counts.iter().filter(|&&c| c > 0).count();
 
         // Calculate uniformity (closer to 1.0 = more uniform)
-        f64::from(used_values as u16) / 256.0
+        f64::from(u16::try_from(used_values).unwrap_or(256)) / 256.0
     }
 
     /// Detect known PRNG patterns
@@ -225,7 +229,12 @@ impl LiveFeedValidator {
         }
 
         if !gaps.is_empty() {
-            let avg_gap: f64 = gaps.iter().map(|&g| f64::from(g)).sum::<f64>() / gaps.len() as f64;
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "gap count as f64 for mean gap calculation"
+            )]
+            let gap_count = gaps.len() as f64;
+            let avg_gap: f64 = gaps.iter().map(|&g| f64::from(g)).sum::<f64>() / gap_count;
 
             // LCGs often have very consistent small gaps
             if avg_gap < 5.0 {

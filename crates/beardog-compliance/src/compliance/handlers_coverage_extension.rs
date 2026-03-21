@@ -490,4 +490,14 @@ mod handlers_coverage_extension_tests {
             );
         }
     }
+
+    #[test]
+    fn test_compliance_handler_default_matches_new() {
+        let a = ComplianceHandler::default();
+        let b = ComplianceHandler::new(ComplianceConfig::default());
+        assert_eq!(
+            a.config.enabled_standards.len(),
+            b.config.enabled_standards.len()
+        );
+    }
 }

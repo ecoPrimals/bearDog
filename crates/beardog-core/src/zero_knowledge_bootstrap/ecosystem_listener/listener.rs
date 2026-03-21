@@ -158,6 +158,10 @@ impl EcosystemListener {
     }
 
     /// Records startup metrics
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Listening duration ms capped to u64::MAX for metrics storage"
+    )]
     fn record_startup_metrics(&mut self, start_time: std::time::Instant) {
         self.metrics.listening_duration_ms = start_time.elapsed().as_millis() as u64;
     }
@@ -659,5 +663,10 @@ mod tests {
             .await
             .expect("ok");
         assert!(primals.read().await.contains_key("hardcoded-legacy-primal"));
+    }
+
+    #[test]
+    fn discover_service_mesh_primals_is_empty() {
+        assert!(super::super::discovery::discover_service_mesh_primals().is_empty());
     }
 }

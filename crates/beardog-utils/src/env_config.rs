@@ -5,8 +5,8 @@
 //! This module provides utilities for loading configuration from environment variables
 //! with sensible defaults and validation.
 //!
-//! Production code uses [`std_env_lookup`] with the real process environment.
-//! Tests pass a [`std::collections::HashMap`]-backed lookup via [`env_map_lookup`] to avoid
+//! Production code uses `std_env_lookup` with the real process environment.
+//! Tests pass a [`std::collections::HashMap`]-backed lookup via `env_map_lookup` to avoid
 //! global `set_var` / races.
 
 use std::collections::HashMap;

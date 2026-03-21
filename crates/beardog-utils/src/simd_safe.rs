@@ -80,10 +80,15 @@ impl SafeSimdProcessor {
             // Safe vectorized-style processing without unsafe code
             for (j, &byte) in chunk.iter().enumerate() {
                 let pos = j % 32;
-                hash[pos] ^= byte.wrapping_mul((i as u8).wrapping_add(1));
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "chunk index mixed into hash byte"
+                )]
+                let chunk_idx = i as u8;
+                hash[pos] ^= byte.wrapping_mul(chunk_idx.wrapping_add(1));
 
                 // Simulate vectorized operations with safe bit manipulation
-                hash[pos] = hash[pos].rotate_left(1) ^ (i as u8);
+                hash[pos] = hash[pos].rotate_left(1) ^ chunk_idx;
             }
         }
 
@@ -104,10 +109,15 @@ impl SafeSimdProcessor {
         for (i, chunk) in input_data.chunks(16).enumerate() {
             for (j, &byte) in chunk.iter().enumerate() {
                 let pos = j % 32;
-                hash[pos] ^= byte.wrapping_mul((i as u8).wrapping_add(1));
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "chunk index mixed into hash byte"
+                )]
+                let chunk_idx = i as u8;
+                hash[pos] ^= byte.wrapping_mul(chunk_idx.wrapping_add(1));
 
                 // Simulate vectorized operations with safe bit manipulation
-                hash[pos] = hash[pos].rotate_right(1) ^ (i as u8);
+                hash[pos] = hash[pos].rotate_right(1) ^ chunk_idx;
             }
         }
 
@@ -127,7 +137,12 @@ impl SafeSimdProcessor {
 
         for (i, &byte) in input_data.iter().enumerate() {
             let pos = i % 32;
-            hash[pos] ^= byte.wrapping_mul((i as u8).wrapping_add(1));
+            #[expect(
+                clippy::cast_possible_truncation,
+                reason = "byte index mixed into hash"
+            )]
+            let idx = i as u8;
+            hash[pos] ^= byte.wrapping_mul(idx.wrapping_add(1));
         }
 
         debug!("✅ Safe scalar hash completed - zero unsafe code");
@@ -602,5 +617,14 @@ mod tests {
         let caps = SimdCapabilities::default();
         let debug_str = format!("{:?}", caps);
         assert!(debug_str.contains("SimdCapabilities"));
+    }
+
+    #[test]
+    fn safe_simd_processor_default_matches_new() {
+        let a = SafeSimdProcessor::default();
+        let b = SafeSimdProcessor::new();
+        let da = format!("{a:?}");
+        let db = format!("{b:?}");
+        assert_eq!(da, db);
     }
 }

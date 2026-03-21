@@ -145,6 +145,10 @@ pub struct AutoEvolutionConfiguration {
 }
 
 impl Default for AutoEvolutionConfiguration {
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "default pool size fits u32 for evolution step limits"
+    )]
     fn default() -> Self {
         Self {
             enable_auto_evolution: true,

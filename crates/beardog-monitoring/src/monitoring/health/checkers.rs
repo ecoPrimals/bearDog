@@ -80,6 +80,10 @@ impl DatabaseHealthChecker {
 }
 
 impl HealthChecker for DatabaseHealthChecker {
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Health check elapsed millis fit in u64 for reporting"
+    )]
     async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         let start = Instant::now();
 
@@ -144,6 +148,10 @@ impl CacheHealthChecker {
 }
 
 impl HealthChecker for CacheHealthChecker {
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Health check elapsed millis fit in u64 for reporting"
+    )]
     async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         let start = Instant::now();
 
@@ -216,6 +224,10 @@ impl ExternalApiHealthChecker {
 }
 
 impl HealthChecker for ExternalApiHealthChecker {
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Health check elapsed millis fit in u64 for reporting"
+    )]
     async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         let start = Instant::now();
 
@@ -275,6 +287,10 @@ impl HsmHealthChecker {
 }
 
 impl HealthChecker for HsmHealthChecker {
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Health check elapsed millis fit in u64 for reporting"
+    )]
     async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         let start = Instant::now();
 

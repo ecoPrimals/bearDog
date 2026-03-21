@@ -23,6 +23,10 @@ impl CertificateIssuer {
     }
 
     /// Issue a certificate based on classification
+    #[expect(
+        clippy::cast_possible_wrap,
+        reason = "Expiry minutes from policy fit i64 for chrono Duration"
+    )]
     pub fn issue(
         &self,
         classification: CommercialClassification,
@@ -72,6 +76,10 @@ impl CertificateIssuer {
     }
 
     /// Issue with explicit license
+    #[expect(
+        clippy::cast_possible_wrap,
+        reason = "Expiry minutes from policy fit i64 for chrono Duration"
+    )]
     pub fn issue_with_license(
         &self,
         classification: CommercialClassification,

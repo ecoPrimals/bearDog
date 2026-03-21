@@ -536,11 +536,8 @@ mod tests {
             },
         ));
 
-        let s = minimal_discovered_primal(
-            "p-s",
-            "https://x",
-            vec![ServiceCapabilityType::DataStorage],
-        );
+        let s =
+            minimal_discovered_primal("p-s", "https://x", vec![ServiceCapabilityType::DataStorage]);
         assert!(EcosystemDiscoveryAdapter::primal_has_capability(
             &s,
             &UniversalCapabilityType::Storage {
@@ -548,11 +545,8 @@ mod tests {
             },
         ));
 
-        let n = minimal_discovered_primal(
-            "p-n",
-            "https://x",
-            vec![ServiceCapabilityType::ServiceMesh],
-        );
+        let n =
+            minimal_discovered_primal("p-n", "https://x", vec![ServiceCapabilityType::ServiceMesh]);
         assert!(EcosystemDiscoveryAdapter::primal_has_capability(
             &n,
             &UniversalCapabilityType::Network {

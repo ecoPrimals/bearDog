@@ -64,6 +64,10 @@ impl DatabaseConnectionConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "default pool size fits u32 for connection limits"
+    )]
     pub fn with_defaults() -> Self {
         Self {
             url: Self::DEFAULT_URL.to_string(),
@@ -87,6 +91,10 @@ impl DatabaseConnectionConfig {
     }
 
     /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "default pool size fits u32 for connection limits"
+    )]
     pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         let default_url = get("DATABASE_URL")
             .or_else(|| get("BEARDOG_DATABASE_URL"))
@@ -130,6 +138,10 @@ impl DatabasePoolConfig {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "default pool size fits u32 for pool sizing"
+    )]
     pub const fn with_defaults() -> Self {
         Self {
             min_idle: Self::DEFAULT_MIN_IDLE,
@@ -151,6 +163,10 @@ impl DatabasePoolConfig {
     }
 
     /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "default pool size fits u32 for pool sizing"
+    )]
     pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         let min_idle = get("DATABASE_POOL_MIN_IDLE")
             .and_then(|v| v.parse().ok())

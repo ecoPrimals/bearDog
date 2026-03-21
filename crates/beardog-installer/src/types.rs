@@ -197,6 +197,10 @@ impl DeploymentReport {
     }
 
     /// Calculate success rate (percentage)
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Deployment success ratio; acceptable f64 precision for percentage"
+    )]
     pub fn success_rate(&self) -> f64 {
         if self.total == 0 {
             0.0
@@ -373,5 +377,21 @@ mod tests {
         let json = serde_json::to_string(&status).expect("serialize failed status");
         assert!(json.contains("\"status\":\"failed\""));
         assert!(json.contains("\"reason\":\"test\""));
+    }
+
+    #[test]
+    fn test_deployment_report_debug_nonempty() {
+        use crate::arch::Architecture;
+        use crate::platform::OperatingSystem;
+
+        let report = DeploymentReport {
+            total: 0,
+            successes: 0,
+            failures: vec![],
+            arch: Architecture::X86_64,
+            os: OperatingSystem::Linux,
+        };
+        let s = format!("{report:?}");
+        assert!(!s.is_empty());
     }
 }

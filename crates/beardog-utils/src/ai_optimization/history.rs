@@ -67,7 +67,12 @@ impl OptimizationHistory {
         if improvements.is_empty() {
             0.0
         } else {
-            improvements.iter().sum::<f64>() / improvements.len() as f64
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "mean improvement; count fits f64 for this statistic"
+            )]
+            let n = improvements.len() as f64;
+            improvements.iter().sum::<f64>() / n
         }
     }
 
@@ -99,7 +104,17 @@ impl OptimizationHistory {
         // Calculate success rates
         for (type_name, (total, successful)) in type_counts {
             if total > 0 {
-                let rate = successful as f64 / total as f64;
+                #[expect(
+                    clippy::cast_precision_loss,
+                    reason = "success rate from small integer counts"
+                )]
+                let succ = successful as f64;
+                #[expect(
+                    clippy::cast_precision_loss,
+                    reason = "success rate from small integer counts"
+                )]
+                let tot = total as f64;
+                let rate = succ / tot;
                 self.success_rates.insert(type_name, rate);
             }
         }

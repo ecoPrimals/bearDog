@@ -147,14 +147,25 @@ impl RetryStrategy for CanonicalRetryConfig {
         if self.enable_exponential_backoff {
             // Calculate exponential backoff: initial_delay * multiplier^(attempt-1)
             // Note: Precision loss is acceptable for delay calculations (not cryptographic)
-            #[allow(
+            #[expect(
+                clippy::cast_possible_truncation,
+                reason = "retry delay clamped to millis as u64 for scheduling"
+            )]
+            #[expect(
                 clippy::cast_precision_loss,
+                reason = "acceptable imprecision for non-cryptographic backoff math"
+            )]
+            #[expect(
+                clippy::cast_sign_loss,
+                reason = "delay clamped non-negative before f64 to u64"
+            )]
+            #[expect(
                 clippy::cast_possible_wrap,
-                clippy::cast_sign_loss
+                reason = "retry attempt capped at 30 for powi exponent"
             )]
             let delay_ms = {
-                let initial_ms = self.initial_delay.as_millis().min(u64::MAX as u128) as f64;
-                let max_ms = self.max_delay.as_millis().min(u64::MAX as u128) as u64;
+                let initial_ms = self.initial_delay.as_millis().min(u128::from(u64::MAX)) as f64;
+                let max_ms = self.max_delay.as_millis().min(u128::from(u64::MAX)) as u64;
                 let computed = initial_ms
                     * self
                         .backoff_multiplier
@@ -237,14 +248,25 @@ impl CanonicalRetryConfig {
         }
 
         // Note: Precision loss is acceptable for delay calculations (not cryptographic)
-        #[allow(
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "retry delay clamped to millis as u64 for scheduling"
+        )]
+        #[expect(
             clippy::cast_precision_loss,
+            reason = "acceptable imprecision for non-cryptographic backoff math"
+        )]
+        #[expect(
+            clippy::cast_sign_loss,
+            reason = "delay clamped non-negative before f64 to u64"
+        )]
+        #[expect(
             clippy::cast_possible_wrap,
-            clippy::cast_sign_loss
+            reason = "retry attempt capped at 30 for powi exponent"
         )]
         let delay_ms = {
             let multiplier = self.backoff_multiplier.powi(attempt.min(30) as i32);
-            let initial_ms = self.initial_delay.as_millis().min(u64::MAX as u128) as f64;
+            let initial_ms = self.initial_delay.as_millis().min(u128::from(u64::MAX)) as f64;
             let computed = initial_ms * multiplier;
             computed.max(0.0) as u64
         };

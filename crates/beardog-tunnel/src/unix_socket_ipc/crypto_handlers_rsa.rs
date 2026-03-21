@@ -124,6 +124,10 @@ pub async fn handle_sign_rsa_pkcs1_sha256(
         .ok_or("Missing 'data' parameter")?;
 
     // Capability-based key size selection (no hardcoding)
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "RSA modulus size validated to 2048/3072/4096"
+    )]
     let key_size = params
         .get("key_size")
         .and_then(serde_json::Value::as_u64)
@@ -350,6 +354,10 @@ pub async fn handle_sign_rsa_pss_sha256(
         .ok_or("Missing 'data' parameter")?;
 
     // Capability-based key size selection (no hardcoding)
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "RSA modulus size validated to 2048/3072/4096"
+    )]
     let key_size = params
         .get("key_size")
         .and_then(serde_json::Value::as_u64)

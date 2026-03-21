@@ -153,6 +153,10 @@ impl AdvancedSIMDOptimizer {
             dst_chunk.copy_from_slice(&src_chunk[..dst_chunk.len()]);
         }
 
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "SIMD timing elapsed nanoseconds as f64"
+        )]
         let elapsed = start_time.elapsed().as_nanos() as f64;
         self.update_performance_metrics(src.len(), elapsed);
 
@@ -183,6 +187,10 @@ impl AdvancedSIMDOptimizer {
             }
         }
 
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "SIMD timing elapsed nanoseconds as f64"
+        )]
         let elapsed = start_time.elapsed().as_nanos() as f64;
         self.update_performance_metrics(data.len(), elapsed);
 
@@ -239,6 +247,7 @@ impl AdvancedSIMDOptimizer {
         self.metrics.total_bytes_processed += bytes_processed as u64;
 
         // Update rolling average
+        #[expect(clippy::cast_precision_loss, reason = "rolling average divisor")]
         let total_ops = self.metrics.operations_count as f64;
         self.metrics.avg_operation_time_ns = self
             .metrics
@@ -260,7 +269,11 @@ impl AdvancedSIMDOptimizer {
         if total_accesses == 0 {
             0.0
         } else {
-            self.metrics.cache_hits as f64 / total_accesses as f64
+            #[expect(clippy::cast_precision_loss, reason = "cache hit rate")]
+            let hits = self.metrics.cache_hits as f64;
+            #[expect(clippy::cast_precision_loss, reason = "cache hit rate")]
+            let tot = total_accesses as f64;
+            hits / tot
         }
     }
 

@@ -127,6 +127,10 @@ impl BirdSongEncryption {
         }
 
         // Calculate node depth from proof
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "Merkle path depth fits u32 for depth checks"
+        )]
         let node_depth = (request.proof.path.len() - 1) as u32;
 
         // Check if node depth is within allowed range

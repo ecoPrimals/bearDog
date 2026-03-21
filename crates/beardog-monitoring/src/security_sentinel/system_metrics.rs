@@ -78,6 +78,10 @@ fn read_cpu_snapshot() -> Result<CpuSnapshot, BearDogError> {
 
 /// Reads memory usage from `/proc/meminfo`.
 #[cfg(target_os = "linux")]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "Memory ratio from /proc counters; f64 sufficient for percentage display"
+)]
 fn read_memory_usage() -> Result<f64, BearDogError> {
     let content = std::fs::read_to_string("/proc/meminfo")
         .map_err(|e| BearDogError::internal(format!("Failed to read /proc/meminfo: {e}")))?;
@@ -153,6 +157,10 @@ impl SystemMetrics {
     }
 
     /// Record a completed request for throughput/latency/error tracking.
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Nanoseconds capped to u64::MAX for accumulator; overflow saturates"
+    )]
     pub fn record_request(&self, duration: std::time::Duration, is_error: bool) {
         self.request_count.fetch_add(1, Ordering::Relaxed);
         self.total_response_ns
@@ -167,6 +175,10 @@ impl SystemMetrics {
     /// Uses delta between two `/proc/stat` reads. First call returns 0.0
     /// (no previous baseline). Subsequent calls return actual usage.
     #[cfg(target_os = "linux")]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "CPU busy/total ratio from /proc; f64 sufficient for percentage"
+    )]
     pub fn collect_cpu_usage(&self) -> Result<f64, BearDogError> {
         let current = read_cpu_snapshot()?;
         let mut prev_guard = self
@@ -216,6 +228,10 @@ impl SystemMetrics {
     /// Collect average response time in milliseconds since last call.
     ///
     /// Resets the accumulator after reading.
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Average latency from atomic counters; f64 sufficient for reporting"
+    )]
     pub fn collect_response_time(&self) -> Result<f64, BearDogError> {
         let total_ns = self.total_response_ns.swap(0, Ordering::Relaxed);
         let count = self.request_count.load(Ordering::Relaxed);
@@ -228,6 +244,10 @@ impl SystemMetrics {
     /// Collect error rate as a percentage (0.0–100.0) since last call.
     ///
     /// Resets the error counter after reading.
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Error ratio from atomic counters; f64 sufficient for percentage"
+    )]
     pub fn collect_error_rate(&self) -> Result<f64, BearDogError> {
         let errors = self.error_count.swap(0, Ordering::Relaxed);
         let count = self.request_count.load(Ordering::Relaxed);
@@ -240,6 +260,10 @@ impl SystemMetrics {
     /// Collect throughput in operations per second since last window reset.
     ///
     /// Resets the request counter and window after reading.
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Ops per second from counts and elapsed; f64 sufficient for throughput"
+    )]
     pub fn collect_throughput(&self) -> Result<f64, BearDogError> {
         let count = self.request_count.swap(0, Ordering::Relaxed);
         let mut start = self

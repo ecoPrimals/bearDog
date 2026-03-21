@@ -22,6 +22,14 @@ impl CommercialExtractionDetector {
         Ok(Self::classify_sync(ctx))
     }
 
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Automation percent 0–100 after round fits u8 for display"
+    )]
+    #[expect(
+        clippy::cast_sign_loss,
+        reason = "Scaled automation score is non-negative before percent conversion"
+    )]
     fn classify_sync(ctx: &RequestContext) -> CertificateClassification {
         let automation = ctx.automation_score.clamp(0.0, 1.0);
         let pattern = ctx.pattern_consistency.clamp(0.0, 1.0);

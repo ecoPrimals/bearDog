@@ -543,6 +543,10 @@ impl CircuitBreakerConfiguration {
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "default pool size fits u32 for circuit breaker thresholds"
+    )]
     pub const fn with_defaults() -> Self {
         Self {
             enabled: true,
@@ -567,6 +571,10 @@ impl CircuitBreakerConfiguration {
     }
 
     /// Load from a custom environment provider (e.g. tests); production uses [`Self::from_env`].
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "default pool size fits u32 for circuit breaker thresholds"
+    )]
     pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Self {
         Self {
             enabled: true,

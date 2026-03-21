@@ -1,6 +1,6 @@
 # BearDog Status
 
-**Last Updated**: March 20, 2026
+**Last Updated**: March 21, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.85.0
 
@@ -11,19 +11,20 @@
 | Metric | Status | Details |
 |--------|--------|---------|
 | **Build** | Clean | Zero errors, edition 2024 |
-| **Clippy** | 0 warnings | Pedantic + nursery, workspace-centralized |
+| **Clippy** | 0 warnings | Pedantic + nursery + cast lints, workspace-centralized |
 | **Missing Docs** | 0 warnings | All public items documented |
 | **Pure Rust** | 100% | Zero C dependencies (ecoBin) |
 | **Unsafe Code** | 0 production | `forbid(unsafe_code)` per-crate, `deny` workspace |
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All .rs files compliant |
-| **Tests** | 13,400+ | Fully concurrent (8 threads) |
-| **Coverage** | 84% line | llvm-cov, workspace-wide |
+| **Tests** | 13,850+ | Fully concurrent (8 threads) |
+| **Coverage** | 85.3% region / 85.7% line | llvm-cov, workspace-wide |
 | **Serial Tests** | 15 | Chaos/fault injection only |
 | **cargo deny** | 4/4 pass | Advisories, bans, licenses, sources |
 | **License** | AGPL-3.0-only | SPDX headers on all .rs files |
 | **Architecture** | DI-based | Pure `Default`, `from_env()` at boundaries |
+| **Cast Lints** | Per-site | Global allows removed; `#[expect(clippy::cast_*)]` per-site |
 | **Production** | READY | Universal deployment |
 
 ---
@@ -31,25 +32,27 @@
 ## Codebase Metrics
 
 - **Crates**: 29 in workspace
-- **Rust Files**: 1,740
+- **Rust Files**: 1,773+
 - **Crypto Methods**: 91+ JSON-RPC methods
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
 
 ---
 
-## Per-Crate Coverage (March 2026, llvm-cov)
+## Per-Crate Coverage (March 21, 2026, llvm-cov)
 
-| Crate | Line Coverage | Function Coverage |
-|-------|--------------|-------------------|
-| beardog-utils | 92.3% | 90.6% |
-| beardog-genetics | 89.9% | 84.0% |
-| beardog-ipc | 86.0% | — |
-| beardog-auth | 84.0% | — |
-| beardog-types | 80.8% | 73.5% |
-| beardog-errors | 77.0% | — |
-| beardog-tunnel | 71.0% | 66.4% |
-| beardog-security | 73.7% | 67.9% |
-| beardog-core | 62.2% | 72.6% |
+| Crate | Region Coverage | Line Coverage |
+|-------|----------------|---------------|
+| beardog-utils | 90.1% | 92.3% |
+| beardog-genetics | 87.5% | 89.9% |
+| beardog-ipc | 86.0% | 86.0% |
+| beardog-auth | 88.0% | 93.0% |
+| beardog-types | 82.5% | 84.0% |
+| beardog-errors | 77.0% | 77.0% |
+| beardog-tunnel | 76.0% | 80.0% |
+| beardog-security | 73.7% | 73.7% |
+| beardog-core | 72.0% | 75.0% |
+| beardog-capabilities | 94.0% | 98.0% |
+| beardog-cli | 85.0% | 85.0% |
 
 ---
 
@@ -72,7 +75,17 @@
 
 ---
 
-## Recent Improvements (March 20, 2026)
+## Recent Improvements (March 21, 2026)
+
+### Wave 6: Cast Lint Tightening, Coverage Push & Capability-Based Discovery
+
+- **Cast lint evolution** — Removed 5 global `allow(clippy::cast_*)` from workspace `Cargo.toml`; 301 sites now use `#[expect(clippy::cast_*, reason = "...")]` or `Type::from(x)` for lossless casts
+- **Hardcoded primal names → capability-based** — IPC socket paths, peer resolution, and listener binds now use `BIOMEOS_IPC_NAMESPACE`, `PRIMAL_NAME` env vars with runtime discovery
+- **Coverage push**: 84% → 85.3% region (13,400 → 13,850+ tests)
+- **Test stability** — `serial_test::serial` on all env-dependent tests in beardog-capabilities; eliminated test pollution
+- **Doc cleanup** — All `rustdoc::broken_intra_doc_links` resolved; `cargo doc -D warnings` clean
+- **Root doc declutter** — 17 reference/guide docs moved to `docs/references/`; session logs archived
+- **File size compliance** — Extracted 5 test modules to keep all .rs files under 1000 lines
 
 ### Wave 5: Concurrency Architecture & Dependency Modernization
 

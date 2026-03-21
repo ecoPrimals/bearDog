@@ -56,3 +56,59 @@ pub enum EcosystemEvent {
     /// Represents invalid announcement variant
     InvalidAnnouncement(String),
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ecosystem::primal_types::{
+        AuthRequirements, EndpointSecurityConfig, PrimalMetadata, UniversalEndpoint,
+    };
+    use beardog_types::canonical::capabilities::CapabilityType;
+    use std::collections::HashMap;
+
+    #[test]
+    fn ecosystem_listener_metrics_default_and_debug() {
+        let m = EcosystemListenerMetrics::default();
+        assert_eq!(m.listening_duration_ms, 0);
+        let m2 = EcosystemListenerMetrics {
+            announcements_received: 1,
+            ..Default::default()
+        };
+        assert_eq!(m2.announcements_received, 1);
+        assert!(!format!("{m2:?}").is_empty());
+    }
+
+    #[test]
+    fn primal_announcement_serde_roundtrip() {
+        let md = PrimalMetadata {
+            display_name: None,
+            version: "0.1.0".to_string(),
+            protocol_versions: vec!["1".to_string()],
+            security_attestations: vec![],
+            custom_fields: HashMap::new(),
+            capabilities: vec![CapabilityType::Monitoring],
+            dependencies: vec![],
+            supported_protocols: vec!["http".to_string()],
+            health_check_endpoint: "/health".to_string(),
+            metrics_endpoint: "/metrics".to_string(),
+        };
+        let ep = UniversalEndpoint {
+            url: "http://127.0.0.1:9".to_string(),
+            protocols: vec!["http".to_string()],
+            auth_requirements: AuthRequirements::default(),
+            security_config: EndpointSecurityConfig::default(),
+        };
+        let ann = PrimalAnnouncement {
+            primal_id: "test-primal".to_string(),
+            capabilities: vec![CapabilityType::Monitoring],
+            endpoints: vec![ep],
+            metadata: md,
+            announcement_timestamp: std::time::SystemTime::UNIX_EPOCH,
+            source_protocol: "unit-test".to_string(),
+        };
+        let val = serde_json::to_value(&ann).expect("serialize announcement");
+        let back: PrimalAnnouncement = serde_json::from_value(val).expect("deserialize");
+        assert_eq!(back.primal_id, "test-primal");
+        assert_eq!(back.source_protocol, "unit-test");
+    }
+}

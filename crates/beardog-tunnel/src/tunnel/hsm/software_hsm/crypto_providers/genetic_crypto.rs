@@ -599,7 +599,7 @@ impl GeneticCryptoProvider {
         );
 
         // Calculate average quality
-        let final_quality = quality_score / tier_count as f64;
+        let final_quality = quality_score / f64::from(tier_count);
 
         // Derive final mixed entropy
         let mixed = hasher.finalize();

@@ -103,7 +103,12 @@ impl EntropyMonitor {
         let average_quality = if quality_scores.is_empty() {
             0.0
         } else {
-            quality_scores.iter().sum::<f64>() / quality_scores.len() as f64
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "sample count as f64 for mean quality"
+            )]
+            let n = quality_scores.len() as f64;
+            quality_scores.iter().sum::<f64>() / n
         };
 
         EntropyAnalytics {

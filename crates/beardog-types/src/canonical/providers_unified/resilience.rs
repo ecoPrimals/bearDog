@@ -113,16 +113,29 @@ impl RetryStrategy for RetryConfig {
         let base_delay = match self.backoff_strategy {
             BackoffStrategy::Fixed => self.initial_delay,
             BackoffStrategy::Linear => {
-                let delay_ms = (self.initial_delay.as_millis() as u64) * (attempt as u64);
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "linear backoff millis from duration fit u64 for scheduling"
+                )]
+                let delay_ms =
+                    (self.initial_delay.as_millis() as u64).saturating_mul(u64::from(attempt));
                 Duration::from_millis(delay_ms)
             }
             BackoffStrategy::Exponential => {
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "exponential backoff delay truncated to u64 millis"
+                )]
                 let delay_ms = (self.initial_delay.as_millis() as f64
                     * 2.0_f64.powi((attempt - 1) as i32)) as u64;
                 Duration::from_millis(delay_ms)
             }
             BackoffStrategy::Custom(_) => {
                 // For custom strategies, use exponential as fallback
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "custom backoff delay truncated to u64 millis"
+                )]
                 let delay_ms = (self.initial_delay.as_millis() as f64
                     * 2.0_f64.powi((attempt - 1) as i32)) as u64;
                 Duration::from_millis(delay_ms)
@@ -134,9 +147,14 @@ impl RetryStrategy for RetryConfig {
         // For now, we use a simplified approach without external dependencies
         let delay_with_jitter = if self.jitter_enabled {
             // Simple jitter: add 10% variation based on attempt number
-            let jitter_percent = (attempt % 10) as f64 * 0.01; // 0-10% variation
+            let jitter_percent = f64::from(attempt % 10) * 0.01; // 0-10% variation
             let jitter_factor = 0.95 + jitter_percent; // 95-105% of delay
-            Duration::from_millis((base_delay.as_millis() as f64 * jitter_factor) as u64)
+            #[expect(
+                clippy::cast_possible_truncation,
+                reason = "jittered delay truncated to u64 millis"
+            )]
+            let millis = (base_delay.as_millis() as f64 * jitter_factor) as u64;
+            Duration::from_millis(millis)
         } else {
             base_delay
         };

@@ -507,7 +507,7 @@ impl Constraint for BatteryConstraint {
             .and_then(serde_json::Value::as_u64)
             .unwrap_or(100); // Default to full battery if unknown
 
-        Ok(battery_percent >= self.min_percent as u64)
+        Ok(battery_percent >= u64::from(self.min_percent))
     }
 
     fn description(&self) -> String {
@@ -693,5 +693,53 @@ mod tests {
         let context =
             ConstraintContext::new().with_env("battery_percent".to_string(), serde_json::json!(10));
         assert!(!constraint.is_satisfied(&context).unwrap());
+    }
+
+    #[test]
+    fn test_proximity_requires_location() {
+        let c = ProximityConstraint {
+            other_party: "bob".into(),
+            max_distance_meters: 10.0,
+        };
+        assert!(c.is_satisfied(&ConstraintContext::new()).is_err());
+    }
+
+    #[test]
+    fn test_proximity_invalid_other_location_json() {
+        let c = ProximityConstraint {
+            other_party: "bob".into(),
+            max_distance_meters: 100.0,
+        };
+        let my = GeoLocation {
+            latitude: 0.0,
+            longitude: 0.0,
+            altitude: None,
+            accuracy: None,
+        };
+        let ctx = ConstraintContext::new()
+            .with_location(my)
+            .with_env("bob_location".into(), serde_json::json!("not-a-location"));
+        assert!(c.is_satisfied(&ctx).is_err());
+    }
+
+    #[test]
+    fn test_proximity_description_and_serialize_json() {
+        let c = ProximityConstraint {
+            other_party: "z".into(),
+            max_distance_meters: 12.5,
+        };
+        assert!(c.description().contains('z'));
+        let json = c.serialize_json().unwrap();
+        assert!(json.contains("other_party") && json.contains("max_distance_meters"));
+    }
+
+    #[test]
+    fn test_battery_constraint_serialize_json_and_type() {
+        let c = BatteryConstraint { min_percent: 15 };
+        assert_eq!(c.constraint_type(), "battery");
+        let s = c.serialize_json().expect("json");
+        assert!(s.contains("15"));
+        let back: BatteryConstraint = serde_json::from_str(&s).expect("roundtrip");
+        assert_eq!(back.min_percent, 15);
     }
 }

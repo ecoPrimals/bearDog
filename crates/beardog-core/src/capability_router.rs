@@ -276,6 +276,14 @@ impl CapabilityRouter {
     }
 
     /// Apply filters to candidate primals
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Rounded latency ms compared to u64 budget; practical ms ranges"
+    )]
+    #[expect(
+        clippy::cast_sign_loss,
+        reason = "Latency milliseconds are non-negative before integer comparison"
+    )]
     fn apply_filters(
         &self,
         mut primals: Vec<DiscoveredPrimal>,

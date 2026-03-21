@@ -389,7 +389,7 @@ impl GenesisLineageProvider {
             metadata: LineageMetadata {
                 biome_type: Some("witness".to_string()),
                 capabilities: vec!["genesis".to_string()],
-                trust_level: witness.physical_channel.trust_level() as u8 as f64,
+                trust_level: f64::from(witness.physical_channel.trust_level() as u8),
                 custom: HashMap::new(),
             },
         };
@@ -403,7 +403,7 @@ impl GenesisLineageProvider {
             metadata: LineageMetadata {
                 biome_type: Some("new-node".to_string()),
                 capabilities: vec![],
-                trust_level: witness.physical_channel.trust_level() as u8 as f64,
+                trust_level: f64::from(witness.physical_channel.trust_level() as u8),
                 custom: HashMap::new(),
             },
         };

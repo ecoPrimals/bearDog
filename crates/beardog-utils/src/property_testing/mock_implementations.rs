@@ -47,7 +47,9 @@ impl PropertyBasedTestFramework {
 
         // Add some pseudo-randomness based on data
         for (i, &byte) in data.iter().take(24).enumerate() {
-            hash_bytes[i + 8] = byte.wrapping_add(i as u8);
+            #[expect(clippy::cast_possible_truncation, reason = "mock hash mixing index")]
+            let bi = i as u8;
+            hash_bytes[i + 8] = byte.wrapping_add(bi);
         }
 
         Ok(hash_bytes)
@@ -63,7 +65,9 @@ impl PropertyBasedTestFramework {
         // Simple XOR "encryption" for testing
         let mut encrypted = data.to_vec();
         for (i, byte) in encrypted.iter_mut().enumerate() {
-            *byte ^= (i % 256) as u8; // Simple pattern for testing
+            #[expect(clippy::cast_possible_truncation, reason = "mock XOR test pattern")]
+            let x = (i % 256) as u8;
+            *byte ^= x; // Simple pattern for testing
         }
         Ok(encrypted)
     }
@@ -78,7 +82,9 @@ impl PropertyBasedTestFramework {
         // Reverse the XOR "encryption"
         let mut decrypted = encrypted.to_vec();
         for (i, byte) in decrypted.iter_mut().enumerate() {
-            *byte ^= (i % 256) as u8;
+            #[expect(clippy::cast_possible_truncation, reason = "mock XOR test pattern")]
+            let x = (i % 256) as u8;
+            *byte ^= x;
         }
         Ok(decrypted)
     }
@@ -231,6 +237,7 @@ impl PropertyBasedTestFramework {
         let mut hasher = DefaultHasher::new();
 
         // Use current timestamp and length as seed
+        #[expect(clippy::cast_possible_truncation, reason = "mock PRNG seed from time")]
         let seed = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()

@@ -650,4 +650,89 @@ mod tests {
         // CLI arg should win
         assert_eq!(config.network.api.port, 6000);
     }
+
+    #[test]
+    fn test_with_file_toml_loads() {
+        let dir = tempfile::TempDir::new().expect("tempdir");
+        let path = dir.path().join("cfg.toml");
+        let cfg = BearDogConfig::default();
+        let toml = toml::to_string(&cfg).expect("serialize");
+        std::fs::write(&path, toml).expect("write");
+        let built = ConfigHierarchy::new().with_file(&path).expect("with_file");
+        let out = built.build().expect("build");
+        assert_eq!(out.network.api.port, cfg.network.api.port);
+    }
+
+    #[test]
+    fn test_with_file_json_loads() {
+        let dir = tempfile::TempDir::new().expect("tempdir");
+        let path = dir.path().join("cfg.json");
+        let cfg = BearDogConfig::default();
+        let j = serde_json::to_string_pretty(&cfg).expect("json");
+        std::fs::write(&path, j).expect("write");
+        let built = ConfigHierarchy::new().with_file(&path).expect("with_file");
+        let out = built.build().expect("build");
+        assert_eq!(out.security.strict_mode, cfg.security.strict_mode);
+    }
+
+    #[test]
+    fn test_merge_configs_paths_always_take_override() {
+        let base = BearDogConfig::default();
+        let mut o = BearDogConfig::default();
+        o.paths.config_dir = PathBuf::from("/overridden/config");
+        let merged = merge_configs(base, o, ConfigSource::ConfigFile);
+        assert_eq!(merged.paths.config_dir, PathBuf::from("/overridden/config"));
+    }
+
+    #[test]
+    fn test_merge_configs_hsm_always_take_override() {
+        let base = BearDogConfig::default();
+        let mut o = BearDogConfig::default();
+        o.hsm.enable_yubihsm = true;
+        let merged = merge_configs(base, o, ConfigSource::ConfigFile);
+        assert!(merged.hsm.enable_yubihsm);
+    }
+
+    #[test]
+    fn test_apply_env_overrides_invalid_bind_address() {
+        let mut env = HashMap::new();
+        env.insert(
+            "BEARDOG_API_BIND_ADDRESS".to_string(),
+            "not-an-ip-address".to_string(),
+        );
+        let r = apply_env_overrides(BearDogConfig::default(), &env);
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn test_apply_env_overrides_invalid_discovery_port() {
+        let mut env = HashMap::new();
+        env.insert("BEARDOG_DISCOVERY_PORT".to_string(), "xyz".to_string());
+        let r = apply_env_overrides(BearDogConfig::default(), &env);
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn test_apply_env_overrides_invalid_admin_port() {
+        let mut env = HashMap::new();
+        env.insert("BEARDOG_ADMIN_PORT".to_string(), "bad".to_string());
+        let r = apply_env_overrides(BearDogConfig::default(), &env);
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn test_apply_env_overrides_invalid_hsm_timeout() {
+        let mut env = HashMap::new();
+        env.insert("BEARDOG_HSM_TIMEOUT".to_string(), "nan".to_string());
+        let r = apply_env_overrides(BearDogConfig::default(), &env);
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn test_apply_env_overrides_invalid_strict_mode() {
+        let mut env = HashMap::new();
+        env.insert("BEARDOG_STRICT_MODE".to_string(), "maybe".to_string());
+        let r = apply_env_overrides(BearDogConfig::default(), &env);
+        assert!(r.is_err());
+    }
 }

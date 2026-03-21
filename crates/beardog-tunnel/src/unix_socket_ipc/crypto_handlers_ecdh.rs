@@ -444,4 +444,25 @@ mod tests {
         assert!(result.is_err());
         Ok(())
     }
+
+    #[test]
+    fn test_ecdh_p384_missing_peer_public_key() {
+        let params = json!({
+            "private_key": BASE64.encode([1u8; 48])
+        });
+        let e = handle_ecdh_p384_derive(&params).unwrap_err();
+        assert!(e.to_string().contains("peer_public_key"));
+    }
+
+    #[test]
+    fn test_ecdh_p256_invalid_peer_sec1() -> Result<(), BearDogError> {
+        let generated = handle_ecdh_p256_generate(&json!({}))?;
+        let priv_k = json_str(&generated, "private_key")?;
+        let params = json!({
+            "private_key": priv_k,
+            "peer_public_key": BASE64.encode([0u8; 10])
+        });
+        assert!(handle_ecdh_p256_derive(&params).is_err());
+        Ok(())
+    }
 }

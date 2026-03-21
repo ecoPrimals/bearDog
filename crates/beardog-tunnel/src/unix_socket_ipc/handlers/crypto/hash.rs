@@ -123,6 +123,10 @@ pub async fn handle_hash_for_cipher(params: Option<&Value>) -> Result<Value, Str
         .and_then(|v| v.as_str())
         .ok_or("Missing required parameter: data")?;
 
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "IANA TLS cipher suite identifier"
+    )]
     let cipher_suite = params
         .get("cipher_suite")
         .and_then(serde_json::Value::as_u64)

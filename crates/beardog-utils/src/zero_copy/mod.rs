@@ -636,4 +636,13 @@ mod tests {
         assert_eq!(cfg_a.a, 1);
         assert_eq!(cfg_b.b, "hello");
     }
+
+    #[test]
+    fn zero_copy_builder_optimize_sets_flag() {
+        let mut b = ZeroCopyBuilder::new(42u32);
+        assert!(!b.is_optimized());
+        let b = b.optimize();
+        assert!(b.is_optimized());
+        assert_eq!(b.build(), 42);
+    }
 }

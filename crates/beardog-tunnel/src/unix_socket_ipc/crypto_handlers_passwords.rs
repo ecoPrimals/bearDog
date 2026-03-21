@@ -215,6 +215,10 @@ pub fn handle_pbkdf2_sha256(params: &Value) -> Result<Value, BearDogError> {
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid base64 salt: {e}")))?;
 
     // Extract iterations (default to 100,000 minimum)
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "PBKDF2 iterations capped by API validation"
+    )]
     let iterations = params
         .get("iterations")
         .and_then(serde_json::Value::as_u64)
@@ -227,6 +231,10 @@ pub fn handle_pbkdf2_sha256(params: &Value) -> Result<Value, BearDogError> {
     }
 
     // Extract output length (default to 32 bytes)
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "PBKDF2 output length validated to 1..=1024"
+    )]
     let output_length = params
         .get("output_length")
         .and_then(serde_json::Value::as_u64)

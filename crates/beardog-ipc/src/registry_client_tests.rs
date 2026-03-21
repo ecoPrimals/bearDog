@@ -346,4 +346,33 @@ mod registry_client_tests {
         assert_eq!(info.primal_id, "");
         assert!(info.capabilities.is_empty());
     }
+
+    #[test]
+    fn test_json_rpc_request_with_params_roundtrip() {
+        let request = JsonRpcRequest {
+            jsonrpc: "2.0".into(),
+            method: "primal.register".into(),
+            params: Some(serde_json::json!({"k": 1})),
+            id: 42,
+        };
+        let json = serde_json::to_string(&request).unwrap();
+        let back: JsonRpcRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.method, "primal.register");
+        assert_eq!(back.id, 42);
+        assert!(back.params.is_some());
+    }
+
+    #[test]
+    fn test_primal_info_debug_contains_struct_name() {
+        let info = PrimalInfo {
+            primal_id: "p".into(),
+            family_id: None,
+            node_id: "n".into(),
+            capabilities: vec![],
+            socket_path: "/tmp/x".into(),
+            last_seen: None,
+        };
+        let s = format!("{info:?}");
+        assert!(s.contains("PrimalInfo"));
+    }
 }

@@ -82,7 +82,17 @@ impl StringInterner {
         if stats.total_requests == 0 {
             Ok(0.0)
         } else {
-            Ok(stats.cache_hits as f64 / stats.total_requests as f64)
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "hit ratio from request counters"
+            )]
+            let hits = stats.cache_hits as f64;
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "hit ratio from request counters"
+            )]
+            let tot = stats.total_requests as f64;
+            Ok(hits / tot)
         }
     }
 
@@ -147,7 +157,11 @@ impl StringInterner {
         if memory_used == 0 {
             Ok(1.0)
         } else {
-            Ok(stats.memory_saved as f64 / (memory_used + stats.memory_saved) as f64)
+            #[expect(clippy::cast_precision_loss, reason = "memory efficiency ratio")]
+            let saved = stats.memory_saved as f64;
+            #[expect(clippy::cast_precision_loss, reason = "memory efficiency ratio")]
+            let denom = (memory_used + stats.memory_saved) as f64;
+            Ok(saved / denom)
         }
     }
 }

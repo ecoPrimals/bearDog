@@ -23,6 +23,7 @@
 //! - ✅ **Pure Rust**: Zero external dependencies
 
 use anyhow::{Context, Result};
+use beardog_types::constants::domains::network::ipc_discovery as ipc_layout;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use tokio::io::{AsyncRead, AsyncWrite};
@@ -131,6 +132,10 @@ pub struct UnixSocketPathHints {
     pub beardog_socket: Option<String>,
     /// `XDG_RUNTIME_DIR` for default socket layout.
     pub xdg_runtime_dir: Option<String>,
+    /// `BIOMEOS_IPC_NAMESPACE` override (directory under runtime dir).
+    pub ipc_namespace: Option<String>,
+    /// Socket filename stem (e.g. `PRIMAL_NAME`); default `beardog`.
+    pub primal_socket_stem: Option<String>,
 }
 
 /// Get Unix socket path candidates from explicit hints (tests avoid env mutation).
@@ -142,11 +147,27 @@ pub fn get_unix_socket_paths_with(hints: &UnixSocketPathHints) -> Vec<PathBuf> {
         paths.push(PathBuf::from(path));
     }
 
+    let stem = hints
+        .primal_socket_stem
+        .clone()
+        .or_else(|| beardog_errors::process_env::var("PRIMAL_NAME").ok())
+        .or_else(|| beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME").ok())
+        .unwrap_or_else(|| "beardog".to_string());
+
+    let subdir =
+        ipc_layout::resolve_biomeos_ipc_subdir_from_optional(hints.ipc_namespace.as_deref());
+
     if let Some(ref runtime_dir) = hints.xdg_runtime_dir {
-        paths.push(PathBuf::from(format!("{runtime_dir}/biomeos/beardog.sock")));
+        let mut p = PathBuf::from(runtime_dir);
+        p.push(&subdir);
+        p.push(format!("{stem}.sock"));
+        paths.push(p);
     }
 
-    paths.push(PathBuf::from("/tmp/beardog.sock"));
+    let mut tmp_path = ipc_layout::biomeos_tmp_socket_root();
+    tmp_path.push(&subdir);
+    tmp_path.push(format!("{stem}.sock"));
+    paths.push(tmp_path);
 
     paths
 }
@@ -163,6 +184,8 @@ fn get_unix_socket_paths() -> Vec<PathBuf> {
     get_unix_socket_paths_with(&UnixSocketPathHints {
         beardog_socket: beardog_errors::process_env::var("BEARDOG_SOCKET").ok(),
         xdg_runtime_dir: beardog_errors::process_env::var("XDG_RUNTIME_DIR").ok(),
+        ipc_namespace: beardog_errors::process_env::var(ipc_layout::ENV_BIOMEOS_IPC_NAMESPACE).ok(),
+        primal_socket_stem: None,
     })
 }
 

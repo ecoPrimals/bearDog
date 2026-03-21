@@ -52,6 +52,10 @@ pub struct RetryConfiguration {
 }
 
 impl Default for ClientConfiguration {
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "default queue size and timeout millis fit u64 for client retry config"
+    )]
     fn default() -> Self {
         Self {
             connection_timeout_seconds: 30,
@@ -139,10 +143,21 @@ impl RetryStrategy for RetryConfiguration {
         if self.enable_exponential_backoff {
             // Exponential backoff with multiplier
             // Note: Precision loss is acceptable for delay calculations (not cryptographic)
-            #[allow(
+            #[expect(
+                clippy::cast_possible_truncation,
+                reason = "retry delay computed as u64 millis for Duration::from_millis"
+            )]
+            #[expect(
                 clippy::cast_precision_loss,
+                reason = "acceptable imprecision for non-cryptographic backoff math"
+            )]
+            #[expect(
+                clippy::cast_sign_loss,
+                reason = "delay clamped non-negative before f64 to u64"
+            )]
+            #[expect(
                 clippy::cast_possible_wrap,
-                clippy::cast_sign_loss
+                reason = "retry attempt capped at 30 for powi exponent"
             )]
             let delay_ms = {
                 let computed = (self.base_delay_ms as f64

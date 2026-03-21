@@ -226,10 +226,15 @@ mod humantime_serde {
         // exceed u64::MAX milliseconds (~584 million years). We clamp to u64::MAX for safety.
         // Using saturating cast ensures we don't wrap around on extreme values.
         let millis = duration.as_millis();
-        let clamped = if millis > u64::MAX as u128 {
+        let clamped = if millis > u128::from(u64::MAX) {
             u64::MAX
         } else {
-            millis as u64
+            #[expect(
+                clippy::cast_possible_truncation,
+                reason = "millis already <= u64::MAX after clamp branch"
+            )]
+            let millis_u64 = millis as u64;
+            millis_u64
         };
         serializer.serialize_u64(clamped)
     }
@@ -255,10 +260,15 @@ mod humantime_serde_optional {
             Some(d) => {
                 // SAFETY: See milliseconds_serializer for rationale
                 let millis = d.as_millis();
-                let clamped = if millis > u64::MAX as u128 {
+                let clamped = if millis > u128::from(u64::MAX) {
                     u64::MAX
                 } else {
-                    millis as u64
+                    #[expect(
+                        clippy::cast_possible_truncation,
+                        reason = "millis already <= u64::MAX after clamp branch"
+                    )]
+                    let millis_u64 = millis as u64;
+                    millis_u64
                 };
                 serializer.serialize_some(&clamped)
             }

@@ -69,7 +69,17 @@ impl HsmPerformanceTracker {
         }
 
         metrics.total_duration_ms += duration_ms;
-        metrics.avg_duration_ms = metrics.total_duration_ms as f64 / metrics.total_count as f64;
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "mean duration from integer accumulators"
+        )]
+        let total_ms = metrics.total_duration_ms as f64;
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "mean duration from integer accumulators"
+        )]
+        let count = metrics.total_count as f64;
+        metrics.avg_duration_ms = total_ms / count;
         metrics.min_duration_ms = metrics.min_duration_ms.min(duration_ms);
         metrics.max_duration_ms = metrics.max_duration_ms.max(duration_ms);
 

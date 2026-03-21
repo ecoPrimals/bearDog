@@ -224,6 +224,10 @@ pub async fn handle_tls_compute_finished_verify_data(
         .ok_or("Missing required parameter: transcript_hash")?;
 
     // NEW: Extract cipher_suite (default to SHA-256 for backwards compatibility)
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "IANA TLS cipher suite identifier"
+    )]
     let cipher_suite = params
         .get("cipher_suite")
         .and_then(serde_json::Value::as_u64)
@@ -278,13 +282,13 @@ pub async fn handle_tls_compute_finished_verify_data(
 
                     // RFC 8446 Section 7.1: HkdfLabel structure
                     // CRITICAL: Label must be "tls13 " + label (e.g., "tls13 finished")
-                    let tls13_label = format!("tls13 {label}");
                     let mut hkdf_label = Vec::new();
-                    hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
-                    hkdf_label.push(tls13_label.len() as u8);
-                    hkdf_label.extend_from_slice(tls13_label.as_bytes());
-                    hkdf_label.push(context.len() as u8);
-                    hkdf_label.extend_from_slice(context);
+                    super::key_derivation::append_tls13_hkdf_label(
+                        &mut hkdf_label,
+                        label,
+                        context,
+                        length,
+                    );
 
                     let mut output = vec![0u8; length];
                     hkdf.expand(&hkdf_label, &mut output)
@@ -317,13 +321,13 @@ pub async fn handle_tls_compute_finished_verify_data(
 
                     // RFC 8446 Section 7.1: HkdfLabel structure
                     // CRITICAL: Label must be "tls13 " + label (e.g., "tls13 finished")
-                    let tls13_label = format!("tls13 {label}");
                     let mut hkdf_label = Vec::new();
-                    hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
-                    hkdf_label.push(tls13_label.len() as u8);
-                    hkdf_label.extend_from_slice(tls13_label.as_bytes());
-                    hkdf_label.push(context.len() as u8);
-                    hkdf_label.extend_from_slice(context);
+                    super::key_derivation::append_tls13_hkdf_label(
+                        &mut hkdf_label,
+                        label,
+                        context,
+                        length,
+                    );
 
                     let mut output = vec![0u8; length];
                     hkdf.expand(&hkdf_label, &mut output)

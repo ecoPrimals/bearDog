@@ -71,6 +71,10 @@ pub fn handle_bcrypt_hash(params: &Value) -> Result<Value, BearDogError> {
     );
 
     // Parse cost (default: 12, range: 4-31)
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "bcrypt cost validated to 4..=31"
+    )]
     let cost = params
         .get("cost")
         .and_then(serde_json::Value::as_u64)
@@ -211,18 +215,34 @@ pub fn handle_scrypt(params: &Value) -> Result<Value, BearDogError> {
     }
 
     // Parse scrypt parameters
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "scrypt log_n validated to 1..=20"
+    )]
     let log_n = params
         .get("log_n")
         .and_then(serde_json::Value::as_u64)
         .unwrap_or(14) as u8;
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "scrypt r from JSON fits Params"
+    )]
     let r = params
         .get("r")
         .and_then(serde_json::Value::as_u64)
         .unwrap_or(8) as u32;
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "scrypt p from JSON fits Params"
+    )]
     let p = params
         .get("p")
         .and_then(serde_json::Value::as_u64)
         .unwrap_or(1) as u32;
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "derived key length validated to 1..=128"
+    )]
     let key_length = params
         .get("key_length")
         .and_then(serde_json::Value::as_u64)
@@ -411,6 +431,35 @@ mod tests {
         let params = json!({
             "password": password,
             "salt": short_salt,
+            "log_n": 10
+        });
+        assert!(handle_scrypt(&params).is_err());
+    }
+
+    #[test]
+    fn test_bcrypt_hash_missing_password() {
+        assert!(handle_bcrypt_hash(&json!({ "cost": 12 })).is_err());
+    }
+
+    #[test]
+    fn test_bcrypt_verify_missing_hash() {
+        let password = BASE64.encode(b"x");
+        assert!(handle_bcrypt_verify(&json!({ "password": password })).is_err());
+    }
+
+    #[test]
+    fn test_scrypt_missing_password() {
+        let params = json!({
+            "salt": BASE64.encode(b"salt12345678"),
+            "log_n": 10
+        });
+        assert!(handle_scrypt(&params).is_err());
+    }
+
+    #[test]
+    fn test_scrypt_missing_salt() {
+        let params = json!({
+            "password": BASE64.encode(b"p"),
             "log_n": 10
         });
         assert!(handle_scrypt(&params).is_err());

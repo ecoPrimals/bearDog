@@ -16,7 +16,6 @@ use crate::command_runner::CommandRunner;
 #[cfg(not(test))]
 use crate::command_runner::SystemCommandRunner;
 #[cfg(test)]
-#[cfg(test)]
 use crate::command_runner::mock::MockAdbCommandRunner;
 use tracing::{debug, error, info, warn};
 
@@ -913,5 +912,51 @@ mod tests {
     fn test_get_device_property_exercises_path() {
         let mgr = DeviceManager::new();
         let _ = mgr.get_device_property("fake-device", "ro.build.version.sdk");
+    }
+
+    #[test]
+    fn test_detect_android_devices_mock_emulator_full_parse() {
+        let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner::new()));
+        let devices = mgr.detect_android_devices().expect("mock adb");
+        assert_eq!(devices.len(), 1);
+        assert_eq!(devices[0].id, "emulator-5554");
+        assert!(devices[0].metadata.contains_key("api_level"));
+        assert_eq!(devices[0].device_type, DeviceType::AndroidStrongBox);
+    }
+
+    #[test]
+    fn test_check_device_prefers_adb_when_emulator_listed() {
+        let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner::new()));
+        let d = mgr.check_device().expect("device");
+        assert_eq!(d.id, "emulator-5554");
+        assert_eq!(d.status, DeviceStatus::Connected);
+    }
+
+    #[test]
+    fn test_check_devices_via_adb_mock() {
+        let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner::new()));
+        let v = mgr.check_devices().expect("devices");
+        assert_eq!(v.len(), 1);
+        assert!(v[0].name.contains("Pixel_Test"));
+    }
+
+    #[test]
+    fn test_get_device_property_sdk_from_mock() {
+        let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner::new()));
+        let v = mgr
+            .get_device_property("emulator-5554", "ro.build.version.sdk")
+            .expect("sdk");
+        assert_eq!(v, "33");
+    }
+
+    #[test]
+    fn test_deploy_to_android_success_with_temp_apk() {
+        let mut path = std::env::temp_dir();
+        path.push(format!("beardog_deploy_apk_{}.apk", std::process::id()));
+        std::fs::write(&path, b"dummy").expect("write apk");
+        let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner::new()));
+        let r = mgr.deploy_to_android("emulator-5554", path.to_str().expect("utf8"));
+        let _ = std::fs::remove_file(&path);
+        assert!(r.is_ok());
     }
 }

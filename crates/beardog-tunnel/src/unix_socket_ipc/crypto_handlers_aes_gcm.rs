@@ -685,4 +685,154 @@ mod tests {
         assert_eq!(&decrypted[..], plaintext);
         Ok(())
     }
+
+    #[test]
+    fn test_aes256_gcm_missing_plaintext() {
+        let params = json!({
+            "key": BASE64.encode(vec![0u8; 32]),
+        });
+        let e = handle_aes256_gcm_encrypt(&params).unwrap_err();
+        assert!(e.to_string().contains("plaintext"));
+    }
+
+    #[test]
+    fn test_aes256_gcm_invalid_nonce_length() {
+        let params = json!({
+            "plaintext": BASE64.encode(b"x"),
+            "key": BASE64.encode(vec![0u8; 32]),
+            "nonce": BASE64.encode(vec![0u8; 8]),
+        });
+        let e = handle_aes256_gcm_encrypt(&params).unwrap_err();
+        assert!(e.to_string().contains("12") || e.to_string().contains("nonce"));
+    }
+
+    #[test]
+    fn test_aes128_gcm_decrypt_missing_ciphertext() {
+        let params = json!({
+            "key": BASE64.encode(vec![0u8; 16]),
+            "nonce": BASE64.encode(vec![0u8; 12]),
+        });
+        let e = handle_aes128_gcm_decrypt(&params).unwrap_err();
+        assert!(e.to_string().contains("ciphertext"));
+    }
+
+    #[test]
+    fn test_aes128_gcm_invalid_aad_on_decrypt() {
+        let key = vec![0x11u8; 16];
+        let enc = json!({
+            "plaintext": BASE64.encode(b"msg"),
+            "key": BASE64.encode(&key),
+            "aad": BASE64.encode(b"aad"),
+        });
+        let er = handle_aes128_gcm_encrypt(&enc).unwrap();
+        let params = json!({
+            "ciphertext": json_str(&er, "ciphertext").unwrap(),
+            "key": BASE64.encode(&key),
+            "nonce": json_str(&er, "nonce").unwrap(),
+            "aad": "not-valid-b64!!!",
+        });
+        let e = handle_aes128_gcm_decrypt(&params).unwrap_err();
+        assert!(e.to_string().contains("aad") || e.to_string().contains("base64"));
+    }
+
+    #[tokio::test]
+    async fn test_generate_onion_identity_smoke() -> Result<(), BearDogError> {
+        let out = crate::unix_socket_ipc::crypto_handlers_hashing::handle_generate_onion_identity(
+            Some(&json!({ "purpose": "unit_test" })),
+        )
+        .await
+        .expect("onion identity");
+        assert_eq!(json_str(&out, "purpose")?, "unit_test");
+        assert!(json_str(&out, "onion_address")?.ends_with(".onion"));
+        let pk = BASE64
+            .decode(json_str(&out, "public_key")?)
+            .expect("pk b64");
+        assert_eq!(pk.len(), 32);
+        let sk = BASE64
+            .decode(json_str(&out, "secret_key")?)
+            .expect("sk b64");
+        assert_eq!(sk.len(), 64);
+        Ok(())
+    }
+
+    #[test]
+    fn test_aes256_gcm_missing_key() {
+        let e = handle_aes256_gcm_encrypt(&json!({
+            "plaintext": BASE64.encode(b"x"),
+        }))
+        .unwrap_err();
+        assert!(e.to_string().contains("key"));
+    }
+
+    #[test]
+    fn test_aes256_gcm_invalid_plaintext_b64() {
+        let e = handle_aes256_gcm_encrypt(&json!({
+            "plaintext": "not-b64!!!",
+            "key": BASE64.encode([0u8; 32]),
+        }))
+        .unwrap_err();
+        assert!(e.to_string().contains("plaintext") || e.to_string().contains("base64"));
+    }
+
+    #[test]
+    fn test_aes256_gcm_decrypt_missing_nonce() {
+        let e = handle_aes256_gcm_decrypt(&json!({
+            "ciphertext": BASE64.encode(b"x"),
+            "key": BASE64.encode([0u8; 32]),
+        }))
+        .unwrap_err();
+        assert!(e.to_string().contains("nonce"));
+    }
+
+    #[test]
+    fn test_aes256_gcm_decrypt_nonce_wrong_length() {
+        let e = handle_aes256_gcm_decrypt(&json!({
+            "ciphertext": BASE64.encode(b"x"),
+            "key": BASE64.encode([0u8; 32]),
+            "nonce": BASE64.encode([0u8; 8]),
+        }))
+        .unwrap_err();
+        assert!(e.to_string().contains("12") || e.to_string().contains("nonce"));
+    }
+
+    #[test]
+    fn test_aes128_gcm_missing_plaintext() {
+        let e = handle_aes128_gcm_encrypt(&json!({
+            "key": BASE64.encode([0u8; 16]),
+        }))
+        .unwrap_err();
+        assert!(e.to_string().contains("plaintext"));
+    }
+
+    #[test]
+    fn test_aes128_gcm_invalid_nonce_length_on_encrypt() {
+        let e = handle_aes128_gcm_encrypt(&json!({
+            "plaintext": BASE64.encode(b"a"),
+            "key": BASE64.encode([0u8; 16]),
+            "nonce": BASE64.encode([0u8; 11]),
+        }))
+        .unwrap_err();
+        assert!(e.to_string().contains("12") || e.to_string().contains("nonce"));
+    }
+
+    #[test]
+    fn test_aes128_gcm_missing_key_on_decrypt() {
+        let e = handle_aes128_gcm_decrypt(&json!({
+            "ciphertext": BASE64.encode(b"x"),
+            "nonce": BASE64.encode([0u8; 12]),
+        }))
+        .unwrap_err();
+        assert!(e.to_string().contains("key"));
+    }
+
+    #[test]
+    fn test_aes128_gcm_decrypt_nonce_bad_length() {
+        let e = handle_aes128_gcm_decrypt(&json!({
+            "ciphertext": BASE64.encode(b"x"),
+            "key": BASE64.encode([0u8; 16]),
+            "nonce": BASE64.encode([0u8; 10]),
+        }))
+        .unwrap_err();
+        assert!(e.to_string().contains("12") || e.to_string().contains("nonce"));
+    }
 }

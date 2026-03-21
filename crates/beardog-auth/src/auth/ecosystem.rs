@@ -301,6 +301,13 @@ mod tests {
     }
 
     #[test]
+    fn test_ecosystem_capability_metadata_hsm_prefix_before_storage_substring() {
+        let engine = CrossNodeAuthEngine::default();
+        let m = engine.ecosystem_capability_metadata("hsm_storage_like");
+        assert!(m.iter().any(|x| x.id == "hsm_operations"));
+    }
+
+    #[test]
     fn test_classify_storage_prefix_before_hsm_substring() {
         let engine = CrossNodeAuthEngine::default();
         let caps = engine

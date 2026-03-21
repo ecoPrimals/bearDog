@@ -247,7 +247,11 @@ impl BufferPoolMetrics {
         if self.total_requests == 0 {
             0.0
         } else {
-            self.cache_hits as f64 / self.total_requests as f64
+            #[expect(clippy::cast_precision_loss, reason = "buffer pool hit rate")]
+            let h = self.cache_hits as f64;
+            #[expect(clippy::cast_precision_loss, reason = "buffer pool hit rate")]
+            let t = self.total_requests as f64;
+            h / t
         }
     }
 }

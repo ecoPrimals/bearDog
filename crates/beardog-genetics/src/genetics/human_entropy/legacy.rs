@@ -79,7 +79,7 @@ impl MultiModalHumanEntropyCollector {
         // Multiple timing samples capture execution jitter
         for sample in 0..8 {
             if let Ok(duration) = SystemTime::now().duration_since(UNIX_EPOCH) {
-                let nanos = duration.subsec_nanos() as u64;
+                let nanos = u64::from(duration.subsec_nanos());
                 let sample_bytes = (nanos.wrapping_mul(sample + 1)).to_le_bytes();
                 for (i, &byte) in sample_bytes.iter().enumerate() {
                     entropy_bytes[i % ENTROPY_SIZE] ^= byte;
@@ -126,6 +126,10 @@ fn calculate_entropy_quality(data: &[u8]) -> f64 {
     }
 
     // Calculate Shannon entropy
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "byte length as f64 for Shannon normalization"
+    )]
     let len = data.len() as f64;
     let mut entropy = 0.0;
 

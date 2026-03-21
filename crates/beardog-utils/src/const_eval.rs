@@ -197,6 +197,10 @@ impl ConstTables {
         let mut i = 0;
 
         while i < 256 {
+            #[expect(
+                clippy::cast_possible_truncation,
+                reason = "CRC table index 0..256 fits u32"
+            )]
             let mut crc = i as u32;
             let mut j = 0;
 
@@ -225,8 +229,16 @@ impl ConstTables {
         let mut num = 2;
 
         while num <= 1000 && count < 168 {
-            if ConstMath::is_prime(num as u64) {
-                primes[count] = num as u16;
+            #[expect(clippy::cast_sign_loss, reason = "primes table uses positive num only")]
+            let n = num as u64;
+            if ConstMath::is_prime(n) {
+                #[expect(clippy::cast_sign_loss, reason = "primes ≤1000 stored as u16")]
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "primes ≤1000 stored as u16"
+                )]
+                let p = num as u16;
+                primes[count] = p;
                 count += 1;
             }
             num += 1;
@@ -796,5 +808,11 @@ mod tests {
     fn test_const_metrics_zero_values() {
         let throughput = ConstMetrics::theoretical_throughput(64, 1, 1);
         assert!(throughput > 0);
+    }
+
+    #[test]
+    fn test_const_metrics_memory_requirements_zero_cache() {
+        let m = ConstMetrics::memory_requirements(1024, 2, 0, 16);
+        assert_eq!(m, 1024 * 2 + 0 + 2 * 16);
     }
 }

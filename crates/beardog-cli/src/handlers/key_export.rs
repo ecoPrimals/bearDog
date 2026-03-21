@@ -851,4 +851,28 @@ mod tests {
         let loaded = key_store::load_key_from_home("lineage-k", dst.path()).unwrap();
         assert_eq!(loaded.parent_key_id.as_deref(), Some("root-k"));
     }
+
+    #[tokio::test]
+    async fn test_export_with_home_missing_key_fails() {
+        let dir = TempDir::new().unwrap();
+        let out = dir.path().join("out.json");
+        let r =
+            handle_key_export_with_home("no-such-key", out.to_str().unwrap(), false, dir.path())
+                .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_import_with_home_missing_input_file() {
+        let dir = TempDir::new().unwrap();
+        let r = handle_key_import_with_home(
+            "/nonexistent/path/key.json",
+            None,
+            false,
+            false,
+            dir.path(),
+        )
+        .await;
+        assert!(r.is_err());
+    }
 }

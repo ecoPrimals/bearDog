@@ -733,4 +733,17 @@ mod tests {
         assert!(deadline >= expected_min);
         assert!(deadline <= expected_max);
     }
+
+    #[tokio::test]
+    async fn test_connect_with_options_refuses_unreachable() {
+        // Reserved / unlikely to accept TCP on typical hosts
+        let addr: std::net::SocketAddr = "127.0.0.1:1".parse().unwrap();
+        let result = TarpcCryptoClient::connect_with_options(
+            addr,
+            Duration::from_millis(80),
+            Duration::from_millis(100),
+        )
+        .await;
+        assert!(result.is_err(), "expected connection failure");
+    }
 }

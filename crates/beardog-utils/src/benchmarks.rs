@@ -192,7 +192,16 @@ impl BenchmarkSuite {
         let measurement_time = measurement_start.elapsed();
 
         let iterations = latencies.len() as u64;
-        let ops_per_second = iterations as f64 / measurement_time.as_secs_f64();
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "benchmark throughput from iteration count"
+        )]
+        let iter_f = iterations as f64;
+        let ops_per_second = iter_f / measurement_time.as_secs_f64();
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "nanos sum fits u64 for measured latencies"
+        )]
         let avg_latency = Duration::from_nanos(
             latencies.iter().map(|d| d.as_nanos() as u64).sum::<u64>() / iterations,
         );
@@ -211,7 +220,14 @@ impl BenchmarkSuite {
         let memory_stats = MemoryStats {
             peak_memory: 1024 * 1024, // 1MB mock
             total_allocations: iterations * 2,
-            allocation_rate: (iterations * 2) as f64 / measurement_time.as_secs_f64(),
+            allocation_rate: {
+                #[expect(
+                    clippy::cast_precision_loss,
+                    reason = "mock allocation rate from iterations"
+                )]
+                let it = (iterations * 2) as f64;
+                it / measurement_time.as_secs_f64()
+            },
             avg_allocation_size: 512,
         };
 
@@ -324,7 +340,12 @@ impl BenchmarkSuite {
         let avg_ops_per_second = if self.benchmarks.is_empty() {
             0.0
         } else {
-            total_ops_per_second / self.benchmarks.len() as f64
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "average ops/sec across benchmark suite"
+            )]
+            let n = self.benchmarks.len() as f64;
+            total_ops_per_second / n
         };
 
         PerformanceReport {

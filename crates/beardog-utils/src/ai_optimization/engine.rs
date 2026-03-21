@@ -337,7 +337,17 @@ impl AIOptimizationEngine {
 
             if total > 0 {
                 let used = total.saturating_sub(available);
-                return Ok((used as f64 / total as f64) * 100.0);
+                #[expect(
+                    clippy::cast_precision_loss,
+                    reason = "memory use ratio for display; f64 mantissa acceptable"
+                )]
+                let used_f = used as f64;
+                #[expect(
+                    clippy::cast_precision_loss,
+                    reason = "memory use ratio for display; f64 mantissa acceptable"
+                )]
+                let total_f = total as f64;
+                return Ok((used_f / total_f) * 100.0);
             }
         }
 
@@ -353,6 +363,10 @@ impl AIOptimizationEngine {
         // Simulate network operation
         tokio::time::sleep(std::time::Duration::from_millis(1)).await;
 
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "millisecond latency sample; sub-ms precision not required"
+        )]
         let latency = start.elapsed().as_millis() as f64;
         Ok(latency.max(1.0)) // Minimum 1ms
     }
@@ -384,7 +398,12 @@ impl AIOptimizationEngine {
         // Simulate a typical operation
         tokio::task::yield_now().await;
 
-        Ok(start.elapsed().as_millis() as f64)
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "response time sample in ms; coarse float is intentional"
+        )]
+        let ms = start.elapsed().as_millis() as f64;
+        Ok(ms)
     }
 
     /// Calculate current error rate
@@ -716,5 +735,14 @@ mod tests {
 
         let stats = engine.get_stats().expect("stats");
         assert_eq!(stats.total_optimizations, 5);
+    }
+
+    #[test]
+    fn get_stats_initial_counts_zero() {
+        let engine = make_engine();
+        let stats = engine.get_stats().expect("stats");
+        assert_eq!(stats.total_optimizations, 0);
+        assert_eq!(stats.successful_optimizations, 0);
+        assert!(stats.learning_accuracy > 0.0);
     }
 }

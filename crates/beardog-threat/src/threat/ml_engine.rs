@@ -157,6 +157,10 @@ impl MlEngine {
         Ok(prediction)
     }
 
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Local prediction duration ms fits u64 for reporting"
+    )]
     fn predict_local(&self, event: &SecurityEvent) -> MlPrediction {
         let start_time = std::time::Instant::now();
 
@@ -180,6 +184,10 @@ impl MlEngine {
     }
 
     /// Predict via universal compute adapter
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Adapter prediction duration ms fits u64 for reporting"
+    )]
     async fn predict_via_universal_adapter(
         &self,
         event: &SecurityEvent,

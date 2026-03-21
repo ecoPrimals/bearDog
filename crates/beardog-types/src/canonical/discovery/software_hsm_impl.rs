@@ -431,6 +431,10 @@ impl KeyManagementCapability for SecureSoftwareHsm {
         let start = std::time::Instant::now();
         let mut test_bytes = vec![0u8; 32];
         let is_healthy = getrandom::getrandom(&mut test_bytes).is_ok();
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "health check elapsed millis fit u64 for metrics"
+        )]
         let elapsed = start.elapsed().as_millis() as u64;
 
         let mut details = std::collections::HashMap::new();

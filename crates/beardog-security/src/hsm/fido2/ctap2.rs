@@ -388,6 +388,10 @@ pub async fn ctaphid_init(
 ///
 /// Uses CTAPHID_CBOR (0x90) command which directly carries CTAP2 commands.
 #[cfg(feature = "fido2")]
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "CTAP2 HID payload length fits u16 per protocol framing"
+)]
 pub async fn send_ctap2_command(
     device: &mut Box<dyn beardog_hid::HidDevice>,
     cid: u32,

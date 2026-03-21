@@ -146,6 +146,10 @@ impl GeneticLineage {
     }
 
     /// Get lineage hint for broadcast encryption
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "lineage depth fits u32 for broadcast hint"
+    )]
     pub fn lineage_hint(&self) -> super::LineageHint {
         super::LineageHint {
             root_id: self.lineage_chain.root_node.node_id.clone(),

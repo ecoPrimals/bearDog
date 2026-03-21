@@ -124,7 +124,7 @@ impl ConstraintEvolutionEngine {
         {
             let now = Utc::now();
             let elapsed_months = (now - created_at).num_days() / 30;
-            if elapsed_months >= *trigger_months as i64 {
+            if elapsed_months >= i64::from(*trigger_months) {
                 return Some(EvolutionTrigger::TimeElapsed {
                     months: *trigger_months,
                 });

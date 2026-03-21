@@ -59,7 +59,12 @@ impl ResourcePredictor {
 
         // Simple moving average prediction
         let sum: f64 = self.cpu_history.iter().sum();
-        Ok(sum / self.cpu_history.len() as f64)
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "deque length as divisor for moving average"
+        )]
+        let n = self.cpu_history.len() as f64;
+        Ok(sum / n)
     }
 
     /// Mean of the memory deque.
@@ -69,7 +74,12 @@ impl ResourcePredictor {
         }
 
         let sum: f64 = self.memory_history.iter().sum();
-        Ok(sum / self.memory_history.len() as f64)
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "deque length as divisor for moving average"
+        )]
+        let n = self.memory_history.len() as f64;
+        Ok(sum / n)
     }
 
     /// Mean of the network deque.
@@ -79,7 +89,12 @@ impl ResourcePredictor {
         }
 
         let sum: f64 = self.network_history.iter().sum();
-        Ok(sum / self.network_history.len() as f64)
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "deque length as divisor for moving average"
+        )]
+        let n = self.network_history.len() as f64;
+        Ok(sum / n)
     }
 
     /// Linear slope estimate over `"cpu"`, `"memory"`, or `"network"` history.
@@ -106,8 +121,18 @@ impl ResourcePredictor {
             return Ok(0.0);
         }
 
-        let recent_avg: f64 = recent.iter().copied().sum::<f64>() / recent.len() as f64;
-        let older_avg: f64 = older.iter().copied().sum::<f64>() / older.len() as f64;
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "recent window size as trend divisor"
+        )]
+        let recent_n = recent.len() as f64;
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "older window size as trend divisor"
+        )]
+        let older_n = older.len() as f64;
+        let recent_avg: f64 = recent.iter().copied().sum::<f64>() / recent_n;
+        let older_avg: f64 = older.iter().copied().sum::<f64>() / older_n;
 
         Ok(recent_avg - older_avg)
     }

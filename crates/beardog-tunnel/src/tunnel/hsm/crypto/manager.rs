@@ -119,7 +119,9 @@ impl CryptoProviderManager {
             if let Some(ref alg) = requirements.algorithm {
                 let alg_name = alg.to_string();
                 if let Some(&latency) = capabilities.performance_profile.latency_us.get(&alg_name) {
-                    if latency > max_latency as f64 {
+                    #[expect(clippy::cast_precision_loss, reason = "compare latency budget in f64")]
+                    let max_us = max_latency as f64;
+                    if latency > max_us {
                         return false;
                     }
                 }

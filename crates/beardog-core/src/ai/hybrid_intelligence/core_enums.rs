@@ -186,3 +186,62 @@ pub enum IntelligenceEventType {
     /// Error occurred
     Error,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn serde_roundtrip_decision_confidence() {
+        let v = DecisionConfidence::High;
+        let json = serde_json::to_value(&v).unwrap();
+        let back: DecisionConfidence = serde_json::from_value(json).unwrap();
+        assert!(matches!(back, DecisionConfidence::High));
+    }
+
+    #[test]
+    fn serde_roundtrip_ai_model_type() {
+        let v = AIModelType::NeuralNetwork;
+        let s = serde_json::to_string(&v).unwrap();
+        let back: AIModelType = serde_json::from_str(&s).unwrap();
+        assert!(matches!(back, AIModelType::NeuralNetwork));
+    }
+
+    #[test]
+    fn serde_roundtrip_learning_feedback() {
+        for fb in [
+            LearningFeedback::Positive,
+            LearningFeedback::Negative,
+            LearningFeedback::Neutral,
+        ] {
+            let s = serde_json::to_string(&fb).unwrap();
+            let back: LearningFeedback = serde_json::from_str(&s).unwrap();
+            assert_eq!(format!("{fb:?}"), format!("{back:?}"));
+        }
+    }
+
+    #[test]
+    fn serde_roundtrip_optimization_algorithm_and_optimizer() {
+        let oa = OptimizationAlgorithm::Adam;
+        let s = serde_json::to_string(&oa).unwrap();
+        let back: OptimizationAlgorithm = serde_json::from_str(&s).unwrap();
+        assert!(matches!(back, OptimizationAlgorithm::Adam));
+
+        let op = Optimizer::RMSprop;
+        let s2 = serde_json::to_string(&op).unwrap();
+        let back2: Optimizer = serde_json::from_str(&s2).unwrap();
+        assert!(matches!(back2, Optimizer::RMSprop));
+    }
+
+    #[test]
+    fn debug_non_serde_enums_nonempty() {
+        assert!(!format!("{:?}", LearningRateAdaptation::Adaptive).is_empty());
+        assert!(!format!("{:?}", UpdateFrequency::PerEpoch).is_empty());
+        assert!(!format!("{:?}", PredictionModel::TimeSeries).is_empty());
+        assert!(!format!("{:?}", InferenceMode::Streaming).is_empty());
+        assert!(!format!("{:?}", LearningAlgorithmType::Reinforcement).is_empty());
+        assert!(!format!("{:?}", OptimizationStrategy::Throughput).is_empty());
+        assert!(!format!("{:?}", OptimizationLevel::Aggressive).is_empty());
+        assert!(!format!("{:?}", IntelligenceEventType::Error).is_empty());
+    }
+}

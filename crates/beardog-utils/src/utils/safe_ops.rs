@@ -160,6 +160,11 @@ impl SafeArithmetic {
                 "Cannot convert negative value {value} to usize"
             )))
         } else {
+            #[expect(clippy::cast_sign_loss, reason = "checked non-negative above")]
+            #[expect(
+                clippy::cast_possible_truncation,
+                reason = "validated non-negative i64 to usize"
+            )]
             Ok(value as usize)
         }
     }

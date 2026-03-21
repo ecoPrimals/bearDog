@@ -284,6 +284,8 @@ impl CapabilityRegistry {
 
 #[cfg(test)]
 mod tests {
+    use serial_test::serial;
+
     use super::*;
 
     /// Test-scoped HTTP base only; production URLs come from env / discovery.
@@ -427,7 +429,9 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_discovery_config() {
+        beardog_errors::process_env::remove_var(crate::metadata::ENV_CAPABILITY_HTTP_PATH);
         let registry = CapabilityRegistry::with_http_base(
             "7c9e6679-7425-40de-944b-e07fc1f90ae7",
             "storage",

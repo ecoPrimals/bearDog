@@ -876,4 +876,48 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn test_software_hsm_implementation_variants() {
+        let v = vec![
+            SoftwareHsmImplementation::BearDogNative,
+            SoftwareHsmImplementation::OpenSsl,
+            SoftwareHsmImplementation::SoftHsm,
+            SoftwareHsmImplementation::MicrosoftCng,
+            SoftwareHsmImplementation::MacOsKeychain,
+            SoftwareHsmImplementation::Custom {
+                name: "x".to_string(),
+                path: PathBuf::from("/tmp/lib.so"),
+            },
+        ];
+        for s in v {
+            let dbg = format!("{s:?}");
+            assert!(!dbg.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_tpm_interface_type_variants() {
+        for t in [
+            TpmInterfaceType::Tpm12,
+            TpmInterfaceType::Tpm20,
+            TpmInterfaceType::FirmwareTpm,
+            TpmInterfaceType::SoftwareTpm,
+        ] {
+            let dbg = format!("{t:?}");
+            assert!(!dbg.is_empty());
+        }
+    }
+
+    #[test]
+    fn pkcs11_identify_vendor_from_library_branches() {
+        let (v, m) = Pkcs11Discoverer::identify_vendor_from_library("libeToken.so");
+        assert_eq!(v, "SafeNet");
+        assert_eq!(m, "eToken");
+        let (v2, m2) = Pkcs11Discoverer::identify_vendor_from_library("libLunaAPI.so");
+        assert_eq!(v2, "Thales");
+        assert_eq!(m2, "Luna HSM");
+        let (v3, _) = Pkcs11Discoverer::identify_vendor_from_library("opensc-pkcs11.so");
+        assert_eq!(v3, "OpenSC");
+    }
 }

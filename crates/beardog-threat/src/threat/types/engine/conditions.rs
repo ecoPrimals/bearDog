@@ -518,4 +518,131 @@ mod tests {
         assert!(condition.is_complex());
         assert_eq!(condition.complexity_score(), 4); // 1 + 3 sub-conditions
     }
+
+    #[test]
+    fn test_numeric_and_membership_and_always() {
+        let mut m = HashMap::from([("n".to_string(), "10".to_string())]);
+        assert!(
+            RuleCondition::FieldGreaterThan {
+                field: "n".into(),
+                value: 5.0,
+            }
+            .evaluate(&m)
+        );
+        assert!(
+            !RuleCondition::FieldGreaterThan {
+                field: "n".into(),
+                value: 15.0,
+            }
+            .evaluate(&m)
+        );
+        m.insert("x".to_string(), "not-a-number".to_string());
+        assert!(
+            !RuleCondition::FieldGreaterThan {
+                field: "x".into(),
+                value: 0.0,
+            }
+            .evaluate(&m)
+        );
+
+        let mut m2 = HashMap::from([("v".to_string(), "3".to_string())]);
+        assert!(
+            RuleCondition::FieldBetween {
+                field: "v".into(),
+                min: 1.0,
+                max: 5.0,
+            }
+            .evaluate(&m2)
+        );
+        m2.insert("v".to_string(), "0".to_string());
+        assert!(
+            !RuleCondition::FieldBetween {
+                field: "v".into(),
+                min: 1.0,
+                max: 5.0,
+            }
+            .evaluate(&m2)
+        );
+
+        assert!(
+            RuleCondition::FieldLessThan {
+                field: "n".into(),
+                value: 20.0,
+            }
+            .evaluate(&m)
+        );
+        assert!(
+            RuleCondition::FieldIn {
+                field: "n".into(),
+                values: vec!["10".into(), "11".into()],
+            }
+            .evaluate(&m)
+        );
+        assert!(RuleCondition::Always.evaluate(&HashMap::new()));
+    }
+
+    #[test]
+    fn test_logical_and_or_empty() {
+        assert!(RuleCondition::and(vec![]).evaluate(&HashMap::new()));
+        assert!(!RuleCondition::or(vec![]).evaluate(&HashMap::new()));
+    }
+
+    #[test]
+    fn test_field_matches_frequency_time_custom_evaluate_false() {
+        let m = HashMap::from([("f".to_string(), "v".to_string())]);
+        assert!(
+            !RuleCondition::FieldMatches {
+                field: "f".into(),
+                pattern: ".*".into(),
+            }
+            .evaluate(&m)
+        );
+        assert!(
+            !RuleCondition::FrequencyThreshold {
+                count: 1,
+                window_minutes: 5,
+            }
+            .evaluate(&m)
+        );
+        assert!(
+            !RuleCondition::TimeWindow {
+                start_hour: 0,
+                end_hour: 23,
+            }
+            .evaluate(&m)
+        );
+        assert!(
+            !RuleCondition::Custom {
+                name: "x".into(),
+                parameters: HashMap::new(),
+            }
+            .evaluate(&m)
+        );
+    }
+
+    #[test]
+    fn test_complexity_frequency_threshold_and_custom() {
+        let ft = RuleCondition::FrequencyThreshold {
+            count: 2,
+            window_minutes: 1,
+        };
+        assert_eq!(ft.complexity_score(), 2);
+        let c = RuleCondition::Custom {
+            name: "p".into(),
+            parameters: HashMap::new(),
+        };
+        assert_eq!(c.complexity_score(), 3);
+    }
+
+    #[test]
+    fn test_rule_condition_logical_not_inverts_evaluation() {
+        let not = RuleCondition::LogicalNot {
+            condition: Box::new(RuleCondition::field_equals("k", "v")),
+        };
+        let mut m = HashMap::new();
+        m.insert("k".to_string(), "v".to_string());
+        assert!(!not.evaluate(&m));
+        m.insert("k".to_string(), "other".to_string());
+        assert!(not.evaluate(&m));
+    }
 }

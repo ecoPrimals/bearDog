@@ -30,6 +30,10 @@ pub struct RetryConfig {
 
 // Implement RetryStrategy trait for workflow retry configuration
 impl RetryStrategy for RetryConfig {
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "workflow max attempts bounded to u32 for retry policy API"
+    )]
     fn max_attempts(&self) -> u32 {
         self.max_attempts as u32 // Convert from usize
     }
@@ -37,13 +41,24 @@ impl RetryStrategy for RetryConfig {
     fn delay_for_attempt(&self, attempt: u32) -> Duration {
         // Exponential backoff
         // Note: Precision loss is acceptable for delay calculations (not cryptographic)
-        #[allow(
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "retry delay clamped to millis as u64 for scheduling"
+        )]
+        #[expect(
             clippy::cast_precision_loss,
+            reason = "acceptable imprecision for non-cryptographic backoff math"
+        )]
+        #[expect(
+            clippy::cast_sign_loss,
+            reason = "delay clamped non-negative before f64 to u64"
+        )]
+        #[expect(
             clippy::cast_possible_wrap,
-            clippy::cast_sign_loss
+            reason = "retry attempt capped at 30 for powi exponent"
         )]
         let delay_ms = {
-            let initial_ms = self.initial_delay.as_millis().min(u64::MAX as u128) as f64;
+            let initial_ms = self.initial_delay.as_millis().min(u128::from(u64::MAX)) as f64;
             let computed = initial_ms * self.backoff_multiplier.powi(attempt.min(30) as i32);
             computed.max(0.0) as u64
         };
@@ -60,6 +75,10 @@ impl RetryStrategy for RetryConfig {
         true
     }
 
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "workflow max attempts bounded to u32 for comparison"
+    )]
     fn is_limit_reached(&self, attempts: u32) -> bool {
         attempts >= self.max_attempts as u32
     }

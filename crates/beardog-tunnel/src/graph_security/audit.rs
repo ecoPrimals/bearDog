@@ -307,7 +307,7 @@ fn calculate_trust_score(
 
     // Penalty for vulnerabilities
     if security.vulnerabilities_found > 0 {
-        score -= 0.20 * (security.vulnerabilities_found as f64 / 10.0);
+        score -= 0.20 * (f64::from(security.vulnerabilities_found) / 10.0);
     }
 
     score.clamp(0.0, 1.0)

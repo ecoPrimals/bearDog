@@ -457,6 +457,9 @@ impl PrimalDiscovery {
                 .get(ipc::ENV_BIOMEOS_SOCKET_DIR_OVERRIDE)
                 .map(String::as_str),
             env_vars.get("XDG_RUNTIME_DIR").map(String::as_str),
+            env_vars
+                .get(ipc::ENV_BIOMEOS_IPC_NAMESPACE)
+                .map(String::as_str),
         );
 
         let entries = match std::fs::read_dir(&dir) {

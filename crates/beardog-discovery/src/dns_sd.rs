@@ -583,4 +583,11 @@ mod tests {
         discovery.clear_cache().await;
         assert!(discovery.get_cached("test").await.is_none());
     }
+
+    #[test]
+    fn dns_sd_config_default_smoke() {
+        let c = DnsSdConfig::default();
+        assert_eq!(c.domain, "local");
+        assert_eq!(c.timeout.as_secs(), 5);
+    }
 }

@@ -611,4 +611,186 @@ mod tests {
 
         Ok(())
     }
+
+    #[tokio::test]
+    async fn test_derive_device_seed_invalid_json() {
+        let r = handle_derive_device_seed(json!("not-an-object")).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_derive_device_seed_short_device_entropy() {
+        let r = handle_derive_device_seed(json!({
+            "root_seed": BASE64.encode([1u8; 32]),
+            "device_entropy": BASE64.encode([2u8; 8]),
+            "device_id": "x",
+        }))
+        .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_derive_device_seed_enrollment_timestamp_changes_output() {
+        let root = BASE64.encode([3u8; 32]);
+        let ent = BASE64.encode([4u8; 16]);
+        let a: DeriveDeviceSeedResponse = serde_json::from_value(
+            handle_derive_device_seed(json!({
+                "root_seed": root.clone(),
+                "device_entropy": ent.clone(),
+                "device_id": "dev",
+                "enrollment_timestamp": 1_700_000_000u64,
+            }))
+            .await
+            .expect("a"),
+        )
+        .expect("parse");
+        let b: DeriveDeviceSeedResponse = serde_json::from_value(
+            handle_derive_device_seed(json!({
+                "root_seed": root,
+                "device_entropy": ent,
+                "device_id": "dev",
+                "enrollment_timestamp": 1_800_000_000u64,
+            }))
+            .await
+            .expect("b"),
+        )
+        .expect("parse");
+        assert_ne!(a.device_seed, b.device_seed);
+    }
+
+    #[tokio::test]
+    async fn test_verify_lineage_certificate_expired() -> Result<(), Box<dyn std::error::Error>> {
+        let parent_seed = BASE64.encode([5u8; 32]);
+        use ed25519_dalek::SigningKey;
+        let child = SigningKey::from_bytes(&[6u8; 32]);
+        let child_pk = BASE64.encode(child.verifying_key().to_bytes());
+
+        let sign = handle_sign_lineage_certificate(json!({
+            "parent_seed": parent_seed,
+            "parent_device_id": "p",
+            "child_public_key": child_pk,
+            "child_device_id": "c",
+            "family_id": "fam",
+            "expires_at": 1u64,
+        }))
+        .await?;
+        let resp: SignLineageCertificateResponse = serde_json::from_value(sign)?;
+
+        let verify = handle_verify_lineage_certificate(json!({
+            "certificate": resp.certificate,
+            "expected_family_id": "fam",
+            "trust_anchors": [],
+        }))
+        .await?;
+        let vr: VerifyLineageCertificateResponse = serde_json::from_value(verify)?;
+        assert!(!vr.valid);
+        assert!(!vr.details.not_expired);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_verify_lineage_certificate_tampered_signature()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let parent_seed = BASE64.encode([7u8; 32]);
+        use ed25519_dalek::SigningKey;
+        let child = SigningKey::from_bytes(&[8u8; 32]);
+        let child_pk = BASE64.encode(child.verifying_key().to_bytes());
+
+        let sign = handle_sign_lineage_certificate(json!({
+            "parent_seed": parent_seed,
+            "parent_device_id": "p",
+            "child_public_key": child_pk,
+            "child_device_id": "c",
+            "family_id": "fam2",
+        }))
+        .await?;
+        let mut resp: SignLineageCertificateResponse = serde_json::from_value(sign)?;
+        let mut sig = BASE64.decode(&resp.certificate.parent_signature)?;
+        sig[0] ^= 0xFF;
+        resp.certificate.parent_signature = BASE64.encode(&sig);
+
+        let verify = handle_verify_lineage_certificate(json!({
+            "certificate": resp.certificate,
+            "expected_family_id": "fam2",
+            "trust_anchors": [],
+        }))
+        .await?;
+        let vr: VerifyLineageCertificateResponse = serde_json::from_value(verify)?;
+        assert!(!vr.valid);
+        assert!(!vr.details.signature_valid);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_verify_lineage_certificate_trust_anchor_match()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let parent_seed = BASE64.encode([9u8; 32]);
+        use ed25519_dalek::SigningKey;
+        let child = SigningKey::from_bytes(&[10u8; 32]);
+        let child_pk = BASE64.encode(child.verifying_key().to_bytes());
+
+        let sign = handle_sign_lineage_certificate(json!({
+            "parent_seed": parent_seed,
+            "parent_device_id": "root",
+            "child_public_key": child_pk.clone(),
+            "child_device_id": "leaf",
+            "family_id": "fam3",
+        }))
+        .await?;
+        let resp: SignLineageCertificateResponse = serde_json::from_value(sign)?;
+
+        let verify = handle_verify_lineage_certificate(json!({
+            "certificate": resp.certificate.clone(),
+            "expected_family_id": "fam3",
+            "trust_anchors": [resp.certificate.clone()],
+        }))
+        .await?;
+        let vr: VerifyLineageCertificateResponse = serde_json::from_value(verify)?;
+        assert!(vr.valid);
+        assert!(vr.details.chain_verified);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_verify_lineage_certificate_trust_anchor_no_match()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let parent_seed = BASE64.encode([11u8; 32]);
+        use ed25519_dalek::SigningKey;
+        let child = SigningKey::from_bytes(&[12u8; 32]);
+        let child_pk = BASE64.encode(child.verifying_key().to_bytes());
+
+        let sign = handle_sign_lineage_certificate(json!({
+            "parent_seed": parent_seed,
+            "parent_device_id": "p",
+            "child_public_key": child_pk,
+            "child_device_id": "c",
+            "family_id": "fam4",
+        }))
+        .await?;
+        let resp: SignLineageCertificateResponse = serde_json::from_value(sign)?;
+
+        let other = LineageCertificate {
+            version: 1,
+            parent_device_id: "x".into(),
+            child_device_id: "y".into(),
+            child_public_key: BASE64.encode([99u8; 32]),
+            family_id: "other".into(),
+            issued_at: 0,
+            expires_at: None,
+            depth: 0,
+            parent_signature: BASE64.encode([0u8; 64]),
+            parent_public_key: BASE64.encode([0u8; 32]),
+        };
+
+        let verify = handle_verify_lineage_certificate(json!({
+            "certificate": resp.certificate,
+            "expected_family_id": "fam4",
+            "trust_anchors": [other],
+        }))
+        .await?;
+        let vr: VerifyLineageCertificateResponse = serde_json::from_value(verify)?;
+        assert!(!vr.valid);
+        assert!(!vr.details.chain_verified);
+        Ok(())
+    }
 }

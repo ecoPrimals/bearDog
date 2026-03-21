@@ -803,6 +803,10 @@ pub async fn handle_tls12_prf(params: Option<&Value>) -> Result<Value, String> {
         .and_then(|v| v.as_str())
         .ok_or("Missing 'seed' parameter")?;
 
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "TLS 1.2 PRF output length from parameters"
+    )]
     let output_len = params
         .get("output_len")
         .and_then(serde_json::Value::as_u64)

@@ -46,6 +46,10 @@ impl CryptoProvider<KeyType> for RustCryptoProvider {
             KeyType::Rsa => 256,                    // RSA-2048
             KeyType::Generic | KeyType::Custom(_) => 32, // Default
         };
+        #[expect(
+            clippy::cast_sign_loss,
+            reason = "key sizes from KeyType are positive byte lengths"
+        )]
         let mut key_material = vec![0u8; key_length as usize];
         rand::thread_rng().fill_bytes(&mut key_material);
         debug!("Generated {} byte key", key_material.len());

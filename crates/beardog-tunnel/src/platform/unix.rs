@@ -19,6 +19,7 @@
 //! - ✅ No hardcoding (XDG Base Directory + runtime discovery)
 
 use super::{PlatformListener, PlatformSocket, PlatformStream, SocketEndpoint};
+use beardog_types::constants::domains::network::ipc_discovery as ipc_layout;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
@@ -86,6 +87,8 @@ pub struct UnixListenHints {
     pub beardog_socket: Option<String>,
     /// `XDG_RUNTIME_DIR` when set.
     pub xdg_runtime_dir: Option<String>,
+    /// `BIOMEOS_IPC_NAMESPACE` override (directory under runtime / tmp).
+    pub ipc_namespace: Option<String>,
 }
 
 impl UnixListenHints {
@@ -94,6 +97,8 @@ impl UnixListenHints {
         Self {
             beardog_socket: beardog_errors::process_env::var("BEARDOG_SOCKET").ok(),
             xdg_runtime_dir: beardog_errors::process_env::var("XDG_RUNTIME_DIR").ok(),
+            ipc_namespace: beardog_errors::process_env::var(ipc_layout::ENV_BIOMEOS_IPC_NAMESPACE)
+                .ok(),
         }
     }
 }
@@ -127,8 +132,12 @@ impl UnixSocket {
 
         // Priority 2: XDG Base Directory (standard Linux/Unix)
         let socket_path = if let Some(ref runtime_dir) = hints.xdg_runtime_dir {
-            // XDG compliant: /run/user/$UID/biomeos/beardog.sock
-            let biomeos_dir = std::path::PathBuf::from(&runtime_dir).join("biomeos");
+            // XDG compliant: /run/user/$UID/<namespace>/<primal>.sock
+            let biomeos_dir = std::path::PathBuf::from(runtime_dir).join(
+                ipc_layout::resolve_biomeos_ipc_subdir_from_optional(
+                    hints.ipc_namespace.as_deref(),
+                ),
+            );
 
             // Ensure directory exists (BLOCKING - acceptable for initialization)
             if !biomeos_dir.exists() {
@@ -137,8 +146,12 @@ impl UnixSocket {
 
             biomeos_dir.join(format!("{primal_name}.sock"))
         } else {
-            // Priority 3: /tmp fallback (compatibility)
-            let tmp_dir = std::path::PathBuf::from("/tmp/biomeos");
+            // Priority 3: temp fallback (compatibility)
+            let tmp_dir = ipc_layout::biomeos_tmp_socket_root().join(
+                ipc_layout::resolve_biomeos_ipc_subdir_from_optional(
+                    hints.ipc_namespace.as_deref(),
+                ),
+            );
 
             // Ensure directory exists (BLOCKING - acceptable for initialization)
             if !tmp_dir.exists() {
@@ -208,6 +221,7 @@ mod tests {
         let hints = UnixListenHints {
             beardog_socket: None,
             xdg_runtime_dir: Some(xdg_runtime.to_string_lossy().into_owned()),
+            ipc_namespace: None,
         };
         let endpoint = UnixSocket::create_endpoint_with("beardog", &hints).unwrap();
 
@@ -228,6 +242,7 @@ mod tests {
         let hints = UnixListenHints {
             beardog_socket: Some("/custom/path/beardog.sock".to_string()),
             xdg_runtime_dir: None,
+            ipc_namespace: None,
         };
         let endpoint = UnixSocket::create_endpoint_with("beardog", &hints).unwrap();
 

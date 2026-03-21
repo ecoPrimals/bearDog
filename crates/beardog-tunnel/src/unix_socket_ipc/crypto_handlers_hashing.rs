@@ -363,7 +363,7 @@ pub fn handle_derive_onion_address(params: &Value) -> Result<Value, BearDogError
         "onion_address": onion_address,
         "public_key": pubkey_b64,
         "checksum": hex::encode(checksum),
-        "version": TOR_V3_VERSION as u32
+        "version": u32::from(TOR_V3_VERSION)
     }))
 }
 
@@ -776,6 +776,48 @@ mod tests {
             addr_part
                 .chars()
                 .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+        );
+    }
+
+    #[test]
+    fn test_derive_onion_address_invalid_pubkey_base64() {
+        let params = json!({
+            "public_key": "not!!!b64!!!"
+        });
+        let e = handle_derive_onion_address(&params).unwrap_err();
+        assert!(e.to_string().contains("base64") || e.to_string().contains("public_key"));
+    }
+
+    #[test]
+    fn test_sha384_missing_data() {
+        let e = handle_sha384(&json!({})).unwrap_err();
+        assert!(e.to_string().contains("data"));
+    }
+
+    #[test]
+    fn test_sha512_invalid_base64() {
+        let e = handle_sha512(&json!({"data": "bad@@@"})).unwrap_err();
+        assert!(e.to_string().contains("base64"));
+    }
+
+    #[test]
+    fn test_sha1_missing_data() {
+        let e = handle_sha1(&json!({})).unwrap_err();
+        assert!(e.to_string().contains("data"));
+    }
+
+    #[test]
+    fn test_sha3_256_missing_data() {
+        let e = handle_sha3_256(&json!({})).unwrap_err();
+        assert!(e.to_string().contains("data"));
+    }
+
+    #[tokio::test]
+    async fn test_generate_onion_identity_default_purpose() {
+        let out = handle_generate_onion_identity(None).await.expect("ok");
+        assert_eq!(
+            out.get("purpose").and_then(|v| v.as_str()),
+            Some("hidden_service")
         );
     }
 }

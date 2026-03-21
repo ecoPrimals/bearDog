@@ -82,8 +82,13 @@ impl MockTimeSource {
 
     /// Create a mock time source starting at a specific time offset
     pub fn with_offset(offset: Duration) -> Self {
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "mock clock stores sub-second precision in u64"
+        )]
+        let nanos_u64 = offset.as_nanos() as u64;
         Self {
-            nanos: Arc::new(AtomicU64::new(offset.as_nanos() as u64)),
+            nanos: Arc::new(AtomicU64::new(nanos_u64)),
             base_instant: Instant::now(),
         }
     }
@@ -104,14 +109,16 @@ impl MockTimeSource {
     /// assert_eq!(time.elapsed(start), Duration::from_secs(60));
     /// ```
     pub fn advance(&self, duration: Duration) {
-        self.nanos
-            .fetch_add(duration.as_nanos() as u64, Ordering::SeqCst);
+        #[expect(clippy::cast_possible_truncation, reason = "mock clock nanos in u64")]
+        let delta = duration.as_nanos() as u64;
+        self.nanos.fetch_add(delta, Ordering::SeqCst);
     }
 
     /// Set absolute time (from source creation)
     pub fn set_elapsed(&self, duration: Duration) {
-        self.nanos
-            .store(duration.as_nanos() as u64, Ordering::SeqCst);
+        #[expect(clippy::cast_possible_truncation, reason = "mock clock nanos in u64")]
+        let nanos_u64 = duration.as_nanos() as u64;
+        self.nanos.store(nanos_u64, Ordering::SeqCst);
     }
 
     /// Reset time to zero

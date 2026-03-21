@@ -9,6 +9,7 @@
 #[cfg(test)]
 mod tests {
     use serde_json::json;
+    use serial_test::serial;
 
     // ========================================================================
     // Decision Field Tests
@@ -127,6 +128,7 @@ mod tests {
     // ========================================================================
 
     #[test]
+    #[serial]
     fn test_env_var_fallback_family_id() {
         // Clear any existing env vars
         beardog_errors::process_env::remove_var("FAMILY_ID");
@@ -147,6 +149,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_env_var_fallback_node_id() {
         // Clear any existing env vars
         beardog_errors::process_env::remove_var("NODE_ID");
@@ -167,6 +170,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_env_var_primary_takes_precedence() {
         // Set both FAMILY_ID and BEARDOG_FAMILY_ID
         beardog_errors::process_env::set_var("FAMILY_ID", "primary-family");
@@ -185,6 +189,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_env_var_fallback_to_unknown() {
         // Clear all env vars
         beardog_errors::process_env::remove_var("FAMILY_ID");
@@ -199,6 +204,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_env_var_both_formats_work() {
         // Test FAMILY_ID format
         beardog_errors::process_env::set_var("FAMILY_ID", "nat0");
@@ -228,6 +234,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_env_var_compatibility_all_methods() {
         // Test that env var fallback works for all IPC methods
 
@@ -271,6 +278,7 @@ mod tests {
     // ========================================================================
 
     #[test]
+    #[serial]
     fn test_trust_response_with_correct_identity() {
         // Set environment - use unique test-scoped keys to avoid parallel test races
         beardog_errors::process_env::set_var("FAMILY_ID", "nat0");
@@ -314,6 +322,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_trust_response_reject_with_decision() {
         // Set environment
         beardog_errors::process_env::set_var("BEARDOG_FAMILY_ID", "nat0");

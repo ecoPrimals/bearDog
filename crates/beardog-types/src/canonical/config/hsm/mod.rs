@@ -195,15 +195,26 @@ impl RetryStrategy for HsmRetryPolicy {
     fn delay_for_attempt(&self, attempt: u32) -> Duration {
         // Exponential backoff with HSM-specific multiplier
         // Note: Precision loss is acceptable for delay calculations (not cryptographic)
-        #[allow(
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "delay millis fit u64 for scheduling"
+        )]
+        #[expect(
             clippy::cast_precision_loss,
+            reason = "acceptable imprecision for non-cryptographic backoff math"
+        )]
+        #[expect(
+            clippy::cast_sign_loss,
+            reason = "delay clamped non-negative before f64 to u64"
+        )]
+        #[expect(
             clippy::cast_possible_wrap,
-            clippy::cast_sign_loss
+            reason = "retry attempt capped at 30 for powi exponent"
         )]
         let delay_ms = {
             // Clamp to u64::MAX millis to avoid overflow (still ~584 million years)
-            let initial_ms = self.initial_delay.as_millis().min(u64::MAX as u128) as f64;
-            let max_ms = self.max_delay.as_millis().min(u64::MAX as u128) as u64;
+            let initial_ms = self.initial_delay.as_millis().min(u128::from(u64::MAX)) as f64;
+            let max_ms = self.max_delay.as_millis().min(u128::from(u64::MAX)) as u64;
             let computed = initial_ms * self.backoff_multiplier.powi(attempt.min(30) as i32);
             computed.min(max_ms as f64).max(0.0) as u64
         };

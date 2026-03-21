@@ -436,6 +436,14 @@ impl MonitoringService {
     ///
     /// # Errors
     /// Returns an error if alerts cannot be cleared
+    #[expect(
+        clippy::cast_possible_wrap,
+        reason = "max_age_hours used as chrono hours; bounded by caller configuration"
+    )]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Retention heuristic count fits usize on supported platforms"
+    )]
     pub async fn clear_old_alerts(&self, max_age_hours: u64) -> Result<usize, BearDogError> {
         let _cutoff_time = Utc::now() - chrono::Duration::hours(max_age_hours as i64);
         let mut alerts = self.alerts.write().await;
@@ -742,5 +750,13 @@ mod tests {
 
         let result = service.check_alerts(&metrics);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn monitoring_config_default_clone_roundtrip() {
+        let c = MonitoringConfig::default();
+        let c2 = c.clone();
+        assert_eq!(c.snapshot_interval_seconds, c2.snapshot_interval_seconds);
+        assert_eq!(c.max_snapshots, c2.max_snapshots);
     }
 }

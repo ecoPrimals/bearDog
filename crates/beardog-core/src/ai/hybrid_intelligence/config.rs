@@ -218,3 +218,57 @@ fn create_default_decision_config_for_default() -> super::types::DecisionEngineC
     // Create a simplified decision engine configuration using defaults
     super::types::DecisionEngineConfig::default()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn intelligence_mode_json_roundtrip() {
+        let m = IntelligenceMode::AutonomousAI;
+        let v = serde_json::to_value(&m).unwrap();
+        let back: IntelligenceMode = serde_json::from_value(v).unwrap();
+        assert!(matches!(back, IntelligenceMode::AutonomousAI));
+    }
+
+    #[test]
+    fn learning_algorithm_json_roundtrip() {
+        let a = LearningAlgorithm::SupervisedLearning;
+        let s = serde_json::to_string(&a).unwrap();
+        let back: LearningAlgorithm = serde_json::from_str(&s).unwrap();
+        assert!(matches!(back, LearningAlgorithm::SupervisedLearning));
+    }
+
+    #[test]
+    fn ml_config_json_roundtrip() {
+        let c = MLConfig {
+            learning_rate: 0.01,
+            batch_size: 32,
+            max_epochs: 10,
+            early_stopping: true,
+        };
+        let v = serde_json::to_value(&c).unwrap();
+        let back: MLConfig = serde_json::from_value(v).unwrap();
+        assert_eq!(back.batch_size, 32);
+        assert!(back.early_stopping);
+    }
+
+    #[test]
+    fn decision_config_json_roundtrip() {
+        let c = DecisionConfig {
+            confidence_threshold: 0.9,
+            enable_human_feedback: false,
+            max_processing_time_ms: 500,
+        };
+        let back: DecisionConfig =
+            serde_json::from_str(&serde_json::to_string(&c).unwrap()).unwrap();
+        assert_eq!(back.max_processing_time_ms, 500);
+    }
+
+    #[test]
+    fn hybrid_intelligence_config_default_smoke() {
+        let cfg = HybridIntelligenceConfig::default();
+        assert_eq!(cfg.human_feedback_weight, 0.3);
+        assert!(matches!(cfg.mode, IntelligenceMode::HybridAssisted));
+    }
+}

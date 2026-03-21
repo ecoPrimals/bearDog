@@ -78,6 +78,10 @@ impl EntropyValidator {
         };
 
         let age = Utc::now().signed_duration_since(*timestamp);
+        #[expect(
+            clippy::cast_possible_wrap,
+            reason = "configured max age hours treated as i64 hours for chrono Duration"
+        )]
         let max_age = Duration::hours(self.config.max_entropy_age_hours as i64);
 
         if age > max_age {
@@ -173,6 +177,10 @@ impl EntropyValidator {
 
                 // Check timestamp freshness (proof shouldn't be too old)
                 let age = Utc::now().signed_duration_since(ownership_proof.timestamp);
+                #[expect(
+                    clippy::cast_possible_wrap,
+                    reason = "configured max age hours treated as i64 hours for chrono Duration"
+                )]
                 let max_age = Duration::hours(self.config.max_entropy_age_hours as i64);
 
                 if age > max_age {

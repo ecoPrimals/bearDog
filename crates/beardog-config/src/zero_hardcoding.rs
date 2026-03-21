@@ -344,6 +344,22 @@ impl RetryConfig {
     }
 
     /// Calculate backoff for attempt N
+    #[expect(
+        clippy::cast_possible_wrap,
+        reason = "Retry attempt index used as powi exponent; fits i32 for f64 powi"
+    )]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Backoff scaled from millis; u128 to f64 acceptable for duration math"
+    )]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Backoff millis clamped from f64 for Duration::from_millis"
+    )]
+    #[expect(
+        clippy::cast_sign_loss,
+        reason = "Non-negative backoff before u64 millis"
+    )]
     pub fn backoff_for_attempt(&self, attempt: u32) -> Duration {
         let multiplier = self.backoff_multiplier.powi(attempt as i32);
         let backoff = self.initial_backoff.as_millis() as f64 * multiplier;

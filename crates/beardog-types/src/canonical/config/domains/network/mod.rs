@@ -147,10 +147,13 @@ impl ConsolidatedNetworkConfiguration {
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(10000);
-        config.rate_limiting.global_rps = Some(
-            crate::constants::domains::network::defaults::DEFAULT_CONNECTION_TIMEOUT.as_millis()
-                as u64,
-        );
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "timeout millis fit u64 for rate limiter RPS config"
+        )]
+        let global_rps = crate::constants::domains::network::defaults::DEFAULT_CONNECTION_TIMEOUT
+            .as_millis() as u64;
+        config.rate_limiting.global_rps = Some(global_rps);
         config.rate_limiting.per_ip_rpm = Some(
             std::env::var("BEARDOG_PRODUCTION_PER_IP_RPM")
                 .ok()

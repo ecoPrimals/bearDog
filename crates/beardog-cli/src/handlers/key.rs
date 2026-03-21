@@ -16,6 +16,37 @@ async fn discover_hsms_agnostic() -> Result<Vec<hsm_agnostic::CliHsmInfo>, BearD
     hsm_agnostic::discover_all_hsms().await
 }
 
+/// Select an HSM for key generation (`auto` prefers Mobile → Hardware → Software).
+pub(crate) fn select_cli_hsm_for_preference<'a>(
+    hsms: &'a [hsm_agnostic::CliHsmInfo],
+    hsm_preference: &str,
+) -> Result<&'a hsm_agnostic::CliHsmInfo, BearDogError> {
+    match hsm_preference.to_lowercase().as_str() {
+        "auto" => hsms
+            .iter()
+            .find(|h| h.tier == "Mobile")
+            .or_else(|| hsms.iter().find(|h| h.tier == "Hardware"))
+            .or_else(|| hsms.iter().find(|h| h.tier == "Software"))
+            .ok_or_else(|| BearDogError::not_found("No suitable HSM found".to_string())),
+        "software" => hsms
+            .iter()
+            .find(|h| h.tier == "Software")
+            .ok_or_else(|| BearDogError::not_found("No software HSM found".to_string())),
+        "hardware" => hsms
+            .iter()
+            .find(|h| h.tier == "Hardware")
+            .ok_or_else(|| BearDogError::not_found("No hardware HSM found".to_string())),
+        "mobile" => hsms
+            .iter()
+            .find(|h| h.tier == "Mobile")
+            .ok_or_else(|| BearDogError::not_found("No mobile HSM found".to_string())),
+        _ => {
+            let msg = format!("Unknown HSM preference: {hsm_preference}");
+            Err(BearDogError::invalid_input(&msg))
+        }
+    }
+}
+
 // ALL OLD PLACEHOLDER CODE REMOVED - was hardcoded and vendor-specific
 
 /// Generate AES-256 key optionally mixed with human entropy seed
@@ -85,32 +116,7 @@ pub async fn handle_key_generate(
         ));
     }
 
-    let selected_hsm = match hsm_preference.to_lowercase().as_str() {
-        "auto" => {
-            // Prefer: mobile > hardware > software
-            hsms.iter()
-                .find(|h| h.tier == "Mobile")
-                .or_else(|| hsms.iter().find(|h| h.tier == "Hardware"))
-                .or_else(|| hsms.iter().find(|h| h.tier == "Software"))
-                .ok_or_else(|| BearDogError::not_found("No suitable HSM found".to_string()))?
-        }
-        "software" => hsms
-            .iter()
-            .find(|h| h.tier == "Software")
-            .ok_or_else(|| BearDogError::not_found("No software HSM found".to_string()))?,
-        "hardware" => hsms
-            .iter()
-            .find(|h| h.tier == "Hardware")
-            .ok_or_else(|| BearDogError::not_found("No hardware HSM found".to_string()))?,
-        "mobile" => hsms
-            .iter()
-            .find(|h| h.tier == "Mobile")
-            .ok_or_else(|| BearDogError::not_found("No mobile HSM found".to_string()))?,
-        _ => {
-            let msg = format!("Unknown HSM preference: {hsm_preference}");
-            return Err(BearDogError::invalid_input(&msg));
-        }
-    };
+    let selected_hsm = select_cli_hsm_for_preference(&hsms, hsm_preference)?;
 
     println!("✅ Selected HSM: {}", selected_hsm.name);
     println!("   Tier: {}", selected_hsm.tier);
@@ -358,32 +364,7 @@ pub async fn handle_key_generate_v2(
         ));
     }
 
-    let selected_hsm = match hsm_preference.to_lowercase().as_str() {
-        "auto" => {
-            // Prefer: mobile > hardware > software
-            hsms.iter()
-                .find(|h| h.tier == "Mobile")
-                .or_else(|| hsms.iter().find(|h| h.tier == "Hardware"))
-                .or_else(|| hsms.iter().find(|h| h.tier == "Software"))
-                .ok_or_else(|| BearDogError::not_found("No suitable HSM found".to_string()))?
-        }
-        "software" => hsms
-            .iter()
-            .find(|h| h.tier == "Software")
-            .ok_or_else(|| BearDogError::not_found("No software HSM found".to_string()))?,
-        "hardware" => hsms
-            .iter()
-            .find(|h| h.tier == "Hardware")
-            .ok_or_else(|| BearDogError::not_found("No hardware HSM found".to_string()))?,
-        "mobile" => hsms
-            .iter()
-            .find(|h| h.tier == "Mobile")
-            .ok_or_else(|| BearDogError::not_found("No mobile HSM found".to_string()))?,
-        _ => {
-            let msg = format!("Unknown HSM preference: {hsm_preference}");
-            return Err(BearDogError::invalid_input(&msg));
-        }
-    };
+    let selected_hsm = select_cli_hsm_for_preference(&hsms, hsm_preference)?;
 
     println!("✅ Selected HSM: {}", selected_hsm.name);
     println!("   Tier: {}", selected_hsm.tier);
@@ -526,9 +507,74 @@ pub async fn handle_key_generate_v2(
 #[cfg(test)]
 mod key_handler_tests {
     use super::*;
+    use crate::handlers::hsm_agnostic::CliHsmInfo;
     use crate::handlers::key_store;
     use chrono::Utc;
     use tempfile::TempDir;
+
+    fn sample_cli_hsm(tier: &str, name: &str) -> CliHsmInfo {
+        CliHsmInfo {
+            id: format!("id-{name}"),
+            name: name.to_string(),
+            vendor: "v".to_string(),
+            model: "m".to_string(),
+            tier: tier.to_string(),
+            hsm_type: "t".to_string(),
+            path: "/p".to_string(),
+            interface_detail: "d".to_string(),
+        }
+    }
+
+    #[test]
+    fn select_cli_hsm_auto_prefers_mobile_then_hardware_then_software() {
+        let hsms = vec![
+            sample_cli_hsm("Software", "sw"),
+            sample_cli_hsm("Hardware", "hw"),
+        ];
+        assert_eq!(
+            select_cli_hsm_for_preference(&hsms, "auto").unwrap().tier,
+            "Hardware"
+        );
+
+        let with_mobile = vec![sample_cli_hsm("Mobile", "mob"), hsms[1].clone()];
+        assert_eq!(
+            select_cli_hsm_for_preference(&with_mobile, "auto")
+                .unwrap()
+                .tier,
+            "Mobile"
+        );
+
+        let only_sw = vec![sample_cli_hsm("Software", "only")];
+        assert_eq!(
+            select_cli_hsm_for_preference(&only_sw, "auto")
+                .unwrap()
+                .name,
+            "only"
+        );
+    }
+
+    #[test]
+    fn select_cli_hsm_each_tier_and_errors() {
+        let hs = vec![sample_cli_hsm("Software", "s")];
+        assert!(select_cli_hsm_for_preference(&hs, "software").is_ok());
+        assert!(select_cli_hsm_for_preference(&hs, "hardware").is_err());
+        assert!(select_cli_hsm_for_preference(&hs, "mobile").is_err());
+
+        let hh = vec![sample_cli_hsm("Hardware", "h")];
+        assert!(select_cli_hsm_for_preference(&hh, "hardware").is_ok());
+
+        let mob = vec![sample_cli_hsm("Mobile", "m")];
+        assert!(select_cli_hsm_for_preference(&mob, "mobile").is_ok());
+
+        assert!(select_cli_hsm_for_preference(&hs, "AUTO").is_ok());
+        assert!(select_cli_hsm_for_preference(&hs, "unknown-mode").is_err());
+    }
+
+    #[test]
+    fn select_cli_hsm_auto_empty_tiers_fails() {
+        let hsms = vec![sample_cli_hsm("Cloud", "c")];
+        assert!(select_cli_hsm_for_preference(&hsms, "auto").is_err());
+    }
 
     #[test]
     fn test_generate_aes_key_without_seed() {
@@ -632,6 +678,45 @@ mod key_handler_tests {
 
     #[tokio::test]
     async fn test_handle_key_delete_without_confirm_returns_early() {
-        handle_key_delete("some-key", false).await.unwrap();
+        let dir = TempDir::new().unwrap();
+        handle_key_delete_with_home("some-key", false, dir.path())
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_list_filter_matches_nothing() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+
+        let k = key_store::StoredKey {
+            key_id: "only-key".to_string(),
+            algorithm: "aes256-gcm".to_string(),
+            hsm_name: "LocalSoft".to_string(),
+            created_at: Utc::now().to_rfc3339(),
+            key_material_b64: key_store::base64_encode(&[1u8; 32]),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        key_store::save_key_to_home(&k, home).unwrap();
+
+        handle_key_list_with_home(Some("nomatch-xyz"), false, home)
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_delete_missing_key_errors() {
+        let dir = TempDir::new().unwrap();
+        let err = handle_key_delete_with_home("missing-id", true, dir.path())
+            .await
+            .unwrap_err();
+        assert!(format!("{err}").contains("missing-id") || format!("{err}").contains("not found"));
     }
 }

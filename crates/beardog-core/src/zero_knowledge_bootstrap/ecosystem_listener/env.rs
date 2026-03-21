@@ -104,3 +104,49 @@ impl EcosystemListenerEnvInputs {
         vec![primary, local]
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_env_inputs() {
+        let d = EcosystemListenerEnvInputs::default();
+        assert_eq!(d.mdns_poll_interval_secs, 5);
+        assert_eq!(d.http_discovery_poll_interval_secs, 10);
+        assert_eq!(d.env_check_interval_secs, 15);
+        assert_eq!(d.mesh_discovery_interval_secs, 20);
+        assert!(!d.mdns_discovery_enabled);
+        assert_eq!(d.http_discovery_timeout_secs, 5);
+        assert!(d.beardog_discovery_endpoint.is_none());
+        let ep = d.discovery_endpoints();
+        assert_eq!(ep.len(), 2);
+        assert!(ep[0].starts_with("http://"));
+        assert!(ep[1].contains("/discovery"));
+        let dbg = format!("{d:?}");
+        assert!(!dbg.is_empty());
+    }
+
+    #[test]
+    fn discovery_endpoints_with_explicit_beardog_endpoint() {
+        let inputs = EcosystemListenerEnvInputs {
+            beardog_discovery_endpoint: Some("http://custom.example:9000/v1".to_string()),
+            ..EcosystemListenerEnvInputs::default()
+        };
+        let ep = inputs.discovery_endpoints();
+        assert_eq!(ep[0], "http://custom.example:9000/v1");
+        assert_eq!(ep.len(), 2);
+    }
+
+    #[test]
+    fn discovery_endpoints_ecosystem_fallback_when_no_beardog_endpoint() {
+        let inputs = EcosystemListenerEnvInputs {
+            beardog_discovery_endpoint: None,
+            ecosystem_discovery_endpoint: Some("http://eco.test:7777".to_string()),
+            discovery_host: None,
+            ..EcosystemListenerEnvInputs::default()
+        };
+        let ep = inputs.discovery_endpoints();
+        assert_eq!(ep[0], "http://eco.test:7777");
+    }
+}

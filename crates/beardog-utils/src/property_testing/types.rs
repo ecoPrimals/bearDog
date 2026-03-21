@@ -150,7 +150,11 @@ impl PropertyBasedTestFramework {
         let mut report = HashMap::new();
 
         let success_rate = if self.statistics.total_tests > 0 {
-            (self.statistics.passed_tests as f64 / self.statistics.total_tests as f64) * 100.0
+            #[expect(clippy::cast_precision_loss, reason = "property test success rate")]
+            let p = self.statistics.passed_tests as f64;
+            #[expect(clippy::cast_precision_loss, reason = "property test success rate")]
+            let tot = self.statistics.total_tests as f64;
+            (p / tot) * 100.0
         } else {
             0.0
         };
@@ -193,7 +197,11 @@ impl PropertyBasedTestFramework {
         for (property, (passed, failed)) in property_stats {
             let total = passed + failed;
             let success_rate = if total > 0 {
-                (passed as f64 / total as f64) * 100.0
+                #[expect(clippy::cast_precision_loss, reason = "per-property success rate")]
+                let p = passed as f64;
+                #[expect(clippy::cast_precision_loss, reason = "per-property success rate")]
+                let tot = total as f64;
+                (p / tot) * 100.0
             } else {
                 0.0
             };
@@ -243,8 +251,11 @@ impl PropertyBasedTestFramework {
         );
 
         if self.statistics.total_tests > 0 {
-            let success_rate =
-                (self.statistics.passed_tests as f64 / self.statistics.total_tests as f64) * 100.0;
+            #[expect(clippy::cast_precision_loss, reason = "logged success rate")]
+            let p = self.statistics.passed_tests as f64;
+            #[expect(clippy::cast_precision_loss, reason = "logged success rate")]
+            let tot = self.statistics.total_tests as f64;
+            let success_rate = (p / tot) * 100.0;
             info!("   📈 Success Rate: {:.2}%", success_rate);
         }
 

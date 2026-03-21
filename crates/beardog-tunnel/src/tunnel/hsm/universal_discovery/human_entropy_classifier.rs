@@ -242,6 +242,10 @@ impl HumanEntropyClassifier {
     ) -> Result<f64, BearDogError> {
         let mut efficiency_score = 0.0;
 
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "scoring heuristic from collection count"
+        )]
         let method_diversity = human_entropy.collection_methods.len() as f64 / 8.0;
         efficiency_score += method_diversity * 0.4;
 
@@ -282,6 +286,10 @@ impl HumanEntropyClassifier {
             })
             .count();
 
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "scoring heuristic from method count"
+        )]
         let biometric_score = (biometric_methods as f64 / 3.0).mul_add(0.6, 0.4);
         Ok(biometric_score.min(1.0))
     }

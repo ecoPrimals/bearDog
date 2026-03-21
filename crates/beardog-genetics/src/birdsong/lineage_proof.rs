@@ -194,6 +194,10 @@ impl LineageProofManager {
         }
 
         // Proof is valid!
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "Merkle path depth fits u32 for verification result"
+        )]
         let depth = (proof.path.len() - 1) as u32;
         info!(
             "✅ Lineage proof verified: {} (depth: {})",
@@ -540,6 +544,24 @@ mod tests {
             proof_manager.get_common_ancestor(&chain.chain_id, "grandchild-1", "child-1");
         assert_eq!(ancestor, Some("child-1".to_string()));
 
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_verify_proof_unknown_chain_errors() -> Result<(), BearDogError> {
+        let chain_manager = Arc::new(LineageChainManager::new());
+        let proof_manager = LineageProofManager::new(chain_manager.clone());
+        let chain = chain_manager
+            .generate_root_chain("root".to_string(), None)
+            .await?;
+        chain_manager
+            .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
+            .await?;
+        let proof = proof_manager.generate_proof(&chain.chain_id, "child-1")?;
+        let err = proof_manager
+            .verify_proof(&proof, "nonexistent-chain-id")
+            .expect_err("unknown chain");
+        assert!(err.to_string().contains("Chain not found") || err.to_string().contains("chain"));
         Ok(())
     }
 }

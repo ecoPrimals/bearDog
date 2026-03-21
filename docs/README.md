@@ -1,153 +1,90 @@
-# 📚 BearDog Documentation Index
+# BearDog Documentation
 
-**Last Updated**: March 19, 2026  
+**Last Updated**: March 21, 2026
 **Status**: Production Ready
 
 ---
 
-## 🎯 **START HERE**
+## Start Here
 
-New to BearDog? Read these in order:
-1. **[START_HERE.md](../START_HERE.md)** - Quick orientation
-2. **[README.md](../README.md)** - Project overview
-3. **[STATUS.md](../STATUS.md)** - Current build status and metrics
-4. **[ROADMAP.md](../ROADMAP.md)** - Completed work and future plans
-
----
-
-## 📖 **Core Documentation**
-
-### **Architecture & Design**
-- **[ARCHITECTURE.md](../ARCHITECTURE.md)** - System architecture overview
-- **[architecture/PROVIDER_SYSTEM.md](architecture/PROVIDER_SYSTEM.md)** - Provider system design
-- **[architecture/ECOSYSTEM_DISCOVERY.md](architecture/ECOSYSTEM_DISCOVERY.md)** - Discovery patterns
-- **[architecture/HSM_ABSTRACTION.md](architecture/HSM_ABSTRACTION.md)** - HSM integration
-
-### **Development**
-- **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** - Contributing guide
-- **[BEARDOG_CODING_STANDARDS.md](../BEARDOG_CODING_STANDARDS.md)** - Code style
-- **[IDIOMATIC_RUST_GUIDE.md](IDIOMATIC_RUST_GUIDE.md)** - Rust best practices
-- **[BEARDOG_QUICK_REFERENCE.md](../BEARDOG_QUICK_REFERENCE.md)** - API reference
-
-### **Operations & Deployment**
-- **[PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)** - Deploy to production
-- **[GETTING_STARTED.md](GETTING_STARTED.md)** - Setup guide
-- **[PERFORMANCE_GUIDE.md](PERFORMANCE_GUIDE.md)** - Optimization tips
-
-### **Security & Compliance**
-- **[SECURITY.md](../SECURITY.md)** - Security policies
-- **[guides/SOVEREIGNTY_COMPLIANCE_GUIDE.md](guides/SOVEREIGNTY_COMPLIANCE_GUIDE.md)** - GDPR/HIPAA
-- **[ENTROPY_SECURITY_ENFORCEMENT_GUIDE.md](ENTROPY_SECURITY_ENFORCEMENT_GUIDE.md)** - Entropy best practices
+1. **[START_HERE.md](../START_HERE.md)** — Quick orientation
+2. **[README.md](../README.md)** — Project overview
+3. **[STATUS.md](../STATUS.md)** — Current build status and metrics
+4. **[CHANGELOG.md](../CHANGELOG.md)** — Version history
 
 ---
 
-## 🔍 **By Topic**
+## Core Documentation
 
-### **Ecosystem Integration**
-- **[ECOSYSTEM_INTEGRATION_GUIDE.md](ECOSYSTEM_INTEGRATION_GUIDE.md)** - Integration patterns
-- **[BEARDOG_ECOSYSTEM_BLUEPRINT.md](BEARDOG_ECOSYSTEM_BLUEPRINT.md)** - Ecosystem design
+### Architecture & Design
+- **[ARCHITECTURE.md](../ARCHITECTURE.md)** — System architecture overview
+- **[architecture/](architecture/)** — Provider system, HSM abstraction, discovery patterns
 
-### **Hardware & Devices**
-- **[hardware/HSM_GUIDE.md](hardware/HSM_GUIDE.md)** - HSM setup
-- **[devices/ANDROID_STRONGBOX.md](devices/ANDROID_STRONGBOX.md)** - Android integration
-- **[devices/SOLO2_GUIDE.md](devices/SOLO2_GUIDE.md)** - FIDO2 tokens
+### Development
+- **[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)** — Contributing guide
+- **[IDIOMATIC_RUST_GUIDE.md](IDIOMATIC_RUST_GUIDE.md)** — Rust best practices
+- **[DEPENDENCY_RATIONALE.md](DEPENDENCY_RATIONALE.md)** — Why each dependency exists
 
-### **Genetic Cryptography**
-- **[genetics/GENETIC_CRYPTO_GUIDE.md](genetics/GENETIC_CRYPTO_GUIDE.md)** - Adaptive algorithms
+### Operations & Deployment
+- **[PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)** — Deploy to production
+- **[GETTING_STARTED.md](GETTING_STARTED.md)** — Setup guide
+- **[PERFORMANCE_GUIDE.md](PERFORMANCE_GUIDE.md)** — Optimization tips
 
-### **API Documentation**
-- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - API reference
-- **[api/CLI_API.md](api/CLI_API.md)** - CLI commands
-- **[api/REST_API.md](api/REST_API.md)** - REST endpoints
-
----
-
-## 📊 **Reports & Status**
-
-### **Latest Session (Dec 6, 2025)**
-All session reports moved to: **[session-reports/2025-12-06/](session-reports/2025-12-06/)**
-
-Key reports:
-- `COMPREHENSIVE_AUDIT_REPORT_DEC_6_2025.md` - Complete audit
-- `SESSION_COMPLETE_FINAL_DEC_6_2025.md` - Final summary
-- `TL_DR_DEC_6_2025.txt` - Quick summary
-- `START_HERE_NEXT_SESSION.md` - Next steps
-
-### **Project Status**
-- **[CHANGELOG.md](../CHANGELOG.md)** - Version history
-- **[specs/PROJECT_STATUS.md](../specs/PROJECT_STATUS.md)** - Current status
+### Security
+- **[SECURITY.md](../SECURITY.md)** — Security policies
+- **[ENTROPY_SECURITY_ENFORCEMENT_GUIDE.md](ENTROPY_SECURITY_ENFORCEMENT_GUIDE.md)** — Entropy best practices
+- **[security/](security/)** — Detailed security documentation
 
 ---
 
-## 🛠️ **Guides**
+## API & Integration
 
-### **Setup & Configuration**
-- **[setup/INSTALLATION.md](setup/INSTALLATION.md)** - Installation guide
-- **[setup/CONFIGURATION.md](setup/CONFIGURATION.md)** - Configuration options
+- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** — API reference
+- **[BEARDOG_RPC_API.md](BEARDOG_RPC_API.md)** — JSON-RPC method catalog
+- **[BEARDOG_RPC_RESPONSE_FORMATS.md](BEARDOG_RPC_RESPONSE_FORMATS.md)** — Response format guide
+- **[BTSP_UNIFIED_API.md](BTSP_UNIFIED_API.md)** — BTSP tunnel API
+- **[TLS_CRYPTO_API.md](TLS_CRYPTO_API.md)** — TLS crypto operations
+- **[ECOSYSTEM_INTEGRATION_GUIDE.md](ECOSYSTEM_INTEGRATION_GUIDE.md)** — Integration patterns
+- **[BIRDSONG_INTEGRATION_GUIDE_FOR_SONGBIRD.md](BIRDSONG_INTEGRATION_GUIDE_FOR_SONGBIRD.md)** — Songbird integration
+- **[GENETIC_CRYPTO_INTEGRATION.md](GENETIC_CRYPTO_INTEGRATION.md)** — Genetic crypto integration
 
-### **Testing**
-- **[testing-guides/TESTING_GUIDE.md](testing-guides/TESTING_GUIDE.md)** - Test strategies
-- **[testing-guides/E2E_TESTING.md](testing-guides/E2E_TESTING.md)** - E2E tests
+### Device & Hardware
+- **[hardware/](hardware/)** — HSM setup
+- **[devices/](devices/)** — Android StrongBox, FIDO2 tokens
+- **[mobile/](mobile/)** — Mobile platform guides
 
 ---
 
-## 📁 **Directory Structure**
+## Guides
+
+- **[guides/](guides/)** — How-to guides (testing, handoff, sovereignty compliance)
+- **[setup/](setup/)** — Installation and configuration
+- **[testing-guides/](testing-guides/)** — Test strategies and E2E testing
+- **[references/](references/)** — Quick references, env vars, patterns
+
+---
+
+## Directory Structure
 
 ```
 docs/
-├── README.md                    # This file
-├── api/                         # API documentation
-├── architecture/                # Architecture docs
-├── devices/                     # Device-specific guides
-├── guides/                      # How-to guides
-├── hardware/                    # Hardware integration
-├── session-reports/             # Session reports by date
-│   └── 2025-12-06/             # Latest session
-├── setup/                       # Setup guides
-└── testing-guides/              # Testing documentation
+├── README.md               # This file
+├── api/                    # API documentation
+├── architecture/           # Architecture deep-dives
+├── devices/                # Device-specific guides
+├── examples/               # Example configurations
+├── genetics/               # Genetic crypto guides
+├── guides/                 # How-to guides
+├── hardware/               # Hardware integration
+├── mobile/                 # Mobile platform guides
+├── performance/            # Performance analysis
+├── references/             # Quick references and patterns
+├── security/               # Security documentation
+├── setup/                  # Installation and config
+├── templates/              # Code templates
+└── testing-guides/         # Testing documentation
 ```
 
 ---
 
-## 🔗 **External Resources**
-
-### **Specifications**
-- **[specs/](../specs/)** - Technical specifications
-- **[specs/current/](../specs/current/)** - Current specs
-- **[specs/PROJECT_STATUS.md](../specs/PROJECT_STATUS.md)** - Status overview
-
-### **White Papers**
-- **[whitePaper/](../whitePaper/)** - Research papers
-
----
-
-## 🎯 **Quick Links**
-
-### For Developers
-- Start: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)
-- Standards: [BEARDOG_CODING_STANDARDS.md](../BEARDOG_CODING_STANDARDS.md)
-- Architecture: [ARCHITECTURE.md](../ARCHITECTURE.md)
-
-### For Operators
-- Deploy: [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)
-- Security: [SECURITY.md](../SECURITY.md)
-- Performance: [PERFORMANCE_GUIDE.md](PERFORMANCE_GUIDE.md)
-
-### For Integrators
-- Ecosystem: [ECOSYSTEM_INTEGRATION_GUIDE.md](ECOSYSTEM_INTEGRATION_GUIDE.md)
-- API: [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
-
----
-
-## 🐻 **Need Help?**
-
-1. Check **[NAVIGATION.md](../NAVIGATION.md)** for quick reference
-2. Search the docs: `grep -r "your topic" docs/`
-3. Read session reports in `session-reports/`
-4. Open an issue on GitHub
-
----
-
-**BearDog**: Sovereign Genetic Cryptography  
-**Status**: Production Ready ✅  
-**Quality**: TOP 0.1% Globally 🏆
+**BearDog**: 100% Pure Rust Cryptographic Service Provider for the ecoPrimals Ecosystem

@@ -378,6 +378,10 @@ impl SovereignEntropyMigrationManager {
 
     /// Update migration statistics
     /// Updates `migration_statistics`
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Running average uses call count; acceptable f64 precision for stats"
+    )]
     async fn update_migration_statistics(
         &self,
         entropy_tier: u8,
@@ -459,6 +463,10 @@ impl SovereignEntropyMigrationManager {
         Ok(bytes)
     }
 
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Xavier-style fan-in divisor; acceptable f64 precision for weight init"
+    )]
     fn fallback_to_legacy_neural_weights(layer_shape: (usize, usize)) -> Vec<Vec<f64>> {
         use rand::Rng;
 

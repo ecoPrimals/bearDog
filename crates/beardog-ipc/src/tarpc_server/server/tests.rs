@@ -207,3 +207,238 @@ async fn primal_info_reads_family_env() {
     let info = server.primal_info(tarpc::context::current()).await;
     assert_eq!(info.family, "test-family");
 }
+
+#[tokio::test]
+async fn x25519_ecdh_roundtrip() {
+    let server = BearDogCryptoServer::new();
+    let cx = tarpc::context::current();
+    let a = server.clone().generate_x25519_ephemeral(cx).await.unwrap();
+    let b = server.clone().generate_x25519_ephemeral(cx).await.unwrap();
+    let s_ab = server
+        .clone()
+        .x25519_key_exchange(
+            cx,
+            KeyExchangeRequest {
+                our_private_key: a.private_key.clone(),
+                their_public_key: b.public_key.clone(),
+            },
+        )
+        .await
+        .unwrap();
+    let s_ba = server
+        .x25519_key_exchange(
+            cx,
+            KeyExchangeRequest {
+                our_private_key: b.private_key.clone(),
+                their_public_key: a.public_key.clone(),
+            },
+        )
+        .await
+        .unwrap();
+    assert_eq!(s_ab.secret, s_ba.secret);
+}
+
+#[tokio::test]
+async fn ecdh_p256_roundtrip() {
+    let server = BearDogCryptoServer::new();
+    let cx = tarpc::context::current();
+    let a = server.clone().generate_ecdh_p256(cx).await.unwrap();
+    let b = server.clone().generate_ecdh_p256(cx).await.unwrap();
+    let s_ab = server
+        .clone()
+        .ecdh_p256_key_exchange(
+            cx,
+            KeyExchangeRequest {
+                our_private_key: a.private_key.clone(),
+                their_public_key: b.public_key.clone(),
+            },
+        )
+        .await
+        .unwrap();
+    let s_ba = server
+        .ecdh_p256_key_exchange(
+            cx,
+            KeyExchangeRequest {
+                our_private_key: b.private_key.clone(),
+                their_public_key: a.public_key.clone(),
+            },
+        )
+        .await
+        .unwrap();
+    assert_eq!(s_ab.secret, s_ba.secret);
+}
+
+#[tokio::test]
+async fn sign_ecdsa_p256_p384_smoke() {
+    let server = BearDogCryptoServer::new();
+    let cx = tarpc::context::current();
+    let p256 = server.clone().generate_ecdh_p256(cx).await.unwrap();
+    let sig256 = server
+        .clone()
+        .sign_ecdsa_p256(
+            cx,
+            SignRequest {
+                data: b"msg".to_vec(),
+                private_key: p256.private_key.clone(),
+            },
+        )
+        .await
+        .unwrap();
+    assert!(!sig256.signature.is_empty());
+
+    let p384 = server.clone().generate_ecdh_p384(cx).await.unwrap();
+    let sig384 = server
+        .sign_ecdsa_p384(
+            cx,
+            SignRequest {
+                data: b"msg".to_vec(),
+                private_key: p384.private_key.clone(),
+            },
+        )
+        .await
+        .unwrap();
+    assert!(!sig384.signature.is_empty());
+}
+
+#[tokio::test]
+async fn verify_ed25519_rejects_wrong_message() {
+    let server = BearDogCryptoServer::new();
+    let cx = tarpc::context::current();
+    let kp = server.clone().generate_ed25519(cx).await.unwrap();
+    let sign = server
+        .clone()
+        .sign_ed25519(
+            cx,
+            SignRequest {
+                data: b"original".to_vec(),
+                private_key: kp.private_key.clone(),
+            },
+        )
+        .await
+        .unwrap();
+    let ok = server
+        .verify_ed25519(
+            cx,
+            VerifyRequest {
+                data: b"tampered".to_vec(),
+                signature: sign.signature,
+                public_key: kp.public_key,
+            },
+        )
+        .await
+        .unwrap();
+    assert!(!ok);
+}
+
+#[tokio::test]
+async fn chacha_and_aes_roundtrip() {
+    let server = BearDogCryptoServer::new();
+    let cx = tarpc::context::current();
+    let key = [7u8; 32];
+    let enc = server
+        .clone()
+        .chacha20_poly1305_encrypt(
+            cx,
+            EncryptRequest {
+                plaintext: b"secret".to_vec(),
+                key: key.to_vec(),
+                nonce: None,
+                aad: None,
+            },
+        )
+        .await
+        .unwrap();
+    let dec = server
+        .chacha20_poly1305_decrypt(
+            cx,
+            DecryptRequest {
+                ciphertext: enc.ciphertext.clone(),
+                key: key.to_vec(),
+                nonce: enc.nonce.clone(),
+                tag: enc.tag.clone(),
+                aad: None,
+            },
+        )
+        .await
+        .unwrap();
+    assert_eq!(dec.plaintext, b"secret");
+
+    let cx = tarpc::context::current();
+    let server2 = BearDogCryptoServer::new();
+    let aes = server2
+        .clone()
+        .aes256_gcm_encrypt(
+            cx,
+            EncryptRequest {
+                plaintext: b"aead".to_vec(),
+                key: key.to_vec(),
+                nonce: None,
+                aad: None,
+            },
+        )
+        .await
+        .unwrap();
+    let aes_dec = server2
+        .aes256_gcm_decrypt(
+            tarpc::context::current(),
+            DecryptRequest {
+                ciphertext: aes.ciphertext.clone(),
+                key: key.to_vec(),
+                nonce: aes.nonce.clone(),
+                tag: aes.tag.clone(),
+                aad: None,
+            },
+        )
+        .await
+        .unwrap();
+    assert_eq!(aes_dec.plaintext, b"aead");
+}
+
+#[tokio::test]
+async fn tls_sign_handshake_delegates_to_ed25519() {
+    let server = BearDogCryptoServer::new();
+    let cx = tarpc::context::current();
+    let kp = server.clone().generate_ed25519(cx).await.unwrap();
+    let out = server
+        .tls_sign_handshake(
+            cx,
+            TlsSignRequest {
+                transcript_hash: b"transcript".to_vec(),
+                private_key: kp.private_key,
+                algorithm: "ed25519".to_string(),
+            },
+        )
+        .await
+        .unwrap();
+    assert_eq!(out.signature.len(), 64);
+}
+
+#[tokio::test]
+async fn x25519_key_exchange_bad_lengths() {
+    let server = BearDogCryptoServer::new();
+    let cx = tarpc::context::current();
+    let e = server
+        .x25519_key_exchange(
+            cx,
+            KeyExchangeRequest {
+                our_private_key: vec![0u8; 31],
+                their_public_key: vec![0u8; 32],
+            },
+        )
+        .await
+        .unwrap_err();
+    assert!(e.message.contains("private key"));
+
+    let server2 = BearDogCryptoServer::new();
+    let e = server2
+        .ecdh_p256_key_exchange(
+            cx,
+            KeyExchangeRequest {
+                our_private_key: vec![0xff; 32],
+                their_public_key: vec![0u8; 10],
+            },
+        )
+        .await
+        .unwrap_err();
+    assert!(!e.message.is_empty());
+}

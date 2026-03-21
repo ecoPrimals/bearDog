@@ -269,7 +269,9 @@ impl UltimatePerformanceProcessor {
     }
 
     fn calculate_cache_hit_ratio(&self) -> f64 {
+        #[expect(clippy::cast_precision_loss, reason = "ratio from atomic counters")]
         let hits = self.stats.cache_hits.load(Ordering::Relaxed) as f64;
+        #[expect(clippy::cast_precision_loss, reason = "ratio from atomic counters")]
         let misses = self.stats.cache_misses.load(Ordering::Relaxed) as f64;
         if hits + misses > 0.0 {
             hits / (hits + misses)
@@ -279,7 +281,9 @@ impl UltimatePerformanceProcessor {
     }
 
     fn calculate_prefetch_effectiveness(&self) -> f64 {
+        #[expect(clippy::cast_precision_loss, reason = "ratio from atomic counters")]
         let prefetch_hits = self.stats.prefetch_hits.load(Ordering::Relaxed) as f64;
+        #[expect(clippy::cast_precision_loss, reason = "ratio from atomic counters")]
         let total_ops = self.stats.operations_processed.load(Ordering::Relaxed) as f64;
         if total_ops > 0.0 {
             prefetch_hits / total_ops
@@ -289,7 +293,15 @@ impl UltimatePerformanceProcessor {
     }
 
     fn calculate_average_latency(&self) -> f64 {
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "mean latency from atomic totals"
+        )]
         let total_time = self.stats.total_processing_time_ns.load(Ordering::Relaxed) as f64;
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "mean latency from atomic totals"
+        )]
         let total_ops = self.stats.operations_processed.load(Ordering::Relaxed) as f64;
         if total_ops > 0.0 {
             total_time / total_ops
@@ -775,5 +787,15 @@ mod tests {
         let _ = stats.clone();
         let debug_str = format!("{:?}", stats);
         assert!(!debug_str.is_empty());
+    }
+
+    #[test]
+    fn ultimate_processor_default_runs_same_as_new() {
+        let a = UltimatePerformanceProcessor::default();
+        let b = UltimatePerformanceProcessor::new();
+        assert_eq!(
+            a.get_performance_stats().operations_processed,
+            b.get_performance_stats().operations_processed
+        );
     }
 }

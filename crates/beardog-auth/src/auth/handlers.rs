@@ -113,6 +113,10 @@ impl AuthenticationHandler {
     }
 
     /// Authenticate user and create session with rate limiting
+    #[expect(
+        clippy::cast_possible_wrap,
+        reason = "Session timeout hours from config fit i64 for chrono Duration"
+    )]
     pub async fn authenticate(&mut self, credentials: &str) -> Result<SessionData, BearDogError> {
         // Extract user identifier from credentials (simplified for demo)
         let user_id = self.extract_user_id(credentials)?;

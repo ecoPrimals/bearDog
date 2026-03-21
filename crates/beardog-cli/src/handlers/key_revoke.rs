@@ -674,4 +674,77 @@ mod tests {
         let merged = RevocationList::load_from_home(home2.path()).unwrap();
         assert!(merged.is_revoked("export-me"));
     }
+
+    #[test]
+    fn test_load_from_home_invalid_json_errors() {
+        let dir = TempDir::new().unwrap();
+        let path = RevocationList::revocation_file_path_for_home(dir.path());
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(&path, "{ not json").unwrap();
+        assert!(RevocationList::load_from_home(dir.path()).is_err());
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_check_revocation_with_home_revoked() {
+        let dir = TempDir::new().unwrap();
+        let mut list = RevocationList::new();
+        list.revoke(
+            "bad-key".to_string(),
+            Some("compromise".to_string()),
+            None,
+            false,
+        );
+        list.save_to_home(dir.path()).unwrap();
+
+        handle_key_check_revocation_with_home("bad-key", dir.path())
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_list_revocations_with_home_nonempty() {
+        let dir = TempDir::new().unwrap();
+        let mut list = RevocationList::new();
+        list.revoke("k1".to_string(), None, None, false);
+        list.save_to_home(dir.path()).unwrap();
+
+        handle_key_list_revocations_with_home(dir.path())
+            .await
+            .unwrap();
+    }
+
+    #[test]
+    fn test_merge_keeps_existing_when_other_is_older() {
+        let mut current = RevocationList::new();
+        current.revoked_keys.insert(
+            "same".to_string(),
+            RevocationEntry {
+                key_id: "same".to_string(),
+                revoked_at: "2025-06-01T00:00:00Z".to_string(),
+                effective_at: None,
+                reason: Some("current".to_string()),
+                revoked_by: "a".to_string(),
+                cascade: false,
+            },
+        );
+
+        let mut older = RevocationList::new();
+        older.revoked_keys.insert(
+            "same".to_string(),
+            RevocationEntry {
+                key_id: "same".to_string(),
+                revoked_at: "2020-01-01T00:00:00Z".to_string(),
+                effective_at: None,
+                reason: Some("stale".to_string()),
+                revoked_by: "b".to_string(),
+                cascade: false,
+            },
+        );
+
+        current.merge(&older);
+        assert_eq!(
+            current.revoked_keys.get("same").unwrap().reason.as_deref(),
+            Some("current")
+        );
+    }
 }

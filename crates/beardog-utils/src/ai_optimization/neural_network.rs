@@ -135,13 +135,18 @@ impl SimpleNeuralNetwork {
             return 0.0;
         }
 
-        let mean: f64 = self.output_layer.iter().sum::<f64>() / self.output_layer.len() as f64;
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "layer size as divisor for mean/variance"
+        )]
+        let len = self.output_layer.len() as f64;
+        let mean: f64 = self.output_layer.iter().sum::<f64>() / len;
         let variance: f64 = self
             .output_layer
             .iter()
             .map(|value| (value - mean).powi(2))
             .sum::<f64>()
-            / self.output_layer.len() as f64;
+            / len;
 
         // Lower variance = higher confidence
         1.0 / (1.0 + variance)

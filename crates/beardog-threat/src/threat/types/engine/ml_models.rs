@@ -396,6 +396,10 @@ impl Default for ModelPerformanceMetrics {
 impl ConfusionMatrix {
     /// Calculate accuracy from confusion matrix
     #[must_use]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Confusion matrix counts as f64 ratio; acceptable for ML metrics"
+    )]
     pub fn accuracy(&self) -> f64 {
         let total =
             self.true_positives + self.true_negatives + self.false_positives + self.false_negatives;
@@ -408,6 +412,10 @@ impl ConfusionMatrix {
 
     /// Calculate precision from confusion matrix
     #[must_use]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Confusion matrix counts as f64 ratio; acceptable for ML metrics"
+    )]
     pub fn precision(&self) -> f64 {
         let predicted_positive = self.true_positives + self.false_positives;
         if predicted_positive == 0 {
@@ -419,6 +427,10 @@ impl ConfusionMatrix {
 
     /// Calculate recall from confusion matrix
     #[must_use]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Confusion matrix counts as f64 ratio; acceptable for ML metrics"
+    )]
     pub fn recall(&self) -> f64 {
         let actual_positive = self.true_positives + self.false_negatives;
         if actual_positive == 0 {

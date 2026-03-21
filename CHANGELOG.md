@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### March 21, 2026 -- Cast Lint Tightening, Coverage Push & Capability Discovery
+
+- **Cast lint evolution** — Removed 5 global `allow(clippy::cast_*)` from workspace Cargo.toml.
+  All 301 cast sites now use per-site `#[expect(clippy::cast_*, reason = "...")]` or
+  `Type::from(x)` for lossless casts. New casts must annotate individually.
+- **Hardcoded primal names → capability-based discovery** — IPC socket paths, peer resolution,
+  and listener binds use `BIOMEOS_IPC_NAMESPACE`, `PRIMAL_NAME`/`BEARDOG_PRIMAL_NAME` env vars
+  with runtime discovery fallbacks. Production code no longer hardcodes peer primal names.
+- **Coverage push**: 84% → 85.3% region / 85.7% line (13,400 → 13,850+ tests). New tests across
+  CLI handlers (daemon, key_derive, key_export, entropy, HSM, streaming, birdsong), tunnel crypto
+  (TLS 1.2, Tor, AES-GCM, BTSP, beacon, genetic enrollment, KDF), core (key management,
+  interaction capture), and library crates (capabilities, discovery, config, types, auth, threat).
+- **Test stability** — Added `serial_test::serial` on all env-dependent tests in
+  beardog-capabilities. Eliminated intermittent test-pollution failures.
+- **Doc link cleanup** — Resolved all `rustdoc::broken_intra_doc_links`. `cargo doc -D warnings`
+  passes clean across the full workspace.
+- **Root doc declutter** — 17 reference/guide docs moved from repo root to `docs/references/`.
+  Session logs (335 files) moved from `docs/sessions/` to `archives/sessions/`.
+- **File size compliance** — Extracted 5 test modules into separate `_tests.rs` files to keep all
+  .rs files under 1000 lines.
+- **Build artifact cleanup** — Removed tracked receipts from git; audit.log files already
+  gitignored.
+
 ### March 20, 2026 -- Concurrency Architecture & Dependency Modernization
 
 - **Dependency Injection architecture** — Eliminated global mutable state (process_env overlay)

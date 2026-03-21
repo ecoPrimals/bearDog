@@ -8,6 +8,33 @@
 use hkdf::Hkdf;
 use sha2::{Digest, Sha256, Sha384};
 
+/// RFC 8446 HKDF-Expand-Label length-prefixed prefix (`length || label_len || label || ctx_len || ctx`).
+pub(crate) fn append_tls13_hkdf_label(
+    hkdf_label: &mut Vec<u8>,
+    label: &str,
+    context: &[u8],
+    length: usize,
+) {
+    let tls13_label = format!("tls13 {label}");
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "HKDF expand output length fits TLS 1.3 label encoding"
+    )]
+    hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "formatted tls13 label length fits u8 in RFC 8446 labels"
+    )]
+    hkdf_label.push(tls13_label.len() as u8);
+    hkdf_label.extend_from_slice(tls13_label.as_bytes());
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "HKDF label context length fits u8 in RFC 8446"
+    )]
+    hkdf_label.push(context.len() as u8);
+    hkdf_label.extend_from_slice(context);
+}
+
 /// Derive TLS 1.3 application secrets using SHA-256
 ///
 /// Used for cipher suites 0x1301 (AES-128-GCM-SHA256) and 0x1303 (ChaCha20-Poly1305-SHA256)
@@ -22,12 +49,7 @@ pub(super) fn derive_application_secrets_sha256(
     // Helper: HKDF-Expand-Label for SHA-256
     let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
         let mut hkdf_label = Vec::new();
-        hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
-        let tls13_label = format!("tls13 {label}");
-        hkdf_label.push(tls13_label.len() as u8);
-        hkdf_label.extend_from_slice(tls13_label.as_bytes());
-        hkdf_label.push(context.len() as u8);
-        hkdf_label.extend_from_slice(context);
+        append_tls13_hkdf_label(&mut hkdf_label, label, context, length);
 
         let hkdf =
             Hkdf::<Sha256>::from_prk(secret).map_err(|e| format!("HKDF from_prk failed: {e}"))?;
@@ -78,12 +100,7 @@ pub(super) fn derive_application_secrets_sha384(
     // Helper: HKDF-Expand-Label for SHA-384
     let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
         let mut hkdf_label = Vec::new();
-        hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
-        let tls13_label = format!("tls13 {label}");
-        hkdf_label.push(tls13_label.len() as u8);
-        hkdf_label.extend_from_slice(tls13_label.as_bytes());
-        hkdf_label.push(context.len() as u8);
-        hkdf_label.extend_from_slice(context);
+        append_tls13_hkdf_label(&mut hkdf_label, label, context, length);
 
         let hkdf =
             Hkdf::<Sha384>::from_prk(secret).map_err(|e| format!("HKDF from_prk failed: {e}"))?;
@@ -145,12 +162,7 @@ pub(super) fn derive_handshake_secrets_sha256(
     // Helper: HKDF-Expand-Label for SHA-256
     let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
         let mut hkdf_label = Vec::new();
-        hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
-        let tls13_label = format!("tls13 {label}");
-        hkdf_label.push(tls13_label.len() as u8);
-        hkdf_label.extend_from_slice(tls13_label.as_bytes());
-        hkdf_label.push(context.len() as u8);
-        hkdf_label.extend_from_slice(context);
+        append_tls13_hkdf_label(&mut hkdf_label, label, context, length);
 
         let hkdf =
             Hkdf::<Sha256>::from_prk(secret).map_err(|e| format!("HKDF from_prk failed: {e}"))?;
@@ -223,12 +235,7 @@ pub(super) fn derive_handshake_secrets_sha384(
     // Helper: HKDF-Expand-Label for SHA-384
     let hkdf_expand_label = |secret: &[u8], label: &str, context: &[u8], length: usize| {
         let mut hkdf_label = Vec::new();
-        hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
-        let tls13_label = format!("tls13 {label}");
-        hkdf_label.push(tls13_label.len() as u8);
-        hkdf_label.extend_from_slice(tls13_label.as_bytes());
-        hkdf_label.push(context.len() as u8);
-        hkdf_label.extend_from_slice(context);
+        append_tls13_hkdf_label(&mut hkdf_label, label, context, length);
 
         let hkdf =
             Hkdf::<Sha384>::from_prk(secret).map_err(|e| format!("HKDF from_prk failed: {e}"))?;

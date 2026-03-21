@@ -162,17 +162,17 @@ impl IpcSocketDiscoveryOptions {
     }
 }
 
-/// Resolve IPC socket path from injected options (tests pass explicit values).
+/// Resolve IPC socket path from injected options (tests pass explicit values; synchronous).
 #[must_use]
-pub async fn discover_ipc_socket_with(opts: IpcSocketDiscoveryOptions) -> String {
-    if let Some(socket) = opts.ipc_socket {
+pub fn resolve_ipc_socket_from_options(opts: &IpcSocketDiscoveryOptions) -> String {
+    if let Some(socket) = &opts.ipc_socket {
         tracing::info!("📡 IPC socket from IPC_SOCKET env: {}", socket);
-        return socket;
+        return socket.clone();
     }
 
-    if let Some(socket) = opts.discovery_socket {
+    if let Some(socket) = &opts.discovery_socket {
         tracing::info!("📡 IPC socket from DISCOVERY_SOCKET env: {}", socket);
-        return socket;
+        return socket.clone();
     }
 
     if let Some(svc) = opts.ipc_capability_services.first() {
@@ -183,9 +183,9 @@ pub async fn discover_ipc_socket_with(opts: IpcSocketDiscoveryOptions) -> String
         }
     }
 
-    if let Some(dev) = opts.beardog_dev_discovery_socket {
+    if let Some(dev) = &opts.beardog_dev_discovery_socket {
         tracing::info!("📡 IPC socket from BEARDOG_DEV_DISCOVERY_SOCKET: {}", dev);
-        return dev;
+        return dev.clone();
     }
 
     tracing::debug!(
@@ -193,6 +193,12 @@ pub async fn discover_ipc_socket_with(opts: IpcSocketDiscoveryOptions) -> String
         DISCOVERY_SOCKET_FALLBACK
     );
     DISCOVERY_SOCKET_FALLBACK.to_string()
+}
+
+/// Resolve IPC socket path from injected options (async wrapper; identical to [`resolve_ipc_socket_from_options`]).
+#[must_use]
+pub async fn discover_ipc_socket_with(opts: IpcSocketDiscoveryOptions) -> String {
+    resolve_ipc_socket_from_options(&opts)
 }
 
 /// Discover IPC socket path via [`IpcSocketDiscoveryOptions::from_env`].
@@ -235,7 +241,10 @@ mod tests {
             ipc_socket: Some("/tmp/from-ipc-socket".to_string()),
             ..Default::default()
         };
-        assert_eq!(discover_ipc_socket_with(opts).await, "/tmp/from-ipc-socket");
+        assert_eq!(
+            resolve_ipc_socket_from_options(&opts),
+            "/tmp/from-ipc-socket"
+        );
     }
 
     #[tokio::test]
@@ -246,7 +255,7 @@ mod tests {
             ..Default::default()
         };
         assert_eq!(
-            discover_ipc_socket_with(opts).await,
+            resolve_ipc_socket_from_options(&opts),
             "/tmp/from-discovery-socket"
         );
     }
@@ -254,7 +263,7 @@ mod tests {
     #[tokio::test]
     async fn discover_ipc_socket_fallback_when_no_env() {
         assert_eq!(
-            discover_ipc_socket_with(IpcSocketDiscoveryOptions::default()).await,
+            resolve_ipc_socket_from_options(&IpcSocketDiscoveryOptions::default()),
             DISCOVERY_SOCKET_FALLBACK
         );
     }
@@ -295,7 +304,7 @@ mod tests {
             ..Default::default()
         };
         assert_eq!(
-            discover_ipc_socket_with(opts).await,
+            resolve_ipc_socket_from_options(&opts),
             "/tmp/from-capability-ipc"
         );
     }

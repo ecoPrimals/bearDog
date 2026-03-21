@@ -289,6 +289,10 @@ impl DetectionRule {
     /// Executes operation
     /// Executes operation
     #[must_use]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "Rule execution duration ms fits u64 for reporting"
+    )]
     pub fn execute(&self, event_data: &HashMap<String, String>) -> RuleExecutionResult {
         let start_time = std::time::Instant::now();
 
@@ -726,5 +730,18 @@ mod tests {
 
         rule.enable();
         assert!(rule.enabled);
+    }
+
+    #[test]
+    fn test_threat_rule_type_display_all_variants() {
+        use ThreatRuleType::*;
+        assert_eq!(format!("{}", Signature), "Signature");
+        assert_eq!(format!("{}", Behavioral), "Behavioral");
+        assert_eq!(format!("{}", Anomaly), "Anomaly");
+        assert_eq!(format!("{}", Heuristic), "Heuristic");
+        assert_eq!(format!("{}", MachineLearning), "Machine Learning");
+        assert_eq!(format!("{}", Correlation), "Correlation");
+        assert_eq!(format!("{}", Threshold), "Threshold");
+        assert_eq!(format!("{}", Custom("plugin".into())), "Custom: plugin");
     }
 }

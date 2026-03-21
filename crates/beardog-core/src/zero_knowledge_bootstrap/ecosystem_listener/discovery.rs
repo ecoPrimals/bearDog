@@ -335,3 +335,19 @@ const fn attempt_http_request(_uri: &http::Uri) -> Vec<PrimalAnnouncement> {
     // This could be enhanced with tokio's native HTTP capabilities
     Vec::new()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn make_discovery_request_invalid_url_errors() {
+        let err = make_discovery_request(":::not-a-uri").expect_err("bad url");
+        assert!(err.to_string().contains("Invalid") || err.to_string().contains("discovery"));
+    }
+
+    #[test]
+    fn discover_service_mesh_returns_empty() {
+        assert!(discover_service_mesh_primals().is_empty());
+    }
+}

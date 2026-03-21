@@ -151,10 +151,12 @@ impl MobileEphemeralKeyManager {
         let mut quality_score = 0.0;
 
         // Sensor data diversity
+        #[expect(clippy::cast_precision_loss, reason = "entropy quality heuristic")]
         let sensor_count = entropy_data.sensor_data.len() as f64;
         quality_score += (sensor_count / 10.0).min(0.3);
 
         // Environmental context
+        #[expect(clippy::cast_precision_loss, reason = "entropy quality heuristic")]
         let context_entropy = entropy_data.environmental_context.len() as f64 / 1024.0;
         quality_score += context_entropy.min(0.3);
 

@@ -142,7 +142,7 @@ pub async fn handle_mix_entropy(params: Value) -> Result<Value, BearDogError> {
         .transpose()
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid tier1_machine: {e}")))?;
 
-    let tiers_used = tier3.is_some() as u8 + tier2.is_some() as u8 + 1;
+    let tiers_used = u8::from(tier3.is_some()) + u8::from(tier2.is_some()) + 1;
 
     let provider = GeneticCryptoProvider::new()?;
     let (mixed, quality) = provider
