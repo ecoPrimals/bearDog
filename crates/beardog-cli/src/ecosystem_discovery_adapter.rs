@@ -178,6 +178,15 @@ impl EcosystemDiscoveryAdapter {
         Ok(())
     }
 
+    /// Test-only: seed discovered primals without network (unit tests).
+    #[cfg(test)]
+    pub(crate) async fn insert_primal_for_test(&self, primal: DiscoveredPrimal) {
+        self.discovered_primals
+            .write()
+            .await
+            .insert(primal.primal_id.clone(), primal);
+    }
+
     /// Convert `DiscoveredPrimal` to `UniversalServiceDescriptor`
     fn primal_to_descriptor(primal: &DiscoveredPrimal) -> UniversalServiceDescriptor {
         // Parse endpoint URL into components
@@ -206,7 +215,7 @@ impl EcosystemDiscoveryAdapter {
     /// Parse endpoint URL into (protocol, host, port, path)
     ///
     /// Modern Rust pattern: Return tuple for destructuring
-    fn parse_endpoint_url(url: &str) -> (String, String, u16, Option<String>) {
+    pub(crate) fn parse_endpoint_url(url: &str) -> (String, String, u16, Option<String>) {
         // Simple URL parsing (production would use url crate)
         let default_port = 8080;
 
@@ -326,7 +335,7 @@ impl EcosystemDiscoveryAdapter {
     /// Maps between UniversalCapabilityType (higher-level, domain-focused) and
     /// ServiceCapabilityType (lower-level, operation-focused) to enable flexible
     /// capability matching across different abstraction levels.
-    fn primal_has_capability(
+    pub(crate) fn primal_has_capability(
         primal: &DiscoveredPrimal,
         requested: &UniversalCapabilityType,
     ) -> bool {
@@ -403,7 +412,225 @@ impl Clone for EcosystemDiscoveryAdapter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use beardog_types::canonical::discovery::NetworkFunction;
+    use beardog_core::ecosystem::primal_types::{
+        AuthRequirements, DiscoveredPrimal, EndpointSecurityConfig, ErrorRateMetrics, LoadMetrics,
+        PrimalMetadata, PrimalMetrics, ResponseTimeMetrics, UniversalEndpoint,
+    };
+    use beardog_core::ecosystem_integration::PrimalDiscoveryService;
+    use beardog_types::canonical::capabilities::ServiceCapabilityType;
+    use beardog_types::canonical::discovery::universal::CollaborationFunction;
+    use beardog_types::canonical::discovery::{
+        ComputeAbility, NetworkFunction, OrchestrationFeature, StorageCharacteristic,
+        UniversalCapabilityType,
+    };
+
+    fn minimal_discovered_primal(
+        id: &str,
+        url: &str,
+        caps: Vec<ServiceCapabilityType>,
+    ) -> DiscoveredPrimal {
+        DiscoveredPrimal {
+            primal_id: id.to_string(),
+            capabilities: caps,
+            endpoint: UniversalEndpoint {
+                url: url.to_string(),
+                protocols: vec!["https".to_string()],
+                auth_requirements: AuthRequirements::default(),
+                security_config: EndpointSecurityConfig::default(),
+            },
+            metadata: PrimalMetadata {
+                display_name: None,
+                version: "1.0.0".to_string(),
+                protocol_versions: vec![],
+                security_attestations: vec![],
+                custom_fields: HashMap::new(),
+                capabilities: vec![],
+                dependencies: vec![],
+                supported_protocols: vec![],
+                health_check_endpoint: "/health".to_string(),
+                metrics_endpoint: "/metrics".to_string(),
+            },
+            discovered_at: std::time::SystemTime::now(),
+            metrics: PrimalMetrics {
+                response_times: ResponseTimeMetrics::default(),
+                availability: 100.0,
+                load_metrics: LoadMetrics::default(),
+                error_rates: ErrorRateMetrics::default(),
+            },
+        }
+    }
+
+    #[test]
+    fn test_parse_endpoint_url_https_with_port_and_path() {
+        let (proto, host, port, path) =
+            EcosystemDiscoveryAdapter::parse_endpoint_url("https://example.com:9443/api/v1");
+        assert_eq!(proto, "https");
+        assert_eq!(host, "example.com");
+        assert_eq!(port, 9443);
+        assert_eq!(path.as_deref(), Some("/api/v1"));
+    }
+
+    #[test]
+    fn test_parse_endpoint_url_http_default_port_no_path() {
+        let (proto, host, port, path) =
+            EcosystemDiscoveryAdapter::parse_endpoint_url("http://localhost");
+        assert_eq!(proto, "http");
+        assert_eq!(host, "localhost");
+        assert_eq!(port, 8080);
+        assert_eq!(path, None);
+    }
+
+    #[test]
+    fn test_parse_endpoint_url_fallback_no_scheme() {
+        let (proto, host, port, path) =
+            EcosystemDiscoveryAdapter::parse_endpoint_url("192.168.1.10");
+        assert_eq!(proto, "http");
+        assert_eq!(host, "192.168.1.10");
+        assert_eq!(port, 8080);
+        assert_eq!(path, None);
+    }
+
+    #[test]
+    fn test_parse_endpoint_url_scheme_with_host_port_and_slash_path() {
+        let (proto, host, port, path) =
+            EcosystemDiscoveryAdapter::parse_endpoint_url("https://api.internal:444/v1");
+        assert_eq!(proto, "https");
+        assert_eq!(host, "api.internal");
+        assert_eq!(port, 444);
+        assert_eq!(path.as_deref(), Some("/v1"));
+    }
+
+    #[test]
+    fn test_primal_has_capability_security_positive() {
+        let p = minimal_discovered_primal(
+            "p-sec",
+            "https://svc.local:443/x",
+            vec![ServiceCapabilityType::Security],
+        );
+        let req = UniversalCapabilityType::Security { services: vec![] };
+        assert!(EcosystemDiscoveryAdapter::primal_has_capability(&p, &req));
+    }
+
+    #[test]
+    fn test_primal_has_capability_security_negative() {
+        let p = minimal_discovered_primal(
+            "p-store",
+            "https://svc.local:443/x",
+            vec![ServiceCapabilityType::DataStorage],
+        );
+        let req = UniversalCapabilityType::Security { services: vec![] };
+        assert!(!EcosystemDiscoveryAdapter::primal_has_capability(&p, &req));
+    }
+
+    #[test]
+    fn test_primal_has_capability_compute_storage_network_orchestration_collab() {
+        let c = minimal_discovered_primal(
+            "p-c",
+            "https://x",
+            vec![ServiceCapabilityType::ComputeIntelligence],
+        );
+        assert!(EcosystemDiscoveryAdapter::primal_has_capability(
+            &c,
+            &UniversalCapabilityType::Compute {
+                abilities: vec![ComputeAbility::DataAnalysis],
+            },
+        ));
+
+        let s = minimal_discovered_primal(
+            "p-s",
+            "https://x",
+            vec![ServiceCapabilityType::DataStorage],
+        );
+        assert!(EcosystemDiscoveryAdapter::primal_has_capability(
+            &s,
+            &UniversalCapabilityType::Storage {
+                characteristics: vec![StorageCharacteristic::Persistent],
+            },
+        ));
+
+        let n = minimal_discovered_primal(
+            "p-n",
+            "https://x",
+            vec![ServiceCapabilityType::ServiceMesh],
+        );
+        assert!(EcosystemDiscoveryAdapter::primal_has_capability(
+            &n,
+            &UniversalCapabilityType::Network {
+                functions: vec![NetworkFunction::TrafficRouting],
+            },
+        ));
+
+        let o = minimal_discovered_primal(
+            "p-o",
+            "https://x",
+            vec![ServiceCapabilityType::WorkflowOrchestration],
+        );
+        assert!(EcosystemDiscoveryAdapter::primal_has_capability(
+            &o,
+            &UniversalCapabilityType::Orchestration {
+                features: vec![OrchestrationFeature::ContainerManagement],
+            },
+        ));
+
+        let col = minimal_discovered_primal(
+            "p-col",
+            "https://x",
+            vec![ServiceCapabilityType::Authentication],
+        );
+        assert!(EcosystemDiscoveryAdapter::primal_has_capability(
+            &col,
+            &UniversalCapabilityType::Collaboration {
+                functions: vec![CollaborationFunction::TemplateStorage],
+            },
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_discover_by_capability_matches_injected_primal() {
+        let adapter = EcosystemDiscoveryAdapter::new().expect("creation failed");
+        let primal = minimal_discovered_primal(
+            "injected-sec",
+            "https://example.com:443/path",
+            vec![ServiceCapabilityType::Security],
+        );
+        adapter.insert_primal_for_test(primal).await;
+
+        let found = adapter
+            .discover_by_capability(UniversalCapabilityType::Security { services: vec![] })
+            .await
+            .expect("discover");
+
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].service_id, "injected-sec");
+        assert_eq!(found[0].endpoint.host, "example.com");
+        assert_eq!(found[0].endpoint.port, 443);
+    }
+
+    #[tokio::test]
+    async fn test_send_request_stub_payload() {
+        let adapter = EcosystemDiscoveryAdapter::new().expect("creation failed");
+        let svc = UniversalServiceDescriptor {
+            service_id: "svc-a".to_string(),
+            capabilities: vec![],
+            endpoint: ServiceEndpoint {
+                protocol: "https".to_string(),
+                host: "api.example".to_string(),
+                port: 8443,
+                path: Some("/rpc".to_string()),
+                parameters: HashMap::new(),
+            },
+            auth_method: AuthenticationMethod::None,
+            performance_profile: PerformanceProfile::default(),
+            trust_score: 0.5,
+        };
+        let body = adapter
+            .send_request(&svc, serde_json::json!({"ping": true}))
+            .await
+            .expect("send");
+        assert_eq!(body["status"], "success");
+        assert_eq!(body["service_id"], "svc-a");
+        assert!(body["endpoint"].as_str().unwrap().contains("api.example"));
+    }
 
     #[tokio::test]
     async fn test_adapter_creation() {

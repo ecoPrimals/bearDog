@@ -87,8 +87,7 @@ impl UniversalAdapterEnvInputs {
     #[must_use]
     fn cache_ttl(&self) -> Duration {
         self.cache_ttl_secs
-            .map(Duration::from_secs)
-            .unwrap_or_else(|| Duration::from_secs(300))
+            .map_or_else(|| Duration::from_secs(300), Duration::from_secs)
     }
 }
 

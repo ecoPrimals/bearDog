@@ -67,7 +67,7 @@ where
         });
     }
 
-    for (key, value) in vars.into_iter() {
+    for (key, value) in vars {
         if key.starts_with("PRIMAL_") && key.ends_with("_ENDPOINT") {
             let parts: Vec<&str> = key.split('_').collect();
             if parts.len() >= 3 {

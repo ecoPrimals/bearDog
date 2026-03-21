@@ -388,7 +388,7 @@ impl Default for RetryConfig {
 /// println!("Connect timeout: {:?}", config.timeouts.connect);
 /// println!("Request timeout: {:?}", config.timeouts.request);
 /// ```
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ZeroHardcodingConfig {
     /// Endpoint configuration (ports, addresses)
     pub endpoints: EndpointConfig,
@@ -414,16 +414,6 @@ impl ZeroHardcodingConfig {
     pub fn auto() -> Self {
         Self {
             endpoints: EndpointConfig::auto(),
-            timeouts: ZeroHardcodingTimeouts::default(),
-            retries: RetryConfig::default(),
-        }
-    }
-}
-
-impl Default for ZeroHardcodingConfig {
-    fn default() -> Self {
-        Self {
-            endpoints: EndpointConfig::default(),
             timeouts: ZeroHardcodingTimeouts::default(),
             retries: RetryConfig::default(),
         }

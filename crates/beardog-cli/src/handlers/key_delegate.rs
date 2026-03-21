@@ -127,7 +127,7 @@ pub async fn handle_key_delegate(
     expires_in: &str,
 ) -> Result<(), BearDogError> {
     let keys_home = key_store::home_dir_for_keys()?;
-    handle_key_delegate_impl(
+    let params = DelegateParams {
         master_key_id,
         delegate_to,
         output_key_id,
@@ -136,52 +136,53 @@ pub async fn handle_key_delegate(
         cpu_quota,
         memory_quota,
         expires_in,
-        &keys_home,
-        std::path::Path::new("."),
-    )
-    .await
+    };
+    handle_key_delegate_impl(&params, &keys_home, std::path::Path::new(".")).await
+}
+
+/// Parameters for key delegation, avoiding long argument lists.
+pub struct DelegateParams<'a> {
+    /// Master key ID to delegate from
+    pub master_key_id: &'a str,
+    /// Identity or key ID being delegated to
+    pub delegate_to: &'a str,
+    /// Output key ID for the delegated key
+    pub output_key_id: &'a str,
+    /// Optional time range (HH:MM-HH:MM)
+    pub time_range: Option<&'a str>,
+    /// Optional allowed weekdays
+    pub weekdays: Option<&'a str>,
+    /// Optional CPU quota (0-100%)
+    pub cpu_quota: Option<u8>,
+    /// Optional memory quota string (e.g. "8GB")
+    pub memory_quota: Option<&'a str>,
+    /// Expiry duration string (e.g. "24h")
+    pub expires_in: &'a str,
 }
 
 /// Same as [`handle_key_delegate`] but keys and receipts live under `home` (tests / DI).
+#[cfg(test)]
 pub async fn handle_key_delegate_with_home(
-    master_key_id: &str,
-    delegate_to: &str,
-    output_key_id: &str,
-    time_range: Option<&str>,
-    weekdays: Option<&str>,
-    cpu_quota: Option<u8>,
-    memory_quota: Option<&str>,
-    expires_in: &str,
+    params: &DelegateParams<'_>,
     home: impl AsRef<Path>,
 ) -> Result<(), BearDogError> {
     let home = home.as_ref();
-    handle_key_delegate_impl(
-        master_key_id,
-        delegate_to,
-        output_key_id,
-        time_range,
-        weekdays,
-        cpu_quota,
-        memory_quota,
-        expires_in,
-        home,
-        home,
-    )
-    .await
+    handle_key_delegate_impl(params, home, home).await
 }
 
 async fn handle_key_delegate_impl(
-    master_key_id: &str,
-    delegate_to: &str,
-    output_key_id: &str,
-    time_range: Option<&str>,
-    weekdays: Option<&str>,
-    cpu_quota: Option<u8>,
-    memory_quota: Option<&str>,
-    expires_in: &str,
+    params: &DelegateParams<'_>,
     keys_home: &Path,
     receipt_parent: &Path,
 ) -> Result<(), BearDogError> {
+    let master_key_id = params.master_key_id;
+    let delegate_to = params.delegate_to;
+    let output_key_id = params.output_key_id;
+    let time_range = params.time_range;
+    let weekdays = params.weekdays;
+    let cpu_quota = params.cpu_quota;
+    let memory_quota = params.memory_quota;
+    let expires_in = params.expires_in;
     println!("🎫 BearDog Key Delegation");
     println!("========================\n");
 
@@ -645,19 +646,19 @@ mod tests {
         };
         key_store::save_key_to_home(&master, home).unwrap();
 
-        handle_key_delegate_with_home(
-            "master-delegate",
-            "delegatee",
-            "delegated-out",
-            Some("9:00-17:00"),
-            Some("mon,wed"),
-            Some(25),
-            Some("512MB"),
-            "24h",
-            home,
-        )
-        .await
-        .expect("delegate");
+        let params = DelegateParams {
+            master_key_id: "master-delegate",
+            delegate_to: "delegatee",
+            output_key_id: "delegated-out",
+            time_range: Some("9:00-17:00"),
+            weekdays: Some("mon,wed"),
+            cpu_quota: Some(25),
+            memory_quota: Some("512MB"),
+            expires_in: "24h",
+        };
+        handle_key_delegate_with_home(&params, home)
+            .await
+            .expect("delegate");
 
         let del = key_store::load_key_from_home("delegated-out", home).expect("delegated key");
         assert_eq!(del.generation, 1);

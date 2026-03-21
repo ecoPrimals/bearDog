@@ -6,7 +6,8 @@
 //! with sensible defaults and validation.
 //!
 //! Production code uses [`std_env_lookup`] with the real process environment.
-//! Tests pass a [`HashMap`]-backed lookup via [`env_map_lookup`] to avoid global `set_var` / races.
+//! Tests pass a [`std::collections::HashMap`]-backed lookup via [`env_map_lookup`] to avoid
+//! global `set_var` / races.
 
 use std::collections::HashMap;
 use std::net::{IpAddr, SocketAddr};
@@ -20,8 +21,9 @@ pub fn std_env_lookup(key: &str) -> Option<String> {
 }
 
 /// Build a lookup closure backed by a map (for tests).
-#[must_use]
-pub fn env_map_lookup(map: &HashMap<String, String>) -> impl Fn(&str) -> Option<String> + '_ {
+pub fn env_map_lookup<S: ::std::hash::BuildHasher>(
+    map: &HashMap<String, String, S>,
+) -> impl Fn(&str) -> Option<String> + '_ {
     move |k| map.get(k).cloned()
 }
 

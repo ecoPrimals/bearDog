@@ -37,4 +37,7 @@ tracing = "0.1"
 [dev-dependencies]
 tokio-test = "0.4"
 mockito = "1.0"
+tempfile = "3"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+beardog-errors = { path = "../beardog-errors" }
 

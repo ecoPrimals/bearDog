@@ -141,9 +141,12 @@ impl NetworkDiscovery {
         let socket = UdpSocket::bind("0.0.0.0:0")
             .map_err(|e| BearDogError::network(format!("Socket bind failed: {e}")))?;
 
-        // Connect to a public DNS server (doesn't send data)
+        // UDP connect to any routable address to discover local IP (no data sent).
+        // Configurable via BEARDOG_NETWORK_PROBE_TARGET for air-gapped or custom environments.
+        let probe_target = std::env::var("BEARDOG_NETWORK_PROBE_TARGET")
+            .unwrap_or_else(|_| "198.51.100.1:80".to_string());
         socket
-            .connect("8.8.8.8:80")
+            .connect(&probe_target)
             .map_err(|e| BearDogError::network(format!("Socket connect failed: {e}")))?;
 
         let local_addr = socket

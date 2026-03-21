@@ -6,7 +6,61 @@
 //!
 //! NOTE: Tests implemented October 27, 2025 - Workflow functionality verified!
 
-use crate::{WorkflowConfig, workflows::types::enums::WorkflowStatus};
+use crate::{
+    ExampleWorkflow, ExampleWorkflowProcessor, ExampleWorkflowStatus, InMemoryWorkflowRepository,
+    LoggingWorkflowObserver, ProcessingContext, WorkflowConfig, WorkflowRepository,
+    WorkflowService, workflows::types::enums::WorkflowStatus,
+};
+use beardog_errors::BearDogError;
+use std::sync::{Arc, Mutex};
+
+/// Minimal observer that records lifecycle hook invocations for tests (observability contract).
+#[derive(Clone)]
+struct RecordingWorkflowObserver {
+    events: Arc<Mutex<Vec<&'static str>>>,
+}
+
+impl RecordingWorkflowObserver {
+    fn new() -> Self {
+        Self {
+            events: Arc::new(Mutex::new(Vec::new())),
+        }
+    }
+
+    fn event_kinds(&self) -> Vec<&'static str> {
+        self.events.lock().map(|e| e.clone()).unwrap_or_default()
+    }
+}
+
+impl crate::workflows::canonical_traits::WorkflowObserver for RecordingWorkflowObserver {
+    type Workflow = ExampleWorkflow;
+    type Error = BearDogError;
+
+    async fn on_created(&self, _workflow: &Self::Workflow) -> Result<(), Self::Error> {
+        self.events.lock().unwrap().push("created");
+        Ok(())
+    }
+
+    async fn on_started(&self, _workflow: &Self::Workflow) -> Result<(), Self::Error> {
+        self.events.lock().unwrap().push("started");
+        Ok(())
+    }
+
+    async fn on_completed(&self, _workflow: &Self::Workflow) -> Result<(), Self::Error> {
+        self.events.lock().unwrap().push("completed");
+        Ok(())
+    }
+
+    async fn on_failed(&self, _workflow: &Self::Workflow, _error: &str) -> Result<(), Self::Error> {
+        self.events.lock().unwrap().push("failed");
+        Ok(())
+    }
+
+    async fn on_cancelled(&self, _workflow: &Self::Workflow) -> Result<(), Self::Error> {
+        self.events.lock().unwrap().push("cancelled");
+        Ok(())
+    }
+}
 
 #[cfg(test)]
 mod workflow_creation_tests {
@@ -212,25 +266,145 @@ mod workflow_state_tests {
 // TEST_DOMAIN: workflows
 // TEST_PRIORITY: normal
 mod workflow_error_handling_tests {
-    #[test]
-    #[ignore = "Placeholder: Implement when error propagation is ready"]
-    fn test_workflow_error_propagation() {
-        // PHASE-2(Testing): Error propagation through workflow
+    use super::*;
+
+    #[tokio::test]
+    async fn test_workflow_error_propagation() {
+        let repo = InMemoryWorkflowRepository::new();
+        let processor = ExampleWorkflowProcessor::new("error-propagation");
+        let observer = RecordingWorkflowObserver::new();
+        let mut service = WorkflowService::new(repo, processor);
+        service.add_observer(observer.clone());
+
+        let missing = ExampleWorkflow::new("not-persisted", "ghost").id;
+        let err = service
+            .execute_workflow(&missing, ProcessingContext::default())
+            .await
+            .expect_err("missing workflow should surface repository error");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Workflow not found") || msg.contains("not found"),
+            "expected not-found semantics, got {msg}"
+        );
+
+        let wf = ExampleWorkflow::new("wf-err", "bad")
+            .set_status(ExampleWorkflowStatus::Failed("simulated".to_string()));
+        service
+            .create_workflow(wf.clone())
+            .await
+            .expect("create should persist");
+
+        let proc_err = service
+            .execute_workflow(&wf.id, ProcessingContext::default())
+            .await
+            .expect_err("failed aggregate should not process");
+        assert!(
+            proc_err.to_string().contains("Cannot process failed"),
+            "processor error should propagate: {proc_err:?}"
+        );
+        assert!(
+            observer.event_kinds().contains(&"failed"),
+            "observer should record failure: {:?}",
+            observer.event_kinds()
+        );
     }
 
-    #[test]
-    #[ignore = "Placeholder: Implement when retry logic is ready"]
-    fn test_workflow_retry_logic() {
-        // PHASE-2(Testing): Retry logic for failed steps
+    #[tokio::test]
+    async fn test_workflow_retry_logic() {
+        let runtime_config = WorkflowConfig {
+            max_concurrent_workflows: 4,
+            default_timeout_seconds: 120,
+            retry_attempts: 3,
+            enable_audit_logging: true,
+            workflow_storage_path: "/tmp/beardog-workflow-retry".to_string(),
+        };
+
+        let repo = InMemoryWorkflowRepository::new();
+        let processor = ExampleWorkflowProcessor::new("retry-processor");
+        let service = WorkflowService {
+            repository: repo,
+            processor,
+            observers: vec![LoggingWorkflowObserver::new("retry-observer")],
+        };
+
+        let wf = ExampleWorkflow::new("retry-1", "Retry workflow")
+            .set_status(ExampleWorkflowStatus::Failed("transient".to_string()));
+        service.create_workflow(wf.clone()).await.expect("create");
+
+        let mut ctx = ProcessingContext::default();
+        ctx.retry_count = runtime_config.retry_attempts;
+
+        let mut attempts: u32 = 0;
+        let outcome = loop {
+            attempts = attempts.saturating_add(1);
+            let current = service
+                .repository()
+                .find_by_id(&wf.id)
+                .await
+                .expect("load")
+                .expect("exists");
+
+            match service.execute_workflow(&current.id, ctx.clone()).await {
+                Ok(done) => break Ok(done),
+                Err(_) if attempts <= ctx.retry_count => {
+                    let repaired = current.set_status(ExampleWorkflowStatus::Started);
+                    service
+                        .repository()
+                        .update(repaired)
+                        .await
+                        .expect("repair state for retry");
+                }
+                Err(e) => break Err(e),
+            }
+        };
+
+        let finished = outcome.expect("retry loop should succeed after repair");
+        assert!(matches!(finished.status, ExampleWorkflowStatus::Completed));
+        assert!(attempts <= ctx.retry_count.saturating_add(1));
+        assert!(attempts >= 2, "expected at least one failure then success");
     }
 
-    #[test]
-    #[ignore = "Placeholder: Implement when error recovery is ready"]
-    fn test_workflow_error_recovery() {
-        // TEST_CATEGORY: integration
-        // TEST_DOMAIN: workflows
-        // TEST_PRIORITY: important
-        // PHASE-2(Testing): Recovery from errors
+    #[tokio::test]
+    async fn test_workflow_error_recovery() {
+        let repo = InMemoryWorkflowRepository::new();
+        let processor = ExampleWorkflowProcessor::new("recovery");
+        let service = WorkflowService {
+            repository: repo,
+            processor,
+            observers: vec![LoggingWorkflowObserver::new("recovery-observer")],
+        };
+
+        let wf = ExampleWorkflow::new("recover-1", "Recovery")
+            .set_status(ExampleWorkflowStatus::Failed("operator reset".to_string()));
+        service.create_workflow(wf.clone()).await.expect("create");
+
+        let err = service
+            .execute_workflow(&wf.id, ProcessingContext::default())
+            .await
+            .expect_err("terminal failure blocks processing");
+        assert!(err.to_string().contains("Cannot process failed"), "{err:?}");
+
+        let stored = service
+            .repository()
+            .find_by_id(&wf.id)
+            .await
+            .expect("read")
+            .expect("still stored");
+        assert!(matches!(stored.status, ExampleWorkflowStatus::Failed(_)));
+
+        let repaired = stored.set_status(ExampleWorkflowStatus::Started);
+        service
+            .repository()
+            .update(repaired)
+            .await
+            .expect("persist recovery");
+
+        let ok = service
+            .execute_workflow(&wf.id, ProcessingContext::default())
+            .await
+            .expect("should complete after repair");
+        assert!(matches!(ok.status, ExampleWorkflowStatus::Completed));
+        assert_eq!(service.repository().count().await.expect("count"), 1);
     }
 }
 // TEST_CATEGORY: integration
@@ -239,33 +413,102 @@ mod workflow_error_handling_tests {
 
 #[cfg(test)]
 mod workflow_integration_tests {
-    // TEST_CATEGORY: integration
-    // TEST_DOMAIN: workflows
-    // TEST_PRIORITY: important
-    #[test]
-    #[ignore = "Placeholder: Implement when security integration is ready"]
-    fn test_workflow_with_security() {
-        // PHASE-2(Testing): Integration with security module
+    use super::*;
+
+    #[tokio::test]
+    async fn test_workflow_with_security() {
+        let security_config = WorkflowConfig {
+            max_concurrent_workflows: 8,
+            default_timeout_seconds: 600,
+            retry_attempts: 2,
+            enable_audit_logging: true,
+            workflow_storage_path: "/var/lib/beardog/secure-workflows".to_string(),
+        };
+
+        let json = serde_json::to_string(&security_config).expect("config serde");
+        assert!(json.contains("\"enable_audit_logging\":true"));
+
+        let repo = InMemoryWorkflowRepository::new();
+        let processor = ExampleWorkflowProcessor::new("secure-processor");
+        let observer = LoggingWorkflowObserver::new("audit-trail");
+        let mut service = WorkflowService::new(repo, processor);
+        service.add_observer(observer);
+
+        let mut ctx = ProcessingContext::default();
+        ctx.user_id = "principal:operator-audited".to_string();
+        ctx.timeout_seconds = security_config.default_timeout_seconds;
+
+        let wf = ExampleWorkflow::new("audit-1", "Audited workflow");
+        service.create_workflow(wf.clone()).await.expect("create");
+
+        let done = service
+            .execute_workflow(&wf.id, ctx)
+            .await
+            .expect("execute under audit-capable config");
+        assert!(matches!(done.status, ExampleWorkflowStatus::Completed));
     }
 
-    // TEST_CATEGORY: integration
-    // TEST_DOMAIN: workflows
-    // TEST_PRIORITY: normal
-    #[test]
-    #[ignore = "Placeholder: Implement when monitoring integration is ready"]
-    fn test_workflow_with_monitoring() {
-        // TEST_CATEGORY: integration
-        // TEST_DOMAIN: workflows
-        // TEST_PRIORITY: normal
-        // PHASE-2(Testing): Integration with monitoring
+    #[tokio::test]
+    async fn test_workflow_with_monitoring() {
+        let repo = InMemoryWorkflowRepository::new();
+        let processor = ExampleWorkflowProcessor::new("monitored");
+        let observer = RecordingWorkflowObserver::new();
+        let mut service = WorkflowService::new(repo, processor);
+        service.add_observer(observer.clone());
+
+        let wf = ExampleWorkflow::new("mon-1", "Observed workflow");
+        service.create_workflow(wf.clone()).await.expect("create");
+
+        let _ = service
+            .execute_workflow(&wf.id, ProcessingContext::default())
+            .await
+            .expect("execute");
+
+        let kinds = observer.event_kinds();
+        assert!(
+            kinds.iter().any(|k| *k == "created"),
+            "missing created: {kinds:?}"
+        );
+        assert!(
+            kinds.iter().any(|k| *k == "started"),
+            "missing started: {kinds:?}"
+        );
+        assert!(
+            kinds.iter().any(|k| *k == "completed"),
+            "missing completed: {kinds:?}"
+        );
     }
 
-    // TEST_CATEGORY: integration
-    // TEST_DOMAIN: workflows
-    // TEST_PRIORITY: normal
-    #[test]
-    #[ignore = "Placeholder: Implement when end-to-end workflow is ready"]
-    fn test_workflow_end_to_end() {
-        // PHASE-2(Testing): End-to-end workflow execution
+    #[tokio::test]
+    async fn test_workflow_end_to_end() {
+        let repo = InMemoryWorkflowRepository::new();
+        let processor = ExampleWorkflowProcessor::new("e2e");
+        let observer = LoggingWorkflowObserver::new("e2e-observer");
+        let mut service = WorkflowService::new(repo, processor);
+        service.add_observer(observer);
+
+        let payload = serde_json::json!({ "phase": "integration", "case": "e2e" });
+        let wf = ExampleWorkflow::new("e2e-1", "End-to-end run").with_data(payload);
+
+        service.create_workflow(wf.clone()).await.expect("persist");
+        assert_eq!(service.repository().count().await.expect("count"), 1);
+
+        let ran = service
+            .execute_workflow(&wf.id, ProcessingContext::default())
+            .await
+            .expect("full execute path");
+
+        assert!(matches!(ran.status, ExampleWorkflowStatus::Completed));
+        assert!(ran.data.is_some());
+        let round_trip = service
+            .repository()
+            .find_by_id(&wf.id)
+            .await
+            .expect("reload")
+            .expect("found");
+        assert!(matches!(
+            round_trip.status,
+            ExampleWorkflowStatus::Completed
+        ));
     }
 }

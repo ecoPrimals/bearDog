@@ -397,4 +397,134 @@ mod tests {
             Some(&"custom_value".to_string())
         );
     }
+
+    #[test]
+    fn test_resolve_capability_http_base_from_env_override() {
+        beardog_errors::process_env::set_var(ENV_CAPABILITY_HTTP_BASE, "http://caps.example:9443/");
+        let base = resolve_capability_http_base();
+        beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_BASE);
+        assert_eq!(base, "http://caps.example:9443");
+    }
+
+    #[test]
+    fn test_resolve_capability_http_base_from_host_and_port() {
+        beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_BASE);
+        beardog_errors::process_env::set_var("BEARDOG_API_HOST", "192.0.2.10");
+        beardog_errors::process_env::set_var("BEARDOG_API_PORT", "65000");
+        let base = resolve_capability_http_base();
+        beardog_errors::process_env::remove_var("BEARDOG_API_HOST");
+        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
+        assert_eq!(base, "http://192.0.2.10:65000");
+    }
+
+    #[test]
+    fn test_resolve_capability_http_discovery_url_paths() {
+        beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_BASE);
+        beardog_errors::process_env::set_var("BEARDOG_API_HOST", "127.0.0.1");
+        beardog_errors::process_env::set_var("BEARDOG_API_PORT", "1");
+
+        beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_PATH);
+        let default_path = resolve_capability_http_discovery_url();
+        assert!(default_path.ends_with(DEFAULT_CAPABILITY_HTTP_PATH));
+
+        beardog_errors::process_env::set_var(ENV_CAPABILITY_HTTP_PATH, "/v2/capabilities");
+        let abs = resolve_capability_http_discovery_url();
+        assert!(abs.contains("/v2/capabilities"));
+        assert!(!abs.ends_with("//v2/capabilities"));
+
+        beardog_errors::process_env::set_var(ENV_CAPABILITY_HTTP_PATH, "manifest.json");
+        let rel = resolve_capability_http_discovery_url();
+        assert!(rel.ends_with("/manifest.json"));
+
+        beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_PATH);
+        beardog_errors::process_env::remove_var("BEARDOG_API_HOST");
+        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
+    }
+
+    #[test]
+    fn test_resolve_capability_mdns_full_name_defaults_and_overrides() {
+        let def = resolve_capability_mdns_full_name("sovereign-1");
+        assert!(def.contains("sovereign-1"));
+        assert!(def.ends_with(".local"));
+        assert!(def.contains("_beardog-cap._tcp"));
+
+        beardog_errors::process_env::set_var(ENV_CAPABILITY_MDNS_INSTANCE, "my-instance");
+        beardog_errors::process_env::set_var(ENV_CAPABILITY_MDNS_SERVICE, "_custom._tcp");
+        let custom = resolve_capability_mdns_full_name("ignored");
+        beardog_errors::process_env::remove_var(ENV_CAPABILITY_MDNS_INSTANCE);
+        beardog_errors::process_env::remove_var(ENV_CAPABILITY_MDNS_SERVICE);
+        assert_eq!(custom, "my-instance._custom._tcp.local");
+    }
+
+    #[test]
+    fn test_resolve_capability_http_base_uses_bind_address_when_api_host_unset() {
+        beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_BASE);
+        beardog_errors::process_env::remove_var("BEARDOG_API_HOST");
+        beardog_errors::process_env::set_var("BEARDOG_BIND_ADDRESS", "198.51.100.7");
+        beardog_errors::process_env::set_var("BEARDOG_API_PORT", "9090");
+        let base = resolve_capability_http_base();
+        beardog_errors::process_env::remove_var("BEARDOG_BIND_ADDRESS");
+        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
+        assert!(
+            base.contains("198.51.100.7"),
+            "expected bind address in base URL, got: {base}"
+        );
+    }
+
+    #[test]
+    fn test_resolve_capability_http_base_invalid_api_port_falls_back_to_default() {
+        beardog_errors::process_env::remove_var(ENV_CAPABILITY_HTTP_BASE);
+        beardog_errors::process_env::set_var("BEARDOG_API_HOST", "127.0.0.1");
+        beardog_errors::process_env::set_var("BEARDOG_API_PORT", "not-a-port");
+        let base = resolve_capability_http_base();
+        beardog_errors::process_env::remove_var("BEARDOG_API_HOST");
+        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
+        assert_eq!(
+            base,
+            format!("http://127.0.0.1:{}", beardog_config::DEFAULT_API_PORT)
+        );
+    }
+
+    #[test]
+    fn test_capability_metadata_serde_roundtrip_with_extra() {
+        let mut meta = CapabilityMetadata::new("cap_x", "1.2.3")
+            .with_description("desc")
+            .with_interface("Iface")
+            .with_endpoint("http://example/cap")
+            .with_protocols(vec!["native".to_string()])
+            .with_rate_limit(42)
+            .with_auth(true);
+        meta.extra.insert("k".to_string(), "v".to_string());
+
+        let json = serde_json::to_string(&meta).unwrap();
+        let back: CapabilityMetadata = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.id, "cap_x");
+        assert_eq!(back.version, "1.2.3");
+        assert_eq!(back.extra.get("k"), Some(&"v".to_string()));
+        assert!(back.requires_auth);
+    }
+
+    #[test]
+    fn test_capability_advertisement_serde_roundtrip() {
+        let primal = PrimalInfo {
+            id: "id-1".to_string(),
+            primal_type: "t".to_string(),
+            description: "d".to_string(),
+            version: "1.0.0".to_string(),
+        };
+        let discovery = DiscoveryConfig {
+            mdns: None,
+            http: "http://h/c".to_string(),
+            ttl: 1,
+        };
+        let ad = CapabilityAdvertisement {
+            primal,
+            capabilities: vec![CapabilityMetadata::new("c", "1").with_interface("I")],
+            discovery,
+        };
+        let json = serde_json::to_string(&ad).unwrap();
+        let back: CapabilityAdvertisement = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.capabilities.len(), 1);
+        assert_eq!(back.discovery.http, "http://h/c");
+    }
 }

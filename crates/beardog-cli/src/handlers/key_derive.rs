@@ -5,6 +5,7 @@
 use super::key_store::{self, StoredKey};
 use beardog_errors::BearDogError;
 use chrono::{Duration, Utc};
+use std::path::Path;
 
 /// Handle key derivation command
 pub async fn handle_key_derive(
@@ -13,12 +14,31 @@ pub async fn handle_key_derive(
     output_key_id: &str,
     expires_in: Option<&str>,
 ) -> Result<(), BearDogError> {
+    let home = key_store::home_dir_for_keys()?;
+    handle_key_derive_with_home(
+        master_key_id,
+        purpose,
+        output_key_id,
+        expires_in,
+        home.as_path(),
+    )
+    .await
+}
+
+/// Same as [`handle_key_derive`] but keys and receipts live under `home` (tests / DI).
+pub async fn handle_key_derive_with_home(
+    master_key_id: &str,
+    purpose: &str,
+    output_key_id: &str,
+    expires_in: Option<&str>,
+    home: &Path,
+) -> Result<(), BearDogError> {
     println!("🔑 BearDog Key Derivation");
     println!("========================\n");
 
     // Load master key
     println!("📥 Loading master key: {master_key_id}");
-    let master_key = key_store::load_key(master_key_id)?;
+    let master_key = key_store::load_key_from_home(master_key_id, home)?;
 
     println!("✅ Master key loaded");
     println!("   Algorithm: {}", master_key.algorithm);
@@ -75,12 +95,12 @@ pub async fn handle_key_derive(
     };
 
     // Save derived key
-    key_store::save_key(&derived_key)?;
+    key_store::save_key_to_home(&derived_key, home)?;
 
     // Update master key to add child
     let mut updated_master = master_key.clone();
     updated_master.children.push(output_key_id.to_string());
-    key_store::save_key(&updated_master)?;
+    key_store::save_key_to_home(&updated_master, home)?;
 
     // Generate operation receipt
     use beardog_types::receipt::{KeyInfo, OperationReceipt, generate_receipt_filename};
@@ -100,8 +120,8 @@ pub async fn handle_key_derive(
         .with_metadata("derivation_purpose", json!(purpose));
 
     // Save receipt
-    let receipt_dir = std::path::Path::new("receipts");
-    std::fs::create_dir_all(receipt_dir)?;
+    let receipt_dir = home.join("receipts");
+    std::fs::create_dir_all(&receipt_dir)?;
     let receipt_path = receipt_dir.join(generate_receipt_filename("key-derive"));
     receipt.save_to_file(&receipt_path)?;
 
@@ -193,7 +213,83 @@ pub fn parse_duration(duration_str: &str) -> Result<chrono::DateTime<Utc>, BearD
 
 #[cfg(test)]
 mod tests {
+    use super::key_store;
     use super::*;
+    use chrono::Utc;
+    use tempfile::TempDir;
+
+    #[tokio::test]
+    async fn test_handle_key_derive_with_home_roundtrip() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+        let master = StoredKey {
+            key_id: "master-1".to_string(),
+            algorithm: "aes256-gcm".to_string(),
+            hsm_name: "test-hsm".to_string(),
+            key_material_b64: key_store::base64_encode(b"01234567890123456789012345678901"),
+            created_at: Utc::now().to_rfc3339(),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        key_store::save_key_to_home(&master, home).unwrap();
+
+        handle_key_derive_with_home("master-1", "student-1", "child-1", None, home)
+            .await
+            .unwrap();
+
+        let child = key_store::load_key_from_home("child-1", home).unwrap();
+        assert_eq!(child.parent_key_id.as_deref(), Some("master-1"));
+        assert_eq!(child.generation, 1);
+        assert_eq!(child.derivation_purpose.as_deref(), Some("student-1"));
+
+        let master_again = key_store::load_key_from_home("master-1", home).unwrap();
+        assert!(master_again.children.contains(&"child-1".to_string()));
+
+        let receipt_dir = home.join("receipts");
+        let entries: Vec<_> = std::fs::read_dir(&receipt_dir)
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .collect();
+        assert!(
+            !entries.is_empty(),
+            "receipt file should exist under home/receipts"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_derive_with_home_expiry() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+        let master = StoredKey {
+            key_id: "master-exp".to_string(),
+            algorithm: "aes256-gcm".to_string(),
+            hsm_name: "test-hsm".to_string(),
+            key_material_b64: key_store::base64_encode(b"01234567890123456789012345678901"),
+            created_at: Utc::now().to_rfc3339(),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        key_store::save_key_to_home(&master, home).unwrap();
+
+        handle_key_derive_with_home("master-exp", "purpose-x", "child-exp", Some("48h"), home)
+            .await
+            .unwrap();
+
+        let child = key_store::load_key_from_home("child-exp", home).unwrap();
+        assert!(child.expires_at.is_some());
+    }
 
     #[test]
     fn test_derive_key_hkdf() {
@@ -231,5 +327,122 @@ mod tests {
         // Invalid format
         assert!(parse_duration("invalid").is_err());
         assert!(parse_duration("24").is_err());
+
+        // Months / years (approximate)
+        let m = parse_duration("2m").unwrap();
+        assert!((m.signed_duration_since(Utc::now()).num_days() - 60).abs() < 3);
+        let y = parse_duration("1y").unwrap();
+        assert!((y.signed_duration_since(Utc::now()).num_days() - 365).abs() < 3);
+
+        assert!(parse_duration("5x").is_err());
+    }
+
+    #[test]
+    fn test_parse_duration_trims_and_unit_aliases() {
+        let h = parse_duration("  6 hour ").unwrap();
+        assert!((h.signed_duration_since(Utc::now()).num_hours() - 6).abs() < 2);
+
+        let d = parse_duration("3 days").unwrap();
+        assert!((d.signed_duration_since(Utc::now()).num_days() - 3).abs() < 2);
+
+        let w = parse_duration("1 week").unwrap();
+        assert!((w.signed_duration_since(Utc::now()).num_days() - 7).abs() < 2);
+    }
+
+    #[test]
+    fn test_parse_duration_invalid_number() {
+        assert!(parse_duration("xxh").is_err());
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_derive_with_home_missing_master_fails() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+        let r = handle_key_derive_with_home("no-such-key", "p", "out", None, home).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_derive_with_home_invalid_master_material_fails() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+        let master = StoredKey {
+            key_id: "bad-b64".to_string(),
+            algorithm: "aes256-gcm".to_string(),
+            hsm_name: "test-hsm".to_string(),
+            key_material_b64: "@@@not-valid-base64@@@".to_string(),
+            created_at: Utc::now().to_rfc3339(),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        key_store::save_key_to_home(&master, home).unwrap();
+        let r = handle_key_derive_with_home("bad-b64", "p", "child-x", None, home).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_derive_with_home_lineage_depth_increments() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+        let master = StoredKey {
+            key_id: "lineage-root".to_string(),
+            algorithm: "aes256-gcm".to_string(),
+            hsm_name: "test-hsm".to_string(),
+            key_material_b64: key_store::base64_encode(b"01234567890123456789012345678901"),
+            created_at: Utc::now().to_rfc3339(),
+            generation: 2,
+            parent_key_id: Some("parent".to_string()),
+            derivation_purpose: None,
+            children: vec![],
+            lineage: Some(key_store::KeyLineageInfo {
+                parent_key_id: Some("parent".to_string()),
+                depth: 3,
+            }),
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        key_store::save_key_to_home(&master, home).unwrap();
+
+        handle_key_derive_with_home("lineage-root", "next", "child-depth", None, home)
+            .await
+            .unwrap();
+
+        let child = key_store::load_key_from_home("child-depth", home).unwrap();
+        assert_eq!(child.lineage.as_ref().unwrap().depth, 4);
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_derive_with_home_short_expiry_prints_hours_branch() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+        let master = StoredKey {
+            key_id: "m-hours".to_string(),
+            algorithm: "aes256-gcm".to_string(),
+            hsm_name: "test-hsm".to_string(),
+            key_material_b64: key_store::base64_encode(b"01234567890123456789012345678901"),
+            created_at: Utc::now().to_rfc3339(),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        key_store::save_key_to_home(&master, home).unwrap();
+
+        handle_key_derive_with_home("m-hours", "p", "c-hours", Some("3h"), home)
+            .await
+            .unwrap();
+        let child = key_store::load_key_from_home("c-hours", home).unwrap();
+        assert!(child.expires_at.is_some());
     }
 }

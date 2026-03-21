@@ -10,6 +10,15 @@ pub async fn discover_hsms_agnostic() -> Result<Vec<hsm_agnostic::CliHsmInfo>, B
     hsm_agnostic::discover_all_hsms().await
 }
 
+/// Resolve `hsm_id` against a discovery list (id equality or name substring), shared by discover/capabilities/test.
+pub(crate) fn find_hsm_for_cli<'a>(
+    hsms: &'a [hsm_agnostic::CliHsmInfo],
+    hsm_id: &str,
+) -> Option<&'a hsm_agnostic::CliHsmInfo> {
+    hsms.iter()
+        .find(|h| h.id == hsm_id || h.name.contains(hsm_id))
+}
+
 /// Handle HSM discovery command
 pub async fn handle_hsm_discover(verbose: bool) -> Result<(), BearDogError> {
     println!("🔍 BearDog HSM Discovery");
@@ -100,9 +109,7 @@ pub async fn handle_hsm_capabilities(hsm_id: &str) -> Result<(), BearDogError> {
     let hsms = discover_hsms_agnostic().await?;
 
     // Find the specific HSM
-    let hsm = hsms
-        .iter()
-        .find(|h| h.id == hsm_id || h.name.contains(hsm_id));
+    let hsm = find_hsm_for_cli(&hsms, hsm_id);
 
     if let Some(hsm) = hsm {
         println!("📋 HSM: {}", hsm.name);
@@ -163,9 +170,7 @@ pub async fn handle_hsm_test(hsm_id: &str, iterations: usize) -> Result<(), Bear
     let hsms = discover_hsms_agnostic().await?;
 
     // Find the specific HSM
-    let hsm = hsms
-        .iter()
-        .find(|h| h.id == hsm_id || h.name.contains(hsm_id));
+    let hsm = find_hsm_for_cli(&hsms, hsm_id);
 
     if let Some(hsm) = hsm {
         println!("📋 Testing: {} ({})", hsm.name, hsm.tier);
@@ -220,6 +225,51 @@ pub async fn handle_hsm_test(hsm_id: &str, iterations: usize) -> Result<(), Bear
 mod hsm_handler_tests {
     use super::*;
 
+    fn sample_hsms() -> Vec<hsm_agnostic::CliHsmInfo> {
+        vec![
+            hsm_agnostic::CliHsmInfo {
+                id: "vendor-a-1234".to_string(),
+                name: "Vendor A Model X".to_string(),
+                vendor: "VendorA".to_string(),
+                model: "ModelX".to_string(),
+                tier: "Software".to_string(),
+                hsm_type: "Software".to_string(),
+                path: "/dev/null".to_string(),
+                interface_detail: "Software via /dev/null".to_string(),
+            },
+            hsm_agnostic::CliHsmInfo {
+                id: "hw-token-99".to_string(),
+                name: "YubiKey Something".to_string(),
+                vendor: "Yubico".to_string(),
+                model: "5C".to_string(),
+                tier: "Hardware".to_string(),
+                hsm_type: "Hardware".to_string(),
+                path: "usb".to_string(),
+                interface_detail: "USB".to_string(),
+            },
+        ]
+    }
+
+    #[test]
+    fn test_find_hsm_for_cli_by_id() {
+        let hsms = sample_hsms();
+        let h = find_hsm_for_cli(&hsms, "hw-token-99").expect("id match");
+        assert_eq!(h.tier, "Hardware");
+    }
+
+    #[test]
+    fn test_find_hsm_for_cli_by_name_substring() {
+        let hsms = sample_hsms();
+        let h = find_hsm_for_cli(&hsms, "YubiKey").expect("substring");
+        assert_eq!(h.id, "hw-token-99");
+    }
+
+    #[test]
+    fn test_find_hsm_for_cli_miss() {
+        let hsms = sample_hsms();
+        assert!(find_hsm_for_cli(&hsms, "no-such-device").is_none());
+    }
+
     #[tokio::test]
     async fn test_handle_hsm_capabilities_unknown_id() {
         let r = handle_hsm_capabilities("___unlikely_cli_hsm_id___").await;
@@ -229,6 +279,19 @@ mod hsm_handler_tests {
     #[tokio::test]
     async fn test_handle_hsm_test_unknown_id() {
         let r = handle_hsm_test("___unlikely_cli_hsm_id___", 1).await;
+        assert!(r.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_handle_hsm_discover_empty_ok() {
+        // Discovery may return empty on CI; handler must still succeed
+        let r = handle_hsm_discover(false).await;
+        assert!(r.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_handle_hsm_list_ok() {
+        let r = handle_hsm_list().await;
         assert!(r.is_ok());
     }
 }

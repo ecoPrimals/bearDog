@@ -110,8 +110,9 @@ doc_lazy_continuation = { level = "allow", priority = 1 }
 too_long_first_doc_paragraph = { level = "allow", priority = 1 }
 empty_docs = { level = "allow", priority = 1 }
 
-# ── Cast safety — allowed globally during audit tightening; migrate to
-#    per-site #[expect(clippy::cast_*, reason = "...")] over time ─────────────
+# ── Cast safety — workspace allow remains required (2026-03 audit: removing any
+#    of these trips `cargo clippy --workspace --all-features -- -D warnings`).
+#    Prefer per-site #[expect(clippy::cast_*, reason = "...")] for new code. ───
 cast_possible_truncation = { level = "allow", priority = 1 }
 cast_precision_loss = { level = "allow", priority = 1 }
 cast_sign_loss = { level = "allow", priority = 1 }
@@ -166,15 +167,10 @@ scrypt = "0.11"           # Memory-hard KDF - stable version (evolved from RC)
 # xts-mode = "0.5.1"        # AES-XTS mode (disk encryption)
 
 # Networking
-quinn = "0.11"
-rustls = { version = "0.23", features = ["dangerous_configuration"] }
-rustls-pemfile = "2.1"
-tokio-rustls = "0.26"
+tokio-tungstenite = "0.24"  # WebSocket for BTSP tunnel transport only
 
 # Database
 sled = "0.34"
-sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
-tokio-tungstenite = "0.24"  # WebSocket for BTSP tunnel transport only
 serde_yaml = "0.9"
 
 # Serialization
@@ -198,12 +194,6 @@ bcrypt = "0.18"  # Legacy password hashing - Phase 7
 # Configuration
 config = "0.14"
 figment = { version = "0.10", features = ["toml", "env"] }
-
-# Monitoring/Metrics
-prometheus = "0.13"
-opentelemetry = "0.22"
-opentelemetry-prometheus = "0.15"
-metrics = "0.21"
 
 # Error handling
 color-eyre = "0.6"

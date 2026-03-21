@@ -133,7 +133,7 @@ pub const DISCOVERY_SOCKET_DEV_FALLBACK: &str = "/tmp/beardog-discovery";
 /// }
 /// ```
 /// Inputs for [`discover_ipc_socket_with`] (injectable; [`Default`] is I/O-free).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct IpcSocketDiscoveryOptions {
     /// `IPC_SOCKET` when set.
     pub ipc_socket: Option<String>,
@@ -143,17 +143,6 @@ pub struct IpcSocketDiscoveryOptions {
     pub beardog_dev_discovery_socket: Option<String>,
     /// Pre-resolved `ipc` capability services (e.g. from [`beardog_discovery::discovered_services_from_environment_with`]).
     pub ipc_capability_services: Vec<beardog_discovery::DiscoveredService>,
-}
-
-impl Default for IpcSocketDiscoveryOptions {
-    fn default() -> Self {
-        Self {
-            ipc_socket: None,
-            discovery_socket: None,
-            beardog_dev_discovery_socket: None,
-            ipc_capability_services: Vec::new(),
-        }
-    }
 }
 
 impl IpcSocketDiscoveryOptions {

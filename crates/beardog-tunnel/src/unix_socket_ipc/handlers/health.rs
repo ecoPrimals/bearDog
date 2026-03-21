@@ -29,8 +29,15 @@ pub struct HealthHandler {
     identity: IdentityHints,
 }
 
+impl Default for HealthHandler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl HealthHandler {
     /// Production: identity from environment (see [`IdentityHints::from_env`]).
+    #[must_use]
     pub fn new() -> Self {
         Self {
             identity: IdentityHints::from_env(),

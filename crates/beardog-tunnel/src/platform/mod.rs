@@ -120,7 +120,7 @@ pub fn default_socket_endpoint() -> SocketEndpoint {
     default_socket_endpoint_for_primal(None)
 }
 
-/// Default Unix filesystem socket using an optional primal name (`None` → [`env!("CARGO_PKG_NAME")`]).
+/// Default Unix filesystem socket using an optional primal name (`None` → `env!("CARGO_PKG_NAME")`).
 #[cfg(all(unix, not(target_os = "android")))]
 pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEndpoint {
     let primal_name = primal_name.unwrap_or(env!("CARGO_PKG_NAME"));

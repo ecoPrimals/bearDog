@@ -32,7 +32,7 @@ use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
 mod command_runner;
-pub use command_runner::{CommandRunner, MockAdbCommandRunner};
+pub use command_runner::CommandRunner;
 
 /// Android deployment: NDK verification, build environment checks, and APK-oriented workflows.
 pub mod android;

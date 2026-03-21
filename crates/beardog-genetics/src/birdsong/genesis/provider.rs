@@ -27,7 +27,7 @@ pub struct GenesisLineageProvider {
     _hardware_entropy: Option<HardwareEntropyFn>,
     /// Minimum [`TrustLevel`] a [`GenesisWitness`] must meet for lineage to be accepted.
     pub min_trust_level: TrustLevel,
-    /// Witness policy: `permissioned` | `permissionless` (see [`Self::verify_witness_authority`]).
+    /// Witness policy: `permissioned` | `permissionless` (see `verify_witness_authority`).
     pub genesis_mode: String,
 }
 
@@ -315,7 +315,7 @@ impl GenesisLineageProvider {
         }
     }
 
-    /// [`verify_witness_authority`](Self::verify_witness_authority) using `BEARDOG_GENESIS_MODE`
+    /// Wrapper for `verify_witness_authority` using `BEARDOG_GENESIS_MODE`
     /// (default `permissioned` when unset).
     pub fn verify_witness_authority_from_env(
         &self,

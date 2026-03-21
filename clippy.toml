@@ -23,15 +23,13 @@ disallowed-methods = [
 allow-unwrap-in-tests = true
 
 # Code quality thresholds
-warn-on-all-wildcard-imports = false  # We have legitimate uses
+# Workspace `[workspace.lints.clippy]` allows `wildcard_imports`; this only affects
+# diagnostics when that allow is removed or narrowed.
+warn-on-all-wildcard-imports = true
 too-many-arguments-threshold = 7
+# `type_complexity` is allowed at workspace level in root `Cargo.toml`; this threshold
+# applies if that allow is narrowed or removed.
 type-complexity-threshold = 250
 
-# NOTE: Pedantic lints are enabled via command-line or in-code attributes
-# Use: cargo clippy -- -W clippy::pedantic
-# Or add to lib.rs: #![warn(clippy::pedantic)]
-#
-# We don't enable them here in clippy.toml because:
-# 1. Clippy's config file only supports a limited set of options
-# 2. Lint levels are better controlled via command-line or code attributes
-# 3. This keeps the config file simple and compatible across Clippy versions
+# Lint groups (`pedantic`, `nursery`, etc.) are set in root `Cargo.toml` under
+# `[workspace.lints.clippy]`. This file only holds Clippy-supported config keys.

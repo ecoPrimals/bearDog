@@ -400,4 +400,104 @@ mod tests {
         let values = buffer.with_slice(|slice| (slice[0], slice[1]));
         assert_eq!(values, (0xAA, 0xBB));
     }
+
+    #[test]
+    fn safe_memory_global_buffer_pools_sizes() {
+        let pools = GlobalBufferPools::new();
+        assert_eq!(pools.get_medium().size(), 4096);
+        assert_eq!(pools.get_large().size(), 65536);
+        assert_eq!(pools.get_small().size(), 1024);
+    }
+
+    #[test]
+    fn safe_memory_pinned_from_vec_named_and_with_buffer() {
+        let buf = SafePinnedBuffer::from_vec(vec![1, 2, 3]);
+        assert_eq!(buf.size(), 3);
+        assert_eq!(buf.with_buffer(|s| s.to_vec()), vec![1, 2, 3]);
+        let named = SafePinnedBuffer::named(16, "diag");
+        assert_eq!(named.size(), 16);
+    }
+
+    #[test]
+    fn safe_memory_sensitive_byte_buf() {
+        let mut s = SensitiveByteBuf::alloc_zeroized(4, "k");
+        assert_eq!(s.label(), "k");
+        assert_eq!(s.len(), 4);
+        assert!(!s.is_empty());
+        s.as_mut_slice().copy_from_slice(&[9, 8, 7, 6]);
+        assert_eq!(s.as_slice(), &[9, 8, 7, 6]);
+        let empty = SensitiveByteBuf::alloc_zeroized(0, "e");
+        assert!(empty.is_empty());
+    }
+
+    #[test]
+    fn safe_memory_buffer_pool_metrics_hit_rate() {
+        let idle = BufferPoolMetrics::new();
+        assert_eq!(idle.hit_rate(), 0.0);
+        let m = BufferPoolMetrics {
+            total_requests: 4,
+            cache_hits: 1,
+            cache_misses: 3,
+        };
+        assert!((m.hit_rate() - 0.25).abs() < f64::EPSILON);
+    }
+
+    #[tokio::test]
+    async fn safe_memory_pool_miss_when_exhausted() {
+        let pool: SafeBufferPool<256> = SafeBufferPool::new(1);
+        let _a = pool.get_buffer().await;
+        let _b = pool.get_buffer().await;
+        let m = pool.metrics().await;
+        assert_eq!(m.total_requests, 2);
+        assert_eq!(m.cache_hits, 1);
+        assert_eq!(m.cache_misses, 1);
+    }
+
+    #[tokio::test]
+    async fn safe_memory_enhanced_pools_default_and_metrics() {
+        let pools = EnhancedMemoryPools::default();
+        let _ = pools.get_small().await;
+        let m = pools.all_metrics().await;
+        assert!(m.total_requests >= 1);
+    }
+
+    #[test]
+    fn safe_memory_global_buffer_pools_default() {
+        let pools = GlobalBufferPools::default();
+        assert_eq!(pools.get_small().size(), 1024);
+    }
+
+    #[test]
+    fn safe_memory_buffer_pool_metrics_default_matches_new() {
+        assert_eq!(
+            BufferPoolMetrics::default().total_requests,
+            BufferPoolMetrics::new().total_requests
+        );
+        assert_eq!(
+            BufferPoolMetrics::default().cache_hits,
+            BufferPoolMetrics::new().cache_hits
+        );
+    }
+
+    #[test]
+    fn safe_memory_safe_pooled_buffer_buffer_and_mut() {
+        let mut pooled: SafePooledBuffer<64> = SafePooledBuffer::default();
+        assert_eq!(pooled.size(), 64);
+        pooled.buffer_mut().with_mut_slice(|s| {
+            s[0] = 0x01;
+        });
+        let b = pooled.buffer().with_slice(|s| s[0]);
+        assert_eq!(b, 0x01);
+    }
+
+    #[tokio::test]
+    async fn safe_memory_pool_zero_initial_capacity_all_misses() {
+        let pool: SafeBufferPool<128> = SafeBufferPool::new(0);
+        let _ = pool.get_buffer().await;
+        let _ = pool.get_buffer().await;
+        let m = pool.metrics().await;
+        assert_eq!(m.total_requests, 2);
+        assert_eq!(m.cache_hits, 0);
+        assert_eq!(m.cache_misses, 2);
+    }
 }

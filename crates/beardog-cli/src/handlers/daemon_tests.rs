@@ -6,6 +6,80 @@
 mod tests {
 
     use crate::DaemonArgs;
+    use crate::handlers::daemon::prepare_daemon_pid_file;
+    use beardog_errors::BearDogError;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_prepare_daemon_pid_file_creates_expected_pid() {
+        let dir = TempDir::new().unwrap();
+        let pid_path = dir.path().join("beardog.pid");
+        let p = pid_path.to_str().unwrap();
+        prepare_daemon_pid_file(p).unwrap();
+        let on_disk = std::fs::read_to_string(p).unwrap();
+        assert_eq!(on_disk.trim(), std::process::id().to_string());
+    }
+
+    #[test]
+    fn test_prepare_daemon_pid_file_removes_unparseable_stale() {
+        let dir = TempDir::new().unwrap();
+        let pid_path = dir.path().join("beardog.pid");
+        let p = pid_path.to_str().unwrap();
+        std::fs::write(p, "not-a-number\n").unwrap();
+        prepare_daemon_pid_file(p).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(p).unwrap().trim(),
+            std::process::id().to_string()
+        );
+    }
+
+    #[test]
+    fn test_prepare_daemon_pid_file_removes_dead_pid() {
+        let dir = TempDir::new().unwrap();
+        let pid_path = dir.path().join("beardog.pid");
+        let p = pid_path.to_str().unwrap();
+        // Very unlikely to exist as a process on Unix/Linux
+        std::fs::write(p, "4194303\n").unwrap();
+        prepare_daemon_pid_file(p).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(p).unwrap().trim(),
+            std::process::id().to_string()
+        );
+    }
+
+    /// When the PID file lists our own live PID, `kill -0` succeeds and we must refuse to start.
+    #[cfg(unix)]
+    #[test]
+    fn test_prepare_daemon_pid_file_rejects_live_pid() {
+        let dir = TempDir::new().unwrap();
+        let pid_path = dir.path().join("beardog.pid");
+        let p = pid_path.to_str().unwrap();
+        std::fs::write(p, format!("{}\n", std::process::id())).unwrap();
+        let err = prepare_daemon_pid_file(p).unwrap_err();
+        match err {
+            BearDogError::Business { message, .. } => {
+                assert!(
+                    message.contains("already running"),
+                    "unexpected message: {message}"
+                );
+            }
+            other => panic!("expected Business error, got {other:?}"),
+        }
+    }
+
+    /// PID path exists but is not a readable file (directory) → read fails with System error.
+    #[test]
+    fn test_prepare_daemon_pid_file_fails_when_pid_path_is_directory() {
+        let dir = TempDir::new().unwrap();
+        let pid_path = dir.path().join("beardog.pid");
+        std::fs::create_dir(&pid_path).unwrap();
+        let p = pid_path.to_str().unwrap();
+        let err = prepare_daemon_pid_file(p).unwrap_err();
+        assert!(
+            matches!(err, BearDogError::System { .. }),
+            "expected System error, got {err:?}"
+        );
+    }
 
     #[test]
     fn test_daemon_args_creation() {

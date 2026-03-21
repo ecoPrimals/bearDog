@@ -311,6 +311,7 @@ pub async fn handle_revocation_export(output_path: &str) -> Result<(), BearDogEr
     handle_revocation_export_with_home(output_path, &home).await
 }
 
+/// Export the revocation list to a file, using a custom home directory (tests / DI).
 #[allow(dead_code)]
 pub async fn handle_revocation_export_with_home(
     output_path: &str,
@@ -340,6 +341,7 @@ pub async fn handle_revocation_import(input_path: &str) -> Result<(), BearDogErr
     handle_revocation_import_with_home(input_path, &home).await
 }
 
+/// Import and merge a revocation list from a file, using a custom home directory (tests / DI).
 #[allow(dead_code)]
 pub async fn handle_revocation_import_with_home(
     input_path: &str,
@@ -380,6 +382,7 @@ pub async fn handle_key_check_revocation(key_id: &str) -> Result<(), BearDogErro
     handle_key_check_revocation_with_home(key_id, &home).await
 }
 
+/// Check whether a key has been revoked, using a custom home directory (tests / DI).
 pub async fn handle_key_check_revocation_with_home(
     key_id: &str,
     home: &Path,
@@ -422,6 +425,7 @@ pub async fn handle_key_list_revocations() -> Result<(), BearDogError> {
     handle_key_list_revocations_with_home(&home).await
 }
 
+/// List all revoked keys, using a custom home directory (tests / DI).
 pub async fn handle_key_list_revocations_with_home(home: &Path) -> Result<(), BearDogError> {
     println!("📋 BearDog Revocation List");
     println!("========================\n");

@@ -38,11 +38,56 @@ pub struct EntropySeedMetadata {
 }
 
 /// HSM information for CLI display
-#[derive(Debug, Clone)]
-struct HsmInfo {
-    name: String,
-    tier: String,
-    hsm_type: String,
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct HsmInfo {
+    pub(crate) name: String,
+    pub(crate) tier: String,
+    pub(crate) hsm_type: String,
+}
+
+/// Pick an HSM from a discovered list according to CLI preference (`auto`, `software`, …).
+pub(crate) fn select_hsm_by_preference<'a>(
+    available_hsms: &'a [HsmInfo],
+    device_preference: &str,
+) -> Result<&'a HsmInfo, BearDogError> {
+    match device_preference.to_lowercase().as_str() {
+        "auto" => available_hsms
+            .iter()
+            .find(|h| h.tier == "Mobile")
+            .or_else(|| available_hsms.iter().find(|h| h.tier == "Hardware"))
+            .or_else(|| available_hsms.iter().find(|h| h.tier == "Software"))
+            .ok_or_else(|| BearDogError::not_found("No suitable HSM found".to_string())),
+        "software" => available_hsms
+            .iter()
+            .find(|h| h.tier == "Software")
+            .ok_or_else(|| {
+                BearDogError::not_found(
+                    "No software HSM found (install a PKCS#11 provider)".to_string(),
+                )
+            }),
+        "mobile" => available_hsms
+            .iter()
+            .find(|h| h.tier == "Mobile")
+            .ok_or_else(|| {
+                BearDogError::not_found(
+                    "No mobile HSM found (check Android StrongBox via ADB)".to_string(),
+                )
+            }),
+        "usb" | "hardware" => available_hsms
+            .iter()
+            .find(|h| h.tier == "Hardware")
+            .ok_or_else(|| {
+                BearDogError::not_found(
+                    "No hardware HSM found (connect any FIDO2/CTAP2 security token)".to_string(),
+                )
+            }),
+        _ => {
+            let msg = format!(
+                "Unknown device preference: '{device_preference}'. Use: auto, software, mobile, usb, hardware"
+            );
+            Err(BearDogError::invalid_input(&msg))
+        }
+    }
 }
 
 /// Handle entropy collection command
@@ -124,47 +169,7 @@ pub async fn handle_entropy_collect(
     // Step 2: Select best HSM based on preference (algorithm-agnostic)
     println!("🎯 Selecting HSM based on preference: '{device_preference}'");
 
-    let selected_hsm = match device_preference.to_lowercase().as_str() {
-        "auto" => {
-            // Automatic selection: prefer mobile > hardware > software
-            available_hsms
-                .iter()
-                .find(|h| h.tier == "Mobile")
-                .or_else(|| available_hsms.iter().find(|h| h.tier == "Hardware"))
-                .or_else(|| available_hsms.iter().find(|h| h.tier == "Software"))
-                .ok_or_else(|| BearDogError::not_found("No suitable HSM found".to_string()))?
-        }
-        "software" => available_hsms
-            .iter()
-            .find(|h| h.tier == "Software")
-            .ok_or_else(|| {
-                BearDogError::not_found(
-                    "No software HSM found (install a PKCS#11 provider)".to_string(),
-                )
-            })?,
-        "mobile" => available_hsms
-            .iter()
-            .find(|h| h.tier == "Mobile")
-            .ok_or_else(|| {
-                BearDogError::not_found(
-                    "No mobile HSM found (check Android StrongBox via ADB)".to_string(),
-                )
-            })?,
-        "usb" | "hardware" => available_hsms
-            .iter()
-            .find(|h| h.tier == "Hardware")
-            .ok_or_else(|| {
-                BearDogError::not_found(
-                    "No hardware HSM found (connect any FIDO2/CTAP2 security token)".to_string(),
-                )
-            })?,
-        _ => {
-            let msg = format!(
-                "Unknown device preference: '{device_preference}'. Use: auto, software, mobile, usb, hardware"
-            );
-            return Err(BearDogError::invalid_input(&msg));
-        }
-    };
+    let selected_hsm = select_hsm_by_preference(&available_hsms, device_preference)?;
 
     println!("✅ Selected: {}", selected_hsm.name);
     println!("   Tier: {}", selected_hsm.tier);
@@ -639,5 +644,131 @@ mod entropy_handler_tests {
     fn test_generate_system_entropy_branch_over_32_bytes() {
         let v = generate_system_entropy(100).unwrap();
         assert_eq!(v.len(), 100);
+    }
+
+    #[test]
+    fn test_select_hsm_by_preference_auto_order() {
+        let hsms = vec![
+            HsmInfo {
+                name: "sw".to_string(),
+                tier: "Software".to_string(),
+                hsm_type: "Software".to_string(),
+            },
+            HsmInfo {
+                name: "mob".to_string(),
+                tier: "Mobile".to_string(),
+                hsm_type: "Mobile".to_string(),
+            },
+        ];
+        let picked = select_hsm_by_preference(&hsms, "auto").unwrap();
+        assert_eq!(picked.tier, "Mobile");
+    }
+
+    #[test]
+    fn test_select_hsm_by_preference_software() {
+        let hsms = vec![HsmInfo {
+            name: "pkcs11".to_string(),
+            tier: "Software".to_string(),
+            hsm_type: "Software".to_string(),
+        }];
+        let picked = select_hsm_by_preference(&hsms, "software").unwrap();
+        assert_eq!(picked.name, "pkcs11");
+    }
+
+    #[test]
+    fn test_select_hsm_by_preference_unknown() {
+        let hsms = vec![HsmInfo {
+            name: "x".to_string(),
+            tier: "Software".to_string(),
+            hsm_type: "Software".to_string(),
+        }];
+        assert!(select_hsm_by_preference(&hsms, "nope").is_err());
+    }
+
+    #[test]
+    fn test_select_hsm_by_preference_hardware_usb_alias() {
+        let hsms = vec![HsmInfo {
+            name: "token".to_string(),
+            tier: "Hardware".to_string(),
+            hsm_type: "USB".to_string(),
+        }];
+        let a = select_hsm_by_preference(&hsms, "usb").unwrap();
+        let b = select_hsm_by_preference(&hsms, "hardware").unwrap();
+        assert_eq!(a.name, b.name);
+    }
+
+    #[test]
+    fn test_select_hsm_by_preference_auto_prefers_mobile_then_hardware() {
+        let hsms = vec![
+            HsmInfo {
+                name: "sw".to_string(),
+                tier: "Software".to_string(),
+                hsm_type: "Software".to_string(),
+            },
+            HsmInfo {
+                name: "hw".to_string(),
+                tier: "Hardware".to_string(),
+                hsm_type: "Hardware".to_string(),
+            },
+        ];
+        assert_eq!(select_hsm_by_preference(&hsms, "auto").unwrap().name, "hw");
+
+        let with_mobile = vec![
+            HsmInfo {
+                name: "m".to_string(),
+                tier: "Mobile".to_string(),
+                hsm_type: "Mobile".to_string(),
+            },
+            hsms[1].clone(),
+        ];
+        assert_eq!(
+            select_hsm_by_preference(&with_mobile, "auto")
+                .unwrap()
+                .tier,
+            "Mobile"
+        );
+    }
+
+    #[test]
+    fn test_select_hsm_by_preference_auto_software_only() {
+        let hsms = vec![HsmInfo {
+            name: "only-soft".to_string(),
+            tier: "Software".to_string(),
+            hsm_type: "Software".to_string(),
+        }];
+        assert_eq!(
+            select_hsm_by_preference(&hsms, "auto").unwrap().name,
+            "only-soft"
+        );
+    }
+
+    #[test]
+    fn test_select_hsm_by_preference_mobile_not_found() {
+        let hsms = vec![HsmInfo {
+            name: "sw".to_string(),
+            tier: "Software".to_string(),
+            hsm_type: "Software".to_string(),
+        }];
+        assert!(select_hsm_by_preference(&hsms, "mobile").is_err());
+    }
+
+    #[test]
+    fn test_select_hsm_by_preference_software_not_found() {
+        let hsms = vec![HsmInfo {
+            name: "hw".to_string(),
+            tier: "Hardware".to_string(),
+            hsm_type: "Hardware".to_string(),
+        }];
+        assert!(select_hsm_by_preference(&hsms, "software").is_err());
+    }
+
+    #[test]
+    fn test_select_hsm_by_preference_hardware_not_found() {
+        let hsms = vec![HsmInfo {
+            name: "sw".to_string(),
+            tier: "Software".to_string(),
+            hsm_type: "Software".to_string(),
+        }];
+        assert!(select_hsm_by_preference(&hsms, "hardware").is_err());
     }
 }

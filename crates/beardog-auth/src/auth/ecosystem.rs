@@ -127,6 +127,11 @@ impl CrossNodeAuthEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::auth::node_registry::InMemoryNodeRegistry;
+    use crate::auth::proof_verifier::DefaultProofVerifier;
+    use crate::auth::types::NodeInfo;
+    use crate::auth::types::authorization::{CrossNodeAuthConfig, SpawningMode, VerificationMode};
+    use chrono::Utc;
 
     #[test]
     fn test_get_ecosystem_capabilities_returns_default_capabilities() {
@@ -244,5 +249,133 @@ mod tests {
             !capabilities.is_empty(),
             "Ecosystem capabilities should never be empty"
         );
+    }
+
+    #[test]
+    fn test_get_ecosystem_capabilities_merges_registry_and_policy() {
+        let mut registry = InMemoryNodeRegistry::new();
+        let node_info = NodeInfo {
+            node_id: "registered-node".to_string(),
+            address: "127.0.0.1:1".to_string(),
+            capabilities: vec![
+                NodeCapability::ThreatDetection,
+                NodeCapability::ThreatDetection,
+            ],
+            trust_level: 1.0,
+            last_seen: Utc::now(),
+            genetics: None,
+        };
+        registry.register_node(node_info).unwrap();
+
+        let mut config = CrossNodeAuthConfig::default();
+        config.consensus_config.required = true;
+        config.verification_mode = VerificationMode::Disabled;
+        config.spawning_mode = SpawningMode::Disabled;
+
+        let engine = CrossNodeAuthEngine::new(
+            Box::new(registry),
+            Box::new(DefaultProofVerifier::new()),
+            config,
+        );
+        let caps = engine.get_ecosystem_capabilities("registered-node");
+        assert!(caps.contains(&NodeCapability::DistributedConsensus));
+        assert!(caps.contains(&NodeCapability::ThreatDetection));
+        assert!(!caps.contains(&NodeCapability::CryptographicAuditing));
+        assert!(!caps.contains(&NodeCapability::ComputeCapable));
+    }
+
+    #[test]
+    fn test_ecosystem_capability_metadata_hsm_storage_generic() {
+        let engine = CrossNodeAuthEngine::default();
+        let h = engine.ecosystem_capability_metadata("hsm_alpha");
+        assert_eq!(h.len(), 3);
+        assert!(h.iter().any(|m| m.id == "hsm_operations"));
+
+        let s = engine.ecosystem_capability_metadata("storage_blob_1");
+        assert_eq!(s.len(), 3);
+        assert!(s.iter().any(|m| m.id == "storage_provider"));
+
+        let g = engine.ecosystem_capability_metadata("other");
+        assert_eq!(g.len(), 2);
+        assert!(g.iter().any(|m| m.id == "basic_operations"));
+    }
+
+    #[test]
+    fn test_classify_storage_prefix_before_hsm_substring() {
+        let engine = CrossNodeAuthEngine::default();
+        let caps = engine
+            .discover_node_capabilities("storage_hsm_like")
+            .unwrap();
+        assert!(caps.contains(&NodeCapability::StorageProvider));
+    }
+
+    #[test]
+    fn test_get_ecosystem_capabilities_merges_full_security_policy() {
+        let mut registry = InMemoryNodeRegistry::new();
+        let node_info = NodeInfo {
+            node_id: "policy-node".to_string(),
+            address: "127.0.0.1:2".to_string(),
+            capabilities: vec![
+                NodeCapability::ThreatDetection,
+                NodeCapability::ThreatDetection,
+            ],
+            trust_level: 0.9,
+            last_seen: Utc::now(),
+            genetics: None,
+        };
+        registry.register_node(node_info).unwrap();
+
+        let mut config = CrossNodeAuthConfig::default();
+        config.consensus_config.required = true;
+        config.verification_mode = VerificationMode::Enabled;
+        config.spawning_mode = SpawningMode::Enabled;
+
+        let engine = CrossNodeAuthEngine::new(
+            Box::new(registry),
+            Box::new(DefaultProofVerifier::new()),
+            config,
+        );
+        let caps = engine.get_ecosystem_capabilities("policy-node");
+        assert!(caps.contains(&NodeCapability::DistributedConsensus));
+        assert!(caps.contains(&NodeCapability::CryptographicAuditing));
+        assert!(caps.contains(&NodeCapability::ComputeCapable));
+        assert!(caps.contains(&NodeCapability::ThreatDetection));
+        let threat_count = caps
+            .iter()
+            .filter(|c| **c == NodeCapability::ThreatDetection)
+            .count();
+        assert_eq!(
+            threat_count, 1,
+            "merge should dedupe identical capabilities"
+        );
+    }
+
+    #[test]
+    fn test_security_policy_capabilities_when_consensus_only() {
+        let mut registry = InMemoryNodeRegistry::new();
+        let node_info = NodeInfo {
+            node_id: "consensus-only".to_string(),
+            address: "127.0.0.1:3".to_string(),
+            capabilities: vec![],
+            trust_level: 1.0,
+            last_seen: Utc::now(),
+            genetics: None,
+        };
+        registry.register_node(node_info).unwrap();
+
+        let mut config = CrossNodeAuthConfig::default();
+        config.consensus_config.required = true;
+        config.verification_mode = VerificationMode::Disabled;
+        config.spawning_mode = SpawningMode::Disabled;
+
+        let engine = CrossNodeAuthEngine::new(
+            Box::new(registry),
+            Box::new(DefaultProofVerifier::new()),
+            config,
+        );
+        let caps = engine.get_ecosystem_capabilities("consensus-only");
+        assert!(caps.contains(&NodeCapability::DistributedConsensus));
+        assert!(!caps.contains(&NodeCapability::CryptographicAuditing));
+        assert!(!caps.contains(&NodeCapability::ComputeCapable));
     }
 }

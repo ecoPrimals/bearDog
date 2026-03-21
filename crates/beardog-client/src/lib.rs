@@ -230,16 +230,234 @@ pub type VerificationResponse = Value;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use beardog_errors::process_env;
+    use beardog_genetics::birdsong::LineageProof;
+    use chrono::Utc;
+    use serde_json::{Value, json};
+    use std::sync::Mutex;
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+    use tokio::net::UnixListener;
+
+    static CLIENT_TEST_ENV: Mutex<()> = Mutex::new(());
+
+    fn lineage_proof_sample() -> LineageProof {
+        LineageProof {
+            node_id: "n1".to_string(),
+            root_id: "r0".to_string(),
+            path: vec![],
+            proof_chain: vec![],
+            merkle_root: vec![0xab; 8],
+            generated_at: Utc::now(),
+        }
+    }
 
     #[tokio::test]
-    #[ignore] // Requires running BearDog instance
-    async fn test_connect() {
-        let client = BearDogClient::connect().await;
-        // Should connect if BearDog is running
-        // Otherwise will fail with connection error (expected)
-        match client {
-            Ok(_) => println!("✅ Connected to BearDog"),
-            Err(e) => println!("⚠️  BearDog not running: {}", e),
-        }
+    async fn connect_maps_missing_socket_to_connection_error() {
+        let _lock = CLIENT_TEST_ENV.lock().unwrap();
+        let tmp = tempfile::tempdir().unwrap();
+        let empty_xdg = tmp.path().join("empty_xdg");
+        std::fs::create_dir_all(&empty_xdg).unwrap();
+        process_env::set_var("HOME", tmp.path().to_string_lossy().as_ref());
+        process_env::set_var("XDG_RUNTIME_DIR", empty_xdg.to_string_lossy().as_ref());
+
+        let result = BearDogClient::connect().await;
+        let err = match result {
+            Err(e) => e,
+            Ok(_) => panic!("expected connection failure"),
+        };
+        let msg = err.to_string();
+        process_env::remove_var("HOME");
+        process_env::remove_var("XDG_RUNTIME_DIR");
+        assert!(
+            msg.contains("Primal not found") || msg.contains("Connection failed"),
+            "unexpected error: {msg}"
+        );
+    }
+
+    #[tokio::test]
+    async fn lineage_methods_round_trip_over_json_rpc() {
+        let _lock = CLIENT_TEST_ENV.lock().unwrap();
+        let tmp = tempfile::tempdir().unwrap();
+        let xdg = tmp.path().join("xdg_run");
+        let eco = xdg.join("ecoPrimals");
+        std::fs::create_dir_all(&eco).unwrap();
+        let socket_path = eco.join("beardog.sock");
+
+        let listener = UnixListener::bind(&socket_path).unwrap();
+
+        tokio::spawn(async move {
+            let (mut stream, _) = listener.accept().await.unwrap();
+            let (mut read_half, mut write_half) = stream.split();
+            let mut reader = BufReader::new(&mut read_half);
+            loop {
+                let mut line = String::new();
+                let n = reader.read_line(&mut line).await.unwrap();
+                if n == 0 {
+                    break;
+                }
+                let req: Value = serde_json::from_str(line.trim()).unwrap();
+                let id = req["id"].clone();
+                let method = req["method"].as_str().unwrap();
+                let result = match method {
+                    "lineage.create" => json!({ "lineage_id": "L-genesis" }),
+                    "lineage.verify" => json!({ "valid": true }),
+                    "lineage.extend" => json!({ "node_id": "child-1" }),
+                    "lineage.get" => json!({ "lineage_id": "L1", "nodes": [] }),
+                    _ => panic!("unexpected method {method}"),
+                };
+                let response = json!({
+                    "jsonrpc": "2.0",
+                    "result": result,
+                    "id": id,
+                });
+                let payload = serde_json::to_string(&response).unwrap();
+                write_half.write_all(payload.as_bytes()).await.unwrap();
+                write_half.write_all(b"\n").await.unwrap();
+            }
+        });
+
+        tokio::time::sleep(std::time::Duration::from_millis(40)).await;
+
+        process_env::set_var("XDG_RUNTIME_DIR", xdg.to_string_lossy().as_ref());
+
+        let mut client = BearDogClient::connect().await.unwrap();
+        let created = client.create_lineage("tower", None).await.unwrap();
+        assert_eq!(created["lineage_id"], "L-genesis");
+
+        let verified = client
+            .verify_lineage(&lineage_proof_sample())
+            .await
+            .unwrap();
+        assert_eq!(verified["valid"], true);
+
+        let extended = client.extend_lineage("L1", "parent", None).await.unwrap();
+        assert_eq!(extended["node_id"], "child-1");
+
+        let got = client.get_lineage("L1").await.unwrap();
+        assert_eq!(got["lineage_id"], "L1");
+
+        process_env::remove_var("XDG_RUNTIME_DIR");
+    }
+
+    #[tokio::test]
+    async fn lineage_create_and_extend_with_metadata_serializes_in_params() {
+        let _lock = CLIENT_TEST_ENV.lock().unwrap();
+        let tmp = tempfile::tempdir().unwrap();
+        let xdg = tmp.path().join("xdg_meta");
+        let eco = xdg.join("ecoPrimals");
+        std::fs::create_dir_all(&eco).unwrap();
+        let socket_path = eco.join("beardog.sock");
+
+        let listener = UnixListener::bind(&socket_path).unwrap();
+
+        tokio::spawn(async move {
+            let (mut stream, _) = listener.accept().await.unwrap();
+            let (mut read_half, mut write_half) = stream.split();
+            let mut reader = BufReader::new(&mut read_half);
+            for _ in 0..2 {
+                let mut line = String::new();
+                reader.read_line(&mut line).await.unwrap();
+                let req: Value = serde_json::from_str(line.trim()).unwrap();
+                let id = req["id"].clone();
+                let method = req["method"].as_str().unwrap();
+                let params = &req["params"];
+                let result = match method {
+                    "lineage.create" => {
+                        assert_eq!(params["service_type"], "tower");
+                        assert!(
+                            !params["metadata"].is_null(),
+                            "metadata should be present in JSON-RPC params"
+                        );
+                        assert_eq!(params["metadata"]["biome_type"], "test-biome");
+                        json!({ "lineage_id": "L-with-meta" })
+                    }
+                    "lineage.extend" => {
+                        assert_eq!(params["lineage_id"], "L-with-meta");
+                        assert_eq!(params["parent_id"], "root");
+                        assert_eq!(params["metadata"]["trust_level"], 0.5);
+                        json!({ "node_id": "child-meta" })
+                    }
+                    _ => panic!("unexpected method {method}"),
+                };
+                let response = json!({
+                    "jsonrpc": "2.0",
+                    "result": result,
+                    "id": id,
+                });
+                let payload = serde_json::to_string(&response).unwrap();
+                write_half.write_all(payload.as_bytes()).await.unwrap();
+                write_half.write_all(b"\n").await.unwrap();
+            }
+        });
+
+        tokio::time::sleep(std::time::Duration::from_millis(40)).await;
+
+        process_env::set_var("XDG_RUNTIME_DIR", xdg.to_string_lossy().as_ref());
+
+        let mut meta = LineageMetadata::default();
+        meta.biome_type = Some("test-biome".to_string());
+        meta.trust_level = 0.5;
+
+        let mut client = BearDogClient::connect().await.unwrap();
+        let created = client
+            .create_lineage("tower", Some(meta.clone()))
+            .await
+            .unwrap();
+        assert_eq!(created["lineage_id"], "L-with-meta");
+
+        let extended = client
+            .extend_lineage("L-with-meta", "root", Some(meta))
+            .await
+            .unwrap();
+        assert_eq!(extended["node_id"], "child-meta");
+
+        process_env::remove_var("XDG_RUNTIME_DIR");
+    }
+
+    #[tokio::test]
+    async fn api_error_maps_json_rpc_fault() {
+        let _lock = CLIENT_TEST_ENV.lock().unwrap();
+        let tmp = tempfile::tempdir().unwrap();
+        let xdg = tmp.path().join("xdg_err");
+        let eco = xdg.join("ecoPrimals");
+        std::fs::create_dir_all(&eco).unwrap();
+        let socket_path = eco.join("beardog.sock");
+
+        let listener = UnixListener::bind(&socket_path).unwrap();
+
+        tokio::spawn(async move {
+            let (mut stream, _) = listener.accept().await.unwrap();
+            let (mut read_half, mut write_half) = stream.split();
+            let mut reader = BufReader::new(&mut read_half);
+            let mut line = String::new();
+            reader.read_line(&mut line).await.unwrap();
+            let response = json!({
+                "jsonrpc": "2.0",
+                "error": { "code": -32601, "message": "method not found" },
+                "id": 1
+            });
+            write_half
+                .write_all(serde_json::to_string(&response).unwrap().as_bytes())
+                .await
+                .unwrap();
+            write_half.write_all(b"\n").await.unwrap();
+        });
+
+        tokio::time::sleep(std::time::Duration::from_millis(40)).await;
+
+        process_env::set_var("XDG_RUNTIME_DIR", xdg.to_string_lossy().as_ref());
+
+        let mut client = BearDogClient::connect().await.unwrap();
+        let result = client.create_lineage("x", None).await;
+        let err = match result {
+            Err(e) => e,
+            Ok(_) => panic!("expected API error"),
+        };
+        let msg = err.to_string();
+        process_env::remove_var("XDG_RUNTIME_DIR");
+        assert!(
+            msg.contains("method not found") || msg.contains("Api error"),
+            "unexpected: {msg}"
+        );
     }
 }

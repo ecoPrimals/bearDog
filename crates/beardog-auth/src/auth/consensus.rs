@@ -207,4 +207,94 @@ mod tests {
             "More than threshold should reach consensus"
         );
     }
+
+    #[test]
+    fn test_register_consensus_node_rejects_empty_id() {
+        let mut engine = CrossNodeAuthEngine::default();
+        let err = engine
+            .register_consensus_node(String::new(), ConsensusNodeHealth::Healthy)
+            .unwrap_err();
+        assert!(format!("{err}").contains("empty") || format!("{err}").contains("consensus"));
+    }
+
+    #[test]
+    fn test_get_consensus_node_health_found_and_not_found() {
+        let engine = CrossNodeAuthEngine::default();
+        assert_eq!(
+            engine.get_consensus_node_health("node_1").unwrap(),
+            ConsensusNodeHealth::Healthy
+        );
+        let err = engine
+            .get_consensus_node_health("no_such_node")
+            .unwrap_err();
+        assert!(format!("{err}").contains("not found") || format!("{err}").contains("Consensus"));
+    }
+
+    #[test]
+    fn test_set_consensus_node_health_updates_and_errors_on_unknown() {
+        let mut engine = CrossNodeAuthEngine::default();
+        engine
+            .set_consensus_node_health("node_1", ConsensusNodeHealth::Degraded)
+            .unwrap();
+        assert_eq!(
+            engine.get_consensus_node_health("node_1").unwrap(),
+            ConsensusNodeHealth::Degraded
+        );
+        let err = engine
+            .set_consensus_node_health("missing", ConsensusNodeHealth::Healthy)
+            .unwrap_err();
+        assert!(format!("{err}").contains("not found") || format!("{err}").contains("Consensus"));
+    }
+
+    #[test]
+    fn test_get_trusted_nodes_excludes_unhealthy() {
+        let mut engine = CrossNodeAuthEngine::default();
+        engine
+            .consensus_registry
+            .get_mut("node_1")
+            .expect("default registry")
+            .health = ConsensusNodeHealth::Offline;
+        let nodes = engine.get_trusted_nodes().unwrap();
+        assert_eq!(nodes, vec!["node_2", "node_3"]);
+    }
+
+    #[test]
+    fn test_quorum_size_with_fewer_healthy_nodes() {
+        let mut engine = CrossNodeAuthEngine::default();
+        engine.consensus_registry.get_mut("node_1").unwrap().health = ConsensusNodeHealth::Offline;
+        engine.consensus_registry.get_mut("node_2").unwrap().health = ConsensusNodeHealth::Offline;
+        let q = engine.quorum_size().unwrap();
+        assert_eq!(q, 0);
+    }
+
+    #[test]
+    fn test_get_trusted_nodes_excludes_degraded() {
+        let mut engine = CrossNodeAuthEngine::default();
+        engine
+            .consensus_registry
+            .get_mut("node_2")
+            .expect("default registry")
+            .health = ConsensusNodeHealth::Degraded;
+        let nodes = engine.get_trusted_nodes().unwrap();
+        assert_eq!(nodes, vec!["node_1", "node_3"]);
+    }
+
+    #[test]
+    fn test_register_consensus_node_success_sorted_and_quorum() {
+        let mut engine = CrossNodeAuthEngine::default();
+        engine
+            .register_consensus_node("node_z".to_string(), ConsensusNodeHealth::Healthy)
+            .unwrap();
+        let nodes = engine.get_trusted_nodes().unwrap();
+        assert_eq!(
+            nodes,
+            vec![
+                "node_1".to_string(),
+                "node_2".to_string(),
+                "node_3".to_string(),
+                "node_z".to_string(),
+            ]
+        );
+        assert_eq!(engine.quorum_size().unwrap(), (4 * 2) / 3);
+    }
 }

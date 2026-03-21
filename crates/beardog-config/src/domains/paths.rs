@@ -56,16 +56,13 @@ impl PathConfig {
         Self {
             config_dir: std::env::var("BEARDOG_CONFIG_DIR")
                 .ok()
-                .map(PathBuf::from)
-                .unwrap_or_else(default_config_dir),
+                .map_or_else(default_config_dir, PathBuf::from),
             data_dir: std::env::var("BEARDOG_DATA_DIR")
                 .ok()
-                .map(PathBuf::from)
-                .unwrap_or_else(default_data_dir),
+                .map_or_else(default_data_dir, PathBuf::from),
             log_dir: std::env::var("BEARDOG_LOG_DIR")
                 .ok()
-                .map(PathBuf::from)
-                .unwrap_or_else(default_log_dir),
+                .map_or_else(default_log_dir, PathBuf::from),
             pkcs11_library_paths: Vec::new(),
             pkcs11_library: std::env::var("BEARDOG_PKCS11_LIBRARY")
                 .ok()
@@ -173,21 +170,18 @@ impl PathConfig {
 }
 
 fn default_config_dir() -> PathBuf {
-    dirs::config_dir()
-        .map(|p| p.join("beardog"))
-        .unwrap_or_else(|| PathBuf::from("/etc/beardog"))
+    dirs::config_dir().map_or_else(|| PathBuf::from("/etc/beardog"), |p| p.join("beardog"))
 }
 
 fn default_data_dir() -> PathBuf {
-    dirs::data_dir()
-        .map(|p| p.join("beardog"))
-        .unwrap_or_else(|| PathBuf::from("/var/lib/beardog"))
+    dirs::data_dir().map_or_else(|| PathBuf::from("/var/lib/beardog"), |p| p.join("beardog"))
 }
 
 fn default_log_dir() -> PathBuf {
-    dirs::cache_dir()
-        .map(|p| p.join("beardog").join("logs"))
-        .unwrap_or_else(|| PathBuf::from("/var/log/beardog"))
+    dirs::cache_dir().map_or_else(
+        || PathBuf::from("/var/log/beardog"),
+        |p| p.join("beardog").join("logs"),
+    )
 }
 
 #[cfg(test)]

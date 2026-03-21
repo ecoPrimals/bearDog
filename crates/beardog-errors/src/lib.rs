@@ -73,6 +73,7 @@
 //! let _err = BearDogError::network("Connection timeout".to_string());
 //! ```
 
+#![forbid(unsafe_code)]
 #![warn(rust_2018_idioms)]
 
 /// Core error types and definitions

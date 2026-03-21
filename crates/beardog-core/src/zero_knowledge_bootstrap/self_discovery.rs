@@ -450,7 +450,7 @@ impl SelfDiscoveryEngine {
         let host = inputs
             .localhost_override
             .clone()
-            .unwrap_or_else(|| config::default_service_host());
+            .unwrap_or_else(config::default_service_host);
 
         UniversalEndpoint {
             url: format!("http://{host}:{port}"),

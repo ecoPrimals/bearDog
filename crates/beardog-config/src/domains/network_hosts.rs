@@ -268,7 +268,7 @@ impl NetworkHostsConfig {
             metrics_host: std::env::var("BEARDOG_METRICS_HOST")
                 .or_else(|_| std::env::var("GRAFANA_URL").map(|url| extract_host_from_url(&url)))
                 .unwrap_or_else(|_| infra.clone()),
-            external_host: std::env::var("BEARDOG_EXTERNAL_HOST").unwrap_or_else(|_| infra),
+            external_host: std::env::var("BEARDOG_EXTERNAL_HOST").unwrap_or(infra),
         }
     }
 

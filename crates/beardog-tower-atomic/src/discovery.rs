@@ -17,11 +17,14 @@ pub struct DiscoverSocketEnv {
 
 impl DiscoverSocketEnv {
     /// Read `XDG_RUNTIME_DIR` and `HOME` from the process environment.
+    ///
+    /// Uses [`beardog_errors::process_env::var`] so tests can override values via the overlay
+    /// without `unsafe` [`std::env::set_var`].
     #[must_use]
     pub fn from_process_env() -> Self {
         Self {
-            xdg_runtime_dir: std::env::var("XDG_RUNTIME_DIR").ok(),
-            home: std::env::var("HOME").ok(),
+            xdg_runtime_dir: beardog_errors::process_env::var("XDG_RUNTIME_DIR").ok(),
+            home: beardog_errors::process_env::var("HOME").ok(),
         }
     }
 }

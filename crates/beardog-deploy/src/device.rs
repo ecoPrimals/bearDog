@@ -13,10 +13,11 @@ use std::io::ErrorKind;
 use std::time::Duration;
 
 use crate::command_runner::CommandRunner;
-#[cfg(test)]
-use crate::command_runner::MockAdbCommandRunner;
 #[cfg(not(test))]
 use crate::command_runner::SystemCommandRunner;
+#[cfg(test)]
+#[cfg(test)]
+use crate::command_runner::mock::MockAdbCommandRunner;
 use tracing::{debug, error, info, warn};
 
 /// Device type enumeration
@@ -102,8 +103,7 @@ impl DeviceManager {
         std::env::var("BEARDOG_LOGCAT_FOLLOW_SECS")
             .ok()
             .and_then(|s| s.parse::<u64>().ok())
-            .map(Duration::from_secs)
-            .unwrap_or_else(|| Duration::from_secs(300))
+            .map_or_else(|| Duration::from_secs(300), Duration::from_secs)
     }
 
     /// Creates a new device manager
@@ -122,7 +122,7 @@ impl DeviceManager {
         }
     }
 
-    /// Use a custom command runner (e.g. [`MockAdbCommandRunner`] in tests).
+    /// Use a custom command runner (e.g. `MockAdbCommandRunner` in tests).
     #[must_use]
     pub fn with_command_runner(runner: Box<dyn CommandRunner>) -> Self {
         Self { runner }
@@ -341,7 +341,7 @@ impl DeviceManager {
 
         let mut owned: Vec<String> = vec![
             "-s".to_string(),
-            device_id.to_string(),
+            device_id.clone(),
             "shell".to_string(),
             "am".to_string(),
             "start".to_string(),
@@ -353,7 +353,7 @@ impl DeviceManager {
             owned.push("arg".to_string());
             owned.push(arg.clone());
         }
-        let argv: Vec<&str> = owned.iter().map(|s| s.as_str()).collect();
+        let argv: Vec<&str> = owned.iter().map(String::as_str).collect();
         let output = self
             .runner
             .run("adb", &argv)

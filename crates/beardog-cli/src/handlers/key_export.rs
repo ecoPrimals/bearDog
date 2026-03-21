@@ -6,6 +6,7 @@ use super::key_store::{self, StoredKey};
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::path::Path;
 
 /// Exported key format for inter-primal sharing
 /// This format is designed to be compatible with ToadStool and other primals
@@ -66,13 +67,24 @@ pub async fn handle_key_export(
     output_path: &str,
     encrypt: bool,
 ) -> Result<(), BearDogError> {
+    let home = key_store::home_dir_for_keys()?;
+    handle_key_export_with_home(key_id, output_path, encrypt, home.as_path()).await
+}
+
+/// Same as [`handle_key_export`] but keys are loaded from `home/.beardog/keys` (tests / DI).
+pub async fn handle_key_export_with_home(
+    key_id: &str,
+    output_path: &str,
+    encrypt: bool,
+    home: &Path,
+) -> Result<(), BearDogError> {
     println!("📤 BearDog Key Export");
     println!("====================");
     println!();
 
     // Load the key from storage
     println!("🔍 Loading key: {key_id}");
-    let stored_key = key_store::load_key(key_id)?;
+    let stored_key = key_store::load_key_from_home(key_id, home)?;
 
     println!("✅ Key found");
     println!("   Algorithm: {}", stored_key.algorithm);
@@ -193,6 +205,20 @@ pub async fn handle_key_import(
     key_id_override: Option<&str>,
     decrypt: bool,
 ) -> Result<(), BearDogError> {
+    let home = key_store::home_dir_for_keys()?;
+    handle_key_import_with_home(input_path, key_id_override, decrypt, false, home.as_path()).await
+}
+
+/// Same as [`handle_key_import`] but keys are stored under `home/.beardog/keys`.
+///
+/// When `allow_overwrite` is true, an existing key with the same id is replaced without stdin confirmation (tests / automation).
+pub async fn handle_key_import_with_home(
+    input_path: &str,
+    key_id_override: Option<&str>,
+    decrypt: bool,
+    allow_overwrite: bool,
+    home: &Path,
+) -> Result<(), BearDogError> {
     println!("📥 BearDog Key Import");
     println!("====================");
     println!();
@@ -254,23 +280,27 @@ pub async fn handle_key_import(
     let final_key_id = key_id_override.unwrap_or(&exported.key_id);
 
     // Check if key already exists
-    if key_store::load_key(final_key_id).is_ok() {
-        println!("⚠️  WARNING: Key '{final_key_id}' already exists!");
-        println!("   Import will overwrite the existing key.");
-        println!();
+    if key_store::load_key_from_home(final_key_id, home).is_ok() {
+        if allow_overwrite {
+            // Tests / automation: proceed without prompting
+        } else {
+            println!("⚠️  WARNING: Key '{final_key_id}' already exists!");
+            println!("   Import will overwrite the existing key.");
+            println!();
 
-        print!("Continue? [y/N]: ");
-        use std::io::{self, Write};
-        io::stdout().flush()?;
+            print!("Continue? [y/N]: ");
+            use std::io::{self, Write};
+            io::stdout().flush()?;
 
-        let mut input = String::new();
-        io::stdin().read_line(&mut input)?;
+            let mut input = String::new();
+            io::stdin().read_line(&mut input)?;
 
-        if !input.trim().eq_ignore_ascii_case("y") {
-            println!("❌ Import cancelled");
-            return Ok(());
+            if !input.trim().eq_ignore_ascii_case("y") {
+                println!("❌ Import cancelled");
+                return Ok(());
+            }
+            println!();
         }
-        println!();
     }
 
     // Convert to StoredKey format
@@ -295,7 +325,7 @@ pub async fn handle_key_import(
     };
 
     // Save to key store
-    key_store::save_key(&stored_key)?;
+    key_store::save_key_to_home(&stored_key, home)?;
 
     println!("✅ Key imported successfully!");
     println!();
@@ -469,7 +499,120 @@ fn decrypt_key_material(encrypted_package: &str, password: &str) -> Result<Strin
 
 #[cfg(test)]
 mod tests {
+    use super::key_store;
     use super::*;
+    use chrono::Utc;
+    use tempfile::TempDir;
+
+    #[tokio::test]
+    async fn test_export_import_with_home_roundtrip() {
+        let src = TempDir::new().unwrap();
+        let dst = TempDir::new().unwrap();
+        let key = StoredKey {
+            key_id: "export-key-1".to_string(),
+            algorithm: "aes-256-gcm".to_string(),
+            hsm_name: "soft".to_string(),
+            key_material_b64: key_store::base64_encode(b"01234567890123456789012345678901"),
+            created_at: Utc::now().to_rfc3339(),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: Some("unit-test".to_string()),
+        };
+        key_store::save_key_to_home(&key, src.path()).unwrap();
+
+        let out = src.path().join("exported.json");
+        handle_key_export_with_home("export-key-1", out.to_str().unwrap(), false, src.path())
+            .await
+            .unwrap();
+
+        handle_key_import_with_home(out.to_str().unwrap(), None, false, false, dst.path())
+            .await
+            .unwrap();
+
+        let loaded = key_store::load_key_from_home("export-key-1", dst.path()).unwrap();
+        assert_eq!(loaded.algorithm, key.algorithm);
+        assert_eq!(loaded.key_material_b64, key.key_material_b64);
+    }
+
+    #[tokio::test]
+    async fn test_import_with_home_override_id() {
+        let src = TempDir::new().unwrap();
+        let dst = TempDir::new().unwrap();
+        let key = StoredKey {
+            key_id: "orig-id".to_string(),
+            algorithm: "aes-256-gcm".to_string(),
+            hsm_name: "soft".to_string(),
+            key_material_b64: key_store::base64_encode(b"01234567890123456789012345678901"),
+            created_at: Utc::now().to_rfc3339(),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        key_store::save_key_to_home(&key, src.path()).unwrap();
+        let out = src.path().join("exported.json");
+        handle_key_export_with_home("orig-id", out.to_str().unwrap(), false, src.path())
+            .await
+            .unwrap();
+
+        handle_key_import_with_home(
+            out.to_str().unwrap(),
+            Some("renamed-id"),
+            false,
+            false,
+            dst.path(),
+        )
+        .await
+        .unwrap();
+
+        assert!(key_store::load_key_from_home("renamed-id", dst.path()).is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_import_with_home_invalid_json_fails() {
+        let dir = TempDir::new().unwrap();
+        let bad = dir.path().join("bad.json");
+        std::fs::write(&bad, "{").unwrap();
+        assert!(
+            handle_key_import_with_home(bad.to_str().unwrap(), None, false, false, dir.path())
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_import_with_home_encrypted_without_decrypt_flag() {
+        let dir = TempDir::new().unwrap();
+        let p = dir.path().join("enc.json");
+        let exported = ExportedKey {
+            key_id: "k".to_string(),
+            algorithm: "aes-256-gcm".to_string(),
+            parent: None,
+            generation: 0,
+            created_at: "t".to_string(),
+            context: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+            metadata: std::collections::HashMap::new(),
+            key_material: "x".to_string(),
+            encrypted: true,
+            version: "1.0".to_string(),
+        };
+        std::fs::write(&p, serde_json::to_string(&exported).unwrap()).unwrap();
+        let r =
+            handle_key_import_with_home(p.to_str().unwrap(), None, false, false, dir.path()).await;
+        assert!(r.is_err());
+    }
 
     #[test]
     fn test_encrypt_decrypt_key_material() {
@@ -574,5 +717,138 @@ mod tests {
         let mut v: serde_json::Value = serde_json::from_str(&enc).unwrap();
         v["ciphertext"] = serde_json::Value::String("not-valid-b64!!!".to_string());
         assert!(decrypt_key_material(&v.to_string(), "pw").is_err());
+    }
+
+    #[tokio::test]
+    async fn test_export_with_home_includes_parent_in_output() {
+        let src = TempDir::new().unwrap();
+        let key = StoredKey {
+            key_id: "with-parent".to_string(),
+            algorithm: "aes-256-gcm".to_string(),
+            hsm_name: "soft".to_string(),
+            key_material_b64: key_store::base64_encode(b"01234567890123456789012345678901"),
+            created_at: Utc::now().to_rfc3339(),
+            generation: 1,
+            parent_key_id: Some("master-x".to_string()),
+            derivation_purpose: Some("ctx".to_string()),
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: Some("p".to_string()),
+        };
+        key_store::save_key_to_home(&key, src.path()).unwrap();
+        let out = src.path().join("out.json");
+        handle_key_export_with_home("with-parent", out.to_str().unwrap(), false, src.path())
+            .await
+            .unwrap();
+        let json = std::fs::read_to_string(&out).unwrap();
+        assert!(json.contains("master-x"));
+    }
+
+    #[tokio::test]
+    async fn test_import_with_home_version_mismatch_warns_and_imports() {
+        let dir = TempDir::new().unwrap();
+        let p = dir.path().join("v2.json");
+        let exported = ExportedKey {
+            key_id: "ver-key".to_string(),
+            algorithm: "aes-256-gcm".to_string(),
+            parent: None,
+            generation: 0,
+            created_at: Utc::now().to_rfc3339(),
+            context: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+            metadata: std::collections::HashMap::new(),
+            key_material: key_store::base64_encode(b"01234567890123456789012345678901"),
+            encrypted: false,
+            version: "2.0".to_string(),
+        };
+        std::fs::write(&p, serde_json::to_string_pretty(&exported).unwrap()).unwrap();
+        handle_key_import_with_home(p.to_str().unwrap(), None, false, false, dir.path())
+            .await
+            .unwrap();
+        let loaded = key_store::load_key_from_home("ver-key", dir.path()).unwrap();
+        assert_eq!(loaded.algorithm, "aes-256-gcm");
+    }
+
+    #[tokio::test]
+    async fn test_import_with_home_allow_overwrite_replaces_existing() {
+        let dir = TempDir::new().unwrap();
+        let old = StoredKey {
+            key_id: "dup".to_string(),
+            algorithm: "aes-256-gcm".to_string(),
+            hsm_name: "a".to_string(),
+            key_material_b64: key_store::base64_encode(b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+            created_at: Utc::now().to_rfc3339(),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        key_store::save_key_to_home(&old, dir.path()).unwrap();
+
+        let p = dir.path().join("new.json");
+        let exported = ExportedKey {
+            key_id: "dup".to_string(),
+            algorithm: "aes-256-gcm".to_string(),
+            parent: Some("root".to_string()),
+            generation: 1,
+            created_at: Utc::now().to_rfc3339(),
+            context: None,
+            expires_at: None,
+            usage: None,
+            purpose: Some("imported".to_string()),
+            metadata: std::collections::HashMap::new(),
+            key_material: key_store::base64_encode(b"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
+            encrypted: false,
+            version: "1.0".to_string(),
+        };
+        std::fs::write(&p, serde_json::to_string_pretty(&exported).unwrap()).unwrap();
+
+        handle_key_import_with_home(p.to_str().unwrap(), None, false, true, dir.path())
+            .await
+            .unwrap();
+        let loaded = key_store::load_key_from_home("dup", dir.path()).unwrap();
+        assert_eq!(loaded.generation, 1);
+        assert_eq!(loaded.parent_key_id.as_deref(), Some("root"));
+        assert_eq!(loaded.key_material_b64, exported.key_material);
+    }
+
+    #[tokio::test]
+    async fn test_import_with_home_parent_triggers_lineage_next_step_message() {
+        let src = TempDir::new().unwrap();
+        let dst = TempDir::new().unwrap();
+        let key = StoredKey {
+            key_id: "lineage-k".to_string(),
+            algorithm: "aes-256-gcm".to_string(),
+            hsm_name: "soft".to_string(),
+            key_material_b64: key_store::base64_encode(b"01234567890123456789012345678901"),
+            created_at: Utc::now().to_rfc3339(),
+            generation: 1,
+            parent_key_id: Some("root-k".to_string()),
+            derivation_purpose: None,
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        key_store::save_key_to_home(&key, src.path()).unwrap();
+        let out = src.path().join("exp.json");
+        handle_key_export_with_home("lineage-k", out.to_str().unwrap(), false, src.path())
+            .await
+            .unwrap();
+
+        handle_key_import_with_home(out.to_str().unwrap(), None, false, false, dst.path())
+            .await
+            .unwrap();
+        let loaded = key_store::load_key_from_home("lineage-k", dst.path()).unwrap();
+        assert_eq!(loaded.parent_key_id.as_deref(), Some("root-k"));
     }
 }

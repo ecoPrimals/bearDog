@@ -450,3 +450,60 @@ mod banner_tests {
         display_banner(&sk, true);
     }
 }
+
+#[cfg(test)]
+mod neural_registration_tests {
+    use super::NeuralRegistrationParams;
+    use beardog_types::primal_identity::PrimalIdentity;
+
+    #[test]
+    fn registration_instance_id_uses_override_when_set() {
+        let p = NeuralRegistrationParams {
+            instance_override: Some("my-reg".to_string()),
+            primal_type: Some("ignored".to_string()),
+            beardog_primal_type: Some("ignored2".to_string()),
+        };
+        let id = PrimalIdentity::for_test("fam", "node-z");
+        assert_eq!(p.registration_instance_id(&id), "my-reg");
+    }
+
+    #[test]
+    fn registration_instance_id_uses_primal_type_when_no_override() {
+        let p = NeuralRegistrationParams {
+            instance_override: None,
+            primal_type: Some("compute".to_string()),
+            beardog_primal_type: None,
+        };
+        let id = PrimalIdentity::for_test("fam", "node-a");
+        assert_eq!(p.registration_instance_id(&id), "compute-node-a");
+    }
+
+    #[test]
+    fn registration_instance_id_falls_back_to_beardog_primal_type() {
+        let p = NeuralRegistrationParams {
+            instance_override: None,
+            primal_type: None,
+            beardog_primal_type: Some("edge".to_string()),
+        };
+        let id = PrimalIdentity::for_test("fam", "node-b");
+        assert_eq!(p.registration_instance_id(&id), "edge-node-b");
+    }
+
+    #[test]
+    fn registration_instance_id_default_role_is_security() {
+        let p = NeuralRegistrationParams::default();
+        let id = PrimalIdentity::for_test("fam", "node-c");
+        assert_eq!(p.registration_instance_id(&id), "security-node-c");
+    }
+
+    #[test]
+    fn primal_type_precedence_over_beardog_primal_type() {
+        let p = NeuralRegistrationParams {
+            instance_override: None,
+            primal_type: Some("primary".to_string()),
+            beardog_primal_type: Some("secondary".to_string()),
+        };
+        let id = PrimalIdentity::for_test("fam", "n");
+        assert_eq!(p.registration_instance_id(&id), "primary-n");
+    }
+}
