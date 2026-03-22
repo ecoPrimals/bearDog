@@ -17,7 +17,7 @@ const DEFAULT_GENOME_TARGETS_RAW: &str = include_str!("../data/default_genome_ta
 /// Primal name - capability-based identifier
 ///
 /// A newtype wrapper around `String` that accepts any genome artifact key at runtime.
-/// Default bundle lists live in [`DEFAULT_GENOME_TARGETS_RAW`] (manifest metadata).
+/// Default bundle lists live in `DEFAULT_GENOME_TARGETS_RAW` (manifest metadata).
 /// Runtime peer discovery uses capabilities, not these labels.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -405,5 +405,28 @@ mod tests {
         };
         let s = format!("{report:?}");
         assert!(!s.is_empty());
+    }
+
+    #[test]
+    fn test_success_rate_zero_total() {
+        use crate::arch::Architecture;
+        use crate::platform::OperatingSystem;
+
+        let report = DeploymentReport {
+            total: 0,
+            successes: 0,
+            failures: vec![],
+            arch: Architecture::X86_64,
+            os: OperatingSystem::Linux,
+        };
+        assert_eq!(report.success_rate(), 0.0);
+    }
+
+    #[test]
+    fn test_deployment_status_display_all_variants() {
+        assert_eq!(DeploymentStatus::Downloading.to_string(), "Downloading");
+        assert_eq!(DeploymentStatus::Installing.to_string(), "Installing");
+        assert_eq!(DeploymentStatus::Validating.to_string(), "Validating");
+        assert_eq!(DeploymentStatus::RolledBack.to_string(), "Rolled Back");
     }
 }

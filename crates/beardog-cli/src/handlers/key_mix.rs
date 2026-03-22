@@ -5,6 +5,7 @@
 use super::key_store::{self, StoredKey};
 use beardog_errors::BearDogError;
 use chrono::Utc;
+use std::path::Path;
 
 /// Handle key mixing command
 pub async fn handle_key_mix(
@@ -14,13 +15,34 @@ pub async fn handle_key_mix(
     threshold: &str,
     expires_in: Option<&str>,
 ) -> Result<(), BearDogError> {
+    let home = key_store::home_dir_for_keys()?;
+    handle_key_mix_with_home(
+        key1_id,
+        key2_id,
+        output_key_id,
+        threshold,
+        expires_in,
+        home.as_path(),
+    )
+    .await
+}
+
+/// Same as [`handle_key_mix`] but keys and receipts are rooted at `home` (tests / isolation).
+pub async fn handle_key_mix_with_home(
+    key1_id: &str,
+    key2_id: &str,
+    output_key_id: &str,
+    threshold: &str,
+    expires_in: Option<&str>,
+    home: &Path,
+) -> Result<(), BearDogError> {
     println!("🧬 BearDog Key Mixing");
     println!("========================\n");
 
     // Load both keys
     println!("📥 Loading keys...");
-    let key1 = key_store::load_key(key1_id)?;
-    let key2 = key_store::load_key(key2_id)?;
+    let key1 = key_store::load_key_from_home(key1_id, home)?;
+    let key2 = key_store::load_key_from_home(key2_id, home)?;
 
     println!("✅ Key 1: {} (Gen {})", key1_id, key1.generation);
     println!("✅ Key 2: {} (Gen {})", key2_id, key2.generation);
@@ -29,14 +51,7 @@ pub async fn handle_key_mix(
     let material1 = key_store::base64_decode(&key1.key_material_b64)?;
     let material2 = key_store::base64_decode(&key2.key_material_b64)?;
 
-    // Verify keys are same length
-    if material1.len() != material2.len() {
-        return Err(BearDogError::validation(&format!(
-            "Keys must be same length (got {} and {} bytes)",
-            material1.len(),
-            material2.len()
-        )));
-    }
+    validate_same_key_material_len(material1.len(), material2.len())?;
 
     // Mix keys using XOR + KDF
     println!("\n🔐 Mixing keys...");
@@ -73,16 +88,16 @@ pub async fn handle_key_mix(
     };
 
     // Save mixed key
-    key_store::save_key(&mixed_key)?;
+    key_store::save_key_to_home(&mixed_key, home)?;
 
     // Update parent keys to add child
     let mut updated_key1 = key1;
     updated_key1.children.push(output_key_id.to_string());
-    key_store::save_key(&updated_key1)?;
+    key_store::save_key_to_home(&updated_key1, home)?;
 
     let mut updated_key2 = key2;
     updated_key2.children.push(output_key_id.to_string());
-    key_store::save_key(&updated_key2)?;
+    key_store::save_key_to_home(&updated_key2, home)?;
 
     // Generate operation receipt
     use beardog_types::receipt::{KeyInfo, OperationReceipt, generate_receipt_filename};
@@ -103,8 +118,8 @@ pub async fn handle_key_mix(
         .with_metadata("threshold", json!(threshold));
 
     // Save receipt
-    let receipt_dir = std::path::Path::new("receipts");
-    std::fs::create_dir_all(receipt_dir)?;
+    let receipt_dir = home.join("receipts");
+    std::fs::create_dir_all(&receipt_dir)?;
     let receipt_path = receipt_dir.join(generate_receipt_filename("key-mix"));
     receipt.save_to_file(&receipt_path)?;
 
@@ -141,6 +156,15 @@ pub async fn handle_key_mix(
     Ok(())
 }
 
+fn validate_same_key_material_len(len_a: usize, len_b: usize) -> Result<(), BearDogError> {
+    if len_a != len_b {
+        return Err(BearDogError::validation(&format!(
+            "Keys must be same length (got {len_a} and {len_b} bytes)"
+        )));
+    }
+    Ok(())
+}
+
 /// Mix two keys using XOR + HKDF
 ///
 /// This is a cryptographically sound way to combine two keys:
@@ -172,6 +196,109 @@ fn mix_keys(key1: &[u8], key2: &[u8]) -> Result<Vec<u8>, BearDogError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::handlers::key_store;
+    use chrono::Utc;
+    use tempfile::TempDir;
+
+    #[tokio::test]
+    async fn handle_key_mix_with_home_roundtrip_writes_receipt() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+        let mat = key_store::base64_encode(&[0xAB; 32]);
+        let k1 = key_store::StoredKey {
+            key_id: "mix-a".to_string(),
+            algorithm: "aes-256-gcm".to_string(),
+            hsm_name: "h1".to_string(),
+            key_material_b64: mat.clone(),
+            created_at: Utc::now().to_rfc3339(),
+            generation: 1,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        let k2 = key_store::StoredKey {
+            key_id: "mix-b".to_string(),
+            generation: 2,
+            ..k1.clone()
+        };
+        key_store::save_key_to_home(&k1, home).unwrap();
+        key_store::save_key_to_home(&k2, home).unwrap();
+
+        handle_key_mix_with_home("mix-a", "mix-b", "mix-out", "2-of-2", None, home)
+            .await
+            .unwrap();
+
+        let mixed = key_store::load_key_from_home("mix-out", home).unwrap();
+        assert_eq!(mixed.generation, 3);
+        assert!(home.join("receipts").exists());
+    }
+
+    #[tokio::test]
+    async fn handle_key_mix_with_home_rejects_mismatched_material_length() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+        let k1 = key_store::StoredKey {
+            key_id: "a".to_string(),
+            algorithm: "aes-256-gcm".to_string(),
+            hsm_name: "h".to_string(),
+            key_material_b64: key_store::base64_encode(&[1u8; 16]),
+            created_at: Utc::now().to_rfc3339(),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        let k2 = key_store::StoredKey {
+            key_id: "b".to_string(),
+            key_material_b64: key_store::base64_encode(&[2u8; 32]),
+            ..k1.clone()
+        };
+        key_store::save_key_to_home(&k1, home).unwrap();
+        key_store::save_key_to_home(&k2, home).unwrap();
+
+        let err = handle_key_mix_with_home("a", "b", "out", "t", None, home)
+            .await
+            .unwrap_err();
+        assert!(err.to_string().contains("same length"));
+    }
+
+    #[tokio::test]
+    async fn handle_key_mix_with_home_invalid_expires_duration_errors() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+        let mat = key_store::base64_encode(&[0xCD; 32]);
+        for id in ["e-a", "e-b"] {
+            let k = key_store::StoredKey {
+                key_id: id.to_string(),
+                algorithm: "aes-256-gcm".to_string(),
+                hsm_name: "h".to_string(),
+                key_material_b64: mat.clone(),
+                created_at: Utc::now().to_rfc3339(),
+                generation: 0,
+                parent_key_id: None,
+                derivation_purpose: None,
+                children: vec![],
+                lineage: None,
+                expires_at: None,
+                usage: None,
+                purpose: None,
+            };
+            key_store::save_key_to_home(&k, home).unwrap();
+        }
+        assert!(
+            handle_key_mix_with_home("e-a", "e-b", "e-out", "t", Some("not-a-duration"), home)
+                .await
+                .is_err()
+        );
+    }
 
     #[test]
     fn test_mix_keys() {
@@ -239,5 +366,18 @@ mod tests {
         // XOR with self is zero
         let self_xor: Vec<u8> = key1.iter().zip(key1.iter()).map(|(a, b)| a ^ b).collect();
         assert_eq!(self_xor, vec![0x00; 4]);
+    }
+
+    #[test]
+    fn test_validate_same_key_material_len_rejects_mismatch() {
+        let err = validate_same_key_material_len(16, 32).expect_err("mismatch");
+        assert!(err.to_string().contains("same length"));
+        assert!(err.to_string().contains("16"));
+        assert!(err.to_string().contains("32"));
+    }
+
+    #[test]
+    fn test_validate_same_key_material_len_accepts_equal() {
+        validate_same_key_material_len(32, 32).expect("ok");
     }
 }

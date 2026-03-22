@@ -22,7 +22,7 @@ fn create_test_node(id: &str) -> GraphNode {
     GraphNode {
         id: id.to_string(),
         node_type: "compute".to_string(),
-        primal: "ToadStool".to_string(),
+        handler_ref: "compute.workload.example".to_string(),
         config: HashMap::new(),
     }
 }
@@ -104,7 +104,7 @@ async fn test_code_injection_detected() {
     let malicious_node = GraphNode {
         id: "node-1".to_string(),
         node_type: "compute".to_string(),
-        primal: "ToadStool".to_string(),
+        handler_ref: "compute.workload.example".to_string(),
         config,
     };
 
@@ -242,7 +242,7 @@ async fn test_shell_injection_detected() {
     let malicious_node = GraphNode {
         id: "node-1".to_string(),
         node_type: "compute".to_string(),
-        primal: "ToadStool".to_string(),
+        handler_ref: "compute.workload.example".to_string(),
         config,
     };
 
@@ -272,7 +272,7 @@ async fn test_backtick_injection_detected() {
     let malicious_node = GraphNode {
         id: "node-1".to_string(),
         node_type: "compute".to_string(),
-        primal: "ToadStool".to_string(),
+        handler_ref: "compute.workload.example".to_string(),
         config,
     };
 
@@ -422,7 +422,7 @@ async fn test_multiple_threat_detection() {
     let malicious_node = GraphNode {
         id: "node-1".to_string(),
         node_type: "compute".to_string(),
-        primal: "ToadStool".to_string(),
+        handler_ref: "compute.workload.example".to_string(),
         config,
     };
 
@@ -448,13 +448,13 @@ async fn test_multiple_threat_detection() {
 }
 
 #[tokio::test]
-async fn test_modification_with_different_primal() {
+async fn test_modification_with_different_handler_ref() {
     let graph = create_test_graph("alice");
 
     let different_node = GraphNode {
         id: "node-1".to_string(),
         node_type: "storage".to_string(),
-        primal: "Squirrel".to_string(),
+        handler_ref: "ml.inference.provider".to_string(),
         config: HashMap::new(),
     };
 
@@ -470,7 +470,7 @@ async fn test_modification_with_different_primal() {
         .await
         .expect("Authorization should succeed");
 
-    // Owner can add nodes with different primals
+    // Owner can add nodes with different execution bindings (capability / opaque refs)
     assert!(result.confidence > 0.0, "Should have some confidence");
 }
 
@@ -554,7 +554,7 @@ async fn test_risk_level_assessment() {
     let high_risk_node = GraphNode {
         id: "node-1".to_string(),
         node_type: "compute".to_string(),
-        primal: "ToadStool".to_string(),
+        handler_ref: "compute.workload.example".to_string(),
         config,
     };
 

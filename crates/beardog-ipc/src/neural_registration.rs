@@ -186,51 +186,116 @@ async fn register_capability(neural_socket: &str, capability: serde_json::Value)
     Ok(())
 }
 
-/// Resolves the Neural API Unix socket path from injected options.
+/// All inputs needed to discover the Neural API socket without reading the process environment.
+#[derive(Debug, Clone, Default)]
+pub struct NeuralApiDiscoveryInputs {
+    /// `NEURAL_API_SOCKET` env var (highest priority, explicit override).
+    pub neural_api_socket: Option<String>,
+    /// `NEURALS_SOCKET` env var (alias).
+    pub neurals_socket: Option<String>,
+    /// `BIOMEOS_SOCKET_DIR` (orchestrator-managed directory; joins `neural-api.sock`).
+    pub biomeos_socket_dir: Option<String>,
+    /// `XDG_RUNTIME_DIR` for Tier 3 resolution.
+    pub xdg_runtime_dir: Option<String>,
+    /// Effective UID for Tier 4 (`/run/user/{uid}/biomeos/`).
+    pub uid: Option<u32>,
+}
+
+/// Resolves the Neural API Unix socket path using 5-tier discovery (testable).
 ///
-/// Resolution order: `neural_api_socket`, then `neurals_socket`, then well-known `/tmp` paths.
-/// An empty string in `Some("")` disables auto-registration for that slot (returns `None`).
+/// Resolution order:
+/// 1. `NEURAL_API_SOCKET` / `NEURALS_SOCKET` env var (explicit override)
+/// 2. `BIOMEOS_SOCKET_DIR/neural-api.sock` (orchestrator-managed directory)
+/// 3. `XDG_RUNTIME_DIR/biomeos/neural-api.sock`
+/// 4. `/run/user/{uid}/biomeos/neural-api.sock`
+/// 5. `/tmp/biomeos/neural-api.sock` and legacy `/tmp/neural-api.sock`
+///
+/// An empty string in an env field disables auto-registration for that slot (returns `None`).
 #[must_use]
 pub fn discover_neural_api_socket_with(
     neural_api_socket: Option<String>,
     neurals_socket: Option<String>,
 ) -> Option<String> {
+    discover_neural_api_socket_from_inputs(&NeuralApiDiscoveryInputs {
+        neural_api_socket,
+        neurals_socket,
+        biomeos_socket_dir: std::env::var("BIOMEOS_SOCKET_DIR").ok(),
+        xdg_runtime_dir: std::env::var("XDG_RUNTIME_DIR").ok(),
+        uid: std::env::var("UID").ok().and_then(|s| s.parse().ok()),
+    })
+}
+
+/// Resolves the Neural API socket from fully-injected inputs (no environment reads).
+#[must_use]
+pub fn discover_neural_api_socket_from_inputs(inputs: &NeuralApiDiscoveryInputs) -> Option<String> {
     use std::path::Path;
 
-    if let Some(ref socket) = neural_api_socket {
+    // Tier 1: explicit env override
+    if let Some(ref socket) = inputs.neural_api_socket {
         if socket.is_empty() {
             debug!("NEURAL_API_SOCKET is empty - auto-registration disabled");
             return None;
         }
-        info!("🔍 Using NEURAL_API_SOCKET: {}", socket);
+        info!("🔍 Using NEURAL_API_SOCKET: {} (Tier 1)", socket);
         return Some(socket.clone());
     }
 
-    if let Some(ref socket) = neurals_socket {
+    if let Some(ref socket) = inputs.neurals_socket {
         if socket.is_empty() {
             debug!("NEURALS_SOCKET is empty - auto-registration disabled");
             return None;
         }
-        info!("🔍 Using NEURALS_SOCKET: {}", socket);
+        info!("🔍 Using NEURALS_SOCKET: {} (Tier 1)", socket);
         return Some(socket.clone());
     }
 
-    let default_paths = [
-        "/tmp/neural-api.sock",      // Primary default (biomeOS standard)
-        "/tmp/neural-api-nat0.sock", // Legacy compatibility
+    // Tier 2: orchestrator-managed directory
+    if let Some(ref dir) = inputs.biomeos_socket_dir {
+        let path = format!("{dir}/neural-api.sock");
+        if Path::new(&path).exists() {
+            info!(
+                "🔍 Found Neural API via BIOMEOS_SOCKET_DIR (Tier 2): {}",
+                path
+            );
+            return Some(path);
+        }
+    }
+
+    // Tier 3: XDG runtime directory
+    if let Some(ref xdg) = inputs.xdg_runtime_dir {
+        let path = format!("{xdg}/biomeos/neural-api.sock");
+        if Path::new(&path).exists() {
+            info!("🔍 Found Neural API via XDG/biomeos (Tier 3): {}", path);
+            return Some(path);
+        }
+    }
+
+    // Tier 4: /run/user/{uid}/biomeos/
+    let uid = inputs.uid.unwrap_or(1000);
+    let run_path = format!("/run/user/{uid}/biomeos/neural-api.sock");
+    if Path::new(&run_path).exists() {
+        info!("🔍 Found Neural API via /run/user (Tier 4): {}", run_path);
+        return Some(run_path);
+    }
+
+    // Tier 5: /tmp fallback (biomeos namespace first, then legacy)
+    let fallback_paths = [
+        "/tmp/biomeos/neural-api.sock",
+        "/tmp/neural-api.sock",
+        "/tmp/neural-api-nat0.sock",
     ];
 
-    for path in &default_paths {
+    for path in &fallback_paths {
         if Path::new(path).exists() {
-            info!("🔍 Found Neural API socket at default path: {}", path);
+            info!("🔍 Found Neural API at fallback path (Tier 5): {}", path);
             return Some((*path).to_string());
         }
         debug!("Checked default path (not found): {}", path);
     }
 
     info!(
-        "ℹ️  No Neural API socket found (checked env vars and {} default paths)",
-        default_paths.len()
+        "ℹ️  No Neural API socket found (checked 5 tiers + {} fallback paths)",
+        fallback_paths.len()
     );
     None
 }

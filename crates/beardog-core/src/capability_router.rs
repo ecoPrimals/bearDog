@@ -456,6 +456,7 @@ impl CapabilityRouter {
 mod tests {
     use super::*;
     use crate::primal_discovery::DiscoveryMethod;
+    use std::collections::HashMap;
 
     #[test]
     fn test_request_context_builder() {
@@ -614,5 +615,221 @@ mod tests {
         };
         router.record_failure("failed-primal");
         // No panic - failure recorded
+    }
+
+    #[test]
+    fn request_context_default_uses_secure_tunneling() {
+        let ctx = RequestContext::default();
+        assert_eq!(ctx.capability, SimpleCapability::SecureTunneling);
+        assert_eq!(ctx.strategy, SelectionStrategy::HighestTrust);
+    }
+
+    #[test]
+    fn select_primal_errors_when_candidate_list_empty() {
+        let mut router = CapabilityRouter::new(PrimalDiscovery::new(DiscoveryMethod::Environment));
+        let mut empty: Vec<crate::primal_discovery::DiscoveredPrimal> = vec![];
+        let ctx = RequestContext::new(SimpleCapability::Cryptography);
+        let err = router
+            .select_primal(&mut empty, &ctx)
+            .expect_err("empty slice");
+        assert!(err.to_string().contains("No primals available"));
+    }
+
+    #[test]
+    fn selection_strategy_least_loaded_and_lowest_latency_reason_strings() {
+        use crate::primal_discovery::DiscoveredPrimal;
+        use std::time::SystemTime;
+
+        let mut primals = vec![
+            DiscoveredPrimal {
+                name: "a".to_string(),
+                endpoints: vec![],
+                capabilities: vec![],
+                trust_score: Some(0.5),
+                discovered_at: SystemTime::now(),
+            },
+            DiscoveredPrimal {
+                name: "b".to_string(),
+                endpoints: vec![],
+                capabilities: vec![],
+                trust_score: Some(0.5),
+                discovered_at: SystemTime::now(),
+            },
+        ];
+
+        let mut router = CapabilityRouter::new(PrimalDiscovery::new(DiscoveryMethod::Environment));
+        router.record_success("a", 100.0);
+        router.record_success("b", 10.0);
+
+        let ctx_ll = RequestContext::new(SimpleCapability::Cryptography)
+            .with_strategy(SelectionStrategy::LeastLoaded);
+        let (picked_ll, reason_ll) = router.select_primal(&mut primals, &ctx_ll).unwrap();
+        assert_eq!(picked_ll.name, "a");
+        assert!(reason_ll.contains("least loaded"));
+
+        let ctx_lat = RequestContext::new(SimpleCapability::Cryptography)
+            .with_strategy(SelectionStrategy::LowestLatency);
+        let (picked_lat, reason_lat) = router.select_primal(&mut primals, &ctx_lat).unwrap();
+        assert_eq!(picked_lat.name, "b");
+        assert!(reason_lat.contains("lowest latency"));
+    }
+
+    #[test]
+    fn selection_strategy_random_returns_index_in_range() {
+        use crate::primal_discovery::DiscoveredPrimal;
+        use std::time::SystemTime;
+
+        let mut primals = vec![
+            DiscoveredPrimal {
+                name: "x".to_string(),
+                endpoints: vec![],
+                capabilities: vec![],
+                trust_score: None,
+                discovered_at: SystemTime::now(),
+            },
+            DiscoveredPrimal {
+                name: "y".to_string(),
+                endpoints: vec![],
+                capabilities: vec![],
+                trust_score: None,
+                discovered_at: SystemTime::now(),
+            },
+        ];
+        let mut router = CapabilityRouter::new(PrimalDiscovery::new(DiscoveryMethod::Environment));
+        let ctx = RequestContext::new(SimpleCapability::Cryptography)
+            .with_strategy(SelectionStrategy::Random);
+        let (sel, reason) = router.select_primal(&mut primals, &ctx).unwrap();
+        assert!(["x", "y"].contains(&sel.name.as_str()));
+        assert_eq!(reason, "random selection");
+    }
+
+    #[tokio::test]
+    async fn route_returns_not_found_when_discovery_empty() {
+        let discovery =
+            PrimalDiscovery::new(DiscoveryMethod::Environment).with_env_override(HashMap::new());
+        let mut router = CapabilityRouter::new(discovery);
+        let err = router
+            .route(
+                SimpleCapability::Cryptography,
+                RequestContext::new(SimpleCapability::Cryptography),
+            )
+            .await
+            .expect_err("empty env");
+        assert!(
+            err.to_string().contains("No primals found"),
+            "unexpected: {err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn route_excludes_named_primal_and_picks_remaining() {
+        let dir = tempfile::tempdir().unwrap();
+        let s_keep = dir.path().join("keep.sock");
+        let s_skip = dir.path().join("skip.sock");
+        std::fs::File::create(&s_keep).unwrap();
+        std::fs::File::create(&s_skip).unwrap();
+
+        let mut env = HashMap::new();
+        env.insert(
+            "PRIMAL_KEEP_ADDR".to_string(),
+            format!("unix://{}", s_keep.display()),
+        );
+        env.insert(
+            "PRIMAL_SKIP_ADDR".to_string(),
+            format!("unix://{}", s_skip.display()),
+        );
+        env.insert(
+            "PRIMAL_KEEP_CAPABILITIES".to_string(),
+            "Cryptography".to_string(),
+        );
+        env.insert(
+            "PRIMAL_SKIP_CAPABILITIES".to_string(),
+            "Cryptography".to_string(),
+        );
+
+        let discovery = PrimalDiscovery::new(DiscoveryMethod::Environment).with_env_override(env);
+        let mut router = CapabilityRouter::new(discovery);
+        let decision = router
+            .route(
+                SimpleCapability::Cryptography,
+                RequestContext::new(SimpleCapability::Cryptography).excluding("skip"),
+            )
+            .await
+            .expect("route");
+        assert_eq!(decision.primal.name, "keep");
+    }
+
+    #[tokio::test]
+    async fn route_filters_out_high_latency_primal_when_max_latency_set() {
+        let dir = tempfile::tempdir().unwrap();
+        let fast_sock = dir.path().join("fast.sock");
+        let slow_sock = dir.path().join("slow.sock");
+        std::fs::File::create(&fast_sock).unwrap();
+        std::fs::File::create(&slow_sock).unwrap();
+
+        let mut env = HashMap::new();
+        env.insert(
+            "PRIMAL_FAST_ADDR".to_string(),
+            format!("unix://{}", fast_sock.display()),
+        );
+        env.insert(
+            "PRIMAL_SLOW_ADDR".to_string(),
+            format!("unix://{}", slow_sock.display()),
+        );
+        env.insert(
+            "PRIMAL_FAST_CAPABILITIES".to_string(),
+            "Cryptography".to_string(),
+        );
+        env.insert(
+            "PRIMAL_SLOW_CAPABILITIES".to_string(),
+            "Cryptography".to_string(),
+        );
+
+        let discovery = PrimalDiscovery::new(DiscoveryMethod::Environment).with_env_override(env);
+        let mut router = CapabilityRouter::new(discovery);
+        router.record_success("slow", 500.0);
+        router.record_success("fast", 5.0);
+
+        let decision = router
+            .route(
+                SimpleCapability::Cryptography,
+                RequestContext::new(SimpleCapability::Cryptography).with_max_latency(50),
+            )
+            .await
+            .expect("route");
+        assert_eq!(decision.primal.name, "fast");
+    }
+
+    #[tokio::test]
+    async fn route_errors_when_all_primals_filtered_by_latency() {
+        let dir = tempfile::tempdir().unwrap();
+        let sock = dir.path().join("only.sock");
+        std::fs::File::create(&sock).unwrap();
+        let mut env = HashMap::new();
+        env.insert(
+            "PRIMAL_ONLY_ADDR".to_string(),
+            format!("unix://{}", sock.display()),
+        );
+        env.insert(
+            "PRIMAL_ONLY_CAPABILITIES".to_string(),
+            "Cryptography".to_string(),
+        );
+
+        let discovery = PrimalDiscovery::new(DiscoveryMethod::Environment).with_env_override(env);
+        let mut router = CapabilityRouter::new(discovery);
+        router.record_success("only", 900.0);
+
+        let err = router
+            .route(
+                SimpleCapability::Cryptography,
+                RequestContext::new(SimpleCapability::Cryptography).with_max_latency(10),
+            )
+            .await
+            .expect_err("filtered");
+        assert!(
+            err.to_string()
+                .contains("No primals match routing criteria"),
+            "unexpected: {err}"
+        );
     }
 }

@@ -273,6 +273,59 @@ reliability = 0.1
     }
 
     #[test]
+    fn primal_info_http_scheme_disables_tls_on_endpoint() {
+        let config_toml = r#"
+[primal_self]
+primal_id = "p"
+primal_type = "t"
+version = "1"
+display_name = "P"
+self_capabilities = ["a"]
+
+[primal_self.endpoint]
+host = "127.0.0.1"
+port = 8080
+scheme = "http"
+path_prefix = "/api"
+
+[primal_self.announcement]
+enabled = false
+methods = []
+announcement_interval_secs = 60
+ttl_secs = 300
+
+[required_capabilities.k]
+required = true
+preferred = false
+features = []
+fallback = "none"
+
+[discovery]
+methods = ["environment"]
+discovery_timeout_secs = 1
+discovery_interval_secs = 300
+cache_ttl_secs = 600
+
+[service_selection]
+strategy = "qos_based"
+
+[service_selection.qos_weights]
+latency = 0.25
+throughput = 0.25
+availability = 0.25
+reliability = 0.25
+"#;
+        let config: DiscoveryConfig = toml::from_str(config_toml).unwrap();
+        let info = config.primal_info();
+        assert!(!info.endpoint.use_tls);
+        assert!(info.endpoint.primary_url.starts_with("http://"));
+        let req = config.required_capabilities();
+        assert_eq!(req.len(), 1);
+        assert_eq!(req[0].capability_type, "k");
+        assert!(req[0].required);
+    }
+
+    #[test]
     fn test_load_repo_primal_capabilities_toml() {
         let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../configs/beardog-primal-capabilities.toml");

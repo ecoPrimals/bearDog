@@ -12,6 +12,7 @@ use super::validation::EntropyValidator;
 
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
+use std::time::Instant;
 use uuid::Uuid;
 
 /// Main entropy hierarchy manager
@@ -55,17 +56,24 @@ impl EntropyHierarchyManager {
         entropy_class: EntropyClass,
         entropy_data: Vec<u8>,
     ) -> Result<Uuid, BearDogError> {
-        // Validate entropy quality
+        let overall = Instant::now();
+        let validation_start = Instant::now();
         if !self.validator.validate_entropy_quality(&entropy_class)? {
             return Err(BearDogError::invalid_input(
                 "Entropy quality below threshold",
             ));
         }
+        self.monitor
+            .record_validation_duration(validation_start.elapsed());
 
-        // Create seed
+        let mixing_start = Instant::now();
         let seed = self
             .mixing_engine
             .create_entropy_seed(entropy_data, entropy_class)?;
+        self.monitor
+            .record_entropy_mixing_duration(mixing_start.elapsed());
+        self.monitor
+            .record_seed_creation_duration(overall.elapsed());
         let seed_id = seed.seed_id;
 
         self.active_seeds.insert(seed_id, seed);
@@ -100,7 +108,8 @@ impl EntropyHierarchyManager {
     /// Validate entropy age and quality
     /// Validates seed
     /// Validates seed
-    pub fn validate_seed(&self, seed_id: Uuid) -> Result<bool, BearDogError> {
+    pub fn validate_seed(&mut self, seed_id: Uuid) -> Result<bool, BearDogError> {
+        let validation_start = Instant::now();
         let seed = self
             .active_seeds
             .get(&seed_id)
@@ -108,11 +117,18 @@ impl EntropyHierarchyManager {
 
         // Check age
         if !self.validator.validate_entropy_age(&seed.entropy_class)? {
+            self.monitor
+                .record_validation_duration(validation_start.elapsed());
             return Ok(false);
         }
 
         // Check quality
-        self.validator.validate_entropy_quality(&seed.entropy_class)
+        let ok = self
+            .validator
+            .validate_entropy_quality(&seed.entropy_class)?;
+        self.monitor
+            .record_validation_duration(validation_start.elapsed());
+        Ok(ok)
     }
 
     /// Gets `seed_info`
@@ -151,56 +167,21 @@ impl EntropyHierarchyManager {
         Ok(removed_count)
     }
 
-    /// Snapshot of operational counters used for observability and tuning (timings are placeholders until wired).
+    /// Snapshot of operational counters and rolling timings for observability and tuning.
     #[must_use]
     pub fn get_performance_metrics(&self) -> PerformanceMetrics {
-        PerformanceMetrics {
-            active_seeds_count: self.active_seeds.len(),
-            total_entropy_generated: self
-                .active_seeds
-                .values()
-                .map(|s| s.entropy_data.len())
-                .sum::<usize>() as u64,
-            average_quality_score: self.calculate_average_quality(),
-            seed_creation_time_ms: 0.0,  // Would be tracked in production
-            entropy_mixing_time_ms: 0.0, // Would be tracked in production
-            validation_time_ms: 0.0,     // Would be tracked in production
-            total_operations: self
-                .active_seeds
-                .values()
-                .map(|s| s.metadata.usage_count)
-                .sum(),
-            successful_operations: self
-                .active_seeds
-                .values()
-                .map(|s| s.metadata.usage_count)
-                .sum(), // Simplified - assume all successful for now
-            failed_operations: 0, // Would be tracked in production
-        }
-    }
-
-    /// Calculate average quality score across all seeds
-    fn calculate_average_quality(&self) -> f64 {
-        if self.active_seeds.is_empty() {
-            return 0.0;
-        }
-
-        let total_quality: f64 = self
+        let mut m = self
+            .monitor
+            .snapshot_performance_metrics(&self.active_seeds);
+        let ops: u64 = self
             .active_seeds
             .values()
-            .map(|seed| match &seed.entropy_class {
-                EntropyClass::HumanLivedExperience { quality_score, .. } => *quality_score,
-                EntropyClass::HumanSupervisedMachine { quality_score, .. } => *quality_score,
-                EntropyClass::StoreBoughtMachine { quality_score, .. } => *quality_score,
-            })
+            .map(|s| s.metadata.usage_count)
             .sum();
-
-        #[expect(
-            clippy::cast_precision_loss,
-            reason = "mean quality over seed count; usize to f64 acceptable for analytics"
-        )]
-        let divisor = self.active_seeds.len() as f64;
-        total_quality / divisor
+        m.total_operations = ops;
+        m.successful_operations = ops;
+        m.failed_operations = 0;
+        m
     }
 
     /// Initialize the manager

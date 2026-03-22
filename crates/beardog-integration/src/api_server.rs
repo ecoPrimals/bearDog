@@ -22,11 +22,12 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
 use axum::{
-    extract::{Path, State},
+    Router,
+    extract::{Path, Request, State},
     http::StatusCode,
+    middleware::{self, Next},
     response::{IntoResponse, Json, Response},
     routing::{delete, get, post},
-    Router,
 };
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
@@ -35,6 +36,14 @@ use tower_http::{cors::CorsLayer, timeout::TimeoutLayer, trace::TraceLayer};
 use tracing::info;
 
 use beardog_errors::BearDogError;
+
+use crate::connection_tracker::ActiveConnectionGuard;
+
+/// Default listen port for [`ApiServerConfig`] when callers use `Default` (matches [`crate::DEFAULT_INTEGRATION_API_PORT`]).
+pub const DEFAULT_API_SERVER_LISTEN_PORT: u16 = crate::DEFAULT_INTEGRATION_API_PORT;
+
+/// Default per-request handler timeout for Axum [`TimeoutLayer`].
+pub const DEFAULT_API_REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// API server state (shared across handlers)
 ///
@@ -59,6 +68,7 @@ pub struct ApiState {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct TunnelMetadata {
     tunnel_id: String,
     peer_id: String,
@@ -67,6 +77,7 @@ struct TunnelMetadata {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct LineageMetadata {
     node_id: String,
     parent_id: Option<String>,
@@ -112,8 +123,8 @@ pub struct ApiServerConfig {
 impl Default for ApiServerConfig {
     fn default() -> Self {
         Self {
-            port: 9000,
-            timeout: Duration::from_secs(30),
+            port: DEFAULT_API_SERVER_LISTEN_PORT,
+            timeout: DEFAULT_API_REQUEST_TIMEOUT,
             enable_cors: true,
         }
     }
@@ -125,6 +136,11 @@ impl Default for ApiServerConfig {
 /// - TraceLayer: Request/response logging
 /// - TimeoutLayer: Per-request timeout
 /// - CorsLayer: Cross-origin support (if enabled)
+async fn track_in_flight_requests(request: Request, next: Next) -> Response {
+    let _guard = ActiveConnectionGuard::new();
+    next.run(request).await
+}
+
 fn create_router(config: &ApiServerConfig) -> Router {
     let state = ApiState::default();
 
@@ -149,7 +165,8 @@ fn create_router(config: &ApiServerConfig) -> Router {
         .route("/metrics", get(get_metrics))
         .route("/capabilities", get(get_capabilities))
         .route("/status", get(get_status))
-        .with_state(state);
+        .with_state(state)
+        .layer(middleware::from_fn(track_in_flight_requests));
 
     // Apply middleware
     let middleware = ServiceBuilder::new()
@@ -178,13 +195,13 @@ pub async fn start_api_server(config: ApiServerConfig) -> Result<(), BearDogErro
     let addr = format!("0.0.0.0:{}", config.port);
     let listener = tokio::net::TcpListener::bind(&addr)
         .await
-        .map_err(|e| BearDogError::network(format!("Failed to bind to {}: {}", addr, e)))?;
+        .map_err(|e| BearDogError::network(format!("Failed to bind to {addr}: {e}")))?;
 
     info!(addr = %addr, "✅ API server listening");
 
     axum::serve(listener, app)
         .await
-        .map_err(|e| BearDogError::network(format!("Server error: {}", e)))?;
+        .map_err(|e| BearDogError::network(format!("Server error: {e}")))?;
 
     Ok(())
 }
@@ -663,6 +680,7 @@ struct BirdSongEncryptResponse {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct BirdSongDecryptRequest {
     ciphertext: String,
     lineage_hint: Option<String>,
@@ -681,6 +699,7 @@ struct LineageInfo {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct VerifyLineageRequest {
     proof: String,
     node_id: String,
@@ -765,7 +784,7 @@ enum ApiError {
 
 impl From<BearDogError> for ApiError {
     fn from(err: BearDogError) -> Self {
-        ApiError::Internal(err.to_string())
+        Self::Internal(err.to_string())
     }
 }
 
@@ -773,8 +792,8 @@ impl From<BearDogError> for ApiError {
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         let (status, message) = match self {
-            ApiError::Internal(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
-            ApiError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
+            Self::Internal(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
+            Self::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
         };
 
         let body = Json(serde_json::json!({
@@ -803,7 +822,8 @@ mod tests {
     #[test]
     fn test_config_defaults() {
         let config = ApiServerConfig::default();
-        assert_eq!(config.port, 9000);
+        assert_eq!(config.port, DEFAULT_API_SERVER_LISTEN_PORT);
+        assert_eq!(config.timeout, DEFAULT_API_REQUEST_TIMEOUT);
         assert!(config.enable_cors);
     }
 

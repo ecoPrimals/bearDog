@@ -54,3 +54,9 @@ workspace = true
 
 [dependencies.serde_json]
 workspace = true
+
+[dependencies.blake3]
+workspace = true
+
+[dev-dependencies.tempfile]
+workspace = true

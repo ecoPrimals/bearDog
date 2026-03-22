@@ -58,7 +58,7 @@ enum CrossPrimalAction {
         #[clap(long)]
         message: String,
 
-        /// Required capability (network, compute, storage)
+        /// Required capability (network, service_mesh, compute, storage)
         #[clap(long)]
         capability: String,
 
@@ -69,7 +69,7 @@ enum CrossPrimalAction {
 
     /// List discovered primals by capability
     DiscoverPrimals {
-        /// Capability to filter by (network, compute, storage, security)
+        /// Capability to filter by (network, service_mesh, compute, storage, security)
         #[clap(long)]
         capability: String,
     },
@@ -183,9 +183,9 @@ async fn handle_send_secure(
 
     info!("🔍 Discovering primals with '{}' capability...", capability);
 
-    // Send to primal with required capability (REAL)
+    // Send to primal with required capability (REAL) — routed by capability type, not primal name
     let result = match capability.to_lowercase().as_str() {
-        "network" => {
+        "network" | "service_mesh" => {
             let security_context = HashMap::new();
             messenger
                 .send_to_network_primal(&message_data, security_context)
@@ -202,7 +202,7 @@ async fn handle_send_secure(
         "storage" => messenger.send_to_storage_primal(&message_data).await,
         _ => {
             return Err(beardog_errors::BearDogError::invalid_input(&format!(
-                "Unknown capability: {capability} (valid: network, compute, storage)"
+                "Unknown capability: {capability} (valid: network, service_mesh, compute, storage)"
             )));
         }
     };
@@ -242,10 +242,13 @@ async fn handle_discover_primals(capability: &str) -> Result<(), beardog_errors:
     let discovery_client: Arc<dyn PrimalDiscoveryService> =
         Arc::new(EcosystemDiscoveryAdapter::new()?);
 
-    // Determine capability type
+    // Determine capability type (universal discovery — no hardcoded primal identifiers)
     let capability_type = match capability.to_lowercase().as_str() {
         "network" => UniversalCapabilityType::Network {
             functions: vec![NetworkFunction::TrafficRouting],
+        },
+        "service_mesh" => UniversalCapabilityType::Network {
+            functions: vec![NetworkFunction::ServiceMesh],
         },
         "security" => UniversalCapabilityType::Security {
             services: vec![SecurityService::KeyManagement],
@@ -258,7 +261,7 @@ async fn handle_discover_primals(capability: &str) -> Result<(), beardog_errors:
         },
         _ => {
             return Err(beardog_errors::BearDogError::invalid_input(&format!(
-                "Unknown capability: {capability} (valid: network, security, compute, storage)"
+                "Unknown capability: {capability} (valid: network, service_mesh, security, compute, storage)"
             )));
         }
     };
@@ -308,6 +311,7 @@ mod tests {
     async fn test_discover_primals_valid_capabilities() {
         // Test that valid capabilities are accepted
         assert!(handle_discover_primals("network").await.is_ok());
+        assert!(handle_discover_primals("service_mesh").await.is_ok());
         assert!(handle_discover_primals("security").await.is_ok());
         assert!(handle_discover_primals("compute").await.is_ok());
         assert!(handle_discover_primals("storage").await.is_ok());
@@ -398,6 +402,20 @@ mod tests {
             .await
             .expect_err("invalid capability");
         assert!(err.to_string().contains("Unknown capability"));
+    }
+
+    #[tokio::test]
+    async fn test_handle_send_secure_network_capability_is_case_insensitive() {
+        let dir = TempDir::new().unwrap();
+        let msg = dir.path().join("msg-net.bin");
+        std::fs::write(&msg, b"ping").unwrap();
+        let r = handle_send_secure(msg.to_str().unwrap(), "NETWORK", None).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_handle_discover_primals_capability_case_insensitive() {
+        assert!(handle_discover_primals("CoMpUtE").await.is_ok());
     }
 
     #[tokio::test]

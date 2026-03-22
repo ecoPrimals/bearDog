@@ -22,6 +22,9 @@ pub const ENV_BIOMEOS_IPC_NAMESPACE: &str = "BIOMEOS_IPC_NAMESPACE";
 /// Root directory for `BIOMEOS_TMP_ROOT/<namespace>/` when `XDG_RUNTIME_DIR` is unset.
 pub const ENV_BIOMEOS_TMP_ROOT: &str = "BIOMEOS_TMP_ROOT";
 
+/// Filename for TCP port discovery files under XDG, home, and [`biomeos_tmp_socket_root`] search paths.
+pub const BEARDOG_TCP_DISCOVERY_FILENAME: &str = "beardog-ipc-port";
+
 /// Default UPA / service-registry listener socket (filename only, under the biomeOS dir).
 pub const DEFAULT_UPA_REGISTRY_SOCKET_NAME: &str = "registry.sock";
 

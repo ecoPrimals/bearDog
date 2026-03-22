@@ -59,8 +59,10 @@ pub struct GraphNode {
     /// Node type (compute, storage, ai, etc.)
     #[serde(rename = "type")]
     pub node_type: String,
-    /// Primal that handles this node
-    pub primal: String,
+    /// Execution binding for this node: capability tag, discovered provider id, or opaque template reference.
+    /// Resolved at runtime via capability discovery—not a compile-time ecosystem product name.
+    #[serde(rename = "handler_ref", alias = "primal")]
+    pub handler_ref: String,
     /// Node-specific configuration
     pub config: HashMap<String, serde_json::Value>,
 }
@@ -364,13 +366,21 @@ mod tests {
         let node = GraphNode {
             id: "node-1".to_string(),
             node_type: "compute".to_string(),
-            primal: "ToadStool".to_string(),
+            handler_ref: "compute.workload.example".to_string(),
             config,
         };
 
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("node-1"));
         assert!(json.contains("compute"));
+        assert!(json.contains("handler_ref"));
+    }
+
+    #[test]
+    fn test_graph_node_accepts_legacy_primal_json_key() {
+        let json = r#"{"id":"n1","type":"compute","primal":"opaque-binding-ref","config":{}}"#;
+        let node: GraphNode = serde_json::from_str(json).expect("deserialize legacy key");
+        assert_eq!(node.handler_ref, "opaque-binding-ref");
     }
 
     #[test]

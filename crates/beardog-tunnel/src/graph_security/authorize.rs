@@ -210,7 +210,7 @@ mod tests {
         GraphNode {
             id: id.to_string(),
             node_type: "compute".to_string(),
-            primal: "ToadStool".to_string(),
+            handler_ref: "compute.workload.example".to_string(),
             config: HashMap::new(),
         }
     }
@@ -282,7 +282,7 @@ mod tests {
         let malicious_node = GraphNode {
             id: "node-1".to_string(),
             node_type: "compute".to_string(),
-            primal: "ToadStool".to_string(),
+            handler_ref: "compute.workload.example".to_string(),
             config,
         };
 

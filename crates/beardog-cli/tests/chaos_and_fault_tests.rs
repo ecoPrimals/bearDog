@@ -15,7 +15,7 @@
 mod chaos_tests {
     use std::sync::Arc;
     use std::sync::atomic::{AtomicUsize, Ordering};
-    use tokio::sync::{Barrier, RwLock, Semaphore};
+    use tokio::sync::{RwLock, Semaphore};
 
     // ========================================================================
     // CHAOS TESTS: Extreme Concurrent Stress

@@ -41,6 +41,9 @@
 #[cfg(test)]
 mod production_comprehensive_tests;
 
+/// Content-addressed backup integrity (BLAKE3 over backup file trees).
+pub mod disaster_recovery;
+
 /// Production configuration and utilities
 ///
 /// Provides production-ready configuration and deployment utilities.

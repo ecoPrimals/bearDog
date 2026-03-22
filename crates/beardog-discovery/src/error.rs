@@ -106,3 +106,15 @@ impl From<url::ParseError> for DiscoveryError {
         Self::Parse(err.to_string())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::DiscoveryError;
+
+    #[test]
+    fn from_url_parse_error_maps_to_parse_variant() {
+        let e: DiscoveryError = url::Url::parse("http://[").unwrap_err().into();
+        assert!(matches!(e, DiscoveryError::Parse(_)));
+        assert!(!e.to_string().is_empty());
+    }
+}

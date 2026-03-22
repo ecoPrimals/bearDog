@@ -115,7 +115,7 @@ impl SocketPathInputs {
     }
 }
 
-/// Socket configuration with 3-tier fallback logic
+/// Socket configuration with 5-tier fallback logic
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SocketConfig {
     /// Final resolved socket path

@@ -188,38 +188,33 @@ async fn stress_test_rate_limiter_1000_operations() {
 async fn stress_test_condition_waiting_race() {
     println!("🔥 STRESS: Condition waiting under race conditions");
 
-    use tokio::sync::Notify;
+    use tokio::sync::Barrier;
+    use tokio::sync::watch;
 
-    let ready = Arc::new(AtomicBool::new(false));
     let waiter_count = Arc::new(AtomicUsize::new(0));
-    let notify = Arc::new(Notify::new());
+    let (signal_tx, _) = watch::channel(false);
+    let barrier = Arc::new(Barrier::new(101));
     let mut handles = Vec::with_capacity(100);
 
     let start = std::time::Instant::now();
 
-    // Spawn 100 waiters
+    // Spawn 100 waiters: barrier ensures every task has subscribed to the watch before we signal,
+    // so no lost wakeups vs `Notify::notify_waiters` racing with registration.
     for _ in 0..100 {
-        let ready = ready.clone();
         let waiter_count = waiter_count.clone();
-        let notify = notify.clone();
+        let mut rx = signal_tx.subscribe();
+        let barrier = barrier.clone();
 
         handles.push(tokio::spawn(async move {
-            // Wait for notification
-            notify.notified().await;
-
-            // Verify condition after wakeup
-            assert!(ready.load(Ordering::SeqCst), "Condition should be met");
+            let _ = barrier.wait().await;
+            rx.changed().await.expect("watch");
+            assert!(*rx.borrow(), "Condition should be met");
             waiter_count.fetch_add(1, Ordering::SeqCst);
         }));
     }
 
-    // Let them all start waiting
-    // LEGITIMATE: Brief sleep to ensure waiters are ready before signaling
-    tokio::time::sleep(Duration::from_millis(10)).await;
-
-    // Signal condition met
-    ready.store(true, Ordering::SeqCst);
-    notify.notify_waiters();
+    let _ = barrier.wait().await;
+    signal_tx.send(true).expect("signal");
 
     // All should complete rapidly
     for handle in handles {

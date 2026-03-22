@@ -7,6 +7,7 @@ use beardog_genetics::genetics::entropy_hierarchy::LiveFeedValidator;
 use beardog_genetics::genetics::human_entropy::{
     InteractionCaptureConfig, InteractionEntropyCollector,
 };
+use beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType;
 use beardog_tunnel::tunnel::hsm::universal_discovery::discovery_engine::DiscoveryEngine;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
@@ -43,6 +44,22 @@ pub(crate) struct HsmInfo {
     pub(crate) name: String,
     pub(crate) tier: String,
     pub(crate) hsm_type: String,
+}
+
+/// Maps a discovered HSM interface to a short CLI label (used by `handle_entropy_collect`).
+pub(crate) fn format_hsm_interface_type_label(interface_type: &HsmInterfaceType) -> String {
+    match interface_type {
+        HsmInterfaceType::Tpm { version } => format!("TPM {version}"),
+        HsmInterfaceType::SoftwareHsm { implementation } => {
+            format!("Software ({implementation})")
+        }
+        HsmInterfaceType::MobileHsm { platform, .. } => format!("Mobile ({platform})"),
+        HsmInterfaceType::CloudKms { provider, .. } => format!("Cloud ({provider})"),
+        HsmInterfaceType::NetworkHsm { endpoint, .. } => format!("Network ({endpoint})"),
+        HsmInterfaceType::UsbHsm { device_id } => format!("USB ({device_id})"),
+        HsmInterfaceType::SmartCard { reader } => format!("SmartCard ({reader})"),
+        HsmInterfaceType::CustomApi { api_type, .. } => format!("Custom ({api_type})"),
+    }
 }
 
 /// Pick an HSM from a discovered list according to CLI preference (`auto`, `software`, …).
@@ -140,24 +157,7 @@ pub async fn handle_entropy_collect(
         .map(|hsm| HsmInfo {
             name: format!("{} {}", hsm.vendor, hsm.model),
             tier: format!("{:?}", hsm.assigned_tier),
-            hsm_type: match &hsm.interface_type {
-                beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType::Tpm { version } =>
-                    format!("TPM {version}"),
-                beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType::SoftwareHsm { implementation } =>
-                    format!("Software ({implementation})"),
-                beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType::MobileHsm { platform, .. } =>
-                    format!("Mobile ({platform})"),
-                beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType::CloudKms { provider, .. } =>
-                    format!("Cloud ({provider})"),
-                beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType::NetworkHsm { endpoint, .. } =>
-                    format!("Network ({endpoint})"),
-                beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType::UsbHsm { device_id } =>
-                    format!("USB ({device_id})"),
-                beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType::SmartCard { reader } =>
-                    format!("SmartCard ({reader})"),
-                beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType::CustomApi { api_type, .. } =>
-                    format!("Custom ({api_type})"),
-            },
+            hsm_type: format_hsm_interface_type_label(&hsm.interface_type),
         })
         .collect();
 
@@ -186,16 +186,8 @@ pub async fn handle_entropy_collect(
         println!("   (Interactive keyboard and mouse capture)");
         println!();
 
-        // Use NEW InteractionEntropyCollector for REAL human input
-        let config = InteractionCaptureConfig {
-            target_interactions: 50,
-            timeout_seconds: 120,
-            min_quality: 0.7,
-            enable_keyboard: true,
-            enable_mouse: true,
-        };
-
-        let collector = InteractionEntropyCollector::new(config);
+        // Use NEW InteractionEntropyCollector for REAL human input (defaults from genetics).
+        let collector = InteractionEntropyCollector::new(InteractionCaptureConfig::default());
 
         // This is a BLOCKING call that waits for real user interaction
         let result = collector.collect_live_interactions()?;
@@ -819,5 +811,62 @@ mod entropy_handler_tests {
         handle_entropy_info(seed_path.to_str().unwrap())
             .await
             .unwrap();
+    }
+
+    #[test]
+    fn format_hsm_interface_type_label_covers_all_variants() {
+        use beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType as T;
+        assert!(
+            format_hsm_interface_type_label(&T::Tpm {
+                version: "2.0".to_string(),
+            })
+            .contains("TPM")
+        );
+        assert!(
+            format_hsm_interface_type_label(&T::SoftwareHsm {
+                implementation: "SoftHSM2".to_string(),
+            })
+            .contains("SoftHSM2")
+        );
+        assert!(
+            format_hsm_interface_type_label(&T::MobileHsm {
+                platform: "Android".to_string(),
+                chip: None,
+            })
+            .contains("Android")
+        );
+        assert!(
+            format_hsm_interface_type_label(&T::CloudKms {
+                provider: "aws".to_string(),
+                region: None,
+            })
+            .contains("aws")
+        );
+        assert!(
+            format_hsm_interface_type_label(&T::NetworkHsm {
+                endpoint: "10.0.0.1".to_string(),
+                port: 443,
+            })
+            .contains("10.0.0.1")
+        );
+        assert!(
+            format_hsm_interface_type_label(&T::UsbHsm {
+                device_id: "deadbeef".to_string(),
+            })
+            .contains("deadbeef")
+        );
+        assert!(
+            format_hsm_interface_type_label(&T::SmartCard {
+                reader: "reader-1".to_string(),
+            })
+            .contains("reader-1")
+        );
+        assert!(
+            format_hsm_interface_type_label(&T::CustomApi {
+                api_type: "rest".to_string(),
+                endpoint: "https://hsm".to_string(),
+            })
+            .contains("rest")
+        );
     }
 }

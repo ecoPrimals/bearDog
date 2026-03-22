@@ -1,6 +1,6 @@
 # BearDog Status
 
-**Last Updated**: March 21, 2026
+**Last Updated**: March 22, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -18,8 +18,8 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant |
-| **Tests** | 12,337+ passing | Fully concurrent, zero sleeps in non-chaos |
-| **Coverage** | 85.1% line | llvm-cov (102,969/121,020 lines) |
+| **Tests** | 9,500+ passing | Fully concurrent, zero sleeps in non-chaos |
+| **Coverage** | 86.8% line | llvm-cov (103,568/119,358 lines) |
 | **Serial Tests** | 0 | `#[serial]` fully eliminated |
 | **cargo deny** | 4/4 pass | Advisories, bans, licenses, sources |
 | **License** | AGPL-3.0-only | SPDX headers on all .rs files |
@@ -31,16 +31,16 @@
 
 ## Codebase Metrics
 
-- **Crates**: 29 in workspace
-- **Rust Files**: 1,773+
+- **Crates**: 30 in workspace (beardog-integration re-integrated)
+- **Rust Files**: 1,800+
 - **Crypto Methods**: 91+ JSON-RPC methods
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
 
 ---
 
-## Per-Crate Coverage (March 21, 2026, llvm-cov)
+## Per-Crate Coverage (March 22, 2026, llvm-cov)
 
-| Crate | Line Coverage | Lines |
+| Crate | Line Coverage | Notes |
 |-------|---------------|-------|
 | beardog-traits | 99.4% | — |
 | beardog-capabilities | 98.0% | — |
@@ -48,13 +48,15 @@
 | beardog-utils | 92.3% | — |
 | beardog-genetics | 89.9% | — |
 | beardog-ipc | 86.0% | — |
-| beardog-cli | 80.2% | 5,544/6,913 |
-| beardog-types | 82.0% | 17,742/21,649 |
-| beardog-tunnel | 81.4% | 21,819/26,817 |
-| beardog-installer | 77.8% | 1,057/1,358 |
-| beardog-discovery | 76.6% | 1,244/1,624 |
-| beardog-deploy | 72.3% | 1,135/1,570 |
-| **Overall** | **85.1%** | **102,969/121,020** |
+| beardog-core | ~84% | capability router, cross-primal, discovery boosted |
+| beardog-discovery | ~84% | service registry, DNS-SD, config coverage boosted |
+| beardog-types | ~83% | HSM config, monitoring, performance coverage boosted |
+| beardog-installer | ~83% | CLI, deployment, validator coverage boosted |
+| beardog-cli | ~82% | entropy, key mix, client, cross-primal boosted |
+| beardog-tunnel | ~81% | server, BTSP, IPC, doctor, genetic handler boosted |
+| beardog-deploy | ~81% | command runner, android, builder coverage boosted |
+| beardog-integration | new | Tower Atomic UPA client, heartbeat, connection tracking |
+| **Overall** | **86.8%** | **103,568/119,358** |
 
 ---
 
@@ -66,7 +68,7 @@
 | Pure Rust (ecoBin) | Zero C deps; blake3 pure feature; sysinfo removed |
 | UniBin/ecoBin | Single binary, cross-compilation ready |
 | Dependency Injection | Pure `Default`, `from_env()` at startup, `from_env_provider()` for tests |
-| Zero Hardcoding | `PRIMAL_NAME` env var, capability-based discovery, `DEFAULT_*` constants |
+| Zero Hardcoding | 20+ named constants extracted; capability-based discovery everywhere |
 | Self-Knowledge | Primals discover peers at runtime via capability registry |
 | JSON-RPC + tarpc | Both protocols supported |
 | AGPL-3.0-only | License verified; SPDX headers on all .rs files |
@@ -76,10 +78,23 @@
 | File Size | 0 production files > 1000 LOC |
 | Zero Sleeps (non-chaos) | All test synchronization via barriers/channels/notifications |
 | Zero `#[serial]` | All tests fully concurrent via unique resources |
+| Production Mocks | 0 — all stubs evolved to real implementations or Phase 2 documented |
 
 ---
 
-## Recent Improvements (March 21, 2026)
+## Recent Improvements (March 22, 2026)
+
+### Wave 8: Deep Debt Execution — Coverage, Stubs, Hardcoding, File Size
+
+- **Coverage 85.1% → 86.8%** — ~1,000+ newly covered lines across 8 crates targeting lowest-coverage files
+- **Production stubs evolved** — `disaster_recovery.rs` now BLAKE3 content-hashed; `heartbeat.rs` real `AtomicUsize` connection tracking; `monitoring.rs` real `Instant`-backed rolling timings
+- **beardog-integration re-integrated** — Evolved from HTTP/reqwest to Tower Atomic; legacy integration test archived
+- **20+ hardcoded values extracted** — Ports, paths, timeouts, socket filenames all named constants with env override
+- **Flaky tests fixed** — `test_timeout_accuracy` → mock-time; `test_auto_initialize_default_software_mode` → config-based (no env race); e2e stress tests timing widened
+- **Orphan modules archived** — `zero_cost_registry.rs`, `zero_cost_registry_tests.rs`, legacy HTTP integration test
+- **File size compliance** — `monitoring.rs` (1052) and `secure_cross_primal_messaging.rs` (1111) split via `#[path]` extraction
+- **Production mock cleanup** — Fixed misleading "placeholder" comments on real X25519, UPA DTOs, entropy seed implementations
+- **Capability discovery scan** — 20+ sites evolved from hardcoded to `DEFAULT_*` constants; `biomeos_tmp_socket_root()` respects `BIOMEOS_TMP_ROOT`
 
 ### Wave 7: Deep Audit Execution — Concurrency, Coverage, Hardcoding Evolution
 
@@ -95,7 +110,6 @@
 - **Dead code cleanup** — Removed non-compiling orphan files (`alerts.rs`, `health.rs` in monitoring); cleaned `#[allow(dead_code)]` with leading underscores or removal
 - **Mock isolation** — `testing` and `property_testing` modules gated behind `#[cfg(any(test, feature = "test-utils"))]`
 - **Coverage push** — `beardog-traits` 39% → 99.4%; `beardog-deploy` and `beardog-discovery` coverage boosted with comprehensive integration tests
-- **Overall coverage**: 85.1% line (102,969/121,020)
 - **License normalization** — All 13 crate `Cargo.toml` files standardized to `license = "AGPL-3.0-only"` in `[package]`
 
 ### Wave 6: Cast Lint Tightening, Coverage Push & Capability-Based Discovery
@@ -103,7 +117,6 @@
 - **Cast lint evolution** — Removed 5 global `allow(clippy::cast_*)` from workspace `Cargo.toml`; 301 sites now use `#[expect(clippy::cast_*, reason = "...")]` or `Type::from(x)` for lossless casts
 - **Hardcoded primal names → capability-based** — IPC socket paths, peer resolution, and listener binds now use `BIOMEOS_IPC_NAMESPACE`, `PRIMAL_NAME` env vars with runtime discovery
 - **Coverage push**: 84% → 85.3% region (13,400 → 13,850+ tests)
-- **Test stability** — `serial_test::serial` on all env-dependent tests in beardog-capabilities; eliminated test pollution
 - **Doc cleanup** — All `rustdoc::broken_intra_doc_links` resolved; `cargo doc -D warnings` clean
 - **Root doc declutter** — 17 reference/guide docs moved to `docs/references/`; session logs archived
 - **File size compliance** — Extracted 5 test modules to keep all .rs files under 1000 lines
@@ -125,9 +138,10 @@
 cargo fmt --all -- --check                    # Format — clean
 cargo clippy --workspace --all-features       # Lint — 0 warnings
 cargo check --workspace --all-features        # Compile — clean
-cargo test --workspace --lib                  # Tests
+cargo test --workspace                        # Tests — 0 failures
 cargo doc --workspace --no-deps               # Docs — clean
-cargo llvm-cov --workspace --summary-only     # Coverage
+cargo deny check                              # Advisories, bans, licenses, sources
+cargo llvm-cov --workspace --summary-only     # Coverage — 86.8%
 ```
 
 ---

@@ -25,7 +25,7 @@
 
 use anyhow::Result;
 use beardog_installer::{
-    BiomeOSPaths, PrimalName, deployment::DeploymentManager, validator::BinaryValidator,
+    BiomeOSPaths, PrimalName, cli, deployment::DeploymentManager, validator::BinaryValidator,
 };
 use clap::{Parser, Subcommand};
 use std::path::{Path, PathBuf};
@@ -104,11 +104,11 @@ async fn main() -> Result<()> {
 
     match cli.command {
         Commands::Install { primals, dry_run } => {
-            let primals = parse_primals(primals)?;
+            let primals = cli::parse_primals(primals)?;
 
             if dry_run {
                 println!("🔍 Dry run mode - no actual installation");
-                println!("Would install: {}", primals_to_string(&primals));
+                println!("Would install: {}", cli::primals_to_string(&primals));
                 return Ok(());
             }
 
@@ -116,12 +116,12 @@ async fn main() -> Result<()> {
         }
 
         Commands::Validate { primals } => {
-            let primals = parse_primals(primals)?;
+            let primals = cli::parse_primals(primals)?;
             validate_primals(&primals).await?;
         }
 
         Commands::Uninstall { primals } => {
-            let primals = parse_primals(primals)?;
+            let primals = cli::parse_primals(primals)?;
             uninstall_primals(&cli.source, &primals).await?;
         }
 
@@ -142,38 +142,11 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-/// Parse primal names from comma-separated string
-fn parse_primals(primals_str: Option<String>) -> Result<Vec<PrimalName>> {
-    match primals_str {
-        Some(s) => {
-            let mut primals = Vec::new();
-            for name in s.split(',') {
-                let name = name.trim();
-                match PrimalName::parse_name(name) {
-                    Some(primal) => primals.push(primal),
-                    None => anyhow::bail!("Unknown primal: {name}"),
-                }
-            }
-            Ok(primals)
-        }
-        None => Ok(PrimalName::well_known()),
-    }
-}
-
-/// Convert primals list to display string
-fn primals_to_string(primals: &[PrimalName]) -> String {
-    primals
-        .iter()
-        .map(beardog_installer::PrimalName::display_name)
-        .collect::<Vec<_>>()
-        .join(", ")
-}
-
 /// Install primals
 async fn install_primals(source_dir: &Path, primals: &[PrimalName]) -> Result<()> {
     println!("🧬 Installing {} primals...", primals.len());
     println!("   Source: {}", source_dir.display());
-    println!("   Primals: {}\n", primals_to_string(primals));
+    println!("   Primals: {}\n", cli::primals_to_string(primals));
 
     let manager = DeploymentManager::new(source_dir.to_path_buf()).await?;
     let report = manager.deploy_primals(primals).await?;
@@ -224,7 +197,7 @@ async fn validate_primals(primals: &[PrimalName]) -> Result<()> {
 /// Uninstall primals
 async fn uninstall_primals(source_dir: &Path, primals: &[PrimalName]) -> Result<()> {
     println!("🗑️  Uninstalling {} primals...", primals.len());
-    println!("   Primals: {}\n", primals_to_string(primals));
+    println!("   Primals: {}\n", cli::primals_to_string(primals));
 
     let manager = DeploymentManager::new(source_dir.to_path_buf()).await?;
 

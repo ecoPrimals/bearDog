@@ -344,18 +344,15 @@ impl UniversalComputeClient {
         // Execute computation through discovered provider
         let response = self.execute_compute_request(&request, &provider)?;
 
-        // Update metrics (fire and forget - metrics update shouldn't block)
-        let metrics_clone = self.metrics.clone();
-        let response_clone = response.clone();
-        tokio::spawn(async move {
-            let mut metrics = metrics_clone.write().await;
+        {
+            let mut metrics = self.metrics.write().await;
             metrics.total_requests += 1;
-            if response_clone.success {
+            if response.success {
                 metrics.successful_requests += 1;
             } else {
                 metrics.failed_requests += 1;
             }
-        });
+        }
 
         info!(
             "✅ Compute request completed: {} ({}ms)",
@@ -648,7 +645,6 @@ mod tests {
         assert!(resp.success);
         assert_eq!(resp.provider_info.performance_score, 0.99);
 
-        tokio::time::sleep(std::time::Duration::from_millis(150)).await;
         let m = client.get_metrics().await;
         assert!(m.total_requests >= 1);
     }

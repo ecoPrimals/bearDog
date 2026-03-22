@@ -304,6 +304,7 @@ impl Default for ServiceRegistryDiscovery {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::{Capability, DiscoveredService, HealthStatus, QoSMetrics, ServiceEndpoint};
 
     #[tokio::test]
     async fn test_create_discovery() {
@@ -331,11 +332,9 @@ mod tests {
     async fn test_cache_expiration() {
         let discovery = ServiceRegistryDiscovery::new().await.unwrap();
 
-        // Add with 0 second TTL (expired immediately)
+        // TTL 0: `get_cached` treats entries as valid only when `age < ttl_secs`, so `0 < 0` is
+        // false and the entry is never returned (no wall-clock wait required).
         discovery.update_cache("test", vec![], 0).await;
-
-        // Small delay to ensure expiration
-        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
 
         // Should be expired
         assert!(discovery.get_cached("test").await.is_none());
@@ -376,6 +375,40 @@ mod tests {
                 // Empty result is also acceptable
             }
         }
+    }
+
+    #[tokio::test]
+    async fn test_discover_returns_cached_services_without_touching_providers() {
+        let discovery = ServiceRegistryDiscovery::new().await.unwrap();
+        let svc = DiscoveredService {
+            id: "reg-1".to_string(),
+            service_type: "registry".to_string(),
+            display_name: "R".to_string(),
+            endpoint: ServiceEndpoint {
+                primary_url: "unix:///run/r.sock".to_string(),
+                fallback_urls: vec![],
+                use_tls: false,
+                path_prefix: None,
+            },
+            capabilities: vec![Capability {
+                capability_type: "crypto".to_string(),
+                version: "1".to_string(),
+                features: vec![],
+                parameters: std::collections::HashMap::new(),
+            }],
+            qos: QoSMetrics::default(),
+            health: HealthStatus::Healthy,
+            discovered_at: std::time::SystemTime::now(),
+            ttl_secs: 600,
+            discovery_method: "test".to_string(),
+            metadata: std::collections::HashMap::new(),
+        };
+        discovery
+            .update_cache("crypto", vec![svc.clone()], 600)
+            .await;
+        let out = discovery.discover("crypto").await.expect("cache hit");
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].id, "reg-1");
     }
 
     #[tokio::test]

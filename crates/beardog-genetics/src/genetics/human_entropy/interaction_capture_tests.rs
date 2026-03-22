@@ -386,3 +386,15 @@ fn test_derive_entropy_bytes_covers_all_mouse_button_tags() {
     let out = InteractionEntropyCollector::derive_entropy_bytes(&events, &metrics);
     assert_eq!(out.len(), 32);
 }
+
+#[test]
+fn test_derive_entropy_bytes_includes_scroll_deltas() {
+    let events = vec![InteractionEvent {
+        interaction_type: InteractionType::MouseScroll,
+        timestamp_nanos: 42,
+        data: InteractionData::Scroll { delta: -3 },
+    }];
+    let metrics = InteractionEntropyCollector::calculate_metrics(&events, 1);
+    let out = InteractionEntropyCollector::derive_entropy_bytes(&events, &metrics);
+    assert_eq!(out.len(), 32);
+}

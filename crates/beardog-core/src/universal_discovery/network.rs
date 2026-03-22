@@ -57,7 +57,10 @@ impl Default for NetworkConfig {
                 .parse()
                 .unwrap_or_else(|e| {
                     tracing::warn!("Failed to parse bind address, using fallback: {}", e);
-                    SocketAddr::new(IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED), 8080)
+                    SocketAddr::new(
+                        IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED),
+                        beardog_network_config.service_ports.api_port,
+                    )
                 }),
             multicast_address: beardog_errors::process_env::var(
                 "BEARDOG_DISCOVERY_MULTICAST_ADDRESS",

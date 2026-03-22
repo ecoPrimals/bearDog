@@ -27,6 +27,7 @@
 //! - Universal & agnostic
 
 pub mod arch;
+pub mod cli;
 pub mod deployment;
 pub mod installer;
 pub mod platform;

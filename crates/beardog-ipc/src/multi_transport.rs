@@ -169,16 +169,16 @@ impl MultiTransportConfig {
         let mut config =
             Self::from_bind_and_ports(&bind_addr, tarpc_port, jsonrpc_port, shutdown_timeout_secs);
 
-        if let Ok(addr) = beardog_errors::process_env::var("BEARDOG_TARPC_ADDR") {
-            if let Ok(parsed) = addr.parse() {
-                config.tarpc_addr = parsed;
-            }
+        if let Ok(addr) = beardog_errors::process_env::var("BEARDOG_TARPC_ADDR")
+            && let Ok(parsed) = addr.parse()
+        {
+            config.tarpc_addr = parsed;
         }
 
-        if let Ok(addr) = beardog_errors::process_env::var("BEARDOG_JSONRPC_ADDR") {
-            if let Ok(parsed) = addr.parse() {
-                config.jsonrpc_addr = parsed;
-            }
+        if let Ok(addr) = beardog_errors::process_env::var("BEARDOG_JSONRPC_ADDR")
+            && let Ok(parsed) = addr.parse()
+        {
+            config.jsonrpc_addr = parsed;
         }
 
         if let Ok(val) = beardog_errors::process_env::var("BEARDOG_ENABLE_TARPC") {
@@ -278,7 +278,7 @@ impl MultiTransportHandle {
     ///
     /// Call after [`Self::shutdown`] so listeners exit their `select!` loops.
     pub async fn join_servers_with_timeout(self, timeout: Duration) {
-        let MultiTransportHandle { server_tasks, .. } = self;
+        let Self { server_tasks, .. } = self;
         let _ = tokio::time::timeout(timeout, async move {
             for task in server_tasks {
                 let _ = task.await;
@@ -391,8 +391,6 @@ impl MultiTransportServer {
             let mut shutdown_rx = shutdown_tx.subscribe();
 
             let h = tokio::spawn(async move {
-                // JSON-RPC server implementation would go here
-                // For now, we just listen and respond with capabilities
                 let listener = match tokio::net::TcpListener::bind(jsonrpc_addr).await {
                     Ok(l) => l,
                     Err(e) => {
@@ -412,32 +410,17 @@ impl MultiTransportServer {
 
                                     // Handle JSON-RPC in spawned task
                                     tokio::spawn(async move {
-                                        // Simple JSON-RPC handler (placeholder)
-                                        // Real implementation would dispatch to handlers
                                         use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
                                         let mut buf = vec![0u8; 4096];
-                                        if let Ok(n) = stream.read(&mut buf).await {
-                                            if n > 0 {
-                                                // Echo capabilities for now
-                                                let response = serde_json::json!({
-                                                    "jsonrpc": "2.0",
-                                                    "result": {
-                                                        "name": "BearDog",
-                                                        "version": env!("CARGO_PKG_VERSION"),
-                                                        "protocols": ["tarpc", "json-rpc"],
-                                                        "capabilities": [
-                                                            "crypto.signatures",
-                                                            "crypto.encryption",
-                                                            "crypto.hashing"
-                                                        ]
-                                                    },
-                                                    "id": 1
-                                                });
-
-                                                let _ = stream.write_all(
-                                                    response.to_string().as_bytes()
-                                                ).await;
+                                        if let Ok(n) = stream.read(&mut buf).await
+                                            && n > 0
+                                        {
+                                            let line = String::from_utf8_lossy(&buf[..n]);
+                                            if let Some(response) =
+                                                handle_jsonrpc_request_line(&line)
+                                            {
+                                                let _ = stream.write_all(response.as_bytes()).await;
                                             }
                                         }
                                     });
@@ -481,6 +464,101 @@ impl MultiTransportServer {
         info!("Multi-transport server stopped");
         Ok(())
     }
+}
+
+/// Minimal JSON-RPC 2.0 responder for the TCP listener: handles parse/validation errors and
+/// capability discovery (`rpc.discover`, `system.capabilities`, `capabilities.list`). Broader method
+/// dispatch belongs in a shared router that delegates to the same service types as
+/// [`BearDogCryptoServer`] (tarpc path), keeping serde request/response types aligned.
+fn handle_jsonrpc_request_line(line: &str) -> Option<String> {
+    let trimmed = line.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+
+    let v: serde_json::Value = match serde_json::from_str(trimmed) {
+        Ok(v) => v,
+        Err(_) => {
+            return Some(
+                serde_json::json!({
+                    "jsonrpc": "2.0",
+                    "error": { "code": -32700, "message": "Parse error" },
+                    "id": null
+                })
+                .to_string(),
+            );
+        }
+    };
+
+    let Some(obj) = v.as_object() else {
+        return Some(
+            serde_json::json!({
+                "jsonrpc": "2.0",
+                "error": { "code": -32600, "message": "Invalid Request" },
+                "id": null
+            })
+            .to_string(),
+        );
+    };
+
+    if obj.get("jsonrpc") != Some(&serde_json::json!("2.0")) {
+        return Some(
+            serde_json::json!({
+                "jsonrpc": "2.0",
+                "error": { "code": -32600, "message": "Invalid Request" },
+                "id": obj.get("id").cloned().unwrap_or(serde_json::Value::Null)
+            })
+            .to_string(),
+        );
+    }
+
+    if !obj.contains_key("id") {
+        return None;
+    }
+
+    let id = obj.get("id").cloned().unwrap_or(serde_json::Value::Null);
+    let method = obj.get("method").and_then(|m| m.as_str()).unwrap_or("");
+
+    let discovery_methods = ["rpc.discover", "system.capabilities", "capabilities.list"];
+    if discovery_methods.contains(&method) {
+        return Some(
+            serde_json::json!({
+                "jsonrpc": "2.0",
+                "result": {
+                    "name": "BearDog",
+                    "version": env!("CARGO_PKG_VERSION"),
+                    "protocols": ["tarpc", "json-rpc"],
+                    "capabilities": [
+                        "crypto.signatures",
+                        "crypto.encryption",
+                        "crypto.hashing"
+                    ]
+                },
+                "id": id
+            })
+            .to_string(),
+        );
+    }
+
+    if method.is_empty() {
+        return Some(
+            serde_json::json!({
+                "jsonrpc": "2.0",
+                "error": { "code": -32600, "message": "Invalid Request" },
+                "id": id
+            })
+            .to_string(),
+        );
+    }
+
+    Some(
+        serde_json::json!({
+            "jsonrpc": "2.0",
+            "error": { "code": -32601, "message": "Method not found" },
+            "id": id
+        })
+        .to_string(),
+    )
 }
 
 /// Protocol selection helper
@@ -536,6 +614,39 @@ impl ProtocolSelector {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn jsonrpc_discover_returns_capabilities_and_echoes_id() {
+        let line = r#"{"jsonrpc":"2.0","method":"rpc.discover","id":42}"#;
+        let s = handle_jsonrpc_request_line(line).expect("response");
+        let v: serde_json::Value = serde_json::from_str(&s).unwrap();
+        assert_eq!(v["jsonrpc"], "2.0");
+        assert_eq!(v["id"], 42);
+        assert!(v["result"]["capabilities"].is_array());
+        assert_eq!(v["result"]["name"], "BearDog");
+    }
+
+    #[test]
+    fn jsonrpc_unknown_method_returns_error() {
+        let line = r#"{"jsonrpc":"2.0","method":"crypto.sign","id":"a"}"#;
+        let s = handle_jsonrpc_request_line(line).expect("response");
+        let v: serde_json::Value = serde_json::from_str(&s).unwrap();
+        assert_eq!(v["error"]["code"], -32601);
+        assert_eq!(v["id"], "a");
+    }
+
+    #[test]
+    fn jsonrpc_notification_produces_no_response() {
+        let line = r#"{"jsonrpc":"2.0","method":"rpc.discover"}"#;
+        assert!(handle_jsonrpc_request_line(line).is_none());
+    }
+
+    #[test]
+    fn jsonrpc_invalid_json_returns_parse_error() {
+        let s = handle_jsonrpc_request_line("not json").expect("response");
+        let v: serde_json::Value = serde_json::from_str(&s).unwrap();
+        assert_eq!(v["error"]["code"], -32700);
+    }
 
     #[test]
     fn test_config_from_env() {

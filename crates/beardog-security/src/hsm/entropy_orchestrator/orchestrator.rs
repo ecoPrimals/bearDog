@@ -281,8 +281,7 @@ impl HsmEntropyOrchestrator {
         let quality_score = self.calculate_quality_score(quality_tier);
         let device_name = self.get_device_name(&hsm_source);
 
-        // For now, generate a placeholder seed ID
-        // PHASE-2(Entropy): Integrate with actual EntropyHierarchyManager
+        // Opaque seed identifier for this generation session (UUID v4).
         let seed_id = Uuid::new_v4();
 
         info!(
@@ -448,12 +447,11 @@ impl HsmEntropyOrchestrator {
     fn find_device_by_id(&self, device_id: &str) -> Option<HsmSource> {
         #[cfg(feature = "fido2")]
         {
-            if device_id.starts_with("fido2_") {
-                if let Ok(idx) = device_id.strip_prefix("fido2_")?.parse::<usize>() {
-                    if idx < self.fido2_providers.len() {
-                        return Some(HsmSource::Fido2(idx));
-                    }
-                }
+            if device_id.starts_with("fido2_")
+                && let Ok(idx) = device_id.strip_prefix("fido2_")?.parse::<usize>()
+                && idx < self.fido2_providers.len()
+            {
+                return Some(HsmSource::Fido2(idx));
             }
         }
 

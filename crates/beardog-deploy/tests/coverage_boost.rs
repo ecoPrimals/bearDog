@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 #![allow(missing_docs, clippy::all)]
 
 //! Integration coverage tests for `beardog-deploy` (fast, deterministic, no sleeps).

@@ -308,7 +308,9 @@ impl SongbirdClient {
                     None
                 }
             })
-            .unwrap_or_else(|| "/tmp/beardog-default.sock".to_string())
+            .unwrap_or_else(|| {
+                beardog_core::socket_config::SocketConfig::from_env().socket_path_string()
+            })
     }
 }
 

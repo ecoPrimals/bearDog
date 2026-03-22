@@ -349,21 +349,20 @@ impl Drop for EnvCleanup {
 
 #[tokio::test]
 async fn test_auto_initialize_default_software_mode() {
-    let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
+    // Default production behavior matches `HsmAutoInitConfig::default()` (software, auto_init).
+    // Do not use `auto_initialize()` + process env here: `BEARDOG_HSM_*` is global and
+    // parallel tests can change it between clear and `from_env()`, yielding an empty manager.
+    let config = HsmAutoInitConfig::default();
+    assert_eq!(config.mode, "software");
+    assert!(config.auto_init);
 
-    // Clear any existing env vars
-    beardog_errors::process_env::remove_var("BEARDOG_HSM_MODE");
-    beardog_errors::process_env::remove_var("BEARDOG_HSM_AUTO_INIT");
-
-    // Should default to software mode
-    let manager = HsmManager::auto_initialize().await;
+    let manager = HsmManager::auto_initialize_with_config(config).await;
     assert!(
         manager.is_ok(),
         "Auto-initialize should succeed with default software mode"
     );
 
     let manager = manager.unwrap();
-    // Verify we can generate a key (proves HSM is registered)
     let key = manager.generate_key("test_key", &KeyType::Ed25519).await;
     assert!(
         key.is_ok(),

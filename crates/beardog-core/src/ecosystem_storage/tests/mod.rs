@@ -5,6 +5,7 @@
 mod backend_tests;
 mod cache_tests;
 mod config_tests;
+mod manager_tests;
 mod metrics_tests;
 mod operations_tests;
 mod types_tests;

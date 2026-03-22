@@ -368,6 +368,14 @@ mod tests {
     }
 
     #[test]
+    fn test_find_ndk_path_uses_provided_existing_directory() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let path = tmp.path().to_string_lossy().into_owned();
+        let d = AndroidDeployment::new(Some(path.clone()), 28);
+        assert_eq!(d.find_ndk_path().expect("existing path"), path);
+    }
+
+    #[test]
     fn test_find_ndk_path_with_provided_path_nonexistent() {
         let d = AndroidDeployment::new(Some("/nonexistent/ndk".to_string()), 33);
         let result = d.find_ndk_path();

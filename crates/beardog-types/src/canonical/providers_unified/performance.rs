@@ -489,3 +489,90 @@ impl PerformanceAlertingConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod performance_coverage_tests {
+    use super::*;
+    use crate::canonical::traits::CacheStrategy;
+
+    #[test]
+    fn performance_config_default_round_trips_json() {
+        let p = PerformanceConfig::default();
+        let v = serde_json::to_value(&p).expect("ser");
+        let back: PerformanceConfig = serde_json::from_value(v).expect("de");
+        assert_eq!(back.max_concurrent_requests, p.max_concurrent_requests);
+    }
+
+    #[test]
+    fn caching_config_validate_when_disabled_always_ok() {
+        let mut c = CachingConfig::default();
+        c.enabled = false;
+        c.max_entries = 0;
+        c.ttl = Duration::ZERO;
+        assert!(c.validate().is_ok());
+        assert_eq!(c.max_entries(), 0);
+        assert!(!c.is_enabled());
+    }
+
+    #[test]
+    fn caching_config_validate_errors_on_zero_entries_when_enabled() {
+        let mut c = CachingConfig::default();
+        c.enabled = true;
+        c.max_entries = 0;
+        assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn caching_config_validate_errors_on_zero_ttl_when_enabled() {
+        let mut c = CachingConfig::default();
+        c.enabled = true;
+        c.ttl = Duration::ZERO;
+        assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn caching_config_eviction_maps_all_variants() {
+        use crate::canonical::traits::cache::EvictionPolicy as TraitPolicy;
+
+        for (policy, expect) in [
+            (EvictionPolicy::Lru, TraitPolicy::Lru),
+            (EvictionPolicy::Lfu, TraitPolicy::Lfu),
+            (EvictionPolicy::Fifo, TraitPolicy::Fifo),
+            (EvictionPolicy::Random, TraitPolicy::Random),
+        ] {
+            let c = CachingConfig {
+                eviction_policy: policy,
+                ..Default::default()
+            };
+            assert_eq!(c.eviction_policy(), expect);
+        }
+    }
+
+    #[test]
+    fn caching_config_is_production_ready_matches_expectations() {
+        let good = CachingConfig::default();
+        assert!(good.is_production_ready());
+
+        let mut bad = CachingConfig::default();
+        bad.max_entries = 5;
+        assert!(!bad.is_production_ready());
+    }
+
+    #[test]
+    fn performance_thresholds_and_alerting_defaults_are_sensible() {
+        let t = PerformanceThresholds::default();
+        assert!(t.max_response_time_ms > 0);
+        assert!(t.max_error_rate >= 0.0);
+        let a = PerformanceAlertingConfig::default();
+        assert!(a.cooldown_period > Duration::ZERO);
+        assert!(a.escalation_threshold > 0);
+    }
+
+    #[test]
+    fn compression_and_buffer_defaults() {
+        let c = CompressionConfig::default();
+        assert!(c.min_size > 0);
+        let b = BufferConfig::default();
+        assert!(b.read_buffer_size > 0 && b.pool_size > 0);
+    }
+}

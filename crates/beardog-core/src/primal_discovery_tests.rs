@@ -2,6 +2,16 @@
 
 use super::*;
 use beardog_types::constants::domains::network::ipc_discovery as ipc;
+use std::sync::{Mutex, OnceLock};
+
+static DISCOVERY_ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+fn discovery_env_lock() -> std::sync::MutexGuard<'static, ()> {
+    DISCOVERY_ENV_LOCK
+        .get_or_init(|| Mutex::new(()))
+        .lock()
+        .expect("discovery env lock")
+}
 
 #[test]
 fn test_discovery_query_by_name() {
@@ -256,4 +266,71 @@ fn test_discovery_method_explicit_constructors() {
 fn discovery_query_by_name_sets_timeout() {
     let q = DiscoveryQuery::by_name("X").with_timeout(Duration::from_secs(3));
     assert_eq!(q.timeout, Duration::from_secs(3));
+}
+
+#[test]
+fn from_env_rejects_unknown_primal_discovery_method() {
+    let _g = discovery_env_lock();
+    beardog_errors::process_env::set_var("PRIMAL_DISCOVERY_METHOD", "not-a-valid-method-xyz");
+    let res = PrimalDiscovery::from_env();
+    assert!(res.is_err(), "expected unknown discovery method error");
+    let err = res.err().expect("err");
+    assert!(
+        err.to_string().contains("Unknown discovery method"),
+        "unexpected: {err}"
+    );
+    beardog_errors::process_env::remove_var("PRIMAL_DISCOVERY_METHOD");
+}
+
+#[tokio::test]
+async fn discover_from_upa_parses_jsonrpc_result_array() {
+    let dir = tempfile::tempdir().unwrap();
+    let sock_path = dir.path().join("upa_registry.sock");
+    let sock_path_str = sock_path.to_string_lossy().to_string();
+
+    let listener = tokio::net::UnixListener::bind(&sock_path).expect("bind unix listener");
+    let server = tokio::spawn(async move {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let (mut stream, _) = listener.accept().await.expect("accept");
+        let mut buf = vec![0u8; 16384];
+        let _n = stream.read(&mut buf).await.expect("read req");
+        let p = DiscoveredPrimal {
+            name: "from-upa".to_string(),
+            endpoints: vec![],
+            capabilities: vec![],
+            trust_score: Some(0.42),
+            discovered_at: std::time::SystemTime::UNIX_EPOCH,
+        };
+        let body = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": [ serde_json::to_value(&p).expect("serialize primal") ]
+        });
+        let mut s = body.to_string();
+        s.push('\n');
+        stream.write_all(s.as_bytes()).await.expect("write resp");
+    });
+
+    let mut discovery = PrimalDiscovery::new(DiscoveryMethod::UniversalPrimalAuthority {
+        registry_addr: sock_path_str,
+    });
+    let q = DiscoveryQuery::by_capability(SimpleCapability::Cryptography);
+    let primals = discovery.discover(q).await.expect("upa discover");
+    server.await.expect("server join");
+    assert_eq!(primals.len(), 1);
+    assert_eq!(primals[0].name, "from-upa");
+    assert_eq!(primals[0].trust_score, Some(0.42));
+}
+
+#[tokio::test]
+async fn discover_by_name_missing_primal_returns_empty_without_error() {
+    let mut discovery = PrimalDiscovery::new(DiscoveryMethod::Environment);
+    let mut env = HashMap::new();
+    env.insert(
+        "PRIMAL_OTHER_ADDR".to_string(),
+        "unix:///tmp/nope.sock".to_string(),
+    );
+    let q = DiscoveryQuery::by_name("missing");
+    let primals = discovery.discover_with_env(q, env).await.expect("discover");
+    assert!(primals.is_empty());
 }

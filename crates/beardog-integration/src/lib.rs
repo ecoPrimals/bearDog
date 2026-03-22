@@ -37,6 +37,7 @@
 #![warn(missing_docs)]
 
 pub mod api_server;
+pub mod connection_tracker;
 pub mod heartbeat;
 pub mod upa_client;
 
@@ -60,6 +61,15 @@ pub use errors::IntegrationError;
 /// Re-export BearDogError for convenience
 pub use beardog_errors::BearDogError;
 
+/// Default UPA base URL when `BEARDOG_UPA_URL` is unset (HTTPS on loopback, conventional dev API port).
+pub const DEFAULT_UPA_URL: &str = "https://localhost:8080";
+
+/// Default REST listen port for this integration API server when `BEARDOG_API_PORT` is unset (distinct from the UPA URL port to avoid binding collisions).
+pub const DEFAULT_INTEGRATION_API_PORT: u16 = 9000;
+
+/// Default heartbeat period when `BEARDOG_HEARTBEAT_INTERVAL` is unset (seconds).
+pub const DEFAULT_HEARTBEAT_INTERVAL_SECS: u64 = 30;
+
 /// Integration configuration
 #[derive(Debug, Clone)]
 pub struct IntegrationConfig {
@@ -79,11 +89,11 @@ impl Default for IntegrationConfig {
     fn default() -> Self {
         Self {
             upa_url: beardog_errors::process_env::var("BEARDOG_UPA_URL")
-                .unwrap_or_else(|_| "https://localhost:8080".to_string()),
+                .unwrap_or_else(|_| DEFAULT_UPA_URL.to_string()),
             api_port: beardog_errors::process_env::var("BEARDOG_API_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(9000),
+                .unwrap_or(DEFAULT_INTEGRATION_API_PORT),
             service_name: beardog_errors::process_env::var("BEARDOG_SERVICE_NAME")
                 .unwrap_or_else(|_| "beardog-security-provider".to_string()),
             capabilities: vec![
@@ -95,7 +105,7 @@ impl Default for IntegrationConfig {
             heartbeat_interval_secs: beardog_errors::process_env::var("BEARDOG_HEARTBEAT_INTERVAL")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(30),
+                .unwrap_or(DEFAULT_HEARTBEAT_INTERVAL_SECS),
         }
     }
 }
@@ -126,10 +136,9 @@ impl BearDogIntegration {
         // Create UPA client
         let upa_config = UpaClientConfig {
             upa_url: config.upa_url.clone(),
-            ..Default::default()
         };
 
-        let upa_client = Arc::new(UpaClient::new(upa_config)?);
+        let upa_client = Arc::new(UpaClient::new(upa_config).await?);
 
         // Register with UPA
         // Use environment-driven endpoint or construct from config
@@ -139,9 +148,9 @@ impl BearDogIntegration {
             let host = beardog_errors::process_env::var("BEARDOG_HOST").unwrap_or_else(|_| {
                 // Secure default for dev, production default for release
                 if cfg!(debug_assertions) {
-                    "127.0.0.1".to_string()  // Secure localhost for development
+                    "127.0.0.1".to_string() // Secure localhost for development
                 } else {
-                    "0.0.0.0".to_string()     // Bind all interfaces for production
+                    "0.0.0.0".to_string() // Bind all interfaces for production
                 }
             });
             format!("http://{}:{}", host, config.api_port)

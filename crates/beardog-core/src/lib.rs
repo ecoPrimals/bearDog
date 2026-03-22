@@ -163,12 +163,14 @@ pub mod zero_knowledge_bootstrap;
 /// Enables capability-based routing to avoid N^2 connection problems.
 pub mod capabilities;
 
-/// Unix socket configuration with XDG compliance and 3-tier fallback
+/// Unix socket configuration with 5-tier Primal IPC Protocol fallback
 ///
 /// Provides robust socket path resolution for inter-primal communication:
-/// 1. BEARDOG_SOCKET environment variable (explicit override)
-/// 2. XDG Runtime Directory (secure, per-user)
-/// 3. /tmp fallback (last resort)
+/// 1. `BEARDOG_SOCKET` environment variable (primal-specific override)
+/// 2. `BIOMEOS_SOCKET_PATH` / `BIOMEOS_SOCKET_DIR` (orchestrator-managed)
+/// 3. `/primal/{PRIMAL_NAME}` (Primal IPC Protocol standard namespace)
+/// 4. `/run/user/{uid}/biomeos/` XDG Runtime Directory (per-user)
+/// 5. `/tmp/` fallback (last resort)
 pub mod socket_config;
 
 /// Migration system for sovereign entropy and ecosystem upgrades

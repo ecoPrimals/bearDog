@@ -233,11 +233,14 @@ mod tests {
     use beardog_genetics::birdsong::LineageProof;
     use chrono::Utc;
     use serde_json::{Value, json};
-    use std::sync::Mutex;
+    use std::sync::{Arc, Mutex};
     use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
     use tokio::net::UnixListener;
+    use tokio::sync::Notify;
 
-    static CLIENT_TEST_ENV: Mutex<()> = Mutex::new(());
+    /// Tests in this module share the global `process_env` overlay (BEARDOG_SOCKET),
+    /// so they must hold this lock. Poison is tolerated so one failure cannot cascade.
+    static ENV_LOCK: Mutex<()> = Mutex::new(());
 
     fn lineage_proof_sample() -> LineageProof {
         LineageProof {
@@ -250,14 +253,23 @@ mod tests {
         }
     }
 
+    /// RAII guard that removes env vars on drop (even on panic).
+    struct EnvGuard(Vec<&'static str>);
+    impl Drop for EnvGuard {
+        fn drop(&mut self) {
+            for key in &self.0 {
+                process_env::remove_var(key);
+            }
+        }
+    }
+
     #[tokio::test]
     async fn connect_maps_missing_socket_to_connection_error() {
-        let _lock = CLIENT_TEST_ENV.lock().unwrap();
+        let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let tmp = tempfile::tempdir().unwrap();
-        let empty_xdg = tmp.path().join("empty_xdg");
-        std::fs::create_dir_all(&empty_xdg).unwrap();
-        process_env::set_var("HOME", tmp.path().to_string_lossy().as_ref());
-        process_env::set_var("XDG_RUNTIME_DIR", empty_xdg.to_string_lossy().as_ref());
+        let sock = tmp.path().join("beardog-missing.sock");
+        process_env::set_var("BEARDOG_SOCKET", sock.to_string_lossy().as_ref());
+        let _guard = EnvGuard(vec!["BEARDOG_SOCKET"]);
 
         let result = BearDogClient::connect().await;
         let err = match result {
@@ -265,8 +277,6 @@ mod tests {
             Ok(_) => panic!("expected connection failure"),
         };
         let msg = err.to_string();
-        process_env::remove_var("HOME");
-        process_env::remove_var("XDG_RUNTIME_DIR");
         assert!(
             msg.contains("Primal not found") || msg.contains("Connection failed"),
             "unexpected error: {msg}"
@@ -275,16 +285,16 @@ mod tests {
 
     #[tokio::test]
     async fn lineage_methods_round_trip_over_json_rpc() {
-        let _lock = CLIENT_TEST_ENV.lock().unwrap();
+        let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let tmp = tempfile::tempdir().unwrap();
-        let xdg = tmp.path().join("xdg_run");
-        let eco = xdg.join("ecoPrimals");
-        std::fs::create_dir_all(&eco).unwrap();
-        let socket_path = eco.join("beardog.sock");
+        let socket_path = tmp.path().join("beardog-round-trip.sock");
 
         let listener = UnixListener::bind(&socket_path).unwrap();
+        let ready = Arc::new(Notify::new());
+        let ready_tx = Arc::clone(&ready);
 
         tokio::spawn(async move {
+            ready_tx.notify_one();
             let (mut stream, _) = listener.accept().await.unwrap();
             let (mut read_half, mut write_half) = stream.split();
             let mut reader = BufReader::new(&mut read_half);
@@ -315,9 +325,9 @@ mod tests {
             }
         });
 
-        tokio::time::sleep(std::time::Duration::from_millis(40)).await;
-
-        process_env::set_var("XDG_RUNTIME_DIR", xdg.to_string_lossy().as_ref());
+        ready.notified().await;
+        process_env::set_var("BEARDOG_SOCKET", socket_path.to_string_lossy().as_ref());
+        let _guard = EnvGuard(vec!["BEARDOG_SOCKET"]);
 
         let mut client = BearDogClient::connect().await.unwrap();
         let created = client.create_lineage("tower", None).await.unwrap();
@@ -334,22 +344,20 @@ mod tests {
 
         let got = client.get_lineage("L1").await.unwrap();
         assert_eq!(got["lineage_id"], "L1");
-
-        process_env::remove_var("XDG_RUNTIME_DIR");
     }
 
     #[tokio::test]
     async fn lineage_create_and_extend_with_metadata_serializes_in_params() {
-        let _lock = CLIENT_TEST_ENV.lock().unwrap();
+        let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let tmp = tempfile::tempdir().unwrap();
-        let xdg = tmp.path().join("xdg_meta");
-        let eco = xdg.join("ecoPrimals");
-        std::fs::create_dir_all(&eco).unwrap();
-        let socket_path = eco.join("beardog.sock");
+        let socket_path = tmp.path().join("beardog-meta.sock");
 
         let listener = UnixListener::bind(&socket_path).unwrap();
+        let ready = Arc::new(Notify::new());
+        let ready_tx = Arc::clone(&ready);
 
         tokio::spawn(async move {
+            ready_tx.notify_one();
             let (mut stream, _) = listener.accept().await.unwrap();
             let (mut read_half, mut write_half) = stream.split();
             let mut reader = BufReader::new(&mut read_half);
@@ -389,9 +397,9 @@ mod tests {
             }
         });
 
-        tokio::time::sleep(std::time::Duration::from_millis(40)).await;
-
-        process_env::set_var("XDG_RUNTIME_DIR", xdg.to_string_lossy().as_ref());
+        ready.notified().await;
+        process_env::set_var("BEARDOG_SOCKET", socket_path.to_string_lossy().as_ref());
+        let _guard = EnvGuard(vec!["BEARDOG_SOCKET"]);
 
         let mut meta = LineageMetadata::default();
         meta.biome_type = Some("test-biome".to_string());
@@ -409,22 +417,20 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(extended["node_id"], "child-meta");
-
-        process_env::remove_var("XDG_RUNTIME_DIR");
     }
 
     #[tokio::test]
     async fn api_error_maps_json_rpc_fault() {
-        let _lock = CLIENT_TEST_ENV.lock().unwrap();
+        let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let tmp = tempfile::tempdir().unwrap();
-        let xdg = tmp.path().join("xdg_err");
-        let eco = xdg.join("ecoPrimals");
-        std::fs::create_dir_all(&eco).unwrap();
-        let socket_path = eco.join("beardog.sock");
+        let socket_path = tmp.path().join("beardog-err.sock");
 
         let listener = UnixListener::bind(&socket_path).unwrap();
+        let ready = Arc::new(Notify::new());
+        let ready_tx = Arc::clone(&ready);
 
         tokio::spawn(async move {
+            ready_tx.notify_one();
             let (mut stream, _) = listener.accept().await.unwrap();
             let (mut read_half, mut write_half) = stream.split();
             let mut reader = BufReader::new(&mut read_half);
@@ -442,9 +448,9 @@ mod tests {
             write_half.write_all(b"\n").await.unwrap();
         });
 
-        tokio::time::sleep(std::time::Duration::from_millis(40)).await;
-
-        process_env::set_var("XDG_RUNTIME_DIR", xdg.to_string_lossy().as_ref());
+        ready.notified().await;
+        process_env::set_var("BEARDOG_SOCKET", socket_path.to_string_lossy().as_ref());
+        let _guard = EnvGuard(vec!["BEARDOG_SOCKET"]);
 
         let mut client = BearDogClient::connect().await.unwrap();
         let result = client.create_lineage("x", None).await;
@@ -453,7 +459,6 @@ mod tests {
             Ok(_) => panic!("expected API error"),
         };
         let msg = err.to_string();
-        process_env::remove_var("XDG_RUNTIME_DIR");
         assert!(
             msg.contains("method not found") || msg.contains("Api error"),
             "unexpected: {msg}"

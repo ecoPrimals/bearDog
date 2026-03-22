@@ -5,31 +5,17 @@
 //! **EVOLVED**: Now uses Tower Atomic (Unix sockets + JSON-RPC) instead of HTTP!
 //!
 //! Modern async client for Universal Port Authority (UPA) over Tower Atomic IPC.
-//!
-//! ## Evolution
-//!
-//! - **Before**: HTTP client using reqwest (connection pooling, keep-alive)
-//! - **After**: Tower Atomic client using Unix sockets (100% Pure Rust IPC!)
-//!
-//! ## Features
-//! - Unix socket communication (no network overhead!)
-//! - JSON-RPC 2.0 protocol
-//! - Automatic retry with exponential backoff
-//! - Graceful error handling
-//! - Lock-free atomic state management
-//!
-//! ## Concurrency Patterns
-//! - Uses `Arc<RwLock>` for shared mutable state
-//! - Tokio async/await throughout
-//! - No blocking operations
 
 use std::path::Path;
 use std::sync::Arc;
 
 use arc_swap::ArcSwap;
-use beardog_discovery::{discovered_services_from_environment_from_env, primary_url_to_ipc_socket_path};
+use beardog_discovery::{
+    discovered_services_from_environment_from_env, primary_url_to_ipc_socket_path,
+};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
+use tokio::sync::Mutex;
 use tracing::{debug, info};
 
 use beardog_errors::BearDogError;
@@ -38,6 +24,38 @@ use beardog_tower_atomic::Client as AtomicClient;
 
 /// Environment capability key: `CAPABILITY_UPA_REGISTER_ENDPOINT` (see `beardog_discovery::capability_env`).
 const UPA_REGISTER_CAPABILITY: &str = "upa_register";
+
+/// Load metrics reported with heartbeats (CPU/memory from heartbeat; connections from API tracker).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LoadMetrics {
+    /// CPU usage percentage (0–100).
+    pub cpu_percent: f32,
+    /// Memory usage percentage (0–100).
+    pub memory_percent: f32,
+    /// Concurrent in-flight HTTP requests on the integration API server.
+    pub active_connections: u32,
+}
+
+/// Configuration for [`UpaClient`] (retained for API compatibility; discovery uses env/capabilities).
+#[derive(Debug, Clone, Default)]
+pub struct UpaClientConfig {
+    /// Legacy URL field from HTTP client days; Tower Atomic uses Unix sockets from env.
+    pub upa_url: String,
+}
+
+/// Minimal service record returned by discovery-style UPA responses (fields may grow without breaking callers).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceInfo {
+    /// Service identifier.
+    pub id: String,
+}
+
+/// Service status snapshot for UPA heartbeats and admin views.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceStatus {
+    /// Human-readable status.
+    pub status: String,
+}
 
 /// UPA registration request payload
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -94,43 +112,35 @@ async fn connect_upa_atomic() -> Result<AtomicClient, BearDogError> {
     }
 
     if let Ok(name) = beardog_errors::process_env::var("UPA_PROVIDER") {
-        return AtomicClient::connect(&name).await.map_err(|e| {
-            BearDogError::network(format!("UPA UPA_PROVIDER connect failed: {e}"))
-        });
+        return AtomicClient::connect(&name)
+            .await
+            .map_err(|e| BearDogError::network(format!("UPA UPA_PROVIDER connect failed: {e}")));
     }
 
     Err(BearDogError::network(
-        "UPA: set UPA_UNIX_SOCKET, CAPABILITY_UPA_REGISTER_ENDPOINT, or UPA_PROVIDER",
+        "UPA: set UPA_UNIX_SOCKET, CAPABILITY_UPA_REGISTER_ENDPOINT, or UPA_PROVIDER".to_string(),
     ))
 }
 
 /// UPA client for service registration and discovery
 pub struct UpaClient {
     /// Tower Atomic client for UPA provider
-    client: AtomicClient,
+    client: Arc<Mutex<AtomicClient>>,
     /// Cached registration token
     token: Arc<ArcSwap<Option<String>>>,
 }
 
 impl UpaClient {
-    /// Create a new UPA client
+    /// Create a new UPA client and connect via Tower Atomic.
     ///
-    /// Discovers the UPA provider at runtime (`UPA_UNIX_SOCKET`, capability env, or `UPA_PROVIDER`).
+    /// `config.upa_url` is accepted for compatibility; connection uses `UPA_UNIX_SOCKET` /
+    /// capability discovery / `UPA_PROVIDER` as documented in `connect_upa_atomic`.
     ///
-    /// Connects via Tower Atomic (Unix socket).
+    /// # Errors
     ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// use beardog_integration::upa_client::UpaClient;
-    ///
-    /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let client = UpaClient::new().await?;
-    ///     Ok(())
-    /// }
-    /// ```
-    pub async fn new() -> Result<Self, BearDogError> {
+    /// Returns an error when no UPA endpoint is configured or connection fails.
+    pub async fn new(config: UpaClientConfig) -> Result<Self, BearDogError> {
+        let _ = config.upa_url;
         info!("🔌 Connecting to UPA via Tower Atomic (capability-first discovery)");
 
         let client = connect_upa_atomic().await?;
@@ -138,35 +148,18 @@ impl UpaClient {
         info!("✅ Connected to UPA provider");
 
         Ok(Self {
-            client,
+            client: Arc::new(Mutex::new(client)),
             token: Arc::new(ArcSwap::new(Arc::new(None))),
         })
     }
 
     /// Register a service with UPA
     ///
-    /// # Example
+    /// # Errors
     ///
-    /// ```rust,no_run
-    /// # use beardog_integration::upa_client::{UpaClient, RegistrationRequest};
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let mut client = UpaClient::new().await?;
-    /// 
-    /// let request = RegistrationRequest {
-    ///     service_name: "beardog-crypto".to_string(),
-    ///     version: "0.9.0".to_string(),
-    ///     capabilities: vec!["crypto.sign".to_string(), "crypto.encrypt".to_string()],
-    ///     endpoint: "/run/user/1000/ecoPrimals/beardog.sock".to_string(),
-    ///     metadata: None,
-    /// };
-    /// 
-    /// let response = client.register(request).await?;
-    /// println!("Registered with service ID: {}", response.service_id);
-    /// # Ok(())
-    /// # }
-    /// ```
+    /// Returns an error when the JSON-RPC call fails or the response cannot be parsed.
     pub async fn register(
-        &mut self,
+        &self,
         request: RegistrationRequest,
     ) -> Result<RegistrationResponse, BearDogError> {
         info!("📝 Registering service: {}", request.service_name);
@@ -181,18 +174,18 @@ impl UpaClient {
 
         let response = self
             .client
+            .lock()
+            .await
             .call("upa.register", params)
             .await
-            .map_err(|e| BearDogError::ApiError(format!("UPA registration failed: {}", e)))?;
+            .map_err(|e| BearDogError::api(format!("UPA registration failed: {e}")))?;
 
-        let registration: RegistrationResponse =
-            serde_json::from_value(response).map_err(|e| {
-                BearDogError::SerializationError(format!("Failed to parse registration response: {}", e))
-            })?;
+        let registration: RegistrationResponse = serde_json::from_value(response).map_err(|e| {
+            let msg = format!("Failed to parse registration response: {e}");
+            BearDogError::serialization(&msg)
+        })?;
 
-        // Cache token
-        self.token
-            .store(Arc::new(Some(registration.token.clone())));
+        self.token.store(Arc::new(Some(registration.token.clone())));
 
         info!("✅ Registered with service ID: {}", registration.service_id);
 
@@ -200,8 +193,12 @@ impl UpaClient {
     }
 
     /// Discover services by capability
-    pub async fn discover(&mut self, capability: &str) -> Result<Vec<Value>, BearDogError> {
-        info!("🔍 Discovering services with capability: {}", capability);
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the JSON-RPC call fails.
+    pub async fn discover(&self, capability: &str) -> Result<Vec<Value>, BearDogError> {
+        info!("🔍 Discovering services with capability: {capability}");
 
         let params = json!({
             "capability": capability,
@@ -209,38 +206,100 @@ impl UpaClient {
 
         let response = self
             .client
+            .lock()
+            .await
             .call("upa.discover", params)
             .await
-            .map_err(|e| BearDogError::ApiError(format!("UPA discovery failed: {}", e)))?;
+            .map_err(|e| BearDogError::api(format!("UPA discovery failed: {e}")))?;
 
-        let services: Vec<Value> = serde_json::from_value(response["services"].clone())
-            .unwrap_or_default();
+        let services: Vec<Value> =
+            serde_json::from_value(response["services"].clone()).unwrap_or_default();
 
         info!("✅ Found {} services", services.len());
 
         Ok(services)
     }
 
-    /// Heartbeat to keep registration alive
-    pub async fn heartbeat(&mut self) -> Result<(), BearDogError> {
+    /// Heartbeat to keep registration alive (token-only; legacy UPA).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when not registered or the RPC fails.
+    pub async fn heartbeat(&self) -> Result<(), BearDogError> {
         debug!("💓 Sending heartbeat to UPA");
 
         let token = self.token.load();
         let token = token
             .as_ref()
             .as_ref()
-            .ok_or_else(|| BearDogError::AuthenticationFailed("Not registered".to_string()))?;
+            .ok_or_else(|| BearDogError::unauthorized("Not registered".to_string()))?;
 
         let params = json!({
             "token": token,
         });
 
         self.client
+            .lock()
+            .await
             .call("upa.heartbeat", params)
             .await
-            .map_err(|e| BearDogError::ApiError(format!("UPA heartbeat failed: {}", e)))?;
+            .map_err(|e| BearDogError::api(format!("UPA heartbeat failed: {e}")))?;
 
         debug!("✅ Heartbeat sent");
+
+        Ok(())
+    }
+
+    /// Send a heartbeat with service identity, token, and load metrics.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the JSON-RPC call fails.
+    pub async fn send_heartbeat(
+        &self,
+        service_id: &str,
+        token: &str,
+        metrics: LoadMetrics,
+    ) -> Result<(), BearDogError> {
+        debug!(service_id = %service_id, "💓 Sending heartbeat with metrics");
+
+        let params = json!({
+            "service_id": service_id,
+            "token": token,
+            "metrics": metrics,
+        });
+
+        self.client
+            .lock()
+            .await
+            .call("upa.heartbeat", params)
+            .await
+            .map_err(|e| BearDogError::api(format!("UPA heartbeat with metrics failed: {e}")))?;
+
+        debug!("✅ Heartbeat with metrics sent");
+
+        Ok(())
+    }
+
+    /// Deregister from UPA (best-effort).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the JSON-RPC call fails.
+    pub async fn deregister(&self, service_id: &str, token: &str) -> Result<(), BearDogError> {
+        let params = json!({
+            "service_id": service_id,
+            "token": token,
+        });
+
+        self.client
+            .lock()
+            .await
+            .call("upa.deregister", params)
+            .await
+            .map_err(|e| BearDogError::api(format!("UPA deregister failed: {e}")))?;
+
+        self.token.store(Arc::new(None));
 
         Ok(())
     }
@@ -253,10 +312,10 @@ mod tests {
     #[tokio::test]
     #[ignore] // Requires a UPA endpoint (env / capability)
     async fn test_connect() {
-        let client = UpaClient::new().await;
+        let client = UpaClient::new(UpaClientConfig::default()).await;
         match client {
             Ok(_) => println!("✅ Connected to UPA"),
-            Err(e) => println!("⚠️  UPA not available: {}", e),
+            Err(e) => println!("⚠️  UPA not available: {e}"),
         }
     }
 }

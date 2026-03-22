@@ -239,6 +239,8 @@ pub enum InstallerError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::arch::Architecture;
+    use crate::platform::OperatingSystem;
     use tempfile::TempDir;
 
     #[tokio::test]
@@ -370,5 +372,111 @@ mod tests {
             installer.binary_path(PrimalName::new("beardog")),
             bin_dir.join("beardog")
         );
+    }
+
+    #[test]
+    fn test_locate_binary_prefers_target_subdirectory() {
+        let temp = TempDir::new().expect("tempdir");
+        let source_dir = temp.path().join("release");
+        std::fs::create_dir_all(source_dir.join("x86_64-unknown-linux-gnu")).expect("mkdir");
+
+        let target_bin = source_dir.join("x86_64-unknown-linux-gnu").join("beardog");
+        std::fs::write(&target_bin, b"x").expect("write");
+
+        let paths = BiomeOSPaths {
+            bin_dir: temp.path().join("bin"),
+            data_dir: temp.path().join("data"),
+            config_dir: temp.path().join("config"),
+            runtime_dir: temp.path().join("runtime"),
+            cache_dir: temp.path().join("cache"),
+        };
+
+        let installer = BinaryInstaller::new(paths, source_dir.clone());
+        let arch = Architecture::X86_64;
+        let os = OperatingSystem::Linux;
+
+        let found = installer
+            .locate_binary(PrimalName::new("beardog"), &arch, &os)
+            .expect("locate");
+        assert_eq!(found, target_bin);
+    }
+
+    #[test]
+    fn test_locate_binary_finds_sibling_target_tree() {
+        let temp = TempDir::new().expect("tempdir");
+        let release = temp.path().join("release");
+        let gnu_dir = temp.path().join("x86_64-unknown-linux-gnu");
+        std::fs::create_dir_all(&release).expect("mkdir release");
+        std::fs::create_dir_all(&gnu_dir).expect("mkdir gnu");
+
+        let candidate = gnu_dir.join("beardog");
+        std::fs::write(&candidate, b"y").expect("write");
+
+        let paths = BiomeOSPaths {
+            bin_dir: temp.path().join("bin"),
+            data_dir: temp.path().join("data"),
+            config_dir: temp.path().join("config"),
+            runtime_dir: temp.path().join("runtime"),
+            cache_dir: temp.path().join("cache"),
+        };
+
+        let installer = BinaryInstaller::new(paths, release);
+        let arch = Architecture::X86_64;
+        let os = OperatingSystem::Linux;
+
+        let found = installer
+            .locate_binary(PrimalName::new("beardog"), &arch, &os)
+            .expect("locate");
+        assert_eq!(found, candidate);
+    }
+
+    #[test]
+    fn test_locate_binary_not_found_lists_candidates() {
+        let temp = TempDir::new().expect("tempdir");
+        let source_dir = temp.path().join("empty");
+        std::fs::create_dir_all(&source_dir).expect("mkdir");
+
+        let paths = BiomeOSPaths {
+            bin_dir: temp.path().join("bin"),
+            data_dir: temp.path().join("data"),
+            config_dir: temp.path().join("config"),
+            runtime_dir: temp.path().join("runtime"),
+            cache_dir: temp.path().join("cache"),
+        };
+
+        let installer = BinaryInstaller::new(paths, source_dir.clone());
+        let arch = Architecture::X86_64;
+        let os = OperatingSystem::Linux;
+
+        let err = installer
+            .locate_binary(PrimalName::new("missing-primal"), &arch, &os)
+            .expect_err("missing binary");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Binary not found"),
+            "unexpected message: {msg}"
+        );
+        assert!(msg.contains("x86_64-unknown-linux-gnu"));
+    }
+
+    #[tokio::test]
+    async fn test_uninstall_binary_missing_is_ok() {
+        let temp = TempDir::new().expect("tempdir");
+        let bin_dir = temp.path().join("bin");
+        std::fs::create_dir_all(&bin_dir).expect("mkdir");
+
+        let paths = BiomeOSPaths {
+            bin_dir: bin_dir.clone(),
+            data_dir: temp.path().join("data"),
+            config_dir: temp.path().join("config"),
+            runtime_dir: temp.path().join("runtime"),
+            cache_dir: temp.path().join("cache"),
+        };
+
+        let installer = BinaryInstaller::new(paths, temp.path().to_path_buf());
+        installer
+            .uninstall_binary(PrimalName::new("nope"))
+            .await
+            .expect("uninstall missing should succeed");
     }
 }

@@ -528,3 +528,113 @@ impl RetryStrategy for RetryPolicy {
         total
     }
 }
+
+#[cfg(test)]
+mod monitoring_core_coverage_tests {
+    use super::*;
+    use crate::canonical::monitoring::MonitoringConfigValidation;
+    use crate::canonical::traits::{MonitoringConfig, RetryStrategy};
+
+    #[test]
+    fn core_monitoring_config_monitoring_level_from_sampling_rate() {
+        let mut c = CoreMonitoringConfig {
+            sampling_rate: 1.0,
+            ..CoreMonitoringConfig::default()
+        };
+        use crate::canonical::traits::monitoring::MonitoringLevel;
+        assert!(matches!(
+            MonitoringConfig::monitoring_level(&c),
+            MonitoringLevel::Standard
+        ));
+        c.sampling_rate = 0.75;
+        assert!(matches!(
+            MonitoringConfig::monitoring_level(&c),
+            MonitoringLevel::Basic
+        ));
+        c.sampling_rate = 0.1;
+        assert!(matches!(
+            MonitoringConfig::monitoring_level(&c),
+            MonitoringLevel::Minimal
+        ));
+    }
+
+    #[test]
+    fn core_monitoring_config_validate_trait_errors() {
+        let mut c = CoreMonitoringConfig::default();
+        c.enabled = true;
+        c.service_name = String::new();
+        assert!(MonitoringConfig::validate(&c).is_err());
+
+        c.service_name = "svc".to_string();
+        c.sampling_rate = 1.5;
+        assert!(MonitoringConfig::validate(&c).is_err());
+
+        c.sampling_rate = 1.0;
+        c.buffer_size = 0;
+        assert!(MonitoringConfig::validate(&c).is_err());
+
+        c.buffer_size = 100;
+        c.flush_interval = Duration::ZERO;
+        assert!(MonitoringConfig::validate(&c).is_err());
+    }
+
+    #[test]
+    fn core_monitoring_config_validation_business_errors() {
+        let mut c = CoreMonitoringConfig::default();
+        c.service_name.clear();
+        assert!(MonitoringConfigValidation::validate(&c).is_err());
+
+        c.service_name = "x".to_string();
+        c.sampling_rate = 2.0;
+        assert!(MonitoringConfigValidation::validate(&c).is_err());
+    }
+
+    #[test]
+    fn retry_policy_delay_and_limits() {
+        let mut p = RetryPolicy::default();
+        p.enabled = true;
+        p.max_retries = 3;
+        p.initial_delay = Duration::from_millis(100);
+        p.max_delay = Duration::from_secs(1);
+        p.backoff_multiplier = 2.0;
+
+        assert!(RetryStrategy::delay_for_attempt(&p, 0) > Duration::ZERO);
+        assert!(RetryStrategy::is_limit_reached(&p, 3));
+        assert!(RetryStrategy::should_retry_error(
+            &p,
+            &std::io::Error::other("x")
+        ));
+        let total = RetryStrategy::total_delay(&p, 2);
+        assert!(total > Duration::ZERO);
+
+        p.enabled = false;
+        assert_eq!(RetryStrategy::total_delay(&p, 5), Duration::ZERO);
+        assert!(RetryStrategy::is_limit_reached(&p, 0));
+        assert!(!RetryStrategy::should_retry_error(
+            &p,
+            &std::io::Error::other("x")
+        ));
+    }
+
+    #[test]
+    fn storage_backend_and_filter_action_serde_roundtrip() {
+        let b = StorageBackend::Memory { max_entries: 42 };
+        let v = serde_json::to_value(&b).expect("ser");
+        let back: StorageBackend = serde_json::from_value(v).expect("de");
+        assert!(matches!(back, StorageBackend::Memory { max_entries: 42 }));
+
+        let fa = FilterAction::Transform {
+            operation: "sample".to_string(),
+            parameters: std::collections::HashMap::new(),
+        };
+        let v2 = serde_json::to_value(&fa).expect("ser");
+        let back2: FilterAction = serde_json::from_value(v2).expect("de");
+        assert!(matches!(back2, FilterAction::Transform { .. }));
+    }
+
+    #[test]
+    fn retention_policy_default_serializes() {
+        let r = RetentionPolicy::default();
+        let _ = serde_json::to_string(&r).expect("json");
+    }
+}

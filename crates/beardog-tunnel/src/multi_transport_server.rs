@@ -248,6 +248,15 @@ impl MultiTransportServer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::btsp_provider::BeardogBtspProvider;
+    use crate::tunnel::hsm::SoftwareHsmConfig;
+    use crate::tunnel::hsm::manager::HsmManager;
+    use crate::tunnel::hsm::software_hsm::RustSoftwareHsm;
+    use crate::tunnel::hsm::types::HsmTier;
+    use beardog_genetics::ecosystem_evolution::EcosystemGeneticEngine;
+    use beardog_types::primal_identity::PrimalIdentity;
+    use std::sync::Arc;
+    use tempfile::tempdir;
 
     #[test]
     fn test_bound_transport_variants() {
@@ -257,6 +266,63 @@ mod tests {
             match t {
                 BoundTransport::Unix(_) => {}
                 BoundTransport::Tcp(_) => {}
+            }
+        }
+    }
+
+    async fn test_btsp_provider() -> Arc<BeardogBtspProvider> {
+        let mut hsm = HsmManager::new();
+        let software_hsm = RustSoftwareHsm::new(SoftwareHsmConfig::default())
+            .await
+            .expect("software hsm");
+        hsm.register_hsm_provider(HsmTier::Software, Arc::new(software_hsm))
+            .expect("register");
+        let hsm = Arc::new(hsm);
+        let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+        Arc::new(BeardogBtspProvider::new(hsm, genetics).await.expect("btsp"))
+    }
+
+    #[tokio::test]
+    async fn bind_all_available_unix_and_tcp_with_isolated_socket_path() {
+        let dir = tempdir().expect("tempdir");
+        let sock = dir.path().join("multi_transport.sock");
+        let provider = test_btsp_provider().await;
+        let identity = Arc::new(PrimalIdentity::for_test("fam", "node"));
+
+        let mts = MultiTransportServer::bind_all_available(
+            provider,
+            identity,
+            sock.to_string_lossy().as_ref(),
+            Some("127.0.0.1:0"),
+        )
+        .await
+        .expect("at least one transport");
+
+        assert!(mts.transport_count() >= 1);
+    }
+
+    #[tokio::test]
+    async fn bind_all_available_fails_when_no_transport_can_be_configured() {
+        let dir = tempdir().expect("tempdir");
+        let provider = test_btsp_provider().await;
+        let identity = Arc::new(PrimalIdentity::for_test("fam", "node"));
+
+        let outcome = MultiTransportServer::bind_all_available(
+            provider,
+            identity,
+            dir.path().to_str().expect("utf8"),
+            Some("not-a-valid-socket-address:xyz"),
+        )
+        .await;
+
+        match outcome {
+            Ok(_) => panic!("expected bind_all_available to fail when no transport is available"),
+            Err(e) => {
+                let msg = format!("{e}");
+                assert!(
+                    msg.contains("transport") || msg.contains("bind") || msg.contains("Failed"),
+                    "{msg}"
+                );
             }
         }
     }

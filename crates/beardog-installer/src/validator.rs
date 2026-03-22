@@ -438,4 +438,40 @@ mod tests {
 
         assert!(report.is_healthy());
     }
+
+    #[test]
+    fn test_validation_report_display_short_checksum_prefix() {
+        let mut report = ValidationReport::new(PrimalName::new("beardog"));
+        report.file_exists = true;
+        report.is_executable = true;
+        report.size_bytes = 2_000_000;
+        report.size_reasonable = true;
+        report.checksum = Some("abcd".to_string());
+        report.runs = false;
+        report.healthy = false;
+
+        let display = format!("{report}");
+        assert!(display.contains("abcd"));
+        assert!(display.contains("UNHEALTHY"));
+    }
+
+    #[tokio::test]
+    #[cfg(unix)]
+    async fn test_validate_all_surfaces_read_errors_as_unhealthy_reports() {
+        let temp = TempDir::new().expect("tempdir");
+        let path = temp.path().join("blocked");
+        fs::write(&path, b"x").await.expect("write");
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(&path).await.expect("meta").permissions();
+        perms.set_mode(0o000);
+        fs::set_permissions(&path, perms).await.expect("chmod");
+
+        let validator = BinaryValidator::new();
+        let reports = validator
+            .validate_all(vec![(PrimalName::new("blocked"), path)])
+            .await;
+
+        assert_eq!(reports.len(), 1);
+        assert!(!reports[0].healthy);
+    }
 }

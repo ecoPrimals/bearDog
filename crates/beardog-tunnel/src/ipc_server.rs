@@ -517,4 +517,127 @@ mod tests {
         .await;
         assert!(out.is_none());
     }
+
+    struct FailingCapabilityHandler;
+
+    #[async_trait::async_trait]
+    impl IpcHandler for FailingCapabilityHandler {
+        async fn handle_capability_request(
+            &self,
+            _request: CapabilityRequest,
+        ) -> Result<CapabilityResponse, BearDogError> {
+            Err(BearDogError::business("capability failed".to_string()))
+        }
+
+        async fn handle_register(
+            &self,
+            _primal_id: String,
+            _capabilities: Vec<String>,
+        ) -> Result<(), BearDogError> {
+            Ok(())
+        }
+
+        async fn handle_event(
+            &self,
+            _event_type: String,
+            _data: serde_json::Value,
+        ) -> Result<(), BearDogError> {
+            Ok(())
+        }
+    }
+
+    #[tokio::test]
+    async fn handle_message_capability_request_err_returns_none() {
+        let handler: Arc<dyn IpcHandler> = Arc::new(FailingCapabilityHandler);
+        let connections = Arc::new(RwLock::new(Vec::new()));
+        let req = CapabilityRequest {
+            from_primal: "a".to_string(),
+            capability: Capability::Encryption {
+                algorithms: vec!["aes".to_string()],
+                key_types: vec!["x25519".to_string()],
+            },
+            params: std::collections::HashMap::new(),
+            request_id: "fail-cap".to_string(),
+        };
+        let out =
+            IpcServer::handle_message(IpcMessage::CapabilityRequest(req), &handler, &connections)
+                .await;
+        assert!(out.is_none());
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn handle_connection_ping_roundtrip_returns_pong_line() {
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+        let (mut local, remote) = tokio::net::UnixStream::pair().expect("unix pair");
+        let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+        let connections = Arc::new(RwLock::new(Vec::new()));
+        let h = Arc::clone(&handler);
+        let c = Arc::clone(&connections);
+        let serve = tokio::spawn(async move {
+            IpcServer::handle_connection(remote, h, c)
+                .await
+                .expect("handle")
+        });
+
+        let ping = serde_json::to_string(&IpcMessage::Ping {
+            from: "unit-test-peer".to_string(),
+        })
+        .expect("serialize ping");
+        local.write_all(ping.as_bytes()).await.expect("write");
+        local.write_all(b"\n").await.expect("newline");
+
+        let mut reader = BufReader::new(&mut local);
+        let mut line = String::new();
+        reader.read_line(&mut line).await.expect("read response");
+        let pong: IpcMessage = serde_json::from_str(line.trim()).expect("pong json");
+        match pong {
+            IpcMessage::Pong { to } => assert_eq!(to, "unit-test-peer"),
+            _ => panic!("expected pong, got {pong:?}"),
+        }
+
+        drop(reader);
+        serve.abort();
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn handle_connection_malformed_json_line_is_skipped_without_panic() {
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+        let (mut local, remote) = tokio::net::UnixStream::pair().expect("unix pair");
+        let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+        let connections = Arc::new(RwLock::new(Vec::new()));
+        let h = Arc::clone(&handler);
+        let c = Arc::clone(&connections);
+        let serve = tokio::spawn(async move {
+            IpcServer::handle_connection(remote, h, c)
+                .await
+                .expect("handle")
+        });
+
+        local
+            .write_all(b"not-json-at-all\n")
+            .await
+            .expect("write garbage");
+        let valid = serde_json::to_string(&IpcMessage::Ping {
+            from: "after-garbage".to_string(),
+        })
+        .expect("serialize");
+        local.write_all(valid.as_bytes()).await.expect("write");
+        local.write_all(b"\n").await.expect("nl");
+
+        let mut reader = BufReader::new(&mut local);
+        let mut out = String::new();
+        reader.read_line(&mut out).await.expect("read");
+        let msg: IpcMessage = serde_json::from_str(out.trim()).expect("second line");
+        assert!(
+            matches!(msg, IpcMessage::Pong { ref to } if to == "after-garbage"),
+            "{msg:?}"
+        );
+
+        drop(reader);
+        serve.abort();
+    }
 }

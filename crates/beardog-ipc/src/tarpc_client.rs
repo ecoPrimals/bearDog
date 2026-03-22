@@ -39,6 +39,12 @@ use tracing::info;
 
 use crate::tarpc_types::*;
 
+/// Default TCP connect timeout for [`TarpcCryptoClient::connect`].
+const DEFAULT_TARPC_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// Default RPC request deadline for [`TarpcCryptoClient::context`].
+const DEFAULT_TARPC_REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
+
 /// High-performance tarpc crypto client
 ///
 /// Thread-safe, clonable client for BearDog crypto operations.
@@ -71,7 +77,12 @@ impl TarpcCryptoClient {
     /// # Errors
     /// Returns error if initial connection fails
     pub async fn connect(addr: SocketAddr) -> anyhow::Result<Self> {
-        Self::connect_with_options(addr, Duration::from_secs(5), Duration::from_secs(30)).await
+        Self::connect_with_options(
+            addr,
+            DEFAULT_TARPC_CONNECT_TIMEOUT,
+            DEFAULT_TARPC_REQUEST_TIMEOUT,
+        )
+        .await
     }
 
     /// Connect with custom timeouts
@@ -586,11 +597,13 @@ mod tests {
         drop(probe);
 
         let server = crate::tarpc_server::BearDogCryptoServer::new();
+        let (ready_tx, ready_rx) = tokio::sync::oneshot::channel();
         let srv = tokio::spawn(async move {
+            let _ = ready_tx.send(());
             let _ = server.run(addr).await;
         });
 
-        tokio::time::sleep(Duration::from_millis(100)).await;
+        ready_rx.await.expect("server task should signal readiness");
 
         let client = TarpcCryptoClient::connect(addr)
             .await
@@ -716,8 +729,8 @@ mod tests {
         let client = TarpcClientInner {
             client: RwLock::new(None),
             addr: "127.0.0.1:9901".parse().unwrap(),
-            connect_timeout: Duration::from_secs(5),
-            request_timeout: Duration::from_secs(30),
+            connect_timeout: DEFAULT_TARPC_CONNECT_TIMEOUT,
+            request_timeout: DEFAULT_TARPC_REQUEST_TIMEOUT,
         };
 
         let outer = TarpcCryptoClient {

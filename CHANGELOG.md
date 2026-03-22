@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### March 22, 2026 -- Wave 8: Deep Debt Execution — Coverage, Stubs, Hardcoding, File Size
+
+- **Coverage 85.1% → 86.8%** — ~1,000+ newly covered lines across beardog-core, beardog-types,
+  beardog-tunnel, beardog-genetics, beardog-cli, beardog-threat, beardog-monitoring, beardog-integration
+- **Production stubs evolved** — `disaster_recovery.rs` BLAKE3 content-hash; `heartbeat.rs` real
+  `AtomicUsize` connection tracking with RAII guard; `monitoring.rs` `Instant`-backed rolling timings
+- **beardog-integration re-integrated** — Evolved HTTP/reqwest to Tower Atomic (Unix sockets + JSON-RPC);
+  legacy HTTP integration test archived; connection tracking via Axum middleware
+- **20+ hardcoded values extracted** — Ports (`DEFAULT_INTEGRATION_API_PORT`, `DEFAULT_API_SERVER_LISTEN_PORT`),
+  timeouts (`DEFAULT_TARPC_CONNECT_TIMEOUT`, `DEFAULT_TARPC_REQUEST_TIMEOUT`), paths
+  (`FALLBACK_REGISTRY_UNIX_SOCKET_PATH`, `BEARDOG_TCP_DISCOVERY_FILENAME`), cache TTLs, socket dirs
+- **Flaky test fixes** — `test_timeout_accuracy` uses mock-time (`start_paused`);
+  `test_auto_initialize_default_software_mode` uses `HsmAutoInitConfig::default()` (no env race);
+  e2e stress test timing widened; mass failure test uses guaranteed early-batch failures
+- **Orphan modules archived** — `zero_cost_registry.rs`, `zero_cost_registry_tests.rs`,
+  legacy HTTP `integration_test.rs` → `archives/orphan_modules/`
+- **File size compliance** — `monitoring.rs` (1052 LOC) → `monitoring.rs` (366) +
+  `monitoring_tests.rs` (576); `secure_cross_primal_messaging.rs` (1111 LOC) → production (603) +
+  `_tests.rs` (506) via `#[path]` extraction
+- **Production mock cleanup** — Fixed "placeholder" comments on real X25519 key exchange, UPA DTOs,
+  entropy seed ID generation; documented Phase 2 items (PKCS#11, TPM, compliance handlers)
+- **Hardcoding scan** — `biomeos_tmp_socket_root()` respects `BIOMEOS_TMP_ROOT`;
+  `InteractionCaptureConfig::default()` replaces magic numbers; network bind fallback uses config
+- **Incident handler coverage** — Full lifecycle: create/classify/escalate/assign/resolve/close
+- **Performance metrics coverage** — Trend analysis, threshold violations, throughput monitoring
+
 ### March 21, 2026 -- Deep Audit: Concurrency Evolution, Coverage Push & Hardcoding Elimination
 
 - **MSRV 1.93.0** — `rust-toolchain.toml` created and pinned; `Cargo.toml` `rust-version` updated

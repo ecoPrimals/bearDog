@@ -32,7 +32,7 @@
 //! - [`benchmarks`]: Performance benchmarking utilities
 //!
 //! ### Testing
-//! - [`property_testing`]: Property-based testing framework (test / `test-utils` only)
+//! - `property_testing`: Property-based testing framework (test / `test-utils` only)
 //!
 //! ## Example
 //!

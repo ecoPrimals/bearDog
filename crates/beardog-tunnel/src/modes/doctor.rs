@@ -7,6 +7,25 @@
 use std::path::Path;
 use tracing::info;
 
+/// Resolve doctor socket path from explicit CLI value or [`SocketConfig::from_env`].
+pub(crate) fn doctor_resolve_socket_path(socket: Option<String>) -> String {
+    socket.unwrap_or_else(|| {
+        beardog_core::socket_config::SocketConfig::from_env()
+            .socket_path()
+            .to_string_lossy()
+            .into_owned()
+    })
+}
+
+/// Single-line JSON status for `format == "json"` (testable without capturing stdout).
+pub(crate) fn doctor_json_status_line(comprehensive: bool) -> String {
+    format!(
+        r#"{{"status":"ok","version":"{}","comprehensive":{}}}"#,
+        env!("CARGO_PKG_VERSION"),
+        comprehensive
+    )
+}
+
 /// Run BearDog doctor (health diagnostics)
 ///
 /// Verifies installation, dependencies, and runtime health.
@@ -15,21 +34,10 @@ pub async fn run(
     socket: Option<String>,
     format: String,
 ) -> anyhow::Result<()> {
-    // Use provided socket or get from environment-driven SocketConfig
-    let socket_path = socket.unwrap_or_else(|| {
-        beardog_core::socket_config::SocketConfig::from_env()
-            .socket_path()
-            .to_string_lossy()
-            .to_string()
-    });
+    let socket_path = doctor_resolve_socket_path(socket);
 
     if format == "json" {
-        // JSON output for automation
-        println!(
-            r#"{{"status":"ok","version":"{}","comprehensive":{}}}"#,
-            env!("CARGO_PKG_VERSION"),
-            comprehensive
-        );
+        println!("{}", doctor_json_status_line(comprehensive));
         return Ok(());
     }
 
@@ -155,4 +163,31 @@ pub async fn run(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod doctor_tests {
+    use super::*;
+
+    #[test]
+    fn doctor_json_status_line_matches_expected_shape() {
+        let line = doctor_json_status_line(true);
+        assert!(line.contains("\"status\":\"ok\""));
+        assert!(line.contains(env!("CARGO_PKG_VERSION")));
+        assert!(line.contains("\"comprehensive\":true"));
+        let line2 = doctor_json_status_line(false);
+        assert!(line2.contains("\"comprehensive\":false"));
+    }
+
+    #[test]
+    fn doctor_resolve_socket_path_uses_explicit_value() {
+        let p = "/tmp/explicit-doctor.sock".to_string();
+        assert_eq!(doctor_resolve_socket_path(Some(p.clone())), p);
+    }
+
+    #[tokio::test]
+    async fn doctor_run_json_format_completes_ok() {
+        let res = run(true, Some("/nonexistent/doctor.sock".into()), "json".into()).await;
+        assert!(res.is_ok());
+    }
 }

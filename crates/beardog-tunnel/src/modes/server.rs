@@ -117,12 +117,8 @@ pub async fn run(
     // Step 3: Load Family Seed (if provided)
     if let Ok(family_seed) = beardog_errors::process_env::var("BEARDOG_FAMILY_SEED") {
         info!("👨‍👩‍👧‍👦 Family lineage seed detected");
-        let family_id: String = family_seed
-            .chars()
-            .filter(|c| c.is_alphanumeric())
-            .take(4)
-            .collect();
-        info!("   Family ID: {}", family_id.to_lowercase());
+        let family_id = family_id_preview_from_seed(&family_seed);
+        info!("   Family ID: {}", family_id);
         info!("   Genetic siblings will auto-trust this family\n");
     }
 
@@ -364,6 +360,15 @@ async fn register_with_legacy_songbird() -> anyhow::Result<()> {
     Ok(())
 }
 
+/// First alphanumeric characters of a family seed (for logging only).
+pub(crate) fn family_id_preview_from_seed(seed: &str) -> String {
+    seed.chars()
+        .filter(|c| c.is_alphanumeric())
+        .take(4)
+        .collect::<String>()
+        .to_lowercase()
+}
+
 /// Display startup banner
 fn display_banner(self_knowledge: &PrimalSelfKnowledge, daemon: bool) {
     info!("╔════════════════════════════════════════════════════════════════════╗");
@@ -505,5 +510,25 @@ mod neural_registration_tests {
         };
         let id = PrimalIdentity::for_test("fam", "n");
         assert_eq!(p.registration_instance_id(&id), "primary-n");
+    }
+
+    #[test]
+    fn family_id_preview_from_seed_filters_and_lowercases() {
+        assert_eq!(super::family_id_preview_from_seed("Ab12!@#xy"), "ab12");
+        assert_eq!(super::family_id_preview_from_seed("!!!"), "");
+    }
+
+    #[test]
+    fn neural_registration_params_from_env_reads_overrides() {
+        beardog_errors::process_env::set_var("BEARDOG_NEURAL_REGISTRATION_INSTANCE", "inst-x");
+        beardog_errors::process_env::set_var("PRIMAL_TYPE", "compute");
+        beardog_errors::process_env::set_var("BEARDOG_PRIMAL_TYPE", "ignored");
+        let p = NeuralRegistrationParams::from_env();
+        beardog_errors::process_env::remove_var("BEARDOG_NEURAL_REGISTRATION_INSTANCE");
+        beardog_errors::process_env::remove_var("PRIMAL_TYPE");
+        beardog_errors::process_env::remove_var("BEARDOG_PRIMAL_TYPE");
+        assert_eq!(p.instance_override, Some("inst-x".to_string()));
+        assert_eq!(p.primal_type, Some("compute".to_string()));
+        assert_eq!(p.beardog_primal_type, Some("ignored".to_string()));
     }
 }

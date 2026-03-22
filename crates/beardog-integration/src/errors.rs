@@ -20,9 +20,9 @@ pub enum IntegrationError {
 impl fmt::Display for IntegrationError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            IntegrationError::Network(msg) => write!(f, "Network error: {}", msg),
-            IntegrationError::Config(msg) => write!(f, "Configuration error: {}", msg),
-            IntegrationError::Internal(msg) => write!(f, "Internal error: {}", msg),
+            Self::Network(msg) => write!(f, "Network error: {msg}"),
+            Self::Config(msg) => write!(f, "Configuration error: {msg}"),
+            Self::Internal(msg) => write!(f, "Internal error: {msg}"),
         }
     }
 }

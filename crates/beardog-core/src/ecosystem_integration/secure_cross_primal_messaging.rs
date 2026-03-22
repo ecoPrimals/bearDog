@@ -524,16 +524,9 @@ impl SecureCrossPrimalMessenger {
         Ok(result)
     }
 
-    /// Perform key exchange with primal (genetic algorithm-based)
+    /// Perform key exchange with a discovered primal (X25519 + SHA3-256 derivation).
     ///
-    /// # Phase 2 Enhancement
-    /// Currently returns a placeholder key for integration testing.
-    /// Full genetic key exchange implementation planned for Phase 2:
-    /// 1. Exchange genetic material with peer
-    /// 2. Use fitness function to evolve shared key
-    /// 3. Verify key establishment success
-    ///
-    /// This replaces traditional Diffie-Hellman/ECDH with genetic algorithms.
+    /// Optional future work: additional genetic-material mixing on top of the established secret.
     async fn perform_key_exchange(
         &self,
         primal: &UniversalServiceDescriptor,
@@ -606,89 +599,5 @@ impl SecureCrossPrimalMessenger {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::primal_self_knowledge::{PrimalIdentity, PrimalIdentityEnvInputs};
-
-    // Mock discovery service for testing
-    #[derive(Debug)]
-    struct MockDiscoveryService {
-        mock_primals: Vec<UniversalServiceDescriptor>,
-    }
-
-    #[async_trait::async_trait]
-    impl PrimalDiscoveryService for MockDiscoveryService {
-        async fn discover_by_capability(
-            &self,
-            _capability: UniversalCapabilityType,
-        ) -> Result<Vec<UniversalServiceDescriptor>, BearDogError> {
-            Ok(self.mock_primals.clone())
-        }
-
-        async fn send_request(
-            &self,
-            _service: &UniversalServiceDescriptor,
-            _payload: serde_json::Value,
-        ) -> Result<serde_json::Value, BearDogError> {
-            Ok(serde_json::json!({}))
-        }
-    }
-
-    #[tokio::test]
-    async fn test_messenger_creation() {
-        let mock_service = Arc::new(MockDiscoveryService {
-            mock_primals: vec![],
-        });
-
-        let result = SecureCrossPrimalMessenger::new(mock_service);
-        assert!(result.is_ok());
-
-        let messenger = result.unwrap();
-        let expected = PrimalIdentity::from_inputs(&PrimalIdentityEnvInputs::from_env())
-            .expect("identity")
-            .name;
-        assert_eq!(messenger.our_identity, expected);
-    }
-
-    #[tokio::test]
-    async fn test_no_hardcoded_primal_names() {
-        // This test verifies that the messenger doesn't hardcode primal names
-        let mock_service = Arc::new(MockDiscoveryService {
-            mock_primals: vec![],
-        });
-
-        let messenger = SecureCrossPrimalMessenger::new(mock_service).unwrap();
-
-        let expected = PrimalIdentity::from_inputs(&PrimalIdentityEnvInputs::from_env())
-            .expect("identity")
-            .name;
-        assert_eq!(messenger.our_identity, expected);
-
-        // Verify we discover primals, not hardcode them
-        let result = messenger
-            .send_to_network_primal(b"test", HashMap::new())
-            .await;
-
-        // Should fail because no primals are discovered (not because of hardcoding)
-        assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("No network-capable primals discovered")
-        );
-    }
-
-    #[tokio::test]
-    async fn test_metrics_tracking() {
-        let mock_service = Arc::new(MockDiscoveryService {
-            mock_primals: vec![],
-        });
-
-        let messenger = SecureCrossPrimalMessenger::new(mock_service).unwrap();
-
-        let metrics = messenger.get_metrics().await;
-        assert_eq!(metrics.messages_sent, 0);
-        assert_eq!(metrics.sessions_established, 0);
-    }
-}
+#[path = "secure_cross_primal_messaging_tests.rs"]
+mod tests;

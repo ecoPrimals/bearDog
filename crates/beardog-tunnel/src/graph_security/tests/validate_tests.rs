@@ -28,7 +28,7 @@ fn create_test_node(id: &str) -> GraphNode {
     GraphNode {
         id: id.to_string(),
         node_type: "compute".to_string(),
-        primal: "ToadStool".to_string(),
+        handler_ref: "compute.workload.example".to_string(),
         config: HashMap::new(),
     }
 }
@@ -124,7 +124,7 @@ async fn test_excessive_cpu_request() {
     let node = GraphNode {
         id: "node-1".to_string(),
         node_type: "compute".to_string(),
-        primal: "ToadStool".to_string(),
+        handler_ref: "compute.workload.example".to_string(),
         config,
     };
 
@@ -149,7 +149,7 @@ async fn test_excessive_memory_request() {
     let node = GraphNode {
         id: "node-1".to_string(),
         node_type: "compute".to_string(),
-        primal: "ToadStool".to_string(),
+        handler_ref: "compute.workload.example".to_string(),
         config,
     };
 

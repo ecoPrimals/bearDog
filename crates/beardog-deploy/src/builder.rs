@@ -380,6 +380,15 @@ mod tests {
     }
 
     #[test]
+    fn test_configure_target_toolchain_x86_64_android_unsupported() {
+        let path = std::path::Path::new("/fake/toolchain/bin");
+        let result = RustBuilder::configure_target_toolchain("x86_64-linux-android", path);
+        assert!(result.is_err());
+        let msg = result.expect_err("unsupported triple").to_string();
+        assert!(msg.contains("Unsupported target"));
+    }
+
+    #[test]
     fn test_setup_build_environment_no_ndk() {
         if std::env::var("ANDROID_NDK_HOME").is_err() && std::env::var("NDK_HOME").is_err() {
             let result = RustBuilder::setup_build_environment("aarch64-linux-android");

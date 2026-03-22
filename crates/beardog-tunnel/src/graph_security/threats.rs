@@ -171,7 +171,7 @@ mod tests {
         GraphNode {
             id: id.to_string(),
             node_type: "compute".to_string(),
-            primal: "ToadStool".to_string(),
+            handler_ref: "compute.workload.example".to_string(),
             config,
         }
     }

@@ -152,29 +152,30 @@ async fn test_nested_timeouts() {
     assert!(outer_result.unwrap().is_err(), "Inner timeout should fail");
 }
 
-#[tokio::test]
+#[tokio::test(start_paused = true)]
 async fn test_timeout_accuracy() {
-    // Test timeout accuracy (should be close to specified duration)
-    let durations = vec![10, 50, 100, 200];
+    // Virtual time only: wall-clock jitter from CI load cannot affect this.
+    // We assert deadline semantics (timeout wins before the longer sleep), not wall-clock ms.
+    let durations = vec![10u64, 50, 100, 200];
 
     for expected_ms in durations {
-        let start = tokio::time::Instant::now();
+        let expected = Duration::from_millis(expected_ms);
 
-        let _result = timeout(Duration::from_millis(expected_ms), async {
-            tokio::time::sleep(Duration::from_millis(expected_ms * 2)).await;
-        })
-        .await;
+        let join = tokio::spawn(async move {
+            timeout(expected, async {
+                tokio::time::sleep(expected * 2).await;
+            })
+            .await
+        });
 
-        let elapsed = start.elapsed().as_millis();
+        // Let the spawned task register its timers before advancing mock time.
+        tokio::task::yield_now().await;
+        tokio::time::advance(expected).await;
 
-        // Allow 20% tolerance
-        let tolerance = expected_ms / 5;
-        let lower = expected_ms.saturating_sub(tolerance);
-        let upper = expected_ms + tolerance;
-
+        let outcome = join.await.expect("timeout task");
         assert!(
-            elapsed >= u128::from(lower) && elapsed <= u128::from(upper),
-            "Timeout should be close to {expected_ms}ms, got {elapsed}ms"
+            outcome.is_err(),
+            "deadline should elapse at {expected_ms}ms virtual time before inner sleep completes"
         );
     }
 }

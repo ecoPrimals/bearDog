@@ -28,6 +28,9 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 use tracing::{debug, error, info, warn};
 
+/// Last-resort Unix socket path when a capability manifest has no UDS endpoint (misconfiguration).
+const FALLBACK_REGISTRY_UNIX_SOCKET_PATH: &str = "/tmp/beardog-default.sock";
+
 /// JSON-RPC 2.0 Request (Universal)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcRequest {
@@ -352,13 +355,15 @@ impl PrimalRegistryClient {
                     None
                 }
             })
-            .unwrap_or_else(|| "/tmp/beardog-default.sock".to_string())
+            .unwrap_or_else(|| FALLBACK_REGISTRY_UNIX_SOCKET_PATH.to_string())
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Arc;
+    use tokio::sync::Notify;
 
     #[test]
     fn test_json_rpc_request_serialization() {
@@ -433,10 +438,11 @@ mod tests {
         ))
     }
 
-    fn spawn_registry_mock(path: PathBuf) -> tokio::task::JoinHandle<()> {
+    fn spawn_registry_mock(path: PathBuf, ready: Arc<Notify>) -> tokio::task::JoinHandle<()> {
         tokio::spawn(async move {
             let _ = std::fs::remove_file(&path);
             let listener = tokio::net::UnixListener::bind(&path).expect("bind registry mock");
+            ready.notify_one();
             loop {
                 let Ok((stream, _)) = listener.accept().await else {
                     break;
@@ -521,8 +527,9 @@ mod tests {
     #[tokio::test]
     async fn test_connect_ping_list_get_provider_unregister() {
         let path = unique_registry_sock();
-        let _srv = spawn_registry_mock(path.clone());
-        tokio::time::sleep(tokio::time::Duration::from_millis(25)).await;
+        let ready = Arc::new(Notify::new());
+        let _srv = spawn_registry_mock(path.clone(), Arc::clone(&ready));
+        ready.notified().await;
 
         let mut client = PrimalRegistryClient::new(path.clone());
         client.connect().await.expect("connect");
@@ -556,9 +563,12 @@ mod tests {
     async fn test_register_error_response() {
         let path = unique_registry_sock();
         let path_clone = path.clone();
+        let ready = Arc::new(Notify::new());
+        let ready_clone = Arc::clone(&ready);
         let _srv = tokio::spawn(async move {
             let _ = std::fs::remove_file(&path_clone);
             let listener = tokio::net::UnixListener::bind(&path_clone).unwrap();
+            ready_clone.notify_one();
             let Ok((mut stream, _)) = listener.accept().await else {
                 return;
             };
@@ -576,7 +586,7 @@ mod tests {
                 .write_all(format!("{}\n", resp.to_string()).as_bytes())
                 .await;
         });
-        tokio::time::sleep(tokio::time::Duration::from_millis(30)).await;
+        ready.notified().await;
 
         let mut client = PrimalRegistryClient::new(path.clone());
         client.connect().await.unwrap();
@@ -590,9 +600,12 @@ mod tests {
     async fn test_list_all_error_branch() {
         let path = unique_registry_sock();
         let path_clone = path.clone();
+        let ready = Arc::new(Notify::new());
+        let ready_clone = Arc::clone(&ready);
         let _srv = tokio::spawn(async move {
             let _ = std::fs::remove_file(&path_clone);
             let listener = tokio::net::UnixListener::bind(&path_clone).unwrap();
+            ready_clone.notify_one();
             loop {
                 let Ok((mut stream, _)) = listener.accept().await else {
                     break;
@@ -614,7 +627,7 @@ mod tests {
                     .await;
             }
         });
-        tokio::time::sleep(tokio::time::Duration::from_millis(30)).await;
+        ready.notified().await;
 
         let mut client = PrimalRegistryClient::new(path.clone());
         client.connect().await.unwrap();
@@ -627,9 +640,12 @@ mod tests {
     async fn test_ping_error_branch() {
         let path = unique_registry_sock();
         let path_clone = path.clone();
+        let ready = Arc::new(Notify::new());
+        let ready_clone = Arc::clone(&ready);
         let _srv = tokio::spawn(async move {
             let _ = std::fs::remove_file(&path_clone);
             let listener = tokio::net::UnixListener::bind(&path_clone).unwrap();
+            ready_clone.notify_one();
             let Ok((mut stream, _)) = listener.accept().await else {
                 return;
             };
@@ -647,7 +663,7 @@ mod tests {
                 .write_all(format!("{}\n", resp.to_string()).as_bytes())
                 .await;
         });
-        tokio::time::sleep(tokio::time::Duration::from_millis(30)).await;
+        ready.notified().await;
 
         let mut client = PrimalRegistryClient::new(path.clone());
         client.connect().await.unwrap();
@@ -660,9 +676,12 @@ mod tests {
     async fn test_unregister_error_branch() {
         let path = unique_registry_sock();
         let path_clone = path.clone();
+        let ready = Arc::new(Notify::new());
+        let ready_clone = Arc::clone(&ready);
         let _srv = tokio::spawn(async move {
             let _ = std::fs::remove_file(&path_clone);
             let listener = tokio::net::UnixListener::bind(&path_clone).unwrap();
+            ready_clone.notify_one();
             let Ok((mut stream, _)) = listener.accept().await else {
                 return;
             };
@@ -680,7 +699,7 @@ mod tests {
                 .write_all(format!("{}\n", resp.to_string()).as_bytes())
                 .await;
         });
-        tokio::time::sleep(tokio::time::Duration::from_millis(30)).await;
+        ready.notified().await;
 
         let mut client = PrimalRegistryClient::new(path.clone());
         client.connect().await.unwrap();
@@ -692,8 +711,9 @@ mod tests {
     #[tokio::test]
     async fn test_register_uses_default_socket_path_when_no_unix_endpoint() {
         let path = unique_registry_sock();
-        let _srv = spawn_registry_mock(path.clone());
-        tokio::time::sleep(tokio::time::Duration::from_millis(25)).await;
+        let ready = Arc::new(Notify::new());
+        let _srv = spawn_registry_mock(path.clone(), Arc::clone(&ready));
+        ready.notified().await;
 
         let mut client = PrimalRegistryClient::new(path.clone());
         client.connect().await.unwrap();

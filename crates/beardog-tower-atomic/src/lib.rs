@@ -263,8 +263,10 @@ struct JsonRpcError {
 mod tests {
     use super::*;
     use serde_json::json;
+    use std::sync::Arc;
     use tempfile::tempdir;
     use tokio::net::UnixListener;
+    use tokio::sync::Notify;
 
     #[tokio::test]
     async fn test_connect_to_mock_primal() {
@@ -276,29 +278,33 @@ mod tests {
         let listener = UnixListener::bind(&socket_path).unwrap();
         let server_socket_path = socket_path.clone();
 
-        tokio::spawn(async move {
-            let (mut stream, _) = listener.accept().await.unwrap();
-            use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+        let ready = Arc::new(Notify::new());
+        tokio::spawn({
+            let ready_tx = Arc::clone(&ready);
+            async move {
+                ready_tx.notify_one();
+                let (mut stream, _) = listener.accept().await.unwrap();
+                use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
-            let mut reader = BufReader::new(&mut stream);
-            let mut request = String::new();
-            reader.read_line(&mut request).await.unwrap();
+                let mut reader = BufReader::new(&mut stream);
+                let mut request = String::new();
+                reader.read_line(&mut request).await.unwrap();
 
-            // Echo back success response
-            let response = json!({
-                "jsonrpc": "2.0",
-                "result": { "status": "ok" },
-                "id": 1
-            });
-            stream
-                .write_all(serde_json::to_string(&response).unwrap().as_bytes())
-                .await
-                .unwrap();
-            stream.write_all(b"\n").await.unwrap();
+                // Echo back success response
+                let response = json!({
+                    "jsonrpc": "2.0",
+                    "result": { "status": "ok" },
+                    "id": 1
+                });
+                stream
+                    .write_all(serde_json::to_string(&response).unwrap().as_bytes())
+                    .await
+                    .unwrap();
+                stream.write_all(b"\n").await.unwrap();
+            }
         });
 
-        // Give server time to start
-        tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+        ready.notified().await;
 
         // Connect directly to socket (bypass discovery for test)
         let stream = UnixStream::connect(&server_socket_path).await.unwrap();

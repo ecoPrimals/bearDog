@@ -15,6 +15,12 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tracing::{debug, info, warn};
 
+/// Well-known ports for HSM device discovery probing.
+const DEFAULT_DISCOVERY_PORTS: &[u16] = &[1792, 7000, 9000, 443];
+
+/// Default HSM discovery timeout in milliseconds.
+const DEFAULT_DISCOVERY_TIMEOUT_MS: u32 = 5000;
+
 /// Main discovery engine coordinating all discoverers
 pub struct DiscoveryEngine {
     pkcs11_discoverer: Pkcs11Discoverer,
@@ -314,7 +320,7 @@ impl Pkcs11Discoverer {
             connection_info: HsmConnectionInfo {
                 endpoint: path.to_string_lossy().to_string(),
                 auth_method: AuthenticationMethod::None,
-                timeout_ms: 5000,
+                timeout_ms: DEFAULT_DISCOVERY_TIMEOUT_MS,
                 encrypted: false,
                 parameters: HashMap::new(),
             },
@@ -357,7 +363,7 @@ impl NetworkHsmDiscoverer {
     /// Creates a new Network HSM discoverer
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
-            _common_ports: vec![1792, 7000, 9000, 443],
+            _common_ports: DEFAULT_DISCOVERY_PORTS.to_vec(),
             _scan_config: NetworkScanConfig {
                 // Example IP ranges for documentation and testing purposes.
                 // In production, these would be loaded from network discovery configuration.

@@ -8,6 +8,9 @@ use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
+/// Default TTL for [`RequestCache::default`] (five minutes).
+pub const DEFAULT_REQUEST_CACHE_TTL: Duration = Duration::from_secs(300);
+
 /// Request cache entry
 #[derive(Debug, Clone)]
 pub struct CacheEntry<T> {
@@ -84,7 +87,7 @@ impl<T: Clone> RequestCache<T> {
 
 impl<T: Clone> Default for RequestCache<T> {
     fn default() -> Self {
-        Self::new(Duration::from_secs(300)) // 5 minutes default TTL
+        Self::new(DEFAULT_REQUEST_CACHE_TTL)
     }
 }
 
@@ -156,6 +159,7 @@ mod tests {
         cache.insert("key1".to_string(), "value1".to_string());
         assert_eq!(cache.get("key1"), Some("value1".to_string()));
 
+        // TTL tests require real elapsed time (cache uses `Instant`, not injectable clock).
         // Minimal sleep for TTL expiration (2ms > 1ms TTL)
         std::thread::sleep(Duration::from_millis(2));
 
@@ -175,6 +179,7 @@ mod tests {
 
         assert_eq!(cache.len(), 2);
 
+        // TTL tests require real elapsed time.
         // Wait for TTL to expire - minimal sleep
         std::thread::sleep(Duration::from_millis(2));
 
@@ -207,7 +212,7 @@ mod tests {
     fn test_cache_default() {
         let cache = RequestCache::<String>::default();
         assert!(cache.is_empty());
-        assert_eq!(cache.default_ttl, Duration::from_secs(300));
+        assert_eq!(cache.default_ttl, DEFAULT_REQUEST_CACHE_TTL);
     }
 
     #[test]
@@ -290,6 +295,7 @@ mod tests {
         cache.insert("short1".to_string(), "value1".to_string());
         cache.insert("short2".to_string(), "value2".to_string());
 
+        // TTL tests require real elapsed time.
         // Wait until first batch is near expiration (40ms into TTL)
         std::thread::sleep(Duration::from_millis(40));
 
@@ -299,6 +305,7 @@ mod tests {
 
         assert_eq!(cache.len(), 4);
 
+        // TTL tests require real elapsed time.
         // Wait for first batch to expire (20ms more = 60ms total > 50ms TTL for first batch)
         // Second batch still has ~30ms remaining
         std::thread::sleep(Duration::from_millis(20));

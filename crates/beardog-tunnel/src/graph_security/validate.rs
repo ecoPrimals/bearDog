@@ -386,7 +386,7 @@ mod tests {
         GraphNode {
             id: id.to_string(),
             node_type: "compute".to_string(),
-            primal: "ToadStool".to_string(),
+            handler_ref: "compute.workload.example".to_string(),
             config: HashMap::new(),
         }
     }
@@ -446,7 +446,7 @@ mod tests {
         let node = GraphNode {
             id: "node-1".to_string(),
             node_type: "compute".to_string(),
-            primal: "ToadStool".to_string(),
+            handler_ref: "compute.workload.example".to_string(),
             config,
         };
 
@@ -459,5 +459,124 @@ mod tests {
                 .iter()
                 .any(|i| i.category == ThreatCategory::ResourceAbuse)
         );
+    }
+
+    #[tokio::test]
+    async fn test_validate_template_signature_invalid_base64_errors() {
+        let mut template = create_test_template(vec![create_test_node("n1")], vec![]);
+        template.signature = Some("not-valid-base64!!!".to_string());
+        let err = validate_template(&template)
+            .await
+            .expect_err("invalid base64");
+        let s = format!("{err}");
+        assert!(
+            s.to_lowercase().contains("base64") || s.contains("signature") || s.contains("Invalid"),
+            "{s}"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_validate_template_signature_wrong_ed25519_length() {
+        use base64::Engine;
+        let mut template = create_test_template(vec![create_test_node("n1")], vec![]);
+        template.signature =
+            Some(base64::engine::general_purpose::STANDARD.encode([1u8, 2u8, 3u8]));
+        let report = validate_template(&template).await.expect("report");
+        assert!(report.issues.iter().any(|i| {
+            i.category == ThreatCategory::Signature
+                && i.severity == IssueSeverity::High
+                && i.description.contains("64")
+        }));
+    }
+
+    #[tokio::test]
+    async fn test_validate_template_signature_well_formed_pending_collaboration_note() {
+        use base64::Engine;
+        let mut template = create_test_template(vec![create_test_node("n1")], vec![]);
+        template.signature = Some(base64::engine::general_purpose::STANDARD.encode([0u8; 64]));
+        let report = validate_template(&template).await.expect("report");
+        assert!(report.issues.iter().any(|i| {
+            i.category == ThreatCategory::Signature
+                && i.description.contains("CollaborationService")
+        }));
+    }
+
+    #[tokio::test]
+    async fn test_validate_excessive_memory_tb() {
+        let mut config = HashMap::new();
+        config.insert("memory".to_string(), serde_json::json!("8TB"));
+        let node = GraphNode {
+            id: "n1".to_string(),
+            node_type: "compute".to_string(),
+            handler_ref: "compute.workload.example".to_string(),
+            config,
+        };
+        let template = create_test_template(vec![node], vec![]);
+        let report = validate_template(&template).await.expect("report");
+        assert!(report.issues.iter().any(|i| {
+            i.category == ThreatCategory::ResourceAbuse && i.description.contains("TB")
+        }));
+    }
+
+    #[test]
+    fn calculate_risk_level_critical_wins_over_high() {
+        let issues = vec![
+            ValidationIssue {
+                severity: IssueSeverity::High,
+                category: ThreatCategory::Structure,
+                description: "high".to_string(),
+                location: None,
+            },
+            ValidationIssue {
+                severity: IssueSeverity::Critical,
+                category: ThreatCategory::Structure,
+                description: "crit".to_string(),
+                location: None,
+            },
+        ];
+        assert_eq!(super::calculate_risk_level(&issues), RiskLevel::Critical);
+    }
+
+    #[test]
+    fn calculate_security_score_clamps_non_negative() {
+        let issues = vec![
+            ValidationIssue {
+                severity: IssueSeverity::Critical,
+                category: ThreatCategory::Structure,
+                description: "a".to_string(),
+                location: None,
+            },
+            ValidationIssue {
+                severity: IssueSeverity::Critical,
+                category: ThreatCategory::Structure,
+                description: "b".to_string(),
+                location: None,
+            },
+        ];
+        assert_eq!(super::calculate_security_score(&issues), 0.0);
+    }
+
+    #[test]
+    fn generate_recommendations_includes_injection_and_signature_hints() {
+        let issues = vec![
+            ValidationIssue {
+                severity: IssueSeverity::High,
+                category: ThreatCategory::CodeInjection,
+                description: "code".to_string(),
+                location: None,
+            },
+            ValidationIssue {
+                severity: IssueSeverity::Low,
+                category: ThreatCategory::Signature,
+                description: "sig".to_string(),
+                location: None,
+            },
+        ];
+        let recs = super::generate_recommendations(&issues);
+        assert!(
+            recs.iter()
+                .any(|r| r.contains("script") || r.contains("executable"))
+        );
+        assert!(recs.iter().any(|r| r.contains("Ed25519")));
     }
 }

@@ -644,8 +644,17 @@ mod tests {
         })
         .expect("monitor");
         monitor.start().expect("start");
-        tokio::time::sleep(std::time::Duration::from_millis(80)).await;
-        let metrics = monitor.get_system_metrics().await;
+        let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(2);
+        let metrics = loop {
+            let m = monitor.get_system_metrics().await;
+            if m.last_updated.is_some() {
+                break m;
+            }
+            if tokio::time::Instant::now() >= deadline {
+                panic!("timed out waiting for background monitor to refresh metrics snapshot");
+            }
+            tokio::task::yield_now().await;
+        };
         assert!(metrics.last_updated.is_some());
         assert!(metrics.cpu_usage_percent >= 0.0);
         let _ = monitor.stop();

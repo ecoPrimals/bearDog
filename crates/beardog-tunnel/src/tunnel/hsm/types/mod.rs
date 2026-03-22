@@ -876,4 +876,70 @@ mod tests {
         assert_eq!(p.key_size, 2048);
         assert!(p.strongbox_required);
     }
+
+    #[test]
+    fn android_key_params_set_purposes_and_auth() {
+        let mut p = AndroidKeyParams::new();
+        p.set_purposes(vec![AndroidKeyPurpose::Encrypt, AndroidKeyPurpose::Decrypt]);
+        p.set_user_authentication_required(true);
+        p.user_authentication_timeout = Some(30);
+        assert_eq!(p.purposes.len(), 2);
+        assert!(p.user_authentication_required);
+        assert_eq!(p.user_authentication_timeout, Some(30));
+    }
+
+    #[test]
+    fn ios_hsm_config_default_and_android_device_caps() {
+        let ios = IOSHsmConfig::default();
+        assert!(ios.secure_enclave_enabled);
+        let caps = AndroidDeviceCapabilities {
+            strongbox_available: true,
+            key_attestation_available: false,
+            hardware_backed_keystore: true,
+            verified_boot: true,
+        };
+        assert!(!caps.key_attestation_available);
+    }
+
+    #[test]
+    fn hsm_operation_json_roundtrip() {
+        let op = HsmOperation::Signing {
+            key_id: "k1".to_string(),
+            algorithm: "ed25519".to_string(),
+        };
+        let json = serde_json::to_string(&op).expect("ser");
+        let back: HsmOperation = serde_json::from_str(&json).expect("de");
+        assert!(matches!(back, HsmOperation::Signing { .. }));
+    }
+
+    #[tokio::test]
+    async fn android_keystore_crypto_returns_not_implemented() {
+        let ks = AndroidKeystore::new(AndroidHsmConfig::default()).expect("ks");
+        let params = AndroidKeyParams::new();
+        assert!(ks.test_keystore_access("kid", &params).is_err());
+        assert!(ks.generate_key("kid", &params).is_err());
+        assert!(ks.encrypt("kid", b"x").await.is_err());
+        assert!(ks.decrypt("kid", b"x").await.is_err());
+        assert!(ks.sign("kid", b"x").await.is_err());
+        assert!(ks.verify("kid", b"x", b"y").await.is_err());
+        assert!(ks.delete_key("kid").await.is_err());
+        assert!(ks.import_key("kid", b"k", KeyType::Ed25519).await.is_err());
+        let keys = ks.list_keys().await.expect("list");
+        assert!(keys.is_empty());
+        assert!(!ks.key_exists("any").await.expect("exists"));
+        let rnd = ks.generate_random_bytes(16).await.expect("rnd");
+        assert_eq!(rnd.len(), 16);
+        let ch = ks.generate_attestation_challenge(8).expect("chal");
+        assert_eq!(ch.len(), 8);
+    }
+
+    #[test]
+    fn algorithm_maps_to_key_type_variants() {
+        let k1: KeyType = Algorithm::RsaPss3072.into();
+        assert_eq!(k1, KeyType::Rsa);
+        let k2: KeyType = Algorithm::RsaPss4096.into();
+        assert_eq!(k2, KeyType::Rsa);
+        let k3: KeyType = Algorithm::EccP256.into();
+        assert_eq!(k3, KeyType::EllipticCurve);
+    }
 }

@@ -73,7 +73,7 @@ fn generate_aes_key_with_seed(seed_data: Option<&[u8]>) -> Result<Vec<u8>, BearD
 }
 
 /// Generate AES-256 key using only system entropy (no human seed)
-#[expect(
+#[allow(
     dead_code,
     reason = "Legacy helper kept for callers not using human seed path"
 )]
@@ -707,6 +707,31 @@ mod key_handler_tests {
         key_store::save_key_to_home(&k, home).unwrap();
 
         handle_key_list_with_home(Some("nomatch-xyz"), false, home)
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_list_hsm_filter_is_case_insensitive() {
+        let dir = TempDir::new().unwrap();
+        let home = dir.path();
+        let k = key_store::StoredKey {
+            key_id: "k1".to_string(),
+            algorithm: "aes256-gcm".to_string(),
+            hsm_name: "MySoftHsm".to_string(),
+            created_at: Utc::now().to_rfc3339(),
+            key_material_b64: key_store::base64_encode(&[1u8; 32]),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        key_store::save_key_to_home(&k, home).unwrap();
+        handle_key_list_with_home(Some("soft"), false, home)
             .await
             .unwrap();
     }

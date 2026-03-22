@@ -207,3 +207,156 @@ async fn test_establish_tunnel_registers_with_get_tunnel() {
     let (_, peer_id) = found.expect("tunnel");
     assert_eq!(peer_id, "registered-peer");
 }
+
+#[tokio::test]
+async fn test_establish_tunnel_rejects_empty_peer_endpoint() {
+    use beardog_capabilities::traits::{PeerEndpoint, SecureTunnelProvider};
+
+    let hsm = create_test_hsm().await;
+    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+    let provider = BeardogBtspProvider::new(hsm, genetics)
+        .await
+        .expect("provider");
+
+    let err = provider
+        .establish_tunnel(PeerEndpoint {
+            id: "empty-endpoint-peer".to_string(),
+            endpoint: String::new(),
+            public_key: Some(vec![9u8; 32]),
+        })
+        .await
+        .expect_err("empty endpoint must be rejected");
+    let s = format!("{err}");
+    assert!(
+        s.to_lowercase().contains("endpoint") || s.contains("empty"),
+        "{s}"
+    );
+}
+
+#[tokio::test]
+async fn test_secure_tunnel_ops_fail_for_unknown_tunnel_handle() {
+    use beardog_capabilities::traits::{SecureTunnelProvider, TunnelHandle};
+
+    let hsm = create_test_hsm().await;
+    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+    let provider = BeardogBtspProvider::new(hsm, genetics)
+        .await
+        .expect("provider");
+
+    let fake = TunnelHandle {
+        id: "no-such-tunnel-uuid".to_string(),
+        peer_id: "ghost".to_string(),
+        established_at: chrono::Utc::now().to_rfc3339(),
+    };
+
+    assert!(provider.tunnel_encrypt(&fake, b"data").await.is_err());
+    assert!(
+        provider
+            .tunnel_decrypt(&fake, b"xxxxxxxxxxxx")
+            .await
+            .is_err()
+    );
+    assert!(provider.tunnel_status(&fake).await.is_err());
+}
+
+#[tokio::test]
+async fn test_tunnel_decrypt_rejects_ciphertext_shorter_than_nonce() {
+    use beardog_capabilities::traits::{PeerEndpoint, SecureTunnelProvider};
+
+    let hsm = create_test_hsm().await;
+    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+    let provider = BeardogBtspProvider::new(hsm, genetics)
+        .await
+        .expect("provider");
+
+    let handle = provider
+        .establish_tunnel(PeerEndpoint {
+            id: "short-cipher-peer".to_string(),
+            endpoint: "unix:///tmp/short.sock".to_string(),
+            public_key: Some(vec![7u8; 32]),
+        })
+        .await
+        .expect("establish");
+
+    let err = provider
+        .tunnel_decrypt(&handle, b"tooshort")
+        .await
+        .expect_err("ciphertext must include 12-byte nonce");
+    assert!(format!("{err}").to_lowercase().contains("short"));
+}
+
+#[tokio::test]
+async fn test_close_tunnel_returns_not_found_for_unknown_handle() {
+    use beardog_capabilities::traits::{SecureTunnelProvider, TunnelHandle};
+
+    let hsm = create_test_hsm().await;
+    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+    let provider = BeardogBtspProvider::new(hsm, genetics)
+        .await
+        .expect("provider");
+
+    let fake = TunnelHandle {
+        id: "missing-close".to_string(),
+        peer_id: "x".to_string(),
+        established_at: chrono::Utc::now().to_rfc3339(),
+    };
+
+    let err = provider
+        .close_tunnel(&fake)
+        .await
+        .expect_err("unknown tunnel");
+    let s = format!("{err}");
+    assert!(
+        s.to_lowercase().contains("not found") || s.contains("Tunnel"),
+        "{s}"
+    );
+}
+
+#[test]
+fn test_get_discovery_socket_paths_non_empty_and_ordered_fallbacks() {
+    let paths = BeardogBtspProvider::get_discovery_socket_paths();
+    assert!(!paths.is_empty());
+    let joined = paths.join(",");
+    assert!(
+        joined.contains("primal") || joined.contains("discovery") || joined.contains("beardog"),
+        "{joined}"
+    );
+}
+
+#[test]
+fn test_get_discovery_socket_paths_prefers_ipc_socket_env() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let sock = dir.path().join("ipc.sock");
+    let path_str = sock.to_string_lossy().to_string();
+    beardog_errors::process_env::set_var("IPC_SOCKET", &path_str);
+    beardog_errors::process_env::remove_var("DISCOVERY_SOCKET");
+    let paths = BeardogBtspProvider::get_discovery_socket_paths();
+    beardog_errors::process_env::remove_var("IPC_SOCKET");
+    assert_eq!(paths.first().map(String::as_str), Some(path_str.as_str()));
+}
+
+#[test]
+fn test_get_discovery_socket_paths_skips_empty_ipc_socket() {
+    beardog_errors::process_env::set_var("IPC_SOCKET", "");
+    beardog_errors::process_env::remove_var("DISCOVERY_SOCKET");
+    let paths = BeardogBtspProvider::get_discovery_socket_paths();
+    beardog_errors::process_env::remove_var("IPC_SOCKET");
+    assert!(
+        !paths.is_empty(),
+        "fallback paths must remain when IPC_SOCKET is empty"
+    );
+    assert!(!paths.iter().any(|p| p.is_empty()));
+}
+
+#[test]
+fn test_get_discovery_socket_paths_dedupes_dev_override() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let dev = dir.path().join("dev.sock").to_string_lossy().to_string();
+    beardog_errors::process_env::remove_var("IPC_SOCKET");
+    beardog_errors::process_env::remove_var("DISCOVERY_SOCKET");
+    beardog_errors::process_env::set_var("BEARDOG_DEV_DISCOVERY_SOCKET", &dev);
+    let paths = BeardogBtspProvider::get_discovery_socket_paths();
+    beardog_errors::process_env::remove_var("BEARDOG_DEV_DISCOVERY_SOCKET");
+    let count = paths.iter().filter(|p| p.as_str() == dev.as_str()).count();
+    assert_eq!(count, 1, "duplicate dev path should appear once: {paths:?}");
+}

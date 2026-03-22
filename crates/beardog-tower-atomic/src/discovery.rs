@@ -11,12 +11,14 @@ use tracing::{debug, warn};
 pub struct DiscoverSocketEnv {
     /// `XDG_RUNTIME_DIR` when present.
     pub xdg_runtime_dir: Option<String>,
-    /// User home directory (`HOME`).
-    pub home: Option<String>,
+    /// `BIOMEOS_SOCKET_DIR` when present (orchestrator-managed socket directory).
+    pub biomeos_socket_dir: Option<String>,
+    /// Effective user id for `/run/user/{uid}/` resolution.
+    pub uid: Option<u32>,
 }
 
 impl DiscoverSocketEnv {
-    /// Read `XDG_RUNTIME_DIR` and `HOME` from the process environment.
+    /// Read discovery inputs from the process environment.
     ///
     /// Uses [`beardog_errors::process_env::var`] so tests can override values via the overlay
     /// instead of calling the soundness-critical [`std::env::set_var`] API directly.
@@ -24,61 +26,80 @@ impl DiscoverSocketEnv {
     pub fn from_process_env() -> Self {
         Self {
             xdg_runtime_dir: beardog_errors::process_env::var("XDG_RUNTIME_DIR").ok(),
-            home: beardog_errors::process_env::var("HOME").ok(),
+            biomeos_socket_dir: beardog_errors::process_env::var("BIOMEOS_SOCKET_DIR").ok(),
+            uid: beardog_errors::process_env::var("UID")
+                .ok()
+                .and_then(|s| s.parse().ok()),
         }
     }
 }
 
-/// Discover primal's Unix socket path using explicit environment paths (testable).
+/// Discover primal's Unix socket path using the 5-tier biomeos standard (testable).
 ///
-/// Search order:
-/// 1. XDG_RUNTIME_DIR/ecoPrimals/{primal}.sock
-/// 2. HOME/.local/share/ecoPrimals/{primal}.sock
-/// 3. /var/run/ecoPrimals/{primal}.sock
-/// 4. /tmp/ecoPrimals/{primal}.sock
+/// Search order (aligned with `beardog-core/socket_config.rs`):
+/// 1. `{PRIMAL_UPPER}_SOCKET` env var (primal-specific override)
+/// 2. `BIOMEOS_SOCKET_DIR/{primal}.sock` (orchestrator-managed directory)
+/// 3. `XDG_RUNTIME_DIR/biomeos/{primal}.sock`
+/// 4. `/run/user/{uid}/biomeos/{primal}.sock`
+/// 5. `/tmp/biomeos/{primal}.sock` (fallback)
 pub async fn discover_primal_socket_with(
     primal_name: &str,
     env: &DiscoverSocketEnv,
 ) -> Result<PathBuf> {
-    // 1. Check XDG runtime dir (preferred for user services)
-    if let Some(xdg_runtime) = &env.xdg_runtime_dir {
-        let socket_path = PathBuf::from(format!("{xdg_runtime}/ecoPrimals/{primal_name}.sock"));
+    // Tier 1: primal-specific env var (e.g. BEARDOG_SOCKET, SONGBIRD_SOCKET)
+    let env_key = format!("{}_SOCKET", primal_name.to_uppercase().replace('-', "_"));
+    if let Ok(val) = beardog_errors::process_env::var(&env_key)
+        && !val.is_empty()
+    {
+        let p = PathBuf::from(&val);
+        if p.exists() {
+            debug!("✅ Found {} via {} (Tier 1)", primal_name, env_key);
+            return Ok(p);
+        }
+    }
 
+    // Tier 2: orchestrator-managed directory
+    if let Some(ref dir) = env.biomeos_socket_dir {
+        let socket_path = PathBuf::from(dir).join(format!("{primal_name}.sock"));
         if socket_path.exists() {
-            debug!("✅ Found {} via XDG_RUNTIME_DIR", primal_name);
+            debug!("✅ Found {} via BIOMEOS_SOCKET_DIR (Tier 2)", primal_name);
             return Ok(socket_path);
         }
     }
 
-    // 2. Check home dir (for user-level primals)
-    if let Some(home) = &env.home {
-        let socket_path =
-            PathBuf::from(format!("{home}/.local/share/ecoPrimals/{primal_name}.sock"));
-
+    // Tier 3: XDG runtime (biomeos namespace)
+    if let Some(ref xdg_runtime) = env.xdg_runtime_dir {
+        let socket_path = PathBuf::from(format!("{xdg_runtime}/biomeos/{primal_name}.sock"));
         if socket_path.exists() {
-            debug!("✅ Found {} via HOME", primal_name);
+            debug!(
+                "✅ Found {} via XDG_RUNTIME_DIR/biomeos (Tier 3)",
+                primal_name
+            );
             return Ok(socket_path);
         }
     }
 
-    // 3. Check /var/run (for system services)
-    let socket_path = PathBuf::from(format!("/var/run/ecoPrimals/{primal_name}.sock"));
-    if socket_path.exists() {
-        debug!("✅ Found {} via /var/run", primal_name);
-        return Ok(socket_path);
+    // Tier 4: /run/user/{uid}/biomeos/
+    let uid = env.uid.unwrap_or(1000);
+    let run_path = PathBuf::from(format!("/run/user/{uid}/biomeos/{primal_name}.sock"));
+    if run_path.exists() {
+        debug!(
+            "✅ Found {} via /run/user/{}/biomeos (Tier 4)",
+            primal_name, uid
+        );
+        return Ok(run_path);
     }
 
-    // 4. Check /tmp (fallback)
-    let socket_path = PathBuf::from(format!("/tmp/ecoPrimals/{primal_name}.sock"));
-    if socket_path.exists() {
-        debug!("✅ Found {} via /tmp", primal_name);
-        return Ok(socket_path);
+    // Tier 5: /tmp/biomeos/ fallback
+    let tmp_path = PathBuf::from(format!("/tmp/biomeos/{primal_name}.sock"));
+    if tmp_path.exists() {
+        debug!("✅ Found {} via /tmp/biomeos (Tier 5)", primal_name);
+        return Ok(tmp_path);
     }
 
-    // Not found
     warn!("❌ Primal not found: {}", primal_name);
     Err(Error::PrimalNotFound(format!(
-        "{primal_name} (searched XDG_RUNTIME_DIR, HOME, /var/run, /tmp)"
+        "{primal_name} (searched 5-tier: env, BIOMEOS_SOCKET_DIR, XDG/biomeos, /run/user/biomeos, /tmp/biomeos)"
     )))
 }
 
@@ -94,17 +115,38 @@ mod tests {
     use tempfile::tempdir;
 
     #[tokio::test]
-    async fn test_discover_via_home() {
+    async fn test_discover_via_biomeos_socket_dir() {
         let dir = tempdir().unwrap();
-        let ecoprimals_dir = dir.path().join(".local/share/ecoPrimals");
-        fs::create_dir_all(&ecoprimals_dir).unwrap();
+        let biomeos_dir = dir.path().join("sockets");
+        fs::create_dir_all(&biomeos_dir).unwrap();
 
-        let socket_path = ecoprimals_dir.join("test_primal.sock");
+        let socket_path = biomeos_dir.join("test_primal.sock");
         fs::File::create(&socket_path).unwrap();
 
         let env = DiscoverSocketEnv {
             xdg_runtime_dir: None,
-            home: Some(dir.path().to_string_lossy().into_owned()),
+            biomeos_socket_dir: Some(biomeos_dir.to_string_lossy().into_owned()),
+            uid: None,
+        };
+
+        let result = discover_primal_socket_with("test_primal", &env).await;
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), socket_path);
+    }
+
+    #[tokio::test]
+    async fn test_discover_via_xdg_biomeos() {
+        let dir = tempdir().unwrap();
+        let biomeos_dir = dir.path().join("biomeos");
+        fs::create_dir_all(&biomeos_dir).unwrap();
+
+        let socket_path = biomeos_dir.join("test_primal.sock");
+        fs::File::create(&socket_path).unwrap();
+
+        let env = DiscoverSocketEnv {
+            xdg_runtime_dir: Some(dir.path().to_string_lossy().into_owned()),
+            biomeos_socket_dir: None,
+            uid: None,
         };
 
         let result = discover_primal_socket_with("test_primal", &env).await;
@@ -116,7 +158,8 @@ mod tests {
     async fn test_primal_not_found() {
         let env = DiscoverSocketEnv {
             xdg_runtime_dir: None,
-            home: Some("/nonexistent".to_string()),
+            biomeos_socket_dir: None,
+            uid: Some(99999),
         };
 
         let result = discover_primal_socket_with("nonexistent_primal", &env).await;

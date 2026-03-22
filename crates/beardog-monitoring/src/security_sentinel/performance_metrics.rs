@@ -368,6 +368,13 @@ impl PerformanceMetricsCollector {
             ));
         }
 
+        if metrics.throughput < thresholds.throughput_threshold {
+            violations.push(format!(
+                "Throughput {:.1} ops/sec below minimum threshold {:.1} ops/sec",
+                metrics.throughput, thresholds.throughput_threshold
+            ));
+        }
+
         Ok(violations)
     }
 
@@ -492,5 +499,114 @@ mod tests {
         ];
         let trend = collector.calculate_trend(&metrics, |m| m.cpu_usage);
         assert_eq!(trend, MetricTrend::Increasing);
+    }
+
+    #[test]
+    fn test_calculate_trend_decreasing() {
+        let collector = PerformanceMetricsCollector::new();
+        let metrics = vec![
+            PerformanceMetrics {
+                cpu_usage: 100.0,
+                ..Default::default()
+            },
+            PerformanceMetrics {
+                cpu_usage: 100.0,
+                ..Default::default()
+            },
+            PerformanceMetrics {
+                cpu_usage: 10.0,
+                ..Default::default()
+            },
+            PerformanceMetrics {
+                cpu_usage: 10.0,
+                ..Default::default()
+            },
+        ];
+        assert_eq!(
+            collector.calculate_trend(&metrics, |m| m.cpu_usage),
+            MetricTrend::Decreasing
+        );
+    }
+
+    #[test]
+    fn test_calculate_trend_first_half_zero_is_stable() {
+        let collector = PerformanceMetricsCollector::new();
+        let metrics = vec![
+            PerformanceMetrics {
+                cpu_usage: 0.0,
+                ..Default::default()
+            },
+            PerformanceMetrics {
+                cpu_usage: 50.0,
+                ..Default::default()
+            },
+        ];
+        assert_eq!(
+            collector.calculate_trend(&metrics, |m| m.cpu_usage),
+            MetricTrend::Stable
+        );
+    }
+
+    #[tokio::test]
+    async fn test_analyze_trends_requires_two_or_more_samples() {
+        let collector = PerformanceMetricsCollector::new();
+        let empty = collector.analyze_trends(5).await.expect("trends");
+        assert_eq!(empty.sample_count, 0);
+
+        collector.collect_metrics().await.expect("one sample");
+        let one = collector
+            .analyze_trends(5)
+            .await
+            .expect("one sample trends");
+        assert_eq!(one.sample_count, 0);
+
+        collector.collect_metrics().await.expect("second sample");
+        let two = collector
+            .analyze_trends(5)
+            .await
+            .expect("two sample trends");
+        assert_eq!(two.sample_count, 2);
+    }
+
+    #[tokio::test]
+    async fn test_get_recent_metrics_respects_max_history() {
+        let collector =
+            PerformanceMetricsCollector::with_config(2, PerformanceThresholds::default());
+        collector.collect_metrics().await.expect("m1");
+        collector.collect_metrics().await.expect("m2");
+        collector.collect_metrics().await.expect("m3");
+        let recent = collector.get_recent_metrics(10).await.expect("recent");
+        assert_eq!(recent.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_check_thresholds_throughput_violation() {
+        let collector = PerformanceMetricsCollector::new();
+        let thresholds = PerformanceThresholds {
+            throughput_threshold: 1000.0,
+            ..PerformanceThresholds::default()
+        };
+        collector.update_thresholds(thresholds).await;
+        let mut m = PerformanceMetrics::default();
+        m.throughput = 10.0;
+        let v = collector.check_thresholds(&m).await.expect("violations");
+        assert!(v.iter().any(|s| s.contains("Throughput")));
+    }
+
+    #[tokio::test]
+    async fn test_update_thresholds_roundtrip() {
+        let collector = PerformanceMetricsCollector::new();
+        let t = PerformanceThresholds {
+            cpu_threshold: 12.0,
+            memory_threshold: 34.0,
+            response_time_threshold: 56.0,
+            error_rate_threshold: 7.0,
+            throughput_threshold: 89.0,
+        };
+        collector.update_thresholds(t.clone()).await;
+        let mut m = PerformanceMetrics::default();
+        m.cpu_usage = 99.0;
+        let v = collector.check_thresholds(&m).await.expect("v");
+        assert!(v.iter().any(|s| s.contains("CPU")));
     }
 }

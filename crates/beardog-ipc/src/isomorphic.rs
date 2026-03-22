@@ -232,14 +232,24 @@ pub fn get_tcp_discovery_file_candidates_with(hints: &TcpDiscoveryPathHints) -> 
     let mut files = Vec::new();
 
     if let Some(ref runtime_dir) = hints.xdg_runtime_dir {
-        files.push(format!("{runtime_dir}/beardog-ipc-port"));
+        files.push(format!(
+            "{runtime_dir}/{}",
+            ipc_layout::BEARDOG_TCP_DISCOVERY_FILENAME
+        ));
     }
 
     if let Some(ref home) = hints.home {
-        files.push(format!("{home}/.local/share/beardog-ipc-port"));
+        files.push(format!(
+            "{home}/.local/share/{}",
+            ipc_layout::BEARDOG_TCP_DISCOVERY_FILENAME
+        ));
     }
 
-    files.push("/tmp/beardog-ipc-port".to_string());
+    files.push(format!(
+        "{}/{}",
+        ipc_layout::biomeos_tmp_socket_root().display(),
+        ipc_layout::BEARDOG_TCP_DISCOVERY_FILENAME
+    ));
 
     files
 }

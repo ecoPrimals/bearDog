@@ -56,6 +56,7 @@ impl CommandRunner for SystemCommandRunner {
                 return Err(io::Error::new(io::ErrorKind::TimedOut, "command timed out"));
             }
 
+            // Polling backoff: `try_wait` is non-blocking; short sleep avoids a busy spin.
             thread::sleep(Duration::from_millis(50));
         }
     }
@@ -213,5 +214,39 @@ pub(crate) mod mock {
             stdout: vec![],
             stderr: vec![],
         })
+    }
+}
+
+#[cfg(test)]
+mod system_and_mock_coverage {
+    use super::mock::MockAdbCommandRunner;
+    use super::{CommandRunner, SystemCommandRunner};
+    use std::time::Duration;
+
+    #[test]
+    fn system_command_runner_run_executes_true_successfully() {
+        let runner = SystemCommandRunner;
+        let out = runner.run("true", &[]).expect("true should run");
+        assert!(out.status.success());
+    }
+
+    #[test]
+    fn system_command_runner_run_bounded_returns_status_for_fast_exiting_child() {
+        let runner = SystemCommandRunner;
+        let out = runner
+            .run_bounded("true", &[], Duration::from_secs(2))
+            .expect("bounded run");
+        assert!(out.status.success());
+    }
+
+    #[test]
+    fn mock_adb_runner_rejects_non_adb_program() {
+        let m = MockAdbCommandRunner::new();
+        let e = m.run("rustc", &[]).expect_err("mock is adb-only");
+        assert_eq!(e.kind(), std::io::ErrorKind::NotFound);
+        let e2 = m
+            .run_bounded("cargo", &[], Duration::from_millis(1))
+            .expect_err("bounded mock is adb-only");
+        assert_eq!(e2.kind(), std::io::ErrorKind::NotFound);
     }
 }

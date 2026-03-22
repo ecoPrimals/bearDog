@@ -79,6 +79,9 @@ pub struct ZeroCopyStats {
     pub config_cache_misses: std::sync::atomic::AtomicUsize,
 }
 
+/// Minimum interval between string-cache cleanups in [`ZeroCopyManager::cleanup_expired`] (seconds).
+const STRING_CACHE_CLEANUP_MIN_INTERVAL_SECS: u64 = 60;
+
 /// Process-wide intern tables guarded by `RwLock`s; safe for concurrent readers.
 pub struct ZeroCopyManager {
     string_cache: RwLock<HashMap<String, Weak<str>>>,
@@ -186,7 +189,9 @@ impl ZeroCopyManager {
             poisoned.into_inner()
         });
         let now = Instant::now();
-        if now.duration_since(*last_cleanup) < Duration::from_secs(60) {
+        if now.duration_since(*last_cleanup)
+            < Duration::from_secs(STRING_CACHE_CLEANUP_MIN_INTERVAL_SECS)
+        {
             return; // Cleanup at most once per minute
         }
 

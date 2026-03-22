@@ -181,3 +181,47 @@ pub async fn route(
         _ => Ok(None),
     }
 }
+
+#[cfg(test)]
+mod genetic_route_tests {
+    use super::route;
+
+    #[tokio::test]
+    async fn genetic_route_unknown_method_returns_none() {
+        let out = route("genetic.unknown_rpc", None).await.expect("route");
+        assert!(out.is_none());
+    }
+
+    #[tokio::test]
+    async fn genetic_route_derive_lineage_key_requires_params() {
+        let err = route("genetic.derive_lineage_key", None)
+            .await
+            .expect_err("expected parameter error");
+        assert!(
+            err.contains("Parameters required") || err.contains("derive_lineage_key"),
+            "{err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn genetic_route_mix_entropy_requires_params() {
+        let err = route("genetic.mix_entropy", None)
+            .await
+            .expect_err("expected parameter error");
+        assert!(
+            err.contains("mix_entropy") || err.contains("Parameters required"),
+            "{err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn genetic_route_verify_lineage_requires_params() {
+        let err = route("genetic.verify_lineage", None)
+            .await
+            .expect_err("expected parameter error");
+        assert!(
+            err.contains("verify_lineage") || err.contains("Parameters required"),
+            "{err}"
+        );
+    }
+}

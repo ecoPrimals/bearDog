@@ -293,3 +293,7 @@ impl Default for SelectionEngine {
         Self::new()
     }
 }
+
+#[cfg(test)]
+#[path = "engines_tests.rs"]
+mod engines_tests;

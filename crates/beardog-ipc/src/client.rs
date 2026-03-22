@@ -347,8 +347,10 @@ pub struct HeartbeatHandle {
 mod tests {
     use super::*;
     use std::path::Path;
+    use std::sync::Arc;
     use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
     use tokio::net::UnixListener;
+    use tokio::sync::Notify;
     use tokio::time::Duration;
 
     fn unique_sock_path() -> std::path::PathBuf {
@@ -362,11 +364,16 @@ mod tests {
         ))
     }
 
-    fn spawn_line_json_mock(path: &Path, register_ok: bool) -> tokio::task::JoinHandle<()> {
+    fn spawn_line_json_mock(
+        path: &Path,
+        register_ok: bool,
+        ready: Arc<Notify>,
+    ) -> tokio::task::JoinHandle<()> {
         let path = path.to_path_buf();
         tokio::spawn(async move {
             let _ = std::fs::remove_file(&path);
             let listener = UnixListener::bind(&path).expect("bind mock unix socket");
+            ready.notify_one();
             loop {
                 let Ok((mut stream, _)) = listener.accept().await else {
                     break;
@@ -443,8 +450,9 @@ mod tests {
     #[tokio::test]
     async fn test_connect_and_register_find_resolve_heartbeat() {
         let path = unique_sock_path();
-        let _guard = spawn_line_json_mock(&path, true);
-        tokio::time::sleep(Duration::from_millis(20)).await;
+        let ready = Arc::new(Notify::new());
+        let _guard = spawn_line_json_mock(&path, true, Arc::clone(&ready));
+        ready.notified().await;
 
         let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
         let client = client.connect_test().await.expect("connect mock");
@@ -468,8 +476,9 @@ mod tests {
     #[tokio::test]
     async fn test_register_failure_branch() {
         let path = unique_sock_path();
-        let _guard = spawn_line_json_mock(&path, false);
-        tokio::time::sleep(Duration::from_millis(20)).await;
+        let ready = Arc::new(Notify::new());
+        let _guard = spawn_line_json_mock(&path, false, Arc::clone(&ready));
+        ready.notified().await;
 
         let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
         let client = client.connect_test().await.unwrap();
@@ -486,8 +495,9 @@ mod tests {
     #[tokio::test]
     async fn test_find_capability_error_branch() {
         let path = unique_sock_path();
-        let _guard = spawn_line_json_mock(&path, true);
-        tokio::time::sleep(Duration::from_millis(20)).await;
+        let ready = Arc::new(Notify::new());
+        let _guard = spawn_line_json_mock(&path, true, Arc::clone(&ready));
+        ready.notified().await;
 
         let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
         let client = client.connect_test().await.unwrap();
@@ -504,16 +514,19 @@ mod tests {
     #[tokio::test]
     async fn test_send_request_invalid_json_response() {
         let path = unique_sock_path();
+        let ready = Arc::new(Notify::new());
+        let ready_clone = Arc::clone(&ready);
         let path_clone = path.clone();
         let _guard = tokio::spawn(async move {
             let _ = std::fs::remove_file(&path_clone);
             let listener = UnixListener::bind(&path_clone).expect("bind");
+            ready_clone.notify_one();
             let Ok((mut stream, _)) = listener.accept().await else {
                 return;
             };
             let _ = stream.write_all(b"not-json").await;
         });
-        tokio::time::sleep(Duration::from_millis(30)).await;
+        ready.notified().await;
 
         let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
         let err = client
@@ -528,8 +541,9 @@ mod tests {
     #[tokio::test]
     async fn test_heartbeat_not_registered() {
         let path = unique_sock_path();
-        let _guard = spawn_line_json_mock(&path, true);
-        tokio::time::sleep(Duration::from_millis(20)).await;
+        let ready = Arc::new(Notify::new());
+        let _guard = spawn_line_json_mock(&path, true, Arc::clone(&ready));
+        ready.notified().await;
 
         let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
         let client = client.connect_test().await.unwrap();

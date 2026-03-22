@@ -377,6 +377,168 @@ fn generate_audit_warnings(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::graph_security::types::LineageVersion;
+    use base64::Engine;
+
+    #[tokio::test]
+    async fn verify_chain_of_custody_empty_lineage_is_false() {
+        let ok = verify_chain_of_custody(&[]).await.expect("query");
+        assert!(!ok);
+    }
+
+    #[tokio::test]
+    async fn verify_chain_of_custody_invalid_base64_signature_is_error() {
+        let lineage = vec![LineageVersion {
+            version: "v1".to_string(),
+            created_at: None,
+            modified_at: None,
+            created_by: None,
+            modified_by: None,
+            change_type: "create".to_string(),
+            changes: None,
+            signature: Some("not-valid-base64!!!".to_string()),
+        }];
+        let err = verify_chain_of_custody(&lineage).await.unwrap_err();
+        assert!(
+            format!("{err}").contains("base64") || format!("{err}").contains("Invalid"),
+            "{err}"
+        );
+    }
+
+    #[tokio::test]
+    async fn verify_chain_of_custody_wrong_signature_length_after_decode_is_false() {
+        let short_sig = base64::engine::general_purpose::STANDARD.encode([1u8, 2u8, 3u8]);
+        let lineage = vec![LineageVersion {
+            version: "v1".to_string(),
+            created_at: None,
+            modified_at: None,
+            created_by: None,
+            modified_by: None,
+            change_type: "create".to_string(),
+            changes: None,
+            signature: Some(short_sig),
+        }];
+        let ok = verify_chain_of_custody(&lineage).await.expect("query");
+        assert!(!ok);
+    }
+
+    #[tokio::test]
+    async fn verify_chain_of_custody_well_formed_ed25519_length_without_pubkey_succeeds() {
+        let sig64 = base64::engine::general_purpose::STANDARD.encode([0u8; 64]);
+        let lineage = vec![LineageVersion {
+            version: "v1".to_string(),
+            created_at: None,
+            modified_at: None,
+            created_by: None,
+            modified_by: None,
+            change_type: "create".to_string(),
+            changes: None,
+            signature: Some(sig64),
+        }];
+        let ok = verify_chain_of_custody(&lineage).await.expect("query");
+        assert!(ok);
+    }
+
+    #[tokio::test]
+    async fn verify_chain_of_custody_second_version_unsigned_warns_but_passes() {
+        let lineage = vec![
+            LineageVersion {
+                version: "v1".to_string(),
+                created_at: None,
+                modified_at: None,
+                created_by: None,
+                modified_by: None,
+                change_type: "create".to_string(),
+                changes: None,
+                signature: None,
+            },
+            LineageVersion {
+                version: "v2".to_string(),
+                created_at: None,
+                modified_at: None,
+                created_by: None,
+                modified_by: None,
+                change_type: "edit".to_string(),
+                changes: None,
+                signature: None,
+            },
+        ];
+        let ok = verify_chain_of_custody(&lineage).await.expect("query");
+        assert!(ok);
+    }
+
+    #[test]
+    fn calculate_audit_risk_level_critical_when_many_vulnerabilities() {
+        let creator = CreatorInfo {
+            user_id: "u".to_string(),
+            identity_verified: true,
+            trust_score: 0.9,
+            reputation: "ok".to_string(),
+            member_since: "2025-01-01T00:00:00Z".to_string(),
+            genetic_family: None,
+        };
+        let security = SecurityAssessment {
+            last_scan: "2026-01-01T00:00:00Z".to_string(),
+            vulnerabilities_found: 10,
+            threat_level: "high".to_string(),
+        };
+        assert_eq!(
+            calculate_audit_risk_level(&creator, &security, true),
+            RiskLevel::Critical
+        );
+    }
+
+    #[test]
+    fn calculate_audit_risk_level_medium_when_some_vulnerabilities() {
+        let creator = CreatorInfo {
+            user_id: "u".to_string(),
+            identity_verified: true,
+            trust_score: 0.9,
+            reputation: "ok".to_string(),
+            member_since: "2025-01-01T00:00:00Z".to_string(),
+            genetic_family: None,
+        };
+        let security = SecurityAssessment {
+            last_scan: "2026-01-01T00:00:00Z".to_string(),
+            vulnerabilities_found: 2,
+            threat_level: "medium".to_string(),
+        };
+        assert_eq!(
+            calculate_audit_risk_level(&creator, &security, true),
+            RiskLevel::Medium
+        );
+    }
+
+    #[test]
+    fn calculate_trust_score_applies_vulnerability_penalty() {
+        let creator = CreatorInfo {
+            user_id: "u".to_string(),
+            identity_verified: true,
+            trust_score: 0.9,
+            reputation: "ok".to_string(),
+            member_since: "2025-01-01T00:00:00Z".to_string(),
+            genetic_family: None,
+        };
+        let community = CommunityUsage {
+            deployments: 0,
+            success_rate: None,
+            avg_rating: None,
+            total_ratings: 0,
+        };
+        let security_clean = SecurityAssessment {
+            last_scan: "2026-01-01T00:00:00Z".to_string(),
+            vulnerabilities_found: 0,
+            threat_level: "none".to_string(),
+        };
+        let security_dirty = SecurityAssessment {
+            last_scan: "2026-01-01T00:00:00Z".to_string(),
+            vulnerabilities_found: 10,
+            threat_level: "high".to_string(),
+        };
+        let clean = calculate_trust_score(&creator, &community, &security_clean);
+        let dirty = calculate_trust_score(&creator, &community, &security_dirty);
+        assert!(dirty < clean);
+    }
 
     #[tokio::test]
     async fn test_audit_origin_basic() {

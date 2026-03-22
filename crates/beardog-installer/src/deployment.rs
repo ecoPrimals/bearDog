@@ -301,8 +301,13 @@ pub enum DeploymentError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::DeploymentStatus;
+    use std::sync::Mutex;
     use tempfile::TempDir;
     use tokio::fs;
+
+    /// `DeploymentManager` installs into real user paths from `BiomeOSPaths::discover()`; avoid races.
+    static DEPLOYMENT_TEST_LOCK: Mutex<()> = Mutex::new(());
 
     async fn setup_test_env() -> (TempDir, std::path::PathBuf) {
         let temp = TempDir::new().expect("tempdir");
@@ -334,6 +339,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_deployment_manager_creation() {
+        let _g = DEPLOYMENT_TEST_LOCK.lock().expect("deployment test lock");
         let (_temp, source_dir) = setup_test_env().await;
         let manager = DeploymentManager::new(source_dir).await;
         assert!(manager.is_ok());
@@ -341,12 +347,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_deploy_single_primal() {
+        let _g = DEPLOYMENT_TEST_LOCK.lock().expect("deployment test lock");
+        let only = PrimalName::well_known()
+            .first()
+            .cloned()
+            .expect("at least one default primal");
         let (_temp, source_dir) = setup_test_env().await;
         let manager = DeploymentManager::new(source_dir)
             .await
             .expect("deployment manager");
 
-        let result = manager.deploy_primals(&[PrimalName::new("beardog")]).await;
+        let result = manager.deploy_primals(std::slice::from_ref(&only)).await;
         assert!(result.is_ok());
 
         let report = result.expect("deploy result");
@@ -357,6 +368,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_deploy_all_primals() {
+        let _g = DEPLOYMENT_TEST_LOCK.lock().expect("deployment test lock");
+        let expected = PrimalName::well_known().len();
         let (_temp, source_dir) = setup_test_env().await;
         let manager = DeploymentManager::new(source_dir)
             .await
@@ -366,35 +379,64 @@ mod tests {
         assert!(result.is_ok());
 
         let report = result.expect("deploy_all result");
-        assert_eq!(report.total, 5); // All 5 primals
-        assert_eq!(report.successes, 5);
+        assert_eq!(report.total, expected);
+        assert_eq!(report.successes, expected);
         assert!(report.is_success());
         assert_eq!(report.success_rate(), 100.0);
     }
 
     #[tokio::test]
     async fn test_progress_tracking() {
+        let _g = DEPLOYMENT_TEST_LOCK.lock().expect("deployment test lock");
         let (_temp, source_dir) = setup_test_env().await;
         let manager = DeploymentManager::new(source_dir)
             .await
             .expect("deployment manager");
 
-        // Start deployment (don't await yet)
-        let deploy_handle = tokio::spawn({
-            let manager = manager.clone_for_task();
-            async move { manager.deploy_all().await }
-        });
+        let expected = PrimalName::well_known().len();
+        let report = manager.deploy_all().await.expect("deploy_all");
+        assert!(report.is_success());
 
-        // Check progress during deployment
-        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
         let progress = manager.get_progress().await;
-        assert_eq!(progress.len(), 5); // All primals tracked
+        assert_eq!(progress.len(), expected);
+        assert!(
+            progress
+                .iter()
+                .all(|p| matches!(p.status, DeploymentStatus::Complete))
+        );
+    }
 
-        // Wait for completion
-        deploy_handle
+    #[tokio::test]
+    async fn test_deploy_missing_binary_records_failure_and_rollback() {
+        let _g = DEPLOYMENT_TEST_LOCK.lock().expect("deployment test lock");
+        let temp = TempDir::new().expect("tempdir");
+        let source_dir = temp.path().join("source");
+        fs::create_dir_all(&source_dir)
             .await
-            .expect("deploy task join")
-            .expect("deploy_all");
+            .expect("create source dir");
+
+        // Only one primal present — others will fail locate_binary
+        let binary = source_dir.join("beardog");
+        fs::write(&binary, b"#!/bin/sh\necho beardog")
+            .await
+            .expect("write fake binary");
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = fs::metadata(&binary).await.expect("metadata").permissions();
+            perms.set_mode(0o755);
+            fs::set_permissions(&binary, perms)
+                .await
+                .expect("set_permissions");
+        }
+
+        let manager = DeploymentManager::new(source_dir)
+            .await
+            .expect("deployment manager");
+
+        let report = manager.deploy_all().await.expect("deploy report");
+        assert!(!report.is_success());
+        assert!(!report.failures.is_empty());
     }
 
     #[tokio::test]

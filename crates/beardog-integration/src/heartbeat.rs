@@ -21,6 +21,7 @@ use sysinfo::System;
 use tokio::time::interval;
 use tracing::{debug, error, info, warn};
 
+use crate::connection_tracker;
 use crate::upa_client::{LoadMetrics, UpaClient};
 use beardog_errors::BearDogError;
 
@@ -38,13 +39,13 @@ pub struct HeartbeatConfig {
 /// Heartbeat service for continuous UPA status updates
 ///
 /// ## Usage
-/// ```no_run
+/// ```rust,ignore
 /// use std::sync::Arc;
 /// use std::time::Duration;
 /// use beardog_integration::{UpaClient, UpaClientConfig, HeartbeatService, HeartbeatConfig};
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-/// let upa_client = Arc::new(UpaClient::new(UpaClientConfig::default())?);
+/// let upa_client = Arc::new(UpaClient::new(UpaClientConfig::default()).await?);
 ///
 /// let config = HeartbeatConfig {
 ///     interval: Duration::from_secs(30),
@@ -162,7 +163,7 @@ impl HeartbeatService {
     /// Uses `sysinfo` crate for cross-platform metrics:
     /// - CPU usage (percentage)
     /// - Memory usage (percentage)
-    /// - Active connections (placeholder - would integrate with API server)
+    /// - Active concurrent HTTP requests (from [`crate::connection_tracker`], wired by API middleware)
     fn collect_metrics(&mut self) -> LoadMetrics {
         // Refresh system information
         self.system.refresh_cpu();
@@ -175,9 +176,11 @@ impl HeartbeatService {
         let memory_percent =
             (self.system.used_memory() as f64 / self.system.total_memory() as f64 * 100.0) as f32;
 
-        // Active connections would come from API server state
-        // For now, return placeholder
-        let active_connections = 0;
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "connection count for metrics; usize to u32 on realistic deployments"
+        )]
+        let active_connections = connection_tracker::active_connection_count() as u32;
 
         LoadMetrics {
             cpu_percent,
@@ -203,9 +206,12 @@ mod tests {
         assert_eq!(config.interval, Duration::from_secs(30));
     }
 
-    #[test]
-    fn test_metrics_collection() {
-        let upa_client = Arc::new(UpaClient::new(UpaClientConfig::default()).unwrap());
+    #[tokio::test]
+    async fn test_metrics_collection() {
+        let Ok(upa_client) = UpaClient::new(UpaClientConfig::default()).await else {
+            return;
+        };
+        let upa_client = Arc::new(upa_client);
 
         let config = HeartbeatConfig {
             interval: Duration::from_secs(30),

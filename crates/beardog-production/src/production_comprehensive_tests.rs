@@ -73,11 +73,7 @@ fn test_production_readiness_check_succeeds() {
     // Simulate a production readiness check
     let is_ready = config::production_ready();
 
-    if !is_ready {
-        panic!("Production system not ready");
-    }
-
-    assert!(is_ready);
+    assert!(is_ready, "Production system not ready");
 }
 
 #[test]
@@ -239,9 +235,10 @@ fn test_production_ready_boolean_ops() {
 #[test]
 fn test_production_ready_match() {
     let result = config::production_ready();
-    match result {
-        true => assert!(result, "production_ready should return true"),
-        false => panic!("Should be ready"),
+    if result {
+        assert!(result, "production_ready should return true");
+    } else {
+        panic!("Should be ready");
     }
 }
 

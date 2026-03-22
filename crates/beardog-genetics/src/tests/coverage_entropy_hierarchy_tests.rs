@@ -114,7 +114,7 @@ mod engine_tests {
 
     #[test]
     fn test_validate_seed_nonexistent() {
-        let manager = EntropyHierarchyManager::default();
+        let mut manager = EntropyHierarchyManager::default();
         let fake_id = uuid::Uuid::new_v4();
         assert!(manager.validate_seed(fake_id).is_err());
     }

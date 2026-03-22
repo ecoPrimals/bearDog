@@ -7,10 +7,14 @@
 use crate::ClientArgs;
 use beardog_errors::BearDogError;
 use serde_json::json;
+use std::path::Path;
 use std::sync::OnceLock;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 use tracing::{error, info};
+
+/// Last-resort Unix socket directory when `BEARDOG_SOCKET` is unset (prefer `BIOMEOS_SOCKET_DIR` / XDG in production).
+const DEFAULT_LOCAL_SOCKET_TMP_DIR: &str = "/tmp/";
 
 /// Store the active socket path for command execution
 static ACTIVE_SOCKET: OnceLock<String> = OnceLock::new();
@@ -34,7 +38,7 @@ fn discover_socket_path_with(get: impl Fn(&str) -> Option<String>) -> String {
         .or_else(|| get("BEARDOG_NAME"))
         .unwrap_or_else(|| "beardog".to_string());
 
-    format!("/tmp/{primal_name}.sock")
+    format!("{DEFAULT_LOCAL_SOCKET_TMP_DIR}{primal_name}.sock")
 }
 
 /// Handle client command - interactive REPL
@@ -129,16 +133,20 @@ pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
 }
 
 async fn execute_command(_stream: &UnixStream, command: &str) -> Result<(), BearDogError> {
-    // We need to create a new connection for the command
-    // Unix streams don't support try_clone in the same way as TCP streams
-    let socket_path = discover_socket_path();
-    let new_stream =
-        UnixStream::connect(&socket_path)
-            .await
-            .map_err(|e| BearDogError::Network {
-                message: format!("Failed to connect for command: {e}"),
-                category: Default::default(),
-            })?;
+    execute_command_on_socket(&discover_socket_path(), command).await
+}
+
+/// Run one JSON-RPC command on a concrete Unix socket path (used by tests; same behavior as `execute_command`).
+async fn execute_command_on_socket(
+    socket_path: impl AsRef<Path>,
+    command: &str,
+) -> Result<(), BearDogError> {
+    let new_stream = UnixStream::connect(socket_path.as_ref())
+        .await
+        .map_err(|e| BearDogError::Network {
+            message: format!("Failed to connect for command: {e}"),
+            category: Default::default(),
+        })?;
 
     let (reader, mut writer) = new_stream.into_split();
     let mut reader = BufReader::new(reader);
@@ -357,5 +365,29 @@ mod client_handler_tests {
             .await
             .expect_err("api error");
         assert!(err.to_string().contains("Server error") || err.to_string().contains("error"));
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn test_execute_command_on_socket_roundtrip() {
+        let dir = tempfile::tempdir().unwrap();
+        let sock_path = dir.path().join("beardog-client-test.sock");
+        let _ = std::fs::remove_file(&sock_path);
+        let listener = tokio::net::UnixListener::bind(&sock_path).unwrap();
+
+        tokio::spawn(async move {
+            let (mut stream, _) = listener.accept().await.unwrap();
+            use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+            let mut reader = BufReader::new(&mut stream);
+            let mut line = String::new();
+            reader.read_line(&mut line).await.unwrap();
+            let response = r#"{"jsonrpc":"2.0","result":{"echo":"pong"},"id":1}"#;
+            stream.write_all(response.as_bytes()).await.unwrap();
+            stream.write_all(b"\n").await.unwrap();
+        });
+
+        super::execute_command_on_socket(&sock_path, "discovery.capabilities arg1")
+            .await
+            .unwrap();
     }
 }

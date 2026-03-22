@@ -14,6 +14,15 @@ use crossterm::event::{self, Event, KeyEvent, MouseEvent};
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 
+/// Default number of keyboard/mouse events to collect before finishing interactive entropy capture.
+pub const DEFAULT_INTERACTION_CAPTURE_TARGET: usize = 50;
+
+/// Upper bound on how long interactive capture may run before giving up (seconds).
+pub const DEFAULT_INTERACTION_CAPTURE_TIMEOUT_SECS: u64 = 120;
+
+/// Minimum normalized quality score (0.0–1.0) for the session to be accepted.
+pub const DEFAULT_INTERACTION_CAPTURE_MIN_QUALITY: f64 = 0.7;
+
 /// Configuration for interaction capture
 #[derive(Debug, Clone)]
 pub struct InteractionCaptureConfig {
@@ -32,9 +41,9 @@ pub struct InteractionCaptureConfig {
 impl Default for InteractionCaptureConfig {
     fn default() -> Self {
         Self {
-            target_interactions: 50, // Collect 50 interactions
-            timeout_seconds: 120,    // 2 minute timeout
-            min_quality: 0.7,        // 70% quality minimum
+            target_interactions: DEFAULT_INTERACTION_CAPTURE_TARGET,
+            timeout_seconds: DEFAULT_INTERACTION_CAPTURE_TIMEOUT_SECS,
+            min_quality: DEFAULT_INTERACTION_CAPTURE_MIN_QUALITY,
             enable_keyboard: true,
             enable_mouse: true,
         }

@@ -74,6 +74,9 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+/// Default API port when `BEARDOG_API_PORT` is not set.
+const DEFAULT_API_PORT: u16 = 8080;
+
 /// Inputs for [`PrimalIdentity::from_inputs`] (no environment reads).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct PrimalIdentityEnvInputs {
@@ -230,7 +233,7 @@ impl PrimalIdentity {
         let mut endpoints = Vec::new();
 
         if let Some(api_host) = &inputs.beardog_api_host {
-            let api_port = inputs.beardog_api_port.unwrap_or(8080);
+            let api_port = inputs.beardog_api_port.unwrap_or(DEFAULT_API_PORT);
 
             endpoints.push(Endpoint {
                 protocol: Protocol::Http,

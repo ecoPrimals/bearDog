@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 #![allow(missing_docs, clippy::all)]
 
 //! Integration coverage tests for `beardog-discovery`.
@@ -381,4 +382,125 @@ fn required_capability_and_discovered_service_roundtrip() {
     let j2 = serde_json::to_string(&ds).expect("ser");
     let ds2: DiscoveredService = serde_json::from_str(&j2).expect("de");
     assert_eq!(ds2.id, "i");
+}
+
+#[test]
+fn discovery_error_from_toml_decode_maps_to_config() {
+    let err = toml::from_str::<DiscoveryConfig>("[broken").unwrap_err();
+    let de: DiscoveryError = err.into();
+    match de {
+        DiscoveryError::Config(msg) => assert!(!msg.is_empty()),
+        _ => panic!("expected Config variant: {de:?}"),
+    }
+}
+
+#[test]
+fn discovered_services_skips_malformed_primal_endpoint_key() {
+    let mut m = HashMap::new();
+    m.insert(
+        "PRIMAL_ENDPOINT".to_string(),
+        "http://127.0.0.1:1".to_string(),
+    );
+    let lookup = m.clone();
+    let get = move |k: &str| lookup.get(k).cloned().ok_or(VarError::NotPresent);
+    let v = discovered_services_from_environment_with("any", 30, get, m.into_iter());
+    assert!(v.is_empty());
+}
+
+#[test]
+fn discovered_services_primal_http_primary_url_sets_use_tls_false() {
+    let mut m = HashMap::new();
+    m.insert(
+        "PRIMAL_ACME_ENDPOINT".to_string(),
+        "http://127.0.0.1:9".to_string(),
+    );
+    m.insert(
+        "PRIMAL_ACME_CAPABILITIES".to_string(),
+        "orch,extra".to_string(),
+    );
+    let lookup = m.clone();
+    let get = move |k: &str| lookup.get(k).cloned().ok_or(VarError::NotPresent);
+    let v = discovered_services_from_environment_with("orch", 45, get, m.into_iter());
+    assert_eq!(v.len(), 1);
+    assert!(!v[0].endpoint.use_tls);
+}
+
+#[test]
+fn discovered_services_primal_skipped_when_capabilities_list_missing_target() {
+    let mut m = HashMap::new();
+    m.insert(
+        "PRIMAL_ACME_ENDPOINT".to_string(),
+        "http://127.0.0.1:9".to_string(),
+    );
+    m.insert(
+        "PRIMAL_ACME_CAPABILITIES".to_string(),
+        "other,thing".to_string(),
+    );
+    let lookup = m.clone();
+    let get = move |k: &str| lookup.get(k).cloned().ok_or(VarError::NotPresent);
+    let v = discovered_services_from_environment_with("wanted-cap", 30, get, m.into_iter());
+    assert!(v.is_empty());
+}
+
+#[tokio::test]
+async fn discovery_config_from_file_rejects_invalid_toml() {
+    let dir = tempfile::tempdir().expect("tmp");
+    let path = dir.path().join("invalid.toml");
+    std::fs::write(&path, "[unclosed\n").expect("write");
+    let e = DiscoveryConfig::from_file(&path).expect_err("invalid");
+    match e {
+        DiscoveryError::Config(_) => {}
+        _ => panic!("expected Config parse error: {e:?}"),
+    }
+}
+
+#[tokio::test]
+async fn announcer_service_registry_without_url_completes() {
+    let cfg: DiscoveryConfig = toml::from_str(
+        r#"
+[primal_self]
+primal_id = "ann"
+primal_type = "security"
+version = "1"
+display_name = "Ann"
+self_capabilities = ["x"]
+
+[primal_self.endpoint]
+host = "127.0.0.1"
+port = 8080
+scheme = "http"
+path_prefix = "/"
+
+[primal_self.announcement]
+enabled = true
+methods = ["service_registry"]
+announcement_interval_secs = 1
+ttl_secs = 1
+
+[required_capabilities.r]
+required = false
+preferred = false
+features = []
+fallback = "none"
+
+[discovery]
+methods = ["environment"]
+discovery_timeout_secs = 1
+discovery_interval_secs = 300
+cache_ttl_secs = 600
+
+[service_selection]
+strategy = "qos_based"
+
+[service_selection.qos_weights]
+latency = 0.25
+throughput = 0.25
+availability = 0.25
+reliability = 0.25
+"#,
+    )
+    .expect("parse announcer cfg");
+    let ann = Announcer::new(cfg.primal_self.announcement.clone(), cfg.primal_info())
+        .with_service_registry_url(None);
+    ann.start().await.expect("registry url unset is ok");
 }

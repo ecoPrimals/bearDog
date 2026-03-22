@@ -274,3 +274,123 @@ pub struct IncidentResponse {
     /// The severity value
     pub severity: String,
 }
+
+#[cfg(test)]
+mod incident_handler_tests {
+    use super::super::core::ThreatDetectionEngine;
+    use super::IncidentResponse;
+    use crate::threat::types::incidents::IncidentLifecyclePhase;
+    use crate::threat::types::{
+        ThreatDetectionConfig, ThreatEvent, ThreatSeverity, ThreatSource, ThreatTarget, ThreatType,
+    };
+
+    fn sample_threat(id: &str) -> ThreatEvent {
+        let mut e = ThreatEvent::new(
+            id.to_string(),
+            ThreatType::Intrusion,
+            ThreatSeverity::High,
+            ThreatSource::default(),
+            ThreatTarget::default(),
+        );
+        e.description = "test incident".to_string();
+        e
+    }
+
+    #[test]
+    fn create_incident_from_threat_returns_stable_prefix() {
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let tid = engine
+            .create_incident_from_threat(&sample_threat("th-1"))
+            .expect("incident id");
+        assert!(tid.starts_with("INC-"));
+    }
+
+    #[test]
+    fn incident_lifecycle_happy_path_and_active_list() {
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let id = engine
+            .create_incident_from_threat(&sample_threat("th-2"))
+            .unwrap();
+
+        let classified = engine.classify_incident(&id).unwrap();
+        assert_eq!(classified.lifecycle, IncidentLifecyclePhase::Classified);
+
+        engine.escalate_incident(&id).unwrap();
+        engine
+            .assign_incident_to_team(&id, "sec-ops")
+            .expect("assign");
+
+        let resolved = engine.resolve_incident(&id, "patched host").unwrap();
+        assert_eq!(resolved.lifecycle, IncidentLifecyclePhase::Resolved);
+        assert_eq!(resolved.resolution.as_deref(), Some("patched host"));
+
+        assert_eq!(engine.get_active_incidents().unwrap().len(), 1);
+
+        engine.close_incident(&id).unwrap();
+        assert!(engine.get_active_incidents().unwrap().is_empty());
+    }
+
+    #[test]
+    fn classify_unknown_incident_returns_error() {
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        assert!(engine.classify_incident("nope").is_err());
+    }
+
+    #[test]
+    fn update_incident_status_unknown_id_returns_synthetic_snapshot() {
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let snap = engine
+            .update_incident_status("missing-1", "investigating")
+            .unwrap()
+            .expect("some");
+        assert_eq!(snap.id, "missing-1");
+        assert_eq!(snap.status, "investigating");
+    }
+
+    #[test]
+    fn update_incident_status_legacy_branches_on_existing_incident() {
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let id = engine
+            .create_incident_from_threat(&sample_threat("th-3"))
+            .unwrap();
+
+        let v: IncidentResponse = engine
+            .update_incident_status(&id, "in_progress")
+            .unwrap()
+            .expect("view");
+        assert_eq!(v.status, "in_progress");
+
+        let v2 = engine
+            .update_incident_status(&id, "resolved")
+            .unwrap()
+            .expect("view2");
+        assert_eq!(v2.status, "resolved");
+
+        let v3 = engine
+            .update_incident_status(&id, "bogus-unknown-status")
+            .unwrap()
+            .expect("view3");
+        assert_eq!(
+            v3.status, "resolved",
+            "unknown legacy labels do not mutate lifecycle; view still reflects current phase"
+        );
+    }
+
+    #[test]
+    fn close_incident_unknown_id_is_noop_ok() {
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        engine.close_incident("nope").unwrap();
+    }
+
+    #[test]
+    fn close_incident_before_resolved_skips_transition() {
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let id = engine
+            .create_incident_from_threat(&sample_threat("th-4"))
+            .unwrap();
+        engine.close_incident(&id).unwrap();
+        let active = engine.get_active_incidents().unwrap();
+        assert_eq!(active.len(), 1);
+        assert_eq!(active[0].status, "open");
+    }
+}
