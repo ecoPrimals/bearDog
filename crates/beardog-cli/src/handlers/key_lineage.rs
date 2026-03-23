@@ -105,10 +105,7 @@ fn find_root(key: &StoredKey, home: &Path) -> Result<StoredKey, BearDogError> {
     while let Some(parent_id) = &current.parent_key_id {
         // Handle mixed keys (parent format: "key1+key2")
         let first_parent = if parent_id.contains('+') {
-            parent_id
-                .split('+')
-                .next()
-                .expect("split on '+' always yields at least one segment")
+            parent_id.split('+').next().unwrap_or(parent_id.as_str())
         } else {
             parent_id.as_str()
         };

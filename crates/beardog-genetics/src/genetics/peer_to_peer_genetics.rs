@@ -5,6 +5,7 @@
 // This module provides functionality for the BearDog ecosystem.
 
 
+use beardog_errors::BearDogError;
 use beardog_types::canonical::SecurityContext;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -110,9 +111,9 @@ impl P2PGeneticsNetwork {
 
 
 
-    pub fn add_node(&mut self, node: GeneticsNode) -> Result<(), String> {
+    pub fn add_node(&mut self, node: GeneticsNode) -> Result<(), BearDogError> {
         if self.nodes.len() >= self.config.max_nodes {
-            return Err("Network at capacity".to_string());
+            return Err(BearDogError::validation("P2P genetics network at capacity"));
         }
 
         self.nodes.insert(node.id.clone(), node);

@@ -374,7 +374,6 @@ impl BeardogBtspProvider {
         }
 
         // For future: Query genetics engine for multi-hop paths
-        // let path = self.genetics.find_path(requester_lineage, target_peer_id, max_hops).await?;
 
         // If peer not found in immediate family, return empty path
         warn!("⚠️  Peer {} not found in genetic lineage", target_peer_id);
@@ -505,14 +504,31 @@ impl BeardogBtspProvider {
 
     /// Discovery Unix socket paths (env-first, then `beardog-ipc` constants).
     ///
-    /// Priority:
-    /// 1. `IPC_SOCKET` / `DISCOVERY_SOCKET` when set
-    /// 2. [`beardog_ipc::DISCOVERY_SOCKET_FALLBACK`] (`/primal/discovery`)
-    /// 3. `BEARDOG_DEV_DISCOVERY_SOCKET` or [`beardog_ipc::discovery_socket_dev_fallback_path`]
+    /// Reads `IPC_SOCKET`, `DISCOVERY_SOCKET`, and `BEARDOG_DEV_DISCOVERY_SOCKET`
+    /// from the process environment overlay, then delegates to [`Self::build_discovery_socket_paths`]
+    /// for the pure priority logic.
     fn get_discovery_socket_paths() -> Vec<String> {
+        Self::build_discovery_socket_paths(
+            beardog_errors::process_env::var("IPC_SOCKET").ok(),
+            beardog_errors::process_env::var("DISCOVERY_SOCKET").ok(),
+            beardog_errors::process_env::var("BEARDOG_DEV_DISCOVERY_SOCKET").ok(),
+        )
+    }
+
+    /// Pure priority logic for discovery socket paths (DI-friendly, deterministic).
+    ///
+    /// Priority:
+    /// 1. `ipc_socket` / `discovery_socket` when `Some` and non-empty
+    /// 2. [`beardog_ipc::DISCOVERY_SOCKET_FALLBACK`] (`/primal/discovery`)
+    /// 3. `dev_socket` or [`beardog_ipc::discovery_socket_dev_fallback_path`]
+    fn build_discovery_socket_paths(
+        ipc_socket: Option<String>,
+        discovery_socket: Option<String>,
+        dev_socket: Option<String>,
+    ) -> Vec<String> {
         let mut paths = Vec::new();
-        for key in ["IPC_SOCKET", "DISCOVERY_SOCKET"] {
-            if let Ok(s) = beardog_errors::process_env::var(key)
+        for val in [ipc_socket, discovery_socket] {
+            if let Some(s) = val
                 && !s.is_empty()
                 && !paths.contains(&s)
             {
@@ -523,8 +539,7 @@ impl BeardogBtspProvider {
         if !paths.contains(&generic) {
             paths.push(generic);
         }
-        let dev = beardog_errors::process_env::var("BEARDOG_DEV_DISCOVERY_SOCKET")
-            .unwrap_or_else(|_| beardog_ipc::discovery_socket_dev_fallback_path());
+        let dev = dev_socket.unwrap_or_else(beardog_ipc::discovery_socket_dev_fallback_path);
         if !paths.contains(&dev) {
             paths.push(dev);
         }
@@ -566,8 +581,6 @@ impl BeardogBtspProvider {
         let proof = format!("lineage_proof_{}", hex::encode(proof_hash));
 
         // Future: Use genetics engine for proper cryptographic proof
-        // let proof = self.genetics.generate_lineage_proof(lineage_path).await?;
-
         Ok(proof)
     }
 

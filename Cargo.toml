@@ -117,10 +117,10 @@ cast_sign_loss = { level = "allow", priority = 1 }
 cast_lossless = { level = "allow", priority = 1 }
 cast_possible_wrap = { level = "allow", priority = 1 }
 
-# ── Unwrap / expect — allowed in test code only. Library code must use
-#    Result<T, E>.  Migrate violations to per-site #[expect] with reason. ─────
-expect_used = { level = "allow", priority = 2 }
-unwrap_used = { level = "allow", priority = 2 }
+# ── Unwrap / expect — warn at workspace level to catch regressions.
+#    Test code uses per-crate cfg_attr(test, allow) or per-site #[expect]. ────
+expect_used = { level = "warn", priority = 2 }
+unwrap_used = { level = "warn", priority = 2 }
 
 [workspace.dependencies]
 # Core dependencies

@@ -17,7 +17,6 @@
 //!
 //! Tests for the production monitoring and observability systems
 
-#[allow(unused_imports)]
 use beardog_errors::BearDogError;
 
 #[tokio::test]

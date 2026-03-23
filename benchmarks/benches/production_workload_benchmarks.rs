@@ -36,7 +36,6 @@ use std::time::Duration;
 // ============================================================================
 
 #[derive(Clone, Debug)]
-#[allow(dead_code)]
 struct ApiRequest {
     tenant_id: String,
     operation: String,
@@ -44,7 +43,6 @@ struct ApiRequest {
 }
 
 #[derive(Clone, Debug)]
-#[allow(dead_code)]
 struct ApiResponse {
     status: u16,
     body: Vec<u8>,

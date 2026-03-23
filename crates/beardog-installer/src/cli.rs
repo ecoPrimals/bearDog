@@ -73,4 +73,25 @@ mod tests {
         assert!(s.contains("Foo Bar"));
         assert!(s.contains("Baz"));
     }
+
+    #[test]
+    fn parse_primals_empty_string_rejects() {
+        let err = parse_primals(Some(String::new())).expect_err("empty string has no valid slugs");
+        assert!(
+            err.to_string().contains("Unknown primal") || err.to_string().contains("primal"),
+            "unexpected: {err}"
+        );
+    }
+
+    #[test]
+    fn parse_primals_empty_list_of_commas() {
+        let err = parse_primals(Some(",,,".to_string())).expect_err("no valid tokens");
+        assert!(err.to_string().contains("Unknown primal"), "{err}");
+    }
+
+    #[test]
+    fn primals_to_string_empty_slice() {
+        let s = primals_to_string(&[]);
+        assert!(s.is_empty());
+    }
 }

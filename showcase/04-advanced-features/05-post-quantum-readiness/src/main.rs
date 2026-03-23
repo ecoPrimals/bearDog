@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Post-Quantum Readiness Demo
 //!
 //! This demo demonstrates quantum-resistant cryptography:

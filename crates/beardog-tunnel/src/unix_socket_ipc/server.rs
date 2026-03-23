@@ -20,7 +20,7 @@ use crate::platform::{PlatformSocket, PlatformStream, Socket, SocketEndpoint};
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tracing::{debug, error, info, warn};
 
 /// Unix socket IPC server for inter-primal communication

@@ -6,9 +6,11 @@
 //! untested. All tests are concurrent-safe — no sleeps, no serialization.
 
 use crate::DeploymentConfig;
+use crate::DeploymentManager;
 use crate::android::AndroidDeployment;
 use crate::builder::RustBuilder;
 use crate::device::{DeviceInfo, DeviceManager, DeviceStatus, DeviceType};
+use crate::optimization::{BuildFeatures, DeploymentOptimizationConfig, OptimizationLevel};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::thread;
@@ -245,4 +247,77 @@ fn test_device_manager_concurrent_creation() {
     for h in handles {
         h.join().unwrap();
     }
+}
+
+#[test]
+fn test_deployment_manager_initialize_rejects_empty_environment_field() {
+    let cfg = DeploymentConfig {
+        environment: String::new(),
+        region: "local".to_string(),
+        instance_count: 0,
+        monitoring_enabled: false,
+    };
+    let mgr = DeploymentManager::new(cfg);
+    assert!(mgr.initialize().is_err());
+}
+
+#[test]
+fn test_deployment_config_serde_preserves_instance_count_zero() {
+    let cfg = DeploymentConfig {
+        environment: "staging".to_string(),
+        region: "eu-west-1".to_string(),
+        instance_count: 0,
+        monitoring_enabled: false,
+    };
+    let json = serde_json::to_string(&cfg).expect("serialize config");
+    let back: DeploymentConfig = serde_json::from_str(&json).expect("deserialize");
+    assert_eq!(back.instance_count, 0);
+    assert!(!back.monitoring_enabled);
+}
+
+#[test]
+fn test_deployment_optimization_cargo_flags_release_lto_includes_release() {
+    let cfg = DeploymentOptimizationConfig {
+        features: BuildFeatures::default(),
+        target_cpu_optimization: None,
+        optimization_level: OptimizationLevel::ReleaseLto,
+    };
+    let flags = cfg.get_cargo_flags();
+    assert!(flags.contains(&"--release".to_string()));
+    assert!(flags.contains(&"--incremental".to_string()));
+}
+
+#[test]
+fn test_deployment_optimization_rustc_flags_release_max_without_extra_lto_flag() {
+    let cfg = DeploymentOptimizationConfig {
+        features: BuildFeatures {
+            parallel_builds: true,
+            incremental_builds: true,
+            optimization: crate::optimization::OptimizationSettings {
+                lto: false,
+                strip_symbols: false,
+            },
+        },
+        target_cpu_optimization: None,
+        optimization_level: OptimizationLevel::ReleaseMaxOpt,
+    };
+    let flags = cfg.get_rustc_flags();
+    assert!(flags.iter().any(|f| f.contains("opt-level=3")));
+    assert!(!flags.iter().any(|f| f == "-C lto=thin"));
+}
+
+#[test]
+fn test_device_info_empty_capabilities_roundtrip() {
+    let info = DeviceInfo {
+        id: "e".to_string(),
+        name: "empty caps".to_string(),
+        device_type: DeviceType::Unknown,
+        status: DeviceStatus::Disconnected,
+        capabilities: vec![],
+        metadata: HashMap::new(),
+    };
+    let json = serde_json::to_string(&info).expect("serialize");
+    let back: DeviceInfo = serde_json::from_str(&json).expect("deserialize");
+    assert!(back.capabilities.is_empty());
+    assert!(back.metadata.is_empty());
 }

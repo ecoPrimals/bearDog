@@ -218,34 +218,6 @@ async fn verify_signature(
         ),
         location: Some("template.signature".to_string()),
     }))
-
-    // NOTE: Full implementation will look like this once collaboration service exists:
-    //
-    // // Get creator's public key
-    // let public_key = collaboration_service
-    //     .get_user_public_key(&template.creator)
-    //     .await?;
-    //
-    // // Create canonical form (template without signature)
-    // let mut canonical_template = template.clone();
-    // canonical_template.signature = None;
-    // let canonical_json = serde_json::to_vec(&canonical_template)
-    //     .map_err(|e| BearDogError::validation(format!("JSON serialization failed: {e}")))?;
-    //
-    // // Verify signature
-    // use beardog_core::crypto_service::algorithms::asymmetric;
-    // let valid = asymmetric::verify_ed25519(&canonical_json, &signature, &public_key)?;
-    //
-    // if !valid {
-    //     return Ok(Some(ValidationIssue {
-    //         severity: IssueSeverity::Critical,
-    //         category: ThreatCategory::Signature,
-    //         description: "Ed25519 signature verification FAILED".to_string(),
-    //         location: Some("template.signature".to_string()),
-    //     }));
-    // }
-    //
-    // Ok(None) // Signature valid
 }
 
 /// Scan for known vulnerabilities

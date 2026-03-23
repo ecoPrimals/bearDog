@@ -1,8 +1,8 @@
 # BearDog Architecture
 
-**Last Updated**: March 21, 2026
+**Last Updated**: March 23, 2026
 **Status**: Production Ready
-**Crates**: 30 | **Tests**: 14,029 | **Coverage**: 86.1% | **MSRV**: 1.93.0
+**Crates**: 30 | **Tests**: 14,201 | **Coverage**: 87.0%+ | **MSRV**: 1.93.0
 
 ---
 
@@ -190,7 +190,7 @@ Key material derived from family seed. Family A never shares keys with Family B.
 |----------|-------------|
 | Pure Rust | Zero C dependencies, RustCrypto suite only |
 | Zero unsafe | `forbid(unsafe_code)` workspace-wide |
-| Zero panics | No `unwrap()` in production; `expect()` only on documented infallible invariants |
+| Zero panics | No `unwrap()` in production; `#[expect]` with reason on justified invariants; `unwrap_used`/`expect_used` warn at workspace |
 | Zero hardcoding | Environment variables and capability discovery |
 | File size | < 1000 LOC per file (exceptions justified) |
 | std preferred | `std::sync::LazyLock` over `once_cell`, etc. |
@@ -201,4 +201,4 @@ Key material derived from family seed. Family A never shares keys with Family B.
 
 ---
 
-**Last Updated**: March 21, 2026
+**Last Updated**: March 23, 2026

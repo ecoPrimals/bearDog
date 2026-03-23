@@ -8,7 +8,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 30 | **Tests**: 14,161 | **Coverage**: 87.0%
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 30 | **Tests**: 14,201 | **Coverage**: 87.0%+
 
 ---
 
@@ -162,15 +162,15 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | Metric | Value |
 |--------|-------|
 | **Build** | Clean, 0 errors |
-| **Clippy** | 0 warnings (pedantic + nursery + cast lints) |
+| **Clippy** | 0 warnings (pedantic + nursery + cast + unwrap/expect warn) |
 | **Missing Docs** | 0 warnings |
 | **Pure Rust** | 100% — zero C dependencies |
 | **Unsafe Code** | 0 production blocks (`forbid(unsafe_code)` workspace-wide) |
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
 | **Files > 1000 LOC** | 0 (production code) |
-| **Tests** | 14,161 (fully concurrent, zero sleeps in non-chaos) |
-| **Coverage** | 87.0% line (llvm-cov, 105,989/121,844 lines) |
+| **Tests** | 14,201 (fully concurrent, zero sleeps in non-chaos) |
+| **Coverage** | 87.0%+ line (llvm-cov workspace) |
 | **Serial Tests** | 0 (`#[serial]` fully eliminated) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |
 | **License** | AGPL-3.0-only (SPDX headers on all .rs files) |
@@ -181,7 +181,7 @@ Key material is derived from the family seed. A BearDog instance serving family 
 - **Pure Rust** — No C dependencies anywhere (ecoBin compliant)
 - **Dependency Injection** — Config flows through parameters, `Default` is pure (no I/O), `from_env()` at boundaries only
 - **Zero Hardcoding** — Environment variables and capability-based discovery
-- **Result<T, E>** — `expect()` with documented invariants preferred over `unwrap()` in production; actively migrating remaining instances
+- **Result<T, E>** — Zero `.unwrap()` in production; `#[expect(clippy::expect_used, reason = "...")]` for justified invariants; `unwrap_used`/`expect_used` warn at workspace level
 - **Fully Concurrent Tests** — Zero `#[serial]`, zero sleeps in non-chaos tests
 - **< 1000 LOC** — File size discipline across all production .rs files
 - **Workspace Lints** — Centralized clippy pedantic + nursery + cast lints

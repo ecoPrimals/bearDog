@@ -236,7 +236,6 @@ fn benchmark_signing(c: &mut Criterion) {
 // ============================================================================
 
 #[derive(Clone, Debug)]
-#[allow(dead_code)]
 enum CryptoProviderDispatch {
     RustCrypto,
     Ring,

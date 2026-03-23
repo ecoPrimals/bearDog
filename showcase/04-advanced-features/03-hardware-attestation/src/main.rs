@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // 🛡️ Hardware Attestation Chain Demo
 //
 // Demonstrates hardware attestation to verify:

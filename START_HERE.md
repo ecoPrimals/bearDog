@@ -142,12 +142,12 @@ cargo build --release                # Build
 
 | Metric | Value |
 |--------|-------|
-| Clippy | 0 warnings (pedantic + nursery + cast) |
+| Clippy | 0 warnings (pedantic + nursery + cast + unwrap/expect warn) |
 | Missing Docs | 0 |
 | Unsafe | `forbid(unsafe_code)` workspace-wide |
 | Pure Rust | 100% |
-| Tests | 14,161 (fully concurrent) |
-| Coverage | 87.0% line (llvm-cov) |
+| Tests | 14,201 (fully concurrent) |
+| Coverage | 87.0%+ line (llvm-cov) |
 | `#[serial]` | 0 |
 | Files > 1000 LOC | 0 (production) |
 

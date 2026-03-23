@@ -172,6 +172,8 @@ pub trait TimeoutPolicy: Send + Sync {
     /// - All timeouts should be > 0 (unless explicitly allowing immediate failure)
     /// - Global timeout (if set) should be >= longest operation timeout
     /// - Connection timeout should generally be shorter than operation timeouts
+    // EVOLUTION: migrate to `Result<(), beardog_errors::BearDogError>` in a semver-major release
+    // once all implementors and call sites are updated (wide trait surface).
     fn validate(&self) -> Result<(), String> {
         // Check connection timeout is reasonable
         let conn_timeout = self.connection_timeout();

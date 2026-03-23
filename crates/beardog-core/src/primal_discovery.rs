@@ -665,21 +665,7 @@ impl PrimalDiscovery {
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
         info!("🔍 mDNS discovery for service: {}", service_type);
 
-        // beardog-discovery crate has complete mDNS implementation
-        // Integration pending: add dependency and wire up
-        //
-        // Example usage when wired up:
-        // ```rust
-        // use beardog_discovery::mdns::MdnsDiscovery;
-        //
-        // let mdns = MdnsDiscovery::new()?;
-        // let services = mdns.discover(&capability).await?;
-        //
-        // // Convert DiscoveredService -> DiscoveredPrimal
-        // let primals = services.into_iter()
-        //     .map(|s| DiscoveredPrimal { ... })
-        //     .collect();
-        // ```
+        // beardog-discovery integration pending (see module docs above).
 
         #[cfg(feature = "mdns")]
         {

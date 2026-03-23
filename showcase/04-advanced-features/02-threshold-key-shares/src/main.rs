@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // 🔐 Threshold Key Shares Demo
 //
 // Demonstrates Shamir's Secret Sharing for distributed trust:

@@ -11,14 +11,14 @@
 | Metric | Status | Details |
 |--------|--------|---------|
 | **Build** | Clean | Zero errors, edition 2024 |
-| **Clippy** | 0 warnings | Pedantic + nursery + cast lints, workspace-centralized |
+| **Clippy** | 0 warnings | Pedantic + nursery + cast lints + unwrap/expect warn, workspace-centralized |
 | **Missing Docs** | 0 warnings | All public items documented |
 | **Pure Rust** | 100% | Zero C dependencies (ecoBin) |
 | **Unsafe Code** | 0 production | `forbid(unsafe_code)` workspace-wide + all crate `lib.rs` |
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`device.rs` refactored) |
-| **Tests** | 14,161 passing | Fully concurrent, zero sleeps in non-chaos |
+| **Tests** | 14,201 passing | Fully concurrent, zero sleeps in non-chaos |
 | **Coverage** | 87.0% line | llvm-cov workspace |
 | **Serial Tests** | 0 | `#[serial]` fully eliminated |
 | **cargo deny** | 4/4 pass | Advisories, bans, licenses, sources |
@@ -32,7 +32,7 @@
 ## Codebase Metrics
 
 - **Crates**: 30 in workspace (beardog-integration re-integrated)
-- **Rust Files**: 1,800+
+- **Rust Files**: 2,000+
 - **Crypto Methods**: 91+ JSON-RPC methods
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
 
@@ -73,16 +73,32 @@
 | JSON-RPC + tarpc | Both protocols supported |
 | AGPL-3.0-only | License verified; SPDX headers on all .rs files |
 | `forbid(unsafe_code)` | Workspace level + every crate `lib.rs` (beardog-errors platform FFI documented per wateringHole) |
-| Workspace Lints | Centralized clippy pedantic + nursery + cast lints |
+| Workspace Lints | Centralized clippy pedantic + nursery + cast + unwrap/expect warn |
 | All Public Items Documented | 0 missing_docs warnings |
 | File Size | 0 production files > 1000 LOC |
 | Zero Sleeps (non-chaos) | All test synchronization via barriers/channels/notifications |
 | Zero `#[serial]` | All tests fully concurrent via unique resources |
-| Production Mocks | Production mocks being evolved to complete implementations |
+| Production Mocks | All mocks isolated to `#[cfg(test)]`; production code uses complete implementations |
+| Commented-Out Code | 0 — all legacy stubs cleaned per wateringHole standard |
+| Typed Errors | `Box<dyn Error>` eliminated from public APIs; `BearDogError` throughout |
 
 ---
 
 ## Recent Improvements (March 23, 2026)
+
+### Wave 12: Cross-Ecosystem Audit, Lint Tightening & Type Safety Evolution
+
+- **Full ecosystem audit** — Reviewed all wateringHole standards, 8 springs (primalSpring, neuralSpring, airSpring, wetSpring, hotSpring, healthSpring, groundSpring, ludoSpring), and all phase1/phase2 primals for absorption opportunities
+- **Clippy lint tightening** — `unwrap_used`/`expect_used` evolved from `allow` to `warn` at workspace level; all 6 production sites annotated with `#[expect(clippy::expect_used, reason = "...")]`; unused `AsyncReadExt` import removed
+- **Typed error evolution** — `Box<dyn Error>` eliminated from `receipt.rs`, `adapter_certificates.rs`, `hyperoptimized_zero_copy.rs`; `Result<(), String>` evolved to `BearDogError` in SIMD and genetics public APIs
+- **SPDX compliance** — All 29 showcase `main.rs` files now have `// SPDX-License-Identifier: AGPL-3.0-only` headers (was 1,997/2,026; now 2,026/2,026)
+- **Commented-out code cleanup** — Removed legacy stubs from ~10 production files per wateringHole standard (tunnel/lib.rs, security/lib.rs, integration/api_server.rs, btsp_provider.rs, graph_security, primal_discovery, biome_sovereignty, providers_unified)
+- **Smart file refactoring** — 4 files near 1000 LOC split by domain: `monitoring_error_path_tests` (3 files), `hsm_provider_selection_tests` (2 files), `crypto_handlers_hashing` (4 files), `comprehensive_core_tests` (5 files)
+- **Dead code evolution** — `#[allow(dead_code)]` removed from `api_server.rs` (fields now logged), `ultimate_safety.rs`, `compliance_validation_tests.rs`; unused fields renamed with `_` prefix
+- **DI-first discovery** — `get_discovery_socket_paths` refactored to pure `build_discovery_socket_paths` with DI-friendly parameters; env-racing tests eliminated
+- **Coverage tests** — 40+ new tests across `beardog-deploy` and `beardog-installer` targeting error paths, boundary conditions, and invalid inputs
+- **14,201 tests passing** — Up from 14,161; 0 failures, 186 ignored
+- **All gates green** — fmt, clippy `-D warnings`, doc, test all clean
 
 ### Wave 11: Deep Coverage Push, Crypto Fault Injection & Zero-Copy IPC
 

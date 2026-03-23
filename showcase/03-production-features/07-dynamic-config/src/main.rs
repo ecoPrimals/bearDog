@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // ⚙️ BearDog: Dynamic Configuration Demo
 
 use anyhow::{Context, Result};

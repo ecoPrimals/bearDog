@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // 🐻 BearDog: Encrypted Compute Workloads Demo
 //
 // ✅ CORRECT: BearDog discovers compute services by "compute" capability

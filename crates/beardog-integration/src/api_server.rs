@@ -68,7 +68,6 @@ pub struct ApiState {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 struct TunnelMetadata {
     tunnel_id: String,
     peer_id: String,
@@ -77,7 +76,6 @@ struct TunnelMetadata {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 struct LineageMetadata {
     node_id: String,
     parent_id: Option<String>,
@@ -234,7 +232,6 @@ async fn btsp_establish_tunnel(
     state.tunnels.write().insert(tunnel_id.clone(), metadata);
 
     // In production: Call BeardogBtspProvider::establish_tunnel()
-    // let handle = btsp_provider.establish_tunnel(peer_endpoint, None).await?;
 
     Ok(Json(BtspEstablishResponse {
         tunnel_id,
@@ -261,7 +258,6 @@ async fn btsp_encrypt(
     }
 
     // In production: Call BeardogBtspProvider::encrypt_data()
-    // let ciphertext = btsp_provider.encrypt_data(tunnel_id, plaintext).await?;
 
     // Simulate encryption
     let ciphertext = format!("encrypted_{}", req.plaintext);
@@ -288,7 +284,6 @@ async fn btsp_decrypt(
     }
 
     // In production: Call BeardogBtspProvider::decrypt_data()
-    // let plaintext = btsp_provider.decrypt_data(tunnel_id, ciphertext).await?;
 
     // Simulate decryption
     let plaintext = req
@@ -315,6 +310,8 @@ async fn btsp_tunnel_status(
         .get(&tunnel_id)
         .ok_or_else(|| ApiError::BadRequest("Tunnel not found".to_string()))?;
 
+    info!(peer_id = %metadata.peer_id, "BTSP: Tunnel metadata");
+
     Ok(Json(BtspTunnelStatus {
         tunnel_id: metadata.tunnel_id.clone(),
         status: metadata.status.clone(),
@@ -336,7 +333,6 @@ async fn btsp_close_tunnel(
     let existed = tunnels.remove(&tunnel_id).is_some();
 
     // In production: Call BeardogBtspProvider::close_tunnel()
-    // btsp_provider.close_tunnel(tunnel_id).await?;
 
     Ok(Json(BtspCloseResponse { success: existed }))
 }
@@ -357,7 +353,6 @@ async fn birdsong_encrypt(
     info!(lineage_hint = ?req.lineage_hint, "BirdSong: Encrypting broadcast");
 
     // In production: Call BirdSongManager::encrypt_broadcast()
-    // let broadcast = birdsong_manager.encrypt_broadcast(encrypt_req).await?;
 
     // Simulate encryption
     let ciphertext = format!("birdsong_encrypted_{}", req.payload);
@@ -381,10 +376,12 @@ async fn birdsong_decrypt(
     Json(req): Json<BirdSongDecryptRequest>,
 ) -> Result<Json<BirdSongDecryptResponse>, ApiError> {
     state.increment_requests();
-    info!("BirdSong: Decrypting broadcast");
+    info!(
+        lineage_hint = ?req.lineage_hint,
+        "BirdSong: Decrypting broadcast"
+    );
 
     // In production: Call BirdSongManager::decrypt_broadcast()
-    // let plaintext = birdsong_manager.decrypt_broadcast(decrypt_req).await?;
 
     // Simulate decryption
     let payload = req
@@ -411,6 +408,12 @@ async fn birdsong_get_lineage(
         .get(&node_id)
         .ok_or_else(|| ApiError::BadRequest("Lineage not found".to_string()))?;
 
+    info!(
+        parent_id = ?metadata.parent_id,
+        created_at = ?metadata.created_at,
+        "BirdSong: Lineage record"
+    );
+
     Ok(Json(LineageInfo {
         node_id: metadata.node_id.clone(),
         lineage_chain: metadata.chain.clone(),
@@ -427,10 +430,13 @@ async fn birdsong_verify_lineage(
     Json(req): Json<VerifyLineageRequest>,
 ) -> Result<Json<VerifyLineageResponse>, ApiError> {
     state.increment_requests();
-    info!(node_id = %req.node_id, "BirdSong: Verifying lineage proof");
+    info!(
+        node_id = %req.node_id,
+        proof_len = %req.proof.len(),
+        "BirdSong: Verifying lineage proof"
+    );
 
     // In production: Call LineageProofManager::verify_proof()
-    // let result = proof_manager.verify_proof(proof).await?;
 
     // Simplified verification
     let lineages = state.lineages.read();
@@ -477,7 +483,6 @@ async fn lineage_generate(
     chain.push(req.node_id.clone());
 
     // In production: Call LineageChainManager::generate_root_chain()
-    // let chain = lineage_manager.generate_root_chain(node_id, metadata).await?;
 
     // Store lineage
     let metadata = LineageMetadata {
@@ -509,7 +514,6 @@ async fn lineage_verify(
     info!("Lineage: Verifying chain");
 
     // In production: Call LineageChainManager::verify_chain()
-    // let valid = lineage_manager.verify_chain(chain_id).await?;
 
     // Simplified verification: Check if chain exists
     let lineages = state.lineages.read();
@@ -538,7 +542,6 @@ async fn lineage_get_proof(
     }
 
     // In production: Call LineageProofManager::generate_proof()
-    // let proof = proof_manager.generate_proof(node_id).await?;
 
     // Generate simplified merkle proof
     let merkle_proof = vec![
@@ -680,7 +683,6 @@ struct BirdSongEncryptResponse {
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct BirdSongDecryptRequest {
     ciphertext: String,
     lineage_hint: Option<String>,
@@ -699,7 +701,6 @@ struct LineageInfo {
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct VerifyLineageRequest {
     proof: String,
     node_id: String,

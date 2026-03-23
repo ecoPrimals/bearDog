@@ -19,9 +19,6 @@ pub mod health;
 pub mod load_balancing;
 /// Migration module
 pub mod migration;
-/// Service discovery (canonical)
-pub mod service_discovery;
-// pub mod trait_migration; // Temporarily disabled - migration utility only
 /// Monitoring module
 pub mod monitoring;
 /// Throughput limits, caching, and compression for provider implementations.
@@ -30,7 +27,8 @@ pub mod performance;
 pub mod resilience;
 /// Security module
 pub mod security;
-// pub mod trait_migration; // NEW: Provider trait migration utilities - DISABLED
+/// Service discovery (canonical)
+pub mod service_discovery;
 /// Traits module
 pub mod traits; // NEW: Unified provider trait system // Provider migration utilities
 
@@ -49,11 +47,6 @@ pub use security::*;
 pub use core::{CoreProviderSettings, ProviderRegistryEntry, ProviderStatus};
 
 // Unified traits - use these for new implementations
-// pub use trait_migration::{
-//     create_canonical_base_legacy_provider, create_canonical_hsm_legacy_provider,
-//     create_canonical_security_legacy_provider, migrate_provider_traits, LegacyProviderTrait,
-//     ProviderMigrationReport, ProviderMigrationResult, ProviderMigrationService,
-// };
 pub use traits::{
     KeyType, // Key type enumeration for HSM operations
     ProviderCapability as TraitProviderCapability,

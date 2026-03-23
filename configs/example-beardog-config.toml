@@ -1,5 +1,7 @@
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.13s
-     Running `target/debug/examples/generate_config`
+# BearDog Example Configuration
+# Generated from `cargo run --example generate_config`
+# See beardog-config-template.toml for the canonical template with env var substitution.
+
 [network.api]
 bind_address = "127.0.0.1"
 port = 8080

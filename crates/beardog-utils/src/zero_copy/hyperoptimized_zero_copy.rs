@@ -5,6 +5,7 @@
 // This module provides SIMD-aligned memory management with full memory safety,
 // achieving near-optimal performance through safe Rust abstractions.
 
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, RwLock};
@@ -25,7 +26,7 @@ pub struct AlignedBuffer {
 impl AlignedBuffer {
     /// Create new aligned buffer with specified capacity
     /// Creates a new instance
-    pub fn new(capacity: usize) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(capacity: usize) -> Result<Self, BearDogError> {
         // Create aligned buffer using Vec with extra space for alignment
         // Use Vec with sufficient capacity for alignment
         let raw_vec = vec![0; capacity];
@@ -174,10 +175,7 @@ impl SIMDAlignedPool {
     /// Panics if the internal buffer pool lock is poisoned due to a panic in another thread
     /// Gets buffer
     /// Gets buffer
-    pub fn get_buffer(
-        &self,
-        required_size: usize,
-    ) -> Result<AlignedBuffer, Box<dyn std::error::Error>> {
+    pub fn get_buffer(&self, required_size: usize) -> Result<AlignedBuffer, BearDogError> {
         let optimal_size = self.find_optimal_size(required_size);
 
         // Try to reuse existing buffer
@@ -349,7 +347,7 @@ impl HyperZeroCopyManager {
         &self,
         data_size: usize,
         operation: F,
-    ) -> Result<R, Box<dyn std::error::Error>>
+    ) -> Result<R, BearDogError>
     where
         F: FnOnce(&mut [u8]) -> R,
     {

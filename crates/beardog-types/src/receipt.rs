@@ -3,6 +3,7 @@
 // Universal Operation Receipt System
 // Provides verifiable proof of operation execution for all BearDog operations
 
+use beardog_errors::BearDogError;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -178,33 +179,40 @@ impl OperationReceipt {
     }
 
     /// Load receipt from JSON file
-    pub fn load_from_file(path: &Path) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn load_from_file(path: &Path) -> Result<Self, BearDogError> {
         let json = std::fs::read_to_string(path)?;
-        let receipt: Self = serde_json::from_str(&json)?;
+        let receipt: Self =
+            serde_json::from_str(&json).map_err(|e| BearDogError::serialization(&e.to_string()))?;
         receipt.validate()?;
         Ok(receipt)
     }
 
     /// Validate receipt structure and required fields
-    pub fn validate(&self) -> Result<(), String> {
+    pub fn validate(&self) -> Result<(), BearDogError> {
         if self.receipt_id.is_empty() {
-            return Err("Missing receipt_id".to_string());
+            return Err(BearDogError::validation("Missing receipt_id"));
         }
         if self.operation.is_empty() {
-            return Err("Missing operation".to_string());
+            return Err(BearDogError::validation("Missing operation"));
         }
         if self.timestamp.is_empty() {
-            return Err("Missing timestamp".to_string());
+            return Err(BearDogError::validation("Missing timestamp"));
         }
 
         // Validate UUID format
         if Uuid::parse_str(&self.receipt_id).is_err() {
-            return Err(format!("Invalid receipt_id UUID: {}", self.receipt_id));
+            return Err(BearDogError::validation(&format!(
+                "Invalid receipt_id UUID: {}",
+                self.receipt_id
+            )));
         }
 
         // Validate ISO 8601 timestamp
         if chrono::DateTime::parse_from_rfc3339(&self.timestamp).is_err() {
-            return Err(format!("Invalid ISO 8601 timestamp: {}", self.timestamp));
+            return Err(BearDogError::validation(&format!(
+                "Invalid ISO 8601 timestamp: {}",
+                self.timestamp
+            )));
         }
 
         Ok(())

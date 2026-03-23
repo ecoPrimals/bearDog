@@ -177,8 +177,6 @@ impl BiomeSovereigntyManager {
         );
 
         // Future enhancement: Return handle to genetic engine
-        // let genetic_engine = EcosystemGeneticEngine::new(config)?;
-        // Store genetic_engine for later use
     }
 
     /// Initialize mixed lineage key management
@@ -224,9 +222,6 @@ impl BiomeSovereigntyManager {
         );
 
         // Future enhancement: Return handle to partnership manager
-        // let partnership_manager = PartnershipManager::new()?;
-        // let lineage_tracker = LineageTracker::new()?;
-        // Store for later use
     }
 
     /// Get the current sovereignty status

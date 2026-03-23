@@ -407,3 +407,93 @@ fn test_show_logs_follow_timeout_treated_as_success() {
     let r = mgr.show_logs("com.beardog.test", true);
     assert!(r.is_ok());
 }
+
+#[test]
+fn test_detect_android_devices_spawn_failure() {
+    let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner {
+        fail_adb_spawn: true,
+        ..MockAdbCommandRunner::new()
+    }));
+    let err = mgr
+        .detect_android_devices()
+        .expect_err("adb spawn should fail");
+    let msg = err.to_string();
+    assert!(
+        msg.contains("Failed to execute adb") || msg.contains("adb"),
+        "unexpected error: {msg}"
+    );
+}
+
+#[test]
+fn test_detect_android_devices_list_command_nonzero() {
+    let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner {
+        fail_adb_devices_exit: true,
+        ..MockAdbCommandRunner::new()
+    }));
+    let err = mgr
+        .detect_android_devices()
+        .expect_err("adb devices -l should fail");
+    assert!(
+        err.to_string().contains("adb command failed"),
+        "unexpected: {}",
+        err
+    );
+}
+
+#[test]
+fn test_run_app_shell_am_failure() {
+    let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner {
+        fail_shell_am: true,
+        ..MockAdbCommandRunner::new()
+    }));
+    let err = mgr.run_app(&[]).expect_err("am start should fail");
+    assert!(
+        err.to_string().contains("App launch failed") || err.to_string().contains("failed"),
+        "unexpected: {}",
+        err
+    );
+}
+
+#[test]
+fn test_show_logs_follow_bounded_exit_failure() {
+    let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner {
+        logcat_follow_bounded_exit_fail: true,
+        ..MockAdbCommandRunner::new()
+    }));
+    let err = mgr
+        .show_logs("com.beardog.test", true)
+        .expect_err("logcat follow should report failure");
+    assert!(
+        err.to_string().contains("Logcat exited with error"),
+        "unexpected: {}",
+        err
+    );
+}
+
+#[test]
+fn test_has_strongbox_false_when_pm_list_io_error() {
+    let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner {
+        pm_list_features_io_error: true,
+        ..MockAdbCommandRunner::new()
+    }));
+    assert!(!mgr.has_strongbox_support("emulator-5554"));
+}
+
+#[test]
+fn test_detect_android_devices_parses_device_skips_offline() {
+    let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner::new()));
+    let devices = mgr
+        .detect_android_devices()
+        .expect("mock adb lists one online device");
+    assert_eq!(devices.len(), 1);
+    assert_eq!(devices[0].id, "emulator-5554");
+}
+
+#[test]
+fn test_get_device_property_unknown_prop_returns_empty() {
+    let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner::new()));
+    let v = mgr
+        .get_device_property("emulator-5554", "ro.nonexistent.prop")
+        .expect("getprop succeeds with empty value");
+    assert!(v.is_empty());
+}

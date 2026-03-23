@@ -474,4 +474,54 @@ mod tests {
         assert_eq!(reports.len(), 1);
         assert!(!reports[0].healthy);
     }
+
+    #[tokio::test]
+    async fn test_validate_all_empty_input() {
+        let validator = BinaryValidator::new();
+        let reports = validator.validate_all(vec![]).await;
+        assert!(reports.is_empty());
+    }
+
+    #[test]
+    fn test_binary_validator_default_constructor() {
+        let _: BinaryValidator = BinaryValidator::default();
+        let _ = BinaryValidator::new();
+    }
+
+    #[tokio::test]
+    async fn test_validation_report_display_without_checksum_line() {
+        let mut report = ValidationReport::new(PrimalName::new("x"));
+        report.file_exists = true;
+        report.is_executable = true;
+        report.size_bytes = 2_000_000;
+        report.size_reasonable = true;
+        report.checksum = None;
+        report.runs = false;
+        report.healthy = false;
+        let display = format!("{report}");
+        assert!(display.contains("UNHEALTHY"));
+        assert!(!display.contains("SHA-256"));
+    }
+
+    #[tokio::test]
+    #[cfg(unix)]
+    async fn test_validate_binary_metadata_io_error_surfaces_as_err() {
+        let temp = TempDir::new().expect("tempdir");
+        let path = temp.path().join("nope");
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::write(&path, b"x").expect("write");
+        let mut perms = std::fs::metadata(&path).expect("meta").permissions();
+        perms.set_mode(0o000);
+        std::fs::set_permissions(&path, perms).expect("chmod");
+
+        let validator = BinaryValidator::new();
+        let err = validator
+            .validate_binary(PrimalName::new("nope"), &path)
+            .await
+            .expect_err("unreadable file should error");
+        assert!(
+            err.to_string().contains("IO error") || err.to_string().contains("path"),
+            "unexpected: {err}"
+        );
+    }
 }

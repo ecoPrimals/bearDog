@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 use beardog_tunnel::tunnel::hsm::{HsmProvider, SoftwareHsm, SoftwareHsmConfig};
 use colored::*;
 use std::error::Error;

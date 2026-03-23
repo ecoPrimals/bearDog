@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // 📊 BearDog: Monitoring Integration Demo
 //
 // This demo shows Prometheus-compatible metrics export

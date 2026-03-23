@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 //! Distributed Key Registry Demo
 //!
 //! Demonstrates multi-node distributed key registry with:

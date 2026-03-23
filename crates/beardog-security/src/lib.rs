@@ -97,9 +97,6 @@ pub mod quantum_crypto;
 
 // DISABLED: Module files are corrupted with syntax errors and need reconstruction
 // See MODULE_STRUCTURE_ISSUES.md for details
-// pub mod orchestration;
-// pub mod advanced;
-// pub mod recovery;
 
 // Comprehensive test modules
 #[cfg(test)]
@@ -107,8 +104,6 @@ mod tests;
 
 #[cfg(test)]
 mod security_operations_comprehensive_tests;
-
-// mod recovery_tests; // Disabled - tests unimplemented recovery functionality
 
 // Re-export main types and functions
 pub use authorization_types::*;

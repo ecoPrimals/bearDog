@@ -314,7 +314,7 @@ async fn test_close_tunnel_returns_not_found_for_unknown_handle() {
 
 #[test]
 fn test_get_discovery_socket_paths_non_empty_and_ordered_fallbacks() {
-    let paths = BeardogBtspProvider::get_discovery_socket_paths();
+    let paths = BeardogBtspProvider::build_discovery_socket_paths(None, None, None);
     assert!(!paths.is_empty());
     let joined = paths.join(",");
     assert!(
@@ -325,22 +325,18 @@ fn test_get_discovery_socket_paths_non_empty_and_ordered_fallbacks() {
 
 #[test]
 fn test_get_discovery_socket_paths_prefers_ipc_socket_env() {
-    let dir = tempfile::tempdir().expect("tempdir");
-    let sock = dir.path().join("ipc.sock");
-    let path_str = sock.to_string_lossy().to_string();
-    beardog_errors::process_env::set_var("IPC_SOCKET", &path_str);
-    beardog_errors::process_env::remove_var("DISCOVERY_SOCKET");
-    let paths = BeardogBtspProvider::get_discovery_socket_paths();
-    beardog_errors::process_env::remove_var("IPC_SOCKET");
-    assert_eq!(paths.first().map(String::as_str), Some(path_str.as_str()));
+    let ipc = "/tmp/test-ipc-priority.sock".to_string();
+    let paths = BeardogBtspProvider::build_discovery_socket_paths(Some(ipc.clone()), None, None);
+    assert_eq!(
+        paths.first().map(String::as_str),
+        Some(ipc.as_str()),
+        "IPC_SOCKET must be first in discovery paths: {paths:?}"
+    );
 }
 
 #[test]
 fn test_get_discovery_socket_paths_skips_empty_ipc_socket() {
-    beardog_errors::process_env::set_var("IPC_SOCKET", "");
-    beardog_errors::process_env::remove_var("DISCOVERY_SOCKET");
-    let paths = BeardogBtspProvider::get_discovery_socket_paths();
-    beardog_errors::process_env::remove_var("IPC_SOCKET");
+    let paths = BeardogBtspProvider::build_discovery_socket_paths(Some(String::new()), None, None);
     assert!(
         !paths.is_empty(),
         "fallback paths must remain when IPC_SOCKET is empty"
@@ -350,13 +346,17 @@ fn test_get_discovery_socket_paths_skips_empty_ipc_socket() {
 
 #[test]
 fn test_get_discovery_socket_paths_dedupes_dev_override() {
-    let dir = tempfile::tempdir().expect("tempdir");
-    let dev = dir.path().join("dev.sock").to_string_lossy().to_string();
-    beardog_errors::process_env::remove_var("IPC_SOCKET");
-    beardog_errors::process_env::remove_var("DISCOVERY_SOCKET");
-    beardog_errors::process_env::set_var("BEARDOG_DEV_DISCOVERY_SOCKET", &dev);
-    let paths = BeardogBtspProvider::get_discovery_socket_paths();
-    beardog_errors::process_env::remove_var("BEARDOG_DEV_DISCOVERY_SOCKET");
+    let dev = "/tmp/test-dev-dedup.sock".to_string();
+    let paths = BeardogBtspProvider::build_discovery_socket_paths(None, None, Some(dev.clone()));
     let count = paths.iter().filter(|p| p.as_str() == dev.as_str()).count();
     assert_eq!(count, 1, "duplicate dev path should appear once: {paths:?}");
+}
+
+#[test]
+fn test_get_discovery_socket_paths_integration_with_env() {
+    let paths = BeardogBtspProvider::get_discovery_socket_paths();
+    assert!(
+        !paths.is_empty(),
+        "real env integration must return at least fallback paths"
+    );
 }

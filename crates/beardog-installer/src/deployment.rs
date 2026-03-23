@@ -301,6 +301,7 @@ pub enum DeploymentError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::installer::InstallerError;
     use crate::types::DeploymentStatus;
     use std::sync::Mutex;
     use tempfile::TempDir;
@@ -454,5 +455,31 @@ mod tests {
         assert!(display.contains("Successes: 4"));
         assert!(display.contains("Failures:  1"));
         assert!(display.contains("80.0%"));
+    }
+
+    #[tokio::test]
+    async fn test_deploy_primals_empty_slice_is_success() {
+        let _g = DEPLOYMENT_TEST_LOCK.lock().expect("deployment test lock");
+        let (_temp, source_dir) = setup_test_env().await;
+        let manager = DeploymentManager::new(source_dir)
+            .await
+            .expect("deployment manager");
+
+        let report = manager.deploy_primals(&[]).await.expect("empty deploy");
+        assert_eq!(report.total, 0);
+        assert_eq!(report.successes, 0);
+        assert!(report.is_success());
+        assert_eq!(report.success_rate(), 0.0);
+    }
+
+    #[test]
+    fn test_deployment_error_display_from_installer() {
+        let e = DeploymentError::Installer(InstallerError::BinaryNotFound {
+            primal: PrimalName::new("x"),
+            target: "t".to_string(),
+            searched: vec!["a".to_string()],
+        });
+        let s = e.to_string();
+        assert!(s.contains("Installer") || s.contains("Binary"), "{s}");
     }
 }

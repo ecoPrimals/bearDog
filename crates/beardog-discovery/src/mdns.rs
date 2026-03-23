@@ -307,6 +307,10 @@ impl MdnsDiscovery {
 }
 
 impl Default for MdnsDiscovery {
+    #[expect(
+        clippy::expect_used,
+        reason = "Default impl cannot return Result; mDNS init requires working network"
+    )]
     fn default() -> Self {
         Self::new().expect("mDNS ServiceDaemon requires a working network stack to initialize")
     }

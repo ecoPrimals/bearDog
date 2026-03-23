@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 use anyhow::{Context as AnyhowContext, Result};
 use clap::Parser;
 use serde::{Deserialize, Serialize};

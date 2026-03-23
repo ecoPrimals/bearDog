@@ -301,7 +301,7 @@ impl<T: Send + 'static> UltimateSafeMemoryPool<T> {
             object: Some(object),
             pool: Arc::clone(&self.pool),
             stats: Arc::clone(&self.stats),
-            safety_token: SafetyToken::new(SafetyLevel::Ultimate),
+            _safety_token: SafetyToken::new(SafetyLevel::Ultimate),
         })
     }
 
@@ -319,12 +319,11 @@ impl<T: Send + 'static> UltimateSafeMemoryPool<T> {
 }
 
 /// Safe pooled object wrapper that prevents memory leaks
-#[allow(dead_code)]
 pub struct SafePooledObject<T> {
     object: Option<T>,
     pool: Arc<Mutex<VecDeque<T>>>,
     stats: Arc<PoolStatistics>,
-    safety_token: SafetyToken,
+    _safety_token: SafetyToken,
 }
 
 impl<T> SafePooledObject<T> {

@@ -300,4 +300,18 @@ mod tests {
         let deserialized: Architecture = serde_json::from_str(&json).expect("deserialize arch");
         assert_eq!(deserialized, Architecture::X86_64);
     }
+
+    #[test]
+    fn test_to_rust_target_unknown_combination_maps_to_unknown_string() {
+        use crate::platform::OperatingSystem;
+
+        assert_eq!(
+            Architecture::Riscv64.to_rust_target(&OperatingSystem::MacOS),
+            "unknown"
+        );
+        assert_eq!(
+            Architecture::Wasm32.to_rust_target(&OperatingSystem::Android),
+            "wasm32-unknown-unknown"
+        );
+    }
 }

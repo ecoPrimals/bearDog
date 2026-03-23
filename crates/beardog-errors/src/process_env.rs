@@ -41,6 +41,10 @@ fn key_string(key: &OsStr) -> String {
 /// # Panics
 ///
 /// Panics if the internal overlay mutex is poisoned.
+#[expect(
+    clippy::expect_used,
+    reason = "mutex poisoning is unrecoverable for the env overlay"
+)]
 pub fn set_var<K: AsRef<OsStr>, V: AsRef<OsStr>>(key: K, value: V) {
     let k = key_string(key.as_ref());
     let v = key_string(value.as_ref());
@@ -58,6 +62,10 @@ pub fn set_var<K: AsRef<OsStr>, V: AsRef<OsStr>>(key: K, value: V) {
 /// # Panics
 ///
 /// Panics if the internal overlay mutex is poisoned.
+#[expect(
+    clippy::expect_used,
+    reason = "mutex poisoning is unrecoverable for the env overlay"
+)]
 pub fn remove_var<K: AsRef<OsStr>>(key: K) {
     let k = key_string(key.as_ref());
     let mut g = overlay()
@@ -95,6 +103,10 @@ pub fn get_var<K: AsRef<OsStr>>(key: K) -> Result<String, VarError> {
 /// # Panics
 ///
 /// Panics if the internal overlay mutex is poisoned.
+#[expect(
+    clippy::expect_used,
+    reason = "mutex poisoning is unrecoverable for the env overlay"
+)]
 pub fn var_os<K: AsRef<OsStr>>(key: K) -> Option<OsString> {
     let k = key_string(key.as_ref());
     let g = overlay()
@@ -112,6 +124,10 @@ pub fn var_os<K: AsRef<OsStr>>(key: K) -> Option<OsString> {
 /// # Panics
 ///
 /// Panics if the internal overlay mutex is poisoned.
+#[expect(
+    clippy::expect_used,
+    reason = "mutex poisoning is unrecoverable for the env overlay"
+)]
 pub fn vars() -> impl Iterator<Item = (String, String)> {
     let overlay_snapshot = overlay()
         .lock()

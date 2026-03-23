@@ -9,10 +9,9 @@ This directory contains the unified configuration system for BearDog deployment,
 - **`environments/development.env`** - Development environment variables
 - **`environments/production.env`** - Production environment variables
 
-### Legacy Configurations (Deprecated)
-- **`development-config.toml`** - ⚠️ **DEPRECATED** - Use `environments/development.env` instead
-- **`production-config.toml`** - ⚠️ **DEPRECATED** - Use `environments/production.env` instead
-- **`distributed_beardog_config.toml`** - ⚠️ **DEPRECATED** - Use environment variables instead
+### Legacy Configurations (Removed)
+Legacy files (`development-config.toml`, `production-config.toml`, `distributed_beardog_config.toml`)
+have been removed. Use `environments/development.env` and `environments/production.env` instead.
 
 ## Usage
 
@@ -96,4 +95,4 @@ beardog-server --config your-config.toml --validate
 
 ---
 
-For detailed configuration options, see the [Configuration Reference](../CONFIGURATION.md). 
+For detailed configuration options, see `beardog-config-template.toml` and the environment files. 

@@ -15,12 +15,12 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - Rust edition 2024 (MSRV 1.93.0, `rust-toolchain.toml` pinned)
 - 100% Pure Rust (zero C dependencies, RustCrypto suite)
 - 91+ JSON-RPC crypto methods (semantic naming)
-- 0 clippy warnings (pedantic + nursery + cast lints, workspace-centralized)
+- 0 clippy warnings (pedantic + nursery + cast + unwrap/expect warn, workspace-centralized)
 - 0 missing documentation warnings (all public items documented)
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 1000 lines of code (production)
-- 14,161 tests passing (fully concurrent, zero sleeps in non-chaos)
+- 14,201 tests passing (fully concurrent, zero sleeps in non-chaos)
 - 87.0% line coverage (llvm-cov, 105,989/121,844 lines)
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - Zero `#[serial_test::serial]` — all tests concurrent via unique isolated resources
@@ -35,7 +35,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - Android StrongBox integration (complete)
 - HSM abstraction (software, PKCS#11, StrongBox)
 - All production `unwrap()`/`expect()` eliminated (zero panic paths)
-- SPDX license headers on all .rs files
+- SPDX license headers on all 2,026 .rs files (100%)
 - ecoBin C-dependency compliance (sysinfo removed, blake3 pure, pprof optional)
 - Smart refactoring of oversized files into submodule directories
 - All mocks isolated behind `cfg(test)` / `test-utils` feature
@@ -111,6 +111,10 @@ Current in-memory storage backend evolves to persistent NestGate-backed storage 
 
 Fully generic methods: `crypto.encrypt` + `{"algorithm": "aes-256-gcm"}` instead of algorithm-specific method names. Requires coordination across ecosystem primals via wateringHole standards.
 
+### CI & Docker Scaffold Cleanup
+
+The `.github/workflows/` files and `docker-compose.yml` reference scripts and services from early development that no longer exist (`scripts/run_benchmarks.sh`, `scripts/deploy-staging.sh`, `scripts/migrate-config.sh`, `postgres`/`redis` services in docker-compose). These are aspirational scaffolds that should be reconciled with the actual BearDog architecture (Unix socket IPC, no database dependencies) when CI is activated.
+
 ---
 
 ## Design Principles
@@ -126,4 +130,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: March 21, 2026
+**Last Updated**: March 23, 2026

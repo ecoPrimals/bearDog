@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // 🛡️ BearDog: Runtime Policy Enforcement Demo
 //
 // This demo shows automatic policy validation and enforcement

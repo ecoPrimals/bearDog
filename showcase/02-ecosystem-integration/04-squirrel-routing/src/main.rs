@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // 🐻🐿️ BearDog + Squirrel: Privacy-Preserving Routing Demo
 //
 // This demo shows BearDog providing privacy-preserving routing for Squirrel MCP

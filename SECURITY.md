@@ -1,6 +1,6 @@
 # BearDog Security
 
-**Last Updated**: March 21, 2026
+**Last Updated**: March 23, 2026
 **Status**: Production Ready
 
 ---
@@ -38,7 +38,7 @@
 ### Code Safety
 
 - **Zero unsafe code** — `forbid(unsafe_code)` workspace-wide
-- **Zero panic paths** — No `unwrap()` in production; `expect()` only on documented infallible invariants (e.g., mutex poisoning, constant parsing)
+- **Zero panic paths** — No `unwrap()` in production; `#[expect(clippy::expect_used, reason = "...")]` on justified invariants; `unwrap_used`/`expect_used` warn at workspace level
 - **Result-based errors** — All fallible operations return `Result<T, E>`
 - **Constant-time comparisons** — Uses `subtle::ConstantTimeEq` for secrets
 - **Zeroize secrets** — Sensitive memory zeroized on drop

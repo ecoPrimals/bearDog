@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // 🐻🌐 BearDog: Cross-Primal Key Lineage Demo
 //
 // This demo shows BearDog tracking genetic key lineage across the ecosystem

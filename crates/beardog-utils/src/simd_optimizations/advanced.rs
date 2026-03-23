@@ -2,6 +2,7 @@
 
 //! Advanced SIMD optimizer with buffer pooling and metrics
 
+use beardog_errors::BearDogError;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 use tracing::{debug, info};
@@ -137,9 +138,11 @@ impl AdvancedSIMDOptimizer {
 
     /// ⚡ PERFORMANCE: Vectorized memory operations (basic implementation)
     /// Note: Uses standard Rust copy. Full SIMD vectorization pending platform-specific optimization.
-    pub fn simd_memory_copy(&mut self, src: &[u8], dst: &mut [u8]) -> Result<(), String> {
+    pub fn simd_memory_copy(&mut self, src: &[u8], dst: &mut [u8]) -> Result<(), BearDogError> {
         if src.len() != dst.len() {
-            return Err("Source and destination must be same length".to_string());
+            return Err(BearDogError::validation(
+                "Source and destination must be same length",
+            ));
         }
 
         let start_time = std::time::Instant::now();
@@ -168,7 +171,7 @@ impl AdvancedSIMDOptimizer {
         &mut self,
         data: &mut [u8],
         operation: SIMDOperation,
-    ) -> Result<(), String> {
+    ) -> Result<(), BearDogError> {
         let start_time = std::time::Instant::now();
 
         match operation {
@@ -197,7 +200,7 @@ impl AdvancedSIMDOptimizer {
     }
 
     /// ⚡ PERFORMANCE: SIMD XOR operation
-    fn simd_xor_pattern(&self, data: &mut [u8], pattern: u8) -> Result<(), String> {
+    fn simd_xor_pattern(&self, data: &mut [u8], pattern: u8) -> Result<(), BearDogError> {
         // Simulate SIMD XOR operations
         let chunk_size = 32; // 256-bit SIMD chunks
 
@@ -212,7 +215,7 @@ impl AdvancedSIMDOptimizer {
     }
 
     /// ⚡ PERFORMANCE: SIMD bitwise AND operation
-    fn simd_bitwise_and(&self, data: &mut [u8], mask: u8) -> Result<(), String> {
+    fn simd_bitwise_and(&self, data: &mut [u8], mask: u8) -> Result<(), BearDogError> {
         // Simulate SIMD AND operations
         let chunk_size = 32;
 
@@ -227,9 +230,11 @@ impl AdvancedSIMDOptimizer {
     }
 
     /// ⚡ PERFORMANCE: SIMD byte swap operation
-    fn simd_byte_swap(&self, data: &mut [u8]) -> Result<(), String> {
+    fn simd_byte_swap(&self, data: &mut [u8]) -> Result<(), BearDogError> {
         if !data.len().is_multiple_of(2) {
-            return Err("Data length must be even for byte swap".to_string());
+            return Err(BearDogError::validation(
+                "Data length must be even for byte swap",
+            ));
         }
 
         // Simulate SIMD byte swapping

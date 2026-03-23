@@ -429,4 +429,49 @@ mod tests {
         assert_eq!(DeploymentStatus::Validating.to_string(), "Validating");
         assert_eq!(DeploymentStatus::RolledBack.to_string(), "Rolled Back");
     }
+
+    #[test]
+    fn test_parse_name_rejects_leading_hyphen() {
+        assert_eq!(PrimalName::parse_name("-beardog"), None);
+        assert_eq!(PrimalName::parse_name("_start"), None);
+    }
+
+    #[test]
+    fn test_parse_name_rejects_invalid_characters() {
+        assert_eq!(PrimalName::parse_name("bad name"), None);
+        assert_eq!(PrimalName::parse_name("a@b"), None);
+    }
+
+    #[test]
+    fn test_primal_display_name_empty_slug() {
+        assert_eq!(PrimalName::new("").display_name(), "");
+    }
+
+    #[test]
+    fn test_genome_bundle_defaults_falls_back_when_env_override_has_no_valid_tokens() {
+        beardog_errors::process_env::set_var("ECOPRIMALS_GENOME_TARGETS", ", , ");
+        let defaults = PrimalName::genome_bundle_defaults();
+        beardog_errors::process_env::remove_var("ECOPRIMALS_GENOME_TARGETS");
+        assert!(
+            !defaults.is_empty(),
+            "should fall back to manifest when parsed override is empty"
+        );
+    }
+
+    #[test]
+    fn test_deployment_report_display_zero_total() {
+        use crate::arch::Architecture;
+        use crate::platform::OperatingSystem;
+
+        let report = DeploymentReport {
+            total: 0,
+            successes: 0,
+            failures: vec![],
+            arch: Architecture::X86_64,
+            os: OperatingSystem::Linux,
+        };
+        let s = format!("{report}");
+        assert!(s.contains("Total:     0"));
+        assert!(s.contains("0.0%"));
+    }
 }

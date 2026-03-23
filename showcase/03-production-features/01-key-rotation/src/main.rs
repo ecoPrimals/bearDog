@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // 🔄 BearDog: Automated Key Rotation Demo
 //
 // This demo shows zero-downtime key rotation with backward compatibility

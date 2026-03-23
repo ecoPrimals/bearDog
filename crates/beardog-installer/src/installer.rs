@@ -479,4 +479,79 @@ mod tests {
             .await
             .expect("uninstall missing should succeed");
     }
+
+    #[tokio::test]
+    async fn test_install_binary_errors_when_bin_dir_path_is_a_file() {
+        let temp = TempDir::new().expect("tempdir");
+        let bin_path = temp.path().join("bin");
+        tokio::fs::write(&bin_path, b"not-a-directory")
+            .await
+            .expect("create file where bin dir should be");
+
+        let paths = BiomeOSPaths {
+            bin_dir: bin_path.clone(),
+            data_dir: temp.path().join("data"),
+            config_dir: temp.path().join("config"),
+            runtime_dir: temp.path().join("runtime"),
+            cache_dir: temp.path().join("cache"),
+        };
+
+        let source_dir = temp.path().join("src");
+        tokio::fs::create_dir_all(&source_dir)
+            .await
+            .expect("mkdir source");
+        let src_bin = source_dir.join("beardog");
+        tokio::fs::write(&src_bin, b"hello")
+            .await
+            .expect("write source");
+
+        let installer = BinaryInstaller::new(paths, source_dir);
+        let err = installer
+            .install_binary(PrimalName::new("beardog"), &src_bin)
+            .await
+            .expect_err("create_dir_all on file path should fail");
+        assert!(
+            matches!(err, InstallerError::IoError { .. }),
+            "unexpected error: {err:?}"
+        );
+    }
+
+    #[test]
+    fn test_locate_binary_resolves_windows_exe_name() {
+        let temp = TempDir::new().expect("tempdir");
+        let release = temp.path().join("release");
+        let target_dir = release.join("x86_64-pc-windows-gnu");
+        std::fs::create_dir_all(&target_dir).expect("mkdir");
+        let exe = target_dir.join("beardog.exe");
+        std::fs::write(&exe, b"x").expect("write exe");
+
+        let paths = BiomeOSPaths {
+            bin_dir: temp.path().join("bin"),
+            data_dir: temp.path().join("data"),
+            config_dir: temp.path().join("config"),
+            runtime_dir: temp.path().join("runtime"),
+            cache_dir: temp.path().join("cache"),
+        };
+
+        let installer = BinaryInstaller::new(paths, release);
+        let found = installer
+            .locate_binary(
+                PrimalName::new("beardog"),
+                &Architecture::X86_64,
+                &OperatingSystem::Windows,
+            )
+            .expect("locate windows exe");
+        assert!(found.to_string_lossy().contains("beardog.exe"));
+    }
+
+    #[test]
+    fn test_installer_error_binary_not_found_display() {
+        let err = InstallerError::BinaryNotFound {
+            primal: PrimalName::new("missing"),
+            target: "x86_64-unknown-linux-gnu".to_string(),
+            searched: vec!["/a".to_string(), "/b".to_string()],
+        };
+        let s = err.to_string();
+        assert!(s.contains("Binary not found") && s.contains("missing"));
+    }
 }

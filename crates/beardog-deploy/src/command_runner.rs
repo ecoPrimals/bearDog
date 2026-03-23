@@ -112,6 +112,16 @@ pub(crate) mod mock {
         pub install_stdout_without_success_marker: bool,
         /// `run_bounded` logcat follow returns `TimedOut` (exercises logcat follow timeout branch).
         pub logcat_follow_yields_timeout: bool,
+        /// `run("adb", ...)` returns [`io::Error`] immediately (simulates missing `adb` binary).
+        pub fail_adb_spawn: bool,
+        /// `adb devices -l` exits non-zero (stderr path in [`crate::device::DeviceManager::detect_android_devices`]).
+        pub fail_adb_devices_exit: bool,
+        /// `adb shell am start ...` exits non-zero ([`crate::device::DeviceManager::run_app`] error path).
+        pub fail_shell_am: bool,
+        /// `adb shell pm list features` returns I/O error ([`crate::device::DeviceManager::has_strongbox_support`] Err branch).
+        pub pm_list_features_io_error: bool,
+        /// `run_bounded` logcat follow exits non-zero (not timeout) ([`crate::device::DeviceManager::show_logs`] follow branch).
+        pub logcat_follow_bounded_exit_fail: bool,
     }
 
     impl Default for MockAdbCommandRunner {
@@ -123,6 +133,11 @@ pub(crate) mod mock {
                 fail_getprop: false,
                 install_stdout_without_success_marker: false,
                 logcat_follow_yields_timeout: false,
+                fail_adb_spawn: false,
+                fail_adb_devices_exit: false,
+                fail_shell_am: false,
+                pm_list_features_io_error: false,
+                logcat_follow_bounded_exit_fail: false,
             }
         }
     }
@@ -138,6 +153,11 @@ pub(crate) mod mock {
                 fail_getprop: false,
                 install_stdout_without_success_marker: false,
                 logcat_follow_yields_timeout: false,
+                fail_adb_spawn: false,
+                fail_adb_devices_exit: false,
+                fail_shell_am: false,
+                pm_list_features_io_error: false,
+                logcat_follow_bounded_exit_fail: false,
             }
         }
 
@@ -151,6 +171,11 @@ pub(crate) mod mock {
                 fail_getprop: false,
                 install_stdout_without_success_marker: false,
                 logcat_follow_yields_timeout: false,
+                fail_adb_spawn: false,
+                fail_adb_devices_exit: false,
+                fail_shell_am: false,
+                pm_list_features_io_error: false,
+                logcat_follow_bounded_exit_fail: false,
             }
         }
     }
@@ -161,6 +186,12 @@ pub(crate) mod mock {
                 return Err(io::Error::new(
                     io::ErrorKind::NotFound,
                     "mock only supports adb",
+                ));
+            }
+            if self.fail_adb_spawn {
+                return Err(io::Error::new(
+                    io::ErrorKind::NotFound,
+                    "mock adb spawn failed",
                 ));
             }
             mock_adb_output(self, args)
@@ -178,16 +209,22 @@ pub(crate) mod mock {
                     "mock only supports adb",
                 ));
             }
-            if self.logcat_follow_yields_timeout
-                && args.len() >= 3
+            let is_logcat_follow = args.len() >= 3
                 && args[0] == "-s"
                 && args[2] == "logcat"
-                && !args.iter().any(|a| *a == "-d")
-            {
+                && !args.iter().any(|a| *a == "-d");
+            if self.logcat_follow_yields_timeout && is_logcat_follow {
                 return Err(io::Error::new(
                     io::ErrorKind::TimedOut,
                     "mock logcat follow timeout",
                 ));
+            }
+            if self.logcat_follow_bounded_exit_fail && is_logcat_follow {
+                return Ok(Output {
+                    status: exit_fail(),
+                    stdout: vec![],
+                    stderr: b"logcat follow failed".to_vec(),
+                });
             }
             Ok(Output {
                 status: exit_ok(),
@@ -199,10 +236,18 @@ pub(crate) mod mock {
 
     fn mock_adb_output(runner: &MockAdbCommandRunner, args: &[&str]) -> Result<Output, io::Error> {
         if args.len() >= 2 && args[0] == "devices" && args[1] == "-l" {
+            if runner.fail_adb_devices_exit {
+                return Ok(Output {
+                    status: exit_fail(),
+                    stdout: vec![],
+                    stderr: b"adb: failed to list devices".to_vec(),
+                });
+            }
             let stdout = if runner.empty_devices {
                 b"List of devices attached\n\n".to_vec()
             } else {
-                b"List of devices attached\nemulator-5554\tdevice\n".to_vec()
+                b"List of devices attached\nemulator-5554\tdevice\nemulator-5556\toffline\n"
+                    .to_vec()
             };
             return Ok(Output {
                 status: exit_ok(),
@@ -240,6 +285,12 @@ pub(crate) mod mock {
             && args.get(4) == Some(&"list")
             && args.get(5) == Some(&"features")
         {
+            if runner.pm_list_features_io_error {
+                return Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    "mock pm list features io error",
+                ));
+            }
             return Ok(Output {
                 status: exit_ok(),
                 stdout: b"feature:android.hardware.strongbox_keystore\nfeature:android.hardware.fingerprint\n"
@@ -269,6 +320,13 @@ pub(crate) mod mock {
         }
 
         if args.len() >= 4 && args[0] == "-s" && args[2] == "shell" && args[3] == "am" {
+            if runner.fail_shell_am {
+                return Ok(Output {
+                    status: exit_fail(),
+                    stdout: vec![],
+                    stderr: b"am start failed".to_vec(),
+                });
+            }
             return Ok(Output {
                 status: exit_ok(),
                 stdout: vec![],

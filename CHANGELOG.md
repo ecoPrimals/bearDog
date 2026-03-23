@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### March 23, 2026 -- Wave 12: Cross-Ecosystem Audit, Lint Tightening & Type Safety Evolution
+
+- **Full ecosystem audit** — Reviewed all wateringHole standards, 8 springs, and all phase1/phase2 primals for absorption opportunities
+- **Clippy lint tightening** — `unwrap_used`/`expect_used` evolved from `allow` to `warn` at workspace level; all 6 production sites annotated with `#[expect(clippy::expect_used, reason = "...")]`; unused `AsyncReadExt` import removed
+- **Typed error evolution** — `Box<dyn Error>` eliminated from public APIs (`receipt.rs`, `adapter_certificates.rs`, `hyperoptimized_zero_copy.rs`); `Result<(), String>` evolved to `BearDogError` in SIMD and genetics APIs
+- **SPDX compliance** — All 29 showcase `main.rs` files now have SPDX headers (2,026/2,026 = 100%)
+- **Commented-out code cleanup** — Removed legacy stubs from ~10 production files per wateringHole standard
+- **Smart file refactoring** — 4 files near 1000 LOC split by domain into 14 focused files
+- **Dead code evolution** — `#[allow(dead_code)]` removed from production; fields wired into traces or renamed with `_` prefix
+- **DI-first discovery** — `get_discovery_socket_paths` refactored to pure `build_discovery_socket_paths` with injectable parameters; env-racing tests eliminated
+- **Coverage tests** — 40+ new tests across `beardog-deploy` and `beardog-installer`
+- **14,201 tests passing** — Up from 14,161; 0 failures, 186 ignored
+- **Root docs aligned** — README, ARCHITECTURE, SECURITY, START_HERE, STATUS, ROADMAP all reflect current state
+
+### March 23, 2026 -- Wave 11: Deep Coverage Push, Crypto Fault Injection & Zero-Copy IPC
+
+- **Coverage 86.1% → 87.0%** — 122+ new tests across 6 crates
+- **Crypto fault injection tests** — 14 adversarial tests (Blake3, ChaCha20-Poly1305, Ed25519, X25519, Tor ntor)
+- **Zero-copy IPC optimization** — `unix_socket_ipc::server.rs` refactored to `BufReader::read_until` with reusable buffers
+- **14,161 tests passing**
+
+### March 23, 2026 -- Wave 10: Deep Audit — Clippy, Hardcoding, Method Aliases, File Size
+
+- **Clippy fully clean** — 12 pedantic errors fixed
+- **File size compliance** — `device.rs` split via `#[path]` extraction
+- **Zero TODO/FIXME** — All resolved
+- **Semantic method aliases** — `capability.list` and `primal.capabilities` added per wateringHole standard
+- **14,039 tests passing**
+
+### March 23, 2026 -- Wave 9: Unwrap Evolution, Clone Audit, Binary Unification
+
+- **`.unwrap()` debt: 1,879 → 85** — Systematic evolution across 45+ files
+- **Zero-copy clone audit** — Eliminated unnecessary `.clone()` in IPC hot paths
+- **Binary collision resolved** — root `src/main.rs` is the sole `beardog` binary
+- **14,029 tests passing**
+
 ### March 22, 2026 -- Wave 8: Deep Debt Execution — Coverage, Stubs, Hardcoding, File Size
 
 - **Coverage 85.1% → 86.8%** — ~1,000+ newly covered lines across beardog-core, beardog-types,

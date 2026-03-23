@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // 🐻🏰 BearDog + NestGate: Sovereign File Encryption Demo
 //
 // This demo shows BearDog providing encryption services for NestGate storage

@@ -104,11 +104,6 @@ pub mod diagnostics;
 // Operational modes for UniBin architecture
 pub mod modes;
 
-// Simple HSM client for CLI usage (PKCS#11 - optional)
-// Disabled until module is created
-// #[cfg(feature = "pkcs11")]
-// pub mod simple_hsm_client;
-
 // NOTE: universal_hsm module - RE-ENABLED for Phase 1.2 rebuild (Nov 7, 2025)
 // NOTE: Tunnel module stabilized - proceeding with Phase 2 implementations
 pub mod universal_hsm;
@@ -149,8 +144,6 @@ mod unix_socket_ipc_schema_tests;
 mod test_helpers;
 
 // Re-export key types
-// #[cfg(feature = "pkcs11")]
-// pub use simple_hsm_client::SimplePkcs11Client;
 pub use tunnel::{BStpConfig, SecureSession, SecurityLevel, SessionManager};
 
 // Re-export BTSP types for Songbird integration

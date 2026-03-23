@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // 🔄 BearDog: Error Recovery Demo
 
 use anyhow::{Context, Result};

@@ -396,4 +396,22 @@ mod tests {
         let deserialized: OperatingSystem = serde_json::from_str(&json).expect("deserialize OS");
         assert_eq!(deserialized, OperatingSystem::Linux);
     }
+
+    #[test]
+    fn test_platform_error_no_home_display() {
+        let e = PlatformError::NoHomeDir;
+        let s = e.to_string();
+        assert!(
+            s.contains("home") || s.contains("Home"),
+            "unexpected message: {s}"
+        );
+    }
+
+    #[test]
+    fn test_platform_error_unsupported_display() {
+        let e = PlatformError::Unsupported {
+            os: "freebsd".to_string(),
+        };
+        assert!(e.to_string().contains("freebsd"));
+    }
 }

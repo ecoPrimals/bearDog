@@ -34,7 +34,7 @@ fn test_fast_buffer_management() {
 }
 
 #[test]
-fn test_simd_operations() -> Result<(), String> {
+fn test_simd_operations() -> Result<(), BearDogError> {
     let mut optimizer = AdvancedSIMDOptimizer::new();
     let mut data = vec![0xFF, 0x00, 0xAA, 0x55];
 
@@ -74,7 +74,7 @@ fn test_aligned_buffer_management() {
 }
 
 #[test]
-fn test_performance_metrics() -> Result<(), String> {
+fn test_performance_metrics() -> Result<(), BearDogError> {
     let mut optimizer = AdvancedSIMDOptimizer::new();
     let mut data = vec![0u8; 1024];
 
@@ -360,7 +360,7 @@ fn test_safe_pattern_match_empty_pattern() {
 // TEST_DOMAIN: core
 // TEST_PRIORITY: important
 #[test]
-fn test_simd_memory_copy() -> Result<(), String> {
+fn test_simd_memory_copy() -> Result<(), BearDogError> {
     let mut optimizer = AdvancedSIMDOptimizer::new();
     let src = vec![1, 2, 3, 4, 5];
     let mut dst = vec![0; 5];
@@ -391,7 +391,7 @@ fn test_simd_memory_copy_length_mismatch() {
 }
 
 #[test]
-fn test_simd_byte_swap() -> Result<(), String> {
+fn test_simd_byte_swap() -> Result<(), BearDogError> {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 // 🔍 BearDog: Comprehensive Audit Logging Demo
 //
 // This demo shows tamper-proof audit logging for compliance

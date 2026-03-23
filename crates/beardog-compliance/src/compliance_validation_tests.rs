@@ -35,12 +35,14 @@ impl GDPRValidator {
         Self
     }
 
-    fn validate(&self, _request: &DataRequest) -> Result<(), BearDogError> {
+    fn validate(&self, request: &DataRequest) -> Result<(), BearDogError> {
+        if request.email.is_empty() {
+            return Err(BearDogError::validation("email required"));
+        }
         Ok(())
     }
 }
 
-#[allow(dead_code)]
 struct DataRequest {
     email: String,
 }
@@ -60,12 +62,14 @@ impl HIPAAValidator {
         Self
     }
 
-    fn validate(&self, _access: &PHIAccess) -> Result<(), BearDogError> {
+    fn validate(&self, access: &PHIAccess) -> Result<(), BearDogError> {
+        if access.user.is_empty() {
+            return Err(BearDogError::validation("user required"));
+        }
         Ok(())
     }
 }
 
-#[allow(dead_code)]
 struct PHIAccess {
     user: String,
 }
@@ -85,12 +89,14 @@ impl ViolationDetector {
         Self
     }
 
-    fn detect(&self, _event: &ComplianceEvent) -> Vec<Violation> {
+    fn detect(&self, event: &ComplianceEvent) -> Vec<Violation> {
+        if event.event_type.is_empty() {
+            return vec![Violation::new("empty_event")];
+        }
         Vec::new()
     }
 }
 
-#[allow(dead_code)]
 struct ComplianceEvent {
     event_type: String,
 }
@@ -103,7 +109,6 @@ impl ComplianceEvent {
     }
 }
 
-#[allow(dead_code)]
 struct Violation {
     id: String,
 }
@@ -121,12 +126,11 @@ impl RemediationEngine {
         Self
     }
 
-    fn get_actions(&self, _violation: &Violation) -> Vec<String> {
-        vec!["notify".to_string(), "remediate".to_string()]
+    fn get_actions(&self, violation: &Violation) -> Vec<String> {
+        vec![format!("notify:{}", violation.id), "remediate".to_string()]
     }
 }
 
-#[allow(dead_code)]
 struct RetentionManager {
     policies: HashMap<String, RetentionPolicy>,
 }
@@ -138,26 +142,25 @@ impl RetentionManager {
         }
     }
 
-    fn register(&self, _policy: RetentionPolicy) {
-        // Simplified
+    fn register(&mut self, policy: RetentionPolicy) {
+        self.policies.insert(policy.data_type.clone(), policy);
     }
 
-    fn has_policy(&self, _data_type: &str) -> bool {
-        true
+    fn has_policy(&self, data_type: &str) -> bool {
+        self.policies.contains_key(data_type)
     }
 }
 
-#[allow(dead_code)]
 struct RetentionPolicy {
     data_type: String,
-    days: u32,
+    _days: u32,
 }
 
 impl RetentionPolicy {
     fn new(data_type: &str, days: u32) -> Self {
         Self {
             data_type: data_type.to_string(),
-            days,
+            _days: days,
         }
     }
 }
@@ -217,7 +220,7 @@ mod tests {
     /// TEST 6: Data Retention Policy
     #[test]
     fn test_data_retention() {
-        let manager = RetentionManager::new();
+        let mut manager = RetentionManager::new();
         let policy = RetentionPolicy::new("user_data", 365);
 
         manager.register(policy);

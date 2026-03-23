@@ -43,6 +43,7 @@
 //! ```
 
 use crate::genetics_constraints::KeyConstraints;
+use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -259,7 +260,7 @@ impl AdapterUnlockCertificate {
     pub fn verify(
         &self,
         expected_adapter_id: Option<&str>,
-    ) -> Result<CertificateVerificationResult, Box<dyn std::error::Error>> {
+    ) -> Result<CertificateVerificationResult, BearDogError> {
         use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 
         // 1. Check expiration
@@ -283,19 +284,18 @@ impl AdapterUnlockCertificate {
         }
 
         // 4. Verify cryptographic signature
-        let public_key_array: [u8; 32] = self
-            .issuer_public_key
-            .as_slice()
-            .try_into()
-            .map_err(|_| "Invalid public key length")?;
+        let public_key_array: [u8; 32] =
+            self.issuer_public_key.as_slice().try_into().map_err(|_| {
+                BearDogError::crypto_error("Invalid issuer public key length (expected 32 bytes)")
+            })?;
 
-        let verifying_key = VerifyingKey::from_bytes(&public_key_array)?;
+        let verifying_key = VerifyingKey::from_bytes(&public_key_array).map_err(|e| {
+            BearDogError::crypto_error(format!("Invalid Ed25519 verifying key: {e}"))
+        })?;
 
-        let signature_array: [u8; 64] = self
-            .signature
-            .as_slice()
-            .try_into()
-            .map_err(|_| "Invalid signature length")?;
+        let signature_array: [u8; 64] = self.signature.as_slice().try_into().map_err(|_| {
+            BearDogError::crypto_error("Invalid signature length (expected 64 bytes)")
+        })?;
 
         let signature = Signature::from_bytes(&signature_array);
 
