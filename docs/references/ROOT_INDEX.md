@@ -87,7 +87,7 @@ Complete guide to BearDog documentation, organized by purpose.
 
 ## Session Archives
 
-Historical session documentation is in `archives/` organized by date and topic.
+Historical session documentation is preserved in `ecoPrimals/archive/` as fossil record.
 
 ---
 

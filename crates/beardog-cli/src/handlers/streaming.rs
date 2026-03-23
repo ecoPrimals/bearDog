@@ -386,7 +386,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_streaming_encrypt_decrypt_roundtrip_small_file() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("tempdir for streaming roundtrip test");
         let home = dir.path();
 
         let key_material: [u8; 32] = [0xAB; 32];
@@ -405,37 +405,44 @@ mod tests {
             usage: None,
             purpose: None,
         };
-        key_store::save_key_to_home(&sk, home).unwrap();
+        key_store::save_key_to_home(&sk, home).expect("save stream test key");
 
         let plain = dir.path().join("plain.bin");
         let enc = dir.path().join("stream.enc");
         let out = dir.path().join("decrypted.bin");
-        std::fs::write(&plain, b"streaming-roundtrip-data").unwrap();
+        std::fs::write(&plain, b"streaming-roundtrip-data").expect("write plaintext fixture");
 
         handle_streaming_encrypt_with_home(
             "stream-roundtrip",
-            plain.to_str().unwrap(),
-            enc.to_str().unwrap(),
+            plain.to_str().expect("plain path utf-8"),
+            enc.to_str().expect("enc path utf-8"),
             home,
         )
         .await
         .expect("encrypt");
-        handle_streaming_decrypt_with_home(enc.to_str().unwrap(), out.to_str().unwrap(), home)
-            .await
-            .expect("decrypt");
+        handle_streaming_decrypt_with_home(
+            enc.to_str().expect("enc path utf-8"),
+            out.to_str().expect("out path utf-8"),
+            home,
+        )
+        .await
+        .expect("decrypt");
 
-        assert_eq!(std::fs::read(&out).unwrap(), b"streaming-roundtrip-data");
+        assert_eq!(
+            std::fs::read(&out).expect("read decrypted output"),
+            b"streaming-roundtrip-data"
+        );
     }
 
     #[tokio::test]
     async fn test_streaming_decrypt_rejects_bad_header_with_home() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("tempdir for streaming roundtrip test");
         let enc = dir.path().join("bad.enc");
         let out = dir.path().join("out.bin");
-        std::fs::write(&enc, b"NOT_BEARDOG\n").unwrap();
+        std::fs::write(&enc, b"NOT_BEARDOG\n").expect("write bad header fixture");
         let r = handle_streaming_decrypt_with_home(
-            enc.to_str().unwrap(),
-            out.to_str().unwrap(),
+            enc.to_str().expect("enc path utf-8"),
+            out.to_str().expect("out path utf-8"),
             dir.path(),
         )
         .await;
@@ -444,7 +451,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_streaming_encrypt_with_home_missing_input() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("tempdir for streaming roundtrip test");
         let r = handle_streaming_encrypt_with_home(
             "kid",
             "/nonexistent/in.bin",

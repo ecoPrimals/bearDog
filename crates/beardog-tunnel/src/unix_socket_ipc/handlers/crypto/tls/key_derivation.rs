@@ -785,7 +785,9 @@ mod tests {
             "server_random": sr,
             "cipher_suite": "TLS_AES_128_GCM_SHA256",
         });
-        let out = handle_tls_derive_secrets(Some(&params)).await.unwrap();
+        let out = handle_tls_derive_secrets(Some(&params))
+            .await
+            .expect("derive secrets should succeed for valid TLS 1.3 test inputs");
         assert!(out.get("master_secret").is_some());
         assert_eq!(out["cipher_suite"], "TLS_AES_128_GCM_SHA256");
     }
@@ -812,7 +814,7 @@ mod tests {
         });
         let out = handle_tls_derive_handshake_secrets(Some(&params))
             .await
-            .unwrap();
+            .expect("handshake secrets should succeed for SHA-256 ChaCha20 suite");
         assert!(out.get("client_write_key").is_some());
         assert!(out.get("hash_algorithm").is_some());
     }

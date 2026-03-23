@@ -110,7 +110,10 @@ mod tests {
 
         let result = verifier.verify_authorization_proof(&proof);
         assert!(result.is_ok());
-        assert!(result.unwrap(), "Valid proof should verify");
+        assert!(
+            result.expect("verify_authorization_proof result in test"),
+            "Valid proof should verify"
+        );
     }
 
     #[test]
@@ -125,7 +128,10 @@ mod tests {
 
         let result = verifier.verify_authorization_proof(&proof);
         assert!(result.is_ok());
-        assert!(!result.unwrap(), "Empty auth ID should fail verification");
+        assert!(
+            !result.expect("verify_authorization_proof result in test"),
+            "Empty auth ID should fail verification"
+        );
     }
 
     #[test]
@@ -140,7 +146,10 @@ mod tests {
 
         let result = verifier.verify_authorization_proof(&proof);
         assert!(result.is_ok());
-        assert!(!result.unwrap(), "Empty signature should fail verification");
+        assert!(
+            !result.expect("verify_authorization_proof result in test"),
+            "Empty signature should fail verification"
+        );
     }
 
     #[test]
@@ -156,7 +165,7 @@ mod tests {
         let result = verifier.verify_authorization_proof(&proof);
         assert!(result.is_ok());
         assert!(
-            !result.unwrap(),
+            !result.expect("verify_authorization_proof result in test"),
             "Expired proof (>1 hour) should fail verification"
         );
     }
@@ -170,7 +179,7 @@ mod tests {
         let result = verifier.generate_proof(&authorization, &operation);
         assert!(result.is_ok(), "Proof generation should succeed");
 
-        let proof = result.unwrap();
+        let proof = result.expect("generate_proof in test");
         assert_eq!(proof.authorization_id, authorization.request_id);
         assert!(
             !proof.proof_signature.is_empty(),
@@ -185,7 +194,7 @@ mod tests {
         let operation = create_test_operation();
 
         let result = verifier.generate_proof(&authorization, &operation);
-        let proof = result.unwrap();
+        let proof = result.expect("generate_proof in test");
 
         assert!(
             proof.proof_signature.starts_with("proof_"),
@@ -203,10 +212,14 @@ mod tests {
         let authorization = create_test_authorization();
         let operation = create_test_operation();
 
-        let proof1 = verifier.generate_proof(&authorization, &operation).unwrap();
+        let proof1 = verifier
+            .generate_proof(&authorization, &operation)
+            .expect("generate_proof in test");
         // Sleep for 1 second since signatures use timestamp in seconds
         std::thread::sleep(std::time::Duration::from_secs(1));
-        let proof2 = verifier.generate_proof(&authorization, &operation).unwrap();
+        let proof2 = verifier
+            .generate_proof(&authorization, &operation)
+            .expect("generate_proof in test");
 
         assert_ne!(
             proof1.proof_signature, proof2.proof_signature,

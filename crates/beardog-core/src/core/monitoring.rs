@@ -619,7 +619,8 @@ mod tests {
             alert_threshold_disk: 95.0,
             max_alert_history: 500,
         };
-        let monitor = SystemMonitor::with_config(config).unwrap();
+        let monitor =
+            SystemMonitor::with_config(config).expect("SystemMonitor::with_config in test");
         assert!(std::mem::size_of_val(&monitor) > 0);
     }
 
@@ -631,7 +632,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_system_monitor_get_metrics() {
-        let monitor = SystemMonitor::new().unwrap();
+        let monitor = SystemMonitor::new().expect("SystemMonitor::new in test");
         let metrics = monitor.get_system_metrics().await;
         assert!(metrics.cpu_usage_percent >= 0.0);
     }

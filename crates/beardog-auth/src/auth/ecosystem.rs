@@ -166,7 +166,7 @@ mod tests {
         let result = engine.discover_node_capabilities("hsm_node_1");
 
         assert!(result.is_ok(), "HSM node discovery should succeed");
-        let capabilities = result.unwrap();
+        let capabilities = result.expect("discover_node_capabilities hsm_node_1");
         assert_eq!(capabilities.len(), 3, "HSM node should have 3 capabilities");
         assert!(capabilities.contains(&NodeCapability::HsmOperations));
         assert!(capabilities.contains(&NodeCapability::KeyGeneration));
@@ -179,7 +179,7 @@ mod tests {
         let result = engine.discover_node_capabilities("storage_node_1");
 
         assert!(result.is_ok(), "Storage node discovery should succeed");
-        let capabilities = result.unwrap();
+        let capabilities = result.expect("discover_node_capabilities storage_node_1");
         assert_eq!(
             capabilities.len(),
             3,
@@ -196,7 +196,7 @@ mod tests {
         let result = engine.discover_node_capabilities("generic_node_1");
 
         assert!(result.is_ok(), "Generic node discovery should succeed");
-        let capabilities = result.unwrap();
+        let capabilities = result.expect("discover_node_capabilities generic_node_1");
         assert_eq!(
             capabilities.len(),
             2,
@@ -212,7 +212,7 @@ mod tests {
         let result = engine.discover_node_capabilities("");
 
         assert!(result.is_ok(), "Empty node ID should default to generic");
-        let capabilities = result.unwrap();
+        let capabilities = result.expect("discover_node_capabilities empty id");
         assert!(
             !capabilities.is_empty(),
             "Should return at least basic capabilities"
@@ -224,7 +224,9 @@ mod tests {
         let engine = CrossNodeAuthEngine::default();
 
         // Test HSM prefix matching
-        let hsm_caps = engine.discover_node_capabilities("hsm_xyz_123").unwrap();
+        let hsm_caps = engine
+            .discover_node_capabilities("hsm_xyz_123")
+            .expect("discover hsm_xyz_123");
         assert!(
             hsm_caps.contains(&NodeCapability::HsmOperations),
             "hsm_ prefix should trigger HSM capabilities"
@@ -233,7 +235,7 @@ mod tests {
         // Test storage prefix matching
         let storage_caps = engine
             .discover_node_capabilities("storage_abc_456")
-            .unwrap();
+            .expect("discover storage_abc_456");
         assert!(
             storage_caps.contains(&NodeCapability::StorageProvider),
             "storage_ prefix should trigger storage capabilities"
@@ -265,7 +267,9 @@ mod tests {
             last_seen: Utc::now(),
             genetics: None,
         };
-        registry.register_node(node_info).unwrap();
+        registry
+            .register_node(node_info)
+            .expect("register_node registered-node");
 
         let mut config = CrossNodeAuthConfig::default();
         config.consensus_config.required = true;
@@ -312,7 +316,7 @@ mod tests {
         let engine = CrossNodeAuthEngine::default();
         let caps = engine
             .discover_node_capabilities("storage_hsm_like")
-            .unwrap();
+            .expect("discover storage_hsm_like");
         assert!(caps.contains(&NodeCapability::StorageProvider));
     }
 
@@ -330,7 +334,9 @@ mod tests {
             last_seen: Utc::now(),
             genetics: None,
         };
-        registry.register_node(node_info).unwrap();
+        registry
+            .register_node(node_info)
+            .expect("register_node policy-node");
 
         let mut config = CrossNodeAuthConfig::default();
         config.consensus_config.required = true;
@@ -368,7 +374,9 @@ mod tests {
             last_seen: Utc::now(),
             genetics: None,
         };
-        registry.register_node(node_info).unwrap();
+        registry
+            .register_node(node_info)
+            .expect("register_node consensus-only");
 
         let mut config = CrossNodeAuthConfig::default();
         config.consensus_config.required = true;

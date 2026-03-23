@@ -145,7 +145,8 @@ mod tests {
 
     #[test]
     fn test_abstract_socket_format() {
-        let endpoint = AndroidSocket::create_endpoint("beardog").unwrap();
+        let endpoint =
+            AndroidSocket::create_endpoint("beardog").expect("Android abstract endpoint");
         match endpoint {
             SocketEndpoint::Abstract(name) => {
                 assert_eq!(name, "@biomeos_beardog");
@@ -159,7 +160,8 @@ mod tests {
     #[test]
     fn test_primal_name_variations() {
         for primal in &["alpha", "beta", "gamma", "delta", "epsilon"] {
-            let endpoint = AndroidSocket::create_endpoint(primal).unwrap();
+            let endpoint =
+                AndroidSocket::create_endpoint(primal).expect("Android endpoint for primal");
             match endpoint {
                 SocketEndpoint::Abstract(name) => {
                     assert!(name.starts_with('@'));
@@ -176,7 +178,8 @@ mod tests {
     async fn test_socket_binding() {
         // Use unique name to avoid conflicts
         let test_name = format!("test_beardog_{}", std::process::id());
-        let endpoint = AndroidSocket::create_endpoint(&test_name).unwrap();
+        let endpoint =
+            AndroidSocket::create_endpoint(&test_name).expect("Android endpoint for binding test");
 
         // Bind should succeed on Linux (abstract sockets are Linux feature)
         let listener = AndroidSocket::bind(&endpoint);
@@ -184,7 +187,7 @@ mod tests {
 
         if let Ok(listener) = listener {
             // Verify local_addr works
-            let addr = listener.local_addr().unwrap();
+            let addr = listener.local_addr().expect("abstract listener local_addr");
             assert!(addr.starts_with('@'));
             println!("✅ Abstract socket bound successfully: {}", addr);
         }
@@ -198,18 +201,19 @@ mod tests {
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .expect("system clock")
                 .as_millis()
         );
-        let endpoint = AndroidSocket::create_endpoint(&test_name).unwrap();
+        let endpoint = AndroidSocket::create_endpoint(&test_name)
+            .expect("Android endpoint for universal trait test");
 
         #[cfg(target_os = "linux")]
         {
             // Only test binding on Linux (where abstract sockets work)
-            let listener = AndroidSocket::bind(&endpoint).unwrap();
+            let listener = AndroidSocket::bind(&endpoint).expect("bind abstract socket");
 
             // Verify universal trait methods
-            let addr = listener.local_addr().unwrap();
+            let addr = listener.local_addr().expect("listener local_addr");
             assert!(addr.starts_with('@'));
 
             println!("✅ Universal PlatformListener trait working on Android!");

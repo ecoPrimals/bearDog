@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+#[cfg(test)]
+mod serialization_property_tests;
+
 mod capabilities_tests;
 mod health_tests;
 mod validation_tests;

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![forbid(unsafe_code)]
 
-//! # BearDog-Songbird Integration
+//! # BearDog integration (UPA / federation)
 //!
 //! Phase 3 integration layer providing UPA registration, heartbeat monitoring,
-//! and expanded API endpoints for cross-primal federation.
+//! and expanded API endpoints for cross-primal federation (orchestrator-agnostic).
 //!
 //! ## Modern Rust Patterns
 //! - Async/await throughout (Tokio runtime)
@@ -61,7 +62,25 @@ pub use errors::IntegrationError;
 /// Re-export BearDogError for convenience
 pub use beardog_errors::BearDogError;
 
-/// Default UPA base URL when `BEARDOG_UPA_URL` is unset (HTTPS on loopback, conventional dev API port).
+/// Default UPA HTTPS port when `BEARDOG_UPA_PORT` / URL omit a port (conventional dev API port).
+pub const DEFAULT_UPA_PORT: u16 = 8080;
+
+/// Builds default UPA base URL: `BEARDOG_UPA_URL`, or `https://{BEARDOG_UPA_HOST|external default}:{port}`.
+#[must_use]
+pub fn default_upa_url() -> String {
+    beardog_errors::process_env::var("BEARDOG_UPA_URL").unwrap_or_else(|_| {
+        let host = beardog_errors::process_env::var("BEARDOG_UPA_HOST").unwrap_or_else(|_| {
+            beardog_config::domains::network_addresses::DEFAULT_EXTERNAL_HOST.to_string()
+        });
+        let port = beardog_errors::process_env::var("BEARDOG_UPA_PORT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(DEFAULT_UPA_PORT);
+        format!("https://{host}:{port}")
+    })
+}
+
+/// Legacy const for callers that need a `&str`; prefer [`default_upa_url`] for env-aware resolution.
 pub const DEFAULT_UPA_URL: &str = "https://localhost:8080";
 
 /// Default REST listen port for this integration API server when `BEARDOG_API_PORT` is unset (distinct from the UPA URL port to avoid binding collisions).
@@ -88,8 +107,7 @@ pub struct IntegrationConfig {
 impl Default for IntegrationConfig {
     fn default() -> Self {
         Self {
-            upa_url: beardog_errors::process_env::var("BEARDOG_UPA_URL")
-                .unwrap_or_else(|_| DEFAULT_UPA_URL.to_string()),
+            upa_url: default_upa_url(),
             api_port: beardog_errors::process_env::var("BEARDOG_API_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
@@ -131,7 +149,7 @@ impl BearDogIntegration {
     /// ## Async Initialization
     /// Performs UPA registration during construction to fail fast
     pub async fn new(config: IntegrationConfig) -> Result<Self, BearDogError> {
-        info!("🚀 Initializing BearDog-Songbird integration");
+        info!("🚀 Initializing BearDog integration (UPA / federation)");
 
         // Create UPA client
         let upa_config = UpaClientConfig {
@@ -144,14 +162,15 @@ impl BearDogIntegration {
         // Use environment-driven endpoint or construct from config
         // Configuration hierarchy: BEARDOG_ENDPOINT > BEARDOG_HOST + port > 127.0.0.1 (dev) / 0.0.0.0 (prod)
         let endpoint = beardog_errors::process_env::var("BEARDOG_ENDPOINT").unwrap_or_else(|_| {
-            // If no explicit endpoint, use BEARDOG_HOST or environment-aware default
             let host = beardog_errors::process_env::var("BEARDOG_HOST").unwrap_or_else(|_| {
-                // Secure default for dev, production default for release
-                if cfg!(debug_assertions) {
-                    "127.0.0.1".to_string() // Secure localhost for development
-                } else {
-                    "0.0.0.0".to_string() // Bind all interfaces for production
-                }
+                beardog_errors::process_env::var("BEARDOG_LISTEN_ADDR").unwrap_or_else(|_| {
+                    if cfg!(debug_assertions) {
+                        beardog_config::domains::network_addresses::DEFAULT_LISTEN_ADDR.to_string()
+                    } else {
+                        beardog_config::domains::network_addresses::DEFAULT_WILDCARD_IPV4_STR
+                            .to_string()
+                    }
+                })
             });
             format!("http://{}:{}", host, config.api_port)
         });

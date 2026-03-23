@@ -533,8 +533,10 @@ mod entropy_handler_tests {
             identity: Some("alice".to_string()),
             entropy_bytes_b64: base64_encode(b"entropy-bytes"),
         };
-        let json = serde_json::to_string(&meta).unwrap();
-        let back: EntropySeedMetadata = serde_json::from_str(&json).unwrap();
+        let json =
+            serde_json::to_string(&meta).expect("serialize EntropySeedMetadata for roundtrip test");
+        let back: EntropySeedMetadata =
+            serde_json::from_str(&json).expect("deserialize EntropySeedMetadata in roundtrip test");
         assert_eq!(back.seed_id, meta.seed_id);
         assert_eq!(back.quality_tier, meta.quality_tier);
         assert_eq!(back.identity, meta.identity);
@@ -542,10 +544,30 @@ mod entropy_handler_tests {
 
     #[test]
     fn test_generate_system_entropy_output_lengths() {
-        assert_eq!(generate_system_entropy(16).unwrap().len(), 16);
-        assert_eq!(generate_system_entropy(32).unwrap().len(), 32);
-        assert_eq!(generate_system_entropy(48).unwrap().len(), 48);
-        assert_eq!(generate_system_entropy(64).unwrap().len(), 64);
+        assert_eq!(
+            generate_system_entropy(16)
+                .expect("generate 16 bytes system entropy")
+                .len(),
+            16
+        );
+        assert_eq!(
+            generate_system_entropy(32)
+                .expect("generate 32 bytes system entropy")
+                .len(),
+            32
+        );
+        assert_eq!(
+            generate_system_entropy(48)
+                .expect("generate 48 bytes system entropy")
+                .len(),
+            48
+        );
+        assert_eq!(
+            generate_system_entropy(64)
+                .expect("generate 64 bytes system entropy")
+                .len(),
+            64
+        );
     }
 
     #[test]
@@ -556,7 +578,7 @@ mod entropy_handler_tests {
 
     #[tokio::test]
     async fn test_handle_entropy_info_reads_seed_file() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for entropy info read test");
         let seed_path = dir.path().join("seed.json");
         let meta = EntropySeedMetadata {
             seed_id: "id-1".to_string(),
@@ -569,8 +591,13 @@ mod entropy_handler_tests {
             identity: None,
             entropy_bytes_b64: base64_encode(&[0u8; 40]),
         };
-        std::fs::write(&seed_path, serde_json::to_string_pretty(&meta).unwrap()).unwrap();
-        let result = handle_entropy_info(seed_path.to_str().unwrap()).await;
+        std::fs::write(
+            &seed_path,
+            serde_json::to_string_pretty(&meta).expect("pretty-print seed metadata for test"),
+        )
+        .expect("write seed.json fixture");
+        let result =
+            handle_entropy_info(seed_path.to_str().expect("seed path must be valid UTF-8")).await;
         assert!(result.is_ok());
     }
 
@@ -593,28 +620,37 @@ mod entropy_handler_tests {
 
     #[test]
     fn test_save_and_load_entropy_file_roundtrip() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for entropy file roundtrip");
         let p = dir.path().join("raw.bin");
         let data = [7u8, 8, 9];
-        save_entropy_file(&data, p.to_str().unwrap()).unwrap();
-        assert_eq!(load_entropy_file(p.to_str().unwrap()).unwrap(), data);
+        save_entropy_file(&data, p.to_str().expect("raw.bin path must be valid UTF-8"))
+            .expect("save_entropy_file in roundtrip test");
+        assert_eq!(
+            load_entropy_file(p.to_str().expect("raw.bin path must be valid UTF-8"))
+                .expect("load_entropy_file in roundtrip test"),
+            data
+        );
     }
 
     #[tokio::test]
     async fn test_handle_entropy_info_invalid_json() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for invalid JSON entropy test");
         let seed_path = dir.path().join("bad.json");
-        std::fs::write(&seed_path, "{not json").unwrap();
+        std::fs::write(&seed_path, "{not json").expect("write invalid JSON fixture");
         assert!(
-            handle_entropy_info(seed_path.to_str().unwrap())
-                .await
-                .is_err()
+            handle_entropy_info(
+                seed_path
+                    .to_str()
+                    .expect("bad.json path must be valid UTF-8"),
+            )
+            .await
+            .is_err()
         );
     }
 
     #[tokio::test]
     async fn test_handle_entropy_info_invalid_entropy_b64() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for invalid b64 entropy test");
         let seed_path = dir.path().join("seed.json");
         let meta = EntropySeedMetadata {
             seed_id: "id-1".to_string(),
@@ -627,9 +663,13 @@ mod entropy_handler_tests {
             identity: Some("x".to_string()),
             entropy_bytes_b64: "!!!".to_string(),
         };
-        std::fs::write(&seed_path, serde_json::to_string_pretty(&meta).unwrap()).unwrap();
+        std::fs::write(
+            &seed_path,
+            serde_json::to_string_pretty(&meta).expect("serialize meta with bad b64"),
+        )
+        .expect("write seed with invalid entropy b64");
         assert!(
-            handle_entropy_info(seed_path.to_str().unwrap())
+            handle_entropy_info(seed_path.to_str().expect("seed path must be valid UTF-8"),)
                 .await
                 .is_err()
         );
@@ -646,7 +686,7 @@ mod entropy_handler_tests {
 
     #[test]
     fn test_generate_system_entropy_branch_over_32_bytes() {
-        let v = generate_system_entropy(100).unwrap();
+        let v = generate_system_entropy(100).expect("generate 100 bytes system entropy");
         assert_eq!(v.len(), 100);
     }
 
@@ -664,7 +704,7 @@ mod entropy_handler_tests {
                 hsm_type: "Mobile".to_string(),
             },
         ];
-        let picked = select_hsm_by_preference(&hsms, "auto").unwrap();
+        let picked = select_hsm_by_preference(&hsms, "auto").expect("select auto with mobile+sw");
         assert_eq!(picked.tier, "Mobile");
     }
 
@@ -675,7 +715,7 @@ mod entropy_handler_tests {
             tier: "Software".to_string(),
             hsm_type: "Software".to_string(),
         }];
-        let picked = select_hsm_by_preference(&hsms, "software").unwrap();
+        let picked = select_hsm_by_preference(&hsms, "software").expect("select software HSM");
         assert_eq!(picked.name, "pkcs11");
     }
 
@@ -696,8 +736,8 @@ mod entropy_handler_tests {
             tier: "Hardware".to_string(),
             hsm_type: "USB".to_string(),
         }];
-        let a = select_hsm_by_preference(&hsms, "usb").unwrap();
-        let b = select_hsm_by_preference(&hsms, "hardware").unwrap();
+        let a = select_hsm_by_preference(&hsms, "usb").expect("select usb alias");
+        let b = select_hsm_by_preference(&hsms, "hardware").expect("select hardware alias");
         assert_eq!(a.name, b.name);
     }
 
@@ -715,7 +755,12 @@ mod entropy_handler_tests {
                 hsm_type: "Hardware".to_string(),
             },
         ];
-        assert_eq!(select_hsm_by_preference(&hsms, "auto").unwrap().name, "hw");
+        assert_eq!(
+            select_hsm_by_preference(&hsms, "auto")
+                .expect("auto select hardware when no mobile")
+                .name,
+            "hw"
+        );
 
         let with_mobile = vec![
             HsmInfo {
@@ -726,7 +771,9 @@ mod entropy_handler_tests {
             hsms[1].clone(),
         ];
         assert_eq!(
-            select_hsm_by_preference(&with_mobile, "auto").unwrap().tier,
+            select_hsm_by_preference(&with_mobile, "auto")
+                .expect("auto prefer mobile")
+                .tier,
             "Mobile"
         );
     }
@@ -739,7 +786,9 @@ mod entropy_handler_tests {
             hsm_type: "Software".to_string(),
         }];
         assert_eq!(
-            select_hsm_by_preference(&hsms, "auto").unwrap().name,
+            select_hsm_by_preference(&hsms, "auto")
+                .expect("auto fallback to software")
+                .name,
             "only-soft"
         );
     }
@@ -794,7 +843,7 @@ mod entropy_handler_tests {
 
     #[tokio::test]
     async fn test_handle_entropy_info_with_identity_and_short_entropy() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for tiny entropy seed test");
         let seed_path = dir.path().join("tiny.json");
         let meta = EntropySeedMetadata {
             seed_id: "id-2".to_string(),
@@ -807,10 +856,18 @@ mod entropy_handler_tests {
             identity: Some("bob".to_string()),
             entropy_bytes_b64: base64_encode(&[1u8, 2, 3]),
         };
-        std::fs::write(&seed_path, serde_json::to_string_pretty(&meta).unwrap()).unwrap();
-        handle_entropy_info(seed_path.to_str().unwrap())
-            .await
-            .unwrap();
+        std::fs::write(
+            &seed_path,
+            serde_json::to_string_pretty(&meta).expect("serialize tiny seed metadata"),
+        )
+        .expect("write tiny.json");
+        handle_entropy_info(
+            seed_path
+                .to_str()
+                .expect("tiny.json path must be valid UTF-8"),
+        )
+        .await
+        .expect("handle_entropy_info for short entropy");
     }
 
     #[test]

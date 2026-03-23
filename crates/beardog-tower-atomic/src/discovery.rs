@@ -116,12 +116,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_discover_via_biomeos_socket_dir() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("tempdir for BIOMEOS_SOCKET_DIR test");
         let biomeos_dir = dir.path().join("sockets");
-        fs::create_dir_all(&biomeos_dir).unwrap();
+        fs::create_dir_all(&biomeos_dir).expect("create biomeos sockets dir");
 
         let socket_path = biomeos_dir.join("test_primal.sock");
-        fs::File::create(&socket_path).unwrap();
+        fs::File::create(&socket_path).expect("create placeholder socket file");
 
         let env = DiscoverSocketEnv {
             xdg_runtime_dir: None,
@@ -131,17 +131,20 @@ mod tests {
 
         let result = discover_primal_socket_with("test_primal", &env).await;
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), socket_path);
+        assert_eq!(
+            result.expect("discover primal socket via BIOMEOS_SOCKET_DIR"),
+            socket_path
+        );
     }
 
     #[tokio::test]
     async fn test_discover_via_xdg_biomeos() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("tempdir for XDG biomeos test");
         let biomeos_dir = dir.path().join("biomeos");
-        fs::create_dir_all(&biomeos_dir).unwrap();
+        fs::create_dir_all(&biomeos_dir).expect("create XDG biomeos dir");
 
         let socket_path = biomeos_dir.join("test_primal.sock");
-        fs::File::create(&socket_path).unwrap();
+        fs::File::create(&socket_path).expect("create placeholder socket file");
 
         let env = DiscoverSocketEnv {
             xdg_runtime_dir: Some(dir.path().to_string_lossy().into_owned()),
@@ -151,7 +154,10 @@ mod tests {
 
         let result = discover_primal_socket_with("test_primal", &env).await;
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), socket_path);
+        assert_eq!(
+            result.expect("discover primal socket via XDG_RUNTIME_DIR/biomeos"),
+            socket_path
+        );
     }
 
     #[tokio::test]

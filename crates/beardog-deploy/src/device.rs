@@ -632,8 +632,8 @@ mod tests {
             DeviceType::SoftwareHsm,
             DeviceType::Unknown,
         ] {
-            let json = serde_json::to_string(&dt).unwrap();
-            let back: DeviceType = serde_json::from_str(&json).unwrap();
+            let json = serde_json::to_string(&dt).expect("DeviceType serializes");
+            let back: DeviceType = serde_json::from_str(&json).expect("DeviceType roundtrips");
             assert_eq!(dt, back);
         }
     }
@@ -646,8 +646,8 @@ mod tests {
             DeviceStatus::Disconnected,
             DeviceStatus::Error,
         ] {
-            let json = serde_json::to_string(&st).unwrap();
-            let back: DeviceStatus = serde_json::from_str(&json).unwrap();
+            let json = serde_json::to_string(&st).expect("DeviceStatus serializes");
+            let back: DeviceStatus = serde_json::from_str(&json).expect("DeviceStatus roundtrips");
             assert_eq!(st, back);
         }
     }
@@ -662,8 +662,8 @@ mod tests {
             capabilities: vec!["a".to_string()],
             metadata: HashMap::from([("k".to_string(), "v".to_string())]),
         };
-        let json = serde_json::to_string(&info).unwrap();
-        let back: DeviceInfo = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&info).expect("DeviceInfo serializes");
+        let back: DeviceInfo = serde_json::from_str(&json).expect("DeviceInfo roundtrips");
         assert_eq!(info.id, back.id);
         assert_eq!(info.capabilities, back.capabilities);
     }
@@ -963,6 +963,67 @@ mod tests {
         let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner::new()));
         let r = mgr.deploy_to_android("emulator-5554", path.to_str().expect("utf8"));
         let _ = std::fs::remove_file(&path);
+        assert!(r.is_ok());
+    }
+
+    #[test]
+    fn test_deploy_to_android_adb_install_nonzero() {
+        let mut path = std::env::temp_dir();
+        path.push(format!("beardog_deploy_fail_{}.apk", std::process::id()));
+        std::fs::write(&path, b"dummy").expect("write apk");
+        let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner {
+            fail_adb_install: true,
+            ..MockAdbCommandRunner::new()
+        }));
+        let r = mgr.deploy_to_android("emulator-5554", path.to_str().expect("utf8"));
+        let _ = std::fs::remove_file(&path);
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn test_deploy_to_android_stdout_without_success_token() {
+        let mut path = std::env::temp_dir();
+        path.push(format!(
+            "beardog_deploy_ambiguous_{}.apk",
+            std::process::id()
+        ));
+        std::fs::write(&path, b"dummy").expect("write apk");
+        let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner {
+            install_stdout_without_success_marker: true,
+            ..MockAdbCommandRunner::new()
+        }));
+        let r = mgr.deploy_to_android("emulator-5554", path.to_str().expect("utf8"));
+        let _ = std::fs::remove_file(&path);
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn test_get_device_property_shell_failure() {
+        let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner {
+            fail_getprop: true,
+            ..MockAdbCommandRunner::new()
+        }));
+        let r = mgr.get_device_property("emulator-5554", "ro.build.version.sdk");
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn test_show_logs_snapshot_logcat_error() {
+        let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner {
+            fail_logcat_snapshot: true,
+            ..MockAdbCommandRunner::new()
+        }));
+        let r = mgr.show_logs("com.beardog.test", false);
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn test_show_logs_follow_timeout_treated_as_success() {
+        let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner {
+            logcat_follow_yields_timeout: true,
+            ..MockAdbCommandRunner::new()
+        }));
+        let r = mgr.show_logs("com.beardog.test", true);
         assert!(r.is_ok());
     }
 }

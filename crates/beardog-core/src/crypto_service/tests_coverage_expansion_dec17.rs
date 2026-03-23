@@ -66,7 +66,7 @@ mod crypto_service_coverage_expansion {
                 },
             )
             .await
-            .unwrap();
+            .expect("encrypt test payload");
 
         // Corrupt the data
         let mut corrupted = encrypted.clone();
@@ -103,7 +103,7 @@ mod crypto_service_coverage_expansion {
                 },
             )
             .await
-            .unwrap();
+            .expect("encrypt test payload");
 
         // Try to decrypt with different key
         let result = service
@@ -154,7 +154,7 @@ mod crypto_service_coverage_expansion {
                 },
             )
             .await
-            .unwrap();
+            .expect("sign test message");
 
         // Modify the signature
         let mut wrong_signature = signature.clone();
@@ -175,7 +175,7 @@ mod crypto_service_coverage_expansion {
             .await;
 
         assert!(
-            result.is_err() || !result.unwrap(),
+            matches!(result, Err(_) | Ok(false)),
             "Wrong signature should not verify"
         );
     }
@@ -196,7 +196,7 @@ mod crypto_service_coverage_expansion {
                 },
             )
             .await
-            .unwrap();
+            .expect("sign test message");
 
         // Try to verify different data with original signature
         let different_data = b"different message";
@@ -212,7 +212,7 @@ mod crypto_service_coverage_expansion {
             .await;
 
         assert!(
-            result.is_err() || !result.unwrap(),
+            matches!(result, Err(_) | Ok(false)),
             "Different data should not verify"
         );
     }
@@ -313,7 +313,7 @@ mod crypto_service_coverage_expansion {
 
         // All should succeed
         for handle in handles {
-            let result = handle.await.unwrap();
+            let result = handle.await.expect("concurrent encrypt task");
             assert!(result.is_ok(), "Concurrent encryption should succeed");
         }
     }
@@ -345,7 +345,7 @@ mod crypto_service_coverage_expansion {
 
         // All should succeed
         for handle in handles {
-            let result = handle.await.unwrap();
+            let result = handle.await.expect("concurrent sign task");
             assert!(result.is_ok(), "Concurrent signing should succeed");
         }
     }
@@ -411,7 +411,7 @@ mod crypto_service_coverage_expansion {
 
         // All should complete
         for handle in handles {
-            let result = handle.await.unwrap();
+            let result = handle.await.expect("concurrent mixed crypto task");
             assert!(result.is_ok(), "Concurrent mixed operations should succeed");
         }
     }
@@ -444,7 +444,10 @@ mod crypto_service_coverage_expansion {
     #[tokio::test]
     async fn test_service_capabilities_check() {
         let service = create_test_service();
-        let capabilities = service.get_capabilities().await.unwrap();
+        let capabilities = service
+            .get_capabilities()
+            .await
+            .expect("crypto service capabilities");
 
         // Should support basic algorithms
         assert!(!capabilities.supported_algorithms.is_empty());
@@ -455,7 +458,7 @@ mod crypto_service_coverage_expansion {
     #[tokio::test]
     async fn test_service_health() {
         let service = create_test_service();
-        let health = service.get_health().await.unwrap();
+        let health = service.get_health().await.expect("crypto service health");
 
         // Should be healthy
         assert!(health.healthy, "Service should be healthy");
@@ -469,7 +472,10 @@ mod crypto_service_coverage_expansion {
     #[tokio::test]
     async fn test_algorithm_discovery() {
         let service = create_test_service();
-        let capabilities = service.get_capabilities().await.unwrap();
+        let capabilities = service
+            .get_capabilities()
+            .await
+            .expect("crypto service capabilities");
 
         // Should have multiple encryption algorithms (reported as strings)
         assert!(

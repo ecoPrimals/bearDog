@@ -9,7 +9,7 @@
 //! 2. **Generic Orchestrator**: `BIOMEOS_SOCKET_PATH` or `BIOMEOS_SOCKET_DIR`
 //! 3. **Primal IPC Protocol Standard**: `/primal/{PRIMAL_NAME}` (discovery-based)
 //! 4. **XDG Runtime Directory**: `/run/user/<uid>/biomeos/{PRIMAL_NAME}.sock` (biomeOS standard)
-//! 5. **Temp Directory** (last resort): `/tmp/{PRIMAL_NAME}-<family>-<node>.sock`
+//! 5. **Temp Directory** (last resort): `{temp}/{PRIMAL_NAME}-<family>-<node>.sock` (override root with `BEARDOG_SOCKET_TMP_DIR`)
 //!
 //! ## Self-Knowledge via PRIMAL_NAME
 //!
@@ -42,7 +42,7 @@
 //! let socket_path = config.socket_path();
 //!
 //! println!("Socket: {}", socket_path.display());
-//! // Output: /tmp/beardog-default-default.sock (or as set by Neural API)
+//! // Output: {platform temp}/beardog-default-default.sock (or as set by Neural API)
 //! ```
 
 use std::fs;
@@ -151,7 +151,7 @@ impl SocketConfig {
     /// 2. `biomeos_socket_path` or `biomeos_socket_dir` (generic orchestrator)
     /// 3. `/primal/{primal-name}` when `primal_namespace_root_exists`
     /// 4. `/run/user/<uid>/biomeos/beardog.sock` when the XDG runtime dir exists
-    /// 5. `/tmp/{primal-name}-{family}-{node}.sock` (fallback)
+    /// 5. Platform temp dir + `{primal-name}-{family}-{node}.sock` (fallback; root from `BEARDOG_SOCKET_TMP_DIR`)
     #[must_use]
     pub fn from_inputs(inputs: &SocketPathInputs) -> Self {
         let family_id = inputs
@@ -221,8 +221,13 @@ impl SocketConfig {
             };
         }
 
-        // Tier 5: /tmp fallback
-        let tmp_path = format!("/tmp/{primal_name}-{family_id}-{node_id}.sock");
+        // Tier 5: platform temp dir fallback (`BEARDOG_SOCKET_TMP_DIR` overrides root)
+        let tmp_root = std::env::var("BEARDOG_SOCKET_TMP_DIR")
+            .map_or_else(|_| std::env::temp_dir(), PathBuf::from);
+        let tmp_path = tmp_root
+            .join(format!("{primal_name}-{family_id}-{node_id}.sock"))
+            .display()
+            .to_string();
         Self {
             socket_path: PathBuf::from(tmp_path),
             family_id,
@@ -351,7 +356,10 @@ impl SocketConfig {
                 )
             }
             SocketPathSource::TempDir => {
-                format!("{} (fallback to /tmp - Tier 5)", self.socket_path_string())
+                format!(
+                    "{} (fallback to platform temp dir - Tier 5)",
+                    self.socket_path_string()
+                )
             }
         }
     }
@@ -489,7 +497,12 @@ mod tests {
                 assert!(config.socket_path_string().contains("biomeos/beardog.sock"));
             }
             SocketPathSource::TempDir => {
-                assert!(config.socket_path_string().starts_with("/tmp/beardog-"));
+                let expect = std::env::temp_dir().join("beardog-");
+                assert!(
+                    config
+                        .socket_path_string()
+                        .starts_with(expect.to_string_lossy().as_ref())
+                );
             }
             _ => panic!("Unexpected source: {:?}", config.source()),
         }
@@ -505,10 +518,8 @@ mod tests {
         });
 
         if config.source() == SocketPathSource::TempDir {
-            assert_eq!(
-                config.socket_path_string(),
-                "/tmp/beardog-fallback-node123.sock"
-            );
+            let p = std::env::temp_dir().join("beardog-fallback-node123.sock");
+            assert_eq!(config.socket_path_string(), p.display().to_string());
         } else if config.source() == SocketPathSource::XdgRuntime {
             // XDG path when /run/user/<uid> exists
             assert!(config.socket_path_string().contains("/run/user/"));
@@ -526,10 +537,8 @@ mod tests {
         assert_eq!(config.node_id(), "default");
 
         if config.source() == SocketPathSource::TempDir {
-            assert_eq!(
-                config.socket_path_string(),
-                "/tmp/beardog-default-default.sock"
-            );
+            let p = std::env::temp_dir().join("beardog-default-default.sock");
+            assert_eq!(config.socket_path_string(), p.display().to_string());
         }
     }
 

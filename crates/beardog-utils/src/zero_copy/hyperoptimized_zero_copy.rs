@@ -543,7 +543,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "Length exceeds buffer capacity")]
     fn test_aligned_buffer_set_length_panic() {
-        let mut buffer = AlignedBuffer::new(1024).unwrap();
+        let mut buffer = AlignedBuffer::new(1024).expect("aligned buffer for panic test");
         buffer.set_length(2048); // Should panic
     }
 
@@ -610,14 +610,14 @@ mod tests {
         let pool = SIMDAlignedPool::new();
 
         // Add some buffers
-        let buffer = pool.get_buffer(256).unwrap();
+        let buffer = pool.get_buffer(256).expect("pool buffer for cleanup test");
         pool.return_buffer(buffer);
 
         // Cleanup should not remove non-expired buffers
         pool.cleanup_expired();
 
         // Should still be able to get buffer
-        let buffer2 = pool.get_buffer(256).unwrap();
+        let buffer2 = pool.get_buffer(256).expect("pool buffer after cleanup");
         assert!(buffer2.capacity() >= 256);
         pool.return_buffer(buffer2);
     }

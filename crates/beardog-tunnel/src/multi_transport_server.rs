@@ -326,4 +326,24 @@ mod tests {
             }
         }
     }
+
+    /// Tier-1 Unix binds; Tier-2 TCP address is invalid — exercises TCP parse `warn!` branch only.
+    #[tokio::test]
+    async fn bind_all_available_unix_ok_invalid_tcp_addr_skipped() {
+        let dir = tempdir().expect("tempdir");
+        let sock = dir.path().join("mts_invalid_tcp.sock");
+        let provider = test_btsp_provider().await;
+        let identity = Arc::new(PrimalIdentity::for_test("fam", "node"));
+
+        let mts = MultiTransportServer::bind_all_available(
+            provider,
+            identity,
+            sock.to_string_lossy().as_ref(),
+            Some(":::not-a-tcp-addr:::bad"),
+        )
+        .await
+        .expect("Unix transport should still bind");
+
+        assert!(mts.transport_count() >= 1);
+    }
 }

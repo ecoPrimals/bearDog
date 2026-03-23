@@ -315,7 +315,7 @@ mod tests {
         let result = service.get_template_info("template-abc123").await;
 
         assert!(result.is_ok());
-        let info = result.unwrap();
+        let info = result.expect("get_template_info Ok");
 
         assert_eq!(info.template_id, "template-abc123");
         assert_eq!(info.creator_id, "user-creator");
@@ -331,7 +331,7 @@ mod tests {
         let result = service.get_template_info("unknown-format").await;
 
         assert!(result.is_ok());
-        let info = result.unwrap();
+        let info = result.expect("get_template_info Ok");
 
         assert_eq!(info.template_id, "unknown-format");
         assert_eq!(info.creator_id, "unknown");
@@ -348,7 +348,7 @@ mod tests {
 
         // Should still return Ok with fallback data
         assert!(result.is_ok());
-        let info = result.unwrap();
+        let info = result.expect("get_template_info Ok");
         assert_eq!(info.template_id, "");
     }
 
@@ -364,7 +364,7 @@ mod tests {
             .await;
 
         assert!(result.is_ok());
-        let perms = result.unwrap();
+        let perms = result.expect("get_user_permissions Ok");
 
         assert_eq!(perms.user_id, "user-123");
         assert_eq!(perms.role, "viewer");
@@ -378,7 +378,7 @@ mod tests {
         let result = service.get_user_permissions("", "resource").await;
 
         assert!(result.is_ok());
-        let perms = result.unwrap();
+        let perms = result.expect("get_user_permissions Ok");
         assert_eq!(perms.user_id, "");
     }
 
@@ -392,7 +392,7 @@ mod tests {
         let result = service.get_lineage("template-abc123").await;
 
         assert!(result.is_ok());
-        let lineage = result.unwrap();
+        let lineage = result.expect("get_lineage Ok");
 
         assert!(!lineage.is_empty());
         let first_version = &lineage[0];
@@ -407,7 +407,7 @@ mod tests {
         let result = service.get_lineage("random").await;
 
         assert!(result.is_ok());
-        let lineage = result.unwrap();
+        let lineage = result.expect("get_lineage Ok");
         assert!(!lineage.is_empty());
     }
 
@@ -421,11 +421,14 @@ mod tests {
         let result = service.get_community_metrics("template-abc").await;
 
         assert!(result.is_ok());
-        let metrics = result.unwrap();
+        let metrics = result.expect("get_community_metrics Ok");
 
         assert!(metrics.deployments > 0);
         assert!(metrics.success_rate.is_some());
-        assert!(metrics.success_rate.unwrap() > 0.0);
+        let rate = metrics
+            .success_rate
+            .expect("default community metrics include success_rate");
+        assert!(rate > 0.0);
         assert!(metrics.avg_rating.is_some());
         assert!(metrics.total_ratings > 0);
     }
@@ -440,7 +443,7 @@ mod tests {
         let result = service.get_security_assessment("template-secure").await;
 
         assert!(result.is_ok());
-        let assessment = result.unwrap();
+        let assessment = result.expect("get_security_assessment Ok");
 
         // Should have recent scan timestamp
         assert!(!assessment.last_scan.is_empty());
@@ -487,8 +490,9 @@ mod tests {
             genetic_family: Some("nat0".to_string()),
         };
 
-        let json = serde_json::to_string(&info).unwrap();
-        let deserialized: TemplateInfo = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&info).expect("serialize TemplateInfo");
+        let deserialized: TemplateInfo =
+            serde_json::from_str(&json).expect("deserialize TemplateInfo");
 
         assert_eq!(deserialized.template_id, info.template_id);
         assert_eq!(deserialized.trust_score, info.trust_score);
@@ -504,8 +508,9 @@ mod tests {
             permissions: vec!["read".to_string(), "write".to_string(), "admin".to_string()],
         };
 
-        let json = serde_json::to_string(&perms).unwrap();
-        let deserialized: UserPermissions = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&perms).expect("serialize UserPermissions");
+        let deserialized: UserPermissions =
+            serde_json::from_str(&json).expect("deserialize UserPermissions");
 
         assert_eq!(deserialized.user_id, perms.user_id);
         assert_eq!(deserialized.permissions.len(), 3);
@@ -524,8 +529,9 @@ mod tests {
             signature: Some("sig-abc".to_string()),
         };
 
-        let json = serde_json::to_string(&version).unwrap();
-        let deserialized: LineageVersion = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&version).expect("serialize LineageVersion");
+        let deserialized: LineageVersion =
+            serde_json::from_str(&json).expect("deserialize LineageVersion");
 
         assert_eq!(deserialized.version, "2.0.0");
         assert!(deserialized.changes.is_some());
@@ -540,8 +546,9 @@ mod tests {
             total_ratings: 500,
         };
 
-        let json = serde_json::to_string(&metrics).unwrap();
-        let deserialized: CommunityMetrics = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&metrics).expect("serialize CommunityMetrics");
+        let deserialized: CommunityMetrics =
+            serde_json::from_str(&json).expect("deserialize CommunityMetrics");
 
         assert_eq!(deserialized.deployments, 1000);
         assert_eq!(deserialized.success_rate, Some(0.99));
@@ -555,8 +562,9 @@ mod tests {
             threat_level: "low".to_string(),
         };
 
-        let json = serde_json::to_string(&assessment).unwrap();
-        let deserialized: SecurityAssessment = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&assessment).expect("serialize SecurityAssessment");
+        let deserialized: SecurityAssessment =
+            serde_json::from_str(&json).expect("deserialize SecurityAssessment");
 
         assert_eq!(deserialized.vulnerabilities_found, 2);
         assert_eq!(deserialized.threat_level, "low");
@@ -583,7 +591,9 @@ mod tests {
             .collect();
 
         for handle in handles {
-            let result = handle.await.unwrap();
+            let result = handle
+                .await
+                .expect("concurrent get_template_info task join");
             assert!(result.is_ok());
         }
     }

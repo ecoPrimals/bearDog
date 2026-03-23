@@ -106,6 +106,7 @@ libc = "0.2"
 
 [dev-dependencies]
 async-trait = { workspace = true }
+proptest = { workspace = true }
 
 [features]
 fido2 = ["dep:beardog-hid", "dep:ciborium", "dep:base64-url"]

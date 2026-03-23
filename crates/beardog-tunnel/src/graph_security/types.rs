@@ -354,7 +354,7 @@ mod tests {
     #[test]
     fn test_risk_level_serialization() {
         let low = RiskLevel::Low;
-        let json = serde_json::to_string(&low).unwrap();
+        let json = serde_json::to_string(&low).expect("RiskLevel serializes to JSON");
         assert_eq!(json, "\"low\"");
     }
 
@@ -370,7 +370,7 @@ mod tests {
             config,
         };
 
-        let json = serde_json::to_string(&node).unwrap();
+        let json = serde_json::to_string(&node).expect("GraphNode serializes to JSON");
         assert!(json.contains("node-1"));
         assert!(json.contains("compute"));
         assert!(json.contains("handler_ref"));
@@ -394,7 +394,7 @@ mod tests {
         ];
 
         for action in actions {
-            let json = serde_json::to_string(&action).unwrap();
+            let json = serde_json::to_string(&action).expect("ModificationAction serializes");
             assert!(!json.is_empty());
         }
     }

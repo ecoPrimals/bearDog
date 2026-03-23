@@ -484,7 +484,9 @@ mod tests {
     #[test]
     fn test_universal_hsm_manager_new() {
         let manager = UniversalHsmManager::new();
-        let status = manager.get_ecosystem_status().unwrap();
+        let status = manager
+            .get_ecosystem_status()
+            .expect("ecosystem status in test");
         assert_eq!(
             status.get("status").and_then(|v| v.as_str()),
             Some("healthy")
@@ -508,7 +510,7 @@ mod tests {
             crate::ecosystem_integration::universal_compute_client::UniversalComputeClient::new(
                 vec![],
             )
-            .unwrap();
+            .expect("UniversalComputeClient::new in test");
         let result = spawner.register_primal_client("primal-1", client).await;
         assert!(result.is_ok());
     }
@@ -519,7 +521,7 @@ mod tests {
         let requirements = make_spawning_requirements(false);
         let result = spawner.spawn_ecosystem_hybrid_node(requirements).await;
         assert!(result.is_ok());
-        let node = result.unwrap();
+        let node = result.expect("spawn_ecosystem_hybrid_node should succeed in test");
         assert!(!node.node_id.is_empty());
         assert_eq!(node.health_status, NodeHealthStatus::Initializing);
         assert!(node.last_heartbeat.is_some());
@@ -536,7 +538,10 @@ mod tests {
     #[tokio::test]
     async fn test_get_spawning_statistics() {
         let spawner = EcosystemGeneticSpawner::default();
-        let stats = spawner.get_spawning_statistics().await.unwrap();
+        let stats = spawner
+            .get_spawning_statistics()
+            .await
+            .expect("get_spawning_statistics in test");
         assert_eq!(stats.total_spawns, 0);
         assert_eq!(stats.successful_spawns, 0);
         assert_eq!(stats.failed_spawns, 0);
@@ -545,14 +550,20 @@ mod tests {
     #[tokio::test]
     async fn test_get_active_spawns() {
         let spawner = EcosystemGeneticSpawner::default();
-        let spawns = spawner.get_active_spawns().await.unwrap();
+        let spawns = spawner
+            .get_active_spawns()
+            .await
+            .expect("get_active_spawns in test");
         assert!(spawns.is_empty());
     }
 
     #[tokio::test]
     async fn test_get_hybrid_nodes() {
         let spawner = EcosystemGeneticSpawner::default();
-        let nodes = spawner.get_hybrid_nodes().await.unwrap();
+        let nodes = spawner
+            .get_hybrid_nodes()
+            .await
+            .expect("get_hybrid_nodes in test");
         assert!(nodes.is_empty());
     }
 
@@ -563,8 +574,11 @@ mod tests {
         let _ = spawner
             .spawn_ecosystem_hybrid_node(requirements)
             .await
-            .unwrap();
-        let stats = spawner.get_spawning_statistics().await.unwrap();
+            .expect("spawn_ecosystem_hybrid_node in test");
+        let stats = spawner
+            .get_spawning_statistics()
+            .await
+            .expect("get_spawning_statistics in test");
         assert_eq!(stats.successful_spawns, 1);
         assert_eq!(stats.total_hybrid_nodes, 1);
     }

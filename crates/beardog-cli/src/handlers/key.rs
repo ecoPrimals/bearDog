@@ -532,14 +532,16 @@ mod key_handler_tests {
             sample_cli_hsm("Hardware", "hw"),
         ];
         assert_eq!(
-            select_cli_hsm_for_preference(&hsms, "auto").unwrap().tier,
+            select_cli_hsm_for_preference(&hsms, "auto")
+                .expect("auto select when only software+hardware")
+                .tier,
             "Hardware"
         );
 
         let with_mobile = vec![sample_cli_hsm("Mobile", "mob"), hsms[1].clone()];
         assert_eq!(
             select_cli_hsm_for_preference(&with_mobile, "auto")
-                .unwrap()
+                .expect("auto select with mobile present")
                 .tier,
             "Mobile"
         );
@@ -547,7 +549,7 @@ mod key_handler_tests {
         let only_sw = vec![sample_cli_hsm("Software", "only")];
         assert_eq!(
             select_cli_hsm_for_preference(&only_sw, "auto")
-                .unwrap()
+                .expect("auto fallback to only software")
                 .name,
             "only"
         );
@@ -578,8 +580,8 @@ mod key_handler_tests {
 
     #[test]
     fn test_generate_aes_key_without_seed() {
-        let k1 = generate_aes_key_with_seed(None).unwrap();
-        let k2 = generate_aes_key_with_seed(None).unwrap();
+        let k1 = generate_aes_key_with_seed(None).expect("generate AES key without seed (1)");
+        let k2 = generate_aes_key_with_seed(None).expect("generate AES key without seed (2)");
         assert_eq!(k1.len(), 32);
         assert_eq!(k2.len(), 32);
         assert_ne!(k1, k2);
@@ -588,8 +590,10 @@ mod key_handler_tests {
     #[test]
     fn test_generate_aes_key_with_seed_length_and_entropy() {
         // System entropy is mixed per call (OsRng); same seed does not imply identical output.
-        let a = generate_aes_key_with_seed(Some(b"human-entropy-seed")).unwrap();
-        let b = generate_aes_key_with_seed(Some(b"human-entropy-seed")).unwrap();
+        let a = generate_aes_key_with_seed(Some(b"human-entropy-seed"))
+            .expect("generate with human seed (1)");
+        let b = generate_aes_key_with_seed(Some(b"human-entropy-seed"))
+            .expect("generate with human seed (2)");
         assert_eq!(a.len(), 32);
         assert_eq!(b.len(), 32);
         assert_ne!(a, b);
@@ -597,21 +601,21 @@ mod key_handler_tests {
 
     #[test]
     fn test_generate_aes_key_legacy_alias() {
-        let k = generate_aes_key().unwrap();
+        let k = generate_aes_key().expect("generate_aes_key legacy alias");
         assert_eq!(k.len(), 32);
     }
 
     #[tokio::test]
     async fn test_handle_key_list_empty_store() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for empty key list test");
         handle_key_list_with_home(None, false, dir.path())
             .await
-            .unwrap();
+            .expect("list keys in empty store");
     }
 
     #[tokio::test]
     async fn test_handle_key_list_with_filter_and_keys() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for filtered key list test");
         let home = dir.path();
 
         let alpha = key_store::StoredKey {
@@ -634,23 +638,27 @@ mod key_handler_tests {
             key_id: "beta".to_string(),
             ..alpha.clone()
         };
-        key_store::save_key_to_home(&alpha, home).unwrap();
-        key_store::save_key_to_home(&beta, home).unwrap();
+        key_store::save_key_to_home(&alpha, home).expect("save alpha key");
+        key_store::save_key_to_home(&beta, home).expect("save beta key");
 
         handle_key_list_with_home(Some("alpha"), false, home)
             .await
-            .unwrap();
-        handle_key_list_with_home(None, true, home).await.unwrap();
+            .expect("list keys filtered by alpha");
+        handle_key_list_with_home(None, true, home)
+            .await
+            .expect("list all keys verbose");
     }
 
     #[tokio::test]
     async fn test_handle_key_info() {
-        handle_key_info("any-id").await.unwrap();
+        handle_key_info("any-id")
+            .await
+            .expect("handle_key_info placeholder");
     }
 
     #[tokio::test]
     async fn test_handle_key_delete_skip_confirm_removes_file() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for key delete test");
         let home = dir.path();
 
         let k = key_store::StoredKey {
@@ -668,25 +676,25 @@ mod key_handler_tests {
             usage: None,
             purpose: None,
         };
-        key_store::save_key_to_home(&k, home).unwrap();
+        key_store::save_key_to_home(&k, home).expect("save to-delete key");
 
         handle_key_delete_with_home("to-delete", true, home)
             .await
-            .unwrap();
+            .expect("delete key with skip_confirm");
         assert!(key_store::load_key_from_home("to-delete", home).is_err());
     }
 
     #[tokio::test]
     async fn test_handle_key_delete_without_confirm_returns_early() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for delete without confirm test");
         handle_key_delete_with_home("some-key", false, dir.path())
             .await
-            .unwrap();
+            .expect("delete without confirm returns early");
     }
 
     #[tokio::test]
     async fn test_handle_key_list_filter_matches_nothing() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for filter matches nothing test");
         let home = dir.path();
 
         let k = key_store::StoredKey {
@@ -704,16 +712,16 @@ mod key_handler_tests {
             usage: None,
             purpose: None,
         };
-        key_store::save_key_to_home(&k, home).unwrap();
+        key_store::save_key_to_home(&k, home).expect("save only-key");
 
         handle_key_list_with_home(Some("nomatch-xyz"), false, home)
             .await
-            .unwrap();
+            .expect("list with filter matching nothing");
     }
 
     #[tokio::test]
     async fn test_handle_key_list_hsm_filter_is_case_insensitive() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for case-insensitive filter test");
         let home = dir.path();
         let k = key_store::StoredKey {
             key_id: "k1".to_string(),
@@ -730,15 +738,15 @@ mod key_handler_tests {
             usage: None,
             purpose: None,
         };
-        key_store::save_key_to_home(&k, home).unwrap();
+        key_store::save_key_to_home(&k, home).expect("save k1 for case test");
         handle_key_list_with_home(Some("soft"), false, home)
             .await
-            .unwrap();
+            .expect("list with lowercase soft filter");
     }
 
     #[tokio::test]
     async fn test_handle_key_delete_missing_key_errors() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for missing key delete test");
         let err = handle_key_delete_with_home("missing-id", true, dir.path())
             .await
             .unwrap_err();

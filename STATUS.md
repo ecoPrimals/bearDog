@@ -1,6 +1,6 @@
 # BearDog Status
 
-**Last Updated**: March 22, 2026
+**Last Updated**: March 23, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -14,12 +14,12 @@
 | **Clippy** | 0 warnings | Pedantic + nursery + cast lints, workspace-centralized |
 | **Missing Docs** | 0 warnings | All public items documented |
 | **Pure Rust** | 100% | Zero C dependencies (ecoBin) |
-| **Unsafe Code** | 0 production | `forbid(unsafe_code)` workspace-wide |
+| **Unsafe Code** | 0 production | `forbid(unsafe_code)` workspace-wide + all crate `lib.rs` |
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant |
-| **Tests** | 9,500+ passing | Fully concurrent, zero sleeps in non-chaos |
-| **Coverage** | 86.8% line | llvm-cov (103,568/119,358 lines) |
+| **Tests** | 14,029 passing | Fully concurrent, zero sleeps in non-chaos |
+| **Coverage** | 86.1% line | llvm-cov |
 | **Serial Tests** | 0 | `#[serial]` fully eliminated |
 | **cargo deny** | 4/4 pass | Advisories, bans, licenses, sources |
 | **License** | AGPL-3.0-only | SPDX headers on all .rs files |
@@ -56,7 +56,7 @@
 | beardog-tunnel | ~81% | server, BTSP, IPC, doctor, genetic handler boosted |
 | beardog-deploy | ~81% | command runner, android, builder coverage boosted |
 | beardog-integration | new | Tower Atomic UPA client, heartbeat, connection tracking |
-| **Overall** | **86.8%** | **103,568/119,358** |
+| **Overall** | **86.1%** | llvm-cov workspace |
 
 ---
 
@@ -72,17 +72,26 @@
 | Self-Knowledge | Primals discover peers at runtime via capability registry |
 | JSON-RPC + tarpc | Both protocols supported |
 | AGPL-3.0-only | License verified; SPDX headers on all .rs files |
-| `forbid(unsafe_code)` | Workspace-wide (beardog-errors platform FFI documented per wateringHole) |
+| `forbid(unsafe_code)` | Workspace level + every crate `lib.rs` (beardog-errors platform FFI documented per wateringHole) |
 | Workspace Lints | Centralized clippy pedantic + nursery + cast lints |
 | All Public Items Documented | 0 missing_docs warnings |
 | File Size | 0 production files > 1000 LOC |
 | Zero Sleeps (non-chaos) | All test synchronization via barriers/channels/notifications |
 | Zero `#[serial]` | All tests fully concurrent via unique resources |
-| Production Mocks | 0 — all stubs evolved to real implementations or Phase 2 documented |
+| Production Mocks | Production mocks being evolved to complete implementations |
 
 ---
 
-## Recent Improvements (March 22, 2026)
+## Recent Improvements (March 23, 2026)
+
+### Wave 9: Unwrap Evolution, Clone Audit, Binary Unification
+
+- **`.unwrap()` debt: 1,879 → 85** — Systematic evolution across 45+ files; production `.unwrap()` → `?`, `.expect("invariant")`, `.ok_or_else()`; test `.unwrap()` → `.expect("descriptive message")`
+- **Zero-copy clone audit** — Eliminated unnecessary `.clone()` in IPC hot paths: BTSP handler `serde_json::Value` clones removed via `Deserialize::deserialize(&Value)`; `key_management.rs` destructuring instead of field clones; `software_hsm/core.rs` shared metadata moves; `key_rotation_manager.rs` move-before-log
+- **Binary collision resolved** — `beardog-cli` legacy binary renamed; root `src/main.rs` UniBin is now the sole `beardog` binary; zero Cargo collision warnings
+- **Coverage tests added** — ~30 new tests across beardog-tunnel, beardog-deploy, beardog-cli, beardog-types, beardog-core targeting error paths
+- **14,029 tests passing** — Up from 13,900+; 0 failures, 186 ignored (platform/interactive-specific)
+- **DNS-SD flaky test fixed** — Timeout `Err` now accepted as valid result for short-duration browse
 
 ### Wave 8: Deep Debt Execution — Coverage, Stubs, Hardcoding, File Size
 
@@ -141,7 +150,7 @@ cargo check --workspace --all-features        # Compile — clean
 cargo test --workspace                        # Tests — 0 failures
 cargo doc --workspace --no-deps               # Docs — clean
 cargo deny check                              # Advisories, bans, licenses, sources
-cargo llvm-cov --workspace --summary-only     # Coverage — 86.8%
+cargo llvm-cov --workspace --summary-only     # Coverage — 86.1%
 ```
 
 ---

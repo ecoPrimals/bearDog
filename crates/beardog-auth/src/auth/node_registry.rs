@@ -108,7 +108,7 @@ mod tests {
         let retrieve_result = registry.get_node_info("node-1");
         assert!(retrieve_result.is_ok(), "Node retrieval should succeed");
 
-        let retrieved = retrieve_result.unwrap();
+        let retrieved = retrieve_result.expect("get_node_info after register");
         const TEST_PORT: u16 = 8080;
         assert_eq!(retrieved.node_id, "node-1");
         assert_eq!(retrieved.address, format!("127.0.0.1:{TEST_PORT}"));
@@ -126,12 +126,14 @@ mod tests {
     fn test_get_trust_level_success() {
         let mut registry = InMemoryNodeRegistry::new();
         let node_info = create_test_node_info("node-1");
-        registry.register_node(node_info).unwrap();
+        registry
+            .register_node(node_info)
+            .expect("register_node for trust level test");
 
         let result = registry.get_trust_level("node-1");
         assert!(result.is_ok(), "Getting trust level should succeed");
         assert_eq!(
-            result.unwrap(),
+            result.expect("get_trust_level after register"),
             0.8,
             "Trust level should match registered value"
         );
@@ -152,12 +154,16 @@ mod tests {
     fn test_update_trust_level_success() {
         let mut registry = InMemoryNodeRegistry::new();
         let node_info = create_test_node_info("node-1");
-        registry.register_node(node_info).unwrap();
+        registry
+            .register_node(node_info)
+            .expect("register_node for update_trust_level test");
 
         let update_result = registry.update_trust_level("node-1", 0.95);
         assert!(update_result.is_ok(), "Updating trust level should succeed");
 
-        let new_level = registry.get_trust_level("node-1").unwrap();
+        let new_level = registry
+            .get_trust_level("node-1")
+            .expect("get_trust_level after update");
         assert_eq!(new_level, 0.95, "Trust level should be updated");
     }
 
@@ -177,13 +183,19 @@ mod tests {
         let mut registry = InMemoryNodeRegistry::new();
 
         let node1 = create_test_node_info("node-1");
-        registry.register_node(node1).unwrap();
+        registry
+            .register_node(node1)
+            .expect("register node1 for overwrite test");
 
         let mut node2 = create_test_node_info("node-1");
         node2.trust_level = 0.5;
-        registry.register_node(node2).unwrap();
+        registry
+            .register_node(node2)
+            .expect("register node2 overwrites node1");
 
-        let retrieved = registry.get_node_info("node-1").unwrap();
+        let retrieved = registry
+            .get_node_info("node-1")
+            .expect("get_node_info after overwrite");
         assert_eq!(
             retrieved.trust_level, 0.5,
             "Second registration should overwrite first"
@@ -196,13 +208,13 @@ mod tests {
 
         registry
             .register_node(create_test_node_info("node-1"))
-            .unwrap();
+            .expect("register node-1");
         registry
             .register_node(create_test_node_info("node-2"))
-            .unwrap();
+            .expect("register node-2");
         registry
             .register_node(create_test_node_info("node-3"))
-            .unwrap();
+            .expect("register node-3");
 
         assert!(registry.get_node_info("node-1").is_ok());
         assert!(registry.get_node_info("node-2").is_ok());

@@ -589,7 +589,7 @@ mod tests {
             beardog_listen_addr: Some("127.0.0.1:9000".to_string()),
             ..Default::default()
         })
-        .unwrap();
+        .expect("discover_endpoints_from_inputs with listen addr");
         assert_eq!(endpoints.len(), 1);
         assert_eq!(endpoints[0].address.port(), 9000);
         assert_eq!(endpoints[0].protocol, Protocol::Http);
@@ -601,14 +601,15 @@ mod tests {
             beardog_port: Some("8080".to_string()),
             ..Default::default()
         })
-        .unwrap();
+        .expect("discover_endpoints_from_inputs with port");
         assert_eq!(endpoints.len(), 1);
         assert_eq!(endpoints[0].address.port(), 8080);
     }
 
     #[test]
     fn test_endpoint_default() {
-        let endpoints = discover_endpoints_from_inputs(&EndpointInputs::default()).unwrap();
+        let endpoints = discover_endpoints_from_inputs(&EndpointInputs::default())
+            .expect("default endpoint discovery");
         assert_eq!(endpoints.len(), 1);
         assert_eq!(endpoints[0].address.port(), 0); // OS-assigned
     }
@@ -631,7 +632,8 @@ mod tests {
 
     #[test]
     fn test_endpoint_parse_unix_uri() {
-        let ep = Endpoint::parse("unix:///run/user/1000/biomeos/example.sock").unwrap();
+        let ep = Endpoint::parse("unix:///run/user/1000/biomeos/example.sock")
+            .expect("parse unix URI in test");
         assert_eq!(ep.protocol, Protocol::UnixSocket);
         assert_eq!(
             ep.unix_socket_path
@@ -643,7 +645,7 @@ mod tests {
 
     #[test]
     fn test_provides_capability() {
-        let sk = PrimalSelfKnowledge::discover().unwrap();
+        let sk = PrimalSelfKnowledge::discover().expect("PrimalSelfKnowledge::discover in test");
         assert!(sk.provides_capability(&SimpleCapability::SecureTunneling));
     }
 

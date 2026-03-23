@@ -166,11 +166,15 @@ mod tests {
         let password = b"test_password";
         let salt = b"test_salt_16byte";
 
-        let key = config.derive_key(password, salt, 32).unwrap();
+        let key = config
+            .derive_key(password, salt, 32)
+            .expect("pbkdf2 derive_key in test");
         assert_eq!(key.len(), 32);
 
         // Should be deterministic
-        let key2 = config.derive_key(password, salt, 32).unwrap();
+        let key2 = config
+            .derive_key(password, salt, 32)
+            .expect("pbkdf2 derive_key in test");
         assert_eq!(key, key2);
     }
 
@@ -180,11 +184,15 @@ mod tests {
         let password = b"test_password";
         let salt = b"test_salt";
 
-        let key = config.derive_key(password, salt, 32).unwrap();
+        let key = config
+            .derive_key(password, salt, 32)
+            .expect("hkdf derive_key in test");
         assert_eq!(key.len(), 32);
 
         // Should be deterministic
-        let key2 = config.derive_key(password, salt, 32).unwrap();
+        let key2 = config
+            .derive_key(password, salt, 32)
+            .expect("hkdf derive_key in test");
         assert_eq!(key, key2);
     }
 
@@ -193,8 +201,12 @@ mod tests {
         let config = KdfConfig::new("pbkdf2".to_string(), Some(1000), None, None);
         let salt = b"same_salt";
 
-        let key1 = config.derive_key(b"password1", salt, 32).unwrap();
-        let key2 = config.derive_key(b"password2", salt, 32).unwrap();
+        let key1 = config
+            .derive_key(b"password1", salt, 32)
+            .expect("pbkdf2 derive_key in test");
+        let key2 = config
+            .derive_key(b"password2", salt, 32)
+            .expect("pbkdf2 derive_key in test");
 
         assert_ne!(key1, key2);
     }
@@ -216,9 +228,13 @@ mod tests {
     #[test]
     fn test_argon2_derivation() {
         let config = KdfConfig::new("argon2".to_string(), None, Some(8192), Some(1));
-        let k1 = config.derive_key(b"pw", b"salt123456789012", 32).unwrap();
+        let k1 = config
+            .derive_key(b"pw", b"salt123456789012", 32)
+            .expect("argon2 derive_key in test");
         assert_eq!(k1.len(), 32);
-        let k2 = config.derive_key(b"pw", b"salt123456789012", 32).unwrap();
+        let k2 = config
+            .derive_key(b"pw", b"salt123456789012", 32)
+            .expect("argon2 derive_key in test");
         assert_eq!(k1, k2);
     }
 

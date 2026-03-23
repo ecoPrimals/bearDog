@@ -215,7 +215,7 @@ mod tests {
         let result = collector.collect_entropy();
         assert!(result.is_ok());
 
-        let entropy = result.unwrap();
+        let entropy = result.expect("collect_entropy should succeed in test");
         assert_eq!(entropy.len(), 32); // 256 bits
     }
 
@@ -228,8 +228,12 @@ mod tests {
         let collector = MultiModalHumanEntropyCollector::new(config);
 
         // Collect entropy twice
-        let entropy1 = collector.collect_entropy().unwrap();
-        let entropy2 = collector.collect_entropy().unwrap();
+        let entropy1 = collector
+            .collect_entropy()
+            .expect("collect_entropy should succeed in test");
+        let entropy2 = collector
+            .collect_entropy()
+            .expect("collect_entropy should succeed in test");
 
         // Should be different (extremely unlikely to be identical)
         assert_ne!(entropy1, entropy2);
@@ -243,7 +247,9 @@ mod tests {
         };
         let collector = MultiModalHumanEntropyCollector::new(config);
 
-        let entropy = collector.collect_entropy().unwrap();
+        let entropy = collector
+            .collect_entropy()
+            .expect("collect_entropy should succeed in test");
 
         // Should not be all zeros
         let all_zeros = entropy.iter().all(|&b| b == 0);
@@ -258,7 +264,9 @@ mod tests {
         };
         let collector = MultiModalHumanEntropyCollector::new(config);
 
-        let entropy = collector.collect_entropy().unwrap();
+        let entropy = collector
+            .collect_entropy()
+            .expect("collect_entropy should succeed in test");
 
         // Should not be all the same byte
         let all_same = entropy.windows(2).all(|w| w[0] == w[1]);
@@ -277,7 +285,7 @@ mod tests {
         assert!(result.is_ok());
 
         // Verify entropy quality meets threshold
-        let entropy = result.unwrap();
+        let entropy = result.expect("collect_entropy should succeed in test");
         let quality = super::calculate_entropy_quality(&entropy);
         assert!(quality >= 0.5);
     }
@@ -364,7 +372,12 @@ mod tests {
         for _ in 0..10 {
             let result = collector.collect_entropy();
             assert!(result.is_ok());
-            assert_eq!(result.unwrap().len(), 32);
+            assert_eq!(
+                result
+                    .expect("collect_entropy should succeed in test")
+                    .len(),
+                32
+            );
         }
     }
 
@@ -416,7 +429,9 @@ mod tests {
         };
         let collector = MultiModalHumanEntropyCollector::new(config);
 
-        let entropy = collector.collect_entropy().unwrap();
+        let entropy = collector
+            .collect_entropy()
+            .expect("collect_entropy should succeed in test");
 
         // Check that we have reasonable byte diversity
         let mut byte_set = std::collections::HashSet::new();
@@ -436,7 +451,9 @@ mod tests {
         };
         let collector = MultiModalHumanEntropyCollector::new(config);
 
-        let entropy = collector.collect_entropy().unwrap();
+        let entropy = collector
+            .collect_entropy()
+            .expect("collect_entropy should succeed in test");
         let quality = super::calculate_entropy_quality(&entropy);
 
         // Quality should be in valid range [0.0, 1.0]

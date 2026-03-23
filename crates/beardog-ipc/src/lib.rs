@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![forbid(unsafe_code)]
 
 //! # beardog-ipc - Primal IPC Protocol Implementation
 //!
 //! This crate implements the ecoPrimals Primal IPC Protocol for BearDog,
-//! enabling runtime discovery and communication with other primals via Songbird.
+//! enabling runtime discovery and communication via capability-based IPC registries.
 //!
 //! ## Standards Compliance
 //!
@@ -11,7 +12,7 @@
 //!
 //! - ✅ JSON-RPC 2.0 over Unix sockets
 //! - ✅ `/primal/*` namespace convention
-//! - ✅ Songbird service registry integration
+//! - ✅ IPC registry integration (`ipc.register`, capability discovery)
 //! - ✅ Capability-based discovery
 //! - ✅ Heartbeat mechanism
 //!
@@ -22,7 +23,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> anyhow::Result<()> {
-//!     // Connect to Songbird
+//!     // Connect to IPC registry (socket from env / capability discovery)
 //!     let client = SongbirdClient::connect().await?;
 //!     
 //!     // Register BearDog capabilities
@@ -108,11 +109,24 @@ pub const PROTOCOL_VERSION: &str = "1.0";
 /// service can bind to, rather than hardcoding a specific primal name.
 pub const DISCOVERY_SOCKET_FALLBACK: &str = "/primal/discovery";
 
-/// Development-only Unix socket path when no registry is present (local dev).
+/// Platform-aware dev discovery socket path when `BEARDOG_DEV_DISCOVERY_SOCKET` is unset.
 ///
-/// Override with `BEARDOG_DEV_DISCOVERY_SOCKET`. Not used in production when
-/// discovery is capability-based (mDNS, registry, Neural API).
-pub const DISCOVERY_SOCKET_DEV_FALLBACK: &str = "/tmp/beardog-discovery";
+/// Equivalent to joining [`std::env::temp_dir`] with `"beardog-discovery"`.
+/// Override the directory only with `BEARDOG_DEV_DISCOVERY_SOCKET_DIR` (optional).
+#[must_use]
+pub fn discovery_socket_dev_fallback_path() -> String {
+    let name = "beardog-discovery";
+    if let Ok(dir) = std::env::var("BEARDOG_DEV_DISCOVERY_SOCKET_DIR") {
+        return std::path::PathBuf::from(dir)
+            .join(name)
+            .to_string_lossy()
+            .into_owned();
+    }
+    std::env::temp_dir()
+        .join(name)
+        .to_string_lossy()
+        .into_owned()
+}
 
 /// Discover IPC socket path via capability-based discovery
 ///

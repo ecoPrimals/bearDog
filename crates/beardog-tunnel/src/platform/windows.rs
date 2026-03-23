@@ -142,7 +142,8 @@ mod tests {
 
     #[test]
     fn test_named_pipe_format() {
-        let endpoint = WindowsSocket::create_endpoint("beardog").unwrap();
+        let endpoint =
+            WindowsSocket::create_endpoint("beardog").expect("Windows named pipe endpoint");
         match endpoint {
             SocketEndpoint::NamedPipe(name) => {
                 assert!(name.contains(r"pipe\biomeos_beardog") || name.contains("biomeos_beardog"));
@@ -154,8 +155,8 @@ mod tests {
 
     #[test]
     fn test_environment_variable_override() {
-        let endpoint =
-            create_endpoint_with("beardog", Some(r"\\.\pipe\test_override"), None).unwrap();
+        let endpoint = create_endpoint_with("beardog", Some(r"\\.\pipe\test_override"), None)
+            .expect("create_endpoint_with BEARDOG_PIPE override");
 
         match endpoint {
             SocketEndpoint::NamedPipe(name) => {
@@ -168,7 +169,8 @@ mod tests {
 
     #[test]
     fn test_biomeos_pipe_dir() {
-        let endpoint = create_endpoint_with("beardog", None, Some(r"\\.\pipe\custom")).unwrap();
+        let endpoint = create_endpoint_with("beardog", None, Some(r"\\.\pipe\custom"))
+            .expect("create_endpoint_with BIOMEOS_PIPE_DIR");
 
         match endpoint {
             SocketEndpoint::NamedPipe(name) => {
@@ -183,7 +185,8 @@ mod tests {
     #[test]
     fn test_primal_name_variations() {
         for primal in &["alpha", "beta", "gamma", "delta", "epsilon"] {
-            let endpoint = WindowsSocket::create_endpoint(primal).unwrap();
+            let endpoint =
+                WindowsSocket::create_endpoint(primal).expect("Windows endpoint for primal");
             match endpoint {
                 SocketEndpoint::NamedPipe(name) => {
                     assert!(name.contains(primal));

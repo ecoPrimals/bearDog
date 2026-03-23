@@ -380,7 +380,7 @@ mod tests {
         // Register a user first
         handler
             .register_user("alice", "SecurePass456!", vec!["admin".to_string()])
-            .unwrap();
+            .expect("register_user in test");
 
         // Authenticate with correct credentials
         let result = handler.authenticate("alice:SecurePass456!").await;
@@ -389,7 +389,7 @@ mod tests {
             "Authentication should succeed with correct credentials"
         );
 
-        let session = result.unwrap();
+        let session = result.expect("authenticate in test");
         assert_eq!(session.user_id, "alice");
         assert!(!session.token.is_empty());
         assert_eq!(session.permissions, vec!["admin".to_string()]);
@@ -402,7 +402,7 @@ mod tests {
 
         handler
             .register_user("bob", "CorrectPass789!", vec!["user".to_string()])
-            .unwrap();
+            .expect("register_user in test");
 
         let result = handler.authenticate("bob:WrongPassword!").await;
         assert!(
@@ -434,7 +434,7 @@ mod tests {
 
         handler
             .register_user("charlie", "Pass123!", vec![])
-            .unwrap();
+            .expect("register_user in test");
 
         // Attempt 3 failed logins
         for _ in 0..3 {
@@ -456,7 +456,7 @@ mod tests {
 
         handler
             .register_user("david", "SecurePass!", vec![])
-            .unwrap();
+            .expect("register_user in test");
 
         // Failed attempt
         let _ = handler.authenticate("david:wrong").await;
@@ -486,7 +486,7 @@ mod tests {
 
         let result = handler.validate_session("test-token-123");
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().user_id, "eve");
+        assert_eq!(result.expect("validate_session in test").user_id, "eve");
     }
 
     #[test]
@@ -605,7 +605,7 @@ mod tests {
 
         let result = handler.extract_user_id("username:password");
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "username");
+        assert_eq!(result.expect("extract_user_id in test"), "username");
     }
 
     #[test]
@@ -615,6 +615,6 @@ mod tests {
 
         let result = handler.extract_user_id("user@example.com:pass:with:colons");
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "user@example.com");
+        assert_eq!(result.expect("extract_user_id in test"), "user@example.com");
     }
 }

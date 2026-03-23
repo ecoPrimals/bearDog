@@ -450,7 +450,7 @@ impl PortDiscoverer {
 ///     None,                  // No config file value
 ///     8080,                  // Default fallback
 ///     PortDiscoveryConfig::default(),
-/// ).await.unwrap();
+/// ).await.expect("hierarchical port discovery");
 /// # }
 /// ```
 pub async fn discover_port_hierarchical(
@@ -544,7 +544,7 @@ mod tests {
         let result = discoverer.discover().await;
 
         assert!(result.is_ok(), "Should find available port in range");
-        let port = result.unwrap();
+        let port = result.expect("system query finds port in range");
         // Modern idiomatic: Use range contains
         assert!((58000..=58100).contains(&port));
     }
@@ -577,7 +577,11 @@ mod tests {
         )
         .await;
 
-        assert_eq!(result.unwrap(), 12345, "CLI override should win");
+        assert_eq!(
+            result.expect("hierarchical discovery with CLI override"),
+            12345,
+            "CLI override should win"
+        );
     }
 
     #[tokio::test]
@@ -594,7 +598,11 @@ mod tests {
         )
         .await;
 
-        assert_eq!(result.unwrap(), 9090, "Should fall back to default");
+        assert_eq!(
+            result.expect("hierarchical discovery falls back to default"),
+            9090,
+            "Should fall back to default"
+        );
     }
 
     #[test]
@@ -646,7 +654,7 @@ mod tests {
             },
         )
         .await
-        .unwrap();
+        .expect("hierarchical uses config when env unset");
         assert_eq!(port, 1111);
     }
 
@@ -663,7 +671,7 @@ mod tests {
             },
         )
         .await
-        .unwrap();
+        .expect("hierarchical invalid env falls through to config");
         assert_eq!(port, 3333);
     }
 
@@ -680,7 +688,7 @@ mod tests {
             },
         )
         .await
-        .unwrap();
+        .expect("hierarchical runtime discovery then default");
         assert_eq!(port, 4242);
     }
 
@@ -694,7 +702,10 @@ mod tests {
             discovery_timeout_ms: 100,
         };
         let discoverer = PortDiscoverer::new(config);
-        let p = discoverer.discover().await.unwrap();
+        let p = discoverer
+            .discover()
+            .await
+            .expect("full strategy discovers port when primal fails");
         assert!((58200..=58250).contains(&p));
     }
 
@@ -710,7 +721,7 @@ mod tests {
         let discoverer = PortDiscoverer::new(config);
         let res = discoverer.discover().await;
         assert!(res.is_ok());
-        let p = res.unwrap();
+        let p = res.expect("primal query strategy discovers port");
         assert!((58300..=58320).contains(&p));
     }
 

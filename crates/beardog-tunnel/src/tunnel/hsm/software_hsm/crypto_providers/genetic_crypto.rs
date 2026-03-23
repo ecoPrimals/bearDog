@@ -443,7 +443,7 @@ impl GeneticCryptoProvider {
     /// let provider = GeneticCryptoProvider::new_with_lineage(lineage_seed)?;
     /// let key = provider.derive_lineage_key(
     ///     "beardog-family",
-    ///     "songbird-family",
+    ///     "peer-family",
     ///     b"tunnel-session-12345"
     /// ).await?;
     /// ```

@@ -292,7 +292,7 @@ mod tests {
 
     #[tokio::test]
     async fn audit_logger_with_temp_path_logs_and_exports() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("tempdir for audit logger test");
         let path = dir.path().join("audit_test.log");
         let logger = DefaultAuditLogger::with_storage_path(path)
             .await
@@ -338,7 +338,7 @@ mod tests {
         assert!(json.starts_with(b"[") || !json.is_empty());
 
         let csv = logger.export_audit_log("csv").await.expect("csv export");
-        let csv_s = String::from_utf8(csv).unwrap();
+        let csv_s = String::from_utf8(csv).expect("CSV export must be UTF-8");
         assert!(csv_s.contains("timestamp"));
 
         assert!(logger.export_audit_log("weird").await.is_err());
@@ -346,11 +346,14 @@ mod tests {
 
     #[tokio::test]
     async fn log_audit_event_stub_ok() {
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("tempdir for audit logger test");
         let logger = DefaultAuditLogger::with_storage_path(dir.path().join("a.log"))
             .await
-            .unwrap();
+            .expect("audit logger with temp path");
         let ev = beardog_types::hsm::AuditEvent::default();
-        logger.log_audit_event(ev).await.unwrap();
+        logger
+            .log_audit_event(ev)
+            .await
+            .expect("default audit event should log");
     }
 }

@@ -616,23 +616,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn jsonrpc_discover_returns_capabilities_and_echoes_id() {
+    fn jsonrpc_discover_returns_capabilities_and_echoes_id() -> Result<(), serde_json::Error> {
         let line = r#"{"jsonrpc":"2.0","method":"rpc.discover","id":42}"#;
         let s = handle_jsonrpc_request_line(line).expect("response");
-        let v: serde_json::Value = serde_json::from_str(&s).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&s)?;
         assert_eq!(v["jsonrpc"], "2.0");
         assert_eq!(v["id"], 42);
         assert!(v["result"]["capabilities"].is_array());
         assert_eq!(v["result"]["name"], "BearDog");
+        Ok(())
     }
 
     #[test]
-    fn jsonrpc_unknown_method_returns_error() {
+    fn jsonrpc_unknown_method_returns_error() -> Result<(), serde_json::Error> {
         let line = r#"{"jsonrpc":"2.0","method":"crypto.sign","id":"a"}"#;
         let s = handle_jsonrpc_request_line(line).expect("response");
-        let v: serde_json::Value = serde_json::from_str(&s).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&s)?;
         assert_eq!(v["error"]["code"], -32601);
         assert_eq!(v["id"], "a");
+        Ok(())
     }
 
     #[test]
@@ -642,10 +644,11 @@ mod tests {
     }
 
     #[test]
-    fn jsonrpc_invalid_json_returns_parse_error() {
+    fn jsonrpc_invalid_json_returns_parse_error() -> Result<(), serde_json::Error> {
         let s = handle_jsonrpc_request_line("not json").expect("response");
-        let v: serde_json::Value = serde_json::from_str(&s).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&s)?;
         assert_eq!(v["error"]["code"], -32700);
+        Ok(())
     }
 
     #[test]
@@ -771,7 +774,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_multi_transport_server_jsonrpc_only_ephemeral_port() {
-        let addr: std::net::SocketAddr = "127.0.0.1:0".parse().unwrap();
+        let addr: std::net::SocketAddr = "127.0.0.1:0"
+            .parse()
+            .expect("127.0.0.1:0 parses as SocketAddr");
         let config = MultiTransportConfig {
             tarpc_addr: addr,
             jsonrpc_addr: addr,
@@ -792,8 +797,12 @@ mod tests {
     #[tokio::test]
     async fn test_multi_transport_handle_shutdown_no_receivers() {
         let config = MultiTransportConfig {
-            tarpc_addr: "127.0.0.1:0".parse().unwrap(),
-            jsonrpc_addr: "127.0.0.1:0".parse().unwrap(),
+            tarpc_addr: "127.0.0.1:0"
+                .parse()
+                .expect("127.0.0.1:0 parses as SocketAddr"),
+            jsonrpc_addr: "127.0.0.1:0"
+                .parse()
+                .expect("127.0.0.1:0 parses as SocketAddr"),
             enable_tarpc: false,
             enable_jsonrpc: false,
             shutdown_timeout: std::time::Duration::from_millis(50),

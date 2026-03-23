@@ -223,12 +223,14 @@ mod tests {
             xdg_runtime_dir: Some(xdg_runtime.to_string_lossy().into_owned()),
             ipc_namespace: None,
         };
-        let endpoint = UnixSocket::create_endpoint_with("beardog", &hints).unwrap();
+        let endpoint = UnixSocket::create_endpoint_with("beardog", &hints)
+            .expect("create_endpoint_with valid hints");
 
         match endpoint {
             SocketEndpoint::Filesystem(path) => {
-                assert!(path.to_str().unwrap().contains("biomeos"));
-                assert!(path.to_str().unwrap().ends_with("beardog.sock"));
+                let path_str = path.to_str().expect("socket path is valid UTF-8");
+                assert!(path_str.contains("biomeos"));
+                assert!(path_str.ends_with("beardog.sock"));
                 println!("✅ XDG-compliant path: {}", path.display());
             }
             _ => panic!("Expected Filesystem endpoint"),
@@ -244,11 +246,15 @@ mod tests {
             xdg_runtime_dir: None,
             ipc_namespace: None,
         };
-        let endpoint = UnixSocket::create_endpoint_with("beardog", &hints).unwrap();
+        let endpoint = UnixSocket::create_endpoint_with("beardog", &hints)
+            .expect("create_endpoint_with beardog_socket override");
 
         match endpoint {
             SocketEndpoint::Filesystem(path) => {
-                assert_eq!(path.to_str().unwrap(), "/custom/path/beardog.sock");
+                assert_eq!(
+                    path.to_str().expect("socket path is valid UTF-8"),
+                    "/custom/path/beardog.sock"
+                );
                 println!("✅ Environment override works");
             }
             _ => panic!("Expected Filesystem endpoint"),
@@ -258,11 +264,15 @@ mod tests {
     #[test]
     fn test_primal_name_variations() {
         for primal in &["alpha", "beta", "gamma", "delta", "epsilon"] {
-            let endpoint =
-                UnixSocket::create_endpoint_with(primal, &UnixListenHints::default()).unwrap();
+            let endpoint = UnixSocket::create_endpoint_with(primal, &UnixListenHints::default())
+                .expect("create_endpoint_with default hints");
             match endpoint {
                 SocketEndpoint::Filesystem(path) => {
-                    assert!(path.to_str().unwrap().contains(primal));
+                    assert!(
+                        path.to_str()
+                            .expect("socket path is UTF-8")
+                            .contains(primal)
+                    );
                     println!("✅ {} → {}", primal, path.display());
                 }
                 _ => panic!("Expected Filesystem endpoint"),
@@ -277,10 +287,10 @@ mod tests {
         let endpoint = SocketEndpoint::Filesystem(test_socket.clone().into());
 
         // Bind using universal trait
-        let listener = UnixSocket::bind(&endpoint).unwrap();
+        let listener = UnixSocket::bind(&endpoint).expect("bind test unix socket");
 
         // Verify local_addr works
-        let addr = listener.local_addr().unwrap();
+        let addr = listener.local_addr().expect("listener local_addr");
         assert_eq!(addr, test_socket);
 
         println!("✅ Universal PlatformListener trait working!");

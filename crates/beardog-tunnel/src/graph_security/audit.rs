@@ -543,7 +543,9 @@ mod tests {
     #[tokio::test]
     async fn test_audit_origin_basic() {
         let template_id = "template-123".to_string();
-        let result = audit_origin(&template_id).await.unwrap();
+        let result = audit_origin(&template_id)
+            .await
+            .expect("audit_origin succeeds for test template");
 
         assert!(result.creator.identity_verified);
         assert!(!result.lineage.is_empty());
@@ -553,7 +555,9 @@ mod tests {
     #[tokio::test]
     async fn test_audit_origin_unknown_creator() {
         let template_id = "unknown-template".to_string();
-        let result = audit_origin(&template_id).await.unwrap();
+        let result = audit_origin(&template_id)
+            .await
+            .expect("audit_origin succeeds for unknown creator template");
 
         assert!(!result.creator.identity_verified);
         assert_eq!(result.risk_level, RiskLevel::High);

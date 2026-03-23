@@ -267,7 +267,7 @@ mod tests {
         let trigger = engine.should_evolve(&constraints, created_at);
         assert!(trigger.is_some());
         assert!(matches!(
-            trigger.unwrap(),
+            trigger.expect("should_evolve must return Some for elapsed lifetime"),
             EvolutionTrigger::TimeElapsed { .. }
         ));
     }
@@ -291,7 +291,7 @@ mod tests {
         );
         // Either trust threshold or usage pattern should trigger
         assert!(matches!(
-            trigger.unwrap(),
+            trigger.expect("should_evolve must return Some after heavy usage"),
             EvolutionTrigger::TrustThreshold { .. } | EvolutionTrigger::UsagePattern { .. }
         ));
     }

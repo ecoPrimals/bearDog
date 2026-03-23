@@ -40,8 +40,8 @@
 //!
 //! // Establish tunnel with another primal (existing usage unchanged!)
 //! let params = TunnelEstablishParams {
-//!     peer_id: "songbird-nat0".into(),
-//!     peer_endpoint: "unix:///tmp/songbird-nat0.sock".into(),
+//!     peer_id: "peer-registry-nat0".into(),
+//!     peer_endpoint: "unix:///path/from/capability/discovery.sock".into(),
 //!     trust_mode: None, // Defaults to GeneticLineage
 //!     protocol: None,   // Defaults to BtspNative
 //! };

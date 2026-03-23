@@ -390,8 +390,8 @@ mod tests {
             version: "2.0.0".to_string(),
         };
 
-        let json = serde_json::to_string(&primal).unwrap();
-        let deserialized: PrimalInfo = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&primal).expect("PrimalInfo serializes");
+        let deserialized: PrimalInfo = serde_json::from_str(&json).expect("PrimalInfo roundtrips");
 
         assert_eq!(deserialized.id, primal.id);
         assert_eq!(deserialized.primal_type, primal.primal_type);
@@ -552,8 +552,9 @@ mod tests {
             .with_auth(true);
         meta.extra.insert("k".to_string(), "v".to_string());
 
-        let json = serde_json::to_string(&meta).unwrap();
-        let back: CapabilityMetadata = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&meta).expect("CapabilityMetadata serializes");
+        let back: CapabilityMetadata =
+            serde_json::from_str(&json).expect("CapabilityMetadata roundtrips");
         assert_eq!(back.id, "cap_x");
         assert_eq!(back.version, "1.2.3");
         assert_eq!(back.extra.get("k"), Some(&"v".to_string()));
@@ -578,8 +579,9 @@ mod tests {
             capabilities: vec![CapabilityMetadata::new("c", "1").with_interface("I")],
             discovery,
         };
-        let json = serde_json::to_string(&ad).unwrap();
-        let back: CapabilityAdvertisement = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&ad).expect("CapabilityAdvertisement serializes");
+        let back: CapabilityAdvertisement =
+            serde_json::from_str(&json).expect("CapabilityAdvertisement roundtrips");
         assert_eq!(back.capabilities.len(), 1);
         assert_eq!(back.discovery.http, "http://h/c");
     }

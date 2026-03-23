@@ -438,9 +438,10 @@ pub enum RecommendationPriority {
 mod tests {
     use super::*;
 
-    struct MockLocalOptimizer;
+    /// Returns fixed improvement factors and metrics (test double only).
+    struct DeterministicLocalOptimizer;
 
-    impl LocalOptimizer for MockLocalOptimizer {
+    impl LocalOptimizer for DeterministicLocalOptimizer {
         fn local_genetic_optimization(
             &self,
             request: OptimizationRequest,
@@ -495,8 +496,8 @@ mod tests {
 
     #[test]
     fn test_ecosystem_optimization_service_request() {
-        let service: EcosystemOptimizationService<(), MockLocalOptimizer> =
-            EcosystemOptimizationService::new((), MockLocalOptimizer);
+        let service: EcosystemOptimizationService<(), DeterministicLocalOptimizer> =
+            EcosystemOptimizationService::new((), DeterministicLocalOptimizer);
         let request = OptimizationRequest::GeneticAlgorithm {
             optimization_target: GeneticTarget {
                 max_generations: 100,
@@ -509,16 +510,18 @@ mod tests {
         };
         let result = service.request_optimization(request);
         assert!(result.is_ok());
-        let response = result.unwrap();
+        let response = result.expect("optimization response");
         assert!(response.success);
         assert!((response.improvement_factor - 1.5).abs() < 1e-10);
     }
 
     #[test]
     fn test_ecosystem_optimization_service_capabilities() {
-        let service: EcosystemOptimizationService<(), MockLocalOptimizer> =
-            EcosystemOptimizationService::new((), MockLocalOptimizer);
-        let caps = service.get_available_capabilities().unwrap();
+        let service: EcosystemOptimizationService<(), DeterministicLocalOptimizer> =
+            EcosystemOptimizationService::new((), DeterministicLocalOptimizer);
+        let caps = service
+            .get_available_capabilities()
+            .expect("optimization capabilities");
         assert!(caps.contains(&"Genetic".to_string()));
         assert!(caps.contains(&"Performance".to_string()));
         assert!(caps.contains(&"Cryptographic".to_string()));
@@ -526,9 +529,11 @@ mod tests {
 
     #[test]
     fn test_ecosystem_optimization_service_health() {
-        let service: EcosystemOptimizationService<(), MockLocalOptimizer> =
-            EcosystemOptimizationService::new((), MockLocalOptimizer);
-        let health = service.check_optimization_health().unwrap();
+        let service: EcosystemOptimizationService<(), DeterministicLocalOptimizer> =
+            EcosystemOptimizationService::new((), DeterministicLocalOptimizer);
+        let health = service
+            .check_optimization_health()
+            .expect("optimization health");
         assert_eq!(health.get("status"), Some(&"healthy".to_string()));
     }
 

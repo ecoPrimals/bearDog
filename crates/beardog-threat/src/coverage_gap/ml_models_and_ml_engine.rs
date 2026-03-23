@@ -222,13 +222,19 @@ mod ml_engine_gap_tests {
             description: "test".to_string(),
             data: std::collections::HashMap::new(),
         };
-        engine.predict_threat(&event).await.unwrap();
+        engine
+            .predict_threat(&event)
+            .await
+            .expect("predict threat for cache test");
 
         // Clear the cache - exercises the code path
         engine.clear_cache().await;
 
         // After clearing, a new prediction should still work
-        let pred = engine.predict_threat(&event).await.unwrap();
+        let pred = engine
+            .predict_threat(&event)
+            .await
+            .expect("predict threat after cache clear");
         assert!(pred.confidence > 0.0);
     }
 
@@ -246,7 +252,10 @@ mod ml_engine_gap_tests {
             data: std::collections::HashMap::new(),
         };
 
-        let prediction = engine.predict_threat(&event).await.unwrap();
+        let prediction = engine
+            .predict_threat(&event)
+            .await
+            .expect("predict threat via universal adapter");
         assert_eq!(prediction.confidence, 0.92);
         assert_eq!(prediction.model_version, "beardog-network-v2.0");
         assert!(prediction.reasoning.iter().any(|r| r.contains("Network")));
@@ -267,7 +276,10 @@ mod ml_engine_gap_tests {
         };
 
         // Should fallback to local prediction
-        let prediction = engine.predict_threat(&event).await.unwrap();
+        let prediction = engine
+            .predict_threat(&event)
+            .await
+            .expect("predict threat local fallback");
         assert_eq!(prediction.model_version, "beardog-local-v1.0");
         assert_eq!(prediction.confidence, 0.75);
     }

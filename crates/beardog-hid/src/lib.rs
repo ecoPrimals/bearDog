@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![forbid(unsafe_code)]
 
 //! Pure Rust HID Interface - ecoBin Compliant
 //!

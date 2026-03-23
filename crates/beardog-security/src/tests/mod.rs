@@ -5,6 +5,9 @@
 //! Comprehensive test coverage for security functionality
 
 #[cfg(test)]
+mod crypto_property_tests;
+
+#[cfg(test)]
 mod crypto_primitives_tests;
 
 #[cfg(test)]

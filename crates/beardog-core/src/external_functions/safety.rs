@@ -269,12 +269,14 @@ mod tests {
             required_clearance: SecurityClearance::Public,
             parameter_validation: true,
         };
-        checker.load_policy(policy).unwrap();
-        let policies = checker.list_policies().unwrap();
+        checker
+            .load_policy(policy)
+            .expect("valid test policy should load");
+        let policies = checker.list_policies().expect("list policies after load");
         assert!(policies.contains(&"p1".to_string()));
         let result = checker.remove_policy("p1");
         assert!(result.is_ok());
-        let policies = checker.list_policies().unwrap();
+        let policies = checker.list_policies().expect("list policies after remove");
         assert!(!policies.contains(&"p1".to_string()));
     }
 }

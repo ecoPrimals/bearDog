@@ -137,6 +137,9 @@ impl Default for LoadBalancingAlgorithm {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Mutex;
+
+    static LOAD_BAL_ENV_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn test_default_config() {
@@ -150,10 +153,11 @@ mod tests {
     #[test]
     fn test_algorithm_serialization() {
         let algorithm = LoadBalancingAlgorithm::WeightedRoundRobin;
-        let json = serde_json::to_string(&algorithm).unwrap();
+        let json = serde_json::to_string(&algorithm).expect("serialize load balancing algorithm");
         assert_eq!(json, "\"weighted_round_robin\"");
 
-        let deserialized: LoadBalancingAlgorithm = serde_json::from_str(&json).unwrap();
+        let deserialized: LoadBalancingAlgorithm =
+            serde_json::from_str(&json).expect("deserialize load balancing algorithm");
         assert_eq!(deserialized, algorithm);
     }
 
@@ -173,8 +177,9 @@ mod tests {
                 .collect(),
         };
 
-        let json = serde_json::to_string(&config).unwrap();
-        let deserialized: CanonicalLoadBalancingConfig = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&config).expect("serialize load balancing config");
+        let deserialized: CanonicalLoadBalancingConfig =
+            serde_json::from_str(&json).expect("deserialize load balancing config");
         assert_eq!(deserialized, config);
     }
 
@@ -182,6 +187,33 @@ mod tests {
     fn test_type_alias() {
         // Ensure type alias works correctly
         let _config: LoadBalancingConfig = CanonicalLoadBalancingConfig::default();
+    }
+
+    #[test]
+    fn test_algorithm_from_env_recognizes_aliases() {
+        let _guard = LOAD_BAL_ENV_LOCK
+            .lock()
+            .expect("serialize load balancing env tests");
+
+        std::env::remove_var("BEARDOG_LOAD_BALANCING_ALGORITHM");
+        assert_eq!(
+            LoadBalancingAlgorithm::from_env(),
+            LoadBalancingAlgorithm::RoundRobin
+        );
+
+        std::env::set_var("BEARDOG_LOAD_BALANCING_ALGORITHM", "least_connections");
+        assert_eq!(
+            LoadBalancingAlgorithm::from_env(),
+            LoadBalancingAlgorithm::LeastConnections
+        );
+
+        std::env::set_var("BEARDOG_LOAD_BALANCING_ALGORITHM", "bogus_unknown_value");
+        assert_eq!(
+            LoadBalancingAlgorithm::from_env(),
+            LoadBalancingAlgorithm::RoundRobin
+        );
+
+        std::env::remove_var("BEARDOG_LOAD_BALANCING_ALGORITHM");
     }
 }
 

@@ -427,7 +427,7 @@ mod tests {
 
         let retrieved = registry.get_metadata("test_cap");
         assert!(retrieved.is_some());
-        let retrieved = retrieved.unwrap();
+        let retrieved = retrieved.expect("registered capability has metadata");
         assert_eq!(retrieved.id, "test_cap");
         assert_eq!(retrieved.version, "2.0");
         assert_eq!(retrieved.description, "Test capability");
@@ -450,7 +450,10 @@ mod tests {
         assert_eq!(config.http, format!("{TEST_ALT_HTTP_BASE}/capabilities"));
         assert_eq!(config.ttl, crate::metadata::DEFAULT_DISCOVERY_TTL_SECS);
         assert!(config.mdns.is_some());
-        let mdns = config.mdns.as_ref().unwrap();
+        let mdns = config
+            .mdns
+            .as_ref()
+            .expect("discovery config includes mDNS for this registry setup");
         assert!(
             mdns.contains("7c9e6679-7425-40de-944b-e07fc1f90ae7"),
             "mDNS name should include sovereign instance id: {mdns}"

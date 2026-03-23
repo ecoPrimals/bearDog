@@ -486,7 +486,8 @@ mod tests {
         };
 
         let config = SoloV2Config::default();
-        let provider = SoloV2Provider::new(device_info, config).unwrap();
+        let provider = SoloV2Provider::new(device_info, config)
+            .expect("connected test Solo V2 device should construct");
 
         let info = provider.get_provider_info();
         assert_eq!(info.provider_type, ProviderType::UsbToken);
@@ -505,7 +506,8 @@ mod tests {
         };
 
         let config = SoloV2Config::default();
-        let provider = SoloV2Provider::new(device_info, config).unwrap();
+        let provider = SoloV2Provider::new(device_info, config)
+            .expect("connected test Solo V2 device should construct");
 
         // Test PIN setting
         let result = provider.set_pin("123456".to_string()).await;
@@ -540,7 +542,8 @@ mod tests {
             vendor_id: 0x20a0,
             product_id: 0x42b2,
         };
-        let provider = SoloV2Provider::new(device_info, SoloV2Config::default()).unwrap();
+        let provider = SoloV2Provider::new(device_info, SoloV2Config::default())
+            .expect("connected test Solo V2 device should construct");
         let err = provider
             .sign_with_device("missing-key", b"data")
             .await
@@ -559,7 +562,8 @@ mod tests {
             vendor_id: 0x20a0,
             product_id: 0x42b2,
         };
-        let provider = SoloV2Provider::new(device_info, SoloV2Config::default()).unwrap();
+        let provider = SoloV2Provider::new(device_info, SoloV2Config::default())
+            .expect("connected test Solo V2 device should construct");
         use crate::universal_hsm::traits::UniversalHsmProvider;
         assert!(
             provider
@@ -581,7 +585,8 @@ mod tests {
             vendor_id: 0x20a0,
             product_id: 0x42b2,
         };
-        let provider = SoloV2Provider::new(device_info, SoloV2Config::default()).unwrap();
+        let provider = SoloV2Provider::new(device_info, SoloV2Config::default())
+            .expect("connected test Solo V2 device should construct");
         let err = provider
             .generate_key_on_device(KeyType::Ed25519, "kid".to_string())
             .await

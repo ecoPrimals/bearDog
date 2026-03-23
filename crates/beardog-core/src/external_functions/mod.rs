@@ -105,7 +105,9 @@ mod tests {
     async fn test_registry_creation() {
         let config = ExternalFunctionsRegistryConfig::default();
         let registry = ExternalFunctionRegistry::new(config);
-        let libraries = registry.list_libraries().unwrap();
+        let libraries = registry
+            .list_libraries()
+            .expect("empty registry should list libraries");
         assert!(libraries.is_empty());
     }
 
@@ -113,7 +115,9 @@ mod tests {
     async fn test_registry_library_management() {
         let config = ExternalFunctionsRegistryConfig::default();
         let registry = ExternalFunctionRegistry::new(config);
-        let libraries = registry.list_libraries().unwrap();
+        let libraries = registry
+            .list_libraries()
+            .expect("empty registry should list libraries");
         assert!(libraries.is_empty());
     }
 
@@ -142,11 +146,15 @@ mod tests {
         };
 
         // Load policies
-        checker.load_policy(policy1).unwrap();
-        checker.load_policy(policy2).unwrap();
+        checker
+            .load_policy(policy1)
+            .expect("parameter_validation policy should load");
+        checker
+            .load_policy(policy2)
+            .expect("memory_bounds policy should load");
 
         // Test list_policies
-        let policies = checker.list_policies().unwrap();
+        let policies = checker.list_policies().expect("policies after load");
         assert!(!policies.is_empty());
         assert!(policies.contains(&"parameter_validation".to_string()));
         assert!(policies.contains(&"memory_bounds".to_string()));

@@ -141,7 +141,7 @@ mod tests {
         let cap = Capability::Crypto;
         assert_eq!(cap.as_str(), "crypto");
 
-        let json = serde_json::to_string(&cap).unwrap();
+        let json = serde_json::to_string(&cap).expect("serialize Capability");
         assert_eq!(json, "\"crypto\"");
     }
 
@@ -166,8 +166,8 @@ mod tests {
             Capability::BTSP,
             Capability::Custom("custom".to_string()),
         ] {
-            let json = serde_json::to_string(&cap).unwrap();
-            let restored: Capability = serde_json::from_str(&json).unwrap();
+            let json = serde_json::to_string(&cap).expect("serialize Capability");
+            let restored: Capability = serde_json::from_str(&json).expect("deserialize Capability");
             assert_eq!(cap, restored);
         }
     }
@@ -219,8 +219,8 @@ mod tests {
             available: true,
             metadata: HashMap::new(),
         };
-        let json = serde_json::to_string(&info).unwrap();
-        let restored: ServiceInfo = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&info).expect("serialize ServiceInfo");
+        let restored: ServiceInfo = serde_json::from_str(&json).expect("deserialize ServiceInfo");
         assert_eq!(info.name, restored.name);
         assert!(restored.available);
     }
@@ -228,7 +228,7 @@ mod tests {
     #[test]
     fn test_service_info_default_available() {
         let json = r#"{"name":"x","endpoint":"/x","capabilities":[],"version":"1.0"}"#;
-        let info: ServiceInfo = serde_json::from_str(json).unwrap();
+        let info: ServiceInfo = serde_json::from_str(json).expect("deserialize ServiceInfo");
         assert!(info.available);
     }
 
@@ -244,14 +244,14 @@ mod tests {
             available: false,
             metadata: meta,
         };
-        let json = serde_json::to_string(&info).unwrap();
+        let json = serde_json::to_string(&info).expect("serialize ServiceInfo");
         assert!(json.contains("desc"));
     }
 
     #[test]
     fn test_default_true() {
         let json = r#"{"name":"x","endpoint":"/x","capabilities":[],"version":"1.0"}"#;
-        let info: ServiceInfo = serde_json::from_str(json).unwrap();
+        let info: ServiceInfo = serde_json::from_str(json).expect("deserialize ServiceInfo");
         assert!(info.available);
     }
 }

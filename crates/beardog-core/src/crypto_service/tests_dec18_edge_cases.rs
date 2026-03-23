@@ -97,7 +97,7 @@ async fn test_encrypt_exceeds_max_size() {
         genetic_enabled: false,
         hsm_enabled: false,
     };
-    let service = BearDogCryptoService::new(config).unwrap();
+    let service = BearDogCryptoService::new(config).expect("crypto service with small max data");
 
     // Try to encrypt 2 KB (exceeds limit)
     let too_large = vec![0u8; 2048];
@@ -191,7 +191,7 @@ async fn test_decrypt_with_wrong_key() {
     let encrypted = service
         .encrypt(data, CryptoAlgorithm::Aes256Gcm, encrypt_opts)
         .await
-        .unwrap();
+        .expect("encrypt for decrypt test");
 
     // Try to decrypt with different key
     let decrypt_opts = DecryptOptions {
@@ -217,7 +217,7 @@ async fn test_decrypt_with_corrupted_ciphertext() {
     let mut encrypted = service
         .encrypt(data, CryptoAlgorithm::Aes256Gcm, encrypt_opts.clone())
         .await
-        .unwrap();
+        .expect("encrypt for decrypt test");
 
     // Corrupt the ciphertext
     if !encrypted.ciphertext.is_empty() {
@@ -248,7 +248,7 @@ async fn test_decrypt_with_wrong_aad() {
     let encrypted = service
         .encrypt(data, CryptoAlgorithm::Aes256Gcm, encrypt_opts.clone())
         .await
-        .unwrap();
+        .expect("encrypt for decrypt test");
 
     // Try to decrypt with wrong AAD
     let decrypt_opts = DecryptOptions {
@@ -316,9 +316,8 @@ async fn test_concurrent_encryptions() {
     }
 
     for handle in handles {
-        let result = handle.await;
-        assert!(result.is_ok(), "Concurrent operation should succeed");
-        assert!(result.unwrap().is_ok(), "Encryption should succeed");
+        let join = handle.await.expect("concurrent encrypt task");
+        assert!(join.is_ok(), "Encryption should succeed");
     }
 }
 
@@ -357,12 +356,8 @@ async fn test_concurrent_encrypt_decrypt() {
     }
 
     for handle in handles {
-        let result = handle.await;
-        assert!(result.is_ok(), "Task should complete");
-        assert!(
-            matches!(result.unwrap(), Ok(true)),
-            "Encrypt/decrypt should match"
-        );
+        let join = handle.await.expect("encrypt/decrypt roundtrip task");
+        assert!(matches!(join, Ok(true)), "Encrypt/decrypt should match");
     }
 }
 
@@ -453,7 +448,7 @@ async fn test_service_with_audit_enabled() {
         genetic_enabled: false,
         hsm_enabled: false,
     };
-    let service = BearDogCryptoService::new(config).unwrap();
+    let service = BearDogCryptoService::new(config).expect("crypto service with small max data");
 
     let options = EncryptOptions {
         key_id: "audit-key".to_string(),
@@ -476,7 +471,7 @@ async fn test_service_with_custom_name() {
         genetic_enabled: false,
         hsm_enabled: false,
     };
-    let service = BearDogCryptoService::new(config).unwrap();
+    let service = BearDogCryptoService::new(config).expect("crypto service with small max data");
 
     let result = service.get_health().await;
     assert!(result.is_ok(), "Custom named service should work");
@@ -499,7 +494,7 @@ async fn test_operation_counter_increments() {
     }
 
     // Check that operations were counted
-    let health = service.get_health().await.unwrap();
+    let health = service.get_health().await.expect("crypto service health");
     assert!(
         health.operations_completed >= 10,
         "Operations should be counted"

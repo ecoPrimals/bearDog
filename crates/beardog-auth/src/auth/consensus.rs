@@ -92,7 +92,7 @@ mod tests {
         let result = engine.get_trusted_nodes();
 
         assert!(result.is_ok(), "Should successfully return trusted nodes");
-        let nodes = result.unwrap();
+        let nodes = result.expect("get_trusted_nodes returns Ok");
         assert_eq!(nodes.len(), 3, "Should return 3 default trusted nodes");
         assert_eq!(nodes[0], "node_1");
         assert_eq!(nodes[1], "node_2");
@@ -104,8 +104,12 @@ mod tests {
         let engine = CrossNodeAuthEngine::default();
 
         // Call multiple times to ensure consistency
-        let nodes1 = engine.get_trusted_nodes().unwrap();
-        let nodes2 = engine.get_trusted_nodes().unwrap();
+        let nodes1 = engine
+            .get_trusted_nodes()
+            .expect("get_trusted_nodes first call");
+        let nodes2 = engine
+            .get_trusted_nodes()
+            .expect("get_trusted_nodes second call");
 
         assert_eq!(nodes1, nodes2, "Should return consistent node list");
     }
@@ -113,7 +117,9 @@ mod tests {
     #[test]
     fn test_get_trusted_nodes_not_empty() {
         let engine = CrossNodeAuthEngine::default();
-        let nodes = engine.get_trusted_nodes().unwrap();
+        let nodes = engine
+            .get_trusted_nodes()
+            .expect("get_trusted_nodes not empty test");
 
         assert!(!nodes.is_empty(), "Trusted nodes list should not be empty");
         for node in nodes {
@@ -136,7 +142,10 @@ mod tests {
         let result = engine.validate_consensus(2);
 
         assert!(result.is_ok());
-        assert!(result.unwrap(), "2 approvals should reach consensus");
+        assert!(
+            result.expect("validate_consensus Ok"),
+            "2 approvals should reach consensus"
+        );
     }
 
     #[test]
@@ -145,7 +154,10 @@ mod tests {
         let result = engine.validate_consensus(1);
 
         assert!(result.is_ok());
-        assert!(!result.unwrap(), "1 approval should not reach consensus");
+        assert!(
+            !result.expect("validate_consensus Ok"),
+            "1 approval should not reach consensus"
+        );
     }
 
     #[test]
@@ -155,7 +167,10 @@ mod tests {
         let result = engine.validate_consensus(threshold);
 
         assert!(result.is_ok());
-        assert!(result.unwrap(), "Exact threshold should reach consensus");
+        assert!(
+            result.expect("validate_consensus Ok"),
+            "Exact threshold should reach consensus"
+        );
     }
 
     #[test]
@@ -164,13 +179,18 @@ mod tests {
         let result = engine.validate_consensus(3);
 
         assert!(result.is_ok());
-        assert!(result.unwrap(), "Above threshold should reach consensus");
+        assert!(
+            result.expect("validate_consensus Ok"),
+            "Above threshold should reach consensus"
+        );
     }
 
     #[test]
     fn test_quorum_size() {
         let engine = CrossNodeAuthEngine::default();
-        let quorum = engine.quorum_size().unwrap();
+        let quorum = engine
+            .quorum_size()
+            .expect("quorum_size with default registry");
 
         assert_eq!(quorum, 2, "Quorum should be 2/3 of 3 nodes");
     }
@@ -178,7 +198,9 @@ mod tests {
     #[test]
     fn test_quorum_size_matches_threshold() {
         let engine = CrossNodeAuthEngine::default();
-        let quorum = engine.quorum_size().unwrap();
+        let quorum = engine
+            .quorum_size()
+            .expect("quorum_size matches threshold test");
         let threshold = engine.get_consensus_threshold();
 
         assert_eq!(quorum, threshold, "Quorum and threshold should match");
@@ -191,7 +213,7 @@ mod tests {
 
         assert!(result.is_ok());
         assert!(
-            !result.unwrap(),
+            !result.expect("validate_consensus Ok"),
             "Zero approvals should not reach consensus"
         );
     }
@@ -203,7 +225,7 @@ mod tests {
 
         assert!(result.is_ok());
         assert!(
-            result.unwrap(),
+            result.expect("validate_consensus Ok"),
             "More than threshold should reach consensus"
         );
     }
@@ -221,7 +243,9 @@ mod tests {
     fn test_get_consensus_node_health_found_and_not_found() {
         let engine = CrossNodeAuthEngine::default();
         assert_eq!(
-            engine.get_consensus_node_health("node_1").unwrap(),
+            engine
+                .get_consensus_node_health("node_1")
+                .expect("default node_1 health"),
             ConsensusNodeHealth::Healthy
         );
         let err = engine
@@ -235,9 +259,11 @@ mod tests {
         let mut engine = CrossNodeAuthEngine::default();
         engine
             .set_consensus_node_health("node_1", ConsensusNodeHealth::Degraded)
-            .unwrap();
+            .expect("set node_1 health to Degraded");
         assert_eq!(
-            engine.get_consensus_node_health("node_1").unwrap(),
+            engine
+                .get_consensus_node_health("node_1")
+                .expect("node_1 health after update"),
             ConsensusNodeHealth::Degraded
         );
         let err = engine
@@ -254,16 +280,28 @@ mod tests {
             .get_mut("node_1")
             .expect("default registry")
             .health = ConsensusNodeHealth::Offline;
-        let nodes = engine.get_trusted_nodes().unwrap();
+        let nodes = engine
+            .get_trusted_nodes()
+            .expect("get_trusted_nodes after marking node_1 offline");
         assert_eq!(nodes, vec!["node_2", "node_3"]);
     }
 
     #[test]
     fn test_quorum_size_with_fewer_healthy_nodes() {
         let mut engine = CrossNodeAuthEngine::default();
-        engine.consensus_registry.get_mut("node_1").unwrap().health = ConsensusNodeHealth::Offline;
-        engine.consensus_registry.get_mut("node_2").unwrap().health = ConsensusNodeHealth::Offline;
-        let q = engine.quorum_size().unwrap();
+        engine
+            .consensus_registry
+            .get_mut("node_1")
+            .expect("node_1 in default registry")
+            .health = ConsensusNodeHealth::Offline;
+        engine
+            .consensus_registry
+            .get_mut("node_2")
+            .expect("node_2 in default registry")
+            .health = ConsensusNodeHealth::Offline;
+        let q = engine
+            .quorum_size()
+            .expect("quorum_size with two nodes offline");
         assert_eq!(q, 0);
     }
 
@@ -275,7 +313,9 @@ mod tests {
             .get_mut("node_2")
             .expect("default registry")
             .health = ConsensusNodeHealth::Degraded;
-        let nodes = engine.get_trusted_nodes().unwrap();
+        let nodes = engine
+            .get_trusted_nodes()
+            .expect("get_trusted_nodes after marking node_2 degraded");
         assert_eq!(nodes, vec!["node_1", "node_3"]);
     }
 
@@ -284,8 +324,10 @@ mod tests {
         let mut engine = CrossNodeAuthEngine::default();
         engine
             .register_consensus_node("node_z".to_string(), ConsensusNodeHealth::Healthy)
-            .unwrap();
-        let nodes = engine.get_trusted_nodes().unwrap();
+            .expect("register node_z");
+        let nodes = engine
+            .get_trusted_nodes()
+            .expect("get_trusted_nodes after registering node_z");
         assert_eq!(
             nodes,
             vec![
@@ -295,6 +337,11 @@ mod tests {
                 "node_z".to_string(),
             ]
         );
-        assert_eq!(engine.quorum_size().unwrap(), (4 * 2) / 3);
+        assert_eq!(
+            engine
+                .quorum_size()
+                .expect("quorum_size with four healthy nodes"),
+            (4 * 2) / 3
+        );
     }
 }

@@ -129,10 +129,15 @@ mod tests {
     #[tokio::test]
     async fn test_adapter_default() {
         let adapter = UniversalAdapter::default();
-        let result = adapter
+        let err = adapter
             .discover_capability_endpoint(CapabilityType::Authentication)
-            .await;
-        assert!(result.is_err());
+            .await
+            .expect_err("default adapter has no endpoints");
+        let msg = format!("{err}");
+        assert!(
+            msg.contains("Capability") || msg.contains("available"),
+            "{msg}"
+        );
     }
 
     #[tokio::test]

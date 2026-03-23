@@ -226,16 +226,18 @@ mod tests {
     #[test]
     fn intelligence_mode_json_roundtrip() {
         let m = IntelligenceMode::AutonomousAI;
-        let v = serde_json::to_value(&m).unwrap();
-        let back: IntelligenceMode = serde_json::from_value(v).unwrap();
+        let v = serde_json::to_value(&m).expect("serialize IntelligenceMode");
+        let back: IntelligenceMode =
+            serde_json::from_value(v).expect("deserialize IntelligenceMode");
         assert!(matches!(back, IntelligenceMode::AutonomousAI));
     }
 
     #[test]
     fn learning_algorithm_json_roundtrip() {
         let a = LearningAlgorithm::SupervisedLearning;
-        let s = serde_json::to_string(&a).unwrap();
-        let back: LearningAlgorithm = serde_json::from_str(&s).unwrap();
+        let s = serde_json::to_string(&a).expect("serialize LearningAlgorithm");
+        let back: LearningAlgorithm =
+            serde_json::from_str(&s).expect("deserialize LearningAlgorithm");
         assert!(matches!(back, LearningAlgorithm::SupervisedLearning));
     }
 
@@ -247,8 +249,8 @@ mod tests {
             max_epochs: 10,
             early_stopping: true,
         };
-        let v = serde_json::to_value(&c).unwrap();
-        let back: MLConfig = serde_json::from_value(v).unwrap();
+        let v = serde_json::to_value(&c).expect("serialize MLConfig");
+        let back: MLConfig = serde_json::from_value(v).expect("deserialize MLConfig");
         assert_eq!(back.batch_size, 32);
         assert!(back.early_stopping);
     }
@@ -261,7 +263,8 @@ mod tests {
             max_processing_time_ms: 500,
         };
         let back: DecisionConfig =
-            serde_json::from_str(&serde_json::to_string(&c).unwrap()).unwrap();
+            serde_json::from_str(&serde_json::to_string(&c).expect("serialize DecisionConfig"))
+                .expect("deserialize DecisionConfig");
         assert_eq!(back.max_processing_time_ms, 500);
     }
 

@@ -561,8 +561,8 @@ mod tests {
             TraitCategory::Custom("custom".to_string()),
         ];
         for cat in categories {
-            let json = serde_json::to_string(&cat).unwrap();
-            let _: TraitCategory = serde_json::from_str(&json).unwrap();
+            let json = serde_json::to_string(&cat).expect("serialize trait category");
+            let _: TraitCategory = serde_json::from_str(&json).expect("deserialize trait category");
         }
     }
 
@@ -573,8 +573,9 @@ mod tests {
             EcosystemCapability::Custom("custom".to_string()),
         ];
         for cap in caps {
-            let json = serde_json::to_string(&cap).unwrap();
-            let _: EcosystemCapability = serde_json::from_str(&json).unwrap();
+            let json = serde_json::to_string(&cap).expect("serialize ecosystem capability");
+            let _: EcosystemCapability =
+                serde_json::from_str(&json).expect("deserialize ecosystem capability");
         }
     }
 

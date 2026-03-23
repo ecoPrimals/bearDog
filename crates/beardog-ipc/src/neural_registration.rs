@@ -28,7 +28,7 @@
 //! Neural API translates semantic method names to BearDog's actual method names:
 //!
 //! ```text
-//! Songbird: "crypto.generate_keypair"
+//! Consumer: "crypto.generate_keypair"
 //!   ↓
 //! Neural API: capability.call("crypto", "generate_keypair")
 //!   ↓
@@ -208,7 +208,7 @@ pub struct NeuralApiDiscoveryInputs {
 /// 2. `BIOMEOS_SOCKET_DIR/neural-api.sock` (orchestrator-managed directory)
 /// 3. `XDG_RUNTIME_DIR/biomeos/neural-api.sock`
 /// 4. `/run/user/{uid}/biomeos/neural-api.sock`
-/// 5. `/tmp/biomeos/neural-api.sock` and legacy `/tmp/neural-api.sock`
+/// 5. Platform temp dir: `{temp}/biomeos/neural-api.sock`, `{temp}/neural-api.sock`, optional `BEARDOG_NEURAL_API_LEGACY_SOCKET`
 ///
 /// An empty string in an env field disables auto-registration for that slot (returns `None`).
 #[must_use]
@@ -278,19 +278,25 @@ pub fn discover_neural_api_socket_from_inputs(inputs: &NeuralApiDiscoveryInputs)
         return Some(run_path);
     }
 
-    // Tier 5: /tmp fallback (biomeos namespace first, then legacy)
-    let fallback_paths = [
-        "/tmp/biomeos/neural-api.sock",
-        "/tmp/neural-api.sock",
-        "/tmp/neural-api-nat0.sock",
+    // Tier 5: platform temp dir + optional legacy path (no fixed peer names)
+    let tmp = std::env::temp_dir();
+    let mut fallback_paths: Vec<std::path::PathBuf> = vec![
+        tmp.join("biomeos").join("neural-api.sock"),
+        tmp.join("neural-api.sock"),
     ];
+    if let Ok(extra) = std::env::var("BEARDOG_NEURAL_API_LEGACY_SOCKET")
+        && !extra.is_empty()
+    {
+        fallback_paths.push(std::path::PathBuf::from(extra));
+    }
 
     for path in &fallback_paths {
-        if Path::new(path).exists() {
-            info!("🔍 Found Neural API at fallback path (Tier 5): {}", path);
-            return Some((*path).to_string());
+        if path.exists() {
+            let ps = path.display().to_string();
+            info!("🔍 Found Neural API at fallback path (Tier 5): {}", ps);
+            return Some(ps);
         }
-        debug!("Checked default path (not found): {}", path);
+        debug!("Checked default path (not found): {}", path.display());
     }
 
     info!(
@@ -302,7 +308,7 @@ pub fn discover_neural_api_socket_from_inputs(inputs: &NeuralApiDiscoveryInputs)
 
 /// Resolves the Neural API Unix socket path for IPC registration.
 ///
-/// Resolution order: `NEURAL_API_SOCKET`, then `NEURALS_SOCKET`, then well-known `/tmp` paths.
+/// Resolution order: `NEURAL_API_SOCKET`, then `NEURALS_SOCKET`, then orchestrator/XDG paths, then platform temp fallbacks.
 /// An empty env value disables auto-registration (returns `None`).
 pub fn discover_neural_api_socket() -> Option<String> {
     discover_neural_api_socket_with(
@@ -344,7 +350,9 @@ mod tests {
             }
         });
 
-        let mappings = cap["semantic_mappings"].as_object().unwrap();
+        let mappings = cap["semantic_mappings"]
+            .as_object()
+            .expect("semantic_mappings fixture must be a JSON object");
         assert!(mappings.contains_key("crypto.generate_keypair"));
         assert!(mappings.contains_key("crypto.ecdh_derive"));
         assert!(mappings.contains_key("crypto.encrypt"));

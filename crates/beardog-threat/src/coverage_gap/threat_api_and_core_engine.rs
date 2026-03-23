@@ -37,7 +37,7 @@ mod core_engine_gap_tests {
     fn test_engine_with_ml_enabled() {
         let mut config = ThreatDetectionConfig::default();
         config.ml_enhancement = true;
-        let engine = ThreatDetectionEngine::new(config).unwrap();
+        let engine = ThreatDetectionEngine::new(config).expect("threat engine with ML");
         assert!(engine.ml_engine.is_some());
     }
 
@@ -45,13 +45,14 @@ mod core_engine_gap_tests {
     fn test_engine_without_ml() {
         let mut config = ThreatDetectionConfig::default();
         config.ml_enhancement = false;
-        let engine = ThreatDetectionEngine::new(config).unwrap();
+        let engine = ThreatDetectionEngine::new(config).expect("threat engine without ML");
         assert!(engine.ml_engine.is_none());
     }
 
     #[test]
     fn test_engine_remove_rule_delegates() {
-        let mut engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let mut engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())
+            .expect("default threat detection engine");
         let result = engine.remove_rule("nonexistent");
         assert!(!result);
     }

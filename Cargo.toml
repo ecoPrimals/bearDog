@@ -28,9 +28,8 @@ homepage = "https://beardog.dev"
 documentation = "https://docs.beardog.dev"
 
 [workspace.lints.rust]
-# `deny` at workspace catches most unsafe; individual crate lib.rs files add
-# `#![forbid(unsafe_code)]` (cannot be relaxed).
-unsafe_code = "deny"
+# `forbid` at workspace level — cannot be relaxed by any crate.
+unsafe_code = "forbid"
 missing_docs = "warn"
 deprecated = "warn"
 
@@ -242,15 +241,16 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 
-# Binary target temporarily disabled - needs proper main.rs
-# [[bin]]
-# name = "beardog-server"
-# path = "src/main.rs"
+[[bin]]
+name = "beardog"
+path = "src/main.rs"
 
 [lints]
 workspace = true
 
 [dependencies]
+clap = { workspace = true }
+color-eyre = { workspace = true }
 beardog-core = { workspace = true }
 beardog-config = { workspace = true }
 beardog-types = { workspace = true }

@@ -350,14 +350,14 @@ mod tests {
 
     #[test]
     fn test_secure_enclave_availability_check() {
-        let provider = SafeIosProvider::new().unwrap();
+        let provider = SafeIosProvider::new().expect("SafeIosProvider::new");
         // Should be false in development environment
         assert!(!provider.is_hardware_backed() || cfg!(target_os = "ios"));
     }
 
     #[test]
     fn test_key_generation_requires_secure_enclave() {
-        let provider = SafeIosProvider::new().unwrap();
+        let provider = SafeIosProvider::new().expect("SafeIosProvider::new");
 
         // If Secure Enclave is not available, key generation should fail
         if !provider.is_hardware_backed() {
@@ -368,7 +368,7 @@ mod tests {
 
     #[test]
     fn test_sign_requires_secure_enclave() {
-        let provider = SafeIosProvider::new().unwrap();
+        let provider = SafeIosProvider::new().expect("SafeIosProvider::new");
         let data = b"test data";
 
         // If Secure Enclave is not available, signing should fail
@@ -380,7 +380,7 @@ mod tests {
 
     #[test]
     fn test_capabilities() {
-        let provider = SafeIosProvider::new().unwrap();
+        let provider = SafeIosProvider::new().expect("SafeIosProvider::new");
         let capabilities = provider.capabilities();
 
         assert!(capabilities.contains_key("secure_enclave"));

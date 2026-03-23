@@ -452,8 +452,13 @@ mod tests {
             "data": BASE64.encode(b"")
         });
 
-        let result = handle_sha256(&params).unwrap();
-        let hash = result.get("hash").unwrap().as_str().unwrap();
+        let result =
+            handle_sha256(&params).expect("SHA-256 handler should succeed for empty input");
+        let hash = result
+            .get("hash")
+            .expect("SHA-256 response should contain 'hash'")
+            .as_str()
+            .expect("SHA-256 hash field should be a JSON string");
 
         // Known SHA-256 of empty string
         assert_eq!(
@@ -469,16 +474,35 @@ mod tests {
             "data": BASE64.encode(b"Hello, World!")
         });
 
-        let result = handle_sha256(&params).unwrap();
-        let hash = result.get("hash").unwrap().as_str().unwrap();
+        let result =
+            handle_sha256(&params).expect("SHA-256 handler should succeed for hello world");
+        let hash = result
+            .get("hash")
+            .expect("SHA-256 response should contain 'hash'")
+            .as_str()
+            .expect("SHA-256 hash field should be a JSON string");
 
         // Known SHA-256 of "Hello, World!"
         assert_eq!(
             hash,
             "dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f"
         );
-        assert_eq!(result.get("algorithm").unwrap().as_str().unwrap(), "sha256");
-        assert_eq!(result.get("output_bits").unwrap().as_u64().unwrap(), 256);
+        assert_eq!(
+            result
+                .get("algorithm")
+                .expect("SHA-256 response should contain 'algorithm'")
+                .as_str()
+                .expect("'algorithm' should be a string"),
+            "sha256"
+        );
+        assert_eq!(
+            result
+                .get("output_bits")
+                .expect("SHA-256 response should contain 'output_bits'")
+                .as_u64()
+                .expect("'output_bits' should be a JSON number"),
+            256
+        );
     }
 
     #[test]
@@ -489,16 +513,27 @@ mod tests {
             "data": BASE64.encode(message)
         });
 
-        let result = handle_sha256(&params).unwrap();
-        let hash_hex = result.get("hash").unwrap().as_str().unwrap();
-        let hash_b64 = result.get("hash_base64").unwrap().as_str().unwrap();
+        let result =
+            handle_sha256(&params).expect("SHA-256 handler should succeed for genesis message");
+        let hash_hex = result
+            .get("hash")
+            .expect("SHA-256 response should contain 'hash'")
+            .as_str()
+            .expect("'hash' should be a string");
+        let hash_b64 = result
+            .get("hash_base64")
+            .expect("SHA-256 response should contain 'hash_base64'")
+            .as_str()
+            .expect("'hash_base64' should be a string");
 
         // Verify both hex and base64 outputs are present
         assert_eq!(hash_hex.len(), 64); // 32 bytes = 64 hex chars
         assert!(!hash_b64.is_empty());
 
         // Decode and verify they match
-        let decoded_b64 = BASE64.decode(hash_b64).unwrap();
+        let decoded_b64 = BASE64
+            .decode(hash_b64)
+            .expect("handler-produced hash_base64 should decode as valid base64");
         assert_eq!(hex::encode(&decoded_b64), hash_hex);
     }
 
@@ -509,8 +544,13 @@ mod tests {
             "data": BASE64.encode(b"")
         });
 
-        let result = handle_sha384(&params).unwrap();
-        let hash = result.get("hash").unwrap().as_str().unwrap();
+        let result =
+            handle_sha384(&params).expect("SHA-384 handler should succeed for empty input");
+        let hash = result
+            .get("hash")
+            .expect("SHA-384 response should contain 'hash'")
+            .as_str()
+            .expect("'hash' should be a JSON string");
 
         // Known SHA-384 of empty string
         assert_eq!(
@@ -526,16 +566,35 @@ mod tests {
             "data": BASE64.encode(b"Hello, World!")
         });
 
-        let result = handle_sha384(&params).unwrap();
-        let hash = result.get("hash").unwrap().as_str().unwrap();
+        let result =
+            handle_sha384(&params).expect("SHA-384 handler should succeed for hello world");
+        let hash = result
+            .get("hash")
+            .expect("SHA-384 response should contain 'hash'")
+            .as_str()
+            .expect("'hash' should be a JSON string");
 
         // Known SHA-384 of "Hello, World!"
         assert_eq!(
             hash,
             "5485cc9b3365b4305dfb4e8337e0a598a574f8242bf17289e0dd6c20a3cd44a089de16ab4ab308f63e44b1170eb5f515"
         );
-        assert_eq!(result.get("algorithm").unwrap().as_str().unwrap(), "sha384");
-        assert_eq!(result.get("output_bits").unwrap().as_u64().unwrap(), 384);
+        assert_eq!(
+            result
+                .get("algorithm")
+                .expect("SHA-384 response should contain 'algorithm'")
+                .as_str()
+                .expect("'algorithm' should be a string"),
+            "sha384"
+        );
+        assert_eq!(
+            result
+                .get("output_bits")
+                .expect("SHA-384 response should contain 'output_bits'")
+                .as_u64()
+                .expect("'output_bits' should be a JSON number"),
+            384
+        );
     }
 
     #[test]
@@ -545,8 +604,13 @@ mod tests {
             "data": BASE64.encode(b"")
         });
 
-        let result = handle_sha512(&params).unwrap();
-        let hash = result.get("hash").unwrap().as_str().unwrap();
+        let result =
+            handle_sha512(&params).expect("SHA-512 handler should succeed for empty input");
+        let hash = result
+            .get("hash")
+            .expect("SHA-512 response should contain 'hash'")
+            .as_str()
+            .expect("'hash' should be a JSON string");
 
         // Known SHA-512 of empty string
         assert_eq!(
@@ -562,16 +626,35 @@ mod tests {
             "data": BASE64.encode(b"Hello, World!")
         });
 
-        let result = handle_sha512(&params).unwrap();
-        let hash = result.get("hash").unwrap().as_str().unwrap();
+        let result =
+            handle_sha512(&params).expect("SHA-512 handler should succeed for hello world");
+        let hash = result
+            .get("hash")
+            .expect("SHA-512 response should contain 'hash'")
+            .as_str()
+            .expect("'hash' should be a JSON string");
 
         // Known SHA-512 of "Hello, World!"
         assert_eq!(
             hash,
             "374d794a95cdcfd8b35993185fef9ba368f160d8daf432d08ba9f1ed1e5abe6cc69291e0fa2fe0006a52570ef18c19def4e617c33ce52ef0a6e5fbe318cb0387"
         );
-        assert_eq!(result.get("algorithm").unwrap().as_str().unwrap(), "sha512");
-        assert_eq!(result.get("output_bits").unwrap().as_u64().unwrap(), 512);
+        assert_eq!(
+            result
+                .get("algorithm")
+                .expect("SHA-512 response should contain 'algorithm'")
+                .as_str()
+                .expect("'algorithm' should be a string"),
+            "sha512"
+        );
+        assert_eq!(
+            result
+                .get("output_bits")
+                .expect("SHA-512 response should contain 'output_bits'")
+                .as_u64()
+                .expect("'output_bits' should be a JSON number"),
+            512
+        );
     }
 
     #[test]
@@ -609,21 +692,39 @@ mod tests {
             "data": BASE64.encode(test_data)
         });
 
-        let sha256_result = handle_sha256(&params).unwrap();
-        let sha384_result = handle_sha384(&params).unwrap();
-        let sha512_result = handle_sha512(&params).unwrap();
+        let sha256_result =
+            handle_sha256(&params).expect("SHA-256 should succeed for consistency data");
+        let sha384_result =
+            handle_sha384(&params).expect("SHA-384 should succeed for consistency data");
+        let sha512_result =
+            handle_sha512(&params).expect("SHA-512 should succeed for consistency data");
 
         // Verify output lengths
         assert_eq!(
-            sha256_result.get("hash").unwrap().as_str().unwrap().len(),
+            sha256_result
+                .get("hash")
+                .expect("SHA-256 response should contain 'hash'")
+                .as_str()
+                .expect("'hash' should be a string")
+                .len(),
             64
         ); // 32 bytes
         assert_eq!(
-            sha384_result.get("hash").unwrap().as_str().unwrap().len(),
+            sha384_result
+                .get("hash")
+                .expect("SHA-384 response should contain 'hash'")
+                .as_str()
+                .expect("'hash' should be a string")
+                .len(),
             96
         ); // 48 bytes
         assert_eq!(
-            sha512_result.get("hash").unwrap().as_str().unwrap().len(),
+            sha512_result
+                .get("hash")
+                .expect("SHA-512 response should contain 'hash'")
+                .as_str()
+                .expect("'hash' should be a string")
+                .len(),
             128
         ); // 64 bytes
 
@@ -638,8 +739,12 @@ mod tests {
     #[test]
     fn test_sha1_hello_world() {
         let params = json!({"data": BASE64.encode(b"Hello, World!")});
-        let result = handle_sha1(&params).unwrap();
-        let hash = result.get("hash").unwrap().as_str().unwrap();
+        let result = handle_sha1(&params).expect("SHA-1 handler should succeed for hello world");
+        let hash = result
+            .get("hash")
+            .expect("SHA-1 response should contain 'hash'")
+            .as_str()
+            .expect("'hash' should be a JSON string");
 
         // Known SHA-1 hash
         assert_eq!(hash, "0a0a9f2a6772942557ab5355d76af442f8f65e01");
@@ -650,8 +755,12 @@ mod tests {
     #[test]
     fn test_sha1_empty() {
         let params = json!({"data": BASE64.encode(b"")});
-        let result = handle_sha1(&params).unwrap();
-        let hash = result.get("hash").unwrap().as_str().unwrap();
+        let result = handle_sha1(&params).expect("SHA-1 handler should succeed for empty input");
+        let hash = result
+            .get("hash")
+            .expect("SHA-1 response should contain 'hash'")
+            .as_str()
+            .expect("'hash' should be a JSON string");
         assert_eq!(hash, "da39a3ee5e6b4b0d3255bfef95601890afd80709");
     }
 
@@ -660,8 +769,13 @@ mod tests {
     #[test]
     fn test_sha3_256_hello_world() {
         let params = json!({"data": BASE64.encode(b"Hello, World!")});
-        let result = handle_sha3_256(&params).unwrap();
-        let hash = result.get("hash").unwrap().as_str().unwrap();
+        let result =
+            handle_sha3_256(&params).expect("SHA3-256 handler should succeed for hello world");
+        let hash = result
+            .get("hash")
+            .expect("SHA3-256 response should contain 'hash'")
+            .as_str()
+            .expect("'hash' should be a JSON string");
 
         // Known SHA3-256 hash
         assert_eq!(
@@ -674,8 +788,13 @@ mod tests {
     #[test]
     fn test_sha3_256_empty() {
         let params = json!({"data": BASE64.encode(b"")});
-        let result = handle_sha3_256(&params).unwrap();
-        let hash = result.get("hash").unwrap().as_str().unwrap();
+        let result =
+            handle_sha3_256(&params).expect("SHA3-256 handler should succeed for empty input");
+        let hash = result
+            .get("hash")
+            .expect("SHA3-256 response should contain 'hash'")
+            .as_str()
+            .expect("'hash' should be a JSON string");
         assert_eq!(
             hash,
             "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a"
@@ -686,10 +805,17 @@ mod tests {
     fn test_sha3_vs_sha2_different() {
         // SHA3 and SHA2 produce different hashes
         let data = BASE64.encode(b"test");
-        let sha2 = handle_sha256(&json!({"data": &data})).unwrap();
-        let sha3 = handle_sha3_256(&json!({"data": &data})).unwrap();
+        let sha2 = handle_sha256(&json!({"data": &data}))
+            .expect("SHA-256 should succeed for sha2 vs sha3 comparison");
+        let sha3 = handle_sha3_256(&json!({"data": &data}))
+            .expect("SHA3-256 should succeed for sha2 vs sha3 comparison");
 
-        assert_ne!(sha2.get("hash").unwrap(), sha3.get("hash").unwrap());
+        assert_ne!(
+            sha2.get("hash")
+                .expect("SHA-256 response should contain 'hash'"),
+            sha3.get("hash")
+                .expect("SHA3-256 response should contain 'hash'")
+        );
     }
 
     // Tor v3 Onion Address Tests (February 7, 2026)
@@ -702,15 +828,27 @@ mod tests {
             "public_key": BASE64.encode(&test_pubkey)
         });
 
-        let result = handle_derive_onion_address(&params).unwrap();
+        let result = handle_derive_onion_address(&params)
+            .expect("onion derivation should succeed for 32-byte test public key");
 
         // Verify onion address format
-        let onion_address = result.get("onion_address").unwrap().as_str().unwrap();
+        let onion_address = result
+            .get("onion_address")
+            .expect("response should contain 'onion_address'")
+            .as_str()
+            .expect("'onion_address' should be a string");
         assert!(onion_address.ends_with(".onion"));
         assert_eq!(onion_address.len(), 62); // 56 chars + ".onion" (6 chars)
 
         // Verify version is 3
-        assert_eq!(result.get("version").unwrap().as_u64().unwrap(), 3);
+        assert_eq!(
+            result
+                .get("version")
+                .expect("response should contain 'version'")
+                .as_u64()
+                .expect("'version' should be a JSON number"),
+            3
+        );
 
         // Verify checksum is present
         assert!(result.get("checksum").is_some());
@@ -724,12 +862,22 @@ mod tests {
             "public_key": BASE64.encode(&test_pubkey)
         });
 
-        let result1 = handle_derive_onion_address(&params).unwrap();
-        let result2 = handle_derive_onion_address(&params).unwrap();
+        let result1 = handle_derive_onion_address(&params)
+            .expect("first onion derivation should succeed for fixed public key");
+        let result2 = handle_derive_onion_address(&params)
+            .expect("second onion derivation should succeed for same public key");
 
         assert_eq!(
-            result1.get("onion_address").unwrap().as_str().unwrap(),
-            result2.get("onion_address").unwrap().as_str().unwrap()
+            result1
+                .get("onion_address")
+                .expect("first result should contain 'onion_address'")
+                .as_str()
+                .expect("'onion_address' should be a string"),
+            result2
+                .get("onion_address")
+                .expect("second result should contain 'onion_address'")
+                .as_str()
+                .expect("'onion_address' should be a string")
         );
     }
 
@@ -767,8 +915,13 @@ mod tests {
             "public_key": BASE64.encode(&test_pubkey)
         });
 
-        let result = handle_derive_onion_address(&params).unwrap();
-        let onion_address = result.get("onion_address").unwrap().as_str().unwrap();
+        let result = handle_derive_onion_address(&params)
+            .expect("onion derivation should succeed for high-byte test key");
+        let onion_address = result
+            .get("onion_address")
+            .expect("response should contain 'onion_address'")
+            .as_str()
+            .expect("'onion_address' should be a string");
 
         // Remove ".onion" suffix and verify lowercase
         let addr_part = &onion_address[..56];

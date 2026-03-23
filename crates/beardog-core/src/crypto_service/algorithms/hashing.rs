@@ -273,15 +273,15 @@ mod tests {
         let key = b"secret key";
         let data = b"message to authenticate";
 
-        let mac = hmac_sha256(key, data).unwrap();
+        let mac = hmac_sha256(key, data).expect("hmac_sha256 in test");
         assert_eq!(mac.len(), 32);
 
         // Same key and data produce same MAC
-        let mac2 = hmac_sha256(key, data).unwrap();
+        let mac2 = hmac_sha256(key, data).expect("hmac_sha256 in test");
         assert_eq!(mac, mac2);
 
         // Different key produces different MAC
-        let mac3 = hmac_sha256(b"different key", data).unwrap();
+        let mac3 = hmac_sha256(b"different key", data).expect("hmac_sha256 in test");
         assert_ne!(mac, mac3);
     }
 
@@ -291,15 +291,15 @@ mod tests {
         let salt = b"optional salt";
         let info = b"application context";
 
-        let key1 = hkdf_sha256(ikm, salt, info, 32).unwrap();
+        let key1 = hkdf_sha256(ikm, salt, info, 32).expect("hkdf_sha256 in test");
         assert_eq!(key1.len(), 32);
 
         // Can derive keys of different lengths
-        let key2 = hkdf_sha256(ikm, salt, info, 64).unwrap();
+        let key2 = hkdf_sha256(ikm, salt, info, 64).expect("hkdf_sha256 in test");
         assert_eq!(key2.len(), 64);
 
         // Different info produces different keys
-        let key3 = hkdf_sha256(ikm, salt, b"different context", 32).unwrap();
+        let key3 = hkdf_sha256(ikm, salt, b"different context", 32).expect("hkdf_sha256 in test");
         assert_ne!(key1, key3);
     }
 
@@ -308,16 +308,17 @@ mod tests {
         let password = b"super secret password";
         let salt = [7u8; 16];
 
-        let hash = hash_password_argon2(password, &salt).unwrap();
+        let hash = hash_password_argon2(password, &salt).expect("hash_password_argon2 in test");
         assert!(!hash.is_empty());
 
         // Same password and salt produce same hash
-        let hash2 = hash_password_argon2(password, &salt).unwrap();
+        let hash2 = hash_password_argon2(password, &salt).expect("hash_password_argon2 in test");
         assert_eq!(hash, hash2);
 
         // Different salt produces different hash
         let different_salt = [9u8; 16];
-        let hash3 = hash_password_argon2(password, &different_salt).unwrap();
+        let hash3 =
+            hash_password_argon2(password, &different_salt).expect("hash_password_argon2 in test");
         assert_ne!(hash, hash3);
     }
 }

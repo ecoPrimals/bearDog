@@ -65,6 +65,7 @@
 //! # }
 //! ```
 
+use beardog_config::domains::network_ports::DEFAULT_API_PORT;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::discovery::{UniversalCapabilityType, UniversalServiceDescriptor};
 
@@ -73,9 +74,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-
-/// Default API port when `BEARDOG_API_PORT` is not set.
-const DEFAULT_API_PORT: u16 = 8080;
 
 /// Inputs for [`PrimalIdentity::from_inputs`] (no environment reads).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -391,7 +389,11 @@ impl PrimalDiscovery {
                         } else {
                             Endpoint {
                                 protocol: Protocol::Http,
-                                host: "localhost".to_string(),
+                                host: std::env::var("BEARDOG_DISCOVERY_HOST_FALLBACK")
+                                    .unwrap_or_else(|_| {
+                                        beardog_config::domains::network_addresses::DEFAULT_EXTERNAL_HOST
+                                            .to_string()
+                                    }),
                                 port: mdns_primal.port,
                                 path: None,
                             }
@@ -698,7 +700,8 @@ mod tests {
             beardog_primal_type: Some("beardog".to_string()),
             ..Default::default()
         };
-        let identity = PrimalIdentity::from_inputs(&inputs).unwrap();
+        let identity =
+            PrimalIdentity::from_inputs(&inputs).expect("PrimalIdentity::from_inputs in test");
 
         assert_eq!(identity.name, "test-primal");
         assert_eq!(identity.primal_type, "beardog");
@@ -710,11 +713,15 @@ mod tests {
 
     #[tokio::test]
     async fn test_discovery_no_hardcoded_addresses() {
-        let identity = PrimalIdentity::from_inputs(&PrimalIdentityEnvInputs::default()).unwrap();
+        let identity = PrimalIdentity::from_inputs(&PrimalIdentityEnvInputs::default())
+            .expect("default PrimalIdentityEnvInputs");
         let discovery = PrimalDiscovery::new(identity);
 
         // Discovery should work WITHOUT hardcoded addresses
-        let hsm_primals = discovery.discover_by_capability("hsm").await.unwrap();
+        let hsm_primals = discovery
+            .discover_by_capability("hsm")
+            .await
+            .expect("discover_by_capability hsm in test");
 
         // May be empty if no HSM primals discovered (correct behavior)
         // Should NOT fall back to hardcoded addresses
@@ -728,7 +735,8 @@ mod tests {
             beardog_api_port: Some(9090),
             ..Default::default()
         };
-        let identity = PrimalIdentity::from_inputs(&inputs).unwrap();
+        let identity =
+            PrimalIdentity::from_inputs(&inputs).expect("PrimalIdentity::from_inputs in test");
 
         // Endpoints should come from config/env, not hardcoded
         for endpoint in &identity.endpoints {
@@ -762,7 +770,9 @@ mod tests {
     #[test]
     fn test_primal_self_knowledge_new() {
         let psk = PrimalSelfKnowledge::new();
-        let identity = psk.get_self_identity().unwrap();
+        let identity = psk
+            .get_self_identity()
+            .expect("get_self_identity for new PrimalSelfKnowledge");
         assert!(!identity.is_empty());
         assert_eq!(psk.get_known_primal_count(), 1);
     }

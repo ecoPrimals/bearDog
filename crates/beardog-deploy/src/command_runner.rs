@@ -2,7 +2,8 @@
 
 //! Pluggable command execution for [`crate::device::DeviceManager`].
 //!
-//! Tests inject `MockAdbCommandRunner` so the suite never blocks on `adb`.
+//! Production uses [`SystemCommandRunner`]. Unit tests use `MockAdbCommandRunner` from the
+//! `command_runner::mock` submodule (compiled only under `#[cfg(test)]`) so the suite never shells out to `adb`.
 
 use std::io;
 use std::process::{Command, Output};
@@ -62,9 +63,7 @@ impl CommandRunner for SystemCommandRunner {
     }
 }
 
-/// Test-only mock implementations for ADB command execution.
-///
-/// Test-only mock implementations for ADB command execution.
+/// Test-only ADB-shaped [`CommandRunner`] (no subprocess; deterministic stdout).
 #[cfg(test)]
 pub(crate) mod mock {
     use super::*;
@@ -84,11 +83,48 @@ pub(crate) mod mock {
         })
     }
 
+    fn exit_fail() -> std::process::ExitStatus {
+        static FAIL: OnceLock<std::process::ExitStatus> = OnceLock::new();
+        *FAIL.get_or_init(|| {
+            if cfg!(windows) {
+                std::process::Command::new("cmd")
+                    .args(["/C", "exit", "1"])
+                    .status()
+            } else {
+                std::process::Command::new("false").status()
+            }
+            .expect("exit status")
+        })
+    }
+
     /// Mock ADB responses for tests (no subprocess, no `adb` on PATH required).
-    #[derive(Debug, Clone, Default)]
+    #[derive(Debug, Clone)]
     pub struct MockAdbCommandRunner {
         /// When true, `adb devices -l` returns no devices (exercises env fallback).
         pub empty_devices: bool,
+        /// `adb install` exits non-zero (deployment error path).
+        pub fail_adb_install: bool,
+        /// `adb logcat -d` snapshot exits non-zero.
+        pub fail_logcat_snapshot: bool,
+        /// `adb shell getprop` exits non-zero.
+        pub fail_getprop: bool,
+        /// `install` stdout omits `Success` (exercises `deploy_to_android` ambiguous output path).
+        pub install_stdout_without_success_marker: bool,
+        /// `run_bounded` logcat follow returns `TimedOut` (exercises logcat follow timeout branch).
+        pub logcat_follow_yields_timeout: bool,
+    }
+
+    impl Default for MockAdbCommandRunner {
+        fn default() -> Self {
+            Self {
+                empty_devices: false,
+                fail_adb_install: false,
+                fail_logcat_snapshot: false,
+                fail_getprop: false,
+                install_stdout_without_success_marker: false,
+                logcat_follow_yields_timeout: false,
+            }
+        }
     }
 
     impl MockAdbCommandRunner {
@@ -97,6 +133,11 @@ pub(crate) mod mock {
         pub const fn new() -> Self {
             Self {
                 empty_devices: false,
+                fail_adb_install: false,
+                fail_logcat_snapshot: false,
+                fail_getprop: false,
+                install_stdout_without_success_marker: false,
+                logcat_follow_yields_timeout: false,
             }
         }
 
@@ -105,6 +146,11 @@ pub(crate) mod mock {
         pub const fn empty_devices() -> Self {
             Self {
                 empty_devices: true,
+                fail_adb_install: false,
+                fail_logcat_snapshot: false,
+                fail_getprop: false,
+                install_stdout_without_success_marker: false,
+                logcat_follow_yields_timeout: false,
             }
         }
     }
@@ -117,7 +163,7 @@ pub(crate) mod mock {
                     "mock only supports adb",
                 ));
             }
-            mock_adb_output(self.empty_devices, args)
+            mock_adb_output(self, args)
         }
 
         fn run_bounded(
@@ -132,7 +178,17 @@ pub(crate) mod mock {
                     "mock only supports adb",
                 ));
             }
-            let _ = args;
+            if self.logcat_follow_yields_timeout
+                && args.len() >= 3
+                && args[0] == "-s"
+                && args[2] == "logcat"
+                && !args.iter().any(|a| *a == "-d")
+            {
+                return Err(io::Error::new(
+                    io::ErrorKind::TimedOut,
+                    "mock logcat follow timeout",
+                ));
+            }
             Ok(Output {
                 status: exit_ok(),
                 stdout: vec![],
@@ -141,9 +197,9 @@ pub(crate) mod mock {
         }
     }
 
-    fn mock_adb_output(empty_devices: bool, args: &[&str]) -> Result<Output, io::Error> {
+    fn mock_adb_output(runner: &MockAdbCommandRunner, args: &[&str]) -> Result<Output, io::Error> {
         if args.len() >= 2 && args[0] == "devices" && args[1] == "-l" {
-            let stdout = if empty_devices {
+            let stdout = if runner.empty_devices {
                 b"List of devices attached\n\n".to_vec()
             } else {
                 b"List of devices attached\nemulator-5554\tdevice\n".to_vec()
@@ -156,6 +212,13 @@ pub(crate) mod mock {
         }
 
         if args.len() >= 5 && args[0] == "-s" && args[2] == "shell" && args[3] == "getprop" {
+            if runner.fail_getprop {
+                return Ok(Output {
+                    status: exit_fail(),
+                    stdout: vec![],
+                    stderr: b"getprop failed".to_vec(),
+                });
+            }
             let prop = args.get(4).copied().unwrap_or("");
             let val = match prop {
                 "ro.build.version.sdk" => "33",
@@ -186,9 +249,21 @@ pub(crate) mod mock {
         }
 
         if args.len() >= 4 && args[0] == "-s" && args[2] == "install" {
+            if runner.fail_adb_install {
+                return Ok(Output {
+                    status: exit_fail(),
+                    stdout: vec![],
+                    stderr: b"INSTALL_FAILED".to_vec(),
+                });
+            }
+            let stdout = if runner.install_stdout_without_success_marker {
+                b"Installed without expected marker line\n".to_vec()
+            } else {
+                b"Success\n".to_vec()
+            };
             return Ok(Output {
                 status: exit_ok(),
-                stdout: b"Success\n".to_vec(),
+                stdout,
                 stderr: vec![],
             });
         }
@@ -202,6 +277,14 @@ pub(crate) mod mock {
         }
 
         if args.len() >= 3 && args[0] == "-s" && args[2] == "logcat" {
+            let is_snapshot = args.iter().any(|a| *a == "-d");
+            if is_snapshot && runner.fail_logcat_snapshot {
+                return Ok(Output {
+                    status: exit_fail(),
+                    stdout: vec![],
+                    stderr: b"logcat failed".to_vec(),
+                });
+            }
             return Ok(Output {
                 status: exit_ok(),
                 stdout: vec![],

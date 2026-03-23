@@ -571,6 +571,7 @@ impl TimeoutPolicy for CanonicalTimeoutConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::canonical::traits::TimeoutPolicy;
 
     #[test]
     fn test_default_config() {
@@ -651,8 +652,49 @@ mod tests {
     #[test]
     fn test_serialization() {
         let config = CanonicalTimeoutConfig::default();
-        let json = serde_json::to_string(&config).unwrap();
-        let deserialized: CanonicalTimeoutConfig = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&config).expect("CanonicalTimeoutConfig serializes");
+        let deserialized: CanonicalTimeoutConfig =
+            serde_json::from_str(&json).expect("CanonicalTimeoutConfig roundtrips");
         assert_eq!(config, deserialized);
+    }
+
+    #[test]
+    fn test_validation_zero_write_timeout() {
+        let mut config = CanonicalTimeoutConfig::default();
+        config.write_timeout = Duration::from_secs(0);
+        let err = config.validate().expect_err("write timeout zero");
+        assert!(err.contains("write_timeout"));
+    }
+
+    #[test]
+    fn test_validation_zero_keepalive_when_set() {
+        let mut config = CanonicalTimeoutConfig::default();
+        config.keepalive_timeout = Some(Duration::from_secs(0));
+        let err = config.validate().expect_err("keepalive zero");
+        assert!(err.contains("keepalive_timeout"));
+    }
+
+    #[test]
+    fn test_timeout_policy_trait_validate_rejects_zero_connect() {
+        let mut config = CanonicalTimeoutConfig::default();
+        config.connect_timeout = Duration::from_secs(0);
+        let err = TimeoutPolicy::validate(&config).expect_err("trait validate");
+        assert!(err.contains("Connection timeout") || err.contains("zero"));
+    }
+
+    #[test]
+    fn test_timeout_policy_trait_validate_operation_lt_connect() {
+        let mut config = CanonicalTimeoutConfig::default();
+        config.connect_timeout = Duration::from_secs(10);
+        config.operation_timeout = Duration::from_secs(5);
+        let err = TimeoutPolicy::validate(&config).expect_err("operation < connect");
+        assert!(err.contains("Operation timeout"));
+    }
+
+    #[test]
+    fn test_timeout_policy_is_production_ready_false_for_bad_connect() {
+        let mut config = CanonicalTimeoutConfig::default();
+        config.connect_timeout = Duration::from_millis(100);
+        assert!(!TimeoutPolicy::is_production_ready(&config));
     }
 }

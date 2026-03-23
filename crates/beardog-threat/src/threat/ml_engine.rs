@@ -470,8 +470,14 @@ mod tests {
             data: std::collections::HashMap::new(),
         };
 
-        let pred1 = engine.predict_threat(&event).await.unwrap();
-        let pred2 = engine.predict_threat(&event).await.unwrap();
+        let pred1 = engine
+            .predict_threat(&event)
+            .await
+            .expect("predict_threat in test");
+        let pred2 = engine
+            .predict_threat(&event)
+            .await
+            .expect("predict_threat in test");
 
         assert_eq!(pred1.confidence, pred2.confidence);
         assert_eq!(pred1.risk_level, pred2.risk_level);
@@ -645,7 +651,10 @@ mod tests {
             data: std::collections::HashMap::new(),
         };
 
-        let pred = engine.predict_threat(&event).await.unwrap();
+        let pred = engine
+            .predict_threat(&event)
+            .await
+            .expect("predict_threat in test");
         assert!(matches!(
             pred.risk_level,
             RiskLevel::Critical | RiskLevel::High
@@ -665,7 +674,10 @@ mod tests {
             data: std::collections::HashMap::new(),
         };
 
-        let pred = engine.predict_threat(&event).await.unwrap();
+        let pred = engine
+            .predict_threat(&event)
+            .await
+            .expect("predict_threat in test");
         assert!(matches!(
             pred.risk_level,
             RiskLevel::High | RiskLevel::Critical
@@ -702,7 +714,10 @@ mod tests {
             data: std::collections::HashMap::new(),
         };
 
-        let pred = engine.predict_threat(&event).await.unwrap();
+        let pred = engine
+            .predict_threat(&event)
+            .await
+            .expect("predict_threat in test");
         assert!(!pred.reasoning.is_empty());
         assert!(pred.reasoning[0].contains("Local heuristic analysis"));
     }
@@ -720,7 +735,10 @@ mod tests {
             data: std::collections::HashMap::new(),
         };
 
-        let pred = engine.predict_threat(&event).await.unwrap();
+        let pred = engine
+            .predict_threat(&event)
+            .await
+            .expect("predict_threat in test");
         assert!(pred.processing_time_ms >= 0);
     }
 

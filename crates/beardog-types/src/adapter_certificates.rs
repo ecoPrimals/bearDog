@@ -28,7 +28,7 @@
 //! ```rust,ignore
 //! // Issue certificate from key
 //! let certificate = key.issue_adapter_certificate(
-//!     "beardog-adapters::songbird::network",
+//!     "beardog-adapters::{adapter}::network",
 //!     AdapterClassification::Human,
 //!     Duration::hours(24),
 //! )?;
@@ -113,7 +113,7 @@ pub struct AdapterUnlockCertificate {
     /// Genetic key that issued this certificate
     pub issuer_key_id: String,
 
-    /// Target adapter (e.g., "beardog-adapters::songbird::network")
+    /// Target adapter id (orchestrator-specific; from discovery / manifest, not hardcoded here)
     ///
     /// Format: `crate::module::submodule`
     pub adapter_id: String,
@@ -238,7 +238,7 @@ impl AdapterUnlockCertificate {
     /// # Example
     ///
     /// ```rust,ignore
-    /// let result = certificate.verify(Some("beardog-adapters::songbird::network"))?;
+    /// let result = certificate.verify(Some("beardog-adapters::peer-network::network"))?;
     /// match result {
     ///     CertificateVerificationResult::Valid => {
     ///         // Proceed with operation
@@ -533,14 +533,24 @@ mod tests {
 
         let expired = CertificateVerificationResult::Expired;
         assert!(!expired.is_valid());
-        assert!(expired.error_message().unwrap().contains("expired"));
+        assert!(
+            expired
+                .error_message()
+                .expect("Expired variant has error message")
+                .contains("expired")
+        );
 
         let wrong_adapter = CertificateVerificationResult::WrongAdapter {
             expected: "adapter-a".to_string(),
             found: "adapter-b".to_string(),
         };
         assert!(!wrong_adapter.is_valid());
-        assert!(wrong_adapter.error_message().unwrap().contains("adapter-a"));
+        assert!(
+            wrong_adapter
+                .error_message()
+                .expect("WrongAdapter variant has error message")
+                .contains("adapter-a")
+        );
     }
 
     #[test]

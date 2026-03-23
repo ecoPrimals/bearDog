@@ -31,13 +31,14 @@ use {
 // Core types and configuration
 pub mod types;
 
-// Property implementations (mock fixtures in `mock_implementations`; crate gated in lib.rs)
+// Property implementations (test fixtures in `mock_implementations`; crate gated in lib.rs)
 /// REST-style validation properties built on [`PropertyBasedTestFramework`].
 pub mod api_properties;
 /// TOML/config parsing and defaulting properties.
 pub mod config_properties;
-/// Mock crypto round-trip and error properties.
+/// Crypto-shaped property tests using deterministic test helpers from `mock_implementations`.
 pub mod crypto_properties;
+/// Deterministic non-crypto helpers for property tests (see module docs in `mock_implementations.rs`).
 pub mod mock_implementations;
 
 // Re-export primary types for convenient access

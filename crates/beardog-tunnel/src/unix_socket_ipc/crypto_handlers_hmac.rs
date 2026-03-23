@@ -245,11 +245,18 @@ mod tests {
             "message": message
         });
 
-        let result = handle_hmac_sha384(&params).unwrap();
-        let mac = result.get("mac").unwrap().as_str().unwrap();
+        let result = handle_hmac_sha384(&params).expect("HMAC-SHA384 handler should succeed");
+        let mac = result
+            .get("mac")
+            .expect("mac field present")
+            .as_str()
+            .expect("mac should be string");
 
         assert_eq!(mac.len(), 96); // 384 bits = 96 hex chars
-        assert_eq!(result.get("algorithm").unwrap(), "HMAC-SHA384");
+        assert_eq!(
+            result.get("algorithm").expect("algorithm field present"),
+            "HMAC-SHA384"
+        );
     }
 
     #[test]
@@ -258,8 +265,8 @@ mod tests {
         let message = BASE64.encode(b"message");
         let params = json!({"key": &key, "message": &message});
 
-        let result1 = handle_hmac_sha384(&params).unwrap();
-        let result2 = handle_hmac_sha384(&params).unwrap();
+        let result1 = handle_hmac_sha384(&params).expect("HMAC-SHA384 deterministic run 1");
+        let result2 = handle_hmac_sha384(&params).expect("HMAC-SHA384 deterministic run 2");
 
         assert_eq!(result1.get("mac"), result2.get("mac"));
     }
@@ -273,11 +280,18 @@ mod tests {
             "message": message
         });
 
-        let result = handle_hmac_sha512(&params).unwrap();
-        let mac = result.get("mac").unwrap().as_str().unwrap();
+        let result = handle_hmac_sha512(&params).expect("HMAC-SHA512 handler should succeed");
+        let mac = result
+            .get("mac")
+            .expect("mac field present")
+            .as_str()
+            .expect("mac should be string");
 
         assert_eq!(mac.len(), 128); // 512 bits = 128 hex chars
-        assert_eq!(result.get("algorithm").unwrap(), "HMAC-SHA512");
+        assert_eq!(
+            result.get("algorithm").expect("algorithm field present"),
+            "HMAC-SHA512"
+        );
     }
 
     #[test]
@@ -294,8 +308,8 @@ mod tests {
             "message": &message
         });
 
-        let result1 = handle_hmac_sha512(&params1).unwrap();
-        let result2 = handle_hmac_sha512(&params2).unwrap();
+        let result1 = handle_hmac_sha512(&params1).expect("HMAC-SHA512 key1");
+        let result2 = handle_hmac_sha512(&params2).expect("HMAC-SHA512 key2");
 
         assert_ne!(result1.get("mac"), result2.get("mac"));
     }
@@ -309,11 +323,18 @@ mod tests {
             "message": message
         });
 
-        let result = handle_hmac_blake3(&params).unwrap();
-        let mac = result.get("mac").unwrap().as_str().unwrap();
+        let result = handle_hmac_blake3(&params).expect("HMAC-Blake3 handler should succeed");
+        let mac = result
+            .get("mac")
+            .expect("mac field present")
+            .as_str()
+            .expect("mac should be string");
 
         assert_eq!(mac.len(), 64); // 256 bits = 64 hex chars
-        assert_eq!(result.get("algorithm").unwrap(), "HMAC-Blake3");
+        assert_eq!(
+            result.get("algorithm").expect("algorithm field present"),
+            "HMAC-Blake3"
+        );
     }
 
     #[test]
@@ -322,8 +343,8 @@ mod tests {
         let message = BASE64.encode(b"msg");
         let params = json!({"key": &key, "message": &message});
 
-        let result1 = handle_hmac_blake3(&params).unwrap();
-        let result2 = handle_hmac_blake3(&params).unwrap();
+        let result1 = handle_hmac_blake3(&params).expect("Blake3 deterministic run 1");
+        let result2 = handle_hmac_blake3(&params).expect("Blake3 deterministic run 2");
 
         assert_eq!(result1.get("mac"), result2.get("mac"));
     }
@@ -335,27 +356,27 @@ mod tests {
         let message = BASE64.encode(b"message");
 
         let sha384_mac = handle_hmac_sha384(&json!({"key": &key, "message": &message}))
-            .unwrap()
+            .expect("sha384 cross-algo")
             .get("mac")
-            .unwrap()
+            .expect("mac")
             .as_str()
-            .unwrap()
+            .expect("mac str")
             .to_string();
 
         let sha512_mac = handle_hmac_sha512(&json!({"key": &key, "message": &message}))
-            .unwrap()
+            .expect("sha512 cross-algo")
             .get("mac")
-            .unwrap()
+            .expect("mac")
             .as_str()
-            .unwrap()
+            .expect("mac str")
             .to_string();
 
         let blake3_mac = handle_hmac_blake3(&json!({"key": &key, "message": &message}))
-            .unwrap()
+            .expect("blake3 cross-algo")
             .get("mac")
-            .unwrap()
+            .expect("mac")
             .as_str()
-            .unwrap()
+            .expect("mac str")
             .to_string();
 
         // All different algorithms should produce different MACs
@@ -369,7 +390,8 @@ mod tests {
         let key = BASE64.encode(b"key");
         let message = BASE64.encode(b"");
 
-        let result = handle_hmac_sha384(&json!({"key": &key, "message": &message})).unwrap();
+        let result = handle_hmac_sha384(&json!({"key": &key, "message": &message}))
+            .expect("HMAC-SHA384 empty message");
         assert!(result.get("mac").is_some());
     }
 }

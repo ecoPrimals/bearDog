@@ -406,20 +406,26 @@ mod tests {
             convergence_threshold: 0.001,
         };
         let optimizer = GeneticOptimizer::with_config(config);
-        let _ = optimizer.initialize().await.unwrap();
+        let _ = optimizer
+            .initialize()
+            .await
+            .expect("genetic optimizer initialize");
         // Simple fitness: sum of squares (maximize)
         let result = optimizer
             .optimize(|x| x.iter().map(|v| v * v).sum::<f64>())
             .await;
         assert!(result.is_ok());
-        let solution = result.unwrap();
+        let solution = result.expect("genetic optimizer optimize");
         assert_eq!(solution.len(), 10);
     }
 
     #[tokio::test]
     async fn test_get_optimization_state() {
         let optimizer = GeneticOptimizer::new();
-        let _ = optimizer.initialize().await.unwrap();
+        let _ = optimizer
+            .initialize()
+            .await
+            .expect("genetic optimizer initialize");
         let state = optimizer.get_optimization_state().await;
         assert_eq!(state.current_generation, 0);
     }
@@ -434,8 +440,14 @@ mod tests {
             convergence_threshold: 0.001,
         };
         let optimizer = GeneticOptimizer::with_config(config);
-        let _ = optimizer.initialize().await.unwrap();
-        let _ = optimizer.optimize(|x| x.iter().sum::<f64>()).await.unwrap();
+        let _ = optimizer
+            .initialize()
+            .await
+            .expect("genetic optimizer initialize");
+        let _ = optimizer
+            .optimize(|x| x.iter().sum::<f64>())
+            .await
+            .expect("genetic optimizer optimize");
         let history = optimizer.get_performance_history().await;
         assert!(!history.is_empty());
     }

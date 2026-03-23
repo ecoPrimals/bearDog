@@ -403,7 +403,11 @@ mod tests {
 
         // Offspring should inherit BOTH immutable paths (union)
         assert!(result.success);
-        let offspring_constraints = result.genetics.constraints.as_ref().unwrap();
+        let offspring_constraints = result
+            .genetics
+            .constraints
+            .as_ref()
+            .expect("offspring merged constraints from parents");
         assert_eq!(
             offspring_constraints.data_access.immutable_paths.len(),
             2,
@@ -464,7 +468,11 @@ mod tests {
         let result = engine.spawn_genetics(request)?;
 
         // Offspring should inherit ALL co-signers
-        let offspring_constraints = result.genetics.constraints.as_ref().unwrap();
+        let offspring_constraints = result
+            .genetics
+            .constraints
+            .as_ref()
+            .expect("offspring merged constraints from parents");
         assert_eq!(offspring_constraints.co_signers.len(), 2);
         assert!(
             offspring_constraints
@@ -517,7 +525,11 @@ mod tests {
         let result = engine.spawn_genetics(request)?;
 
         // Offspring should require audit if ANY parent requires it
-        let offspring_constraints = result.genetics.constraints.as_ref().unwrap();
+        let offspring_constraints = result
+            .genetics
+            .constraints
+            .as_ref()
+            .expect("offspring merged constraints from parents");
         assert!(
             offspring_constraints.data_access.audit_required,
             "Should inherit audit requirement from any parent"
@@ -603,7 +615,11 @@ mod tests {
         let result = engine.spawn_genetics(request)?;
 
         // Offspring should inherit ALL mandatory encryption keys
-        let offspring_constraints = result.genetics.constraints.as_ref().unwrap();
+        let offspring_constraints = result
+            .genetics
+            .constraints
+            .as_ref()
+            .expect("offspring merged constraints from parents");
         assert_eq!(
             offspring_constraints.data_access.mandatory_encryption.len(),
             2

@@ -195,15 +195,21 @@ mod tests {
 
         // Verify correct trust levels are returned
         assert_eq!(
-            verifier.verify(PhysicalChannelType::HardwareKey).unwrap(),
+            verifier
+                .verify(PhysicalChannelType::HardwareKey)
+                .expect("hardware key channel should verify under default genesis config"),
             TrustLevel::Maximum
         );
         assert_eq!(
-            verifier.verify(PhysicalChannelType::Nfc).unwrap(),
+            verifier
+                .verify(PhysicalChannelType::Nfc)
+                .expect("NFC channel should verify under default genesis config"),
             TrustLevel::High
         );
         assert_eq!(
-            verifier.verify(PhysicalChannelType::Bluetooth).unwrap(),
+            verifier
+                .verify(PhysicalChannelType::Bluetooth)
+                .expect("Bluetooth channel should verify under default genesis config"),
             TrustLevel::Medium
         );
     }

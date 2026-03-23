@@ -298,15 +298,19 @@ mod tests {
         let mut registry = ExternalFunctionRegistry::default();
         let result = registry.load_library("/path/to/lib.so");
         assert!(result.is_ok());
-        let lib_id = result.unwrap();
+        let lib_id = result.expect("load_library returned Ok in test");
         assert!(!lib_id.is_empty());
     }
 
     #[test]
     fn test_registry_get_library_info() {
         let mut registry = ExternalFunctionRegistry::default();
-        let lib_id = registry.load_library("/test/lib.so").unwrap();
-        let info = registry.get_library_info(&lib_id).unwrap();
+        let lib_id = registry
+            .load_library("/test/lib.so")
+            .expect("load test library");
+        let info = registry
+            .get_library_info(&lib_id)
+            .expect("get_library_info after load");
         assert_eq!(info.id, lib_id);
         assert_eq!(info.name, "lib.so");
     }
@@ -321,7 +325,9 @@ mod tests {
     #[test]
     fn test_registry_unload_library() {
         let mut registry = ExternalFunctionRegistry::default();
-        let lib_id = registry.load_library("/path/lib.so").unwrap();
+        let lib_id = registry
+            .load_library("/path/lib.so")
+            .expect("load library for unload test");
         let result = registry.unload_library(&lib_id);
         assert!(result.is_ok());
     }
@@ -336,16 +342,22 @@ mod tests {
     #[test]
     fn test_registry_list_libraries() {
         let mut registry = ExternalFunctionRegistry::default();
-        registry.load_library("/a/lib1.so").unwrap();
-        registry.load_library("/b/lib2.so").unwrap();
-        let libs = registry.list_libraries().unwrap();
+        registry
+            .load_library("/a/lib1.so")
+            .expect("load lib1 for list test");
+        registry
+            .load_library("/b/lib2.so")
+            .expect("load lib2 for list test");
+        let libs = registry.list_libraries().expect("list_libraries");
         assert_eq!(libs.len(), 2);
     }
 
     #[test]
     fn test_registry_register_function() {
         let mut registry = ExternalFunctionRegistry::default();
-        let lib_id = registry.load_library("/path/lib.so").unwrap();
+        let lib_id = registry
+            .load_library("/path/lib.so")
+            .expect("load library for register_function test");
         let sig = make_signature();
         let meta = make_metadata();
         let result = registry.register_function(&lib_id, "my_func", sig, meta);
@@ -364,10 +376,12 @@ mod tests {
     #[test]
     fn test_registry_unregister_function() {
         let mut registry = ExternalFunctionRegistry::default();
-        let lib_id = registry.load_library("/path/lib.so").unwrap();
+        let lib_id = registry
+            .load_library("/path/lib.so")
+            .expect("load library for unregister_function test");
         let func_id = registry
             .register_function(&lib_id, "my_func", make_signature(), make_metadata())
-            .unwrap();
+            .expect("register_function");
         let result = registry.unregister_function(&func_id);
         assert!(result.is_ok());
     }
@@ -382,11 +396,15 @@ mod tests {
     #[test]
     fn test_registry_get_function_info() {
         let mut registry = ExternalFunctionRegistry::default();
-        let lib_id = registry.load_library("/path/lib.so").unwrap();
+        let lib_id = registry
+            .load_library("/path/lib.so")
+            .expect("load library for get_function_info test");
         let func_id = registry
             .register_function(&lib_id, "my_func", make_signature(), make_metadata())
-            .unwrap();
-        let info = registry.get_function_info(&func_id).unwrap();
+            .expect("register_function");
+        let info = registry
+            .get_function_info(&func_id)
+            .expect("get_function_info");
         assert_eq!(info.name, "my_func");
     }
 
@@ -400,14 +418,16 @@ mod tests {
     #[test]
     fn test_registry_call_function() {
         let mut registry = ExternalFunctionRegistry::default();
-        let lib_id = registry.load_library("/path/lib.so").unwrap();
+        let lib_id = registry
+            .load_library("/path/lib.so")
+            .expect("load library for call_function test");
         let func_id = registry
             .register_function(&lib_id, "my_func", make_signature(), make_metadata())
-            .unwrap();
+            .expect("register_function");
         let params = vec![];
         let result = registry.call_function(&func_id, params);
         assert!(result.is_ok());
-        let res = result.unwrap();
+        let res = result.expect("call_function Ok");
         assert!(res.success);
     }
 

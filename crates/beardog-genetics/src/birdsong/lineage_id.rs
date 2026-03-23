@@ -95,7 +95,7 @@ impl LineageID {
     /// use beardog_genetics::birdsong::LineageID;
     ///
     /// let id = LineageID::new("lineage:tower:1735000000:abc123:node-1");
-    /// let (service_type, timestamp, hash, node_id) = id.parse().unwrap();
+    /// let (service_type, timestamp, hash, node_id) = id.parse().expect("valid lineage ID");
     /// assert_eq!(service_type, "tower");
     /// assert_eq!(node_id, "node-1");
     /// ```
@@ -132,7 +132,7 @@ impl LineageID {
     /// use beardog_genetics::birdsong::LineageID;
     ///
     /// let id = LineageID::new("lineage:tower:1735000000:abc123:node-1");
-    /// assert_eq!(id.node_id().unwrap(), "node-1");
+    /// assert_eq!(id.node_id().expect("valid lineage ID"), "node-1");
     /// ```
     pub fn node_id(&self) -> Result<String, BearDogError> {
         let (_, _, _, node_id) = self.parse()?;
@@ -147,7 +147,7 @@ impl LineageID {
     /// use beardog_genetics::birdsong::LineageID;
     ///
     /// let id = LineageID::new("lineage:tower:1735000000:abc123:node-1");
-    /// assert_eq!(id.service_type().unwrap(), "tower");
+    /// assert_eq!(id.service_type().expect("valid lineage ID"), "tower");
     /// ```
     pub fn service_type(&self) -> Result<String, BearDogError> {
         let (service_type, _, _, _) = self.parse()?;
@@ -203,7 +203,8 @@ mod tests {
     #[test]
     fn test_lineage_id_parse() {
         let id = LineageID::new("lineage:tower:1735000000:abc123def456:node-1");
-        let (service_type, timestamp, hash, node_id) = id.parse().unwrap();
+        let (service_type, timestamp, hash, node_id) =
+            id.parse().expect("parse canonical lineage ID in test");
 
         assert_eq!(service_type, "tower");
         assert_eq!(timestamp, 1735000000);
@@ -214,13 +215,19 @@ mod tests {
     #[test]
     fn test_lineage_id_node_id() {
         let id = LineageID::new("lineage:mesh-relay:1735000000:xyz789:relay-node-1");
-        assert_eq!(id.node_id().unwrap(), "relay-node-1");
+        assert_eq!(
+            id.node_id().expect("node_id from mesh-relay lineage ID"),
+            "relay-node-1"
+        );
     }
 
     #[test]
     fn test_lineage_id_service_type() {
         let id = LineageID::new("lineage:mesh-relay:1735000000:xyz789:node-1");
-        assert_eq!(id.service_type().unwrap(), "mesh-relay");
+        assert_eq!(
+            id.service_type().expect("service_type from lineage ID"),
+            "mesh-relay"
+        );
     }
 
     #[test]
@@ -232,8 +239,8 @@ mod tests {
     #[test]
     fn test_lineage_id_roundtrip() {
         let id1 = LineageID::format("tower", "chain-1", "node-1");
-        let node_id = id1.node_id().unwrap();
-        let service_type = id1.service_type().unwrap();
+        let node_id = id1.node_id().expect("node_id roundtrip");
+        let service_type = id1.service_type().expect("service_type roundtrip");
 
         assert_eq!(node_id, "node-1");
         assert_eq!(service_type, "tower");

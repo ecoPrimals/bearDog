@@ -27,7 +27,7 @@
 //! # Environment Variables
 //!
 //! - `BEARDOG_API_HOST` - API server hostname (default: 127.0.0.1)
-//! - `BEARDOG_BIND_ADDRESS` - Server bind address (default: 127.0.0.1)
+//! - `BEARDOG_LISTEN_ADDR` / `BEARDOG_BIND_ADDRESS` - Server bind address (default: 127.0.0.1)
 //! - `BEARDOG_EXTERNAL_HOST` - External/public hostname (default: localhost)
 //! - `BEARDOG_MULTICAST_ADDRESS` - Multicast address for discovery (fallback: see `DEFAULT_MULTICAST_ADDRESS`)
 //! - `BEARDOG_LOCALHOST_IPV4` / `BEARDOG_LOCALHOST_IPV6` / `BEARDOG_WILDCARD_IPV4` - Override standard IP literals used in config (optional)
@@ -98,6 +98,9 @@ pub const DEFAULT_API_HOST: &str = "127.0.0.1";
 
 /// **Fallback** bind address when `BEARDOG_BIND_ADDRESS` and config omit a value (loopback, dev-oriented).
 pub const DEFAULT_BIND_ADDRESS: &str = "127.0.0.1";
+
+/// **Fallback** listen address (alias of [`DEFAULT_BIND_ADDRESS`]) for `BEARDOG_LISTEN_ADDR` documentation parity.
+pub const DEFAULT_LISTEN_ADDR: &str = DEFAULT_BIND_ADDRESS;
 
 /// **Fallback** external hostname when `BEARDOG_EXTERNAL_HOST` is unset.
 pub const DEFAULT_EXTERNAL_HOST: &str = "localhost";
@@ -209,7 +212,8 @@ impl NetworkAddressesConfig {
     pub fn from_env() -> Self {
         Self {
             api_host: std::env::var("BEARDOG_API_HOST").unwrap_or_else(|_| default_api_host()),
-            bind_address: std::env::var("BEARDOG_BIND_ADDRESS")
+            bind_address: std::env::var("BEARDOG_LISTEN_ADDR")
+                .or_else(|_| std::env::var("BEARDOG_BIND_ADDRESS"))
                 .unwrap_or_else(|_| default_bind_address()),
             external_host: std::env::var("BEARDOG_EXTERNAL_HOST")
                 .unwrap_or_else(|_| default_external_host()),

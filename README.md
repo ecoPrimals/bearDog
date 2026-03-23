@@ -8,7 +8,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 30 | **Tests**: 9,500+ | **Coverage**: 86.8%
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 30 | **Tests**: 14,029 | **Coverage**: 86.1%
 
 ---
 
@@ -169,8 +169,8 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
 | **Files > 1000 LOC** | 0 (production code) |
-| **Tests** | 15,723+ (fully concurrent, zero sleeps in non-chaos) |
-| **Coverage** | 85.1% line (llvm-cov, 102,969/121,020 lines) |
+| **Tests** | 14,029 (fully concurrent, zero sleeps in non-chaos) |
+| **Coverage** | 86.1% line (llvm-cov, 102,969/121,020 lines) |
 | **Serial Tests** | 0 (`#[serial]` fully eliminated) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |
 | **License** | AGPL-3.0-only (SPDX headers on all .rs files) |
@@ -181,7 +181,7 @@ Key material is derived from the family seed. A BearDog instance serving family 
 - **Pure Rust** — No C dependencies anywhere (ecoBin compliant)
 - **Dependency Injection** — Config flows through parameters, `Default` is pure (no I/O), `from_env()` at boundaries only
 - **Zero Hardcoding** — Environment variables and capability-based discovery
-- **Result<T, E>** — Zero `unwrap()` in production code; `expect()` only on infallible operations with documented invariants
+- **Result<T, E>** — `expect()` with documented invariants preferred over `unwrap()` in production; actively migrating remaining instances
 - **Fully Concurrent Tests** — Zero `#[serial]`, zero sleeps in non-chaos tests
 - **< 1000 LOC** — File size discipline across all production .rs files
 - **Workspace Lints** — Centralized clippy pedantic + nursery + cast lints

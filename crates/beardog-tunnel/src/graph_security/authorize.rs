@@ -228,7 +228,7 @@ mod tests {
 
         let result = authorize_modification(&"alice".to_string(), &graph, &modification)
             .await
-            .unwrap();
+            .expect("authorize_modification succeeds for owner add-node");
 
         assert!(result.authorized);
         assert_eq!(result.risk_level, RiskLevel::Low);
@@ -247,7 +247,7 @@ mod tests {
 
         let result = authorize_modification(&"bob".to_string(), &graph, &modification)
             .await
-            .unwrap();
+            .expect("authorize_modification succeeds for non-owner denial case");
 
         assert!(!result.authorized);
         assert!(result.blocked_reason.is_some());
@@ -266,7 +266,7 @@ mod tests {
 
         let result = authorize_modification(&"alice".to_string(), &graph, &modification)
             .await
-            .unwrap();
+            .expect("authorize_modification succeeds for invalid structure case");
 
         assert!(!result.authorized);
         assert_eq!(result.blocked_reason, Some("invalid_structure".to_string()));
@@ -296,7 +296,7 @@ mod tests {
 
         let result = authorize_modification(&"alice".to_string(), &graph, &modification)
             .await
-            .unwrap();
+            .expect("authorize_modification succeeds for threat-detected case");
 
         assert!(!result.authorized);
         assert_eq!(result.blocked_reason, Some("threat_detected".to_string()));

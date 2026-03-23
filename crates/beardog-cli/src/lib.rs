@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![forbid(unsafe_code)]
 
 //! BearDog CLI Library
 //!
@@ -35,7 +36,7 @@ pub struct ServerArgs {
     ///
     /// Defaults:
     /// - Android: @biomeos_beardog (abstract socket, bypasses SELinux)
-    /// - Linux/macOS: /tmp/beardog.sock (filesystem Unix socket)
+    /// - Linux/macOS: `{temp}/beardog.sock` (platform temp dir + primal name; override dir with `BEARDOG_SOCKET_TMP_DIR` / `BEARDOG_LOCAL_SOCKET_DIR` in client handler)
     /// - Windows: \\.\pipe\biomeos_beardog (named pipe)
     ///
     /// Override with --socket for custom path
@@ -53,7 +54,7 @@ pub struct ServerArgs {
     pub r#abstract: bool,
 
     /// TCP listen address (Tier 2 - Universal fallback)
-    /// Example: --listen 127.0.0.1:9900
+    /// Example: --listen {loopback}:9900 (use `BEARDOG_LISTEN_ADDR` / `BEARDOG_TCP_IPC_PORT` from config for defaults)
     ///
     /// Use for:
     /// - Cross-device communication

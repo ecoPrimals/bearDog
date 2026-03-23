@@ -283,8 +283,10 @@ mod tests {
         let key = [42u8; 32];
         let data = b"Hello, BearDog!";
 
-        let (ciphertext, nonce, tag) = encrypt_aes_256_gcm(data, &key, None).unwrap();
-        let plaintext = decrypt_aes_256_gcm(&ciphertext, &nonce, &tag, &key, None).unwrap();
+        let (ciphertext, nonce, tag) =
+            encrypt_aes_256_gcm(data, &key, None).expect("encrypt_aes_256_gcm in test");
+        let plaintext =
+            decrypt_aes_256_gcm(&ciphertext, &nonce, &tag, &key, None).expect("decrypt in test");
 
         assert_eq!(data, plaintext.as_slice());
     }
@@ -295,8 +297,10 @@ mod tests {
         let data = b"Secret message";
         let aad = b"Additional context";
 
-        let (ciphertext, nonce, tag) = encrypt_aes_256_gcm(data, &key, Some(aad)).unwrap();
-        let plaintext = decrypt_aes_256_gcm(&ciphertext, &nonce, &tag, &key, Some(aad)).unwrap();
+        let (ciphertext, nonce, tag) =
+            encrypt_aes_256_gcm(data, &key, Some(aad)).expect("encrypt_aes_256_gcm in test");
+        let plaintext = decrypt_aes_256_gcm(&ciphertext, &nonce, &tag, &key, Some(aad))
+            .expect("decrypt in test");
 
         assert_eq!(data, plaintext.as_slice());
     }
@@ -306,8 +310,10 @@ mod tests {
         let key = [99u8; 32];
         let data = b"ChaCha test data";
 
-        let (ciphertext, nonce, tag) = encrypt_chacha20_poly1305(data, &key, None).unwrap();
-        let plaintext = decrypt_chacha20_poly1305(&ciphertext, &nonce, &tag, &key, None).unwrap();
+        let (ciphertext, nonce, tag) =
+            encrypt_chacha20_poly1305(data, &key, None).expect("encrypt_chacha20_poly1305 in test");
+        let plaintext = decrypt_chacha20_poly1305(&ciphertext, &nonce, &tag, &key, None)
+            .expect("decrypt_chacha20_poly1305 in test");
 
         assert_eq!(data, plaintext.as_slice());
     }

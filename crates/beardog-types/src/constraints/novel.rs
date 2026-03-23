@@ -558,10 +558,14 @@ mod tests {
             .with_location(my_location)
             .with_env(
                 "alice_location".to_string(),
-                serde_json::to_value(alice_location).unwrap(),
+                serde_json::to_value(alice_location).expect("GeoLocation as JSON value"),
             );
 
-        assert!(constraint.is_satisfied(&context).unwrap());
+        assert!(
+            constraint
+                .is_satisfied(&context)
+                .expect("proximity constraint evaluates")
+        );
     }
 
     #[test]
@@ -575,12 +579,20 @@ mod tests {
         // Test within range
         let context =
             ConstraintContext::new().with_env("temperature".to_string(), serde_json::json!(22.5));
-        assert!(constraint.is_satisfied(&context).unwrap());
+        assert!(
+            constraint
+                .is_satisfied(&context)
+                .expect("environmental constraint in range")
+        );
 
         // Test outside range (too hot)
         let context =
             ConstraintContext::new().with_env("temperature".to_string(), serde_json::json!(30.0));
-        assert!(!constraint.is_satisfied(&context).unwrap());
+        assert!(
+            !constraint
+                .is_satisfied(&context)
+                .expect("environmental constraint out of range")
+        );
     }
 
     #[test]
@@ -592,11 +604,19 @@ mod tests {
         let mut context = ConstraintContext::new();
         context.network_state.wifi_ssid = Some("SecureNet".to_string());
 
-        assert!(constraint.is_satisfied(&context).unwrap());
+        assert!(
+            constraint
+                .is_satisfied(&context)
+                .expect("network SSID allowed")
+        );
 
         // Test wrong SSID
         context.network_state.wifi_ssid = Some("PublicWiFi".to_string());
-        assert!(!constraint.is_satisfied(&context).unwrap());
+        assert!(
+            !constraint
+                .is_satisfied(&context)
+                .expect("network SSID disallowed")
+        );
     }
 
     #[test]
@@ -609,11 +629,19 @@ mod tests {
         context.network_state.vpn_active = true;
         context.network_state.vpn_name = Some("corp-wireguard".to_string());
 
-        assert!(constraint.is_satisfied(&context).unwrap());
+        assert!(
+            constraint
+                .is_satisfied(&context)
+                .expect("VPN constraint satisfied")
+        );
 
         // Test VPN not active
         context.network_state.vpn_active = false;
-        assert!(!constraint.is_satisfied(&context).unwrap());
+        assert!(
+            !constraint
+                .is_satisfied(&context)
+                .expect("VPN constraint not satisfied")
+        );
     }
 
     #[test]
@@ -627,7 +655,11 @@ mod tests {
             .with_env("biometric_verified".to_string(), serde_json::json!(true))
             .with_env("biometric_device".to_string(), serde_json::json!("solo-v2"));
 
-        assert!(constraint.is_satisfied(&context).unwrap());
+        assert!(
+            constraint
+                .is_satisfied(&context)
+                .expect("biometric constraint satisfied")
+        );
 
         // Test wrong device
         let context = ConstraintContext::new()
@@ -637,7 +669,11 @@ mod tests {
                 serde_json::json!("other-device"),
             );
 
-        assert!(!constraint.is_satisfied(&context).unwrap());
+        assert!(
+            !constraint
+                .is_satisfied(&context)
+                .expect("biometric wrong device")
+        );
     }
 
     #[test]
@@ -647,11 +683,19 @@ mod tests {
         let mut context = ConstraintContext::new();
         context.system_state.load_average_1m = Some(1.5);
 
-        assert!(constraint.is_satisfied(&context).unwrap());
+        assert!(
+            constraint
+                .is_satisfied(&context)
+                .expect("system load within limit")
+        );
 
         // Test high load
         context.system_state.load_average_1m = Some(3.0);
-        assert!(!constraint.is_satisfied(&context).unwrap());
+        assert!(
+            !constraint
+                .is_satisfied(&context)
+                .expect("system load over limit")
+        );
     }
 
     #[test]
@@ -677,7 +721,11 @@ mod tests {
         };
 
         let context = ConstraintContext::new().with_location(nearby);
-        assert!(constraint.is_satisfied(&context).unwrap());
+        assert!(
+            constraint
+                .is_satisfied(&context)
+                .expect("geofence satisfied")
+        );
     }
 
     #[test]
@@ -687,12 +735,20 @@ mod tests {
         // Good battery
         let context =
             ConstraintContext::new().with_env("battery_percent".to_string(), serde_json::json!(75));
-        assert!(constraint.is_satisfied(&context).unwrap());
+        assert!(
+            constraint
+                .is_satisfied(&context)
+                .expect("battery sufficient")
+        );
 
         // Low battery
         let context =
             ConstraintContext::new().with_env("battery_percent".to_string(), serde_json::json!(10));
-        assert!(!constraint.is_satisfied(&context).unwrap());
+        assert!(
+            !constraint
+                .is_satisfied(&context)
+                .expect("battery insufficient")
+        );
     }
 
     #[test]
@@ -729,7 +785,9 @@ mod tests {
             max_distance_meters: 12.5,
         };
         assert!(c.description().contains('z'));
-        let json = c.serialize_json().unwrap();
+        let json = c
+            .serialize_json()
+            .expect("ProximityConstraint serializes to JSON");
         assert!(json.contains("other_party") && json.contains("max_distance_meters"));
     }
 

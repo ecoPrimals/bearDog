@@ -182,10 +182,12 @@ mod tests {
         config.insert("command".to_string(), serde_json::json!("eval(user_input)"));
 
         let node = create_test_node("node-1", config);
-        let result = check_code_injection(&node).await.unwrap();
+        let result = check_code_injection(&node)
+            .await
+            .expect("check_code_injection completes for malicious config");
 
         assert!(result.is_some());
-        let threat = result.unwrap();
+        let threat = result.expect("malicious node should produce a threat");
         assert_eq!(threat.category, ThreatCategory::CodeInjection);
     }
 
@@ -195,7 +197,9 @@ mod tests {
         config.insert("memory".to_string(), serde_json::json!("4GB"));
 
         let node = create_test_node("node-1", config);
-        let result = check_code_injection(&node).await.unwrap();
+        let result = check_code_injection(&node)
+            .await
+            .expect("check_code_injection completes for benign config");
 
         assert!(result.is_none());
     }

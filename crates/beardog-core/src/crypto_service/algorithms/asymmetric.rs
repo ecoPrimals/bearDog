@@ -345,21 +345,23 @@ mod tests {
     fn test_ed25519_sign_verify() {
         // Generate a test keypair
         let seed = [42u8; 32];
-        let (secret_key, public_key) = generate_ed25519_from_seed(&seed).unwrap();
+        let (secret_key, public_key) =
+            generate_ed25519_from_seed(&seed).expect("ed25519 keypair from seed");
 
         let data = b"Hello, BearDog Ed25519!";
 
         // Sign
-        let signature = sign_ed25519(data, &secret_key).unwrap();
+        let signature = sign_ed25519(data, &secret_key).expect("ed25519 sign");
         assert_eq!(signature.len(), 64);
 
         // Verify with correct key
-        let valid = verify_ed25519(data, &signature, &public_key).unwrap();
+        let valid = verify_ed25519(data, &signature, &public_key).expect("ed25519 verify");
         assert!(valid);
 
         // Verify with wrong data should fail
         let wrong_data = b"Wrong data";
-        let invalid = verify_ed25519(wrong_data, &signature, &public_key).unwrap();
+        let invalid =
+            verify_ed25519(wrong_data, &signature, &public_key).expect("ed25519 verify wrong data");
         assert!(!invalid);
     }
 
@@ -367,20 +369,22 @@ mod tests {
     fn test_ecdsa_p256_sign_verify() {
         // Generate a test keypair
         let seed = [99u8; 32];
-        let (secret_key, public_key) = generate_ecdsa_p256_from_seed(&seed).unwrap();
+        let (secret_key, public_key) =
+            generate_ecdsa_p256_from_seed(&seed).expect("ecdsa p256 keypair from seed");
 
         let data = b"Hello, BearDog ECDSA!";
 
         // Sign
-        let signature = sign_ecdsa_p256(data, &secret_key).unwrap();
+        let signature = sign_ecdsa_p256(data, &secret_key).expect("ecdsa sign");
 
         // Verify with correct key
-        let valid = verify_ecdsa_p256(data, &signature, &public_key).unwrap();
+        let valid = verify_ecdsa_p256(data, &signature, &public_key).expect("ecdsa verify");
         assert!(valid);
 
         // Verify with wrong data should fail
         let wrong_data = b"Wrong data";
-        let invalid = verify_ecdsa_p256(wrong_data, &signature, &public_key).unwrap();
+        let invalid = verify_ecdsa_p256(wrong_data, &signature, &public_key)
+            .expect("ecdsa verify wrong data");
         assert!(!invalid);
     }
 
@@ -388,16 +392,16 @@ mod tests {
     fn test_ed25519_deterministic() {
         // Same seed should produce same keypair
         let seed = [77u8; 32];
-        let (sk1, pk1) = generate_ed25519_from_seed(&seed).unwrap();
-        let (sk2, pk2) = generate_ed25519_from_seed(&seed).unwrap();
+        let (sk1, pk1) = generate_ed25519_from_seed(&seed).expect("ed25519 keypair 1");
+        let (sk2, pk2) = generate_ed25519_from_seed(&seed).expect("ed25519 keypair 2");
 
         assert_eq!(sk1, sk2);
         assert_eq!(pk1, pk2);
 
         // Same key should produce same signature for same data
         let data = b"Deterministic test";
-        let sig1 = sign_ed25519(data, &sk1).unwrap();
-        let sig2 = sign_ed25519(data, &sk2).unwrap();
+        let sig1 = sign_ed25519(data, &sk1).expect("ed25519 sign 1");
+        let sig2 = sign_ed25519(data, &sk2).expect("ed25519 sign 2");
 
         assert_eq!(sig1, sig2);
     }
@@ -410,25 +414,30 @@ mod tests {
         // Generate a 2048-bit RSA key for testing (smaller for faster tests)
         let mut rng = rand::thread_rng();
         let bits = 2048;
-        let private_key = RsaPrivateKey::new(&mut rng, bits).unwrap();
+        let private_key = RsaPrivateKey::new(&mut rng, bits).expect("RSA key generation in test");
         let public_key = RsaPublicKey::from(&private_key);
 
         // Encode keys to DER
-        let private_key_der = private_key.to_pkcs8_der().unwrap();
-        let public_key_der = public_key.to_public_key_der().unwrap();
+        let private_key_der = private_key
+            .to_pkcs8_der()
+            .expect("RSA private key PKCS#8 DER");
+        let public_key_der = public_key.to_public_key_der().expect("RSA public key DER");
 
         let data = b"Hello, BearDog RSA-PSS!";
 
         // Sign
-        let signature = sign_rsa_pss(data, private_key_der.as_bytes()).unwrap();
+        let signature =
+            sign_rsa_pss(data, private_key_der.as_bytes()).expect("RSA-PSS sign in test");
 
         // Verify with correct key
-        let valid = verify_rsa_pss(data, &signature, public_key_der.as_bytes()).unwrap();
+        let valid = verify_rsa_pss(data, &signature, public_key_der.as_bytes())
+            .expect("RSA-PSS verify in test");
         assert!(valid);
 
         // Verify with wrong data should fail
         let wrong_data = b"Wrong data";
-        let invalid = verify_rsa_pss(wrong_data, &signature, public_key_der.as_bytes()).unwrap();
+        let invalid = verify_rsa_pss(wrong_data, &signature, public_key_der.as_bytes())
+            .expect("RSA-PSS verify wrong data");
         assert!(!invalid);
     }
 }

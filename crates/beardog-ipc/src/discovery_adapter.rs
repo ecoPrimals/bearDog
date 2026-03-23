@@ -325,7 +325,7 @@ mod tests {
             id: 1,
         };
 
-        let json = serde_json::to_string(&request).unwrap();
+        let json = serde_json::to_string(&request).expect("serialize JsonRpcRequest");
         assert!(json.contains("primal.ping"));
         assert!(json.contains("\"id\":1"));
     }
@@ -333,7 +333,7 @@ mod tests {
     #[test]
     fn test_json_rpc_response_deserialization() {
         let json = r#"{"jsonrpc":"2.0","result":{"pong":true},"id":1}"#;
-        let response: JsonRpcResponse = serde_json::from_str(json).unwrap();
+        let response: JsonRpcResponse = serde_json::from_str(json).expect("deserialize JsonRpcResponse");
 
         assert_eq!(response.jsonrpc, "2.0");
         assert_eq!(response.id, 1);
@@ -351,7 +351,7 @@ mod tests {
             "socket_path": "/tmp/beardog-nat0.sock"
         }"#;
 
-        let info: PrimalInfo = serde_json::from_str(json).unwrap();
+        let info: PrimalInfo = serde_json::from_str(json).expect("deserialize PrimalInfo");
         assert_eq!(info.primal_id, "beardog");
         assert_eq!(info.family_id, Some("nat0".to_string()));
         assert_eq!(info.capabilities.len(), 2);

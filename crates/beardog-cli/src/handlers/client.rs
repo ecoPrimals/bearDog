@@ -13,8 +13,10 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 use tracing::{error, info};
 
-/// Last-resort Unix socket directory when `BEARDOG_SOCKET` is unset (prefer `BIOMEOS_SOCKET_DIR` / XDG in production).
-const DEFAULT_LOCAL_SOCKET_TMP_DIR: &str = "/tmp/";
+fn default_local_socket_parent_dir() -> std::path::PathBuf {
+    std::env::var("BEARDOG_LOCAL_SOCKET_DIR")
+        .map_or_else(|_| std::env::temp_dir(), std::path::PathBuf::from)
+}
 
 /// Store the active socket path for command execution
 static ACTIVE_SOCKET: OnceLock<String> = OnceLock::new();
@@ -38,7 +40,10 @@ fn discover_socket_path_with(get: impl Fn(&str) -> Option<String>) -> String {
         .or_else(|| get("BEARDOG_NAME"))
         .unwrap_or_else(|| "beardog".to_string());
 
-    format!("{DEFAULT_LOCAL_SOCKET_TMP_DIR}{primal_name}.sock")
+    default_local_socket_parent_dir()
+        .join(format!("{primal_name}.sock"))
+        .display()
+        .to_string()
 }
 
 /// Handle client command - interactive REPL
@@ -269,7 +274,8 @@ mod client_handler_tests {
 
     #[test]
     fn test_build_jsonrpc_request_method_only() {
-        let v = build_jsonrpc_request("crypto.blake3_hash").unwrap();
+        let v =
+            build_jsonrpc_request("crypto.blake3_hash").expect("build_jsonrpc_request method only");
         assert_eq!(v["jsonrpc"], "2.0");
         assert_eq!(v["method"], "crypto.blake3_hash");
         assert_eq!(v["params"], json!({}));
@@ -278,7 +284,8 @@ mod client_handler_tests {
 
     #[test]
     fn test_build_jsonrpc_request_with_args() {
-        let v = build_jsonrpc_request("crypto.sign_ed25519 msg1 msg2").unwrap();
+        let v = build_jsonrpc_request("crypto.sign_ed25519 msg1 msg2")
+            .expect("build_jsonrpc_request with args");
         assert_eq!(v["method"], "crypto.sign_ed25519");
         assert_eq!(v["params"], json!({ "args": ["msg1", "msg2"] }));
     }
@@ -305,7 +312,11 @@ mod client_handler_tests {
         let mut map = HashMap::new();
         map.insert("PRIMAL_NAME".to_string(), "myprimal".to_string());
         let get = |k: &str| map.get(k).cloned();
-        assert_eq!(discover_socket_path_with(get), "/tmp/myprimal.sock");
+        let expected = std::env::temp_dir()
+            .join("myprimal.sock")
+            .display()
+            .to_string();
+        assert_eq!(discover_socket_path_with(get), expected);
     }
 
     #[test]
@@ -313,7 +324,11 @@ mod client_handler_tests {
         let mut map = HashMap::new();
         map.insert("BEARDOG_NAME".to_string(), "other".to_string());
         let get = |k: &str| map.get(k).cloned();
-        assert_eq!(discover_socket_path_with(get), "/tmp/other.sock");
+        let expected = std::env::temp_dir()
+            .join("other.sock")
+            .display()
+            .to_string();
+        assert_eq!(discover_socket_path_with(get), expected);
     }
 
     #[test]
@@ -326,21 +341,28 @@ mod client_handler_tests {
     async fn test_send_command_success() {
         use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
-        let (client, mut server) = tokio::net::UnixStream::pair().unwrap();
+        let (client, mut server) =
+            tokio::net::UnixStream::pair().expect("UnixStream::pair for test");
         tokio::spawn(async move {
             let mut line = String::new();
             let mut reader = BufReader::new(&mut server);
-            reader.read_line(&mut line).await.unwrap();
+            reader
+                .read_line(&mut line)
+                .await
+                .expect("server read request line");
             let response = r#"{"jsonrpc":"2.0","result":{"ok":true},"id":1}"#;
-            server.write_all(response.as_bytes()).await.unwrap();
-            server.write_all(b"\n").await.unwrap();
+            server
+                .write_all(response.as_bytes())
+                .await
+                .expect("server write response");
+            server.write_all(b"\n").await.expect("server write newline");
         });
 
         let (read_half, mut write_half) = client.into_split();
         let mut reader = BufReader::new(read_half);
         let out = send_command(&mut write_half, &mut reader, "crypto.blake3_hash")
             .await
-            .unwrap();
+            .expect("send_command success path");
         assert_eq!(out["ok"], true);
     }
 
@@ -349,14 +371,21 @@ mod client_handler_tests {
     async fn test_send_command_server_error_field() {
         use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
-        let (client, mut server) = tokio::net::UnixStream::pair().unwrap();
+        let (client, mut server) =
+            tokio::net::UnixStream::pair().expect("UnixStream::pair for error test");
         tokio::spawn(async move {
             let mut line = String::new();
             let mut reader = BufReader::new(&mut server);
-            reader.read_line(&mut line).await.unwrap();
+            reader
+                .read_line(&mut line)
+                .await
+                .expect("server read request line");
             let response = r#"{"jsonrpc":"2.0","error":{"code":-1},"id":1}"#;
-            server.write_all(response.as_bytes()).await.unwrap();
-            server.write_all(b"\n").await.unwrap();
+            server
+                .write_all(response.as_bytes())
+                .await
+                .expect("server write error response");
+            server.write_all(b"\n").await.expect("server write newline");
         });
 
         let (read_half, mut write_half) = client.into_split();
@@ -370,24 +399,33 @@ mod client_handler_tests {
     #[cfg(unix)]
     #[tokio::test]
     async fn test_execute_command_on_socket_roundtrip() {
-        let dir = tempfile::tempdir().unwrap();
+        let dir = tempfile::tempdir().expect("tempdir for unix socket test");
         let sock_path = dir.path().join("beardog-client-test.sock");
         let _ = std::fs::remove_file(&sock_path);
-        let listener = tokio::net::UnixListener::bind(&sock_path).unwrap();
+        let listener = tokio::net::UnixListener::bind(&sock_path).expect("bind test unix listener");
 
         tokio::spawn(async move {
-            let (mut stream, _) = listener.accept().await.unwrap();
+            let (mut stream, _) = listener
+                .accept()
+                .await
+                .expect("listener accept in test server");
             use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
             let mut reader = BufReader::new(&mut stream);
             let mut line = String::new();
-            reader.read_line(&mut line).await.unwrap();
+            reader
+                .read_line(&mut line)
+                .await
+                .expect("read jsonrpc line");
             let response = r#"{"jsonrpc":"2.0","result":{"echo":"pong"},"id":1}"#;
-            stream.write_all(response.as_bytes()).await.unwrap();
-            stream.write_all(b"\n").await.unwrap();
+            stream
+                .write_all(response.as_bytes())
+                .await
+                .expect("write response");
+            stream.write_all(b"\n").await.expect("write newline");
         });
 
         super::execute_command_on_socket(&sock_path, "discovery.capabilities arg1")
             .await
-            .unwrap();
+            .expect("execute_command_on_socket roundtrip");
     }
 }

@@ -198,7 +198,8 @@ impl NetworkDiscovery {
 
     /// Check if a port is available for binding
     fn is_port_available(&self, port: u16) -> bool {
-        TcpListener::bind(("127.0.0.1", port)).is_ok()
+        use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+        TcpListener::bind(SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), port)).is_ok()
     }
 
     /// Select best bind address from discovered capabilities
@@ -226,7 +227,9 @@ mod tests {
     #[test]
     fn test_network_discovery_finds_addresses() {
         let discovery = NetworkDiscovery::with_defaults();
-        let capabilities = discovery.discover().unwrap();
+        let capabilities = discovery
+            .discover()
+            .expect("network discovery finds capabilities");
 
         // Should discover at least loopback
         assert!(!capabilities.local_addresses.is_empty());
@@ -236,7 +239,9 @@ mod tests {
     #[test]
     fn test_network_discovery_finds_ports() {
         let discovery = NetworkDiscovery::with_defaults();
-        let capabilities = discovery.discover().unwrap();
+        let capabilities = discovery
+            .discover()
+            .expect("network discovery finds capabilities");
 
         // Should find at least one available port
         assert!(!capabilities.available_ports.is_empty());
@@ -250,9 +255,17 @@ mod tests {
             port_range: (8080, 8099),
         };
         let discovery = NetworkDiscovery::new(prefs);
-        let capabilities = discovery.discover().unwrap();
+        let capabilities = discovery
+            .discover()
+            .expect("network discovery finds capabilities");
 
-        assert!(capabilities.local_addresses.first().unwrap().is_loopback());
+        assert!(
+            capabilities
+                .local_addresses
+                .first()
+                .expect("at least one local address")
+                .is_loopback()
+        );
     }
 
     #[test]
@@ -264,7 +277,9 @@ mod tests {
         };
 
         let discovery = NetworkDiscovery::new(prefs);
-        let capabilities = discovery.discover().unwrap();
+        let capabilities = discovery
+            .discover()
+            .expect("network discovery finds capabilities");
 
         // Should check preferred port first
         assert!(!capabilities.available_ports.is_empty());
@@ -273,9 +288,12 @@ mod tests {
     #[test]
     fn test_select_bind_address_works() {
         let discovery = NetworkDiscovery::with_defaults();
-        let capabilities = discovery.discover().unwrap();
+        let capabilities = discovery
+            .discover()
+            .expect("network discovery finds capabilities");
 
-        let bind_addr = NetworkDiscovery::select_bind_address(&capabilities).unwrap();
+        let bind_addr = NetworkDiscovery::select_bind_address(&capabilities)
+            .expect("select bind address from discovered capabilities");
 
         assert!(bind_addr.port() > 0);
     }
@@ -286,7 +304,9 @@ mod tests {
         // unless they're actually available
 
         let discovery = NetworkDiscovery::with_defaults();
-        let capabilities = discovery.discover().unwrap();
+        let capabilities = discovery
+            .discover()
+            .expect("network discovery finds capabilities");
 
         // All discovered addresses should be real
         for addr in &capabilities.local_addresses {

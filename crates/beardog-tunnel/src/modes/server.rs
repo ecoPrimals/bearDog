@@ -305,7 +305,7 @@ async fn register_with_discovery_service(
 
     // PHASE 2: Fallback to legacy registry transport (deprecated path)
     #[allow(deprecated)]
-    match register_with_legacy_songbird().await {
+    match register_with_legacy_ipc_registry().await {
         Ok(()) => {
             info!(
                 "✅ Registered with legacy discovery registry (migrate to Neural API when available)"
@@ -329,7 +329,7 @@ async fn register_with_discovery_service(
     since = "0.9.1",
     note = "Use Neural API registration for TRUE PRIMAL pattern"
 )]
-async fn register_with_legacy_songbird() -> anyhow::Result<()> {
+async fn register_with_legacy_ipc_registry() -> anyhow::Result<()> {
     use beardog_ipc::{Capability, SongbirdClient};
 
     // Connects via `beardog-ipc` discovery (env + fallbacks — no hardcoded peer host)
@@ -353,7 +353,7 @@ async fn register_with_legacy_songbird() -> anyhow::Result<()> {
     tokio::spawn(async move {
         let _heartbeat = client.start_heartbeat(heartbeat_interval);
         // Heartbeat task runs until client is dropped
-        // This keeps BearDog registered with Songbird
+        // This keeps BearDog registered with the IPC registry
         std::future::pending::<()>().await;
     });
 

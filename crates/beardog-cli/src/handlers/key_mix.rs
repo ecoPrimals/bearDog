@@ -202,7 +202,7 @@ mod tests {
 
     #[tokio::test]
     async fn handle_key_mix_with_home_roundtrip_writes_receipt() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for key mix roundtrip test");
         let home = dir.path();
         let mat = key_store::base64_encode(&[0xAB; 32]);
         let k1 = key_store::StoredKey {
@@ -225,21 +225,21 @@ mod tests {
             generation: 2,
             ..k1.clone()
         };
-        key_store::save_key_to_home(&k1, home).unwrap();
-        key_store::save_key_to_home(&k2, home).unwrap();
+        key_store::save_key_to_home(&k1, home).expect("save mix-a");
+        key_store::save_key_to_home(&k2, home).expect("save mix-b");
 
         handle_key_mix_with_home("mix-a", "mix-b", "mix-out", "2-of-2", None, home)
             .await
-            .unwrap();
+            .expect("mix keys mix-a and mix-b");
 
-        let mixed = key_store::load_key_from_home("mix-out", home).unwrap();
+        let mixed = key_store::load_key_from_home("mix-out", home).expect("load mix-out");
         assert_eq!(mixed.generation, 3);
         assert!(home.join("receipts").exists());
     }
 
     #[tokio::test]
     async fn handle_key_mix_with_home_rejects_mismatched_material_length() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for mismatched length mix test");
         let home = dir.path();
         let k1 = key_store::StoredKey {
             key_id: "a".to_string(),
@@ -261,18 +261,18 @@ mod tests {
             key_material_b64: key_store::base64_encode(&[2u8; 32]),
             ..k1.clone()
         };
-        key_store::save_key_to_home(&k1, home).unwrap();
-        key_store::save_key_to_home(&k2, home).unwrap();
+        key_store::save_key_to_home(&k1, home).expect("save key a");
+        key_store::save_key_to_home(&k2, home).expect("save key b");
 
         let err = handle_key_mix_with_home("a", "b", "out", "t", None, home)
             .await
-            .unwrap_err();
+            .expect_err("mix should fail on length mismatch");
         assert!(err.to_string().contains("same length"));
     }
 
     #[tokio::test]
     async fn handle_key_mix_with_home_invalid_expires_duration_errors() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for invalid expires mix test");
         let home = dir.path();
         let mat = key_store::base64_encode(&[0xCD; 32]);
         for id in ["e-a", "e-b"] {
@@ -291,7 +291,7 @@ mod tests {
                 usage: None,
                 purpose: None,
             };
-            key_store::save_key_to_home(&k, home).unwrap();
+            key_store::save_key_to_home(&k, home).expect("save key for invalid duration test");
         }
         assert!(
             handle_key_mix_with_home("e-a", "e-b", "e-out", "t", Some("not-a-duration"), home)
@@ -305,7 +305,7 @@ mod tests {
         let key1 = vec![0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0];
         let key2 = vec![0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x11, 0x22];
 
-        let mixed = mix_keys(&key1, &key2).unwrap();
+        let mixed = mix_keys(&key1, &key2).expect("mix_keys 8-byte test vectors");
 
         // Should be same length
         assert_eq!(mixed.len(), key1.len());
@@ -338,8 +338,8 @@ mod tests {
         let key1 = vec![0x12; 32];
         let key2 = vec![0x34; 32];
 
-        let mixed1 = mix_keys(&key1, &key2).unwrap();
-        let mixed2 = mix_keys(&key1, &key2).unwrap();
+        let mixed1 = mix_keys(&key1, &key2).expect("mix_keys first random salt");
+        let mixed2 = mix_keys(&key1, &key2).expect("mix_keys second random salt");
 
         // Should be different (different salt each time)
         assert_ne!(mixed1, mixed2);

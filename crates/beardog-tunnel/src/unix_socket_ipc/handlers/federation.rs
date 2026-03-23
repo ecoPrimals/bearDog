@@ -230,7 +230,7 @@ mod tests {
         let result = handler
             .handle_verify_family_member(Some(&params))
             .await
-            .unwrap();
+            .expect("verify family member same family");
 
         assert_eq!(result["is_family_member"], true);
         assert_eq!(result["relationship"], "sibling");
@@ -256,7 +256,7 @@ mod tests {
         let result = handler
             .handle_verify_family_member(Some(&params))
             .await
-            .unwrap();
+            .expect("verify family member different family");
 
         assert_eq!(result["is_family_member"], false);
         assert_eq!(result["relationship"], "unrelated");
@@ -281,12 +281,12 @@ mod tests {
         let result = handler
             .handle_derive_subfed_key(Some(&params))
             .await
-            .unwrap();
+            .expect("derive subfed key");
 
         assert!(
             result["key_ref"]
                 .as_str()
-                .unwrap()
+                .expect("key_ref string")
                 .contains("beardog-hsm-key-")
         );
         assert_eq!(result["key_id"], "subfed:parent-fam:test-subfed:v1");

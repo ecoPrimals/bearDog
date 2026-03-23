@@ -724,11 +724,11 @@ mod tests {
             "key": BASE64.encode(&key),
             "aad": BASE64.encode(b"aad"),
         });
-        let er = handle_aes128_gcm_encrypt(&enc).unwrap();
+        let er = handle_aes128_gcm_encrypt(&enc).expect("aes128 gcm encrypt for aad test");
         let params = json!({
-            "ciphertext": json_str(&er, "ciphertext").unwrap(),
+            "ciphertext": json_str(&er, "ciphertext").expect("ciphertext field"),
             "key": BASE64.encode(&key),
-            "nonce": json_str(&er, "nonce").unwrap(),
+            "nonce": json_str(&er, "nonce").expect("nonce field"),
             "aad": "not-valid-b64!!!",
         });
         let e = handle_aes128_gcm_decrypt(&params).unwrap_err();

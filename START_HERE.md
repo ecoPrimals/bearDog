@@ -146,8 +146,8 @@ cargo build --release                # Build
 | Missing Docs | 0 |
 | Unsafe | `forbid(unsafe_code)` workspace-wide |
 | Pure Rust | 100% |
-| Tests | 12,337+ (fully concurrent) |
-| Coverage | 85.1% line (llvm-cov) |
+| Tests | 14,029 (fully concurrent) |
+| Coverage | 86.1% line (llvm-cov) |
 | `#[serial]` | 0 |
 | Files > 1000 LOC | 0 (production) |
 
@@ -165,4 +165,4 @@ cargo build --release                # Build
 
 ---
 
-**Last Updated**: March 21, 2026
+**Last Updated**: March 23, 2026

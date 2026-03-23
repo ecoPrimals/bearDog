@@ -19,6 +19,7 @@ use async_trait::async_trait;
 use base64::Engine;
 use beardog_capabilities::traits::SecureTunnelProvider;
 use chrono::Utc;
+use serde::Deserialize;
 use std::sync::Arc;
 use tracing::{info, warn};
 
@@ -187,10 +188,9 @@ impl BtspHandler {
 
         let params_value = params.ok_or("Missing params for tunnel establish")?;
 
-        // Try parsing as new unified format first
-        if let Ok(unified_params) = serde_json::from_value::<
-            beardog_types::btsp::TunnelEstablishParams,
-        >(params_value.clone())
+        // Try parsing as new unified format first (deserialize from `&Value` — no extra `Value` clone)
+        if let Ok(unified_params) =
+            beardog_types::btsp::TunnelEstablishParams::deserialize(params_value)
         {
             info!("📋 Parsed as unified BTSP parameters");
             return self
@@ -201,7 +201,7 @@ impl BtspHandler {
         // Fall back to legacy format for backward compatibility
         info!("📋 Falling back to legacy BTSP format (backward compat)");
         let peer: beardog_capabilities::traits::PeerEndpoint =
-            serde_json::from_value(params_value.clone())
+            beardog_capabilities::traits::PeerEndpoint::deserialize(params_value)
                 .map_err(|e| format!("Invalid peer endpoint (legacy format): {e}"))?;
 
         match btsp_provider.establish_tunnel(peer).await {
@@ -337,8 +337,9 @@ impl BtspHandler {
 
         let params = params.ok_or("Missing params for tunnel encrypt")?;
 
+        let tunnel_val = params.get("tunnel").ok_or("Missing tunnel handle")?;
         let tunnel: beardog_capabilities::traits::TunnelHandle =
-            serde_json::from_value(params.get("tunnel").ok_or("Missing tunnel handle")?.clone())
+            beardog_capabilities::traits::TunnelHandle::deserialize(tunnel_val)
                 .map_err(|e| format!("Invalid tunnel handle: {e}"))?;
 
         let data_b64 = params
@@ -377,8 +378,9 @@ impl BtspHandler {
 
         let params = params.ok_or("Missing params for tunnel decrypt")?;
 
+        let tunnel_val = params.get("tunnel").ok_or("Missing tunnel handle")?;
         let tunnel: beardog_capabilities::traits::TunnelHandle =
-            serde_json::from_value(params.get("tunnel").ok_or("Missing tunnel handle")?.clone())
+            beardog_capabilities::traits::TunnelHandle::deserialize(tunnel_val)
                 .map_err(|e| format!("Invalid tunnel handle: {e}"))?;
 
         let data_b64 = params
@@ -418,7 +420,7 @@ impl BtspHandler {
         let params = params.ok_or("Missing params for tunnel status")?;
 
         let tunnel_handle = if let Some(tunnel) = params.get("tunnel") {
-            serde_json::from_value(tunnel.clone())
+            beardog_capabilities::traits::TunnelHandle::deserialize(tunnel)
                 .map_err(|e| format!("Invalid tunnel handle: {e}"))?
         } else {
             let tunnel_id = params
@@ -462,7 +464,7 @@ impl BtspHandler {
         let params = params.ok_or("Missing params for tunnel close")?;
 
         let tunnel_handle = if let Some(tunnel) = params.get("tunnel") {
-            serde_json::from_value(tunnel.clone())
+            beardog_capabilities::traits::TunnelHandle::deserialize(tunnel)
                 .map_err(|e| format!("Invalid tunnel handle: {e}"))?
         } else {
             let tunnel_id = params
@@ -515,9 +517,8 @@ impl BtspHandler {
         let params_value = params.ok_or("Missing params for configure_tls")?;
 
         // Parse parameters for validation
-        let _config_params =
-            serde_json::from_value::<beardog_types::btsp::ConfigureTlsParams>(params_value.clone())
-                .map_err(|e| format!("Invalid configure_tls params: {e}"))?;
+        let _config_params = beardog_types::btsp::ConfigureTlsParams::deserialize(params_value)
+            .map_err(|e| format!("Invalid configure_tls params: {e}"))?;
 
         Err(
             "btsp.configure_tls is part of external mode (HTTPS), handled by Songbird.\n\
@@ -546,9 +547,8 @@ impl BtspHandler {
         let params_value = params.ok_or("Missing params for verify_peer")?;
 
         // Parse parameters
-        let verify_params =
-            serde_json::from_value::<beardog_types::btsp::VerifyPeerParams>(params_value.clone())
-                .map_err(|e| format!("Invalid verify_peer params: {e}"))?;
+        let verify_params = beardog_types::btsp::VerifyPeerParams::deserialize(params_value)
+            .map_err(|e| format!("Invalid verify_peer params: {e}"))?;
 
         // Route based on trust mode
         match verify_params.trust_mode.as_str() {
@@ -621,10 +621,8 @@ impl BtspHandler {
         let params_value = params.ok_or("Missing params for tunnel_send_http")?;
 
         // Parse parameters for validation
-        let _http_params = serde_json::from_value::<beardog_types::btsp::TunnelSendHttpParams>(
-            params_value.clone(),
-        )
-        .map_err(|e| format!("Invalid tunnel_send_http params: {e}"))?;
+        let _http_params = beardog_types::btsp::TunnelSendHttpParams::deserialize(params_value)
+            .map_err(|e| format!("Invalid tunnel_send_http params: {e}"))?;
 
         Err(
             "btsp.tunnel_send_http is part of external mode (HTTPS), handled by Songbird.\n\

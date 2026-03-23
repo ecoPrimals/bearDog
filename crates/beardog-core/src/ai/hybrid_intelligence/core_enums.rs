@@ -194,16 +194,17 @@ mod tests {
     #[test]
     fn serde_roundtrip_decision_confidence() {
         let v = DecisionConfidence::High;
-        let json = serde_json::to_value(&v).unwrap();
-        let back: DecisionConfidence = serde_json::from_value(json).unwrap();
+        let json = serde_json::to_value(&v).expect("serialize DecisionConfidence");
+        let back: DecisionConfidence =
+            serde_json::from_value(json).expect("deserialize DecisionConfidence");
         assert!(matches!(back, DecisionConfidence::High));
     }
 
     #[test]
     fn serde_roundtrip_ai_model_type() {
         let v = AIModelType::NeuralNetwork;
-        let s = serde_json::to_string(&v).unwrap();
-        let back: AIModelType = serde_json::from_str(&s).unwrap();
+        let s = serde_json::to_string(&v).expect("serialize AIModelType");
+        let back: AIModelType = serde_json::from_str(&s).expect("deserialize AIModelType");
         assert!(matches!(back, AIModelType::NeuralNetwork));
     }
 
@@ -214,8 +215,9 @@ mod tests {
             LearningFeedback::Negative,
             LearningFeedback::Neutral,
         ] {
-            let s = serde_json::to_string(&fb).unwrap();
-            let back: LearningFeedback = serde_json::from_str(&s).unwrap();
+            let s = serde_json::to_string(&fb).expect("serialize LearningFeedback");
+            let back: LearningFeedback =
+                serde_json::from_str(&s).expect("deserialize LearningFeedback");
             assert_eq!(format!("{fb:?}"), format!("{back:?}"));
         }
     }
@@ -223,13 +225,14 @@ mod tests {
     #[test]
     fn serde_roundtrip_optimization_algorithm_and_optimizer() {
         let oa = OptimizationAlgorithm::Adam;
-        let s = serde_json::to_string(&oa).unwrap();
-        let back: OptimizationAlgorithm = serde_json::from_str(&s).unwrap();
+        let s = serde_json::to_string(&oa).expect("serialize OptimizationAlgorithm");
+        let back: OptimizationAlgorithm =
+            serde_json::from_str(&s).expect("deserialize OptimizationAlgorithm");
         assert!(matches!(back, OptimizationAlgorithm::Adam));
 
         let op = Optimizer::RMSprop;
-        let s2 = serde_json::to_string(&op).unwrap();
-        let back2: Optimizer = serde_json::from_str(&s2).unwrap();
+        let s2 = serde_json::to_string(&op).expect("serialize Optimizer");
+        let back2: Optimizer = serde_json::from_str(&s2).expect("deserialize Optimizer");
         assert!(matches!(back2, Optimizer::RMSprop));
     }
 

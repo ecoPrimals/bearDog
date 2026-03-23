@@ -258,7 +258,10 @@ mod tests {
         });
 
         assert!(receipt.key_info.is_some());
-        assert_eq!(receipt.key_info.unwrap().key_id, "test-key");
+        assert_eq!(
+            receipt.key_info.expect("receipt key info").key_id,
+            "test-key"
+        );
     }
 
     #[test]
@@ -294,8 +297,9 @@ mod tests {
         let receipt =
             OperationReceipt::new("key-generate").with_metadata("test_key", json!("test_value"));
 
-        let json = serde_json::to_string(&receipt).unwrap();
-        let deserialized: OperationReceipt = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&receipt).expect("serialize receipt");
+        let deserialized: OperationReceipt =
+            serde_json::from_str(&json).expect("deserialize receipt");
 
         assert_eq!(receipt.receipt_id, deserialized.receipt_id);
         assert_eq!(receipt.operation, deserialized.operation);

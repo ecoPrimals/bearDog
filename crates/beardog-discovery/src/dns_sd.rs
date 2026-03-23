@@ -366,7 +366,8 @@ mod tests {
         // Should return empty vec, not error
         let result = discovery.discover("nonexistent-capability").await;
         assert!(result.is_ok());
-        assert!(result.unwrap().is_empty());
+        let services = result.expect("discover should return Ok for missing capability");
+        assert!(services.is_empty());
     }
 
     #[tokio::test]

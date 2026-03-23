@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![forbid(unsafe_code)]
 
 //! # BearDog Tower Atomic
 //!
@@ -271,11 +272,11 @@ mod tests {
     #[tokio::test]
     async fn test_connect_to_mock_primal() {
         // Create temporary Unix socket
-        let dir = tempdir().unwrap();
+        let dir = tempdir().expect("tempdir for mock primal socket");
         let socket_path = dir.path().join("mock_primal.sock");
 
         // Start mock server
-        let listener = UnixListener::bind(&socket_path).unwrap();
+        let listener = UnixListener::bind(&socket_path).expect("bind mock primal unix listener");
         let server_socket_path = socket_path.clone();
 
         let ready = Arc::new(Notify::new());
@@ -283,12 +284,18 @@ mod tests {
             let ready_tx = Arc::clone(&ready);
             async move {
                 ready_tx.notify_one();
-                let (mut stream, _) = listener.accept().await.unwrap();
+                let (mut stream, _) = listener
+                    .accept()
+                    .await
+                    .expect("mock server accepts connection");
                 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
                 let mut reader = BufReader::new(&mut stream);
                 let mut request = String::new();
-                reader.read_line(&mut request).await.unwrap();
+                reader
+                    .read_line(&mut request)
+                    .await
+                    .expect("mock server reads JSON-RPC line");
 
                 // Echo back success response
                 let response = json!({
@@ -297,17 +304,26 @@ mod tests {
                     "id": 1
                 });
                 stream
-                    .write_all(serde_json::to_string(&response).unwrap().as_bytes())
+                    .write_all(
+                        serde_json::to_string(&response)
+                            .expect("JSON-RPC response serializes")
+                            .as_bytes(),
+                    )
                     .await
-                    .unwrap();
-                stream.write_all(b"\n").await.unwrap();
+                    .expect("mock server writes response body");
+                stream
+                    .write_all(b"\n")
+                    .await
+                    .expect("mock server writes newline");
             }
         });
 
         ready.notified().await;
 
         // Connect directly to socket (bypass discovery for test)
-        let stream = UnixStream::connect(&server_socket_path).await.unwrap();
+        let stream = UnixStream::connect(&server_socket_path)
+            .await
+            .expect("client connects to mock primal");
         let mut client = Client {
             stream,
             primal_name: "mock_primal".to_string(),
@@ -318,7 +334,7 @@ mod tests {
         let response = client
             .call("test.method", json!({"param": "value"}))
             .await
-            .unwrap();
+            .expect("JSON-RPC call to mock primal succeeds");
 
         assert_eq!(response["status"], "ok");
     }

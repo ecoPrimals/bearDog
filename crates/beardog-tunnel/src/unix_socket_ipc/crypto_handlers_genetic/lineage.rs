@@ -414,7 +414,10 @@ mod tests {
             Some(true)
         );
 
-        let key_hex = result.get("beacon_key").and_then(|v| v.as_str()).unwrap();
+        let key_hex = result
+            .get("beacon_key")
+            .and_then(|v| v.as_str())
+            .expect("beacon_key hex in test");
         let key_bytes = hex::decode(key_hex)?;
         assert_eq!(key_bytes.len(), 32);
 
@@ -430,8 +433,14 @@ mod tests {
         let result1 = handle_derive_lineage_beacon_key(params.clone()).await?;
         let result2 = handle_derive_lineage_beacon_key(params).await?;
 
-        let key1 = result1.get("beacon_key").and_then(|v| v.as_str()).unwrap();
-        let key2 = result2.get("beacon_key").and_then(|v| v.as_str()).unwrap();
+        let key1 = result1
+            .get("beacon_key")
+            .and_then(|v| v.as_str())
+            .expect("beacon_key hex in test");
+        let key2 = result2
+            .get("beacon_key")
+            .and_then(|v| v.as_str())
+            .expect("beacon_key hex in test");
 
         assert_eq!(
             key1, key2,
@@ -450,8 +459,14 @@ mod tests {
         let result1 = handle_derive_lineage_beacon_key(json!({ "lineage_seed": seed1 })).await?;
         let result2 = handle_derive_lineage_beacon_key(json!({ "lineage_seed": seed2 })).await?;
 
-        let key1 = result1.get("beacon_key").and_then(|v| v.as_str()).unwrap();
-        let key2 = result2.get("beacon_key").and_then(|v| v.as_str()).unwrap();
+        let key1 = result1
+            .get("beacon_key")
+            .and_then(|v| v.as_str())
+            .expect("beacon_key hex in test");
+        let key2 = result2
+            .get("beacon_key")
+            .and_then(|v| v.as_str())
+            .expect("beacon_key hex in test");
 
         assert_ne!(
             key1, key2,
@@ -467,7 +482,10 @@ mod tests {
         let result = handle_derive_lineage_beacon_key(json!({})).await?;
         assert!(result.get("beacon_key").is_some());
 
-        let key_hex = result.get("beacon_key").and_then(|v| v.as_str()).unwrap();
+        let key_hex = result
+            .get("beacon_key")
+            .and_then(|v| v.as_str())
+            .expect("beacon_key hex in test");
         let key_bytes = hex::decode(key_hex)?;
         assert_eq!(key_bytes.len(), 32);
 

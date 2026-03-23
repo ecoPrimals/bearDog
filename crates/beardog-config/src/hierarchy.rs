@@ -370,7 +370,9 @@ mod tests {
 
     #[test]
     fn test_hierarchy_defaults() {
-        let config = ConfigHierarchy::new().build().unwrap();
+        let config = ConfigHierarchy::new()
+            .build()
+            .expect("ConfigHierarchy::build should succeed in test");
         // Should have secure defaults
         assert_eq!(config.network.api.port, 8080);
     }
@@ -380,7 +382,7 @@ mod tests {
         let config = ConfigHierarchy::new()
             .with_cli_arg("port".to_string(), "9000".to_string())
             .build()
-            .unwrap();
+            .expect("ConfigHierarchy::build with CLI port override");
 
         // CLI args should override defaults
         assert_eq!(config.network.api.port, 9000);
@@ -426,7 +428,9 @@ mod tests {
     #[test]
     fn test_hierarchy_default() {
         let h = ConfigHierarchy::default();
-        let config = h.build().unwrap();
+        let config = h
+            .build()
+            .expect("ConfigHierarchy::build should succeed in test");
         assert!(config.network.api.port > 0);
     }
 
@@ -435,7 +439,7 @@ mod tests {
         let config = ConfigHierarchy::new()
             .with_platform_defaults()
             .build()
-            .unwrap();
+            .expect("ConfigHierarchy::build with platform defaults");
         assert!(config.network.api.port > 0);
     }
 
@@ -445,7 +449,10 @@ mod tests {
         args.insert("port".to_string(), "7777".to_string());
         args.insert("log-level".to_string(), "debug".to_string());
 
-        let config = ConfigHierarchy::new().with_cli_args(args).build().unwrap();
+        let config = ConfigHierarchy::new()
+            .with_cli_args(args)
+            .build()
+            .expect("ConfigHierarchy::build should succeed in test");
 
         assert_eq!(config.network.api.port, 7777);
         assert_eq!(config.monitoring.log_level, "debug");
@@ -456,7 +463,7 @@ mod tests {
         let config = ConfigHierarchy::new()
             .with_cli_arg("bind-address".to_string(), "0.0.0.0".to_string())
             .build()
-            .unwrap();
+            .expect("ConfigHierarchy::build with bind-address CLI override");
 
         assert_eq!(
             config.network.api.bind_address,
@@ -469,7 +476,7 @@ mod tests {
         let config = ConfigHierarchy::new()
             .with_cli_arg("api-port".to_string(), "5555".to_string())
             .build()
-            .unwrap();
+            .expect("ConfigHierarchy::build with api-port CLI alias");
         assert_eq!(config.network.api.port, 5555);
     }
 
@@ -478,7 +485,7 @@ mod tests {
         let config = ConfigHierarchy::new()
             .with_cli_arg("config".to_string(), "/tmp/beardog/config.toml".to_string())
             .build()
-            .unwrap();
+            .expect("ConfigHierarchy::build with config path CLI override");
         assert_eq!(
             config.paths.config_dir,
             std::path::PathBuf::from("/tmp/beardog")
@@ -504,7 +511,10 @@ mod tests {
     #[test]
     fn test_with_env_vars() {
         // Just test that it doesn't panic (env vars are unpredictable)
-        let config = ConfigHierarchy::new().with_env_vars().build().unwrap();
+        let config = ConfigHierarchy::new()
+            .with_env_vars()
+            .build()
+            .expect("ConfigHierarchy::build should succeed in test");
         assert!(config.network.api.port > 0);
     }
 
@@ -513,9 +523,9 @@ mod tests {
         // In test env, no config files exist, so it should fall through
         let config = ConfigHierarchy::new()
             .with_auto_config_file()
-            .unwrap()
+            .expect("with_auto_config_file should succeed when no files exist")
             .build()
-            .unwrap();
+            .expect("ConfigHierarchy::build after auto config discovery");
         assert!(config.network.api.port > 0);
     }
 
@@ -538,7 +548,8 @@ mod tests {
         env.insert("BEARDOG_DISCOVERY_PORT".to_string(), "3001".to_string());
         env.insert("BEARDOG_ADMIN_PORT".to_string(), "3002".to_string());
 
-        let config = apply_env_overrides(BearDogConfig::default(), &env).unwrap();
+        let config =
+            apply_env_overrides(BearDogConfig::default(), &env).expect("apply_env_overrides ports");
         assert_eq!(config.network.api.port, 3000);
         assert_eq!(config.network.discovery.port, 3001);
         assert_eq!(config.network.admin.port, 3002);
@@ -554,7 +565,8 @@ mod tests {
         env.insert("BEARDOG_DATA_DIR".to_string(), "/custom/data".to_string());
         env.insert("BEARDOG_LOG_DIR".to_string(), "/custom/logs".to_string());
 
-        let config = apply_env_overrides(BearDogConfig::default(), &env).unwrap();
+        let config =
+            apply_env_overrides(BearDogConfig::default(), &env).expect("apply_env_overrides paths");
         assert_eq!(config.paths.config_dir, PathBuf::from("/custom/config"));
         assert_eq!(config.paths.data_dir, PathBuf::from("/custom/data"));
         assert_eq!(config.paths.log_dir, PathBuf::from("/custom/logs"));
@@ -568,7 +580,8 @@ mod tests {
             "192.168.1.1".to_string(),
         );
 
-        let config = apply_env_overrides(BearDogConfig::default(), &env).unwrap();
+        let config = apply_env_overrides(BearDogConfig::default(), &env)
+            .expect("apply_env_overrides bind address");
         assert_eq!(
             config.network.api.bind_address,
             std::net::IpAddr::V4(std::net::Ipv4Addr::new(192, 168, 1, 1))
@@ -589,7 +602,8 @@ mod tests {
         let mut env = HashMap::new();
         env.insert("BEARDOG_HSM_TIMEOUT".to_string(), "120".to_string());
 
-        let config = apply_env_overrides(BearDogConfig::default(), &env).unwrap();
+        let config = apply_env_overrides(BearDogConfig::default(), &env)
+            .expect("apply_env_overrides HSM timeout");
         assert_eq!(config.timeouts.hsm_operation_secs, 120);
     }
 
@@ -598,7 +612,8 @@ mod tests {
         let mut env = HashMap::new();
         env.insert("BEARDOG_STRICT_MODE".to_string(), "true".to_string());
 
-        let config = apply_env_overrides(BearDogConfig::default(), &env).unwrap();
+        let config = apply_env_overrides(BearDogConfig::default(), &env)
+            .expect("apply_env_overrides strict mode");
         assert!(config.security.strict_mode);
     }
 
@@ -607,7 +622,8 @@ mod tests {
         let mut env = HashMap::new();
         env.insert("BEARDOG_LOG_LEVEL".to_string(), "trace".to_string());
 
-        let config = apply_env_overrides(BearDogConfig::default(), &env).unwrap();
+        let config = apply_env_overrides(BearDogConfig::default(), &env)
+            .expect("apply_env_overrides log level");
         assert_eq!(config.monitoring.log_level, "trace");
     }
 
@@ -645,7 +661,7 @@ mod tests {
             .with_env_vars()
             .with_cli_arg("port".to_string(), "6000".to_string())
             .build()
-            .unwrap();
+            .expect("ConfigHierarchy::build full stack with CLI port");
 
         // CLI arg should win
         assert_eq!(config.network.api.port, 6000);

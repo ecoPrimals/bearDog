@@ -384,11 +384,17 @@ mod tests {
             "key_id": "test_key",
             "purpose": "tls_handshake",
         });
-        let out = handle_tls_sign_handshake(Some(&params)).await.unwrap();
+        let out = handle_tls_sign_handshake(Some(&params))
+            .await
+            .expect("tls.sign_handshake should succeed with valid test params");
         assert_eq!(out["algorithm"], "Ed25519");
         assert_eq!(out["key_id"], "test_key");
-        let sig_b64 = out["signature"].as_str().unwrap();
-        let sig = BASE64_STANDARD.decode(sig_b64).unwrap();
+        let sig_b64 = out["signature"]
+            .as_str()
+            .expect("handler must return signature as string");
+        let sig = BASE64_STANDARD
+            .decode(sig_b64)
+            .expect("signature must be valid base64");
         assert_eq!(sig.len(), 64);
     }
 
@@ -419,7 +425,7 @@ mod tests {
             });
             let out = handle_tls_compute_finished_verify_data(Some(&params))
                 .await
-                .unwrap();
+                .expect("finished verify_data should succeed for valid SHA-256 suite inputs");
             assert_eq!(out["length"], 32);
             assert_eq!(out["hash_algorithm"], "SHA-256");
         }
@@ -436,7 +442,7 @@ mod tests {
         });
         let out = handle_tls_compute_finished_verify_data(Some(&params))
             .await
-            .unwrap();
+            .expect("finished verify_data should succeed for SHA-384 suite inputs");
         assert_eq!(out["length"], 48);
         assert_eq!(out["hash_algorithm"], "SHA-384");
     }

@@ -318,8 +318,8 @@ pub trait CacheStrategy: Send + Sync {
 mod tests {
     use super::*;
 
-    // Mock cache strategy for testing
-    struct MockCacheStrategy {
+    // Test-only [`CacheStrategy`] implementation.
+    struct TestCacheStrategy {
         enabled: bool,
         max_entries: usize,
         ttl: Duration,
@@ -327,7 +327,7 @@ mod tests {
         max_bytes: Option<u64>,
     }
 
-    impl CacheStrategy for MockCacheStrategy {
+    impl CacheStrategy for TestCacheStrategy {
         fn max_entries(&self) -> usize {
             self.max_entries
         }
@@ -371,7 +371,7 @@ mod tests {
 
     #[test]
     fn test_basic_strategy() {
-        let strategy = MockCacheStrategy {
+        let strategy = TestCacheStrategy {
             enabled: true,
             max_entries: 1000,
             ttl: Duration::from_secs(3600),
@@ -388,7 +388,7 @@ mod tests {
 
     #[test]
     fn test_should_evict() {
-        let strategy = MockCacheStrategy {
+        let strategy = TestCacheStrategy {
             enabled: true,
             max_entries: 1000,
             ttl: Duration::from_secs(3600),
@@ -408,7 +408,7 @@ mod tests {
 
     #[test]
     fn test_capacity_calculations() {
-        let strategy = MockCacheStrategy {
+        let strategy = TestCacheStrategy {
             enabled: true,
             max_entries: 1000,
             ttl: Duration::from_secs(3600),
@@ -427,7 +427,7 @@ mod tests {
 
     #[test]
     fn test_target_hit_rate() {
-        let lru_strategy = MockCacheStrategy {
+        let lru_strategy = TestCacheStrategy {
             enabled: true,
             max_entries: 1000,
             ttl: Duration::from_secs(3600),
@@ -436,7 +436,7 @@ mod tests {
         };
         assert_eq!(lru_strategy.target_hit_rate(), 0.8);
 
-        let random_strategy = MockCacheStrategy {
+        let random_strategy = TestCacheStrategy {
             enabled: true,
             max_entries: 1000,
             ttl: Duration::from_secs(3600),
@@ -449,7 +449,7 @@ mod tests {
     #[test]
     fn test_validation() {
         // Valid strategy
-        let valid = MockCacheStrategy {
+        let valid = TestCacheStrategy {
             enabled: true,
             max_entries: 1000,
             ttl: Duration::from_secs(3600),
@@ -459,7 +459,7 @@ mod tests {
         assert!(valid.validate().is_ok());
 
         // Invalid: zero entries
-        let invalid1 = MockCacheStrategy {
+        let invalid1 = TestCacheStrategy {
             enabled: true,
             max_entries: 0,
             ttl: Duration::from_secs(3600),
@@ -469,7 +469,7 @@ mod tests {
         assert!(invalid1.validate().is_err());
 
         // Invalid: zero TTL
-        let invalid2 = MockCacheStrategy {
+        let invalid2 = TestCacheStrategy {
             enabled: true,
             max_entries: 1000,
             ttl: Duration::ZERO,
@@ -479,7 +479,7 @@ mod tests {
         assert!(invalid2.validate().is_err());
 
         // Valid: disabled cache with zero entries is OK
-        let disabled = MockCacheStrategy {
+        let disabled = TestCacheStrategy {
             enabled: false,
             max_entries: 0,
             ttl: Duration::ZERO,
@@ -492,7 +492,7 @@ mod tests {
     #[test]
     fn test_production_ready() {
         // Production ready
-        let prod = MockCacheStrategy {
+        let prod = TestCacheStrategy {
             enabled: true,
             max_entries: 10000,
             ttl: Duration::from_secs(1800), // 30 minutes
@@ -502,7 +502,7 @@ mod tests {
         assert!(prod.is_production_ready());
 
         // Not production ready: too small
-        let not_prod1 = MockCacheStrategy {
+        let not_prod1 = TestCacheStrategy {
             enabled: true,
             max_entries: 5,
             ttl: Duration::from_secs(1800),
@@ -512,7 +512,7 @@ mod tests {
         assert!(!not_prod1.is_production_ready());
 
         // Not production ready: TTL too short
-        let not_prod2 = MockCacheStrategy {
+        let not_prod2 = TestCacheStrategy {
             enabled: true,
             max_entries: 10000,
             ttl: Duration::from_secs(5),
@@ -522,7 +522,7 @@ mod tests {
         assert!(!not_prod2.is_production_ready());
 
         // Not production ready: disabled
-        let not_prod3 = MockCacheStrategy {
+        let not_prod3 = TestCacheStrategy {
             enabled: false,
             max_entries: 10000,
             ttl: Duration::from_secs(1800),

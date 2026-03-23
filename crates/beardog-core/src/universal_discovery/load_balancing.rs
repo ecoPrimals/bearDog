@@ -531,7 +531,7 @@ mod tests {
     #[tokio::test]
     async fn test_load_balancer_creation() {
         let config = LoadBalancingConfig::default();
-        let balancer = LoadBalancer::new(&config).unwrap();
+        let balancer = LoadBalancer::new(&config).expect("LoadBalancer::new with test config");
         assert!(balancer.balance_services(vec![]).await.is_ok());
     }
 
@@ -541,10 +541,13 @@ mod tests {
             algorithm: LoadBalancingAlgorithm::RoundRobin,
             ..Default::default()
         };
-        let balancer = LoadBalancer::new(&config).unwrap();
+        let balancer = LoadBalancer::new(&config).expect("LoadBalancer::new with test config");
 
         let services = create_test_services(3);
-        let result = balancer.balance_services(services).await.unwrap();
+        let result = balancer
+            .balance_services(services)
+            .await
+            .expect("balance_services should succeed");
 
         // Round robin should preserve order on first call
         assert_eq!(result.len(), 3);
@@ -556,10 +559,13 @@ mod tests {
             algorithm: LoadBalancingAlgorithm::LeastConnections,
             ..Default::default()
         };
-        let balancer = LoadBalancer::new(&config).unwrap();
+        let balancer = LoadBalancer::new(&config).expect("LoadBalancer::new with test config");
 
         let services = create_test_services(3);
-        let result = balancer.balance_services(services).await.unwrap();
+        let result = balancer
+            .balance_services(services)
+            .await
+            .expect("balance_services should succeed");
 
         assert_eq!(result.len(), 3);
     }
@@ -570,24 +576,27 @@ mod tests {
             algorithm: LoadBalancingAlgorithm::WeightedRoundRobin,
             ..Default::default()
         };
-        let balancer = LoadBalancer::new(&config).unwrap();
+        let balancer = LoadBalancer::new(&config).expect("LoadBalancer::new with test config");
 
         // Set different weights
         balancer
             .update_service_weight("service-0", 1.0)
             .await
-            .unwrap();
+            .expect("update_service_weight service-0 for weighted round robin");
         balancer
             .update_service_weight("service-1", 2.0)
             .await
-            .unwrap();
+            .expect("update_service_weight service-1 for weighted round robin");
         balancer
             .update_service_weight("service-2", 3.0)
             .await
-            .unwrap();
+            .expect("update_service_weight service-2 for weighted round robin");
 
         let services = create_test_services(3);
-        let result = balancer.balance_services(services).await.unwrap();
+        let result = balancer
+            .balance_services(services)
+            .await
+            .expect("balance_services weighted round robin");
 
         // Higher weight services should be first
         assert_eq!(result.len(), 3);
@@ -599,10 +608,13 @@ mod tests {
             algorithm: LoadBalancingAlgorithm::Random,
             ..Default::default()
         };
-        let balancer = LoadBalancer::new(&config).unwrap();
+        let balancer = LoadBalancer::new(&config).expect("LoadBalancer::new with test config");
 
         let services = create_test_services(5);
-        let result = balancer.balance_services(services).await.unwrap();
+        let result = balancer
+            .balance_services(services)
+            .await
+            .expect("balance_services should succeed");
 
         assert_eq!(result.len(), 5);
     }
@@ -613,11 +625,17 @@ mod tests {
             algorithm: LoadBalancingAlgorithm::IpHash,
             ..Default::default()
         };
-        let balancer = LoadBalancer::new(&config).unwrap();
+        let balancer = LoadBalancer::new(&config).expect("LoadBalancer::new with test config");
 
         let services = create_test_services(3);
-        let result1 = balancer.balance_services(services.clone()).await.unwrap();
-        let result2 = balancer.balance_services(services).await.unwrap();
+        let result1 = balancer
+            .balance_services(services.clone())
+            .await
+            .expect("balance_services first call");
+        let result2 = balancer
+            .balance_services(services)
+            .await
+            .expect("balance_services second call");
 
         // IP hash should be deterministic
         assert_eq!(result1.len(), result2.len());
@@ -632,10 +650,13 @@ mod tests {
             algorithm: LoadBalancingAlgorithm::LeastResponseTime,
             ..Default::default()
         };
-        let balancer = LoadBalancer::new(&config).unwrap();
+        let balancer = LoadBalancer::new(&config).expect("LoadBalancer::new with test config");
 
         let services = create_test_services(3);
-        let result = balancer.balance_services(services).await.unwrap();
+        let result = balancer
+            .balance_services(services)
+            .await
+            .expect("balance_services should succeed");
 
         assert_eq!(result.len(), 3);
     }
@@ -646,10 +667,13 @@ mod tests {
             algorithm: LoadBalancingAlgorithm::ResourceBased,
             ..Default::default()
         };
-        let balancer = LoadBalancer::new(&config).unwrap();
+        let balancer = LoadBalancer::new(&config).expect("LoadBalancer::new with test config");
 
         let services = create_test_services_with_metadata(3);
-        let result = balancer.balance_services(services).await.unwrap();
+        let result = balancer
+            .balance_services(services)
+            .await
+            .expect("balance_services should succeed");
 
         // Services with less metadata (less resource usage) should be first
         assert_eq!(result.len(), 3);
@@ -659,18 +683,33 @@ mod tests {
     #[tokio::test]
     async fn test_connection_counting() {
         let config = LoadBalancingConfig::default();
-        let balancer = LoadBalancer::new(&config).unwrap();
+        let balancer = LoadBalancer::new(&config).expect("LoadBalancer::new with test config");
 
         // Increment connections
-        balancer.increment_connections("service-1").await.unwrap();
-        balancer.increment_connections("service-1").await.unwrap();
-        balancer.increment_connections("service-2").await.unwrap();
+        balancer
+            .increment_connections("service-1")
+            .await
+            .expect("increment_connections service-1");
+        balancer
+            .increment_connections("service-1")
+            .await
+            .expect("increment_connections service-1 again");
+        balancer
+            .increment_connections("service-2")
+            .await
+            .expect("increment_connections service-2");
 
         // Decrement connections
-        balancer.decrement_connections("service-1").await.unwrap();
+        balancer
+            .decrement_connections("service-1")
+            .await
+            .expect("decrement_connections service-1");
 
         // Decrement non-existent service should not error
-        balancer.decrement_connections("service-999").await.unwrap();
+        balancer
+            .decrement_connections("service-999")
+            .await
+            .expect("decrement_connections missing service");
 
         // Verify state
         let state = balancer.state.read().await;
@@ -681,36 +720,50 @@ mod tests {
     #[tokio::test]
     async fn test_service_weight_update() {
         let config = LoadBalancingConfig::default();
-        let balancer = LoadBalancer::new(&config).unwrap();
+        let balancer = LoadBalancer::new(&config).expect("LoadBalancer::new with test config");
 
         balancer
             .update_service_weight("service-1", 2.5)
             .await
-            .unwrap();
+            .expect("update_service_weight service-1 in weight test");
         balancer
             .update_service_weight("service-2", 1.5)
             .await
-            .unwrap();
+            .expect("update_service_weight service-2 in weight test");
 
         let state = balancer.state.read().await;
-        assert!((state.service_weights.get("service-1").unwrap() - 2.5).abs() < f64::EPSILON);
-        assert!((state.service_weights.get("service-2").unwrap() - 1.5).abs() < f64::EPSILON);
+        let w1 = state
+            .service_weights
+            .get("service-1")
+            .expect("service-1 weight recorded");
+        let w2 = state
+            .service_weights
+            .get("service-2")
+            .expect("service-2 weight recorded");
+        assert!((w1 - 2.5).abs() < f64::EPSILON);
+        assert!((w2 - 1.5).abs() < f64::EPSILON);
     }
 
     #[tokio::test]
     async fn test_empty_services() {
         let config = LoadBalancingConfig::default();
-        let balancer = LoadBalancer::new(&config).unwrap();
-        let result = balancer.balance_services(vec![]).await.unwrap();
+        let balancer = LoadBalancer::new(&config).expect("LoadBalancer::new with test config");
+        let result = balancer
+            .balance_services(vec![])
+            .await
+            .expect("balance_services empty vec");
         assert!(result.is_empty());
     }
 
     #[tokio::test]
     async fn test_single_service() {
         let config = LoadBalancingConfig::default();
-        let balancer = LoadBalancer::new(&config).unwrap();
+        let balancer = LoadBalancer::new(&config).expect("LoadBalancer::new with test config");
         let services = create_test_services(1);
-        let result = balancer.balance_services(services).await.unwrap();
+        let result = balancer
+            .balance_services(services)
+            .await
+            .expect("balance_services single service");
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].name, "service-0");
@@ -735,7 +788,7 @@ mod tests {
     #[test]
     fn test_load_balancer_start_stop() {
         let config = LoadBalancingConfig::default();
-        let balancer = LoadBalancer::new(&config).unwrap();
+        let balancer = LoadBalancer::new(&config).expect("LoadBalancer::new with test config");
 
         assert!(balancer.start().is_ok());
         assert!(balancer.stop().is_ok());

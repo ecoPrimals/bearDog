@@ -168,7 +168,7 @@ mod tests {
     #[test]
     #[cfg(target_os = "macos")]
     fn test_macos_socket_format() {
-        let endpoint = IOSSocket::create_endpoint("beardog").unwrap();
+        let endpoint = IOSSocket::create_endpoint("beardog").expect("macOS socket endpoint");
         match endpoint {
             SocketEndpoint::Filesystem(path) => {
                 let path_str = path.to_string_lossy();
@@ -183,7 +183,7 @@ mod tests {
     #[test]
     #[cfg(target_os = "ios")]
     fn test_ios_xpc_format() {
-        let endpoint = IOSSocket::create_endpoint("beardog").unwrap();
+        let endpoint = IOSSocket::create_endpoint("beardog").expect("iOS XPC endpoint");
         match endpoint {
             SocketEndpoint::XPC(service) => {
                 assert_eq!(service, "org.biomeos.beardog");
@@ -197,7 +197,8 @@ mod tests {
     #[test]
     fn test_primal_name_variations() {
         for primal in &["alpha", "beta", "gamma", "delta", "epsilon"] {
-            let endpoint = IOSSocket::create_endpoint(primal).unwrap();
+            let endpoint =
+                IOSSocket::create_endpoint(primal).expect("iOS/macOS endpoint for primal");
 
             #[cfg(target_os = "macos")]
             match endpoint {
@@ -230,7 +231,8 @@ mod tests {
         beardog_errors::process_env::set_var("BIOMEOS_SOCKET_DIR", &test_dir);
 
         let test_name = format!("test_beardog_{}", std::process::id());
-        let endpoint = IOSSocket::create_endpoint(&test_name).unwrap();
+        let endpoint =
+            IOSSocket::create_endpoint(&test_name).expect("macOS socket for binding test");
 
         let listener = IOSSocket::bind(&endpoint);
         assert!(listener.is_ok(), "Socket binding failed on macOS");

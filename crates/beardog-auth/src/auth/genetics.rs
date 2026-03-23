@@ -204,10 +204,17 @@ mod tests {
             ..Default::default()
         };
 
-        engine.register_genetics(genetics1).unwrap();
-        engine.register_genetics(genetics2).unwrap();
+        engine
+            .register_genetics(genetics1)
+            .expect("register genetics1");
+        engine
+            .register_genetics(genetics2)
+            .expect("register genetics2 overwrite");
 
-        let registered = engine.genetics_registry.get("gen-1").unwrap();
+        let registered = engine
+            .genetics_registry
+            .get("gen-1")
+            .expect("gen-1 in registry after overwrite");
         assert_eq!(registered.fitness_score, 0.9, "Should have updated value");
     }
 
@@ -218,12 +225,17 @@ mod tests {
         let result = engine.combine_genetics(&["parent-1"]);
         assert!(result.is_ok(), "Single parent combination should succeed");
 
-        let combined = result.unwrap();
+        let combined = result.expect("combine_genetics single parent");
         assert_eq!(combined.generation, 1);
         assert_eq!(combined.fitness_score, 0.8);
         assert_eq!(combined.security_clearance, SecurityClearance::Medium);
         assert!(combined.parent_genetics.is_some());
-        assert_eq!(combined.parent_genetics.unwrap(), vec!["parent-1"]);
+        assert_eq!(
+            combined
+                .parent_genetics
+                .expect("parent_genetics for single parent"),
+            vec!["parent-1"]
+        );
     }
 
     #[test]
@@ -233,9 +245,11 @@ mod tests {
         let result = engine.combine_genetics(&["parent-1", "parent-2", "parent-3"]);
         assert!(result.is_ok(), "Multiple parent combination should succeed");
 
-        let combined = result.unwrap();
+        let combined = result.expect("combine_genetics multiple parents");
         assert!(combined.parent_genetics.is_some());
-        let parents = combined.parent_genetics.unwrap();
+        let parents = combined
+            .parent_genetics
+            .expect("parent_genetics for multiple parents");
         assert_eq!(parents.len(), 3);
         assert!(parents.contains(&"parent-1".to_string()));
         assert!(parents.contains(&"parent-2".to_string()));
@@ -254,8 +268,12 @@ mod tests {
     fn test_combine_genetics_generates_unique_id() {
         let engine = CrossNodeAuthEngine::default();
 
-        let result1 = engine.combine_genetics(&["parent-1"]).unwrap();
-        let result2 = engine.combine_genetics(&["parent-1"]).unwrap();
+        let result1 = engine
+            .combine_genetics(&["parent-1"])
+            .expect("combine_genetics first unique id");
+        let result2 = engine
+            .combine_genetics(&["parent-1"])
+            .expect("combine_genetics second unique id");
 
         assert_ne!(
             result1.id, result2.id,
@@ -288,7 +306,10 @@ mod tests {
         let result = engine.terminate_spawn(&spawn_id);
         assert!(result.is_ok(), "Termination should succeed");
 
-        let terminated = engine.spawned_beardogs.get(&spawn_id).unwrap();
+        let terminated = engine
+            .spawned_beardogs
+            .get(&spawn_id)
+            .expect("spawn present after insert");
         assert!(matches!(terminated.current_status, SpawnStatus::Terminated));
     }
 

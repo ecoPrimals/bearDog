@@ -404,7 +404,7 @@ mod tests {
         let result = discover_self_identity().await;
         assert!(result.is_ok(), "Self-identity discovery should succeed");
         
-        let identity = result.unwrap();
+        let identity = result.expect("discover_self_identity in test");
         assert!(!identity.id.to_string().is_empty(), "Should have valid ID");
         assert!(identity.capabilities.compute.cpu_cores > 0, "Should detect CPU cores");
     }
@@ -414,7 +414,7 @@ mod tests {
         let result = discover_capabilities().await;
         assert!(result.is_ok());
         
-        let caps = result.unwrap();
+        let caps = result.expect("discover_capabilities in test");
         assert!(caps.compute.cpu_cores > 0);
         assert!(caps.crypto.quantum_resistant);
     }
@@ -424,7 +424,7 @@ mod tests {
         let result = discover_network_info().await;
         assert!(result.is_ok());
         
-        let network = result.unwrap();
+        let network = result.expect("discover_network_info in test");
         assert!(!network.interfaces.is_empty(), "Should find at least one interface");
     }
 
@@ -433,7 +433,7 @@ mod tests {
         let result = derive_primal_id().await;
         assert!(result.is_ok());
         
-        let (id, method) = result.unwrap();
+        let (id, method) = result.expect("derive_primal_id in test");
         assert!(!id.to_string().is_empty());
         // Should at least fall back to system-derived
         assert!(matches!(method, IdentityDerivation::SystemDerived | 

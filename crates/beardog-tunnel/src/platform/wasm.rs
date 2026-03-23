@@ -113,7 +113,7 @@ mod tests {
 
     #[test]
     fn test_wasm_channel_format() {
-        let endpoint = WASMSocket::create_endpoint("beardog").unwrap();
+        let endpoint = WASMSocket::create_endpoint("beardog").expect("WASM in-process endpoint");
         match endpoint {
             SocketEndpoint::InProcess(channel) => {
                 assert!(channel.contains("beardog"));
@@ -127,7 +127,7 @@ mod tests {
     #[test]
     fn test_primal_name_variations() {
         for primal in &["alpha", "beta", "gamma", "delta", "epsilon"] {
-            let endpoint = WASMSocket::create_endpoint(primal).unwrap();
+            let endpoint = WASMSocket::create_endpoint(primal).expect("WASM endpoint for primal");
             match endpoint {
                 SocketEndpoint::InProcess(channel) => {
                     assert!(channel.contains(primal));
@@ -140,11 +140,12 @@ mod tests {
 
     #[test]
     fn test_wasm_binding_returns_unsupported() {
-        let endpoint = WASMSocket::create_endpoint("beardog").unwrap();
+        let endpoint = WASMSocket::create_endpoint("beardog").expect("WASM endpoint for bind test");
         let result = WASMSocket::bind(&endpoint);
 
         assert!(result.is_err(), "WASM binding should return error");
-        assert_eq!(result.unwrap_err().kind(), std::io::ErrorKind::Unsupported);
+        let err = result.expect_err("WASM bind should fail in sandbox");
+        assert_eq!(err.kind(), std::io::ErrorKind::Unsupported);
         println!("✅ WASM correctly returns Unsupported (expected for browser sandbox)");
     }
 }

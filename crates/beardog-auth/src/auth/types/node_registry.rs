@@ -33,7 +33,11 @@ pub struct ConsensusNodeRecord {
     pub last_seen: DateTime<Utc>,
 }
 
-/// Default trusted quorum nodes matching the historical stub (`node_1` … `node_3`).
+/// Example healthy quorum participants for `CrossNodeAuthEngine::default()` in tests.
+///
+/// [`CrossNodeAuthEngine::new`] starts with an empty registry; production deployments should
+/// populate [`CrossNodeAuthEngine::consensus_registry`] from configuration or discovery before
+/// relying on quorum APIs.
 pub fn default_consensus_registry() -> BTreeMap<String, ConsensusNodeRecord> {
     let now = Utc::now();
     ["node_1", "node_2", "node_3"]
@@ -142,79 +146,10 @@ impl Default for CrossNodeAuthEngine {
             active_authorizations: HashMap::new(),
             spawned_beardogs: HashMap::new(),
             genetics_registry: HashMap::new(),
-            node_registry: Box::new(test_helpers::MockNodeRegistry::default()),
-            proof_verifier: Box::new(test_helpers::MockProofVerifier),
+            node_registry: Box::new(crate::auth::node_registry::InMemoryNodeRegistry::new()),
+            proof_verifier: Box::new(crate::auth::proof_verifier::DefaultProofVerifier::new()),
             workflow_engine: None,
             consensus_registry: default_consensus_registry(),
-        }
-    }
-}
-
-// Test helper implementations
-#[cfg(test)]
-mod test_helpers {
-    use super::*;
-
-    #[derive(Default)]
-    pub struct MockNodeRegistry {
-        nodes: HashMap<String, NodeInfo>,
-    }
-
-    impl NodeRegistry for MockNodeRegistry {
-        fn get_node_info(&self, node_id: &str) -> Result<NodeInfo, BearDogError> {
-            self.nodes
-                .get(node_id)
-                .cloned()
-                .ok_or_else(|| BearDogError::not_found(format!("Node not found: {node_id}")))
-        }
-
-        fn register_node(&mut self, node_info: NodeInfo) -> Result<(), BearDogError> {
-            self.nodes.insert(node_info.node_id.clone(), node_info);
-            Ok(())
-        }
-
-        fn get_trust_level(&self, node_id: &str) -> Result<f64, BearDogError> {
-            self.get_node_info(node_id).map(|n| n.trust_level)
-        }
-
-        fn update_trust_level(
-            &mut self,
-            node_id: &str,
-            trust_level: f64,
-        ) -> Result<(), BearDogError> {
-            if let Some(node) = self.nodes.get_mut(node_id) {
-                node.trust_level = trust_level;
-                Ok(())
-            } else {
-                Err(BearDogError::not_found(format!(
-                    "Node not found: {}",
-                    node_id
-                )))
-            }
-        }
-    }
-
-    pub struct MockProofVerifier;
-
-    impl ProofVerifier for MockProofVerifier {
-        fn verify_authorization_proof(
-            &self,
-            _proof: &AuthorizationProof,
-        ) -> Result<bool, BearDogError> {
-            Ok(true)
-        }
-
-        fn generate_proof(
-            &self,
-            _authorization: &CrossNodeAuthorization,
-            _operation: &CrossNodeOperation,
-        ) -> Result<AuthorizationProof, BearDogError> {
-            Ok(AuthorizationProof {
-                authorization_id: "test-auth".to_string(),
-                operation: CrossNodeOperation::default(),
-                timestamp: Utc::now(),
-                proof_signature: "test-signature".to_string(),
-            })
         }
     }
 }
@@ -223,6 +158,8 @@ mod test_helpers {
 #[cfg(test)]
 mod comprehensive_tests {
     use super::*;
+    use crate::auth::node_registry::InMemoryNodeRegistry;
+    use crate::auth::proof_verifier::DefaultProofVerifier;
 
     // Helper function to create test NodeInfo
     fn create_test_node_info(node_id: &str) -> NodeInfo {
@@ -262,8 +199,8 @@ mod comprehensive_tests {
     }
 
     #[test]
-    fn test_mock_node_registry_register_node() {
-        let mut registry = test_helpers::MockNodeRegistry::default();
+    fn test_in_memory_node_registry_register_node() {
+        let mut registry = InMemoryNodeRegistry::new();
         let node = create_test_node_info("register-node-1");
 
         let result = registry.register_node(node.clone());
@@ -272,24 +209,27 @@ mod comprehensive_tests {
         // Verify node was registered
         let retrieved = registry.get_node_info("register-node-1");
         assert!(retrieved.is_ok());
-        assert_eq!(retrieved.unwrap().node_id, "register-node-1");
+        assert_eq!(
+            retrieved.expect("registered node").node_id,
+            "register-node-1"
+        );
     }
 
     #[test]
-    fn test_mock_node_registry_get_missing_node() {
-        let registry = test_helpers::MockNodeRegistry::default();
+    fn test_in_memory_node_registry_get_missing_node() {
+        let registry = InMemoryNodeRegistry::new();
 
         let result = registry.get_node_info("nonexistent-node");
         assert!(result.is_err(), "Should fail for missing node");
 
         // Verify error message
         let err = result.unwrap_err();
-        assert!(err.to_string().contains("Node not found"));
+        assert!(err.to_string().contains("not found"));
     }
 
     #[test]
-    fn test_mock_node_registry_get_trust_level() {
-        let mut registry = test_helpers::MockNodeRegistry::default();
+    fn test_in_memory_node_registry_get_trust_level() {
+        let mut registry = InMemoryNodeRegistry::new();
         let mut node = create_test_node_info("trust-node");
         node.trust_level = 0.95;
 
@@ -297,20 +237,20 @@ mod comprehensive_tests {
 
         let trust_level = registry.get_trust_level("trust-node");
         assert!(trust_level.is_ok());
-        assert_eq!(trust_level.unwrap(), 0.95);
+        assert_eq!(trust_level.expect("trust level"), 0.95);
     }
 
     #[test]
-    fn test_mock_node_registry_get_trust_level_missing_node() {
-        let registry = test_helpers::MockNodeRegistry::default();
+    fn test_in_memory_node_registry_get_trust_level_missing_node() {
+        let registry = InMemoryNodeRegistry::new();
 
         let result = registry.get_trust_level("missing-node");
         assert!(result.is_err(), "Should fail for missing node");
     }
 
     #[test]
-    fn test_mock_node_registry_update_trust_level() {
-        let mut registry = test_helpers::MockNodeRegistry::default();
+    fn test_in_memory_node_registry_update_trust_level() {
+        let mut registry = InMemoryNodeRegistry::new();
         let node = create_test_node_info("update-trust-node");
 
         registry.register_node(node).expect("Should register");
@@ -321,23 +261,23 @@ mod comprehensive_tests {
 
         // Verify update
         let new_trust = registry.get_trust_level("update-trust-node");
-        assert_eq!(new_trust.unwrap(), 0.99);
+        assert_eq!(new_trust.expect("updated trust level"), 0.99);
     }
 
     #[test]
-    fn test_mock_node_registry_update_trust_level_missing_node() {
-        let mut registry = test_helpers::MockNodeRegistry::default();
+    fn test_in_memory_node_registry_update_trust_level_missing_node() {
+        let mut registry = InMemoryNodeRegistry::new();
 
         let result = registry.update_trust_level("missing-node", 0.5);
         assert!(result.is_err(), "Should fail for missing node");
 
         let err = result.unwrap_err();
-        assert!(err.to_string().contains("Node not found"));
+        assert!(err.to_string().contains("not found"));
     }
 
     #[test]
-    fn test_mock_node_registry_multiple_nodes() {
-        let mut registry = test_helpers::MockNodeRegistry::default();
+    fn test_in_memory_node_registry_multiple_nodes() {
+        let mut registry = InMemoryNodeRegistry::new();
 
         // Register multiple nodes
         for i in 1..=5 {
@@ -353,8 +293,8 @@ mod comprehensive_tests {
     }
 
     #[test]
-    fn test_mock_proof_verifier_verify_authorization() {
-        let verifier = test_helpers::MockProofVerifier;
+    fn test_default_proof_verifier_verify_authorization() {
+        let verifier = DefaultProofVerifier::new();
         let proof = AuthorizationProof {
             authorization_id: "test-auth".to_string(),
             operation: CrossNodeOperation::default(),
@@ -364,7 +304,10 @@ mod comprehensive_tests {
 
         let result = verifier.verify_authorization_proof(&proof);
         assert!(result.is_ok());
-        assert!(result.unwrap(), "Mock verifier should return true");
+        assert!(
+            result.expect("verify authorization proof"),
+            "structurally valid proof should verify"
+        );
     }
 
     // Test removed due to struct field mismatches - needs proper mock setup
@@ -442,7 +385,7 @@ mod comprehensive_tests {
 
     #[test]
     fn test_node_registry_overwrite_existing_node() {
-        let mut registry = test_helpers::MockNodeRegistry::default();
+        let mut registry = InMemoryNodeRegistry::new();
 
         // Register initial node
         let node1 = create_test_node_info("overwrite-node");
@@ -455,6 +398,10 @@ mod comprehensive_tests {
 
         // Verify it was overwritten
         let trust = registry.get_trust_level("overwrite-node");
-        assert_eq!(trust.unwrap(), 0.5, "Should have new trust level");
+        assert_eq!(
+            trust.expect("overwritten trust level"),
+            0.5,
+            "Should have new trust level"
+        );
     }
 }

@@ -565,12 +565,13 @@ mod tests {
         let mut config = SovereignEntropyMigrationConfig::default();
         config.enabled_phases = vec![]; // Disable all phases
         let entropy_manager = Arc::new(beardog_genetics::EntropyHierarchyManager::default());
-        let manager = SovereignEntropyMigrationManager::new(entropy_manager, config).unwrap();
+        let manager = SovereignEntropyMigrationManager::new(entropy_manager, config)
+            .expect("SovereignEntropyMigrationManager::new in test");
         let result = manager
             .migrate_crypto_key_generation("key_generation", 32, None)
             .await;
         assert!(result.is_ok());
-        let bytes = result.unwrap();
+        let bytes = result.expect("migrate_crypto_key_generation when phases disabled");
         assert_eq!(bytes.len(), 32);
     }
 
@@ -578,7 +579,8 @@ mod tests {
     async fn test_migration_manager_get_statistics() {
         let entropy_manager = Arc::new(beardog_genetics::EntropyHierarchyManager::default());
         let config = SovereignEntropyMigrationConfig::default();
-        let manager = SovereignEntropyMigrationManager::new(entropy_manager, config).unwrap();
+        let manager = SovereignEntropyMigrationManager::new(entropy_manager, config)
+            .expect("SovereignEntropyMigrationManager::new in test");
         let stats = manager.get_migration_statistics().await;
         assert_eq!(stats.total_calls_migrated, 0);
     }
@@ -587,7 +589,8 @@ mod tests {
     async fn test_migration_manager_enable_disable_phase() {
         let entropy_manager = Arc::new(beardog_genetics::EntropyHierarchyManager::default());
         let config = SovereignEntropyMigrationConfig::default();
-        let mut manager = SovereignEntropyMigrationManager::new(entropy_manager, config).unwrap();
+        let mut manager = SovereignEntropyMigrationManager::new(entropy_manager, config)
+            .expect("SovereignEntropyMigrationManager::new in test");
         manager.enable_migration_phase(MigrationPhase::GeneticOperations);
         manager.disable_migration_phase(MigrationPhase::GeneticOperations);
         // Verify no panic - phases modified successfully
@@ -600,7 +603,8 @@ mod tests {
         config
             .operation_tier_requirements
             .insert("custom_crypto_op".to_string(), 2);
-        let manager = SovereignEntropyMigrationManager::new(entropy_manager, config).unwrap();
+        let manager = SovereignEntropyMigrationManager::new(entropy_manager, config)
+            .expect("SovereignEntropyMigrationManager::new in test");
         let bytes = manager
             .migrate_crypto_key_generation("custom_crypto_op", 16, Some("human-1"))
             .await
@@ -618,7 +622,7 @@ mod tests {
             entropy_manager,
             SovereignEntropyMigrationConfig::default(),
         )
-        .unwrap();
+        .expect("SovereignEntropyMigrationManager::new for neural weight test");
         for dist in ["he", "normal", "uniform", "xavier", "unknown"] {
             let w = manager
                 .migrate_neural_weight_initialization((2, 3), dist, None)
@@ -636,7 +640,7 @@ mod tests {
             entropy_manager,
             SovereignEntropyMigrationConfig::default(),
         )
-        .unwrap();
+        .expect("SovereignEntropyMigrationManager::new for random data test");
         let bytes = manager
             .migrate_random_data_generation("unlisted_operation", 24, Some("id-a"))
             .await
@@ -648,7 +652,8 @@ mod tests {
     async fn test_enable_phase_idempotent() {
         let entropy_manager = Arc::new(beardog_genetics::EntropyHierarchyManager::default());
         let config = SovereignEntropyMigrationConfig::default();
-        let mut manager = SovereignEntropyMigrationManager::new(entropy_manager, config).unwrap();
+        let mut manager = SovereignEntropyMigrationManager::new(entropy_manager, config)
+            .expect("SovereignEntropyMigrationManager::new in test");
         let n = manager.config.enabled_phases.len();
         manager.enable_migration_phase(MigrationPhase::CryptographicKeys);
         assert_eq!(manager.config.enabled_phases.len(), n);
@@ -657,13 +662,16 @@ mod tests {
     #[test]
     fn test_config_and_stats_serde_roundtrip() {
         let config = SovereignEntropyMigrationConfig::default();
-        let json = serde_json::to_string(&config).unwrap();
-        let back: SovereignEntropyMigrationConfig = serde_json::from_str(&json).unwrap();
+        let json =
+            serde_json::to_string(&config).expect("serialize SovereignEntropyMigrationConfig");
+        let back: SovereignEntropyMigrationConfig =
+            serde_json::from_str(&json).expect("deserialize SovereignEntropyMigrationConfig");
         assert_eq!(back.default_system_identity, config.default_system_identity);
 
         let stats = MigrationStatistics::default();
-        let json = serde_json::to_string(&stats).unwrap();
-        let _: MigrationStatistics = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&stats).expect("serialize MigrationStatistics");
+        let _: MigrationStatistics =
+            serde_json::from_str(&json).expect("deserialize MigrationStatistics");
     }
 
     #[tokio::test]
@@ -671,16 +679,17 @@ mod tests {
         let entropy_manager = Arc::new(beardog_genetics::EntropyHierarchyManager::default());
         let mut config = SovereignEntropyMigrationConfig::default();
         config.enabled_phases.clear();
-        let manager = SovereignEntropyMigrationManager::new(entropy_manager, config).unwrap();
+        let manager = SovereignEntropyMigrationManager::new(entropy_manager, config)
+            .expect("SovereignEntropyMigrationManager::new in test");
         let w = manager
             .migrate_neural_weight_initialization((2, 2), "he", None)
             .await
-            .unwrap();
+            .expect("neural weight fallback when phases cleared");
         assert_eq!(w.len(), 2);
         let r = manager
             .migrate_random_data_generation("nonce_generation", 8, None)
             .await
-            .unwrap();
+            .expect("random data fallback when phases cleared");
         assert_eq!(r.len(), 8);
     }
 }

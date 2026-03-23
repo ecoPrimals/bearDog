@@ -156,16 +156,17 @@ impl KeyStore {
             description,
         };
 
-        // Store in memory
+        // Store in memory (`persist_id` mirrors `key_id` for post-move persist path)
+        let persist_id = key_id.clone();
         let mut inner = self.inner.write().await;
         inner.signing_keys.insert(key_id.clone(), signing_key);
         inner.verifying_keys.insert(key_id.clone(), verifying_key);
-        inner.metadata.insert(key_id.clone(), metadata.clone());
+        inner.metadata.insert(key_id, metadata);
         drop(inner);
 
         // Persist to storage if configured
         if let KeyStorage::File(_) = &storage {
-            self.persist_signing_key(&key_id).await?;
+            self.persist_signing_key(&persist_id).await?;
         }
 
         Ok(public_key_bytes)
@@ -203,15 +204,16 @@ impl KeyStore {
             description,
         };
 
-        // Store in memory
+        // Store in memory (`persist_id` mirrors `key_id` for post-move persist path)
+        let persist_id = key_id.clone();
         let mut inner = self.inner.write().await;
         inner.symmetric_keys.insert(key_id.clone(), key_bytes);
-        inner.metadata.insert(key_id.clone(), metadata.clone());
+        inner.metadata.insert(key_id, metadata);
         drop(inner);
 
         // Persist to storage if configured
         if let KeyStorage::File(_) = &storage {
-            self.persist_symmetric_key(&key_id).await?;
+            self.persist_symmetric_key(&persist_id).await?;
         }
 
         Ok(())
@@ -564,12 +566,18 @@ impl KeyStore {
                         let key_bytes = fs::read(&path).await.map_err(|e| {
                             BearDogError::security(format!("Failed to read signing key: {e}"))
                         })?;
+                        let KeyMetadata {
+                            usage,
+                            storage,
+                            description,
+                            ..
+                        } = metadata;
                         self.import_signing_key(
                             key_id.to_string(),
                             &key_bytes,
-                            metadata.usage.clone(),
-                            metadata.storage.clone(),
-                            metadata.description.clone(),
+                            usage,
+                            storage,
+                            description,
                         )
                         .await?;
                         loaded_count += 1;
@@ -857,19 +865,22 @@ mod tests {
 
     #[tokio::test]
     async fn test_load_from_storage_skips_orphan_key_without_metadata() {
-        let temp = TempDir::new().unwrap();
+        let temp = TempDir::new().expect("temp dir for test");
         let dir = temp.path();
-        std::fs::write(dir.join("lonely.key"), [7u8; 32]).unwrap();
+        std::fs::write(dir.join("lonely.key"), [7u8; 32]).expect("write orphan key file");
         let store = KeyStore::new(Some(dir.to_path_buf()));
-        let n = store.load_from_storage().await.unwrap();
+        let n = store
+            .load_from_storage()
+            .await
+            .expect("load_from_storage in test");
         assert_eq!(n, 0);
     }
 
     #[tokio::test]
     async fn test_load_from_storage_skips_unsupported_key_type() {
-        let temp = TempDir::new().unwrap();
+        let temp = TempDir::new().expect("temp dir for test");
         let dir = temp.path();
-        std::fs::write(dir.join("rsa.key"), b"dummy-key-material").unwrap();
+        std::fs::write(dir.join("rsa.key"), b"dummy-key-material").expect("write rsa.key");
         let meta = KeyMetadata {
             key_id: "rsa".to_string(),
             key_type: KeyType::Rsa2048,
@@ -881,11 +892,14 @@ mod tests {
         };
         std::fs::write(
             dir.join("rsa.meta.json"),
-            serde_json::to_string_pretty(&meta).unwrap(),
+            serde_json::to_string_pretty(&meta).expect("serialize KeyMetadata in test"),
         )
-        .unwrap();
+        .expect("write rsa.meta.json");
         let store = KeyStore::new(Some(dir.to_path_buf()));
-        let n = store.load_from_storage().await.unwrap();
+        let n = store
+            .load_from_storage()
+            .await
+            .expect("load_from_storage in test");
         assert_eq!(n, 0);
     }
 

@@ -337,7 +337,7 @@ mod tests {
         let result = registry.load_library("/test/library.so");
         assert!(result.is_ok());
 
-        let library_id = result.unwrap();
+        let library_id = result.expect("load test library");
         let info = registry.get_library_info(&library_id);
         assert!(info.is_ok());
     }
@@ -352,10 +352,14 @@ mod tests {
     #[test]
     fn test_list_libraries() {
         let mut registry = ExternalFunctionRegistry::default();
-        registry.load_library("/test/lib1.so").unwrap();
-        registry.load_library("/test/lib2.so").unwrap();
+        registry
+            .load_library("/test/lib1.so")
+            .expect("load test lib1");
+        registry
+            .load_library("/test/lib2.so")
+            .expect("load test lib2");
 
-        let libraries = registry.list_libraries().unwrap();
+        let libraries = registry.list_libraries().expect("list libraries");
         assert_eq!(libraries.len(), 2);
     }
 }

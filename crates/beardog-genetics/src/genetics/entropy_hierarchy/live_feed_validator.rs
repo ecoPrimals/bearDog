@@ -311,7 +311,9 @@ mod tests {
         let data = vec![1, 2, 3, 4, 5];
         let metadata = HashMap::new(); // No attestation
 
-        let result = validator.validate_live_feed_only(&data, &metadata).unwrap();
+        let result = validator
+            .validate_live_feed_only(&data, &metadata)
+            .expect("validate_live_feed_only in test");
 
         assert!(!result.is_live);
         assert!(!result.violations.is_empty());
@@ -334,7 +336,9 @@ mod tests {
         metadata.insert("hardware_attestation".to_string(), "true".to_string());
         metadata.insert("anti_replay_nonce".to_string(), "test-nonce".to_string());
 
-        let result = validator.validate_live_feed_only(&data, &metadata).unwrap();
+        let result = validator
+            .validate_live_feed_only(&data, &metadata)
+            .expect("validate_live_feed_only in test");
 
         // Should detect as too uniform
         assert!(!result.is_live);
@@ -357,7 +361,9 @@ mod tests {
             uuid::Uuid::new_v4().to_string(),
         );
 
-        let result = validator.validate_live_feed_only(&data, &metadata).unwrap();
+        let result = validator
+            .validate_live_feed_only(&data, &metadata)
+            .expect("validate_live_feed_only in test");
 
         // Should accept good random data
         assert!(result.is_live || result.timing_entropy > 0.5);
@@ -366,7 +372,9 @@ mod tests {
     #[test]
     fn test_calculate_timing_entropy_empty() {
         let validator = LiveFeedValidator::new();
-        let result = validator.calculate_timing_entropy(&[]).unwrap();
+        let result = validator
+            .calculate_timing_entropy(&[])
+            .expect("calculate_timing_entropy in test");
         assert_eq!(result, 0.0);
     }
 
@@ -376,7 +384,9 @@ mod tests {
 
         // All same value = very low entropy
         let data = vec![42u8; 100];
-        let result = validator.calculate_timing_entropy(&data).unwrap();
+        let result = validator
+            .calculate_timing_entropy(&data)
+            .expect("calculate_timing_entropy in test");
 
         assert!(result < 0.1); // Should be very low
     }
@@ -403,7 +413,9 @@ mod tests {
         // Simulate LCG-like pattern (consecutive small gaps)
         let lcg_data: Vec<u8> = (0..32).map(|i| (i * 3 % 256) as u8).collect();
 
-        let result = validator.detect_prng_pattern(&lcg_data).unwrap();
+        let result = validator
+            .detect_prng_pattern(&lcg_data)
+            .expect("detect_prng_pattern in test");
         assert!(result.is_some());
     }
 
@@ -420,7 +432,7 @@ mod tests {
 
         let result = validator.detect_repeating_pattern(&data);
         assert!(result.is_some());
-        assert_eq!(result.unwrap(), 4);
+        assert_eq!(result.expect("repeating pattern period in test"), 4);
     }
 
     #[test]
@@ -439,7 +451,9 @@ mod tests {
         let data = vec![1, 2, 3, 4, 5];
         let metadata = HashMap::new();
 
-        let result = validator.validate_live_feed_only(&data, &metadata).unwrap();
+        let result = validator
+            .validate_live_feed_only(&data, &metadata)
+            .expect("validate_live_feed_only in test");
 
         // May still fail on timing entropy but not on metadata
         assert!(!result.violations.iter().any(|v| v.contains("attestation")));

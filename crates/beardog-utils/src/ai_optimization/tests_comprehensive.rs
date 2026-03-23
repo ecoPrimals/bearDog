@@ -32,14 +32,14 @@ fn test_resource_predictor_zero_window_size() {
 
 #[test]
 fn test_resource_predictor_add_sample() {
-    let mut predictor = ResourcePredictor::new(10).unwrap();
+    let mut predictor = ResourcePredictor::new(10).expect("ResourcePredictor::new");
     let result = predictor.add_sample(50.0, 60.0, 10.0);
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_resource_predictor_multiple_samples() {
-    let mut predictor = ResourcePredictor::new(5).unwrap();
+    let mut predictor = ResourcePredictor::new(5).expect("ResourcePredictor::new");
 
     for i in 1..=10 {
         let result = predictor.add_sample(i as f64, i as f64 * 2.0, i as f64 * 0.5);
@@ -49,71 +49,75 @@ fn test_resource_predictor_multiple_samples() {
 
 #[test]
 fn test_predict_cpu_usage_no_data() {
-    let predictor = ResourcePredictor::new(10).unwrap();
+    let predictor = ResourcePredictor::new(10).expect("ResourcePredictor::new");
     let result = predictor.predict_cpu_usage();
     assert!(result.is_err());
 }
 
 #[test]
 fn test_predict_cpu_usage_with_data() {
-    let mut predictor = ResourcePredictor::new(10).unwrap();
+    let mut predictor = ResourcePredictor::new(10).expect("ResourcePredictor::new");
 
-    predictor.add_sample(50.0, 60.0, 10.0).unwrap();
-    predictor.add_sample(60.0, 70.0, 12.0).unwrap();
+    predictor.add_sample(50.0, 60.0, 10.0).expect("add_sample");
+    predictor.add_sample(60.0, 70.0, 12.0).expect("add_sample");
 
-    let prediction = predictor.predict_cpu_usage().unwrap();
+    let prediction = predictor.predict_cpu_usage().expect("predict_cpu_usage");
     assert_eq!(prediction, 55.0); // Average of 50 and 60
 }
 
 #[test]
 fn test_predict_memory_usage_no_data() {
-    let predictor = ResourcePredictor::new(10).unwrap();
+    let predictor = ResourcePredictor::new(10).expect("ResourcePredictor::new");
     let result = predictor.predict_memory_usage();
     assert!(result.is_err());
 }
 
 #[test]
 fn test_predict_memory_usage_with_data() {
-    let mut predictor = ResourcePredictor::new(10).unwrap();
+    let mut predictor = ResourcePredictor::new(10).expect("ResourcePredictor::new");
 
-    predictor.add_sample(50.0, 40.0, 10.0).unwrap();
-    predictor.add_sample(60.0, 60.0, 12.0).unwrap();
+    predictor.add_sample(50.0, 40.0, 10.0).expect("add_sample");
+    predictor.add_sample(60.0, 60.0, 12.0).expect("add_sample");
 
-    let prediction = predictor.predict_memory_usage().unwrap();
+    let prediction = predictor
+        .predict_memory_usage()
+        .expect("predict_memory_usage");
     assert_eq!(prediction, 50.0); // Average of 40 and 60
 }
 
 #[test]
 fn test_predict_network_latency_no_data() {
-    let predictor = ResourcePredictor::new(10).unwrap();
+    let predictor = ResourcePredictor::new(10).expect("ResourcePredictor::new");
     let result = predictor.predict_network_latency();
     assert!(result.is_err());
 }
 
 #[test]
 fn test_predict_network_latency_with_data() {
-    let mut predictor = ResourcePredictor::new(10).unwrap();
+    let mut predictor = ResourcePredictor::new(10).expect("ResourcePredictor::new");
 
-    predictor.add_sample(50.0, 60.0, 10.0).unwrap();
-    predictor.add_sample(60.0, 70.0, 20.0).unwrap();
+    predictor.add_sample(50.0, 60.0, 10.0).expect("add_sample");
+    predictor.add_sample(60.0, 70.0, 20.0).expect("add_sample");
 
-    let prediction = predictor.predict_network_latency().unwrap();
+    let prediction = predictor
+        .predict_network_latency()
+        .expect("predict_network_latency");
     assert_eq!(prediction, 15.0); // Average of 10 and 20
 }
 
 #[test]
 fn test_window_size_limiting() {
-    let mut predictor = ResourcePredictor::new(3).unwrap();
+    let mut predictor = ResourcePredictor::new(3).expect("ResourcePredictor::new");
 
     // Add more samples than window size
     for i in 1..=5 {
         predictor
             .add_sample(i as f64 * 10.0, i as f64 * 20.0, i as f64)
-            .unwrap();
+            .expect("add_sample");
     }
 
     // Should only average the last 3 samples (30, 40, 50)
-    let prediction = predictor.predict_cpu_usage().unwrap();
+    let prediction = predictor.predict_cpu_usage().expect("predict_cpu_usage");
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
@@ -125,20 +129,22 @@ fn test_window_size_limiting() {
 // TEST_PRIORITY: normal
 #[test]
 fn test_get_trend_cpu() {
-    let mut predictor = ResourcePredictor::new(20).unwrap();
+    let mut predictor = ResourcePredictor::new(20).expect("ResourcePredictor::new");
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
 
     // Add increasing trend with enough samples for proper comparison
     for i in 1..=20 {
-        predictor.add_sample(i as f64 * 10.0, 50.0, 10.0).unwrap();
+        predictor
+            .add_sample(i as f64 * 10.0, 50.0, 10.0)
+            .expect("add_sample");
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
     }
 
-    let trend = predictor.get_trend("cpu").unwrap();
+    let trend = predictor.get_trend("cpu").expect("get_trend cpu");
     // Trend should be positive (recent values higher than older)
     assert!(trend > 50.0); // Recent avg around 150-200, older avg around 10-100
 }
@@ -148,16 +154,18 @@ fn test_get_trend_cpu() {
 // TEST_PRIORITY: normal
 #[test]
 fn test_get_trend_memory() {
-    let mut predictor = ResourcePredictor::new(20).unwrap();
+    let mut predictor = ResourcePredictor::new(20).expect("ResourcePredictor::new");
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     for i in 1..=20 {
-        predictor.add_sample(50.0, i as f64 * 5.0, 10.0).unwrap();
+        predictor
+            .add_sample(50.0, i as f64 * 5.0, 10.0)
+            .expect("add_sample");
     }
 
-    let trend = predictor.get_trend("memory").unwrap();
+    let trend = predictor.get_trend("memory").expect("get_trend memory");
     assert!(trend > 20.0);
 }
 
@@ -166,16 +174,18 @@ fn test_get_trend_memory() {
 // TEST_PRIORITY: normal
 #[test]
 fn test_get_trend_network() {
-    let mut predictor = ResourcePredictor::new(20).unwrap();
+    let mut predictor = ResourcePredictor::new(20).expect("ResourcePredictor::new");
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     for i in 1..=20 {
-        predictor.add_sample(50.0, 60.0, i as f64 * 2.0).unwrap();
+        predictor
+            .add_sample(50.0, 60.0, i as f64 * 2.0)
+            .expect("add_sample");
     }
 
-    let trend = predictor.get_trend("network").unwrap();
+    let trend = predictor.get_trend("network").expect("get_trend network");
     assert!(trend > 10.0);
 }
 
@@ -184,7 +194,7 @@ fn test_get_trend_network() {
 // TEST_PRIORITY: normal
 #[test]
 fn test_get_trend_unknown_type() {
-    let predictor = ResourcePredictor::new(10).unwrap();
+    let predictor = ResourcePredictor::new(10).expect("ResourcePredictor::new");
     let result = predictor.get_trend("unknown");
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
@@ -194,13 +204,13 @@ fn test_get_trend_unknown_type() {
 
 #[test]
 fn test_get_trend_insufficient_data() {
-    let mut predictor = ResourcePredictor::new(10).unwrap();
-    predictor.add_sample(50.0, 60.0, 10.0).unwrap();
+    let mut predictor = ResourcePredictor::new(10).expect("ResourcePredictor::new");
+    predictor.add_sample(50.0, 60.0, 10.0).expect("add_sample");
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    let trend = predictor.get_trend("cpu").unwrap();
+    let trend = predictor.get_trend("cpu").expect("get_trend cpu");
     assert_eq!(trend, 0.0); // Not enough data for trend
 }
 
@@ -493,7 +503,7 @@ fn test_get_success_rate() {
     // Success rate should be 3/4 = 0.75
     let rate = history.get_success_rate("ThreadPool");
     assert!(rate.is_some());
-    assert_eq!(rate.unwrap(), 0.75);
+    assert_eq!(rate.expect("ThreadPool success rate"), 0.75);
 }
 
 #[test]
@@ -560,16 +570,20 @@ fn test_optimization_history_with_large_capacity() {
 // TEST_PRIORITY: normal
 #[test]
 fn test_predictor_accuracy_over_time() {
-    let mut predictor = ResourcePredictor::new(10).unwrap();
+    let mut predictor = ResourcePredictor::new(10).expect("ResourcePredictor::new");
 
     // Add consistent data
     for _ in 0..5 {
-        predictor.add_sample(50.0, 60.0, 10.0).unwrap();
+        predictor.add_sample(50.0, 60.0, 10.0).expect("add_sample");
     }
 
-    let cpu_pred = predictor.predict_cpu_usage().unwrap();
-    let mem_pred = predictor.predict_memory_usage().unwrap();
-    let net_pred = predictor.predict_network_latency().unwrap();
+    let cpu_pred = predictor.predict_cpu_usage().expect("predict_cpu_usage");
+    let mem_pred = predictor
+        .predict_memory_usage()
+        .expect("predict_memory_usage");
+    let net_pred = predictor
+        .predict_network_latency()
+        .expect("predict_network_latency");
 
     assert_eq!(cpu_pred, 50.0);
     assert_eq!(mem_pred, 60.0);

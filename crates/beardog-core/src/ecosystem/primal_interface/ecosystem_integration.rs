@@ -248,20 +248,20 @@ mod tests {
                 "https://security.example.com".to_string(),
             )
             .await
-            .unwrap();
+            .expect("register Security capability");
         core.universal_adapter
             .register_capability(
                 CapabilityType::ServiceMesh,
                 "https://mesh.example.com".to_string(),
             )
             .await
-            .unwrap();
+            .expect("register ServiceMesh capability");
         let required = vec![CapabilityType::Security, CapabilityType::ServiceMesh];
         let result = core
             .coordinate_ecosystem_operation(uuid::Uuid::new_v4(), required)
             .await;
         assert!(result.is_ok());
-        let value = result.unwrap();
+        let value = result.expect("coordinate ecosystem operation");
         assert!(value.get("operation_id").is_some());
         assert_eq!(
             value.get("status").and_then(|v| v.as_str()),
@@ -274,7 +274,7 @@ mod tests {
         let core = make_core();
         let result = core.get_ecosystem_integration_health().await;
         assert!(result.is_ok());
-        let status = result.unwrap();
+        let status = result.expect("ecosystem integration health");
         assert!(matches!(
             status,
             HealthStatus::Healthy | HealthStatus::Degraded | HealthStatus::Unhealthy

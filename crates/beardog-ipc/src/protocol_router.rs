@@ -500,10 +500,14 @@ mod tests {
     async fn test_prefixed_stream_new() {
         use tokio::net::{TcpListener, TcpStream};
         // Ephemeral loopback — test-only
-        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
-        let addr = listener.local_addr().unwrap();
+        let listener = TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind ephemeral TCP for prefixed stream test");
+        let addr = listener
+            .local_addr()
+            .expect("ephemeral listener local_addr");
         let (client_stream, _) = tokio::join!(TcpStream::connect(addr), listener.accept());
-        let client_stream = client_stream.unwrap();
+        let client_stream = client_stream.expect("TCP connect in prefixed stream test");
         let prefixed = PrefixedStream::new(vec![1, 2, 3], client_stream);
         assert!(!prefixed.prefix_exhausted());
     }
@@ -512,10 +516,14 @@ mod tests {
     async fn test_prefixed_stream_prefix_exhausted_empty() {
         use tokio::net::{TcpListener, TcpStream};
         // Ephemeral loopback — test-only
-        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
-        let addr = listener.local_addr().unwrap();
+        let listener = TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind ephemeral TCP for empty-prefix test");
+        let addr = listener
+            .local_addr()
+            .expect("ephemeral listener local_addr");
         let (client_stream, _) = tokio::join!(TcpStream::connect(addr), listener.accept());
-        let client_stream = client_stream.unwrap();
+        let client_stream = client_stream.expect("TCP connect for empty-prefix test");
         let prefixed = PrefixedStream::new(vec![], client_stream);
         assert!(prefixed.prefix_exhausted());
     }
@@ -525,14 +533,21 @@ mod tests {
         use tokio::io::AsyncReadExt;
         use tokio::net::TcpListener;
         // Ephemeral loopback — test-only
-        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
-        let addr = listener.local_addr().unwrap();
+        let listener = TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind ephemeral TCP for prefix read test");
+        let addr = listener
+            .local_addr()
+            .expect("ephemeral listener local_addr");
         let (client_stream, _) = tokio::join!(TcpStream::connect(addr), listener.accept());
-        let client_stream = client_stream.unwrap();
+        let client_stream = client_stream.expect("TCP connect for prefix read test");
         let prefix = vec![0x01, 0x02, 0x03];
         let mut prefixed = PrefixedStream::new(prefix, client_stream);
         let mut buf = [0u8; 3];
-        let n = prefixed.read(&mut buf).await.unwrap();
+        let n = prefixed
+            .read(&mut buf)
+            .await
+            .expect("read prefix bytes from PrefixedStream");
         assert_eq!(n, 3);
         assert_eq!(buf, [0x01, 0x02, 0x03]);
         assert!(prefixed.prefix_exhausted());

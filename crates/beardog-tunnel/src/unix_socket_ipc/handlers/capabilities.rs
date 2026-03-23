@@ -253,13 +253,17 @@ mod tests {
         let result = handler.handle("capabilities", None, &btsp_provider).await;
 
         assert!(result.is_ok());
-        let response = result.unwrap();
+        let response = result.expect("capabilities handler in test");
 
         assert_eq!(response["primal"], "beardog");
         assert!(response["provided_capabilities"].is_array());
         assert!(response["family_id"].is_string());
         assert!(response["node_id"].is_string());
-        assert!(response["btsp_enabled"].as_bool().unwrap());
+        assert!(
+            response["btsp_enabled"]
+                .as_bool()
+                .expect("btsp_enabled should be bool in test")
+        );
     }
 
     #[tokio::test]
@@ -271,7 +275,7 @@ mod tests {
         let result = handler.handle("identity", None, &btsp_provider).await;
 
         assert!(result.is_ok());
-        let response = result.unwrap();
+        let response = result.expect("capabilities handler in test");
 
         assert_eq!(response["primal"], "beardog");
         assert!(response["family"].is_string());
@@ -290,14 +294,22 @@ mod tests {
             .await;
 
         assert!(result.is_ok());
-        let response = result.unwrap();
+        let response = result.expect("capabilities handler in test");
 
         // Must have flat capabilities array
-        let caps = response["capabilities"].as_array().unwrap();
+        let caps = response["capabilities"]
+            .as_array()
+            .expect("capabilities should be array in test");
         assert!(caps.len() >= 12, "Expected at least 12 capabilities");
 
         // Verify required capabilities per ecoBin v2.0
-        let cap_strs: Vec<&str> = caps.iter().map(|v| v.as_str().unwrap()).collect();
+        let cap_strs: Vec<&str> = caps
+            .iter()
+            .map(|v| {
+                v.as_str()
+                    .expect("capability entry should be string in test")
+            })
+            .collect();
         assert!(cap_strs.contains(&"crypto.sha256"));
         assert!(cap_strs.contains(&"crypto.sign"));
         assert!(cap_strs.contains(&"crypto.verify"));

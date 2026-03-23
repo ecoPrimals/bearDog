@@ -376,19 +376,22 @@ reliability = 0.25
 
     #[tokio::test]
     async fn from_config_creates_discovery() {
-        let dir = tempfile::tempdir().unwrap();
+        let dir = tempfile::tempdir().expect("tempdir for discovery config test");
         let path = dir.path().join("d.toml");
-        std::fs::write(&path, minimal_config_toml("\"environment\"")).unwrap();
-        let d = CapabilityDiscovery::from_config(&path).await.unwrap();
+        std::fs::write(&path, minimal_config_toml("\"environment\""))
+            .expect("write minimal discovery config");
+        let d = CapabilityDiscovery::from_config(&path)
+            .await
+            .expect("from_config with minimal TOML");
         assert_eq!(d.config.primal_self.primal_id, "t");
     }
 
     #[tokio::test]
     async fn find_by_capability_environment_and_cache() {
-        let dir = tempfile::tempdir().unwrap();
+        let dir = tempfile::tempdir().expect("tempdir for env discovery test");
         let path = dir.path().join("d.toml");
         let toml = minimal_config_toml("\"environment\"");
-        std::fs::write(&path, toml).unwrap();
+        std::fs::write(&path, toml).expect("write discovery TOML");
 
         let env = Arc::new({
             let mut m = HashMap::new();
@@ -401,7 +404,7 @@ reliability = 0.25
         let env_for_closure = env.clone();
         let d = CapabilityDiscovery::from_config(&path)
             .await
-            .unwrap()
+            .expect("from_config for env hook test")
             .with_environment_discovery(move |cap, ttl| {
                 let e = env_for_closure.clone();
                 discovered_services_from_environment_with(
@@ -411,18 +414,24 @@ reliability = 0.25
                     e.iter().map(|(a, b)| (a.clone(), b.clone())),
                 )
             });
-        let first = d.find_by_capability("orch").await.unwrap();
+        let first = d.find_by_capability("orch").await.expect("find orch first");
         assert_eq!(first.len(), 1);
-        let second = d.find_by_capability("orch").await.unwrap();
+        let second = d
+            .find_by_capability("orch")
+            .await
+            .expect("find orch second");
         assert_eq!(second.len(), 1);
     }
 
     #[tokio::test]
     async fn discover_services_unknown_method_is_skipped() {
         let toml = minimal_config_toml("\"not-a-real-method\"");
-        let config: DiscoveryConfig = toml::from_str(&toml).unwrap();
+        let config: DiscoveryConfig = toml::from_str(&toml).expect("parse discovery config TOML");
         let d = CapabilityDiscovery::new(config);
-        let out = d.find_by_capability("anything").await.unwrap();
+        let out = d
+            .find_by_capability("anything")
+            .await
+            .expect("find with unknown method");
         assert!(out.is_empty());
     }
 
@@ -435,9 +444,13 @@ reliability = 0.25
             "\"mdns\", \"dns_sd\"",
         ] {
             let toml = minimal_config_toml(methods);
-            let config: DiscoveryConfig = toml::from_str(&toml).unwrap();
+            let config: DiscoveryConfig =
+                toml::from_str(&toml).expect("parse discovery config for methods branch");
             let d = CapabilityDiscovery::new(config);
-            let out = d.find_by_capability("c").await.unwrap();
+            let out = d
+                .find_by_capability("c")
+                .await
+                .expect("find by capability c");
             assert!(out.is_empty(), "expected empty for methods={methods}");
         }
     }
@@ -445,17 +458,22 @@ reliability = 0.25
     #[tokio::test]
     async fn service_registry_branch_with_env_url() {
         let toml = minimal_config_toml("\"service_registry\"");
-        let config: DiscoveryConfig = toml::from_str(&toml).unwrap();
+        let config: DiscoveryConfig =
+            toml::from_str(&toml).expect("parse service_registry branch config");
         let d = CapabilityDiscovery::new(config)
             .with_service_registry_url(Some("http://127.0.0.1:8500".to_string()));
-        let out = d.find_by_capability("x").await.unwrap();
+        let out = d
+            .find_by_capability("x")
+            .await
+            .expect("find with registry URL set");
         assert!(out.is_empty());
     }
 
     #[test]
     fn select_best_empty_and_ranking() {
         let toml = minimal_config_toml("\"environment\"");
-        let config: DiscoveryConfig = toml::from_str(&toml).unwrap();
+        let config: DiscoveryConfig =
+            toml::from_str(&toml).expect("parse config for select_best test");
         let d = CapabilityDiscovery::new(config);
 
         assert!(d.select_best(&[]).is_none());
@@ -501,16 +519,21 @@ reliability = 0.25
             ..low.clone()
         };
 
-        let best = d.select_best(&[low.clone(), high.clone()]).unwrap();
+        let best = d
+            .select_best(&[low.clone(), high.clone()])
+            .expect("select_best with two candidates");
         assert_eq!(best.id, "b");
     }
 
     #[tokio::test]
     async fn builder_with_service_registry_url_none_still_runs() {
         let toml = minimal_config_toml("\"environment\"");
-        let config: DiscoveryConfig = toml::from_str(&toml).unwrap();
+        let config: DiscoveryConfig = toml::from_str(&toml).expect("parse config for noop find");
         let d = CapabilityDiscovery::new(config).with_service_registry_url(None);
-        let out = d.find_by_capability("noop").await.unwrap();
+        let out = d
+            .find_by_capability("noop")
+            .await
+            .expect("find noop with registry URL none");
         assert!(out.is_empty());
     }
 }

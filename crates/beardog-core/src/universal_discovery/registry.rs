@@ -223,17 +223,26 @@ mod tests {
     #[test]
     fn test_registry_new() {
         let config = ServiceRegistryConfig::default();
-        let registry = ServiceRegistry::new(&config).unwrap();
-        assert_eq!(registry.get_service_count().unwrap(), 0);
+        let registry = ServiceRegistry::new(&config).expect("ServiceRegistry::new in test");
+        assert_eq!(
+            registry
+                .get_service_count()
+                .expect("get_service_count empty registry"),
+            0
+        );
     }
 
     #[test]
     fn test_registry_register_and_find() {
         let config = ServiceRegistryConfig::default();
-        let mut registry = ServiceRegistry::new(&config).unwrap();
+        let mut registry = ServiceRegistry::new(&config).expect("ServiceRegistry::new in test");
         let service = make_extended_service_info("svc1");
-        registry.register_service(service).unwrap();
-        let found = registry.find_services_by_name("svc1").unwrap();
+        registry
+            .register_service(service)
+            .expect("register_service svc1");
+        let found = registry
+            .find_services_by_name("svc1")
+            .expect("find_services_by_name svc1");
         assert_eq!(found.len(), 1);
         assert_eq!(found[0].service_info.name, "svc1");
     }
@@ -241,24 +250,38 @@ mod tests {
     #[test]
     fn test_registry_deregister() {
         let config = ServiceRegistryConfig::default();
-        let mut registry = ServiceRegistry::new(&config).unwrap();
+        let mut registry = ServiceRegistry::new(&config).expect("ServiceRegistry::new in test");
         let service = make_extended_service_info("svc1");
-        registry.register_service(service).unwrap();
-        let removed = registry.deregister_service("svc1").unwrap();
+        registry
+            .register_service(service)
+            .expect("register_service for deregister test");
+        let removed = registry
+            .deregister_service("svc1")
+            .expect("deregister_service svc1");
         assert!(removed.is_some());
-        assert_eq!(registry.get_service_count().unwrap(), 0);
+        assert_eq!(
+            registry
+                .get_service_count()
+                .expect("get_service_count after deregister"),
+            0
+        );
     }
 
     #[test]
     fn test_registry_update_health() {
         let config = ServiceRegistryConfig::default();
-        let mut registry = ServiceRegistry::new(&config).unwrap();
+        let mut registry = ServiceRegistry::new(&config).expect("ServiceRegistry::new in test");
         let service = make_extended_service_info("svc1");
-        registry.register_service(service).unwrap();
+        registry
+            .register_service(service)
+            .expect("register_service for health update test");
         registry
             .update_service_health("svc1", HealthStatus::Degraded)
-            .unwrap();
-        let found = registry.get_service("svc1").unwrap().unwrap();
+            .expect("update_service_health");
+        let found = registry
+            .get_service("svc1")
+            .expect("get_service Result")
+            .expect("service svc1 should exist");
         assert_eq!(found.health_status, HealthStatus::Degraded);
     }
 

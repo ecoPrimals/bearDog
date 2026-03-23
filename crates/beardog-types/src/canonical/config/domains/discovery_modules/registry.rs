@@ -241,7 +241,10 @@ mod tests {
         config.endpoints.push("http://primary:8500".to_string());
         config.endpoints.push("http://secondary:8500".to_string());
 
-        assert_eq!(config.primary_endpoint().unwrap(), "http://primary:8500");
+        assert_eq!(
+            config.primary_endpoint().expect("primary endpoint"),
+            "http://primary:8500"
+        );
     }
 
     #[test]
@@ -251,8 +254,8 @@ mod tests {
             password: Arc::from("secret"),
         };
 
-        let json = serde_json::to_string(&auth).unwrap();
-        let deserialized: EtcdAuth = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&auth).expect("serialize etcd auth");
+        let deserialized: EtcdAuth = serde_json::from_str(&json).expect("deserialize etcd auth");
 
         assert_eq!(auth, deserialized);
     }

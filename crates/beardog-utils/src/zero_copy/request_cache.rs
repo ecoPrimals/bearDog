@@ -280,7 +280,9 @@ mod tests {
 
         // Wait for all threads
         for handle in handles {
-            handle.join().unwrap();
+            handle
+                .join()
+                .expect("concurrent cache test thread panicked or failed to join");
         }
 
         assert_eq!(cache.len(), 50); // 5 threads * 10 entries each

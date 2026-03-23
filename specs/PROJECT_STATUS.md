@@ -1,7 +1,7 @@
 # BearDog Project Status
 
 > **HISTORICAL SNAPSHOT** — Point-in-time record from Dec 4, 2025.
-> For current metrics see [STATUS.md](../STATUS.md) (12,337+ tests, 29 crates, 85.1% coverage, MSRV 1.93.0).
+> For current metrics see [STATUS.md](../STATUS.md) (14,029 tests, 30 crates, 86.1% coverage, MSRV 1.93.0).
 
 **Last Updated**: December 4, 2025 (Comprehensive Audit)  
 **Grade**: **A- (91/100)** - Production Ready  

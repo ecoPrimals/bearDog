@@ -319,7 +319,7 @@ mod tests {
     #[test]
     fn test_parse_hid_id_solokey() {
         let uevent = "HID_ID=0003:00001209:0000BEEE\n";
-        let (vid, pid) = parse_hid_id(uevent).unwrap();
+        let (vid, pid) = parse_hid_id(uevent).expect("parse_hid_id in test");
         assert_eq!(vid, 0x1209); // SoloKeys
         assert_eq!(pid, 0xBEEE); // Solo 2
     }
@@ -327,7 +327,7 @@ mod tests {
     #[test]
     fn test_parse_hid_id_yubikey() {
         let uevent = "HID_ID=0003:00001050:00000407\n";
-        let (vid, pid) = parse_hid_id(uevent).unwrap();
+        let (vid, pid) = parse_hid_id(uevent).expect("parse_hid_id in test");
         assert_eq!(vid, 0x1050); // Yubico
         assert_eq!(pid, 0x0407); // YubiKey 5
     }
@@ -381,7 +381,7 @@ mod tests {
     #[test]
     fn test_parse_hid_id_multiline_with_other_fields() {
         let uevent = "DRIVER=hid-generic\nHID_ID=0003:00001050:00000407\nHID_NAME=Yubico YubiKey\n";
-        let (vid, pid) = parse_hid_id(uevent).unwrap();
+        let (vid, pid) = parse_hid_id(uevent).expect("parse_hid_id in test");
         assert_eq!(vid, 0x1050);
         assert_eq!(pid, 0x0407);
     }
@@ -401,10 +401,15 @@ mod tests {
         let test_path = dir.join("beardog_hid_test_string_file.txt");
         tokio::fs::write(&test_path, "  Test Content  \n")
             .await
-            .unwrap();
-        let result = read_string_file(test_path.to_str().unwrap()).await;
+            .expect("write temp test file");
+        let result = read_string_file(
+            test_path
+                .to_str()
+                .expect("temp path is valid UTF-8 in test"),
+        )
+        .await;
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "Test Content");
+        assert_eq!(result.expect("read_string_file in test"), "Test Content");
         let _ = tokio::fs::remove_file(&test_path).await;
     }
 

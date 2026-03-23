@@ -19,8 +19,8 @@ use super::{Transport, TrustMode, TunnelProtocol};
 ///
 /// ```json
 /// {
-///   "peer_id": "songbird-nat0",
-///   "peer_endpoint": "unix:///tmp/songbird-nat0.sock"
+///   "peer_id": "peer-instance-id",
+///   "peer_endpoint": "unix:///path/from/discovery.sock"
 /// }
 /// ```
 ///
@@ -45,13 +45,13 @@ use super::{Transport, TrustMode, TunnelProtocol};
 pub struct TunnelEstablishParams {
     /// Peer identifier (primal ID or server hostname)
     ///
-    /// - Internal mode: Primal ID (e.g., "songbird-nat0")
+    /// - Internal mode: Opaque primal / instance id from discovery (not a product name)
     /// - External mode: Server hostname (e.g., "api.anthropic.com")
     pub peer_id: String,
 
     /// Peer endpoint (URI: unix:// or tcp://)
     ///
-    /// - Internal mode: `unix:///tmp/primal.sock`
+    /// - Internal mode: `unix:///...` from capability / registry discovery
     /// - External mode: `tcp://hostname:port`
     pub peer_endpoint: String,
 

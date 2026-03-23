@@ -181,15 +181,15 @@ mod tests {
 
     #[test]
     fn test_derive_key_from_id() {
-        let key = derive_key_from_id("test_key", "test").unwrap();
+        let key = derive_key_from_id("test_key", "test").expect("derive_key_from_id in test");
         assert_eq!(key.len(), 32);
 
         // Same inputs should produce same key (deterministic)
-        let key2 = derive_key_from_id("test_key", "test").unwrap();
+        let key2 = derive_key_from_id("test_key", "test").expect("derive_key_from_id in test");
         assert_eq!(key, key2);
 
         // Different inputs should produce different keys
-        let key3 = derive_key_from_id("test_key", "different").unwrap();
+        let key3 = derive_key_from_id("test_key", "different").expect("derive_key_from_id in test");
         assert_ne!(key, key3);
     }
 
@@ -198,7 +198,7 @@ mod tests {
         let encoded = BASE64.encode(b"hello world");
         let result = decode_base64_field("test_data", &encoded);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), b"hello world");
+        assert_eq!(result.expect("decode_base64_field in test"), b"hello world");
     }
 
     #[test]
@@ -237,7 +237,10 @@ mod tests {
     fn test_require_str_param() {
         let params = json!({"name": "test"});
 
-        assert_eq!(require_str_param(&params, "name").unwrap(), "test");
+        assert_eq!(
+            require_str_param(&params, "name").expect("require_str_param in test"),
+            "test"
+        );
         assert!(require_str_param(&params, "missing").is_err());
     }
 
@@ -261,7 +264,7 @@ mod tests {
         let params = json!({"key_id": "test", "data": "hello"});
         let result: Result<TestRequest, _> = deserialize_request(params, "test.method");
         assert!(result.is_ok());
-        let req = result.unwrap();
+        let req = result.expect("deserialize_request in test");
         assert_eq!(req.key_id, "test");
         assert_eq!(req.data, "hello");
     }

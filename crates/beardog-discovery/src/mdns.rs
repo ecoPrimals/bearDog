@@ -357,7 +357,8 @@ mod tests {
         // Should return empty vec, not error
         let result = discovery.discover("nonexistent-capability").await;
         assert!(result.is_ok());
-        assert!(result.unwrap().is_empty());
+        let services = result.expect("discover should return Ok for missing capability");
+        assert!(services.is_empty());
     }
 
     #[tokio::test]
@@ -383,7 +384,7 @@ mod tests {
     fn test_get_hostname() {
         let hostname = MdnsDiscovery::get_hostname();
         assert!(hostname.is_ok());
-        let name = hostname.unwrap();
+        let name = hostname.expect("get_hostname should succeed in test environment");
         assert!(!name.is_empty());
         assert!(!name.contains('.'), "Hostname should not contain domain");
     }
@@ -413,7 +414,8 @@ mod tests {
 
         let result = discovery.discover("test-service").await;
         assert!(result.is_ok()); // Should return empty results
-        assert!(result.unwrap().is_empty());
+        let services = result.expect("discover with short timeout should return Ok");
+        assert!(services.is_empty());
     }
 
     #[tokio::test]

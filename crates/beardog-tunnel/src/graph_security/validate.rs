@@ -394,7 +394,9 @@ mod tests {
     #[tokio::test]
     async fn test_validate_empty_template() {
         let template = create_test_template(vec![], vec![]);
-        let report = validate_template(&template).await.unwrap();
+        let report = validate_template(&template)
+            .await
+            .expect("validate_template returns report for empty template");
 
         assert!(!report.valid);
         assert!(!report.issues.is_empty());
@@ -410,7 +412,9 @@ mod tests {
         }];
 
         let template = create_test_template(nodes, edges);
-        let report = validate_template(&template).await.unwrap();
+        let report = validate_template(&template)
+            .await
+            .expect("validate_template returns report for valid graph");
 
         assert!(report.valid);
         assert_eq!(report.risk_level, RiskLevel::Low);
@@ -427,7 +431,9 @@ mod tests {
         }];
 
         let template = create_test_template(nodes, edges);
-        let report = validate_template(&template).await.unwrap();
+        let report = validate_template(&template)
+            .await
+            .expect("validate_template returns report for invalid edge reference");
 
         assert!(!report.valid);
         assert!(
@@ -451,7 +457,9 @@ mod tests {
         };
 
         let template = create_test_template(vec![node], vec![]);
-        let report = validate_template(&template).await.unwrap();
+        let report = validate_template(&template)
+            .await
+            .expect("validate_template returns report for excessive resources");
 
         assert!(
             report

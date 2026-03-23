@@ -359,10 +359,10 @@ mod tests {
         let result = engine.comprehensive_integration_health_check();
         assert!(result.is_ok());
 
-        let health = result.unwrap();
+        let health = result.expect("comprehensive integration health");
         assert!(health.is_object());
 
-        let obj = health.as_object().unwrap();
+        let obj = health.as_object().expect("health JSON object");
         assert!(obj.contains_key("universal_adapter"));
         assert!(obj.contains_key("capability_discovery"));
         assert!(obj.contains_key("service_mesh"));
@@ -380,7 +380,7 @@ mod tests {
         let engine = IntegrationEngine::default();
         let result = engine.get_discovered_services_count();
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 0);
+        assert_eq!(result.expect("discovered services count"), 0);
     }
 
     #[test]

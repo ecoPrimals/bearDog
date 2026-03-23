@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![forbid(unsafe_code)]
 
 //! # `BearDog` Configuration
 //!
@@ -47,7 +48,7 @@ pub use hierarchy::ConfigHierarchy;
 pub use loader::ConfigLoader;
 
 // Re-export commonly used types
-pub use domains::network_addresses::NetworkAddressesConfig;
+pub use domains::network_addresses::{DEFAULT_LISTEN_ADDR, NetworkAddressesConfig};
 pub use domains::network_ports::{
     DEFAULT_API_PORT, DEFAULT_DISCOVERY_PORT, DEFAULT_HEALTH_PORT, DEFAULT_HTTPS_PORT,
     DEFAULT_METRICS_PORT, DEFAULT_TCP_IPC_PORT, DEFAULT_VAULT_PORT, NetworkPortsConfig,

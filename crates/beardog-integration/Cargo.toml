@@ -51,6 +51,7 @@ arc-swap = "1.6"  # Lock-free atomic Arc swaps
 uuid = { version = "1.6", features = ["v4", "serde"] }
 
 # BearDog dependencies
+beardog-config = { path = "../beardog-config" }
 beardog-errors = { path = "../beardog-errors" }
 beardog-discovery = { path = "../beardog-discovery" }
 beardog-tunnel = { path = "../beardog-tunnel" }

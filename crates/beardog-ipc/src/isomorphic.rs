@@ -324,7 +324,11 @@ mod tests {
         assert!(unix.is_optimal());
 
         // Test-only: arbitrary loopback port for display string shape
-        let tcp = IpcEndpoint::TcpLocal("127.0.0.1:65000".parse().unwrap());
+        let tcp = IpcEndpoint::TcpLocal(
+            "127.0.0.1:65000"
+                .parse()
+                .expect("127.0.0.1:65000 parses as SocketAddr"),
+        );
         assert_eq!(tcp.display(), "tcp:127.0.0.1:65000");
         assert!(!tcp.is_optimal());
     }

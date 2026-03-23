@@ -491,7 +491,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_list_available_devices() {
-        let orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+        let orchestrator = HsmEntropyOrchestrator::new()
+            .await
+            .expect("HsmEntropyOrchestrator::new in test");
         let devices = orchestrator.list_available_devices().await;
         // Should not panic, may be empty if no HSMs available
         // Note: devices.len() is always >= 0 (usize is unsigned)
@@ -537,7 +539,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_generate_entropy_basic() {
-        let mut orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+        let mut orchestrator = HsmEntropyOrchestrator::new()
+            .await
+            .expect("HsmEntropyOrchestrator::new in test");
 
         let request = EntropyGenerationRequest {
             length: 32,
@@ -551,14 +555,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_generate_human_entropy_basic() {
-        let mut orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+        let mut orchestrator = HsmEntropyOrchestrator::new()
+            .await
+            .expect("HsmEntropyOrchestrator::new in test");
         let result = orchestrator.generate_human_entropy(32, None).await;
         assert!(result.is_ok() || result.is_err());
     }
 
     #[tokio::test]
     async fn test_generate_entropy_various_lengths() {
-        let mut orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+        let mut orchestrator = HsmEntropyOrchestrator::new()
+            .await
+            .expect("HsmEntropyOrchestrator::new in test");
 
         for length in &[16, 32, 64, 128] {
             let request = EntropyGenerationRequest {
@@ -605,7 +613,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_generate_human_entropy_with_input() {
-        let mut orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+        let mut orchestrator = HsmEntropyOrchestrator::new()
+            .await
+            .expect("HsmEntropyOrchestrator::new in test");
 
         let human_input = HumanEntropyInput {
             biometric_data: Some(vec![100, 150, 120, 180]),
@@ -634,7 +644,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_list_devices_consistency() {
-        let orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+        let orchestrator = HsmEntropyOrchestrator::new()
+            .await
+            .expect("HsmEntropyOrchestrator::new in test");
 
         let devices1 = orchestrator.list_available_devices().await;
         let devices2 = orchestrator.list_available_devices().await;
@@ -653,7 +665,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_entropy_requests_are_independent() {
-        let mut orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+        let mut orchestrator = HsmEntropyOrchestrator::new()
+            .await
+            .expect("HsmEntropyOrchestrator::new in test");
 
         let request1 = EntropyGenerationRequest {
             length: 32,
@@ -676,7 +690,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_orchestrator_sequential_operations() {
-        let mut orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+        let mut orchestrator = HsmEntropyOrchestrator::new()
+            .await
+            .expect("HsmEntropyOrchestrator::new in test");
 
         let _devices = orchestrator.list_available_devices().await;
         let result1 = orchestrator.generate_human_entropy(32, None).await;
@@ -688,7 +704,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_generate_entropy_zero_length() {
-        let mut orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+        let mut orchestrator = HsmEntropyOrchestrator::new()
+            .await
+            .expect("HsmEntropyOrchestrator::new in test");
 
         let request = EntropyGenerationRequest {
             length: 0,
@@ -702,7 +720,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_generate_entropy_large_length() {
-        let mut orchestrator = HsmEntropyOrchestrator::new().await.unwrap();
+        let mut orchestrator = HsmEntropyOrchestrator::new()
+            .await
+            .expect("HsmEntropyOrchestrator::new in test");
 
         let request = EntropyGenerationRequest {
             length: 1024,

@@ -409,7 +409,7 @@ mod tests {
             result
                 .failure_reason
                 .as_ref()
-                .unwrap()
+                .expect("invalid proof failure reason")
                 .contains("Root mismatch")
         );
         Ok(())
@@ -438,7 +438,7 @@ mod tests {
             result
                 .failure_reason
                 .as_ref()
-                .unwrap()
+                .expect("invalid proof failure reason")
                 .contains("Merkle root mismatch")
         );
         Ok(())
@@ -467,7 +467,7 @@ mod tests {
             result
                 .failure_reason
                 .as_ref()
-                .unwrap()
+                .expect("invalid proof failure reason")
                 .contains("Path length mismatch")
         );
         Ok(())

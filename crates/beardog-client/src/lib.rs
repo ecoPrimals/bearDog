@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![forbid(unsafe_code)]
 
 //! # BearDog Client Library (Tower Atomic Edition)
 //!
@@ -93,7 +94,7 @@ impl BearDogClient {
     ///
     /// # Arguments
     ///
-    /// * `service_type` - Type of service (e.g., "tower", "songbird")
+    /// * `service_type` - Type of service (opaque label, e.g. deployment role from your registry)
     /// * `metadata` - Optional metadata for the root node
     ///
     /// # Example
@@ -266,7 +267,7 @@ mod tests {
     #[tokio::test]
     async fn connect_maps_missing_socket_to_connection_error() {
         let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = tempfile::tempdir().expect("tempdir for BearDog client test");
         let sock = tmp.path().join("beardog-missing.sock");
         process_env::set_var("BEARDOG_SOCKET", sock.to_string_lossy().as_ref());
         let _guard = EnvGuard(vec!["BEARDOG_SOCKET"]);
@@ -286,27 +287,37 @@ mod tests {
     #[tokio::test]
     async fn lineage_methods_round_trip_over_json_rpc() {
         let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = tempfile::tempdir().expect("tempdir for BearDog client test");
         let socket_path = tmp.path().join("beardog-round-trip.sock");
 
-        let listener = UnixListener::bind(&socket_path).unwrap();
+        let listener =
+            UnixListener::bind(&socket_path).expect("bind test Unix socket for mock server");
         let ready = Arc::new(Notify::new());
         let ready_tx = Arc::clone(&ready);
 
         tokio::spawn(async move {
             ready_tx.notify_one();
-            let (mut stream, _) = listener.accept().await.unwrap();
+            let (mut stream, _) = listener
+                .accept()
+                .await
+                .expect("mock server accept lineage round-trip client");
             let (mut read_half, mut write_half) = stream.split();
             let mut reader = BufReader::new(&mut read_half);
             loop {
                 let mut line = String::new();
-                let n = reader.read_line(&mut line).await.unwrap();
+                let n = reader
+                    .read_line(&mut line)
+                    .await
+                    .expect("mock server read JSON-RPC line");
                 if n == 0 {
                     break;
                 }
-                let req: Value = serde_json::from_str(line.trim()).unwrap();
+                let req: Value =
+                    serde_json::from_str(line.trim()).expect("mock server parse JSON-RPC request");
                 let id = req["id"].clone();
-                let method = req["method"].as_str().unwrap();
+                let method = req["method"]
+                    .as_str()
+                    .expect("JSON-RPC request must have string method");
                 let result = match method {
                     "lineage.create" => json!({ "lineage_id": "L-genesis" }),
                     "lineage.verify" => json!({ "valid": true }),
@@ -319,9 +330,16 @@ mod tests {
                     "result": result,
                     "id": id,
                 });
-                let payload = serde_json::to_string(&response).unwrap();
-                write_half.write_all(payload.as_bytes()).await.unwrap();
-                write_half.write_all(b"\n").await.unwrap();
+                let payload =
+                    serde_json::to_string(&response).expect("serialize JSON-RPC response");
+                write_half
+                    .write_all(payload.as_bytes())
+                    .await
+                    .expect("write JSON-RPC response body");
+                write_half
+                    .write_all(b"\n")
+                    .await
+                    .expect("write JSON-RPC newline");
             }
         });
 
@@ -329,44 +347,65 @@ mod tests {
         process_env::set_var("BEARDOG_SOCKET", socket_path.to_string_lossy().as_ref());
         let _guard = EnvGuard(vec!["BEARDOG_SOCKET"]);
 
-        let mut client = BearDogClient::connect().await.unwrap();
-        let created = client.create_lineage("tower", None).await.unwrap();
+        let mut client = BearDogClient::connect()
+            .await
+            .expect("connect to mock round-trip socket");
+        let created = client
+            .create_lineage("tower", None)
+            .await
+            .expect("create_lineage round-trip");
         assert_eq!(created["lineage_id"], "L-genesis");
 
         let verified = client
             .verify_lineage(&lineage_proof_sample())
             .await
-            .unwrap();
+            .expect("verify_lineage round-trip");
         assert_eq!(verified["valid"], true);
 
-        let extended = client.extend_lineage("L1", "parent", None).await.unwrap();
+        let extended = client
+            .extend_lineage("L1", "parent", None)
+            .await
+            .expect("extend_lineage round-trip");
         assert_eq!(extended["node_id"], "child-1");
 
-        let got = client.get_lineage("L1").await.unwrap();
+        let got = client
+            .get_lineage("L1")
+            .await
+            .expect("get_lineage round-trip");
         assert_eq!(got["lineage_id"], "L1");
     }
 
     #[tokio::test]
     async fn lineage_create_and_extend_with_metadata_serializes_in_params() {
         let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = tempfile::tempdir().expect("tempdir for BearDog client test");
         let socket_path = tmp.path().join("beardog-meta.sock");
 
-        let listener = UnixListener::bind(&socket_path).unwrap();
+        let listener =
+            UnixListener::bind(&socket_path).expect("bind test Unix socket for mock server");
         let ready = Arc::new(Notify::new());
         let ready_tx = Arc::clone(&ready);
 
         tokio::spawn(async move {
             ready_tx.notify_one();
-            let (mut stream, _) = listener.accept().await.unwrap();
+            let (mut stream, _) = listener
+                .accept()
+                .await
+                .expect("mock server accept metadata test client");
             let (mut read_half, mut write_half) = stream.split();
             let mut reader = BufReader::new(&mut read_half);
             for _ in 0..2 {
                 let mut line = String::new();
-                reader.read_line(&mut line).await.unwrap();
-                let req: Value = serde_json::from_str(line.trim()).unwrap();
+                reader
+                    .read_line(&mut line)
+                    .await
+                    .expect("mock server read metadata JSON-RPC line");
+                let req: Value = serde_json::from_str(line.trim())
+                    .expect("mock server parse metadata JSON-RPC request");
                 let id = req["id"].clone();
-                let method = req["method"].as_str().unwrap();
+                let method = req["method"]
+                    .as_str()
+                    .expect("JSON-RPC request must have string method");
                 let params = &req["params"];
                 let result = match method {
                     "lineage.create" => {
@@ -391,9 +430,16 @@ mod tests {
                     "result": result,
                     "id": id,
                 });
-                let payload = serde_json::to_string(&response).unwrap();
-                write_half.write_all(payload.as_bytes()).await.unwrap();
-                write_half.write_all(b"\n").await.unwrap();
+                let payload =
+                    serde_json::to_string(&response).expect("serialize metadata JSON-RPC response");
+                write_half
+                    .write_all(payload.as_bytes())
+                    .await
+                    .expect("write metadata JSON-RPC response");
+                write_half
+                    .write_all(b"\n")
+                    .await
+                    .expect("write metadata JSON-RPC newline");
             }
         });
 
@@ -405,54 +451,69 @@ mod tests {
         meta.biome_type = Some("test-biome".to_string());
         meta.trust_level = 0.5;
 
-        let mut client = BearDogClient::connect().await.unwrap();
+        let mut client = BearDogClient::connect()
+            .await
+            .expect("connect to mock metadata socket");
         let created = client
             .create_lineage("tower", Some(meta.clone()))
             .await
-            .unwrap();
+            .expect("create_lineage with metadata");
         assert_eq!(created["lineage_id"], "L-with-meta");
 
         let extended = client
             .extend_lineage("L-with-meta", "root", Some(meta))
             .await
-            .unwrap();
+            .expect("extend_lineage with metadata");
         assert_eq!(extended["node_id"], "child-meta");
     }
 
     #[tokio::test]
     async fn api_error_maps_json_rpc_fault() {
         let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let tmp = tempfile::tempdir().unwrap();
+        let tmp = tempfile::tempdir().expect("tempdir for BearDog client test");
         let socket_path = tmp.path().join("beardog-err.sock");
 
-        let listener = UnixListener::bind(&socket_path).unwrap();
+        let listener =
+            UnixListener::bind(&socket_path).expect("bind test Unix socket for mock server");
         let ready = Arc::new(Notify::new());
         let ready_tx = Arc::clone(&ready);
 
         tokio::spawn(async move {
             ready_tx.notify_one();
-            let (mut stream, _) = listener.accept().await.unwrap();
+            let (mut stream, _) = listener
+                .accept()
+                .await
+                .expect("mock server accept fault test client");
             let (mut read_half, mut write_half) = stream.split();
             let mut reader = BufReader::new(&mut read_half);
             let mut line = String::new();
-            reader.read_line(&mut line).await.unwrap();
+            reader
+                .read_line(&mut line)
+                .await
+                .expect("mock server read fault-test request");
             let response = json!({
                 "jsonrpc": "2.0",
                 "error": { "code": -32601, "message": "method not found" },
                 "id": 1
             });
+            let err_body = serde_json::to_string(&response).expect("serialize error response");
             write_half
-                .write_all(serde_json::to_string(&response).unwrap().as_bytes())
+                .write_all(err_body.as_bytes())
                 .await
-                .unwrap();
-            write_half.write_all(b"\n").await.unwrap();
+                .expect("write JSON-RPC error response");
+            write_half
+                .write_all(b"\n")
+                .await
+                .expect("write JSON-RPC error newline");
         });
 
         ready.notified().await;
         process_env::set_var("BEARDOG_SOCKET", socket_path.to_string_lossy().as_ref());
         let _guard = EnvGuard(vec!["BEARDOG_SOCKET"]);
 
-        let mut client = BearDogClient::connect().await.unwrap();
+        let mut client = BearDogClient::connect()
+            .await
+            .expect("connect to mock fault socket");
         let result = client.create_lineage("x", None).await;
         let err = match result {
             Err(e) => e,

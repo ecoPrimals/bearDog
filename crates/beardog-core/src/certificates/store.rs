@@ -120,15 +120,21 @@ mod tests {
             CertificateClassification::Human { confidence: 0.9 },
             &signing_key,
         )
-        .unwrap();
+        .expect("issue test certificate");
 
         // Store certificate
-        store.store(cert.clone()).await.unwrap();
+        store
+            .store(cert.clone())
+            .await
+            .expect("store certificate in test");
 
         // Retrieve certificate
         let retrieved = store.get("test-adapter").await;
         assert!(retrieved.is_some());
-        assert_eq!(retrieved.unwrap().adapter_id, "test-adapter");
+        assert_eq!(
+            retrieved.expect("retrieved certificate present").adapter_id,
+            "test-adapter"
+        );
     }
 
     #[tokio::test]
@@ -142,12 +148,12 @@ mod tests {
             CertificateClassification::Human { confidence: 0.9 },
             &signing_key,
         )
-        .unwrap();
+        .expect("issue certificate for expiry test");
 
         // Set expiry to past
         cert.expires_at = Utc::now() - Duration::hours(1);
 
-        store.store(cert).await.unwrap();
+        store.store(cert).await.expect("store expired certificate");
 
         // Should not retrieve expired certificate
         let retrieved = store.get("test-adapter").await;
@@ -165,8 +171,11 @@ mod tests {
             CertificateClassification::Human { confidence: 0.9 },
             &signing_key,
         )
-        .unwrap();
-        store.store(valid_cert).await.unwrap();
+        .expect("issue valid certificate for cleanup test");
+        store
+            .store(valid_cert)
+            .await
+            .expect("store valid certificate");
 
         // Store expired certificate
         let mut expired_cert = AdapterUnlockCertificate::issue(
@@ -174,14 +183,20 @@ mod tests {
             CertificateClassification::Human { confidence: 0.9 },
             &signing_key,
         )
-        .unwrap();
+        .expect("issue expired-adapter certificate");
         expired_cert.expires_at = Utc::now() - Duration::hours(1);
-        store.store(expired_cert).await.unwrap();
+        store
+            .store(expired_cert)
+            .await
+            .expect("store expired certificate");
 
         assert_eq!(store.count().await, 2);
 
         // Cleanup
-        let removed = store.cleanup_expired().await.unwrap();
+        let removed = store
+            .cleanup_expired()
+            .await
+            .expect("cleanup_expired in test");
         assert_eq!(removed, 1);
         assert_eq!(store.count().await, 1);
 

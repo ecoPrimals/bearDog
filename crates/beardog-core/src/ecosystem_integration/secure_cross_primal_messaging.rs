@@ -312,7 +312,7 @@ impl SecureCrossPrimalMessenger {
     /// Send message to ANY compute-capable primal
     ///
     /// Discovers and sends to primals with compute capabilities.
-    /// Works with ANY primal (e.g., toadstool, or others) without hardcoding names.
+    /// Works with any capability-matched peer discovered at runtime (no fixed primal names).
     ///
     /// # Errors
     /// Returns an error if no compute primals are found or request fails

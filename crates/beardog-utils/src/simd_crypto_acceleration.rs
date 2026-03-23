@@ -250,8 +250,18 @@ mod tests {
 
         assert!(results.contains_key("aes_encrypt_ns_per_kb"));
         assert!(results.contains_key("sha256_hash_ns_per_kb"));
-        assert!(*results.get("aes_encrypt_ns_per_kb").unwrap() > 0);
-        assert!(*results.get("sha256_hash_ns_per_kb").unwrap() > 0);
+        assert!(
+            *results
+                .get("aes_encrypt_ns_per_kb")
+                .expect("benchmark reports AES encrypt timing")
+                > 0
+        );
+        assert!(
+            *results
+                .get("sha256_hash_ns_per_kb")
+                .expect("benchmark reports SHA-256 timing")
+                > 0
+        );
     }
 
     #[test]

@@ -202,7 +202,7 @@ impl BearDogGenetics {
     ///
     /// // Issue certificate for Songbird network adapter
     /// let certificate = key.issue_adapter_certificate(
-    ///     "beardog-adapters::songbird::network",
+    ///     "beardog-adapters::{discovered_adapter}::network",
     ///     AdapterClassification::Human,
     ///     Duration::hours(24),
     /// )?;

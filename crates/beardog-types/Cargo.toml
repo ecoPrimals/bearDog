@@ -48,6 +48,7 @@ tokio-test = "0.4"
 criterion = { version = "0.5", features = ["html_reports"] }
 serial_test = { workspace = true }
 tempfile = { workspace = true }
+proptest = { workspace = true }
 
 [features]
 default = [ "config",]

@@ -546,7 +546,12 @@ mod tests {
 
         let seeds: std::collections::HashSet<_> = results
             .iter()
-            .map(|r| r.get("device_seed").unwrap().as_str().unwrap())
+            .map(|r| {
+                r.get("device_seed")
+                    .expect("derive response includes device_seed")
+                    .as_str()
+                    .expect("device_seed is a JSON string")
+            })
             .collect();
         assert_eq!(
             seeds.len(),
@@ -584,9 +589,9 @@ mod tests {
         // Genesis signs certificate for USB Tower
         use ed25519_dalek::SigningKey;
         let usb_signing_key = SigningKey::from_bytes(
-            &BASE64.decode(&usb_seed.device_seed)?[..32]
+            &(BASE64.decode(&usb_seed.device_seed)?[..32]
                 .try_into()
-                .unwrap(),
+                .expect("decoded device seed yields 32-byte signing key material")),
         );
         let usb_pubkey = BASE64.encode(usb_signing_key.verifying_key().to_bytes());
 

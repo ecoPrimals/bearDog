@@ -216,7 +216,9 @@ mod tests {
         let engine = GeneticEvolutionEngine::new(config);
 
         let signatures = vec![GeneticSignature::default(); 10];
-        let population = engine.initialize_population(signatures).unwrap();
+        let population = engine
+            .initialize_population(signatures)
+            .expect("population init with matching size and signatures");
         assert_eq!(population.len(), 10);
     }
 
@@ -238,7 +240,9 @@ mod tests {
             },
         ];
 
-        let survivors = engine.select_survivors(&population, 2).unwrap();
+        let survivors = engine
+            .select_survivors(&population, 2)
+            .expect("selection with k <= population len");
         assert_eq!(survivors.len(), 2);
         assert_eq!(survivors[0], 0); // Highest fitness first
     }

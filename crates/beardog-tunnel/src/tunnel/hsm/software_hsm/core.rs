@@ -248,16 +248,19 @@ impl RustSoftwareHsm {
 
         // Protect key material
         let protected_bytes = self.memory_protector.protect(&key_material).await?;
-        let protected_material = ProtectedMemory::new(protected_bytes.clone(), true);
-        let encrypted_data = protected_bytes.clone(); // Clone for HSM key before moving
+        let encrypted_data = protected_bytes.clone();
+        let protected_material = ProtectedMemory::new(protected_bytes, true);
 
+        let key_id = request.key_id.clone();
+        let key_type = request.key_type.clone();
+        let metadata = KeyMetadata::new(key_id.clone(), key_type.clone());
         // Create software key
         let software_key = SoftwareKey {
-            id: request.key_id.clone(),
+            id: key_id.clone(),
             key_material: protected_material,
-            key_type: request.key_type.clone(),
+            key_type: key_type.clone(),
             created_at: Utc::now(),
-            metadata: KeyMetadata::new(request.key_id.clone(), request.key_type.clone()),
+            metadata: metadata.clone(),
         };
 
         // Store key
@@ -271,10 +274,10 @@ impl RustSoftwareHsm {
 
         // Create HSM key
         let hsm_key = HsmKey {
-            id: request.key_id.clone(),
+            id: key_id,
             hsm_type: "SoftwareHsm".to_string(),
-            key_type: request.key_type.clone(),
-            metadata: KeyMetadata::new(request.key_id.clone(), request.key_type.clone()),
+            key_type,
+            metadata,
             key_material: KeyMaterial::Encrypted {
                 encrypted_data,
                 encryption_algorithm: "AES-256-GCM".to_string(),
@@ -318,7 +321,7 @@ impl RustSoftwareHsm {
 
         // Protect derived key material
         let protected_bytes = self.memory_protector.protect(&derived_material).await?;
-        let encrypted_derived_data = protected_bytes.clone(); // Clone before moving
+        let encrypted_derived_data = protected_bytes.clone();
         let protected_derived = ProtectedMemory::new(protected_bytes, true);
 
         // Zeroize root key material (FIXED: removed .clone() to actually zero the key!)
@@ -333,13 +336,15 @@ impl RustSoftwareHsm {
             hex::encode(&derivation_data[..8.min(derivation_data.len())])
         );
 
+        let derived_key_type = root_key.key_type.clone();
+        let derived_meta = KeyMetadata::new(derived_key_id.clone(), derived_key_type.clone());
         // Store derived key
         let derived_key = SoftwareKey {
             id: derived_key_id.clone(),
             key_material: protected_derived,
-            key_type: root_key.key_type.clone(),
+            key_type: derived_key_type.clone(),
             created_at: Utc::now(),
-            metadata: KeyMetadata::new(derived_key_id.clone(), root_key.key_type.clone()),
+            metadata: derived_meta.clone(),
         };
 
         drop(key_store);
@@ -348,10 +353,10 @@ impl RustSoftwareHsm {
 
         // Create HSM key
         let hsm_key = HsmKey {
-            id: derived_key_id.clone(),
+            id: derived_key_id,
             hsm_type: "SoftwareHsm".to_string(),
-            key_type: root_key.key_type.clone(),
-            metadata: KeyMetadata::new(derived_key_id.clone(), root_key.key_type.clone()),
+            key_type: derived_key_type,
+            metadata: derived_meta,
             key_material: KeyMaterial::Encrypted {
                 encrypted_data: encrypted_derived_data,
                 encryption_algorithm: "AES-256-GCM".to_string(),
@@ -363,7 +368,7 @@ impl RustSoftwareHsm {
             created_at: Utc::now(),
         };
 
-        info!("✅ Key derived successfully: {}", derived_key_id);
+        info!("✅ Key derived successfully: {}", hsm_key.id);
         Ok(hsm_key)
     }
 }
@@ -417,12 +422,13 @@ impl HsmProvider for RustSoftwareHsm {
         let protected_bytes = self.memory_protector.protect(key_data).await?;
         let protected_material = ProtectedMemory::new(protected_bytes, true);
 
+        let id = key_id.to_string();
         // Create key metadata
-        let key_metadata = KeyMetadata::new(key_id.to_string(), key_type.clone());
+        let key_metadata = KeyMetadata::new(id.clone(), key_type.clone());
 
         // Create software key
         let software_key = SoftwareKey {
-            id: key_id.to_string(),
+            id: id.clone(),
             key_material: protected_material,
             key_type: key_type.clone(),
             created_at: Utc::now(),
@@ -440,7 +446,7 @@ impl HsmProvider for RustSoftwareHsm {
 
         // Create HSM key
         let hsm_key = HsmKey {
-            id: key_id.to_string(),
+            id,
             hsm_type: "SoftwareHsm".to_string(),
             key_type,
             metadata: key_metadata,

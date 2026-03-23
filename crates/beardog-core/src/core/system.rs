@@ -375,7 +375,7 @@ mod tests {
     fn test_system_with_default_config() {
         let result = BearDogCore::with_default_config();
         assert!(result.is_ok());
-        let _core = result.unwrap();
+        let _core = result.expect("BearDogCore::with_default_config should succeed in tests");
     }
 
     #[tokio::test]

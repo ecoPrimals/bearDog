@@ -552,7 +552,7 @@ mod tests {
 
     #[test]
     fn test_revocation_list_load_save_roundtrip_via_home() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for revocation roundtrip test");
 
         let mut list = RevocationList::new();
         list.revoke(
@@ -573,15 +573,27 @@ mod tests {
 
     #[test]
     fn test_revocation_export_import_merge() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for export/import merge test");
         let export_a = dir.path().join("a.json");
         let mut a = RevocationList::new();
         a.revoke("ka".to_string(), None, None, false);
-        a.export(export_a.to_str().unwrap()).unwrap();
+        a.export(
+            export_a
+                .to_str()
+                .expect("export path must be valid UTF-8 for test"),
+        )
+        .expect("export revocation list a");
 
         let mut b = RevocationList::new();
         b.revoke("kb".to_string(), None, None, false);
-        b.merge(&RevocationList::import(export_a.to_str().unwrap()).unwrap());
+        b.merge(
+            &RevocationList::import(
+                export_a
+                    .to_str()
+                    .expect("export path must be valid UTF-8 for test"),
+            )
+            .expect("import revocation list from export file"),
+        );
         assert!(b.is_revoked("ka"));
         assert!(b.is_revoked("kb"));
     }
@@ -616,42 +628,46 @@ mod tests {
 
         older.merge(&newer);
         assert_eq!(
-            older.revoked_keys.get("k").unwrap().reason,
+            older
+                .revoked_keys
+                .get("k")
+                .expect("key k must exist after merge with newer entry")
+                .reason,
             Some("newer".to_string())
         );
     }
 
     #[tokio::test]
     async fn test_handle_key_check_revocation_not_revoked() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for revocation check test");
         handle_key_check_revocation_with_home("fresh-key-id", dir.path())
             .await
-            .unwrap();
+            .expect("handle_key_check_revocation_with_home for non-revoked key");
     }
 
     #[tokio::test]
     async fn test_handle_key_list_revocations_empty() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for empty revocation list test");
         handle_key_list_revocations_with_home(dir.path())
             .await
-            .unwrap();
+            .expect("handle_key_list_revocations_with_home on empty store");
     }
 
     #[tokio::test]
     async fn test_handle_key_revoke_idempotent() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for idempotent revoke test");
 
         handle_key_revoke_with_home("dup-key", Some("r1"), None, false, dir.path())
             .await
-            .unwrap();
+            .expect("first revoke of dup-key");
         handle_key_revoke_with_home("dup-key", Some("r2"), None, false, dir.path())
             .await
-            .unwrap();
+            .expect("second revoke of dup-key (idempotent)");
     }
 
     #[tokio::test]
     async fn test_handle_key_revoke_with_cascade() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for cascade revoke test");
 
         use crate::handlers::key_store;
 
@@ -670,50 +686,66 @@ mod tests {
             usage: None,
             purpose: None,
         };
-        key_store::save_key_to_home(&parent, dir.path()).unwrap();
+        key_store::save_key_to_home(&parent, dir.path())
+            .expect("save parent key for cascade revoke test");
 
         handle_key_revoke_with_home("parent-k", Some("rotate"), None, true, dir.path())
             .await
-            .unwrap();
+            .expect("revoke parent with cascade");
 
-        let list = RevocationList::load_from_home(dir.path()).unwrap();
+        let list = RevocationList::load_from_home(dir.path()).expect("load revocation list");
         assert!(list.is_revoked("parent-k"));
         assert!(list.is_revoked("child-k"));
     }
 
     #[tokio::test]
     async fn test_handle_revocation_export_and_import_handlers() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for export handler test");
 
         let mut list = RevocationList::new();
         list.revoke("export-me".to_string(), None, None, false);
-        list.save_to_home(dir.path()).unwrap();
+        list.save_to_home(dir.path())
+            .expect("save revocation list before export");
 
         let export_path = dir.path().join("rev.json");
-        handle_revocation_export_with_home(export_path.to_str().unwrap(), dir.path())
-            .await
-            .unwrap();
+        handle_revocation_export_with_home(
+            export_path
+                .to_str()
+                .expect("export path must be valid UTF-8"),
+            dir.path(),
+        )
+        .await
+        .expect("export revocation list");
 
-        let home2 = TempDir::new().unwrap();
-        handle_revocation_import_with_home(export_path.to_str().unwrap(), home2.path())
-            .await
-            .unwrap();
-        let merged = RevocationList::load_from_home(home2.path()).unwrap();
+        let home2 = TempDir::new().expect("create second temp home for import test");
+        handle_revocation_import_with_home(
+            export_path
+                .to_str()
+                .expect("export path must be valid UTF-8"),
+            home2.path(),
+        )
+        .await
+        .expect("import revocation list");
+        let merged = RevocationList::load_from_home(home2.path()).expect("load merged list");
         assert!(merged.is_revoked("export-me"));
     }
 
     #[test]
     fn test_load_from_home_invalid_json_errors() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for invalid JSON test");
         let path = RevocationList::revocation_file_path_for_home(dir.path());
-        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-        std::fs::write(&path, "{ not json").unwrap();
+        std::fs::create_dir_all(
+            path.parent()
+                .expect("revocation file path must have a parent directory"),
+        )
+        .expect("create parent dirs for revocation file");
+        std::fs::write(&path, "{ not json").expect("write invalid JSON fixture");
         assert!(RevocationList::load_from_home(dir.path()).is_err());
     }
 
     #[tokio::test]
     async fn test_handle_key_check_revocation_with_home_revoked() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for revoked key check test");
         let mut list = RevocationList::new();
         list.revoke(
             "bad-key".to_string(),
@@ -721,23 +753,25 @@ mod tests {
             None,
             false,
         );
-        list.save_to_home(dir.path()).unwrap();
+        list.save_to_home(dir.path())
+            .expect("save revocation list with bad-key");
 
         handle_key_check_revocation_with_home("bad-key", dir.path())
             .await
-            .unwrap();
+            .expect("check revocation for revoked key");
     }
 
     #[tokio::test]
     async fn test_handle_key_list_revocations_with_home_nonempty() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for nonempty revocation list test");
         let mut list = RevocationList::new();
         list.revoke("k1".to_string(), None, None, false);
-        list.save_to_home(dir.path()).unwrap();
+        list.save_to_home(dir.path())
+            .expect("save revocation list with k1");
 
         handle_key_list_revocations_with_home(dir.path())
             .await
-            .unwrap();
+            .expect("list revocations with entries");
     }
 
     #[test]
@@ -770,7 +804,12 @@ mod tests {
 
         current.merge(&older);
         assert_eq!(
-            current.revoked_keys.get("same").unwrap().reason.as_deref(),
+            current
+                .revoked_keys
+                .get("same")
+                .expect("key same must exist after merge")
+                .reason
+                .as_deref(),
             Some("current")
         );
     }

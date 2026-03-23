@@ -13,7 +13,8 @@ mod threat_engine_gap_tests {
 
     #[test]
     fn test_engine_add_threat_feed() {
-        let mut engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let mut engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())
+            .expect("default threat detection config should construct engine");
         let feed = ThreatIntelligenceFeed {
             id: "feed-1".to_string(),
             name: "Test Feed".to_string(),
@@ -29,7 +30,8 @@ mod threat_engine_gap_tests {
 
     #[test]
     fn test_engine_update_threat_feed() {
-        let mut engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let mut engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())
+            .expect("default threat detection config should construct engine");
         let feed = ThreatIntelligenceFeed {
             id: "feed-1".to_string(),
             name: "Old Name".to_string(),
@@ -51,12 +53,20 @@ mod threat_engine_gap_tests {
             indicators: vec![],
         };
         engine.update_threat_feed(updated_feed);
-        assert_eq!(engine.threat_feeds.get("feed-1").unwrap().name, "New Name");
+        assert_eq!(
+            engine
+                .threat_feeds
+                .get("feed-1")
+                .expect("feed-1 must exist after update")
+                .name,
+            "New Name"
+        );
     }
 
     #[test]
     fn test_engine_remove_rule() {
-        let mut engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let mut engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())
+            .expect("default threat detection config should construct engine");
         let rule = DetectionRule::default();
         let id = rule.id.clone();
         engine.add_detection_rule(rule);
@@ -69,13 +79,15 @@ mod threat_engine_gap_tests {
 
     #[test]
     fn test_engine_remove_rule_not_found() {
-        let mut engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let mut engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())
+            .expect("default threat detection config should construct engine");
         assert!(!engine.remove_rule("nonexistent"));
     }
 
     #[test]
     fn test_engine_add_ml_model() {
-        let mut engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let mut engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())
+            .expect("default threat detection config should construct engine");
         let model = MlModel {
             id: "m1".to_string(),
             name: "Test".to_string(),
@@ -97,7 +109,8 @@ mod threat_engine_gap_tests {
 
     #[test]
     fn test_engine_get_stats() {
-        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())
+            .expect("default threat detection config should construct engine");
         let stats = engine.get_stats();
         assert_eq!(stats.total_threats_detected, 0);
     }

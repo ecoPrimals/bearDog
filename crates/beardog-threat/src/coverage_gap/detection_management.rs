@@ -15,7 +15,8 @@ mod management_tests {
     use beardog_types::canonical::config::domains::threat::ThreatDetectionConfig;
 
     fn make_engine() -> ThreatDetectionEngine {
-        ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap()
+        ThreatDetectionEngine::new(ThreatDetectionConfig::default())
+            .expect("default threat detection config should construct engine")
     }
 
     fn make_rule(id: &str, name: &str) -> DetectionRule {
@@ -299,10 +300,11 @@ mod management_tests {
         let engine = make_engine();
         let health = engine.get_system_health();
 
-        let serialized = serde_json::to_string(&health).unwrap();
+        let serialized = serde_json::to_string(&health).expect("SystemHealth should serialize");
         assert!(!serialized.is_empty());
 
-        let deserialized: SystemHealth = serde_json::from_str(&serialized).unwrap();
+        let deserialized: SystemHealth =
+            serde_json::from_str(&serialized).expect("SystemHealth round-trip JSON");
         assert_eq!(deserialized.details, health.details);
     }
 
@@ -312,8 +314,9 @@ mod management_tests {
         let engine = make_engine();
         let status = engine.get_system_status();
 
-        let serialized = serde_json::to_string(&status).unwrap();
-        let deserialized: SystemStatus = serde_json::from_str(&serialized).unwrap();
+        let serialized = serde_json::to_string(&status).expect("SystemStatus should serialize");
+        let deserialized: SystemStatus =
+            serde_json::from_str(&serialized).expect("SystemStatus round-trip JSON");
         assert_eq!(deserialized.system_uptime, "N/A");
     }
 

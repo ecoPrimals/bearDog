@@ -228,6 +228,22 @@ mod tests {
     }
 
     #[test]
+    fn test_validation_invalid_rollback_threshold() {
+        let mut config = CanonicalRolloutConfig::default();
+        config.rollback_threshold_percentage = 101.0;
+        let err = config.validate().expect_err("rollback threshold out of range");
+        assert!(err.contains("rollback_threshold"));
+    }
+
+    #[test]
+    fn test_validation_invalid_min_success_rate() {
+        let mut config = CanonicalRolloutConfig::default();
+        config.min_success_rate = -1.0;
+        let err = config.validate().expect_err("min_success_rate out of range");
+        assert!(err.contains("min_success_rate"));
+    }
+
+    #[test]
     fn test_validation_target_groups() {
         let mut config = CanonicalRolloutConfig::default();
         config.strategy = RolloutStrategy::TargetGroupBased;
@@ -252,18 +268,20 @@ mod tests {
             health_check_interval: Duration::from_secs(5),
         };
 
-        let json = serde_json::to_string(&config).unwrap();
-        let deserialized: CanonicalRolloutConfig = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&config).expect("serialize rollout config");
+        let deserialized: CanonicalRolloutConfig =
+            serde_json::from_str(&json).expect("deserialize rollout config");
         assert_eq!(deserialized, config);
     }
 
     #[test]
     fn test_strategy_serialization() {
         let strategy = RolloutStrategy::BlueGreen;
-        let json = serde_json::to_string(&strategy).unwrap();
+        let json = serde_json::to_string(&strategy).expect("serialize rollout strategy");
         assert_eq!(json, "\"blue_green\"");
 
-        let deserialized: RolloutStrategy = serde_json::from_str(&json).unwrap();
+        let deserialized: RolloutStrategy =
+            serde_json::from_str(&json).expect("deserialize rollout strategy");
         assert_eq!(deserialized, strategy);
     }
 

@@ -380,11 +380,15 @@ mod tests {
         let noon = Utc::now()
             .date_naive()
             .and_hms_opt(12, 0, 0)
-            .unwrap()
+            .expect("valid noon time in test")
             .and_utc();
         context.current_time = noon;
 
-        assert!(constraint.is_satisfied(&context).unwrap());
+        assert!(
+            constraint
+                .is_satisfied(&context)
+                .expect("is_satisfied in test")
+        );
         assert_eq!(constraint.constraint_type(), "time_range");
     }
 
@@ -395,10 +399,18 @@ mod tests {
         let mut context = ConstraintContext::new();
         context.system_state.cpu_usage_percent = Some(30.0);
 
-        assert!(constraint.is_satisfied(&context).unwrap());
+        assert!(
+            constraint
+                .is_satisfied(&context)
+                .expect("is_satisfied in test")
+        );
 
         context.system_state.cpu_usage_percent = Some(70.0);
-        assert!(!constraint.is_satisfied(&context).unwrap());
+        assert!(
+            !constraint
+                .is_satisfied(&context)
+                .expect("is_satisfied in test")
+        );
     }
 
     #[test]
@@ -410,7 +422,11 @@ mod tests {
         let mut context = ConstraintContext::new();
         context.system_state.memory_used_bytes = Some(4 * 1024 * 1024 * 1024); // 4 GB
 
-        assert!(constraint.is_satisfied(&context).unwrap());
+        assert!(
+            constraint
+                .is_satisfied(&context)
+                .expect("is_satisfied in test")
+        );
     }
 
     #[test]
@@ -426,11 +442,19 @@ mod tests {
         context.system_state.cpu_usage_percent = Some(30.0);
         context.system_state.memory_used_bytes = Some(4 * 1024 * 1024 * 1024);
 
-        assert!(constraint.is_satisfied(&context).unwrap());
+        assert!(
+            constraint
+                .is_satisfied(&context)
+                .expect("is_satisfied in test")
+        );
 
         // Fail CPU check
         context.system_state.cpu_usage_percent = Some(70.0);
-        assert!(!constraint.is_satisfied(&context).unwrap());
+        assert!(
+            !constraint
+                .is_satisfied(&context)
+                .expect("is_satisfied in test")
+        );
     }
 
     #[test]
@@ -447,7 +471,11 @@ mod tests {
         context.system_state.memory_used_bytes = Some(4 * 1024 * 1024 * 1024); // Passes
 
         // Should pass because memory constraint passes
-        assert!(constraint.is_satisfied(&context).unwrap());
+        assert!(
+            constraint
+                .is_satisfied(&context)
+                .expect("is_satisfied in test")
+        );
     }
 
     #[test]

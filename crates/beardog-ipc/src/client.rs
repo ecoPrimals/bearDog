@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Songbird IPC Client
+//! IPC registry client (Primal IPC Protocol)
 //!
-//! Implements the client side of the Primal IPC Protocol for communicating with Songbird.
+//! JSON-RPC 2.0 over Unix socket to an orchestrator-agnostic service registry (`ipc.*` methods).
 
 use crate::{
     DISCOVERY_SOCKET_FALLBACK, IpcSocketDiscoveryOptions,
@@ -20,10 +20,10 @@ use tokio::sync::RwLock;
 use tokio::time::{Duration, interval};
 use tracing::{debug, info, warn};
 
-/// Client for communicating with Songbird service registry
+/// Client for the Primal IPC registry transport (capability discovery, `ipc.register`, etc.).
 #[derive(Debug)]
 pub struct SongbirdClient {
-    /// Songbird socket path
+    /// Registry Unix socket path (from env / capability discovery)
     socket_path: String,
     /// Request ID counter
     request_id: Arc<AtomicU64>,
@@ -32,7 +32,7 @@ pub struct SongbirdClient {
 }
 
 impl SongbirdClient {
-    /// Create a new Songbird client
+    /// Create a new client (socket path defaults to [`DISCOVERY_SOCKET_FALLBACK`] until [`connect`](Self::connect)).
     pub fn new() -> Self {
         Self {
             socket_path: DISCOVERY_SOCKET_FALLBACK.to_string(),
@@ -41,7 +41,7 @@ impl SongbirdClient {
         }
     }
 
-    /// Connect to Songbird (validates socket exists)
+    /// Connect to the IPC registry (validates socket exists)
     pub async fn connect() -> IpcResult<Self> {
         let socket_path = resolve_ipc_socket_from_options(&IpcSocketDiscoveryOptions::from_env());
         let client = Self {
@@ -55,16 +55,16 @@ impl SongbirdClient {
             .await
             .map_err(|e| {
                 IpcError::Connection(format!(
-                    "Cannot connect to Songbird at {}: {}",
+                    "Cannot connect to IPC registry at {}: {}",
                     client.socket_path, e
                 ))
             })?;
 
-        info!("✅ Connected to Songbird at {}", client.socket_path);
+        info!("✅ Connected to IPC registry at {}", client.socket_path);
         Ok(client)
     }
 
-    /// Register this primal with Songbird
+    /// Register this primal with the IPC registry
     ///
     /// # Example
     /// ```no_run
@@ -113,7 +113,10 @@ impl SongbirdClient {
                 .unwrap_or(false)
             {
                 *self.primal_name.write().await = Some(primal_name.to_string());
-                info!("✅ Successfully registered {} with Songbird", primal_name);
+                info!(
+                    "✅ Successfully registered {} with IPC registry",
+                    primal_name
+                );
                 Ok(())
             } else {
                 Err(IpcError::Protocol("Registration failed".to_string()))
@@ -327,12 +330,12 @@ impl SongbirdClient {
     pub(crate) async fn connect_test(self) -> IpcResult<Self> {
         let _stream = UnixStream::connect(&self.socket_path).await.map_err(|e| {
             IpcError::Connection(format!(
-                "Cannot connect to Songbird at {}: {}",
+                "Cannot connect to IPC registry at {}: {}",
                 self.socket_path, e
             ))
         })?;
 
-        info!("✅ Connected to Songbird at {}", self.socket_path);
+        info!("✅ Connected to IPC registry at {}", self.socket_path);
         Ok(self)
     }
 }
@@ -440,9 +443,9 @@ mod tests {
                     }),
                 };
                 let stream = reader.into_inner();
-                let _ = stream
-                    .write_all(serde_json::to_string(&response).unwrap().as_bytes())
-                    .await;
+                let body = serde_json::to_string(&response)
+                    .expect("serialize ipc line-json mock response in test");
+                let _ = stream.write_all(body.as_bytes()).await;
             }
         })
     }
@@ -481,7 +484,10 @@ mod tests {
         ready.notified().await;
 
         let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
-        let client = client.connect_test().await.unwrap();
+        let client = client
+            .connect_test()
+            .await
+            .expect("connect mock for register failure test");
 
         let err = client
             .register("x", vec![Capability::Crypto])
@@ -500,7 +506,10 @@ mod tests {
         ready.notified().await;
 
         let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
-        let client = client.connect_test().await.unwrap();
+        let client = client
+            .connect_test()
+            .await
+            .expect("connect mock for find_capability error test");
 
         let err = client
             .find_capability("fail")
@@ -546,7 +555,10 @@ mod tests {
         ready.notified().await;
 
         let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
-        let client = client.connect_test().await.unwrap();
+        let client = client
+            .connect_test()
+            .await
+            .expect("connect mock for heartbeat-not-registered test");
 
         let err = client.heartbeat().await.err().expect("expected err");
         assert!(matches!(err, IpcError::Protocol(_)), "{err:?}");

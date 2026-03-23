@@ -101,3 +101,51 @@ pub async fn handle_daemon(args: DaemonArgs) -> Result<(), BearDogError> {
 
     result
 }
+
+#[cfg(test)]
+mod tests {
+    // SPDX-License-Identifier: AGPL-3.0-only
+
+    use super::prepare_daemon_pid_file;
+
+    #[test]
+    fn prepare_daemon_pid_file_creates_and_writes_current_pid() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("unit.pid");
+        let path_str = path.to_str().expect("utf8 path");
+
+        prepare_daemon_pid_file(path_str).expect("prepare fresh pid file");
+
+        let contents = std::fs::read_to_string(path_str).expect("read pid");
+        assert_eq!(
+            contents.trim(),
+            std::process::id().to_string(),
+            "pid file should record this process"
+        );
+    }
+
+    #[test]
+    fn prepare_daemon_pid_file_replaces_stale_pid_when_process_absent() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("stale.pid");
+        let path_str = path.to_str().expect("utf8 path");
+        std::fs::write(path_str, "999999\n").expect("write stale pid");
+
+        prepare_daemon_pid_file(path_str).expect("stale pid should be replaced");
+
+        let contents = std::fs::read_to_string(path_str).expect("read pid");
+        assert_eq!(contents.trim(), std::process::id().to_string());
+    }
+
+    #[test]
+    fn prepare_daemon_pid_file_fails_when_path_is_directory() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let err = prepare_daemon_pid_file(dir.path().to_str().expect("utf8 path"))
+            .expect_err("directory cannot be used as pid file");
+        let msg = format!("{err}");
+        assert!(
+            msg.contains("PID") || msg.contains("pid") || msg.contains("Failed"),
+            "{msg}"
+        );
+    }
+}

@@ -101,7 +101,10 @@ pub async fn handle_birdsong_encrypt_with_home(
     let broadcast = encryption.encrypt(&request)?;
 
     // Serialize broadcast to file
-    let output_path = output.unwrap_or("encrypted.birdsong");
+    let output_path: &str = match output {
+        Some(p) => p,
+        None => "encrypted.birdsong",
+    };
     let serialized = serde_json::to_vec_pretty(&broadcast)
         .map_err(|e| BearDogError::system(format!("Serialization failed: {e}")))?;
 
@@ -465,7 +468,8 @@ mod tests {
 
     #[test]
     fn test_parse_lineage_hint_direct_ancestors() {
-        let hint = parse_lineage_hint("DirectAncestors", "root-123").unwrap();
+        let hint =
+            parse_lineage_hint("DirectAncestors", "root-123").expect("parse DirectAncestors hint");
         assert_eq!(hint.root_id, "root-123");
         assert_eq!(hint.min_depth, 0);
         assert_eq!(hint.max_depth, 1);
@@ -473,7 +477,8 @@ mod tests {
 
     #[test]
     fn test_parse_lineage_hint_all_descendants() {
-        let hint = parse_lineage_hint("AllDescendants", "root-456").unwrap();
+        let hint =
+            parse_lineage_hint("AllDescendants", "root-456").expect("parse AllDescendants hint");
         assert_eq!(hint.root_id, "root-456");
         assert_eq!(hint.min_depth, 0);
         assert_eq!(hint.max_depth, 100);
@@ -481,7 +486,7 @@ mod tests {
 
     #[test]
     fn test_parse_lineage_hint_depth_range() {
-        let hint = parse_lineage_hint("Depth:2-5", "root-789").unwrap();
+        let hint = parse_lineage_hint("Depth:2-5", "root-789").expect("parse Depth:2-5 hint");
         assert_eq!(hint.root_id, "root-789");
         assert_eq!(hint.min_depth, 2);
         assert_eq!(hint.max_depth, 5);
@@ -489,7 +494,7 @@ mod tests {
 
     #[test]
     fn test_parse_lineage_hint_root_only() {
-        let hint = parse_lineage_hint("RootOnly", "root-000").unwrap();
+        let hint = parse_lineage_hint("RootOnly", "root-000").expect("parse RootOnly hint");
         assert_eq!(hint.root_id, "root-000");
         assert_eq!(hint.min_depth, 0);
         assert_eq!(hint.max_depth, 0);
@@ -562,76 +567,97 @@ mod tests {
 
     #[tokio::test]
     async fn test_birdsong_encrypt_decrypt_roundtrip_full_key_material() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for birdsong roundtrip test");
         let home = dir.path();
 
         let root = sample_stored_key("root-lineage-1", &[9u8; 32]);
-        key_store::save_key_to_home(&root, home).unwrap();
+        key_store::save_key_to_home(&root, home).expect("save root-lineage-1");
 
         let out = dir.path().join("out.birdsong");
         handle_birdsong_encrypt_with_home(
             "hello-roundtrip",
             "DirectAncestors",
             "root-lineage-1",
-            Some(out.to_str().unwrap()),
+            Some(out.to_str().expect("out.birdsong path must be valid UTF-8")),
             home,
         )
         .await
         .expect("encrypt");
 
-        handle_birdsong_decrypt_with_home(out.to_str().unwrap(), "root-lineage-1", home)
-            .await
-            .expect("decrypt");
+        handle_birdsong_decrypt_with_home(
+            out.to_str().expect("out.birdsong path must be valid UTF-8"),
+            "root-lineage-1",
+            home,
+        )
+        .await
+        .expect("decrypt");
     }
 
     #[tokio::test]
     async fn test_birdsong_encrypt_uses_short_key_material_hkdf_branch() {
-        let dir = TempDir::new().unwrap();
+        let dir =
+            TempDir::new().expect("create temp directory for short key material birdsong test");
         let home = dir.path();
 
         let root = sample_stored_key("short-root", &[1u8; 16]);
-        key_store::save_key_to_home(&root, home).unwrap();
+        key_store::save_key_to_home(&root, home).expect("save short-root");
 
         let out = dir.path().join("short.birdsong");
         handle_birdsong_encrypt_with_home(
             "m",
             "RootOnly",
             "short-root",
-            Some(out.to_str().unwrap()),
+            Some(
+                out.to_str()
+                    .expect("short.birdsong path must be valid UTF-8"),
+            ),
             home,
         )
         .await
         .expect("encrypt");
 
-        handle_birdsong_decrypt_with_home(out.to_str().unwrap(), "short-root", home)
-            .await
-            .expect("decrypt");
+        handle_birdsong_decrypt_with_home(
+            out.to_str()
+                .expect("short.birdsong path must be valid UTF-8"),
+            "short-root",
+            home,
+        )
+        .await
+        .expect("decrypt");
     }
 
     #[tokio::test]
     async fn test_birdsong_decrypt_lineage_mismatch() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for birdsong lineage mismatch test");
         let home = dir.path();
 
         let a = sample_stored_key("root-a", &[2u8; 32]);
         let b = sample_stored_key("root-b", &[3u8; 32]);
-        key_store::save_key_to_home(&a, home).unwrap();
-        key_store::save_key_to_home(&b, home).unwrap();
+        key_store::save_key_to_home(&a, home).expect("save root-a");
+        key_store::save_key_to_home(&b, home).expect("save root-b");
 
         let out = dir.path().join("mismatch.birdsong");
         handle_birdsong_encrypt_with_home(
             "x",
             "AllDescendants",
             "root-a",
-            Some(out.to_str().unwrap()),
+            Some(
+                out.to_str()
+                    .expect("mismatch.birdsong path must be valid UTF-8"),
+            ),
             home,
         )
         .await
-        .unwrap();
+        .expect("encrypt for lineage mismatch test");
 
-        let err = handle_birdsong_decrypt_with_home(out.to_str().unwrap(), "root-b", home)
-            .await
-            .expect_err("lineage mismatch");
+        let err = handle_birdsong_decrypt_with_home(
+            out.to_str()
+                .expect("mismatch.birdsong path must be valid UTF-8"),
+            "root-b",
+            home,
+        )
+        .await
+        .expect_err("lineage mismatch");
         assert!(
             err.to_string().to_lowercase().contains("lineage")
                 || err.to_string().contains("Lineage")
@@ -649,11 +675,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_birdsong_decrypt_invalid_json() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for invalid birdsong JSON test");
         let p = dir.path().join("bad.json");
-        std::fs::write(&p, b"not json").unwrap();
+        std::fs::write(&p, b"not json").expect("write invalid JSON fixture");
         assert!(
-            handle_birdsong_decrypt(p.to_str().unwrap(), "k")
+            handle_birdsong_decrypt(p.to_str().expect("bad.json path must be valid UTF-8"), "k",)
                 .await
                 .is_err()
         );
@@ -661,27 +687,31 @@ mod tests {
 
     #[tokio::test]
     async fn test_birdsong_decrypt_key_without_lineage() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for decrypt without lineage test");
         let home = dir.path();
 
         let mut k = sample_stored_key("no-lineage", &[5u8; 32]);
         k.lineage = None;
-        key_store::save_key_to_home(&k, home).unwrap();
+        key_store::save_key_to_home(&k, home).expect("save no-lineage key");
 
         let out = dir.path().join("x.birdsong");
         handle_birdsong_encrypt_with_home(
             "z",
             "RootOnly",
             "no-lineage",
-            Some(out.to_str().unwrap()),
+            Some(out.to_str().expect("x.birdsong path must be valid UTF-8")),
             home,
         )
         .await
-        .unwrap();
+        .expect("encrypt for no-lineage decrypt test");
 
-        let err = handle_birdsong_decrypt_with_home(out.to_str().unwrap(), "no-lineage", home)
-            .await
-            .expect_err("no lineage on decrypt key");
+        let err = handle_birdsong_decrypt_with_home(
+            out.to_str().expect("x.birdsong path must be valid UTF-8"),
+            "no-lineage",
+            home,
+        )
+        .await
+        .expect_err("no lineage on decrypt key");
         assert!(err.to_string().contains("lineage") || err.to_string().contains("Lineage"));
     }
 }

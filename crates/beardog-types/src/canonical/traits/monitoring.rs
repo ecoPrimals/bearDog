@@ -346,8 +346,8 @@ pub trait MonitoringConfig: Send + Sync {
 mod tests {
     use super::*;
 
-    // Mock monitoring config for testing
-    struct MockMonitoringConfig {
+    // Test-only [`MonitoringConfig`] implementation.
+    struct TestMonitoringConfig {
         enabled: bool,
         endpoint: String,
         interval: Duration,
@@ -359,7 +359,7 @@ mod tests {
         sample_rate: f64,
     }
 
-    impl MonitoringConfig for MockMonitoringConfig {
+    impl MonitoringConfig for TestMonitoringConfig {
         fn is_enabled(&self) -> bool {
             self.enabled
         }
@@ -419,7 +419,7 @@ mod tests {
 
     #[test]
     fn test_basic_config() {
-        let config = MockMonitoringConfig {
+        let config = TestMonitoringConfig {
             enabled: true,
             endpoint: "http://metrics.example.com:9090".to_string(),
             interval: Duration::from_secs(60),
@@ -441,7 +441,7 @@ mod tests {
     #[test]
     fn test_overhead_calculation() {
         // Minimal config
-        let minimal = MockMonitoringConfig {
+        let minimal = TestMonitoringConfig {
             enabled: true,
             endpoint: "http://metrics.example.com".to_string(),
             interval: Duration::from_secs(60),
@@ -455,7 +455,7 @@ mod tests {
         assert_eq!(minimal.estimated_overhead(), 0.01);
 
         // Verbose with tracing
-        let verbose = MockMonitoringConfig {
+        let verbose = TestMonitoringConfig {
             enabled: true,
             endpoint: "http://metrics.example.com".to_string(),
             interval: Duration::from_secs(10),
@@ -469,7 +469,7 @@ mod tests {
         assert_eq!(verbose.estimated_overhead(), 0.28); // 0.20 + 0.05 + 0.03
 
         // With sampling
-        let sampled = MockMonitoringConfig {
+        let sampled = TestMonitoringConfig {
             enabled: true,
             endpoint: "http://metrics.example.com".to_string(),
             interval: Duration::from_secs(60),
@@ -491,7 +491,7 @@ mod tests {
     #[test]
     fn test_validation() {
         // Valid config
-        let valid = MockMonitoringConfig {
+        let valid = TestMonitoringConfig {
             enabled: true,
             endpoint: "http://metrics.example.com".to_string(),
             interval: Duration::from_secs(60),
@@ -505,7 +505,7 @@ mod tests {
         assert!(valid.validate().is_ok());
 
         // Invalid: empty endpoint
-        let invalid1 = MockMonitoringConfig {
+        let invalid1 = TestMonitoringConfig {
             enabled: true,
             endpoint: String::new(),
             interval: Duration::from_secs(60),
@@ -519,7 +519,7 @@ mod tests {
         assert!(invalid1.validate().is_err());
 
         // Invalid: zero interval
-        let invalid2 = MockMonitoringConfig {
+        let invalid2 = TestMonitoringConfig {
             enabled: true,
             endpoint: "http://metrics.example.com".to_string(),
             interval: Duration::ZERO,
@@ -533,7 +533,7 @@ mod tests {
         assert!(invalid2.validate().is_err());
 
         // Invalid: sample rate out of range
-        let invalid3 = MockMonitoringConfig {
+        let invalid3 = TestMonitoringConfig {
             enabled: true,
             endpoint: "http://metrics.example.com".to_string(),
             interval: Duration::from_secs(60),
@@ -550,7 +550,7 @@ mod tests {
     #[test]
     fn test_production_ready() {
         // Production ready
-        let prod = MockMonitoringConfig {
+        let prod = TestMonitoringConfig {
             enabled: true,
             endpoint: "http://metrics.example.com".to_string(),
             interval: Duration::from_secs(60),
@@ -564,7 +564,7 @@ mod tests {
         assert!(prod.is_production_ready());
 
         // Not production ready: disabled
-        let not_prod1 = MockMonitoringConfig {
+        let not_prod1 = TestMonitoringConfig {
             enabled: false,
             endpoint: "http://metrics.example.com".to_string(),
             interval: Duration::from_secs(60),
@@ -578,7 +578,7 @@ mod tests {
         assert!(!not_prod1.is_production_ready());
 
         // Not production ready: too frequent
-        let not_prod2 = MockMonitoringConfig {
+        let not_prod2 = TestMonitoringConfig {
             enabled: true,
             endpoint: "http://metrics.example.com".to_string(),
             interval: Duration::from_secs(5),
@@ -592,7 +592,7 @@ mod tests {
         assert!(!not_prod2.is_production_ready());
 
         // Not production ready: too much overhead
-        let not_prod3 = MockMonitoringConfig {
+        let not_prod3 = TestMonitoringConfig {
             enabled: true,
             endpoint: "http://metrics.example.com".to_string(),
             interval: Duration::from_secs(60),
@@ -608,7 +608,7 @@ mod tests {
 
     #[test]
     fn test_disabled_monitoring() {
-        let disabled = MockMonitoringConfig {
+        let disabled = TestMonitoringConfig {
             enabled: false,
             endpoint: String::new(),
             interval: Duration::ZERO,

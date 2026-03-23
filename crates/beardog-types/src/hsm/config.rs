@@ -485,7 +485,7 @@ mod tests {
         let json = serde_json::to_string(&config);
         assert!(json.is_ok());
 
-        let json_str = json.unwrap();
+        let json_str = json.expect("serialize DatabaseConfig in test");
         let deserialized: Result<DatabaseConfig, _> = serde_json::from_str(&json_str);
         assert!(deserialized.is_ok());
     }
@@ -496,7 +496,7 @@ mod tests {
         let json = serde_json::to_string(&config);
         assert!(json.is_ok());
 
-        let json_str = json.unwrap();
+        let json_str = json.expect("serialize KeyStoreConfig in test");
         let deserialized: Result<KeyStoreConfig, _> = serde_json::from_str(&json_str);
         assert!(deserialized.is_ok());
     }
@@ -507,7 +507,7 @@ mod tests {
         let json = serde_json::to_string(&config);
         assert!(json.is_ok());
 
-        let json_str = json.unwrap();
+        let json_str = json.expect("serialize HsmConfig in test");
         let deserialized: Result<HsmConfig, _> = serde_json::from_str(&json_str);
         assert!(deserialized.is_ok());
     }
@@ -518,10 +518,13 @@ mod tests {
         let json = serde_json::to_string(&storage_type);
         assert!(json.is_ok());
 
-        let json_str = json.unwrap();
+        let json_str = json.expect("serialize KeyStorageType in test");
         let deserialized: Result<KeyStorageType, _> = serde_json::from_str(&json_str);
         assert!(deserialized.is_ok());
-        assert_eq!(deserialized.unwrap(), KeyStorageType::Hardware);
+        assert_eq!(
+            deserialized.expect("deserialize KeyStorageType in test"),
+            KeyStorageType::Hardware
+        );
     }
 
     // Default function tests

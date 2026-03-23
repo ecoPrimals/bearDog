@@ -283,4 +283,101 @@ mod tests {
         let result = select_hsm(&hsms, "auto");
         assert!(result.is_err());
     }
+
+    #[test]
+    fn test_select_hsm_hardware_pref_no_hardware_tier() {
+        let hsms = vec![CliHsmInfo {
+            id: "sw-1".to_string(),
+            name: "Soft".to_string(),
+            vendor: "V".to_string(),
+            model: "M".to_string(),
+            tier: "Software".to_string(),
+            hsm_type: "PKCS#11".to_string(),
+            path: "/x".to_string(),
+            interface_detail: "d".to_string(),
+        }];
+        let err = select_hsm(&hsms, "hardware").expect_err("no hardware tier");
+        let msg = format!("{err}");
+        assert!(msg.contains("hardware") || msg.contains("found"), "{msg}");
+    }
+
+    #[test]
+    fn test_select_hsm_mobile_pref_no_mobile_tier() {
+        let hsms = vec![CliHsmInfo {
+            id: "sw-1".to_string(),
+            name: "Soft".to_string(),
+            vendor: "V".to_string(),
+            model: "M".to_string(),
+            tier: "Software".to_string(),
+            hsm_type: "PKCS#11".to_string(),
+            path: "/x".to_string(),
+            interface_detail: "d".to_string(),
+        }];
+        assert!(select_hsm(&hsms, "mobile").is_err());
+    }
+
+    #[test]
+    fn test_select_hsm_unknown_preference_falls_back_like_auto() {
+        let hsms = vec![
+            CliHsmInfo {
+                id: "sw-1".to_string(),
+                name: "Soft".to_string(),
+                vendor: "V".to_string(),
+                model: "M".to_string(),
+                tier: "Software".to_string(),
+                hsm_type: "PKCS#11".to_string(),
+                path: "/a".to_string(),
+                interface_detail: "d".to_string(),
+            },
+            CliHsmInfo {
+                id: "hw-1".to_string(),
+                name: "Hw".to_string(),
+                vendor: "W".to_string(),
+                model: "H".to_string(),
+                tier: "Hardware".to_string(),
+                hsm_type: "USB Token".to_string(),
+                path: "/b".to_string(),
+                interface_detail: "d".to_string(),
+            },
+        ];
+        let picked = select_hsm(&hsms, "not-a-known-preference")
+            .expect("unknown preference uses default branch");
+        assert_eq!(picked.tier, "Hardware");
+    }
+
+    #[test]
+    fn test_cli_hsm_info_from_secure_enclave_tier_maps_to_unknown_label() {
+        use std::collections::HashMap;
+
+        use beardog_tunnel::tunnel::hsm::types::HsmTier;
+        use beardog_tunnel::tunnel::hsm::universal_discovery::AuthenticationMethod;
+        use beardog_tunnel::{
+            DiscoveredHsm, DiscoveryHsmHealthStatus, HsmConnectionInfo, HsmInterfaceType,
+            UniversalHsmCapabilities,
+        };
+
+        let hsm = DiscoveredHsm {
+            vendor: "Apple".to_string(),
+            model: "SecureEnclave".to_string(),
+            interface_type: HsmInterfaceType::SoftwareHsm {
+                implementation: "test-impl".to_string(),
+            },
+            connection_info: HsmConnectionInfo {
+                endpoint: "ep".to_string(),
+                auth_method: AuthenticationMethod::None,
+                timeout_ms: 1_000,
+                encrypted: false,
+                parameters: HashMap::new(),
+            },
+            capabilities: UniversalHsmCapabilities::default(),
+            assigned_tier: HsmTier::SecureEnclave,
+            supports_human_entropy: false,
+            health_status: DiscoveryHsmHealthStatus::Healthy,
+            discovered_at: chrono::Utc::now(),
+        };
+
+        let info = CliHsmInfo::from(hsm);
+        assert_eq!(info.tier, "Unknown");
+        assert!(info.interface_detail.contains("Software"));
+    }
 }

@@ -68,10 +68,10 @@ impl KeyRotationManager {
         // Set rotation interval from config
         metadata.rotation_interval = Some(self.config.rotation_interval);
 
-        let mut store = self.metadata_store.write().await;
-        store.insert(key_id.clone(), metadata);
-
         info!("✅ Registered key: {}", key_id);
+        let mut store = self.metadata_store.write().await;
+        store.insert(key_id, metadata);
+
         Ok(())
     }
 
@@ -549,7 +549,10 @@ mod tests {
     #[tokio::test]
     async fn test_create_rotation_manager() {
         let manager = KeyRotationManager::with_defaults();
-        let stats = manager.get_rotation_stats().await.unwrap();
+        let stats = manager
+            .get_rotation_stats()
+            .await
+            .expect("get_rotation_stats on empty manager");
         assert_eq!(stats.total_keys, 0);
     }
 
@@ -564,9 +567,12 @@ mod tests {
                 "aes-256-gcm".to_string(),
             )
             .await
-            .unwrap();
+            .expect("register test-key-1");
 
-        let metadata = manager.get_key_metadata("test-key-1").await.unwrap();
+        let metadata = manager
+            .get_key_metadata("test-key-1")
+            .await
+            .expect("get_key_metadata test-key-1");
         assert_eq!(metadata.key_id, "test-key-1");
         assert_eq!(metadata.state, KeyLifecycleState::Active);
     }
@@ -583,18 +589,27 @@ mod tests {
                 "aes-256-gcm".to_string(),
             )
             .await
-            .unwrap();
+            .expect("register test-key for rotation");
 
         // Rotate key
-        let new_key_id = manager.rotate_key("test-key").await.unwrap();
+        let new_key_id = manager
+            .rotate_key("test-key")
+            .await
+            .expect("rotate test-key");
 
         // Verify old key is deprecated
-        let old_meta = manager.get_key_metadata("test-key").await.unwrap();
+        let old_meta = manager
+            .get_key_metadata("test-key")
+            .await
+            .expect("get_key_metadata test-key after rotate");
         assert_eq!(old_meta.state, KeyLifecycleState::Deprecated);
         assert_eq!(old_meta.successor_key_id, Some(new_key_id.clone()));
 
         // Verify new key is active
-        let new_meta = manager.get_key_metadata(&new_key_id).await.unwrap();
+        let new_meta = manager
+            .get_key_metadata(&new_key_id)
+            .await
+            .expect("get_key_metadata new key after rotate");
         assert_eq!(new_meta.state, KeyLifecycleState::Active);
         assert_eq!(new_meta.predecessor_key_id, Some("test-key".to_string()));
     }
@@ -611,9 +626,12 @@ mod tests {
                 "aes-256-gcm".to_string(),
             )
             .await
-            .unwrap();
+            .expect("register test-key for cannot-rotate test");
 
-        manager.rotate_key("test-key").await.unwrap();
+        manager
+            .rotate_key("test-key")
+            .await
+            .expect("first rotate test-key");
 
         // Try to rotate deprecated key (should fail)
         let result = manager.rotate_key("test-key").await;
@@ -632,7 +650,7 @@ mod tests {
                 "aes-256-gcm".to_string(),
             )
             .await
-            .unwrap();
+            .expect("register test-key for check_rotation_needed");
 
         // Manually set activation time to past
         {
@@ -645,7 +663,10 @@ mod tests {
         }
 
         // Should detect rotation needed
-        let keys = manager.check_rotation_needed().await.unwrap();
+        let keys = manager
+            .check_rotation_needed()
+            .await
+            .expect("check_rotation_needed");
         assert!(keys.contains(&"test-key".to_string()));
     }
 
@@ -661,9 +682,12 @@ mod tests {
                 "aes-256-gcm".to_string(),
             )
             .await
-            .unwrap();
+            .expect("register test-key for cleanup test");
 
-        manager.rotate_key("test-key").await.unwrap();
+        manager
+            .rotate_key("test-key")
+            .await
+            .expect("rotate test-key for cleanup test");
 
         // Manually set deprecated time to past
         {
@@ -674,11 +698,17 @@ mod tests {
         }
 
         // Run cleanup
-        let cleaned = manager.cleanup_deprecated_keys().await.unwrap();
+        let cleaned = manager
+            .cleanup_deprecated_keys()
+            .await
+            .expect("cleanup_deprecated_keys");
         assert_eq!(cleaned, 1);
 
         // Verify key is revoked
-        let meta = manager.get_key_metadata("test-key").await.unwrap();
+        let meta = manager
+            .get_key_metadata("test-key")
+            .await
+            .expect("get_key_metadata test-key after cleanup");
         assert_eq!(meta.state, KeyLifecycleState::Revoked);
     }
 
@@ -694,7 +724,7 @@ mod tests {
                 "aes-256-gcm".to_string(),
             )
             .await
-            .unwrap();
+            .expect("register key-1");
 
         manager
             .register_key(
@@ -703,13 +733,13 @@ mod tests {
                 "aes-256-gcm".to_string(),
             )
             .await
-            .unwrap();
+            .expect("register key-2");
 
         // Get active keys
         let active_keys = manager
             .get_keys_by_state(KeyLifecycleState::Active)
             .await
-            .unwrap();
+            .expect("get_keys_by_state Active");
 
         assert_eq!(active_keys.len(), 2);
         assert!(active_keys.contains(&"key-1".to_string()));
@@ -728,7 +758,7 @@ mod tests {
                 "aes-256-gcm".to_string(),
             )
             .await
-            .unwrap();
+            .expect("register key-1 for stats test");
 
         manager
             .register_key(
@@ -737,11 +767,17 @@ mod tests {
                 "aes-256-gcm".to_string(),
             )
             .await
-            .unwrap();
+            .expect("register key-2 for stats test");
 
-        manager.rotate_key("key-1").await.unwrap();
+        manager
+            .rotate_key("key-1")
+            .await
+            .expect("rotate key-1 for stats test");
 
-        let stats = manager.get_rotation_stats().await.unwrap();
+        let stats = manager
+            .get_rotation_stats()
+            .await
+            .expect("get_rotation_stats after rotation");
         assert_eq!(stats.total_keys, 3); // key-1, key-2, key-1-rotated
         assert_eq!(stats.active_keys, 2);
         assert_eq!(stats.deprecated_keys, 1);

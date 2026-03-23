@@ -267,7 +267,8 @@ availability = 0.3
 reliability = 0.1
         "#;
 
-        let config: DiscoveryConfig = toml::from_str(config_toml).unwrap();
+        let config: DiscoveryConfig =
+            toml::from_str(config_toml).expect("embedded discovery TOML in test must parse");
         assert_eq!(config.primal_self.primal_id, "beardog");
         assert_eq!(config.primal_self.self_capabilities.len(), 2);
     }
@@ -315,7 +316,8 @@ throughput = 0.25
 availability = 0.25
 reliability = 0.25
 "#;
-        let config: DiscoveryConfig = toml::from_str(config_toml).unwrap();
+        let config: DiscoveryConfig =
+            toml::from_str(config_toml).expect("embedded primal_info TOML in test must parse");
         let info = config.primal_info();
         assert!(!info.endpoint.use_tls);
         assert!(info.endpoint.primary_url.starts_with("http://"));

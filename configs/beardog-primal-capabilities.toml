@@ -22,7 +22,7 @@
 #   PRIMAL_TYPE / BEARDOG_PRIMAL_TYPE — capability role string for default registration label
 # IPC / registry:
 #   IPC_SOCKET, DISCOVERY_SOCKET — Unix paths for IPC discovery (`beardog-ipc`)
-#   BEARDOG_DEV_DISCOVERY_SOCKET — dev fallback socket (`DISCOVERY_SOCKET_DEV_FALLBACK`)
+#   BEARDOG_DEV_DISCOVERY_SOCKET — dev fallback socket path (or `discovery_socket_dev_fallback_path()` under temp dir)
 #   BEARDOG_IPC_RESOLVE_TARGET_PARAM_KEY — JSON-RPC `ipc.resolve` params field (default `primal`; legacy wire name)
 # Tunnel / BTSP (`beardog-config::domains::btsp`):
 #   BEARDOG_BTSP_BIRDSONG_KEY_LABEL — HSM key label for BirdSong master

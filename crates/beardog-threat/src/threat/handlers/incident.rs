@@ -298,7 +298,8 @@ mod incident_handler_tests {
 
     #[test]
     fn create_incident_from_threat_returns_stable_prefix() {
-        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())
+            .expect("ThreatDetectionEngine::new should succeed in test");
         let tid = engine
             .create_incident_from_threat(&sample_threat("th-1"))
             .expect("incident id");
@@ -307,68 +308,91 @@ mod incident_handler_tests {
 
     #[test]
     fn incident_lifecycle_happy_path_and_active_list() {
-        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())
+            .expect("ThreatDetectionEngine::new should succeed in test");
         let id = engine
             .create_incident_from_threat(&sample_threat("th-2"))
-            .unwrap();
+            .expect("create_incident_from_threat should succeed in test");
 
-        let classified = engine.classify_incident(&id).unwrap();
+        let classified = engine
+            .classify_incident(&id)
+            .expect("classify_incident should succeed in test");
         assert_eq!(classified.lifecycle, IncidentLifecyclePhase::Classified);
 
-        engine.escalate_incident(&id).unwrap();
+        engine
+            .escalate_incident(&id)
+            .expect("escalate_incident should succeed in test");
         engine
             .assign_incident_to_team(&id, "sec-ops")
             .expect("assign");
 
-        let resolved = engine.resolve_incident(&id, "patched host").unwrap();
+        let resolved = engine
+            .resolve_incident(&id, "patched host")
+            .expect("resolve_incident should succeed in test");
         assert_eq!(resolved.lifecycle, IncidentLifecyclePhase::Resolved);
         assert_eq!(resolved.resolution.as_deref(), Some("patched host"));
 
-        assert_eq!(engine.get_active_incidents().unwrap().len(), 1);
+        assert_eq!(
+            engine
+                .get_active_incidents()
+                .expect("get_active_incidents should succeed in test")
+                .len(),
+            1
+        );
 
-        engine.close_incident(&id).unwrap();
-        assert!(engine.get_active_incidents().unwrap().is_empty());
+        engine
+            .close_incident(&id)
+            .expect("close_incident should succeed in test");
+        assert!(
+            engine
+                .get_active_incidents()
+                .expect("get_active_incidents after close")
+                .is_empty()
+        );
     }
 
     #[test]
     fn classify_unknown_incident_returns_error() {
-        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())
+            .expect("ThreatDetectionEngine::new should succeed in test");
         assert!(engine.classify_incident("nope").is_err());
     }
 
     #[test]
     fn update_incident_status_unknown_id_returns_synthetic_snapshot() {
-        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())
+            .expect("ThreatDetectionEngine::new should succeed in test");
         let snap = engine
             .update_incident_status("missing-1", "investigating")
-            .unwrap()
-            .expect("some");
+            .expect("update_incident_status should succeed in test")
+            .expect("synthetic snapshot for unknown id");
         assert_eq!(snap.id, "missing-1");
         assert_eq!(snap.status, "investigating");
     }
 
     #[test]
     fn update_incident_status_legacy_branches_on_existing_incident() {
-        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())
+            .expect("ThreatDetectionEngine::new should succeed in test");
         let id = engine
             .create_incident_from_threat(&sample_threat("th-3"))
-            .unwrap();
+            .expect("create incident for legacy status test");
 
         let v: IncidentResponse = engine
             .update_incident_status(&id, "in_progress")
-            .unwrap()
+            .expect("update in_progress")
             .expect("view");
         assert_eq!(v.status, "in_progress");
 
         let v2 = engine
             .update_incident_status(&id, "resolved")
-            .unwrap()
+            .expect("update resolved")
             .expect("view2");
         assert_eq!(v2.status, "resolved");
 
         let v3 = engine
             .update_incident_status(&id, "bogus-unknown-status")
-            .unwrap()
+            .expect("update bogus status")
             .expect("view3");
         assert_eq!(
             v3.status, "resolved",
@@ -378,18 +402,22 @@ mod incident_handler_tests {
 
     #[test]
     fn close_incident_unknown_id_is_noop_ok() {
-        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
-        engine.close_incident("nope").unwrap();
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())
+            .expect("ThreatDetectionEngine::new should succeed in test");
+        engine
+            .close_incident("nope")
+            .expect("close unknown incident should return Ok in test");
     }
 
     #[test]
     fn close_incident_before_resolved_skips_transition() {
-        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default()).unwrap();
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default())
+            .expect("ThreatDetectionEngine::new should succeed in test");
         let id = engine
             .create_incident_from_threat(&sample_threat("th-4"))
-            .unwrap();
-        engine.close_incident(&id).unwrap();
-        let active = engine.get_active_incidents().unwrap();
+            .expect("create incident for close-before-resolved test");
+        engine.close_incident(&id).expect("close before resolved");
+        let active = engine.get_active_incidents().expect("get_active_incidents");
         assert_eq!(active.len(), 1);
         assert_eq!(active[0].status, "open");
     }

@@ -129,11 +129,14 @@ mod tests {
             CertificateClassification::Human { confidence: 0.9 },
             &signing_key,
         )
-        .unwrap();
+        .expect("issue adapter certificate for renewal test");
 
         // Set to expire in 3 minutes (within 5 minute buffer)
         cert.expires_at = Utc::now() + Duration::minutes(3);
-        store.store(cert).await.unwrap();
+        store
+            .store(cert)
+            .await
+            .expect("store certificate for renewal");
 
         // Should need renewal
         assert!(renewal.needs_renewal("test-adapter").await);
@@ -154,9 +157,9 @@ mod tests {
             CertificateClassification::Human { confidence: 0.9 },
             &signing_key,
         )
-        .unwrap();
+        .expect("issue adapter certificate for no-renewal test");
 
-        store.store(cert).await.unwrap();
+        store.store(cert).await.expect("store certificate");
 
         // Should not need renewal
         assert!(!renewal.needs_renewal("test-adapter").await);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![cfg(any(test, feature = "test-utils"))]
 
-//! Mock implementations for property-based testing
+//! Non-cryptographic test fixtures for property-based testing
 //!
 //! This module provides test-only mock implementations of cryptographic
 //! and security operations for use in property-based testing scenarios.

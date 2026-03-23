@@ -73,7 +73,7 @@ mod tests {
             id: 1,
         };
 
-        let json = serde_json::to_string(&request).unwrap();
+        let json = serde_json::to_string(&request).expect("serialize JsonRpcRequest");
         assert!(json.contains("\"jsonrpc\":\"2.0\""));
         assert!(json.contains("\"method\":\"test.method\""));
     }
@@ -86,8 +86,9 @@ mod tests {
             params: json!({"key": "value"}),
             id: 42,
         };
-        let json = serde_json::to_string(&request).unwrap();
-        let restored: JsonRpcRequest = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&request).expect("serialize JsonRpcRequest");
+        let restored: JsonRpcRequest =
+            serde_json::from_str(&json).expect("deserialize JsonRpcRequest roundtrip");
         assert_eq!(restored.method, request.method);
         assert_eq!(restored.id, request.id);
     }
@@ -95,7 +96,8 @@ mod tests {
     #[test]
     fn test_request_deserialization() {
         let json = r#"{"jsonrpc":"2.0","method":"primal.ping","params":null,"id":1}"#;
-        let request: JsonRpcRequest = serde_json::from_str(json).unwrap();
+        let request: JsonRpcRequest =
+            serde_json::from_str(json).expect("deserialize JsonRpcRequest from literal");
         assert_eq!(request.jsonrpc, "2.0");
         assert_eq!(request.method, "primal.ping");
         assert_eq!(request.id, 1);
@@ -110,7 +112,7 @@ mod tests {
             id: 1,
         };
 
-        let json = serde_json::to_string(&response).unwrap();
+        let json = serde_json::to_string(&response).expect("serialize JsonRpcResponse");
         assert!(json.contains("\"result\""));
         assert!(!json.contains("\"error\""));
     }
@@ -128,7 +130,7 @@ mod tests {
             id: 1,
         };
 
-        let json = serde_json::to_string(&response).unwrap();
+        let json = serde_json::to_string(&response).expect("serialize JsonRpcResponse");
         assert!(!json.contains("\"result\""));
         assert!(json.contains("\"error\""));
     }
@@ -141,8 +143,9 @@ mod tests {
             error: None,
             id: 99,
         };
-        let json = serde_json::to_string(&response).unwrap();
-        let restored: JsonRpcResponse = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&response).expect("serialize JsonRpcResponse");
+        let restored: JsonRpcResponse =
+            serde_json::from_str(&json).expect("deserialize JsonRpcResponse roundtrip");
         assert_eq!(restored.id, 99);
         assert!(restored.result.is_some());
     }
@@ -154,8 +157,9 @@ mod tests {
             message: "Invalid params".to_string(),
             data: Some(json!({"field": "missing"})),
         };
-        let json = serde_json::to_string(&err).unwrap();
-        let restored: JsonRpcError = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&err).expect("serialize JsonRpcError with data");
+        let restored: JsonRpcError =
+            serde_json::from_str(&json).expect("deserialize JsonRpcError with data");
         assert_eq!(restored.code, error_codes::INVALID_PARAMS);
         assert!(restored.data.is_some());
     }
@@ -167,7 +171,7 @@ mod tests {
             message: "Parse error".to_string(),
             data: None,
         };
-        let json = serde_json::to_string(&err).unwrap();
+        let json = serde_json::to_string(&err).expect("serialize JsonRpcError without data");
         assert!(!json.contains("\"data\""));
     }
 

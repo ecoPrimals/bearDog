@@ -314,7 +314,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_cache_operations() {
-        let discovery = ServiceRegistryDiscovery::new().await.unwrap();
+        let discovery = ServiceRegistryDiscovery::new()
+            .await
+            .expect("ServiceRegistryDiscovery::new in test");
 
         // Cache should be empty
         assert!(discovery.get_cached("test").await.is_none());
@@ -330,7 +332,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_cache_expiration() {
-        let discovery = ServiceRegistryDiscovery::new().await.unwrap();
+        let discovery = ServiceRegistryDiscovery::new()
+            .await
+            .expect("ServiceRegistryDiscovery::new in test");
 
         // TTL 0: `get_cached` treats entries as valid only when `age < ttl_secs`, so `0 < 0` is
         // false and the entry is never returned (no wall-clock wait required).
@@ -342,7 +346,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_concurrent_cache_access() {
-        let discovery = ServiceRegistryDiscovery::new().await.unwrap();
+        let discovery = ServiceRegistryDiscovery::new()
+            .await
+            .expect("ServiceRegistryDiscovery::new in test");
 
         // Concurrent cache writes
         let handles: Vec<_> = (0..10)
@@ -363,7 +369,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_discover_without_providers() {
-        let discovery = ServiceRegistryDiscovery::new().await.unwrap();
+        let discovery = ServiceRegistryDiscovery::new()
+            .await
+            .expect("ServiceRegistryDiscovery::new in test");
 
         // Should fail gracefully when no providers are available
         let result = discovery.discover("test-cap").await;
@@ -379,7 +387,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_discover_returns_cached_services_without_touching_providers() {
-        let discovery = ServiceRegistryDiscovery::new().await.unwrap();
+        let discovery = ServiceRegistryDiscovery::new()
+            .await
+            .expect("ServiceRegistryDiscovery::new in test");
         let svc = DiscoveredService {
             id: "reg-1".to_string(),
             service_type: "registry".to_string(),
@@ -413,7 +423,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_refresh_providers() {
-        let discovery = ServiceRegistryDiscovery::new().await.unwrap();
+        let discovery = ServiceRegistryDiscovery::new()
+            .await
+            .expect("ServiceRegistryDiscovery::new in test");
 
         // Should return error (no providers available)
         // But should not panic

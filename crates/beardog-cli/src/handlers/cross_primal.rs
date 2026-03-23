@@ -395,21 +395,31 @@ mod tests {
 
     #[tokio::test]
     async fn test_handle_send_secure_unknown_capability_before_network() {
-        let dir = TempDir::new().unwrap();
+        let dir =
+            TempDir::new().expect("create temp directory for send_secure unknown capability test");
         let msg = dir.path().join("msg.bin");
-        std::fs::write(&msg, b"hello").unwrap();
-        let err = handle_send_secure(msg.to_str().unwrap(), "not-a-capability", None)
-            .await
-            .expect_err("invalid capability");
+        std::fs::write(&msg, b"hello").expect("write msg.bin fixture");
+        let err = handle_send_secure(
+            msg.to_str().expect("msg.bin path must be valid UTF-8"),
+            "not-a-capability",
+            None,
+        )
+        .await
+        .expect_err("invalid capability");
         assert!(err.to_string().contains("Unknown capability"));
     }
 
     #[tokio::test]
     async fn test_handle_send_secure_network_capability_is_case_insensitive() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for send_secure NETWORK test");
         let msg = dir.path().join("msg-net.bin");
-        std::fs::write(&msg, b"ping").unwrap();
-        let r = handle_send_secure(msg.to_str().unwrap(), "NETWORK", None).await;
+        std::fs::write(&msg, b"ping").expect("write msg-net.bin fixture");
+        let r = handle_send_secure(
+            msg.to_str().expect("msg-net.bin path must be valid UTF-8"),
+            "NETWORK",
+            None,
+        )
+        .await;
         assert!(r.is_err());
     }
 

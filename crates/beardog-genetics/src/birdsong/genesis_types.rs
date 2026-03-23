@@ -496,7 +496,14 @@ mod tests {
 
         // Check timestamp is big-endian
         let ts_bytes = &message[node_id.len()..node_id.len() + 8];
-        assert_eq!(u64::from_be_bytes(ts_bytes.try_into().unwrap()), timestamp);
+        assert_eq!(
+            u64::from_be_bytes(
+                ts_bytes
+                    .try_into()
+                    .expect("timestamp slice should be exactly 8 bytes"),
+            ),
+            timestamp
+        );
     }
 
     // === PhysicalChannelProof verify tests ===
@@ -510,7 +517,7 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(!proof.verify().unwrap());
+        assert!(!proof.verify().expect("verify should return Result in test"));
     }
 
     #[test]
@@ -525,7 +532,7 @@ mod tests {
         assert!(
             proof
                 .verify_with_attestation_mode("permissionless")
-                .unwrap()
+                .expect("permissionless attestation verify")
         );
     }
 
@@ -538,7 +545,7 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(proof.verify().unwrap());
+        assert!(proof.verify().expect("verify should return Result in test"));
     }
 
     #[test]
@@ -550,7 +557,7 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(!proof.verify().unwrap());
+        assert!(!proof.verify().expect("verify should return Result in test"));
     }
 
     #[test]
@@ -562,7 +569,7 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(!proof.verify().unwrap());
+        assert!(!proof.verify().expect("verify should return Result in test"));
     }
 
     #[test]
@@ -574,7 +581,7 @@ mod tests {
             pairing_data: Some(vec![1u8; 32]),
             timestamp: 1735000000,
         };
-        assert!(proof.verify().unwrap());
+        assert!(proof.verify().expect("verify should return Result in test"));
     }
 
     #[test]
@@ -586,7 +593,7 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(!proof.verify().unwrap());
+        assert!(!proof.verify().expect("verify should return Result in test"));
     }
 
     #[test]
@@ -598,7 +605,7 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(proof.verify().unwrap());
+        assert!(proof.verify().expect("verify should return Result in test"));
     }
 
     #[test]
@@ -610,7 +617,7 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(!proof.verify().unwrap());
+        assert!(!proof.verify().expect("verify should return Result in test"));
     }
 
     #[test]
@@ -636,7 +643,11 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(!proof.verify_with_attestation_mode("software").unwrap());
+        assert!(
+            !proof
+                .verify_with_attestation_mode("software")
+                .expect("software attestation verify")
+        );
     }
 
     #[test]
@@ -648,7 +659,11 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(proof.verify_with_attestation_mode("software").unwrap());
+        assert!(
+            proof
+                .verify_with_attestation_mode("software")
+                .expect("software attestation verify")
+        );
     }
 
     #[test]
@@ -660,7 +675,11 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(!proof.verify_with_attestation_mode("software").unwrap());
+        assert!(
+            !proof
+                .verify_with_attestation_mode("software")
+                .expect("software attestation verify")
+        );
     }
 
     #[test]
@@ -675,7 +694,7 @@ mod tests {
         assert!(
             proof
                 .verify_with_attestation_mode("permissionless")
-                .unwrap()
+                .expect("permissionless attestation verify")
         );
     }
 
@@ -691,7 +710,7 @@ mod tests {
         assert!(
             !proof
                 .verify_with_attestation_mode("permissionless")
-                .unwrap()
+                .expect("permissionless attestation verify")
         );
     }
 
@@ -705,7 +724,9 @@ mod tests {
             timestamp: 1735000000,
         };
         // On linux, this uses verify_tpm_attestation which checks len >= 64
-        let result = proof.verify_with_attestation_mode("hardware").unwrap();
+        let result = proof
+            .verify_with_attestation_mode("hardware")
+            .expect("hardware attestation verify");
         assert!(result);
     }
 
@@ -718,7 +739,11 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(proof.verify_with_attestation_mode("unknown_mode").unwrap());
+        assert!(
+            proof
+                .verify_with_attestation_mode("unknown_mode")
+                .expect("unknown attestation mode verify")
+        );
     }
 
     #[test]
@@ -730,7 +755,7 @@ mod tests {
             pairing_data: None,
             timestamp: 1735000000,
         };
-        assert!(!proof.verify().unwrap());
+        assert!(!proof.verify().expect("verify should return Result in test"));
     }
 
     // === GeneticLineage tests ===

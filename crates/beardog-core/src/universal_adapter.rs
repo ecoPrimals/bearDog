@@ -451,14 +451,14 @@ mod tests {
             },
             ..Default::default()
         })
-        .unwrap();
+        .expect("discover_from_inputs for universal adapter creation test");
         let discovery = PrimalDiscovery::new(DiscoveryMethod::Environment);
         let adapter = UniversalAdapter::with_self_knowledge_discovery_and_cache(
             sk,
             discovery,
             Duration::from_secs(300),
         )
-        .unwrap();
+        .expect("UniversalAdapter::with_self_knowledge_discovery_and_cache");
 
         assert_eq!(adapter.self_knowledge().my_name(), "BearDog");
         assert_eq!(adapter.cached_capabilities().await.len(), 0); // Empty cache initially
@@ -466,9 +466,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_discover_capability_from_environment() {
-        let dir = tempfile::tempdir().unwrap();
+        let dir = tempfile::tempdir().expect("tempdir for universal adapter env test");
         let sock = dir.path().join("testprimal.sock");
-        std::fs::File::create(&sock).unwrap();
+        std::fs::File::create(&sock).expect("create dummy unix socket path");
         let uri = format!("unix://{}", sock.display());
 
         let mut env = HashMap::new();
@@ -485,7 +485,7 @@ mod tests {
             },
             ..Default::default()
         })
-        .unwrap();
+        .expect("discover_from_inputs for env discovery test");
 
         let discovery = PrimalDiscovery::new(DiscoveryMethod::Environment).with_env_override(env);
         let adapter = UniversalAdapter::with_self_knowledge_discovery_and_cache(
@@ -493,12 +493,12 @@ mod tests {
             discovery,
             Duration::from_secs(300),
         )
-        .unwrap();
+        .expect("UniversalAdapter with env override");
 
         let primals = adapter
             .discover_capability(SimpleCapability::Discovery)
             .await
-            .unwrap();
+            .expect("discover_capability Discovery from env");
 
         assert!(
             primals.iter().any(|p| p.name == "testprimal"),
@@ -509,9 +509,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_cache_behavior() {
-        let dir = tempfile::tempdir().unwrap();
+        let dir = tempfile::tempdir().expect("tempdir for universal adapter env test");
         let sock = dir.path().join("testprimal.sock");
-        std::fs::File::create(&sock).unwrap();
+        std::fs::File::create(&sock).expect("create dummy unix socket path");
         let uri = format!("unix://{}", sock.display());
 
         let mut env = HashMap::new();
@@ -528,7 +528,7 @@ mod tests {
             },
             ..Default::default()
         })
-        .unwrap();
+        .expect("discover_from_inputs for cache behavior test");
 
         let discovery = PrimalDiscovery::new(DiscoveryMethod::Environment).with_env_override(env);
         let adapter = UniversalAdapter::with_self_knowledge_discovery_and_cache(
@@ -536,7 +536,7 @@ mod tests {
             discovery,
             Duration::from_secs(60),
         )
-        .unwrap();
+        .expect("UniversalAdapter for cache test");
 
         assert_eq!(adapter.cached_capabilities().await.len(), 0);
 
@@ -544,7 +544,7 @@ mod tests {
             .discover_capability(SimpleCapability::Discovery)
             .await;
         assert!(result.is_ok(), "Discovery should succeed");
-        let primals = result.unwrap();
+        let primals = result.expect("discover_capability should succeed after is_ok");
 
         assert_eq!(
             primals.len(),
@@ -564,7 +564,7 @@ mod tests {
 
     #[test]
     fn test_self_knowledge_access() {
-        let rt = tokio::runtime::Runtime::new().unwrap();
+        let rt = tokio::runtime::Runtime::new().expect("tokio Runtime for adapter access test");
         rt.block_on(async {
             let sk_in = PrimalSelfKnowledge::discover_from_inputs(&SelfKnowledgeInputs {
                 identity: IdentityInputs {
@@ -573,14 +573,14 @@ mod tests {
                 },
                 ..Default::default()
             })
-            .unwrap();
+            .expect("discover_from_inputs adapter-test-primal");
             let discovery = PrimalDiscovery::new(DiscoveryMethod::Environment);
             let adapter = UniversalAdapter::with_self_knowledge_discovery_and_cache(
                 sk_in,
                 discovery,
                 Duration::from_secs(300),
             )
-            .unwrap();
+            .expect("UniversalAdapter for self_knowledge access test");
 
             let sk = adapter.self_knowledge();
             assert_eq!(sk.my_name(), "adapter-test-primal");

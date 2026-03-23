@@ -1,5 +1,5 @@
 [[bin]]
-name = "beardog"
+name = "beardog-cli-legacy"
 path = "src/main.rs"
 
 [package]

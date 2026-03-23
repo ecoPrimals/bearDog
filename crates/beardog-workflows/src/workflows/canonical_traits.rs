@@ -432,17 +432,17 @@ mod tests {
         assert!(!DefaultWorkflowStatus::Cancelled.is_active());
     }
 
-    // Mock implementations for trait testing
+    // Test doubles for trait coverage (unit tests only).
     #[derive(Debug, Clone)]
-    struct MockWorkflowId(String);
+    struct TestWorkflowId(String);
 
-    impl std::fmt::Display for MockWorkflowId {
+    impl std::fmt::Display for TestWorkflowId {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             write!(f, "{}", self.0)
         }
     }
 
-    impl WorkflowId for MockWorkflowId {
+    impl WorkflowId for TestWorkflowId {
         fn as_str(&self) -> &str {
             &self.0
         }
@@ -450,27 +450,27 @@ mod tests {
 
     #[test]
     fn test_workflow_id_trait() {
-        let id = MockWorkflowId("test-id-123".to_string());
+        let id = TestWorkflowId("test-id-123".to_string());
         assert_eq!(id.as_str(), "test-id-123");
         assert_eq!(format!("{}", id), "test-id-123");
     }
 
     #[test]
     fn test_workflow_id_clone() {
-        let id = MockWorkflowId("clone-test".to_string());
+        let id = TestWorkflowId("clone-test".to_string());
         let cloned = id.clone();
         assert_eq!(id.as_str(), cloned.as_str());
     }
 
     #[derive(Debug, Clone)]
-    struct MockWorkflow {
-        id: MockWorkflowId,
+    struct TestWorkflow {
+        id: TestWorkflowId,
         status: DefaultWorkflowStatus,
         created: chrono::DateTime<chrono::Utc>,
     }
 
-    impl Workflow for MockWorkflow {
-        type Id = MockWorkflowId;
+    impl Workflow for TestWorkflow {
+        type Id = TestWorkflowId;
         type Status = DefaultWorkflowStatus;
 
         fn id(&self) -> &Self::Id {
@@ -489,8 +489,8 @@ mod tests {
     #[test]
     fn test_workflow_trait() {
         let now = chrono::Utc::now();
-        let workflow = MockWorkflow {
-            id: MockWorkflowId("wf-001".to_string()),
+        let workflow = TestWorkflow {
+            id: TestWorkflowId("wf-001".to_string()),
             status: DefaultWorkflowStatus::Running,
             created: now,
         };
@@ -510,8 +510,8 @@ mod tests {
         ];
 
         for (i, status) in statuses.iter().enumerate() {
-            let workflow = MockWorkflow {
-                id: MockWorkflowId(format!("wf-{}", i)),
+            let workflow = TestWorkflow {
+                id: TestWorkflowId(format!("wf-{}", i)),
                 status: *status,
                 created: now,
             };
@@ -533,8 +533,8 @@ mod tests {
 
     #[test]
     fn test_workflow_clone() {
-        let workflow = MockWorkflow {
-            id: MockWorkflowId("clone-wf".to_string()),
+        let workflow = TestWorkflow {
+            id: TestWorkflowId("clone-wf".to_string()),
             status: DefaultWorkflowStatus::Completed,
             created: chrono::Utc::now(),
         };
@@ -546,14 +546,14 @@ mod tests {
 
     #[test]
     fn test_workflow_debug() {
-        let workflow = MockWorkflow {
-            id: MockWorkflowId("debug-wf".to_string()),
+        let workflow = TestWorkflow {
+            id: TestWorkflowId("debug-wf".to_string()),
             status: DefaultWorkflowStatus::Failed,
             created: chrono::Utc::now(),
         };
 
         let debug_str = format!("{:?}", workflow);
-        assert!(debug_str.contains("MockWorkflow"));
+        assert!(debug_str.contains("TestWorkflow"));
     }
 
     #[test]
@@ -561,8 +561,8 @@ mod tests {
         let now = chrono::Utc::now();
 
         // Start pending
-        let mut workflow = MockWorkflow {
-            id: MockWorkflowId("lifecycle-test".to_string()),
+        let mut workflow = TestWorkflow {
+            id: TestWorkflowId("lifecycle-test".to_string()),
             status: DefaultWorkflowStatus::Pending,
             created: now,
         };
@@ -583,8 +583,8 @@ mod tests {
     #[test]
     fn test_workflow_failure_path() {
         let now = chrono::Utc::now();
-        let mut workflow = MockWorkflow {
-            id: MockWorkflowId("failure-test".to_string()),
+        let mut workflow = TestWorkflow {
+            id: TestWorkflowId("failure-test".to_string()),
             status: DefaultWorkflowStatus::Running,
             created: now,
         };
@@ -601,8 +601,8 @@ mod tests {
     #[test]
     fn test_workflow_cancellation() {
         let now = chrono::Utc::now();
-        let mut workflow = MockWorkflow {
-            id: MockWorkflowId("cancel-test".to_string()),
+        let mut workflow = TestWorkflow {
+            id: TestWorkflowId("cancel-test".to_string()),
             status: DefaultWorkflowStatus::Pending,
             created: now,
         };
@@ -615,14 +615,14 @@ mod tests {
 
     #[test]
     fn test_workflow_id_empty_string() {
-        let id = MockWorkflowId(String::new());
+        let id = TestWorkflowId(String::new());
         assert_eq!(id.as_str(), "");
         assert_eq!(format!("{}", id), "");
     }
 
     #[test]
     fn test_workflow_id_special_characters() {
-        let id = MockWorkflowId("test-id_123.456@abc".to_string());
+        let id = TestWorkflowId("test-id_123.456@abc".to_string());
         assert_eq!(id.as_str(), "test-id_123.456@abc");
     }
 
@@ -648,14 +648,14 @@ mod tests {
         let time1 = chrono::Utc::now();
         let time2 = chrono::Utc::now();
 
-        let wf1 = MockWorkflow {
-            id: MockWorkflowId("wf1".to_string()),
+        let wf1 = TestWorkflow {
+            id: TestWorkflowId("wf1".to_string()),
             status: DefaultWorkflowStatus::Running,
             created: time1,
         };
 
-        let wf2 = MockWorkflow {
-            id: MockWorkflowId("wf2".to_string()),
+        let wf2 = TestWorkflow {
+            id: TestWorkflowId("wf2".to_string()),
             status: DefaultWorkflowStatus::Running,
             created: time2,
         };

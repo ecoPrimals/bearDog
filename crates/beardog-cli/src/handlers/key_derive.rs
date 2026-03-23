@@ -62,10 +62,10 @@ pub async fn handle_key_derive_with_home(
     };
 
     if let Some(expiry) = expires_at {
+        let duration_label = expires_in.unwrap_or_default();
         println!(
-            "   Expires: {} ({})",
+            "   Expires: {} ({duration_label})",
             expiry.format("%Y-%m-%d %H:%M:%S UTC"),
-            expires_in.unwrap_or("")
         );
     }
 
@@ -220,7 +220,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_handle_key_derive_with_home_roundtrip() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for key derive roundtrip test");
         let home = dir.path();
         let master = StoredKey {
             key_id: "master-1".to_string(),
@@ -237,23 +237,24 @@ mod tests {
             usage: None,
             purpose: None,
         };
-        key_store::save_key_to_home(&master, home).unwrap();
+        key_store::save_key_to_home(&master, home).expect("save master key for derive test");
 
         handle_key_derive_with_home("master-1", "student-1", "child-1", None, home)
             .await
-            .unwrap();
+            .expect("derive child key from master");
 
-        let child = key_store::load_key_from_home("child-1", home).unwrap();
+        let child = key_store::load_key_from_home("child-1", home).expect("load derived child key");
         assert_eq!(child.parent_key_id.as_deref(), Some("master-1"));
         assert_eq!(child.generation, 1);
         assert_eq!(child.derivation_purpose.as_deref(), Some("student-1"));
 
-        let master_again = key_store::load_key_from_home("master-1", home).unwrap();
+        let master_again =
+            key_store::load_key_from_home("master-1", home).expect("reload master after derive");
         assert!(master_again.children.contains(&"child-1".to_string()));
 
         let receipt_dir = home.join("receipts");
         let entries: Vec<_> = std::fs::read_dir(&receipt_dir)
-            .unwrap()
+            .expect("read receipts directory")
             .filter_map(|e| e.ok())
             .collect();
         assert!(
@@ -264,7 +265,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_handle_key_derive_with_home_expiry() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for derive with expiry test");
         let home = dir.path();
         let master = StoredKey {
             key_id: "master-exp".to_string(),
@@ -281,13 +282,14 @@ mod tests {
             usage: None,
             purpose: None,
         };
-        key_store::save_key_to_home(&master, home).unwrap();
+        key_store::save_key_to_home(&master, home).expect("save master-exp key");
 
         handle_key_derive_with_home("master-exp", "purpose-x", "child-exp", Some("48h"), home)
             .await
-            .unwrap();
+            .expect("derive key with 48h expiry");
 
-        let child = key_store::load_key_from_home("child-exp", home).unwrap();
+        let child =
+            key_store::load_key_from_home("child-exp", home).expect("load child-exp with expiry");
         assert!(child.expires_at.is_some());
     }
 
@@ -296,32 +298,33 @@ mod tests {
         let master_key = b"test_master_key_material_32bytes";
         let context = b"test_purpose";
 
-        let derived1 = derive_key_hkdf(master_key, context).unwrap();
-        let derived2 = derive_key_hkdf(master_key, context).unwrap();
+        let derived1 = derive_key_hkdf(master_key, context).expect("HKDF derive first");
+        let derived2 = derive_key_hkdf(master_key, context).expect("HKDF derive second");
 
         // Should be deterministic
         assert_eq!(derived1, derived2);
         assert_eq!(derived1.len(), 32);
 
         // Different context should produce different key
-        let derived3 = derive_key_hkdf(master_key, b"different_purpose").unwrap();
+        let derived3 =
+            derive_key_hkdf(master_key, b"different_purpose").expect("HKDF different context");
         assert_ne!(derived1, derived3);
     }
 
     #[test]
     fn test_parse_duration() {
         // Hours
-        let result = parse_duration("24h").unwrap();
+        let result = parse_duration("24h").expect("parse 24h");
         // Allow 2-hour tolerance for test timing variations
         assert!((result.signed_duration_since(Utc::now()).num_hours() - 24).abs() < 2);
 
         // Days
-        let result = parse_duration("30d").unwrap();
+        let result = parse_duration("30d").expect("parse 30d");
         // Allow 2-day tolerance for test timing variations
         assert!((result.signed_duration_since(Utc::now()).num_days() - 30).abs() < 2);
 
         // Weeks
-        let result = parse_duration("2w").unwrap();
+        let result = parse_duration("2w").expect("parse 2w");
         assert!((result.signed_duration_since(Utc::now()).num_days() - 14).abs() < 2);
 
         // Invalid format
@@ -329,9 +332,9 @@ mod tests {
         assert!(parse_duration("24").is_err());
 
         // Months / years (approximate)
-        let m = parse_duration("2m").unwrap();
+        let m = parse_duration("2m").expect("parse 2m");
         assert!((m.signed_duration_since(Utc::now()).num_days() - 60).abs() < 3);
-        let y = parse_duration("1y").unwrap();
+        let y = parse_duration("1y").expect("parse 1y");
         assert!((y.signed_duration_since(Utc::now()).num_days() - 365).abs() < 3);
 
         assert!(parse_duration("5x").is_err());
@@ -339,13 +342,13 @@ mod tests {
 
     #[test]
     fn test_parse_duration_trims_and_unit_aliases() {
-        let h = parse_duration("  6 hour ").unwrap();
+        let h = parse_duration("  6 hour ").expect("parse 6 hour with spaces");
         assert!((h.signed_duration_since(Utc::now()).num_hours() - 6).abs() < 2);
 
-        let d = parse_duration("3 days").unwrap();
+        let d = parse_duration("3 days").expect("parse 3 days");
         assert!((d.signed_duration_since(Utc::now()).num_days() - 3).abs() < 2);
 
-        let w = parse_duration("1 week").unwrap();
+        let w = parse_duration("1 week").expect("parse 1 week");
         assert!((w.signed_duration_since(Utc::now()).num_days() - 7).abs() < 2);
     }
 
@@ -356,7 +359,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_handle_key_derive_with_home_missing_master_fails() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for missing master test");
         let home = dir.path();
         let r = handle_key_derive_with_home("no-such-key", "p", "out", None, home).await;
         assert!(r.is_err());
@@ -364,7 +367,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_handle_key_derive_with_home_invalid_master_material_fails() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for invalid b64 master test");
         let home = dir.path();
         let master = StoredKey {
             key_id: "bad-b64".to_string(),
@@ -381,14 +384,14 @@ mod tests {
             usage: None,
             purpose: None,
         };
-        key_store::save_key_to_home(&master, home).unwrap();
+        key_store::save_key_to_home(&master, home).expect("save bad-b64 master key");
         let r = handle_key_derive_with_home("bad-b64", "p", "child-x", None, home).await;
         assert!(r.is_err());
     }
 
     #[tokio::test]
     async fn test_handle_key_derive_with_home_lineage_depth_increments() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for lineage depth test");
         let home = dir.path();
         let master = StoredKey {
             key_id: "lineage-root".to_string(),
@@ -408,19 +411,27 @@ mod tests {
             usage: None,
             purpose: None,
         };
-        key_store::save_key_to_home(&master, home).unwrap();
+        key_store::save_key_to_home(&master, home).expect("save lineage-root master");
 
         handle_key_derive_with_home("lineage-root", "next", "child-depth", None, home)
             .await
-            .unwrap();
+            .expect("derive child-depth from lineage-root");
 
-        let child = key_store::load_key_from_home("child-depth", home).unwrap();
-        assert_eq!(child.lineage.as_ref().unwrap().depth, 4);
+        let child =
+            key_store::load_key_from_home("child-depth", home).expect("load child-depth key");
+        assert_eq!(
+            child
+                .lineage
+                .as_ref()
+                .expect("derived key must have lineage metadata")
+                .depth,
+            4
+        );
     }
 
     #[tokio::test]
     async fn test_handle_key_derive_with_home_short_expiry_prints_hours_branch() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for short expiry branch test");
         let home = dir.path();
         let master = StoredKey {
             key_id: "m-hours".to_string(),
@@ -437,12 +448,12 @@ mod tests {
             usage: None,
             purpose: None,
         };
-        key_store::save_key_to_home(&master, home).unwrap();
+        key_store::save_key_to_home(&master, home).expect("save m-hours master");
 
         handle_key_derive_with_home("m-hours", "p", "c-hours", Some("3h"), home)
             .await
-            .unwrap();
-        let child = key_store::load_key_from_home("c-hours", home).unwrap();
+            .expect("derive c-hours with 3h expiry");
+        let child = key_store::load_key_from_home("c-hours", home).expect("load c-hours");
         assert!(child.expires_at.is_some());
     }
 }

@@ -28,8 +28,19 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 use tracing::{debug, error, info, warn};
 
-/// Last-resort Unix socket path when a capability manifest has no UDS endpoint (misconfiguration).
-const FALLBACK_REGISTRY_UNIX_SOCKET_PATH: &str = "/tmp/beardog-default.sock";
+/// Last-resort registry UDS when the capability manifest has no Unix endpoint (misconfiguration).
+///
+/// Override with `BEARDOG_REGISTRY_SOCKET_FALLBACK`; otherwise uses
+/// `{std::env::temp_dir()}/beardog-registry-default.sock`.
+#[must_use]
+fn fallback_registry_unix_socket_path() -> String {
+    std::env::var("BEARDOG_REGISTRY_SOCKET_FALLBACK").unwrap_or_else(|_| {
+        std::env::temp_dir()
+            .join("beardog-registry-default.sock")
+            .to_string_lossy()
+            .into_owned()
+    })
+}
 
 /// JSON-RPC 2.0 Request (Universal)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -97,7 +108,7 @@ pub struct PrimalInfo {
 /// # Zero Vendor Hardcoding
 ///
 /// This client works with:
-/// - Songbird (ecoPrimals discovery orchestrator)
+/// - Any JSON-RPC primal registry (orchestrator-agnostic)
 /// - Consul (HashiCorp service mesh)
 /// - etcd (Kubernetes/Cloud Native registry)
 /// - Custom registries
@@ -118,7 +129,7 @@ impl PrimalRegistryClient {
     /// # Zero Assumptions
     ///
     /// We don't know or care what's on the other end of this socket.
-    /// Could be Songbird, could be Consul, could be anything.
+    /// Could be any registry implementation that speaks the wire protocol.
     pub const fn new(socket_path: PathBuf) -> Self {
         Self {
             socket_path,
@@ -355,7 +366,7 @@ impl PrimalRegistryClient {
                     None
                 }
             })
-            .unwrap_or_else(|| FALLBACK_REGISTRY_UNIX_SOCKET_PATH.to_string())
+            .unwrap_or_else(fallback_registry_unix_socket_path)
     }
 }
 
@@ -366,7 +377,7 @@ mod tests {
     use tokio::sync::Notify;
 
     #[test]
-    fn test_json_rpc_request_serialization() {
+    fn test_json_rpc_request_serialization() -> Result<(), serde_json::Error> {
         let request = JsonRpcRequest {
             jsonrpc: "2.0".to_string(),
             method: "primal.ping".to_string(),
@@ -374,24 +385,26 @@ mod tests {
             id: 1,
         };
 
-        let json = serde_json::to_string(&request).unwrap();
+        let json = serde_json::to_string(&request)?;
         assert!(json.contains("primal.ping"));
         assert!(json.contains("\"id\":1"));
+        Ok(())
     }
 
     #[test]
-    fn test_json_rpc_response_deserialization() {
+    fn test_json_rpc_response_deserialization() -> Result<(), serde_json::Error> {
         let json = r#"{"jsonrpc":"2.0","result":{"pong":true},"id":1}"#;
-        let response: JsonRpcResponse = serde_json::from_str(json).unwrap();
+        let response: JsonRpcResponse = serde_json::from_str(json)?;
 
         assert_eq!(response.jsonrpc, "2.0");
         assert_eq!(response.id, 1);
         assert!(response.result.is_some());
         assert!(response.error.is_none());
+        Ok(())
     }
 
     #[test]
-    fn test_primal_info_deserialization() {
+    fn test_primal_info_deserialization() -> Result<(), serde_json::Error> {
         let json = r#"{
             "primal_id": "beardog",
             "family_id": "nat0",
@@ -400,10 +413,11 @@ mod tests {
             "socket_path": "/tmp/beardog-nat0.sock"
         }"#;
 
-        let info: PrimalInfo = serde_json::from_str(json).unwrap();
+        let info: PrimalInfo = serde_json::from_str(json)?;
         assert_eq!(info.primal_id, "beardog");
         assert_eq!(info.family_id, Some("nat0".to_string()));
         assert_eq!(info.capabilities.len(), 2);
+        Ok(())
     }
 
     #[test]
@@ -412,7 +426,7 @@ mod tests {
         let client = PrimalRegistryClient::new(PathBuf::from("/tmp/any-registry.sock"));
 
         // Client doesn't know or care what's on the other end
-        // Could be Songbird, Consul, etcd, custom - it adapts universally
+        // Could be any JSON-RPC registry — client is vendor-agnostic
         assert_eq!(client.socket_path, PathBuf::from("/tmp/any-registry.sock"));
     }
 
@@ -511,12 +525,9 @@ mod tests {
                             }),
                         };
                         let mut stream = reader.into_inner();
-                        let _ = stream
-                            .write_all(
-                                format!("{}\n", serde_json::to_string(&response).unwrap())
-                                    .as_bytes(),
-                            )
-                            .await;
+                        let line = serde_json::to_string(&response)
+                            .expect("serialize mock JSON-RPC response in test");
+                        let _ = stream.write_all(format!("{line}\n").as_bytes()).await;
                         reader = BufReader::new(stream);
                     }
                 });
@@ -567,7 +578,8 @@ mod tests {
         let ready_clone = Arc::clone(&ready);
         let _srv = tokio::spawn(async move {
             let _ = std::fs::remove_file(&path_clone);
-            let listener = tokio::net::UnixListener::bind(&path_clone).unwrap();
+            let listener = tokio::net::UnixListener::bind(&path_clone)
+                .expect("bind test registry socket for error-branch test");
             ready_clone.notify_one();
             let Ok((mut stream, _)) = listener.accept().await else {
                 return;
@@ -589,7 +601,10 @@ mod tests {
         ready.notified().await;
 
         let mut client = PrimalRegistryClient::new(path.clone());
-        client.connect().await.unwrap();
+        client
+            .connect()
+            .await
+            .expect("connect registry client for register error test");
         let caps = beardog_core::capabilities::BearDogCapabilities::new(None, "n".to_string());
         let err = client.register(&caps).await.err().expect("register err");
         assert!(err.to_string().contains("register") || err.to_string().contains("Registry"));
@@ -604,7 +619,8 @@ mod tests {
         let ready_clone = Arc::clone(&ready);
         let _srv = tokio::spawn(async move {
             let _ = std::fs::remove_file(&path_clone);
-            let listener = tokio::net::UnixListener::bind(&path_clone).unwrap();
+            let listener = tokio::net::UnixListener::bind(&path_clone)
+                .expect("bind test registry socket for error-branch test");
             ready_clone.notify_one();
             loop {
                 let Ok((mut stream, _)) = listener.accept().await else {
@@ -630,7 +646,10 @@ mod tests {
         ready.notified().await;
 
         let mut client = PrimalRegistryClient::new(path.clone());
-        client.connect().await.unwrap();
+        client
+            .connect()
+            .await
+            .expect("connect for list_all error branch test");
         let err = client.list_all().await.err().expect("list err");
         assert!(err.to_string().contains("list") || err.to_string().contains("primals"));
         let _ = std::fs::remove_file(&path);
@@ -644,7 +663,8 @@ mod tests {
         let ready_clone = Arc::clone(&ready);
         let _srv = tokio::spawn(async move {
             let _ = std::fs::remove_file(&path_clone);
-            let listener = tokio::net::UnixListener::bind(&path_clone).unwrap();
+            let listener = tokio::net::UnixListener::bind(&path_clone)
+                .expect("bind test registry socket for error-branch test");
             ready_clone.notify_one();
             let Ok((mut stream, _)) = listener.accept().await else {
                 return;
@@ -666,7 +686,10 @@ mod tests {
         ready.notified().await;
 
         let mut client = PrimalRegistryClient::new(path.clone());
-        client.connect().await.unwrap();
+        client
+            .connect()
+            .await
+            .expect("connect for ping error branch test");
         let err = client.ping().await.err().expect("ping err");
         assert!(err.to_string().contains("Ping") || err.to_string().contains("ping"));
         let _ = std::fs::remove_file(&path);
@@ -680,7 +703,8 @@ mod tests {
         let ready_clone = Arc::clone(&ready);
         let _srv = tokio::spawn(async move {
             let _ = std::fs::remove_file(&path_clone);
-            let listener = tokio::net::UnixListener::bind(&path_clone).unwrap();
+            let listener = tokio::net::UnixListener::bind(&path_clone)
+                .expect("bind test registry socket for error-branch test");
             ready_clone.notify_one();
             let Ok((mut stream, _)) = listener.accept().await else {
                 return;
@@ -702,7 +726,10 @@ mod tests {
         ready.notified().await;
 
         let mut client = PrimalRegistryClient::new(path.clone());
-        client.connect().await.unwrap();
+        client
+            .connect()
+            .await
+            .expect("connect for unregister error branch test");
         let err = client.unregister("x").await.err().expect("unreg err");
         assert!(err.to_string().contains("unregister") || err.to_string().contains("Unregister"));
         let _ = std::fs::remove_file(&path);
@@ -716,7 +743,10 @@ mod tests {
         ready.notified().await;
 
         let mut client = PrimalRegistryClient::new(path.clone());
-        client.connect().await.unwrap();
+        client
+            .connect()
+            .await
+            .expect("connect for default socket path registration test");
 
         use beardog_core::capabilities::{Capability, IpcEndpoint};
         use std::collections::HashMap;

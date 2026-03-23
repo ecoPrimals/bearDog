@@ -508,7 +508,7 @@ impl BeardogBtspProvider {
     /// Priority:
     /// 1. `IPC_SOCKET` / `DISCOVERY_SOCKET` when set
     /// 2. [`beardog_ipc::DISCOVERY_SOCKET_FALLBACK`] (`/primal/discovery`)
-    /// 3. `BEARDOG_DEV_DISCOVERY_SOCKET` or [`beardog_ipc::DISCOVERY_SOCKET_DEV_FALLBACK`]
+    /// 3. `BEARDOG_DEV_DISCOVERY_SOCKET` or [`beardog_ipc::discovery_socket_dev_fallback_path`]
     fn get_discovery_socket_paths() -> Vec<String> {
         let mut paths = Vec::new();
         for key in ["IPC_SOCKET", "DISCOVERY_SOCKET"] {
@@ -524,7 +524,7 @@ impl BeardogBtspProvider {
             paths.push(generic);
         }
         let dev = beardog_errors::process_env::var("BEARDOG_DEV_DISCOVERY_SOCKET")
-            .unwrap_or_else(|_| beardog_ipc::DISCOVERY_SOCKET_DEV_FALLBACK.to_string());
+            .unwrap_or_else(|_| beardog_ipc::discovery_socket_dev_fallback_path());
         if !paths.contains(&dev) {
             paths.push(dev);
         }

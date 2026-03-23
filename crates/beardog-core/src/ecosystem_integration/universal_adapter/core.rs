@@ -267,10 +267,15 @@ mod tests {
         let adapter = UniversalAdapter::new(config);
         let request =
             AdapterRequest::new(AdapterOperation::Connect, "https://example.com".to_string());
-        let response = adapter.process_request(request).await.unwrap();
+        let response = adapter
+            .process_request(request)
+            .await
+            .expect("process_request should succeed in test");
         assert_eq!(response.status, ResponseStatus::Success);
         assert!(response.payload.is_some());
-        let payload = response.payload.unwrap();
+        let payload = response
+            .payload
+            .expect("connect response should include payload in test");
         assert_eq!(
             payload.get("connected").and_then(|v| v.as_bool()),
             Some(true)
@@ -285,12 +290,15 @@ mod tests {
             AdapterOperation::Disconnect,
             "https://example.com".to_string(),
         );
-        let response = adapter.process_request(request).await.unwrap();
+        let response = adapter
+            .process_request(request)
+            .await
+            .expect("process_request should succeed in test");
         assert_eq!(response.status, ResponseStatus::Success);
         assert_eq!(
             response
                 .payload
-                .unwrap()
+                .expect("disconnect response should include payload in test")
                 .get("disconnected")
                 .and_then(|v| v.as_bool()),
             Some(true)
@@ -305,9 +313,14 @@ mod tests {
             AdapterOperation::HealthCheck,
             "https://example.com".to_string(),
         );
-        let response = adapter.process_request(request).await.unwrap();
+        let response = adapter
+            .process_request(request)
+            .await
+            .expect("process_request should succeed in test");
         assert_eq!(response.status, ResponseStatus::Success);
-        let payload = response.payload.unwrap();
+        let payload = response
+            .payload
+            .expect("health check response should include payload in test");
         assert_eq!(
             payload.get("status").and_then(|v| v.as_str()),
             Some("healthy")
@@ -321,7 +334,10 @@ mod tests {
         let request =
             AdapterRequest::new(AdapterOperation::Request, "https://example.com".to_string())
                 .with_payload(serde_json::json!({"key": "value"}));
-        let response = adapter.process_request(request).await.unwrap();
+        let response = adapter
+            .process_request(request)
+            .await
+            .expect("process_request should succeed in test");
         assert_eq!(response.status, ResponseStatus::Success);
         assert_eq!(response.payload, Some(serde_json::json!({"key": "value"})));
     }
@@ -345,7 +361,10 @@ mod tests {
         assert_eq!(adapter.connection_count().await, 0);
         let request =
             AdapterRequest::new(AdapterOperation::Connect, "https://example.com".to_string());
-        let _ = adapter.process_request(request).await.unwrap();
+        let _ = adapter
+            .process_request(request)
+            .await
+            .expect("process_request should succeed in test");
         assert_eq!(adapter.connection_count().await, 1);
     }
 
@@ -355,7 +374,10 @@ mod tests {
         let adapter = UniversalAdapter::new(config);
         let request =
             AdapterRequest::new(AdapterOperation::Connect, "https://example.com".to_string());
-        let _ = adapter.process_request(request).await.unwrap();
+        let _ = adapter
+            .process_request(request)
+            .await
+            .expect("process_request should succeed in test");
         let metrics = adapter.metrics().await;
         assert!(metrics.total_requests >= 1);
     }

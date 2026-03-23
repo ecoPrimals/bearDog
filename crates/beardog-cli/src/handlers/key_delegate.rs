@@ -535,7 +535,7 @@ mod tests {
 
     #[test]
     fn test_parse_time_range() {
-        let (start, end) = parse_time_range("9:00-17:00").unwrap();
+        let (start, end) = parse_time_range("9:00-17:00").expect("parse_time_range valid input");
         assert_eq!(start, "9:00");
         assert_eq!(end, "17:00");
 
@@ -545,22 +545,22 @@ mod tests {
 
     #[test]
     fn test_parse_weekdays_range() {
-        let days = parse_weekdays("mon-fri").unwrap();
+        let days = parse_weekdays("mon-fri").expect("parse_weekdays range");
         assert_eq!(days, vec!["mon", "tue", "wed", "thu", "fri"]);
     }
 
     #[test]
     fn test_parse_weekdays_list() {
-        let days = parse_weekdays("mon,wed,fri").unwrap();
+        let days = parse_weekdays("mon,wed,fri").expect("parse_weekdays list");
         assert_eq!(days, vec!["mon", "wed", "fri"]);
     }
 
     #[test]
     fn test_expand_weekday_range() {
-        let days = expand_weekday_range("mon", "fri").unwrap();
+        let days = expand_weekday_range("mon", "fri").expect("expand_weekday_range mon-fri");
         assert_eq!(days, vec!["mon", "tue", "wed", "thu", "fri"]);
 
-        let weekend = expand_weekday_range("sat", "sun").unwrap();
+        let weekend = expand_weekday_range("sat", "sun").expect("expand_weekday_range weekend");
         assert_eq!(weekend, vec!["sat", "sun"]);
 
         // Invalid range
@@ -569,10 +569,19 @@ mod tests {
 
     #[test]
     fn test_parse_memory_quota() {
-        assert_eq!(parse_memory_quota("8GB").unwrap(), 8 * 1024 * 1024 * 1024);
-        assert_eq!(parse_memory_quota("512MB").unwrap(), 512 * 1024 * 1024);
-        assert_eq!(parse_memory_quota("1024KB").unwrap(), 1024 * 1024);
-        assert_eq!(parse_memory_quota("100").unwrap(), 100); // Bytes
+        assert_eq!(
+            parse_memory_quota("8GB").expect("parse 8GB"),
+            8 * 1024 * 1024 * 1024
+        );
+        assert_eq!(
+            parse_memory_quota("512MB").expect("parse 512MB"),
+            512 * 1024 * 1024
+        );
+        assert_eq!(
+            parse_memory_quota("1024KB").expect("parse 1024KB"),
+            1024 * 1024
+        );
+        assert_eq!(parse_memory_quota("100").expect("parse raw bytes"), 100); // Bytes
 
         assert!(parse_memory_quota("invalid").is_err());
         assert!(parse_memory_quota("10XB").is_err());
@@ -598,11 +607,14 @@ mod tests {
     #[test]
     fn test_derive_delegated_key_deterministic() {
         let master = [3u8; 32];
-        let a = derive_delegated_key(&master, b"delegate:alice").unwrap();
-        let b = derive_delegated_key(&master, b"delegate:alice").unwrap();
+        let a = derive_delegated_key(&master, b"delegate:alice").expect("derive alice");
+        let b = derive_delegated_key(&master, b"delegate:alice").expect("derive alice again");
         assert_eq!(a, b);
         assert_eq!(a.len(), 32);
-        assert_ne!(derive_delegated_key(&master, b"delegate:bob").unwrap(), a);
+        assert_ne!(
+            derive_delegated_key(&master, b"delegate:bob").expect("derive bob"),
+            a
+        );
     }
 
     #[test]
@@ -627,7 +639,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_handle_key_delegate_full_flow() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("tempdir for key delegate flow test");
         let home = dir.path();
 
         let master = key_store::StoredKey {
@@ -648,7 +660,7 @@ mod tests {
             usage: None,
             purpose: None,
         };
-        key_store::save_key_to_home(&master, home).unwrap();
+        key_store::save_key_to_home(&master, home).expect("save master key in test");
 
         let params = DelegateParams {
             master_key_id: "master-delegate",
@@ -676,8 +688,11 @@ mod tests {
 
     #[test]
     fn test_parse_memory_quota_bytes_unit() {
-        assert_eq!(parse_memory_quota("4096B").unwrap(), 4096);
-        assert_eq!(parse_memory_quota("2TB").unwrap(), 2 * 1024_u64.pow(4));
+        assert_eq!(parse_memory_quota("4096B").expect("parse 4096B"), 4096);
+        assert_eq!(
+            parse_memory_quota("2TB").expect("parse 2TB"),
+            2 * 1024_u64.pow(4)
+        );
     }
 
     #[test]
@@ -697,6 +712,10 @@ mod tests {
             expires_at: "2000-01-01T00:00:00Z".to_string(),
             delegated_to: "u".to_string(),
         };
-        assert_eq!(dc.is_satisfied().unwrap(), false);
+        assert_eq!(
+            dc.is_satisfied()
+                .expect("is_satisfied on expired constraints"),
+            false
+        );
     }
 }

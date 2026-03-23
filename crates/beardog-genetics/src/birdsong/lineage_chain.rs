@@ -371,7 +371,9 @@ mod tests {
         assert_eq!(child.depth, 1);
 
         // Verify chain state
-        let updated_chain = manager.get_chain(&chain.chain_id).unwrap();
+        let updated_chain = manager
+            .get_chain(&chain.chain_id)
+            .expect("chain exists after add_child");
         assert_eq!(updated_chain.nodes.len(), 2);
         assert_eq!(updated_chain.relationships.len(), 1);
 
@@ -394,7 +396,7 @@ mod tests {
         let chain = manager
             .generate_root_chain("root".to_string(), None)
             .await
-            .unwrap();
+            .expect("generate_root_chain for parent-not-found test");
         let result = manager
             .add_child(
                 &chain.chain_id,
@@ -413,11 +415,11 @@ mod tests {
         let chain = manager
             .generate_root_chain("root".to_string(), None)
             .await
-            .unwrap();
+            .expect("generate_root_chain for duplicate child test");
         manager
             .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
             .await
-            .unwrap();
+            .expect("first add_child for duplicate test");
         let result = manager
             .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
             .await;
@@ -450,7 +452,7 @@ mod tests {
         let chain = manager
             .generate_root_chain("root".to_string(), None)
             .await
-            .unwrap();
+            .expect("generate_root_chain for get_path missing node test");
         assert!(
             manager
                 .get_path_from_root(&chain.chain_id, "nonexistent")
@@ -464,13 +466,15 @@ mod tests {
         let chain = manager
             .generate_root_chain("root".to_string(), None)
             .await
-            .unwrap();
+            .expect("generate_root_chain for verify_relationship test");
         let child = manager
             .add_child(&chain.chain_id, "root", "child-1".to_string(), None)
             .await
-            .unwrap();
+            .expect("add_child for verify_relationship test");
 
-        let updated_chain = manager.get_chain(&chain.chain_id).unwrap();
+        let updated_chain = manager
+            .get_chain(&chain.chain_id)
+            .expect("chain exists after add_child");
         let parent_key = &updated_chain.root_node.public_key;
         let child_key = &child.public_key;
         let relationship = &updated_chain.relationships[0];
@@ -493,7 +497,7 @@ mod tests {
         let chain = manager
             .generate_root_chain("root".to_string(), Some(metadata))
             .await
-            .unwrap();
+            .expect("generate_root_chain with metadata");
         assert_eq!(
             chain.root_node.metadata.biome_type,
             Some("forest".to_string())
@@ -529,7 +533,7 @@ mod tests {
         // Verify path
         let path = manager
             .get_path_from_root(&chain.chain_id, "grandchild-1")
-            .unwrap();
+            .expect("path from root to grandchild-1");
         assert_eq!(path, vec!["root", "child-1", "grandchild-1"]);
 
         Ok(())

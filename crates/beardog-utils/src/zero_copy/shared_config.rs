@@ -268,7 +268,7 @@ mod tests {
         // Use a lock to ensure this test runs serially with other tests that might share state
         use std::sync::Mutex;
         static TEST_LOCK: Mutex<()> = Mutex::new(());
-        let _guard = TEST_LOCK.lock().unwrap();
+        let _guard = TEST_LOCK.lock().expect("lock not poisoned");
 
         let manager = Arc::new(SharedConfigManager::new());
         let mut handles = vec![];
@@ -289,8 +289,13 @@ mod tests {
         }
 
         // Collect all configs
-        let configs: Vec<Arc<TestConfig>> =
-            handles.into_iter().map(|h| h.join().unwrap()).collect();
+        let configs: Vec<Arc<TestConfig>> = handles
+            .into_iter()
+            .map(|h| {
+                h.join()
+                    .expect("concurrent get_or_create test thread panicked or failed to join")
+            })
+            .collect();
 
         // All should point to the same Arc
         for i in 1..configs.len() {

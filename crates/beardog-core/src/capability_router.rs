@@ -516,7 +516,9 @@ mod tests {
         let context = RequestContext::new(SimpleCapability::Cryptography)
             .with_strategy(SelectionStrategy::HighestTrust);
 
-        let (selected, reason) = router.select_primal(&mut primals, &context).unwrap();
+        let (selected, reason) = router
+            .select_primal(&mut primals, &context)
+            .expect("select_primal highest trust");
 
         assert_eq!(selected.name, "high-trust");
         assert!(reason.contains("trust"));
@@ -533,7 +535,10 @@ mod tests {
         router.record_success("test-primal", 50.0);
         router.record_success("test-primal", 60.0);
 
-        let load = router.load_tracker.get("test-primal").unwrap();
+        let load = router
+            .load_tracker
+            .get("test-primal")
+            .expect("load_tracker entry after record_success");
         assert_eq!(load.total_requests, 2);
         assert!(load.avg_latency_ms.is_some());
     }
@@ -567,8 +572,12 @@ mod tests {
         };
         let context = RequestContext::new(SimpleCapability::Cryptography)
             .with_strategy(SelectionStrategy::RoundRobin);
-        let (selected1, _) = router.select_primal(&mut primals, &context).unwrap();
-        let (selected2, _) = router.select_primal(&mut primals, &context).unwrap();
+        let (selected1, _) = router
+            .select_primal(&mut primals, &context)
+            .expect("round robin first");
+        let (selected2, _) = router
+            .select_primal(&mut primals, &context)
+            .expect("round robin second");
         assert_eq!(selected1.name, "first");
         assert_eq!(selected2.name, "second");
     }
@@ -602,7 +611,9 @@ mod tests {
         };
         let context = RequestContext::new(SimpleCapability::Cryptography)
             .with_strategy(SelectionStrategy::FirstAvailable);
-        let (selected, _) = router.select_primal(&mut primals, &context).unwrap();
+        let (selected, _) = router
+            .select_primal(&mut primals, &context)
+            .expect("first available selection");
         assert_eq!(selected.name, "first");
     }
 
@@ -663,13 +674,17 @@ mod tests {
 
         let ctx_ll = RequestContext::new(SimpleCapability::Cryptography)
             .with_strategy(SelectionStrategy::LeastLoaded);
-        let (picked_ll, reason_ll) = router.select_primal(&mut primals, &ctx_ll).unwrap();
+        let (picked_ll, reason_ll) = router
+            .select_primal(&mut primals, &ctx_ll)
+            .expect("least loaded selection");
         assert_eq!(picked_ll.name, "a");
         assert!(reason_ll.contains("least loaded"));
 
         let ctx_lat = RequestContext::new(SimpleCapability::Cryptography)
             .with_strategy(SelectionStrategy::LowestLatency);
-        let (picked_lat, reason_lat) = router.select_primal(&mut primals, &ctx_lat).unwrap();
+        let (picked_lat, reason_lat) = router
+            .select_primal(&mut primals, &ctx_lat)
+            .expect("lowest latency selection");
         assert_eq!(picked_lat.name, "b");
         assert!(reason_lat.contains("lowest latency"));
     }
@@ -698,7 +713,9 @@ mod tests {
         let mut router = CapabilityRouter::new(PrimalDiscovery::new(DiscoveryMethod::Environment));
         let ctx = RequestContext::new(SimpleCapability::Cryptography)
             .with_strategy(SelectionStrategy::Random);
-        let (sel, reason) = router.select_primal(&mut primals, &ctx).unwrap();
+        let (sel, reason) = router
+            .select_primal(&mut primals, &ctx)
+            .expect("random selection");
         assert!(["x", "y"].contains(&sel.name.as_str()));
         assert_eq!(reason, "random selection");
     }
@@ -723,11 +740,11 @@ mod tests {
 
     #[tokio::test]
     async fn route_excludes_named_primal_and_picks_remaining() {
-        let dir = tempfile::tempdir().unwrap();
+        let dir = tempfile::tempdir().expect("tempdir for primal sockets");
         let s_keep = dir.path().join("keep.sock");
         let s_skip = dir.path().join("skip.sock");
-        std::fs::File::create(&s_keep).unwrap();
-        std::fs::File::create(&s_skip).unwrap();
+        std::fs::File::create(&s_keep).expect("create keep.sock fixture");
+        std::fs::File::create(&s_skip).expect("create skip.sock fixture");
 
         let mut env = HashMap::new();
         env.insert(
@@ -761,11 +778,11 @@ mod tests {
 
     #[tokio::test]
     async fn route_filters_out_high_latency_primal_when_max_latency_set() {
-        let dir = tempfile::tempdir().unwrap();
+        let dir = tempfile::tempdir().expect("tempdir for latency filter test");
         let fast_sock = dir.path().join("fast.sock");
         let slow_sock = dir.path().join("slow.sock");
-        std::fs::File::create(&fast_sock).unwrap();
-        std::fs::File::create(&slow_sock).unwrap();
+        std::fs::File::create(&fast_sock).expect("create fast.sock");
+        std::fs::File::create(&slow_sock).expect("create slow.sock");
 
         let mut env = HashMap::new();
         env.insert(
@@ -802,9 +819,9 @@ mod tests {
 
     #[tokio::test]
     async fn route_errors_when_all_primals_filtered_by_latency() {
-        let dir = tempfile::tempdir().unwrap();
+        let dir = tempfile::tempdir().expect("tempdir for latency error test");
         let sock = dir.path().join("only.sock");
-        std::fs::File::create(&sock).unwrap();
+        std::fs::File::create(&sock).expect("create only.sock");
         let mut env = HashMap::new();
         env.insert(
             "PRIMAL_ONLY_ADDR".to_string(),

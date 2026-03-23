@@ -515,7 +515,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_aes_gcm_encrypt_decrypt() {
-        let hsm = SecureSoftwareHsm::new().unwrap();
+        let hsm = SecureSoftwareHsm::new().expect("SecureSoftwareHsm::new should succeed in test");
 
         // Generate key
         let key_id = hsm
@@ -527,24 +527,30 @@ mod tests {
                 metadata: std::collections::HashMap::new(),
             })
             .await
-            .unwrap();
+            .expect("generate_key should succeed in test");
 
         // Test data
         let plaintext = b"Hello, Sovereign Computing!";
 
         // Encrypt
-        let ciphertext = hsm.encrypt(plaintext, &key_id).await.unwrap();
+        let ciphertext = hsm
+            .encrypt(plaintext, &key_id)
+            .await
+            .expect("encrypt should succeed in test");
         assert_ne!(ciphertext, plaintext); // Should be different
         assert!(ciphertext.len() > plaintext.len()); // Should include nonce + tag
 
         // Decrypt
-        let decrypted = hsm.decrypt(&ciphertext, &key_id).await.unwrap();
+        let decrypted = hsm
+            .decrypt(&ciphertext, &key_id)
+            .await
+            .expect("decrypt should succeed in test");
         assert_eq!(decrypted, plaintext);
     }
 
     #[tokio::test]
     async fn test_ed25519_sign_verify() {
-        let hsm = SecureSoftwareHsm::new().unwrap();
+        let hsm = SecureSoftwareHsm::new().expect("SecureSoftwareHsm::new should succeed in test");
 
         // Generate signing key
         let key_id = hsm
@@ -556,31 +562,46 @@ mod tests {
                 metadata: std::collections::HashMap::new(),
             })
             .await
-            .unwrap();
+            .expect("generate_key should succeed in test");
 
         // Test data
         let data = b"Sign this message";
 
         // Sign
-        let signature = hsm.sign(data, &key_id).await.unwrap();
+        let signature = hsm
+            .sign(data, &key_id)
+            .await
+            .expect("sign should succeed in test");
         assert_eq!(signature.len(), 64); // Ed25519 signatures are 64 bytes
 
         // Verify
-        let valid = hsm.verify(data, &signature, &key_id).await.unwrap();
+        let valid = hsm
+            .verify(data, &signature, &key_id)
+            .await
+            .expect("verify should succeed in test");
         assert!(valid);
 
         // Verify with wrong data should fail
         let wrong_data = b"Different message";
-        let invalid = hsm.verify(wrong_data, &signature, &key_id).await.unwrap();
+        let invalid = hsm
+            .verify(wrong_data, &signature, &key_id)
+            .await
+            .expect("verify should succeed in test");
         assert!(!invalid);
     }
 
     #[tokio::test]
     async fn test_generate_random() {
-        let hsm = SecureSoftwareHsm::new().unwrap();
+        let hsm = SecureSoftwareHsm::new().expect("SecureSoftwareHsm::new should succeed in test");
 
-        let random1 = hsm.generate_random(32).await.unwrap();
-        let random2 = hsm.generate_random(32).await.unwrap();
+        let random1 = hsm
+            .generate_random(32)
+            .await
+            .expect("generate_random should succeed in test");
+        let random2 = hsm
+            .generate_random(32)
+            .await
+            .expect("generate_random should succeed in test");
 
         assert_eq!(random1.len(), 32);
         assert_eq!(random2.len(), 32);
@@ -589,7 +610,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_key_deletion() {
-        let hsm = SecureSoftwareHsm::new().unwrap();
+        let hsm = SecureSoftwareHsm::new().expect("SecureSoftwareHsm::new should succeed in test");
 
         let key_id = hsm
             .generate_key(KeySpec {
@@ -600,13 +621,18 @@ mod tests {
                 metadata: std::collections::HashMap::new(),
             })
             .await
-            .unwrap();
+            .expect("generate_key should succeed in test");
 
         // Key should exist
-        let _ = hsm.get_key(&key_id).await.unwrap();
+        let _ = hsm
+            .get_key(&key_id)
+            .await
+            .expect("get_key should find key before delete in test");
 
         // Delete key
-        hsm.delete_key(&key_id).await.unwrap();
+        hsm.delete_key(&key_id)
+            .await
+            .expect("delete_key should succeed in test");
 
         // Key should no longer exist
         let result = hsm.get_key(&key_id).await;
@@ -615,7 +641,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_key_rotation() {
-        let hsm = SecureSoftwareHsm::new().unwrap();
+        let hsm = SecureSoftwareHsm::new().expect("SecureSoftwareHsm::new should succeed in test");
 
         let old_key_id = hsm
             .generate_key(KeySpec {
@@ -626,26 +652,47 @@ mod tests {
                 metadata: std::collections::HashMap::new(),
             })
             .await
-            .unwrap();
+            .expect("generate_key should succeed in test");
 
         // Rotate key
-        let new_key_id = hsm.rotate_key(&old_key_id).await.unwrap();
+        let new_key_id = hsm
+            .rotate_key(&old_key_id)
+            .await
+            .expect("rotate_key should succeed in test");
 
         assert_ne!(old_key_id, new_key_id);
 
         // Both keys should exist
-        let _ = hsm.get_key(&old_key_id).await.unwrap();
-        let _ = hsm.get_key(&new_key_id).await.unwrap();
+        let _ = hsm
+            .get_key(&old_key_id)
+            .await
+            .expect("old key should remain after rotation in test");
+        let _ = hsm
+            .get_key(&new_key_id)
+            .await
+            .expect("new key should exist after rotation in test");
 
         // Old data encrypted with old key should still decrypt
         let plaintext = b"Test data";
-        let old_ciphertext = hsm.encrypt(plaintext, &old_key_id).await.unwrap();
-        let decrypted = hsm.decrypt(&old_ciphertext, &old_key_id).await.unwrap();
+        let old_ciphertext = hsm
+            .encrypt(plaintext, &old_key_id)
+            .await
+            .expect("encrypt with old key should succeed in test");
+        let decrypted = hsm
+            .decrypt(&old_ciphertext, &old_key_id)
+            .await
+            .expect("decrypt with old key should succeed in test");
         assert_eq!(decrypted, plaintext);
 
         // New key should work for new data
-        let new_ciphertext = hsm.encrypt(plaintext, &new_key_id).await.unwrap();
-        let new_decrypted = hsm.decrypt(&new_ciphertext, &new_key_id).await.unwrap();
+        let new_ciphertext = hsm
+            .encrypt(plaintext, &new_key_id)
+            .await
+            .expect("encrypt with new key should succeed in test");
+        let new_decrypted = hsm
+            .decrypt(&new_ciphertext, &new_key_id)
+            .await
+            .expect("decrypt with new key should succeed in test");
         assert_eq!(new_decrypted, plaintext);
     }
 }

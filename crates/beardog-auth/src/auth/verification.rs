@@ -130,7 +130,10 @@ mod tests {
 
         let result = engine.verify_authorization_proof(&proof);
         assert!(result.is_ok());
-        assert!(result.unwrap(), "Valid proof should verify");
+        assert!(
+            result.expect("verify_authorization_proof Ok"),
+            "Valid proof should verify"
+        );
     }
 
     #[test]
@@ -146,7 +149,10 @@ mod tests {
 
         let result = engine.verify_authorization_proof(&proof);
         assert!(result.is_ok());
-        assert!(!result.unwrap(), "Non-existent auth should fail");
+        assert!(
+            !result.expect("verify_authorization_proof Ok"),
+            "Non-existent auth should fail"
+        );
     }
 
     #[test]
@@ -177,7 +183,10 @@ mod tests {
 
         let result = engine.verify_authorization_proof(&proof);
         assert!(result.is_ok());
-        assert!(!result.unwrap(), "Inactive auth should fail");
+        assert!(
+            !result.expect("verify_authorization_proof Ok"),
+            "Inactive auth should fail"
+        );
     }
 
     #[test]
@@ -208,7 +217,10 @@ mod tests {
 
         let result = engine.verify_authorization_proof(&proof);
         assert!(result.is_ok());
-        assert!(!result.unwrap(), "Expired auth should fail");
+        assert!(
+            !result.expect("verify_authorization_proof Ok"),
+            "Expired auth should fail"
+        );
     }
 
     #[test]
@@ -239,7 +251,10 @@ mod tests {
 
         let result = engine.verify_authorization_proof(&proof);
         assert!(result.is_ok());
-        assert!(!result.unwrap(), "Empty signature should fail");
+        assert!(
+            !result.expect("verify_authorization_proof Ok"),
+            "Empty signature should fail"
+        );
     }
 
     #[test]
@@ -264,7 +279,10 @@ mod tests {
         let result = engine.revoke_authorization(&auth_id);
         assert!(result.is_ok(), "Revocation should succeed");
 
-        let auth = engine.active_authorizations.get(&auth_id).unwrap();
+        let auth = engine
+            .active_authorizations
+            .get(&auth_id)
+            .expect("auth present after insert");
         assert!(
             !auth.is_active,
             "Authorization should be inactive after revocation"
@@ -299,8 +317,8 @@ mod tests {
         };
 
         let entropy = vec![1u8; 32];
-        let key =
-            BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![]).unwrap();
+        let key = BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![])
+            .expect("generate_with_constraints for compliant op test");
 
         // Allowed operation
         let delete_unprotected = KeyOperation::Delete {
@@ -327,8 +345,8 @@ mod tests {
         };
 
         let entropy = vec![1u8; 32];
-        let key =
-            BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![]).unwrap();
+        let key = BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![])
+            .expect("generate_with_constraints for violation test");
 
         // Violating operation
         let delete_protected = KeyOperation::Delete {
@@ -338,7 +356,10 @@ mod tests {
         let result = engine.verify_genetic_operation(&key, &delete_protected);
         assert!(result.is_err(), "Constraint violation should be blocked");
         assert!(
-            result.unwrap_err().to_string().contains("protected"),
+            result
+                .expect_err("constraint violation expected")
+                .to_string()
+                .contains("protected"),
             "Error should mention protected path"
         );
     }
@@ -359,8 +380,8 @@ mod tests {
         };
 
         let entropy = vec![1u8; 32];
-        let key =
-            BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![]).unwrap();
+        let key = BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![])
+            .expect("generate_with_constraints for expired key test");
 
         // Any operation should fail
         let read_op = KeyOperation::Read {
@@ -371,7 +392,10 @@ mod tests {
         let result = engine.verify_genetic_operation(&key, &read_op);
         assert!(result.is_err(), "Expired key should be rejected");
         assert!(
-            result.unwrap_err().to_string().contains("expired"),
+            result
+                .expect_err("expired key should error")
+                .to_string()
+                .contains("expired"),
             "Error should mention expiration"
         );
     }
@@ -392,8 +416,8 @@ mod tests {
         };
 
         let entropy = vec![1u8; 32];
-        let mut key =
-            BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![]).unwrap();
+        let mut key = BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![])
+            .expect("generate_with_constraints for tamper test");
 
         // Tamper with constraints
         if let Some(ref mut constraints) = key.constraints {
@@ -408,7 +432,10 @@ mod tests {
         let result = engine.verify_genetic_operation(&key, &delete_op);
         assert!(result.is_err(), "Tampered key should be rejected");
         assert!(
-            result.unwrap_err().to_string().contains("tampered"),
+            result
+                .expect_err("tampered key should error")
+                .to_string()
+                .contains("tampered"),
             "Error should mention tampering"
         );
     }

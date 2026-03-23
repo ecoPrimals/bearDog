@@ -105,7 +105,10 @@ fn find_root(key: &StoredKey, home: &Path) -> Result<StoredKey, BearDogError> {
     while let Some(parent_id) = &current.parent_key_id {
         // Handle mixed keys (parent format: "key1+key2")
         let first_parent = if parent_id.contains('+') {
-            parent_id.split('+').next().unwrap_or(parent_id)
+            parent_id
+                .split('+')
+                .next()
+                .expect("split on '+' always yields at least one segment")
         } else {
             parent_id.as_str()
         };
@@ -241,46 +244,46 @@ mod tests {
 
     #[test]
     fn test_find_root_already_root() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for find_root root test");
         let home = dir.path();
         let root = create_test_key("root", 0, None);
-        let found_root = find_root(&root, home).unwrap();
+        let found_root = find_root(&root, home).expect("find_root when key is already root");
         assert_eq!(found_root.key_id, "root");
     }
 
     #[test]
     fn test_find_root_walks_single_parent() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for find_root walk test");
         let home = dir.path();
         let mut root = create_test_key("line-root", 0, None);
         root.children = vec!["line-child".to_string()];
         let child = create_test_key("line-child", 1, Some("line-root".to_string()));
-        key_store::save_key_to_home(&root, home).unwrap();
-        key_store::save_key_to_home(&child, home).unwrap();
+        key_store::save_key_to_home(&root, home).expect("save line-root");
+        key_store::save_key_to_home(&child, home).expect("save line-child");
 
-        let found = find_root(&child, home).unwrap();
+        let found = find_root(&child, home).expect("walk parent chain to root");
         assert_eq!(found.key_id, "line-root");
     }
 
     #[test]
     fn test_find_root_mixed_parent_uses_first_segment() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for mixed parent test");
         let home = dir.path();
         let k1 = create_test_key("mix-a", 0, None);
         let k2 = create_test_key("mix-b", 0, None);
-        key_store::save_key_to_home(&k1, home).unwrap();
-        key_store::save_key_to_home(&k2, home).unwrap();
+        key_store::save_key_to_home(&k1, home).expect("save mix-a");
+        key_store::save_key_to_home(&k2, home).expect("save mix-b");
 
         let mixed = create_test_key("mixed-child", 2, Some("mix-a+mix-b".to_string()));
-        key_store::save_key_to_home(&mixed, home).unwrap();
+        key_store::save_key_to_home(&mixed, home).expect("save mixed-child");
 
-        let found = find_root(&mixed, home).unwrap();
+        let found = find_root(&mixed, home).expect("resolve mixed parent to first segment root");
         assert_eq!(found.key_id, "mix-a");
     }
 
     #[test]
     fn test_count_lineage_single_key() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for count_lineage single key");
         let home = dir.path();
         let key = create_test_key("single", 0, None);
         let (total, depth) = count_lineage(&key, 0, home);
@@ -290,15 +293,15 @@ mod tests {
 
     #[test]
     fn test_count_lineage_with_children() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for count_lineage children test");
         let home = dir.path();
         let mut parent = create_test_key("parent", 0, None);
         let c1 = create_test_key("child1", 1, Some("parent".to_string()));
         let c2 = create_test_key("child2", 1, Some("parent".to_string()));
         parent.children = vec!["child1".to_string(), "child2".to_string()];
-        key_store::save_key_to_home(&parent, home).unwrap();
-        key_store::save_key_to_home(&c1, home).unwrap();
-        key_store::save_key_to_home(&c2, home).unwrap();
+        key_store::save_key_to_home(&parent, home).expect("save parent");
+        key_store::save_key_to_home(&c1, home).expect("save child1");
+        key_store::save_key_to_home(&c2, home).expect("save child2");
 
         let (total, depth) = count_lineage(&parent, 0, home);
         assert_eq!(total, 3);
@@ -307,41 +310,41 @@ mod tests {
 
     #[tokio::test]
     async fn test_handle_key_lineage_json_includes_tree() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for lineage JSON test");
         let home = dir.path();
         let root = create_test_key("json-root", 0, None);
         let child = create_test_key("json-child", 1, Some("json-root".to_string()));
-        key_store::save_key_to_home(&root, home).unwrap();
-        key_store::save_key_to_home(&child, home).unwrap();
+        key_store::save_key_to_home(&root, home).expect("save json-root");
+        key_store::save_key_to_home(&child, home).expect("save json-child");
 
         handle_key_lineage_for_home("json-child", true, home)
             .await
-            .unwrap();
+            .expect("handle_key_lineage JSON output");
     }
 
     #[tokio::test]
     async fn test_handle_key_lineage_human_output_smoke() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for lineage human output test");
         let home = dir.path();
         let k = create_test_key("human-only", 0, None);
-        key_store::save_key_to_home(&k, home).unwrap();
+        key_store::save_key_to_home(&k, home).expect("save human-only key");
 
         handle_key_lineage_for_home("human-only", false, home)
             .await
-            .unwrap();
+            .expect("handle_key_lineage human-readable output");
     }
 
     #[test]
     fn test_build_lineage_tree_nested() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::new().expect("create temp directory for build_lineage_tree test");
         let home = dir.path();
         let mut root = create_test_key("bt-root", 0, None);
         let child = create_test_key("bt-child", 1, Some("bt-root".to_string()));
         root.children = vec!["bt-child".to_string()];
-        key_store::save_key_to_home(&root, home).unwrap();
-        key_store::save_key_to_home(&child, home).unwrap();
+        key_store::save_key_to_home(&root, home).expect("save bt-root");
+        key_store::save_key_to_home(&child, home).expect("save bt-child");
 
-        let node = build_lineage_tree(&root, home).unwrap();
+        let node = build_lineage_tree(&root, home).expect("build nested lineage tree");
         assert_eq!(node.key_id, "bt-root");
         assert_eq!(node.children.len(), 1);
         assert_eq!(node.children[0].key_id, "bt-child");

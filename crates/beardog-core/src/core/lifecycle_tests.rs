@@ -323,4 +323,28 @@ mod tests {
         assert_eq!(health.component_name, cloned.component_name);
         assert_eq!(health.status, cloned.status);
     }
+
+    #[tokio::test]
+    async fn test_health_check_inactive_when_any_component_not_running() {
+        let core = create_test_core();
+        core.startup().await.expect("startup");
+
+        {
+            let mut state = core.state.write().await;
+            state
+                .components
+                .insert("security".to_string(), ComponentStatus::Inactive);
+        }
+
+        let health = core
+            .health_check()
+            .await
+            .expect("health check returns Ok with inactive status");
+
+        assert_eq!(health.status, ComponentStatus::Inactive);
+        assert!(
+            health.details.is_some(),
+            "details should note unhealthy components"
+        );
+    }
 }

@@ -41,7 +41,9 @@ mod handlers_coverage_extension_tests {
         let mut handler = ComplianceHandler::new(config);
         let event = create_event(ComplianceEventType::DataAccess, ComplianceStandard::Gdpr);
 
-        let result = handler.evaluate_compliance(&event).unwrap();
+        let result = handler
+            .evaluate_compliance(&event)
+            .expect("compliance evaluation should succeed for test event");
 
         assert!(!result.recommendations.is_empty());
         assert!(
@@ -68,7 +70,9 @@ mod handlers_coverage_extension_tests {
             ComplianceStandard::Sox,
         );
 
-        let result = handler.evaluate_compliance(&event).unwrap();
+        let result = handler
+            .evaluate_compliance(&event)
+            .expect("compliance evaluation should succeed for test event");
 
         assert!(!result.recommendations.is_empty());
         assert!(
@@ -100,7 +104,9 @@ mod handlers_coverage_extension_tests {
             ComplianceStandard::Iso27001,
         );
 
-        let result = handler.evaluate_compliance(&event).unwrap();
+        let result = handler
+            .evaluate_compliance(&event)
+            .expect("compliance evaluation should succeed for test event");
 
         assert!(!result.recommendations.is_empty());
         assert!(
@@ -129,7 +135,9 @@ mod handlers_coverage_extension_tests {
         let mut handler = ComplianceHandler::new(config);
         let event = create_event(ComplianceEventType::SystemAccess, ComplianceStandard::Soc2);
 
-        let result = handler.evaluate_compliance(&event).unwrap();
+        let result = handler
+            .evaluate_compliance(&event)
+            .expect("compliance evaluation should succeed for test event");
 
         assert!(!result.recommendations.is_empty());
         assert!(
@@ -161,7 +169,9 @@ mod handlers_coverage_extension_tests {
             ComplianceStandard::Gdpr,
         );
 
-        let result = handler.evaluate_compliance(&event).unwrap();
+        let result = handler
+            .evaluate_compliance(&event)
+            .expect("compliance evaluation should succeed for test event");
 
         // Default recommendations for unhandled event types
         assert!(!result.recommendations.is_empty());
@@ -188,7 +198,9 @@ mod handlers_coverage_extension_tests {
             ComplianceStandard::Soc2,
         );
 
-        let result = handler.evaluate_compliance(&event).unwrap();
+        let result = handler
+            .evaluate_compliance(&event)
+            .expect("compliance evaluation should succeed for test event");
 
         // Default recommendations
         assert!(!result.recommendations.is_empty());
@@ -210,7 +222,9 @@ mod handlers_coverage_extension_tests {
             ComplianceStandard::Iso27001,
         );
 
-        let result = handler.evaluate_compliance(&event).unwrap();
+        let result = handler
+            .evaluate_compliance(&event)
+            .expect("compliance evaluation should succeed for test event");
 
         assert!(result.score >= 0.0);
         assert!(result.score <= 100.0);
@@ -225,7 +239,9 @@ mod handlers_coverage_extension_tests {
         let mut handler = ComplianceHandler::new(config);
         let event = create_event(ComplianceEventType::SystemAccess, ComplianceStandard::Soc2);
 
-        let result = handler.evaluate_compliance(&event).unwrap();
+        let result = handler
+            .evaluate_compliance(&event)
+            .expect("compliance evaluation should succeed for test event");
 
         assert!(result.score >= 0.0);
     }
@@ -239,7 +255,9 @@ mod handlers_coverage_extension_tests {
         let mut handler = ComplianceHandler::new(config);
         let event = create_event(ComplianceEventType::DataAccess, ComplianceStandard::Ccpa);
 
-        let result = handler.evaluate_compliance(&event).unwrap();
+        let result = handler
+            .evaluate_compliance(&event)
+            .expect("compliance evaluation should succeed for test event");
 
         assert!(result.score >= 0.0);
     }
@@ -256,7 +274,9 @@ mod handlers_coverage_extension_tests {
             ComplianceStandard::Pci,
         );
 
-        let result = handler.evaluate_compliance(&event).unwrap();
+        let result = handler
+            .evaluate_compliance(&event)
+            .expect("compliance evaluation should succeed for test event");
 
         assert!(result.score >= 0.0);
     }
@@ -273,7 +293,9 @@ mod handlers_coverage_extension_tests {
             ComplianceStandard::Custom("TestStandard".to_string()),
         );
 
-        let result = handler.evaluate_compliance(&event).unwrap();
+        let result = handler
+            .evaluate_compliance(&event)
+            .expect("compliance evaluation should succeed for test event");
 
         assert!(result.score >= 0.0);
         assert!(!result.recommendations.is_empty());
@@ -325,7 +347,9 @@ mod handlers_coverage_extension_tests {
         let mut handler = ComplianceHandler::new(config);
         let event = create_event(ComplianceEventType::DataAccess, ComplianceStandard::Gdpr);
 
-        let result = handler.evaluate_compliance(&event).unwrap();
+        let result = handler
+            .evaluate_compliance(&event)
+            .expect("compliance evaluation should succeed for test event");
 
         // Score should be between 0 and 100
         assert!(result.score >= 0.0);
@@ -398,7 +422,8 @@ mod handlers_coverage_extension_tests {
         let result = handler.check_sovereignty_compliance(&event);
 
         assert!(result.is_ok());
-        assert!(result.unwrap().is_empty());
+        let issues = result.expect("sovereignty check should succeed");
+        assert!(issues.is_empty());
     }
 
     #[test]
@@ -410,7 +435,8 @@ mod handlers_coverage_extension_tests {
         let result = handler.check_privacy_compliance(&event);
 
         assert!(result.is_ok());
-        assert!(result.unwrap().is_empty());
+        let issues = result.expect("privacy check should succeed");
+        assert!(issues.is_empty());
     }
 
     #[test]

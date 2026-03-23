@@ -566,7 +566,9 @@ mod tests {
         }
 
         for handle in handles {
-            handle.join().unwrap();
+            handle
+                .join()
+                .expect("concurrent string caching test thread panicked or failed to join");
         }
 
         let stats = manager.get_stats();

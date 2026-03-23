@@ -465,13 +465,13 @@ mod tests {
     #[tokio::test]
     async fn test_create_delegated_key() {
         let config = KeyExchangeConfig::default();
-        let exchange = GeneticKeyExchange::new(config).unwrap();
+        let exchange = GeneticKeyExchange::new(config).expect("GeneticKeyExchange::new in test");
 
         let allowed_ops = vec!["encrypt".to_string(), "decrypt".to_string()];
         let result = exchange.create_delegated_key("test-peer", 3600, &allowed_ops);
 
         assert!(result.is_ok());
-        let key = result.unwrap();
+        let key = result.expect("create_delegated_key after is_ok");
         assert!(!key.public_key.is_empty());
         assert_eq!(key.constraints.allowed_operations.len(), 2);
     }
@@ -482,7 +482,8 @@ mod tests {
             max_key_lifetime_secs: 1000,
             ..Default::default()
         };
-        let exchange = GeneticKeyExchange::new(config).unwrap();
+        let exchange =
+            GeneticKeyExchange::new(config).expect("GeneticKeyExchange::new for lifetime test");
 
         let result = exchange.create_delegated_key("test-peer", 2000, &[]);
 
@@ -492,17 +493,18 @@ mod tests {
     #[test]
     fn test_key_exchange() {
         let config = KeyExchangeConfig::default();
-        let exchange = GeneticKeyExchange::new(config).unwrap();
+        let exchange =
+            GeneticKeyExchange::new(config).expect("GeneticKeyExchange::new for exchange test");
 
         let allowed_ops = vec!["encrypt".to_string()];
         let delegated_key = exchange
             .create_delegated_key("peer-1", 3600, &allowed_ops)
-            .unwrap();
+            .expect("create_delegated_key peer-1");
 
         let result = exchange.perform_key_exchange("peer-1", &delegated_key);
         assert!(result.is_ok());
 
-        let exchange_result = result.unwrap();
+        let exchange_result = result.expect("perform_key_exchange after is_ok");
         assert!(!exchange_result.shared_secret.is_empty());
         assert_eq!(exchange_result.lineage.peer_id, "peer-1");
     }
@@ -510,15 +512,20 @@ mod tests {
     #[test]
     fn test_evolution_triggers() {
         let config = KeyExchangeConfig::default();
-        let exchange = GeneticKeyExchange::new(config).unwrap();
+        let exchange =
+            GeneticKeyExchange::new(config).expect("GeneticKeyExchange::new for evolution test");
 
-        let delegated_key = exchange.create_delegated_key("peer-2", 3600, &[]).unwrap();
+        let delegated_key = exchange
+            .create_delegated_key("peer-2", 3600, &[])
+            .expect("create_delegated_key peer-2");
 
         exchange
             .perform_key_exchange("peer-2", &delegated_key)
-            .unwrap();
+            .expect("perform_key_exchange peer-2");
 
-        let should_evolve = exchange.should_evolve("peer-2").unwrap();
+        let should_evolve = exchange
+            .should_evolve("peer-2")
+            .expect("should_evolve peer-2");
         assert!(!should_evolve); // Not enough time elapsed yet
     }
 
@@ -535,7 +542,8 @@ mod tests {
     #[tokio::test]
     async fn test_constraint_validation() {
         let config = KeyExchangeConfig::default();
-        let _exchange = GeneticKeyExchange::new(config).unwrap();
+        let _exchange =
+            GeneticKeyExchange::new(config).expect("GeneticKeyExchange::new for constraint test");
 
         let constraints = KeyConstraints {
             allowed_operations: vec![],

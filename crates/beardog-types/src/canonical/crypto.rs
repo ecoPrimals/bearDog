@@ -686,7 +686,12 @@ mod tests {
 
         assert_eq!(config.key_size, 256);
         assert!(config.rotation_interval_seconds.is_some());
-        assert_eq!(config.rotation_interval_seconds.unwrap(), 86400 * 30);
+        assert_eq!(
+            config
+                .rotation_interval_seconds
+                .expect("default rotation interval"),
+            86400 * 30
+        );
         assert!(config.metadata.is_empty());
     }
 
@@ -705,7 +710,12 @@ mod tests {
         };
 
         assert_eq!(config.key_size, 128);
-        assert_eq!(config.rotation_interval_seconds.unwrap(), 3600);
+        assert_eq!(
+            config
+                .rotation_interval_seconds
+                .expect("custom rotation interval"),
+            3600
+        );
         assert_eq!(config.metadata.len(), 1);
     }
 
@@ -738,7 +748,7 @@ mod tests {
         assert!(!usage.encrypt);
         assert!(usage.sign);
         assert!(usage.verify);
-        assert_eq!(usage.max_operations.unwrap(), 1000);
+        assert_eq!(usage.max_operations.expect("max operations"), 1000);
     }
 
     // EncryptionMode tests

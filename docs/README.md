@@ -1,6 +1,6 @@
 # BearDog Documentation
 
-**Last Updated**: March 21, 2026
+**Last Updated**: March 23, 2026
 **Status**: Production Ready
 
 ---
@@ -39,7 +39,7 @@ docs/
 ```
 
 Archived documentation (migration guides, hardware setup, device guides, testing guides,
-architecture deep-dives, etc.) is preserved in `archives/docs/` for fossil record.
+architecture deep-dives, etc.) is preserved in `ecoPrimals/archive/` as fossil record.
 
 ---
 

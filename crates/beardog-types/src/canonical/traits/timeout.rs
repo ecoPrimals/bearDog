@@ -238,14 +238,14 @@ pub trait TimeoutPolicy: Send + Sync {
 mod tests {
     use super::*;
 
-    // Mock timeout policy for testing
-    struct MockTimeoutPolicy {
+    // Test-only [`TimeoutPolicy`] implementation.
+    struct TestTimeoutPolicy {
         connection: Duration,
         default_op: Duration,
         global: Option<Duration>,
     }
 
-    impl TimeoutPolicy for MockTimeoutPolicy {
+    impl TimeoutPolicy for TestTimeoutPolicy {
         fn connection_timeout(&self) -> Duration {
             self.connection
         }
@@ -265,7 +265,7 @@ mod tests {
 
     #[test]
     fn test_basic_timeouts() {
-        let policy = MockTimeoutPolicy {
+        let policy = TestTimeoutPolicy {
             connection: Duration::from_secs(10),
             default_op: Duration::from_secs(30),
             global: None,
@@ -279,7 +279,7 @@ mod tests {
 
     #[test]
     fn test_should_timeout() {
-        let policy = MockTimeoutPolicy {
+        let policy = TestTimeoutPolicy {
             connection: Duration::from_secs(10),
             default_op: Duration::from_secs(30),
             global: None,
@@ -297,7 +297,7 @@ mod tests {
 
     #[test]
     fn test_remaining_time() {
-        let policy = MockTimeoutPolicy {
+        let policy = TestTimeoutPolicy {
             connection: Duration::from_secs(10),
             default_op: Duration::from_secs(30),
             global: None,
@@ -326,7 +326,7 @@ mod tests {
 
     #[test]
     fn test_global_timeout() {
-        let policy = MockTimeoutPolicy {
+        let policy = TestTimeoutPolicy {
             connection: Duration::from_secs(10),
             default_op: Duration::from_secs(30),
             global: Some(Duration::from_secs(120)),
@@ -337,7 +337,7 @@ mod tests {
 
     #[test]
     fn test_convenience_methods() {
-        let policy = MockTimeoutPolicy {
+        let policy = TestTimeoutPolicy {
             connection: Duration::from_secs(10),
             default_op: Duration::from_secs(30),
             global: None,
@@ -351,7 +351,7 @@ mod tests {
     #[test]
     fn test_validation() {
         // Valid policy
-        let valid = MockTimeoutPolicy {
+        let valid = TestTimeoutPolicy {
             connection: Duration::from_secs(10),
             default_op: Duration::from_secs(30),
             global: Some(Duration::from_secs(120)),
@@ -359,7 +359,7 @@ mod tests {
         assert!(valid.validate().is_ok());
 
         // Invalid: zero global timeout
-        let invalid = MockTimeoutPolicy {
+        let invalid = TestTimeoutPolicy {
             connection: Duration::from_secs(10),
             default_op: Duration::from_secs(30),
             global: Some(Duration::ZERO),
@@ -367,7 +367,7 @@ mod tests {
         assert!(invalid.validate().is_err());
 
         // Invalid: very short global timeout
-        let invalid2 = MockTimeoutPolicy {
+        let invalid2 = TestTimeoutPolicy {
             connection: Duration::from_secs(10),
             default_op: Duration::from_secs(30),
             global: Some(Duration::from_millis(100)),
@@ -378,7 +378,7 @@ mod tests {
     #[test]
     fn test_production_readiness() {
         // Production ready
-        let prod = MockTimeoutPolicy {
+        let prod = TestTimeoutPolicy {
             connection: Duration::from_secs(5),
             default_op: Duration::from_secs(30),
             global: None,
@@ -386,7 +386,7 @@ mod tests {
         assert!(prod.is_production_ready());
 
         // Not production ready: zero connection timeout
-        let not_prod = MockTimeoutPolicy {
+        let not_prod = TestTimeoutPolicy {
             connection: Duration::ZERO,
             default_op: Duration::from_secs(30),
             global: None,
@@ -394,7 +394,7 @@ mod tests {
         assert!(!not_prod.is_production_ready());
 
         // Not production ready: too long connection timeout
-        let not_prod2 = MockTimeoutPolicy {
+        let not_prod2 = TestTimeoutPolicy {
             connection: Duration::from_secs(100),
             default_op: Duration::from_secs(30),
             global: None,
@@ -404,7 +404,7 @@ mod tests {
 
     #[test]
     fn test_idle_timeout_default() {
-        let policy = MockTimeoutPolicy {
+        let policy = TestTimeoutPolicy {
             connection: Duration::from_secs(10),
             default_op: Duration::from_secs(30),
             global: None,

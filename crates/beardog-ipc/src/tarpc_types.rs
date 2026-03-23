@@ -416,8 +416,9 @@ mod tests {
             public_key: vec![1, 2, 3],
             private_key: vec![4, 5, 6],
         };
-        let json = serde_json::to_string(&kp).unwrap();
-        let deserialized: KeyPair = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&kp).expect("serialize KeyPair");
+        let deserialized: KeyPair =
+            serde_json::from_str(&json).expect("deserialize KeyPair from JSON");
         assert_eq!(kp.public_key, deserialized.public_key);
     }
 
@@ -427,8 +428,8 @@ mod tests {
             public_key: vec![1, 2, 3],
             private_key: vec![4, 5, 6],
         };
-        let json = serde_json::to_string(&kp).unwrap();
-        let restored: KeyPair = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&kp).expect("serialize KeyPair for roundtrip");
+        let restored: KeyPair = serde_json::from_str(&json).expect("deserialize KeyPair roundtrip");
         assert_eq!(kp.public_key, restored.public_key);
         assert_eq!(kp.private_key, restored.private_key);
     }
@@ -448,8 +449,8 @@ mod tests {
             code: -32600,
             message: "Bad request".to_string(),
         };
-        let json = serde_json::to_string(&err).unwrap();
-        let restored: CryptoError = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&err).expect("serialize CryptoError");
+        let restored: CryptoError = serde_json::from_str(&json).expect("deserialize CryptoError");
         assert_eq!(err.code, restored.code);
     }
 
@@ -471,8 +472,8 @@ mod tests {
             data: vec![1, 2, 3],
             private_key: vec![4, 5, 6],
         };
-        let json = serde_json::to_string(&req).unwrap();
-        let restored: SignRequest = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&req).expect("serialize SignRequest");
+        let restored: SignRequest = serde_json::from_str(&json).expect("deserialize SignRequest");
         assert_eq!(req.data, restored.data);
     }
 
@@ -483,8 +484,9 @@ mod tests {
             signature: vec![2],
             public_key: vec![3],
         };
-        let json = serde_json::to_string(&req).unwrap();
-        let restored: VerifyRequest = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&req).expect("serialize VerifyRequest");
+        let restored: VerifyRequest =
+            serde_json::from_str(&json).expect("deserialize VerifyRequest");
         assert_eq!(req.public_key, restored.public_key);
     }
 
@@ -494,8 +496,9 @@ mod tests {
             our_private_key: vec![1; 32],
             their_public_key: vec![2; 32],
         };
-        let json = serde_json::to_string(&req).unwrap();
-        let restored: KeyExchangeRequest = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&req).expect("serialize KeyExchangeRequest");
+        let restored: KeyExchangeRequest =
+            serde_json::from_str(&json).expect("deserialize KeyExchangeRequest");
         assert_eq!(req.our_private_key.len(), restored.our_private_key.len());
     }
 
@@ -508,8 +511,9 @@ mod tests {
             tag: vec![0; 16],
             aad: None,
         };
-        let json = serde_json::to_string(&req).unwrap();
-        let restored: DecryptRequest = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&req).expect("serialize DecryptRequest");
+        let restored: DecryptRequest =
+            serde_json::from_str(&json).expect("deserialize DecryptRequest");
         assert_eq!(req.ciphertext, restored.ciphertext);
     }
 
@@ -519,8 +523,8 @@ mod tests {
             data: vec![1, 2, 3],
             key: vec![4, 5, 6],
         };
-        let json = serde_json::to_string(&req).unwrap();
-        let restored: HmacRequest = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&req).expect("serialize HmacRequest");
+        let restored: HmacRequest = serde_json::from_str(&json).expect("deserialize HmacRequest");
         assert_eq!(req.key, restored.key);
     }
 
@@ -532,8 +536,8 @@ mod tests {
             family: "ecoPrimals".to_string(),
             capabilities: vec!["crypto".to_string()],
         };
-        let json = serde_json::to_string(&info).unwrap();
-        let restored: PrimalInfo = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&info).expect("serialize PrimalInfo");
+        let restored: PrimalInfo = serde_json::from_str(&json).expect("deserialize PrimalInfo");
         assert_eq!(info.name, restored.name);
     }
 
@@ -544,8 +548,8 @@ mod tests {
             version: "1.0".to_string(),
             uptime_seconds: 42,
         };
-        let json = serde_json::to_string(&status).unwrap();
-        let restored: HealthStatus = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&status).expect("serialize HealthStatus");
+        let restored: HealthStatus = serde_json::from_str(&json).expect("deserialize HealthStatus");
         assert_eq!(status.uptime_seconds, restored.uptime_seconds);
     }
 
@@ -559,15 +563,16 @@ mod tests {
             enabled: true,
             metadata: meta,
         };
-        let json = serde_json::to_string(&info).unwrap();
-        let restored: ProtocolInfo = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&info).expect("serialize ProtocolInfo");
+        let restored: ProtocolInfo = serde_json::from_str(&json).expect("deserialize ProtocolInfo");
         assert_eq!(info.port, restored.port);
     }
 
     #[test]
     fn test_protocol_info_default_metadata() {
         let json = r#"{"name":"tarpc","port":9901,"enabled":true}"#;
-        let info: ProtocolInfo = serde_json::from_str(json).unwrap();
+        let info: ProtocolInfo =
+            serde_json::from_str(json).expect("deserialize ProtocolInfo with default metadata");
         assert!(info.metadata.is_empty());
     }
 
@@ -578,8 +583,9 @@ mod tests {
             generation: 1,
             context: "test".to_string(),
         };
-        let json = serde_json::to_string(&req).unwrap();
-        let restored: LineageRequest = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&req).expect("serialize LineageRequest");
+        let restored: LineageRequest =
+            serde_json::from_str(&json).expect("deserialize LineageRequest");
         assert_eq!(req.generation, restored.generation);
     }
 
@@ -590,8 +596,9 @@ mod tests {
             transcript_hash: vec![2; 32],
             cipher_suite: "TLS_AES_256_GCM_SHA384".to_string(),
         };
-        let json = serde_json::to_string(&req).unwrap();
-        let restored: TlsSecretsRequest = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&req).expect("serialize TlsSecretsRequest");
+        let restored: TlsSecretsRequest =
+            serde_json::from_str(&json).expect("deserialize TlsSecretsRequest");
         assert_eq!(req.cipher_suite, restored.cipher_suite);
     }
 
@@ -601,8 +608,8 @@ mod tests {
             name: "crypto.signatures".to_string(),
             version: "1.0".to_string(),
         };
-        let json = serde_json::to_string(&cap).unwrap();
-        let restored: Capability = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&cap).expect("serialize Capability");
+        let restored: Capability = serde_json::from_str(&json).expect("deserialize Capability");
         assert_eq!(cap.name, restored.name);
     }
 }

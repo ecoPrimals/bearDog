@@ -595,7 +595,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_encrypt_decrypt_aes256() {
-        let service = BearDogCryptoService::new(test_config()).unwrap();
+        let service =
+            BearDogCryptoService::new(test_config()).expect("BearDogCryptoService::new in test");
         let plaintext = b"Hello, BearDog!";
 
         let encrypted = service
@@ -608,7 +609,7 @@ mod tests {
                 },
             )
             .await
-            .unwrap();
+            .expect("encrypt in test");
 
         let decrypted = service
             .decrypt(
@@ -619,14 +620,15 @@ mod tests {
                 },
             )
             .await
-            .unwrap();
+            .expect("decrypt in test");
 
         assert_eq!(plaintext, decrypted.as_slice());
     }
 
     #[tokio::test]
     async fn test_sign_verify_ed25519() {
-        let service = BearDogCryptoService::new(test_config()).unwrap();
+        let service =
+            BearDogCryptoService::new(test_config()).expect("BearDogCryptoService::new in test");
         let data = b"Message to sign";
 
         // Sign
@@ -640,11 +642,14 @@ mod tests {
                 },
             )
             .await
-            .unwrap();
+            .expect("sign in test");
 
         // Get public key (in production, this would be stored/retrieved separately)
-        let key = service.derive_signing_key("signing-key").unwrap();
-        let (_secret_key, public_key) = asymmetric::generate_ed25519_from_seed(&key).unwrap();
+        let key = service
+            .derive_signing_key("signing-key")
+            .expect("derive_signing_key in test");
+        let (_secret_key, public_key) =
+            asymmetric::generate_ed25519_from_seed(&key).expect("ed25519 from derived key in test");
 
         // Verify
         let valid = service
@@ -657,16 +662,20 @@ mod tests {
                 },
             )
             .await
-            .unwrap();
+            .expect("verify in test");
 
         assert!(valid);
     }
 
     #[tokio::test]
     async fn test_capabilities() {
-        let service = BearDogCryptoService::new(test_config()).unwrap();
+        let service =
+            BearDogCryptoService::new(test_config()).expect("BearDogCryptoService::new in test");
 
-        let caps = service.get_capabilities().await.unwrap();
+        let caps = service
+            .get_capabilities()
+            .await
+            .expect("get_capabilities in test");
 
         assert_eq!(caps.service_name, "test-service");
         assert!(!caps.supported_algorithms.is_empty());
@@ -675,9 +684,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_health() {
-        let service = BearDogCryptoService::new(test_config()).unwrap();
+        let service =
+            BearDogCryptoService::new(test_config()).expect("BearDogCryptoService::new in test");
 
-        let health = service.get_health().await.unwrap();
+        let health = service.get_health().await.expect("get_health in test");
 
         assert!(health.healthy);
         assert_eq!(health.operations_completed, 0);
@@ -685,7 +695,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_data_size_limit() {
-        let service = BearDogCryptoService::new(test_config()).unwrap();
+        let service =
+            BearDogCryptoService::new(test_config()).expect("BearDogCryptoService::new in test");
 
         // Create data larger than limit (1MB)
         let large_data = vec![0u8; 2 * 1024 * 1024];

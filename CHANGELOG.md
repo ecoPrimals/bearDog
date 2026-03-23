@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `test_auto_initialize_default_software_mode` uses `HsmAutoInitConfig::default()` (no env race);
   e2e stress test timing widened; mass failure test uses guaranteed early-batch failures
 - **Orphan modules archived** — `zero_cost_registry.rs`, `zero_cost_registry_tests.rs`,
-  legacy HTTP `integration_test.rs` → `archives/orphan_modules/`
+  legacy HTTP `integration_test.rs` → `ecoPrimals/archive/` (fossil record)
 - **File size compliance** — `monitoring.rs` (1052 LOC) → `monitoring.rs` (366) +
   `monitoring_tests.rs` (576); `secure_cross_primal_messaging.rs` (1111 LOC) → production (603) +
   `_tests.rs` (506) via `#[path]` extraction
@@ -84,7 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Doc link cleanup** — Resolved all `rustdoc::broken_intra_doc_links`. `cargo doc -D warnings`
   passes clean across the full workspace.
 - **Root doc declutter** — 17 reference/guide docs moved from repo root to `docs/references/`.
-  Session logs (335 files) moved from `docs/sessions/` to `archives/sessions/`.
+  Session logs (335 files) moved to `ecoPrimals/archive/` (fossil record).
 - **File size compliance** — Extracted 5 test modules into separate `_tests.rs` files to keep all
   .rs files under 1000 lines.
 - **Build artifact cleanup** — Removed tracked receipts from git; audit.log files already
@@ -297,4 +297,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-For detailed session notes, see `archives/` organized by date and topic.
+For detailed session notes, see `ecoPrimals/archive/` (fossil record) organized by date and topic.

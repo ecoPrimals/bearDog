@@ -292,10 +292,11 @@ mod tests {
             from: "test".to_string(),
         };
 
-        let json = serde_json::to_string(&msg).unwrap();
+        let json = serde_json::to_string(&msg).expect("IpcMessage Ping serializes to JSON");
         assert!(json.contains("ping"));
 
-        let deserialized: IpcMessage = serde_json::from_str(&json).unwrap();
+        let deserialized: IpcMessage =
+            serde_json::from_str(&json).expect("IpcMessage Ping roundtrips from JSON");
         match deserialized {
             IpcMessage::Ping { from } => assert_eq!(from, "test"),
             _ => panic!("Wrong message type"),
@@ -315,9 +316,10 @@ mod tests {
         };
 
         let msg = IpcMessage::CapabilityRequest(req);
-        let json = serde_json::to_string(&msg).unwrap();
+        let json = serde_json::to_string(&msg).expect("IpcMessage CapabilityRequest serializes");
 
-        let deserialized: IpcMessage = serde_json::from_str(&json).unwrap();
+        let deserialized: IpcMessage =
+            serde_json::from_str(&json).expect("IpcMessage CapabilityRequest roundtrips");
         match deserialized {
             IpcMessage::CapabilityRequest(req) => {
                 assert_eq!(req.from_primal, "test_primal");
@@ -344,7 +346,7 @@ mod tests {
             IpcServer::handle_message(IpcMessage::CapabilityRequest(req), &handler, &connections)
                 .await;
         assert!(out.is_some());
-        match out.unwrap() {
+        match out.expect("handle_message returns Some for CapabilityRequest") {
             IpcMessage::CapabilityResponse(resp) => {
                 assert_eq!(resp.request_id, "r1");
                 assert!(matches!(resp.status, ResponseStatus::Success));
@@ -639,5 +641,19 @@ mod tests {
 
         drop(reader);
         serve.abort();
+    }
+
+    /// Remote closed the connection before sending a line: `read_line` returns `Ok(0)`.
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn handle_connection_eof_without_request_exits_ok() {
+        let (local, remote) = tokio::net::UnixStream::pair().expect("unix pair");
+        drop(local);
+
+        let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+        let connections = Arc::new(RwLock::new(Vec::new()));
+        IpcServer::handle_connection(remote, handler, connections)
+            .await
+            .expect("EOF should complete without error");
     }
 }
