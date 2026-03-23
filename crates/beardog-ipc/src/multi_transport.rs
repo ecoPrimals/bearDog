@@ -519,7 +519,13 @@ fn handle_jsonrpc_request_line(line: &str) -> Option<String> {
     let id = obj.get("id").cloned().unwrap_or(serde_json::Value::Null);
     let method = obj.get("method").and_then(|m| m.as_str()).unwrap_or("");
 
-    let discovery_methods = ["rpc.discover", "system.capabilities", "capabilities.list"];
+    let discovery_methods = [
+        "rpc.discover",
+        "system.capabilities",
+        "capabilities.list",
+        "capability.list",
+        "primal.capabilities",
+    ];
     if discovery_methods.contains(&method) {
         return Some(
             serde_json::json!({

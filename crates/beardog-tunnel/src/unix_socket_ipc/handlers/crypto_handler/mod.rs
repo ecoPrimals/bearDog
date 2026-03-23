@@ -7,7 +7,7 @@ use crate::unix_socket_ipc::handlers::MethodHandler;
 use async_trait::async_trait;
 use std::sync::Arc;
 
-mod aliases_and_beardog;
+pub(crate) mod aliases_and_beardog;
 mod genetic;
 mod hashing;
 mod kex_aead;

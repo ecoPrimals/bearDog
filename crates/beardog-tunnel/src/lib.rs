@@ -167,4 +167,8 @@ pub use tunnel::hsm::{
 pub use beardog_errors::BearDogError;
 
 #[cfg(test)]
+mod coverage_boost_wave10;
+#[cfg(test)]
+mod crypto_fault_injection_tests;
+#[cfg(test)]
 mod tests;

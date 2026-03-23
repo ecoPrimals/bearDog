@@ -37,6 +37,10 @@ fn key_string(key: &OsStr) -> String {
 /// Set a value in the process environment overlay (thread-safe).
 ///
 /// Does not call [`std::env::set_var`].
+///
+/// # Panics
+///
+/// Panics if the internal overlay mutex is poisoned.
 pub fn set_var<K: AsRef<OsStr>, V: AsRef<OsStr>>(key: K, value: V) {
     let k = key_string(key.as_ref());
     let v = key_string(value.as_ref());
@@ -50,6 +54,10 @@ pub fn set_var<K: AsRef<OsStr>, V: AsRef<OsStr>>(key: K, value: V) {
 ///
 /// A key removed here masks the OS value for `var` / `var_os` / `vars`.
 /// Does not call [`std::env::remove_var`].
+///
+/// # Panics
+///
+/// Panics if the internal overlay mutex is poisoned.
 pub fn remove_var<K: AsRef<OsStr>>(key: K) {
     let k = key_string(key.as_ref());
     let mut g = overlay()
@@ -59,21 +67,34 @@ pub fn remove_var<K: AsRef<OsStr>>(key: K) {
 }
 
 /// Read an environment variable: overlay first, then [`std::env::var`].
+///
+/// # Errors
+///
+/// Returns [`VarError::NotPresent`] when the key is absent from both the overlay and the OS
+/// environment. Returns [`VarError::NotUnicode`] when the value is not valid UTF-8.
 #[inline]
 pub fn var<K: AsRef<OsStr>>(key: K) -> Result<String, VarError> {
-    match var_os(key.as_ref()) {
-        Some(s) => s.into_string().map_err(VarError::NotUnicode),
-        None => Err(VarError::NotPresent),
-    }
+    var_os(key.as_ref()).map_or(Err(VarError::NotPresent), |s| {
+        s.into_string().map_err(VarError::NotUnicode)
+    })
 }
 
 /// Alias for `var` (same semantics as [`std::env::var`] with overlay).
+///
+/// # Errors
+///
+/// Returns [`VarError::NotPresent`] when the key is absent from both the overlay and the OS
+/// environment. Returns [`VarError::NotUnicode`] when the value is not valid UTF-8.
 #[inline]
 pub fn get_var<K: AsRef<OsStr>>(key: K) -> Result<String, VarError> {
     var(key)
 }
 
 /// Read an environment variable as [`OsString`]: overlay first, then [`std::env::var_os`].
+///
+/// # Panics
+///
+/// Panics if the internal overlay mutex is poisoned.
 pub fn var_os<K: AsRef<OsStr>>(key: K) -> Option<OsString> {
     let k = key_string(key.as_ref());
     let g = overlay()
@@ -87,6 +108,10 @@ pub fn var_os<K: AsRef<OsStr>>(key: K) -> Option<OsString> {
 }
 
 /// Iterate environment variables: OS vars merged with the overlay (overlay wins; removals apply).
+///
+/// # Panics
+///
+/// Panics if the internal overlay mutex is poisoned.
 pub fn vars() -> impl Iterator<Item = (String, String)> {
     let overlay_snapshot = overlay()
         .lock()

@@ -144,6 +144,10 @@ pub const DEFAULT_DATABASE_PORT: u16 = 5432;
 /// Default Grafana port (3000)
 pub const DEFAULT_GRAFANA_PORT: u16 = 3000;
 
+/// Default integration API server listen port (9000)
+/// REST endpoints for cross-primal federation. Override with `BEARDOG_API_PORT`.
+pub const DEFAULT_INTEGRATION_API_PORT: u16 = 9000;
+
 /// Default TCP IPC fallback port (9900)
 /// Used when Unix sockets aren't available (Android, containers, Windows)
 pub const DEFAULT_TCP_IPC_PORT: u16 = 9900;

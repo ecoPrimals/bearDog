@@ -63,7 +63,7 @@ pub use errors::IntegrationError;
 pub use beardog_errors::BearDogError;
 
 /// Default UPA HTTPS port when `BEARDOG_UPA_PORT` / URL omit a port (conventional dev API port).
-pub const DEFAULT_UPA_PORT: u16 = 8080;
+pub const DEFAULT_UPA_PORT: u16 = beardog_config::DEFAULT_API_PORT;
 
 /// Builds default UPA base URL: `BEARDOG_UPA_URL`, or `https://{BEARDOG_UPA_HOST|external default}:{port}`.
 #[must_use]
@@ -84,7 +84,7 @@ pub fn default_upa_url() -> String {
 pub const DEFAULT_UPA_URL: &str = "https://localhost:8080";
 
 /// Default REST listen port for this integration API server when `BEARDOG_API_PORT` is unset (distinct from the UPA URL port to avoid binding collisions).
-pub const DEFAULT_INTEGRATION_API_PORT: u16 = 9000;
+pub const DEFAULT_INTEGRATION_API_PORT: u16 = beardog_config::DEFAULT_INTEGRATION_API_PORT;
 
 /// Default heartbeat period when `BEARDOG_HEARTBEAT_INTERVAL` is unset (seconds).
 pub const DEFAULT_HEARTBEAT_INTERVAL_SECS: u64 = 30;

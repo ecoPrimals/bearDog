@@ -1,6 +1,6 @@
 # BearDog Roadmap
 
-**Updated**: March 21, 2026
+**Updated**: March 23, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,8 +20,8 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 1000 lines of code (production)
-- 14,029 tests passing (fully concurrent, zero sleeps in non-chaos)
-- 86.1% line coverage (llvm-cov, 102,969/121,020 lines)
+- 14,161 tests passing (fully concurrent, zero sleeps in non-chaos)
+- 87.0% line coverage (llvm-cov, 105,989/121,844 lines)
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - Zero `#[serial_test::serial]` — all tests concurrent via unique isolated resources
 - `cargo deny` passes all 4 checks
@@ -59,7 +59,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ### Test Coverage to 90%
 
-Coverage at 86.1% overall. Top crates above target; remaining crates need integration-heavy test harnesses.
+Coverage at 87.0% overall. Top crates above target; remaining crates approaching via targeted test waves.
 
 | Crate | Line Coverage | Status |
 |-------|-------------|--------|
@@ -68,20 +68,21 @@ Coverage at 86.1% overall. Top crates above target; remaining crates need integr
 | beardog-auth | 93.0% | Above target |
 | beardog-utils | 92.3% | Above target |
 | beardog-genetics | 89.9% | At target |
-| beardog-ipc | 86.0% | In progress |
-| beardog-types | 82.0% | In progress |
-| beardog-tunnel | 81.4% | In progress |
-| beardog-cli | 80.2% | In progress |
-| beardog-installer | 77.8% | In progress |
-| beardog-discovery | 76.6% | In progress |
-| beardog-deploy | 72.3% | In progress |
+| beardog-ipc | 86.0% | Approaching |
+| beardog-core | ~85% | Approaching |
+| beardog-discovery | ~85% | Boosted (Wave 11) |
+| beardog-types | ~84% | Boosted (Wave 11) |
+| beardog-installer | ~84% | Boosted (Wave 11) |
+| beardog-cli | ~83% | Boosted (Wave 11) |
+| beardog-tunnel | ~83% | Boosted (Wave 11 + fault injection) |
+| beardog-deploy | ~82% | Boosted (Wave 11) |
 
 ### primalSpring Capability Audit Fixes
 
-Three quick fixes from the primalSpring capability audit:
-1. Register `health.liveness` and `health.readiness` method aliases
-2. Register `capabilities.list` method alias
-3. Register bare crypto method aliases for TLS 1.3 compatibility
+~~Three quick fixes from the primalSpring capability audit~~ — **DONE (Wave 10)**:
+1. ~~Register `health.liveness` and `health.readiness` method aliases~~ — already registered
+2. ~~Register `capabilities.list` method alias~~ — already registered; added `capability.list` + `primal.capabilities`
+3. ~~Register bare crypto method aliases for TLS 1.3 compatibility~~ — already bridged in `HandlerRegistry::route`
 
 ---
 
@@ -91,11 +92,11 @@ These items are enhancements — nothing is blocking production use.
 
 ### Zero-Copy Hot Path Evolution
 
-Deferred pending profiling to identify actual hot paths. `bytes::Bytes` and `Arc<str>` ready for adoption where measurements justify it.
+~~Deferred pending profiling~~ — **DONE (Wave 11)**: IPC hot paths audited and optimized. `unix_socket_ipc::server.rs` refactored from byte-at-a-time reads to `BufReader::read_until` with reusable buffers. `bytes::Bytes` and `Arc<str>` adoption deferred as JSON-RPC message sizes don't justify the complexity; current buffer reuse eliminates the primary allocation overhead.
 
 ### Fault Injection Tests
 
-Stub framework exists. Needs fleshing out with chaos engineering scenarios for crypto operations under adverse conditions.
+~~Stub framework exists~~ — **DONE (Wave 11)**: 14 crypto fault injection tests covering adversarial inputs (malformed base64, wrong key/nonce lengths, corrupted ciphertext/signatures, all-zero/all-ones keys, wrong-length DH secrets) for Blake3, ChaCha20-Poly1305, Ed25519, X25519, and Tor ntor handlers.
 
 ### Secret Storage Evolution (when NestGate available)
 

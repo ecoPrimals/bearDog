@@ -35,6 +35,16 @@ impl RustBuilder {
         }
     }
 
+    /// Test-only hook to exercise [`RustBuilder::get_host_architecture`] from crate-level tests.
+    #[cfg(test)]
+    #[allow(
+        dead_code,
+        reason = "Called from `coverage_boost_tests`; not every test target links that module."
+    )]
+    pub(crate) fn host_architecture_for_test() -> Result<&'static str, BearDogError> {
+        Self::get_host_architecture()
+    }
+
     /// Builds complete Android application
     ///
     /// library compilation, and example app building.
@@ -101,8 +111,8 @@ impl RustBuilder {
     /// Returns error if NDK path is not configured
     /// Gets `ndk_path`
     fn get_ndk_path() -> Result<String, BearDogError> {
-        std::env::var("ANDROID_NDK_HOME")
-            .or_else(|_| std::env::var("NDK_HOME"))
+        beardog_errors::process_env::var("ANDROID_NDK_HOME")
+            .or_else(|_| beardog_errors::process_env::var("NDK_HOME"))
             .map_err(|_| BearDogError::system("ANDROID_NDK_HOME not set".to_string()))
     }
 

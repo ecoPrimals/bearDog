@@ -90,7 +90,7 @@ pub async fn run_disaster_recovery_test(
 impl E2EMetrics {
     /// Modern idiomatic merge: accumulate all metrics properly
     ///
-    /// Design: Complete implementation, no "TODO: merge other fields"
+    /// Design: Complete implementation — all fields merged explicitly
     /// Pattern: Explicit field handling ensures nothing is forgotten
     fn merge(&mut self, other: Self) {
         // Accumulate counters

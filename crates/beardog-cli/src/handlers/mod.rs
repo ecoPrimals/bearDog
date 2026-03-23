@@ -53,6 +53,8 @@ pub mod streaming;
 #[cfg(test)]
 mod client_tests;
 #[cfg(test)]
+mod coverage_boost_wave10;
+#[cfg(test)]
 mod daemon_tests;
 #[cfg(test)]
 mod doctor_tests;

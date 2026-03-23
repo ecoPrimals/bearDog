@@ -63,3 +63,6 @@ pub mod prelude {
         types::{Capability, DiscoveredService, PrimalInfo, ServiceEndpoint},
     };
 }
+
+#[cfg(test)]
+mod coverage_boost_wave10;

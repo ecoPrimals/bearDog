@@ -34,6 +34,8 @@ impl MethodHandler for CapabilitiesHandler {
             "get_capabilities",
             "discover_capabilities",
             "capabilities.list",
+            "capability.list",
+            "primal.capabilities",
             "identity",
             "whoami",
             "get_identity",
@@ -47,9 +49,11 @@ impl MethodHandler for CapabilitiesHandler {
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
         match method {
-            "capabilities" | "get_capabilities" | "capabilities.list" => {
-                self.handle_capabilities().await
-            }
+            "capabilities"
+            | "get_capabilities"
+            | "capabilities.list"
+            | "capability.list"
+            | "primal.capabilities" => self.handle_capabilities().await,
             "discover_capabilities" => self.handle_discover_capabilities().await,
             "identity" | "whoami" | "get_identity" => self.handle_identity().await,
             _ => Err(format!("Method not found: {method}")),
@@ -234,11 +238,13 @@ mod tests {
         let handler = CapabilitiesHandler::with_hints(identity, test_hints());
         let methods = handler.methods();
 
-        assert_eq!(methods.len(), 7);
+        assert_eq!(methods.len(), 9);
         assert!(methods.contains(&"capabilities"));
         assert!(methods.contains(&"get_capabilities"));
         assert!(methods.contains(&"discover_capabilities"));
         assert!(methods.contains(&"capabilities.list"));
+        assert!(methods.contains(&"capability.list"));
+        assert!(methods.contains(&"primal.capabilities"));
         assert!(methods.contains(&"identity"));
         assert!(methods.contains(&"whoami"));
         assert!(methods.contains(&"get_identity"));
@@ -328,7 +334,13 @@ mod tests {
         let handler = CapabilitiesHandler::with_hints(identity, test_hints());
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
-        for method in &["capabilities", "get_capabilities"] {
+        for method in &[
+            "capabilities",
+            "get_capabilities",
+            "capabilities.list",
+            "capability.list",
+            "primal.capabilities",
+        ] {
             let result = handler.handle(method, None, &btsp_provider).await;
             assert!(result.is_ok(), "Method {} should succeed", method);
         }

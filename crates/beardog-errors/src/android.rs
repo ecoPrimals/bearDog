@@ -34,7 +34,7 @@ pub enum AndroidError {
         alternatives: Vec<&'static str>,
     },
 
-    /// StrongBox not available on this device
+    /// `StrongBox` not available on this device
     StrongBoxNotAvailable {
         /// Device manufacturer
         manufacturer: String,
@@ -145,8 +145,9 @@ impl fmt::Display for AndroidError {
 
 impl std::error::Error for AndroidError {}
 
-/// Create a PHASE-2 not implemented error with context
-pub fn phase2_not_implemented(
+/// Create a PHASE-2 not implemented error with context.
+#[must_use]
+pub const fn phase2_not_implemented(
     feature: &'static str,
     implementation_notes: &'static str,
     workaround: Option<&'static str>,

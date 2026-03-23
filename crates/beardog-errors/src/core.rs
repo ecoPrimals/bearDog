@@ -2,7 +2,7 @@
 
 //! Core Error Types - `BearDogError` Taxonomy
 //!
-//! Provides the primary error type for the BearDog ecosystem with comprehensive
+//! Provides the primary error type for the `BearDog` ecosystem with comprehensive
 //! domain categorization and rich error context.
 //!
 //! # Quick Start

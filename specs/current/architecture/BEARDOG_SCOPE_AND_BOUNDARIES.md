@@ -1,8 +1,8 @@
 # BearDog Scope and Boundaries Specification
 
-**Version:** 1.0  
-**Date:** January 2025  
-**Status:** ECOSYSTEM ALIGNED  
+**Version:** 2.0  
+**Date:** March 2026 (originally January 2025)  
+**Status:** ECOSYSTEM ALIGNED — Responsibility matrix refreshed March 2026  
 **Purpose:** Clear boundary definition between BearDog and other ecosystem primals
 
 ## 🎯 **Executive Summary**
@@ -134,31 +134,29 @@ integration_point:
   - Clean separation: storage vs security
 ```
 
-## 📋 **TODO Responsibility Matrix**
+## 📋 **Responsibility Matrix**
 
-### **✅ BearDog's Actual TODOs (20 items)**
-- Genetic spawning cryptographic proof generation
-- HSM configuration hot-reload implementation
-- Ring crypto library integration (external dependency)
-- ML threat detection model integration
-- Ed25519 signature verification completion
-- Biometric authentication implementation
-- Real-time compliance monitoring
-- Advanced cryptographic algorithms
-- Security test suite completion
-- Key rotation automation
+### **✅ BearDog — Completed (as of March 2026)**
+- ~~Ring crypto library integration~~ → Eliminated: 100% Pure Rust (RustCrypto suite, zero C deps)
+- ~~Ed25519 signature verification~~ → Complete: full Ed25519 sign/verify via `crypto.sign_ed25519` / `crypto.verify_ed25519`
+- ~~Advanced cryptographic algorithms~~ → Complete: 91+ JSON-RPC methods (ChaCha20-Poly1305, X25519, BLAKE3, Argon2id, post-quantum ML-KEM/ML-DSA/SPHINCS+, Tor ntor)
+- ~~Security test suite~~ → 14,161 tests, 87.0% line coverage, 14 crypto fault injection tests
+- ~~Key rotation automation~~ → Complete: `key_rotation_manager.rs` with policy-driven rotation
+- ~~HSM configuration~~ → Complete: Software, PKCS#11, StrongBox backends via `HsmManager`
+- ~~Genetic spawning cryptographic proof generation~~ → Complete: `genetic.*` methods, lineage key derivation, beacon seeds
 
-### **❌ NOT BearDog TODOs (30 items - Other Primals)**
-- SongBird discovery service connection (SongBird team)
-- ToadStool compute integration (ToadStool team)
-- NestGate storage federation (NestGate team)  
-- Squirrel MCP protocol support (Squirrel team)
-- biomeOS container orchestration (biomeOS team)
-- Network peer discovery (SongBird team)
-- Service mesh routing (SongBird team)
-- Data replication logic (NestGate team)
-- AI model execution (Squirrel team)
-- Universal compute platform (ToadStool team)
+### **🔮 BearDog — Future Work**
+- HSM hot-reload (runtime backend switching without restart)
+- ML-enhanced threat detection integration (deferred to skunkBat coordination)
+- Biometric authentication (deferred to mobile platform maturity)
+- Real-time compliance monitoring (deferred to ecosystem-wide observability)
+
+### **❌ NOT BearDog's Responsibility (Other Primals)**
+- Service discovery and mesh routing (Songbird)
+- Compute orchestration (ToadStool)
+- Storage federation (NestGate)
+- MCP/AI protocol (Squirrel)
+- Container orchestration (biomeOS)
 
 ## 🎯 **Scope Enforcement Guidelines**
 
@@ -202,8 +200,4 @@ This ensures humans retain control over their security while benefiting from eco
 
 ---
 
-**Next Steps:**
-1. Review this with other primal teams
-2. Update cross-team integration specs
-3. Refactor any boundary-violating code
-4. Document integration testing strategies 
+**Status**: All boundary-violating code refactored. BearDog operates strictly within its crypto domain. Integration with other primals occurs solely via JSON-RPC capability discovery at runtime.

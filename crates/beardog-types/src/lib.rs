@@ -464,6 +464,8 @@ pub mod health_status;
 
 // Test modules
 #[cfg(test)]
+mod coverage_boost_wave10;
+#[cfg(test)]
 mod tests;
 
 #[cfg(test)]

@@ -20,7 +20,7 @@ use crate::platform::{PlatformSocket, PlatformStream, Socket, SocketEndpoint};
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tracing::{debug, error, info, warn};
 
 /// Unix socket IPC server for inter-primal communication
@@ -259,35 +259,23 @@ impl UnixSocketIpcServer {
             // SAFETY: We can't directly downcast Box<dyn PlatformStream>,
             // so we need a different approach. Let's use AsyncRead/AsyncWrite directly!
 
-            // Read first line using AsyncRead trait
-            let mut buffer = Vec::new();
-            let mut stream = stream; // Make mutable
+            let mut buf_stream = BufReader::new(stream);
+            let mut buffer = Vec::with_capacity(1024);
 
-            // Read until newline
-            loop {
-                let mut byte = [0u8; 1];
-                match stream.read_exact(&mut byte).await {
-                    Ok(_) => {
-                        buffer.push(byte[0]);
-                        if byte[0] == b'\n' {
-                            break;
-                        }
-                    }
-                    Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => {
-                        if buffer.is_empty() {
-                            debug!("📤 Client disconnected immediately");
-                            return Ok(());
-                        }
-                        break;
-                    }
-                    Err(e) => {
-                        error!("❌ Failed to read from stream: {}", e);
-                        return Err(anyhow::anyhow!("Failed to read: {e}"));
-                    }
+            match buf_stream.read_until(b'\n', &mut buffer).await {
+                Ok(0) => {
+                    debug!("📤 Client disconnected immediately");
+                    return Ok(());
+                }
+                Ok(_) => {}
+                Err(e) => {
+                    error!("❌ Failed to read from stream: {}", e);
+                    return Err(anyhow::anyhow!("Failed to read: {e}"));
                 }
             }
 
             let first_line = String::from_utf8_lossy(&buffer).to_string();
+            let stream = buf_stream.into_inner();
 
             if first_line.trim().is_empty() {
                 debug!("📤 Empty request, ignoring");
@@ -345,54 +333,45 @@ impl UnixSocketIpcServer {
     async fn handle_jsonrpc_universal(
         &self,
         first_line: &str,
-        mut stream: Box<dyn PlatformStream>,
+        stream: Box<dyn PlatformStream>,
     ) -> Result<()> {
+        let mut buf_stream = BufReader::new(stream);
+
         // Handle first request
         let response = self
             .handle_one_jsonrpc_request_universal(first_line)
             .await?;
-        stream.write_all(response.as_bytes()).await?;
-        stream.write_all(b"\n").await?;
+        buf_stream.get_mut().write_all(response.as_bytes()).await?;
+        buf_stream.get_mut().write_all(b"\n").await?;
 
-        // Continue handling requests until connection closes
+        let mut line_buf = Vec::with_capacity(1024);
+
         loop {
-            let mut line_buf = Vec::new();
-            let mut byte = [0u8; 1];
-
-            loop {
-                match stream.read_exact(&mut byte).await {
-                    Ok(_) => {
-                        line_buf.push(byte[0]);
-                        if byte[0] == b'\n' {
-                            break;
-                        }
-                    }
-                    Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => {
-                        if line_buf.is_empty() {
-                            debug!("📤 Client disconnected gracefully");
-                            return Ok(());
-                        }
-                        break;
-                    }
-                    Err(e) => {
-                        error!("❌ Read error: {}", e);
-                        return Err(anyhow::anyhow!("Read failed: {e}"));
-                    }
+            line_buf.clear();
+            match buf_stream.read_until(b'\n', &mut line_buf).await {
+                Ok(0) => {
+                    debug!("📤 Client disconnected gracefully");
+                    return Ok(());
+                }
+                Ok(_) => {}
+                Err(e) => {
+                    error!("❌ Read error: {}", e);
+                    return Err(anyhow::anyhow!("Read failed: {e}"));
                 }
             }
 
-            let line = String::from_utf8_lossy(&line_buf).to_string();
+            let line = String::from_utf8_lossy(&line_buf);
             if line.trim().is_empty() {
                 continue;
             }
 
             match self.handle_one_jsonrpc_request_universal(&line).await {
                 Ok(response) => {
-                    if let Err(e) = stream.write_all(response.as_bytes()).await {
+                    if let Err(e) = buf_stream.get_mut().write_all(response.as_bytes()).await {
                         warn!("⚠️  Failed to write response: {}", e);
                         break;
                     }
-                    if let Err(e) = stream.write_all(b"\n").await {
+                    if let Err(e) = buf_stream.get_mut().write_all(b"\n").await {
                         warn!("⚠️  Failed to write newline: {}", e);
                         break;
                     }

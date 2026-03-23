@@ -311,8 +311,12 @@ impl AndroidDeployment {
     /// `true` if command is available, `false` otherwise
     #[must_use]
     fn check_command_available(command: &str) -> bool {
+        // `which` runs in a subprocess that only sees the OS environment unless we pass PATH
+        // explicitly; honor [`beardog_errors::process_env`] so tests can narrow PATH via the overlay.
+        let path = beardog_errors::process_env::var_os("PATH").unwrap_or_default();
         Command::new("which")
             .arg(command)
+            .env("PATH", path)
             .output()
             .map(|output| output.status.success())
             .unwrap_or(false)

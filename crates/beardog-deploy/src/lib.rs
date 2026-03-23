@@ -60,6 +60,10 @@ mod deploy_comprehensive_tests;
 #[cfg(test)]
 mod coverage_tests;
 
+#[cfg(test)]
+#[path = "coverage_boost_tests.rs"]
+mod coverage_boost_tests;
+
 /// High-level knobs for a BearDog deployment run (environment, scale, and observability).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeploymentConfig {
