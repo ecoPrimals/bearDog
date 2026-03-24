@@ -279,6 +279,7 @@ enum TestDelayedKind {
 
 #[cfg(test)]
 impl TestDelayedChecker {
+    /// Builds a checker that simulates a database dependency with the given startup delay.
     #[must_use]
     pub fn database(delay: Duration) -> Self {
         Self {
@@ -287,6 +288,7 @@ impl TestDelayedChecker {
         }
     }
 
+    /// Builds a checker that simulates a cache dependency with the given startup delay.
     #[must_use]
     pub fn cache(delay: Duration) -> Self {
         Self {
@@ -295,6 +297,7 @@ impl TestDelayedChecker {
         }
     }
 
+    /// Builds a checker that simulates an external HTTP API at `url` with the given startup delay.
     #[must_use]
     pub fn external_api(url: &'static str, delay: Duration) -> Self {
         Self {
@@ -303,6 +306,7 @@ impl TestDelayedChecker {
         }
     }
 
+    /// Builds a checker that simulates an HSM dependency with the given startup delay.
     #[must_use]
     pub fn hsm(delay: Duration) -> Self {
         Self {

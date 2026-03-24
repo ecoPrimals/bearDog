@@ -212,8 +212,7 @@ fn test_metric_sampling_rate() {
 
     assert!(
         sampled > 400 && sampled < 600,
-        "Sampling rate off: {}",
-        sampled
+        "Sampling rate off: {sampled}"
     );
 }
 

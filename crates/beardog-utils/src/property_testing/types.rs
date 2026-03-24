@@ -283,6 +283,7 @@ impl Default for PropertyBasedTestFramework {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::float_eq;
 
     #[test]
     fn test_property_test_config_default() {
@@ -301,9 +302,9 @@ mod tests {
         assert_eq!(stats.passed_tests, 0);
         assert_eq!(stats.failed_tests, 0);
         assert_eq!(stats.properties_tested, 0);
-        assert_eq!(stats.average_execution_time_ms, 0.0);
-        assert_eq!(stats.min_execution_time_ms, 0.0);
-        assert_eq!(stats.max_execution_time_ms, 0.0);
+        float_eq::f64(stats.average_execution_time_ms, 0.0);
+        float_eq::f64(stats.min_execution_time_ms, 0.0);
+        float_eq::f64(stats.max_execution_time_ms, 0.0);
     }
 
     #[test]
@@ -472,7 +473,7 @@ mod tests {
     fn test_property_value_variants() {
         let s = PropertyValue::String("hello".to_string());
         let i = PropertyValue::Integer(42);
-        let f = PropertyValue::Float(3.14);
+        let f = PropertyValue::Float(1.234_567);
         let b = PropertyValue::Boolean(true);
         let bytes = PropertyValue::Bytes(vec![1, 2, 3]);
 
@@ -494,7 +495,7 @@ mod tests {
             result.error_message,
             Some("Property violation detected".to_string())
         );
-        assert_eq!(result.execution_time_ms, 0.0);
+        float_eq::f64(result.execution_time_ms, 0.0);
         assert_eq!(result.test_case_id, 10);
         assert_eq!(result.property_name, "failing");
     }

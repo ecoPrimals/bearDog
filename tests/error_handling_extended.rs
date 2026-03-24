@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! Extended Error Handling Tests
 //!
 //! This module contains high-value integration tests for advanced error handling patterns,

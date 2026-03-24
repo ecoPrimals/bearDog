@@ -556,7 +556,7 @@ mod tests {
     #[test]
     fn test_protocol_detector_with_peek_size() {
         let d = ProtocolDetector::with_peek_size(64);
-        assert!(format!("{:?}", d).contains("64"));
+        assert!(format!("{d:?}").contains("64"));
     }
 
     #[test]

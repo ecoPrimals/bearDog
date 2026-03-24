@@ -12,7 +12,7 @@ fn test_key_generation_sizes() {
 
     for size in &key_sizes {
         let key = generate_secure_random_bytes(*size);
-        assert!(key.is_ok(), "Should generate {}-byte key", size);
+        assert!(key.is_ok(), "Should generate {size}-byte key");
         assert_eq!(key.unwrap().len(), *size);
     }
 }

@@ -389,15 +389,15 @@ fn test_metrics_collection_over_time() {
         #[allow(clippy::cast_precision_loss)]
         let metrics = CurrentMetrics {
             timestamp: chrono::Utc::now(),
-            cpu_usage_percent: 50.0 + (f64::from(i)) * 2.0,
-            memory_usage_percent: 60.0 + (f64::from(i)) * 1.0,
+            cpu_usage_percent: (f64::from(i)).mul_add(2.0, 50.0),
+            memory_usage_percent: (f64::from(i)).mul_add(1.0, 60.0),
             disk_usage_percent: 40.0,
             network_throughput_bps: 1_000_000 + (u64::from(i) * 100_000),
             active_connections: 100 + (i * 10),
             // TEST_CATEGORY: integration
             // TEST_DOMAIN: types
             // TEST_PRIORITY: normal
-            latency_ms: 10.0 + (f64::from(i)) * 0.5,
+            latency_ms: (f64::from(i)).mul_add(0.5, 10.0),
             error_rate_percent: 0.1,
             custom_metrics: std::collections::HashMap::new(),
         };

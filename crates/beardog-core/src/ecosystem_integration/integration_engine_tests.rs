@@ -88,7 +88,7 @@ mod tests {
     #[test]
     fn test_config_stored_correctly() {
         let config = UnifiedBearDogConfig::default();
-        let engine = IntegrationEngine::new(config.clone());
+        let engine = IntegrationEngine::new(config);
 
         // Config should be stored
         // Can't directly compare configs, but we can verify it exists
@@ -160,7 +160,7 @@ mod integration_scenarios {
         let original_integrated = engine.ecosystem_integrated;
 
         // Clone
-        let cloned = engine.clone();
+        let cloned = engine;
 
         // State should be preserved
         assert_eq!(original_integrated, cloned.ecosystem_integrated);

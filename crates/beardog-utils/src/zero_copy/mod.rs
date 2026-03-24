@@ -559,7 +559,7 @@ mod tests {
             let mgr = Arc::clone(&manager);
             let handle = thread::spawn(move || {
                 for _ in 0..100 {
-                    let _ = mgr.get_shared_string(format!("test_{}", i));
+                    let _ = mgr.get_shared_string(format!("test_{i}"));
                 }
             });
             handles.push(handle);
@@ -646,7 +646,7 @@ mod tests {
 
     #[test]
     fn zero_copy_builder_optimize_sets_flag() {
-        let mut b = ZeroCopyBuilder::new(42u32);
+        let b = ZeroCopyBuilder::new(42u32);
         assert!(!b.is_optimized());
         let b = b.optimize();
         assert!(b.is_optimized());

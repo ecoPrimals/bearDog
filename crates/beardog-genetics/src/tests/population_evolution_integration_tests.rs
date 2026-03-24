@@ -79,7 +79,7 @@ mod population_evolution_tests {
         fn mutate(individual: &mut Individual, rate: f64) {
             for gene in &mut individual.genes {
                 if rand::random::<f64>() < rate {
-                    *gene = (*gene + rand::random::<f64>() * 0.1).min(1.0);
+                    *gene = rand::random::<f64>().mul_add(0.1, *gene).min(1.0);
                 }
             }
         }

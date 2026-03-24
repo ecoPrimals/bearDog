@@ -1,8 +1,8 @@
 # 🎬 BearDog Showcase Examples
 
-**Status**: 🚧 **Under Active Construction** (Dec 24, 2025)  
+**Status**: Expanding showcase (Mar 24, 2026)  
 **Location**: `showcase/`  
-**Progress**: 1/38 demos (3%)
+**Progress**: 29 runnable demos with `src/main.rs` (~76% of the 38-demo roadmap target; count with `find showcase -name main.rs | wc -l`)
 
 ---
 
@@ -30,36 +30,17 @@ cat showcase/00_SHOWCASE_INDEX.md
 
 ## 📚 Available Content
 
-### ✅ Ready to Run
+### ✅ Ready to run
 
-1. **00_START_HERE.md** - Your entry point (start here!)
-2. **00_SHOWCASE_INDEX.md** - Complete showcase map
-3. **05-mixed-entropy/** - Human + machine entropy demo ✅
+1. **00_START_HERE.md** — Entry point (start here)
+2. **00_SHOWCASE_INDEX.md** — Full map
+3. **29 Cargo demos** — `00-local-primal/`, `02-ecosystem-integration/`, `03-production-features/`, `04-advanced-features/`, and **`05-mixed-entropy/`** (minimal mixed-entropy placeholder)
 
-### 🚧 Under Construction
+Try any directory that contains `Cargo.toml` and `src/main.rs` with `cargo run`.
 
-**Level 0 - Local Primal** (6 demos planned)
-- Foundation of BearDog operations
-- Standalone capabilities
-- No dependencies required
+### Roadmap (remaining work)
 
-**Level 1 - Hardware Integration** (6 more demos planned)
-- Real HSM integration
-- Performance comparisons
-- Failover strategies
-
-**Level 2 - Ecosystem Integration** (7 demos planned)
-- Songbird BTSP tunnels
-- NestGate encrypted storage
-- ToadStool encrypted compute
-- Squirrel key routing
-
-**Level 3-5 - Advanced & Production** (18 demos planned)
-- Distributed operations
-- Advanced cryptography
-- Production deployment patterns
-
-**Total Target**: 38 comprehensive demos
+The original map targeted **38** demos across six bands (local, hardware, ecosystem, network, advanced, production). The tree now holds **29** runnable binaries; some bands are fuller than others. See [00_SHOWCASE_INDEX.md](00_SHOWCASE_INDEX.md) for category-level status.
 
 ---
 
@@ -117,33 +98,20 @@ cat showcase/00_SHOWCASE_INDEX.md
 
 ---
 
-## 📊 Construction Progress
+## 📊 Construction progress
 
-```
-Current Status: 1/38 demos (3%)
+Approximate inventory (each row is a `main.rs` under `showcase/`):
 
-┌─────────────────────────────────┐
-│ Level 0: Local Primal           │ ⬜⬜⬜⬜⬜⬜ 0/6 (0%)
-├─────────────────────────────────┤
-│ Level 1: Hardware Integration   │ 🟩⬜⬜⬜⬜⬜⬜ 1/7 (14%)
-├─────────────────────────────────┤
-│ Level 2: Ecosystem Integration  │ ⬜⬜⬜⬜⬜⬜⬜ 0/7 (0%)
-├─────────────────────────────────┤
-│ Level 3: Network & Federation   │ ⬜⬜⬜⬜⬜⬜ 0/6 (0%)
-├─────────────────────────────────┤
-│ Level 4: Advanced Features      │ ⬜⬜⬜⬜⬜⬜ 0/6 (0%)
-├─────────────────────────────────┤
-│ Level 5: Production Patterns    │ ⬜⬜⬜⬜⬜⬜ 0/6 (0%)
-└─────────────────────────────────┘
+| Area | Runnable demos |
+|------|----------------|
+| `00-local-primal/` | 6 |
+| `02-ecosystem-integration/` | 5 |
+| `03-production-features/` | 7 |
+| `04-advanced-features/` | 10 |
+| `05-mixed-entropy/` | 1 |
+| **Total** | **29** |
 
-🟩 = Complete  ⬜ = Planned
-```
-
-### Timeline
-
-**This Week**: Level 0 + Level 1 expansion (12 demos)  
-**This Month**: Level 2 (7 demos)  
-**Next Quarter**: Levels 3-5 (18 demos)
+Roadmap target remains **38** comprehensive demos; gaps include hardware-focused examples under `01-hardware-integration/` and additional ecosystem/network pieces as in [00_SHOWCASE_INDEX.md](00_SHOWCASE_INDEX.md).
 
 ---
 
@@ -168,8 +136,8 @@ Current Status: 1/38 demos (3%)
 - ✅ Distributed ancestry
 
 ### World-Class Security
-- 🏆 TOP 0.001% (6 unsafe blocks in 150K lines)
-- 🏆 85-90% test coverage (3,223+ tests)
+- 🏆 **0 unsafe** (`#![forbid(unsafe_code)]` workspace-wide)
+- 🏆 High automated test volume — see [STATUS.md](../STATUS.md) for current counts
 - 🏆 Perfect file discipline (0 files > 1000 lines)
 - 🏆 Zero production mocks
 
@@ -369,8 +337,8 @@ cp -r ../archive/beardog-dec-23-2025/showcase/XX-example showcase/
 
 ---
 
-**Last Updated**: December 24, 2025  
-**Status**: 🚧 Under Active Construction  
-**Target**: 38 comprehensive demos by Q1 2026
+**Last Updated**: March 24, 2026  
+**Status**: Active expansion  
+**Target**: 38 comprehensive demos (roadmap); **29** runnable today
 
 🐻 **BearDog Showcase - Learn by Example** 🎬

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! Comprehensive Error Handling Tests
 //!
 //! This module contains extensive tests for `BearDog`'s error handling system,

@@ -72,7 +72,7 @@ mod orchestration_comprehensive_tests {
         // Verify status transitions are distinct
         assert_ne!(completed_status, failed_status);
         assert_ne!(
-            format!("{:?}", completed_status),
+            format!("{completed_status:?}"),
             format!("{:?}", failed_status)
         );
     }
@@ -118,17 +118,21 @@ mod orchestration_comprehensive_tests {
         assert!(operations[1].priority < operations[2].priority);
 
         // Test operation filtering by status
-        let completed_ops: Vec<&CryptoOperation> = operations
-            .iter()
-            .filter(|op| matches!(op.status, SecurityWorkflowStatus::Completed))
-            .collect();
-        assert_eq!(completed_ops.len(), 1);
+        assert_eq!(
+            operations
+                .iter()
+                .filter(|op| matches!(op.status, SecurityWorkflowStatus::Completed))
+                .count(),
+            1
+        );
 
-        let pending_ops: Vec<&CryptoOperation> = operations
-            .iter()
-            .filter(|op| matches!(op.status, SecurityWorkflowStatus::Pending))
-            .collect();
-        assert_eq!(pending_ops.len(), 1);
+        assert_eq!(
+            operations
+                .iter()
+                .filter(|op| matches!(op.status, SecurityWorkflowStatus::Pending))
+                .count(),
+            1
+        );
     }
 
     /// Test 3: Compliance orchestration
@@ -180,17 +184,21 @@ mod orchestration_comprehensive_tests {
         assert_eq!(secure_checks.len(), 1);
         assert_eq!(secure_checks[0].check_name, "encryption_compliance");
 
-        let warning_checks: Vec<&ComplianceCheck> = checks
-            .iter()
-            .filter(|c| matches!(c.health_status, SecurityHealthStatus::Warning))
-            .collect();
-        assert_eq!(warning_checks.len(), 1);
+        assert_eq!(
+            checks
+                .iter()
+                .filter(|c| matches!(c.health_status, SecurityHealthStatus::Warning))
+                .count(),
+            1
+        );
 
-        let critical_checks: Vec<&ComplianceCheck> = checks
-            .iter()
-            .filter(|c| matches!(c.health_status, SecurityHealthStatus::Critical))
-            .collect();
-        assert_eq!(critical_checks.len(), 1);
+        assert_eq!(
+            checks
+                .iter()
+                .filter(|c| matches!(c.health_status, SecurityHealthStatus::Critical))
+                .count(),
+            1
+        );
 
         // Verify all checks have the same timestamp
         assert!(checks.iter().all(|c| c.timestamp == now));

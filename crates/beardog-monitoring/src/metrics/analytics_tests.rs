@@ -144,7 +144,7 @@ mod analytics_tests {
         let config = AnalyticsConfig::default();
         let engine = AnalyticsEngine::new(config).unwrap();
 
-        let debug_str = format!("{:?}", engine);
+        let debug_str = format!("{engine:?}");
         assert!(debug_str.contains("AnalyticsEngine"));
     }
 }

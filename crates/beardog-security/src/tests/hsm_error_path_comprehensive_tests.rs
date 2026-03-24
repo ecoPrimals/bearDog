@@ -247,7 +247,7 @@ async fn test_hsm_concurrent_operations() -> Result<()> {
         let device = Arc::clone(&device);
         handles.push(tokio::spawn(async move {
             device
-                .generate_key(&format!("key_{}", i))
+                .generate_key(&format!("key_{i}"))
                 .await
                 .expect("operation should succeed");
         }));
@@ -287,7 +287,7 @@ async fn test_hsm_concurrent_operations_with_failures() -> Result<()> {
                 device.clear_failures();
             }
 
-            device.generate_key(&format!("key_{}", i)).await
+            device.generate_key(&format!("key_{i}")).await
         }));
     }
 
@@ -326,8 +326,8 @@ async fn test_hsm_connection_failure_during_operations() -> Result<()> {
                 _ = shutdown_rx.recv() => {
                     break;
                 }
-                _ = async {
-                    let _ = device_clone.generate_key(&format!("key_{}", count)).await;
+                () = async {
+                    let _ = device_clone.generate_key(&format!("key_{count}")).await;
                     count += 1;
                     tokio::task::yield_now().await;
                 } => {}
@@ -390,7 +390,7 @@ async fn test_hsm_rapid_failure_recovery_cycles() -> Result<()> {
             device.clear_failures();
         }
 
-        let _ = device.generate_key(&format!("key_{}", i)).await;
+        let _ = device.generate_key(&format!("key_{i}")).await;
     }
 
     // Device should remain stable
@@ -410,7 +410,7 @@ async fn test_hsm_graceful_degradation() -> Result<()> {
 
     // Multiple operations should fail gracefully
     for i in 0..10 {
-        let result = device.generate_key(&format!("key_{}", i)).await;
+        let result = device.generate_key(&format!("key_{i}")).await;
         assert!(result.is_err());
     }
 
@@ -531,7 +531,7 @@ async fn test_hsm_operation_limits() -> Result<()> {
 
     // Perform many operations
     for i in 0..1_000 {
-        device.generate_key(&format!("key_{}", i)).await?;
+        device.generate_key(&format!("key_{i}")).await?;
     }
 
     assert_eq!(device.get_operation_count(), 1_000);
@@ -585,10 +585,10 @@ async fn test_hsm_concurrent_mixed_operations() -> Result<()> {
         handles.push(tokio::spawn(async move {
             match i % 3 {
                 0 => {
-                    let _ = device.generate_key(&format!("key_{}", i)).await;
+                    let _ = device.generate_key(&format!("key_{i}")).await;
                 }
                 1 => {
-                    let _ = device.sign(b"test_data", &format!("key_{}", i)).await;
+                    let _ = device.sign(b"test_data", &format!("key_{i}")).await;
                 }
                 2 => {
                     let _ = device.connect().await;
@@ -622,7 +622,7 @@ async fn test_hsm_stress_test() -> Result<()> {
         let device = Arc::clone(&device);
         handles.push(tokio::spawn(async move {
             for j in 0..10 {
-                let _ = device.generate_key(&format!("key_{}_{}", i, j)).await;
+                let _ = device.generate_key(&format!("key_{i}_{j}")).await;
                 tokio::task::yield_now().await;
             }
         }));

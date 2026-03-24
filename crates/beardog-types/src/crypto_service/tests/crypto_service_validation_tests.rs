@@ -44,7 +44,7 @@ fn test_crypto_algorithm_clone() {
 #[test]
 fn test_crypto_algorithm_debug() {
     let alg = CryptoAlgorithm::ChaCha20Poly1305;
-    let debug_str = format!("{:?}", alg);
+    let debug_str = format!("{alg:?}");
     assert!(debug_str.contains("ChaCha20Poly1305"));
 }
 
@@ -92,7 +92,7 @@ fn test_encrypted_data_empty_ciphertext() {
 fn test_encrypted_data_large_ciphertext() {
     let large_ciphertext = vec![0xAB; 1_000_000];
     let data = EncryptedData {
-        ciphertext: large_ciphertext.clone(),
+        ciphertext: large_ciphertext,
         algorithm: CryptoAlgorithm::ChaCha20Poly1305,
         metadata: EncryptionMetadata {
             timestamp: SystemTime::now(),
@@ -177,7 +177,7 @@ fn test_encryption_metadata_long_key_id() {
     let long_id = "a".repeat(1000);
     let metadata = EncryptionMetadata {
         timestamp: SystemTime::now(),
-        key_id: Some(long_id.clone()),
+        key_id: Some(long_id),
         nonce: vec![],
         tag: None,
     };
@@ -281,7 +281,7 @@ fn test_very_large_nonce() {
     let metadata = EncryptionMetadata {
         timestamp: SystemTime::now(),
         key_id: None,
-        nonce: large_nonce.clone(),
+        nonce: large_nonce,
         tag: None,
     };
 
@@ -359,7 +359,7 @@ fn test_encrypted_data_with_each_algorithm() {
             algorithm: alg,
             metadata: EncryptionMetadata {
                 timestamp: SystemTime::now(),
-                key_id: Some(format!("key-{}", idx)),
+                key_id: Some(format!("key-{idx}")),
                 nonce: vec![idx as u8; 12],
                 tag: Some(vec![idx as u8; 16]),
             },
@@ -464,7 +464,7 @@ fn test_encrypted_data_debug_format() {
         },
     };
 
-    let debug_str = format!("{:?}", data);
+    let debug_str = format!("{data:?}");
     assert!(debug_str.contains("EncryptedData"));
     assert!(debug_str.contains("Aes256Gcm"));
 }
@@ -478,7 +478,7 @@ fn test_encryption_metadata_debug_format() {
         tag: None,
     };
 
-    let debug_str = format!("{:?}", metadata);
+    let debug_str = format!("{metadata:?}");
     assert!(debug_str.contains("EncryptionMetadata"));
 }
 

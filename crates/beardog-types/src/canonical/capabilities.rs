@@ -26,6 +26,7 @@
 //! println!("Capability: {:?}", capability);
 //! ```
 
+use crate::constants::defaults;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 // Removed incorrect imports added by migration script
@@ -689,7 +690,7 @@ impl Default for StorageCapabilities {
             max_capacity: std::env::var("BEARDOG_STORAGE_MAX_CAPACITY")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(10000.0),
+                .unwrap_or(defaults::DEFAULT_MAX_ENTRIES as f64),
             encryption_at_rest: true,
             backup_support: true,
         }
@@ -752,7 +753,7 @@ impl Default for PerformanceCapabilities {
             max_ops_per_second: std::env::var("BEARDOG_PERF_MAX_OPS_PER_SECOND")
                 .ok()
                 .and_then(|v| v.parse().ok())
-                .unwrap_or(10000.0),
+                .unwrap_or(defaults::DEFAULT_MAX_ENTRIES as f64),
             avg_response_time_ms: std::env::var("BEARDOG_PERF_AVG_RESPONSE_TIME_MS")
                 .ok()
                 .and_then(|v| v.parse().ok())

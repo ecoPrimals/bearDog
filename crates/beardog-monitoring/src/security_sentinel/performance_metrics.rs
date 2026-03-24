@@ -426,14 +426,26 @@ mod tests {
     #[test]
     fn test_thresholds_default() {
         let thresholds = PerformanceThresholds::default();
-        assert_eq!(thresholds.cpu_threshold, 80.0);
-        assert_eq!(thresholds.memory_threshold, 85.0);
+        assert!(
+            (thresholds.cpu_threshold - 80.0).abs() < f64::EPSILON,
+            "expected cpu_threshold ≈ 80.0, got {}",
+            thresholds.cpu_threshold
+        );
+        assert!(
+            (thresholds.memory_threshold - 85.0).abs() < f64::EPSILON,
+            "expected memory_threshold ≈ 85.0, got {}",
+            thresholds.memory_threshold
+        );
     }
 
     #[test]
     fn test_metrics_default() {
         let metrics = PerformanceMetrics::default();
-        assert_eq!(metrics.cpu_usage, 0.0);
+        assert!(
+            metrics.cpu_usage.abs() < f64::EPSILON,
+            "expected default cpu_usage ≈ 0.0, got {}",
+            metrics.cpu_usage
+        );
     }
 
     #[test]

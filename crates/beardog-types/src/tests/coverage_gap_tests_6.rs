@@ -737,9 +737,9 @@ mod zero_percent_files {
     #[test]
     fn test_constants_domains_config() {
         use crate::constants::domains::config::*;
-        let _ = format!("{}", system::DEFAULT_SYSTEM_NAME);
-        let _ = format!("{}", system::DEFAULT_VERSION);
-        let _ = format!("{}", system::DEFAULT_LOG_LEVEL);
+        let _ = system::DEFAULT_SYSTEM_NAME.to_string();
+        let _ = system::DEFAULT_VERSION.to_string();
+        let _ = system::DEFAULT_LOG_LEVEL.to_string();
     }
 
     #[test]

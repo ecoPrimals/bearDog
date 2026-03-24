@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 //! Property-Based Testing for Cryptographic Roundtrips
 //!
 //! This test suite verifies that cryptographic operations maintain
@@ -96,8 +97,7 @@ async fn property_large_input_handling() -> Result<(), BearDogError> {
 
     assert_eq!(
         plaintext, decrypted,
-        "Large plaintext roundtrip failed ({} bytes)",
-        plaintext_len
+        "Large plaintext roundtrip failed ({plaintext_len} bytes)"
     );
 
     Ok(())
@@ -132,15 +132,11 @@ async fn property_sign_verify_roundtrip() -> Result<(), BearDogError> {
 
         // Use the provider's proper key generation for Ed25519
         // This ensures the key material is in the correct format
-        let signing_key_bytes = match provider
+        let Ok(signing_key_bytes) = provider
             .generate_key_material(&CanonicalKeyType::Ed25519)
             .await
-        {
-            Ok(key) => key,
-            Err(_) => {
-                // If key generation fails, skip this iteration
-                continue;
-            }
+        else {
+            continue;
         };
 
         // Sign the message
@@ -148,7 +144,7 @@ async fn property_sign_verify_roundtrip() -> Result<(), BearDogError> {
             Ok(sig) => sig,
             Err(e) => {
                 // Log the error for debugging but continue
-                eprintln!("Sign failed at iteration {}: {:?}", iteration, e);
+                eprintln!("Sign failed at iteration {iteration}: {e:?}");
                 continue;
             }
         };
@@ -161,7 +157,7 @@ async fn property_sign_verify_roundtrip() -> Result<(), BearDogError> {
             Ok(v) => v,
             Err(e) => {
                 // Log verification errors
-                eprintln!("Verify failed at iteration {}: {:?}", iteration, e);
+                eprintln!("Verify failed at iteration {iteration}: {e:?}");
                 false
             }
         };
@@ -171,8 +167,7 @@ async fn property_sign_verify_roundtrip() -> Result<(), BearDogError> {
             successful_iterations += 1;
         } else {
             eprintln!(
-                "Signature verification failed for {} bytes (iteration {})",
-                message_len, iteration
+                "Signature verification failed for {message_len} bytes (iteration {iteration})"
             );
         }
     }
@@ -181,9 +176,7 @@ async fn property_sign_verify_roundtrip() -> Result<(), BearDogError> {
     // Some iterations may be skipped due to key generation issues
     assert!(
         successful_iterations >= 45,
-        "Only {}/{} iterations successful (expected >= 45)",
-        successful_iterations,
-        iterations
+        "Only {successful_iterations}/{iterations} iterations successful (expected >= 45)"
     );
 
     Ok(())

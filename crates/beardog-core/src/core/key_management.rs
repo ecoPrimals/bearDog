@@ -156,8 +156,7 @@ impl KeyStore {
             description,
         };
 
-        // Store in memory (`persist_id` mirrors `key_id` for post-move persist path)
-        let persist_id = key_id.clone();
+        let persist_id = matches!(storage, KeyStorage::File(_)).then(|| key_id.clone());
         let mut inner = self.inner.write().await;
         inner.signing_keys.insert(key_id.clone(), signing_key);
         inner.verifying_keys.insert(key_id.clone(), verifying_key);
@@ -165,8 +164,8 @@ impl KeyStore {
         drop(inner);
 
         // Persist to storage if configured
-        if let KeyStorage::File(_) = &storage {
-            self.persist_signing_key(&persist_id).await?;
+        if let Some(pid) = persist_id {
+            self.persist_signing_key(&pid).await?;
         }
 
         Ok(public_key_bytes)
@@ -204,16 +203,15 @@ impl KeyStore {
             description,
         };
 
-        // Store in memory (`persist_id` mirrors `key_id` for post-move persist path)
-        let persist_id = key_id.clone();
+        let persist_id = matches!(storage, KeyStorage::File(_)).then(|| key_id.clone());
         let mut inner = self.inner.write().await;
         inner.symmetric_keys.insert(key_id.clone(), key_bytes);
         inner.metadata.insert(key_id, metadata);
         drop(inner);
 
         // Persist to storage if configured
-        if let KeyStorage::File(_) = &storage {
-            self.persist_symmetric_key(&persist_id).await?;
+        if let Some(pid) = persist_id {
+            self.persist_symmetric_key(&pid).await?;
         }
 
         Ok(())
@@ -256,14 +254,15 @@ impl KeyStore {
             description,
         };
 
+        let persist_id = matches!(storage, KeyStorage::File(_)).then(|| key_id.clone());
         let mut inner = self.inner.write().await;
         inner.signing_keys.insert(key_id.clone(), signing_key);
         inner.verifying_keys.insert(key_id.clone(), verifying_key);
-        inner.metadata.insert(key_id.clone(), metadata);
+        inner.metadata.insert(key_id, metadata);
         drop(inner);
 
-        if let KeyStorage::File(_) = &storage {
-            self.persist_signing_key(&key_id).await?;
+        if let Some(pid) = persist_id {
+            self.persist_signing_key(&pid).await?;
         }
 
         Ok(())
@@ -310,7 +309,7 @@ impl KeyStore {
 
                 let mut inner = self.inner.write().await;
                 inner.verifying_keys.insert(key_id.clone(), verifying_key);
-                inner.metadata.insert(key_id.clone(), metadata);
+                inner.metadata.insert(key_id, metadata);
                 Ok(())
             }
             _ => Err(BearDogError::security(format!(
@@ -421,9 +420,11 @@ impl KeyStore {
         let metadata = inner
             .metadata
             .get(key_id)
-            .ok_or_else(|| BearDogError::security(format!("Key metadata not found: {key_id}")))?
-            .clone();
+            .ok_or_else(|| BearDogError::security(format!("Key metadata not found: {key_id}")))?;
 
+        let metadata_json = serde_json::to_string_pretty(metadata).map_err(|e| {
+            BearDogError::security(format!("Failed to serialize key metadata: {e}"))
+        })?;
         let key_bytes = signing_key.to_bytes();
         drop(inner);
 
@@ -440,9 +441,6 @@ impl KeyStore {
 
         // Write metadata file
         let metadata_path = storage_dir.join(format!("{key_id}.meta.json"));
-        let metadata_json = serde_json::to_string_pretty(&metadata).map_err(|e| {
-            BearDogError::security(format!("Failed to serialize key metadata: {e}"))
-        })?;
         fs::write(&metadata_path, metadata_json)
             .await
             .map_err(|e| BearDogError::security(format!("Failed to write key metadata: {e}")))?;
@@ -464,9 +462,11 @@ impl KeyStore {
         let metadata = inner
             .metadata
             .get(key_id)
-            .ok_or_else(|| BearDogError::security(format!("Key metadata not found: {key_id}")))?
-            .clone();
+            .ok_or_else(|| BearDogError::security(format!("Key metadata not found: {key_id}")))?;
 
+        let metadata_json = serde_json::to_string_pretty(metadata).map_err(|e| {
+            BearDogError::security(format!("Failed to serialize key metadata: {e}"))
+        })?;
         let key_bytes = symmetric_key.clone();
         drop(inner);
 
@@ -483,9 +483,6 @@ impl KeyStore {
 
         // Write metadata file
         let metadata_path = storage_dir.join(format!("{key_id}.meta.json"));
-        let metadata_json = serde_json::to_string_pretty(&metadata).map_err(|e| {
-            BearDogError::security(format!("Failed to serialize key metadata: {e}"))
-        })?;
         fs::write(&metadata_path, metadata_json)
             .await
             .map_err(|e| BearDogError::security(format!("Failed to write key metadata: {e}")))?;

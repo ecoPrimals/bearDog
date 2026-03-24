@@ -211,7 +211,7 @@ mod tests {
                 port: 8080,
                 metadata: std::collections::HashMap::new(),
             },
-            address: SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080),
+            address: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 8080),
             tags: std::collections::HashMap::new(),
             metadata: std::collections::HashMap::new(),
             health_status: HealthStatus::Healthy,

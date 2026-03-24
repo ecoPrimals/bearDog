@@ -313,12 +313,14 @@ impl RustBuilder {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::expect_used, clippy::unwrap_used)]
+
     use super::*;
 
     #[test]
     fn test_rust_builder_new() {
         let builder = RustBuilder::new(std::path::Path::new("/tmp/project"));
-        let debug = format!("{:?}", builder);
+        let debug = format!("{builder:?}");
         assert!(debug.contains("RustBuilder"));
     }
 
@@ -326,7 +328,7 @@ mod tests {
     fn test_rust_builder_new_various_paths() {
         for p in ["/tmp", ".", "/home/user/project", "/opt/beardog"] {
             let b = RustBuilder::new(std::path::Path::new(p));
-            assert!(format!("{:?}", b).contains("RustBuilder"));
+            assert!(format!("{b:?}").contains("RustBuilder"));
         }
     }
 

@@ -537,7 +537,7 @@ async fn test_metrics_reflects_credential_count_and_max_keys() {
         .find(|c| c.name == "credentials_count")
         .map(|c| c.value)
         .unwrap();
-    assert_eq!(count, 1.0);
+    assert!((count - 1.0).abs() < f64::EPSILON);
 
     let mut d2 = make_device(true, false, None, vec!["ES256".to_string()]);
     d2.capabilities.max_resident_keys = None;
@@ -548,7 +548,7 @@ async fn test_metrics_reflects_credential_count_and_max_keys() {
         .iter()
         .find(|c| c.name == "max_credentials")
         .unwrap();
-    assert_eq!(max_m.value, 0.0);
+    assert!(max_m.value.abs() < f64::EPSILON);
 }
 
 #[tokio::test]

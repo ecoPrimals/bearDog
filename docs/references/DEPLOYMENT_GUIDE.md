@@ -682,7 +682,7 @@ echo $FAMILY_ID
 **beardog Status**: ✅ **PRODUCTION READY - DEPLOY NOW**
 
 **Metrics**:
-- Tests: 3,847/3,847 (100%)
+- Tests: see [STATUS.md](../../STATUS.md) for current passing count (authoritative)
 - Unsafe Code: 0/0 (LEGENDARY!)
 - Documentation: Complete
 - Cross-Platform: 7+ platforms

@@ -253,7 +253,7 @@ mod tests {
     #[test]
     fn test_debug_format() {
         let config = PathConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
 
         assert!(debug_str.contains("PathConfig"));
         assert!(debug_str.contains("config_dir"));

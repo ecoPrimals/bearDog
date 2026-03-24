@@ -226,7 +226,7 @@ mod tests {
     #[test]
     fn intelligence_mode_json_roundtrip() {
         let m = IntelligenceMode::AutonomousAI;
-        let v = serde_json::to_value(&m).expect("serialize IntelligenceMode");
+        let v = serde_json::to_value(m).expect("serialize IntelligenceMode");
         let back: IntelligenceMode =
             serde_json::from_value(v).expect("deserialize IntelligenceMode");
         assert!(matches!(back, IntelligenceMode::AutonomousAI));
@@ -249,7 +249,7 @@ mod tests {
             max_epochs: 10,
             early_stopping: true,
         };
-        let v = serde_json::to_value(&c).expect("serialize MLConfig");
+        let v = serde_json::to_value(c).expect("serialize MLConfig");
         let back: MLConfig = serde_json::from_value(v).expect("deserialize MLConfig");
         assert_eq!(back.batch_size, 32);
         assert!(back.early_stopping);

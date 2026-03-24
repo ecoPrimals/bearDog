@@ -33,6 +33,7 @@
 //! }
 //! ```
 
+use crate::constants::time;
 use std::time::Duration;
 
 /// Cache eviction policies
@@ -259,7 +260,7 @@ pub trait CacheStrategy: Send + Sync {
             eprintln!("WARNING: Very short TTL ({ttl:?}), cache may not be effective");
         }
 
-        if ttl > Duration::from_secs(86400 * 365) {
+        if ttl > Duration::from_secs(time::SECONDS_PER_DAY * 365) {
             // > 1 year
             eprintln!("WARNING: Very long TTL ({ttl:?}), entries may never expire");
         }
@@ -306,7 +307,7 @@ pub trait CacheStrategy: Send + Sync {
 
         // Reasonable TTL
         let ttl = self.ttl();
-        if ttl < Duration::from_secs(10) || ttl > Duration::from_secs(86400 * 7) {
+        if ttl < Duration::from_secs(10) || ttl > Duration::from_secs(time::SECONDS_PER_DAY * 7) {
             return false; // Too short (<10s) or too long (>7 days)
         }
 

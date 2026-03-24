@@ -42,7 +42,7 @@ async fn test_node_registration() -> Result<(), BearDogError> {
 
     let node_info = NodeInfo {
         node_id: "test-node".to_string(),
-        address: format!("127.0.0.1:{}", TEST_PORT),
+        address: format!("127.0.0.1:{TEST_PORT}"),
         capabilities: vec![NodeCapability::StorageProvider],
         trust_level: 0.8,
         // TEST_CATEGORY: integration
@@ -52,7 +52,7 @@ async fn test_node_registration() -> Result<(), BearDogError> {
         genetics: None,
     };
 
-    node_registry.register_node(node_info.clone())?;
+    node_registry.register_node(node_info)?;
     let retrieved = node_registry.get_node_info("test-node")?;
     assert_eq!(retrieved.node_id, "test-node");
     assert_eq!(retrieved.trust_level, 0.8);

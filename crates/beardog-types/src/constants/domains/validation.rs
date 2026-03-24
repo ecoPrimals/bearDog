@@ -208,7 +208,7 @@ mod tests {
             minimum: "100".to_string(),
             field: "cache_size".to_string(),
         };
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("cache_size"));
         assert!(display.contains("50"));
         assert!(display.contains("100"));
@@ -237,7 +237,7 @@ mod tests {
         };
         let s = e.to_string();
         assert!(s.contains("depth"));
-        assert!(s.contains("3"));
+        assert!(s.contains('3'));
         assert!(s.contains("[10, 20]"));
     }
 }

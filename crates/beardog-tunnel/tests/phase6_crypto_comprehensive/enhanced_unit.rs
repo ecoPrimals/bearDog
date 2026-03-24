@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 
 //! Enhanced unit tests — edge cases, boundaries, special inputs.
 
@@ -229,7 +230,7 @@ fn test_pbkdf2_minimum_iterations_enforcement() {
             "iterations": iterations
         }));
 
-        assert!(result.is_err(), "Should reject {} iterations", iterations);
+        assert!(result.is_err(), "Should reject {iterations} iterations");
     }
 
     // 100,000 should be accepted
@@ -283,7 +284,7 @@ fn test_argon2id_very_long_password() {
     let long_password = "a".repeat(1000);
 
     let hash_result = handle_argon2id_hash(&json!({
-        "password": long_password.clone()
+        "password": long_password
     }));
 
     assert!(hash_result.is_ok());

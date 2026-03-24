@@ -154,7 +154,11 @@ fn test_capability_response_error() {
 fn test_ai_response_metadata_defaults() {
     let metadata = AIResponseMetadata::default();
 
-    assert_eq!(metadata.confidence_score, 1.0);
+    assert!(
+        (metadata.confidence_score - 1.0).abs() < 1e-9,
+        "expected confidence_score ≈ 1.0, got {}",
+        metadata.confidence_score
+    );
     assert_eq!(metadata.processing_time_ms, 0);
     assert_eq!(metadata.model_version, "v1.0.0");
 }
@@ -184,11 +188,15 @@ fn test_ai_integration_response_with_suggestions() {
             processing_time_ms: 150,
             model_version: "v2.0.0".to_string(),
         },
-        suggested_actions: suggestions.clone(),
+        suggested_actions: suggestions,
     };
 
     assert_eq!(response.result, "analysis_complete");
-    assert_eq!(response.ai_metadata.confidence_score, 0.95);
+    assert!(
+        (response.ai_metadata.confidence_score - 0.95).abs() < 1e-9,
+        "expected confidence_score ≈ 0.95, got {}",
+        response.ai_metadata.confidence_score
+    );
     assert_eq!(response.ai_metadata.processing_time_ms, 150);
     assert_eq!(response.suggested_actions.len(), 3);
     assert_eq!(response.suggested_actions[0], "action1");
@@ -282,8 +290,8 @@ fn test_adapter_config_clone_and_debug() {
     assert_eq!(config.enable_caching, cloned.enable_caching);
 
     // Test Debug
-    let debug_str = format!("{:?}", config);
+    let debug_str = format!("{config:?}");
     assert!(debug_str.contains("AdapterConfig"));
     assert!(debug_str.contains("45"));
-    assert!(debug_str.contains("4"));
+    assert!(debug_str.contains('4'));
 }

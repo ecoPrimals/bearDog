@@ -90,13 +90,13 @@ mod concurrent_hashmap_tests {
         let map = SafeConcurrentHashMap::new();
 
         for i in 0..100 {
-            map.insert(format!("key{}", i), format!("value{}", i));
+            map.insert(format!("key{i}"), format!("value{i}"));
         }
 
         assert_eq!(map.len(), 100);
 
         for i in 0..100 {
-            assert_eq!(map.get(&format!("key{}", i)), Some(format!("value{}", i)));
+            assert_eq!(map.get(&format!("key{i}")), Some(format!("value{i}")));
         }
     }
 
@@ -111,8 +111,8 @@ mod concurrent_hashmap_tests {
             let map_ref = map.clone();
             let handle = thread::spawn(move || {
                 for i in 0..inserts_per_thread {
-                    let key = format!("t{}_k{}", thread_id, i);
-                    let value = format!("v{}", i);
+                    let key = format!("t{thread_id}_k{i}");
+                    let value = format!("v{i}");
                     map_ref.insert(key, value);
                 }
             });
@@ -132,7 +132,7 @@ mod concurrent_hashmap_tests {
 
         // Pre-populate
         for i in 0..100 {
-            map.insert(format!("key{}", i), format!("value{}", i));
+            map.insert(format!("key{i}"), format!("value{i}"));
         }
 
         let mut handles = vec![];
@@ -142,9 +142,9 @@ mod concurrent_hashmap_tests {
             let map_ref = map.clone();
             let handle = thread::spawn(move || {
                 for i in 0..100 {
-                    let key = format!("key{}", i);
+                    let key = format!("key{i}");
                     let value = map_ref.get(&key);
-                    assert_eq!(value, Some(format!("value{}", i)));
+                    assert_eq!(value, Some(format!("value{i}")));
                 }
             });
             handles.push(handle);
@@ -258,7 +258,7 @@ mod concurrent_cache_tests {
 
         for i in 0..5 {
             cache
-                .insert(format!("key{}", i), format!("value{}", i))
+                .insert(format!("key{i}"), format!("value{i}"))
                 .unwrap();
         }
         assert_eq!(cache.len(), 5);
@@ -279,8 +279,8 @@ mod concurrent_cache_tests {
             let cache_ref = cache.clone();
             let handle = thread::spawn(move || {
                 for i in 0..50 {
-                    let key = format!("t{}_k{}", thread_id, i);
-                    let value = format!("v{}", i);
+                    let key = format!("t{thread_id}_k{i}");
+                    let value = format!("v{i}");
                     let _ = cache_ref.insert(key.clone(), value.clone());
                     // Note: Due to concurrent access and potential evictions,
                     // we verify insertion worked but don't assert the value is still there
@@ -418,7 +418,7 @@ mod concurrent_queue_tests {
             }
         });
 
-        let queue_consumer = queue.clone();
+        let queue_consumer = queue;
         let consumer = thread::spawn(move || {
             let mut count = 0;
             while count < items_to_produce {
@@ -511,8 +511,8 @@ mod concurrent_integration_tests {
 
             let handle = thread::spawn(move || {
                 for i in 0..50 {
-                    let key = format!("t{}_k{}", thread_id, i);
-                    let value = format!("v{}", i);
+                    let key = format!("t{thread_id}_k{i}");
+                    let value = format!("v{i}");
 
                     // Use all three structures
                     map_ref.insert(key.clone(), value.clone());
@@ -543,7 +543,7 @@ mod concurrent_integration_tests {
             let map_ref = map.clone();
             let handle = thread::spawn(move || {
                 // Each thread reports its completion
-                map_ref.insert(format!("thread_{}", thread_id), "completed".to_string());
+                map_ref.insert(format!("thread_{thread_id}"), "completed".to_string());
 
                 // ✅ MODERNIZED: Yield instead of sleep for coordination
                 // Wait for all threads to report
@@ -554,7 +554,7 @@ mod concurrent_integration_tests {
                 // Verify all reported
                 for i in 0..num_threads {
                     assert_eq!(
-                        map_ref.get(&format!("thread_{}", i)),
+                        map_ref.get(&format!("thread_{i}")),
                         Some("completed".to_string())
                     );
                 }

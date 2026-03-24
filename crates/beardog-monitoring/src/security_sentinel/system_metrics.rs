@@ -303,7 +303,10 @@ mod tests {
     fn test_collect_response_time_no_requests() {
         let metrics = SystemMetrics::new();
         let rt = metrics.collect_response_time().expect("response time");
-        assert_eq!(rt, 0.0);
+        assert!(
+            rt.abs() < f64::EPSILON,
+            "expected response time 0.0 with no requests, got {rt}"
+        );
     }
 
     #[test]
@@ -320,7 +323,10 @@ mod tests {
     fn test_collect_error_rate_no_requests() {
         let metrics = SystemMetrics::new();
         let rate = metrics.collect_error_rate().expect("error rate");
-        assert_eq!(rate, 0.0);
+        assert!(
+            rate.abs() < f64::EPSILON,
+            "expected error rate 0.0 with no requests, got {rate}"
+        );
     }
 
     #[test]
@@ -353,12 +359,15 @@ mod tests {
         let metrics = SystemMetrics::new();
         // First call establishes baseline
         let first = metrics.collect_cpu_usage().expect("cpu first");
-        assert_eq!(first, 0.0, "First call should be 0.0 (no baseline)");
+        assert!(
+            first.abs() < f64::EPSILON,
+            "First call should be 0.0 (no baseline), got {first}"
+        );
         // Brief delay for CPU delta
         std::thread::sleep(std::time::Duration::from_millis(50));
         let second = metrics.collect_cpu_usage().expect("cpu second");
         assert!(
-            second >= 0.0 && second <= 100.0,
+            (0.0..=100.0).contains(&second),
             "CPU should be 0-100, got {second}"
         );
     }

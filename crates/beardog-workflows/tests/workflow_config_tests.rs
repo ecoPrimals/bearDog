@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
+
 //! Configuration tests for BearDog workflows
 //!
 //! These tests verify workflow configuration validation and serialization.
@@ -41,7 +43,7 @@ fn test_workflow_config_serialization() {
     let json = serde_json::to_string(&config).expect("Serialization should succeed");
     assert!(json.contains("10"));
     assert!(json.contains("300"));
-    assert!(json.contains("3"));
+    assert!(json.contains('3'));
 }
 
 // TEST_CATEGORY: integration

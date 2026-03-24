@@ -78,11 +78,7 @@ fn test_special_characters_in_ids() {
     for id in &ids {
         assert!(
             id.contains(['/', ';', '<', '>']),
-            "Should detect special characters in: {}",
-            // TEST_CATEGORY: integration
-            // TEST_DOMAIN: security
-            // TEST_PRIORITY: normal
-            id
+            "Should detect special characters in: {id}"
         );
     }
 
@@ -172,7 +168,7 @@ fn test_algorithm_name_validation() {
 /// Test timestamp validation
 #[test]
 fn test_timestamp_validation() {
-    let current_time = 1697820000000u64; // Unix timestamp in ms
+    let current_time = 1_697_820_000_000_u64; // Unix timestamp in ms
     let future_time = current_time + (365 * 24 * 60 * 60 * 1000); // +1 year
     let past_time = 0; // Invalid
 
@@ -216,8 +212,7 @@ fn test_version_string_validation() {
         let is_valid = parts.len() == 3 && parts.iter().all(|p| p.parse::<u32>().is_ok());
         assert!(
             !is_valid,
-            "Invalid version should fail validation: {}",
-            version
+            "Invalid version should fail validation: {version}"
         );
     }
     // TEST_CATEGORY: integration
@@ -235,8 +230,7 @@ fn test_ip_address_validation() {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
         // TEST_PRIORITY: normal
-        let parts: Vec<&str> = ip.split('.').collect();
-        assert_eq!(parts.len(), 4, "Valid IP should have 4 octets");
+        assert_eq!(ip.split('.').count(), 4, "Valid IP should have 4 octets");
     }
 
     for ip in &invalid_ips {
@@ -256,7 +250,7 @@ fn test_port_number_validation() {
     }
 
     for port in &invalid_ports {
-        assert!(*port == 0 || *port > 65535, "Invalid port: {}", port);
+        assert!(*port == 0 || *port > 65535, "Invalid port: {port}");
     }
 }
 
@@ -272,8 +266,7 @@ fn test_hex_string_validation() {
     for hex in &valid_hex {
         assert!(
             hex.chars().all(|c| c.is_ascii_hexdigit()),
-            "Should be valid hex: {}",
-            hex
+            "Should be valid hex: {hex}"
         );
     }
 
@@ -282,7 +275,7 @@ fn test_hex_string_validation() {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
         // TEST_PRIORITY: normal
-        assert!(!is_valid, "Should be invalid hex: {}", hex);
+        assert!(!is_valid, "Should be invalid hex: {hex}");
     }
 }
 
@@ -299,7 +292,7 @@ fn test_base64_validation() {
             // TEST_PRIORITY: normal
             .chars()
             .all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '=');
-        assert!(valid_chars, "Should have valid base64 chars: {}", b64);
+        assert!(valid_chars, "Should have valid base64 chars: {b64}");
     }
 }
 
@@ -349,11 +342,11 @@ fn test_percentage_validation() {
     let invalid_percentages = [-10.0, 150.0];
 
     for pct in &valid_percentages {
-        assert!((0.0..=100.0).contains(pct), "Valid percentage: {}", pct);
+        assert!((0.0..=100.0).contains(pct), "Valid percentage: {pct}");
     }
 
     for pct in &invalid_percentages {
-        assert!(!(0.0..=100.0).contains(pct), "Invalid percentage: {}", pct);
+        assert!(!(0.0..=100.0).contains(pct), "Invalid percentage: {pct}");
     }
 }
 
@@ -440,11 +433,7 @@ fn test_config_value_ranges() {
     for (name, value, min, max) in &config_values {
         assert!(
             *value >= *min && *value <= *max,
-            "{} should be in range [{}, {}]: {}",
-            name,
-            min,
-            max,
-            value
+            "{name} should be in range [{min}, {max}]: {value}"
         );
     }
 }

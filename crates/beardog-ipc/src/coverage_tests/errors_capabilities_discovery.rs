@@ -3,11 +3,6 @@
 //! Errors, capabilities, service info, discovery query coverage tests.
 
 use crate::error::{IpcError, IpcResult};
-use crate::isomorphic::IpcEndpoint;
-use crate::protocol_router::{Protocol, ProtocolCapabilities, ProtocolDetector, RouterConfig};
-use crate::registry_client::{
-    JsonRpcError, JsonRpcRequest, JsonRpcResponse, PrimalInfo, PrimalRegistryClient,
-};
 use crate::types::{Capability, DiscoveryQuery, ServiceInfo};
 use std::collections::HashMap;
 
@@ -18,63 +13,63 @@ use std::collections::HashMap;
 #[test]
 fn test_ipc_error_display_connection() {
     let err = IpcError::Connection("conn failed".to_string());
-    assert_eq!(format!("{}", err), "Connection error: conn failed");
+    assert_eq!(format!("{err}"), "Connection error: conn failed");
 }
 
 #[test]
 fn test_ipc_error_display_protocol() {
     let err = IpcError::Protocol("bad protocol".to_string());
-    assert_eq!(format!("{}", err), "Protocol error: bad protocol");
+    assert_eq!(format!("{err}"), "Protocol error: bad protocol");
 }
 
 #[test]
 fn test_ipc_error_display_serialization() {
     let err = IpcError::Serialization("bad json".to_string());
-    assert_eq!(format!("{}", err), "Serialization error: bad json");
+    assert_eq!(format!("{err}"), "Serialization error: bad json");
 }
 
 #[test]
 fn test_ipc_error_display_service_not_found() {
     let err = IpcError::ServiceNotFound("crypto".to_string());
-    assert_eq!(format!("{}", err), "Service not found: crypto");
+    assert_eq!(format!("{err}"), "Service not found: crypto");
 }
 
 #[test]
 fn test_ipc_error_display_timeout() {
     let err = IpcError::Timeout;
-    assert_eq!(format!("{}", err), "Operation timed out");
+    assert_eq!(format!("{err}"), "Operation timed out");
 }
 
 #[test]
 fn test_ipc_error_debug_all_variants() {
     let err = IpcError::Connection("test".to_string());
-    assert!(format!("{:?}", err).contains("Connection"));
+    assert!(format!("{err:?}").contains("Connection"));
 
     let err = IpcError::Protocol("test".to_string());
-    assert!(format!("{:?}", err).contains("Protocol"));
+    assert!(format!("{err:?}").contains("Protocol"));
 
     let err = IpcError::Serialization("test".to_string());
-    assert!(format!("{:?}", err).contains("Serialization"));
+    assert!(format!("{err:?}").contains("Serialization"));
 
     let err = IpcError::ServiceNotFound("test".to_string());
-    assert!(format!("{:?}", err).contains("ServiceNotFound"));
+    assert!(format!("{err:?}").contains("ServiceNotFound"));
 
     let err = IpcError::Timeout;
-    assert!(format!("{:?}", err).contains("Timeout"));
+    assert!(format!("{err:?}").contains("Timeout"));
 }
 
 #[test]
 fn test_ipc_error_from_io() {
     let io_err = std::io::Error::new(std::io::ErrorKind::NotFound, "file missing");
     let ipc_err: IpcError = io_err.into();
-    assert!(format!("{}", ipc_err).contains("I/O error"));
+    assert!(format!("{ipc_err}").contains("I/O error"));
 }
 
 #[test]
 fn test_ipc_result_ok() {
     let ok: IpcResult<u32> = Ok(42);
     assert!(ok.is_ok());
-    assert_eq!(ok.unwrap(), 42);
+    assert!(matches!(ok, Ok(42)));
 }
 
 #[test]
@@ -173,7 +168,7 @@ fn test_capability_clone_and_debug() {
     let cap = Capability::Custom("cloned".to_string());
     let cloned = cap.clone();
     assert_eq!(cap, cloned);
-    assert!(format!("{:?}", cap).contains("cloned"));
+    assert!(format!("{cap:?}").contains("cloned"));
 }
 
 // ============================================================================
@@ -239,7 +234,7 @@ fn test_service_info_debug() {
         available: true,
         metadata: HashMap::new(),
     };
-    let debug = format!("{:?}", info);
+    let debug = format!("{info:?}");
     assert!(debug.contains("test"));
 }
 
@@ -307,7 +302,7 @@ fn test_discovery_query_serialization() {
 #[test]
 fn test_discovery_query_debug() {
     let q = DiscoveryQuery::primal("beardog");
-    assert!(format!("{:?}", q).contains("beardog"));
+    assert!(format!("{q:?}").contains("beardog"));
 }
 
 #[test]

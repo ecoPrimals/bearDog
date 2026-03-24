@@ -159,7 +159,7 @@ mod session_token_tests {
     #[test]
     fn test_session_token_generation_format() {
         let user_id = "user123";
-        let token = format!("session_{}", user_id);
+        let token = format!("session_{user_id}");
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
         // TEST_PRIORITY: normal
@@ -188,7 +188,7 @@ mod session_token_tests {
     // TEST_PRIORITY: normal
     fn test_session_token_with_empty_user() {
         let user_id = "";
-        let token = format!("session_{}", user_id);
+        let token = format!("session_{user_id}");
 
         assert_eq!(token, "session_");
     }
@@ -199,9 +199,9 @@ mod session_token_tests {
         // TEST_DOMAIN: security
         // TEST_PRIORITY: normal
         let user_id = "user@example.com";
-        let token = format!("session_{}", user_id);
+        let token = format!("session_{user_id}");
 
-        assert!(token.contains("@"));
+        assert!(token.contains('@'));
     }
 
     // TEST_CATEGORY: integration
@@ -210,7 +210,7 @@ mod session_token_tests {
     #[test]
     fn test_session_token_length() {
         let user_id = "user123";
-        let token = format!("session_{}", user_id);
+        let token = format!("session_{user_id}");
 
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security

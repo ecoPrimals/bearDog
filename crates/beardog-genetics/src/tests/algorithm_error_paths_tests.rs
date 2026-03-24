@@ -151,7 +151,7 @@ mod algorithm_error_tests {
             .map(|i| {
                 tokio::spawn(async move {
                     let result: Result<(), BearDogError> =
-                        Err(BearDogError::genetics(format!("Evolution conflict {}", i)));
+                        Err(BearDogError::genetics(format!("Evolution conflict {i}")));
                     assert!(result.is_err());
                 })
             })

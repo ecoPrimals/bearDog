@@ -327,8 +327,7 @@ fn test_process_mouse_event_drag_and_horizontal_scroll_return_none() {
         };
         assert!(
             collector.process_mouse_event(ev, 1, &mut last).is_none(),
-            "expected unhandled kind {:?} to yield None",
-            kind
+            "expected unhandled kind {kind:?} to yield None"
         );
     }
 }

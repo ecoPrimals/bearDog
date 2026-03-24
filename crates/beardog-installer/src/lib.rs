@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![forbid(unsafe_code)]
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 //! # beardog-installer
 //!
@@ -51,6 +52,9 @@ pub const NAME: &str = env!("CARGO_PKG_NAME");
 
 #[cfg(test)]
 mod coverage_boost_wave10;
+
+#[cfg(test)]
+mod coverage_march26_installer_wave;
 
 #[cfg(test)]
 mod tests {

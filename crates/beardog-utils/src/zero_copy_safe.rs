@@ -229,7 +229,7 @@ mod tests {
     #[test]
     fn test_buffer_from_vec_non_empty() {
         let data = vec![1, 2, 3, 4, 5];
-        let buffer = SafeZeroCopyBuffer::from_vec(data.clone());
+        let buffer = SafeZeroCopyBuffer::from_vec(data);
 
         assert_eq!(buffer.len(), 5);
         assert!(!buffer.is_empty());
@@ -387,14 +387,14 @@ mod tests {
     #[test]
     fn test_buffer_debug() {
         let buffer = SafeZeroCopyBuffer::from_vec(vec![1, 2, 3]);
-        let debug_str = format!("{:?}", buffer);
+        let debug_str = format!("{buffer:?}");
         assert!(debug_str.contains("SafeZeroCopyBuffer"));
     }
 
     #[test]
     fn test_pool_new() {
         let pool = SafeBufferPool::new(512, 5);
-        let debug_str = format!("{:?}", pool);
+        let debug_str = format!("{pool:?}");
         assert!(debug_str.contains("SafeBufferPool"));
     }
 

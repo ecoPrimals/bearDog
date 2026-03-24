@@ -578,7 +578,7 @@ mod tests {
         };
         assert_eq!(
             config.api_url(),
-            format!("http://localhost:{}", DEFAULT_API_PORT)
+            format!("http://localhost:{DEFAULT_API_PORT}")
         );
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: types
@@ -634,17 +634,17 @@ mod tests {
 
         assert_eq!(
             config.api_url(),
-            format!("http://localhost:{}", DEFAULT_API_PORT)
+            format!("http://localhost:{DEFAULT_API_PORT}")
         );
         assert_eq!(
             config.metrics_url(),
-            format!("http://localhost:{}/metrics", DEFAULT_DISCOVERY_PORT)
+            format!("http://localhost:{DEFAULT_DISCOVERY_PORT}/metrics")
         );
         assert_eq!(
             config.health_url(),
-            format!("http://localhost:{}/health", DEFAULT_HEALTH_PORT)
+            format!("http://localhost:{DEFAULT_HEALTH_PORT}/health")
         );
-        assert_eq!(config.ws_url(), format!("ws://localhost:{}", WS_PORT));
-        assert_eq!(config.grpc_endpoint(), format!("localhost:{}", GRPC_PORT));
+        assert_eq!(config.ws_url(), format!("ws://localhost:{WS_PORT}"));
+        assert_eq!(config.grpc_endpoint(), format!("localhost:{GRPC_PORT}"));
     }
 }

@@ -39,7 +39,7 @@ mod compliance_handler_tests {
     #[test]
     fn test_compliance_handler_creation() {
         let config = create_test_config();
-        let handler = ComplianceHandler::new(config.clone());
+        let handler = ComplianceHandler::new(config);
 
         assert_eq!(handler.enabled_standards.len(), 3);
         assert!(handler.audit_trail.is_empty());
@@ -216,7 +216,11 @@ mod compliance_handler_tests {
 
         let metrics = handler.generate_metrics();
 
-        assert_eq!(metrics.overall_score, 95.0);
+        assert!(
+            (metrics.overall_score - 95.0).abs() < f64::EPSILON,
+            "expected overall_score ≈ 95.0, got {}",
+            metrics.overall_score
+        );
         assert_eq!(metrics.standards_compliance.len(), 3);
         assert_eq!(metrics.audit_trail_size, 0);
         assert!(metrics.last_assessment_date.is_some());
@@ -439,7 +443,11 @@ mod compliance_handler_tests {
         assert!(result.is_ok());
         let compliance_result = result.unwrap();
         // With no standards, score should be 100
-        assert_eq!(compliance_result.score, 100.0);
+        assert!(
+            (compliance_result.score - 100.0).abs() < f64::EPSILON,
+            "expected score ≈ 100.0, got {}",
+            compliance_result.score
+        );
     }
 
     #[test]
@@ -672,7 +680,11 @@ mod compliance_handler_tests {
                 .standards_compliance
                 .contains_key(&ComplianceStandard::Hipaa)
         );
-        assert_eq!(metrics.overall_score, 95.0);
+        assert!(
+            (metrics.overall_score - 95.0).abs() < f64::EPSILON,
+            "expected overall_score ≈ 95.0, got {}",
+            metrics.overall_score
+        );
     }
 
     #[test]

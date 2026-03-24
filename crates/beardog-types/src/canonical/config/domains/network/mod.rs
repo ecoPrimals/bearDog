@@ -21,6 +21,7 @@
 //! - `RateLimitConfig` (network-specific instances)
 //! - Plus additional scattered network configurations
 
+use crate::constants::domains::network::limits::MAX_CONNECTIONS;
 use beardog_errors::{BearDogError, ConfigurationErrorCategory};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -127,11 +128,11 @@ impl ConsolidatedNetworkConfiguration {
         config.server.max_connections =
             crate::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE;
         config.rate_limiting.global_rps = Some(100_000);
-        config.rate_limiting.per_ip_rpm = Some(10000);
+        config.rate_limiting.per_ip_rpm = Some(MAX_CONNECTIONS as u64);
         config
             .security
             .ddos_protection
-            .max_requests_per_ip_per_minute = 10000;
+            .max_requests_per_ip_per_minute = MAX_CONNECTIONS as u64;
         config.tls.enabled = false; // Disable TLS for easier development
         config.endpoint_security.enable_authentication = false;
 
@@ -146,7 +147,7 @@ impl ConsolidatedNetworkConfiguration {
         config.server.max_connections = std::env::var("BEARDOG_PRODUCTION_MAX_CONNECTIONS")
             .ok()
             .and_then(|s| s.parse().ok())
-            .unwrap_or(10000);
+            .unwrap_or(MAX_CONNECTIONS);
         #[expect(
             clippy::cast_possible_truncation,
             reason = "timeout millis fit u64 for rate limiter RPS config"
@@ -495,7 +496,7 @@ mod tests {
             config.server.max_connections,
             crate::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE
         );
-        assert_eq!(config.tls.enabled, false);
+        assert!(!config.tls.enabled);
         assert!(config.validate().is_ok());
     }
 
@@ -503,7 +504,7 @@ mod tests {
     fn test_production_config() {
         let config = ConsolidatedNetworkConfiguration::production();
         assert_eq!(config.server.max_connections, 10000);
-        assert_eq!(config.tls.enabled, true);
+        assert!(config.tls.enabled);
         assert_eq!(config.tls.verification_mode, TlsVerificationMode::Full);
         assert!(config.validate().is_ok());
     }

@@ -127,8 +127,7 @@ fn test_ed25519_multiple_messages() {
             .expect("Verification should succeed");
         assert!(
             is_valid,
-            "Signature should be valid for message: {:?}",
-            message
+            "Signature should be valid for message: {message:?}"
         );
     }
 }
@@ -471,7 +470,7 @@ fn test_secure_random_various_sizes() {
 
     for size in sizes {
         let random = BearDogCrypto::generate_secure_random(size);
-        assert_eq!(random.len(), size, "Random should have size {}", size);
+        assert_eq!(random.len(), size, "Random should have size {size}");
     }
 }
 

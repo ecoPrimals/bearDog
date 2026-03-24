@@ -66,7 +66,7 @@ mod network_coverage_extension_tests {
     #[test]
     fn test_network_config_debug() {
         let config = NetworkConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
 
         assert!(debug_str.contains("NetworkConfig"));
     }
@@ -95,10 +95,10 @@ mod network_coverage_extension_tests {
     #[test]
     fn test_api_config_wildcard_bind_via_builder() {
         let config = ApiConfig::builder()
-            .bind_address(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)))
+            .bind_address(IpAddr::V4(Ipv4Addr::UNSPECIFIED))
             .build();
 
-        assert_eq!(config.bind_address, IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)));
+        assert_eq!(config.bind_address, IpAddr::V4(Ipv4Addr::UNSPECIFIED));
     }
 
     #[test]
@@ -318,7 +318,7 @@ mod network_coverage_extension_tests {
     fn test_api_validation_error_message_port_zero() {
         let config = ApiConfig::builder().port(0).build();
         let err = config.validate().unwrap_err();
-        let err_str = format!("{}", err);
+        let err_str = format!("{err}");
 
         assert!(err_str.contains("port") || err_str.contains("Port"));
     }
@@ -327,7 +327,7 @@ mod network_coverage_extension_tests {
     fn test_api_validation_error_message_tls() {
         let config = ApiConfig::builder().tls_enabled(true).build();
         let err = config.validate().unwrap_err();
-        let err_str = format!("{}", err);
+        let err_str = format!("{err}");
 
         assert!(err_str.contains("TLS") || err_str.contains("certificate"));
     }
@@ -336,7 +336,7 @@ mod network_coverage_extension_tests {
     fn test_api_validation_error_message_max_connections() {
         let config = ApiConfig::builder().max_connections(0).build();
         let err = config.validate().unwrap_err();
-        let err_str = format!("{}", err);
+        let err_str = format!("{err}");
 
         assert!(err_str.contains("connection") || err_str.contains("max"));
     }
@@ -403,7 +403,7 @@ mod network_coverage_extension_tests {
 
     #[test]
     fn test_network_config_with_ipv6_addresses() {
-        let ipv6 = IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1));
+        let ipv6 = IpAddr::V6(Ipv6Addr::LOCALHOST);
 
         let mut config = NetworkConfig::default();
         config.api.bind_address = ipv6;
@@ -449,7 +449,7 @@ mod network_coverage_extension_tests {
     #[test]
     fn test_api_config_debug() {
         let config = ApiConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
 
         assert!(debug_str.contains("ApiConfig"));
     }
@@ -457,7 +457,7 @@ mod network_coverage_extension_tests {
     #[test]
     fn test_discovery_config_debug() {
         let config = ServiceDiscoveryConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
 
         assert!(debug_str.contains("ServiceDiscoveryConfig"));
     }
@@ -465,7 +465,7 @@ mod network_coverage_extension_tests {
     #[test]
     fn test_admin_config_debug() {
         let config = AdminConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
 
         assert!(debug_str.contains("AdminConfig"));
     }

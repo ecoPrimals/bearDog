@@ -67,10 +67,10 @@ fn test_workflow_status_transitions() {
     let failed = WorkflowStatus::Failed;
 
     // Verify status values exist
-    assert_eq!(format!("{:?}", pending), "Pending");
-    assert_eq!(format!("{:?}", running), "Running");
-    assert_eq!(format!("{:?}", completed), "Completed");
-    assert_eq!(format!("{:?}", failed), "Failed");
+    assert_eq!(format!("{pending:?}"), "Pending");
+    assert_eq!(format!("{running:?}"), "Running");
+    assert_eq!(format!("{completed:?}"), "Completed");
+    assert_eq!(format!("{failed:?}"), "Failed");
 }
 
 #[test]
@@ -80,7 +80,7 @@ fn test_workflow_progress_tracking() -> Result<(), BearDogError> {
     // TEST_DOMAIN: workflows
     // TEST_PRIORITY: normal
     let mut state = WorkflowState {
-        workflow_id: workflow_id.clone(),
+        workflow_id,
         status: WorkflowStatus::Pending,
         current_step: 0,
         total_steps: 3,
@@ -252,7 +252,7 @@ fn test_workflow_status_serialization() {
     ];
 
     for status in statuses {
-        let formatted = format!("{:?}", status);
+        let formatted = format!("{status:?}");
         assert!(!formatted.is_empty(), "Status should be formattable");
     }
 }
@@ -312,9 +312,7 @@ fn test_workflow_completion_percentage() -> Result<(), BearDogError> {
         let actual_percentage = (state.current_step as f64 / state.total_steps as f64) * 100.0;
         assert!(
             (actual_percentage - expected_percentage).abs() < 0.01,
-            "Percentage calculation incorrect for {}/{}",
-            current,
-            total
+            "Percentage calculation incorrect for {current}/{total}"
         );
     }
 

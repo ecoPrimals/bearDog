@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![forbid(unsafe_code)]
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 //! # `BearDog` Utilities Crate
 //!
@@ -15,9 +16,6 @@
 //! - **Property Testing**: QuickCheck-based property testing framework
 //! - **AI Optimization**: Intelligent performance optimization
 //! - **100% Safe**: Fully memory-safe in all utilities
-
-#![cfg_attr(test, allow(clippy::expect_used))]
-#![cfg_attr(test, allow(clippy::unwrap_used))]
 //!
 //! ## Core Modules
 //!
@@ -148,3 +146,13 @@ mod ultimate_performance_tests;
 #[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod ultimate_safety_tests;
+
+/// Approximate `f64` equality for tests (avoids `clippy::float_cmp`).
+#[cfg(test)]
+pub(crate) mod float_eq {
+    #[track_caller]
+    pub fn f64(a: f64, b: f64) {
+        const EPS: f64 = 1e-9;
+        assert!((a - b).abs() < EPS, "expected ~{b}, got {a}");
+    }
+}

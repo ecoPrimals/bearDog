@@ -126,7 +126,7 @@ mod metrics_core_tests {
         let config = MetricsCoreConfig::default();
         let core = MetricsCore::new(config).unwrap();
 
-        let debug_str = format!("{:?}", core);
+        let debug_str = format!("{core:?}");
         assert!(debug_str.contains("MetricsCore"));
     }
 }

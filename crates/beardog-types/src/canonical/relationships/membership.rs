@@ -6,7 +6,7 @@
 // replacing binary allowlist/blocklist patterns with a nuanced spectrum of 
 // relationship levels that reflect biological ecosystem dynamics.
 
-use beardog_errors::BearDogError;
+use crate::constants::time;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -385,7 +385,10 @@ impl MembershipRegistry {
 impl Default for MembershipConfig {
     fn default() -> Self {
         let mut review_intervals = HashMap::new();
-        review_intervals.insert("CautiousInteraction".to_string(), Duration::from_secs(86400)); // Daily
+        review_intervals.insert(
+            "CautiousInteraction".to_string(),
+            Duration::from_secs(time::SECONDS_PER_DAY),
+        ); // Daily
         review_intervals.insert("EcosystemProtection".to_string(), Duration::from_secs(604800)); // Weekly
         
         let mut escalation_thresholds = HashMap::new();

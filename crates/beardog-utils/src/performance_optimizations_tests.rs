@@ -297,7 +297,7 @@ fn test_zero_copy_processor_stream_processing() {
     let mut processor = ZeroCopyProcessor::new(1024);
     let stream = b"abcdefghijklmnopqrstuvwxyz";
 
-    let result = processor.process_stream(stream, 5, |chunk| chunk.to_vec());
+    let result = processor.process_stream(stream, 5, <[u8]>::to_vec);
 
     match result {
         StreamResult::Success {
@@ -525,8 +525,8 @@ fn test_zero_copy_memory_efficiency() {
 
     // Store multiple references
     for i in 0..10 {
-        let data = format!("data_{}", i);
-        processor.store_shared_reference(format!("key_{}", i), data.as_bytes());
+        let data = format!("data_{i}");
+        processor.store_shared_reference(format!("key_{i}"), data.as_bytes());
     }
 
     let (_, _refs, total_bytes) = processor.get_stats();

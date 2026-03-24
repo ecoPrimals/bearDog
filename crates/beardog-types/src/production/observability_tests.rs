@@ -108,8 +108,8 @@ fn test_observability_engine_new_default() {
     // TEST_DOMAIN: types
     // TEST_PRIORITY: normal
     let engine = result.unwrap();
-    assert_eq!(engine.get_config().enable_tracing, false);
-    assert_eq!(engine.get_config().enable_logging, false);
+    assert!(!engine.get_config().enable_tracing);
+    assert!(!engine.get_config().enable_logging);
 }
 
 #[test]
@@ -255,8 +255,8 @@ fn test_observability_engine_get_config() {
     let engine = ObservabilityEngine::new(&config).expect("Should create engine");
     let retrieved_config = engine.get_config();
 
-    assert_eq!(retrieved_config.enable_tracing, true);
-    assert_eq!(retrieved_config.enable_logging, true);
+    assert!(retrieved_config.enable_tracing);
+    assert!(retrieved_config.enable_logging);
     assert_eq!(retrieved_config.trace_sampling_rate, 0.5);
     assert_eq!(retrieved_config.log_level, "info");
 }
@@ -292,7 +292,7 @@ fn test_observability_engine_config_immutability() {
 #[test]
 fn test_observability_config_debug() {
     let config = ObservabilityConfig::default();
-    let debug_str = format!("{:?}", config);
+    let debug_str = format!("{config:?}");
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: types
@@ -305,7 +305,7 @@ fn test_observability_config_debug() {
 fn test_observability_engine_debug() {
     let config = ObservabilityConfig::default();
     let engine = ObservabilityEngine::new(&config).expect("Should create engine");
-    let debug_str = format!("{:?}", engine);
+    let debug_str = format!("{engine:?}");
 
     assert!(!debug_str.is_empty());
     assert!(debug_str.contains("ObservabilityEngine"));

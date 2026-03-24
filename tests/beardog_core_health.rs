@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! `BearDog` Core Health Check Tests
 //!
 //! This module contains unit tests for core health checking functionality,

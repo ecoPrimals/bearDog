@@ -37,7 +37,7 @@ impl CompositeThreat {
         // Return highest severity from indicators
         self.indicators
             .iter()
-            .map(|t| t.severity())
+            .map(super::behavior::Threat::severity)
             .max()
             .unwrap_or(ThreatSeverity::Info)
     }

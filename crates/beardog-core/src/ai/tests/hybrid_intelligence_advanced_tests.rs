@@ -180,16 +180,12 @@ async fn test_predict_with_custom_model_id() {
         .expect("should build system");
 
     let input_data = vec![1.0, 2.0, 3.0];
-    let model_id = Some("custom-model-123".to_string());
-    let result = system.predict(input_data, model_id.clone()).await;
+    let model_id = "custom-model-123".to_string();
+    let result = system.predict(input_data, Some(model_id.clone())).await;
 
     assert!(result.is_ok(), "Custom model ID should work");
     let prediction = result.unwrap();
-    assert_eq!(
-        prediction.model_id,
-        model_id.unwrap(),
-        "Should use custom model ID"
-    );
+    assert_eq!(prediction.model_id, model_id, "Should use custom model ID");
 }
 
 // ============================================================================

@@ -33,7 +33,7 @@ fn test_production_config_clone() {
 #[test]
 fn test_production_config_debug() {
     let config = ProductionConfig::default();
-    let debug_str = format!("{:?}", config);
+    let debug_str = format!("{config:?}");
 
     assert!(debug_str.contains("ProductionConfig"));
 }
@@ -112,7 +112,7 @@ fn test_environment_level_clone() {
 #[test]
 fn test_environment_level_debug() {
     let level = EnvironmentLevel::Production;
-    let debug_str = format!("{:?}", level);
+    let debug_str = format!("{level:?}");
 
     assert!(debug_str.contains("Production"));
 }
@@ -311,7 +311,7 @@ fn test_operational_status_initializing() {
 #[test]
 fn test_operational_status_debug() {
     let status = OperationalStatus::Critical;
-    let debug_str = format!("{:?}", status);
+    let debug_str = format!("{status:?}");
 
     assert!(debug_str.contains("Critical"));
 }

@@ -255,7 +255,7 @@ mod tests {
         let receipt_dir = home.join("receipts");
         let entries: Vec<_> = std::fs::read_dir(&receipt_dir)
             .expect("read receipts directory")
-            .filter_map(|e| e.ok())
+            .filter_map(std::result::Result::ok)
             .collect();
         assert!(
             !entries.is_empty(),

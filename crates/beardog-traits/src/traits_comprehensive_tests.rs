@@ -380,7 +380,7 @@ fn test_version_comparison() {
 #[test]
 fn test_version_concatenation() {
     let version = utilities::get_unified_version();
-    let message = format!("Trait system version: {}", version);
+    let message = format!("Trait system version: {version}");
     assert!(message.contains("3.0.0"));
 }
 
@@ -406,13 +406,10 @@ fn test_validation_boolean_ops() {
 
 #[test]
 fn test_validation_match() {
-    match utilities::validate_unified_usage() {
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: core
-        // TEST_PRIORITY: normal
-        true => { /* validation passed */ }
-        false => panic!("Should validate successfully"),
-    }
+    assert!(
+        utilities::validate_unified_usage(),
+        "Should validate successfully"
+    );
 }
 
 // ============================================================================

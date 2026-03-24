@@ -265,7 +265,7 @@ mod tests {
     fn test_builder_debug_format() {
         let builder = TimeoutConfigBuilder::new().health_check_secs(10);
 
-        let debug_str = format!("{:?}", builder);
+        let debug_str = format!("{builder:?}");
         assert!(debug_str.contains("TimeoutConfigBuilder"));
     }
 

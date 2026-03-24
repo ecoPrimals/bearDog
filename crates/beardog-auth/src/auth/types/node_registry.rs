@@ -203,7 +203,7 @@ mod comprehensive_tests {
         let mut registry = InMemoryNodeRegistry::new();
         let node = create_test_node_info("register-node-1");
 
-        let result = registry.register_node(node.clone());
+        let result = registry.register_node(node);
         assert!(result.is_ok(), "Should register node successfully");
 
         // Verify node was registered
@@ -288,7 +288,7 @@ mod comprehensive_tests {
         // Verify all nodes registered
         for i in 1..=5 {
             let result = registry.get_node_info(&format!("node-{i}"));
-            assert!(result.is_ok(), "Node {} should exist", i);
+            assert!(result.is_ok(), "Node {i} should exist");
         }
     }
 

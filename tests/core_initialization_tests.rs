@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! `BearDog` Core Initialization Tests
 //!
 //! This module contains unit and integration tests for `BearDogCore` initialization,

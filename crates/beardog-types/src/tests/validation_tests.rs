@@ -145,8 +145,7 @@ mod tests {
         for port in ports {
             assert!(
                 port > 1023,
-                "Port {} should be above 1023 to avoid well-known port range",
-                port
+                "Port {port} should be above 1023 to avoid well-known port range"
             );
         }
     }
@@ -177,7 +176,7 @@ mod tests {
         let config = RuntimeConfig::default();
 
         // Should be able to debug print (useful for logging)
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
         assert!(!debug_str.is_empty());
         assert!(debug_str.contains("RuntimeConfig"));
     }

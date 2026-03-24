@@ -116,7 +116,7 @@ mod performance_tests {
         let config = PerformanceConfig::default();
         let engine = PerformanceEngine::new(config).unwrap();
 
-        let debug_str = format!("{:?}", engine);
+        let debug_str = format!("{engine:?}");
         assert!(debug_str.contains("PerformanceEngine"));
     }
 

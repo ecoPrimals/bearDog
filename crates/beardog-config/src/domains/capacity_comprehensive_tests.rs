@@ -54,7 +54,9 @@ mod tests {
         let mut env = HashMap::new();
         env.insert("BEARDOG_CHANNEL_BUFFER", "2000");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config.default_channel_buffer, 2000);
     }
@@ -64,7 +66,9 @@ mod tests {
         let mut env = HashMap::new();
         env.insert("BEARDOG_DISCOVERY_QUEUE_SIZE", "500");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config.discovery_queue_size, 500);
     }
@@ -74,7 +78,9 @@ mod tests {
         let mut env = HashMap::new();
         env.insert("BEARDOG_EVENT_BUS_CAPACITY", "50000");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config.event_bus_capacity, 50000);
     }
@@ -84,7 +90,9 @@ mod tests {
         let mut env = HashMap::new();
         env.insert("BEARDOG_MAX_CONNECTIONS", "500");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config.max_connections, 500);
     }
@@ -94,7 +102,9 @@ mod tests {
         let mut env = HashMap::new();
         env.insert("BEARDOG_MIN_IDLE_CONNECTIONS", "50");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config.min_idle_connections, 50);
     }
@@ -104,7 +114,9 @@ mod tests {
         let mut env = HashMap::new();
         env.insert("BEARDOG_CONNECTION_POOL_TIMEOUT_SECS", "60");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config.connection_pool_timeout_secs, 60);
     }
@@ -114,9 +126,11 @@ mod tests {
         let mut env = HashMap::new();
         env.insert("BEARDOG_MAX_MESSAGE_SIZE_BYTES", "52428800"); // 50 MB
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
-        assert_eq!(config.max_message_size_bytes, 52428800);
+        assert_eq!(config.max_message_size_bytes, 52_428_800);
     }
 
     #[test]
@@ -124,7 +138,9 @@ mod tests {
         let mut env = HashMap::new();
         env.insert("BEARDOG_BUFFER_POOL_SIZE", "4096");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config.buffer_pool_size, 4096);
     }
@@ -134,7 +150,9 @@ mod tests {
         let mut env = HashMap::new();
         env.insert("BEARDOG_CACHE_MAX_ENTRIES", "50000");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config.cache_max_entries, 50000);
     }
@@ -152,7 +170,9 @@ mod tests {
         env.insert("BEARDOG_BUFFER_POOL_SIZE", "2048");
         env.insert("BEARDOG_CACHE_MAX_ENTRIES", "30000");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config.default_channel_buffer, 3000);
         assert_eq!(config.discovery_queue_size, 300);
@@ -160,7 +180,7 @@ mod tests {
         assert_eq!(config.max_connections, 300);
         assert_eq!(config.min_idle_connections, 30);
         assert_eq!(config.connection_pool_timeout_secs, 90);
-        assert_eq!(config.max_message_size_bytes, 31457280);
+        assert_eq!(config.max_message_size_bytes, 31_457_280);
         assert_eq!(config.buffer_pool_size, 2048);
         assert_eq!(config.cache_max_entries, 30000);
     }
@@ -171,7 +191,9 @@ mod tests {
         env.insert("BEARDOG_CHANNEL_BUFFER", "invalid");
         env.insert("BEARDOG_MAX_CONNECTIONS", "not_a_number");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         // Should use defaults when parsing fails
         assert_eq!(config.default_channel_buffer, 1000);
@@ -184,7 +206,9 @@ mod tests {
         env.insert("BEARDOG_MAX_CONNECTIONS", "200");
         env.insert("BEARDOG_CACHE_MAX_ENTRIES", "20000");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         // Overridden values
         assert_eq!(config.max_connections, 200);
@@ -236,7 +260,9 @@ mod tests {
         env.insert("BEARDOG_MAX_CONNECTIONS", "10");
         env.insert("BEARDOG_CACHE_MAX_ENTRIES", "1000");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config.default_channel_buffer, 100);
         assert_eq!(config.max_connections, 10);
@@ -251,12 +277,14 @@ mod tests {
         env.insert("BEARDOG_MAX_CONNECTIONS", "1000");
         env.insert("BEARDOG_CACHE_MAX_ENTRIES", "100000");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config.default_channel_buffer, 10000);
-        assert_eq!(config.event_bus_capacity, 100000);
+        assert_eq!(config.event_bus_capacity, 100_000);
         assert_eq!(config.max_connections, 1000);
-        assert_eq!(config.cache_max_entries, 100000);
+        assert_eq!(config.cache_max_entries, 100_000);
     }
 
     #[test]
@@ -264,9 +292,11 @@ mod tests {
         let mut env = HashMap::new();
         env.insert("BEARDOG_MAX_MESSAGE_SIZE_BYTES", "104857600"); // 100 MB
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
-        assert_eq!(config.max_message_size_bytes, 104857600);
+        assert_eq!(config.max_message_size_bytes, 104_857_600);
     }
 
     // ============================================================================
@@ -284,7 +314,7 @@ mod tests {
     #[test]
     fn test_debug() {
         let config = CapacityConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
 
         assert!(debug_str.contains("CapacityConfig"));
     }
@@ -296,7 +326,9 @@ mod tests {
 
         let mut env = HashMap::new();
         env.insert("BEARDOG_MAX_CONNECTIONS", "200");
-        let config3 = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config3 = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config1, config2);
         assert_ne!(config1, config3);
@@ -322,7 +354,9 @@ mod tests {
         env.insert("BEARDOG_MAX_CONNECTIONS", "500");
         env.insert("BEARDOG_CACHE_MAX_ENTRIES", "50000");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         let json = serde_json::to_string(&config).expect("Should serialize");
         let deserialized: CapacityConfig = serde_json::from_str(&json).expect("Should deserialize");
@@ -341,7 +375,9 @@ mod tests {
         env.insert("BEARDOG_CHANNEL_BUFFER", "0");
         env.insert("BEARDOG_MAX_CONNECTIONS", "0");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config.default_channel_buffer, 0);
         assert_eq!(config.max_connections, 0);
@@ -353,10 +389,12 @@ mod tests {
         env.insert("BEARDOG_EVENT_BUS_CAPACITY", "1000000");
         env.insert("BEARDOG_CACHE_MAX_ENTRIES", "10000000");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
-        assert_eq!(config.event_bus_capacity, 1000000);
-        assert_eq!(config.cache_max_entries, 10000000);
+        assert_eq!(config.event_bus_capacity, 1_000_000);
+        assert_eq!(config.cache_max_entries, 10_000_000);
     }
 
     #[test]
@@ -364,7 +402,9 @@ mod tests {
         let mut env = HashMap::new();
         env.insert("BEARDOG_MAX_CONNECTIONS", "-100");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         // Should use default when parsing fails
         assert_eq!(config.max_connections, 100);
@@ -375,7 +415,9 @@ mod tests {
         let mut env = HashMap::new();
         env.insert("BEARDOG_CHANNEL_BUFFER", "");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         // Should use default when parsing fails
         assert_eq!(config.default_channel_buffer, 1000);
@@ -386,7 +428,9 @@ mod tests {
         let mut env = HashMap::new();
         env.insert("BEARDOG_DISCOVERY_QUEUE_SIZE", "  ");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         // Should use default when parsing fails
         assert_eq!(config.discovery_queue_size, 100);
@@ -407,7 +451,9 @@ mod tests {
         env.insert("BEARDOG_MAX_MESSAGE_SIZE_BYTES", "52428800");
         env.insert("BEARDOG_CACHE_MAX_ENTRIES", "50000");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config.default_channel_buffer, 5000);
         assert_eq!(config.max_connections, 500);
@@ -422,7 +468,9 @@ mod tests {
         env.insert("BEARDOG_MAX_CONNECTIONS", "5");
         env.insert("BEARDOG_CACHE_MAX_ENTRIES", "100");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config.default_channel_buffer, 10);
         assert_eq!(config.max_connections, 5);
@@ -438,7 +486,9 @@ mod tests {
         env.insert("BEARDOG_BUFFER_POOL_SIZE", "128");
         env.insert("BEARDOG_CACHE_MAX_ENTRIES", "500");
 
-        let config = CapacityConfig::from_env_provider(|key| env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config.default_channel_buffer, 50);
         assert_eq!(config.event_bus_capacity, 1000);
@@ -457,13 +507,17 @@ mod tests {
         let mut env1 = HashMap::new();
         env1.insert("BEARDOG_MAX_CONNECTIONS", "100");
 
-        let config1 = CapacityConfig::from_env_provider(|key| env1.get(key).map(|s| s.to_string()));
+        let config1 = CapacityConfig::from_env_provider(|key| {
+            env1.get(key).map(std::string::ToString::to_string)
+        });
 
         // Test 2 with different values (running concurrently safe)
         let mut env2 = HashMap::new();
         env2.insert("BEARDOG_MAX_CONNECTIONS", "200");
 
-        let config2 = CapacityConfig::from_env_provider(|key| env2.get(key).map(|s| s.to_string()));
+        let config2 = CapacityConfig::from_env_provider(|key| {
+            env2.get(key).map(std::string::ToString::to_string)
+        });
 
         // Should be different and isolated
         assert_eq!(config1.max_connections, 100);

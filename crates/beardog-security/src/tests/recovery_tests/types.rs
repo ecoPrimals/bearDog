@@ -343,16 +343,15 @@ impl RecoveryAttemptTracker {
     }
 
     pub fn attempt_count(&self, user_id: &str) -> usize {
-        self.attempts.get(user_id).map_or(0, |v| v.len())
+        self.attempts.get(user_id).map_or(0, std::vec::Vec::len)
     }
 
     pub fn can_attempt(&self, user_id: &str, policy: &RecoveryPolicy) -> bool {
-        if let Some(attempts) = self.attempts.get(user_id) {
-            if let Some(last_attempt) = attempts.last() {
-                if last_attempt.elapsed() < policy.cooldown {
-                    return false;
-                }
-            }
+        if let Some(attempts) = self.attempts.get(user_id)
+            && let Some(last_attempt) = attempts.last()
+            && last_attempt.elapsed() < policy.cooldown
+        {
+            return false;
         }
         self.under_attempt_limit(user_id, policy)
     }

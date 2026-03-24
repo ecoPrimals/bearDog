@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![forbid(unsafe_code)]
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+#![cfg_attr(test, allow(clippy::float_cmp))]
 
 //! BearDog CLI Library
 //!
@@ -166,3 +168,6 @@ pub struct DoctorArgs {
     #[arg(long)]
     pub component: Option<String>,
 }
+
+#[cfg(test)]
+mod coverage_expansion_march_2026;

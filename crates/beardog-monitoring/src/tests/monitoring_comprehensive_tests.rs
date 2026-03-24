@@ -164,7 +164,7 @@ mod tests {
     #[test]
     fn test_dashboard_url_format() {
         const TEST_GRAFANA_PORT: u16 = 3000;
-        let url = format!("http://grafana.local:{}/dashboard", TEST_GRAFANA_PORT);
+        let url = format!("http://grafana.local:{TEST_GRAFANA_PORT}/dashboard");
         assert!(url.starts_with("http"));
         assert!(url.contains("dashboard"));
     }

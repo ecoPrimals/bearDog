@@ -131,7 +131,7 @@ mod tests {
         };
 
         let cached = CachedVerification {
-            result: result.clone(),
+            result,
             cached_at: now,
             expires_at: now + chrono::Duration::hours(1),
         };

@@ -41,7 +41,7 @@ async fn test_generate_genetic_id() {
         device_id: "test-witness".into(),
         public_key: vec![1u8; 32],
         physical_channel: PhysicalChannelType::HardwareKey,
-        timestamp: 1735000000,
+        timestamp: 1_735_000_000,
         signature: vec![0u8; 64],
     };
 
@@ -66,7 +66,7 @@ async fn test_create_lineage_from_witness() {
         device_id: "witness-001".into(),
         public_key: vec![1u8; 32],
         physical_channel: PhysicalChannelType::HardwareKey,
-        timestamp: 1735000000,
+        timestamp: 1_735_000_000,
         signature: vec![0u8; 64],
     };
 
@@ -101,7 +101,7 @@ async fn test_genesis_with_hardware_entropy() {
         device_id: "test-device".into(),
         public_key: vec![1u8; 32],
         physical_channel: PhysicalChannelType::HardwareKey,
-        timestamp: 1735000000,
+        timestamp: 1_735_000_000,
         signature: vec![2u8; 64],
     };
 
@@ -120,7 +120,7 @@ async fn test_genesis_without_hardware_entropy() {
         device_id: "test-device".into(),
         public_key: vec![1u8; 32],
         physical_channel: PhysicalChannelType::HardwareKey,
-        timestamp: 1735000000,
+        timestamp: 1_735_000_000,
         signature: vec![2u8; 64],
     };
 
@@ -146,7 +146,7 @@ async fn test_hardware_entropy_uniqueness() {
         device_id: "test-device".into(),
         public_key: vec![1u8; 32],
         physical_channel: PhysicalChannelType::HardwareKey,
-        timestamp: 1735000000,
+        timestamp: 1_735_000_000,
         signature: vec![2u8; 64],
     };
 
@@ -171,7 +171,7 @@ async fn test_hardware_entropy_failure_fallback() {
         device_id: "test-device".into(),
         public_key: vec![1u8; 32],
         physical_channel: PhysicalChannelType::HardwareKey,
-        timestamp: 1735000000,
+        timestamp: 1_735_000_000,
         signature: vec![2u8; 64],
     };
 
@@ -193,7 +193,7 @@ async fn test_hardware_entropy_determinism() {
         device_id: "test-device".into(),
         public_key: vec![1u8; 32],
         physical_channel: PhysicalChannelType::HardwareKey,
-        timestamp: 1735000000,
+        timestamp: 1_735_000_000,
         signature: vec![2u8; 64],
     };
 
@@ -211,7 +211,7 @@ async fn test_verify_witness_authority_permissionless_mode() {
         device_id: "any-device".into(),
         public_key: vec![1u8; 32],
         physical_channel: PhysicalChannelType::HardwareKey,
-        timestamp: 1735000000,
+        timestamp: 1_735_000_000,
         signature: vec![0u8; 64],
     };
 
@@ -227,7 +227,7 @@ async fn test_verify_witness_authority_invalid_pubkey_length() {
         device_id: "device".into(),
         public_key: vec![1u8; 16],
         physical_channel: PhysicalChannelType::HardwareKey,
-        timestamp: 1735000000,
+        timestamp: 1_735_000_000,
         signature: vec![0u8; 64],
     };
 
@@ -243,7 +243,7 @@ async fn test_verify_witness_authority_empty_signature() {
         device_id: "device".into(),
         public_key: vec![1u8; 32],
         physical_channel: PhysicalChannelType::HardwareKey,
-        timestamp: 1735000000,
+        timestamp: 1_735_000_000,
         signature: vec![],
     };
 
@@ -259,7 +259,7 @@ async fn test_verify_witness_authority_unknown_mode() {
         device_id: "device".into(),
         public_key: vec![1u8; 32],
         physical_channel: PhysicalChannelType::HardwareKey,
-        timestamp: 1735000000,
+        timestamp: 1_735_000_000,
         signature: vec![0u8; 64],
     };
 
@@ -276,7 +276,7 @@ async fn test_verify_witness_authority_pubkey_mismatch() {
         device_id: "device".into(),
         public_key: vec![2u8; 32],
         physical_channel: PhysicalChannelType::HardwareKey,
-        timestamp: 1735000000,
+        timestamp: 1_735_000_000,
         signature: vec![0u8; 64],
     };
 
@@ -293,7 +293,7 @@ async fn test_conduct_genesis_ceremony_failed_proof() {
         device_id: "witness-device".into(),
         public_key: vec![1u8; 32],
         physical_channel: PhysicalChannelType::HardwareKey,
-        timestamp: 1735000000,
+        timestamp: 1_735_000_000,
         signature: vec![0u8; 64],
     };
 
@@ -302,7 +302,7 @@ async fn test_conduct_genesis_ceremony_failed_proof() {
         attestation: None,
         verification_codes: None,
         pairing_data: None,
-        timestamp: 1735000000,
+        timestamp: 1_735_000_000,
     };
 
     let result = provider
@@ -323,7 +323,7 @@ async fn test_conduct_genesis_ceremony_lineage_failure() {
         device_id: "unregistered-device".into(),
         public_key: vec![1u8; 32],
         physical_channel: PhysicalChannelType::QrCodeWithOob,
-        timestamp: 1735000000,
+        timestamp: 1_735_000_000,
         signature: vec![0u8; 64],
     };
 
@@ -332,7 +332,7 @@ async fn test_conduct_genesis_ceremony_lineage_failure() {
         attestation: None,
         verification_codes: Some(vec!["CODE123".to_string()]),
         pairing_data: None,
-        timestamp: 1735000000,
+        timestamp: 1_735_000_000,
     };
 
     let result = provider

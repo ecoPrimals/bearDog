@@ -73,7 +73,7 @@ impl SovereigntyPolicy {
         self
     }
 
-    pub fn inherit_from(mut self, parent: &SovereigntyPolicy) -> Self {
+    pub fn inherit_from(mut self, parent: &Self) -> Self {
         self.data_residency = parent.data_residency;
         for reg in &parent.regulations {
             self.regulations.insert(*reg);

@@ -19,7 +19,7 @@ mod adapter_coverage_tests {
         let _adapter = UniversalAdapter::new(AdapterConfig::default());
 
         let invalid_request = CapabilityRequest {
-            capability: "".to_string(),
+            capability: String::new(),
             operation: "execute".to_string(),
             parameters: HashMap::new(),
         };
@@ -281,10 +281,7 @@ mod adapter_coverage_tests {
 
         // Register multiple instances of same capability
         for i in 1..=3 {
-            adapter.register_capability(
-                format!("service-{}", i),
-                format!("http://service-{}:8080", i),
-            );
+            adapter.register_capability(format!("service-{i}"), format!("http://service-{i}:8080"));
         }
 
         let capabilities = adapter.get_capabilities();

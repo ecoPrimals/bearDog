@@ -469,7 +469,7 @@ mod hsm_status_tests {
     #[test]
     fn test_hsm_status_clone() {
         let s1 = HsmStatus::default();
-        let s2 = s1.clone();
+        let s2 = s1;
         let _ = format!("{s2:?}");
     }
 }
@@ -540,7 +540,7 @@ mod metrics_tests {
     #[test]
     fn test_system_metrics_clone() {
         let m1 = SystemMetrics::default();
-        let m2 = m1.clone();
+        let m2 = m1;
         let _ = format!("{m2:?}");
     }
 }
@@ -619,7 +619,7 @@ mod workflow_tests_gap {
     #[test]
     fn test_workflow_clone() {
         let w1 = Workflow::default();
-        let w2 = w1.clone();
+        let w2 = w1;
         let _ = format!("{w2:?}");
     }
 }
@@ -707,7 +707,7 @@ mod hsm_discovery_tests {
     #[test]
     fn test_hsm_discovery_config_clone() {
         let c1 = HsmDiscoveryConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }

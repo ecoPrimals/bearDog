@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 
 //! Chaos / malformed input tests.
 
@@ -191,10 +192,10 @@ async fn test_chaos_concurrent_random_operations() {
 
     let mut successes = 0;
     for handle in handles {
-        if let Ok(result) = handle.await {
-            if result.is_ok() {
-                successes += 1;
-            }
+        if let Ok(result) = handle.await
+            && result.is_ok()
+        {
+            successes += 1;
         }
     }
 

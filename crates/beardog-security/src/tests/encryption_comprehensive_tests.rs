@@ -298,7 +298,7 @@ mod tests {
             // TEST_CATEGORY: integration
             // TEST_DOMAIN: security
             // TEST_PRIORITY: critical
-            assert_eq!(data, decrypted, "Failed at size {}", size);
+            assert_eq!(data, decrypted, "Failed at size {size}");
         }
     }
 

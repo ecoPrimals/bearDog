@@ -119,7 +119,7 @@ mod tests {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
         // TEST_PRIORITY: normal
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
         assert!(!debug_str.is_empty());
     }
 
@@ -185,7 +185,7 @@ mod tests {
     fn test_session_timeout_duration_properties() {
         let timeout = Duration::from_secs(3600);
         assert_eq!(timeout.as_secs(), 3600);
-        assert_eq!(timeout.as_millis(), 3600000);
+        assert_eq!(timeout.as_millis(), 3_600_000);
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
         // TEST_PRIORITY: critical

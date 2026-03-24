@@ -491,7 +491,7 @@ fn test_pricing_calculation_integration() {
 
     // Calculate estimated price
     let volume_charge = indicator.usage_volume as f64 * pricing.volume_multiplier;
-    let complexity_factor = 1.0 + (indicator.integration_complexity * 0.5);
+    let complexity_factor = indicator.integration_complexity.mul_add(0.5, 1.0);
     let estimated_price = (pricing.base_cost + volume_charge) * complexity_factor;
 
     assert!(

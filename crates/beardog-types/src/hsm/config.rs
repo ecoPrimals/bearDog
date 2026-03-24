@@ -5,6 +5,7 @@
 //! Provides production-ready configuration types for HSM operations,
 //! replacing temporary stub implementations.
 
+use crate::constants::time;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::time::Duration;
@@ -209,7 +210,7 @@ impl KeyStoreConfig {
             encrypted: true,
             cache_size: 1024,
             enable_backup: true,
-            backup_interval_secs: 3600,
+            backup_interval_secs: time::SECONDS_PER_HOUR,
             max_key_age_days: 365,
             enable_key_rotation: true,
             rotation_interval_days: 90,
@@ -290,7 +291,7 @@ const fn default_cache_size() -> usize {
     1024
 }
 const fn default_backup_interval_secs() -> u64 {
-    3600
+    time::SECONDS_PER_HOUR
 }
 const fn default_rotation_interval_days() -> u32 {
     90

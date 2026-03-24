@@ -238,18 +238,18 @@ mod tests {
         let chacha = EncryptionAlgorithm::ChaCha20Poly1305;
 
         // Test Debug
-        assert_eq!(format!("{:?}", aes), "Aes256Gcm");
-        assert_eq!(format!("{:?}", chacha), "ChaCha20Poly1305");
+        assert_eq!(format!("{aes:?}"), "Aes256Gcm");
+        assert_eq!(format!("{chacha:?}"), "ChaCha20Poly1305");
 
         // Test Clone
-        let aes_clone = aes.clone();
-        assert_eq!(format!("{:?}", aes_clone), "Aes256Gcm");
+        let aes_clone = aes;
+        assert_eq!(format!("{aes_clone:?}"), "Aes256Gcm");
     }
 
     #[test]
     fn test_algorithm_default() {
         let default_algo = EncryptionAlgorithm::default();
-        assert_eq!(format!("{:?}", default_algo), "Aes256Gcm");
+        assert_eq!(format!("{default_algo:?}"), "Aes256Gcm");
     }
 
     #[test]
@@ -289,7 +289,7 @@ mod tests {
             let key = Arc::clone(&key);
 
             let handle = thread::spawn(move || {
-                let plaintext = format!("message {}", i);
+                let plaintext = format!("message {i}");
                 let ciphertext = service.encrypt(plaintext.as_bytes(), &key).unwrap();
                 service.decrypt(&ciphertext, &key).unwrap()
             });
@@ -328,7 +328,7 @@ mod tests {
             let plaintext = vec![0x42u8; size];
             let ciphertext = service.encrypt(&plaintext, &key)?;
             let decrypted = service.decrypt(&ciphertext, &key)?;
-            assert_eq!(decrypted, plaintext, "Failed for size {}", size);
+            assert_eq!(decrypted, plaintext, "Failed for size {size}");
         }
 
         Ok(())

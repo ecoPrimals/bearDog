@@ -13,7 +13,7 @@ mod config_hsm_mod_tests {
     fn test_unified_hsm_config_default() {
         let c = UnifiedHsmConfig::default();
         let _ = format!("{c:?}");
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 
@@ -94,7 +94,7 @@ mod monitoring_core_tests {
     fn test_core_monitoring_config_default() {
         let c = CoreMonitoringConfig::default();
         let _ = format!("{c:?}");
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 
@@ -233,7 +233,7 @@ mod hsm_keys_tests_extra {
     fn test_hsm_key_default() {
         let k = HsmKey::default();
         let _ = format!("{k:?}");
-        let k2 = k.clone();
+        let k2 = k;
         let _ = format!("{k2:?}");
     }
 
@@ -281,6 +281,7 @@ mod hsm_config_tests_extra {
     use crate::canonical::hsm::config::*;
 
     #[test]
+    #[allow(deprecated)]
     fn test_legacy_hsm_provider_type_default() {
         let t = LegacyHsmProviderType::default();
         let _ = format!("{t:?}");

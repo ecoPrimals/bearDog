@@ -310,7 +310,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    #[ignore] // Requires a UPA endpoint (env / capability)
+    #[ignore = "Requires a UPA endpoint (env / capability)"]
     async fn test_connect() {
         let client = UpaClient::new(UpaClientConfig::default()).await;
         match client {

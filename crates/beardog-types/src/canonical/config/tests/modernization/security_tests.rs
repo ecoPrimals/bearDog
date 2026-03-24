@@ -19,7 +19,7 @@ use std::time::Duration;
 #[test]
 fn test_failover_configuration_with_defaults() {
     let config = network::connection::FailoverConfiguration::with_defaults();
-    assert_eq!(config.enabled, true);
+    assert!(config.enabled);
     assert_eq!(
         config.detection_timeout_seconds,
         network::connection::FailoverConfiguration::DEFAULT_DETECTION_TIMEOUT_SECS
@@ -50,7 +50,7 @@ fn test_failover_configuration_from_env() {
 #[test]
 fn test_rate_limiting_config_with_defaults() {
     let config = RateLimitingConfig::with_defaults();
-    assert_eq!(config.enabled, true);
+    assert!(config.enabled);
     assert_eq!(
         config.max_requests_per_minute,
         RateLimitingConfig::DEFAULT_MAX_REQUESTS_PER_MINUTE
@@ -96,7 +96,7 @@ fn test_threading_config_with_defaults() {
         system::ThreadingConfig::DEFAULT_BLOCKING_THREADS
     );
     assert_eq!(config.stack_size, None);
-    assert_eq!(config.enable_tls_optimization, true);
+    assert!(config.enable_tls_optimization);
 }
 
 /// Test ThreadingConfig::from_env()
@@ -135,8 +135,8 @@ fn test_network_resource_config_with_defaults() {
         config.write_timeout,
         Duration::from_secs(NetworkResourceConfig::DEFAULT_WRITE_TIMEOUT_SECS)
     );
-    assert_eq!(config.keep_alive, true);
-    assert_eq!(config.tcp_nodelay, true);
+    assert!(config.keep_alive);
+    assert!(config.tcp_nodelay);
 }
 
 /// Test NetworkResourceConfig::from_env()

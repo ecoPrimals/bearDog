@@ -16,7 +16,7 @@ mod error_edge_cases {
     #[test]
     fn test_error_with_empty_message() {
         let error = BearDogError::validation("");
-        let display = format!("{}", error);
+        let display = format!("{error}");
         // Empty message should still produce valid error
         assert!(!display.is_empty());
     }
@@ -24,7 +24,7 @@ mod error_edge_cases {
     #[test]
     fn test_error_with_whitespace_only() {
         let error = BearDogError::validation("   ");
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(!display.is_empty());
     }
 
@@ -32,7 +32,7 @@ mod error_edge_cases {
     fn test_error_with_very_long_message() {
         let long_message = "x".repeat(10000);
         let error = BearDogError::validation(&long_message);
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains(&long_message));
     }
 
@@ -40,7 +40,7 @@ mod error_edge_cases {
     fn test_error_with_unicode() {
         let unicode_msg = "Error: 测试 🔐 🐻";
         let error = BearDogError::validation(unicode_msg);
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("测试"));
     }
 
@@ -48,7 +48,7 @@ mod error_edge_cases {
     fn test_error_with_newlines() {
         let msg = "Line 1\nLine 2\nLine 3";
         let error = BearDogError::validation(msg);
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("Line 1"));
     }
 
@@ -111,14 +111,14 @@ mod error_edge_cases {
     #[test]
     fn test_error_display_format() {
         let error = BearDogError::security("Authentication failed".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("Authentication failed"));
     }
 
     #[test]
     fn test_error_debug_format() {
         let error = BearDogError::security("Debug test".to_string());
-        let debug = format!("{:?}", error);
+        let debug = format!("{error:?}");
         assert!(!debug.is_empty());
         assert!(debug.len() > 10); // Should have some structure
     }
@@ -133,7 +133,7 @@ mod error_edge_cases {
         ];
 
         for error in errors {
-            let display = format!("{}", error);
+            let display = format!("{error}");
             assert!(!display.is_empty());
             assert!(display.len() > 2);
         }
@@ -162,7 +162,7 @@ mod error_edge_cases {
 
         if let Err(e) = with_context {
             assert!(matches!(e, BearDogError::Security { .. }));
-            let display = format!("{}", e);
+            let display = format!("{e}");
             assert!(display.contains("Security violation"));
         }
     }
@@ -363,8 +363,8 @@ mod error_edge_cases {
         let original = BearDogError::validation("test error");
         let cloned = original.clone();
 
-        let original_str = format!("{}", original);
-        let cloned_str = format!("{}", cloned);
+        let original_str = format!("{original}");
+        let cloned_str = format!("{cloned}");
         assert_eq!(original_str, cloned_str);
     }
 
@@ -391,11 +391,11 @@ mod error_edge_cases {
         let error_clone = Arc::clone(&error);
 
         let handle = thread::spawn(move || {
-            let display = format!("{}", *error_clone);
+            let display = format!("{error_clone}");
             assert!(display.contains("concurrent test"));
         });
 
-        let display = format!("{}", *error);
+        let display = format!("{error}");
         assert!(display.contains("concurrent test"));
 
         handle.join().expect("Thread should complete");
@@ -440,7 +440,7 @@ mod error_edge_cases {
     fn test_str_to_error() {
         let str_error = "test error";
         let error = BearDogError::validation(str_error);
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("test error"));
     }
 
@@ -451,7 +451,7 @@ mod error_edge_cases {
     #[test]
     fn test_authentication_error_scenario() {
         let error = authentication_error("Invalid credentials");
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("Invalid credentials"));
         assert!(matches!(error, BearDogError::Security { .. }));
     }
@@ -459,7 +459,7 @@ mod error_edge_cases {
     #[test]
     fn test_authorization_error_scenario() {
         let error = authorization_error("/api/users", "delete");
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("/api/users"));
         assert!(matches!(error, BearDogError::Security { .. }));
     }
@@ -467,7 +467,7 @@ mod error_edge_cases {
     #[test]
     fn test_crypto_error_scenario() {
         let error = crypto_error("key_generation", "Key generation failed");
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("Key generation failed"));
         assert!(matches!(error, BearDogError::Security { .. }));
     }
@@ -475,7 +475,7 @@ mod error_edge_cases {
     #[test]
     fn test_io_error_scenario() {
         let error = io_error("read_file", "File not found");
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("File not found"));
         assert!(matches!(error, BearDogError::System { .. }));
     }
@@ -483,7 +483,7 @@ mod error_edge_cases {
     #[test]
     fn test_validation_error_scenario() {
         let error = validation_error("email", "Email format invalid");
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("Email format invalid"));
         assert!(matches!(error, BearDogError::Business { .. }));
     }
@@ -491,7 +491,7 @@ mod error_edge_cases {
     #[test]
     fn test_not_implemented_scenario() {
         let error = not_implemented("Feature coming soon");
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("Feature coming soon"));
         assert!(matches!(error, BearDogError::System { .. }));
     }
@@ -499,7 +499,7 @@ mod error_edge_cases {
     #[test]
     fn test_unsupported_operation_scenario() {
         let error = unsupported_operation("Platform not supported");
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("Platform not supported"));
         assert!(matches!(error, BearDogError::System { .. }));
     }
@@ -528,7 +528,7 @@ mod error_edge_cases {
     fn test_error_with_special_characters() {
         let special = "Error: \t\n\r\\ \" ' {}[]()<>";
         let error = BearDogError::validation(special);
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(!display.is_empty());
     }
 }

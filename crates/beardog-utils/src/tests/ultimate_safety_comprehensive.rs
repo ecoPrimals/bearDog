@@ -289,11 +289,11 @@ fn test_safety_error_display() {
         attempted_size: 100,
         available_space: 50,
     };
-    let display = format!("{}", error1);
+    let display = format!("{error1}");
     assert!(display.contains("Buffer overflow"));
 
     let error2 = SafetyError::InvalidReference;
-    let display = format!("{}", error2);
+    let display = format!("{error2}");
     assert!(display.contains("Invalid reference"));
 }
 
@@ -314,7 +314,7 @@ fn test_pool_stats_clone() {
         leaks_prevented: 0,
     };
 
-    let cloned = stats.clone();
+    let cloned = stats;
     assert_eq!(cloned.objects_in_pool, 5);
     assert_eq!(cloned.objects_borrowed, 2);
 }
@@ -350,7 +350,7 @@ fn test_safe_reference_with_string() {
     // TEST_PRIORITY: normal
     let safe_ref = SafeReference::new(String::from("Hello"));
 
-    let length = safe_ref.safe_read(|s| s.len()).unwrap();
+    let length = safe_ref.safe_read(std::string::String::len).unwrap();
     assert_eq!(length, 5);
 
     safe_ref.safe_write(|s| s.push_str(" World")).unwrap();
@@ -358,7 +358,7 @@ fn test_safe_reference_with_string() {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    let new_value = safe_ref.safe_read(|s| s.clone()).unwrap();
+    let new_value = safe_ref.safe_read(std::clone::Clone::clone).unwrap();
     assert_eq!(new_value, "Hello World");
 }
 

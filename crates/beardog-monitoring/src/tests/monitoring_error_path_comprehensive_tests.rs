@@ -195,7 +195,7 @@ async fn test_concurrent_metric_collection_with_failures() -> Result<()> {
                 collector.clear_failure();
             }
 
-            let result = collector.collect(&format!("metric_{}", i), i as f64).await;
+            let result = collector.collect(&format!("metric_{i}"), i as f64).await;
 
             // Verify expected behavior
             if i % 10 == 0 {
@@ -290,7 +290,7 @@ async fn test_concurrent_storage_operations() -> Result<()> {
         let storage = Arc::clone(&storage);
         handles.push(tokio::spawn(async move {
             storage
-                .write(format!("data_{}", i))
+                .write(format!("data_{i}"))
                 .await
                 .expect("write should succeed");
         }));
@@ -357,7 +357,7 @@ async fn test_concurrent_metric_writes_no_data_loss() -> Result<()> {
         let collector = Arc::clone(&collector);
         handles.push(tokio::spawn(async move {
             collector
-                .collect(&format!("metric_{}", i), i as f64)
+                .collect(&format!("metric_{i}"), i as f64)
                 .await
                 .expect("collect should succeed");
         }));
@@ -386,7 +386,7 @@ async fn test_concurrent_read_write_consistency() -> Result<()> {
     let writer_handle = tokio::spawn(async move {
         for i in 0..100 {
             storage_writer
-                .write(format!("data_{}", i))
+                .write(format!("data_{i}"))
                 .await
                 .expect("write should succeed");
             tokio::task::yield_now().await;
@@ -426,9 +426,7 @@ async fn test_metric_buffer_overflow() -> Result<()> {
 
     // Collect a large number of metrics
     for i in 0..10_000 {
-        collector
-            .collect(&format!("metric_{}", i), i as f64)
-            .await?;
+        collector.collect(&format!("metric_{i}"), i as f64).await?;
     }
 
     // Verify all collected
@@ -445,7 +443,7 @@ async fn test_storage_capacity_limits() -> Result<()> {
 
     // Write a large amount of data
     for i in 0..1_000 {
-        storage.write(format!("data_{}", i)).await?;
+        storage.write(format!("data_{i}")).await?;
     }
 
     // Verify all data persisted
@@ -468,7 +466,7 @@ async fn test_memory_pressure_graceful_degradation() -> Result<()> {
             // Each task collects multiple metrics
             for j in 0..20 {
                 let _ = collector
-                    .collect(&format!("metric_{}_{}", i, j), (i * j) as f64)
+                    .collect(&format!("metric_{i}_{j}"), (i * j) as f64)
                     .await;
                 tokio::task::yield_now().await;
             }
@@ -504,7 +502,7 @@ async fn test_automatic_recovery_from_transient_failures() -> Result<()> {
             collector.clear_failure();
         }
 
-        let result = collector.collect(&format!("metric_{}", i), i as f64).await;
+        let result = collector.collect(&format!("metric_{i}"), i as f64).await;
 
         if i % 2 == 0 {
             assert!(result.is_err());
@@ -535,8 +533,8 @@ async fn test_graceful_shutdown_during_active_operations() -> Result<()> {
                 _ = shutdown_rx.recv() => {
                     break;
                 }
-                _ = async {
-                    let _ = collector_clone.collect(&format!("metric_{}", count), count as f64).await;
+                () = async {
+                    let _ = collector_clone.collect(&format!("metric_{count}"), count as f64).await;
                     count += 1;
                     tokio::task::yield_now().await;
                 } => {}
@@ -604,7 +602,7 @@ async fn test_partial_failure_handling() -> Result<()> {
                 collector.clear_failure();
             }
 
-            collector.collect(&format!("metric_{}", i), i as f64).await
+            collector.collect(&format!("metric_{i}"), i as f64).await
         }));
     }
 
@@ -614,7 +612,7 @@ async fn test_partial_failure_handling() -> Result<()> {
 
     for handle in handles {
         match handle.await.unwrap() {
-            Ok(_) => success_count += 1,
+            Ok(()) => success_count += 1,
             Err(_) => failure_count += 1,
         }
     }
@@ -699,7 +697,7 @@ async fn test_rapid_failure_recovery_cycles() -> Result<()> {
             collector.clear_failure();
         }
 
-        let _ = collector.collect(&format!("metric_{}", i), i as f64).await;
+        let _ = collector.collect(&format!("metric_{i}"), i as f64).await;
     }
 
     // System should remain stable
@@ -726,7 +724,7 @@ async fn test_concurrent_failure_injection() -> Result<()> {
             }
             // else: no change
 
-            let _ = collector.collect(&format!("metric_{}", i), i as f64).await;
+            let _ = collector.collect(&format!("metric_{i}"), i as f64).await;
         }));
     }
 

@@ -59,7 +59,7 @@ mod genetics_manager_tests {
             authorization_genetics_enabled: false,
         };
 
-        let manager = GeneticsManager::with_config(config.clone());
+        let manager = GeneticsManager::with_config(config);
         assert!(!manager.config.entropy_collection_enabled);
         assert!(manager.config.genetic_spawning_enabled);
         assert!(!manager.config.ecosystem_evolution_enabled);
@@ -85,7 +85,7 @@ mod genetics_manager_tests {
     #[test]
     fn test_genetics_config_debug() {
         let config = GeneticsConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
         assert!(debug_str.contains("GeneticsConfig"));
         assert!(debug_str.contains("entropy_collection_enabled"));
     }
@@ -104,7 +104,7 @@ mod genetics_manager_tests {
     #[test]
     fn test_genetics_manager_debug() {
         let manager = GeneticsManager::new();
-        let debug_str = format!("{:?}", manager);
+        let debug_str = format!("{manager:?}");
         assert!(debug_str.contains("GeneticsManager"));
         assert!(debug_str.contains("config"));
     }
@@ -255,8 +255,8 @@ mod genetics_manager_tests {
     fn test_genetics_manager_multiple_clones() {
         let manager = GeneticsManager::new();
         let clone1 = manager.clone();
-        let clone2 = clone1.clone();
-        let clone3 = clone2.clone();
+        let clone2 = clone1;
+        let clone3 = clone2;
 
         // All clones should have same config
         assert_eq!(
@@ -415,7 +415,7 @@ mod genetics_edge_cases {
     #[test]
     fn test_manager_clone_independence() {
         let manager1 = GeneticsManager::new();
-        let manager2 = manager1.clone();
+        let manager2 = manager1;
 
         // Clones should be independent (not sharing mutable state)
         // Since GeneticsManager only has config and it's cloned,

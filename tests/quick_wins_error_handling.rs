@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! Quick Win Tests: Error Handling
 //!
 //! This module contains unit tests focused on verifying basic error handling patterns

@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 
 use super::*;
 
 #[test]
 fn test_device_manager_default_matches_new() {
-    assert!(format!("{:?}", DeviceManager::default()).contains("DeviceManager"));
+    let dm = DeviceManager::default();
+    assert!(format!("{dm:?}").contains("DeviceManager"));
     let _ = DeviceManager::new();
 }
 
@@ -267,7 +269,7 @@ fn test_device_info_debug_format() {
         capabilities: vec![],
         metadata: HashMap::new(),
     };
-    let dbg = format!("{:?}", info);
+    let dbg = format!("{info:?}");
     assert!(dbg.contains("dbg-test"));
     assert!(dbg.contains("Unknown"));
     assert!(dbg.contains("Disconnected"));
@@ -339,7 +341,8 @@ fn test_get_device_property_sdk_from_mock() {
 #[test]
 fn test_deploy_to_android_success_with_temp_apk() {
     let mut path = std::env::temp_dir();
-    path.push(format!("beardog_deploy_apk_{}.apk", std::process::id()));
+    let pid = std::process::id();
+    path.push(format!("beardog_deploy_apk_{pid}.apk"));
     std::fs::write(&path, b"dummy").expect("write apk");
     let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner::new()));
     let r = mgr.deploy_to_android("emulator-5554", path.to_str().expect("utf8"));
@@ -350,7 +353,8 @@ fn test_deploy_to_android_success_with_temp_apk() {
 #[test]
 fn test_deploy_to_android_adb_install_nonzero() {
     let mut path = std::env::temp_dir();
-    path.push(format!("beardog_deploy_fail_{}.apk", std::process::id()));
+    let pid = std::process::id();
+    path.push(format!("beardog_deploy_fail_{pid}.apk"));
     std::fs::write(&path, b"dummy").expect("write apk");
     let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner {
         fail_adb_install: true,
@@ -364,10 +368,8 @@ fn test_deploy_to_android_adb_install_nonzero() {
 #[test]
 fn test_deploy_to_android_stdout_without_success_token() {
     let mut path = std::env::temp_dir();
-    path.push(format!(
-        "beardog_deploy_ambiguous_{}.apk",
-        std::process::id()
-    ));
+    let pid = std::process::id();
+    path.push(format!("beardog_deploy_ambiguous_{pid}.apk"));
     std::fs::write(&path, b"dummy").expect("write apk");
     let mgr = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner {
         install_stdout_without_success_marker: true,
@@ -435,8 +437,7 @@ fn test_detect_android_devices_list_command_nonzero() {
         .expect_err("adb devices -l should fail");
     assert!(
         err.to_string().contains("adb command failed"),
-        "unexpected: {}",
-        err
+        "unexpected: {err}"
     );
 }
 
@@ -449,8 +450,7 @@ fn test_run_app_shell_am_failure() {
     let err = mgr.run_app(&[]).expect_err("am start should fail");
     assert!(
         err.to_string().contains("App launch failed") || err.to_string().contains("failed"),
-        "unexpected: {}",
-        err
+        "unexpected: {err}"
     );
 }
 
@@ -465,8 +465,7 @@ fn test_show_logs_follow_bounded_exit_failure() {
         .expect_err("logcat follow should report failure");
     assert!(
         err.to_string().contains("Logcat exited with error"),
-        "unexpected: {}",
-        err
+        "unexpected: {err}"
     );
 }
 

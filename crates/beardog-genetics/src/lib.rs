@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![forbid(unsafe_code)]
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+// Float tests compare exact constructed constants; epsilon would be noise vs. readability.
+#![cfg_attr(test, allow(clippy::float_cmp))]
 
 //! # `BearDog` Genetics - Advanced Genetic Algorithms and Entropy Management
 //!
@@ -11,10 +14,6 @@
 //! - **Genetic Algorithms**: Advanced evolution and optimization algorithms
 //! - **Entropy Hierarchy**: Human and machine entropy source management
 //! - **Genetic Spawning**: Dynamic primal generation and evolution
-
-#![cfg_attr(test, allow(clippy::expect_used))]
-#![cfg_attr(test, allow(clippy::unwrap_used))]
-
 //! - **Ecosystem Evolution**: Binary pattern elimination and relationship evolution
 //! - **Biometric Entropy**: Human-owned entropy without corporate control
 //!

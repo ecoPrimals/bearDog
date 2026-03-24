@@ -244,7 +244,11 @@ fn test_ai_response_metadata_default() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: adapters
     // TEST_PRIORITY: normal
-    assert_eq!(metadata.confidence_score, 1.0);
+    assert!(
+        (metadata.confidence_score - 1.0).abs() < 1e-9,
+        "expected confidence_score ≈ 1.0, got {}",
+        metadata.confidence_score
+    );
     assert_eq!(metadata.processing_time_ms, 0);
     assert_eq!(metadata.model_version, "v1.0.0");
 }
@@ -257,7 +261,11 @@ fn test_ai_response_metadata_custom() {
         model_version: "v2.0.0".to_string(),
     };
 
-    assert_eq!(metadata.confidence_score, 0.95);
+    assert!(
+        (metadata.confidence_score - 0.95).abs() < 1e-9,
+        "expected confidence_score ≈ 0.95, got {}",
+        metadata.confidence_score
+    );
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: adapters
     // TEST_PRIORITY: normal
@@ -280,7 +288,10 @@ fn test_ai_response_metadata_serialization() {
     let deserialized: AIResponseMetadata =
         serde_json::from_str(&serialized).expect("Deserialization should succeed");
 
-    assert_eq!(metadata.confidence_score, deserialized.confidence_score);
+    assert!(
+        (metadata.confidence_score - deserialized.confidence_score).abs() < 1e-9,
+        "confidence_score mismatch after round-trip"
+    );
     assert_eq!(metadata.processing_time_ms, deserialized.processing_time_ms);
     assert_eq!(metadata.model_version, deserialized.model_version);
 }
@@ -293,7 +304,10 @@ fn test_ai_response_metadata_clone() {
     let metadata1 = AIResponseMetadata::default();
     let metadata2 = metadata1.clone();
 
-    assert_eq!(metadata1.confidence_score, metadata2.confidence_score);
+    assert!(
+        (metadata1.confidence_score - metadata2.confidence_score).abs() < 1e-9,
+        "cloned confidence_score should match"
+    );
     assert_eq!(metadata1.model_version, metadata2.model_version);
 }
 
@@ -309,7 +323,11 @@ fn test_ai_integration_response_default() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: adapters
     // TEST_PRIORITY: normal
-    assert_eq!(response.ai_metadata.confidence_score, 1.0);
+    assert!(
+        (response.ai_metadata.confidence_score - 1.0).abs() < 1e-9,
+        "expected confidence_score ≈ 1.0, got {}",
+        response.ai_metadata.confidence_score
+    );
     assert!(response.suggested_actions.is_empty());
 }
 
@@ -484,10 +502,7 @@ fn test_universal_adapter_multiple_registrations() {
     let mut adapter = UniversalAdapter::new(config);
 
     for i in 0..10 {
-        adapter.register_capability(
-            format!("capability_{}", i),
-            format!("http://svc{}.local", i),
-        );
+        adapter.register_capability(format!("capability_{i}"), format!("http://svc{i}.local"));
     }
 
     // TEST_CATEGORY: unit
@@ -700,10 +715,10 @@ async fn test_universal_adapter_empty_capability_name() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: adapters
     // TEST_PRIORITY: normal
-    adapter.register_capability("".to_string(), "http://test.com".to_string());
+    adapter.register_capability(String::new(), "http://test.com".to_string());
 
     let request = CapabilityRequest {
-        capability: "".to_string(),
+        capability: String::new(),
         operation: "test".to_string(),
         parameters: HashMap::new(),
     };
@@ -749,7 +764,7 @@ async fn test_universal_adapter_large_parameters() {
 
     let mut params = HashMap::new();
     for i in 0..100 {
-        params.insert(format!("key_{}", i), format!("value_{}", i));
+        params.insert(format!("key_{i}"), format!("value_{i}"));
     }
 
     let request = CapabilityRequest {
@@ -811,7 +826,7 @@ fn test_capability_response_debug_format() {
         metadata: HashMap::new(),
     };
 
-    let debug_str = format!("{:?}", response);
+    let debug_str = format!("{response:?}");
     assert!(debug_str.contains("CapabilityResponse"));
     assert!(debug_str.contains("success"));
 }
@@ -822,7 +837,7 @@ fn test_capability_response_debug_format() {
 #[test]
 fn test_ai_response_metadata_debug_format() {
     let metadata = AIResponseMetadata::default();
-    let debug_str = format!("{:?}", metadata);
+    let debug_str = format!("{metadata:?}");
 
     assert!(debug_str.contains("AIResponseMetadata"));
     assert!(debug_str.contains("confidence_score"));

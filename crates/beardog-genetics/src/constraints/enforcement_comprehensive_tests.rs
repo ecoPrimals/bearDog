@@ -125,8 +125,8 @@ fn test_invalid_signature_fails() {
     assert!(result.is_err(), "Should fail with wrong key");
     match result {
         Err(ConstraintViolationError::SignatureVerificationFailed { .. }) => (),
-        Err(e) => panic!("Expected SignatureVerificationFailed, got: {:?}", e),
-        Ok(_) => panic!("Expected error, got Ok"),
+        Err(e) => panic!("Expected SignatureVerificationFailed, got: {e:?}"),
+        Ok(()) => panic!("Expected error, got Ok"),
     }
 }
 
@@ -243,8 +243,8 @@ fn test_cannot_delete_path_fails() {
         Err(ConstraintViolationError::DataAccessDenied { operation: op, .. }) => {
             assert_eq!(op, "delete");
         }
-        Err(e) => panic!("Expected DataAccessDenied, got: {:?}", e),
-        Ok(_) => panic!("Expected error, got Ok"),
+        Err(e) => panic!("Expected DataAccessDenied, got: {e:?}"),
+        Ok(()) => panic!("Expected error, got Ok"),
     }
 }
 
@@ -388,14 +388,14 @@ fn test_constraint_violation_error_display() {
     let error = ConstraintViolationError::KeyExpired {
         expired_at: Utc::now(),
     };
-    let display = format!("{}", error);
+    let display = format!("{error}");
     assert!(display.contains("expired") || display.contains("Expired"));
 
     let error = ConstraintViolationError::UseCountExceeded {
         max_uses: 10,
         current_uses: 15,
     };
-    let display = format!("{}", error);
+    let display = format!("{error}");
     assert!(display.contains("10") && display.contains("15"));
 }
 
@@ -467,7 +467,7 @@ fn test_unrestricted_scope_allows_all() {
             verifying_key.as_bytes(),
             &ConstraintEnforcementPolicy::default(),
         );
-        assert!(result.is_ok(), "Operation {:?} should be allowed", op_type);
+        assert!(result.is_ok(), "Operation {op_type:?} should be allowed");
     }
 }
 

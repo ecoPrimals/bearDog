@@ -182,6 +182,7 @@ impl Default for SimdCryptoAccelerator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::float_eq;
 
     #[test]
     fn test_simd_capabilities_detection() {
@@ -238,7 +239,7 @@ mod tests {
 
         assert!(metrics.contains_key("aes_throughput_mbps"));
         assert!(metrics.contains_key("sha256_throughput_mbps"));
-        assert_eq!(metrics["safety_score"], 1.0);
+        float_eq::f64(metrics["safety_score"], 1.0);
     }
 
     #[test]

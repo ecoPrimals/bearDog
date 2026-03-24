@@ -453,7 +453,7 @@ mod tests {
     #[test]
     fn test_debug() {
         let config = CryptoConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
 
         assert!(debug_str.contains("CryptoConfig"));
     }

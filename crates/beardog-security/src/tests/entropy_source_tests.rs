@@ -41,8 +41,7 @@ mod tests {
         // Average should be near 127.5 for uniform distribution
         assert!(
             (avg - 127.5).abs() < 20.0,
-            "Entropy distribution skewed: avg={}",
-            avg
+            "Entropy distribution skewed: avg={avg}"
         );
     }
 
@@ -218,8 +217,7 @@ mod tests {
         // Should have good variety (at least 200 unique values out of 1000)
         assert!(
             unique_count > 200,
-            "Entropy should have good variety: {}",
-            unique_count
+            "Entropy should have good variety: {unique_count}"
         );
     }
 

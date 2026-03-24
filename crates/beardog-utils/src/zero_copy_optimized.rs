@@ -585,7 +585,7 @@ mod tests {
         let manager = ZeroCopyManager::new();
         let opt = manager.optimize_string("test");
 
-        assert_eq!(format!("{}", opt), "test");
+        assert_eq!(format!("{opt}"), "test");
     }
 
     #[test]

@@ -681,7 +681,7 @@ fn verify_ed25519_signature(
         .map_err(|_| BearDogError::validation("Invalid signature length"))?;
 
     let verifying_key = VerifyingKey::from_bytes(&public_array)
-        .map_err(|e| BearDogError::validation(&format!("Invalid public key: {}", e)))?;
+        .map_err(|e| BearDogError::validation(&format!("Invalid public key: {e}")))?;
 
     let sig = Signature::from_bytes(&sig_array);
 
@@ -717,7 +717,7 @@ fn encrypt_aes_256_gcm(
 
     cipher
         .encrypt(nonce, plaintext)
-        .map_err(|e| BearDogError::security(format!("AES-GCM encryption failed: {}", e)))
+        .map_err(|e| BearDogError::security(format!("AES-GCM encryption failed: {e}")))
 }
 
 #[allow(dead_code)]
@@ -733,7 +733,7 @@ fn decrypt_aes_256_gcm(
 
     cipher
         .decrypt(nonce, ciphertext)
-        .map_err(|e| BearDogError::security(format!("AES-GCM decryption failed: {}", e)))
+        .map_err(|e| BearDogError::security(format!("AES-GCM decryption failed: {e}")))
 }
 
 #[allow(dead_code)]
@@ -765,7 +765,7 @@ fn encrypt_chacha20_poly1305(
 
     cipher
         .encrypt(nonce, plaintext)
-        .map_err(|e| BearDogError::security(format!("ChaCha20-Poly1305 encryption failed: {}", e)))
+        .map_err(|e| BearDogError::security(format!("ChaCha20-Poly1305 encryption failed: {e}")))
 }
 
 #[allow(dead_code)]
@@ -781,7 +781,7 @@ fn decrypt_chacha20_poly1305(
 
     cipher
         .decrypt(nonce, ciphertext)
-        .map_err(|e| BearDogError::security(format!("ChaCha20-Poly1305 decryption failed: {}", e)))
+        .map_err(|e| BearDogError::security(format!("ChaCha20-Poly1305 decryption failed: {e}")))
 }
 
 #[allow(dead_code)]
@@ -801,7 +801,7 @@ fn encrypt_chacha20_poly1305_with_aad(
     };
 
     cipher.encrypt(nonce, payload).map_err(|e| {
-        BearDogError::security(format!("ChaCha20-Poly1305 AAD encryption failed: {}", e))
+        BearDogError::security(format!("ChaCha20-Poly1305 AAD encryption failed: {e}"))
     })
 }
 
@@ -822,7 +822,7 @@ fn decrypt_chacha20_poly1305_with_aad(
     };
 
     cipher.decrypt(nonce, payload).map_err(|e| {
-        BearDogError::security(format!("ChaCha20-Poly1305 AAD decryption failed: {}", e))
+        BearDogError::security(format!("ChaCha20-Poly1305 AAD decryption failed: {e}"))
     })
 }
 
@@ -864,12 +864,12 @@ fn derive_key_argon2(password: &[u8], salt: &[u8]) -> Result<Vec<u8>, BearDogErr
 
     // Convert salt to base64 string format required by argon2
     let salt_str = SaltString::encode_b64(salt)
-        .map_err(|e| BearDogError::validation(&format!("Invalid salt: {}", e)))?;
+        .map_err(|e| BearDogError::validation(&format!("Invalid salt: {e}")))?;
 
     let argon2 = Argon2::default();
     let hash = argon2
         .hash_password(password, &salt_str)
-        .map_err(|e| BearDogError::security(format!("Argon2 failed: {}", e)))?;
+        .map_err(|e| BearDogError::security(format!("Argon2 failed: {e}")))?;
 
     // Extract the raw hash bytes
     let hash_bytes = hash

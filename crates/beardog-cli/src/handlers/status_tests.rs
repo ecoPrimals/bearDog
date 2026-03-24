@@ -251,8 +251,7 @@ fn test_get_build_info_performance() {
 
     assert!(
         elapsed.as_millis() < 10,
-        "get_build_info should be fast: {:?}",
-        elapsed
+        "get_build_info should be fast: {elapsed:?}"
     );
 }
 
@@ -265,8 +264,7 @@ fn test_get_system_info_performance() {
 
     assert!(
         elapsed.as_millis() < 10,
-        "get_system_info should be fast: {:?}",
-        elapsed
+        "get_system_info should be fast: {elapsed:?}"
     );
 }
 
@@ -279,7 +277,6 @@ async fn test_handle_status_performance() {
 
     assert!(
         elapsed.as_millis() < 100,
-        "handle_status should be fast: {:?}",
-        elapsed
+        "handle_status should be fast: {elapsed:?}"
     );
 }

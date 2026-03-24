@@ -5,7 +5,7 @@
 //! Tests: Unit, E2E, and validation of zero-hardcoding principle
 
 #[cfg(test)]
-mod registry_client_tests {
+mod suite {
     use super::super::*;
     use std::path::PathBuf;
 
@@ -323,11 +323,10 @@ mod registry_client_tests {
             // Should fail to parse as valid JSON-RPC 2.0
             let result = serde_json::from_str::<JsonRpcRequest>(json);
             // We allow parsing but validate protocol adherence at runtime
-            if let Ok(req) = result {
-                if req.jsonrpc != "2.0" {
-                    // Wrong version should be rejected
-                    continue;
-                }
+            if let Ok(req) = result
+                && req.jsonrpc != "2.0"
+            {
+                // Wrong version should be rejected
             }
         }
     }

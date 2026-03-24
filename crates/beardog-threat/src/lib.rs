@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![forbid(unsafe_code)]
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 //! # `BearDog` Threat Detection and Analysis
 //!
@@ -17,9 +18,6 @@
 //!
 //! ## Example
 //!
-
-#![cfg_attr(test, allow(clippy::expect_used))]
-#![cfg_attr(test, allow(clippy::unwrap_used))]
 //! ```rust
 //! use beardog_threat::ThreatDetectionEngine;
 //! use beardog_types::canonical::config::domains::threat::CanonicalThreatDetectionConfig;
@@ -84,6 +82,16 @@ mod tests;
 )]
 #[cfg(test)]
 mod coverage_gap;
+
+#[cfg(test)]
+pub(crate) mod float_assert {
+    /// Assert two `f64` values are approximately equal (test helper).
+    pub fn near_f64(actual: f64, expected: f64) {
+        const EPS: f64 = 1e-9;
+        let diff = (actual - expected).abs();
+        assert!(diff < EPS, "expected {expected}, got {actual} (|Δ|={diff})");
+    }
+}
 
 /// Core threat detection engine and analysis
 ///

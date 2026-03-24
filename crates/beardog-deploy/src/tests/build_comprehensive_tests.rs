@@ -19,7 +19,7 @@ mod tests {
     #[test]
     fn test_cargo_build_with_target() {
         let target = "aarch64-linux-android";
-        let command = format!("cargo build --target {}", target);
+        let command = format!("cargo build --target {target}");
         assert!(command.contains("--target"));
         assert!(command.contains(target));
     }
@@ -27,7 +27,7 @@ mod tests {
     #[test]
     fn test_cargo_build_with_features() {
         let features = "android,strongbox";
-        let command = format!("cargo build --features {}", features);
+        let command = format!("cargo build --features {features}");
         assert!(command.contains("--features"));
         assert!(command.contains("android"));
     }
@@ -66,7 +66,7 @@ mod tests {
     #[test]
     fn test_rustup_target_add() {
         let target = "aarch64-linux-android";
-        let command = format!("rustup target add {}", target);
+        let command = format!("rustup target add {target}");
         assert!(command.contains("target add"));
     }
 
@@ -152,8 +152,7 @@ mod tests {
     #[test]
     fn test_build_target_triple_format() {
         let triple = "aarch64-linux-android";
-        let parts: Vec<&str> = triple.split('-').collect();
-        assert!(parts.len() >= 2);
+        assert!(triple.split('-').count() >= 2);
     }
 
     #[test]

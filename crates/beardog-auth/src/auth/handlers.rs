@@ -356,7 +356,7 @@ mod tests {
     #[test]
     fn test_new_authentication_handler() {
         let config = AuthConfig::default();
-        let handler = AuthenticationHandler::new(config.clone());
+        let handler = AuthenticationHandler::new(config);
 
         assert_eq!(handler.config.session_timeout_hours, 24);
         assert_eq!(handler.get_login_attempts("test-user"), 0);
@@ -480,9 +480,7 @@ mod tests {
             permissions: vec!["read".to_string()],
         };
 
-        handler
-            .active_sessions
-            .insert("eve".to_string(), session.clone());
+        handler.active_sessions.insert("eve".to_string(), session);
 
         let result = handler.validate_session("test-token-123");
         assert!(result.is_ok());

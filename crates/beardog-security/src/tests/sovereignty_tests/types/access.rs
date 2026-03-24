@@ -186,17 +186,15 @@ impl ABACPolicy {
     pub fn evaluate(&self, attributes: &AttributeSet) -> Result<(), BearDogError> {
         for (key, required_value) in &self.required_attributes {
             match attributes.get(key) {
-                Some(actual_value) if actual_value == required_value => continue,
+                Some(actual_value) if actual_value == required_value => {}
                 Some(_) => {
                     return Err(BearDogError::security(format!(
-                        "Attribute {} has wrong value",
-                        key
+                        "Attribute {key} has wrong value"
                     )));
                 }
                 None => {
                     return Err(BearDogError::security(format!(
-                        "Missing required attribute: {}",
-                        key
+                        "Missing required attribute: {key}"
                     )));
                 }
             }

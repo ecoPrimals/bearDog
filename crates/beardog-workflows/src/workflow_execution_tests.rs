@@ -59,7 +59,7 @@ fn test_execution_status_lifecycle() {
     assert_eq!(completed, ExecutionStatus::Completed);
 
     // Test Clone and PartialEq
-    assert_eq!(queued.clone(), ExecutionStatus::Queued);
+    assert_eq!(queued, ExecutionStatus::Queued);
     assert_ne!(queued, running);
 }
 
@@ -115,7 +115,7 @@ fn test_workflow_type_variants() {
 
     for workflow_type in types {
         // Test Display trait
-        let display = format!("{}", workflow_type);
+        let display = format!("{workflow_type}");
         assert!(!display.is_empty(), "Display should produce output");
 
         // Test Clone
@@ -139,16 +139,16 @@ fn test_approval_decision_states() {
     let pending = ApprovalDecision::Pending;
 
     // Test Display trait
-    assert_eq!(format!("{}", granted), "Granted");
-    assert!(format!("{}", rejected).contains("Rejected"));
-    assert!(format!("{}", rejected).contains("Invalid request"));
-    assert_eq!(format!("{}", abstained), "Abstained");
-    assert_eq!(format!("{}", pending), "Pending");
+    assert_eq!(format!("{granted}"), "Granted");
+    assert!(format!("{rejected}").contains("Rejected"));
+    assert!(format!("{rejected}").contains("Invalid request"));
+    assert_eq!(format!("{abstained}"), "Abstained");
+    assert_eq!(format!("{pending}"), "Pending");
 
     // Test Clone
-    assert_eq!(granted.clone(), ApprovalDecision::Granted);
+    assert_eq!(granted, ApprovalDecision::Granted);
     assert_eq!(
-        rejected.clone(),
+        rejected,
         ApprovalDecision::Rejected("Invalid request".to_string())
     );
 }
@@ -346,7 +346,7 @@ fn test_workflow_target_types() {
     for target in targets {
         let cloned = target.clone();
         assert_eq!(target, cloned);
-        let debug_str = format!("{:?}", target);
+        let debug_str = format!("{target:?}");
         assert!(!debug_str.is_empty());
     }
 }

@@ -64,7 +64,7 @@ impl TrustDomain {
         !anchor.is_expired() && self.trusts_anchor(anchor)
     }
 
-    pub fn merge(&self, other: &TrustDomain) -> TrustDomain {
+    pub fn merge(&self, other: &Self) -> Self {
         let mut merged = self.clone();
         for anchor in &other.anchors {
             if !merged.trusts_anchor(anchor) {

@@ -217,10 +217,11 @@ impl AndroidStrongBoxHsm {
     async fn cache_key_info(&self, key_info: &KeyInfo) -> Result<(), BearDogError> {
         debug!("Caching key info for: {}", key_info.key_id);
         let mut cache = self.key_cache.write().await;
+        let id = key_info.key_id.clone();
         cache.insert(
-            key_info.key_id.clone(),
+            id.clone(),
             CachedKeyInfo {
-                key_id: key_info.key_id.clone(),
+                key_id: id,
                 key_type: key_info.key_type.clone(),
                 last_used: Utc::now(),
                 key_usage: key_info.key_usage.clone(), // Use Vec<KeyUsage>
@@ -628,7 +629,7 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
     ) -> Result<HsmKey, BearDogError> {
         // Convert GenerateKeyRequest to KeyGenerationSpec
         let spec = KeyGenerationSpec {
-            key_id: request.key_id.clone(),
+            key_id: request.key_id,
             key_type: request.key_type,
             key_size: 256,                                     // Default for StrongBox
             key_usage: vec![KeyUsage::Sign, KeyUsage::Verify], // Default
@@ -639,21 +640,20 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
         let key_info = self.generate_strongbox_key(&spec).await?;
 
         // Convert KeyInfo to UniversalKey (HsmKey)
-        let key_type_clone = key_info.key_type.clone();
         Ok(HsmKey {
             id: key_info.key_id.clone(),
             hsm_type: "AndroidStrongBox".to_string(),
-            key_type: key_type_clone.clone(),
+            key_type: key_info.key_type.clone(),
             metadata: KeyMetadata {
                 key_id: key_info.key_id,
-                key_type: key_type_clone,
+                key_type: key_info.key_type,
                 alias: None,
                 created_at: chrono::Utc::now(),
                 expires_at: None,
                 tags: HashMap::new(),
             },
             key_material: KeyMaterial::HardwareReference {
-                reference: request.key_id,
+                reference: spec.key_id,
                 hsm_location: "android_strongbox".to_string(),
             },
             hsm_tier: "production".to_string(),
@@ -710,7 +710,7 @@ impl ManagerHsmProvider for AndroidStrongBoxHsm {
         if let Some(cached) = cache.get(key_id) {
             // Use ManagerKeyInfo (from manager::implementation) which has: key_id, key_type (String), is_hardware_backed
             Ok(ManagerKeyInfo {
-                key_id: cached.key_id.clone(),
+                key_id: key_id.to_string(),
                 key_type: format!("{:?}", cached.key_type), // Convert KeyType enum to String
                 is_hardware_backed: true,                   // StrongBox is always hardware-backed
             })

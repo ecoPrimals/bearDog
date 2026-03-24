@@ -375,7 +375,7 @@ mod tests {
     #[test]
     fn test_access_condition_ip_address() {
         let condition = AccessCondition::IpAddress {
-            address: 0x7F000001, // 127.0.0.1
+            address: u32::from(std::net::Ipv4Addr::LOCALHOST),
             window_seconds: 3600,
         };
 
@@ -384,7 +384,7 @@ mod tests {
                 address,
                 window_seconds,
             } => {
-                assert_eq!(address, 0x7F000001);
+                assert_eq!(address, u32::from(std::net::Ipv4Addr::LOCALHOST));
                 assert_eq!(window_seconds, 3600);
             }
             _ => panic!("Expected IpAddress variant"),

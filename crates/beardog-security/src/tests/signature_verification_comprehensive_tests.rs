@@ -239,7 +239,7 @@ mod signature_tests {
             let signature: Signature = signing_key.sign(&data);
 
             let result = verifying_key.verify(&data, &signature);
-            assert!(result.is_ok(), "Signature for {} bytes should verify", size);
+            assert!(result.is_ok(), "Signature for {size} bytes should verify");
         }
     }
 

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 //! RFC 8448 Validation Test
 //!
 //! This test validates BearDog's TLS 1.3 key derivation against known values
@@ -168,7 +169,7 @@ async fn test_rfc8448_handshake_key_derivation() {
         let mut hkdf_label = Vec::new();
         hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
 
-        let tls13_label = format!("tls13 {}", label);
+        let tls13_label = format!("tls13 {label}");
         hkdf_label.push(tls13_label.len() as u8);
         hkdf_label.extend_from_slice(tls13_label.as_bytes());
 
@@ -192,14 +193,12 @@ async fn test_rfc8448_handshake_key_derivation() {
 
     assert_eq!(
         client_write_key, expected_client_key,
-        "Client write key mismatch!\nExpected: {:02x?}\nGot:      {:02x?}",
-        expected_client_key, client_write_key
+        "Client write key mismatch!\nExpected: {expected_client_key:02x?}\nGot:      {client_write_key:02x?}"
     );
 
     assert_eq!(
         server_write_key, expected_server_key,
-        "Server write key mismatch!\nExpected: {:02x?}\nGot:      {:02x?}",
-        expected_server_key, server_write_key
+        "Server write key mismatch!\nExpected: {expected_server_key:02x?}\nGot:      {server_write_key:02x?}"
     );
 
     println!("✅ Client write key matches RFC 8448!");
@@ -229,14 +228,12 @@ async fn test_rfc8448_handshake_key_derivation() {
 
     assert_eq!(
         client_write_iv, expected_client_iv,
-        "Client write IV mismatch!\nExpected: {:02x?}\nGot:      {:02x?}",
-        expected_client_iv, client_write_iv
+        "Client write IV mismatch!\nExpected: {expected_client_iv:02x?}\nGot:      {client_write_iv:02x?}"
     );
 
     assert_eq!(
         server_write_iv, expected_server_iv,
-        "Server write IV mismatch!\nExpected: {:02x?}\nGot:      {:02x?}",
-        expected_server_iv, server_write_iv
+        "Server write IV mismatch!\nExpected: {expected_server_iv:02x?}\nGot:      {server_write_iv:02x?}"
     );
 
     println!("✅ Client write IV matches RFC 8448!");

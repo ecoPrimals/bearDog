@@ -24,7 +24,7 @@ fn test_hash_incremental_sizes() {
     for size in &sizes {
         let data = vec![0x42u8; *size];
         let result = compute_sha256_hash(&data);
-        assert!(result.is_ok(), "Should hash {} bytes", size);
+        assert!(result.is_ok(), "Should hash {size} bytes");
         assert_eq!(result.unwrap().len(), 32, "Hash should be 32 bytes");
     }
 }
@@ -37,7 +37,7 @@ fn test_sha512_variable_sizes() {
     for size in &sizes {
         let data = vec![0xFFu8; *size];
         let result = compute_sha512_hash(&data);
-        assert!(result.is_ok(), "SHA-512 should work with {} bytes", size);
+        assert!(result.is_ok(), "SHA-512 should work with {size} bytes");
         assert_eq!(result.unwrap().len(), 64, "SHA-512 produces 64 bytes");
     }
 }
@@ -87,7 +87,7 @@ fn test_secure_random_various_sizes() {
     // TEST_PRIORITY: normal
     for size in &sizes {
         let random = generate_secure_random_bytes(*size);
-        assert!(random.is_ok(), "Should generate {} random bytes", size);
+        assert!(random.is_ok(), "Should generate {size} random bytes");
         assert_eq!(random.unwrap().len(), *size);
     }
 }

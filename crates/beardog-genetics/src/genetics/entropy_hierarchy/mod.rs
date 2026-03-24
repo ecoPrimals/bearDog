@@ -50,7 +50,7 @@ mod tests {
             require_biometric_verification: false,
             require_ownership_proof: false,
         };
-        let manager = EntropyHierarchyManager::new(config.clone());
+        let manager = EntropyHierarchyManager::new(config);
 
         assert_eq!(manager.config.min_human_quality, 0.9);
         assert_eq!(manager.config.min_machine_quality, 0.7);
@@ -175,7 +175,7 @@ mod tests {
 
         let supervised = EntropyClass::HumanSupervisedMachine {
             quality_score: 0.85,
-            machine_source: machine_source.clone(),
+            machine_source,
             human_validator: HumanIdentity {
                 identity_id: "test".to_string(),
                 identity_hash: vec![1],

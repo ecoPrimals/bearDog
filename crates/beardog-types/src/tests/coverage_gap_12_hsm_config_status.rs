@@ -57,7 +57,7 @@ mod hsm_capabilities_methods_tests {
     fn test_performance_rating() {
         let c = HsmCapabilities::default();
         let rating = c.performance_rating();
-        assert!(rating >= 0.0 && rating <= 1.0);
+        assert!((0.0..=1.0).contains(&rating));
     }
 
     #[test]

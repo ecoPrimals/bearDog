@@ -480,19 +480,20 @@ async fn lineage_generate(
         }
     }
 
-    chain.push(req.node_id.clone());
+    let node_id = req.node_id.clone();
+    chain.push(node_id.clone());
 
     // In production: Call LineageChainManager::generate_root_chain()
 
-    // Store lineage
+    // Store lineage (`chain` is also returned in the response — clone for stored metadata)
     let metadata = LineageMetadata {
-        node_id: req.node_id.clone(),
+        node_id: node_id.clone(),
         parent_id: req.parent_id.clone(),
         chain: chain.clone(),
         depth,
         created_at: SystemTime::now(),
     };
-    state.lineages.write().insert(req.node_id.clone(), metadata);
+    state.lineages.write().insert(node_id, metadata);
 
     let signature = format!("sig_{}", uuid::Uuid::new_v4());
 
@@ -817,7 +818,7 @@ mod tests {
     fn test_api_state_creation() {
         let state = ApiState::default();
         // State should be cloneable (Arc-based)
-        let _cloned = state.clone();
+        let _cloned = state;
     }
 
     #[test]

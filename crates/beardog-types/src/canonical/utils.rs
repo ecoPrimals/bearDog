@@ -190,8 +190,7 @@ mod tests {
         for (name, _) in &info {
             assert!(
                 names.insert(name),
-                "Type name '{}' appears multiple times",
-                name
+                "Type name '{name}' appears multiple times"
             );
         }
 
@@ -214,15 +213,13 @@ mod tests {
             // Verify naming conventions
             assert!(
                 name.chars().next().unwrap().is_uppercase(),
-                "Type name '{}' should start with uppercase",
-                name
+                "Type name '{name}' should start with uppercase"
             );
 
             // Verify description is meaningful
             assert!(
                 description.len() > 10,
-                "Description for '{}' should be meaningful",
-                name
+                "Description for '{name}' should be meaningful"
             );
         }
     }
@@ -235,8 +232,8 @@ mod tests {
 
         assert_eq!(info1.len(), info2.len());
         for (i, ((name1, desc1), (name2, desc2))) in info1.iter().zip(info2.iter()).enumerate() {
-            assert_eq!(name1, name2, "Name mismatch at index {}", i);
-            assert_eq!(desc1, desc2, "Description mismatch at index {}", i);
+            assert_eq!(name1, name2, "Name mismatch at index {i}");
+            assert_eq!(desc1, desc2, "Description mismatch at index {i}");
         }
     }
 
@@ -270,15 +267,13 @@ mod tests {
             // Descriptions should be sentences with proper capitalization
             assert!(
                 description.chars().next().unwrap().is_uppercase(),
-                "Description for '{}' should start with uppercase",
-                name
+                "Description for '{name}' should start with uppercase"
             );
 
             // Descriptions should be substantial
             assert!(
                 description.split_whitespace().count() >= 2,
-                "Description for '{}' should have at least 2 words",
-                name
+                "Description for '{name}' should have at least 2 words"
             );
         }
     }

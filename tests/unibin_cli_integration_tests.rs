@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! Integration tests for the `BearDog` UniBin CLI.
 //!
 //! Exercises the binary entry point (`src/main.rs`) via subprocess invocation,

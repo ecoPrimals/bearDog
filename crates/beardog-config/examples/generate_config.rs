@@ -11,7 +11,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let toml_str = toml::to_string_pretty(&config)?;
 
     // Print to stdout
-    println!("{}", toml_str);
+    println!("{toml_str}");
 
     Ok(())
 }

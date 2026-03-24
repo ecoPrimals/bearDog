@@ -135,3 +135,6 @@ mod coverage_gap_tests_7;
 )]
 mod coverage_gap_tests_8;
 mod coverage_gap_tests_9;
+
+// March 2026: receipt, adapter certificates, constraint builtins
+mod coverage_march26_types_wave;

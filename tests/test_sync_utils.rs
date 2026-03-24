@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! Modern Async Test Synchronization Utilities
 //!
 //! This module provides reusable patterns for test synchronization without sleeps.

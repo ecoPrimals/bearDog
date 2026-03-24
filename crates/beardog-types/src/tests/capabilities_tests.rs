@@ -101,7 +101,7 @@ fn test_capability_type_as_id() {
 #[test]
 fn test_capability_type_display() {
     let cap = CapabilityType::KeyManagement;
-    let display_string = format!("{}", cap);
+    let display_string = format!("{cap}");
     assert!(!display_string.is_empty());
 }
 
@@ -218,14 +218,11 @@ fn test_capability_filtering() {
     assert_eq!(vendor_caps.len(), 2);
 
     // Filter for primal capabilities
-    let primal_caps: Vec<_> = capabilities
-        .iter()
-        .filter(|c| c.is_primal_capability())
-        // TEST_CATEGORY: integration
-        // TEST_DOMAIN: types
-        // TEST_PRIORITY: normal
-        .collect();
-    assert!(!primal_caps.is_empty());
+    assert!(
+        capabilities
+            .iter()
+            .any(CapabilityType::is_primal_capability)
+    );
 }
 
 #[test]
@@ -265,27 +262,29 @@ fn test_capability_type_in_hashmap() {
 #[test]
 fn test_capability_type_multiple_instances() {
     // Test that we can create many instances without issues
-    let capabilities: Vec<CapabilityType> = (0..100)
-        .map(|i| match i % 5 {
+    let mut count = 0;
+    for i in 0..100 {
+        let _ = match i % 5 {
             0 => CapabilityType::KeyManagement,
             1 => CapabilityType::ServiceMesh,
             2 => CapabilityType::HardwareSecurityModule,
             3 => CapabilityType::Monitoring,
             _ => CapabilityType::Logging,
-        })
-        .collect();
+        };
+        count += 1;
+    }
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: types
     // TEST_PRIORITY: normal
 
     // Should not panic or have memory issues
-    assert_eq!(capabilities.len(), 100);
+    assert_eq!(count, 100);
 }
 
 #[test]
 fn test_capability_type_debug() {
     let cap = CapabilityType::KeyManagement;
-    let debug_string = format!("{:?}", cap);
+    let debug_string = format!("{cap:?}");
     assert!(!debug_string.is_empty());
 }
 

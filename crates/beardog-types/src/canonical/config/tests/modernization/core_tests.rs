@@ -88,7 +88,7 @@ fn test_database_connection_config_from_env() {
 
     assert_eq!(config.url, "postgres://localhost/test");
     assert_eq!(config.timeout, Duration::from_secs(60));
-    assert_eq!(config.ssl, true);
+    assert!(config.ssl);
 }
 
 #[test]
@@ -139,7 +139,7 @@ fn test_migration_config_from_env() {
         _ => None,
     });
 
-    assert_eq!(config.auto_migrate, false);
+    assert!(!config.auto_migrate);
     assert_eq!(config.directory, "db/migrations");
 }
 

@@ -3,6 +3,7 @@
 //! Comprehensive tests for ultimate_performance module
 //! Focus: Performance optimizations, SIMD operations, statistics
 
+use crate::float_eq;
 use crate::ultimate_performance::*;
 
 #[test]
@@ -98,7 +99,7 @@ fn test_cache_hit_ratio_calculation() {
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     let stats = processor.get_performance_stats();
-    assert_eq!(stats.cache_hit_ratio, 0.0);
+    float_eq::f64(stats.cache_hit_ratio, 0.0);
 }
 
 #[test]
@@ -110,7 +111,7 @@ fn test_prefetch_effectiveness_calculation() {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    assert_eq!(stats.prefetch_effectiveness, 0.0);
+    float_eq::f64(stats.prefetch_effectiveness, 0.0);
 }
 
 #[test]
@@ -125,7 +126,7 @@ fn test_average_latency_calculation() {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    assert_eq!(stats.average_latency_ns, 0.0);
+    float_eq::f64(stats.average_latency_ns, 0.0);
 }
 
 #[test]
@@ -140,7 +141,7 @@ fn test_performance_stats_clone() {
     // TEST_PRIORITY: important
 
     assert_eq!(stats1.operations_processed, stats2.operations_processed);
-    assert_eq!(stats1.cache_hit_ratio, stats2.cache_hit_ratio);
+    float_eq::f64(stats1.cache_hit_ratio, stats2.cache_hit_ratio);
 }
 
 #[test]
@@ -165,8 +166,8 @@ fn test_operation_type_copy() {
     let op2 = op1; // Should be Copy
 
     // Both should be usable
-    let _ = format!("{:?}", op1);
-    let _ = format!("{:?}", op2);
+    let _ = format!("{op1:?}");
+    let _ = format!("{op2:?}");
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal

@@ -113,7 +113,7 @@ mod tests {
     fn test_export_engine_debug() {
         let config = ExportConfig::default();
         let engine = ExportEngine::new(config).expect("engine");
-        let debug_str = format!("{:?}", engine);
+        let debug_str = format!("{engine:?}");
         assert!(debug_str.contains("ExportEngine"));
     }
 }

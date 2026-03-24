@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 //! RFC 5116 AES-GCM Test Vectors Validation
 //!
 //! This test validates BearDog's AES-GCM implementation against known test vectors
@@ -298,8 +299,7 @@ fn test_aes128_gcm_wrong_tls_aad_fails() {
     let error_msg = decrypt_result.unwrap_err().to_string();
     assert!(
         error_msg.contains("authentication") || error_msg.contains("verification"),
-        "Error should mention authentication/verification failure, got: {}",
-        error_msg
+        "Error should mention authentication/verification failure, got: {error_msg}"
     );
 
     println!("✅ AES-128-GCM wrong AAD detection: PASSED");

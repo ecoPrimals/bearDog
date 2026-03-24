@@ -117,7 +117,7 @@ mod tests {
         let mut key_ids = Vec::new();
         for (i, key_data) in keys_data.iter().enumerate() {
             let metadata = KeyMetadata {
-                id: format!("test_key_{}", i),
+                id: format!("test_key_{i}"),
                 created_at: Utc::now(),
                 key_type: "AES256".to_string(),
             };
@@ -157,7 +157,7 @@ mod tests {
             enable_rotation: true,
         };
 
-        let manager = MemoryKeyManager::new(config.clone()).unwrap();
+        let manager = MemoryKeyManager::new(config).unwrap();
         let key_id = manager.generate_key().unwrap();
         assert!(manager.key_exists(&key_id).unwrap());
     }
@@ -344,12 +344,12 @@ mod tests {
 
         for key_type in key_types {
             let metadata = KeyMetadata {
-                id: format!("key_{}", key_type),
+                id: format!("key_{key_type}"),
                 created_at: Utc::now(),
                 key_type: key_type.to_string(),
             };
 
-            let key_data = format!("data_for_{}", key_type).into_bytes();
+            let key_data = format!("data_for_{key_type}").into_bytes();
             let key_id = manager.store_key(&key_data, metadata).unwrap();
 
             let retrieved = manager.get_key(&key_id).unwrap();

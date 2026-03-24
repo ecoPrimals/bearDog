@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! Integration Tests for Authentication and Security
 //!
 //! This module contains comprehensive integration tests for `BearDog`'s authentication

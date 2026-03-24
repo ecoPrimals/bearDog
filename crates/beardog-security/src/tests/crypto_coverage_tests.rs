@@ -233,7 +233,12 @@ mod random_generation_tests {
     #[test]
     fn test_random_distribution_not_uniform_zeros() -> Result<(), BearDogError> {
         let bytes = generate_secure_random_bytes(1000)?;
-        let zero_count = bytes.iter().filter(|&&b| b == 0).count();
+        let mut zero_count = 0usize;
+        for &b in &bytes {
+            if b == 0 {
+                zero_count += 1;
+            }
+        }
 
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
@@ -491,8 +496,8 @@ mod constant_time_comparison_tests {
     // TEST_DOMAIN: security
     // TEST_PRIORITY: normal
     fn test_constant_time_one_bit_difference() {
-        let a = vec![0b10101010];
-        let b = vec![0b10101011]; // Last bit different
+        let a = vec![0b1010_1010];
+        let b = vec![0b1010_1011]; // Last bit different
         assert!(!constant_time_compare(&a, &b));
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security

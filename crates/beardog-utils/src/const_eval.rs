@@ -640,7 +640,7 @@ mod tests {
     #[test]
     fn test_const_config_validate_memory_limit() {
         // Create a config with huge buffer * cache to exceed 100MB
-        let config: ConstConfig<524288, 512, true, 12> = ConstConfig::default();
+        let config: ConstConfig<524_288, 512, true, 12> = ConstConfig::default();
         let result = config.validate();
         assert!(result.is_err());
     }
@@ -813,6 +813,6 @@ mod tests {
     #[test]
     fn test_const_metrics_memory_requirements_zero_cache() {
         let m = ConstMetrics::memory_requirements(1024, 2, 0, 16);
-        assert_eq!(m, 1024 * 2 + 0 + 2 * 16);
+        assert_eq!(m, (1024 * 2) + 2 * 16);
     }
 }

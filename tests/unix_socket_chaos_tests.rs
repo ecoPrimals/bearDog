@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 #![allow(
     missing_docs,
     clippy::float_cmp,
@@ -121,10 +122,10 @@ async fn chaos_test_connection_storm() {
                     "id": i
                 });
 
-                if let Ok(response) = send_request(&mut stream, request).await {
-                    if response["result"]["status"] == "healthy" {
-                        success_count.fetch_add(1, Ordering::SeqCst);
-                    }
+                if let Ok(response) = send_request(&mut stream, request).await
+                    && response["result"]["status"] == "healthy"
+                {
+                    success_count.fetch_add(1, Ordering::SeqCst);
                 }
             }
         });
@@ -312,10 +313,10 @@ async fn chaos_test_concurrent_request_flood() {
                         "id": format!("{}:{}", conn_id, req_id)
                     });
 
-                    if let Ok(response) = send_request(&mut stream, request).await {
-                        if response["result"]["status"] == "healthy" {
-                            successful_requests.fetch_add(1, Ordering::SeqCst);
-                        }
+                    if let Ok(response) = send_request(&mut stream, request).await
+                        && response["result"]["status"] == "healthy"
+                    {
+                        successful_requests.fetch_add(1, Ordering::SeqCst);
                     }
                 }
             }

@@ -58,7 +58,7 @@ mod network_connection_tests {
     #[test]
     fn test_connection_pool_config_clone() {
         let c1 = ConnectionPoolConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -80,7 +80,7 @@ mod workflow_extra_coverage {
     #[test]
     fn test_workflow_clone() {
         let w1 = Workflow::default();
-        let w2 = w1.clone();
+        let w2 = w1;
         let _ = format!("{w2:?}");
     }
 }

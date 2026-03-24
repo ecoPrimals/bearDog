@@ -285,7 +285,7 @@ mod tests {
         // Encrypt
         let request = BirdSongEncryptRequest {
             plaintext: plaintext.to_vec(),
-            lineage_hint: hint.clone(),
+            lineage_hint: hint,
             associated_data: None,
         };
         let broadcast = encryption.encrypt(&request)?;
@@ -325,7 +325,7 @@ mod tests {
 
         let request = BirdSongEncryptRequest {
             plaintext: plaintext.to_vec(),
-            lineage_hint: hint.clone(),
+            lineage_hint: hint,
             associated_data: None,
         };
         let broadcast = encryption.encrypt(&request)?;
@@ -427,9 +427,9 @@ mod tests {
         // Verify each broadcast can be decrypted by appropriate depth
         for (depth, broadcast) in broadcasts.iter().enumerate() {
             let proof = LineageProof {
-                node_id: format!("node-depth-{}", depth),
+                node_id: format!("node-depth-{depth}"),
                 root_id: "test-root".to_string(),
-                path: (0..=depth).map(|d| format!("node-depth-{}", d)).collect(),
+                path: (0..=depth).map(|d| format!("node-depth-{d}")).collect(),
                 proof_chain: Vec::new(),
                 merkle_root: Vec::new(),
                 generated_at: Utc::now(),

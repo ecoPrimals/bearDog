@@ -488,6 +488,24 @@ impl SystemMonitor {
     }
 }
 
+impl Default for SystemMonitor {
+    fn default() -> Self {
+        // SystemMonitor::new() with default config is infallible in practice,
+        // but we handle the Result properly for defensive programming
+        Self::new().unwrap_or_else(|e| {
+            // This should never happen with default config, but we provide
+            // a minimal fallback monitor if it does
+            error!("Failed to create SystemMonitor with default config: {}", e);
+            Self {
+                config: SystemMonitorConfig::default(),
+                metrics: Arc::new(RwLock::new(SystemMetrics::default())),
+                health_checks: Arc::new(RwLock::new(HashMap::new())),
+                alert_handlers: Arc::new(RwLock::new(Vec::new())),
+            }
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -651,31 +669,14 @@ mod tests {
             if m.last_updated.is_some() {
                 break m;
             }
-            if tokio::time::Instant::now() >= deadline {
-                panic!("timed out waiting for background monitor to refresh metrics snapshot");
-            }
+            assert!(
+                tokio::time::Instant::now() < deadline,
+                "timed out waiting for background monitor to refresh metrics snapshot"
+            );
             tokio::task::yield_now().await;
         };
         assert!(metrics.last_updated.is_some());
         assert!(metrics.cpu_usage_percent >= 0.0);
         let _ = monitor.stop();
-    }
-}
-
-impl Default for SystemMonitor {
-    fn default() -> Self {
-        // SystemMonitor::new() with default config is infallible in practice,
-        // but we handle the Result properly for defensive programming
-        Self::new().unwrap_or_else(|e| {
-            // This should never happen with default config, but we provide
-            // a minimal fallback monitor if it does
-            error!("Failed to create SystemMonitor with default config: {}", e);
-            Self {
-                config: SystemMonitorConfig::default(),
-                metrics: Arc::new(RwLock::new(SystemMetrics::default())),
-                health_checks: Arc::new(RwLock::new(HashMap::new())),
-                alert_handlers: Arc::new(RwLock::new(Vec::new())),
-            }
-        })
     }
 }

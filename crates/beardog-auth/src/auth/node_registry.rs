@@ -102,7 +102,7 @@ mod tests {
         let mut registry = InMemoryNodeRegistry::new();
         let node_info = create_test_node_info("node-1");
 
-        let register_result = registry.register_node(node_info.clone());
+        let register_result = registry.register_node(node_info);
         assert!(register_result.is_ok(), "Node registration should succeed");
 
         let retrieve_result = registry.get_node_info("node-1");

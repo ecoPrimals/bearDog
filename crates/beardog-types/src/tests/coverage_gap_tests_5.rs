@@ -153,7 +153,7 @@ mod adapter_submethods_tests {
     #[test]
     fn test_step_config_clone() {
         let c = crate::canonical::config::domains::adapter::chain::StepConfig::default();
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 
@@ -173,7 +173,7 @@ mod adapter_submethods_tests {
     #[test]
     fn test_optimization_config_clone() {
         let c = crate::canonical::config::domains::adapter::core::OptimizationConfig::default();
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 }
@@ -260,7 +260,7 @@ mod testing_methods_tests {
     #[test]
     fn test_production_test_config_clone() {
         let c1 = CanonicalProductionTestConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -314,7 +314,7 @@ mod bootstrap_from_env_tests {
     #[test]
     fn test_bootstrap_discovery_clone() {
         let c = BootstrapDiscoveryConfig::default();
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 
@@ -539,42 +539,42 @@ mod resilience_methods_tests {
     #[test]
     fn test_resilience_config_clone() {
         let c1 = ResilienceConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 
     #[test]
     fn test_circuit_breaker_config_clone() {
         let c1 = CircuitBreakerConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 
     #[test]
     fn test_retry_config_clone() {
         let c1 = RetryConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 
     #[test]
     fn test_bulkhead_config_clone() {
         let c1 = BulkheadConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 
     #[test]
     fn test_fallback_config_clone() {
         let c1 = FallbackConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 
     #[test]
     fn test_timeout_config_clone() {
         let c1 = TimeoutConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -588,21 +588,21 @@ mod providers_performance_methods {
     #[test]
     fn test_performance_config_clone() {
         let c1 = PerformanceConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 
     #[test]
     fn test_caching_config_clone() {
         let c1 = CachingConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 
     #[test]
     fn test_buffer_config_clone() {
         let c1 = BufferConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -616,7 +616,7 @@ mod config_discovery_methods {
     #[test]
     fn test_discovery_config_clone_eq() {
         let c1 = DiscoveryConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -630,7 +630,7 @@ mod config_client_methods {
     #[test]
     fn test_client_configuration_clone_eq() {
         let c1 = ClientConfiguration::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -644,14 +644,14 @@ mod monitoring_health_extra {
     #[test]
     fn test_http_health_check_clone() {
         let c1 = HttpHealthCheckConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 
     #[test]
     fn test_tcp_health_check_clone() {
         let c1 = TcpHealthCheckConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -669,7 +669,7 @@ mod config_hsm_mod_tests {
     #[test]
     fn test_canonical_hsm_config_clone() {
         let c1 = crate::canonical::hsm_unified::CanonicalHsmConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -757,7 +757,7 @@ mod config_network_domain_tests {
     #[test]
     fn test_consolidated_network_config_clone() {
         let c1 = ConsolidatedNetworkConfiguration::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }

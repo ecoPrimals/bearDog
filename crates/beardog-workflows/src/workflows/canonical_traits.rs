@@ -362,7 +362,7 @@ mod tests {
     #[test]
     fn test_default_workflow_status_debug() {
         let status = DefaultWorkflowStatus::Running;
-        let debug_str = format!("{:?}", status);
+        let debug_str = format!("{status:?}");
         assert!(debug_str.contains("Running"));
     }
 
@@ -403,8 +403,8 @@ mod tests {
         ];
 
         for status in terminal_states {
-            assert!(status.is_terminal(), "{:?} should be terminal", status);
-            assert!(!status.is_active(), "{:?} should not be active", status);
+            assert!(status.is_terminal(), "{status:?} should be terminal");
+            assert!(!status.is_active(), "{status:?} should not be active");
         }
     }
 
@@ -416,7 +416,7 @@ mod tests {
         ];
 
         for status in non_terminal_states {
-            assert!(!status.is_terminal(), "{:?} should not be terminal", status);
+            assert!(!status.is_terminal(), "{status:?} should not be terminal");
         }
     }
 
@@ -452,7 +452,7 @@ mod tests {
     fn test_workflow_id_trait() {
         let id = TestWorkflowId("test-id-123".to_string());
         assert_eq!(id.as_str(), "test-id-123");
-        assert_eq!(format!("{}", id), "test-id-123");
+        assert_eq!(format!("{id}"), "test-id-123");
     }
 
     #[test]
@@ -511,7 +511,7 @@ mod tests {
 
         for (i, status) in statuses.iter().enumerate() {
             let workflow = TestWorkflow {
-                id: TestWorkflowId(format!("wf-{}", i)),
+                id: TestWorkflowId(format!("wf-{i}")),
                 status: *status,
                 created: now,
             };
@@ -552,7 +552,7 @@ mod tests {
             created: chrono::Utc::now(),
         };
 
-        let debug_str = format!("{:?}", workflow);
+        let debug_str = format!("{workflow:?}");
         assert!(debug_str.contains("TestWorkflow"));
     }
 
@@ -617,7 +617,7 @@ mod tests {
     fn test_workflow_id_empty_string() {
         let id = TestWorkflowId(String::new());
         assert_eq!(id.as_str(), "");
-        assert_eq!(format!("{}", id), "");
+        assert_eq!(format!("{id}"), "");
     }
 
     #[test]

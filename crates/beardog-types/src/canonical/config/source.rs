@@ -327,7 +327,7 @@ mod tests {
         source.set("TIMEOUT", "30");
 
         assert_eq!(get_parsed(&source, "PORT", 0), 8080);
-        assert_eq!(get_bool(&source, "ENABLED", false), true);
+        assert!(get_bool(&source, "ENABLED", false));
         assert_eq!(get_parsed(&source, "TIMEOUT", 0), 30);
         assert_eq!(get_parsed(&source, "MISSING", 42), 42);
     }
@@ -381,7 +381,7 @@ mod tests {
 
         // Clone for multiple threads
         let source1 = source.clone();
-        let source2 = source.clone();
+        let source2 = source;
 
         let handle1 = thread::spawn(move || {
             for _ in 0..100 {

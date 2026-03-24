@@ -46,7 +46,7 @@ fn test_biometric_hash_large() {
     let large_hash: Vec<u8> = (0..1024).map(|i| (i % 256) as u8).collect();
     let large_proof: Vec<u8> = (0..512).map(|i| (i % 256) as u8).collect();
 
-    let hash = BiometricHash::new(large_hash.clone(), large_proof.clone());
+    let hash = BiometricHash::new(large_hash, large_proof);
 
     assert_eq!(hash.hash.len(), 1024);
     assert_eq!(hash.ownership_proof.len(), 512);
@@ -161,8 +161,7 @@ fn test_human_entropy_quality_boundaries() {
         if let HumanEntropyType::Biometric { quality_score, .. } = source.source_type {
             assert_eq!(
                 quality_score, quality,
-                "Quality should be {} for {}",
-                quality, description
+                "Quality should be {quality} for {description}"
             );
         }
     }

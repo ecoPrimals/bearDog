@@ -218,7 +218,7 @@ mod response_gap_tests {
     #[test]
     fn test_handler_debug() {
         let handler = make_handler(true);
-        let debug = format!("{:?}", handler);
+        let debug = format!("{handler:?}");
         assert!(debug.contains("AutomatedThreatResponseHandler"));
     }
 
@@ -228,7 +228,7 @@ mod response_gap_tests {
             enabled: true,
             max_response_level: ThreatSeverity::High,
         };
-        let debug = format!("{:?}", config);
+        let debug = format!("{config:?}");
         assert!(debug.contains("ThreatResponseConfig"));
     }
 

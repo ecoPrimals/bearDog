@@ -607,7 +607,7 @@ mod concurrent_processing_tests {
     fn test_multiple_concurrent_contexts() {
         let contexts: Vec<ProcessingContext> = (0..10)
             .map(|i| ProcessingContext {
-                user_id: format!("concurrent-user-{:03}", i),
+                user_id: format!("concurrent-user-{i:03}"),
                 retry_count: 0,
                 timeout_seconds: 300,
             })
@@ -617,7 +617,7 @@ mod concurrent_processing_tests {
 
         // Verify all have unique IDs
         for (i, context) in contexts.iter().enumerate() {
-            assert_eq!(context.user_id, format!("concurrent-user-{:03}", i));
+            assert_eq!(context.user_id, format!("concurrent-user-{i:03}"));
         }
     }
 

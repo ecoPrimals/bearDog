@@ -432,7 +432,7 @@ mod tests {
 
     #[test]
     fn test_shared_config_new() {
-        let config: HashMap<String, i32> = [("key".to_string(), 42)].iter().cloned().collect();
+        let config: HashMap<String, i32> = std::iter::once(("key".to_string(), 42)).collect();
         let shared = config_optimization::SharedConfig::new(config);
         assert_eq!(shared.get().get("key"), Some(&42));
     }

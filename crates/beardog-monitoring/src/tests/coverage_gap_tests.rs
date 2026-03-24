@@ -187,7 +187,7 @@ fn test_trend_analyzer_decreasing_trend() {
     let analyzer = TrendAnalyzer::new(config);
 
     let metrics: Vec<MetricDataPoint> = (0..10)
-        .map(|i| make_data_point(100.0 - (i as f64 * 10.0)))
+        .map(|i| make_data_point((i as f64).mul_add(-10.0, 100.0)))
         .collect();
 
     let trend = analyzer.analyze_trends(&metrics);
@@ -418,7 +418,7 @@ fn test_metric_collection_default() {
 #[test]
 fn test_metric_value_variants() {
     let counter = MonitoringMetricValue::Counter(100);
-    let gauge = MonitoringMetricValue::Gauge(3.14);
+    let gauge = MonitoringMetricValue::Gauge(std::f64::consts::PI);
     let histogram = MonitoringMetricValue::Histogram(vec![1.0, 2.0, 3.0]);
     let timer = MonitoringMetricValue::Timer(Duration::from_secs(1));
 
@@ -430,17 +430,17 @@ fn test_metric_value_variants() {
 
 #[test]
 fn test_alert_type_variants() {
-    let p = AlertType::Performance;
-    let s = AlertType::Security;
-    let r = AlertType::Resource;
-    let e = AlertType::Error;
-    let c = AlertType::Custom("custom".to_string());
+    let performance = AlertType::Performance;
+    let security = AlertType::Security;
+    let resource = AlertType::Resource;
+    let error = AlertType::Error;
+    let custom = AlertType::Custom("custom".to_string());
 
-    assert_eq!(p, AlertType::Performance);
-    assert_eq!(s, AlertType::Security);
-    assert_eq!(r, AlertType::Resource);
-    assert_eq!(e, AlertType::Error);
-    assert!(matches!(c, AlertType::Custom(_)));
+    assert_eq!(performance, AlertType::Performance);
+    assert_eq!(security, AlertType::Security);
+    assert_eq!(resource, AlertType::Resource);
+    assert_eq!(error, AlertType::Error);
+    assert!(matches!(custom, AlertType::Custom(_)));
 }
 
 #[test]

@@ -337,7 +337,7 @@ fn test_rapid_sequential_spawns() {
         };
 
         let result = engine.spawn_genetics(request);
-        assert!(result.is_ok(), "Spawn {} failed", i);
+        assert!(result.is_ok(), "Spawn {i} failed");
     }
 }
 

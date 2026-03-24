@@ -401,7 +401,7 @@ mod tests {
         let fallback = ConfigValue::new(8080, ConfigSource::FallbackDefaults);
         let cli = ConfigValue::new(9000, ConfigSource::CliArgs);
 
-        let result = fallback.merge(cli.clone());
+        let result = fallback.merge(cli);
         assert_eq!(result.value, 9000);
         assert_eq!(result.source, ConfigSource::CliArgs);
     }
@@ -467,7 +467,7 @@ mod tests {
 
         assert_eq!(
             config.network.api.bind_address,
-            std::net::IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0))
+            std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED)
         );
     }
 

@@ -6,6 +6,7 @@
 // Consolidates 8+ TimeoutConfig instances across the codebase.
 
 use crate::canonical::traits::TimeoutPolicy;
+use crate::constants::defaults;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -421,7 +422,7 @@ impl CanonicalTimeoutConfig {
             // Domain timeouts
             health_check_timeout: Duration::from_secs(30),
             hsm_operation_timeout: Duration::from_secs(10),
-            hsm_probe_timeout: Duration::from_millis(5000),
+            hsm_probe_timeout: Duration::from_millis(defaults::DEFAULT_MAX_RESPONSE_TIME_MS),
             discovery_timeout: Duration::from_secs(60),
             ai_decision_timeout: Duration::from_secs(300),
             ai_request_timeout: Duration::from_secs(300),

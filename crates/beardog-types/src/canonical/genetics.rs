@@ -3,6 +3,8 @@
 // Genetics configuration types for BearDog
 // Provides structured definitions for genetic algorithms, entropy, and evolutionary processes
 
+use crate::constants::defaults;
+use crate::constants::time;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -374,12 +376,12 @@ pub struct TerminationConfig {
 impl Default for TerminationConfig {
     fn default() -> Self {
         Self {
-            max_generations: 1000,
+            max_generations: defaults::DEFAULT_MAX_GENERATIONS,
             max_evaluations: None,
             target_fitness: None,
             convergence_tolerance: 1e-6,
             max_stagnation: 100,
-            max_runtime_seconds: Some(3600), // 1 hour
+            max_runtime_seconds: Some(time::SECONDS_PER_HOUR), // 1 hour
         }
     }
 }

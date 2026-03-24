@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 //! SHA-384 Cipher Suite Test (0x1302)
 //!
 //! Smoke test to verify TLS 1.3 cipher suite 0x1302 (TLS_AES_256_GCM_SHA384)

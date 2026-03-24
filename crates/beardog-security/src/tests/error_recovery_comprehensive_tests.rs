@@ -229,8 +229,8 @@ fn test_error_propagation() {
     // With context at each level
 
     let base_error = "Network timeout";
-    let wrapped_error = format!("HSM operation failed: {}", base_error);
-    let final_error = format!("Security check failed: {}", wrapped_error);
+    let wrapped_error = format!("HSM operation failed: {base_error}");
+    let final_error = format!("Security check failed: {wrapped_error}");
 
     assert!(
         final_error.contains("Network timeout"),
@@ -253,7 +253,7 @@ fn test_transient_failure_retry() {
     // Then: Should retry with exponential backoff
     for attempt in 0..max_retries {
         let delay = base_delay_ms * 2_u64.pow(attempt as u32);
-        assert!(delay > 0, "Delay should increase: {}", delay);
+        assert!(delay > 0, "Delay should increase: {delay}");
         assert!(delay <= base_delay_ms * 8, "Delay should be bounded");
     }
 }
@@ -302,8 +302,7 @@ fn test_error_recovery_metrics() {
     let success_rate = (successful_recoveries as f64 / total_attempts as f64) * 100.0;
     assert!(
         success_rate >= 90.0,
-        "Recovery rate should be high: {:.1}%",
-        success_rate
+        "Recovery rate should be high: {success_rate:.1}%"
     );
 }
 
@@ -322,7 +321,7 @@ fn test_error_context_preservation() {
         // TEST_PRIORITY: important
         operation: "key_generation",
         component: "hsm_provider",
-        timestamp_ms: 1697820000000,
+        timestamp_ms: 1_697_820_000_000,
     };
 
     assert!(

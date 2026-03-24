@@ -12,6 +12,16 @@
 //!
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
+// Coverage and unit tests compare floats to literals, assert const invariants, and may use
+// large stack arrays in generated patterns; keep `-D warnings` builds clean without churn.
+#![cfg_attr(
+    test,
+    allow(
+        clippy::float_cmp,
+        clippy::assertions_on_constants,
+        clippy::large_stack_arrays,
+    )
+)]
 // ## 🎯 **PEDANTIC PERFECTION ACHIEVED** ✅
 //
 // This crate represents **ABSOLUTE SOFTWARE ENGINEERING EXCELLENCE** with:

@@ -314,7 +314,7 @@ mod tests {
         report.runs = true;
         report.healthy = true;
 
-        let display = format!("{}", report);
+        let display = format!("{report}");
         assert!(display.contains("Beardog"));
         assert!(display.contains("✓ HEALTHY"));
     }
@@ -484,7 +484,7 @@ mod tests {
 
     #[test]
     fn test_binary_validator_default_constructor() {
-        let _: BinaryValidator = BinaryValidator::default();
+        let _: BinaryValidator = BinaryValidator;
         let _ = BinaryValidator::new();
     }
 

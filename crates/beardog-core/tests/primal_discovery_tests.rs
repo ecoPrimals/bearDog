@@ -269,9 +269,6 @@ async fn test_primal_discovery_creation() {
     };
 
     let _discovery = PrimalDiscovery::new(identity);
-
-    // Should not panic - creation succeeds
-    assert!(true);
 }
 
 #[tokio::test]
@@ -338,7 +335,7 @@ fn test_empty_primal_name() {
 fn test_very_long_primal_name() {
     let long_name = "a".repeat(1000);
     let identity = PrimalIdentity {
-        name: long_name.clone(),
+        name: long_name,
         primal_type: "test".to_string(),
         capabilities: HashSet::new(),
         endpoints: vec![],

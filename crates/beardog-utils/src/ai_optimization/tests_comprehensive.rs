@@ -14,6 +14,7 @@
 use super::history::OptimizationHistory;
 use super::predictor::ResourcePredictor;
 use super::types::{OptimizationAction, OptimizationType};
+use crate::float_eq;
 use std::collections::HashMap;
 
 // ========== ResourcePredictor Tests ==========
@@ -62,7 +63,7 @@ fn test_predict_cpu_usage_with_data() {
     predictor.add_sample(60.0, 70.0, 12.0).expect("add_sample");
 
     let prediction = predictor.predict_cpu_usage().expect("predict_cpu_usage");
-    assert_eq!(prediction, 55.0); // Average of 50 and 60
+    float_eq::f64(prediction, 55.0); // Average of 50 and 60
 }
 
 #[test]
@@ -82,7 +83,7 @@ fn test_predict_memory_usage_with_data() {
     let prediction = predictor
         .predict_memory_usage()
         .expect("predict_memory_usage");
-    assert_eq!(prediction, 50.0); // Average of 40 and 60
+    float_eq::f64(prediction, 50.0); // Average of 40 and 60
 }
 
 #[test]
@@ -102,7 +103,7 @@ fn test_predict_network_latency_with_data() {
     let prediction = predictor
         .predict_network_latency()
         .expect("predict_network_latency");
-    assert_eq!(prediction, 15.0); // Average of 10 and 20
+    float_eq::f64(prediction, 15.0); // Average of 10 and 20
 }
 
 #[test]
@@ -121,7 +122,7 @@ fn test_window_size_limiting() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    assert_eq!(prediction, 40.0);
+    float_eq::f64(prediction, 40.0);
 }
 
 // TEST_CATEGORY: unit
@@ -211,7 +212,7 @@ fn test_get_trend_insufficient_data() {
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     let trend = predictor.get_trend("cpu").expect("get_trend cpu");
-    assert_eq!(trend, 0.0); // Not enough data for trend
+    float_eq::f64(trend, 0.0); // Not enough data for trend
 }
 
 #[test]
@@ -351,7 +352,7 @@ fn test_get_average_improvement_no_data() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    assert_eq!(history.get_average_improvement(), 0.0);
+    float_eq::f64(history.get_average_improvement(), 0.0);
 }
 
 #[test]
@@ -381,7 +382,7 @@ fn test_get_average_improvement_with_data() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    assert_eq!(history.get_average_improvement(), 15.0);
+    float_eq::f64(history.get_average_improvement(), 15.0);
 }
 
 // TEST_CATEGORY: unit
@@ -415,7 +416,7 @@ fn test_get_average_improvement_with_none_values() {
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     // Should only count action1
-    assert_eq!(history.get_average_improvement(), 10.0);
+    float_eq::f64(history.get_average_improvement(), 10.0);
 }
 
 #[test]
@@ -503,7 +504,7 @@ fn test_get_success_rate() {
     // Success rate should be 3/4 = 0.75
     let rate = history.get_success_rate("ThreadPool");
     assert!(rate.is_some());
-    assert_eq!(rate.expect("ThreadPool success rate"), 0.75);
+    float_eq::f64(rate.expect("ThreadPool success rate"), 0.75);
 }
 
 #[test]
@@ -585,7 +586,7 @@ fn test_predictor_accuracy_over_time() {
         .predict_network_latency()
         .expect("predict_network_latency");
 
-    assert_eq!(cpu_pred, 50.0);
-    assert_eq!(mem_pred, 60.0);
-    assert_eq!(net_pred, 10.0);
+    float_eq::f64(cpu_pred, 50.0);
+    float_eq::f64(mem_pred, 60.0);
+    float_eq::f64(net_pred, 10.0);
 }

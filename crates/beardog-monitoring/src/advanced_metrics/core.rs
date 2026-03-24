@@ -205,7 +205,7 @@ mod tests {
     #[test]
     fn test_advanced_metrics_system_config() {
         let config = MetricsConfig::default();
-        let system = AdvancedMetricsSystem::new(config.clone());
+        let system = AdvancedMetricsSystem::new(config);
 
         // Verify config is accessible
         assert!(system.config().enabled);

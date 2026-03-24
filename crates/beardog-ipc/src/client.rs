@@ -492,8 +492,7 @@ mod tests {
         let err = client
             .register("x", vec![Capability::Crypto])
             .await
-            .err()
-            .expect("expected err");
+            .expect_err("expected err");
         assert!(matches!(err, IpcError::Protocol(_)), "{err:?}");
         let _ = std::fs::remove_file(&path);
     }
@@ -514,8 +513,7 @@ mod tests {
         let err = client
             .find_capability("fail")
             .await
-            .err()
-            .expect("expected err");
+            .expect_err("expected err");
         assert!(matches!(err, IpcError::Protocol(_)), "{err:?}");
         let _ = std::fs::remove_file(&path);
     }
@@ -541,8 +539,7 @@ mod tests {
         let err = client
             .find_capability("crypto")
             .await
-            .err()
-            .expect("expected serialization err");
+            .expect_err("expected serialization err");
         assert!(matches!(err, IpcError::Serialization(_)), "{err:?}");
         let _ = std::fs::remove_file(&path);
     }
@@ -560,7 +557,7 @@ mod tests {
             .await
             .expect("connect mock for heartbeat-not-registered test");
 
-        let err = client.heartbeat().await.err().expect("expected err");
+        let err = client.heartbeat().await.expect_err("expected err");
         assert!(matches!(err, IpcError::Protocol(_)), "{err:?}");
         let _ = std::fs::remove_file(&path);
     }
@@ -599,8 +596,7 @@ mod tests {
         let err = result.unwrap_err();
         assert!(
             matches!(err, IpcError::Connection(_) | IpcError::Io(_)),
-            "Expected Connection or Io error, got {:?}",
-            err
+            "Expected Connection or Io error, got {err:?}"
         );
     }
 

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+use crate::constants::time;
+
 // HSM key management types and structures
 // Provides definitions for HSM keys, metadata, and lifecycle management
 
@@ -209,7 +211,7 @@ impl Default for KeyHealth {
         Self {
             status: "healthy".to_string(),
             last_check: SystemTime::now(),
-            check_interval: 3600, // 1 hour
+            check_interval: time::SECONDS_PER_HOUR as u32, // 1 hour
             operation_count: 0,
             error_count: 0,
         }

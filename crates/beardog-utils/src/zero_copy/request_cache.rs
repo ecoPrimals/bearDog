@@ -269,7 +269,7 @@ mod tests {
             let cache_clone = Arc::clone(&cache);
             handles.push(thread::spawn(move || {
                 for j in 0..10 {
-                    let key = format!("key_{}_{}", i, j);
+                    let key = format!("key_{i}_{j}");
                     let value = i * 10 + j;
                     cache_clone.insert(key.clone(), value);
                     let retrieved = cache_clone.get(&key);

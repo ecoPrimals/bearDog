@@ -477,38 +477,33 @@ async fn run_comparison() -> Result<(), BearDogError> {
         println!("📈 Insights:");
         println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-        let fastest = results.iter().min_by_key(|r| r.generation_time_ms).unwrap();
-        println!(
-            "⚡ Fastest: {} ({} ms)",
-            fastest.source, fastest.generation_time_ms
-        );
-
-        let best_quality = results
-            .iter()
-            .max_by(|a, b| {
+        if let (Some(fastest), Some(best_quality), Some(best_shannon)) = (
+            results.iter().min_by_key(|r| r.generation_time_ms),
+            results.iter().max_by(|a, b| {
                 a.quality_score
                     .partial_cmp(&b.quality_score)
                     .unwrap_or(std::cmp::Ordering::Equal)
-            })
-            .unwrap();
-        println!(
-            "🎯 Best Quality: {} ({:.1}%)",
-            best_quality.source,
-            best_quality.quality_score * 100.0
-        );
-
-        let best_shannon = results
-            .iter()
-            .max_by(|a, b| {
+            }),
+            results.iter().max_by(|a, b| {
                 a.shannon_entropy
                     .partial_cmp(&b.shannon_entropy)
                     .unwrap_or(std::cmp::Ordering::Equal)
-            })
-            .unwrap();
-        println!(
-            "🎲 Best Randomness: {} (Shannon: {:.4})",
-            best_shannon.source, best_shannon.shannon_entropy
-        );
+            }),
+        ) {
+            println!(
+                "⚡ Fastest: {} ({} ms)",
+                fastest.source, fastest.generation_time_ms
+            );
+            println!(
+                "🎯 Best Quality: {} ({:.1}%)",
+                best_quality.source,
+                best_quality.quality_score * 100.0
+            );
+            println!(
+                "🎲 Best Randomness: {} (Shannon: {:.4})",
+                best_shannon.source, best_shannon.shannon_entropy
+            );
+        }
 
         println!();
         println!("💡 Recommendations:");

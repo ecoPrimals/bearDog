@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
+
 //! Comprehensive Tests for BearDog Error Types
 //!
 //! Coverage expansion for beardog-errors crate
@@ -116,7 +118,7 @@ fn test_error_system() {
 #[test]
 fn test_error_display() {
     let err = BearDogError::not_found("test".to_string());
-    let display = format!("{}", err);
+    let display = format!("{err}");
 
     assert!(display.contains("test"));
 }
@@ -124,7 +126,7 @@ fn test_error_display() {
 #[test]
 fn test_error_debug() {
     let err = BearDogError::invalid_input("debug test");
-    let debug = format!("{:?}", err);
+    let debug = format!("{err:?}");
 
     assert!(debug.contains("debug test"));
 }
@@ -134,7 +136,7 @@ fn test_error_clone() {
     let err = BearDogError::unauthorized("clone test".to_string());
     let cloned = err.clone();
 
-    assert_eq!(format!("{}", err), format!("{}", cloned));
+    assert_eq!(format!("{err}"), format!("{cloned}"));
 }
 
 #[test]
@@ -152,7 +154,7 @@ fn test_error_category_equality() {
 #[test]
 fn test_error_category_debug() {
     let category = SecurityErrorCategory::Authorization;
-    let debug = format!("{:?}", category);
+    let debug = format!("{category:?}");
 
     assert!(debug.contains("Authorization"));
 }
@@ -262,7 +264,7 @@ fn test_error_in_collection() {
 #[test]
 fn test_error_category_serialization() {
     let category = SystemErrorCategory::Internal;
-    let serialized = format!("{:?}", category);
+    let serialized = format!("{category:?}");
     assert!(serialized.contains("Internal"));
 }
 

@@ -14,6 +14,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use crate::canonical::config::r#trait::BearDogConfig;
+use crate::constants::time;
 
 /// **CONSOLIDATED MONITORING CONFIGURATION** - Unifies all monitoring configs
 ///
@@ -290,7 +291,7 @@ impl MetricsCollectionConfig {
             retention_period: Duration::from_secs(get_parsed(
                 source,
                 "BEARDOG_METRICS_RETENTION_PERIOD_SECS",
-                86400 * 7,
+                time::SECONDS_PER_DAY * 7,
             )),
         }
     }
@@ -388,7 +389,7 @@ impl AnomalyDetectionConfig {
             training_window: Duration::from_secs(get_parsed(
                 source,
                 "BEARDOG_ANOMALY_TRAINING_WINDOW_SECS",
-                86400,
+                time::SECONDS_PER_DAY,
             )),
             alert_thresholds,
         }
@@ -410,7 +411,7 @@ impl Default for TrendAnalysisConfig {
                 std::env::var("BEARDOG_TREND_ANALYSIS_PERIOD_SECS")
                     .ok()
                     .and_then(|p| p.parse().ok())
-                    .unwrap_or(86400), // 1 day default
+                    .unwrap_or(time::SECONDS_PER_DAY), // 1 day default
             ),
             indicators: vec!["cpu_trend".to_string(), "memory_trend".to_string()],
             forecasting_models: vec!["arima".to_string(), "linear_trend".to_string()],
@@ -418,7 +419,7 @@ impl Default for TrendAnalysisConfig {
                 std::env::var("BEARDOG_PREDICTION_HORIZON_SECS")
                     .ok()
                     .and_then(|h| h.parse().ok())
-                    .unwrap_or(3600), // 1 hour default
+                    .unwrap_or(time::SECONDS_PER_HOUR), // 1 hour default
             ),
         }
     }

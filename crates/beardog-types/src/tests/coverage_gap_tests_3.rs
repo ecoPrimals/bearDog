@@ -21,7 +21,7 @@ mod config_trait_tests {
             validation_status: ValidationStatus::Valid,
         };
         let _ = format!("{m:?}");
-        let m2 = m.clone();
+        let m2 = m;
         assert_eq!(m2.domain, "test");
     }
 
@@ -276,7 +276,7 @@ mod monitoring_core_tests {
     #[test]
     fn test_core_monitoring_config_clone() {
         let c1 = CoreMonitoringConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 
@@ -302,7 +302,7 @@ mod config_security_mod_tests {
     #[test]
     fn test_security_config_clone() {
         let c1 = CanonicalSecurityConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -322,7 +322,7 @@ mod config_security_auth_tests {
     #[test]
     fn test_canonical_authorization_config_clone() {
         let c1 = CanonicalAuthorizationConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -342,7 +342,7 @@ mod config_security_mfa_tests {
     #[test]
     fn test_canonical_mfa_config_clone() {
         let c1 = CanonicalMfaConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -362,7 +362,7 @@ mod config_security_encryption_tests {
     #[test]
     fn test_canonical_encryption_config_clone() {
         let c1 = CanonicalEncryptionConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -390,7 +390,7 @@ mod config_unified_simplified_tests {
     #[test]
     fn test_simplified_config_clone() {
         let c1 = SimplifiedBearDogConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -454,7 +454,7 @@ mod config_hsm_hardware_tests {
     #[test]
     fn test_hardware_config_clone() {
         let c1 = UnifiedHardwareHsmConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -474,7 +474,7 @@ mod config_hsm_cloud_tests {
     #[test]
     fn test_cloud_hsm_config_clone() {
         let c1 = UnifiedCloudHsmConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }

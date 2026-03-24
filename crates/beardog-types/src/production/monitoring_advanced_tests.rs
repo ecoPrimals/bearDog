@@ -422,7 +422,7 @@ fn test_metric_type_variants() {
     assert_eq!(types.len(), 4);
     for metric_type in types {
         // Verify each type can be created
-        let _ = format!("{:?}", metric_type);
+        let _ = format!("{metric_type:?}");
     }
 }
 
@@ -468,7 +468,7 @@ fn test_operation_status_variants() {
 
     assert_eq!(statuses.len(), 4);
     for status in statuses {
-        let _ = format!("{:?}", status);
+        let _ = format!("{status:?}");
     }
 }
 

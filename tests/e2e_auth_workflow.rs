@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! End-to-End Authentication Workflow Test
 //!
 //! Tests the complete authentication flow from user registration through

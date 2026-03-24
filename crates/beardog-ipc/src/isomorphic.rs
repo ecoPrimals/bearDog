@@ -338,7 +338,7 @@ mod tests {
         let ep = IpcEndpoint::UnixSocket(PathBuf::from("/tmp/x.sock"));
         let cloned = ep.clone();
         assert_eq!(ep.display(), cloned.display());
-        assert!(format!("{:?}", ep).contains("UnixSocket"));
+        assert!(format!("{ep:?}").contains("UnixSocket"));
     }
 
     #[test]

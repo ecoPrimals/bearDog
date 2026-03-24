@@ -321,7 +321,7 @@ mod tests {
             &self.id
         }
 
-        fn version(&self) -> &str {
+        fn version(&self) -> &'static str {
             "1.0.0"
         }
 

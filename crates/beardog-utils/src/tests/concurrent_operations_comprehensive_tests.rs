@@ -80,7 +80,7 @@ async fn test_concurrent_hashmap_parallel_inserts() {
     for i in 0..100 {
         let map = map.clone();
         handles.push(tokio::spawn(async move {
-            map.insert(format!("key_{}", i), i);
+            map.insert(format!("key_{i}"), i);
         }));
     }
 
@@ -93,7 +93,7 @@ async fn test_concurrent_hashmap_parallel_inserts() {
 
     // Verify values
     for i in 0..100 {
-        assert_eq!(map.get(&format!("key_{}", i)), Some(i));
+        assert_eq!(map.get(&format!("key_{i}")), Some(i));
     }
 }
 
@@ -104,7 +104,7 @@ async fn test_concurrent_hashmap_read_write_mix() {
 
     // Pre-populate
     for i in 0..50 {
-        map.insert(format!("key_{}", i), i);
+        map.insert(format!("key_{i}"), i);
     }
 
     let mut handles = vec![];
@@ -118,7 +118,7 @@ async fn test_concurrent_hashmap_read_write_mix() {
                 let _ = map.get(&format!("key_{}", i % 50));
             } else {
                 // Write operation
-                map.insert(format!("new_key_{}", i), i);
+                map.insert(format!("new_key_{i}"), i);
             }
         }));
     }
@@ -138,7 +138,7 @@ async fn test_concurrent_hashmap_remove_operations() {
 
     // Insert 100 items
     for i in 0..100 {
-        map.insert(format!("key_{}", i), i);
+        map.insert(format!("key_{i}"), i);
     }
 
     let mut handles = vec![];
@@ -147,7 +147,7 @@ async fn test_concurrent_hashmap_remove_operations() {
     for i in 0..50 {
         let map = map.clone();
         handles.push(tokio::spawn(async move {
-            map.remove(&format!("key_{}", i));
+            map.remove(&format!("key_{i}"));
         }));
     }
 
@@ -170,7 +170,7 @@ async fn test_safe_cache_concurrent_gets() {
 
     // Pre-populate
     for i in 0..50 {
-        let _ = cache.insert(format!("key_{}", i), format!("value_{}", i));
+        let _ = cache.insert(format!("key_{i}"), format!("value_{i}"));
     }
 
     let mut handles = vec![];
@@ -202,7 +202,7 @@ async fn test_safe_cache_concurrent_inserts() {
     for i in 0..100 {
         let cache = cache.clone();
         handles.push(tokio::spawn(async move {
-            let _ = cache.insert(format!("key_{}", i), format!("value_{}", i));
+            let _ = cache.insert(format!("key_{i}"), format!("value_{i}"));
         }));
     }
 
@@ -223,7 +223,7 @@ async fn test_safe_cache_eviction_under_pressure() {
     for i in 0..200 {
         let cache = cache.clone();
         handles.push(tokio::spawn(async move {
-            let _ = cache.insert(format!("key_{}", i), format!("value_{}", i));
+            let _ = cache.insert(format!("key_{i}"), format!("value_{i}"));
             tokio::time::sleep(Duration::from_micros(10)).await;
         }));
     }
@@ -304,7 +304,7 @@ async fn test_concurrent_operations_complete_promptly() {
     for i in 0..50 {
         let map = map.clone();
         handles.push(tokio::spawn(async move {
-            map.insert(format!("key_{}", i), i);
+            map.insert(format!("key_{i}"), i);
         }));
     }
 
@@ -371,11 +371,7 @@ async fn test_throughput_under_concurrent_load() {
     let duration = start.elapsed();
 
     assert_eq!(counter.load(Ordering::SeqCst), 10_000);
-    assert!(
-        duration.as_millis() < 1000,
-        "Should be fast: {:?}",
-        duration
-    );
+    assert!(duration.as_millis() < 1000, "Should be fast: {duration:?}");
 }
 
 #[tokio::test]
@@ -385,7 +381,7 @@ async fn test_cache_performance_with_many_readers() {
 
     // Populate cache
     for i in 0..100 {
-        let _ = cache.insert(format!("key_{}", i), format!("value_{}", i));
+        let _ = cache.insert(format!("key_{i}"), format!("value_{i}"));
     }
 
     let start = std::time::Instant::now();
@@ -408,8 +404,7 @@ async fn test_cache_performance_with_many_readers() {
 
     assert!(
         duration.as_millis() < 2000,
-        "Reads should be fast: {:?}",
-        duration
+        "Reads should be fast: {duration:?}"
     );
 }
 
@@ -423,7 +418,7 @@ async fn test_memory_safety_with_drop() {
     let map = Arc::new(map);
 
     for i in 0..100 {
-        map.insert(format!("key_{}", i), i);
+        map.insert(format!("key_{i}"), i);
     }
 
     let mut handles = vec![];
@@ -432,7 +427,7 @@ async fn test_memory_safety_with_drop() {
     for i in 0..50 {
         let map = map.clone();
         handles.push(tokio::spawn(async move {
-            let _ = map.get(&format!("key_{}", i));
+            let _ = map.get(&format!("key_{i}"));
             drop(map);
         }));
     }
@@ -451,7 +446,7 @@ async fn test_concurrent_clear_and_access() {
     let map = Arc::new(map);
 
     for i in 0..100 {
-        map.insert(format!("key_{}", i), i);
+        map.insert(format!("key_{i}"), i);
     }
 
     let mut handles = vec![];
@@ -467,7 +462,7 @@ async fn test_concurrent_clear_and_access() {
         let map = map.clone();
         handles.push(tokio::spawn(async move {
             for _ in 0..10 {
-                let _ = map.get(&format!("key_{}", i));
+                let _ = map.get(&format!("key_{i}"));
                 tokio::time::sleep(Duration::from_millis(1)).await;
             }
         }));

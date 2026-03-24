@@ -2,6 +2,7 @@
 
 //! Structured capability matrices advertised by HSM devices (crypto, performance, APIs).
 
+use crate::constants::defaults;
 use serde::{Deserialize, Serialize};
 
 /// HSM hardware capabilities
@@ -132,7 +133,7 @@ impl Default for KeyManagementCapabilities {
                 std::env::var("BEARDOG_HSM_MAX_KEYS")
                     .ok()
                     .and_then(|k| k.parse().ok())
-                    .unwrap_or(10000), // 10K keys default
+                    .unwrap_or(defaults::DEFAULT_MAX_ENTRIES as u32), // 10K keys default
             ),
             backup_support: true,
             recovery_support: true,
@@ -268,7 +269,7 @@ impl Default for PerformanceCapabilities {
             max_operations_per_second: std::env::var("BEARDOG_HSM_MAX_OPS_PER_SEC")
                 .ok()
                 .and_then(|o| o.parse().ok())
-                .unwrap_or(10000), // 10K ops/sec default
+                .unwrap_or(defaults::DEFAULT_MAX_ENTRIES as u32), // 10K ops/sec default
             concurrent_operations: 100,
             average_latency_ms: 5.0,
             throughput_mbps: 100.0,

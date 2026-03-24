@@ -256,9 +256,7 @@ fn test_mock_backend_store_and_retrieve() {
         destination_key: None,
     };
 
-    let store_response = backend
-        .store(store_request.clone())
-        .expect("Store should succeed");
+    let store_response = backend.store(store_request).expect("Store should succeed");
     assert_eq!(store_response.status, StorageStatus::Success);
 
     let retrieve_request = StorageRequest {

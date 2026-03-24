@@ -347,7 +347,7 @@ mod timeout_tests {
         ];
 
         for timeout in &timeouts {
-            assert!(timeout.as_secs() > 0, "Timeout {:?} must be > 0", timeout);
+            assert!(timeout.as_secs() > 0, "Timeout {timeout:?} must be > 0");
         }
     }
 
@@ -368,8 +368,7 @@ mod timeout_tests {
         for timeout in &timeouts {
             assert!(
                 timeout < &ONE_HOUR,
-                "Timeout {:?} should be < 1 hour",
-                timeout
+                "Timeout {timeout:?} should be < 1 hour"
             );
         }
     }
@@ -388,8 +387,7 @@ mod timeout_tests {
         for timeout in &fast_timeouts {
             assert!(
                 timeout <= &TEN_SECONDS,
-                "Fast timeout {:?} should be <= 10 seconds",
-                timeout
+                "Fast timeout {timeout:?} should be <= 10 seconds"
             );
         }
     }

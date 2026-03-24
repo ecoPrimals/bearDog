@@ -13,6 +13,7 @@
 // This test suite provides extensive coverage for AI-powered optimization.
 
 use crate::ai_optimization::*;
+use crate::float_eq;
 use std::time::Duration;
 
 // =============================================================================
@@ -357,7 +358,7 @@ fn test_optimization_history_average_improvement() {
 fn test_optimization_history_average_no_data() {
     let history = OptimizationHistory::new(100);
     let avg = history.get_average_improvement();
-    assert_eq!(avg, 0.0);
+    float_eq::f64(avg, 0.0);
 }
 
 #[test]
@@ -556,7 +557,11 @@ fn test_full_ai_workflow() {
     // TEST_PRIORITY: normal
     for i in 0..20 {
         predictor
-            .add_sample(50.0 + i as f64, 60.0 + i as f64, 10.0 + i as f64 * 0.1)
+            .add_sample(
+                50.0 + i as f64,
+                60.0 + i as f64,
+                (i as f64).mul_add(0.1, 10.0),
+            )
             .unwrap();
     }
 
@@ -590,7 +595,7 @@ fn test_optimization_workflow() {
             },
             parameters: HashMap::new(),
             expected_improvement: 10.0,
-            actual_improvement: Some(10.0 + (i as f64) * 0.5),
+            actual_improvement: Some((i as f64).mul_add(0.5, 10.0)),
             success: Some(i % 3 != 0), // Most succeed
         };
         history.add_action(action);

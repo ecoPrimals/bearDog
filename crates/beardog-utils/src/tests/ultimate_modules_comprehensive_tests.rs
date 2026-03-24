@@ -98,7 +98,7 @@ fn test_safe_buffer_sequential_writes() {
 
     // Multiple sequential writes
     for i in 0..10 {
-        let data = format!("Write {}", i);
+        let data = format!("Write {i}");
         assert!(buffer.safe_write(data.as_bytes()).is_ok());
     }
 
@@ -219,7 +219,7 @@ fn test_safe_reference_read_operations() {
     let sum = safe_ref.safe_read(|v| v.iter().sum::<i32>()).unwrap();
     assert_eq!(sum, 15);
 
-    let len = safe_ref.safe_read(|v| v.len()).unwrap();
+    let len = safe_ref.safe_read(std::vec::Vec::len).unwrap();
     assert_eq!(len, 5);
 }
 
@@ -233,7 +233,7 @@ fn test_safe_reference_write_operations() {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    let len = safe_ref.safe_read(|v| v.len()).unwrap();
+    let len = safe_ref.safe_read(std::vec::Vec::len).unwrap();
     assert_eq!(len, 4);
 
     // Verify content
@@ -330,7 +330,7 @@ fn test_safety_error_display() {
         // TEST_PRIORITY: important
         available_space: 50,
     };
-    let msg1 = format!("{}", err1);
+    let msg1 = format!("{err1}");
     assert!(msg1.contains("Buffer overflow"));
     assert!(msg1.contains("100"));
     assert!(msg1.contains("50"));
@@ -339,14 +339,14 @@ fn test_safety_error_display() {
         attempted_read: 20,
         available_data: 10,
     };
-    let msg2 = format!("{}", err2);
+    let msg2 = format!("{err2}");
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     assert!(msg2.contains("Read beyond bounds"));
 
     let err3 = SafetyError::InvalidReference;
-    let msg3 = format!("{}", err3);
+    let msg3 = format!("{err3}");
     assert!(msg3.contains("Invalid reference"));
 }
 

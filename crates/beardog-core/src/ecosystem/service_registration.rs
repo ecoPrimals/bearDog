@@ -258,7 +258,7 @@ mod tests {
             health_status: HealthStatus::Healthy,
         };
 
-        let debug_str = format!("{:?}", registration);
+        let debug_str = format!("{registration:?}");
         assert!(debug_str.contains("debug-test"));
         assert!(debug_str.contains("Debug Test"));
     }

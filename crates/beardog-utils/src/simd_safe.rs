@@ -584,7 +584,7 @@ mod tests {
         for size in [0, 1, 7, 15, 16, 31, 32, 63, 64, 127, 256] {
             let data = vec![0xABu8; size];
             let hash = processor.safe_simd_hash(&data)?;
-            assert_eq!(hash.len(), 32, "Hash length should be 32 for size {}", size);
+            assert_eq!(hash.len(), 32, "Hash length should be 32 for size {size}");
         }
         Ok(())
     }
@@ -599,8 +599,7 @@ mod tests {
             let data2 = vec![42u8; size];
             assert!(
                 processor.safe_compare_arrays(&data1, &data2),
-                "Equal arrays of size {} should compare equal",
-                size
+                "Equal arrays of size {size} should compare equal"
             );
         }
     }
@@ -608,14 +607,14 @@ mod tests {
     #[test]
     fn test_processor_debug() {
         let processor = SafeSimdProcessor::new();
-        let debug_str = format!("{:?}", processor);
+        let debug_str = format!("{processor:?}");
         assert!(debug_str.contains("SafeSimdProcessor"));
     }
 
     #[test]
     fn test_capabilities_debug() {
         let caps = SimdCapabilities::default();
-        let debug_str = format!("{:?}", caps);
+        let debug_str = format!("{caps:?}");
         assert!(debug_str.contains("SimdCapabilities"));
     }
 

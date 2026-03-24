@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 
 //! End-to-end handler flow (JSON-RPC style).
 
@@ -19,7 +20,7 @@ async fn test_e2e_sign_ed25519() {
 
     let result = handle_sign_ed25519(Some(&params)).await;
 
-    assert!(result.is_ok(), "E2E sign failed: {:?}", result);
+    assert!(result.is_ok(), "E2E sign failed: {result:?}");
     let response = result.unwrap();
     assert!(response["signature"].as_str().is_some());
     assert_eq!(response["algorithm"], "Ed25519");

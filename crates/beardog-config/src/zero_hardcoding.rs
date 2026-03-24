@@ -471,7 +471,10 @@ mod tests {
     fn test_zero_hardcoding_config() {
         let config = ZeroHardcodingConfig::auto();
         let http_addr = config.endpoints.http_socket_addr();
-        assert!(http_addr.port() == 0 || http_addr.port() > 0);
+        #[allow(clippy::double_comparisons)]
+        {
+            assert!(http_addr.port() == 0 || http_addr.port() > 0);
+        }
     }
 
     #[test]
@@ -506,7 +509,10 @@ mod tests {
         let config = EndpointConfig::from_env();
         // Without env vars set, should use defaults (port 0)
         // The bind_addr defaults to 0.0.0.0
-        assert!(config.http_port == 0 || config.http_port > 0); // may have env set
+        #[allow(clippy::double_comparisons)]
+        {
+            assert!(config.http_port == 0 || config.http_port > 0); // may have env set
+        }
     }
 
     #[test]

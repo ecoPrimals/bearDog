@@ -525,7 +525,7 @@ mod tests {
     #[test]
     fn test_compute_merkle_root_single_leaf() {
         let leaf = vec![1u8; 32];
-        let root = super::compute_merkle_root(&[leaf.clone()]);
+        let root = super::compute_merkle_root(std::slice::from_ref(&leaf));
         assert_eq!(root, leaf);
     }
 

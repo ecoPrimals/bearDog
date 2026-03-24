@@ -186,19 +186,18 @@ impl BehaviorAnalyzer {
             } => {
                 // Check if login from unusual location (if profile exists)
                 if let Some(profile) = self.profiles.get(user_id) {
-                    let known_ips: Vec<_> = profile
+                    // If this IP hasn't been seen before, flag as unusual access
+                    if !profile
                         .iter()
                         .filter_map(|e| {
-                            if let BehaviorEvent::Login { source_ip, .. } = e {
-                                Some(source_ip.as_str())
+                            if let BehaviorEvent::Login { source_ip: ip, .. } = e {
+                                Some(ip.as_str())
                             } else {
                                 None
                             }
                         })
-                        .collect();
-
-                    // If this IP hasn't been seen before, flag as unusual access
-                    if !known_ips.contains(&source_ip.as_str()) {
+                        .any(|ip| ip == source_ip.as_str())
+                    {
                         return Some(Threat::new(
                             ThreatType::UnusualAccess,
                             ThreatSeverity::Medium,
@@ -210,19 +209,17 @@ impl BehaviorAnalyzer {
             BehaviorEvent::DataAccess { resource, .. } => {
                 // Check if accessing unusual resources (if profile exists)
                 if let Some(profile) = self.profiles.get(user_id) {
-                    let known_resources: Vec<_> = profile
+                    // If accessing a resource not in profile, flag as suspicious
+                    if !profile
                         .iter()
                         .filter_map(|e| {
-                            if let BehaviorEvent::DataAccess { resource, .. } = e {
-                                Some(resource.as_str())
+                            if let BehaviorEvent::DataAccess { resource: res, .. } = e {
+                                Some(res.as_str())
                             } else {
                                 None
                             }
                         })
-                        .collect();
-
-                    // If accessing a resource not in profile, flag as suspicious
-                    if !known_resources.contains(&resource.as_str())
+                        .any(|res| res == resource.as_str())
                         && (resource.contains("admin") || resource.contains("sensitive"))
                     {
                         return Some(Threat::new(

@@ -6,6 +6,7 @@
 //! serde-friendly tree with validation hooks ([`HsmConfigValidation`](crate::canonical::config::hsm::HsmConfigValidation)).
 
 use crate::canonical::traits::RetryStrategy;
+use crate::constants::time;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -723,7 +724,7 @@ impl Default for SessionManagementConfig {
                 std::env::var("BEARDOG_HSM_SESSION_TIMEOUT_SECS")
                     .ok()
                     .and_then(|v| v.parse().ok())
-                    .unwrap_or(3600),
+                    .unwrap_or(time::SECONDS_PER_HOUR),
             ),
             max_concurrent_sessions: std::env::var("BEARDOG_HSM_MAX_CONCURRENT_SESSIONS")
                 .ok()
@@ -766,13 +767,13 @@ impl Default for HsmBackupConfig {
                 std::env::var("BEARDOG_HSM_BACKUP_INTERVAL_SECS")
                     .ok()
                     .and_then(|v| v.parse().ok())
-                    .unwrap_or(86400), // 24 hours default
+                    .unwrap_or(time::SECONDS_PER_DAY), // 24 hours default
             ),
             retention_period: Duration::from_secs(
                 std::env::var("BEARDOG_HSM_BACKUP_RETENTION_SECS")
                     .ok()
                     .and_then(|v| v.parse().ok())
-                    .unwrap_or(86400 * 30), // 30 days default
+                    .unwrap_or(time::SECONDS_PER_DAY * 30), // 30 days default
             ),
             encryption_enabled: true,
             remote_backup: false,

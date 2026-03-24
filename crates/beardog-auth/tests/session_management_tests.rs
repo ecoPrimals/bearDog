@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! Session management and security tests for BearDog authentication
 //!
 //! These tests verify session lifecycle, rate limiting, and security features.
@@ -160,7 +161,7 @@ async fn test_account_lockout() {
 
     // Verify lockout message
     if let Err(e) = result {
-        let error_msg = format!("{:?}", e);
+        let error_msg = format!("{e:?}");
         assert!(error_msg.contains("Account locked") || error_msg.contains("locked"));
     }
 }
@@ -453,7 +454,7 @@ async fn test_auth_config_serialization() {
 
     let json = serde_json::to_string(&config).expect("Serialization should succeed");
     assert!(json.contains("12"));
-    assert!(json.contains("3"));
+    assert!(json.contains('3'));
     assert!(json.contains("true"));
 }
 

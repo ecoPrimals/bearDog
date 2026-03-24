@@ -437,7 +437,7 @@ mod tests {
             Some("fam".to_string()),
             "node".to_string(),
         );
-        let err = client.register(&caps).await.err().expect("not connected");
+        let err = client.register(&caps).await.expect_err("not connected");
         assert!(err.to_string().contains("Not connected") || err.to_string().contains("registry"));
     }
 
@@ -557,7 +557,7 @@ mod tests {
             .expect("get_provider");
         assert_eq!(p.primal_id, "p1");
 
-        let err = client.get_provider("none").await.err().expect("err");
+        let err = client.get_provider("none").await.expect_err("err");
         assert!(err.to_string().contains("missing") || err.to_string().contains("capability"));
 
         let caps = beardog_core::capabilities::BearDogCapabilities::new(
@@ -588,15 +588,13 @@ mod tests {
             let mut reader = BufReader::new(&mut stream);
             let mut line = String::new();
             let _ = reader.read_line(&mut line).await;
-            let mut stream = reader.into_inner();
+            let stream = reader.into_inner();
             let resp = serde_json::json!({
                 "jsonrpc": "2.0",
                 "error": { "code": -1, "message": "register failed" },
                 "id": 1
             });
-            let _ = stream
-                .write_all(format!("{}\n", resp.to_string()).as_bytes())
-                .await;
+            let _ = stream.write_all(format!("{resp}\n").as_bytes()).await;
         });
         ready.notified().await;
 
@@ -606,7 +604,7 @@ mod tests {
             .await
             .expect("connect registry client for register error test");
         let caps = beardog_core::capabilities::BearDogCapabilities::new(None, "n".to_string());
-        let err = client.register(&caps).await.err().expect("register err");
+        let err = client.register(&caps).await.expect_err("register err");
         assert!(err.to_string().contains("register") || err.to_string().contains("Registry"));
         let _ = std::fs::remove_file(&path);
     }
@@ -632,15 +630,13 @@ mod tests {
                 let _ = reader.read_line(&mut line).await;
                 let v: serde_json::Value = serde_json::from_str(line.trim()).unwrap_or_default();
                 let id = v["id"].as_u64().unwrap_or(1);
-                let mut stream = reader.into_inner();
+                let stream = reader.into_inner();
                 let resp = serde_json::json!({
                     "jsonrpc": "2.0",
                     "error": { "code": -1, "message": "list failed" },
                     "id": id
                 });
-                let _ = stream
-                    .write_all(format!("{}\n", resp.to_string()).as_bytes())
-                    .await;
+                let _ = stream.write_all(format!("{resp}\n").as_bytes()).await;
             }
         });
         ready.notified().await;
@@ -650,7 +646,7 @@ mod tests {
             .connect()
             .await
             .expect("connect for list_all error branch test");
-        let err = client.list_all().await.err().expect("list err");
+        let err = client.list_all().await.expect_err("list err");
         assert!(err.to_string().contains("list") || err.to_string().contains("primals"));
         let _ = std::fs::remove_file(&path);
     }
@@ -673,15 +669,13 @@ mod tests {
             let mut reader = BufReader::new(&mut stream);
             let mut line = String::new();
             let _ = reader.read_line(&mut line).await;
-            let mut stream = reader.into_inner();
+            let stream = reader.into_inner();
             let resp = serde_json::json!({
                 "jsonrpc": "2.0",
                 "error": { "code": -1, "message": "bad" },
                 "id": 1
             });
-            let _ = stream
-                .write_all(format!("{}\n", resp.to_string()).as_bytes())
-                .await;
+            let _ = stream.write_all(format!("{resp}\n").as_bytes()).await;
         });
         ready.notified().await;
 
@@ -690,7 +684,7 @@ mod tests {
             .connect()
             .await
             .expect("connect for ping error branch test");
-        let err = client.ping().await.err().expect("ping err");
+        let err = client.ping().await.expect_err("ping err");
         assert!(err.to_string().contains("Ping") || err.to_string().contains("ping"));
         let _ = std::fs::remove_file(&path);
     }
@@ -713,15 +707,13 @@ mod tests {
             let mut reader = BufReader::new(&mut stream);
             let mut line = String::new();
             let _ = reader.read_line(&mut line).await;
-            let mut stream = reader.into_inner();
+            let stream = reader.into_inner();
             let resp = serde_json::json!({
                 "jsonrpc": "2.0",
                 "error": { "code": -1, "message": "nope" },
                 "id": 1
             });
-            let _ = stream
-                .write_all(format!("{}\n", resp.to_string()).as_bytes())
-                .await;
+            let _ = stream.write_all(format!("{resp}\n").as_bytes()).await;
         });
         ready.notified().await;
 
@@ -730,7 +722,7 @@ mod tests {
             .connect()
             .await
             .expect("connect for unregister error branch test");
-        let err = client.unregister("x").await.err().expect("unreg err");
+        let err = client.unregister("x").await.expect_err("unreg err");
         assert!(err.to_string().contains("unregister") || err.to_string().contains("Unregister"));
         let _ = std::fs::remove_file(&path);
     }

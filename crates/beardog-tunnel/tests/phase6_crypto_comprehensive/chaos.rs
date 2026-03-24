@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 
 //! Chaos tests — concurrent operations and rapid cycles.
 
@@ -12,7 +13,7 @@ fn test_chaos_concurrent_sha256_operations() {
     let handles: Vec<_> = (0..100)
         .map(|i| {
             thread::spawn(move || {
-                let data = format!("Message number {}", i);
+                let data = format!("Message number {i}");
                 let result = handle_sha256(&json!({
                     "data": BASE64.encode(data.as_bytes())
                 }));
@@ -47,7 +48,7 @@ fn test_chaos_rapid_encrypt_decrypt_cycles() {
     let key = vec![0x42u8; 32];
 
     for i in 0..100 {
-        let plaintext = format!("Message {}", i);
+        let plaintext = format!("Message {i}");
 
         let encrypt_result = handle_aes256_gcm_encrypt(&json!({
             "plaintext": BASE64.encode(plaintext.as_bytes()),
@@ -76,7 +77,7 @@ fn test_chaos_concurrent_password_hashing() {
     let handles: Vec<_> = (0..20)
         .map(|i| {
             thread::spawn(move || {
-                let password = format!("Password{}", i);
+                let password = format!("Password{i}");
                 handle_argon2id_hash(&json!({"password": password})).is_ok()
             })
         })
@@ -97,7 +98,7 @@ fn test_chaos_mixed_operations_concurrent() {
     // SHA operations
     for i in 0..10 {
         handles.push(thread::spawn(move || {
-            handle_sha256(&json!({"data": BASE64.encode(format!("data{}", i).as_bytes())})).is_ok()
+            handle_sha256(&json!({"data": BASE64.encode(format!("data{i}").as_bytes())})).is_ok()
         }));
     }
 
@@ -113,7 +114,7 @@ fn test_chaos_mixed_operations_concurrent() {
         handles.push(thread::spawn(move || {
             let key = vec![0x42u8; 32];
             handle_aes256_gcm_encrypt(&json!({
-                "plaintext": BASE64.encode(format!("msg{}", i).as_bytes()),
+                "plaintext": BASE64.encode(format!("msg{i}").as_bytes()),
                 "key": BASE64.encode(&key)
             }))
             .is_ok()

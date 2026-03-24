@@ -162,7 +162,7 @@ async fn test_discovery_under_load() {
         .map(|_| {
             tokio::spawn(async move {
                 for _ in 0..100 {
-                    let _ = tokio::task::yield_now().await;
+                    let () = tokio::task::yield_now().await;
                 }
             })
         })

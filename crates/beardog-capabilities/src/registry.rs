@@ -490,14 +490,14 @@ mod tests {
         );
 
         for i in 1..=5 {
-            let id = format!("capability_{}", i);
+            let id = format!("capability_{i}");
             let metadata = CapabilityMetadata::new(&id, "1.0");
             registry.register(&id, MockCapability, metadata);
         }
 
         assert_eq!(registry.list_capabilities().len(), 5);
         for i in 1..=5 {
-            let id = format!("capability_{}", i);
+            let id = format!("capability_{i}");
             assert!(registry.has_capability(&id));
         }
     }

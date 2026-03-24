@@ -481,7 +481,7 @@ fn test_update_metrics() {
         failed_operations: 5,
     };
 
-    monitor.update_metrics(new_metrics.clone());
+    monitor.update_metrics(new_metrics);
     assert_eq!(monitor.metrics.active_seeds_count, 10);
     assert_eq!(monitor.metrics.total_entropy_generated, 1000);
     assert_eq!(monitor.metrics.average_quality_score, 0.85);
@@ -504,7 +504,7 @@ fn test_get_performance_metrics() {
         failed_operations: 2,
     };
 
-    monitor.update_metrics(new_metrics.clone());
+    monitor.update_metrics(new_metrics);
     let retrieved_metrics = monitor.get_performance_metrics();
     assert_eq!(retrieved_metrics.active_seeds_count, 5);
     assert_eq!(retrieved_metrics.total_entropy_generated, 500);

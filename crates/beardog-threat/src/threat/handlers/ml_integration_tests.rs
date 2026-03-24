@@ -22,6 +22,7 @@ use std::collections::HashMap;
 #[cfg(test)]
 mod ml_integration_tests {
     use super::*;
+    use crate::float_assert::near_f64;
 
     fn create_test_engine() -> ThreatDetectionEngine {
         let config = ThreatDetectionConfig::default();
@@ -56,7 +57,7 @@ mod ml_integration_tests {
         assert_eq!(event.threat_type, ThreatType::Anomaly);
         assert_eq!(event.severity, ThreatSeverity::Medium);
         assert_eq!(event.status, ThreatStatus::Active);
-        assert_eq!(event.confidence, 0.85);
+        near_f64(event.confidence, 0.85);
         assert_eq!(event.score, 75);
         assert_eq!(event.detection_method, DetectionMethod::MachineLearning);
     }
@@ -108,8 +109,8 @@ mod ml_integration_tests {
         assert!(event.source.identifier.starts_with("ml_source_"));
         assert_eq!(event.source.ip_address, Some("192.168.1.100".to_string()));
         assert_eq!(event.source.hostname, Some("ml-analyzer".to_string()));
-        assert_eq!(event.source.reputation_score, 0.8);
-        assert_eq!(event.source.confidence_score, 0.9);
+        near_f64(event.source.reputation_score, 0.8);
+        near_f64(event.source.confidence_score, 0.9);
 
         // Verify target structure
         assert_eq!(event.target.target_type, "system");
@@ -171,7 +172,7 @@ mod ml_integration_tests {
         let score1 = engine.calculate_threat_score(&model, &event_data).unwrap();
         let score2 = engine.calculate_threat_score(&model, &event_data).unwrap();
 
-        assert_eq!(score1, score2);
+        near_f64(score1, score2);
     }
 
     #[test]
@@ -189,7 +190,10 @@ mod ml_integration_tests {
         let score2 = engine.calculate_threat_score(&model, &data2).unwrap();
 
         // Different data should produce different scores (most likely)
-        assert_ne!(score1, score2);
+        assert!(
+            (score1 - score2).abs() > 1e-9,
+            "expected scores to differ, got {score1} and {score2}"
+        );
     }
 
     #[test]
@@ -226,8 +230,8 @@ mod ml_integration_tests {
 
         for i in 0..5 {
             let model = MlModel {
-                id: format!("model_{}", i),
-                name: format!("Test Model {}", i),
+                id: format!("model_{i}"),
+                name: format!("Test Model {i}"),
                 model_type: MlModelType::NeuralNetwork,
                 version: "1.0".to_string(),
                 accuracy: 0.9,

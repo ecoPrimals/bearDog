@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 // # Pure Genetics Evolution Demonstration
 //
 // This example demonstrates the ecosystem evolution genetics capabilities
@@ -65,36 +66,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     for (pattern_name, pattern) in test_patterns {
-        println!("🧪 Testing: {}", pattern_name);
+        println!("🧪 Testing: {pattern_name}");
 
         let evolved_membership = engine.evolve_access_pattern(pattern, mock_context.clone())?;
 
         match &evolved_membership {
             EcosystemMembership::ActiveContributor { trust_level, .. } => {
-                println!(
-                    "   ✅ Evolved to: ActiveContributor (trust: {:.2})",
-                    trust_level
-                );
+                println!("   ✅ Evolved to: ActiveContributor (trust: {trust_level:.2})");
             }
             EcosystemMembership::LearningParticipant { trust_level, .. } => {
-                println!(
-                    "   🌱 Evolved to: LearningParticipant (trust: {:.2})",
-                    trust_level
-                );
+                println!("   🌱 Evolved to: LearningParticipant (trust: {trust_level:.2})");
             }
             EcosystemMembership::CautiousInteraction { trust_level, .. } => {
-                println!(
-                    "   ⚠️  Evolved to: CautiousInteraction (trust: {:.2})",
-                    trust_level
-                );
+                println!("   ⚠️  Evolved to: CautiousInteraction (trust: {trust_level:.2})");
             }
             EcosystemMembership::EcosystemProtection { trust_level, .. } => {
-                println!(
-                    "   🛡️  Evolved to: EcosystemProtection (trust: {:.2})",
-                    trust_level
-                );
+                println!("   🛡️  Evolved to: EcosystemProtection (trust: {trust_level:.2})");
             }
-            _ => println!("   🔄 Evolved to: {:?}", evolved_membership),
+            _ => println!("   🔄 Evolved to: {evolved_membership:?}"),
         }
         println!();
     }
@@ -115,7 +104,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     for (scenario_name, trust_state) in trust_scenarios {
-        println!("🧪 Testing: {}", scenario_name);
+        println!("🧪 Testing: {scenario_name}");
 
         let evolved_trust =
             engine.evolve_trust_pattern(trust_state, mock_history.clone(), mock_context.clone())?;
@@ -125,10 +114,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("   🌸 Evolved to: Flourishing Trust");
             }
             TrustEvolution::Building { progress_rate, .. } => {
-                println!(
-                    "   🔨 Evolved to: Building Trust (progress: {:.2})",
-                    progress_rate
-                );
+                println!("   🔨 Evolved to: Building Trust (progress: {progress_rate:.2})");
             }
             TrustEvolution::Questioning { .. } => {
                 println!("   ❓ Evolved to: Questioning Trust");
@@ -170,7 +156,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     for (scenario_name, hierarchy) in coordination_scenarios {
-        println!("🧪 Testing: {}", scenario_name);
+        println!("🧪 Testing: {scenario_name}");
 
         let evolved_coordination = engine.evolve_coordination_pattern(
             hierarchy,
@@ -255,8 +241,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   ✅ Allowlist Entries: {}", legacy_allowlist.len());
     println!("   ❌ Blocklist Entries: {}", legacy_blocklist.len());
 
-    let migrated_memberships =
-        migrate_from_binary_patterns(legacy_allowlist.clone(), legacy_blocklist.clone())?;
+    let migrated_memberships = migrate_from_binary_patterns(legacy_allowlist, legacy_blocklist)?;
 
     println!(
         "🌱 Migration Results: {} total memberships created",

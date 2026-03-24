@@ -261,7 +261,7 @@ fn test_config_merging() -> Result<(), Box<dyn std::error::Error>> {
         },
     };
 
-    let merged = UnifiedConfigUtils::merge_configs(base, override_config.clone())?;
+    let merged = UnifiedConfigUtils::merge_configs(base, override_config)?;
 
     // Override should take precedence
     assert_eq!(merged.name, "override");
@@ -272,8 +272,8 @@ fn test_config_merging() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_shared_config_management() {
-    let config1 = UnifiedConfigUtils::get_shared_config("test_config", || TestConfig::default());
-    let config2 = UnifiedConfigUtils::get_shared_config("test_config", || TestConfig::default());
+    let config1 = UnifiedConfigUtils::get_shared_config("test_config", TestConfig::default);
+    let config2 = UnifiedConfigUtils::get_shared_config("test_config", TestConfig::default);
 
     // Should be the same instance
     assert!(std::sync::Arc::ptr_eq(&config1, &config2));

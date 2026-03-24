@@ -13,7 +13,7 @@ mod genesis_types_tests {
     fn make_valid_witness(new_node_id: &str) -> GenesisWitness {
         let signing_key = SigningKey::from_bytes(&[42u8; 32]);
         let public_key = signing_key.verifying_key().to_bytes().to_vec();
-        let timestamp = 1735000000u64;
+        let timestamp = 1_735_000_000_u64;
         let message = GenesisWitness::create_signing_message(new_node_id, timestamp, &public_key);
         let signature = signing_key.sign(&message).to_bytes().to_vec();
 
@@ -57,9 +57,8 @@ mod genesis_types_tests {
         witness.signature = vec![0u8; 64];
         let result = witness.verify_signature("test-node");
         // Either an error or false (invalid signature), but should not panic
-        match result {
-            Ok(valid) => assert!(!valid, "Zero signature should not verify"),
-            Err(_) => {} // Error is also acceptable
+        if let Ok(valid) = result {
+            assert!(!valid, "Zero signature should not verify");
         }
     }
 
@@ -109,7 +108,7 @@ mod genesis_types_tests {
                 created_at: chrono::Utc::now(),
             },
             genesis_witness: make_valid_witness(node_id),
-            birth_timestamp: 1735000000,
+            birth_timestamp: 1_735_000_000,
             trust_level: trust,
         }
     }
@@ -145,7 +144,7 @@ mod genesis_types_tests {
             attestation: Some(vec![1u8; 64]),
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         let result = proof.verify();
         assert!(result.is_ok());
@@ -159,7 +158,7 @@ mod genesis_types_tests {
             attestation: None,
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         let result = proof.verify();
         assert!(result.is_ok());
@@ -173,7 +172,7 @@ mod genesis_types_tests {
             attestation: Some(vec![]),
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         let result = proof.verify();
         assert!(result.is_ok());
@@ -187,7 +186,7 @@ mod genesis_types_tests {
             attestation: Some(vec![1u8; 16]),
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         let result = proof.verify();
         assert!(result.is_ok());
@@ -201,7 +200,7 @@ mod genesis_types_tests {
             attestation: Some(vec![0u8; 64]),
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         let result = proof.verify();
         assert!(result.is_ok());
@@ -215,7 +214,7 @@ mod genesis_types_tests {
             attestation: None,
             verification_codes: Some(vec!["CODE1".to_string()]),
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         let result = proof.verify();
         assert!(result.is_ok());
@@ -229,7 +228,7 @@ mod genesis_types_tests {
             attestation: None,
             verification_codes: Some(vec![]),
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         let result = proof.verify();
         assert!(result.is_ok());
@@ -243,7 +242,7 @@ mod genesis_types_tests {
             attestation: None,
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         let result = proof.verify();
         assert!(result.is_ok());
@@ -257,7 +256,7 @@ mod genesis_types_tests {
             attestation: None,
             verification_codes: None,
             pairing_data: Some(vec![1, 2, 3]),
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         let result = proof.verify();
         assert!(result.is_ok());
@@ -271,7 +270,7 @@ mod genesis_types_tests {
             attestation: None,
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         let result = proof.verify();
         assert!(result.is_ok());
@@ -285,7 +284,7 @@ mod genesis_types_tests {
             attestation: Some(vec![1u8; 32]),
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         let result = proof.verify();
         assert!(result.is_ok());
@@ -299,7 +298,7 @@ mod genesis_types_tests {
             attestation: None,
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         let result = proof.verify();
         assert!(result.is_ok());
@@ -313,7 +312,7 @@ mod genesis_types_tests {
             attestation: None,
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert_eq!(proof.trust_level(), TrustLevel::Maximum);
     }
@@ -325,7 +324,7 @@ mod genesis_types_tests {
             attestation: None,
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert_eq!(proof.trust_level(), TrustLevel::Medium);
     }
@@ -337,7 +336,7 @@ mod genesis_types_tests {
             attestation: None,
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert_eq!(proof.trust_level(), TrustLevel::High);
     }
@@ -350,18 +349,18 @@ mod genesis_types_tests {
             attestation: Some(vec![1u8; 64]),
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         let result = GenesisCeremonyResult {
             genetic_lineage: lineage,
             physical_proof: proof,
-            completed_at: 1735000001,
+            completed_at: 1_735_000_001,
             success: true,
             error: None,
         };
         assert!(result.success);
         assert!(result.error.is_none());
-        assert_eq!(result.completed_at, 1735000001);
+        assert_eq!(result.completed_at, 1_735_000_001);
     }
 
     #[test]
@@ -372,12 +371,12 @@ mod genesis_types_tests {
             attestation: None,
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         let result = GenesisCeremonyResult {
             genetic_lineage: lineage,
             physical_proof: proof,
-            completed_at: 1735000001,
+            completed_at: 1_735_000_001,
             success: false,
             error: Some("Witness verification failed".to_string()),
         };

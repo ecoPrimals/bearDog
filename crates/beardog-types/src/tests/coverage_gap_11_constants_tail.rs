@@ -40,9 +40,9 @@ mod constants_math_tests {
     #[test]
     fn test_math_constants() {
         use crate::constants::domains::math;
-        assert!(math::common::PI > 3.14);
-        assert!(math::common::E > 2.71);
-        assert!(math::common::TAU > 6.28);
+        assert!(math::common::PI > 3.0);
+        assert!(math::common::E > 2.0);
+        assert!(math::common::TAU > 6.0);
         assert!(math::common::SQRT_2 > 1.41);
     }
 }

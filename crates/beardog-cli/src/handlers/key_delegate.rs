@@ -712,10 +712,9 @@ mod tests {
             expires_at: "2000-01-01T00:00:00Z".to_string(),
             delegated_to: "u".to_string(),
         };
-        assert_eq!(
-            dc.is_satisfied()
-                .expect("is_satisfied on expired constraints"),
-            false
+        assert!(
+            !dc.is_satisfied()
+                .expect("is_satisfied on expired constraints")
         );
     }
 }

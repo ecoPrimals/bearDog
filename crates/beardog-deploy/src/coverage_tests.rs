@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 
 //! Coverage expansion tests for beardog-deploy
 //!
@@ -24,16 +25,16 @@ fn test_android_deployment_construction_variants() {
     let d1 = AndroidDeployment::new(Some("/opt/android-ndk".to_string()), 33);
     let d2 = AndroidDeployment::new(None, 28);
     let d3 = AndroidDeployment::new(Some(String::new()), 21);
-    assert!(format!("{:?}", d1).contains("AndroidDeployment"));
-    assert!(format!("{:?}", d2).contains("AndroidDeployment"));
-    assert!(format!("{:?}", d3).contains("AndroidDeployment"));
+    assert!(format!("{d1:?}").contains("AndroidDeployment"));
+    assert!(format!("{d2:?}").contains("AndroidDeployment"));
+    assert!(format!("{d3:?}").contains("AndroidDeployment"));
 }
 
 #[test]
 fn test_android_deployment_various_api_levels() {
     for api_level in [21, 28, 30, 33, 34, 35] {
         let deployment = AndroidDeployment::new(None, api_level);
-        let debug = format!("{:?}", deployment);
+        let debug = format!("{deployment:?}");
         assert!(debug.contains(&api_level.to_string()));
     }
 }
@@ -60,7 +61,7 @@ fn test_rust_builder_construction() {
     let paths = ["/tmp", "/home", ".", "./target", "/opt/project"];
     for path in &paths {
         let builder = RustBuilder::new(std::path::Path::new(path));
-        assert!(format!("{:?}", builder).contains("RustBuilder"));
+        assert!(format!("{builder:?}").contains("RustBuilder"));
     }
 }
 
@@ -240,7 +241,7 @@ fn test_device_manager_concurrent_creation() {
             thread::spawn(|| {
                 let manager = DeviceManager::default();
                 // DeviceManager should be constructible concurrently
-                let _ = format!("{:?}", manager);
+                let _ = format!("{manager:?}");
             })
         })
         .collect();

@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::unwrap_used)]
+
 //! Shared helpers for integration tests in this crate.
 
 use std::sync::{Mutex, OnceLock};

@@ -5,7 +5,7 @@
 //!
 //! Run with: cargo run --example api_demo
 
-use beardog_integration::{BearDogIntegration, IntegrationConfig};
+use beardog_integration::IntegrationConfig;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]

@@ -302,7 +302,9 @@ mod network_timeout_policy_tests {
         assert!(tc.should_timeout(Duration::from_secs(120), "request"));
         assert_eq!(
             tc.remaining_time(Duration::from_secs(5), "request"),
-            tc.request_timeout - Duration::from_secs(5)
+            tc.request_timeout
+                .checked_sub(Duration::from_secs(5))
+                .unwrap()
         );
     }
 

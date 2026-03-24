@@ -1,8 +1,8 @@
 # 🐻 BearDog Showcase Index
 
-**Last Updated:** December 24, 2025  
-**Status:** 🚧 **Under Construction** - Building comprehensive showcase  
-**Grade:** World-Class Quality (A+), Showcase Needs Expansion
+**Last Updated:** March 24, 2026  
+**Status:** Active expansion — 29 runnable demos (`main.rs` under `showcase/`), roadmap target 38  
+**Grade:** World-Class Quality (A+), showcase depth varies by directory
 
 ---
 
@@ -17,14 +17,14 @@
 - 🌐 **Zero-Knowledge Bootstrap** - No hardcoded config, self-discovering
 - 🎯 **Sovereignty First** - Your keys, your control, zero vendor lock-in
 
-**Security Grade**: 🏆 **TOP 0.001%** (6 unsafe blocks in 150K lines)
+**Security Grade**: 🏆 **0 unsafe** — `#![forbid(unsafe_code)]` workspace-wide
 
 ---
 
 ## 📚 Available Showcases
 
 ### 00. **Local Primal - BearDog Basics** (`00-local-primal/`)
-**Status:** 🚧 **Under Construction**  
+**Status:** **6/6** runnable skeletons (`01`–`06` each have `src/main.rs`)  
 **Purpose:** Understand what BearDog can do standalone
 
 **Demos**:
@@ -41,8 +41,8 @@
 ---
 
 ### 01. **Hardware Integration** (`01-hardware-integration/`)
-**Status:** ⚠️  **Needs Expansion**  
-**Current**: Only `05-mixed-entropy/` exists  
+**Status:** ⚠️ **Needs expansion** (directory may be sparse or merged with other showcase areas)  
+**Related:** Mixed entropy entrypoint also lives at top-level [`05-mixed-entropy/`](05-mixed-entropy/README.md)  
 **Purpose:** Show BearDog's hardware HSM capabilities
 
 **Planned Demos**:
@@ -50,7 +50,7 @@
 2. `02-tpm-integration/` - Linux TPM 2.0 usage
 3. `03-android-strongbox/` - Mobile HSM (Android)
 4. `04-ios-secure-enclave/` - Mobile HSM (iOS)
-5. `05-mixed-entropy/` - ✅ **EXISTS** - Human + machine entropy
+5. Top-level [`05-mixed-entropy/`](05-mixed-entropy/README.md) — mixed entropy (placeholder binary)
 6. `06-hsm-comparison/` - Performance benchmarks
 7. `07-failover/` - Software HSM fallback
 
@@ -60,25 +60,29 @@
 ---
 
 ### 02. **Ecosystem Integration** (`02-ecosystem-integration/`)
-**Status:** 🚧 **Planned**  
+**Status:** **5** runnable demos present (`01`–`05` with `main.rs`)  
 **Purpose:** BearDog working with other primals
 
-**Planned Demos**:
-1. `01-songbird-btsp/` - BTSP tunnel integration with Songbird
-2. `02-beardog-genesis/` - Physical genesis ceremony
-3. `03-birdsong-encryption/` - Encrypted cross-primal messaging
-4. `04-lineage-tracking/` - Distributed key lineage
-5. `05-nestgate-encrypted-storage/` - Encrypt data before NestGate storage
-6. `06-toadstool-encrypted-compute/` - Decrypt workload, compute, re-encrypt
-7. `07-squirrel-key-routing/` - Route key operations via Squirrel
+**Present (runnable)**:
+1. `01-songbird-btsp/`
+2. `02-nestgate-encryption/`
+3. `03-toadstool-workloads/`
+4. `04-squirrel-routing/`
+5. `05-cross-primal-lineage/`
 
 **Time**: 1.5 hours  
 **Level**: Advanced
 
 ---
 
+### **Production features** (`03-production-features/`)
+**Status:** **7** runnable demos (`01`–`07` with `main.rs`)  
+Examples: key rotation, policy enforcement, audit logging, monitoring, profiling, error recovery, dynamic configuration.
+
+---
+
 ### 03. **Network & Federation** (`03-network-federation/`)
-**Status:** 🚧 **Planned**  
+**Status:** See **`04-advanced-features/`** for federation/registry-style demos (e.g. `09-cross-tower-federation`, `06-distributed-key-registry`)  
 **Purpose:** Distributed BearDog operations
 
 **Planned Demos**:
@@ -95,16 +99,20 @@
 ---
 
 ### 04. **Advanced Features** (`04-advanced-features/`)
-**Status:** 🚧 **Planned**  
+**Status:** **10** runnable demos (`01`–`10` with `main.rs`)  
 **Purpose:** Advanced cryptographic operations
 
-**Planned Demos**:
-1. `01-constraint-enforcement/` - Genetic constraint validation
-2. `02-key-rotation/` - Automated key rotation with lineage
-3. `03-receipt-verification/` - Cryptographic operation receipts
-4. `04-zero-knowledge-proofs/` - Privacy-preserving attestation
-5. `05-post-quantum-ready/` - Hybrid classical/PQ crypto
-6. `06-hardware-attestation/` - HSM attestation chains
+**Present (runnable)**:
+1. `01-multi-primal-workflow/`
+2. `02-threshold-key-shares/`
+3. `03-hardware-attestation/`
+4. `04-zero-knowledge-proofs/`
+5. `05-post-quantum-readiness/`
+6. `06-distributed-key-registry/`
+7. `07-receipt-verification/`
+8. `08-constraint-composition/`
+9. `09-cross-tower-federation/`
+10. `10-benchmarking-performance/`
 
 **Time**: 1.5 hours  
 **Level**: Expert
@@ -112,7 +120,7 @@
 ---
 
 ### 05. **Production Patterns** (`05-production-patterns/`)
-**Status:** 🚧 **Planned**  
+**Status:** Overlaps **`03-production-features/`** (7 runnable demos there); this band of the original index is still filling in  
 **Purpose:** Real-world deployment scenarios
 
 **Planned Demos**:
@@ -135,8 +143,8 @@
 # Check if BearDog is installed
 beardog-cli --version
 
-# If not, build it:
-cd /home/eastgate/Development/ecoPrimals/beardog
+# If not, build it (from repository root):
+cd /path/to/beardog
 cargo build --release
 
 # Binary at: target/release/beardog-cli
@@ -179,23 +187,21 @@ cargo run
 
 ---
 
-## 📊 Showcase Maturity
+## 📊 Showcase maturity
 
-### Current Status
-```
-00-local-primal:           ⬜⬜⬜⬜⬜⬜ 0/6 demos (0%)
-01-hardware-integration:   🟩⬜⬜⬜⬜⬜⬜ 1/7 demos (14%)
-02-ecosystem-integration:  ⬜⬜⬜⬜⬜⬜⬜ 0/7 demos (0%)
-03-network-federation:     ⬜⬜⬜⬜⬜⬜ 0/6 demos (0%)
-04-advanced-features:      ⬜⬜⬜⬜⬜⬜ 0/6 demos (0%)
-05-production-patterns:    ⬜⬜⬜⬜⬜⬜ 0/6 demos (0%)
+**Runnable today:** **29** demos (`find showcase -name main.rs | wc -l`).  
+**Roadmap target:** **38** comprehensive demos (original index bands).
 
-Overall: 🟩⬜⬜⬜⬜⬜⬜⬜⬜⬜ 1/38 demos (3%)
-```
+| Area | Runnable `main.rs` count |
+|------|-------------------------|
+| `00-local-primal/` | 6 |
+| `02-ecosystem-integration/` | 5 |
+| `03-production-features/` | 7 |
+| `04-advanced-features/` | 10 |
+| `05-mixed-entropy/` | 1 |
+| **Total** | **29** |
 
-**Target**: 38 demos across 6 categories  
-**Built**: 1 demo (3%)  
-**Remaining**: 37 demos (97%)
+Hardware-focused demos under `01-hardware-integration/` and some ecosystem slots from the original plan are still open.
 
 ---
 
@@ -340,9 +346,9 @@ Want to add a showcase demo?
 
 ---
 
-**Last Updated**: December 24, 2025  
+**Last Updated**: March 24, 2026  
 **Maintainer**: BearDog Team  
-**Status**: 🚧 Under Active Construction
+**Status**: Active expansion
 
 🐻 **BearDog Showcase - Learn Sovereign Cryptography by Example** 🎬
 

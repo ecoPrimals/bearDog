@@ -192,7 +192,7 @@ fn test_security_level_ordering() {
 
     // Just verify they exist and are different
     assert_ne!(
-        format!("{:?}", standard),
+        format!("{standard:?}"),
         format!("{:?}", critical),
         "Security levels should be distinct"
     );

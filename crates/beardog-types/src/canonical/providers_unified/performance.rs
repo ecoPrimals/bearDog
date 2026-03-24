@@ -3,6 +3,9 @@
 //! Provider-side performance tuning: caching, compression, buffers, and rate limits.
 
 use crate::canonical::traits::CacheStrategy;
+use crate::constants::buffers;
+use crate::constants::defaults;
+use crate::constants::time;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -97,8 +100,8 @@ impl Default for CachingConfig {
         Self {
             enabled: true,
             cache_type: CacheType::Memory,
-            max_entries: 10000,
-            ttl: Duration::from_secs(3600),
+            max_entries: defaults::DEFAULT_MAX_ENTRIES,
+            ttl: Duration::from_secs(time::SECONDS_PER_HOUR),
             eviction_policy: EvictionPolicy::Lru,
         }
     }
@@ -151,7 +154,7 @@ impl CacheStrategy for CachingConfig {
         self.max_entries >= 100 && // At least 100 entries
         self.max_entries <= 1_000_000 && // At most 1M entries
         self.ttl >= Duration::from_secs(60) && // At least 1 minute
-        self.ttl <= Duration::from_secs(86400) && // At most 1 day
+        self.ttl <= Duration::from_secs(time::SECONDS_PER_DAY) && // At most 1 day
         self.validate().is_ok()
     }
 }
@@ -246,8 +249,8 @@ pub struct BufferConfig {
 impl Default for BufferConfig {
     fn default() -> Self {
         Self {
-            read_buffer_size: 8192,
-            write_buffer_size: 8192,
+            read_buffer_size: buffers::DEFAULT_SIZE,
+            write_buffer_size: buffers::DEFAULT_SIZE,
             pool_size: 100,
         }
     }
@@ -309,7 +312,7 @@ pub struct PerformanceThresholds {
 impl Default for PerformanceThresholds {
     fn default() -> Self {
         Self {
-            max_response_time_ms: 5000,
+            max_response_time_ms: defaults::DEFAULT_MAX_RESPONSE_TIME_MS,
             max_error_rate: 5.0,
             max_cpu_usage: 80.0,
             max_memory_usage: 1_000_000_000,
@@ -370,12 +373,12 @@ impl CachingConfig {
             max_entries: std::env::var("BEARDOG_PROVIDER_CACHE_MAX_ENTRIES")
                 .ok()
                 .and_then(|v| v.parse().ok())
-                .unwrap_or(10000),
+                .unwrap_or(defaults::DEFAULT_MAX_ENTRIES),
             ttl: Duration::from_secs(
                 std::env::var("BEARDOG_PROVIDER_CACHE_TTL_SECS")
                     .ok()
                     .and_then(|v| v.parse().ok())
-                    .unwrap_or(3600),
+                    .unwrap_or(time::SECONDS_PER_HOUR),
             ),
             ..Default::default()
         }
@@ -408,11 +411,11 @@ impl BufferConfig {
             read_buffer_size: std::env::var("BEARDOG_READ_BUFFER_SIZE")
                 .ok()
                 .and_then(|v| v.parse().ok())
-                .unwrap_or(8192),
+                .unwrap_or(buffers::DEFAULT_SIZE),
             write_buffer_size: std::env::var("BEARDOG_WRITE_BUFFER_SIZE")
                 .ok()
                 .and_then(|v| v.parse().ok())
-                .unwrap_or(8192),
+                .unwrap_or(buffers::DEFAULT_SIZE),
             pool_size: std::env::var("BEARDOG_BUFFER_POOL_SIZE")
                 .ok()
                 .and_then(|v| v.parse().ok())
@@ -447,7 +450,7 @@ impl PerformanceThresholds {
             max_response_time_ms: std::env::var("BEARDOG_PROVIDER_MAX_RESPONSE_TIME_MS")
                 .ok()
                 .and_then(|v| v.parse().ok())
-                .unwrap_or(5000),
+                .unwrap_or(defaults::DEFAULT_MAX_RESPONSE_TIME_MS),
             max_error_rate: std::env::var("BEARDOG_PROVIDER_MAX_ERROR_RATE")
                 .ok()
                 .and_then(|v| v.parse().ok())

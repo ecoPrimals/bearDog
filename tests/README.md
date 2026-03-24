@@ -1,7 +1,7 @@
 # 🧪 BearDog Test Suite
 
-**Last Updated**: October 26, 2025  
-**Total Tests**: 3,223+ test functions  
+**Last Updated**: March 24, 2026  
+**Total tests**: See **[STATUS.md](../STATUS.md)** for the current passing count (authoritative; changes frequently).  
 **Organization**: Categorized by type and domain
 
 ---

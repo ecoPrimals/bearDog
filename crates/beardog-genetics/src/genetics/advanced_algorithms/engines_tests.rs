@@ -12,7 +12,7 @@ fn population_manager_set_and_get_roundtrip() {
     a.fitness_score = 0.5;
     let mut b = GeneticIndividual::default();
     b.fitness_score = 0.7;
-    pm.set_population(vec![a.clone(), b.clone()]);
+    pm.set_population(vec![a, b]);
     assert_eq!(pm.population_size(), 2);
     let pop = pm.get_population();
     assert_eq!(pop.len(), 2);
@@ -75,7 +75,7 @@ fn selection_engine_survivors_sorted_by_fitness() {
 #[test]
 fn fitness_evaluator_clone_preserves_adaptive_weight_bits() {
     let fe = FitnessEvaluator::new();
-    let c = fe.clone();
+    let c = fe;
     let _ = c
         .evaluate_fitness(&GeneticIndividual::default())
         .expect("ok");
@@ -84,7 +84,7 @@ fn fitness_evaluator_clone_preserves_adaptive_weight_bits() {
 #[test]
 fn mutation_engine_clone_preserves_history() {
     let me = MutationEngine::new();
-    let c = me.clone();
+    let c = me;
     let mut ind = GeneticIndividual::default();
     let _ = c.apply_mutation(&mut ind, 1.0).expect("mutation");
 }
@@ -93,20 +93,20 @@ fn mutation_engine_clone_preserves_history() {
 fn population_manager_clone_is_independent() {
     let pm = PopulationManager::new(4);
     pm.set_population(vec![GeneticIndividual::default()]);
-    let q = pm.clone();
+    let q = pm;
     assert_eq!(q.population_size(), 1);
 }
 
 #[test]
 fn crossover_engine_clone_preserves_matrix() {
     let ce = CrossoverEngine::new();
-    let _ = ce.clone();
+    let _ = ce;
 }
 
 #[test]
 fn selection_engine_clone_preserves_method() {
     let se = SelectionEngine::new();
-    let c = se.clone();
+    let c = se;
     let pop = vec![GeneticIndividual::default()];
     let _ = c.select_parents(&pop, 1).expect("p");
 }

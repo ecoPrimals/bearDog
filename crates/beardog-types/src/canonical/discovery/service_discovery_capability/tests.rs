@@ -15,7 +15,7 @@ fn test_service_descriptor_creation() {
 
     let descriptor = ServiceDescriptor {
         instance_id: ServiceInstanceId::new("test-123"),
-        endpoint: format!("http://localhost:{}", DEFAULT_API_PORT),
+        endpoint: format!("http://localhost:{DEFAULT_API_PORT}"),
         capabilities: vec![ServiceCapabilityType::ServiceMesh],
         metadata: HashMap::new(),
         health: ServiceHealth::Healthy,
@@ -33,6 +33,6 @@ fn test_discovery_error_display() {
         criteria: "capability=ServiceMesh".to_string(),
     };
 
-    let display = format!("{}", error);
+    let display = format!("{error}");
     assert!(display.contains("Service not found"));
 }

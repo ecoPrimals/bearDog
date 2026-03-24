@@ -331,11 +331,8 @@ mod tests {
         // Admin may not be allowed
         let result = verifier.verify_operation(&cert, &AdapterOperation::Admin);
         // Depending on scope, this might fail
-        if result.is_err() {
-            assert!(matches!(
-                result.unwrap_err(),
-                VerificationError::OperationNotAllowed { .. }
-            ));
+        if let Err(e) = result {
+            assert!(matches!(e, VerificationError::OperationNotAllowed { .. }));
         }
     }
 
@@ -374,33 +371,33 @@ mod tests {
         let expired = VerificationError::Expired {
             expired_at: Utc::now(),
         };
-        assert!(format!("{}", expired).contains("expired"));
+        assert!(format!("{expired}").contains("expired"));
 
         let invalid_sig = VerificationError::InvalidSignature {
             reason: "bad bytes".to_string(),
         };
-        assert!(format!("{}", invalid_sig).contains("bad bytes"));
+        assert!(format!("{invalid_sig}").contains("bad bytes"));
 
         let license_req = VerificationError::LicenseRequired {
             classification: "Commercial/High".to_string(),
         };
-        assert!(format!("{}", license_req).contains("License required"));
+        assert!(format!("{license_req}").contains("License required"));
 
         let license_exp = VerificationError::LicenseExpired {
             expired_at: Utc::now(),
         };
-        assert!(format!("{}", license_exp).contains("License expired"));
+        assert!(format!("{license_exp}").contains("License expired"));
 
         let op_denied = VerificationError::OperationNotAllowed {
             operation: "Admin".to_string(),
             allowed: vec!["Read".to_string()],
         };
-        assert!(format!("{}", op_denied).contains("not allowed"));
+        assert!(format!("{op_denied}").contains("not allowed"));
 
         let hash_fail = VerificationError::HashingFailed {
             reason: "corrupt data".to_string(),
         };
-        assert!(format!("{}", hash_fail).contains("hashing failed"));
+        assert!(format!("{hash_fail}").contains("hashing failed"));
     }
 
     #[test]
@@ -506,11 +503,8 @@ mod tests {
 
         // Admin should not be allowed for unknown classification
         let result = verifier.verify_operation(&cert, &AdapterOperation::Admin);
-        if result.is_err() {
-            assert!(matches!(
-                result.unwrap_err(),
-                VerificationError::OperationNotAllowed { .. }
-            ));
+        if let Err(e) = result {
+            assert!(matches!(e, VerificationError::OperationNotAllowed { .. }));
         }
     }
 
@@ -519,7 +513,7 @@ mod tests {
         let err = VerificationError::InvalidSignature {
             reason: "test".to_string(),
         };
-        let debug = format!("{:?}", err);
+        let debug = format!("{err:?}");
         assert!(debug.contains("InvalidSignature"));
     }
 
@@ -528,7 +522,7 @@ mod tests {
         let err = VerificationError::Expired {
             expired_at: Utc::now(),
         };
-        let cloned = err.clone();
-        assert!(format!("{}", cloned).contains("expired"));
+        let cloned = err;
+        assert!(format!("{cloned}").contains("expired"));
     }
 }

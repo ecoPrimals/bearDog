@@ -149,7 +149,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    #[ignore] // Requires physical FIDO2 device
+    #[ignore = "requires physical FIDO2 device"]
     async fn test_discover_fido2_devices() {
         let result = discover_fido2_devices().await;
         assert!(result.is_ok());

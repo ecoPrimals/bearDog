@@ -357,7 +357,7 @@ mod tests {
         let addr = config
             .to_socket_addr()
             .expect("127.0.0.1 should parse as a socket address");
-        assert_eq!(addr.to_string(), format!("127.0.0.1:{}", TEST_DEFAULT_PORT));
+        assert_eq!(addr.to_string(), format!("127.0.0.1:{TEST_DEFAULT_PORT}"));
     }
 
     #[test]

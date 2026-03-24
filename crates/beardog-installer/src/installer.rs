@@ -391,7 +391,7 @@ mod tests {
             cache_dir: temp.path().join("cache"),
         };
 
-        let installer = BinaryInstaller::new(paths, source_dir.clone());
+        let installer = BinaryInstaller::new(paths, source_dir);
         let arch = Architecture::X86_64;
         let os = OperatingSystem::Linux;
 
@@ -444,7 +444,7 @@ mod tests {
             cache_dir: temp.path().join("cache"),
         };
 
-        let installer = BinaryInstaller::new(paths, source_dir.clone());
+        let installer = BinaryInstaller::new(paths, source_dir);
         let arch = Architecture::X86_64;
         let os = OperatingSystem::Linux;
 

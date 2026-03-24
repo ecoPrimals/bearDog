@@ -2,6 +2,8 @@
 
 //! Android Keystore, StrongBox, and attestation-facing configuration types.
 
+use crate::constants::defaults;
+use crate::constants::time;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -283,7 +285,7 @@ impl Default for AndroidHsmSession {
             device_info: AndroidDeviceInfo::default(),
             created_at: Utc::now(),
             last_access: Utc::now(),
-            timeout_seconds: 3600, // 1 hour
+            timeout_seconds: time::SECONDS_PER_HOUR as u32, // 1 hour
             active_keys: Vec::new(),
             metadata: HashMap::new(),
         }
@@ -375,7 +377,7 @@ impl Default for PerformanceSettings {
     fn default() -> Self {
         Self {
             max_concurrent_operations: 10,
-            operation_timeout_ms: 5000, // 5 seconds
+            operation_timeout_ms: defaults::DEFAULT_MAX_RESPONSE_TIME_MS as u32, // 5 seconds
             key_cache_size: 100,
             connection_pool_size: 5,
             enable_batching: true,

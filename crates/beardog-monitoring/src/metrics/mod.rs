@@ -312,7 +312,7 @@ mod tests {
     #[test]
     fn test_metric_category_clone() {
         let category = MetricCategory::Performance;
-        let cloned = category.clone();
+        let cloned = category;
         assert!(matches!(cloned, MetricCategory::Performance));
     }
 
@@ -332,7 +332,10 @@ mod tests {
     fn test_metric_value_gauge() {
         let value = MetricValue::Gauge(50.5);
         if let MetricValue::Gauge(v) = value {
-            assert_eq!(v, 50.5);
+            assert!(
+                (v - 50.5).abs() < f64::EPSILON,
+                "expected gauge ≈ 50.5, got {v}"
+            );
         } else {
             panic!("Expected Gauge");
         }
@@ -341,7 +344,7 @@ mod tests {
     #[test]
     fn test_metric_value_histogram() {
         let values = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let value = MetricValue::Histogram(values.clone());
+        let value = MetricValue::Histogram(values);
         if let MetricValue::Histogram(v) = value {
             assert_eq!(v.len(), 5);
         } else {
@@ -356,7 +359,10 @@ mod tests {
             count: 10,
         };
         if let MetricValue::Summary { sum, count } = value {
-            assert_eq!(sum, 100.0);
+            assert!(
+                (sum - 100.0).abs() < f64::EPSILON,
+                "expected summary sum ≈ 100.0, got {sum}"
+            );
             assert_eq!(count, 10);
         } else {
             panic!("Expected Summary");

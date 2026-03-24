@@ -192,9 +192,9 @@ fn test_multiple_keys_storage() {
 
     // Store multiple keys
     for i in 0..5 {
-        let key_data = format!("key_data_{}", i).into_bytes();
+        let key_data = format!("key_data_{i}").into_bytes();
         let metadata = KeyMetadata {
-            id: format!("key_{}", i),
+            id: format!("key_{i}"),
             created_at: chrono::Utc::now(),
             key_type: "test".to_string(),
         };
@@ -387,8 +387,8 @@ fn test_custom_key_config() {
         enable_rotation: true,
     };
 
-    let manager = MemoryKeyManager::new(config.clone())
-        .expect("Key manager with custom config should succeed");
+    let manager =
+        MemoryKeyManager::new(config).expect("Key manager with custom config should succeed");
 
     // Manager should be created successfully with custom config
     // TEST_CATEGORY: integration

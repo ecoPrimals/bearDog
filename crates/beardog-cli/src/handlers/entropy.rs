@@ -826,8 +826,8 @@ mod entropy_handler_tests {
     #[test]
     fn test_calculate_entropy_quality_moderate_distribution() {
         let mut v = vec![0u8; 256];
-        for i in 0..256 {
-            v[i] = (i % 17) as u8;
+        for (i, slot) in v.iter_mut().enumerate() {
+            *slot = (i % 17) as u8;
         }
         let q = calculate_entropy_quality(&v);
         assert!(q > 0.2 && q < 0.99, "unexpected quality {q}");

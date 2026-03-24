@@ -421,7 +421,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore] // Requires physical FIDO2 device
+    #[ignore = "requires physical FIDO2 device"]
     async fn test_fido2_provider_creation() {
         use crate::hsm::fido2::discover_fido2_devices;
 

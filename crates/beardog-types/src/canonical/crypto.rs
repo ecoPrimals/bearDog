@@ -3,6 +3,8 @@
 // Cryptographic types and configurations for BearDog
 // Provides structured definitions for cryptographic algorithms, keys, and security settings
 
+use crate::constants::domains::security::crypto as security_crypto;
+use crate::constants::time;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -89,8 +91,8 @@ impl Default for KeyDerivationFunction {
     fn default() -> Self {
         Self::Argon2 {
             variant: "Argon2id".to_string(),
-            memory: 65536,
-            time: 3,
+            memory: security_crypto::ARGON2_MEMORY_COST,
+            time: security_crypto::ARGON2_TIME_COST,
         }
     }
 }
@@ -127,7 +129,7 @@ impl Default for KeyConfig {
             key_size: 256,
             kdf: KeyDerivationFunction::default(),
             usage: KeyUsage::default(),
-            rotation_interval_seconds: Some(86400 * 30), // 30 days
+            rotation_interval_seconds: Some((30 * time::SECONDS_PER_DAY) as u32), // 30 days
             metadata: HashMap::new(),
         }
     }
@@ -385,8 +387,8 @@ impl Default for RotationPolicy {
     fn default() -> Self {
         Self {
             automatic: true,
-            interval_seconds: 86400 * 30, // 30 days
-            max_age_seconds: 86400 * 90,  // 90 days
+            interval_seconds: (30 * time::SECONDS_PER_DAY) as u32, // 30 days
+            max_age_seconds: (90 * time::SECONDS_PER_DAY) as u32,  // 90 days
             rotate_on_compromise: true,
         }
     }
@@ -453,7 +455,7 @@ impl Default for RngConfig {
             algorithm: "ChaCha20".to_string(),
             entropy_source: "hardware".to_string(),
             seed_size: 32,
-            reseed_interval_seconds: 3600, // 1 hour
+            reseed_interval_seconds: time::SECONDS_PER_HOUR as u32, // 1 hour
         }
     }
 }

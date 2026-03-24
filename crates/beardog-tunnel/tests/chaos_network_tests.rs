@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 //! Chaos Testing for Network Partitions and Failures
 //!
 //! This test suite simulates real-world failure scenarios to verify
@@ -54,8 +55,7 @@ async fn chaos_concurrent_connection_storm() -> Result<(), BearDogError> {
             if should_fail {
                 failure.fetch_add(1, Ordering::Relaxed);
                 Err(BearDogError::network(format!(
-                    "Simulated connection failure (task {})",
-                    task_id
+                    "Simulated connection failure (task {task_id})"
                 )))
             } else {
                 // Simulate successful connection
@@ -76,8 +76,7 @@ async fn chaos_concurrent_connection_storm() -> Result<(), BearDogError> {
     let total_failure = failure_count.load(Ordering::Relaxed);
 
     println!(
-        "🌪️  Chaos test results: {} success, {} failures (total: {})",
-        total_success, total_failure, concurrent_tasks
+        "🌪️  Chaos test results: {total_success} success, {total_failure} failures (total: {concurrent_tasks})"
     );
 
     // Property: All tasks completed (no panics or deadlocks)
@@ -117,8 +116,7 @@ async fn chaos_network_timeout_resilience() -> Result<(), BearDogError> {
     }
 
     println!(
-        "🌪️  Timeout chaos: {} completed, {} timed out (total: {})",
-        completions, timeouts, iterations
+        "🌪️  Timeout chaos: {completions} completed, {timeouts} timed out (total: {iterations})"
     );
 
     // Property: All operations either completed or timed out (no hangs)
@@ -157,8 +155,8 @@ async fn chaos_resource_exhaustion() -> Result<(), BearDogError> {
     }
 
     println!(
-        "🌪️  Resource chaos: Successfully allocated {} resources before exhaustion",
-        allocations
+        "🌪️  Resource chaos: Successfully allocated {allocations} resources before exhaustion (held {} buffers)",
+        resources.len()
     );
 
     // Property: System gracefully handles resource limits
@@ -197,16 +195,14 @@ async fn chaos_cascading_failures() -> Result<(), BearDogError> {
             if trigger.load(Ordering::Relaxed) {
                 cascade.fetch_add(1, Ordering::Relaxed);
                 return Err(BearDogError::network(format!(
-                    "Cascading failure (task {})",
-                    task_id
+                    "Cascading failure (task {task_id})"
                 )));
             }
 
             // 10% chance to trigger the cascade
             if rand::random::<u8>() < 25 && !trigger.swap(true, Ordering::Relaxed) {
                 return Err(BearDogError::network(format!(
-                    "Initial failure (task {})",
-                    task_id
+                    "Initial failure (task {task_id})"
                 )));
             }
 
@@ -226,10 +222,7 @@ async fn chaos_cascading_failures() -> Result<(), BearDogError> {
 
     let cascaded = cascade_count.load(Ordering::Relaxed);
 
-    println!(
-        "🌪️  Cascading failure chaos: {} total errors, {} cascaded",
-        errors, cascaded
-    );
+    println!("🌪️  Cascading failure chaos: {errors} total errors, {cascaded} cascaded");
 
     // Property: System detects and reports cascading failures
     assert!(errors > 0, "Should have at least one failure");
@@ -276,10 +269,7 @@ async fn chaos_rapid_connect_disconnect() -> Result<(), BearDogError> {
     let total_conn = connections.load(Ordering::Relaxed);
     let total_disc = disconnections.load(Ordering::Relaxed);
 
-    println!(
-        "🌪️  Connect/disconnect chaos: {} connections, {} disconnections",
-        total_conn, total_disc
-    );
+    println!("🌪️  Connect/disconnect chaos: {total_conn} connections, {total_disc} disconnections");
 
     // Property: Connections and disconnections should match
     assert_eq!(
@@ -360,8 +350,7 @@ async fn chaos_concurrent_crypto_operations() -> Result<(), BearDogError> {
             if rand::random::<u8>() < 25 {
                 failure.fetch_add(1, Ordering::Relaxed);
                 return Err(BearDogError::crypto_error(format!(
-                    "Simulated crypto failure (op {})",
-                    op_id
+                    "Simulated crypto failure (op {op_id})"
                 )));
             }
 
@@ -421,8 +410,7 @@ async fn chaos_concurrent_crypto_operations() -> Result<(), BearDogError> {
     let total_failure = failure_count.load(Ordering::Relaxed);
 
     println!(
-        "🌪️  Concurrent crypto chaos: {} success, {} failures (total: {})",
-        total_success, total_failure, operations
+        "🌪️  Concurrent crypto chaos: {total_success} success, {total_failure} failures (total: {operations})"
     );
 
     // Property: All operations completed (no deadlocks)

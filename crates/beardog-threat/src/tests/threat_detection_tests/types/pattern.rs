@@ -49,7 +49,7 @@ impl ThreatPattern {
 
     pub fn matches(&self, input: &str) -> bool {
         // Simplified regex matching
-        input.contains(&self.pattern.replace(".*", "").replace("\\", ""))
+        input.contains(&self.pattern.replace(".*", "").replace('\\', ""))
             || self.pattern_match(input)
     }
 
@@ -133,6 +133,6 @@ impl PatternMatcher {
 
     pub fn find_highest_severity_match(&self, input: &str) -> Option<PatternMatch> {
         let matches = self.find_matches(input);
-        matches.into_iter().max_by_key(|m| m.severity())
+        matches.into_iter().max_by_key(PatternMatch::severity)
     }
 }

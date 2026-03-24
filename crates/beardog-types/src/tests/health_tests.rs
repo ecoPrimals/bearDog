@@ -45,7 +45,7 @@ mod health_status_tests {
     #[test]
     fn test_health_status_debug() {
         let status = HealthStatus::Healthy;
-        let debug_str = format!("{:?}", status);
+        let debug_str = format!("{status:?}");
         assert!(debug_str.contains("Healthy"));
     }
 
@@ -207,7 +207,7 @@ mod health_check_tests {
 
         for status in statuses {
             let check = HealthCheck {
-                name: format!("check_{:?}", status),
+                name: format!("check_{status:?}"),
                 status: status.clone(),
                 message: None,
                 timestamp: Utc::now(),

@@ -116,12 +116,12 @@ mod workflow_creation_tests {
         // TEST_PRIORITY: normal
 
         // Verify all states are distinct
-        assert_ne!(format!("{:?}", created), format!("{:?}", pending));
-        assert_ne!(format!("{:?}", pending), format!("{:?}", in_progress));
-        assert_ne!(format!("{:?}", in_progress), format!("{:?}", completed));
-        assert_ne!(format!("{:?}", completed), format!("{:?}", failed));
-        assert_ne!(format!("{:?}", failed), format!("{:?}", cancelled));
-        assert_ne!(format!("{:?}", cancelled), format!("{:?}", suspended));
+        assert_ne!(format!("{created:?}"), format!("{:?}", pending));
+        assert_ne!(format!("{pending:?}"), format!("{:?}", in_progress));
+        assert_ne!(format!("{in_progress:?}"), format!("{:?}", completed));
+        assert_ne!(format!("{completed:?}"), format!("{:?}", failed));
+        assert_ne!(format!("{failed:?}"), format!("{:?}", cancelled));
+        assert_ne!(format!("{cancelled:?}"), format!("{:?}", suspended));
     }
 }
 
@@ -192,7 +192,7 @@ mod workflow_execution_tests {
 
         // Verify cancellation is distinct from failure
         let failed = ExecutionStatus::Failed;
-        assert_ne!(format!("{:?}", cancelled), format!("{:?}", failed));
+        assert_ne!(format!("{cancelled:?}"), format!("{:?}", failed));
     }
 }
 
@@ -257,7 +257,7 @@ mod workflow_state_tests {
         assert!(matches!(recovered, WorkflowExecutionState::Initialized));
 
         // Verify states are different
-        assert_ne!(format!("{:?}", failed), format!("{:?}", recovered));
+        assert_ne!(format!("{failed:?}"), format!("{:?}", recovered));
     }
 }
 
@@ -465,18 +465,9 @@ mod workflow_integration_tests {
             .expect("execute");
 
         let kinds = observer.event_kinds();
-        assert!(
-            kinds.iter().any(|k| *k == "created"),
-            "missing created: {kinds:?}"
-        );
-        assert!(
-            kinds.iter().any(|k| *k == "started"),
-            "missing started: {kinds:?}"
-        );
-        assert!(
-            kinds.iter().any(|k| *k == "completed"),
-            "missing completed: {kinds:?}"
-        );
+        assert!(kinds.contains(&"created"), "missing created: {kinds:?}");
+        assert!(kinds.contains(&"started"), "missing started: {kinds:?}");
+        assert!(kinds.contains(&"completed"), "missing completed: {kinds:?}");
     }
 
     #[tokio::test]

@@ -6,6 +6,7 @@
 
 #![allow(unused_imports, unused_variables, dead_code, clippy::all)]
 
+use crate::float_eq;
 use crate::ultimate_performance::*;
 
 #[test]
@@ -73,9 +74,9 @@ fn test_ultimate_performance_stats_calculation() {
     let stats = processor.get_performance_stats();
 
     // New processor should have zero stats
-    assert_eq!(stats.cache_hit_ratio, 0.0);
-    assert_eq!(stats.prefetch_effectiveness, 0.0);
-    assert_eq!(stats.average_latency_ns, 0.0);
+    float_eq::f64(stats.cache_hit_ratio, 0.0);
+    float_eq::f64(stats.prefetch_effectiveness, 0.0);
+    float_eq::f64(stats.average_latency_ns, 0.0);
 }
 
 // TEST_CATEGORY: unit
@@ -102,7 +103,7 @@ fn test_ultimate_performance_stats_debug() {
     // TEST_PRIORITY: normal
     let stats = processor.get_performance_stats();
 
-    let debug_str = format!("{:?}", stats);
+    let debug_str = format!("{stats:?}");
     assert!(debug_str.contains("UltimatePerformanceStats"));
 }
 
@@ -135,7 +136,7 @@ fn test_operation_type_variants() {
 #[test]
 fn test_operation_type_debug() {
     let op = OperationType::Cryptographic;
-    let debug_str = format!("{:?}", op);
+    let debug_str = format!("{op:?}");
     assert!(debug_str.contains("Cryptographic"));
 }
 

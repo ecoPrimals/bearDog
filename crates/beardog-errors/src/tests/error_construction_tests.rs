@@ -163,7 +163,7 @@ fn test_error_debug() {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: errors
     // TEST_PRIORITY: important
-    let debug_str = format!("{:?}", error);
+    let debug_str = format!("{error:?}");
 
     assert!(debug_str.contains("Security"));
     assert!(debug_str.contains("Test error"));
@@ -175,7 +175,7 @@ fn test_error_display() {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: errors
     // TEST_PRIORITY: important
-    let display_str = format!("{}", error);
+    let display_str = format!("{error}");
 
     assert!(display_str.contains("Authentication failed"));
 }
@@ -273,7 +273,7 @@ fn test_multiple_error_types() {
             (1, BearDogError::System { .. }) => {}
             (2, BearDogError::System { .. }) => {} // network() returns System
             (3, BearDogError::Business { .. }) => {}
-            _ => panic!("Unexpected error variant at index {}", i),
+            _ => panic!("Unexpected error variant at index {i}"),
         }
     }
 }

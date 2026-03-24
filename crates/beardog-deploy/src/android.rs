@@ -325,18 +325,20 @@ impl AndroidDeployment {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::expect_used, clippy::unwrap_used)]
+
     use super::*;
 
     #[test]
     fn test_new_with_ndk_path() {
         let d = AndroidDeployment::new(Some("/opt/ndk".to_string()), 33);
-        assert!(format!("{:?}", d).contains("/opt/ndk"));
+        assert!(format!("{d:?}").contains("/opt/ndk"));
     }
 
     #[test]
     fn test_new_without_ndk_path() {
         let d = AndroidDeployment::new(None, 28);
-        assert!(format!("{:?}", d).contains("None"));
+        assert!(format!("{d:?}").contains("None"));
     }
 
     #[test]

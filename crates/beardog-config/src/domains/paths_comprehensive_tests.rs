@@ -146,7 +146,7 @@ mod tests {
         let result = config.get_pkcs11_library();
 
         // Just verify it doesn't panic
-        println!("Discovery result: {:?}", result);
+        println!("Discovery result: {result:?}");
     }
 
     #[test]
@@ -156,7 +156,7 @@ mod tests {
         // 1. Only discovery available
         let config1 = PathConfig::default();
         let result1 = config1.get_pkcs11_library();
-        println!("Discovery only: {:?}", result1);
+        println!("Discovery only: {result1:?}");
 
         // 2. Configured paths available
         let config2 = PathConfig {
@@ -249,7 +249,7 @@ mod tests {
     #[test]
     fn test_debug() {
         let config = PathConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
 
         assert!(debug_str.contains("PathConfig"));
     }
@@ -303,9 +303,9 @@ mod tests {
             let log_str = config.log_dir.to_string_lossy();
 
             println!("Linux paths:");
-            println!("  config: {}", config_str);
-            println!("  data: {}", data_str);
-            println!("  log: {}", log_str);
+            println!("  config: {config_str}");
+            println!("  data: {data_str}");
+            println!("  log: {log_str}");
         }
     }
 
@@ -321,9 +321,9 @@ mod tests {
             let log_str = config.log_dir.to_string_lossy();
 
             println!("macOS paths:");
-            println!("  config: {}", config_str);
-            println!("  data: {}", data_str);
-            println!("  log: {}", log_str);
+            println!("  config: {config_str}");
+            println!("  data: {data_str}");
+            println!("  log: {log_str}");
         }
     }
 
@@ -339,9 +339,9 @@ mod tests {
             let log_str = config.log_dir.to_string_lossy();
 
             println!("Windows paths:");
-            println!("  config: {}", config_str);
-            println!("  data: {}", data_str);
-            println!("  log: {}", log_str);
+            println!("  config: {config_str}");
+            println!("  data: {data_str}");
+            println!("  log: {log_str}");
         }
     }
 

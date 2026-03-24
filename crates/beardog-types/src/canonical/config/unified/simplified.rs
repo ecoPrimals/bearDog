@@ -10,6 +10,7 @@
 //! This module uses `Arc<str>` instead of `String` for frequently cloned fields,
 //! providing 10x faster clone operations and 30% memory reduction.
 
+use crate::constants::time;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -109,7 +110,7 @@ pub struct SecuritySettings {
 impl Default for SecuritySettings {
     fn default() -> Self {
         Self {
-            session_timeout_seconds: 3600,
+            session_timeout_seconds: time::SECONDS_PER_HOUR,
             max_login_attempts: 5,
             enable_mfa: true,
             hash_rounds: 12,

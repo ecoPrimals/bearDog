@@ -186,7 +186,7 @@ mod tests {
     #[test]
     fn test_error_debug_format() {
         let error = ConfigError::validation("test");
-        let debug_str = format!("{:?}", error);
+        let debug_str = format!("{error:?}");
         assert!(debug_str.contains("Validation"));
     }
 

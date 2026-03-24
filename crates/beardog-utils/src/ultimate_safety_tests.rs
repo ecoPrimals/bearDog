@@ -17,14 +17,14 @@ fn test_ultimate_safe_buffer_creation() {
 #[test]
 fn test_ultimate_safe_buffer_clone() {
     let buffer1 = UltimateSafeBuffer::new(100);
-    let _buffer2 = buffer1.clone();
+    let _buffer2 = buffer1;
     // Clone succeeded
 }
 
 #[test]
 fn test_ultimate_safe_buffer_debug() {
     let buffer = UltimateSafeBuffer::new(100);
-    let debug_str = format!("{:?}", buffer);
+    let debug_str = format!("{buffer:?}");
 
     assert!(!debug_str.is_empty());
 }
@@ -77,7 +77,7 @@ fn test_safety_statistics_clone() {
 #[test]
 fn test_safety_statistics_debug() {
     let stats = SafetyStatistics::default();
-    let debug_str = format!("{:?}", stats);
+    let debug_str = format!("{stats:?}");
 
     assert!(!debug_str.is_empty());
 }
@@ -97,7 +97,7 @@ fn test_ultimate_safe_buffer_various_sizes() {
 // TEST_PRIORITY: normal
 fn test_pool_statistics_default() {
     let stats = PoolStatistics::default();
-    let _ = format!("{:?}", stats);
+    let _ = format!("{stats:?}");
 }
 
 // TEST_CATEGORY: unit

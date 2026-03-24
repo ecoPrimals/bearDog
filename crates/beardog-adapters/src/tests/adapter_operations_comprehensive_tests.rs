@@ -28,7 +28,7 @@ mod adapter_operations {
             retry_attempts: 5,
             enable_caching: false,
         };
-        let adapter = UniversalAdapter::new(config.clone());
+        let adapter = UniversalAdapter::new(config);
         assert_eq!(adapter.config.timeout_seconds, 60);
         assert_eq!(adapter.config.retry_attempts, 5);
         assert!(!adapter.config.enable_caching);
@@ -71,7 +71,7 @@ mod adapter_operations {
     #[test]
     fn test_adapter_config_debug() {
         let config = AdapterConfig::default();
-        let debug = format!("{:?}", config);
+        let debug = format!("{config:?}");
         assert!(debug.contains("AdapterConfig"));
         assert!(debug.contains("timeout_seconds"));
     }
@@ -146,7 +146,7 @@ mod adapter_operations {
     #[test]
     fn test_adapter_debug() {
         let adapter = UniversalAdapter::new(AdapterConfig::default());
-        let debug = format!("{:?}", adapter);
+        let debug = format!("{adapter:?}");
         assert!(debug.contains("UniversalAdapter"));
     }
 
@@ -247,7 +247,7 @@ mod adapter_operations {
     fn test_capability_request_large_params() {
         let mut params = HashMap::new();
         for i in 0..100 {
-            params.insert(format!("param{}", i), format!("value{}", i));
+            params.insert(format!("param{i}"), format!("value{i}"));
         }
 
         let request = CapabilityRequest {

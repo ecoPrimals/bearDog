@@ -330,7 +330,7 @@ mod tests {
             let reconstructed = transport.to_endpoint();
             let parsed_again =
                 Transport::from_endpoint(&reconstructed).expect("Failed to re-parse");
-            assert_eq!(transport, parsed_again, "Roundtrip failed for {}", endpoint);
+            assert_eq!(transport, parsed_again, "Roundtrip failed for {endpoint}");
         }
     }
 }

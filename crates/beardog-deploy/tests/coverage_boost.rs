@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-#![allow(missing_docs, clippy::all)]
+#![allow(missing_docs, clippy::all, clippy::expect_used, clippy::unwrap_used)]
 
 //! Integration coverage tests for `beardog-deploy` (fast, deterministic, no sleeps).
 
@@ -379,7 +379,8 @@ fn device_manager_deploy_to_android_bad_output_without_success() {
     }
 
     let tmp = tempfile::tempdir().expect("tmp");
-    let apk = tmp.path().join(format!("bad_{}.apk", std::process::id()));
+    let pid = std::process::id();
+    let apk = tmp.path().join(format!("bad_{pid}.apk"));
     std::fs::write(&apk, b"x").expect("write");
     let mgr = DeviceManager::with_command_runner(Box::new(NoSuccessInstallRunner));
     let e = mgr
@@ -398,7 +399,7 @@ fn device_info_display_and_clone() {
         capabilities: vec!["a".to_string()],
         metadata: std::collections::HashMap::new(),
     };
-    let dbg = format!("{:?}", d.clone());
+    let dbg = format!("{d:?}");
     assert!(dbg.contains("i1"));
 }
 

@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, clippy::float_cmp)]
+
 //! Chaos and Fault Injection Tests for BearDog UniBin
 //!
 //! **Philosophy**: "test issues will be production issues"
@@ -178,7 +180,7 @@ mod chaos_tests {
             match handle.await {
                 Ok(Ok(())) => successes += 1,
                 Ok(Err(_)) => failures += 1,
-                Err(_) => panic!("Task should not panic"),
+                Err(e) => panic!("Task should not panic: {e:?}"),
             }
         }
 
@@ -186,13 +188,11 @@ mod chaos_tests {
         // Use range to account for potential race conditions in test execution
         assert!(
             (85..=87).contains(&successes),
-            "Should have ~86 successes, got {}",
-            successes
+            "Should have ~86 successes, got {successes}"
         );
         assert!(
             (13..=15).contains(&failures),
-            "Should have ~14 failures, got {}",
-            failures
+            "Should have ~14 failures, got {failures}"
         );
         assert_eq!(successes + failures, 100, "Total should be 100");
     }
@@ -335,7 +335,7 @@ mod chaos_tests {
         // Receive all messages
         let recv_handle = tokio::spawn(async move {
             let mut count = 0;
-            while let Some(_) = rx.recv().await {
+            while rx.recv().await.is_some() {
                 count += 1;
             }
             count

@@ -355,7 +355,7 @@ mod tests {
             .map(|i| {
                 let disc = discovery.clone();
                 tokio::spawn(async move {
-                    disc.update_cache(&format!("cap-{}", i), vec![], 300).await;
+                    disc.update_cache(&format!("cap-{i}"), vec![], 300).await;
                 })
             })
             .collect();
@@ -375,13 +375,10 @@ mod tests {
 
         // Should fail gracefully when no providers are available
         let result = discovery.discover("test-cap").await;
-        match result {
-            Err(DiscoveryError::BackendUnavailable { .. }) => {
-                // Expected: no providers available
-            }
-            _ => {
-                // Empty result is also acceptable
-            }
+        if let Err(DiscoveryError::BackendUnavailable { .. }) = result {
+            // Expected: no providers available
+        } else {
+            // Empty result is also acceptable
         }
     }
 

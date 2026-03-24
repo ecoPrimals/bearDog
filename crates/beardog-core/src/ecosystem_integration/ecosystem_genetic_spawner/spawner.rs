@@ -492,7 +492,9 @@ mod tests {
             Some("healthy")
         );
         assert_eq!(
-            status.get("hsm_available").and_then(|v| v.as_bool()),
+            status
+                .get("hsm_available")
+                .and_then(serde_json::Value::as_bool),
             Some(true)
         );
     }

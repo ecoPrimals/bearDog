@@ -483,8 +483,7 @@ mod tests {
         let overhead = sampled.estimated_overhead();
         assert!(
             (overhead - 0.005).abs() < 0.0001,
-            "Expected ~0.005, got {}",
-            overhead
+            "Expected ~0.005, got {overhead}"
         ); // 0.05 * 0.1
     }
 

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! Fault Injection Tests for Unix Socket IPC Evolution
 //!
 //! Tests the resilience and recovery of the lock-free concurrent implementation

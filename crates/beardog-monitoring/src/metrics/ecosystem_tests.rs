@@ -119,7 +119,7 @@ mod ecosystem_tests {
         let config = EcosystemConfig::default();
         let monitor = EcosystemMonitor::new(config).unwrap();
 
-        let debug_str = format!("{:?}", monitor);
+        let debug_str = format!("{monitor:?}");
         assert!(debug_str.contains("EcosystemMonitor"));
     }
 

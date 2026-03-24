@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![forbid(unsafe_code)]
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+#![cfg_attr(test, allow(clippy::float_cmp))]
 
 //! # `BearDog` Authentication and Authorization
 //!
@@ -31,9 +33,6 @@
 //!
 //! ## Architecture
 //!
-
-#![cfg_attr(test, allow(clippy::expect_used))]
-#![cfg_attr(test, allow(clippy::unwrap_used))]
 //! The auth system is built on decentralized principles:
 //! - **No Central Authority**: Users control their own identity
 //! - **Cryptographic Proofs**: Mathematical verification of identity
@@ -59,7 +58,6 @@ mod tests;
 
 #[cfg(test)]
 mod lib_tests {
-    use super::*;
 
     #[test]
     fn test_auth_lib_accessible() {

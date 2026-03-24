@@ -735,13 +735,13 @@ mod tests {
     #[test]
     fn test_threat_rule_type_display_all_variants() {
         use ThreatRuleType::*;
-        assert_eq!(format!("{}", Signature), "Signature");
-        assert_eq!(format!("{}", Behavioral), "Behavioral");
-        assert_eq!(format!("{}", Anomaly), "Anomaly");
-        assert_eq!(format!("{}", Heuristic), "Heuristic");
-        assert_eq!(format!("{}", MachineLearning), "Machine Learning");
-        assert_eq!(format!("{}", Correlation), "Correlation");
-        assert_eq!(format!("{}", Threshold), "Threshold");
+        assert_eq!(format!("{Signature}"), "Signature");
+        assert_eq!(format!("{Behavioral}"), "Behavioral");
+        assert_eq!(format!("{Anomaly}"), "Anomaly");
+        assert_eq!(format!("{Heuristic}"), "Heuristic");
+        assert_eq!(format!("{MachineLearning}"), "Machine Learning");
+        assert_eq!(format!("{Correlation}"), "Correlation");
+        assert_eq!(format!("{Threshold}"), "Threshold");
         assert_eq!(format!("{}", Custom("plugin".into())), "Custom: plugin");
     }
 }

@@ -181,7 +181,11 @@ fn test_ai_response_metadata_validation() {
         model_version: "gpt-4-turbo-2024".to_string(),
     };
 
-    assert_eq!(metadata.confidence_score, 0.95);
+    assert!(
+        (metadata.confidence_score - 0.95).abs() < 1e-9,
+        "expected confidence_score ≈ 0.95, got {}",
+        metadata.confidence_score
+    );
     assert_eq!(metadata.processing_time_ms, 123);
     assert_eq!(metadata.model_version, "gpt-4-turbo-2024");
 
@@ -189,7 +193,10 @@ fn test_ai_response_metadata_validation() {
     let json = serde_json::to_string(&metadata).unwrap();
     let deserialized: AIResponseMetadata = serde_json::from_str(&json).unwrap();
 
-    assert_eq!(metadata.confidence_score, deserialized.confidence_score);
+    assert!(
+        (metadata.confidence_score - deserialized.confidence_score).abs() < 1e-9,
+        "confidence_score mismatch after round-trip"
+    );
     assert_eq!(metadata.processing_time_ms, deserialized.processing_time_ms);
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: adapters
@@ -219,7 +226,11 @@ fn test_ai_integration_response_complete_structure() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: adapters
     // TEST_PRIORITY: normal
-    assert_eq!(response.ai_metadata.confidence_score, 0.88);
+    assert!(
+        (response.ai_metadata.confidence_score - 0.88).abs() < 1e-9,
+        "expected confidence_score ≈ 0.88, got {}",
+        response.ai_metadata.confidence_score
+    );
     assert_eq!(response.ai_metadata.processing_time_ms, 456);
     assert_eq!(response.ai_metadata.model_version, "claude-3-opus");
     assert_eq!(response.suggested_actions.len(), 1);
@@ -285,8 +296,8 @@ fn test_multiple_adapters_with_different_configs() {
         enable_caching: false,
     };
 
-    let adapter1 = UniversalAdapter::new(config1.clone());
-    let adapter2 = UniversalAdapter::new(config2.clone());
+    let adapter1 = UniversalAdapter::new(config1);
+    let adapter2 = UniversalAdapter::new(config2);
 
     // Each adapter should maintain its own configuration
     assert_eq!(adapter1.config.timeout_seconds, 10);

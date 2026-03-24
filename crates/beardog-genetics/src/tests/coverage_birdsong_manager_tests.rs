@@ -222,8 +222,7 @@ mod manager_discovery_tests {
         assert!(!broadcast.ciphertext.is_empty());
 
         // Revoke and verify
-        let revoked_count = manager.revoke_keys(&chain.chain_id, "child-a");
-        assert!(revoked_count >= 0);
+        let _revoked_count = manager.revoke_keys(&chain.chain_id, "child-a");
 
         // Rotate all keys
         let rotated = manager.rotate_all_keys(&chain.chain_id, "root", 2)?;

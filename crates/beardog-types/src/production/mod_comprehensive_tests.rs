@@ -50,7 +50,7 @@ fn test_environment_level_variants() {
     ];
 
     for level in levels {
-        assert!(!format!("{:?}", level).is_empty());
+        assert!(!format!("{level:?}").is_empty());
     }
 }
 
@@ -93,7 +93,7 @@ fn test_operational_status_variants() {
     ];
 
     for status in statuses {
-        assert!(!format!("{:?}", status).is_empty());
+        assert!(!format!("{status:?}").is_empty());
     }
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: types

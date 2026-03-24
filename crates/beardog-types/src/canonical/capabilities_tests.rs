@@ -113,7 +113,7 @@ fn test_capability_type_is_primal() {
 #[test]
 fn test_capability_type_display() {
     let cap = CapabilityType::Monitoring;
-    let displayed = format!("{}", cap);
+    let displayed = format!("{cap}");
     assert_eq!(displayed, "Monitoring");
 }
 

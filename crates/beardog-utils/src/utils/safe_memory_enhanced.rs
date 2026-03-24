@@ -361,6 +361,7 @@ impl EnhancedMemoryPools {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::float_eq;
 
     #[tokio::test]
     async fn test_buffer_pool_operations() {
@@ -417,7 +418,7 @@ mod tests {
     fn safe_memory_pinned_from_vec_named_and_with_buffer() {
         let buf = SafePinnedBuffer::from_vec(vec![1, 2, 3]);
         assert_eq!(buf.size(), 3);
-        assert_eq!(buf.with_buffer(|s| s.to_vec()), vec![1, 2, 3]);
+        assert_eq!(buf.with_buffer(<[u8]>::to_vec), vec![1, 2, 3]);
         let named = SafePinnedBuffer::named(16, "diag");
         assert_eq!(named.size(), 16);
     }
@@ -437,7 +438,7 @@ mod tests {
     #[test]
     fn safe_memory_buffer_pool_metrics_hit_rate() {
         let idle = BufferPoolMetrics::new();
-        assert_eq!(idle.hit_rate(), 0.0);
+        float_eq::f64(idle.hit_rate(), 0.0);
         let m = BufferPoolMetrics {
             total_requests: 4,
             cache_hits: 1,

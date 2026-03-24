@@ -144,7 +144,7 @@ mod tests {
             capabilities_discovered: 40,
             discovery_attempts: 15,
             discovery_success_rate: 0.8,
-            protocols_used: protocols.clone(),
+            protocols_used: protocols,
         };
 
         assert_eq!(metrics.protocols_used.len(), 3);

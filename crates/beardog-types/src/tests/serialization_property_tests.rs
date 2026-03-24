@@ -28,7 +28,7 @@ proptest! {
     /// KeyId roundtrips through serde_json for arbitrary UTF-8 strings.
     #[test]
     fn key_id_json_roundtrip(s in prop::string::string_regex(".{0,256}").unwrap()) {
-        let id = KeyId::new(s.clone());
+        let id = KeyId::new(s);
         let back: KeyId = roundtrip_json(&id).expect("KeyId roundtrip");
         prop_assert_eq!(back, id);
     }
@@ -36,7 +36,7 @@ proptest! {
     /// RegistrationId roundtrips through serde_json.
     #[test]
     fn registration_id_json_roundtrip(s in prop::string::string_regex(".{0,256}").unwrap()) {
-        let id = RegistrationId::new(s.clone());
+        let id = RegistrationId::new(s);
         let back: RegistrationId = roundtrip_json(&id).expect("RegistrationId roundtrip");
         prop_assert_eq!(back, id);
     }
@@ -44,7 +44,7 @@ proptest! {
     /// ServiceInstanceId roundtrips through serde_json.
     #[test]
     fn service_instance_id_json_roundtrip(s in prop::string::string_regex(".{0,256}").unwrap()) {
-        let id = ServiceInstanceId::new(s.clone());
+        let id = ServiceInstanceId::new(s);
         let back: ServiceInstanceId = roundtrip_json(&id).expect("ServiceInstanceId roundtrip");
         prop_assert_eq!(back, id);
     }
@@ -89,7 +89,7 @@ proptest! {
     fn bear_dog_error_display_debug_and_security_json_roundtrip(
         msg in prop::string::string_regex(".{1,512}").unwrap(),
     ) {
-        let err = BearDogError::security(msg.clone());
+        let err = BearDogError::security(msg);
         let disp = err.to_string();
         prop_assert!(!disp.is_empty());
         prop_assert_eq!(disp, format!("{err}"));

@@ -292,7 +292,7 @@ mod tests {
         assert_ne!(id1, id3);
 
         let mut set = HashSet::new();
-        set.insert(id1.clone());
+        set.insert(id1);
         assert!(set.contains(&id2));
         assert!(!set.contains(&id3));
     }
@@ -332,7 +332,7 @@ mod tests {
 
         let key_id = KeyId::new("borrow-test");
         let mut map = HashMap::new();
-        map.insert(key_id.clone(), "value");
+        map.insert(key_id, "value");
 
         // Borrow trait allows using &str to query HashMap<KeyId, _>
         assert_eq!(map.get("borrow-test" as &str), Some(&"value"));
@@ -348,7 +348,7 @@ mod tests {
     #[test]
     fn test_key_id_debug_format() {
         let key_id = KeyId::new("debug-test");
-        let debug_str = format!("{:?}", key_id);
+        let debug_str = format!("{key_id:?}");
         assert!(debug_str.contains("debug-test"));
     }
 
@@ -378,7 +378,7 @@ mod tests {
     #[test]
     fn test_service_instance_id_display() {
         let instance = ServiceInstanceId::new("display-test");
-        assert_eq!(format!("{}", instance), "display-test");
+        assert_eq!(format!("{instance}"), "display-test");
     }
 
     #[test]
@@ -407,7 +407,7 @@ mod tests {
     #[test]
     fn test_registration_id_display() {
         let reg = RegistrationId::new("reg-display");
-        assert_eq!(format!("{}", reg), "reg-display");
+        assert_eq!(format!("{reg}"), "reg-display");
     }
 
     #[test]

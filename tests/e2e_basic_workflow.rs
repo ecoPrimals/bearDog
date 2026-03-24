@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! Basic E2E Workflow Test
 //!
 //! This test demonstrates a complete end-to-end workflow validation

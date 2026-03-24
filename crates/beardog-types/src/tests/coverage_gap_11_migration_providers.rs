@@ -231,7 +231,7 @@ mod canonical_crypto_defaults {
     #[test]
     fn test_safe_crypto_configuration_clone() {
         let c = SafeCryptoConfiguration::default();
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 
@@ -284,7 +284,7 @@ mod ai_training_defaults {
     #[test]
     fn test_training_config_clone() {
         let c = TrainingConfig::default();
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 }
@@ -399,7 +399,7 @@ mod workflow_retry_defaults {
     #[test]
     fn test_retry_config_clone() {
         let c = RetryConfig::default();
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 }

@@ -150,7 +150,7 @@ mod config_testing_tests {
     #[test]
     fn test_canonical_test_config_clone() {
         let c1 = CanonicalTestConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -211,7 +211,7 @@ mod monitoring_health_tests {
     #[test]
     fn test_unified_health_config_clone() {
         let c1 = UnifiedHealthConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -243,7 +243,7 @@ mod config_production_resources_tests {
     #[test]
     fn test_resource_management_config_clone() {
         let c1 = ResourceManagementConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -293,7 +293,7 @@ mod config_bootstrap_tests {
     #[test]
     fn test_bootstrap_config_clone() {
         let c1 = UnifiedBootstrapConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -313,7 +313,7 @@ mod config_discovery_tests {
     #[test]
     fn test_discovery_config_clone() {
         let c1 = DiscoveryConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -351,7 +351,7 @@ mod config_database_tests {
     #[test]
     fn test_database_domain_config_clone() {
         let c1 = DatabaseDomainConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -463,7 +463,7 @@ mod config_network_client_tests {
     #[test]
     fn test_client_configuration_clone() {
         let c1 = ClientConfiguration::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -557,7 +557,7 @@ mod config_hsm_mobile_tests {
     #[test]
     fn test_mobile_hsm_config_clone() {
         let c1 = UnifiedMobileHsmConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -577,7 +577,7 @@ mod config_workflow_escalation_tests {
     #[test]
     fn test_workflow_escalation_config_clone() {
         let c1 = WorkflowEscalationConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }

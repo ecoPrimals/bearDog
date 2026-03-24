@@ -178,8 +178,11 @@ fn test_workflow_system_version_is_set() {
     }
 
     // Verify version format (semver)
-    let parts: Vec<&str> = WORKFLOW_SYSTEM_VERSION.split('.').collect();
-    assert_eq!(parts.len(), 3, "Version should follow semver (X.Y.Z)");
+    assert_eq!(
+        WORKFLOW_SYSTEM_VERSION.split('.').count(),
+        3,
+        "Version should follow semver (X.Y.Z)"
+    );
 }
 
 // ============================================================================
@@ -464,7 +467,7 @@ fn test_workflow_config_clone_creates_independent_copy() {
     assert_eq!(original.workflow_storage_path, cloned.workflow_storage_path);
 
     // Verify they are truly independent (comparing values)
-    let mut modified = cloned.clone();
+    let mut modified = cloned;
     modified.max_concurrent_workflows = 999;
 
     // Original should be unchanged

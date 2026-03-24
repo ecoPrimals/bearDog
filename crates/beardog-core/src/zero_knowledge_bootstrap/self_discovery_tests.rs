@@ -25,9 +25,8 @@ async fn test_self_discovery_engine() -> Result<(), Box<dyn std::error::Error>> 
 
     // Primal ID should NOT hardcode specific primal names
     // It should be self-discovered from PRIMAL_TYPE or default to "primal"
-    let parts: Vec<&str> = identity.primal_id.split('-').collect();
     assert!(
-        parts.len() >= 3,
+        identity.primal_id.split('-').count() >= 3,
         "Primal ID should have format: type-hostname-uuid"
     );
 
@@ -167,8 +166,10 @@ async fn test_primal_id_format() -> Result<(), Box<dyn std::error::Error>> {
         "Primal ID should have hyphen separators"
     );
 
-    let parts: Vec<&str> = primal_id.split('-').collect();
-    assert!(parts.len() >= 3, "Primal ID should have at least 3 parts");
+    assert!(
+        primal_id.split('-').count() >= 3,
+        "Primal ID should have at least 3 parts"
+    );
     Ok(())
 }
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-#![allow(missing_docs, clippy::all)]
+#![allow(missing_docs, clippy::all, clippy::expect_used, clippy::unwrap_used)]
 
 //! Integration coverage tests for `beardog-discovery`.
 

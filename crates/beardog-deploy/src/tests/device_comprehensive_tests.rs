@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 
 //! Comprehensive Device Manager Tests
 //!
@@ -14,14 +15,14 @@ use crate::device::{DeviceInfo, DeviceManager, DeviceStatus, DeviceType};
 fn test_device_manager_new() {
     let manager = DeviceManager::new();
     // Verify manager is created successfully
-    assert!(format!("{:?}", manager).contains("DeviceManager"));
+    assert!(format!("{manager:?}").contains("DeviceManager"));
 }
 
 #[test]
 fn test_device_manager_default() {
     let manager = DeviceManager::default();
     // Verify default implementation works
-    assert!(format!("{:?}", manager).contains("DeviceManager"));
+    assert!(format!("{manager:?}").contains("DeviceManager"));
 }
 
 // ============================================================================
@@ -77,7 +78,7 @@ fn test_device_type_variants() {
 #[test]
 fn test_device_type_debug() {
     let device_type = DeviceType::AndroidStrongBox;
-    let debug_str = format!("{:?}", device_type);
+    let debug_str = format!("{device_type:?}");
     assert!(debug_str.contains("AndroidStrongBox"));
 }
 
@@ -118,7 +119,7 @@ fn test_device_status_variants() {
 #[test]
 fn test_device_status_debug() {
     let status = DeviceStatus::Connected;
-    let debug_str = format!("{:?}", status);
+    let debug_str = format!("{status:?}");
     assert!(debug_str.contains("Connected"));
 }
 
@@ -174,7 +175,7 @@ fn test_device_info_with_capabilities() {
         name: "Secure Device".to_string(),
         device_type: DeviceType::IosSecureEnclave,
         status: DeviceStatus::Available,
-        capabilities: capabilities.clone(),
+        capabilities,
         metadata: std::collections::HashMap::new(),
     };
 
@@ -221,7 +222,7 @@ fn test_device_info_debug() {
         metadata: std::collections::HashMap::new(),
     };
 
-    let debug_str = format!("{:?}", device_info);
+    let debug_str = format!("{device_info:?}");
     assert!(debug_str.contains("test-id"));
     assert!(debug_str.contains("SoftwareHsm"));
 }
@@ -294,7 +295,7 @@ fn test_all_device_types_coverage() {
     assert_eq!(types.len(), 5);
     for device_type in types {
         let device_info = DeviceInfo {
-            id: format!("test-{:?}", device_type),
+            id: format!("test-{device_type:?}"),
             name: "Test".to_string(),
             device_type,
             status: DeviceStatus::Available,
@@ -318,7 +319,7 @@ fn test_all_device_statuses_coverage() {
     assert_eq!(statuses.len(), 4);
     for status in statuses {
         let device_info = DeviceInfo {
-            id: format!("test-{:?}", status),
+            id: format!("test-{status:?}"),
             name: "Test".to_string(),
             device_type: DeviceType::Unknown,
             status,
@@ -348,7 +349,7 @@ fn test_device_info_empty_collections() {
 fn test_device_info_large_metadata() {
     let mut metadata = std::collections::HashMap::new();
     for i in 0..100 {
-        metadata.insert(format!("key_{}", i), format!("value_{}", i));
+        metadata.insert(format!("key_{i}"), format!("value_{i}"));
     }
 
     let device_info = DeviceInfo {

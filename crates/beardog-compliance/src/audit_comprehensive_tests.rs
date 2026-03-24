@@ -78,7 +78,7 @@ fn test_audit_severity_serialization() {
 #[test]
 fn test_audit_severity_debug_format() {
     let severity = AuditSeverity::High;
-    let debug_str = format!("{:?}", severity);
+    let debug_str = format!("{severity:?}");
 
     assert!(debug_str.contains("High"));
 }
@@ -104,7 +104,7 @@ fn test_audit_event_type_variants() {
 #[test]
 fn test_audit_event_type_clone() {
     let type1 = AuditEventType::Authentication;
-    let type2 = type1.clone();
+    let type2 = type1;
 
     assert!(matches!(type2, AuditEventType::Authentication));
 }
@@ -122,7 +122,7 @@ fn test_audit_event_type_serialization() {
 #[test]
 fn test_audit_event_type_debug_format() {
     let event_type = AuditEventType::ComplianceCheck;
-    let debug_str = format!("{:?}", event_type);
+    let debug_str = format!("{event_type:?}");
 
     assert!(debug_str.contains("ComplianceCheck"));
 }
@@ -400,7 +400,7 @@ fn test_audit_event_debug_format() {
         "test".to_string(),
         "test".to_string(),
     );
-    let debug_str = format!("{:?}", event);
+    let debug_str = format!("{event:?}");
 
     assert!(debug_str.contains("AuditEvent"));
     assert!(debug_str.contains("SecurityEvent"));
@@ -472,7 +472,7 @@ fn test_audit_engine_add_multiple_events() {
     for i in 0..10 {
         let event = AuditEvent::new(
             AuditEventType::DataAccess,
-            format!("resource_{}", i),
+            format!("resource_{i}"),
             "read".to_string(),
             "success".to_string(),
         );
@@ -499,7 +499,7 @@ fn test_audit_engine_event_rotation() {
     for i in 0..10 {
         let event = AuditEvent::new(
             AuditEventType::DataAccess,
-            format!("resource_{}", i),
+            format!("resource_{i}"),
             "read".to_string(),
             "success".to_string(),
         );

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 //! `deploy-pixel8` — CLI entrypoint for BearDog Android deployment (check, build, deploy, run, logs).
 

@@ -345,7 +345,7 @@ fn test_performance_optimizer_evaluate_scaling_various_states() {
 #[test]
 fn test_optimization_config_debug() {
     let config = OptimizationConfig::default();
-    let debug_str = format!("{:?}", config);
+    let debug_str = format!("{config:?}");
 
     assert!(!debug_str.is_empty());
     assert!(debug_str.contains("OptimizationConfig"));
@@ -355,7 +355,7 @@ fn test_optimization_config_debug() {
 fn test_performance_optimizer_debug() {
     let config = OptimizationConfig::default();
     let optimizer = PerformanceOptimizer::new(&config).expect("Should create optimizer");
-    let debug_str = format!("{:?}", optimizer);
+    let debug_str = format!("{optimizer:?}");
 
     assert!(!debug_str.is_empty());
     assert!(debug_str.contains("PerformanceOptimizer"));

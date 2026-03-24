@@ -167,7 +167,7 @@ impl DeploymentManager {
     async fn deploy_single(&self, primal: PrimalName) -> Result<(), DeploymentError> {
         // 1. Update status: Downloading
         self.update_progress(
-            primal.clone(),
+            &primal,
             DeploymentStatus::Downloading,
             10,
             "Locating binary",
@@ -179,21 +179,17 @@ impl DeploymentManager {
             .locate_binary(primal.clone(), &self.arch, &self.os)?;
 
         // 2. Update status: Installing
-        self.update_progress(
-            primal.clone(),
-            DeploymentStatus::Installing,
-            40,
-            "Copying binary",
-        )
-        .await;
+        self.update_progress(&primal, DeploymentStatus::Installing, 40, "Copying binary")
+            .await;
 
-        self.installer
+        let installed_path = self
+            .installer
             .install_binary(primal.clone(), &binary_path)
             .await?;
 
         // 3. Update status: Validating
         self.update_progress(
-            primal.clone(),
+            &primal,
             DeploymentStatus::Validating,
             70,
             "Validating installation",
@@ -201,7 +197,6 @@ impl DeploymentManager {
         .await;
 
         // Basic validation: check binary exists and is executable
-        let installed_path = self.installer.binary_path(primal.clone());
         if !installed_path.exists() {
             return Err(DeploymentError::ValidationFailed {
                 primal,
@@ -211,7 +206,7 @@ impl DeploymentManager {
 
         // 4. Update status: Complete
         self.update_progress(
-            primal.clone(),
+            &primal,
             DeploymentStatus::Complete,
             100,
             "Deployment successful",
@@ -227,7 +222,7 @@ impl DeploymentManager {
 
         for primal in primals {
             self.update_progress(
-                primal.clone(),
+                primal,
                 DeploymentStatus::RolledBack,
                 0,
                 "Rollback initiated",
@@ -242,14 +237,14 @@ impl DeploymentManager {
     /// Update deployment progress (real-time)
     async fn update_progress(
         &self,
-        primal: PrimalName,
+        primal: &PrimalName,
         status: DeploymentStatus,
         percent: u8,
         message: &str,
     ) {
         let mut progress = self.progress.write().await;
 
-        if let Some(entry) = progress.iter_mut().find(|p| p.primal == primal) {
+        if let Some(entry) = progress.iter_mut().find(|p| &p.primal == primal) {
             entry.status = status;
             entry.percent = percent;
             entry.message = message.to_string();
@@ -300,6 +295,8 @@ pub enum DeploymentError {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::await_holding_lock)]
+
     use super::*;
     use crate::installer::InstallerError;
     use crate::types::DeploymentStatus;
@@ -383,7 +380,8 @@ mod tests {
         assert_eq!(report.total, expected);
         assert_eq!(report.successes, expected);
         assert!(report.is_success());
-        assert_eq!(report.success_rate(), 100.0);
+        let rate = report.success_rate();
+        assert!((rate - 100.0).abs() < 1e-9, "expected 100.0, got {rate}");
     }
 
     #[tokio::test]
@@ -450,7 +448,7 @@ mod tests {
             os: OperatingSystem::Linux,
         };
 
-        let display = format!("{}", report);
+        let display = format!("{report}");
         assert!(display.contains("Total:     5"));
         assert!(display.contains("Successes: 4"));
         assert!(display.contains("Failures:  1"));
@@ -469,7 +467,8 @@ mod tests {
         assert_eq!(report.total, 0);
         assert_eq!(report.successes, 0);
         assert!(report.is_success());
-        assert_eq!(report.success_rate(), 0.0);
+        let rate = report.success_rate();
+        assert!(rate.abs() < 1e-9, "expected 0.0, got {rate}");
     }
 
     #[test]

@@ -12,6 +12,7 @@
 #[cfg(test)]
 #[allow(clippy::module_inception)]
 mod tests {
+    use crate::float_assert::near_f64;
     use crate::threat::handlers::core::ThreatDetectionEngine;
     use crate::threat::types::DetectionMethod;
     use crate::threat::{
@@ -31,7 +32,7 @@ mod tests {
         // Test that engine was created successfully
         let stats = engine.get_statistics();
         assert_eq!(stats.total_threats_detected, 0);
-        assert_eq!(stats.false_positive_rate, 0.0);
+        near_f64(stats.false_positive_rate, 0.0);
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
@@ -44,8 +45,8 @@ mod tests {
         assert!(config.ml_enhancement);
         assert!(config.real_time_monitoring);
         assert!(!config.auto_response);
-        assert_eq!(config.sensitivity, 0.7);
-        assert_eq!(config.block_threshold, 0.9);
+        near_f64(config.sensitivity, 0.7);
+        near_f64(config.block_threshold, 0.9);
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal

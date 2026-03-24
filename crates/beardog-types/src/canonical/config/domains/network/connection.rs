@@ -649,7 +649,7 @@ mod tests {
         let config = ConnectionPoolConfig::default();
         assert!(config.validate().is_ok());
 
-        let mut invalid_config = config.clone();
+        let mut invalid_config = config;
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: types
         // TEST_PRIORITY: normal
@@ -666,7 +666,7 @@ mod tests {
         // TEST_PRIORITY: normal
         assert!(config.validate().is_ok());
 
-        let mut invalid_config = config.clone();
+        let mut invalid_config = config;
         invalid_config.connection_timeout_seconds = 0;
         assert!(invalid_config.validate().is_err());
     }

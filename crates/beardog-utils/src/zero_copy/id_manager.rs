@@ -115,7 +115,7 @@ mod tests {
     fn test_id_manager_empty_prefix() {
         let manager = IdManager::new("");
         let id = manager.next_id();
-        assert!(id.starts_with("_"));
+        assert!(id.starts_with('_'));
     }
 
     #[test]

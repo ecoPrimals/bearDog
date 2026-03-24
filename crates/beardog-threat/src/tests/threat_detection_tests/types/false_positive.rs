@@ -46,8 +46,7 @@ impl FalsePositiveHandler {
         let threat_id = threat
             .metadata()
             .get("id")
-            .map(|s| s.as_str())
-            .unwrap_or("");
+            .map_or("", std::string::String::as_str);
 
         if self.is_known_false_positive(threat_id) {
             return true;

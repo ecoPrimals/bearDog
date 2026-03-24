@@ -19,6 +19,7 @@ use super::types::*;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::float_assert::near_f64;
     use std::sync::{Arc, Mutex};
     use std::time::Duration;
 
@@ -189,7 +190,7 @@ mod tests {
                 threat
                     .metadata()
                     .get("source_ip")
-                    .unwrap_or(&"unknown".to_string())
+                    .map_or("unknown", |s| s.as_str())
             ));
         });
 
@@ -249,7 +250,7 @@ mod tests {
         tracker.record_response(&incident_id, ResponseAction::NotifyAdmin, true);
 
         assert_eq!(tracker.response_count(&incident_id), 2);
-        assert_eq!(tracker.success_rate(&incident_id), 100.0);
+        near_f64(tracker.success_rate(&incident_id), 100.0);
 
         // Test mitigation time tracking - modern pattern: test behavior, not timing
         tracker.mark_mitigated(&incident_id);
@@ -263,7 +264,7 @@ mod tests {
         assert_eq!(metrics.total_incidents, 1);
         assert_eq!(metrics.total_responses, 2);
         assert_eq!(metrics.successful_responses, 2);
-        assert_eq!(metrics.success_rate(), 100.0);
+        near_f64(metrics.success_rate(), 100.0);
     }
 }
 

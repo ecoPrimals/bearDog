@@ -104,10 +104,10 @@ mod authorization_comprehensive_tests {
 
         // Super admin has all permissions
         let super_admin_with_perms = super_admin_role
-            .with_permission(read_perm.clone())
-            .with_permission(write_perm.clone())
-            .with_permission(delete_perm.clone())
-            .with_permission(admin_perm.clone());
+            .with_permission(read_perm)
+            .with_permission(write_perm)
+            .with_permission(delete_perm)
+            .with_permission(admin_perm);
 
         assert_eq!(super_admin_with_perms.permissions().len(), 4);
 
@@ -207,7 +207,7 @@ mod authorization_comprehensive_tests {
         // Test permission set with many permissions
         let mut large_perm_set = PermissionSet::new();
         for i in 0..100 {
-            large_perm_set.add(Permission::new(&format!("perm:{}", i)));
+            large_perm_set.add(Permission::new(&format!("perm:{i}")));
         }
         assert_eq!(large_perm_set.len(), 100);
 

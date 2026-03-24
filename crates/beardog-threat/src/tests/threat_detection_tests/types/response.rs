@@ -137,7 +137,10 @@ impl EscalationLevel {
         Self {
             name: name.into(),
             severity,
-            contacts: contacts.iter().map(|s| s.to_string()).collect(),
+            contacts: contacts
+                .iter()
+                .map(std::string::ToString::to_string)
+                .collect(),
             timeout,
         }
     }

@@ -414,8 +414,7 @@ fn test_key_uniqueness() -> Result<(), BearDogError> {
         for j in (i + 1)..keys.len() {
             assert_ne!(
                 keys[i], keys[j],
-                "Generated keys should be unique (index {} and {})",
-                i, j
+                "Generated keys should be unique (index {i} and {j})"
             );
         }
     }
@@ -442,8 +441,7 @@ fn test_nonce_uniqueness() -> Result<(), BearDogError> {
         for j in (i + 1)..nonces.len() {
             assert_ne!(
                 nonces[i], nonces[j],
-                "Nonces should be unique (index {} and {})",
-                i, j
+                "Nonces should be unique (index {i} and {j})"
             );
         }
     }

@@ -266,7 +266,7 @@ mod tests {
     #[test]
     fn test_debug() {
         let config = LimitsConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
 
         assert!(debug_str.contains("LimitsConfig"));
     }
@@ -359,7 +359,7 @@ mod tests {
             buffer_size: 1024 * 1024, // Max
             max_connections: 10000,   // Max
             max_retries: 100,         // Max
-            queue_size: 100000,
+            queue_size: 100_000,
             thread_pool_size: 128, // Max
             ..Default::default()
         };

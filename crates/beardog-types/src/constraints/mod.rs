@@ -320,8 +320,7 @@ mod tests {
         // Should be approximately 559 km = 559,000 meters
         assert!(
             (distance - 559_000.0).abs() < 10_000.0,
-            "Distance calculation off: {}",
-            distance
+            "Distance calculation off: {distance}"
         );
     }
 

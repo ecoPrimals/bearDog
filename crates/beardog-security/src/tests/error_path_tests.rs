@@ -143,8 +143,7 @@ mod tests {
         // Expect significant difference (avalanche effect means ~50% bits differ)
         assert!(
             diff_bits > 50,
-            "Expected significant bit differences, got {}",
-            diff_bits
+            "Expected significant bit differences, got {diff_bits}"
         );
     }
 

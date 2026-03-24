@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 
 //! Ed25519 / X25519 unit tests.
 
@@ -18,7 +19,7 @@ async fn test_ed25519_empty_message() {
     });
 
     let result = handle_sign_ed25519(Some(&params)).await;
-    assert!(result.is_ok(), "Empty message signing failed: {:?}", result);
+    assert!(result.is_ok(), "Empty message signing failed: {result:?}");
 
     let sig = result.unwrap();
     assert!(sig["signature"].as_str().is_some());

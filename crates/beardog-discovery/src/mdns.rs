@@ -430,7 +430,7 @@ mod tests {
         let handles: Vec<_> = (0..5)
             .map(|i| {
                 let disc = discovery.clone();
-                tokio::spawn(async move { disc.discover(&format!("test-cap-{}", i)).await })
+                tokio::spawn(async move { disc.discover(&format!("test-cap-{i}")).await })
             })
             .collect();
 
@@ -449,7 +449,7 @@ mod tests {
             .map(|i| {
                 let disc = discovery.clone();
                 tokio::spawn(async move {
-                    disc.update_cache(&format!("_test{}._tcp.local.", i), vec![])
+                    disc.update_cache(&format!("_test{i}._tcp.local."), vec![])
                         .await;
                 })
             })

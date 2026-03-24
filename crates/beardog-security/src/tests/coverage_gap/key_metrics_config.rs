@@ -16,7 +16,7 @@ mod metrics_tests {
         assert_eq!(metrics.keys_accessed, 0);
         assert_eq!(metrics.keys_expired, 0);
         assert_eq!(metrics.avg_access_time, Duration::from_millis(0));
-        assert_eq!(metrics.cache_hit_rate, 0.0);
+        assert!(metrics.cache_hit_rate.abs() < f64::EPSILON);
         assert_eq!(metrics.memory_usage, 0);
     }
 
@@ -33,7 +33,7 @@ mod metrics_tests {
         };
         assert_eq!(metrics.total_keys, 100);
         assert_eq!(metrics.keys_created, 200);
-        assert_eq!(metrics.cache_hit_rate, 0.95);
+        assert!((metrics.cache_hit_rate - 0.95).abs() < 1e-9);
     }
 
     #[test]

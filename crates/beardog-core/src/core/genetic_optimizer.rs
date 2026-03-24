@@ -406,7 +406,7 @@ mod tests {
             convergence_threshold: 0.001,
         };
         let optimizer = GeneticOptimizer::with_config(config);
-        let _ = optimizer
+        let () = optimizer
             .initialize()
             .await
             .expect("genetic optimizer initialize");
@@ -422,7 +422,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_optimization_state() {
         let optimizer = GeneticOptimizer::new();
-        let _ = optimizer
+        let () = optimizer
             .initialize()
             .await
             .expect("genetic optimizer initialize");
@@ -440,7 +440,7 @@ mod tests {
             convergence_threshold: 0.001,
         };
         let optimizer = GeneticOptimizer::with_config(config);
-        let _ = optimizer
+        let () = optimizer
             .initialize()
             .await
             .expect("genetic optimizer initialize");

@@ -706,7 +706,7 @@ impl HsmProvider for RustSoftwareHsm {
         let key = key_store.get_key(key_id).await?;
 
         Ok(crate::tunnel::hsm::manager::implementation::KeyInfo {
-            key_id: key.id.clone(),
+            key_id: key_id.to_string(),
             key_type: format!("{:?}", key.key_type),
             is_hardware_backed: false, // Software HSM
         })

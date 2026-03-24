@@ -30,7 +30,7 @@ mod tests {
             .with_jurisdiction(Jurisdiction::International);
 
         // Test policy conflict resolution (strictest wins)
-        let resolved = PolicyResolver::resolve(&[strict_policy.clone(), relaxed_policy.clone()]);
+        let resolved = PolicyResolver::resolve(&[strict_policy, relaxed_policy]);
         assert_eq!(resolved.data_residency(), DataResidency::StrictLocal);
 
         // Test empty policy set

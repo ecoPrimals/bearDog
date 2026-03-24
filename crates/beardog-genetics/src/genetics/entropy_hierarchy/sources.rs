@@ -471,7 +471,7 @@ mod tests {
                 entropy_data: vec![i],
                 collected_at: chrono::Utc::now(),
             };
-            manager.register_source(format!("source_{}", i), source);
+            manager.register_source(format!("source_{i}"), source);
         }
 
         assert_eq!(manager.list_sources().len(), 5);
@@ -581,7 +581,7 @@ mod tests {
         let config = EntropyHierarchyConfig::default();
         let engine = EntropyMixingEngine::new(&config);
 
-        let debug_str = format!("{:?}", engine);
+        let debug_str = format!("{engine:?}");
         assert!(!debug_str.is_empty());
         assert!(debug_str.contains("EntropyMixingEngine"));
     }
@@ -591,7 +591,7 @@ mod tests {
         let config = EntropyHierarchyConfig::default();
         let manager = EntropySourceManager::new(&config);
 
-        let debug_str = format!("{:?}", manager);
+        let debug_str = format!("{manager:?}");
         assert!(!debug_str.is_empty());
     }
 }

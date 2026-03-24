@@ -419,6 +419,7 @@ impl Default for UltimatePerformanceProcessor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::float_eq;
 
     #[test]
     fn test_ultimate_performance_processor() {
@@ -460,7 +461,7 @@ mod tests {
 
         assert_eq!(stats.operations_processed, 0);
         assert_eq!(stats.simd_operations, 0);
-        assert_eq!(stats.cache_hit_ratio, 0.0);
+        float_eq::f64(stats.cache_hit_ratio, 0.0);
     }
 
     #[test]
@@ -588,7 +589,7 @@ mod tests {
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
         let stats = processor.get_performance_stats();
-        assert_eq!(stats.cache_hit_ratio, 0.0);
+        float_eq::f64(stats.cache_hit_ratio, 0.0);
 
         // After processing, ratio should still be valid
         processor.process_with_ultimate_optimization(&[1, 2, 3]);
@@ -615,7 +616,7 @@ mod tests {
         let processor = UltimatePerformanceProcessor::new();
 
         let stats = processor.get_performance_stats();
-        assert_eq!(stats.average_latency_ns, 0.0);
+        float_eq::f64(stats.average_latency_ns, 0.0);
     }
 
     #[test]
@@ -771,7 +772,7 @@ mod tests {
         // Test that all operation types can be created and cloned
         for op_type in types {
             let cloned = op_type;
-            let _ = format!("{:?}", cloned);
+            let _ = format!("{cloned:?}");
         }
     }
 
@@ -784,8 +785,8 @@ mod tests {
         let stats = processor.get_performance_stats();
 
         // Verify stats structure is valid
-        let _ = stats.clone();
-        let debug_str = format!("{:?}", stats);
+        let _ = stats;
+        let debug_str = format!("{stats:?}");
         assert!(!debug_str.is_empty());
     }
 

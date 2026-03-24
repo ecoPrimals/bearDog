@@ -31,9 +31,9 @@ mod crypto_utils_tests {
         let password = b"test_password";
         let salt = b"salt";
 
-        for size in [16, 24, 32, 48, 64].iter() {
+        for size in &[16, 24, 32, 48, 64] {
             let result = derive_key(password, salt, *size);
-            assert!(result.is_ok(), "Derivation should work for size {}", size);
+            assert!(result.is_ok(), "Derivation should work for size {size}");
             assert_eq!(
                 result.unwrap().len(),
                 *size,
@@ -311,9 +311,9 @@ mod crypto_utils_tests {
     /// Test random with different sizes
     #[test]
     fn test_random_bytes_different_sizes() {
-        for size in [8, 16, 24, 32, 48, 64, 128].iter() {
+        for size in &[8, 16, 24, 32, 48, 64, 128] {
             let result = generate_random_bytes(*size);
-            assert!(result.is_ok(), "Should generate {} bytes", size);
+            assert!(result.is_ok(), "Should generate {size} bytes");
             assert_eq!(result.unwrap().len(), *size, "Size should match");
         }
     }

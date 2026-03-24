@@ -231,7 +231,7 @@ mod tests {
     fn test_safety_checker_load_policy_empty_id() {
         let mut checker = SafetyChecker::new(SecurityClearance::Public);
         let policy = SafetyPolicy {
-            policy_id: "".to_string(),
+            policy_id: String::new(),
             function_patterns: vec!["*".to_string()],
             required_clearance: SecurityClearance::Public,
             parameter_validation: true,

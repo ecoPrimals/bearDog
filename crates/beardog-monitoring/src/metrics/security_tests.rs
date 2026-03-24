@@ -119,7 +119,7 @@ mod security_tests {
         let config = SecurityMetricsConfig::default();
         let engine = SecurityMetricsEngine::new(config).unwrap();
 
-        let debug_str = format!("{:?}", engine);
+        let debug_str = format!("{engine:?}");
         assert!(debug_str.contains("SecurityMetricsEngine"));
     }
 

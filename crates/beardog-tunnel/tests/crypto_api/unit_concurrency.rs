@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 
 //! Concurrent mixed crypto operations.
 
@@ -12,7 +13,7 @@ async fn test_concurrent_crypto_operations() {
     let handles: Vec<_> = (0..50)
         .map(|i| {
             tokio::spawn(async move {
-                let msg = format!("message_{}", i);
+                let msg = format!("message_{i}");
                 let msg_b64 = base64::engine::general_purpose::STANDARD.encode(msg.as_bytes());
 
                 // Sign

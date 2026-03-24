@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 #![allow(
     missing_docs,
     clippy::float_cmp,
@@ -398,7 +399,7 @@ async fn test_async_error_propagation() {
 async fn test_concurrent_async_errors() {
     // Helper async function that may fail
     async fn async_task(id: u32) -> Result<u32, BearDogError> {
-        if id % 2 == 0 {
+        if id.is_multiple_of(2) {
             Ok(id)
         } else {
             Err(BearDogError::validation(&format!("Task {id} failed")))

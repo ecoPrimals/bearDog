@@ -9,6 +9,7 @@
 use beardog_errors::BearDogError;
 use beardog_errors::BearDogError;
 use crate::canonical::traits::{CacheStrategy, TimeoutPolicy};
+use crate::constants::time;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 // Note: SystemTime available for future timestamp needs
@@ -677,7 +678,7 @@ impl Default for AuthenticationConfiguration {
             session_timeout: std::env::var("BEARDOG_PROVIDER_SESSION_TIMEOUT_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(3600), // 1 hour
+                .unwrap_or(time::SECONDS_PER_HOUR), // 1 hour
             enable_mfa: false,
         }
     }
@@ -731,7 +732,7 @@ impl Default for KeyManagementConfiguration {
             rotation_interval: std::env::var("BEARDOG_PROVIDER_KEY_ROTATION_INTERVAL_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(86400), // 24 hours
+                .unwrap_or(time::SECONDS_PER_DAY), // 24 hours
             derivation: KeyDerivationConfiguration::default(),
         }
     }
@@ -792,7 +793,7 @@ impl Default for CachingConfiguration {
             ttl: std::env::var("BEARDOG_CACHE_TTL_SECS")
                 .ok()
                 .and_then(|t| t.parse().ok())
-                .unwrap_or(3600), // 1 hour default
+                .unwrap_or(time::SECONDS_PER_HOUR), // 1 hour default
             eviction_policy: EvictionPolicy::Lru,
         }
     }
@@ -846,7 +847,7 @@ impl CacheStrategy for CachingConfiguration {
         self.max_size >= 100 && // At least 100 entries
         self.max_size <= 1_000_000 && // At most 1M entries
         self.ttl >= 60 && // At least 1 minute
-        self.ttl <= 86400 && // At most 1 day
+        self.ttl <= time::SECONDS_PER_DAY && // At most 1 day
         self.validate().is_ok()
     }
 }

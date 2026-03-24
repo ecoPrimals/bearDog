@@ -43,3 +43,6 @@ mod connection_error_paths_tests;
 // December 1, 2025: HSM provider integration tests (production paths)
 #[cfg(test)]
 mod hsm_provider_integration_tests;
+
+#[cfg(test)]
+mod tunnel_coverage_wave2;

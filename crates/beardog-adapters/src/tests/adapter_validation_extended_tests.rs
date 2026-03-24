@@ -370,7 +370,7 @@ mod adapter_validation_tests {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: adapters
         // TEST_PRIORITY: normal
-        let debug_str = format!("{:?}", adapter);
+        let debug_str = format!("{adapter:?}");
         assert!(debug_str.contains("test"));
     }
     // TEST_CATEGORY: integration

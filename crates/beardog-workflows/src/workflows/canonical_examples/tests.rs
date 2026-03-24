@@ -173,7 +173,7 @@ async fn test_full_integration() -> Result<(), BearDogError> {
 #[test]
 fn test_example_workflow_id_display() {
     let id = ExampleWorkflowId("test-id-123".to_string());
-    assert_eq!(format!("{}", id), "test-id-123");
+    assert_eq!(format!("{id}"), "test-id-123");
     assert_eq!(id.as_str(), "test-id-123");
 }
 
@@ -441,7 +441,7 @@ fn test_example_workflow_id_hash() {
 #[test]
 fn test_example_workflow_debug() {
     let workflow = ExampleWorkflow::new("debug-1", "Debug Test");
-    let debug = format!("{:?}", workflow);
+    let debug = format!("{workflow:?}");
     assert!(debug.contains("debug-1"));
     assert!(debug.contains("Debug Test"));
 }
@@ -449,7 +449,7 @@ fn test_example_workflow_debug() {
 #[test]
 fn test_in_memory_repository_clone() {
     let repo = InMemoryWorkflowRepository::new();
-    let cloned = repo.clone();
+    let cloned = repo;
     assert!(cloned.is_empty());
 }
 
@@ -470,7 +470,7 @@ async fn test_repository_concurrent_operations() {
         let r = Arc::clone(&repo);
         handles.push(tokio::spawn(async move {
             let workflow =
-                ExampleWorkflow::new(&format!("concurrent-{}", i), &format!("Concurrent {}", i));
+                ExampleWorkflow::new(&format!("concurrent-{i}"), &format!("Concurrent {i}"));
             r.save(workflow).await
         }));
     }

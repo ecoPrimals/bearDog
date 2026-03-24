@@ -117,7 +117,7 @@ mod tests {
     #[tokio::test]
     async fn test_needs_renewal() {
         let signing_key = SigningKey::from_bytes(&[1u8; 32]);
-        let detector = CommercialExtractionDetector::default();
+        let detector = CommercialExtractionDetector;
         let issuer = CertificateIssuer::new(signing_key, detector);
         let store = CertificateStore::new();
         let renewal = CertificateRenewal::new(issuer, store.clone());
@@ -145,7 +145,7 @@ mod tests {
     #[tokio::test]
     async fn test_no_renewal_needed() {
         let signing_key = SigningKey::from_bytes(&[1u8; 32]);
-        let detector = CommercialExtractionDetector::default();
+        let detector = CommercialExtractionDetector;
         let issuer = CertificateIssuer::new(signing_key, detector);
         let store = CertificateStore::new();
         let renewal = CertificateRenewal::new(issuer, store.clone());

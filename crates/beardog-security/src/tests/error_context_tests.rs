@@ -12,7 +12,7 @@ mod tests {
         use beardog_errors::BearDogError;
 
         let error = BearDogError::internal("test error".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
 
         assert!(!display.is_empty(), "Error display should not be empty");
     }
@@ -23,7 +23,7 @@ mod tests {
         use beardog_errors::BearDogError;
 
         let error = BearDogError::internal("test error".to_string());
-        let debug = format!("{:?}", error);
+        let debug = format!("{error:?}");
 
         assert!(!debug.is_empty(), "Error debug should not be empty");
     }
@@ -99,7 +99,7 @@ mod tests {
         use beardog_errors::BearDogError;
 
         let error1 = BearDogError::internal("root cause".to_string());
-        let error2 = BearDogError::internal(format!("wrapped: {}", error1));
+        let error2 = BearDogError::internal(format!("wrapped: {error1}"));
 
         // Test passes if error chaining compiles and runs
         // TEST_CATEGORY: integration

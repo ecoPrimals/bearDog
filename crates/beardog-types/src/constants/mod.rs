@@ -217,6 +217,24 @@ pub mod buffers {
     pub const NETWORK_MTU: usize = 1500;
 }
 
+/// Wall-clock time units in seconds, for configuration defaults and intervals.
+pub mod time {
+    /// Seconds in one hour (3600).
+    pub const SECONDS_PER_HOUR: u64 = 3600;
+    /// Seconds in one calendar day (86_400).
+    pub const SECONDS_PER_DAY: u64 = 86400;
+}
+
+/// Shared numeric defaults referenced by multiple canonical and provider types.
+pub mod defaults {
+    /// Default maximum entries for in-memory caches, buffers, and similar structures.
+    pub const DEFAULT_MAX_ENTRIES: usize = 10_000;
+    /// Default ceiling for provider response time and related millisecond timeouts.
+    pub const DEFAULT_MAX_RESPONSE_TIME_MS: u64 = 5000;
+    /// Default generation cap for evolutionary / genetic termination criteria.
+    pub const DEFAULT_MAX_GENERATIONS: usize = 1000;
+}
+
 /// Standard retry parameters based on reliability engineering.
 ///
 /// These follow **exponential backoff best practices** and are configurable.

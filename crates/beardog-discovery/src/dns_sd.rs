@@ -414,7 +414,7 @@ mod tests {
     #[tokio::test]
     async fn test_invalid_domain_configuration() {
         let config = DnsSdConfig {
-            domain: "".to_string(), // Empty domain
+            domain: String::new(), // Empty domain
             ..Default::default()
         };
 
@@ -455,7 +455,7 @@ mod tests {
         let handles: Vec<_> = (0..5)
             .map(|i| {
                 let disc = discovery.clone();
-                tokio::spawn(async move { disc.discover(&format!("test-cap-{}", i)).await })
+                tokio::spawn(async move { disc.discover(&format!("test-cap-{i}")).await })
             })
             .collect();
 
@@ -476,7 +476,7 @@ mod tests {
             .map(|i| {
                 let disc = discovery.clone();
                 tokio::spawn(async move {
-                    disc.update_cache(&format!("service-{}", i), vec![]).await;
+                    disc.update_cache(&format!("service-{i}"), vec![]).await;
                 })
             })
             .collect();

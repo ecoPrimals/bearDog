@@ -100,7 +100,7 @@ fn test_spawn_with_maximum_parents() {
     // Create many parents to test limits
     let parents: Vec<BearDogGenetics> = (0..10)
         .map(|i| BearDogGenetics {
-            id: format!("parent-{}", i),
+            id: format!("parent-{i}"),
             fitness_score: 0.7,
             generation: i,
             ..Default::default()
@@ -311,7 +311,7 @@ fn test_generation_increment_across_multiple_spawns() {
     let gen2_request = SpawnRequest {
         required_capabilities: vec![NodeCapability::ComputeProvider],
         security_clearance: SecurityClearance::Medium,
-        parent_genetics: vec![gen1_genetics.clone()],
+        parent_genetics: vec![gen1_genetics],
     };
 
     let gen2_result = engine.spawn_genetics(gen2_request).unwrap();
@@ -345,13 +345,11 @@ fn test_fitness_score_in_valid_range() {
 
         assert!(
             fitness >= 0.0,
-            "Fitness score should be >= 0.0, got {}",
-            fitness
+            "Fitness score should be >= 0.0, got {fitness}"
         );
         assert!(
             fitness <= 1.0,
-            "Fitness score should be <= 1.0, got {}",
-            fitness
+            "Fitness score should be <= 1.0, got {fitness}"
         );
     }
 }
@@ -390,8 +388,7 @@ fn test_spawn_preserves_required_capabilities() {
     for cap in &required {
         assert!(
             spawned_caps.contains(cap),
-            "Required capability {:?} not found in spawned genetics",
-            cap
+            "Required capability {cap:?} not found in spawned genetics"
         );
     }
 }

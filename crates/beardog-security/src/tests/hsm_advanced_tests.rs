@@ -300,17 +300,12 @@ fn test_registry_concurrent_access() {
     // Tests thread safety
 
     let concurrent_operations = 20;
-    let operations = (0..concurrent_operations).collect::<Vec<_>>();
 
     // Simulate concurrent access
     assert_eq!(
-        operations.len(),
+        (0..concurrent_operations).count(),
         concurrent_operations,
-        "Should handle {} concurrent operations",
-        // TEST_CATEGORY: integration
-        // TEST_DOMAIN: security
-        // TEST_PRIORITY: normal
-        concurrent_operations
+        "Should handle {concurrent_operations} concurrent operations"
     );
 
     // Test thread safety
@@ -383,12 +378,13 @@ fn test_provider_selection_strategy() {
         selected.0, "hsm-3",
         "Should select provider with highest health score"
     );
-    assert_eq!(
-        selected.1, 0.95,
+    assert!(
+        (selected.1 - 0.95_f64).abs() < 1e-9_f64,
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
         // TEST_PRIORITY: normal
-        "Selected provider should have 0.95 health"
+        "Selected provider should have 0.95 health (got {})",
+        selected.1
     );
 }
 
@@ -435,13 +431,13 @@ fn test_provider_failover() {
     assert!(failover_triggered, "Should trigger failover");
 
     // Backup takes over
-    let active_provider = if !primary_healthy {
+    let active_provider = if primary_healthy {
+        primary_provider
+    } else {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
         // TEST_PRIORITY: important
         backup_provider
-    } else {
-        primary_provider
     };
     assert_eq!(active_provider, backup_provider, "Backup should be active");
 }

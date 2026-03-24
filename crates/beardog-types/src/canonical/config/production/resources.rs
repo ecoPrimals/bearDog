@@ -5,6 +5,8 @@
 // This module contains system resource management configuration including
 // memory, CPU, network, storage, and connection management settings.
 
+use crate::constants::domains::network::limits::MAX_CONNECTIONS;
+use crate::constants::time;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -221,7 +223,7 @@ impl StorageResourceConfig {
     pub const DEFAULT_MAX_DISK_USAGE_PERCENT: f64 = 80.0;
 
     /// Default temp cleanup interval in seconds
-    pub const DEFAULT_TEMP_CLEANUP_INTERVAL_SECS: u64 = 3600;
+    pub const DEFAULT_TEMP_CLEANUP_INTERVAL_SECS: u64 = time::SECONDS_PER_HOUR;
 
     /// Default log rotation size in MB
     pub const DEFAULT_LOG_ROTATION_SIZE_MB: u64 = 100;
@@ -421,7 +423,7 @@ impl ResourceManagementConfig {
                 max_connections: std::env::var("BEARDOG_PROD_PRODUCTION_MAX_CONNECTIONS")
                     .ok()
                     .and_then(|c| c.parse().ok())
-                    .unwrap_or(10000),
+                    .unwrap_or(MAX_CONNECTIONS),
                 connection_timeout: Duration::from_secs(
                     std::env::var("BEARDOG_PROD_PRODUCTION_CONNECTION_TIMEOUT_SECS")
                         .ok()
@@ -465,7 +467,7 @@ impl ResourceManagementConfig {
                     std::env::var("BEARDOG_PROD_PRODUCTION_CONNECTION_LIFETIME_SECS")
                         .ok()
                         .and_then(|s| s.parse().ok())
-                        .unwrap_or(3600), // 1 hour
+                        .unwrap_or(time::SECONDS_PER_HOUR), // 1 hour
                 ),
                 health_check_interval: Duration::from_secs(
                     std::env::var("BEARDOG_PROD_PRODUCTION_HEALTH_CHECK_INTERVAL_SECS")

@@ -442,7 +442,7 @@ fn test_hsm_key_generation_concurrency() {
 
     let concurrent_operations = 10;
     let generated_keys = (0..concurrent_operations)
-        .map(|i| format!("key-{}", i))
+        .map(|i| format!("key-{i}"))
         .collect::<Vec<_>>();
 
     // Verify concurrent generation
@@ -522,7 +522,7 @@ fn test_hsm_generated_key_uniqueness() {
     // Generate multiple keys
     let key_count = 100;
     let generated_keys = (0..key_count)
-        .map(|i| format!("unique-key-{:04}", i))
+        .map(|i| format!("unique-key-{i:04}"))
         .collect::<Vec<_>>();
 
     // Verify all keys are unique
@@ -532,8 +532,7 @@ fn test_hsm_generated_key_uniqueness() {
     assert_eq!(
         unique_keys.len(),
         key_count,
-        "All {} keys should be unique",
-        key_count
+        "All {key_count} keys should be unique"
     );
 
     // Verify entropy quality (simulated)

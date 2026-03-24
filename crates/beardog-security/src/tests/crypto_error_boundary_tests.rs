@@ -32,7 +32,7 @@ mod tests {
         for length in invalid_lengths {
             let invalid_key = vec![0u8; length];
             let result = validate_key_length(&invalid_key);
-            assert!(result.is_err(), "Key length {} should be invalid", length);
+            assert!(result.is_err(), "Key length {length} should be invalid");
         }
     }
 
@@ -44,7 +44,7 @@ mod tests {
         for length in valid_lengths {
             let valid_key = vec![0u8; length];
             let result = validate_key_length(&valid_key);
-            assert!(result.is_ok(), "Key length {} should be valid", length);
+            assert!(result.is_ok(), "Key length {length} should be valid");
         }
     }
 
@@ -78,8 +78,7 @@ mod tests {
             let result = verify_signature_length(&sig);
             assert!(
                 result.is_err(),
-                "Signature length {} should be invalid",
-                length
+                "Signature length {length} should be invalid"
             );
         }
     }
@@ -329,7 +328,7 @@ mod tests {
         // TEST_DOMAIN: security
         // TEST_PRIORITY: normal
         let error = create_crypto_error("sensitive_key_material_here");
-        let error_msg = format!("{:?}", error);
+        let error_msg = format!("{error:?}");
 
         assert!(
             !error_msg.contains("sensitive_key_material"),
@@ -374,7 +373,7 @@ mod tests {
         let encrypted = encrypt_authenticated(plaintext).expect("Encryption should succeed");
 
         // Tamper with the ciphertext
-        let mut tampered = encrypted.clone();
+        let mut tampered = encrypted;
         if !tampered.is_empty() {
             tampered[0] ^= 0xFF;
         }

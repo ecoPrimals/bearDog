@@ -14,7 +14,8 @@
 // - TrustEvolution: Dynamic trust building and healing
 // - BiologicalRelationships: Mutualistic ecosystem interactions
 
-use beardog_errors::BearDogError;
+use crate::constants::defaults;
+use crate::constants::time;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -201,7 +202,7 @@ impl EcosystemRelationshipRegistry {
         
         match now.duration_since(last_interaction) {
             Ok(duration) => {
-                let hours_since = duration.as_secs() as f64 / 3600.0;
+                let hours_since = duration.as_secs() as f64 / time::SECONDS_PER_HOUR as f64;
                 (1.0 / (1.0 + hours_since * 0.1)).max(0.0).min(1.0)
             }
             Err(_) => 0.0,
@@ -278,7 +279,7 @@ pub enum InteractionResult {
 impl Default for RelationshipRegistryConfig {
     fn default() -> Self {
         Self {
-            max_relationships: 10000,
+            max_relationships: defaults::DEFAULT_MAX_ENTRIES,
             trust_decay_rate: 0.01,
             min_trust_threshold: 0.3,
             health_check_interval: Duration::from_secs(300), // 5 minutes

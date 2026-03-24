@@ -347,7 +347,8 @@ mod tests {
         };
 
         assert!(!report.is_success());
-        assert_eq!(report.success_rate(), 80.0);
+        let rate = report.success_rate();
+        assert!((rate - 80.0).abs() < 1e-9, "expected 80.0, got {rate}");
     }
 
     #[test]
@@ -364,7 +365,8 @@ mod tests {
         };
 
         assert!(report.is_success());
-        assert_eq!(report.success_rate(), 100.0);
+        let rate = report.success_rate();
+        assert!((rate - 100.0).abs() < 1e-9, "expected 100.0, got {rate}");
     }
 
     #[test]
@@ -419,7 +421,8 @@ mod tests {
             arch: Architecture::X86_64,
             os: OperatingSystem::Linux,
         };
-        assert_eq!(report.success_rate(), 0.0);
+        let rate = report.success_rate();
+        assert!(rate.abs() < 1e-9, "expected 0.0, got {rate}");
     }
 
     #[test]

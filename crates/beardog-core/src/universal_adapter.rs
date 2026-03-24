@@ -502,8 +502,7 @@ mod tests {
 
         assert!(
             primals.iter().any(|p| p.name == "testprimal"),
-            "expected testprimal from env + capability filter, got {:?}",
-            primals
+            "expected testprimal from env + capability filter, got {primals:?}"
         );
     }
 
@@ -549,8 +548,7 @@ mod tests {
         assert_eq!(
             primals.len(),
             1,
-            "Should discover 1 primal with Discovery capability, got {:?}",
-            primals
+            "Should discover 1 primal with Discovery capability, got {primals:?}"
         );
 
         assert_eq!(adapter.cached_capabilities().await.len(), 1);

@@ -106,7 +106,7 @@ mod hsm_status_defaults {
     #[test]
     fn test_hsm_status_clone() {
         let s = HsmStatus::default();
-        let s2 = s.clone();
+        let s2 = s;
         let _ = format!("{s2:?}");
     }
 }
@@ -126,7 +126,7 @@ mod hsm_android_defaults {
     #[test]
     fn test_android_hsm_config_clone() {
         let c = AndroidHsmConfig::default();
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 }
@@ -194,7 +194,7 @@ mod network_client_defaults {
     #[test]
     fn test_client_configuration_clone() {
         let c = ClientConfiguration::default();
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 }
@@ -252,7 +252,7 @@ mod retry_domain_defaults {
     #[test]
     fn test_canonical_retry_config_clone() {
         let c = CanonicalRetryConfig::default();
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 }

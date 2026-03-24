@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! Simple core integration tests
 //!
 //! These tests validate basic functionality of core `BearDog` types and errors.

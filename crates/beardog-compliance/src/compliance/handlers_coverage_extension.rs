@@ -19,7 +19,7 @@ mod handlers_coverage_extension_tests {
         event_type: ComplianceEventType,
         standard: ComplianceStandard,
     ) -> ComplianceEvent {
-        let description = format!("Test event: {:?}", event_type);
+        let description = format!("Test event: {event_type:?}");
         ComplianceEvent {
             id: Uuid::new_v4().to_string(),
             event_type,
@@ -406,7 +406,11 @@ mod handlers_coverage_extension_tests {
 
         let metrics = handler.generate_metrics();
 
-        assert_eq!(metrics.overall_score, 95.0);
+        assert!(
+            (metrics.overall_score - 95.0).abs() < f64::EPSILON,
+            "expected overall_score ≈ 95.0, got {}",
+            metrics.overall_score
+        );
         assert_eq!(metrics.audit_trail_size, 10);
         assert_eq!(metrics.standards_compliance.len(), 3);
         assert!(metrics.last_assessment_date.is_some());
@@ -457,7 +461,7 @@ mod handlers_coverage_extension_tests {
         let config = ComplianceConfig::default();
         let handler = ComplianceHandler::new(config);
 
-        let debug_str = format!("{:?}", handler);
+        let debug_str = format!("{handler:?}");
         assert!(debug_str.contains("ComplianceHandler"));
     }
 
@@ -480,8 +484,7 @@ mod handlers_coverage_extension_tests {
             let result = handler.evaluate_compliance(&event);
             assert!(
                 result.is_ok(),
-                "Event type {:?} should evaluate successfully",
-                event_type
+                "Event type {event_type:?} should evaluate successfully"
             );
         }
     }
@@ -511,8 +514,7 @@ mod handlers_coverage_extension_tests {
             let result = handler.evaluate_compliance(&event);
             assert!(
                 result.is_ok(),
-                "Standard {:?} should evaluate successfully",
-                standard
+                "Standard {standard:?} should evaluate successfully"
             );
         }
     }

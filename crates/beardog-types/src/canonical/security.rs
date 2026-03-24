@@ -4,6 +4,7 @@
 // Provides comprehensive security settings, authentication, and access control
 
 use crate::canonical::capabilities::SecurityLevel;
+use crate::constants::time;
 use chrono::Duration;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -145,7 +146,7 @@ impl Default for AuthenticationConfig {
         Self {
             methods: vec![AuthMethod::Password, AuthMethod::Mfa],
             mfa_required: true,
-            session_timeout_seconds: 3600,
+            session_timeout_seconds: time::SECONDS_PER_HOUR,
             max_failed_attempts: 3,
             lockout_duration_seconds: 900,
             password_policy: PasswordPolicy::default(),
@@ -423,7 +424,7 @@ impl SecurityConfig {
         config.policy.enforcement_level = EnforcementLevel::Maximum;
         config.authentication.mfa_required = true;
         config.authentication.max_failed_attempts = 1;
-        config.authentication.lockout_duration_seconds = 3600;
+        config.authentication.lockout_duration_seconds = time::SECONDS_PER_HOUR;
         config.access_control.default_policy = AccessPolicy::Deny;
         config.rate_limiting = true;
         config.rate_limit_per_minute = 100;
@@ -434,7 +435,7 @@ impl SecurityConfig {
         let mut config = Self::default();
         config.policy.enforcement_level = EnforcementLevel::Permissive;
         config.authentication.mfa_required = false;
-        config.authentication.session_timeout_seconds = 86400;
+        config.authentication.session_timeout_seconds = time::SECONDS_PER_DAY;
         config.rate_limiting = false;
         config
     }

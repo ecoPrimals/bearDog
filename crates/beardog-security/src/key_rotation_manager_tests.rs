@@ -52,7 +52,7 @@ mod tests {
         for i in 1..=5 {
             manager
                 .register_key(
-                    format!("test-key-{}", i),
+                    format!("test-key-{i}"),
                     "aes".to_string(),
                     "aes-256".to_string(),
                 )
@@ -254,7 +254,7 @@ mod tests {
         for i in 1..=3 {
             manager
                 .register_key(
-                    format!("active-{}", i),
+                    format!("active-{i}"),
                     "aes".to_string(),
                     "aes-256".to_string(),
                 )
@@ -309,7 +309,7 @@ mod tests {
         for i in 1..=5 {
             manager
                 .register_key(
-                    format!("stats-key-{}", i),
+                    format!("stats-key-{i}"),
                     "aes".to_string(),
                     "aes-256".to_string(),
                 )
@@ -335,7 +335,7 @@ mod tests {
     #[tokio::test]
     async fn test_custom_rotation_config() {
         let config = KeyRotationConfig {
-            rotation_interval: Duration::from_secs(7776000), // 90 days
+            rotation_interval: Duration::from_secs(7_776_000), // 90 days
             auto_rotation_enabled: true,
             backup_before_rotation: true,
             ..Default::default()
@@ -355,7 +355,7 @@ mod tests {
         let metadata = manager.get_key_metadata("custom-config").await.unwrap();
         assert_eq!(
             metadata.rotation_interval,
-            Some(Duration::from_secs(7776000))
+            Some(Duration::from_secs(7_776_000))
         );
     }
 
@@ -406,7 +406,7 @@ mod tests {
         for i in 1..=10 {
             manager
                 .register_key(
-                    format!("concurrent-{}", i),
+                    format!("concurrent-{i}"),
                     "aes".to_string(),
                     "aes-256".to_string(),
                 )
@@ -418,7 +418,7 @@ mod tests {
         let mut tasks = JoinSet::new();
         for i in 1..=10 {
             let mgr = manager.clone();
-            tasks.spawn(async move { mgr.rotate_key(&format!("concurrent-{}", i)).await.unwrap() });
+            tasks.spawn(async move { mgr.rotate_key(&format!("concurrent-{i}")).await.unwrap() });
         }
 
         // Wait for all rotations

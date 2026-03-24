@@ -508,7 +508,9 @@ fn test_hsm_session_timeout_and_renewal() {
     assert!(session_valid, "Session should still be valid");
 
     // Session approaches timeout
-    let time_until_timeout = Duration::from_secs(session_timeout_secs) - current_time;
+    let time_until_timeout = Duration::from_secs(session_timeout_secs)
+        .checked_sub(current_time)
+        .unwrap();
     let renewal_threshold = Duration::from_secs(60);
     let should_renew = time_until_timeout < renewal_threshold;
 
@@ -517,7 +519,9 @@ fn test_hsm_session_timeout_and_renewal() {
 
     // Now simulate closer to timeout
     let current_time_near_timeout = Duration::from_secs(280);
-    let time_until_timeout = Duration::from_secs(session_timeout_secs) - current_time_near_timeout;
+    let time_until_timeout = Duration::from_secs(session_timeout_secs)
+        .checked_sub(current_time_near_timeout)
+        .unwrap();
     let should_renew = time_until_timeout < renewal_threshold;
     assert!(should_renew, "Should trigger renewal");
 

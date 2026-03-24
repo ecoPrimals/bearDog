@@ -227,7 +227,7 @@ mod unified_config_tests {
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: types
         // TEST_PRIORITY: normal
-        let debug_output = format!("{:?}", config);
+        let debug_output = format!("{config:?}");
 
         assert!(!debug_output.is_empty());
         assert!(debug_output.len() > 100);

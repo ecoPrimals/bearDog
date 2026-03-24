@@ -30,13 +30,13 @@ mod capability_type_tests {
         let cap = CapabilityType::Security;
         let cloned = cap.clone();
 
-        assert_eq!(format!("{:?}", cap), format!("{:?}", cloned));
+        assert_eq!(format!("{cap:?}"), format!("{:?}", cloned));
     }
 
     #[test]
     fn test_capability_debug_output() {
         let cap = CapabilityType::Security;
-        let debug_str = format!("{:?}", cap);
+        let debug_str = format!("{cap:?}");
 
         assert!(!debug_str.is_empty());
         assert!(debug_str.contains("Security"));
@@ -161,8 +161,7 @@ mod capability_serialization_tests {
         // Should be reasonably sized (enum with string data)
         assert!(
             size <= 32,
-            "Capability type should be reasonably sized, got {} bytes",
-            size
+            "Capability type should be reasonably sized, got {size} bytes"
         );
     }
 
@@ -177,8 +176,7 @@ mod capability_serialization_tests {
         // Option<enum> should still be reasonably sized
         assert!(
             size <= 32,
-            "Option<Capability> should be reasonably sized, got {} bytes",
-            size
+            "Option<Capability> should be reasonably sized, got {size} bytes"
         );
     }
 }
@@ -222,12 +220,12 @@ mod capability_pattern_tests {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: types
         // TEST_PRIORITY: normal
-        let security_caps: Vec<_> = all_caps
+        let n = all_caps
             .iter()
             .filter(|&c| matches!(c, CapabilityType::Security))
-            .collect();
+            .count();
 
-        assert_eq!(security_caps.len(), 1);
+        assert_eq!(n, 1);
     }
 }
 

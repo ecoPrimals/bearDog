@@ -66,6 +66,8 @@ impl CommandRunner for SystemCommandRunner {
 /// Test-only ADB-shaped [`CommandRunner`] (no subprocess; deterministic stdout).
 #[cfg(test)]
 pub(crate) mod mock {
+    #![allow(clippy::expect_used, clippy::unwrap_used)]
+
     use super::*;
     use std::sync::OnceLock;
 
@@ -98,7 +100,7 @@ pub(crate) mod mock {
     }
 
     /// Mock ADB responses for tests (no subprocess, no `adb` on PATH required).
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Default)]
     pub struct MockAdbCommandRunner {
         /// When true, `adb devices -l` returns no devices (exercises env fallback).
         pub empty_devices: bool,
@@ -122,24 +124,6 @@ pub(crate) mod mock {
         pub pm_list_features_io_error: bool,
         /// `run_bounded` logcat follow exits non-zero (not timeout) ([`crate::device::DeviceManager::show_logs`] follow branch).
         pub logcat_follow_bounded_exit_fail: bool,
-    }
-
-    impl Default for MockAdbCommandRunner {
-        fn default() -> Self {
-            Self {
-                empty_devices: false,
-                fail_adb_install: false,
-                fail_logcat_snapshot: false,
-                fail_getprop: false,
-                install_stdout_without_success_marker: false,
-                logcat_follow_yields_timeout: false,
-                fail_adb_spawn: false,
-                fail_adb_devices_exit: false,
-                fail_shell_am: false,
-                pm_list_features_io_error: false,
-                logcat_follow_bounded_exit_fail: false,
-            }
-        }
     }
 
     impl MockAdbCommandRunner {
@@ -209,10 +193,8 @@ pub(crate) mod mock {
                     "mock only supports adb",
                 ));
             }
-            let is_logcat_follow = args.len() >= 3
-                && args[0] == "-s"
-                && args[2] == "logcat"
-                && !args.iter().any(|a| *a == "-d");
+            let is_logcat_follow =
+                args.len() >= 3 && args[0] == "-s" && args[2] == "logcat" && !args.contains(&"-d");
             if self.logcat_follow_yields_timeout && is_logcat_follow {
                 return Err(io::Error::new(
                     io::ErrorKind::TimedOut,
@@ -286,10 +268,7 @@ pub(crate) mod mock {
             && args.get(5) == Some(&"features")
         {
             if runner.pm_list_features_io_error {
-                return Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    "mock pm list features io error",
-                ));
+                return Err(io::Error::other("mock pm list features io error"));
             }
             return Ok(Output {
                 status: exit_ok(),
@@ -335,7 +314,7 @@ pub(crate) mod mock {
         }
 
         if args.len() >= 3 && args[0] == "-s" && args[2] == "logcat" {
-            let is_snapshot = args.iter().any(|a| *a == "-d");
+            let is_snapshot = args.contains(&"-d");
             if is_snapshot && runner.fail_logcat_snapshot {
                 return Ok(Output {
                     status: exit_fail(),
@@ -360,6 +339,8 @@ pub(crate) mod mock {
 
 #[cfg(test)]
 mod system_and_mock_coverage {
+    #![allow(clippy::expect_used, clippy::unwrap_used)]
+
     use super::mock::MockAdbCommandRunner;
     use super::{CommandRunner, SystemCommandRunner};
     use std::time::Duration;

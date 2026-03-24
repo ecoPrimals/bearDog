@@ -7,6 +7,7 @@ use std::time::Duration;
 
 use crate::canonical::config::domains::retry::CanonicalRetryConfig;
 use crate::canonical::config::r#trait::BearDogConfig;
+use crate::constants::defaults;
 use beardog_errors::BearDogError;
 
 use super::builder::UnifiedDiscoveryConfigBuilder;
@@ -229,7 +230,7 @@ impl Default for UnifiedDiscoveryConfig {
             service_id: Arc::from("beardog-discovery"),
             enabled_protocols: vec![DiscoveryProtocol::Http {
                 endpoint: discovery_endpoint,
-                timeout_ms: 5000,
+                timeout_ms: defaults::DEFAULT_MAX_RESPONSE_TIME_MS,
             }],
             registry: ServiceRegistryConfig::default(),
             network: NetworkDiscoveryConfig::default(),

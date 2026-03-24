@@ -233,7 +233,12 @@ mod tests {
 
         // Should discover at least loopback
         assert!(!capabilities.local_addresses.is_empty());
-        assert!(capabilities.local_addresses.iter().any(|a| a.is_loopback()));
+        assert!(
+            capabilities
+                .local_addresses
+                .iter()
+                .any(std::net::IpAddr::is_loopback)
+        );
     }
 
     #[test]

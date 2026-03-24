@@ -549,11 +549,6 @@ mod tests {
         let input = vec![1.0, 3.0, 5.0, 7.0];
         let pred = system.predict(input, None).await.expect("pred");
         assert_eq!(pred.predictions.len(), 4);
-        assert!(
-            pred.uncertainty
-                .as_ref()
-                .map(|u| !u.is_empty())
-                .unwrap_or(false)
-        );
+        assert!(pred.uncertainty.as_ref().is_some_and(|u| !u.is_empty()));
     }
 }

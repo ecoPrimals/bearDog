@@ -6,6 +6,7 @@
 // Allow deprecated warnings in this module - LegacyHsmProviderType is intentionally kept for backward compatibility
 #![allow(deprecated)]
 
+use crate::constants::time;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
@@ -146,7 +147,7 @@ impl Default for SecurityConfig {
                 std::env::var("BEARDOG_HSM_SESSION_TIMEOUT_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
-                    .unwrap_or(3600),
+                    .unwrap_or(time::SECONDS_PER_HOUR),
             ),
             audit_logging: true,
             access_policies: vec![

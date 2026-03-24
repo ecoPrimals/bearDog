@@ -146,7 +146,7 @@ mod service_mesh_extra_tests {
     #[test]
     fn test_service_mesh_config_clone() {
         let c = ServiceMeshConfig::default();
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 }
@@ -160,21 +160,21 @@ mod ai_learning_extra_tests {
     #[test]
     fn test_online_learning_config_clone() {
         let c = OnlineLearningConfig::default();
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 
     #[test]
     fn test_transfer_learning_config_clone() {
         let c = TransferLearningConfig::default();
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 
     #[test]
     fn test_meta_learning_config_clone() {
         let c = MetaLearningConfig::default();
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 }
@@ -188,7 +188,7 @@ mod bootstrap_extra_tests {
     #[test]
     fn test_unified_bootstrap_config_clone() {
         let c = UnifiedBootstrapConfig::default();
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 }
@@ -208,7 +208,7 @@ mod hsm_hardware_extra_tests {
     #[test]
     fn test_unified_hardware_hsm_config_clone() {
         let c = UnifiedHardwareHsmConfig::default();
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 }
@@ -228,7 +228,7 @@ mod hsm_cloud_extra_tests {
     #[test]
     fn test_unified_cloud_hsm_config_clone() {
         let c = UnifiedCloudHsmConfig::default();
-        let c2 = c.clone();
+        let c2 = c;
         let _ = format!("{c2:?}");
     }
 }

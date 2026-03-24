@@ -140,7 +140,7 @@ mod tests {
     #[test]
     fn test_android_gradle_wrapper() {
         let gradlew = "./gradlew";
-        assert!(gradlew.starts_with("."));
+        assert!(gradlew.starts_with('.'));
         assert!(gradlew.contains("gradlew"));
     }
 
@@ -174,7 +174,7 @@ mod tests {
     #[test]
     fn test_android_security_patch_format() {
         let security_patch = "2024-10-01";
-        assert!(security_patch.contains("-"));
+        assert!(security_patch.contains('-'));
         assert!(security_patch.len() >= 10);
     }
 
@@ -182,7 +182,7 @@ mod tests {
     fn test_android_device_fingerprint() {
         let fingerprint = "google/pixel8/pixel8:14/UQ1A.231205.015/11084887:user/release-keys";
         assert!(fingerprint.contains("google"));
-        assert!(fingerprint.contains(":"));
+        assert!(fingerprint.contains(':'));
     }
 
     #[test]

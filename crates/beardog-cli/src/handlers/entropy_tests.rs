@@ -44,8 +44,7 @@ fn test_entropy_quality_uniform_distribution() {
     let quality = calculate_entropy_quality(&bytes);
     assert!(
         quality > 0.95,
-        "uniform distribution should have high quality: {}",
-        quality
+        "uniform distribution should have high quality: {quality}"
     );
 }
 
@@ -203,7 +202,7 @@ fn test_concurrent_file_saves() {
         .map(|i| {
             let temp_dir = Arc::clone(&temp_dir);
             thread::spawn(move || {
-                let path = temp_dir.path().join(format!("entropy_{}.bin", i));
+                let path = temp_dir.path().join(format!("entropy_{i}.bin"));
                 let data: Vec<u8> = (0..=255).collect();
                 save_entropy_file(&data, path.to_str().unwrap())
             })
@@ -225,7 +224,7 @@ fn test_concurrent_file_loads() {
 
     // Create test files
     for i in 0..10 {
-        let path = temp_dir.path().join(format!("entropy_{}.bin", i));
+        let path = temp_dir.path().join(format!("entropy_{i}.bin"));
         let data: Vec<u8> = (0..=255).collect();
         save_entropy_file(&data, path.to_str().unwrap()).expect("save");
     }
@@ -236,7 +235,7 @@ fn test_concurrent_file_loads() {
         .map(|i| {
             let temp_dir = Arc::clone(&temp_dir);
             thread::spawn(move || {
-                let path = temp_dir.path().join(format!("entropy_{}.bin", i));
+                let path = temp_dir.path().join(format!("entropy_{i}.bin"));
                 load_entropy_file(path.to_str().unwrap())
             })
         })

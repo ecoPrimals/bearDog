@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, clippy::disallowed_methods)]
 
 //! Comprehensive Unit Tests for BearDog Deploy
 //!
@@ -10,8 +11,6 @@
 //! - DeploymentManager lifecycle
 //! - Configuration validation
 //! - Serialization/deserialization
-
-#![allow(clippy::disallowed_methods)] // unwrap/unwrap_err acceptable in test code
 //! - Edge cases and error scenarios
 
 use super::*;
@@ -72,7 +71,7 @@ fn test_deployment_config_clone() {
 #[test]
 fn test_deployment_config_debug_format() {
     let config = DeploymentConfig::default();
-    let debug_str = format!("{:?}", config);
+    let debug_str = format!("{config:?}");
 
     assert!(debug_str.contains("DeploymentConfig"));
     assert!(debug_str.contains("development"));
@@ -101,7 +100,7 @@ fn test_deployment_config_serialization() {
 #[test]
 fn test_deployment_config_empty_environment() {
     let config = DeploymentConfig {
-        environment: "".to_string(),
+        environment: String::new(),
         region: "local".to_string(),
         instance_count: 1,
         monitoring_enabled: true,
@@ -225,7 +224,7 @@ fn test_deployment_manager_with_custom_config() {
         monitoring_enabled: true,
     };
 
-    let manager = DeploymentManager::new(config.clone());
+    let manager = DeploymentManager::new(config);
     assert_eq!(manager.config.environment, "production");
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
@@ -250,7 +249,7 @@ fn test_deployment_manager_clone() {
 fn test_deployment_manager_debug_format() {
     let config = DeploymentConfig::default();
     let manager = DeploymentManager::new(config);
-    let debug_str = format!("{:?}", manager);
+    let debug_str = format!("{manager:?}");
 
     assert!(debug_str.contains("DeploymentManager"));
 }
@@ -294,7 +293,7 @@ fn test_deployment_manager_initialize_with_production_config() {
 #[test]
 fn test_deployment_manager_initialize_empty_environment_fails() {
     let config = DeploymentConfig {
-        environment: "".to_string(),
+        environment: String::new(),
         region: "local".to_string(),
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
@@ -311,7 +310,7 @@ fn test_deployment_manager_initialize_empty_environment_fails() {
     // TEST_PRIORITY: normal
 
     let error = result.unwrap_err();
-    let error_msg = format!("{:?}", error);
+    let error_msg = format!("{error:?}");
     assert!(error_msg.contains("Environment") || error_msg.contains("empty"));
 }
 

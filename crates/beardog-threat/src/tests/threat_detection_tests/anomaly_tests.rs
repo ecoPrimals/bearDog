@@ -57,10 +57,10 @@ mod tests {
         // Test edge cases near threshold
         detector.set_threshold(2.0); // 2 standard deviations
 
-        let mild_deviation = baseline + 1.5 * detector.std_dev();
+        let mild_deviation = 1.5f64.mul_add(detector.std_dev(), baseline);
         assert!(!detector.is_anomaly(mild_deviation).unwrap());
 
-        let strong_deviation = baseline + 3.0 * detector.std_dev();
+        let strong_deviation = 3.0f64.mul_add(detector.std_dev(), baseline);
         assert!(detector.is_anomaly(strong_deviation).unwrap());
 
         // Test adaptive learning

@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, clippy::manual_async_fn)]
+
 //! Integration tests (part 2): unified HSM multi-credential, security, workflow, providers.
 
 mod common;
@@ -168,11 +170,16 @@ impl MultiCredentialHsmProvider for MockHsm {
 struct IdConv;
 
 fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
+    use std::fmt::Write;
+    let mut s = String::with_capacity(bytes.len() * 2);
+    for b in bytes {
+        let _ = write!(s, "{b:02x}");
+    }
+    s
 }
 
 fn hex_decode(s: &str) -> Result<Vec<u8>, BearDogError> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err(BearDogError::System {
             message: "invalid hex length".into(),
             category: beardog_errors::SystemErrorCategory::General,
@@ -556,11 +563,11 @@ impl BearDogProvider for MiniProv {
     type Error = std::io::Error;
     type Config = ();
 
-    fn provider_id(&self) -> &str {
+    fn provider_id(&self) -> &'static str {
         "mini"
     }
 
-    fn provider_version(&self) -> &str {
+    fn provider_version(&self) -> &'static str {
         "0.0.1"
     }
 

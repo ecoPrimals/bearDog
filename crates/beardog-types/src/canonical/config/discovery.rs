@@ -22,6 +22,7 @@
 //! This functionality is now in the `discovery_unified` module with enhanced features.
 
 use crate::canonical::traits::CacheStrategy;
+use crate::constants::time;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -677,7 +678,7 @@ impl CacheStrategy for CacheConfig {
         self.max_entries >= 100 &&
         self.max_entries <= 100_000 &&
         self.ttl >= Duration::from_secs(60) &&
-        self.ttl <= Duration::from_secs(3600) &&
+        self.ttl <= Duration::from_secs(time::SECONDS_PER_HOUR) &&
         self.validate().is_ok()
     }
 }

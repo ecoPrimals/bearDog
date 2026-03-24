@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 // Isomorphic IPC Test - Linux Verification
 //
 // This test verifies that the isomorphic IPC implementation
@@ -41,7 +42,7 @@ async fn test_isomorphic_discovery_apis() -> Result<()> {
             println!("      (This is OK if beardog is running)");
         }
         Err(e) => {
-            println!("   ✅ Expected failure: {}", e);
+            println!("   ✅ Expected failure: {e}");
             println!("      (No server running - this is correct)");
         }
     }

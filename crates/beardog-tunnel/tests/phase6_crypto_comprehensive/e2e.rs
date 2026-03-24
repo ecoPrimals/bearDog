@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 
 //! End-to-end integration tests — full handler flows across primitives.
 
@@ -94,7 +95,7 @@ fn test_e2e_password_registration_and_login_flow() {
     // Step 2: User attempts login with correct password
     let login_result = handle_argon2id_verify(&json!({
         "password": password,
-        "hash": stored_hash.clone()
+        "hash": stored_hash
     }))
     .unwrap();
 
@@ -160,11 +161,11 @@ fn test_e2e_concurrent_user_sessions() {
     let handles: Vec<_> = (0..10)
         .map(|i| {
             thread::spawn(move || {
-                let password = format!("User{}Password", i);
+                let password = format!("User{i}Password");
 
                 // Each user hashes their password
                 let hash_result = handle_argon2id_hash(&json!({
-                    "password": password.clone()
+                    "password": password
                 }))
                 .unwrap();
 

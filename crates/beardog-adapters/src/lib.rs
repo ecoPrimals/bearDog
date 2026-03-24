@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![forbid(unsafe_code)]
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 //! # `BearDog` Universal Adapters
 //!
@@ -11,9 +12,6 @@
 //!
 //! - **Universal Adapter Pattern**: Works with any security provider
 //! - **Capability-Based Discovery**: Services discovered by capability, not name
-
-#![cfg_attr(test, allow(clippy::expect_used))]
-#![cfg_attr(test, allow(clippy::unwrap_used))]
 
 /// Adapter certificate subsystem: signed unlock credentials, classification, and verification.
 pub mod certificates;

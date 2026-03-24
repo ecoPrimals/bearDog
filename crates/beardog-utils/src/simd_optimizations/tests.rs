@@ -11,13 +11,14 @@
 )]
 
 use super::*;
+use crate::float_eq;
 use beardog_errors::BearDogError;
 
 #[test]
 fn test_simd_optimizer_creation() {
     let optimizer = AdvancedSIMDOptimizer::new();
     assert_eq!(optimizer.get_metrics().operations_count, 0);
-    assert_eq!(optimizer.cache_hit_rate(), 0.0);
+    float_eq::f64(optimizer.cache_hit_rate(), 0.0);
 }
 
 #[test]
@@ -199,7 +200,7 @@ fn test_safe_string_process() -> Result<(), BearDogError> {
     let mut optimizer = SafeSimdOptimizer::default();
     let input = vec!["hello", "world"];
 
-    let result = optimizer.safe_string_process(&input, |s| s.to_uppercase())?;
+    let result = optimizer.safe_string_process(&input, str::to_uppercase)?;
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
@@ -515,7 +516,7 @@ fn test_cache_hit_rate() {
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    assert_eq!(optimizer.cache_hit_rate(), 0.0);
+    float_eq::f64(optimizer.cache_hit_rate(), 0.0);
 }
 
 // TEST_CATEGORY: unit

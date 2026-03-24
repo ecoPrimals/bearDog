@@ -22,7 +22,7 @@ impl RateLimitDetector {
 
     pub fn check_rate_limit(&mut self, identifier: &str) -> bool {
         let now = Instant::now();
-        let cutoff = now - self.window;
+        let cutoff = now.checked_sub(self.window).unwrap();
 
         let requests = self.requests.entry(identifier.to_string()).or_default();
 

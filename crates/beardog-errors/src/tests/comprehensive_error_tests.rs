@@ -84,28 +84,28 @@ mod error_display_tests {
     #[test]
     fn test_error_display() {
         let error = BearDogError::internal("Test error".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("Test error"));
     }
 
     #[test]
     fn test_error_debug() {
         let error = BearDogError::internal("Debug test".to_string());
-        let debug = format!("{:?}", error);
+        let debug = format!("{error:?}");
         assert!(debug.contains("System"));
     }
 
     #[test]
     fn test_system_error_display() {
         let error = BearDogError::system("System failure".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("System"));
     }
 
     #[test]
     fn test_security_error_display() {
         let error = BearDogError::security("Security violation".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("Security"));
     }
 }
@@ -233,7 +233,7 @@ mod error_edge_cases {
     // TEST_PRIORITY: important
     fn test_empty_message() {
         let error = BearDogError::internal(String::new());
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(!display.is_empty());
     }
 
@@ -244,7 +244,7 @@ mod error_edge_cases {
         // TEST_DOMAIN: errors
         // TEST_PRIORITY: normal
         let error = BearDogError::internal(long_msg);
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.len() > 900);
     }
     // TEST_CATEGORY: integration
@@ -257,7 +257,7 @@ mod error_edge_cases {
         // TEST_DOMAIN: errors
         // TEST_PRIORITY: normal
         let error = BearDogError::internal("Error: 测试错误 🔥".to_string());
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("测试错误"));
     }
 
@@ -267,7 +267,7 @@ mod error_edge_cases {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: errors
         // TEST_PRIORITY: important
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(display.contains("Line 1"));
     }
 }
@@ -282,7 +282,7 @@ mod error_helper_functions {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: errors
         // TEST_PRIORITY: important
-        assert!(format!("{:?}", error).contains("System"));
+        assert!(format!("{error:?}").contains("System"));
     }
 
     #[test]
@@ -291,7 +291,7 @@ mod error_helper_functions {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: errors
         // TEST_PRIORITY: important
-        assert!(format!("{:?}", error).contains("Security"));
+        assert!(format!("{error:?}").contains("Security"));
     }
 
     #[test]
@@ -300,13 +300,13 @@ mod error_helper_functions {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: errors
         // TEST_PRIORITY: important
-        assert!(format!("{:?}", error).contains("System"));
+        assert!(format!("{error:?}").contains("System"));
     }
 
     #[test]
     fn test_not_found_error_helper() {
         let error = BearDogError::not_found("Not found".to_string());
-        assert!(format!("{:?}", error).contains("Business"));
+        assert!(format!("{error:?}").contains("Business"));
     }
 
     #[test]
@@ -315,7 +315,7 @@ mod error_helper_functions {
         // TEST_DOMAIN: errors
         // TEST_PRIORITY: normal
         let error = BearDogError::unauthorized("Unauthorized".to_string());
-        assert!(format!("{:?}", error).contains("Security"));
+        assert!(format!("{error:?}").contains("Security"));
     }
 
     // TEST_CATEGORY: integration
@@ -324,7 +324,7 @@ mod error_helper_functions {
     #[test]
     fn test_configuration_error_helper() {
         let error = BearDogError::configuration("Config error");
-        assert!(format!("{:?}", error).contains("System"));
+        assert!(format!("{error:?}").contains("System"));
     }
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: errors
@@ -378,15 +378,16 @@ mod error_clone_tests {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: errors
         // TEST_PRIORITY: important
-        assert_eq!(format!("{:?}", error1), format!("{:?}", error2));
+        assert_eq!(format!("{error1:?}"), format!("{error2:?}"));
     }
 
     #[test]
     fn test_error_clone_multiple() {
         let error = BearDogError::security("Security".to_string());
-        let _clone1 = error.clone();
-        let _clone2 = error.clone();
-        // Should not panic
+        let clone1 = error.clone();
+        let clone2 = error.clone();
+        assert_eq!(format!("{clone1:?}"), format!("{clone2:?}"));
+        assert_eq!(format!("{error:?}"), format!("{clone1:?}"));
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: errors
         // TEST_PRIORITY: important

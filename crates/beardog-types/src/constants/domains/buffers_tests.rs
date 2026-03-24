@@ -292,13 +292,11 @@ mod buffer_tests {
         for &buffer in &buffers {
             assert!(
                 buffer >= MIN_BUFFER_SIZE,
-                "Buffer {} must be >= MIN_BUFFER_SIZE",
-                buffer
+                "Buffer {buffer} must be >= MIN_BUFFER_SIZE"
             );
             assert!(
                 buffer <= MAX_BUFFER_SIZE,
-                "Buffer {} must be <= MAX_BUFFER_SIZE",
-                buffer
+                "Buffer {buffer} must be <= MAX_BUFFER_SIZE"
             );
         }
     }
@@ -325,8 +323,7 @@ mod buffer_tests {
         let _large = vec![0u8; BUFFER_SIZE_LARGE];
         let _network = vec![0u8; NETWORK_BUFFER_SIZE];
 
-        // If we got here, allocations succeeded
-        assert!(true, "All buffer allocations should succeed");
+        // If we got here, allocations succeeded.
     }
 
     #[test]

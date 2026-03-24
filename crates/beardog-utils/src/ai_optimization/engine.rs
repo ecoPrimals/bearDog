@@ -432,6 +432,7 @@ impl AIOptimizationEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::float_eq;
 
     fn make_engine() -> AIOptimizationEngine {
         AIOptimizationEngine::new(Duration::from_secs(60))
@@ -592,7 +593,7 @@ mod tests {
             recs[0].optimization_type,
             OptimizationType::ThreadPool
         ));
-        assert_eq!(recs[0].confidence, 0.85);
+        float_eq::f64(recs[0].confidence, 0.85);
         assert!(matches!(recs[0].priority, RecommendationPriority::Medium));
     }
 

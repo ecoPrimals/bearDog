@@ -277,7 +277,9 @@ mod tests {
             .payload
             .expect("connect response should include payload in test");
         assert_eq!(
-            payload.get("connected").and_then(|v| v.as_bool()),
+            payload
+                .get("connected")
+                .and_then(serde_json::Value::as_bool),
             Some(true)
         );
     }
@@ -300,7 +302,7 @@ mod tests {
                 .payload
                 .expect("disconnect response should include payload in test")
                 .get("disconnected")
-                .and_then(|v| v.as_bool()),
+                .and_then(serde_json::Value::as_bool),
             Some(true)
         );
     }

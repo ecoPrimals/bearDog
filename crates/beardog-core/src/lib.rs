@@ -12,8 +12,10 @@
 //! - AI-human hybrid decision making systems
 //! - Sovereign cryptographic key management
 
-#![cfg_attr(test, allow(clippy::expect_used))]
-#![cfg_attr(test, allow(clippy::unwrap_used))]
+#![cfg_attr(
+    test,
+    allow(clippy::expect_used, clippy::unwrap_used, clippy::float_cmp)
+)]
 //! - Genetic algorithm-based key evolution
 //! - Universal service discovery and orchestration
 //! - Zero-copy memory optimization
@@ -189,6 +191,10 @@ pub mod crypto_service;
 mod crypto_service_chacha_tests;
 #[cfg(test)]
 mod crypto_service_comprehensive_tests;
+
+#[cfg(test)]
+#[path = "tests/coverage_march26_core_wave.rs"]
+mod coverage_march26_core_wave;
 
 // Re-export key components
 pub use core::*;

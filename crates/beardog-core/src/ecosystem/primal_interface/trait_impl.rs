@@ -500,16 +500,16 @@ mod tests {
         let ai = PrimalTrait::discover_ai_capabilities(&core)
             .await
             .expect("ai caps");
-        assert!(ai.is_empty() || ai.iter().any(|c| format!("{c:?}").len() > 0));
+        assert!(ai.is_empty() || ai.iter().any(|c| !format!("{c:?}").is_empty()));
 
         let compute = PrimalTrait::discover_compute_capabilities(&core)
             .await
             .expect("compute caps");
-        assert!(compute.is_empty() || compute.iter().any(|c| format!("{c:?}").len() > 0));
+        assert!(compute.is_empty() || compute.iter().any(|c| !format!("{c:?}").is_empty()));
 
         let storage = PrimalTrait::discover_storage_capabilities(&core)
             .await
             .expect("storage caps");
-        assert!(storage.is_empty() || storage.iter().any(|c| format!("{c:?}").len() > 0));
+        assert!(storage.is_empty() || storage.iter().any(|c| !format!("{c:?}").is_empty()));
     }
 }

@@ -169,8 +169,7 @@ async fn test_discover_biomeos_runtime_socket_scan() {
     let primals = discovery.discover_with_env(query, env_vars).await.unwrap();
     assert!(
         primals.iter().any(|p| p.name == "orchid"),
-        "expected orchid from socket scan, got {:?}",
-        primals
+        "expected orchid from socket scan, got {primals:?}"
     );
 }
 
@@ -233,8 +232,7 @@ async fn test_discover_multi_runs_environment_and_dedupes() {
     assert_eq!(
         primals.len(),
         1,
-        "duplicate Environment arms should dedupe by name: {:?}",
-        primals
+        "duplicate Environment arms should dedupe by name: {primals:?}"
     );
 }
 

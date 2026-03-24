@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 #![allow(
     unused_imports,
     unused_variables,
@@ -722,10 +723,7 @@ mod tests {
     #[tokio::test]
     async fn ipc_fault_oversized_jsonrpc_line_rejected() {
         let padding = "x".repeat(300_000);
-        let line = format!(
-            r#"{{"jsonrpc":"2.0","method":"x","id":1,"p":"{}"}}"#,
-            padding
-        );
+        let line = format!(r#"{{"jsonrpc":"2.0","method":"x","id":1,"p":"{padding}"}}"#);
         let response = handle_jsonrpc_request_line_for_fault(&line).expect("oversized response");
         let v: serde_json::Value = serde_json::from_str(&response).expect("response is JSON");
         assert_eq!(v["error"]["code"], error_codes::INTERNAL_ERROR);

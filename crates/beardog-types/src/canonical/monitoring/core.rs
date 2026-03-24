@@ -6,6 +6,8 @@
 // across all monitoring domains.
 
 use crate::canonical::traits::{MonitoringConfig, RetryStrategy};
+use crate::constants::defaults;
+use crate::constants::time;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -220,7 +222,9 @@ pub enum StorageBackend {
 
 impl Default for StorageBackend {
     fn default() -> Self {
-        Self::Memory { max_entries: 10000 }
+        Self::Memory {
+            max_entries: defaults::DEFAULT_MAX_ENTRIES,
+        }
     }
 }
 
@@ -327,7 +331,7 @@ impl Default for RetentionPolicy {
                 std::env::var("BEARDOG_RETENTION_MAX_AGE_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
-                    .unwrap_or(86400 * 30), // 30 days
+                    .unwrap_or(time::SECONDS_PER_DAY * 30), // 30 days
             ),
             max_size: std::env::var("BEARDOG_RETENTION_MAX_SIZE_BYTES")
                 .ok()
@@ -341,7 +345,7 @@ impl Default for RetentionPolicy {
                 std::env::var("BEARDOG_RETENTION_CLEANUP_INTERVAL_SECS")
                     .ok()
                     .and_then(|s| s.parse().ok())
-                    .unwrap_or(3600), // 1 hour
+                    .unwrap_or(time::SECONDS_PER_HOUR), // 1 hour
             ),
             archive_policy: None,
         }

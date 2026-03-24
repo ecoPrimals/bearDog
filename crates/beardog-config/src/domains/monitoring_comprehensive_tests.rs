@@ -9,6 +9,13 @@
 mod tests {
     use crate::domains::monitoring::{MonitoringConfig, MonitoringConfigBuilder};
 
+    fn assert_approx_f64(actual: f64, expected: f64) {
+        assert!(
+            (actual - expected).abs() < 1e-9,
+            "expected {expected}, got {actual}"
+        );
+    }
+
     // ============================================================================
     // MonitoringConfig Default and Construction Tests
     // ============================================================================
@@ -25,7 +32,7 @@ mod tests {
         assert!(config.enable_health_check);
         assert_eq!(config.health_check_port, 9093);
         assert!(!config.enable_performance_tracking);
-        assert_eq!(config.tracing_sample_rate, 0.1);
+        assert_approx_f64(config.tracing_sample_rate, 0.1);
     }
 
     #[test]
@@ -93,7 +100,7 @@ mod tests {
         // ✅ CONCURRENT-SAFE: Use builder pattern, no env vars
         let config = MonitoringConfig::builder().tracing_sample_rate(0.5).build();
 
-        assert_eq!(config.tracing_sample_rate, 0.5);
+        assert_approx_f64(config.tracing_sample_rate, 0.5);
     }
 
     #[test]
@@ -109,7 +116,7 @@ mod tests {
         assert_eq!(config.metrics_port, 7070);
         assert_eq!(config.health_check_port, 7071);
         assert_eq!(config.log_level, "trace");
-        assert_eq!(config.tracing_sample_rate, 0.25);
+        assert_approx_f64(config.tracing_sample_rate, 0.25);
     }
 
     // ============================================================================
@@ -279,14 +286,14 @@ mod tests {
     fn test_builder_tracing_sample_rate_zero() {
         let config = MonitoringConfig::builder().tracing_sample_rate(0.0).build();
 
-        assert_eq!(config.tracing_sample_rate, 0.0);
+        assert_approx_f64(config.tracing_sample_rate, 0.0);
     }
 
     #[test]
     fn test_builder_tracing_sample_rate_full() {
         let config = MonitoringConfig::builder().tracing_sample_rate(1.0).build();
 
-        assert_eq!(config.tracing_sample_rate, 1.0);
+        assert_approx_f64(config.tracing_sample_rate, 1.0);
     }
 
     #[test]
@@ -311,7 +318,7 @@ mod tests {
         assert!(config.enable_health_check);
         assert_eq!(config.health_check_port, 8081);
         assert!(config.enable_performance_tracking);
-        assert_eq!(config.tracing_sample_rate, 0.5);
+        assert_approx_f64(config.tracing_sample_rate, 0.5);
     }
 
     // ============================================================================
@@ -332,15 +339,13 @@ mod tests {
             let config = MonitoringConfig::builder()
                 .log_level(level.to_string())
                 .build();
-            assert!(config.validate().is_ok(), "Level {} should be valid", level);
+            assert!(config.validate().is_ok(), "Level {level} should be valid");
         }
     }
 
     #[test]
     fn test_validate_invalid_log_level_empty() {
-        let config = MonitoringConfig::builder()
-            .log_level("".to_string())
-            .build();
+        let config = MonitoringConfig::builder().log_level(String::new()).build();
         assert!(config.validate().is_err());
     }
 
@@ -360,11 +365,7 @@ mod tests {
             let config = MonitoringConfig::builder()
                 .log_format(format.to_string())
                 .build();
-            assert!(
-                config.validate().is_ok(),
-                "Format {} should be valid",
-                format
-            );
+            assert!(config.validate().is_ok(), "Format {format} should be valid");
         }
     }
 
@@ -417,7 +418,7 @@ mod tests {
         assert_eq!(config.log_level, "debug");
         assert!(!config.structured_logging);
         assert!(!config.enable_metrics);
-        assert_eq!(config.tracing_sample_rate, 1.0);
+        assert_approx_f64(config.tracing_sample_rate, 1.0);
     }
 
     #[test]
@@ -433,7 +434,7 @@ mod tests {
         assert_eq!(config.log_level, "error");
         assert!(!config.enable_metrics);
         assert!(!config.enable_health_check);
-        assert_eq!(config.tracing_sample_rate, 0.0);
+        assert_approx_f64(config.tracing_sample_rate, 0.0);
     }
 
     // ============================================================================
@@ -482,7 +483,7 @@ mod tests {
     #[test]
     fn test_debug() {
         let config = MonitoringConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
 
         assert!(debug_str.contains("MonitoringConfig"));
     }

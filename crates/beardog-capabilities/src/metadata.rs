@@ -494,7 +494,11 @@ mod tests {
             get_from_map(&m_empty, k)
         });
         assert!(def.contains("sovereign-1"));
-        assert!(def.ends_with(".local"));
+        assert!(
+            std::path::Path::new(&def)
+                .extension()
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("local"))
+        );
         assert!(def.contains("_beardog-cap._tcp"));
 
         let m_custom = HashMap::from([

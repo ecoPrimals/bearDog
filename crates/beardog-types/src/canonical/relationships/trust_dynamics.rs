@@ -6,6 +6,7 @@
 // states with dynamic trust building, healing, and evolution based on interaction
 // patterns and ecosystem behavior.
 
+use crate::constants::time;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -232,7 +233,7 @@ impl TrustEvolution {
                         current_level: *current_level,
                         healing_progress: 0.2,
                         healing_actions: vec![HealingAction::Acknowledgment("Addressing concerns".to_string())],
-                        recovery_timeline: Duration::from_secs(86400 * 7), // 1 week
+                        recovery_timeline: Duration::from_secs(time::SECONDS_PER_DAY * 7), // 1 week
                     };
                 }
             }

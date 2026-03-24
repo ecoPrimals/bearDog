@@ -213,7 +213,7 @@ mod tests {
     #[tokio::test]
     async fn test_certificate_issuance_human() {
         let signing_key = SigningKey::from_bytes(&[1u8; 32]);
-        let detector = CommercialExtractionDetector::default();
+        let detector = CommercialExtractionDetector;
         let issuer = CertificateIssuer::new(signing_key, detector);
 
         let context = RequestContext {
@@ -240,7 +240,7 @@ mod tests {
     #[tokio::test]
     async fn test_certificate_issuance_commercial_high_risk_blocked() {
         let signing_key = SigningKey::from_bytes(&[2u8; 32]);
-        let detector = CommercialExtractionDetector::default();
+        let detector = CommercialExtractionDetector;
         let issuer = CertificateIssuer::new(signing_key, detector);
 
         let context = RequestContext {

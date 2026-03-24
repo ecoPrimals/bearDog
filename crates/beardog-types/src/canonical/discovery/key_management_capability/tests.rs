@@ -124,7 +124,7 @@ fn test_kms_error_display() {
         key_id: "key-123".to_string(),
     };
 
-    let display = format!("{}", error);
+    let display = format!("{error}");
     assert!(display.contains("Key not found"));
 }
 
@@ -187,7 +187,7 @@ fn test_kms_error_display_all_variants() {
     ];
     for (err, needles) in cases {
         let s = err.to_string();
-        for needle in needles.iter() {
+        for needle in needles {
             assert!(s.contains(*needle), "expected {needle:?} in {s:?}");
         }
     }

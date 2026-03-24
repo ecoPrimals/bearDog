@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! End-to-End Tests for Schema Fix (January 27, 2026)
 //!
 //! These tests verify the complete integration of:

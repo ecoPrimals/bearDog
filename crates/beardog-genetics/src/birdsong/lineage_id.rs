@@ -207,7 +207,7 @@ mod tests {
             id.parse().expect("parse canonical lineage ID in test");
 
         assert_eq!(service_type, "tower");
-        assert_eq!(timestamp, 1735000000);
+        assert_eq!(timestamp, 1_735_000_000);
         assert_eq!(hash, "abc123def456");
         assert_eq!(node_id, "node-1");
     }
@@ -249,7 +249,7 @@ mod tests {
     #[test]
     fn test_lineage_id_display() {
         let id = LineageID::new("lineage:test:123:abc:node");
-        assert_eq!(format!("{}", id), "lineage:test:123:abc:node");
+        assert_eq!(format!("{id}"), "lineage:test:123:abc:node");
     }
 
     #[test]

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![forbid(unsafe_code)]
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 //! # BearDog Client Library (Tower Atomic Edition)
 //!
@@ -234,14 +235,14 @@ mod tests {
     use beardog_genetics::birdsong::LineageProof;
     use chrono::Utc;
     use serde_json::{Value, json};
-    use std::sync::{Arc, Mutex};
+    use std::sync::Arc;
     use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
     use tokio::net::UnixListener;
-    use tokio::sync::Notify;
+    use tokio::sync::{Mutex, Notify};
 
-    /// Tests in this module share the global `process_env` overlay (BEARDOG_SOCKET),
-    /// so they must hold this lock. Poison is tolerated so one failure cannot cascade.
-    static ENV_LOCK: Mutex<()> = Mutex::new(());
+    /// Tests in this module share the global `process_env` overlay (BEARDOG_SOCKET).
+    /// Async mutex so we can `.await` while holding the lock (no `await_holding_lock` on std mutex).
+    static ENV_LOCK: Mutex<()> = Mutex::const_new(());
 
     fn lineage_proof_sample() -> LineageProof {
         LineageProof {
@@ -266,16 +267,15 @@ mod tests {
 
     #[tokio::test]
     async fn connect_maps_missing_socket_to_connection_error() {
-        let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let _env = ENV_LOCK.lock().await;
         let tmp = tempfile::tempdir().expect("tempdir for BearDog client test");
         let sock = tmp.path().join("beardog-missing.sock");
         process_env::set_var("BEARDOG_SOCKET", sock.to_string_lossy().as_ref());
         let _guard = EnvGuard(vec!["BEARDOG_SOCKET"]);
 
         let result = BearDogClient::connect().await;
-        let err = match result {
-            Err(e) => e,
-            Ok(_) => panic!("expected connection failure"),
+        let Err(err) = result else {
+            panic!("expected connection failure");
         };
         let msg = err.to_string();
         assert!(
@@ -286,7 +286,7 @@ mod tests {
 
     #[tokio::test]
     async fn lineage_methods_round_trip_over_json_rpc() {
-        let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let _env = ENV_LOCK.lock().await;
         let tmp = tempfile::tempdir().expect("tempdir for BearDog client test");
         let socket_path = tmp.path().join("beardog-round-trip.sock");
 
@@ -377,7 +377,7 @@ mod tests {
 
     #[tokio::test]
     async fn lineage_create_and_extend_with_metadata_serializes_in_params() {
-        let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let _env = ENV_LOCK.lock().await;
         let tmp = tempfile::tempdir().expect("tempdir for BearDog client test");
         let socket_path = tmp.path().join("beardog-meta.sock");
 
@@ -469,7 +469,7 @@ mod tests {
 
     #[tokio::test]
     async fn api_error_maps_json_rpc_fault() {
-        let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let _env = ENV_LOCK.lock().await;
         let tmp = tempfile::tempdir().expect("tempdir for BearDog client test");
         let socket_path = tmp.path().join("beardog-err.sock");
 
@@ -515,9 +515,8 @@ mod tests {
             .await
             .expect("connect to mock fault socket");
         let result = client.create_lineage("x", None).await;
-        let err = match result {
-            Err(e) => e,
-            Ok(_) => panic!("expected API error"),
+        let Err(err) = result else {
+            panic!("expected API error");
         };
         let msg = err.to_string();
         assert!(

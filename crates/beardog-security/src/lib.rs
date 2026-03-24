@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![forbid(unsafe_code)]
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 //! # `BearDog` Security Crate
 //!
@@ -11,9 +12,6 @@
 //! - **Quantum-Resistant Cryptography**: Post-quantum cryptographic algorithms
 //! - **Hardware Security Modules**: Integration with `YubiKey`, TPM, and software HSMs
 //! - **Memory-safe only**: All operations are memory-safe
-
-#![cfg_attr(test, allow(clippy::expect_used))]
-#![cfg_attr(test, allow(clippy::unwrap_used))]
 //! - **SIMD Acceleration**: Hardware-accelerated cryptographic operations
 //! - **Secure Key Management**: Safe key storage and lifecycle management
 //!

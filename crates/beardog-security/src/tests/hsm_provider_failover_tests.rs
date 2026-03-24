@@ -129,7 +129,7 @@ fn test_concurrent_crypto_operations() -> Result<(), BearDogError> {
     for i in 0..5 {
         let key_clone = Arc::clone(&key);
         let handle = thread::spawn(move || {
-            let message = format!("Message {}", i);
+            let message = format!("Message {i}");
             let (ciphertext, nonce) =
                 BearDogCrypto::encrypt_aes_gcm(&key_clone, message.as_bytes(), None)
                     .expect("Encryption should succeed");

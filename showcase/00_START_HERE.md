@@ -12,7 +12,7 @@
 - 🌊 **Entropy Hierarchy** - Mixed human + machine (never simulated!)
 - 🔒 **BTSP Protocol** - Secure encrypted tunnels with PFS
 - 🌐 **Zero-Knowledge** - Self-discovering, no hardcoded config
-- ⚡ **World-Class Security** - TOP 0.001% (6 unsafe blocks in 150K lines)
+- ⚡ **World-Class Security** - **0 unsafe** (`#![forbid(unsafe_code)]` workspace-wide)
 
 **Grade**: A+ (98/100) - Production Ready, World-Class Quality
 
@@ -22,8 +22,8 @@
 
 ### Prerequisites
 ```bash
-# Check if BearDog is installed
-cd /home/eastgate/Development/ecoPrimals/beardog
+# Check if BearDog is installed (from repository root)
+cd /path/to/beardog
 cargo build --release
 
 # Binary at: target/release/beardog-cli
@@ -132,17 +132,12 @@ Production-ready patterns and advanced features.
 | **Zero-Knowledge** | ❌ Hardcoded config | ✅ Self-discovering |
 | **Sovereignty** | ❌ Vendor-controlled | ✅ User-controlled |
 
-### Security Metrics (Industry Comparison)
+### Security metrics
 
-```
-BearDog vs Industry Average:
-  - Unsafe blocks: 167-833x SAFER (6 vs 1000-5000)
-  - Test coverage: 1.3x BETTER (85-90% vs 60-70%)
-  - File discipline: PERFECT (0 files > 1000 lines)
-  - E2E tests: 2-5x MORE (27 vs 5-15)
-```
+- **Unsafe Rust**: none — workspace enforces `#![forbid(unsafe_code)]`.
+- **Tests**: see [STATUS.md](../STATUS.md) for the current passing count and coverage notes.
 
-**Result**: TOP 0.001% globally for memory safety
+**Result**: Memory-safety posture is strict by construction (no `unsafe` in crate code).
 
 ---
 
@@ -184,20 +179,11 @@ Universal adapters for:
 
 ## 🗺️ Showcase Map
 
-### Current Status
-```
-Level 0 (Local Primal):       ⬜⬜⬜⬜⬜⬜ 0/6 demos (0%)
-Level 1 (Hardware):           🟩⬜⬜⬜⬜⬜⬜ 1/7 demos (14%)
-Level 2 (Ecosystem):          ⬜⬜⬜⬜⬜⬜⬜ 0/7 demos (0%)
-Level 3 (Network):            ⬜⬜⬜⬜⬜⬜ 0/6 demos (0%)
-Level 4 (Advanced):           ⬜⬜⬜⬜⬜⬜ 0/6 demos (0%)
-Level 5 (Production):         ⬜⬜⬜⬜⬜⬜ 0/6 demos (0%)
+### Current status
 
-Overall: 🟩⬜⬜⬜⬜ 1/38 demos (3%)
-```
+**29** runnable demos under `showcase/` (each with `src/main.rs`). Roadmap target: **38** comprehensive demos — see [README.md](README.md) for a per-folder count table.
 
-**Target**: 38 comprehensive demos  
-**Status**: 🚧 Under active construction
+**Status**: Active expansion (examples and depth vary by directory)
 
 ---
 
@@ -213,22 +199,9 @@ Overall: 🟩⬜⬜⬜⬜ 1/38 demos (3%)
    **Shows**: Human + machine entropy mixing
    **Time**: 2 minutes
 
-### 🚧 Coming This Week
+### More demos
 
-1. **Hello BearDog** (`00-local-primal/01-hello-beardog/`)
-   - Generate your first key
-   - Learn basic operations
-   - Understand key storage
-
-2. **HSM Discovery** (`00-local-primal/02-hsm-discovery/`)
-   - Auto-detect hardware HSMs
-   - Query capabilities
-   - Select best provider
-
-3. **Key Constraints** (`00-local-primal/03-key-constraints/`)
-   - Create constrained keys
-   - Self-enforcing rules
-   - Constraint validation
+Browse `00-local-primal/`, `02-ecosystem-integration/`, `03-production-features/`, and `04-advanced-features/` — each contains runnable crates. Depth varies; see per-demo READMEs where present.
 
 ---
 
@@ -354,9 +327,9 @@ After completing the showcase, you should be able to:
 
 ---
 
-**Last Updated**: December 24, 2025  
+**Last Updated**: March 24, 2026  
 **Maintainer**: BearDog Team  
-**Status**: 🚧 Under Active Construction
+**Status**: Active expansion
 
 🐻 **BearDog: Sovereign. Secure. Self-Enforcing.** 🔐
 

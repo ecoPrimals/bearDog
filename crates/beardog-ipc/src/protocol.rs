@@ -194,6 +194,6 @@ mod tests {
         };
         let cloned = request.clone();
         assert_eq!(cloned.method, request.method);
-        assert!(format!("{:?}", request).contains("test"));
+        assert!(format!("{request:?}").contains("test"));
     }
 }

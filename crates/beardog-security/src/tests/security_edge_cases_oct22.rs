@@ -98,7 +98,7 @@ fn test_encrypt_decrypt_boundary_sizes() {
     for size in sizes {
         let data = vec![42u8; size];
         let encrypted = attempt_encryption(&data, &key);
-        assert!(encrypted.is_ok(), "Should encrypt size {}", size);
+        assert!(encrypted.is_ok(), "Should encrypt size {size}");
     }
 }
 
@@ -536,7 +536,7 @@ fn test_random_bytes_length() {
         // TEST_DOMAIN: security
         // TEST_PRIORITY: normal
         let random = generate_random_bytes(size);
-        assert!(random.is_ok(), "Should generate {} bytes", size);
+        assert!(random.is_ok(), "Should generate {size} bytes");
 
         if let Ok(bytes) = random {
             assert_eq!(bytes.len(), size, "Should have correct length");
@@ -695,7 +695,12 @@ fn attempt_decryption(data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> 
     }
     // Stub: detect if data looks corrupted (mostly 0xFF pattern is suspicious for 128-byte data)
     if data.len() == 128 {
-        let ff_count = data.iter().filter(|&&b| b == 0xFF).count();
+        let mut ff_count = 0usize;
+        for &b in data {
+            if b == 0xFF {
+                ff_count += 1;
+            }
+        }
         if ff_count >= 120 {
             // If 120+ of 128 bytes are 0xFF, likely corrupted
             return Err(BearDogError::Security {

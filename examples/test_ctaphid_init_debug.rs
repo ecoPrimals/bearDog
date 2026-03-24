@@ -83,7 +83,8 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
         // Generate nonce
         let mut nonce = [0u8; 8];
         for (i, byte) in nonce.iter_mut().enumerate() {
-            *byte = u8::try_from((i * 17 + 42) & 0xFF).expect("masked to u8"); // Deterministic for debugging
+            // Low 8 bits of linear function — always fits in `u8`.
+            *byte = ((i * 17 + 42) & 0xFF) as u8;
         }
 
         println!("📋 Building CTAPHID_INIT packet:");

@@ -585,7 +585,7 @@ mod tests {
         assert_eq!(pool.find_optimal_size(5000), 16384);
 
         // Test very large size
-        assert_eq!(pool.find_optimal_size(100000), 131072); // 2 * 65536
+        assert_eq!(pool.find_optimal_size(100_000), 131_072); // 2 * 65536
     }
 
     #[test]
@@ -689,7 +689,7 @@ mod tests {
 
         // Add many strings to trigger cleanup
         for i in 0..1100 {
-            let _ = manager.intern_string(&format!("test_{}", i));
+            let _ = manager.intern_string(&format!("test_{i}"));
         }
 
         // Optimize should clean up cache

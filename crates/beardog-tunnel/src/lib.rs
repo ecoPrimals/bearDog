@@ -1,13 +1,41 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![forbid(unsafe_code)]
+#![cfg_attr(
+    test,
+    allow(
+        dead_code,
+        clippy::bool_assert_comparison,
+        clippy::bool_to_int_with_if,
+        clippy::case_sensitive_file_extension_comparisons,
+        clippy::collapsible_if,
+        clippy::equatable_if_let,
+        clippy::expect_used,
+        clippy::float_cmp,
+        clippy::ignored_unit_patterns,
+        clippy::manual_let_else,
+        clippy::needless_borrows_for_generic_args,
+        clippy::needless_collect,
+        clippy::or_fun_call,
+        clippy::redundant_clone,
+        clippy::redundant_closure_for_method_calls,
+        clippy::semicolon_if_nothing_returned,
+        clippy::should_implement_trait,
+        clippy::single_match,
+        clippy::single_match_else,
+        clippy::uninlined_format_args,
+        clippy::unnecessary_struct_initialization,
+        clippy::unnecessary_unwrap,
+        clippy::unnested_or_patterns,
+        clippy::unreadable_literal,
+        clippy::unwrap_used,
+        clippy::useless_vec,
+    )
+)] // Pedantic/nursery clippy: relaxed only for `cfg(test)` builds (see workspace `Cargo.toml` lints).
 
 //! # BearDog Tunnel - Secure Communication and HSM Integration
 //!
 //! Provides secure communication tunnels and Hardware Security Module (HSM) integration
 //! for the BearDog ecosystem, enabling encrypted channels and cryptographic key management.
-
-#![cfg_attr(test, allow(clippy::expect_used))]
-#![cfg_attr(test, allow(clippy::unwrap_used))]
 //!
 //! ## Features
 //!

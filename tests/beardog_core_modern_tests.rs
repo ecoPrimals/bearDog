@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! Modern `BearDog` Core Tests
 //!
 //! Canonical tests for beardog-core functionality using current architecture.

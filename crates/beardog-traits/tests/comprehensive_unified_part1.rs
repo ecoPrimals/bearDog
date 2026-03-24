@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, clippy::manual_async_fn)]
+
 //! Integration tests (part 1): unified `mod`, core, identity, monitoring, genetics.
 
 use beardog_errors::BearDogError;
@@ -40,7 +42,7 @@ impl BearDogCore for CoreComponent {
         &self.id
     }
 
-    fn version(&self) -> &str {
+    fn version(&self) -> &'static str {
         "2.0.0"
     }
 
@@ -109,7 +111,7 @@ impl BearDogCore for ServiceThing {
         &self.id
     }
 
-    fn version(&self) -> &str {
+    fn version(&self) -> &'static str {
         "1.0.0"
     }
 
@@ -220,7 +222,7 @@ fn service_status_and_component_health_roundtrip_json() {
     }
     let h = ComponentHealth {
         is_healthy: false,
-        status: "".to_string(),
+        status: String::new(),
         last_check: std::time::SystemTime::UNIX_EPOCH,
         details: HashMap::from([("k".into(), "v".into())]),
     };
@@ -555,7 +557,8 @@ async fn metrics_collector_smoke() {
         ety: "e".into(),
     };
     assert_eq!(m.collect_metrics().await.unwrap().v, 1);
-    assert_eq!(m.performance_score().await.unwrap(), 1.0);
+    let score = m.performance_score().await.unwrap();
+    assert!((score - 1.0).abs() < f64::EPSILON);
 }
 
 #[test]
@@ -659,7 +662,7 @@ fn identity_info_serde_and_validation_struct() {
     let d = IdentityInfo::default();
     assert!(!d.id.is_empty());
     assert_ne!(info, d);
-    info.id = d.id.clone();
+    info.id = d.id;
 }
 
 // ---------------------------------------------------------------------------
@@ -708,7 +711,7 @@ fn genetics_dtos_and_defaults() {
         biome_id: "b".into(),
         signature: vec![],
         trust_level: 0.0,
-        health_status: "".into(),
+        health_status: String::new(),
         metadata: HashMap::new(),
     };
     serde_json::to_string(&bd).unwrap();

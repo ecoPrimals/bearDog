@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! Quick Win Tests: Config Validation
 //!
 //! This module contains high-value unit tests designed to boost test coverage with minimal effort.

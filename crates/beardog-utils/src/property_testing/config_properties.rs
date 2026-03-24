@@ -210,7 +210,7 @@ mod tests {
         const TEST_PORT: u16 = 8080;
         let valid = TestCase {
             id: 1,
-            input_data: format!("key = \"value\"\nport = {}", TEST_PORT).into_bytes(),
+            input_data: format!("key = \"value\"\nport = {TEST_PORT}").into_bytes(),
             test_type: "configuration".to_string(),
             expected_properties: vec![],
         };
@@ -266,7 +266,7 @@ mod tests {
         const TEST_PORT: u16 = 8080;
         let test_case = TestCase {
             id: 1,
-            input_data: format!("port = {}\nhost = \"localhost\"", TEST_PORT).into_bytes(),
+            input_data: format!("port = {TEST_PORT}\nhost = \"localhost\"").into_bytes(),
             test_type: "configuration".to_string(),
             expected_properties: vec![],
         };

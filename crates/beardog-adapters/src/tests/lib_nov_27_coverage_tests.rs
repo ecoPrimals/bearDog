@@ -54,7 +54,7 @@ fn test_adapter_config_clone() {
 #[test]
 fn test_adapter_config_debug() {
     let config = AdapterConfig::default();
-    let debug_str = format!("{:?}", config);
+    let debug_str = format!("{config:?}");
     assert!(debug_str.contains("AdapterConfig"));
     assert!(debug_str.contains("timeout"));
 }
@@ -94,10 +94,10 @@ fn test_adapter_config_deserialization() {
 #[test]
 fn test_universal_adapter_creation() {
     let config = AdapterConfig::default();
-    let adapter = UniversalAdapter::new(config.clone());
+    let adapter = UniversalAdapter::new(config);
 
     // Verify adapter is created
-    let debug_str = format!("{:?}", adapter);
+    let debug_str = format!("{adapter:?}");
     assert!(debug_str.contains("UniversalAdapter"));
 }
 
@@ -110,7 +110,7 @@ fn test_universal_adapter_inspect() {
     let adapter = UniversalAdapter::new(config);
 
     // Test adapter basic properties
-    let debug_str = format!("{:?}", adapter);
+    let debug_str = format!("{adapter:?}");
     assert!(debug_str.contains("UniversalAdapter"));
 }
 
@@ -126,7 +126,7 @@ fn test_universal_adapter_with_caching_disabled() {
     let adapter = UniversalAdapter::new(config);
 
     // Verify adapter created
-    let debug_str = format!("{:?}", adapter);
+    let debug_str = format!("{adapter:?}");
     assert!(debug_str.contains("UniversalAdapter"));
 }
 
@@ -228,7 +228,7 @@ async fn test_universal_adapter_cache_behavior() {
 
     let adapter = UniversalAdapter::new(config);
     // Cache operations tested internally
-    let debug_str = format!("{:?}", adapter);
+    let debug_str = format!("{adapter:?}");
     assert!(debug_str.contains("UniversalAdapter"));
 }
 
@@ -243,7 +243,7 @@ async fn test_universal_adapter_no_cache() {
     };
 
     let adapter = UniversalAdapter::new(config);
-    let debug_str = format!("{:?}", adapter);
+    let debug_str = format!("{adapter:?}");
     assert!(debug_str.contains("UniversalAdapter"));
 }
 

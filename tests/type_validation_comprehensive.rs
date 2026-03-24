@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! Comprehensive Type Validation Tests
 //!
 //! This module contains high-value integration tests for canonical type construction,

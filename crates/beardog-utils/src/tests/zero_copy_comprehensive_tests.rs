@@ -386,8 +386,8 @@ fn test_optimized_string_display() {
     let shared = zero_copy_optimized::OptimizedString::Shared(Arc::from("display"));
     let owned = zero_copy_optimized::OptimizedString::Owned("display".to_string());
 
-    assert_eq!(format!("{}", shared), "display");
-    assert_eq!(format!("{}", owned), "display");
+    assert_eq!(format!("{shared}"), "display");
+    assert_eq!(format!("{owned}"), "display");
 }
 
 // =============================================================================
@@ -678,7 +678,7 @@ fn test_request_cache_many_entries() {
     // TEST_PRIORITY: normal
 
     for i in 0..1000 {
-        cache.insert(format!("key_{}", i), format!("value_{}", i));
+        cache.insert(format!("key_{i}"), format!("value_{i}"));
     }
 
     assert_eq!(cache.len(), 1000);
@@ -687,10 +687,7 @@ fn test_request_cache_many_entries() {
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     for i in 0..1000 {
-        assert_eq!(
-            cache.get(&format!("key_{}", i)),
-            Some(format!("value_{}", i))
-        );
+        assert_eq!(cache.get(&format!("key_{i}")), Some(format!("value_{i}")));
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
@@ -712,7 +709,7 @@ fn test_concurrent_string_caching() {
                 // TEST_CATEGORY: integration
                 // TEST_DOMAIN: core
                 // TEST_PRIORITY: normal
-                let _s = manager_clone.get_shared_string(format!("thread_{}", i));
+                let _s = manager_clone.get_shared_string(format!("thread_{i}"));
             }
         });
         handles.push(handle);
@@ -787,12 +784,12 @@ fn test_request_cache_workflow() {
 
     // Insert multiple entries
     for i in 0..10 {
-        cache.insert(format!("key_{}", i), i * 2);
+        cache.insert(format!("key_{i}"), i * 2);
     }
 
     // Verify all entries
     for i in 0..10 {
-        assert_eq!(cache.get(&format!("key_{}", i)), Some(i * 2));
+        assert_eq!(cache.get(&format!("key_{i}")), Some(i * 2));
     }
 
     // Cleanup shouldn't affect non-expired entries

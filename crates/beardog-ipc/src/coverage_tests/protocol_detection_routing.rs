@@ -188,19 +188,19 @@ fn test_protocol_clone_copy() {
 #[test]
 fn test_protocol_detector_new() {
     let d = ProtocolDetector::new();
-    assert!(format!("{:?}", d).contains("16")); // default peek_size
+    assert!(format!("{d:?}").contains("16")); // default peek_size
 }
 
 #[test]
 fn test_protocol_detector_custom_peek_size() {
     let d = ProtocolDetector::with_peek_size(32);
-    assert!(format!("{:?}", d).contains("32"));
+    assert!(format!("{d:?}").contains("32"));
 }
 
 #[test]
 fn test_protocol_detector_default() {
     let d = ProtocolDetector::default();
-    assert!(format!("{:?}", d).contains("ProtocolDetector"));
+    assert!(format!("{d:?}").contains("ProtocolDetector"));
 }
 
 // ============================================================================
@@ -281,7 +281,7 @@ fn test_router_config_debug_and_clone() {
     let c = RouterConfig::default();
     let c2 = c.clone();
     assert_eq!(c.enable_tarpc, c2.enable_tarpc);
-    assert!(format!("{:?}", c).contains("RouterConfig"));
+    assert!(format!("{c:?}").contains("RouterConfig"));
 }
 
 // ============================================================================
@@ -363,6 +363,6 @@ fn test_ipc_endpoint_tcp_display() {
 #[test]
 fn test_ipc_endpoint_clone_and_debug() {
     let ep = IpcEndpoint::UnixSocket(PathBuf::from("/tmp/test.sock"));
-    let cloned = ep.clone();
-    assert!(format!("{:?}", cloned).contains("UnixSocket"));
+    let cloned = ep;
+    assert!(format!("{cloned:?}").contains("UnixSocket"));
 }

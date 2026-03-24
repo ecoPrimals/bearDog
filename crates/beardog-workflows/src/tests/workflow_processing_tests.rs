@@ -228,7 +228,7 @@ async fn test_workflow_status_pending_to_running() -> Result<(), BearDogError> {
     assert_eq!(workflow.status, WorkflowStatus::Pending);
 
     // Simulate status change
-    let mut updated_workflow = workflow.clone();
+    let mut updated_workflow = workflow;
     updated_workflow.status = WorkflowStatus::InProgress;
 
     assert_eq!(updated_workflow.status, WorkflowStatus::InProgress);
@@ -372,7 +372,7 @@ async fn test_workflow_retry_scenario() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_multiple_workflows_different_types() -> Result<(), BearDogError> {
-    let workflows = vec![
+    let workflows = [
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: workflows
         // TEST_PRIORITY: normal

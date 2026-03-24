@@ -5,6 +5,7 @@
 //! Comprehensive types for managing cryptographic key lifecycle states,
 //! rotation, expiration, and audit trails.
 
+use crate::constants::time;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -255,13 +256,13 @@ impl Default for KeyRotationConfig {
     fn default() -> Self {
         Self {
             auto_rotation_enabled: true,
-            rotation_interval: Duration::from_secs(90 * 24 * 3600), // 90 days
-            deprecation_period: Duration::from_secs(30 * 24 * 3600), // 30 days
+            rotation_interval: Duration::from_secs(90 * time::SECONDS_PER_DAY), // 90 days
+            deprecation_period: Duration::from_secs(30 * time::SECONDS_PER_DAY), // 30 days
             backup_before_rotation: true,
             max_backup_count: 3,
             enable_expiration_alerts: true,
-            alert_threshold: Duration::from_secs(7 * 24 * 3600), // 7 days
-            check_interval: Duration::from_secs(3600),           // 1 hour
+            alert_threshold: Duration::from_secs(7 * time::SECONDS_PER_DAY), // 7 days
+            check_interval: Duration::from_secs(time::SECONDS_PER_HOUR),     // 1 hour
         }
     }
 }
@@ -273,9 +274,9 @@ impl KeyRotationConfig {
     #[must_use]
     pub fn high_security() -> Self {
         Self {
-            rotation_interval: Duration::from_secs(30 * 24 * 3600), // 30 days
-            deprecation_period: Duration::from_secs(7 * 24 * 3600), // 7 days
-            alert_threshold: Duration::from_secs(3 * 24 * 3600),    // 3 days
+            rotation_interval: Duration::from_secs(30 * time::SECONDS_PER_DAY), // 30 days
+            deprecation_period: Duration::from_secs(7 * time::SECONDS_PER_DAY), // 7 days
+            alert_threshold: Duration::from_secs(3 * time::SECONDS_PER_DAY),    // 3 days
             ..Self::default()
         }
     }
@@ -287,8 +288,8 @@ impl KeyRotationConfig {
     pub fn development() -> Self {
         Self {
             auto_rotation_enabled: false, // Manual rotation in dev
-            rotation_interval: Duration::from_secs(365 * 24 * 3600), // 1 year
-            deprecation_period: Duration::from_secs(90 * 24 * 3600), // 90 days
+            rotation_interval: Duration::from_secs(365 * time::SECONDS_PER_DAY), // 1 year
+            deprecation_period: Duration::from_secs(90 * time::SECONDS_PER_DAY), // 90 days
             backup_before_rotation: false,
             enable_expiration_alerts: false,
             ..Self::default()

@@ -100,20 +100,17 @@ impl ThreatIntelligence {
     }
 
     pub fn get_reputation_score(&self, _ioc_type: IocType, value: &str) -> f64 {
-        self.iocs
-            .get(value)
-            .map(|ioc| {
-                // Convert ThreatSeverity to reputation score (0.0 = worst, 100.0 = best)
-                use ThreatSeverity::*;
-                match ioc.threat_level {
-                    Critical => 0.0,
-                    High => 25.0,
-                    Medium => 50.0,
-                    Low => 75.0,
-                    Info => 100.0,
-                }
-            })
-            .unwrap_or(100.0) // Default to good reputation for unknown IPs
+        self.iocs.get(value).map_or(100.0, |ioc| {
+            // Convert ThreatSeverity to reputation score (0.0 = worst, 100.0 = best)
+            use ThreatSeverity::*;
+            match ioc.threat_level {
+                Critical => 0.0,
+                High => 25.0,
+                Medium => 50.0,
+                Low => 75.0,
+                Info => 100.0,
+            }
+        }) // Default to good reputation for unknown IPs
     }
 
     pub fn enrich_threat(&self, threat: &mut Threat) {
@@ -122,7 +119,7 @@ impl ThreatIntelligence {
         let mut max_severity = None;
 
         // Collect matches first to avoid borrow conflicts
-        for (_, value) in threat.metadata().iter() {
+        for value in threat.metadata().values() {
             if let Some(ioc) = self.iocs.get(value) {
                 matched_iocs.push(value.clone());
                 max_severity = Some(match max_severity {

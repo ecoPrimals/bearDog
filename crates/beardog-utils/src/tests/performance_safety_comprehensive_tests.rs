@@ -520,7 +520,7 @@ fn test_safe_buffer_stress_test() {
 
     // Perform many write/read cycles
     for i in 0..100 {
-        let data = format!("Iteration {}", i);
+        let data = format!("Iteration {i}");
         buffer.safe_write(data.as_bytes()).unwrap();
 
         // TEST_CATEGORY: integration

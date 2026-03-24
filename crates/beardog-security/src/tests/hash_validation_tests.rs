@@ -103,8 +103,7 @@ mod tests {
             // TEST_CATEGORY: integration
             // TEST_DOMAIN: security
             // TEST_PRIORITY: normal
-            "Should have significant bit differences: {}",
-            diff_bits
+            "Should have significant bit differences: {diff_bits}"
         );
     }
 
@@ -114,7 +113,7 @@ mod tests {
         let mut hashes = std::collections::HashSet::new();
 
         for i in 0..100 {
-            let data = format!("test data {}", i);
+            let data = format!("test data {i}");
             let hash = Sha256::digest(data.as_bytes());
 
             assert!(

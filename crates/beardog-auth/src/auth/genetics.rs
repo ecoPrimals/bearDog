@@ -183,7 +183,7 @@ mod tests {
             constraint_signature: None,
         };
 
-        let result = engine.register_genetics(genetics.clone());
+        let result = engine.register_genetics(genetics);
         assert!(result.is_ok(), "Registration should succeed");
         assert!(engine.genetics_registry.contains_key("gen-1"));
     }

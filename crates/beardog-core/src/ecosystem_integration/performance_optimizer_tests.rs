@@ -318,7 +318,7 @@ async fn test_connection_state_equality() {
 async fn test_cached_result_creation() {
     let data = Arc::new(vec![1, 2, 3, 4, 5]);
     let cached = CachedResult {
-        data: data.clone(),
+        data,
         cached_at: std::time::Instant::now(),
         ttl: Duration::from_secs(300),
         access_count: 0,
@@ -562,9 +562,9 @@ async fn test_zero_copy_cached_result() {
         access_count: 0,
     };
 
-    // Cloning Arc doesn't copy data
-    let cloned_data = cached.data.clone();
-    assert_eq!(Arc::strong_count(&original_data), 3); // original + cached.data + cloned_data
+    // Moving Arc doesn't copy data — zero-copy sharing
+    let cloned_data = cached.data;
+    assert_eq!(Arc::strong_count(&original_data), 2); // original + moved-from-cached
     assert_eq!(*cloned_data, vec![1, 2, 3, 4, 5]);
 }
 

@@ -518,6 +518,7 @@ impl std::fmt::Display for MlModelType {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::float_assert::near_f64;
 
     #[test]
     fn test_ml_model_creation() {
@@ -552,7 +553,7 @@ mod tests {
 
         model.update_accuracy(0.9);
         assert!(model.is_high_accuracy());
-        assert_eq!(model.accuracy, 0.9);
+        near_f64(model.accuracy, 0.9);
     }
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
@@ -591,13 +592,13 @@ mod tests {
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
-        assert_eq!(matrix.accuracy(), 150.0 / 180.0);
-        assert_eq!(matrix.precision(), 80.0 / 90.0);
-        assert_eq!(matrix.recall(), 80.0 / 100.0);
+        near_f64(matrix.accuracy(), 150.0 / 180.0);
+        near_f64(matrix.precision(), 80.0 / 90.0);
+        near_f64(matrix.recall(), 80.0 / 100.0);
 
         let expected_f1 =
             2.0 * (matrix.precision() * matrix.recall()) / (matrix.precision() + matrix.recall());
-        assert_eq!(matrix.f1_score(), expected_f1);
+        near_f64(matrix.f1_score(), expected_f1);
     }
 
     #[test]

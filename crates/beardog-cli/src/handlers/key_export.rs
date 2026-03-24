@@ -94,27 +94,40 @@ pub async fn handle_key_export_with_home(
     }
     println!();
 
-    // Convert to export format
+    // Convert to export format (move fields out of `StoredKey` — no redundant string clones)
+    let StoredKey {
+        key_id,
+        algorithm,
+        parent_key_id,
+        generation,
+        created_at,
+        derivation_purpose,
+        expires_at,
+        usage,
+        purpose,
+        key_material_b64,
+        hsm_name,
+        ..
+    } = stored_key;
+
     let mut exported = ExportedKey {
-        key_id: stored_key.key_id.clone(),
-        algorithm: stored_key.algorithm.clone(),
-        parent: stored_key.parent_key_id.clone(),
-        generation: stored_key.generation,
-        created_at: stored_key.created_at.clone(),
-        context: stored_key.derivation_purpose.clone(),
-        expires_at: stored_key.expires_at.clone(),
-        usage: stored_key.usage.clone(),
-        purpose: stored_key.purpose.clone(),
+        key_id,
+        algorithm,
+        parent: parent_key_id,
+        generation,
+        created_at,
+        context: derivation_purpose,
+        expires_at,
+        usage,
+        purpose,
         metadata: std::collections::HashMap::new(),
-        key_material: stored_key.key_material_b64.clone(),
+        key_material: key_material_b64,
         encrypted: false,
         version: "1.0".to_string(),
     };
 
     // Add metadata
-    exported
-        .metadata
-        .insert("hsm_name".to_string(), stored_key.hsm_name);
+    exported.metadata.insert("hsm_name".to_string(), hsm_name);
     exported
         .metadata
         .insert("exported_at".to_string(), chrono::Utc::now().to_rfc3339());
@@ -303,25 +316,40 @@ pub async fn handle_key_import_with_home(
         }
     }
 
-    // Convert to StoredKey format
+    // Convert to StoredKey format (consume `exported` to avoid cloning each field)
+    let ExportedKey {
+        algorithm,
+        parent,
+        generation,
+        created_at,
+        context,
+        expires_at,
+        usage,
+        purpose,
+        key_material,
+        metadata,
+        ..
+    } = exported;
+
+    let hsm_name = metadata
+        .get("hsm_name")
+        .cloned()
+        .unwrap_or_else(|| "imported".to_string());
+
     let stored_key = StoredKey {
         key_id: final_key_id.to_string(),
-        algorithm: exported.algorithm.clone(),
-        hsm_name: exported
-            .metadata
-            .get("hsm_name")
-            .cloned()
-            .unwrap_or_else(|| "imported".to_string()),
-        created_at: exported.created_at.clone(),
-        key_material_b64: exported.key_material.clone(),
-        generation: exported.generation,
-        parent_key_id: exported.parent.clone(),
-        derivation_purpose: exported.context.clone(),
+        algorithm,
+        hsm_name,
+        created_at,
+        key_material_b64: key_material,
+        generation,
+        parent_key_id: parent,
+        derivation_purpose: context,
         children: Vec::new(), // Will be rebuilt as keys are derived
         lineage: None,        // Imported keys don't have lineage info initially
-        expires_at: exported.expires_at.clone(),
-        usage: exported.usage.clone(),
-        purpose: exported.purpose.clone(),
+        expires_at,
+        usage,
+        purpose,
     };
 
     // Save to key store
@@ -346,7 +374,7 @@ pub async fn handle_key_import_with_home(
     println!(
         "   2. Use key: beardog encrypt --key {final_key_id} --input data.txt --output data.enc"
     );
-    if exported.parent.is_some() {
+    if stored_key.parent_key_id.is_some() {
         println!("   3. Check lineage: beardog key lineage --key-id {final_key_id}");
     }
     println!();

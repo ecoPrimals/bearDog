@@ -19,7 +19,7 @@ mod adapter_mod_tests {
     #[test]
     fn test_unified_adapter_config_clone() {
         let c1 = UnifiedAdapterConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -45,7 +45,7 @@ mod adapter_chain_tests {
     #[test]
     fn test_chain_config_clone() {
         let c1 = ChainConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -76,7 +76,7 @@ mod compliance_tests {
     #[test]
     fn test_consolidated_compliance_clone() {
         let c1 = ConsolidatedComplianceConfiguration::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -124,7 +124,7 @@ mod workflow_domain_tests {
     #[test]
     fn test_consolidated_workflow_clone() {
         let c1 = ConsolidatedWorkflowConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 }
@@ -174,7 +174,7 @@ mod ai_config_tests {
     #[test]
     fn test_ai_config_clone() {
         let c1 = ConsolidatedAiConfig::default();
-        let c2 = c1.clone();
+        let c2 = c1;
         let _ = format!("{c2:?}");
     }
 

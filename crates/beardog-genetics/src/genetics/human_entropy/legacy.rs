@@ -201,7 +201,7 @@ mod tests {
         let collector = MultiModalHumanEntropyCollector::new(config);
 
         // Verify collector is created
-        assert!(format!("{:?}", collector).contains("MultiModalHumanEntropyCollector"));
+        assert!(format!("{collector:?}").contains("MultiModalHumanEntropyCollector"));
     }
 
     #[test]

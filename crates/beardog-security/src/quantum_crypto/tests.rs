@@ -32,7 +32,7 @@ mod quantum_crypto_tests {
         assert!(!key.is_empty());
 
         // Debug should redact key data
-        let debug = format!("{:?}", key);
+        let debug = format!("{key:?}");
         assert!(debug.contains("[REDACTED]"));
         assert!(!debug.contains("1, 2, 3, 4"));
     }

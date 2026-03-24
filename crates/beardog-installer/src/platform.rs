@@ -325,16 +325,14 @@ mod tests {
         let data_str = paths.data_dir.to_str().expect("data_dir utf-8");
         assert!(
             data_str.contains("biomeos") || data_str.contains("nucleus"),
-            "data_dir should contain biomeos or nucleus, got: {}",
-            data_str
+            "data_dir should contain biomeos or nucleus, got: {data_str}"
         );
 
         // config_dir should contain either "biomeos" or "nucleus"
         let config_str = paths.config_dir.to_str().expect("config_dir utf-8");
         assert!(
             config_str.contains("biomeos") || config_str.contains("nucleus"),
-            "config_dir should contain biomeos or nucleus, got: {}",
-            config_str
+            "config_dir should contain biomeos or nucleus, got: {config_str}"
         );
 
         assert!(
@@ -349,8 +347,7 @@ mod tests {
         let cache_str = paths.cache_dir.to_str().expect("cache_dir utf-8");
         assert!(
             cache_str.contains("biomeos") || cache_str.contains("nucleus"),
-            "cache_dir should contain biomeos or nucleus, got: {}",
-            cache_str
+            "cache_dir should contain biomeos or nucleus, got: {cache_str}"
         );
     }
 

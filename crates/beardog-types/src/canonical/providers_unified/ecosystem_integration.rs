@@ -327,7 +327,9 @@ impl EcosystemIntegrator {
                 MigrationComplexity::Simple => std::time::Duration::from_secs(60),
                 MigrationComplexity::Moderate => std::time::Duration::from_secs(300),
                 MigrationComplexity::Complex => std::time::Duration::from_secs(900),
-                MigrationComplexity::Manual => std::time::Duration::from_secs(3600),
+                MigrationComplexity::Manual => {
+                    std::time::Duration::from_secs(crate::constants::time::SECONDS_PER_HOUR)
+                }
             })
             .sum();
 
@@ -350,7 +352,9 @@ impl EcosystemIntegrator {
                 provider_name: p.name.clone(),
                 intervention_type: InterventionType::CodeRefactoring,
                 description: format!("Manual migration required for complex provider: {}", p.name),
-                estimated_time: std::time::Duration::from_secs(3600),
+                estimated_time: std::time::Duration::from_secs(
+                    crate::constants::time::SECONDS_PER_HOUR,
+                ),
             })
             .collect();
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![forbid(unsafe_code)]
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 //! BearDog Deployment - Platform Deployment Automation
 //!
@@ -24,9 +25,6 @@
 //! let manager = DeploymentManager::new(config);
 //! manager.initialize().expect("deployment init");
 //! ```
-
-#![cfg_attr(test, allow(clippy::expect_used))]
-#![cfg_attr(test, allow(clippy::unwrap_used))]
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -63,6 +61,9 @@ mod coverage_tests;
 #[cfg(test)]
 #[path = "coverage_boost_tests.rs"]
 mod coverage_boost_tests;
+
+#[cfg(test)]
+mod deploy_coverage_wave2;
 
 /// High-level knobs for a BearDog deployment run (environment, scale, and observability).
 #[derive(Debug, Clone, Serialize, Deserialize)]

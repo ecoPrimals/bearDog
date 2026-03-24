@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 //! Simplified Comprehensive Tests for BearDog Tunnel
 //!
 //! Coverage expansion for beardog-tunnel crate - Phase 2
@@ -28,7 +29,7 @@ async fn test_session_manager_multiple_instances() {
 #[tokio::test]
 async fn test_session_manager_debug() {
     let manager = SessionManager::new();
-    let debug_str = format!("{:?}", manager);
+    let debug_str = format!("{manager:?}");
 
     assert!(!debug_str.is_empty());
 }
@@ -104,7 +105,7 @@ async fn test_manager_debug_multiple_times() {
     let manager = SessionManager::new();
 
     for _ in 0..10 {
-        let debug_str = format!("{:?}", manager);
+        let debug_str = format!("{manager:?}");
         assert!(!debug_str.is_empty());
     }
 }

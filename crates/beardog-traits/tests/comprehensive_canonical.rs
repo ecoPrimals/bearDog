@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, clippy::manual_async_fn)]
+
 //! Integration tests (part 3): canonical BaseProvider, platform, and DTO sweep.
 
 use beardog_errors::BearDogError;
@@ -102,7 +104,7 @@ impl BaseProvider for MockBase {
 struct MockBaseCaps;
 
 impl BaseProvider for MockBaseCaps {
-    fn provider_id(&self) -> &str {
+    fn provider_id(&self) -> &'static str {
         "x"
     }
 
@@ -439,9 +441,7 @@ fn canonical_workflow_ai_cache_db_monitoring_universal() {
 #[test]
 fn validation_id_randomized_lengths() {
     for len in [3usize, 10, 100, 255] {
-        let id: String = (0..len)
-            .map(|i| ['a', 'b', '-', '_'][(i % 4) as usize])
-            .collect();
+        let id: String = (0..len).map(|i| ['a', 'b', '-', '_'][i % 4]).collect();
         assert!(ValidationUtils::validate_id(&id).is_ok());
     }
 }

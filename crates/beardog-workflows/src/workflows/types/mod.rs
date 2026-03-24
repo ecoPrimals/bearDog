@@ -164,7 +164,7 @@ mod tests {
         let request = WorkflowRequest {
             id: "complex-test".to_string(),
             workflow_type: "complex".to_string(),
-            data: complex_data.clone(),
+            data: complex_data,
         };
 
         assert_eq!(request.data["nested"]["field1"], "value1");
@@ -250,7 +250,7 @@ mod tests {
             workflow_type: "debug".to_string(),
             data: serde_json::json!({}),
         };
-        let debug_str = format!("{:?}", request);
+        let debug_str = format!("{request:?}");
         assert!(debug_str.contains("WorkflowRequest"));
         assert!(debug_str.contains("debug-test"));
     }
@@ -262,7 +262,7 @@ mod tests {
             status: "test".to_string(),
             result: None,
         };
-        let debug_str = format!("{:?}", response);
+        let debug_str = format!("{response:?}");
         assert!(debug_str.contains("WorkflowResponse"));
         assert!(debug_str.contains("debug-response"));
     }
@@ -270,7 +270,7 @@ mod tests {
     #[test]
     fn test_workflow_config_debug() {
         let config = WorkflowConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
         assert!(debug_str.contains("WorkflowConfig"));
         assert!(debug_str.contains("100"));
     }
@@ -313,7 +313,7 @@ mod tests {
 
         for status in statuses {
             let response = WorkflowResponse {
-                id: format!("test-{}", status),
+                id: format!("test-{status}"),
                 status: status.to_string(),
                 result: None,
             };

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! Hardware-Agnostic HSM Test Infrastructure
 //!
 //! This module provides test infrastructure that works with ANY HSM hardware

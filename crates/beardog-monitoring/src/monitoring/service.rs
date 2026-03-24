@@ -505,12 +505,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_alert_generation() -> Result<(), BearDogError> {
-        let config = MonitoringConfig {
-            // TEST_CATEGORY: unit
-            // TEST_DOMAIN: monitoring
-            // TEST_PRIORITY: normal
-            ..Default::default()
-        };
+        let config = Default::default();
 
         let service = MonitoringService::new(config);
         let metrics = service.collect_performance_metrics()?;

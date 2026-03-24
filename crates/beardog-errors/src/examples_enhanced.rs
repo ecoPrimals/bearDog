@@ -168,7 +168,7 @@ pub fn discover_service(service_name: &str, consul_addr: &str) -> Result<String,
         return Err(network_error_with_context(
             "Connection refused",
             consul_addr,
-            &format!("discover_service({})", service_name),
+            &format!("discover_service({service_name})"),
         ));
     }
 
@@ -360,7 +360,7 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         let msg = err.to_string();
-        assert!(msg.contains("@"));
+        assert!(msg.contains('@'));
         assert!(msg.contains("username@domain.com"));
     }
 

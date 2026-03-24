@@ -395,7 +395,7 @@ fn test_display_scope_violation() {
         allowed: vec!["a".into()],
         attempted: "b".into(),
     };
-    assert!(err.to_string().contains("b"));
+    assert!(err.to_string().contains('b'));
 }
 
 #[test]

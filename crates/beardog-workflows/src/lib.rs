@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![forbid(unsafe_code)]
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 //! # `BearDog` Workflows - Process Orchestration
 //!
 //! Comprehensive workflow orchestration and process management for `BearDog` applications,
 //! providing stateful workflow execution with audit logging and error recovery.
-
-#![cfg_attr(test, allow(clippy::expect_used))]
-#![cfg_attr(test, allow(clippy::unwrap_used))]
-
 //!
 //! ## Features
 //!
@@ -276,7 +273,7 @@ mod lib_tests {
         };
 
         let system = BearDogWorkflowSystem::new(repo, processor, observer);
-        assert!(format!("{:?}", system).contains("BearDogWorkflowSystem"));
+        assert!(format!("{system:?}").contains("BearDogWorkflowSystem"));
     }
 
     #[test]
@@ -299,7 +296,7 @@ mod lib_tests {
         };
 
         let system = BearDogWorkflowSystem::new(repo, processor, observer);
-        let debug_str = format!("{:?}", system);
+        let debug_str = format!("{system:?}");
         assert!(!debug_str.is_empty());
         assert!(debug_str.contains("service"));
     }
@@ -317,7 +314,7 @@ mod lib_tests {
             workflow_storage_path: "/var/lib/beardog/workflows".to_string(),
         };
 
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
         assert!(!debug_str.is_empty());
         assert!(debug_str.contains("WorkflowConfig"));
     }
@@ -370,8 +367,8 @@ mod lib_tests {
             handles.push(tokio::spawn(async move {
                 let mut locked = sys.lock().await;
                 let workflow = ExampleWorkflow::new(
-                    &format!("concurrent-{}", i),
-                    &format!("Concurrent Test {}", i),
+                    &format!("concurrent-{i}"),
+                    &format!("Concurrent Test {i}"),
                 );
                 locked
                     .execute_workflow(workflow, ProcessingContext::default())

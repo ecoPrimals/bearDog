@@ -5,6 +5,7 @@
 //! This module contains the main HSM provider enum and implementations.
 
 use super::configs::{AndroidHsmConfig, IosHsmConfig, SoftwareHsmConfig, StrongBoxHsmConfig};
+use crate::constants::time;
 use crate::canonical::providers_unified::traits::consolidated::{
     ConsolidatedProvider, ProviderInfo, ProviderHealth, ProviderMetrics, 
     ProviderType, HealthStatus, ProviderCapability
@@ -87,7 +88,7 @@ impl ConsolidatedProvider for HsmUnifiedProvider {
             status: HealthStatus::Healthy,
             last_check: SystemTime::now(),
             error_message: None,
-            uptime_seconds: 3600, // 1 hour example
+            uptime_seconds: time::SECONDS_PER_HOUR, // 1 hour example
             response_time_ms: 10,
         })
     }

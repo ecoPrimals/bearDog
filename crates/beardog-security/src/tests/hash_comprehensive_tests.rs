@@ -66,11 +66,7 @@ mod sha256_comprehensive {
             assert_eq!(
                 hash.len(),
                 32,
-                "Hash should always be 32 bytes for size {}",
-                // TEST_CATEGORY: integration
-                // TEST_DOMAIN: security
-                // TEST_PRIORITY: normal
-                size
+                "Hash should always be 32 bytes for size {size}"
             );
         }
         Ok(())
@@ -158,8 +154,7 @@ mod sha256_comprehensive {
         // Should differ in many bits (avalanche effect)
         assert!(
             diff_bits > 50,
-            "Only {} bits differ, avalanche effect weak",
-            diff_bits
+            "Only {diff_bits} bits differ, avalanche effect weak"
         );
         Ok(())
     }
@@ -264,8 +259,7 @@ mod sha512_comprehensive {
                 // TEST_CATEGORY: integration
                 // TEST_DOMAIN: security
                 // TEST_PRIORITY: normal
-                "Hash should always be 64 bytes for size {}",
-                size
+                "Hash should always be 64 bytes for size {size}"
             );
         }
         Ok(())

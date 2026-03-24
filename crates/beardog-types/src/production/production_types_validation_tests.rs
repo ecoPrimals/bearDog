@@ -50,7 +50,7 @@ mod validation_tests {
     #[test]
     fn test_environment_level_debug() {
         let level = EnvironmentLevel::Critical;
-        let debug_str = format!("{:?}", level);
+        let debug_str = format!("{level:?}");
         assert!(debug_str.contains("Critical"));
     }
 
@@ -98,7 +98,7 @@ mod validation_tests {
     // TEST_PRIORITY: normal
     fn test_operational_status_debug() {
         let status = OperationalStatus::Critical;
-        let debug_str = format!("{:?}", status);
+        let debug_str = format!("{status:?}");
         assert!(debug_str.contains("Critical"));
     }
 

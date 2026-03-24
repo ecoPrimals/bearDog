@@ -34,7 +34,7 @@ fn test_genetics_manager_with_custom_config() {
         authorization_genetics_enabled: false,
     };
 
-    let manager = GeneticsManager::with_config(config.clone());
+    let manager = GeneticsManager::with_config(config);
     assert!(!manager.config().entropy_collection_enabled);
     assert!(manager.config().genetic_spawning_enabled);
     assert!(!manager.config().ecosystem_evolution_enabled);
@@ -208,7 +208,7 @@ fn test_genetics_manager_multiple_updates() {
 #[test]
 fn test_genetics_config_debug() {
     let config = GeneticsConfig::default();
-    let debug_str = format!("{:?}", config);
+    let debug_str = format!("{config:?}");
     assert!(debug_str.contains("GeneticsConfig"));
 }
 
@@ -218,7 +218,7 @@ fn test_genetics_config_debug() {
 #[test]
 fn test_genetics_manager_debug() {
     let manager = GeneticsManager::new();
-    let debug_str = format!("{:?}", manager);
+    let debug_str = format!("{manager:?}");
     assert!(debug_str.contains("GeneticsManager"));
 }
 

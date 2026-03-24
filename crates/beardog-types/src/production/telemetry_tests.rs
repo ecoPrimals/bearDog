@@ -286,7 +286,7 @@ fn test_telemetry_collector_start_with_disabled() {
 #[test]
 fn test_telemetry_config_debug() {
     let config = TelemetryConfig::default();
-    let debug_str = format!("{:?}", config);
+    let debug_str = format!("{config:?}");
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: types
     // TEST_PRIORITY: normal
@@ -299,7 +299,7 @@ fn test_telemetry_config_debug() {
 fn test_telemetry_collector_debug() {
     let config = TelemetryConfig::default();
     let collector = TelemetryCollector::new(&config).expect("Should create collector");
-    let debug_str = format!("{:?}", collector);
+    let debug_str = format!("{collector:?}");
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: types
@@ -457,8 +457,8 @@ fn test_multiple_telemetry_collectors() {
     let collector2 = TelemetryCollector::new(&config2).expect("Should create collector2");
 
     // Both should exist independently
-    let debug1 = format!("{:?}", collector1);
-    let debug2 = format!("{:?}", collector2);
+    let debug1 = format!("{collector1:?}");
+    let debug2 = format!("{collector2:?}");
     assert!(!debug1.is_empty());
     assert!(!debug2.is_empty());
 }

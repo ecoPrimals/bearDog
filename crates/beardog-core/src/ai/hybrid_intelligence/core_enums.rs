@@ -194,7 +194,7 @@ mod tests {
     #[test]
     fn serde_roundtrip_decision_confidence() {
         let v = DecisionConfidence::High;
-        let json = serde_json::to_value(&v).expect("serialize DecisionConfidence");
+        let json = serde_json::to_value(v).expect("serialize DecisionConfidence");
         let back: DecisionConfidence =
             serde_json::from_value(json).expect("deserialize DecisionConfidence");
         assert!(matches!(back, DecisionConfidence::High));

@@ -520,7 +520,7 @@ reliability = 0.25
         };
 
         let best = d
-            .select_best(&[low.clone(), high.clone()])
+            .select_best(&[low, high])
             .expect("select_best with two candidates");
         assert_eq!(best.id, "b");
     }

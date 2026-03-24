@@ -32,6 +32,7 @@ use beardog_types::canonical::config::domains::threat::ThreatDetectionConfig;
 #[cfg(test)]
 mod analysis_tests {
     use super::*;
+    use crate::float_assert::near_f64;
 
     #[test]
     fn test_threat_detection_engine_new() {
@@ -101,14 +102,14 @@ mod analysis_tests {
         let rule = DetectionRule {
             id: "rule_to_remove".to_string(),
             name: "Remove Me".to_string(),
-            description: "".to_string(),
-            pattern: "".to_string(),
+            description: String::new(),
+            pattern: String::new(),
             severity: ThreatSeverity::Low,
             enabled: true,
             confidence: 0.5,
             condition: RuleCondition::FieldEquals {
-                field: "".to_string(),
-                value: "".to_string(),
+                field: String::new(),
+                value: String::new(),
             },
             rule_type: ThreatRuleType::Signature,
         };
@@ -134,14 +135,14 @@ mod analysis_tests {
             let rule = DetectionRule {
                 id: format!("rule{i}"),
                 name: format!("Rule {i}"),
-                description: "".to_string(),
-                pattern: "".to_string(),
+                description: String::new(),
+                pattern: String::new(),
                 severity: ThreatSeverity::Low,
                 enabled: true,
                 confidence: 0.5,
                 condition: RuleCondition::FieldEquals {
-                    field: "".to_string(),
-                    value: "".to_string(),
+                    field: String::new(),
+                    value: String::new(),
                 },
                 rule_type: ThreatRuleType::Signature,
             };
@@ -195,7 +196,7 @@ mod analysis_tests {
 
         let analysis = result.unwrap();
         assert!(!analysis.threat_detected); // Small data should not trigger threat
-        assert_eq!(analysis.confidence_score, 0.1);
+        near_f64(analysis.confidence_score, 0.1);
         assert_eq!(analysis.threat_type, ThreatType::Unknown);
         assert_eq!(engine.metrics.analyses_performed, 1);
         assert_eq!(engine.metrics.threats_detected, 0);
@@ -211,7 +212,7 @@ mod analysis_tests {
 
         let analysis = result.unwrap();
         assert!(analysis.threat_detected); // Large data triggers threat
-        assert_eq!(analysis.confidence_score, 0.8);
+        near_f64(analysis.confidence_score, 0.8);
         assert_eq!(analysis.threat_type, ThreatType::Malware);
         assert_eq!(engine.metrics.analyses_performed, 1);
         assert_eq!(engine.metrics.threats_detected, 1);
@@ -246,7 +247,7 @@ mod analysis_tests {
         assert_eq!(metrics.analyses_performed, 0);
         assert_eq!(metrics.threats_detected, 0);
         assert_eq!(metrics.false_positives, 0);
-        assert_eq!(metrics.detection_accuracy, 0.0);
+        near_f64(metrics.detection_accuracy, 0.0);
     }
 
     #[test]
@@ -259,7 +260,7 @@ mod analysis_tests {
         };
 
         assert!(result.threat_detected);
-        assert_eq!(result.confidence_score, 0.95);
+        near_f64(result.confidence_score, 0.95);
         assert_eq!(result.threat_type, ThreatType::Malware);
         assert!(result.details.contains("malware"));
     }
@@ -272,6 +273,7 @@ mod analysis_tests {
 #[cfg(test)]
 mod enrichment_tests {
     use super::*;
+    use crate::float_assert::near_f64;
 
     #[test]
     fn test_threat_enrichment_handler_new() {
@@ -296,7 +298,7 @@ mod enrichment_tests {
 
         let intel = intelligence.unwrap();
         assert_eq!(intel.description, "enriched");
-        assert_eq!(intel.confidence, 0.8);
+        near_f64(intel.confidence, 0.8);
     }
 
     #[test]
@@ -346,7 +348,7 @@ mod enrichment_tests {
     fn test_external_intelligence_default() {
         let intel = ExternalIntelligence::default();
         assert_eq!(intel.description, "none");
-        assert_eq!(intel.confidence, 0.0);
+        near_f64(intel.confidence, 0.0);
     }
 
     #[test]
@@ -357,7 +359,7 @@ mod enrichment_tests {
         };
 
         assert_eq!(intel.description, "Known APT group signature");
-        assert_eq!(intel.confidence, 0.95);
+        near_f64(intel.confidence, 0.95);
     }
 }
 
@@ -760,7 +762,7 @@ mod response_tests {
             ThreatSeverity::Critical,
         ] {
             let threat = ThreatEvent::new(
-                format!("threat_{:?}", severity),
+                format!("threat_{severity:?}"),
                 ThreatType::Intrusion,
                 severity,
                 ThreatSource::default(),

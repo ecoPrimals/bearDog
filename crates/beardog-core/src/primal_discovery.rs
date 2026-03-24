@@ -300,12 +300,11 @@ impl PrimalDiscovery {
             DiscoveryMethod::Multi(methods) => {
                 // Try each method in order
                 for method in methods {
-                    if matches!(method, DiscoveryMethod::Environment) {
-                        if let Ok(results) = self.discover_from_env_vars(&env_vars, &query) {
-                            if !results.is_empty() {
-                                return Ok(results);
-                            }
-                        }
+                    if matches!(method, DiscoveryMethod::Environment)
+                        && let Ok(results) = self.discover_from_env_vars(&env_vars, &query)
+                        && !results.is_empty()
+                    {
+                        return Ok(results);
                     }
                 }
                 Ok(Vec::new())

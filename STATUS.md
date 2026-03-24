@@ -18,8 +18,8 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`device.rs` refactored) |
-| **Tests** | 14,201 passing | Fully concurrent, zero sleeps in non-chaos |
-| **Coverage** | 87.0% line | llvm-cov workspace |
+| **Tests** | 14,351 passing | Fully concurrent, zero sleeps in non-chaos |
+| **Coverage** | 87.0%+ line | llvm-cov workspace (targeting 90%) |
 | **Serial Tests** | 0 | `#[serial]` fully eliminated |
 | **cargo deny** | 4/4 pass | Advisories, bans, licenses, sources |
 | **License** | AGPL-3.0-only | SPDX headers on all .rs files |
@@ -86,6 +86,19 @@
 
 ## Recent Improvements (March 23, 2026)
 
+### Wave 13: Deep Debt Elimination, Pedantic Clippy, Zero-Copy & Coverage Push
+
+- **Clippy fully clean** — 1,149 errors across 13+ crates eliminated; workspace `cargo clippy --all-targets --all-features -- -D warnings` exits 0
+- **Mechanical lint fixes** — `uninlined_format_args` (114), `redundant_closure` (30), `redundant_clone` (5), `float_cmp` (8 → epsilon helpers), `long_literal_lacking_separators` (8), `hand_coded_ip_address` (4 → `Ipv4Addr::LOCALHOST`), `single_char_pattern`, `empty_string_manually`, `needless_collect`, and more
+- **Test lint isolation** — Every crate `lib.rs` now has `#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]`; all integration test files have file-level allows; production code remains strict
+- **Magic number extraction** — 60+ bare numeric literals in `beardog-types` default impls → named constants (`SECONDS_PER_HOUR`, `SECONDS_PER_DAY`, `DEFAULT_MAX_ENTRIES`, `DEFAULT_MAX_RESPONSE_TIME_MS`, `DEFAULT_MAX_GENERATIONS`, etc.)
+- **Zero-copy optimization** — Clone-heavy production files evolved: destructuring over field clones (key_export, key_management), serialize-by-reference under locks, move semantics instead of clone-then-insert, reduced `Arc` reference counts
+- **150 new tests** — 74 tests across cli/deploy/tunnel + 76 tests across types/core/installer targeting uncovered error paths, defaults, serde roundtrips, configuration parsing
+- **License compliance** — `LICENSE-DOCS.md` added (CC-BY-SA 4.0 for docs per scyBorg); SPDX headers verified 2,026/2,026
+- **Stale docs updated** — `specs/README.md` and `specs/PROJECT_STATUS.md` aligned with current metrics
+- **14,351 tests passing** — Up from 14,201; 0 failures, 186 ignored
+- **All gates green** — fmt, clippy `-D warnings`, doc, test all clean
+
 ### Wave 12: Cross-Ecosystem Audit, Lint Tightening & Type Safety Evolution
 
 - **Full ecosystem audit** — Reviewed all wateringHole standards, 8 springs (primalSpring, neuralSpring, airSpring, wetSpring, hotSpring, healthSpring, groundSpring, ludoSpring), and all phase1/phase2 primals for absorption opportunities
@@ -97,7 +110,7 @@
 - **Dead code evolution** — `#[allow(dead_code)]` removed from `api_server.rs` (fields now logged), `ultimate_safety.rs`, `compliance_validation_tests.rs`; unused fields renamed with `_` prefix
 - **DI-first discovery** — `get_discovery_socket_paths` refactored to pure `build_discovery_socket_paths` with DI-friendly parameters; env-racing tests eliminated
 - **Coverage tests** — 40+ new tests across `beardog-deploy` and `beardog-installer` targeting error paths, boundary conditions, and invalid inputs
-- **14,201 tests passing** — Up from 14,161; 0 failures, 186 ignored
+- **14,351 tests passing** — Up from 14,201; 0 failures, 186 ignored
 - **All gates green** — fmt, clippy `-D warnings`, doc, test all clean
 
 ### Wave 11: Deep Coverage Push, Crypto Fault Injection & Zero-Copy IPC

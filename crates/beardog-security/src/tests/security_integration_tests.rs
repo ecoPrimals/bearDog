@@ -237,14 +237,14 @@ fn test_key_deletion() {
 // TEST_CATEGORY: integration
 // TEST_DOMAIN: security
 // TEST_PRIORITY: normal
-#[ignore] // Key rotation not yet implemented in current API
+#[ignore = "key rotation not yet implemented in current API"]
 fn test_key_rotation() {
     // Test pending key rotation API implementation
     // Placeholder preserved for future implementation
 }
 
 #[test]
-#[ignore] // Key expiration tracking not yet in current API
+#[ignore = "key expiration tracking not yet in current API"]
 fn test_key_expiration() {
     // Test pending expiration tracking API implementation
     // Placeholder preserved for future implementation
@@ -280,7 +280,7 @@ fn test_encryption_config() {
 // TEST_DOMAIN: security
 // TEST_PRIORITY: normal
 #[test]
-#[ignore] // SecurityMetrics module reorganized
+#[ignore = "SecurityMetrics module reorganized"]
 fn test_security_metrics() {
     // Test pending new metrics API stabilization
     // TEST_CATEGORY: integration

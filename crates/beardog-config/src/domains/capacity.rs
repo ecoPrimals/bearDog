@@ -290,8 +290,9 @@ mod tests {
         test_env.insert("BEARDOG_MAX_CONNECTIONS", "200");
         test_env.insert("BEARDOG_CACHE_MAX_ENTRIES", "50000");
 
-        let config =
-            CapacityConfig::from_env_provider(|key| test_env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            test_env.get(key).map(std::string::ToString::to_string)
+        });
 
         assert_eq!(config.default_channel_buffer, 2000);
         assert_eq!(config.max_connections, 200);
@@ -310,8 +311,9 @@ mod tests {
         let mut test_env = HashMap::new();
         test_env.insert("BEARDOG_MAX_CONNECTIONS", "not_a_number");
 
-        let config =
-            CapacityConfig::from_env_provider(|key| test_env.get(key).map(|s| s.to_string()));
+        let config = CapacityConfig::from_env_provider(|key| {
+            test_env.get(key).map(std::string::ToString::to_string)
+        });
 
         // Should fall back to default when parsing fails
         assert_eq!(config.max_connections, 100);
@@ -328,7 +330,7 @@ mod tests {
     #[test]
     fn test_capacity_config_debug() {
         let config = CapacityConfig::default();
-        let debug_str = format!("{:?}", config);
+        let debug_str = format!("{config:?}");
 
         assert!(debug_str.contains("CapacityConfig"));
         assert!(debug_str.contains("default_channel_buffer"));

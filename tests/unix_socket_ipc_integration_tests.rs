@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! Integration tests for Unix Socket IPC
 //!
 //! These tests verify the complete IPC flow for `BearDog`'s Unix socket server:

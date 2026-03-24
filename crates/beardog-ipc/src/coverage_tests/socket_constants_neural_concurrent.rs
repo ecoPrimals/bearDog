@@ -100,7 +100,7 @@ fn test_capability_serde_concurrent() {
                     1 => Capability::BTSP,
                     2 => Capability::Ed25519,
                     3 => Capability::Storage,
-                    _ => Capability::Custom(format!("custom_{}", i)),
+                    _ => Capability::Custom(format!("custom_{i}")),
                 };
                 let json = serde_json::to_string(&cap).unwrap();
                 let restored: Capability = serde_json::from_str(&json).unwrap();

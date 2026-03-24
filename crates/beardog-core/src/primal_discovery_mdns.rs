@@ -430,7 +430,7 @@ mod tests {
     #[test]
     fn get_local_addresses_includes_loopback() {
         let addrs = super::get_local_addresses();
-        assert!(addrs.iter().any(|a| a.is_loopback()));
+        assert!(addrs.iter().any(std::net::IpAddr::is_loopback));
     }
 
     #[test]
@@ -471,7 +471,7 @@ mod tests {
         if result.is_err() {
             // If it failed, log it but don't fail the test
             // Network conditions in CI/test environments may not support mDNS
-            eprintln!("mDNS announce failed (acceptable in test): {:?}", result);
+            eprintln!("mDNS announce failed (acceptable in test): {result:?}");
         }
         // Test passes as long as we didn't panic
     }

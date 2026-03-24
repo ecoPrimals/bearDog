@@ -19,6 +19,7 @@ use super::types::*;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::float_assert::near_f64;
     use std::sync::{Arc, Mutex};
     use std::time::{Duration, Instant};
 
@@ -52,14 +53,14 @@ mod tests {
                     ThreatEvent::new(
                         ThreatType::Malware,
                         ThreatSeverity::High,
-                        format!("threat_{}", i),
+                        format!("threat_{i}"),
                     )
                 } else {
                     // Generate normal event
                     ThreatEvent::new(
                         ThreatType::None,
                         ThreatSeverity::Info,
-                        format!("normal_{}", i),
+                        format!("normal_{i}"),
                     )
                 };
 
@@ -114,7 +115,7 @@ mod tests {
                         .process_event(&ThreatEvent::new(
                             ThreatType::None,
                             ThreatSeverity::Info,
-                            format!("thread_{}_{}", thread_id, i),
+                            format!("thread_{thread_id}_{i}"),
                         ));
                 }
             });
@@ -142,16 +143,16 @@ mod tests {
 
         // Test basic severity levels
         let low_threat = Threat::new(ThreatType::SuspiciousActivity, ThreatSeverity::Low);
-        assert_eq!(classifier.calculate_score(&low_threat), 25.0);
+        near_f64(classifier.calculate_score(&low_threat), 25.0);
 
         let medium_threat = Threat::new(ThreatType::UnusualAccess, ThreatSeverity::Medium);
-        assert_eq!(classifier.calculate_score(&medium_threat), 50.0);
+        near_f64(classifier.calculate_score(&medium_threat), 50.0);
 
         let high_threat = Threat::new(ThreatType::Malware, ThreatSeverity::High);
-        assert_eq!(classifier.calculate_score(&high_threat), 75.0);
+        near_f64(classifier.calculate_score(&high_threat), 75.0);
 
         let critical_threat = Threat::new(ThreatType::DataBreach, ThreatSeverity::Critical);
-        assert_eq!(classifier.calculate_score(&critical_threat), 100.0);
+        near_f64(classifier.calculate_score(&critical_threat), 100.0);
 
         // Test threat categorization
         assert_eq!(
@@ -203,13 +204,13 @@ mod tests {
         let mut confidence_threat = Threat::new(ThreatType::Malware, ThreatSeverity::High);
         confidence_threat.set_confidence(0.95);
 
-        assert_eq!(confidence_threat.confidence(), 0.95);
+        near_f64(confidence_threat.confidence(), 0.95);
 
         let adjusted_score = classifier.calculate_score_with_confidence(&confidence_threat);
         assert!(adjusted_score > 70.0); // High confidence should maintain high score
 
         let low_confidence_threat = Threat::new(ThreatType::Malware, ThreatSeverity::High);
-        let mut low_conf = low_confidence_threat.clone();
+        let mut low_conf = low_confidence_threat;
         low_conf.set_confidence(0.3);
 
         let adjusted_low = classifier.calculate_score_with_confidence(&low_conf);
@@ -280,7 +281,7 @@ mod tests {
 
         let pattern = ThreatPattern::new("test_pattern", r"suspicious", ThreatSeverity::Medium);
 
-        pattern_refiner.add_pattern(pattern.clone());
+        pattern_refiner.add_pattern(pattern);
 
         // Mark matches as false positives
         pattern_refiner.record_false_positive("test_pattern", "suspicious but benign context");

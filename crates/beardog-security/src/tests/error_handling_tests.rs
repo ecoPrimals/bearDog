@@ -17,10 +17,10 @@ enum MockSecurityError {
 impl std::fmt::Display for MockSecurityError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Authentication(msg) => write!(f, "Authentication error: {}", msg),
-            Self::Authorization(msg) => write!(f, "Authorization error: {}", msg),
-            Self::Cryptography(msg) => write!(f, "Cryptography error: {}", msg),
-            Self::Validation(msg) => write!(f, "Validation error: {}", msg),
+            Self::Authentication(msg) => write!(f, "Authentication error: {msg}"),
+            Self::Authorization(msg) => write!(f, "Authorization error: {msg}"),
+            Self::Cryptography(msg) => write!(f, "Cryptography error: {msg}"),
+            Self::Validation(msg) => write!(f, "Validation error: {msg}"),
         }
     }
 }
@@ -83,7 +83,7 @@ fn test_error_display_format() {
     // TEST_DOMAIN: security
     // TEST_PRIORITY: important
 
-    let error_string = format!("{}", error);
+    let error_string = format!("{error}");
     assert!(
         !error_string.is_empty(),
         "Error should have display representation"

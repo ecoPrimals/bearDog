@@ -78,7 +78,7 @@ fn test_json_rpc_request_debug_and_clone() {
     };
     let cloned = req.clone();
     assert_eq!(cloned.method, req.method);
-    assert!(format!("{:?}", req).contains("primal.ping"));
+    assert!(format!("{req:?}").contains("primal.ping"));
 }
 
 #[test]
@@ -209,7 +209,7 @@ fn test_primal_info_debug_and_clone() {
     };
     let cloned = info.clone();
     assert_eq!(cloned.primal_id, info.primal_id);
-    assert!(format!("{:?}", info).contains("beardog"));
+    assert!(format!("{info:?}").contains("beardog"));
 }
 
 // ============================================================================

@@ -283,7 +283,8 @@ fn deployment_report_zero_total() {
         arch: Architecture::X86_64,
         os: OperatingSystem::Linux,
     };
-    assert_eq!(report.success_rate(), 0.0);
+    let rate = report.success_rate();
+    assert!(rate.abs() < 1e-9, "expected 0.0, got {rate}");
 }
 
 // -- ValidationReport: Display for all branches --
@@ -367,7 +368,7 @@ async fn validator_small_file_not_size_reasonable() {
 
 #[test]
 fn validator_default_is_new() {
-    let _ = BinaryValidator::default();
+    let _ = BinaryValidator;
 }
 
 // -- BinaryValidator: validate_all with mix --

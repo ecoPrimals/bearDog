@@ -12,7 +12,7 @@ mod error_path_tests {
     #[test]
     fn test_invalid_input_error() {
         let error = BearDogError::invalid_input("Test error");
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(!display.is_empty());
     }
 
@@ -129,7 +129,7 @@ mod error_path_tests {
     #[test]
     fn test_error_with_empty_message() {
         let error = BearDogError::invalid_input("");
-        let display = format!("{}", error);
+        let display = format!("{error}");
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: errors
         // TEST_PRIORITY: important
@@ -143,7 +143,7 @@ mod error_path_tests {
         // TEST_PRIORITY: important
         let long_msg = "error ".repeat(100);
         let error = BearDogError::invalid_input(&long_msg);
-        let display = format!("{}", error);
+        let display = format!("{error}");
         assert!(!display.is_empty());
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: errors
@@ -156,7 +156,7 @@ mod error_path_tests {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: errors
         // TEST_PRIORITY: important
-        let debug = format!("{:?}", error);
+        let debug = format!("{error:?}");
         assert!(!debug.is_empty());
     }
 

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used)]
 //! Simple Integration Scenarios
 //!
 //! High-value integration tests for common workflows,

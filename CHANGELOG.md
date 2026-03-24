@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### March 24, 2026 -- Wave 13: Clippy Sweep, Constants, Zero-Copy, Tests & Docs
+
+- **Clippy fully clean** — 1,149 errors eliminated workspace-wide
+- **Magic number extraction** — 60+ bare literals → named constants
+- **Zero-copy optimization** — clone-heavy production files evolved
+- **150 new tests** (14,201 → 14,351)
+- **License compliance** — `LICENSE-DOCS.md` added (CC-BY-SA 4.0)
+- **Stale docs updated**
+
 ### March 23, 2026 -- Wave 12: Cross-Ecosystem Audit, Lint Tightening & Type Safety Evolution
 
 - **Full ecosystem audit** — Reviewed all wateringHole standards, 8 springs, and all phase1/phase2 primals for absorption opportunities

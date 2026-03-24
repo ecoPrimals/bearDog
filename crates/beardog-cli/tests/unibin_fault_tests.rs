@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(clippy::expect_used, clippy::unwrap_used, clippy::float_cmp)]
+
 //! Fault injection tests for UniBin commands - resilience testing
 
 use assert_cmd::Command;
@@ -191,7 +193,7 @@ fn test_doctor_concurrent_executions() {
                 let mut cmd = Command::cargo_bin("beardog").unwrap();
                 cmd.arg("doctor");
                 let result = cmd.assert().success();
-                eprintln!("Concurrent doctor check {} completed", i);
+                eprintln!("Concurrent doctor check {i} completed");
                 result
             })
         })

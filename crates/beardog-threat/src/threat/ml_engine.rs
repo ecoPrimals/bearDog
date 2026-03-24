@@ -343,6 +343,7 @@ pub struct MlEngineStats {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::float_assert::near_f64;
     use crate::threat::ThreatSeverity;
     use chrono::Utc;
 
@@ -445,7 +446,7 @@ mod tests {
 
         for i in 0..5 {
             let model = MlModel {
-                name: format!("model-{}", i),
+                name: format!("model-{i}"),
                 version: "1.0".to_string(),
                 model_type: "test".to_string(),
                 accuracy: 0.9,
@@ -479,14 +480,14 @@ mod tests {
             .await
             .expect("predict_threat in test");
 
-        assert_eq!(pred1.confidence, pred2.confidence);
+        near_f64(pred1.confidence, pred2.confidence);
         assert_eq!(pred1.risk_level, pred2.risk_level);
     }
 
     #[test]
     fn test_risk_level_debug() {
         let risk = RiskLevel::Critical;
-        let debug_str = format!("{:?}", risk);
+        let debug_str = format!("{risk:?}");
         assert!(debug_str.contains("Critical"));
     }
 
@@ -508,7 +509,7 @@ mod tests {
         };
 
         let cloned = pred.clone();
-        assert_eq!(pred.confidence, cloned.confidence);
+        near_f64(pred.confidence, cloned.confidence);
         assert_eq!(pred.risk_level, cloned.risk_level);
     }
 
@@ -560,9 +561,7 @@ mod tests {
             let score = engine.calculate_threat_score(&event);
             assert!(
                 score >= min_score,
-                "Event {} should have score >= {}",
-                event_type,
-                min_score
+                "Event {event_type} should have score >= {min_score}"
             );
         }
     }
@@ -618,7 +617,7 @@ mod tests {
             processing_time_ms: 50,
         };
 
-        let debug_str = format!("{:?}", pred);
+        let debug_str = format!("{pred:?}");
         assert!(!debug_str.is_empty());
         assert!(debug_str.contains("MlPrediction"));
     }
@@ -633,7 +632,7 @@ mod tests {
             last_updated: Utc::now(),
         };
 
-        let debug_str = format!("{:?}", model);
+        let debug_str = format!("{model:?}");
         assert!(!debug_str.is_empty());
         assert!(debug_str.contains("MlModel"));
     }

@@ -74,7 +74,7 @@ mod witness_tests {
     #[test]
     fn test_witness_verification_error_display() {
         let err = WitnessVerificationError::SignatureExpired {
-            age_secs: 100000,
+            age_secs: 100_000,
             max_secs: 86400,
         };
         let msg = format!("{err}");
@@ -124,7 +124,7 @@ mod witness_tests {
     fn test_verify_empty_device_id() {
         let verifier = GenesisWitnessVerifier::permissive();
         let witness = GenesisWitness::new(
-            "".to_string(), // empty device ID
+            String::new(), // empty device ID
             vec![0u8; 32],
             PhysicalChannelType::HardwareKey,
             current_timestamp(),

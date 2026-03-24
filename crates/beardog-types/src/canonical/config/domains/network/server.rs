@@ -156,7 +156,7 @@ mod tests {
         let config = SocketBufferConfiguration::default();
         assert!(config.validate().is_ok());
 
-        let mut invalid_config = config.clone();
+        let mut invalid_config = config;
         invalid_config.send_buffer_size = 0;
         assert!(invalid_config.validate().is_err());
     }

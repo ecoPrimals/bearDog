@@ -486,7 +486,7 @@ mod tests {
     #[test]
     fn test_witness_signing_message_format() {
         let node_id = "test-node-123";
-        let timestamp = 1735000000u64;
+        let timestamp = 1_735_000_000_u64;
         let pubkey = vec![1u8; 32];
 
         let message = GenesisWitness::create_signing_message(node_id, timestamp, &pubkey);
@@ -515,7 +515,7 @@ mod tests {
             attestation: None,
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert!(!proof.verify().expect("verify should return Result in test"));
     }
@@ -527,7 +527,7 @@ mod tests {
             attestation: Some(vec![1u8; 64]),
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert!(
             proof
@@ -543,7 +543,7 @@ mod tests {
             attestation: None,
             verification_codes: Some(vec!["CODE123".to_string()]),
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert!(proof.verify().expect("verify should return Result in test"));
     }
@@ -555,7 +555,7 @@ mod tests {
             attestation: None,
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert!(!proof.verify().expect("verify should return Result in test"));
     }
@@ -567,7 +567,7 @@ mod tests {
             attestation: None,
             verification_codes: Some(vec![]),
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert!(!proof.verify().expect("verify should return Result in test"));
     }
@@ -579,7 +579,7 @@ mod tests {
             attestation: None,
             verification_codes: None,
             pairing_data: Some(vec![1u8; 32]),
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert!(proof.verify().expect("verify should return Result in test"));
     }
@@ -591,7 +591,7 @@ mod tests {
             attestation: None,
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert!(!proof.verify().expect("verify should return Result in test"));
     }
@@ -603,7 +603,7 @@ mod tests {
             attestation: Some(vec![1u8; 32]),
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert!(proof.verify().expect("verify should return Result in test"));
     }
@@ -615,7 +615,7 @@ mod tests {
             attestation: None,
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert!(!proof.verify().expect("verify should return Result in test"));
     }
@@ -627,7 +627,7 @@ mod tests {
             attestation: None,
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert_eq!(proof.trust_level(), TrustLevel::Maximum);
     }
@@ -641,7 +641,7 @@ mod tests {
             attestation: Some(vec![1u8; 16]), // too short for software mode
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert!(
             !proof
@@ -657,7 +657,7 @@ mod tests {
             attestation: Some(vec![1u8; 64]),
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert!(
             proof
@@ -673,7 +673,7 @@ mod tests {
             attestation: Some(vec![0u8; 64]), // all zeros
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert!(
             !proof
@@ -689,7 +689,7 @@ mod tests {
             attestation: Some(vec![42u8; 1]), // any non-empty
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert!(
             proof
@@ -705,7 +705,7 @@ mod tests {
             attestation: Some(vec![]), // empty
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert!(
             !proof
@@ -721,7 +721,7 @@ mod tests {
             attestation: Some(vec![1u8; 128]),
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         // On linux, this uses verify_tpm_attestation which checks len >= 64
         let result = proof
@@ -737,7 +737,7 @@ mod tests {
             attestation: Some(vec![1u8; 64]), // valid for software fallback
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert!(
             proof
@@ -753,7 +753,7 @@ mod tests {
             attestation: Some(vec![]),
             verification_codes: None,
             pairing_data: None,
-            timestamp: 1735000000,
+            timestamp: 1_735_000_000,
         };
         assert!(!proof.verify().expect("verify should return Result in test"));
     }
@@ -806,10 +806,10 @@ mod tests {
                 device_id: "witness".to_string(),
                 public_key: vec![1u8; 32],
                 physical_channel: PhysicalChannelType::HardwareKey,
-                timestamp: 1735000000,
+                timestamp: 1_735_000_000,
                 signature: vec![0u8; 64],
             },
-            birth_timestamp: 1735000000,
+            birth_timestamp: 1_735_000_000,
             trust_level: TrustLevel::High,
         };
 
@@ -851,10 +851,10 @@ mod tests {
                 device_id: "witness".to_string(),
                 public_key: vec![1u8; 32],
                 physical_channel: PhysicalChannelType::HardwareKey,
-                timestamp: 1735000000,
+                timestamp: 1_735_000_000,
                 signature: vec![0u8; 64],
             },
-            birth_timestamp: 1735000000,
+            birth_timestamp: 1_735_000_000,
             trust_level: TrustLevel::High,
         };
 
