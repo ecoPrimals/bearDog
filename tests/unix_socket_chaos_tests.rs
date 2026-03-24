@@ -123,7 +123,7 @@ async fn chaos_test_connection_storm() {
                 });
 
                 if let Ok(response) = send_request(&mut stream, request).await
-                    && response["result"]["status"] == "healthy"
+                    && response["result"]["status"] == "alive"
                 {
                     success_count.fetch_add(1, Ordering::SeqCst);
                 }
@@ -164,7 +164,7 @@ async fn chaos_test_rapid_connect_disconnect() {
         });
 
         let response = send_request(&mut stream, request).await.unwrap();
-        assert_eq!(response["result"]["status"], "healthy");
+        assert_eq!(response["result"]["status"], "alive");
 
         // Immediate disconnect
         drop(stream);
@@ -176,7 +176,7 @@ async fn chaos_test_rapid_connect_disconnect() {
     let mut stream = UnixStream::connect(&socket_path).await.unwrap();
     let request = json!({"jsonrpc": "2.0", "method": "health", "id": 999});
     let response = send_request(&mut stream, request).await.unwrap();
-    assert_eq!(response["result"]["status"], "healthy");
+    assert_eq!(response["result"]["status"], "alive");
 
     server.stop().await.unwrap();
     server_handle.abort();
@@ -314,7 +314,7 @@ async fn chaos_test_concurrent_request_flood() {
                     });
 
                     if let Ok(response) = send_request(&mut stream, request).await
-                        && response["result"]["status"] == "healthy"
+                        && response["result"]["status"] == "alive"
                     {
                         successful_requests.fetch_add(1, Ordering::SeqCst);
                     }

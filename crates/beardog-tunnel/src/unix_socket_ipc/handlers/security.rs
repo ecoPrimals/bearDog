@@ -147,7 +147,7 @@ impl SecurityHandler {
         let our_family = self.identity.family_id();
         let our_node = self.identity.node_id();
 
-        // Phase 1: Dual representation with capability hints + Songbird decision field
+        // Phase 1: Dual representation with capability hints + wire decision field
         let (trust_level, trust_level_name, decision, reason, allowed_caps, denied_caps) =
             if peer_family == our_family {
                 info!(
@@ -198,9 +198,9 @@ impl SecurityHandler {
 
         // Phase 1 Response: Dual representation (int + string) with capability hints + decision field
         Ok(serde_json::json!({
-            "decision": decision,                  // Songbird requires this field
+            "decision": decision,                  // Required by callers (wire compatibility)
             "trust_level": trust_level,           // Integer (compact, backward compat)
-            "trust_level_name": trust_level_name, // String (Songbird expects this)
+            "trust_level_name": trust_level_name, // String (callers expect this)
             "reason": reason,
             "peer_id": peer_id,
             "peer_family": peer_family,

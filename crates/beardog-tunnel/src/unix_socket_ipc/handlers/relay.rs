@@ -46,7 +46,7 @@ use tracing::{debug, info, warn};
 
 /// Relay authorization handler
 ///
-/// Implements lineage-gated relay authorization. When Songbird's relay server
+/// Implements lineage-gated relay authorization. When a relay server
 /// receives a relay allocation request, it calls `relay.authorize` to verify
 /// the requester is a legitimate family member before allowing relay usage.
 pub struct RelayHandler {

@@ -51,6 +51,9 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const NAME: &str = env!("CARGO_PKG_NAME");
 
 #[cfg(test)]
+mod test_env_lock;
+
+#[cfg(test)]
 mod coverage_boost_wave10;
 
 #[cfg(test)]

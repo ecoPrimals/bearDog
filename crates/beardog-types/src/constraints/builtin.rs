@@ -349,7 +349,10 @@ fn format_bytes(bytes: u64) -> String {
     const GB: u64 = MB * 1024;
     const TB: u64 = GB * 1024;
 
-    #[allow(clippy::cast_precision_loss)] // Acceptable for human-readable display
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "display/metric conversion, precision loss acceptable"
+    )]
     if bytes >= TB {
         format!("{:.2} TB", bytes as f64 / TB as f64)
     } else if bytes >= GB {

@@ -12,7 +12,7 @@ impl BearDogCore {
         dead_code,
         reason = "pub(crate) HSM init hook for ecosystem integration"
     )]
-    #[allow(clippy::unused_self, reason = "will use self when fully implemented")]
+    #[expect(clippy::unused_self, reason = "trait conformance requires &self")]
     pub(crate) fn initialize_hsm_providers(&self) -> Result<(), BearDogError> {
         info!("🔧 Initializing universal HSM providers");
         info!("🛠️ Initializing Software HSM provider");
@@ -32,7 +32,7 @@ impl BearDogCore {
         dead_code,
         reason = "pub(crate) HSM shutdown hook for ecosystem cleanup"
     )]
-    #[allow(clippy::unused_self, reason = "will use self when fully implemented")]
+    #[expect(clippy::unused_self, reason = "trait conformance requires &self")]
     pub(crate) fn shutdown_hsm_providers(&self) -> Result<(), BearDogError> {
         debug!("🔍 Closing hardware HSM connections");
 
@@ -47,7 +47,7 @@ impl BearDogCore {
 
     /// Check HSM health - used by health monitoring
     #[allow(dead_code, reason = "pub(crate) HSM health hook for monitoring")]
-    #[allow(clippy::unused_self, reason = "will use self when fully implemented")]
+    #[expect(clippy::unused_self, reason = "trait conformance requires &self")]
     pub(crate) fn check_hsm_health(&self) -> HealthStatus {
         debug!("🏥 Checking HSM provider health");
 

@@ -10,7 +10,10 @@ use std::path::PathBuf;
 ///
 /// **Note**: Contains multiple boolean flags for fine-grained HSM control.
 /// Each flag enables/disables a specific HSM provider type.
-#[allow(clippy::struct_excessive_bools)]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "configuration struct: one bool per feature flag"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmConfig {
     /// Auto-detect available HSMs

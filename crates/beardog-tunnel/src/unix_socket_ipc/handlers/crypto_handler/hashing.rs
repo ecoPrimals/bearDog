@@ -91,7 +91,7 @@ pub async fn route(
         }
 
         "beardog.crypto.sha3_256" => {
-            info!("🧅 Crypto: beardog.crypto.sha3_256 (Songbird Onion Service)");
+            info!("🧅 Crypto: beardog.crypto.sha3_256 (onion service crypto)");
             let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
             Ok(Some(
                 handle_sha3_256(params_ref).map_err(|e| e.to_string())?,

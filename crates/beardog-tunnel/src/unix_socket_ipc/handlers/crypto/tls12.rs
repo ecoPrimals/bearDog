@@ -2,8 +2,8 @@
 
 //! TLS 1.2 cryptographic operations
 //!
-//! This module provides TLS 1.2-specific cryptographic operations for Songbird
-//! and other primals that need backward compatibility with older systems.
+//! This module provides TLS 1.2-specific cryptographic operations for calling
+//! primals that need backward compatibility with older systems.
 //!
 //! # Overview
 //!
@@ -16,7 +16,7 @@
 //! # Architecture: Tower Atomic Pattern
 //!
 //! BearDog provides the cryptographic "atoms" via JSON-RPC:
-//! - Songbird orchestrates the TLS 1.2 handshake
+//! - The calling primal orchestrates the TLS 1.2 handshake
 //! - BearDog executes the crypto operations
 //! - Zero crypto code duplication across primals
 //! - Pure Rust for both (ecoBin compliant)
@@ -71,7 +71,7 @@
 //! # Created
 //!
 //! January 27, 2026 - Deep Debt Evolution Session\
-//! Requested by: Songbird team for TLS 1.2 backward compatibility
+//! Added for TLS 1.2 backward compatibility (interoperability with legacy stacks)
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;

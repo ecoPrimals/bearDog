@@ -229,7 +229,10 @@ impl SystemState {
     pub fn memory_usage_percent(&self) -> Option<f64> {
         match (self.memory_used_bytes, self.memory_total_bytes) {
             // Note: Precision loss acceptable for percentage calculation
-            #[allow(clippy::cast_precision_loss)]
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "display/metric conversion, precision loss acceptable"
+            )]
             (Some(used), Some(total)) if total > 0 => Some((used as f64 / total as f64) * 100.0),
             _ => None,
         }

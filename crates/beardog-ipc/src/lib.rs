@@ -44,8 +44,10 @@
 //! ```
 
 pub mod client;
+pub mod dispatch;
 pub mod error;
 pub mod isomorphic; // Isomorphic IPC client discovery (Jan 31, 2026)
+pub mod method_names;
 pub mod neural_registration; // Neural API auto-registration (Tower Atomic)
 pub mod protocol;
 pub mod registry_client;
@@ -66,7 +68,9 @@ pub mod multi_transport;
 pub mod protocol_router;
 
 pub use client::SongbirdClient;
+pub use dispatch::{DispatchOutcome, IpcErrorPhase};
 pub use error::{IpcError, IpcResult};
+pub use method_names::normalize_method;
 pub use types::{Capability, DiscoveryQuery, ServiceInfo};
 // Neural API auto-registration (Tower Atomic TRUE PRIMAL)
 pub use neural_registration::{

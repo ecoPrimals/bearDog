@@ -452,6 +452,9 @@ mod tests {
 
     #[test]
     fn test_genome_bundle_defaults_falls_back_when_env_override_has_no_valid_tokens() {
+        let _guard = crate::test_env_lock::ECOPRIMALS_GENOME_TARGETS_LOCK
+            .lock()
+            .expect("ECOPRIMALS_GENOME_TARGETS test lock poisoned");
         beardog_errors::process_env::set_var("ECOPRIMALS_GENOME_TARGETS", ", , ");
         let defaults = PrimalName::genome_bundle_defaults();
         beardog_errors::process_env::remove_var("ECOPRIMALS_GENOME_TARGETS");

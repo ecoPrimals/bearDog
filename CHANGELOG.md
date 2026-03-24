@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### March 24, 2026 -- Wave 15: Ecosystem Absorption, IPC Evolution, Semantic Naming v2.1.0 & Self-Knowledge
+
+- **IPC error types** — `DispatchOutcome` / `IpcErrorPhase` from rhizoCrypt/LoamSpine pattern; `route_with_outcome()` + `normalize_method()`
+- **Health v2.1.0** — Differentiated liveness/readiness/deep-check per wateringHole standard
+- **Self-knowledge** — ~75 Songbird references removed from production handlers
+- **`#[expect(reason)]`** — 30+ `#[allow(clippy::)]` evolved to `#[expect]` with reasons; 6 stale removed
+- **Production stubs evolved** — Migration adapters, universal adapter timing, BirdSong → `not_implemented`
+- **deny.toml** — 8 cross-primal type crate bans; wire-only contract enforcement
+- **60+ deep tests** — integration HTTP router, disaster recovery, result extensions, command runner
+- **Coverage 87.08% → 87.35%** (lines)
+- **Discovery docs** — 5-tier pattern and credential resolution in CONTEXT.md/ARCHITECTURE.md
+- **14,447+ tests passing**
+
 ### March 24, 2026 -- Wave 14: Deep Debt Audit, Test Evolution, scyBorg Compliance & Zero-Copy
 
 - **Failing test fixed** — `test_auto_initialize_environment_precedence`

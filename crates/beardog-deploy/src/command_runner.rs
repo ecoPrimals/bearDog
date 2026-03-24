@@ -371,4 +371,134 @@ mod system_and_mock_coverage {
             .expect_err("bounded mock is adb-only");
         assert_eq!(e2.kind(), std::io::ErrorKind::NotFound);
     }
+
+    #[test]
+    fn mock_devices_list_nonzero_exit_surfaces_stderr() {
+        let mut m = MockAdbCommandRunner::new();
+        m.fail_adb_devices_exit = true;
+        let out = m.run("adb", &["devices", "-l"]).expect("output");
+        assert!(!out.status.success());
+        assert!(!out.stderr.is_empty());
+    }
+
+    #[test]
+    fn mock_empty_devices_list() {
+        let m = MockAdbCommandRunner::empty_devices();
+        let out = m.run("adb", &["devices", "-l"]).expect("output");
+        assert!(out.status.success());
+        let s = String::from_utf8_lossy(&out.stdout);
+        assert!(s.contains("List of devices"));
+    }
+
+    #[test]
+    fn mock_install_failure_nonzero() {
+        let mut m = MockAdbCommandRunner::new();
+        m.fail_adb_install = true;
+        let out = m
+            .run("adb", &["-s", "emulator-5554", "install", "x.apk"])
+            .expect("output");
+        assert!(!out.status.success());
+    }
+
+    #[test]
+    fn mock_install_ambiguous_stdout() {
+        let mut m = MockAdbCommandRunner::new();
+        m.install_stdout_without_success_marker = true;
+        let out = m
+            .run("adb", &["-s", "emulator-5554", "install", "x.apk"])
+            .expect("output");
+        assert!(out.status.success());
+        assert!(!String::from_utf8_lossy(&out.stdout).contains("Success"));
+    }
+
+    #[test]
+    fn mock_logcat_snapshot_failure() {
+        let mut m = MockAdbCommandRunner::new();
+        m.fail_logcat_snapshot = true;
+        let out = m
+            .run("adb", &["-s", "emulator-5554", "logcat", "-d"])
+            .expect("output");
+        assert!(!out.status.success());
+    }
+
+    #[test]
+    fn mock_getprop_failure() {
+        let mut m = MockAdbCommandRunner::new();
+        m.fail_getprop = true;
+        let out = m
+            .run(
+                "adb",
+                &[
+                    "-s",
+                    "emulator-5554",
+                    "shell",
+                    "getprop",
+                    "ro.build.version.sdk",
+                ],
+            )
+            .expect("output");
+        assert!(!out.status.success());
+    }
+
+    #[test]
+    fn mock_shell_am_failure() {
+        let mut m = MockAdbCommandRunner::new();
+        m.fail_shell_am = true;
+        let out = m
+            .run(
+                "adb",
+                &["-s", "emulator-5554", "shell", "am", "start", "-n", "a/b"],
+            )
+            .expect("output");
+        assert!(!out.status.success());
+    }
+
+    #[test]
+    fn mock_pm_list_features_io_error() {
+        let mut m = MockAdbCommandRunner::new();
+        m.pm_list_features_io_error = true;
+        let e = m
+            .run(
+                "adb",
+                &["-s", "emulator-5554", "shell", "pm", "list", "features"],
+            )
+            .expect_err("io error");
+        assert_eq!(e.kind(), std::io::ErrorKind::Other);
+    }
+
+    #[test]
+    fn mock_logcat_follow_timeout() {
+        let mut m = MockAdbCommandRunner::new();
+        m.logcat_follow_yields_timeout = true;
+        let e = m
+            .run_bounded(
+                "adb",
+                &["-s", "emulator-5554", "logcat"],
+                Duration::from_millis(1),
+            )
+            .expect_err("timeout");
+        assert_eq!(e.kind(), std::io::ErrorKind::TimedOut);
+    }
+
+    #[test]
+    fn mock_logcat_follow_exit_fail() {
+        let mut m = MockAdbCommandRunner::new();
+        m.logcat_follow_bounded_exit_fail = true;
+        let out = m
+            .run_bounded(
+                "adb",
+                &["-s", "emulator-5554", "logcat"],
+                Duration::from_secs(2),
+            )
+            .expect("output");
+        assert!(!out.status.success());
+    }
+
+    #[test]
+    fn mock_fail_adb_spawn() {
+        let mut m = MockAdbCommandRunner::new();
+        m.fail_adb_spawn = true;
+        let e = m.run("adb", &["devices", "-l"]).expect_err("spawn");
+        assert_eq!(e.kind(), std::io::ErrorKind::NotFound);
+    }
 }

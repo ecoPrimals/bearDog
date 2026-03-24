@@ -107,6 +107,12 @@ pub mod constructors_unified;
 /// Extension traits and helpers for idiomatic error handling in Rust.
 pub mod idiomatic;
 
+/// Result/option validation extension traits (additional context helpers).
+#[allow(missing_docs)]
+pub mod result_extensions;
+
+pub use result_extensions::{ErrorChainExt, OptionValidationExt, ResultValidationExt};
+
 /// Enhanced error constructor examples
 ///
 /// Real-world examples demonstrating how to use enhanced error constructors

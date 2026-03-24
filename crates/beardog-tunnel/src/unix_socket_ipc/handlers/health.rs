@@ -24,9 +24,13 @@ use tracing::info;
 /// - `health.readiness` - Ecosystem standard readiness probe
 /// - `health.check` - Ecosystem standard health check
 ///
-/// All return the same response with service metadata.
+/// Per Semantic Method Naming Standard v2.1.0:
+/// - Liveness (`ping`, `health`, `health.liveness`) → minimal `{"status":"alive"}` response
+/// - Readiness (`health.readiness`) → includes protocol and capabilities count
+/// - Deep check (`status`, `check`, `health.check`) → full health with timestamp
 pub struct HealthHandler {
     identity: IdentityHints,
+    capabilities_count: usize,
 }
 
 impl Default for HealthHandler {
@@ -41,12 +45,25 @@ impl HealthHandler {
     pub fn new() -> Self {
         Self {
             identity: IdentityHints::from_env(),
+            capabilities_count: 0,
+        }
+    }
+
+    /// Production with known capabilities count (set during registry construction).
+    #[must_use]
+    pub fn with_capabilities(count: usize) -> Self {
+        Self {
+            identity: IdentityHints::from_env(),
+            capabilities_count: count,
         }
     }
 
     /// Tests / DI: explicit identity hints (no `PRIMAL_NAME` env mutation).
     pub fn with_identity_hints(identity: IdentityHints) -> Self {
-        Self { identity }
+        Self {
+            identity,
+            capabilities_count: 0,
+        }
     }
 }
 
@@ -66,19 +83,46 @@ impl MethodHandler for HealthHandler {
 
     async fn handle(
         &self,
-        _method: &str,
+        method: &str,
         _params: Option<&serde_json::Value>,
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
-        info!("🏥 Health check requested");
+        let primal = get_primal_name_with(&self.identity);
+        let version = env!("CARGO_PKG_VERSION");
 
-        Ok(serde_json::json!({
-            "status": "healthy",
-            "primal": get_primal_name_with(&self.identity),
-            "version": env!("CARGO_PKG_VERSION"),
-            "protocol": "JSON-RPC",
-            "timestamp": Utc::now().to_rfc3339(),
-        }))
+        match method {
+            // Liveness: minimal, fast — "am I alive?"
+            "ping" | "health" | "health.liveness" => {
+                info!("🏥 Liveness probe");
+                Ok(serde_json::json!({
+                    "status": "alive",
+                    "primal": primal,
+                    "version": version,
+                }))
+            }
+            // Readiness: "can I serve requests?"
+            "health.readiness" => {
+                info!("🏥 Readiness probe");
+                Ok(serde_json::json!({
+                    "status": "ready",
+                    "primal": primal,
+                    "version": version,
+                    "protocol": "JSON-RPC",
+                    "capabilities_count": self.capabilities_count,
+                }))
+            }
+            // Deep check: full health with timestamp
+            _ => {
+                info!("🏥 Health check requested");
+                Ok(serde_json::json!({
+                    "status": "healthy",
+                    "primal": primal,
+                    "version": version,
+                    "protocol": "JSON-RPC",
+                    "timestamp": Utc::now().to_rfc3339(),
+                }))
+            }
+        }
     }
 }
 
@@ -103,25 +147,63 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_health_check_response() {
+    async fn test_liveness_response() {
         let handler = HealthHandler::with_identity_hints(IdentityHints {
             primal_name: Some("beardog".to_string()),
             ..Default::default()
         });
-
-        // Use safe mock provider (health handler doesn't actually use it)
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
-        let result = handler.handle("ping", None, &btsp_provider).await;
+        for method in &["ping", "health", "health.liveness"] {
+            let result = handler
+                .handle(method, None, &btsp_provider)
+                .await
+                .expect("liveness should succeed");
+            assert_eq!(result["status"], "alive", "liveness status for {method}");
+            assert_eq!(result["primal"], "beardog");
+            assert!(result["version"].is_string());
+            assert!(
+                result.get("timestamp").is_none(),
+                "liveness has no timestamp"
+            );
+        }
+    }
 
-        assert!(result.is_ok());
-        let response = result.unwrap();
+    #[tokio::test]
+    async fn test_readiness_response() {
+        let mut handler = HealthHandler::with_identity_hints(IdentityHints {
+            primal_name: Some("beardog".to_string()),
+            ..Default::default()
+        });
+        handler.capabilities_count = 91;
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
-        assert_eq!(response["status"], "healthy");
-        assert_eq!(response["primal"], "beardog");
-        assert_eq!(response["protocol"], "JSON-RPC");
-        assert!(response["version"].is_string());
-        assert!(response["timestamp"].is_string());
+        let result = handler
+            .handle("health.readiness", None, &btsp_provider)
+            .await
+            .expect("readiness should succeed");
+        assert_eq!(result["status"], "ready");
+        assert_eq!(result["capabilities_count"], 91);
+        assert_eq!(result["protocol"], "JSON-RPC");
+    }
+
+    #[tokio::test]
+    async fn test_deep_check_response() {
+        let handler = HealthHandler::with_identity_hints(IdentityHints {
+            primal_name: Some("beardog".to_string()),
+            ..Default::default()
+        });
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        for method in &["status", "check", "health.check"] {
+            let result = handler
+                .handle(method, None, &btsp_provider)
+                .await
+                .expect("deep check should succeed");
+            assert_eq!(result["status"], "healthy", "deep check for {method}");
+            assert!(result["timestamp"].is_string(), "deep check has timestamp");
+            assert_eq!(result["protocol"], "JSON-RPC");
+        }
     }
 
     #[tokio::test]
@@ -139,7 +221,7 @@ mod tests {
             "health.check",
         ] {
             let result = handler.handle(method, None, &btsp_provider).await;
-            assert!(result.is_ok(), "Method {} should succeed", method);
+            assert!(result.is_ok(), "Method {method} should succeed");
         }
     }
 }

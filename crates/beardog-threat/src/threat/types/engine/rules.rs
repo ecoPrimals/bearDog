@@ -468,7 +468,10 @@ impl RulePerformanceMetrics {
         self.total_executions += 1;
 
         // Update execution time average with proper precision handling
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "display/metric conversion, precision loss acceptable"
+        )]
         {
             self.avg_execution_time_ms = self
                 .avg_execution_time_ms
@@ -489,7 +492,10 @@ impl RulePerformanceMetrics {
         self.last_updated = Utc::now();
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "display/metric conversion, precision loss acceptable"
+    )]
     fn calculate_metrics(&mut self) {
         let total =
             self.true_positives + self.true_negatives + self.false_positives + self.false_negatives;

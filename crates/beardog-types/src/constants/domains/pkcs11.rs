@@ -119,7 +119,10 @@ pub const fn return_code_description(code: u32) -> &'static str {
 
 /// PKCS#11 object classes
 /// Note: These constants match the PKCS#11 specification exactly
-#[allow(clippy::unreadable_literal)]
+#[expect(
+    clippy::unreadable_literal,
+    reason = "PKCS#11 constants match spec values"
+)]
 pub mod object_classes {
     /// Data object
     pub const CKO_DATA: u32 = 0x00000000;
@@ -139,7 +142,10 @@ pub mod object_classes {
 
 /// PKCS#11 key types
 /// Note: These constants match the PKCS#11 specification exactly
-#[allow(clippy::unreadable_literal)]
+#[expect(
+    clippy::unreadable_literal,
+    reason = "PKCS#11 constants match spec values"
+)]
 pub mod key_types {
     /// RSA key
     pub const CKK_RSA: u32 = 0x00000000;
@@ -171,7 +177,10 @@ mod tests {
             return_code_description(return_codes::CKR_PIN_INCORRECT),
             "Incorrect PIN"
         );
-        #[allow(clippy::unreadable_literal)]
+        #[expect(
+            clippy::unreadable_literal,
+            reason = "PKCS#11 constants match spec values"
+        )]
         {
             assert_eq!(return_code_description(0xFFFFFFFF), "Unknown error code");
         }

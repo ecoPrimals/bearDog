@@ -21,7 +21,7 @@ pub async fn route(
 ) -> Result<Option<serde_json::Value>, String> {
     match method {
         "crypto.ed25519_generate_keypair" => {
-            info!("🔑 Crypto: ed25519_generate_keypair (Songbird Onion Identity)");
+            info!("🔑 Crypto: ed25519_generate_keypair (onion identity route)");
             Ok(Some(handle_ed25519_generate_keypair(params).await?))
         }
 

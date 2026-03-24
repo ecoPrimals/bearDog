@@ -212,7 +212,7 @@ async fn fault_test_rapid_server_restart() {
     reader.read_line(&mut line).await.unwrap();
 
     let response: serde_json::Value = serde_json::from_str(&line).unwrap();
-    assert_eq!(response["result"]["status"], "healthy");
+    assert_eq!(response["result"]["status"], "alive");
 
     server.stop().await.unwrap();
     server_handle.abort();

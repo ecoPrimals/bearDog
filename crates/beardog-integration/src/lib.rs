@@ -297,6 +297,8 @@ impl Drop for BearDogIntegration {
 mod tests {
     use super::*;
 
+    static INTEGRATION_ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
     #[test]
     fn test_default_config() {
         let config = IntegrationConfig::default();
@@ -306,6 +308,9 @@ mod tests {
 
     #[test]
     fn test_config_from_env() {
+        let _guard = INTEGRATION_ENV_LOCK
+            .lock()
+            .expect("integration env test lock poisoned");
         beardog_errors::process_env::set_var("BEARDOG_API_PORT", "9999");
         beardog_errors::process_env::set_var("BEARDOG_SERVICE_NAME", "test-service");
 
@@ -315,5 +320,51 @@ mod tests {
 
         beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
         beardog_errors::process_env::remove_var("BEARDOG_SERVICE_NAME");
+    }
+
+    #[test]
+    fn default_upa_url_with_explicit_url_env() {
+        let _guard = INTEGRATION_ENV_LOCK
+            .lock()
+            .expect("integration env test lock poisoned");
+        beardog_errors::process_env::set_var("BEARDOG_UPA_URL", "https://upa.example:9443/");
+        let u = default_upa_url();
+        beardog_errors::process_env::remove_var("BEARDOG_UPA_URL");
+        assert_eq!(u, "https://upa.example:9443/");
+    }
+
+    #[test]
+    fn default_upa_url_builds_from_host_and_port_env() {
+        let _guard = INTEGRATION_ENV_LOCK
+            .lock()
+            .expect("integration env test lock poisoned");
+        beardog_errors::process_env::remove_var("BEARDOG_UPA_URL");
+        beardog_errors::process_env::set_var("BEARDOG_UPA_HOST", "api.local");
+        beardog_errors::process_env::set_var("BEARDOG_UPA_PORT", "9000");
+        let u = default_upa_url();
+        beardog_errors::process_env::remove_var("BEARDOG_UPA_HOST");
+        beardog_errors::process_env::remove_var("BEARDOG_UPA_PORT");
+        assert_eq!(u, "https://api.local:9000");
+    }
+
+    #[test]
+    fn default_heartbeat_interval_from_env() {
+        let _guard = INTEGRATION_ENV_LOCK
+            .lock()
+            .expect("integration env test lock poisoned");
+        beardog_errors::process_env::set_var("BEARDOG_HEARTBEAT_INTERVAL", "120");
+        let c = IntegrationConfig::default();
+        beardog_errors::process_env::remove_var("BEARDOG_HEARTBEAT_INTERVAL");
+        assert_eq!(c.heartbeat_interval_secs, 120);
+    }
+
+    #[test]
+    fn integration_config_default_api_port_matches_constant_when_env_unset() {
+        let _guard = INTEGRATION_ENV_LOCK
+            .lock()
+            .expect("integration env test lock poisoned");
+        beardog_errors::process_env::remove_var("BEARDOG_API_PORT");
+        let c = IntegrationConfig::default();
+        assert_eq!(c.api_port, DEFAULT_INTEGRATION_API_PORT);
     }
 }

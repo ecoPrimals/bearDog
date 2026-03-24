@@ -118,7 +118,10 @@ impl AuditStatistics {
         }
         let successful = self.total_operations - self.failed_operations;
         // Note: Precision loss is acceptable for rate calculations (52-bit mantissa is sufficient)
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "display/metric conversion, precision loss acceptable"
+        )]
         let rate = successful as f64 / self.total_operations as f64;
         rate
     }

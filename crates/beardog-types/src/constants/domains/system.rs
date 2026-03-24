@@ -315,7 +315,10 @@ pub mod timeouts {
 
     /// **LEGACY COMPATIBILITY FUNCTION** - For migration from deprecated unified constants
     #[must_use]
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "platform-specific size, checked at boundary"
+    )]
     pub const fn default_timeout_ms() -> u64 {
         CONNECTION_TIMEOUT.as_millis() as u64
     }

@@ -437,11 +437,20 @@ impl ResourceUsage {
 
         let cpu_cost = self.cpu_seconds * CPU_PRICE;
         // Precision loss acceptable for cost calculations (sub-cent precision not needed)
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "display/metric conversion, precision loss acceptable"
+        )]
         let memory_cost = (self.memory_bytes as f64) * MEMORY_PRICE;
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "display/metric conversion, precision loss acceptable"
+        )]
         let network_cost = (self.network_bytes as f64) * NETWORK_PRICE;
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "display/metric conversion, precision loss acceptable"
+        )]
         let storage_cost = (self.storage_bytes as f64) * STORAGE_PRICE;
 
         cpu_cost + memory_cost + network_cost + storage_cost + self.custom_units

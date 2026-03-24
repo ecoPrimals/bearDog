@@ -203,7 +203,7 @@ pub async fn handle_verify_ed25519(params: Option<&Value>) -> Result<Value, Stri
 /// Handle crypto.ed25519_generate_keypair method
 ///
 /// Generates a new Ed25519 keypair for signing/identity.
-/// Used by Songbird's Sovereign Onion Service for identity generation.
+/// Used for onion identity generation in the ecosystem.
 ///
 /// # Parameters
 ///

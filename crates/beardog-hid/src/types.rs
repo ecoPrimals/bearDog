@@ -146,7 +146,10 @@ pub mod fido2_products {
 /// assert!(is_fido2_device(vid, pid));
 /// ```
 #[must_use]
-#[allow(clippy::unnested_or_patterns)] // Cannot nest: GOOGLE has specific product IDs, others match all
+#[expect(
+    clippy::unnested_or_patterns,
+    reason = "clarity: separate match arms for distinct HID types"
+)]
 pub const fn is_fido2_device(vendor_id: VendorId, product_id: ProductId) -> bool {
     use fido2_products::SOLO2;
     use fido2_vendors::{FEITIAN, GOOGLE, SOLOKEYS, YUBICO};

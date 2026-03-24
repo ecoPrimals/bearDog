@@ -35,6 +35,7 @@
 
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
+use beardog_ipc::{DispatchOutcome, IpcErrorPhase};
 use std::sync::Arc;
 
 // Dark Forest Beacon Genetics (Phase 1 - Feb 2026)
@@ -53,7 +54,7 @@ pub mod federation;
 pub mod graph_security;
 pub mod health;
 pub mod introspection; // Primal introspection (primal.info, rpc.methods)
-pub mod relay; // Relay authorization (lineage-gated, for Songbird relay server)
+pub mod relay; // Relay authorization (lineage-gated, for coordinated punch)
 pub mod secrets; // Encrypted secret storage (family-scoped, ChaCha20-Poly1305)
 pub mod security;
 
@@ -228,8 +229,8 @@ impl HandlerRegistry {
         btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
         // Backward-compat bridge: bare crypto names → namespaced equivalents.
-        // Songbird and other primals may call bare names during migration
-        // to capability-based routing via the Neural API.
+        // Consuming primals may call bare names during migration to
+        // capability-based routing via the Neural API.
         let method = match method {
             "x25519_generate_ephemeral" => "crypto.x25519_generate_ephemeral",
             "x25519_derive_secret" => "crypto.x25519_derive_secret",
@@ -252,6 +253,37 @@ impl HandlerRegistry {
 
         // No handler found (JSON-RPC 2.0 error message)
         Err(format!("Method not found: {method}"))
+    }
+
+    /// Route a request and return a structured [`DispatchOutcome`].
+    ///
+    /// Same dispatch logic as [`route`](Self::route), but returns a typed outcome
+    /// that distinguishes transport/protocol/dispatch/application failures.
+    pub async fn route_with_outcome(
+        &self,
+        method: &str,
+        params: Option<&serde_json::Value>,
+        btsp_provider: &Arc<BeardogBtspProvider>,
+    ) -> DispatchOutcome {
+        let result = self.route(method, params, btsp_provider).await;
+        match result {
+            Ok(v) => DispatchOutcome::Success(v),
+            Err(ref msg) if msg.contains("Method not found") => DispatchOutcome::Failure {
+                phase: IpcErrorPhase::Dispatch,
+                code: -32601,
+                message: msg.clone(),
+            },
+            Err(ref msg) if msg.contains("Invalid params") => DispatchOutcome::Failure {
+                phase: IpcErrorPhase::Dispatch,
+                code: -32602,
+                message: msg.clone(),
+            },
+            Err(msg) => DispatchOutcome::Failure {
+                phase: IpcErrorPhase::Application,
+                code: -32000,
+                message: msg,
+            },
+        }
     }
 
     /// Get all methods from all handlers

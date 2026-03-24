@@ -191,7 +191,7 @@ impl IntrospectionHandler {
                 "operations": ["hsm_status", "key_management"]
             },
             "btsp": {
-                "description": "BTSP provider for Songbird TLS",
+                "description": "BTSP provider for TLS integration",
                 "methods": all_methods.iter()
                     .filter(|m| m.starts_with("btsp."))
                     .cloned()

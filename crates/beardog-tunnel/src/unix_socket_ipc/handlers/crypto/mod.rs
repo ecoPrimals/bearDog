@@ -80,7 +80,7 @@ pub use symmetric::{handle_chacha20_poly1305_decrypt, handle_chacha20_poly1305_e
 // Re-export hash handlers for backward compatibility
 pub use hash::{handle_blake3_hash, handle_hash_for_cipher, handle_hmac_sha256};
 
-// Re-export TLS 1.2 handlers for Tower Atomic pattern (Songbird integration)
+// Re-export TLS 1.2 handlers for Tower Atomic pattern (TLS 1.2 crypto atoms for callers)
 pub use tls12::{
     handle_aes_128_gcm_decrypt, handle_aes_128_gcm_encrypt, handle_aes_256_gcm_decrypt,
     handle_aes_256_gcm_encrypt, handle_ecdhe_p256_compute_shared, handle_ecdhe_p256_generate,

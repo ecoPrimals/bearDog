@@ -132,7 +132,10 @@ impl LimitsConfig {
     /// Create a new limits configuration with explicit values
     ///
     /// Prefer using `LimitsConfig::builder()` for cleaner construction.
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "construction params, builder would obscure required fields"
+    )]
     pub const fn new(
         buffer_size: usize,
         max_connections: usize,

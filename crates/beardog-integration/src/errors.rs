@@ -29,6 +29,42 @@ impl fmt::Display for IntegrationError {
 
 impl std::error::Error for IntegrationError {}
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn integration_error_display_network() {
+        let e = IntegrationError::Network("peer reset".to_string());
+        assert_eq!(e.to_string(), "Network error: peer reset");
+    }
+
+    #[test]
+    fn integration_error_display_config() {
+        let e = IntegrationError::Config("bad port".to_string());
+        assert_eq!(e.to_string(), "Configuration error: bad port");
+    }
+
+    #[test]
+    fn integration_error_display_internal() {
+        let e = IntegrationError::Internal("panic avoided".to_string());
+        assert_eq!(e.to_string(), "Internal error: panic avoided");
+    }
+
+    #[test]
+    fn integration_error_debug_includes_variant() {
+        let e = IntegrationError::Config("x".to_string());
+        let s = format!("{e:?}");
+        assert!(s.contains("Config"));
+    }
+
+    #[test]
+    fn integration_error_source_is_none() {
+        let e = IntegrationError::Network("n".to_string());
+        assert!(std::error::Error::source(&e).is_none());
+    }
+}
+
 // Fossil Record: reqwest::Error conversion removed (Tower Atomic evolution)
 // impl From<reqwest::Error> for IntegrationError {
 //     fn from(e: reqwest::Error) -> Self {

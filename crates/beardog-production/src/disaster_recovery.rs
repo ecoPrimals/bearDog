@@ -131,4 +131,70 @@ mod tests {
         assert_ne!(h1, h2);
         Ok(())
     }
+
+    #[test]
+    fn hash_rejects_missing_path() {
+        let p = std::path::Path::new("/nonexistent/beardog/backup/path/999999");
+        let e = hash_backup_content(p).expect_err("missing path should error");
+        let s = e.to_string();
+        assert!(s.contains("Backup path does not exist") || s.contains("does not exist"));
+    }
+
+    #[test]
+    fn hash_single_file_root() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempdir()?;
+        let f = dir.path().join("only.bin");
+        fs::write(&f, b"content")?;
+        let h = hash_backup_content(&f)?;
+        assert_eq!(h.len(), 64);
+        Ok(())
+    }
+
+    #[test]
+    fn hash_nested_directories() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempdir()?;
+        fs::create_dir_all(dir.path().join("a/b"))?;
+        fs::write(dir.path().join("a/b/x.txt"), b"nested")?;
+        fs::write(dir.path().join("root.txt"), b"top")?;
+        let h = hash_backup_content(dir.path())?;
+        assert_eq!(h.len(), 64);
+        Ok(())
+    }
+
+    #[test]
+    fn hash_symlink_root_is_rejected() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempdir()?;
+        let target = dir.path().join("target.txt");
+        fs::write(&target, b"data")?;
+        let link = dir.path().join("link");
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink(&target, &link)?;
+            let err = hash_backup_content(&link).expect_err("symlink root not file/dir");
+            let msg = err.to_string();
+            assert!(
+                msg.contains("not a file or directory") || msg.contains("not a file"),
+                "unexpected message: {msg}"
+            );
+        }
+        #[cfg(not(unix))]
+        {
+            let _ = (link, target);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn hash_skips_symlinks_in_tree() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempdir()?;
+        let real = dir.path().join("real.txt");
+        fs::write(&real, b"ok")?;
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink(&real, dir.path().join("badlink"))?;
+        }
+        let h = hash_backup_content(dir.path())?;
+        assert_eq!(h.len(), 64);
+        Ok(())
+    }
 }

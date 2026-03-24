@@ -141,7 +141,7 @@ impl CapabilitiesHandler {
                         "blake3_hash",
                         "hmac_sha256"
                     ],
-                    "description": "Pure Rust cryptographic operations for Songbird TLS and other primals - Ed25519, X25519, ChaCha20-Poly1305, Blake3, HMAC"
+                    "description": "Pure Rust cryptographic operations for TLS and other primals - Ed25519, X25519, ChaCha20-Poly1305, Blake3, HMAC"
                 },
                 {
                     "type": "tls",
@@ -170,7 +170,7 @@ impl CapabilitiesHandler {
     /// Handle discover_capabilities request
     ///
     /// Returns a flat list of capability strings for ecosystem consistency.
-    /// This mirrors Songbird's `discover_capabilities` format, enabling
+    /// This mirrors the conventional `discover_capabilities` format, enabling
     /// uniform capability discovery across all primals.
     async fn handle_discover_capabilities(&self) -> Result<serde_json::Value, String> {
         info!("🔍 discover_capabilities requested");

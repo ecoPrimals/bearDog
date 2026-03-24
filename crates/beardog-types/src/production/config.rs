@@ -329,7 +329,10 @@ impl ProductionCoreConfig {
 /// }
 /// ```
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "configuration struct: one bool per feature flag"
+)]
 pub struct ProductionFlags {
     /// Enable advanced monitoring with detailed metrics and alerting
     pub enable_advanced_monitoring: bool,

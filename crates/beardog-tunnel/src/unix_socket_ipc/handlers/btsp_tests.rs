@@ -64,7 +64,7 @@ async fn btsp_tunnel_establish_missing_params() {
 }
 
 #[tokio::test]
-async fn btsp_configure_tls_returns_songbird_guidance() {
+async fn btsp_configure_tls_returns_external_mode_guidance() {
     let handler = BtspHandler;
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
@@ -75,7 +75,7 @@ async fn btsp_configure_tls_returns_songbird_guidance() {
         .handle("btsp.configure_tls", Some(&params), &provider)
         .await
         .unwrap_err();
-    assert!(err.contains("Songbird") || err.contains("external mode"));
+    assert!(err.contains("external mode") || err.contains("not implemented in BearDog"));
 }
 
 #[tokio::test]
@@ -117,7 +117,7 @@ async fn btsp_tunnel_encrypt_invalid_base64() {
 }
 
 #[tokio::test]
-async fn btsp_tunnel_establish_external_routes_to_songbird_message() {
+async fn btsp_tunnel_establish_external_routes_to_external_mode_message() {
     let handler = BtspHandler;
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
@@ -141,7 +141,7 @@ async fn btsp_tunnel_establish_external_routes_to_songbird_message() {
         .handle("btsp.tunnel_establish", Some(&params), &provider)
         .await
         .unwrap_err();
-    assert!(err.contains("Songbird") || err.contains("external"));
+    assert!(err.contains("external") || err.contains("not implemented in BearDog"));
 }
 
 #[tokio::test]
@@ -185,7 +185,7 @@ async fn btsp_verify_peer_tunnel_not_found() {
 }
 
 #[tokio::test]
-async fn btsp_verify_peer_certificate_mode_returns_songbird_guidance() {
+async fn btsp_verify_peer_certificate_mode_returns_external_mode_guidance() {
     let handler = BtspHandler;
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
@@ -196,7 +196,7 @@ async fn btsp_verify_peer_certificate_mode_returns_songbird_guidance() {
         .handle("btsp.verify_peer", Some(&params), &provider)
         .await
         .unwrap_err();
-    assert!(err.contains("Songbird") || err.contains("certificate"));
+    assert!(err.contains("certificate") || err.contains("external mode"));
 }
 
 #[tokio::test]
@@ -335,7 +335,7 @@ async fn btsp_configure_tls_invalid_json() {
 }
 
 #[tokio::test]
-async fn btsp_tunnel_send_http_valid_shape_returns_songbird_guidance() {
+async fn btsp_tunnel_send_http_valid_shape_returns_external_mode_guidance() {
     let handler = BtspHandler;
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
@@ -348,7 +348,7 @@ async fn btsp_tunnel_send_http_valid_shape_returns_songbird_guidance() {
         .handle("btsp.tunnel_send_http", Some(&params), &provider)
         .await
         .unwrap_err();
-    assert!(err.contains("Songbird") || err.contains("external"));
+    assert!(err.contains("external") || err.contains("not implemented in BearDog"));
 }
 
 #[tokio::test]

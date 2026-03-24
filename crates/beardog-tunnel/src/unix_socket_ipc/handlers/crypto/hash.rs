@@ -112,8 +112,8 @@ use tracing::{debug, info};
 ///
 /// # TRUE PRIMAL Pattern
 ///
-/// This method enables Songbird to hash data without knowing which algorithm to use.
-/// BearDog owns the crypto decisions, Songbird just passes cipher_suite.
+/// This method enables callers to hash data without knowing which algorithm to use.
+/// BearDog owns the crypto decisions; callers pass `cipher_suite`.
 pub async fn handle_hash_for_cipher(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.hash_for_cipher")?;
 

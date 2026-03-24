@@ -187,6 +187,9 @@ fn title_case_slug_multi_part() {
 
 #[test]
 fn genome_bundle_defaults_with_env_override() {
+    let _guard = crate::test_env_lock::ECOPRIMALS_GENOME_TARGETS_LOCK
+        .lock()
+        .expect("ECOPRIMALS_GENOME_TARGETS test lock poisoned");
     beardog_errors::process_env::set_var("ECOPRIMALS_GENOME_TARGETS", "beardog,songbird");
     let defaults = PrimalName::genome_bundle_defaults();
     beardog_errors::process_env::remove_var("ECOPRIMALS_GENOME_TARGETS");
@@ -198,6 +201,9 @@ fn genome_bundle_defaults_with_env_override() {
 
 #[test]
 fn genome_bundle_defaults_empty_env_falls_back_to_manifest() {
+    let _guard = crate::test_env_lock::ECOPRIMALS_GENOME_TARGETS_LOCK
+        .lock()
+        .expect("ECOPRIMALS_GENOME_TARGETS test lock poisoned");
     beardog_errors::process_env::set_var("ECOPRIMALS_GENOME_TARGETS", "   ");
     let defaults = PrimalName::genome_bundle_defaults();
     beardog_errors::process_env::remove_var("ECOPRIMALS_GENOME_TARGETS");

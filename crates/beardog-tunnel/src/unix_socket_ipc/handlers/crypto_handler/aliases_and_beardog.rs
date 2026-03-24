@@ -60,47 +60,47 @@ pub async fn route(
         }
 
         "beardog.crypto.ed25519_generate_keypair" => {
-            info!("🧅 Crypto: beardog.crypto.ed25519_generate_keypair (Songbird Onion Identity)");
+            info!("🧅 Crypto: beardog.crypto.ed25519_generate_keypair (onion identity route)");
             Ok(Some(handle_ed25519_generate_keypair(params).await?))
         }
 
         "beardog.crypto.sign_ed25519" => {
-            info!("🧅 Crypto: beardog.crypto.sign_ed25519 (Songbird Onion Service)");
+            info!("🧅 Crypto: beardog.crypto.sign_ed25519 (onion service crypto)");
             Ok(Some(handle_sign_ed25519(params).await?))
         }
 
         "beardog.crypto.verify_ed25519" => {
-            info!("🧅 Crypto: beardog.crypto.verify_ed25519 (Songbird Onion Service)");
+            info!("🧅 Crypto: beardog.crypto.verify_ed25519 (onion service crypto)");
             Ok(Some(handle_verify_ed25519(params).await?))
         }
 
         "beardog.crypto.x25519_generate_ephemeral" => {
-            info!("🧅 Crypto: beardog.crypto.x25519_generate_ephemeral (Songbird Onion Service)");
+            info!("🧅 Crypto: beardog.crypto.x25519_generate_ephemeral (onion service crypto)");
             Ok(Some(handle_x25519_generate_ephemeral(params).await?))
         }
 
         "beardog.crypto.x25519_derive_secret" => {
-            info!("🧅 Crypto: beardog.crypto.x25519_derive_secret (Songbird Onion Service)");
+            info!("🧅 Crypto: beardog.crypto.x25519_derive_secret (onion service crypto)");
             Ok(Some(handle_x25519_derive_secret(params).await?))
         }
 
         "beardog.crypto.chacha20_poly1305_encrypt" => {
-            info!("🧅 Crypto: beardog.crypto.chacha20_poly1305_encrypt (Songbird Onion Service)");
+            info!("🧅 Crypto: beardog.crypto.chacha20_poly1305_encrypt (onion service crypto)");
             Ok(Some(handle_chacha20_poly1305_encrypt(params).await?))
         }
 
         "beardog.crypto.chacha20_poly1305_decrypt" => {
-            info!("🧅 Crypto: beardog.crypto.chacha20_poly1305_decrypt (Songbird Onion Service)");
+            info!("🧅 Crypto: beardog.crypto.chacha20_poly1305_decrypt (onion service crypto)");
             Ok(Some(handle_chacha20_poly1305_decrypt(params).await?))
         }
 
         "beardog.crypto.hmac_sha256" => {
-            info!("🧅 Crypto: beardog.crypto.hmac_sha256 (Songbird Onion Service)");
+            info!("🧅 Crypto: beardog.crypto.hmac_sha256 (onion service crypto)");
             Ok(Some(handle_hmac_sha256(params).await?))
         }
 
         "beardog.crypto.blake3_hash" => {
-            info!("🧅 Crypto: beardog.crypto.blake3_hash (Songbird Onion Service)");
+            info!("🧅 Crypto: beardog.crypto.blake3_hash (onion service crypto)");
             Ok(Some(handle_blake3_hash(params).await?))
         }
 

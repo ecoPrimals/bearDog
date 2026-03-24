@@ -304,23 +304,25 @@ impl BtspHandler {
             "🌐 External tunnel requested: {} → {}",
             params.peer_id, params.peer_endpoint
         );
-        info!("📡 External mode is handled by Songbird (Tower Atomic pattern)");
+        info!(
+            "📡 External mode (HTTPS) is not implemented in BearDog; use the calling primal's BTSP external mode API (Tower Atomic pattern)"
+        );
 
         Err(format!(
-            "External mode (HTTPS) is handled by Songbird, not BearDog.\n\
+            "External mode (HTTPS) is not implemented in BearDog.\n\
              \n\
              BearDog provides crypto primitives via RPC (11 methods already implemented).\n\
-             Songbird implements TLS 1.3 + HTTP/2 using BearDog's crypto.\n\
+             The HTTP/TLS layer runs in the requesting primal using BearDog's crypto.\n\
              \n\
-             Tower Atomic Pattern: Songbird (HTTP) + BearDog (Crypto) = Secure HTTPS\n\
+             Tower Atomic Pattern: HTTP (calling primal) + BearDog (crypto) = Secure HTTPS\n\
              \n\
              To use external HTTPS:\n\
-             1. Connect to Songbird (HTTP-capable primal)\n\
-             2. Use Songbird's BTSP external mode API\n\
-             3. Songbird will call BearDog's crypto RPC methods\n\
+             1. Connect to an HTTP-capable primal in your stack\n\
+             2. Use that primal's BTSP external mode API\n\
+             3. That stack calls BearDog's crypto RPC methods\n\
              \n\
              Requested: {} ({})\n\
-             Primal Responsibility: BearDog = Internal Mode + Crypto | Songbird = External Mode + HTTP",
+             Primal responsibility: BearDog = internal mode + crypto; external HTTPS = calling primal.",
             params.peer_id, params.peer_endpoint
         ))
     }
@@ -512,7 +514,9 @@ impl BtspHandler {
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
         info!("🔐 BTSP Configure TLS requested");
-        info!("📡 TLS configuration is handled by Songbird (external mode)");
+        info!(
+            "📡 TLS configuration is part of external mode; handled outside BearDog (requesting primal's BTSP external mode API)"
+        );
 
         let params_value = params.ok_or("Missing params for configure_tls")?;
 
@@ -521,9 +525,9 @@ impl BtspHandler {
             .map_err(|e| format!("Invalid configure_tls params: {e}"))?;
 
         Err(
-            "btsp.configure_tls is part of external mode (HTTPS), handled by Songbird.\n\
+            "btsp.configure_tls is part of external mode (HTTPS), not implemented in BearDog.\n\
              \n\
-             Use Songbird's BTSP external mode API for TLS configuration.\n\
+             Use the requesting primal's BTSP external mode API for TLS configuration.\n\
              BearDog provides the crypto primitives via RPC."
                 .into(),
         )
@@ -594,10 +598,12 @@ impl BtspHandler {
                 }
             }
             "certificate" => {
-                info!("📡 Certificate verification is handled by Songbird (external mode)");
-                Err("btsp.verify_peer (certificate) is part of external mode, handled by Songbird.\n\
+                info!(
+                    "📡 Certificate verification is part of external mode; handled outside BearDog (requesting primal)"
+                );
+                Err("btsp.verify_peer (certificate) is part of external mode, not implemented in BearDog.\n\
                      \n\
-                     Use Songbird's BTSP external mode API for certificate verification.\n\
+                     Use the requesting primal's BTSP external mode API for certificate verification.\n\
                      BearDog provides crypto primitives (tls.verify_certificate RPC method).".into())
             }
             _ => Err(format!("Unknown trust_mode: {}", verify_params.trust_mode)),
@@ -616,7 +622,9 @@ impl BtspHandler {
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
         info!("🌐 BTSP Tunnel Send HTTP requested");
-        info!("📡 HTTP operations are handled by Songbird (external mode)");
+        info!(
+            "📡 HTTP operations are part of external mode; handled outside BearDog (requesting primal)"
+        );
 
         let params_value = params.ok_or("Missing params for tunnel_send_http")?;
 
@@ -625,15 +633,15 @@ impl BtspHandler {
             .map_err(|e| format!("Invalid tunnel_send_http params: {e}"))?;
 
         Err(
-            "btsp.tunnel_send_http is part of external mode (HTTPS), handled by Songbird.\n\
+            "btsp.tunnel_send_http is part of external mode (HTTPS), not implemented in BearDog.\n\
              \n\
-             Songbird implements:\n\
+             The requesting primal typically implements:\n\
              - HTTP/2 client\n\
              - TLS 1.3 handshake (using BearDog crypto RPC)\n\
              - BTSP external mode API\n\
              \n\
              BearDog provides crypto primitives only.\n\
-             Use Songbird for all external HTTPS communication."
+             Use the calling primal for external HTTPS communication."
                 .into(),
         )
     }

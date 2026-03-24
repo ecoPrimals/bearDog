@@ -189,7 +189,7 @@ async fn test_health_check() {
 
     assert_eq!(response["jsonrpc"], "2.0");
     assert_eq!(response["id"], 1);
-    assert_eq!(response["result"]["status"], "healthy");
+    assert_eq!(response["result"]["status"], "alive");
 
     // Graceful shutdown
     server.stop().await.unwrap();
@@ -218,7 +218,7 @@ async fn test_concurrent_connections() {
 
             let response = send_request(&mut stream, request).await.unwrap();
             assert_eq!(response["id"], i);
-            assert_eq!(response["result"]["status"], "healthy");
+            assert_eq!(response["result"]["status"], "alive");
         });
 
         handles.push(handle);
@@ -396,7 +396,7 @@ async fn test_multiple_clients_sequential() {
 
         let response = send_request(&mut stream, request).await.unwrap();
         assert_eq!(response["id"], i);
-        assert_eq!(response["result"]["status"], "healthy");
+        assert_eq!(response["result"]["status"], "alive");
 
         // Drop stream (disconnect)
         drop(stream);

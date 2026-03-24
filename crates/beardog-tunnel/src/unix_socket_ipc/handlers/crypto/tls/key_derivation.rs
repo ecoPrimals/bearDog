@@ -419,7 +419,7 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
         hash_algo, key_len, IV_LEN
     );
 
-    // HEX DUMPS for derived keys (cross-verify with Songbird and RFC 8448)
+    // HEX DUMPS for derived keys (cross-verify with RFC 8448 and other implementations)
     info!("🔍 BEARDOG DERIVED HANDSHAKE KEYS - FULL HEX DUMPS:");
     info!("   client_write_key: {}", hex::encode(&client_write_key));
     info!("   server_write_key: {}", hex::encode(&server_write_key));

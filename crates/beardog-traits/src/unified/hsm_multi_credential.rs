@@ -434,7 +434,10 @@ pub trait CredentialIdConverter {
     /// Convert from universal ID to protocol-specific ID
     ///
     /// Note: Takes `&self` to allow stateful converters with device-specific mappings
-    #[allow(clippy::wrong_self_convention)]
+    #[expect(
+        clippy::wrong_self_convention,
+        reason = "trait method naming differs from Rust convention"
+    )]
     fn from_universal_id(&self, universal_id: &str) -> Result<Vec<u8>, BearDogError>;
 }
 

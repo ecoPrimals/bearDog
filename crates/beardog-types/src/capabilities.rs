@@ -192,7 +192,10 @@ pub enum CapabilityHealth {
 
 /// `BearDog` AI architecture configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "configuration struct: one bool per feature flag"
+)]
 pub struct BearDogAIArchitecture {
     /// Whether AI capabilities are enabled
     /// Whether feature is enabled

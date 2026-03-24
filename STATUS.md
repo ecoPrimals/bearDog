@@ -18,8 +18,8 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`device.rs` refactored) |
-| **Tests** | 14,387 passing | Fully concurrent, zero sleeps in non-chaos |
-| **Coverage** | 87.2%+ line | llvm-cov workspace (targeting 90%) |
+| **Tests** | 14,447+ passing | Fully concurrent, zero sleeps in non-chaos |
+| **Coverage** | 87.35%+ line | llvm-cov workspace (targeting 90%) |
 | **Serial Tests** | 0 | `#[serial]` fully eliminated |
 | **cargo deny** | 4/4 pass | Advisories, bans, licenses, sources |
 | **License** | AGPL-3.0-only | SPDX headers on all .rs files |
@@ -85,6 +85,20 @@
 ---
 
 ## Recent Improvements (March 24, 2026)
+
+### Wave 15: Ecosystem Absorption, IPC Evolution, Semantic Naming v2.1.0, Self-Knowledge & Coverage Push
+
+- **IPC error types** — `DispatchOutcome` and `IpcErrorPhase` added to `beardog-ipc` (from rhizoCrypt/LoamSpine pattern); `route_with_outcome()` on `HandlerRegistry`; `normalize_method()` for canonical name normalization
+- **Health handler v2.1.0** — Differentiated liveness (`"alive"`), readiness (`"ready"` + capabilities count), and deep check (`"healthy"` + timestamp) per wateringHole Semantic Method Naming Standard v2.1.0
+- **Self-knowledge** — Removed ~75 hardcoded "Songbird" references from production handler code; BearDog now describes operations generically, not naming peer primals
+- **`#[expect(reason)]` migration** — 30+ production `#[allow(clippy::...)]` evolved to `#[expect(clippy::..., reason = "...")]` with contextual reasons; 6 stale annotations removed
+- **Production stubs evolved** — Migration adapters return `not_implemented` errors; universal adapter uses real timing; BirdSong encrypt/decrypt returns 501; placeholder JSON eliminated
+- **deny.toml** — 8 cross-primal type crate bans added (songbird-types, squirrel-types, etc.) + `provenance-trio-types` ban; enforces JSON-RPC wire-only contracts
+- **60+ deep tests** — beardog-integration (HTTP router), beardog-production (disaster recovery), beardog-errors (result extensions), beardog-deploy (command runner), beardog-installer (env locking)
+- **Coverage 87.08% → 87.35%** (lines); 81.98% → 82.27% (functions)
+- **Discovery documentation** — 5-tier discovery pattern and credential resolution chain added to CONTEXT.md and ARCHITECTURE.md
+- **14,447+ tests passing** — 0 failures
+- **All gates green** — fmt, clippy `-D warnings`, doc, deny, test all clean
 
 ### Wave 14: Deep Debt Audit, Test Evolution, scyBorg Compliance & Zero-Copy
 

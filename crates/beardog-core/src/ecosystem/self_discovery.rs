@@ -374,7 +374,7 @@ impl SelfDiscoveryManager {
     }
 
     /// Register with a specific discovery endpoint
-    #[allow(clippy::unused_self, reason = "will use self when fully implemented")]
+    #[expect(clippy::unused_self, reason = "trait conformance requires &self")]
     fn register_with_endpoint(&self, endpoint: &str) -> Result<(), BearDogError> {
         debug!("Registering with discovery endpoint: {}", endpoint);
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 use crate::BearDogError;
+use crate::categories::BusinessErrorCategory;
 use std::fmt::Display;
 
 pub trait ResultValidationExt<T> {
@@ -24,7 +25,10 @@ where
 {
     /// Creates instance with validation context
     fn with_validation_context(self, context: &str) -> Result<T, BearDogError> {
-        self.map_err(|e| BearDogError::validation(format!("{context}: {e}")))
+        self.map_err(|e| {
+            let msg = format!("{context}: {e}");
+            BearDogError::business_with_category(&msg, BusinessErrorCategory::Validation)
+        })
     }
 
     /// Creates instance with internal context
@@ -59,18 +63,17 @@ pub trait OptionValidationExt<T> {
 
 impl<T> OptionValidationExt<T> for Option<T> {
     fn ok_or_validation_error(self, message: &str) -> Result<T, BearDogError> {
-        self.ok_or_else(|| BearDogError::validation(message.to_string()))
+        self.ok_or_else(|| BearDogError::validation(message))
     }
-
 
     fn ok_or_not_found(self, item_type: &str) -> Result<T, BearDogError> {
         self.ok_or_else(|| BearDogError::internal(format!("{item_type} not found")))
     }
 
-
     fn ok_or_missing_required(self, field_name: &str) -> Result<T, BearDogError> {
         self.ok_or_else(|| {
-            BearDogError::validation(format!("Required field '{field_name}' is missing"))
+            let msg = format!("Required field '{field_name}' is missing");
+            BearDogError::business_with_category(&msg, BusinessErrorCategory::Validation)
         })
     }
 }
@@ -89,7 +92,6 @@ where
     fn chain_with_context(self, context: &str) -> BearDogError {
         BearDogError::internal(format!("{context}: {self}"))
     }
-
 
     fn chain_with_lazy_context<F>(self, context_fn: F) -> BearDogError
     where

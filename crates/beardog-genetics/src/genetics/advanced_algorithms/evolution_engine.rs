@@ -134,7 +134,10 @@ impl GeneticEvolutionEngine {
         }
 
         // Calculate statistics
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "display/metric conversion, precision loss acceptable"
+        )]
         let avg_fitness =
             next_gen.iter().map(|i| i.fitness_score).sum::<f64>() / next_gen.len() as f64;
         let best_fitness = next_gen
