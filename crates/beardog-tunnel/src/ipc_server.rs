@@ -287,6 +287,86 @@ mod tests {
     }
 
     #[test]
+    fn ipc_message_register_roundtrips_json() -> Result<(), BearDogError> {
+        let msg = IpcMessage::Register {
+            primal_id: "p-a".to_string(),
+            capabilities: vec!["crypto.sign".to_string()],
+        };
+        let json = serde_json::to_string(&msg)
+            .map_err(|e| BearDogError::serialization(&format!("Register serde: {e}")))?;
+        let back: IpcMessage = serde_json::from_str(&json)
+            .map_err(|e| BearDogError::serialization(&format!("Register de: {e}")))?;
+        match back {
+            IpcMessage::Register {
+                primal_id,
+                capabilities,
+            } => {
+                assert_eq!(primal_id, "p-a");
+                assert_eq!(capabilities, vec!["crypto.sign".to_string()]);
+            }
+            other => {
+                return Err(BearDogError::invalid_input(&format!(
+                    "expected Register, got {other:?}"
+                )));
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn ipc_message_event_roundtrips_json() -> Result<(), BearDogError> {
+        let msg = IpcMessage::Event {
+            event_type: "audit".to_string(),
+            data: serde_json::json!({"k": 1}),
+        };
+        let json = serde_json::to_string(&msg)
+            .map_err(|e| BearDogError::serialization(&format!("Event serde: {e}")))?;
+        let back: IpcMessage = serde_json::from_str(&json)
+            .map_err(|e| BearDogError::serialization(&format!("Event de: {e}")))?;
+        match back {
+            IpcMessage::Event { event_type, data } => {
+                assert_eq!(event_type, "audit");
+                assert_eq!(data["k"], 1);
+            }
+            other => {
+                return Err(BearDogError::invalid_input(&format!(
+                    "expected Event, got {other:?}"
+                )));
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn ipc_message_pong_roundtrips_json() -> Result<(), BearDogError> {
+        let msg = IpcMessage::Pong {
+            to: "peer-1".to_string(),
+        };
+        let json = serde_json::to_string(&msg)
+            .map_err(|e| BearDogError::serialization(&format!("Pong serde: {e}")))?;
+        let back: IpcMessage = serde_json::from_str(&json)
+            .map_err(|e| BearDogError::serialization(&format!("Pong de: {e}")))?;
+        match back {
+            IpcMessage::Pong { to } => assert_eq!(to, "peer-1"),
+            other => {
+                return Err(BearDogError::invalid_input(&format!(
+                    "expected Pong, got {other:?}"
+                )));
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn ipc_server_new_stores_socket_path() {
+        use std::path::PathBuf;
+        let p = PathBuf::from("/tmp/beardog-ipc-coverage.sock");
+        let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
+        let srv = IpcServer::new(p.clone(), handler);
+        assert_eq!(srv.socket_path, p);
+    }
+
+    #[test]
     fn test_ipc_message_serialization() -> Result<(), BearDogError> {
         let msg = IpcMessage::Ping {
             from: "test".to_string(),

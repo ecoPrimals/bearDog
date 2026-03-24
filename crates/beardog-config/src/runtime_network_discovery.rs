@@ -10,6 +10,7 @@
 //! - Use configuration as preferences, not requirements
 //! - Graceful fallback when discovery fails
 
+use crate::domains::network_ports::DEFAULT_API_PORT;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener};
@@ -39,12 +40,15 @@ pub struct NetworkPreferences {
     pub port_range: (u16, u16),
 }
 
+/// Inclusive upper bound for the default [`NetworkPreferences`] port scan window (see [`NetworkPreferences::default`]).
+pub const DEFAULT_RUNTIME_PORT_SCAN_RANGE_END: u16 = DEFAULT_API_PORT + 19;
+
 impl Default for NetworkPreferences {
     fn default() -> Self {
         Self {
             preferred_host: None,
             preferred_port: None,
-            port_range: (8080, 8099), // Search range, not hardcoded requirement
+            port_range: (DEFAULT_API_PORT, DEFAULT_RUNTIME_PORT_SCAN_RANGE_END),
         }
     }
 }
@@ -257,7 +261,7 @@ mod tests {
         let prefs = NetworkPreferences {
             preferred_host: Some("127.0.0.1".to_string()),
             preferred_port: None,
-            port_range: (8080, 8099),
+            port_range: (DEFAULT_API_PORT, DEFAULT_RUNTIME_PORT_SCAN_RANGE_END),
         };
         let discovery = NetworkDiscovery::new(prefs);
         let capabilities = discovery

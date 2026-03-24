@@ -9,7 +9,6 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::time::Duration;
 
-#[allow(clippy::type_complexity)]
 /// Minimal key/value cache with string payloads and optional TTL.
 pub trait CacheProvider: BaseProvider {
     /// Sets value
@@ -102,7 +101,6 @@ pub struct AdvancedCacheStats {
     pub memory_usage: u64,
 }
 
-#[allow(clippy::type_complexity)]
 /// Batch and pattern operations for high-throughput caches.
 pub trait EnhancedCacheProvider: CacheProvider {
     /// Multi-get returning only found keys.

@@ -273,6 +273,13 @@ mod hsm_handler_tests {
         assert!(find_hsm_for_cli(&hsms, "no-such-device").is_none());
     }
 
+    #[test]
+    fn test_find_hsm_for_cli_id_exact_over_name() {
+        let hsms = sample_hsms();
+        let by_id = find_hsm_for_cli(&hsms, "vendor-a-1234").expect("exact id");
+        assert_eq!(by_id.id, "vendor-a-1234");
+    }
+
     #[tokio::test]
     async fn test_handle_hsm_capabilities_unknown_id() {
         let r = handle_hsm_capabilities("___unlikely_cli_hsm_id___").await;

@@ -42,7 +42,7 @@ impl DelegationConstraints {
     /// using the universal constraint system.
     #[allow(
         dead_code,
-        reason = "Public builder for upcoming delegation constraint evaluation"
+        reason = "public delegation helpers; not referenced by all CLI entrypoints"
     )]
     pub fn to_constraints(&self) -> Vec<Box<dyn Constraint>> {
         let mut constraints: Vec<Box<dyn Constraint>> = Vec::new();
@@ -85,7 +85,7 @@ impl DelegationConstraints {
     /// MODERNIZED: Uses trait-based constraint evaluation
     #[allow(
         dead_code,
-        reason = "Public API for future delegation validation before issuance"
+        reason = "public delegation helpers; not referenced by all CLI entrypoints"
     )]
     pub fn is_satisfied(&self) -> Result<bool, BearDogError> {
         let constraints = self.to_constraints();
@@ -104,7 +104,7 @@ impl DelegationConstraints {
     /// Get composite constraint (all constraints with AND logic)
     #[allow(
         dead_code,
-        reason = "Public API for exporting composite constraints in delegation"
+        reason = "public delegation helpers; not referenced by all CLI entrypoints"
     )]
     pub fn as_composite(&self) -> CompositeConstraint {
         CompositeConstraint::and(self.to_constraints())

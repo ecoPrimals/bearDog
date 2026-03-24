@@ -3,8 +3,11 @@
 // Hardware Security Module configuration types
 // Provides structured configuration definitions for HSM providers and settings
 
-// Allow deprecated warnings in this module - LegacyHsmProviderType is intentionally kept for backward compatibility
-#![allow(deprecated)]
+// Expect deprecated warnings in this module - LegacyHsmProviderType is intentionally kept for backward compatibility
+#![expect(
+    deprecated,
+    reason = "legacy HSM provider types retained for backward compatibility during unified migration"
+)]
 
 use crate::constants::time;
 use serde::{Deserialize, Serialize};
@@ -32,7 +35,6 @@ use std::time::Duration;
 /// - Security capability tracking
 /// - Universal provider support
 /// - Modern patterns
-#[allow(deprecated)] // Allow internal uses for backward compatibility
 #[deprecated(
     since = "4.0.0",
     note = "Use hsm_unified::providers::HsmProviderType instead. See migration guide above."
@@ -59,8 +61,10 @@ pub enum LegacyHsmProviderType {
     },
 }
 
-#[allow(deprecated)] // Allow implementation for backward compatibility
-#[allow(deprecated)] // Allow implementation for backward compatibility
+#[expect(
+    deprecated,
+    reason = "Display for deprecated LegacyHsmProviderType kept for migration and diagnostics"
+)]
 impl fmt::Display for LegacyHsmProviderType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

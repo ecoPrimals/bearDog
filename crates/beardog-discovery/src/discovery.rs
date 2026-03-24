@@ -536,4 +536,81 @@ reliability = 0.25
             .expect("find noop with registry URL none");
         assert!(out.is_empty());
     }
+
+    #[tokio::test]
+    async fn from_config_missing_file_errors() {
+        let res = CapabilityDiscovery::from_config("/nonexistent/discovery-config-xyz.toml").await;
+        assert!(
+            res.is_err(),
+            "missing file should not load discovery config"
+        );
+    }
+
+    #[test]
+    fn select_best_prefers_finite_over_nan_score() {
+        let toml = minimal_config_toml("\"environment\"");
+        let config: DiscoveryConfig = toml::from_str(&toml).expect("parse config for nan test");
+        let d = CapabilityDiscovery::new(config);
+
+        let base = DiscoveredService {
+            id: "a".to_string(),
+            service_type: "t".to_string(),
+            display_name: "a".to_string(),
+            endpoint: ServiceEndpoint {
+                primary_url: "http://a".to_string(),
+                fallback_urls: vec![],
+                use_tls: false,
+                path_prefix: None,
+            },
+            capabilities: vec![Capability {
+                capability_type: "c".to_string(),
+                version: "1".to_string(),
+                features: vec![],
+                parameters: HashMap::new(),
+            }],
+            qos: QoSMetrics {
+                latency_ms: f64::NAN,
+                throughput_ops_sec: 0.0,
+                availability: 0.0,
+                reliability: 0.0,
+                updated_at: SystemTime::now(),
+            },
+            health: HealthStatus::Unknown,
+            discovered_at: SystemTime::now(),
+            ttl_secs: 60,
+            discovery_method: "test".to_string(),
+            metadata: HashMap::new(),
+        };
+        let mut good = base.clone();
+        good.id = "b".to_string();
+        good.qos = QoSMetrics {
+            latency_ms: 10.0,
+            throughput_ops_sec: 100.0,
+            availability: 1.0,
+            reliability: 1.0,
+            updated_at: SystemTime::now(),
+        };
+
+        let best = d
+            .select_best(&[base, good])
+            .expect("finite score wins over NaN");
+        assert_eq!(best.id, "b");
+    }
+
+    #[tokio::test]
+    async fn find_by_capability_skips_empty_cache_entry() {
+        let dir = tempfile::tempdir().expect("tempdir for cache skip test");
+        let path = dir.path().join("d.toml");
+        let toml = minimal_config_toml("\"environment\"");
+        std::fs::write(&path, toml).expect("write discovery TOML");
+        let d = CapabilityDiscovery::from_config(&path)
+            .await
+            .expect("from_config")
+            .with_environment_discovery(|_cap, _ttl| vec![]);
+        let out = d
+            .find_by_capability("orphan-cap")
+            .await
+            .expect("find orphan");
+        assert!(out.is_empty());
+    }
 }

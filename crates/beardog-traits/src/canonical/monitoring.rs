@@ -20,7 +20,6 @@ pub enum AlertSeverity {
     Critical,
 }
 
-#[allow(clippy::type_complexity)]
 /// Records time-series metrics and raises simple threshold alerts.
 pub trait MonitoringProvider: BaseProvider {
     /// Ingests a single named gauge/counter with optional tags.

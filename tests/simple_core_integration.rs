@@ -12,8 +12,6 @@
     clippy::needless_collect
 )]
 // Simple Core Integration Tests
-// Migrated from tests_NEEDS_FIXING_BACKUP/simple_core_tests.rs
-// Date: October 10, 2025
 
 use beardog_core::BearDogConfig;
 use beardog_errors::BearDogError;

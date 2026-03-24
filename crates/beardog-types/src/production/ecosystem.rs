@@ -525,7 +525,10 @@ impl ProductionState {
 
     /// Calculate current error rate percentage
     #[must_use]
-    #[allow(clippy::cast_precision_loss)] // Acceptable for percentage calculation
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "u64 counts converted to f64 for approximate error-rate percentage"
+    )]
     pub fn error_rate(&self) -> f64 {
         if self.total_requests == 0 {
             0.0

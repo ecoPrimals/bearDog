@@ -16,7 +16,6 @@ pub struct QueryResult {
     pub affected_rows: u64,
 }
 
-#[allow(clippy::type_complexity)]
 /// CRUD, listing, transactions, and backup hooks for embedded or remote databases.
 pub trait DatabaseProvider: BaseProvider {
     /// Executes query

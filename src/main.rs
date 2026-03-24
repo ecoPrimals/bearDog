@@ -280,7 +280,8 @@ enum BirdsongAction {
 
 fn init_tracing() {
     let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
-    fmt().with_env_filter(filter).with_target(false).init();
+    // Idempotent: tests may call `init_tracing` more than once; ignore duplicate installs.
+    let _ = fmt().with_env_filter(filter).with_target(false).try_init();
 }
 
 async fn dispatch(command: Commands) -> Result<()> {
@@ -805,3 +806,7 @@ mod tests {
         assert!(result.is_ok());
     }
 }
+
+#[cfg(test)]
+#[path = "main_coverage_extension.rs"]
+mod main_coverage_extension;

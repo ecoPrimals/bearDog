@@ -261,7 +261,10 @@ impl MonitoringMigrationService {
     }
 
     /// Migrate configuration monitoring settings
-    #[allow(clippy::unused_async, clippy::unnecessary_wraps)]
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "migration stub — Result API reserved for future I/O-backed migration"
+    )]
     fn migrate_configuration_monitoring(
         metrics: Option<HashMap<String, serde_json::Value>>,
         tracing: Option<HashMap<String, serde_json::Value>>,
@@ -299,7 +302,11 @@ impl MonitoringMigrationService {
     }
 
     /// Migrate production monitoring settings
-    #[allow(clippy::unused_async, clippy::unused_self, clippy::unnecessary_wraps)]
+    #[expect(
+        clippy::unused_self,
+        clippy::unnecessary_wraps,
+        reason = "migration stub — &self and Result kept for parity with other migration paths"
+    )]
     fn migrate_production_monitoring(
         &self,
         _observability: HashMap<String, serde_json::Value>,

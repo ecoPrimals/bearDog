@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### March 24, 2026 -- Wave 16: Full Ecosystem Audit, api_server Refactor, Zero-Copy & Debris Cleanup
+
+- **Full wateringHole audit** — Cross-referenced PRIMAL_IPC_PROTOCOL, SEMANTIC_METHOD_NAMING, ECOBIN, UNIBIN, ZERO_HARDCODING, primalSpring standards
+- **api_server.rs refactored** — 1,185 LOC → 3-module structure (`mod.rs`, `handlers.rs`, `types.rs`); production stubs → 501 Not Implemented
+- **`#[expect(reason)]` hardening** — Additional migrations with unfulfilled-lint regression fixes
+- **Showcase edition 2024** — All 28 showcase `Cargo.toml` updated from 2021 to 2024
+- **Zero-copy IPC** — clone-free JSON detection, `Value` deserialization from borrow, `&str` borrows in method lists
+- **Zero-hardcoding evolution** — 3 new named constants; `DEFAULT_UPA_URL` aliased from canonical config; DNS-SD comments genericized
+- **38 deep tests** — main.rs CLI/dispatch, deploy config, CLI HSM, tunnel IPC, discovery edge cases
+- **Debris cleanup** — `audit.log` artifacts removed; stale `tests/README.md` links fixed; Dockerfile aligned to 1.93.0; `tests_NEEDS_FIXING` comment references cleaned
+- **14,499+ tests passing** — 0 failures
+- **All gates green** — fmt, clippy `-D warnings`, doc, deny, test all clean
+
 ### March 24, 2026 -- Wave 15: Ecosystem Absorption, IPC Evolution, Semantic Naming v2.1.0 & Self-Knowledge
 
 - **IPC error types** — `DispatchOutcome` / `IpcErrorPhase` from rhizoCrypt/LoamSpine pattern; `route_with_outcome()` + `normalize_method()`

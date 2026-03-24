@@ -113,7 +113,10 @@ pub enum LegacyDiscoveryProtocol {
     },
 }
 
-#[allow(deprecated)]
+#[expect(
+    deprecated,
+    reason = "Hash for deprecated LegacyDiscoveryProtocol kept until callers finish discovery_unified migration"
+)]
 impl Hash for LegacyDiscoveryProtocol {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {

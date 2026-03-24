@@ -5,15 +5,34 @@ use crate::categories::BusinessErrorCategory;
 use std::fmt::Display;
 
 pub trait ResultValidationExt<T> {
-    /// Creates instance with validation context
+    /// Wraps the error with a validation-category business context.
+    ///
+    /// # Errors
+    /// Returns [`BearDogError`] with [`BusinessErrorCategory::Validation`] when `self` is `Err`.
     fn with_validation_context(self, context: &str) -> Result<T, BearDogError>;
-    /// Creates instance with internal context
+
+    /// Wraps the error with an internal context message.
+    ///
+    /// # Errors
+    /// Returns [`BearDogError`] (internal) when `self` is `Err`.
     fn with_internal_context(self, context: &str) -> Result<T, BearDogError>;
-    /// Creates instance with operation context
+
+    /// Wraps the error with an operation-scoped context.
+    ///
+    /// # Errors
+    /// Returns [`BearDogError`] (internal) describing the failed operation when `self` is `Err`.
     fn with_operation_context(self, operation: &str) -> Result<T, BearDogError>;
-    /// Creates instance with component context
+
+    /// Wraps the error with a component-scoped context.
+    ///
+    /// # Errors
+    /// Returns [`BearDogError`] (internal) naming the failing component when `self` is `Err`.
     fn with_component_context(self, component: &str) -> Result<T, BearDogError>;
-    /// Creates instance with detailed context
+
+    /// Wraps the error with a lazily-computed detailed context.
+    ///
+    /// # Errors
+    /// Returns [`BearDogError`] (internal) with the message produced by `context_fn` when `self` is `Err`.
     fn with_detailed_context<F>(self, context_fn: F) -> Result<T, BearDogError>
     where
         F: FnOnce() -> String;
@@ -56,8 +75,22 @@ where
 }
 
 pub trait OptionValidationExt<T> {
+    /// Converts `None` into a validation error.
+    ///
+    /// # Errors
+    /// Returns [`BearDogError`] with [`BusinessErrorCategory::Validation`] when `self` is `None`.
     fn ok_or_validation_error(self, message: &str) -> Result<T, BearDogError>;
+
+    /// Converts `None` into a "not found" internal error.
+    ///
+    /// # Errors
+    /// Returns [`BearDogError`] (internal) indicating the item was not found when `self` is `None`.
     fn ok_or_not_found(self, item_type: &str) -> Result<T, BearDogError>;
+
+    /// Converts `None` into a "missing required field" validation error.
+    ///
+    /// # Errors
+    /// Returns [`BearDogError`] with [`BusinessErrorCategory::Validation`] when `self` is `None`.
     fn ok_or_missing_required(self, field_name: &str) -> Result<T, BearDogError>;
 }
 

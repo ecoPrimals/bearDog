@@ -51,9 +51,9 @@ pub use loader::ConfigLoader;
 // Re-export commonly used types
 pub use domains::network_addresses::{DEFAULT_LISTEN_ADDR, NetworkAddressesConfig};
 pub use domains::network_ports::{
-    DEFAULT_API_PORT, DEFAULT_DISCOVERY_PORT, DEFAULT_HEALTH_PORT, DEFAULT_HTTPS_PORT,
-    DEFAULT_INTEGRATION_API_PORT, DEFAULT_METRICS_PORT, DEFAULT_TCP_IPC_PORT, DEFAULT_VAULT_PORT,
-    NetworkPortsConfig,
+    DEFAULT_API_PORT, DEFAULT_API_PORT_STR, DEFAULT_DISCOVERY_PORT, DEFAULT_HEALTH_PORT,
+    DEFAULT_HTTPS_PORT, DEFAULT_INTEGRATION_API_PORT, DEFAULT_METRICS_PORT, DEFAULT_TCP_IPC_PORT,
+    DEFAULT_UPA_FALLBACK_BASE_URL, DEFAULT_VAULT_PORT, NetworkPortsConfig,
 };
 
 // Re-export zero hardcoding for easy access

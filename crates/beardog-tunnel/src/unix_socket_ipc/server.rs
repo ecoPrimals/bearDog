@@ -480,6 +480,8 @@ impl UnixSocketIpcServer {
     async fn handle_jsonrpc_via_registry(&self, request: &JsonRpcRequest) -> JsonRpcResponse {
         debug!("→ JSON-RPC Request: {}", request.method);
 
+        let id = request.id.clone().unwrap_or(serde_json::Value::Null);
+
         // Validate JSON-RPC version
         if request.jsonrpc != "2.0" {
             return JsonRpcResponse {
@@ -490,7 +492,7 @@ impl UnixSocketIpcServer {
                     message: "Invalid JSON-RPC version (must be 2.0)".to_string(),
                     data: None,
                 }),
-                id: request.id.clone().unwrap_or(serde_json::Value::Null),
+                id,
             };
         }
 
@@ -510,7 +512,7 @@ impl UnixSocketIpcServer {
                 jsonrpc: "2.0".to_string(),
                 result: Some(value),
                 error: None,
-                id: request.id.clone().unwrap_or(serde_json::Value::Null),
+                id,
             },
             Err(e) => {
                 // Detect error type and use appropriate error code
@@ -531,7 +533,7 @@ impl UnixSocketIpcServer {
                         message,
                         data: None,
                     }),
-                    id: request.id.clone().unwrap_or(serde_json::Value::Null),
+                    id,
                 }
             }
         }

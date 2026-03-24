@@ -108,7 +108,10 @@ pub mod constructors_unified;
 pub mod idiomatic;
 
 /// Result/option validation extension traits (additional context helpers).
-#[allow(missing_docs)]
+#[expect(
+    missing_docs,
+    reason = "extension trait helpers mirror idiomatic names; module-level docs cover purpose"
+)]
 pub mod result_extensions;
 
 pub use result_extensions::{ErrorChainExt, OptionValidationExt, ResultValidationExt};

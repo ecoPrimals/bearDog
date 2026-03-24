@@ -41,7 +41,10 @@ impl PrimalIdEnvInputs {
 
 /// Injected configuration for [`SelfDiscoveryEngine`] (no reads in [`Default::default`]).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
-#[allow(missing_docs)]
+#[expect(
+    missing_docs,
+    reason = "field names mirror BEARDOG_* / PRIMAL_* env keys; self-explanatory in from_env()"
+)]
 pub struct SelfDiscoveryEnvInputs {
     /// Primal ID components ([`PrimalIdEnvInputs`]).
     pub primal_id: PrimalIdEnvInputs,
@@ -179,7 +182,10 @@ impl SelfDiscoveryEngine {
     }
 
     /// Logs the discovery plan
-    #[allow(clippy::unused_self, reason = "will use self when fully implemented")]
+    #[expect(
+        clippy::unused_self,
+        reason = "will use self when discovery phases read engine state"
+    )]
     fn log_discovery_plan(&self) {
         info!("🔍 Starting self-identity discovery...");
         info!("📋 Discovery Plan:");

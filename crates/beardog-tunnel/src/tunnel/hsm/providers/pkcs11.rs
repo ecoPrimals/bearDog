@@ -12,13 +12,22 @@ pub struct Pkcs11UniversalProvider {
     /// HSM capabilities
     capabilities: Option<Pkcs11Capabilities>,
     /// PKCS#11 library path
-    #[allow(dead_code)] // Read when `pkcs11-provider` session wiring is complete
+    #[expect(
+        dead_code,
+        reason = "migration adapter — reserved for PKCS#11 session wiring when feature is enabled"
+    )]
     library_path: String,
     /// Slot ID
-    #[allow(dead_code)] // Read when `pkcs11-provider` session wiring is complete
+    #[expect(
+        dead_code,
+        reason = "migration adapter — reserved for PKCS#11 session wiring when feature is enabled"
+    )]
     slot_id: u64,
     /// Provider metadata
-    #[allow(dead_code)] // Queried when provider is fully active
+    #[expect(
+        dead_code,
+        reason = "migration adapter — fields reserved for Phase 2 provider wiring"
+    )]
     metadata: HashMap<String, String>,
 }
 

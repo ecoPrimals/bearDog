@@ -16,8 +16,8 @@ BearDog answers “who is this node?” and “perform this crypto operation saf
 - **Workspace:** 30 crates (`Cargo.toml` workspace)
 - **Rust sources:** 2,000+ `.rs` files
 - **MSRV:** 1.93.0 (`rust-toolchain.toml`)
-- **Tests:** 14,447+ passing (0 failed, 186 ignored)
-- **Coverage:** 87.35%+ line (llvm-cov, workspace)
+- **Tests:** 14,499+ passing (0 failed, 186 ignored)
+- **Coverage:** 86.70%+ line (llvm-cov, workspace)
 - **Unsafe:** 0 production blocks (`forbid(unsafe_code)` workspace-wide)
 - **IPC:** JSON-RPC 2.0 over Unix sockets / TCP / named pipes (platform-dependent); **tarpc** RPC where applicable
 

@@ -145,10 +145,10 @@ impl ProtocolDetector {
         }
 
         // Check for JSON-RPC (starts with '{' or whitespace then '{')
-        let trimmed = bytes
+        let mut trimmed = bytes
             .iter()
             .skip_while(|&&b| b == b' ' || b == b'\t' || b == b'\n' || b == b'\r');
-        if let Some(&first_char) = trimmed.clone().next()
+        if let Some(&first_char) = trimmed.next()
             && first_char == b'{'
         {
             // Likely JSON - check for JSON-RPC fields

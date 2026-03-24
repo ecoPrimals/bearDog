@@ -11,6 +11,7 @@ use crate::{
     resolve_ipc_socket_from_options,
     types::{Capability, ServiceInfo},
 };
+use serde::Deserialize;
 use serde_json::json;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -167,7 +168,7 @@ impl SongbirdClient {
 
             let service_infos = services
                 .iter()
-                .filter_map(|s| serde_json::from_value(s.clone()).ok())
+                .filter_map(|s| ServiceInfo::deserialize(s).ok())
                 .collect();
 
             debug!(

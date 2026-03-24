@@ -87,7 +87,10 @@ impl From<ServiceHealth> for super::traits::ProviderHealth {
         use std::collections::HashMap;
         use std::time::SystemTime;
 
-        #[allow(clippy::cast_sign_loss)]
+        #[expect(
+            clippy::cast_sign_loss,
+            reason = "legacy UTC timestamp converted to non-negative unix seconds for SystemTime"
+        )]
         let timestamp = SystemTime::UNIX_EPOCH
             + std::time::Duration::from_secs(service_health.last_check.timestamp().max(0) as u64);
 
@@ -151,9 +154,15 @@ impl From<CacheStats> for super::traits::ProviderMetrics {
     fn from(cache_stats: CacheStats) -> Self {
         let total_requests = cache_stats.hit_count + cache_stats.miss_count;
         let hit_rate = if total_requests > 0 {
-            #[allow(clippy::cast_precision_loss)]
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "legacy u64 counts converted to f64 for hit-rate ratio"
+            )]
             let hit_count_f64 = cache_stats.hit_count as f64;
-            #[allow(clippy::cast_precision_loss)]
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "legacy u64 counts converted to f64 for hit-rate ratio"
+            )]
             let total_f64 = total_requests as f64;
             hit_count_f64 / total_f64
         } else {
@@ -161,13 +170,25 @@ impl From<CacheStats> for super::traits::ProviderMetrics {
         };
 
         let mut custom_metrics = HashMap::new();
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "migration adapter — legacy integer metrics exposed as f64 custom metrics"
+        )]
         custom_metrics.insert("hit_count".to_string(), cache_stats.hit_count as f64);
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "migration adapter — legacy integer metrics exposed as f64 custom metrics"
+        )]
         custom_metrics.insert("miss_count".to_string(), cache_stats.miss_count as f64);
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "migration adapter — legacy integer metrics exposed as f64 custom metrics"
+        )]
         custom_metrics.insert("cache_size".to_string(), cache_stats.size as f64);
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "migration adapter — legacy integer metrics exposed as f64 custom metrics"
+        )]
         custom_metrics.insert(
             "eviction_count".to_string(),
             cache_stats.eviction_count as f64,

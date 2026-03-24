@@ -71,7 +71,6 @@ pub struct ClassificationResult {
     pub metadata: std::collections::HashMap<String, serde_json::Value>,
 }
 
-#[allow(clippy::type_complexity)]
 /// High-level AI operations built on [`BaseProvider`].
 pub trait AiProvider: BaseProvider {
     /// Processes prompt

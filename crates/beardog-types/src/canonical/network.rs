@@ -4,6 +4,7 @@
 // Provides network-related configuration structures and utilities
 
 use crate::canonical::traits::TimeoutPolicy;
+use beardog_config::domains::network_ports::DEFAULT_API_PORT;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -36,7 +37,7 @@ impl Default for NetworkConfig {
     fn default() -> Self {
         Self {
             bind_address: "0.0.0.0".to_string(),
-            port: 8080,
+            port: DEFAULT_API_PORT,
             tls_enabled: true,
             tls_cert_path: None,
             tls_key_path: None,
@@ -225,7 +226,7 @@ impl NetworkConfig {
             port: std::env::var("BEARDOG_NETWORK_PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(8080),
+                .unwrap_or(DEFAULT_API_PORT),
             ..Default::default()
         }
     }
@@ -335,7 +336,7 @@ mod network_timeout_policy_tests {
         nc.port = 0;
         assert!(nc.validate().unwrap_err().contains("Port"));
 
-        nc.port = 8080;
+        nc.port = DEFAULT_API_PORT;
         nc.tls_enabled = true;
         assert!(nc.validate().unwrap_err().contains("certificate"));
 

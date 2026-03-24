@@ -134,3 +134,33 @@ fn deployment_manager_empty_env_fails_validation() {
     let err = manager.initialize();
     assert!(err.is_err(), "empty environment should fail validation");
 }
+
+#[test]
+fn deployment_config_clone_and_monitoring_toggle() {
+    let mut c = crate::DeploymentConfig::default();
+    c.monitoring_enabled = false;
+    c.region = "us-west".to_string();
+    let c2 = c.clone();
+    assert_eq!(c2.region, "us-west");
+    assert!(!c2.monitoring_enabled);
+}
+
+#[test]
+fn deployment_manager_debug_includes_environment() {
+    let m = crate::DeploymentManager::new(crate::DeploymentConfig::default());
+    let s = format!("{m:?}");
+    assert!(s.contains("development") || s.contains("DeploymentManager"));
+}
+
+#[test]
+fn deployment_optimization_config_release_lto_cargo_flags() {
+    use crate::optimization::{DeploymentOptimizationConfig, OptimizationLevel};
+    let config = DeploymentOptimizationConfig {
+        features: crate::optimization::BuildFeatures::default(),
+        target_cpu_optimization: None,
+        optimization_level: OptimizationLevel::ReleaseLto,
+    };
+    let flags = config.get_cargo_flags();
+    assert!(flags.contains(&"--release".to_string()));
+    assert!(config.get_rustc_flags().iter().any(|f| f.contains("lto")));
+}

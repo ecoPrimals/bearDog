@@ -409,7 +409,7 @@ pub fn calculate_entropy_quality(bytes: &[u8]) -> f64 {
 /// Save entropy data to file (for future persistence features)
 #[allow(
     dead_code,
-    reason = "Public hook for entropy export; callers outside this crate may use it"
+    reason = "public hook; not referenced by all CLI entrypoints"
 )]
 pub fn save_entropy_file(data: &[u8], path: &str) -> Result<(), BearDogError> {
     std::fs::write(path, data)
@@ -419,7 +419,7 @@ pub fn save_entropy_file(data: &[u8], path: &str) -> Result<(), BearDogError> {
 /// Load entropy data from file (for future persistence features)
 #[allow(
     dead_code,
-    reason = "Public hook for entropy import; callers outside this crate may use it"
+    reason = "public hook; not referenced by all CLI entrypoints"
 )]
 pub fn load_entropy_file(path: &str) -> Result<Vec<u8>, BearDogError> {
     std::fs::read(path)

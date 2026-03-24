@@ -56,7 +56,6 @@ pub struct SecureSession {
 /// **UNIFICATION NOTE**: This trait exists alongside `unified::SecurityProvider`.
 /// Future versions should consolidate to a single `SecurityProvider` interface
 /// that combines the best of both approaches.
-#[allow(clippy::type_complexity)]
 pub trait SecurityProvider: BaseProvider {
     /// Validates credentials and returns an [`AuthenticationResult`].
     fn authenticate(

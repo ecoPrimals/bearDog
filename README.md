@@ -8,7 +8,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 30 | **Tests**: 14,447+ | **Coverage**: 87.35%+
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 30 | **Tests**: 14,499+ | **Coverage**: 86.70%+
 
 ---
 
@@ -169,8 +169,8 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
 | **Files > 1000 LOC** | 0 (production code) |
-| **Tests** | 14,447+ (fully concurrent, zero sleeps in non-chaos) |
-| **Coverage** | 87.35%+ line (llvm-cov workspace) |
+| **Tests** | 14,499+ (fully concurrent, zero sleeps in non-chaos) |
+| **Coverage** | 86.70%+ line (llvm-cov workspace) |
 | **Serial Tests** | 0 (`#[serial]` fully eliminated) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |
 | **License** | AGPL-3.0-only (SPDX headers on all .rs files) |

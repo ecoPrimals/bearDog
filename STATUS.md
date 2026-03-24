@@ -17,9 +17,9 @@
 | **Unsafe Code** | 0 production | `forbid(unsafe_code)` workspace-wide + all crate `lib.rs` |
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
-| **Files > 1000 LOC** | 0 | All production .rs files compliant (`device.rs` refactored) |
-| **Tests** | 14,447+ passing | Fully concurrent, zero sleeps in non-chaos |
-| **Coverage** | 87.35%+ line | llvm-cov workspace (targeting 90%) |
+| **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
+| **Tests** | 14,499+ passing | Fully concurrent, zero sleeps in non-chaos |
+| **Coverage** | 86.70%+ line | llvm-cov workspace (targeting 90%) |
 | **Serial Tests** | 0 | `#[serial]` fully eliminated |
 | **cargo deny** | 4/4 pass | Advisories, bans, licenses, sources |
 | **License** | AGPL-3.0-only | SPDX headers on all .rs files |
@@ -38,7 +38,7 @@
 
 ---
 
-## Per-Crate Coverage (March 23, 2026, llvm-cov)
+## Per-Crate Coverage (March 24, 2026, llvm-cov)
 
 | Crate | Line Coverage | Notes |
 |-------|---------------|-------|
@@ -56,7 +56,7 @@
 | beardog-tunnel | ~83% | server, BTSP, IPC, crypto fault injection, BufReader opt |
 | beardog-deploy | ~82% | command runner, android, builder, device coverage boosted |
 | beardog-integration | new | Tower Atomic UPA client, heartbeat, connection tracking |
-| **Overall** | **87.35%** | llvm-cov workspace |
+| **Overall** | **86.70%** | llvm-cov workspace |
 
 ---
 
@@ -98,6 +98,21 @@
 - **Coverage 87.08% → 87.35%** (lines); 81.98% → 82.27% (functions)
 - **Discovery documentation** — 5-tier discovery pattern and credential resolution chain added to CONTEXT.md and ARCHITECTURE.md
 - **14,447+ tests passing** — 0 failures
+- **All gates green** — fmt, clippy `-D warnings`, doc, deny, test all clean
+
+### Wave 16: Full Ecosystem Audit, api_server Refactor, Zero-Copy IPC, Edition 2024 Showcase & Debris Cleanup
+
+- **Full wateringHole audit** — Cross-referenced all standards (PRIMAL_IPC_PROTOCOL, SEMANTIC_METHOD_NAMING, ECOBIN_ARCHITECTURE, UNIBIN_ARCHITECTURE, ZERO_HARDCODING, primalSpring Leverage Guide)
+- **api_server.rs refactored** — 1,185 LOC flat file → 3-module structure (`mod.rs`, `handlers.rs`, `types.rs`); all under 1000 LOC; production stubs evolved to 501 Not Implemented
+- **`#[expect(reason)]` migration** — Additional `#[allow]` → `#[expect(reason)]` with unfulfilled-lint regression fixes
+- **Showcase edition 2024** — All 28 showcase `Cargo.toml` updated from edition 2021 to 2024
+- **Zero-copy IPC** — Removed `clone()` from JSON detection, `Value` deserialization from borrow, `id` single-clone, `&str` borrows in method lists
+- **Zero-hardcoding evolution** — `DEFAULT_API_PORT_STR`, `DEFAULT_UPA_FALLBACK_BASE_URL`, `DEFAULT_RUNTIME_PORT_SCAN_RANGE_END` named constants; `DEFAULT_UPA_URL` aliased from canonical config; DNS-SD comments genericized
+- **38 deep tests** — main.rs CLI/dispatch coverage, deploy config, CLI HSM, tunnel IPC, discovery edge cases
+- **Coverage test race fix** — `coverage_gap_tests_6` global-state race eliminated
+- **Clippy doc compliance** — `missing_errors_doc` fixed in `result_extensions.rs` (8 methods)
+- **Debris cleanup** — `audit.log` artifacts removed; stale test `README.md` links fixed; Dockerfile toolchain aligned to 1.93.0; `tests_NEEDS_FIXING` comment references cleaned
+- **14,499+ tests passing** — 0 failures
 - **All gates green** — fmt, clippy `-D warnings`, doc, deny, test all clean
 
 ### Wave 14: Deep Debt Audit, Test Evolution, scyBorg Compliance & Zero-Copy
@@ -225,7 +240,7 @@ cargo check --workspace --all-features        # Compile — clean
 cargo test --workspace                        # Tests — 0 failures
 cargo doc --workspace --no-deps               # Docs — clean
 cargo deny check                              # Advisories, bans, licenses, sources
-cargo llvm-cov --workspace --summary-only     # Coverage — 87.35%
+cargo llvm-cov --workspace --summary-only     # Coverage — 86.70%
 ```
 
 ---

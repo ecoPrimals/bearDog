@@ -260,7 +260,10 @@ impl MonitoringService {
     ///
     /// # Errors
     /// Returns an error if metrics cannot be collected
-    #[allow(clippy::unused_self)]
+    #[allow(
+        clippy::unused_self,
+        reason = "instance method for API symmetry with future OS-backed metrics collection"
+    )]
     pub const fn collect_performance_metrics(
         &self,
     ) -> Result<SystemPerformanceMetrics, BearDogError> {

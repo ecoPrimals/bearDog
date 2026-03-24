@@ -98,10 +98,11 @@ impl GeneticEvolutionEngine {
             .collect();
 
         // Selection
-        #[allow(
+        #[expect(
             clippy::cast_possible_truncation,
             clippy::cast_sign_loss,
-            clippy::cast_precision_loss
+            clippy::cast_precision_loss,
+            reason = "elitism count from population size times f64 percentage; bounded by evaluator"
         )]
         let num_elite =
             (evaluated.len() as f64 * self.evolution_config.elitism_percentage) as usize;

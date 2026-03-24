@@ -694,7 +694,7 @@ impl PrimalDiscovery {
         // DNS-SD uses the same infrastructure as mDNS, just with different domain
         #[cfg(feature = "mdns")]
         {
-            // EVOLUTION: DNS-SD discovery via Songbird IPC (capability-based)
+            // EVOLUTION: DNS-SD discovery via ecosystem relay IPC (capability-based).
             // This is the proper implementation using inter-primal communication
             // instead of hardcoded mock data.
             //
@@ -702,7 +702,7 @@ impl PrimalDiscovery {
             // For now, return empty until integration is complete.
             // This is honest about current capabilities (fallback, not full discovery).
             warn!(
-                "DNS-SD discovery via Songbird IPC not yet complete - beardog-discovery crate pending"
+                "DNS-SD discovery via ecosystem relay IPC not yet complete - beardog-discovery crate pending"
             );
             warn!("Returning empty discovery results until integration is complete");
             warn!("See: specs/IMPLEMENTATION_GAPS_NOV_2025.md for beardog-discovery timeline");

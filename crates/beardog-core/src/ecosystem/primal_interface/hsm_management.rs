@@ -8,7 +8,7 @@ use tracing::{debug, info};
 
 impl BearDogCore {
     /// Initialize HSM providers - used by ecosystem integration
-    #[allow(
+    #[expect(
         dead_code,
         reason = "pub(crate) HSM init hook for ecosystem integration"
     )]
@@ -28,7 +28,7 @@ impl BearDogCore {
     }
 
     /// Shutdown HSM providers - used by ecosystem cleanup
-    #[allow(
+    #[expect(
         dead_code,
         reason = "pub(crate) HSM shutdown hook for ecosystem cleanup"
     )]
@@ -46,7 +46,7 @@ impl BearDogCore {
     }
 
     /// Check HSM health - used by health monitoring
-    #[allow(dead_code, reason = "pub(crate) HSM health hook for monitoring")]
+    #[expect(dead_code, reason = "pub(crate) HSM health hook for monitoring")]
     #[expect(clippy::unused_self, reason = "trait conformance requires &self")]
     pub(crate) fn check_hsm_health(&self) -> HealthStatus {
         debug!("🏥 Checking HSM provider health");

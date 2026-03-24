@@ -47,7 +47,6 @@ impl Default for MonitoringConfig {
 
 // Type alias for backward compatibility
 // DEPRECATED: Transitional alias - use canonical::monitoring::MonitoringConfig directly
-#[allow(deprecated)]
 pub use crate::canonical::monitoring::MonitoringConfig as CanonicalMonitoringConfig;
 
 /// Throughput and latency monitoring retention settings.
@@ -321,7 +320,10 @@ impl SystemMetricsCollector {
     pub const fn new(interval: Duration) -> Self {
         Self {
             config: MonitoringConfig {
-                #[allow(clippy::cast_sign_loss)]
+                #[expect(
+                    clippy::cast_sign_loss,
+                    reason = "chrono duration seconds fit u64 for monitoring interval configuration"
+                )]
                 monitoring_interval_seconds: interval.num_seconds() as u64,
                 enable_alerting: true,
                 alert_retention_count: 1000,
@@ -562,7 +564,10 @@ impl PerformanceMonitor {
             0.92 // Default score when no history
         } else {
             // Calculate efficiency based on history length and recency
-            #[allow(clippy::cast_precision_loss)]
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "heuristic efficiency score from sample count as f64"
+            )]
             let history_factor = (self.performance_history.len() as f64 / 100.0).min(1.0);
             0.85 + (history_factor * 0.1) // Score improves with more data
         };

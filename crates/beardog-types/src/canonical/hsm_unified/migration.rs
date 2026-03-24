@@ -143,7 +143,10 @@ impl HsmMigrationService {
 
     /// Create a migration service with default options
     #[must_use]
-    #[allow(clippy::should_implement_trait)]
+    #[expect(
+        clippy::should_implement_trait,
+        reason = "inherent default() alongside Default trait — kept for explicit call-site clarity"
+    )]
     pub fn default() -> Self {
         Self::new(MigrationOptions::default())
     }
@@ -239,7 +242,10 @@ impl HsmMigrationService {
     }
 
     /// Migrate tunnel HSM configuration
-    #[allow(clippy::unused_async)]
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "migration stub — Result kept for future async HSM tunnel wiring"
+    )]
     fn migrate_tunnel_hsm_config(
         &self,
         hardware_config: Option<HashMap<String, serde_json::Value>>,
@@ -269,7 +275,10 @@ impl HsmMigrationService {
     }
 
     /// Migrate configuration HSM settings
-    #[allow(clippy::unused_async)]
+    #[expect(
+        clippy::unnecessary_wraps,
+        reason = "migration stub — Result kept for future async configuration migration"
+    )]
     fn migrate_configuration_hsm_config(
         &self,
         providers: Vec<HashMap<String, serde_json::Value>>,
@@ -297,7 +306,10 @@ impl HsmMigrationService {
     }
 
     /// Migrate zero-cost HSM configuration
-    #[allow(clippy::unused_self)]
+    #[expect(
+        clippy::unused_self,
+        reason = "instance method for API symmetry with other migration paths"
+    )]
     fn migrate_zero_cost_hsm_config(
         &self,
         manager_config: &HashMap<String, serde_json::Value>,
@@ -331,7 +343,11 @@ impl HsmMigrationService {
     }
 
     /// Validate the unified configuration
-    #[allow(clippy::unused_self, clippy::unnecessary_wraps)]
+    #[expect(
+        clippy::unused_self,
+        clippy::unnecessary_wraps,
+        reason = "validation hook — Result shape and &self reserved for future schema checks"
+    )]
     /// Validates `unified_config`
     const fn validate_unified_config(
         &self,

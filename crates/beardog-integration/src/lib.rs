@@ -82,7 +82,9 @@ pub fn default_upa_url() -> String {
 }
 
 /// Legacy const for callers that need a `&str`; prefer [`default_upa_url`] for env-aware resolution.
-pub const DEFAULT_UPA_URL: &str = "https://localhost:8080";
+///
+/// Alias of [`beardog_config::DEFAULT_UPA_FALLBACK_BASE_URL`] (documented fallbacks for host and port).
+pub const DEFAULT_UPA_URL: &str = beardog_config::DEFAULT_UPA_FALLBACK_BASE_URL;
 
 /// Default REST listen port for this integration API server when `BEARDOG_API_PORT` is unset (distinct from the UPA URL port to avoid binding collisions).
 pub const DEFAULT_INTEGRATION_API_PORT: u16 = beardog_config::DEFAULT_INTEGRATION_API_PORT;

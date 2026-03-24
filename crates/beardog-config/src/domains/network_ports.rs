@@ -98,6 +98,18 @@ pub struct NetworkPortsConfig {
 /// Default API server port (8080)
 pub const DEFAULT_API_PORT: u16 = 8080;
 
+/// Decimal string form of [`DEFAULT_API_PORT`] for URL construction (`concat!`, logging, etc.).
+///
+/// Must parse to the same value as [`DEFAULT_API_PORT`]; used to avoid embedding port literals in strings.
+pub const DEFAULT_API_PORT_STR: &str = "8080";
+
+/// Default UPA-style HTTPS base URL when `BEARDOG_UPA_URL` / related env vars are unset.
+///
+/// Semantically `https://{DEFAULT_EXTERNAL_HOST}:{DEFAULT_API_PORT}`.
+/// Built with `concat!` (string literals only); unit tests assert it matches
+/// `https://{DEFAULT_EXTERNAL_HOST}:{DEFAULT_API_PORT}`.
+pub const DEFAULT_UPA_FALLBACK_BASE_URL: &str = concat!("https://", "localhost", ":", "8080");
+
 /// Default discovery service port (9090)
 pub const DEFAULT_DISCOVERY_PORT: u16 = 9090;
 
@@ -314,6 +326,25 @@ impl NetworkPortsConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn default_api_port_str_matches_numeric() {
+        assert_eq!(
+            DEFAULT_API_PORT_STR
+                .parse::<u16>()
+                .expect("port str parses"),
+            DEFAULT_API_PORT
+        );
+    }
+
+    #[test]
+    fn default_upa_fallback_matches_external_host_and_api_port() {
+        use crate::domains::network_addresses::DEFAULT_EXTERNAL_HOST;
+        assert_eq!(
+            DEFAULT_UPA_FALLBACK_BASE_URL,
+            format!("https://{DEFAULT_EXTERNAL_HOST}:{DEFAULT_API_PORT}")
+        );
+    }
 
     #[test]
     fn test_default_ports() {
