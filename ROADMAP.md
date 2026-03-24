@@ -1,6 +1,6 @@
 # BearDog Roadmap
 
-**Updated**: March 23, 2026
+**Updated**: March 24, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,8 +20,8 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 1000 lines of code (production)
-- 14,387 tests passing (fully concurrent, zero sleeps in non-chaos)
-- 87.2% line coverage (llvm-cov workspace)
+- 14,447+ tests passing (fully concurrent, zero sleeps in non-chaos)
+- 87.35% line coverage (llvm-cov workspace)
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - Zero `#[serial_test::serial]` — all tests concurrent via unique isolated resources
 - `cargo deny` passes all 4 checks
@@ -59,7 +59,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ### Test Coverage to 90%
 
-Coverage at 87.2% overall. Top crates above target; remaining crates approaching via targeted test waves.
+Coverage at 87.35% overall. Top crates above target; remaining crates approaching via targeted test waves.
 
 | Crate | Line Coverage | Status |
 |-------|-------------|--------|

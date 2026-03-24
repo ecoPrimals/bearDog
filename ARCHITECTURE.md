@@ -1,8 +1,8 @@
 # BearDog Architecture
 
-**Last Updated**: March 23, 2026
+**Last Updated**: March 24, 2026
 **Status**: Production Ready
-**Crates**: 30 | **Tests**: 14,387 | **Coverage**: 87.2%+ | **MSRV**: 1.93.0
+**Crates**: 30 | **Tests**: 14,447+ | **Coverage**: 87.35%+ | **MSRV**: 1.93.0
 
 ---
 

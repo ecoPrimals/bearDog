@@ -18,10 +18,10 @@ Error: No HSM providers available
 export BEARDOG_HSM_MODE=software
 
 # Start BearDog (it will auto-initialize software HSM)
-./beardog-server
+./beardog server
 
 # Or with cargo
-BEARDOG_HSM_MODE=software cargo run --release --bin beardog-server
+BEARDOG_HSM_MODE=software cargo run --release --bin beardog -- server
 ```
 
 **Done!** BearDog will auto-detect the env var and initialize software HSM.
@@ -47,7 +47,7 @@ WorkingDirectory=/opt/beardog
 Environment="BEARDOG_HSM_MODE=software"
 Environment="BEARDOG_API_BIND_ADDR=0.0.0.0:9000"
 
-ExecStart=/usr/local/bin/beardog-server
+ExecStart=/usr/local/bin/beardog server
 Restart=on-failure
 
 # Security hardening
@@ -75,21 +75,21 @@ sudo systemctl status beardog
 FROM rust:1.85 AS builder
 WORKDIR /build
 COPY . .
-RUN cargo build --release --bin beardog-server
+RUN cargo build --release --bin beardog
 
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /build/target/release/beardog-server /usr/local/bin/
+COPY --from=builder /build/target/release/beardog /usr/local/bin/
 
 # Software HSM by default (no hardware required)
 ENV BEARDOG_HSM_MODE=software
 ENV BEARDOG_API_BIND_ADDR=0.0.0.0:9000
 
 EXPOSE 9000
-CMD ["beardog-server"]
+CMD ["beardog", "server"]
 ```
 
 **Build and run**:
@@ -231,7 +231,7 @@ let hsm = Arc::new(hsm);
 
 ### **Minimal Package Requirements**:
 
-1. **Binary**: `beardog-server`
+1. **Binary**: `beardog` (run `beardog server` for the API service)
 2. **Environment Variable**: `BEARDOG_HSM_MODE=software`
 3. **Port**: `9000` (or configure with `BEARDOG_API_BIND_ADDR`)
 
@@ -253,7 +253,7 @@ export BEARDOG_API_BIND_ADDR=0.0.0.0:9000
 export RUST_LOG=info
 
 # Start BearDog
-exec /usr/local/bin/beardog-server
+exec /usr/local/bin/beardog server
 ```
 
 ---
@@ -269,21 +269,21 @@ echo $BEARDOG_HSM_MODE  # Should print "software"
 
 **Force it**:
 ```bash
-BEARDOG_HSM_MODE=software ./beardog-server
+BEARDOG_HSM_MODE=software ./beardog server
 ```
 
 ### **Permission denied?**
 
 ```bash
 sudo chown -R beardog:beardog /opt/beardog
-sudo chmod +x /usr/local/bin/beardog-server
+sudo chmod +x /usr/local/bin/beardog
 ```
 
 ### **Port already in use?**
 
 ```bash
 # Use different port
-BEARDOG_HSM_MODE=software BEARDOG_API_BIND_ADDR=0.0.0.0:9001 ./beardog-server
+BEARDOG_HSM_MODE=software BEARDOG_API_BIND_ADDR=0.0.0.0:9001 ./beardog server
 ```
 
 ---
@@ -308,7 +308,7 @@ BEARDOG_HSM_MODE=software BEARDOG_API_BIND_ADDR=0.0.0.0:9001 ./beardog-server
 
 ### **For biomeOS**:
 1. Add `BEARDOG_HSM_MODE=software` to deployment
-2. Start `beardog-server`
+2. Start the BearDog server (`beardog server`)
 3. That's it!
 
 **Later**, when you want hardware HSM:

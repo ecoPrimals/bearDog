@@ -146,8 +146,8 @@ cargo build --release                # Build
 | Missing Docs | 0 |
 | Unsafe | `forbid(unsafe_code)` workspace-wide |
 | Pure Rust | 100% |
-| Tests | 14,387 (fully concurrent) |
-| Coverage | 87.2%+ line (llvm-cov) |
+| Tests | 14,447+ (fully concurrent) |
+| Coverage | 87.35%+ line (llvm-cov) |
 | `#[serial]` | 0 |
 | Files > 1000 LOC | 0 (production) |
 

@@ -56,7 +56,7 @@
 | beardog-tunnel | ~83% | server, BTSP, IPC, crypto fault injection, BufReader opt |
 | beardog-deploy | ~82% | command runner, android, builder, device coverage boosted |
 | beardog-integration | new | Tower Atomic UPA client, heartbeat, connection tracking |
-| **Overall** | **87.2%** | llvm-cov workspace |
+| **Overall** | **87.35%** | llvm-cov workspace |
 
 ---
 
@@ -225,7 +225,7 @@ cargo check --workspace --all-features        # Compile — clean
 cargo test --workspace                        # Tests — 0 failures
 cargo doc --workspace --no-deps               # Docs — clean
 cargo deny check                              # Advisories, bans, licenses, sources
-cargo llvm-cov --workspace --summary-only     # Coverage — 87.2%
+cargo llvm-cov --workspace --summary-only     # Coverage — 87.35%
 ```
 
 ---

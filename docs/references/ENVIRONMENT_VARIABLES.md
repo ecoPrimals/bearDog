@@ -29,7 +29,7 @@ export BEARDOG_HSM_MODE=software
 export RUST_LOG=info
 
 # Start server
-./beardog-server
+./beardog server
 ```
 
 **Result**: BearDog starts with:
@@ -498,7 +498,7 @@ export BEARDOG_BIND_ADDR=127.0.0.1:9000
 export RUST_LOG=debug
 export BEARDOG_DEV_MODE=true
 
-./beardog-server
+./beardog server
 ```
 
 ---
@@ -518,7 +518,7 @@ export RUST_LOG=info
 export BEARDOG_LOG_FORMAT=json
 export BEARDOG_LOG_FILE=/var/log/beardog/tower1.log
 
-./beardog-server
+./beardog server
 ```
 
 ---
@@ -535,7 +535,7 @@ export RUST_LOG=info
 export BEARDOG_LOG_FORMAT=json
 export BEARDOG_LOG_FILE=/var/log/beardog/tower2.log
 
-./beardog-server
+./beardog server
 ```
 
 ---
@@ -549,7 +549,7 @@ export NODE_ID=tower1
 export BEARDOG_HSM_MODE=software
 export RUST_LOG=info
 
-./beardog-server
+./beardog server
 # Creates: /tmp/beardog-nat0-tower1.sock
 ```
 
@@ -560,7 +560,7 @@ export NODE_ID=tower2
 export BEARDOG_HSM_MODE=software
 export RUST_LOG=info
 
-./beardog-server
+./beardog server
 # Creates: /tmp/beardog-nat0-tower2.sock
 ```
 
@@ -597,7 +597,7 @@ export BEARDOG_BIND_ADDR=0.0.0.0:0
 ```bash
 # Load from .env
 source .env
-./beardog-server
+./beardog server
 
 # Or use systemd
 EnvironmentFile=/etc/beardog/beardog.env
@@ -609,11 +609,11 @@ EnvironmentFile=/etc/beardog/beardog.env
 
 ```bash
 # ❌ BAD
-./beardog-server --port 9000 --host localhost
+./beardog server --port 9000 --host localhost
 
 # ✅ GOOD
 export BEARDOG_BIND_ADDR=0.0.0.0:9000
-./beardog-server
+./beardog server
 ```
 
 ---

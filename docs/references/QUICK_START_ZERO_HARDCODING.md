@@ -38,7 +38,7 @@ export PRIMAL_BIOMEOS_ADDR=127.0.0.1:9200
 
 ### Step 3: Run BearDog
 ```bash
-cargo run --bin beardog-server
+cargo run --bin beardog -- server
 ```
 
 You should see:
@@ -228,7 +228,7 @@ Environment="PRIMAL_NAME=BearDog"
 Environment="BEARDOG_LISTEN_ADDR=127.0.0.1:8900"
 Environment="BEARDOG_CAPABILITIES=SecureTunneling,Cryptography,HsmIntegration"
 Environment="PRIMAL_DISCOVERY_METHOD=mdns"
-ExecStart=/usr/local/bin/beardog-server
+ExecStart=/usr/local/bin/beardog server
 Restart=on-failure
 
 [Install]
@@ -304,7 +304,7 @@ cargo test -p beardog-core primal_discovery
 cargo test -p beardog-core capability_router
 
 # 3. Run server
-cargo run --bin beardog-server
+cargo run --bin beardog -- server
 ```
 
 If you see the self-knowledge discovery output, you're ready to go! 🚀

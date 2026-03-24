@@ -303,7 +303,7 @@ pub enum SimpleCapability {
 export PRIMAL_NAME=BearDog
 export BEARDOG_LISTEN_ADDR=127.0.0.1:8900
 export BEARDOG_CAPABILITIES=SecureTunneling,Cryptography
-cargo run --bin beardog-server
+cargo run --bin beardog -- server
 
 # Terminal 2: Test discovery
 export PRIMAL_NAME=TestClient
