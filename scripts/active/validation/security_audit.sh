@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-echo "🛡️ BearDog Production Security Audit - January 2025"
+echo "🛡️ BearDog Production Security Audit - March 2026"
 echo "=================================================="
 
 AUDIT_RESULTS_DIR="security_audit_$(date +%Y%m%d_%H%M%S)"

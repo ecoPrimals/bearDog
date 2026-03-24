@@ -2,7 +2,7 @@
 
 **Last Updated**: March 23, 2026
 **Status**: Production Ready
-**Crates**: 30 | **Tests**: 14,351 | **Coverage**: 87.0%+ | **MSRV**: 1.93.0
+**Crates**: 30 | **Tests**: 14,387 | **Coverage**: 87.2%+ | **MSRV**: 1.93.0
 
 ---
 

@@ -150,13 +150,13 @@ impl KeyStore {
             key_id: key_id.clone(),
             key_type: KeyType::Ed25519,
             usage,
-            storage: storage.clone(),
+            storage,
             created_at: chrono::Utc::now(),
             expires_at: None,
             description,
         };
 
-        let persist_id = matches!(storage, KeyStorage::File(_)).then(|| key_id.clone());
+        let persist_id = matches!(&metadata.storage, KeyStorage::File(_)).then(|| key_id.clone());
         let mut inner = self.inner.write().await;
         inner.signing_keys.insert(key_id.clone(), signing_key);
         inner.verifying_keys.insert(key_id.clone(), verifying_key);
@@ -197,13 +197,13 @@ impl KeyStore {
             key_id: key_id.clone(),
             key_type: KeyType::Aes256Gcm,
             usage,
-            storage: storage.clone(),
+            storage,
             created_at: chrono::Utc::now(),
             expires_at: None,
             description,
         };
 
-        let persist_id = matches!(storage, KeyStorage::File(_)).then(|| key_id.clone());
+        let persist_id = matches!(&metadata.storage, KeyStorage::File(_)).then(|| key_id.clone());
         let mut inner = self.inner.write().await;
         inner.symmetric_keys.insert(key_id.clone(), key_bytes);
         inner.metadata.insert(key_id, metadata);
@@ -248,13 +248,13 @@ impl KeyStore {
             key_id: key_id.clone(),
             key_type: KeyType::Ed25519,
             usage,
-            storage: storage.clone(),
+            storage,
             created_at: chrono::Utc::now(),
             expires_at: None,
             description,
         };
 
-        let persist_id = matches!(storage, KeyStorage::File(_)).then(|| key_id.clone());
+        let persist_id = matches!(&metadata.storage, KeyStorage::File(_)).then(|| key_id.clone());
         let mut inner = self.inner.write().await;
         inner.signing_keys.insert(key_id.clone(), signing_key);
         inner.verifying_keys.insert(key_id.clone(), verifying_key);
@@ -467,6 +467,7 @@ impl KeyStore {
         let metadata_json = serde_json::to_string_pretty(metadata).map_err(|e| {
             BearDogError::security(format!("Failed to serialize key metadata: {e}"))
         })?;
+        // Clone material before releasing the read lock (borrow cannot outlive `inner`).
         let key_bytes = symmetric_key.clone();
         drop(inner);
 

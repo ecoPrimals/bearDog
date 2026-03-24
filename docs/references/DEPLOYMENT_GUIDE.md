@@ -56,8 +56,8 @@ FAMILY_ID=prod NODE_ID=node1 beardog server
 **Native Build**:
 ```bash
 # Rust toolchain
-rustc 1.70.0+
-cargo 1.70.0+
+rustc 1.93.0+
+cargo 1.93.0+
 
 # Build tools (standard)
 gcc/clang (for linking only)
@@ -272,7 +272,7 @@ adb shell "cd /data/local/tmp && ./beardog client status"
 
 **Dockerfile**:
 ```dockerfile
-FROM rust:1.70 as builder
+FROM rust:1.93.0 as builder
 
 WORKDIR /build
 COPY . .

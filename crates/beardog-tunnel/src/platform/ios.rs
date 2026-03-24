@@ -164,11 +164,13 @@ impl PlatformSocket for IOSSocket {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use beardog_errors::BearDogError;
 
     #[test]
     #[cfg(target_os = "macos")]
-    fn test_macos_socket_format() {
-        let endpoint = IOSSocket::create_endpoint("beardog").expect("macOS socket endpoint");
+    fn test_macos_socket_format() -> Result<(), BearDogError> {
+        let endpoint = IOSSocket::create_endpoint("beardog")
+            .map_err(|e| BearDogError::system(format!("macOS socket endpoint: {e}")))?;
         match endpoint {
             SocketEndpoint::Filesystem(path) => {
                 let path_str = path.to_string_lossy();
@@ -176,29 +178,42 @@ mod tests {
                 assert!(path_str.ends_with(".sock"));
                 println!("✅ macOS socket: {}", path.display());
             }
-            _ => panic!("Expected Filesystem endpoint on macOS, got {:?}", endpoint),
+            other => {
+                return Err(BearDogError::invalid_input(format!(
+                    "Expected Filesystem endpoint on macOS, got {:?}",
+                    other
+                )));
+            }
         }
+        Ok(())
     }
 
     #[test]
     #[cfg(target_os = "ios")]
-    fn test_ios_xpc_format() {
-        let endpoint = IOSSocket::create_endpoint("beardog").expect("iOS XPC endpoint");
+    fn test_ios_xpc_format() -> Result<(), BearDogError> {
+        let endpoint = IOSSocket::create_endpoint("beardog")
+            .map_err(|e| BearDogError::system(format!("iOS XPC endpoint: {e}")))?;
         match endpoint {
             SocketEndpoint::XPC(service) => {
                 assert_eq!(service, "org.biomeos.beardog");
                 assert!(service.starts_with("org.biomeos."));
                 println!("✅ iOS XPC service: {}", service);
             }
-            _ => panic!("Expected XPC endpoint on iOS, got {:?}", endpoint),
+            other => {
+                return Err(BearDogError::invalid_input(format!(
+                    "Expected XPC endpoint on iOS, got {:?}",
+                    other
+                )));
+            }
         }
+        Ok(())
     }
 
     #[test]
-    fn test_primal_name_variations() {
+    fn test_primal_name_variations() -> Result<(), BearDogError> {
         for primal in &["alpha", "beta", "gamma", "delta", "epsilon"] {
-            let endpoint =
-                IOSSocket::create_endpoint(primal).expect("iOS/macOS endpoint for primal");
+            let endpoint = IOSSocket::create_endpoint(primal)
+                .map_err(|e| BearDogError::system(format!("iOS/macOS endpoint for primal: {e}")))?;
 
             #[cfg(target_os = "macos")]
             match endpoint {
@@ -206,7 +221,12 @@ mod tests {
                     assert!(path.to_string_lossy().contains(primal));
                     println!("✅ macOS {} → {}", primal, path.display());
                 }
-                _ => panic!("Expected Filesystem endpoint on macOS, got {:?}", endpoint),
+                other => {
+                    return Err(BearDogError::invalid_input(format!(
+                        "Expected Filesystem endpoint on macOS, got {:?}",
+                        other
+                    )));
+                }
             }
 
             #[cfg(target_os = "ios")]
@@ -216,9 +236,15 @@ mod tests {
                     assert!(service.starts_with("org.biomeos."));
                     println!("✅ iOS {} → {}", primal, service);
                 }
-                _ => panic!("Expected XPC endpoint on iOS, got {:?}", endpoint),
+                other => {
+                    return Err(BearDogError::invalid_input(format!(
+                        "Expected XPC endpoint on iOS, got {:?}",
+                        other
+                    )));
+                }
             }
         }
+        Ok(())
     }
 
     #[tokio::test]

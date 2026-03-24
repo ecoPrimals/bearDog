@@ -58,8 +58,8 @@ fn sign_data(&self) -> Result<Vec<u8>, Error> {
 
 | File | Issue | Priority |
 |------|-------|----------|
-| `hsm_foundation/providers/android_strongbox.rs` | Mock implementations | LOW - Not in module tree |
-| `hsm_foundation/providers/ios_secure_enclave.rs` | Mock implementations | LOW - Not in module tree |
+| `crates/beardog-tunnel/src/tunnel/hsm/android_strongbox/` | Legacy / platform-specific stubs | Review against current module tree |
+| `crates/beardog-tunnel/src/tunnel/hsm/providers/ios.rs` | Platform-specific code paths | Review for test-only mocks |
 | `keystore.rs` | Mock fallback when native unavailable | MEDIUM |
 | `audit/logger.rs` | `AuditStatistics::new()` default | LOW - Just default, not fake |
 
@@ -197,8 +197,8 @@ if native_handle.is_none() {
 }
 ```
 
-### Priority: LOW - Uncompiled files
-Files in `hsm_foundation/providers/` are NOT in the module tree and therefore NOT compiled. Low priority but should be cleaned up or removed if truly unused.
+### Priority: LOW - Uncompiled or legacy paths
+Provider implementations live under `crates/beardog-tunnel/src/tunnel/hsm/providers/` (plus platform subtrees such as `android_strongbox/`). Anything not wired in the crate module tree is not compiled; clean up or remove if truly unused.
 
 ---
 

@@ -39,7 +39,6 @@ pub struct AndroidStrongBoxHsm {
 
 #[derive(Debug, Clone)]
 struct CachedKeyInfo {
-    key_id: String,
     key_type: KeyType,
     last_used: chrono::DateTime<Utc>,
     key_usage: Vec<KeyUsage>,
@@ -217,14 +216,12 @@ impl AndroidStrongBoxHsm {
     async fn cache_key_info(&self, key_info: &KeyInfo) -> Result<(), BearDogError> {
         debug!("Caching key info for: {}", key_info.key_id);
         let mut cache = self.key_cache.write().await;
-        let id = key_info.key_id.clone();
         cache.insert(
-            id.clone(),
+            key_info.key_id.clone(),
             CachedKeyInfo {
-                key_id: id,
                 key_type: key_info.key_type.clone(),
                 last_used: Utc::now(),
-                key_usage: key_info.key_usage.clone(), // Use Vec<KeyUsage>
+                key_usage: key_info.key_usage.clone(),
             },
         );
         Ok(())

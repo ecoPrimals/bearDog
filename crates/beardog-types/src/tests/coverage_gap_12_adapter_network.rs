@@ -335,15 +335,15 @@ mod network_consolidated_tests {
 
     #[test]
     fn test_from_host_port() {
-        let c = ConsolidatedNetworkConfiguration::from_host_port("127.0.0.1", 8080);
-        assert_eq!(c.server.port, 8080);
+        let c = ConsolidatedNetworkConfiguration::from_host_port("127.0.0.1", 0);
+        assert_eq!(c.server.port, 0);
     }
 
     #[test]
     fn test_from_bind_address() {
-        let addr: std::net::SocketAddr = "127.0.0.1:9090".parse().unwrap();
+        let addr: std::net::SocketAddr = "127.0.0.1:0".parse().unwrap();
         let c = ConsolidatedNetworkConfiguration::from_bind_address(addr);
-        assert_eq!(c.server.port, 9090);
+        assert_eq!(c.server.port, 0);
     }
 
     #[test]

@@ -130,7 +130,7 @@ fn test_contact_info_structure() {
     // Test that ContactInfo has all required fields
     let contact = ContactInfo {
         peer_id: "test-peer".to_string(),
-        addresses: vec!["127.0.0.1:9000".to_string()],
+        addresses: vec!["127.0.0.1:0".to_string()],
         lineage_proof: "proof123".to_string(),
         lineage_path: vec!["root".to_string(), "test-peer".to_string()],
         search_depth: 2,

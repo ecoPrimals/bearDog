@@ -43,7 +43,7 @@ primal_id = "beardog"
 # env_override: PRIMAL_TYPE, BEARDOG_PRIMAL_TYPE — capability role for defaults (e.g. neural registration label)
 primal_type = "security"
 # env_override: version often injected by CI / package manifest
-version = "0.9.5"
+version = "0.9.0"
 # Human-facing label only; peers discover via self_capabilities + mDNS, not display_name
 display_name = "BearDog Security Primal"
 

@@ -1,11 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
-# BearDog v3.0 System Validation Script
+# BearDog 0.9.0 System Validation Script
 # Comprehensive validation of BearDog deployment
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 VALIDATION_LOG="/tmp/beardog-validation-$(date +%Y%m%d-%H%M%S).log"
 
 # Colors for output
@@ -76,13 +76,14 @@ validate_build_system() {
         test_fail "Cargo build system has issues"
     fi
     
-    # Check Rust version
+    # Check Rust version (workspace MSRV)
     local rust_version=$(rustc --version | awk '{print $2}')
+    local min_rust="1.93.0"
     info "Rust version: $rust_version"
-    if [[ "$rust_version" > "1.70.0" ]] || [[ "$rust_version" == "1.70.0" ]]; then
-        test_pass "Rust version is compatible ($rust_version)"
+    if [[ "$rust_version" == "$(printf '%s\n' "$rust_version" "$min_rust" | sort -V | tail -n1)" ]]; then
+        test_pass "Rust version is compatible ($rust_version, MSRV $min_rust+)"
     else
-        test_fail "Rust version too old ($rust_version, need 1.70.0+)"
+        test_fail "Rust version too old ($rust_version, need $min_rust+)"
     fi
     
     # Check for target directory and artifacts
@@ -419,7 +420,7 @@ generate_validation_report() {
     local report_file="/tmp/beardog-validation-report-$(date +%Y%m%d-%H%M%S).md"
     
     cat > "$report_file" << EOF
-# BearDog v3.0 System Validation Report
+# BearDog 0.9.0 System Validation Report
 
 **Date**: $(date)
 **Validation Score**: $total_score% ($PASSED_TESTS/$TOTAL_TESTS tests passed)
@@ -473,7 +474,7 @@ print_validation_summary() {
     
     echo
     echo -e "${GREEN}========================================${NC}"
-    echo -e "${GREEN}  BearDog v3.0 Validation Summary      ${NC}"
+    echo -e "${GREEN}  BearDog 0.9.0 Validation Summary      ${NC}"
     echo -e "${GREEN}========================================${NC}"
     echo
     echo -e "${BLUE}Validation Score:${NC} $total_score% ($PASSED_TESTS/$TOTAL_TESTS tests passed)"
@@ -499,7 +500,7 @@ print_validation_summary() {
 }
 
 main() {
-    log "🔍 Starting BearDog v3.0 System Validation"
+    log "🔍 Starting BearDog 0.9.0 System Validation"
     
     validate_build_system
     validate_system_requirements

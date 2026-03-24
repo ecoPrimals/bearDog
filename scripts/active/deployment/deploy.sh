@@ -1,4 +1,7 @@
 #!/bin/bash
+# NOTE: This deployment script needs updating for the current architecture.
+# (Repository has no ./charts/beardog Helm chart; DB backup and rollout names are placeholders.)
+
 # BearDog Deployment Automation Script
 # Provides secure, automated deployment with health checks and rollback capabilities
 
@@ -6,7 +9,7 @@ set -euo pipefail
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 DEPLOYMENT_LOG="/tmp/beardog-deployment-$(date +%Y%m%d-%H%M%S).log"
 HEALTH_CHECK_TIMEOUT=300  # 5 minutes
 ROLLBACK_TIMEOUT=180      # 3 minutes
@@ -320,7 +323,7 @@ health_check() {
             
             if [ "$ready_pods" -eq "$REPLICA_COUNT" ] && [ "$total_pods" -eq "$REPLICA_COUNT" ]; then
                 # Test application health endpoint
-                if kubectl exec -n "$NAMESPACE" deployment/beardog -- beardog-cli health-check &> /dev/null; then
+                if kubectl exec -n "$NAMESPACE" deployment/beardog -- beardog status &> /dev/null; then
                     log_success "Health check passed - all $REPLICA_COUNT pods are ready and healthy"
                     return 0
                 fi
@@ -365,7 +368,7 @@ post_deployment_verification() {
     if [ "$DRY_RUN" = false ]; then
         # Run smoke tests
         log "Running smoke tests..."
-        kubectl exec -n "$NAMESPACE" deployment/beardog -- beardog-cli test --smoke || {
+        kubectl exec -n "$NAMESPACE" deployment/beardog -- beardog doctor || {
             log_warning "Smoke tests failed"
         }
         

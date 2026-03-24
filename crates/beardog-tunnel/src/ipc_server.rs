@@ -287,24 +287,31 @@ mod tests {
     }
 
     #[test]
-    fn test_ipc_message_serialization() {
+    fn test_ipc_message_serialization() -> Result<(), BearDogError> {
         let msg = IpcMessage::Ping {
             from: "test".to_string(),
         };
 
-        let json = serde_json::to_string(&msg).expect("IpcMessage Ping serializes to JSON");
+        let json = serde_json::to_string(&msg).map_err(|e| {
+            BearDogError::serialization(&format!("IpcMessage Ping serializes to JSON: {e}"))
+        })?;
         assert!(json.contains("ping"));
 
-        let deserialized: IpcMessage =
-            serde_json::from_str(&json).expect("IpcMessage Ping roundtrips from JSON");
-        match deserialized {
-            IpcMessage::Ping { from } => assert_eq!(from, "test"),
-            _ => panic!("Wrong message type"),
-        }
+        let deserialized: IpcMessage = serde_json::from_str(&json).map_err(|e| {
+            BearDogError::serialization(&format!("IpcMessage Ping roundtrips from JSON: {e}"))
+        })?;
+        let IpcMessage::Ping { from } = deserialized else {
+            return Err(BearDogError::invalid_input(&format!(
+                "Wrong message type: expected Ping, got {:?}",
+                deserialized
+            )));
+        };
+        assert_eq!(from, "test");
+        Ok(())
     }
 
     #[test]
-    fn test_capability_request_serialization() {
+    fn test_capability_request_serialization() -> Result<(), BearDogError> {
         let req = CapabilityRequest {
             from_primal: "test_primal".to_string(),
             capability: Capability::Encryption {
@@ -316,21 +323,26 @@ mod tests {
         };
 
         let msg = IpcMessage::CapabilityRequest(req);
-        let json = serde_json::to_string(&msg).expect("IpcMessage CapabilityRequest serializes");
+        let json = serde_json::to_string(&msg).map_err(|e| {
+            BearDogError::serialization(&format!("IpcMessage CapabilityRequest serializes: {e}"))
+        })?;
 
-        let deserialized: IpcMessage =
-            serde_json::from_str(&json).expect("IpcMessage CapabilityRequest roundtrips");
-        match deserialized {
-            IpcMessage::CapabilityRequest(req) => {
-                assert_eq!(req.from_primal, "test_primal");
-                assert_eq!(req.request_id, "req_123");
-            }
-            _ => panic!("Wrong message type"),
-        }
+        let deserialized: IpcMessage = serde_json::from_str(&json).map_err(|e| {
+            BearDogError::serialization(&format!("IpcMessage CapabilityRequest roundtrips: {e}"))
+        })?;
+        let IpcMessage::CapabilityRequest(req) = deserialized else {
+            return Err(BearDogError::invalid_input(&format!(
+                "Wrong message type: expected CapabilityRequest, got {:?}",
+                deserialized
+            )));
+        };
+        assert_eq!(req.from_primal, "test_primal");
+        assert_eq!(req.request_id, "req_123");
+        Ok(())
     }
 
     #[tokio::test]
-    async fn handle_message_capability_request_ok() {
+    async fn handle_message_capability_request_ok() -> Result<(), BearDogError> {
         let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
         let connections = Arc::new(RwLock::new(Vec::new()));
         let req = CapabilityRequest {
@@ -345,14 +357,24 @@ mod tests {
         let out =
             IpcServer::handle_message(IpcMessage::CapabilityRequest(req), &handler, &connections)
                 .await;
-        assert!(out.is_some());
-        match out.expect("handle_message returns Some for CapabilityRequest") {
+        let Some(response_msg) = out else {
+            return Err(BearDogError::invalid_input(
+                "handle_message returned None for CapabilityRequest",
+            ));
+        };
+        match response_msg {
             IpcMessage::CapabilityResponse(resp) => {
                 assert_eq!(resp.request_id, "r1");
                 assert!(matches!(resp.status, ResponseStatus::Success));
             }
-            _ => panic!("expected capability response"),
+            other => {
+                return Err(BearDogError::invalid_input(&format!(
+                    "expected capability response, got {:?}",
+                    other
+                )));
+            }
         }
+        Ok(())
     }
 
     #[tokio::test]
@@ -569,10 +591,11 @@ mod tests {
 
     #[cfg(unix)]
     #[tokio::test]
-    async fn handle_connection_ping_roundtrip_returns_pong_line() {
+    async fn handle_connection_ping_roundtrip_returns_pong_line() -> Result<(), BearDogError> {
         use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
-        let (mut local, remote) = tokio::net::UnixStream::pair().expect("unix pair");
+        let (mut local, remote) = tokio::net::UnixStream::pair()
+            .map_err(|e| BearDogError::system(format!("unix pair: {e}")))?;
         let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
         let connections = Arc::new(RwLock::new(Vec::new()));
         let h = Arc::clone(&handler);
@@ -586,21 +609,37 @@ mod tests {
         let ping = serde_json::to_string(&IpcMessage::Ping {
             from: "unit-test-peer".to_string(),
         })
-        .expect("serialize ping");
-        local.write_all(ping.as_bytes()).await.expect("write");
-        local.write_all(b"\n").await.expect("newline");
+        .map_err(|e| BearDogError::serialization(&format!("serialize ping: {e}")))?;
+        local
+            .write_all(ping.as_bytes())
+            .await
+            .map_err(|e| BearDogError::system(format!("write: {e}")))?;
+        local
+            .write_all(b"\n")
+            .await
+            .map_err(|e| BearDogError::system(format!("newline: {e}")))?;
 
         let mut reader = BufReader::new(&mut local);
         let mut line = String::new();
-        reader.read_line(&mut line).await.expect("read response");
-        let pong: IpcMessage = serde_json::from_str(line.trim()).expect("pong json");
+        reader
+            .read_line(&mut line)
+            .await
+            .map_err(|e| BearDogError::system(format!("read response: {e}")))?;
+        let pong: IpcMessage = serde_json::from_str(line.trim())
+            .map_err(|e| BearDogError::serialization(&format!("pong json: {e}")))?;
         match pong {
             IpcMessage::Pong { to } => assert_eq!(to, "unit-test-peer"),
-            _ => panic!("expected pong, got {pong:?}"),
+            other => {
+                return Err(BearDogError::invalid_input(&format!(
+                    "expected pong, got {:?}",
+                    other
+                )));
+            }
         }
 
         drop(reader);
         serve.abort();
+        Ok(())
     }
 
     #[cfg(unix)]

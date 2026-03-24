@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### March 24, 2026 -- Wave 14: Deep Debt Audit, Test Evolution, scyBorg Compliance & Zero-Copy
+
+- **Failing test fixed** — `test_auto_initialize_environment_precedence`
+- **main.rs** — `dispatch()` extracted from `main()` for testability; **36 new tests** (33 CLI parse + 3 dispatch)
+- **scyBorg** — `LYSOGENY_PROTOCOL.md` and `SCYBORG_EXCEPTION_PROTOCOL.md` added (license/compliance artifacts)
+- **Zero-copy** — `bytes::Bytes` in software HSM; storage moved in `key_management`
+- **Tests** — Hardcoded ports replaced with ephemeral `:0` where appropriate
+- **Platform stubs** — Test stubs evolved from `panic!()` to `Result<T, E>`
+
 ### March 24, 2026 -- Wave 13: Clippy Sweep, Constants, Zero-Copy, Tests & Docs
 
 - **Clippy fully clean** — 1,149 errors eliminated workspace-wide

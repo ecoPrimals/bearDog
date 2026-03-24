@@ -29,8 +29,8 @@ fn server_args_abstract_flag() {
 
 #[test]
 fn server_args_listen_loopback() {
-    let a = ServerArgs::try_parse_from(["beardog", "--listen", "127.0.0.1:9900"]).expect("parse");
-    assert_eq!(a.listen.as_deref(), Some("127.0.0.1:9900"));
+    let a = ServerArgs::try_parse_from(["beardog", "--listen", "127.0.0.1:0"]).expect("parse");
+    assert_eq!(a.listen.as_deref(), Some("127.0.0.1:0"));
 }
 
 #[test]
@@ -209,7 +209,7 @@ fn doctor_args_clone_roundtrip() {
 
 #[test]
 fn server_args_clone_preserves_listen() {
-    let a = ServerArgs::try_parse_from(["p", "--listen", "0.0.0.0:1"]).expect("parse");
+    let a = ServerArgs::try_parse_from(["p", "--listen", "0.0.0.0:0"]).expect("parse");
     assert_eq!(a.clone().listen, a.listen);
 }
 

@@ -147,15 +147,15 @@ run_benchmarks() {
         return
     fi
     
-    info "Running unified modernization benchmarks..."
-    if [[ -f "benches/unified_modernization_benchmarks.rs" ]]; then
-        if cargo bench --bench unified_modernization_benchmarks >> "$DEPLOYMENT_LOG" 2>&1; then
+    info "Running benchmarks package (see benchmarks/benches/)..."
+    if [[ -f "benchmarks/benches/hsm_operations_benchmarks.rs" ]]; then
+        if cargo bench -p benchmarks --bench hsm_operations_benchmarks >> "$DEPLOYMENT_LOG" 2>&1; then
             log "✅ Performance benchmarks completed"
         else
             warning "Some benchmarks failed or are not available"
         fi
     else
-        warning "Unified benchmarks not found, skipping performance validation"
+        warning "benchmarks/benches/ not found, skipping performance validation"
     fi
 }
 
@@ -210,7 +210,7 @@ generate_report() {
 - Migration utilities available
 
 ### 📈 Performance Metrics
-$(if [[ -f "$PROJECT_ROOT/target/criterion/unified_modernization_benches/report/index.html" ]]; then
+$(if [[ -d "$PROJECT_ROOT/target/criterion" ]]; then
     echo "- Benchmark results available in target/criterion/"
     echo "- Zero-cost abstractions validated"
     echo "- Configuration performance optimized"

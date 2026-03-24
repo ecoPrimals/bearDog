@@ -27,7 +27,7 @@ fn resolve_socket_path_with_listen_addr_still_returns_socket_for_explicit() {
     let args = ServerArgs {
         socket: "/run/bd.sock".to_string(),
         r#abstract: false,
-        listen: Some("0.0.0.0:7777".to_string()),
+        listen: Some("0.0.0.0:0".to_string()),
         family_id: None,
         orchestrator_id: None,
     };

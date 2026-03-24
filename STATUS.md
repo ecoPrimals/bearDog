@@ -1,6 +1,6 @@
 # BearDog Status
 
-**Last Updated**: March 23, 2026
+**Last Updated**: March 24, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -18,8 +18,8 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`device.rs` refactored) |
-| **Tests** | 14,351 passing | Fully concurrent, zero sleeps in non-chaos |
-| **Coverage** | 87.0%+ line | llvm-cov workspace (targeting 90%) |
+| **Tests** | 14,387 passing | Fully concurrent, zero sleeps in non-chaos |
+| **Coverage** | 87.2%+ line | llvm-cov workspace (targeting 90%) |
 | **Serial Tests** | 0 | `#[serial]` fully eliminated |
 | **cargo deny** | 4/4 pass | Advisories, bans, licenses, sources |
 | **License** | AGPL-3.0-only | SPDX headers on all .rs files |
@@ -56,7 +56,7 @@
 | beardog-tunnel | ~83% | server, BTSP, IPC, crypto fault injection, BufReader opt |
 | beardog-deploy | ~82% | command runner, android, builder, device coverage boosted |
 | beardog-integration | new | Tower Atomic UPA client, heartbeat, connection tracking |
-| **Overall** | **87.0%** | llvm-cov workspace (105,989/121,844 lines) |
+| **Overall** | **87.2%** | llvm-cov workspace |
 
 ---
 
@@ -84,7 +84,19 @@
 
 ---
 
-## Recent Improvements (March 23, 2026)
+## Recent Improvements (March 24, 2026)
+
+### Wave 14: Deep Debt Audit, Test Evolution, scyBorg Compliance & Zero-Copy
+
+- **Failing test fixed** — `test_auto_initialize_environment_precedence` restored to green
+- **Root crate coverage** — 85.9% → 87.2% (llvm-cov)
+- **Test evolution** — 33 new CLI parse tests + 3 dispatch tests in `main.rs`; `dispatch()` extracted from `main()` for testability; **Debug** derives on CLI types
+- **14,387 tests passing** — Up from 14,351 (+36); 0 failures, 186 ignored
+- **Zero-copy** — `bytes::Bytes` in software HSM; storage moves in `key_management`
+- **scyBorg compliance** — `LYSOGENY_PROTOCOL.md` and `SCYBORG_EXCEPTION_PROTOCOL.md` added at repo root
+- **Test hygiene** — Hardcoded ports in tests replaced with ephemeral `:0` binds where appropriate
+- **Platform test stubs** — Evolved from `panic!()` to `Result<T, E>` for clearer failure modes
+- **All gates green** — fmt, clippy `-D warnings`, doc, test all clean
 
 ### Wave 13: Deep Debt Elimination, Pedantic Clippy, Zero-Copy & Coverage Push
 
@@ -199,7 +211,7 @@ cargo check --workspace --all-features        # Compile — clean
 cargo test --workspace                        # Tests — 0 failures
 cargo doc --workspace --no-deps               # Docs — clean
 cargo deny check                              # Advisories, bans, licenses, sources
-cargo llvm-cov --workspace --summary-only     # Coverage — 87.0%
+cargo llvm-cov --workspace --summary-only     # Coverage — 87.2%
 ```
 
 ---

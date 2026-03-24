@@ -174,21 +174,29 @@ impl SoftwareKey {
 /// Protected memory wrapper
 #[derive(Debug, Clone)]
 pub struct ProtectedMemory {
-    /// Encrypted data
-    pub data: Vec<u8>,
+    /// Encrypted data (shared via [`bytes::Bytes`] for cheap clones on hot paths)
+    pub data: bytes::Bytes,
     /// Whether memory is protected
     pub protected: bool,
 }
 
 impl ProtectedMemory {
     /// Create new protected memory
-    pub const fn new(data: Vec<u8>, protected: bool) -> Self {
+    pub fn new(data: Vec<u8>, protected: bool) -> Self {
+        Self {
+            data: bytes::Bytes::from(data),
+            protected,
+        }
+    }
+
+    /// Wrap existing shared bytes (e.g. after [`bytes::Bytes::clone`] from the same buffer).
+    pub fn from_bytes(data: bytes::Bytes, protected: bool) -> Self {
         Self { data, protected }
     }
 
     /// Get data reference
     pub fn data(&self) -> &[u8] {
-        &self.data
+        &self.data[..]
     }
 
     /// Check if memory is protected

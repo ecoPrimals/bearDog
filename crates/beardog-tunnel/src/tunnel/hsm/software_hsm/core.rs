@@ -29,6 +29,7 @@ use crate::tunnel::hsm::types::*;
 use crate::tunnel::hsm::{GenerateKeyRequest, HsmConfig};
 use beardog_errors::BearDogError;
 use beardog_types::hsm::AuditEvent;
+use bytes::Bytes;
 use chrono::Utc;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -248,8 +249,10 @@ impl RustSoftwareHsm {
 
         // Protect key material
         let protected_bytes = self.memory_protector.protect(&key_material).await?;
-        let encrypted_data = protected_bytes.clone();
-        let protected_material = ProtectedMemory::new(protected_bytes, true);
+        // One full copy for the returned `HsmKey`; store shares the buffer via `Bytes` (cheap clone).
+        let buf = Bytes::from(protected_bytes);
+        let encrypted_data = buf.to_vec();
+        let protected_material = ProtectedMemory::from_bytes(buf, true);
 
         let key_id = request.key_id.clone();
         let key_type = request.key_type.clone();
@@ -321,8 +324,9 @@ impl RustSoftwareHsm {
 
         // Protect derived key material
         let protected_bytes = self.memory_protector.protect(&derived_material).await?;
-        let encrypted_derived_data = protected_bytes.clone();
-        let protected_derived = ProtectedMemory::new(protected_bytes, true);
+        let buf = Bytes::from(protected_bytes);
+        let encrypted_derived_data = buf.to_vec();
+        let protected_derived = ProtectedMemory::from_bytes(buf, true);
 
         // Zeroize root key material (FIXED: removed .clone() to actually zero the key!)
         self.memory_protector
@@ -420,7 +424,9 @@ impl HsmProvider for RustSoftwareHsm {
 
         // Protect key material
         let protected_bytes = self.memory_protector.protect(key_data).await?;
-        let protected_material = ProtectedMemory::new(protected_bytes, true);
+        let buf = Bytes::from(protected_bytes);
+        let encrypted_blob = buf.to_vec();
+        let protected_material = ProtectedMemory::from_bytes(buf, true);
 
         let id = key_id.to_string();
         // Create key metadata
@@ -451,7 +457,7 @@ impl HsmProvider for RustSoftwareHsm {
             key_type,
             metadata: key_metadata,
             key_material: KeyMaterial::Encrypted {
-                encrypted_data: key_data.to_vec(),
+                encrypted_data: encrypted_blob,
                 encryption_algorithm: "AES-256-GCM".to_string(),
                 kdf_params: None,
             },

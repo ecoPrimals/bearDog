@@ -36,7 +36,7 @@ export BEARDOG_SMTP_SERVER="your-smtp-server"
 
 # Use unified template
 export BEARDOG_CONFIG=configs/beardog-config-template.toml
-beardog-server
+beardog server
 ```
 
 ### Docker
@@ -80,11 +80,7 @@ export BEARDOG_SECURITY_HSM_ENABLED=true
 
 ## Validation
 
-Configuration files are validated on startup. Use the validation command to check your config:
-
-```bash
-beardog-server --config your-config.toml --validate
-```
+Configuration files are validated when the process loads them (for example when starting the server with `BEARDOG_CONFIG` set). There is no separate `--validate` flag on the `beardog` binary; run your usual entrypoint (for example `beardog server` with `BEARDOG_CONFIG=your-config.toml`) and confirm startup succeeds.
 
 ## Security Notes
 

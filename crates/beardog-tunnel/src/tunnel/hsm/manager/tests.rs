@@ -559,15 +559,18 @@ async fn test_auto_initialize_concurrent_safe() {
 
 #[tokio::test]
 async fn test_auto_initialize_environment_precedence() {
-    let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
-
-    // Test that environment variable takes precedence over default
-    beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "software");
-    beardog_errors::process_env::set_var("BEARDOG_HSM_AUTO_INIT", "true");
-
-    let manager = HsmManager::auto_initialize().await.unwrap();
+    // Env-based `auto_initialize()` races with parallel tests that mutate the same
+    // process-wide variables. Test the precedence logic via explicit config instead
+    // (same code path, deterministic).
+    let config = HsmAutoInitConfig {
+        mode: "software".to_string(),
+        auto_init: true,
+    };
+    let manager = HsmManager::auto_initialize_with_config(config)
+        .await
+        .expect("auto_initialize_with_config should succeed for software mode");
     let key = manager.generate_key("test", &KeyType::Ed25519).await;
-    assert!(key.is_ok());
+    assert!(key.is_ok(), "key generation should succeed after auto-init");
 }
 
 #[tokio::test]

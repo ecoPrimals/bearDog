@@ -586,24 +586,24 @@ mod tests {
     #[test]
     fn test_endpoint_from_listen_addr() {
         let endpoints = discover_endpoints_from_inputs(&EndpointInputs {
-            beardog_listen_addr: Some("127.0.0.1:9000".to_string()),
+            beardog_listen_addr: Some("127.0.0.1:0".to_string()),
             ..Default::default()
         })
         .expect("discover_endpoints_from_inputs with listen addr");
         assert_eq!(endpoints.len(), 1);
-        assert_eq!(endpoints[0].address.port(), 9000);
+        assert_eq!(endpoints[0].address.port(), 0);
         assert_eq!(endpoints[0].protocol, Protocol::Http);
     }
 
     #[test]
     fn test_endpoint_from_port() {
         let endpoints = discover_endpoints_from_inputs(&EndpointInputs {
-            beardog_port: Some("8080".to_string()),
+            beardog_port: Some("0".to_string()),
             ..Default::default()
         })
         .expect("discover_endpoints_from_inputs with port");
         assert_eq!(endpoints.len(), 1);
-        assert_eq!(endpoints[0].address.port(), 8080);
+        assert_eq!(endpoints[0].address.port(), 0);
     }
 
     #[test]

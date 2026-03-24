@@ -139,38 +139,55 @@ pub fn create_endpoint_with(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use beardog_errors::BearDogError;
 
     #[test]
-    fn test_named_pipe_format() {
-        let endpoint =
-            WindowsSocket::create_endpoint("beardog").expect("Windows named pipe endpoint");
+    fn test_named_pipe_format() -> Result<(), BearDogError> {
+        let endpoint = WindowsSocket::create_endpoint("beardog")
+            .map_err(|e| BearDogError::system(format!("Windows named pipe endpoint: {e}")))?;
         match endpoint {
             SocketEndpoint::NamedPipe(name) => {
                 assert!(name.contains(r"pipe\biomeos_beardog") || name.contains("biomeos_beardog"));
                 println!("✅ Named pipe format: {}", name);
             }
-            _ => panic!("Expected NamedPipe endpoint, got {:?}", endpoint),
+            other => {
+                return Err(BearDogError::invalid_input(format!(
+                    "Expected NamedPipe endpoint, got {:?}",
+                    other
+                )));
+            }
         }
+        Ok(())
     }
 
     #[test]
-    fn test_environment_variable_override() {
+    fn test_environment_variable_override() -> Result<(), BearDogError> {
         let endpoint = create_endpoint_with("beardog", Some(r"\\.\pipe\test_override"), None)
-            .expect("create_endpoint_with BEARDOG_PIPE override");
+            .map_err(|e| {
+                BearDogError::system(format!("create_endpoint_with BEARDOG_PIPE override: {e}"))
+            })?;
 
         match endpoint {
             SocketEndpoint::NamedPipe(name) => {
                 assert_eq!(name, r"\\.\pipe\test_override");
                 println!("✅ BEARDOG_PIPE override works");
             }
-            _ => panic!("Expected NamedPipe endpoint, got {:?}", endpoint),
+            other => {
+                return Err(BearDogError::invalid_input(format!(
+                    "Expected NamedPipe endpoint, got {:?}",
+                    other
+                )));
+            }
         }
+        Ok(())
     }
 
     #[test]
-    fn test_biomeos_pipe_dir() {
-        let endpoint = create_endpoint_with("beardog", None, Some(r"\\.\pipe\custom"))
-            .expect("create_endpoint_with BIOMEOS_PIPE_DIR");
+    fn test_biomeos_pipe_dir() -> Result<(), BearDogError> {
+        let endpoint =
+            create_endpoint_with("beardog", None, Some(r"\\.\pipe\custom")).map_err(|e| {
+                BearDogError::system(format!("create_endpoint_with BIOMEOS_PIPE_DIR: {e}"))
+            })?;
 
         match endpoint {
             SocketEndpoint::NamedPipe(name) => {
@@ -178,22 +195,34 @@ mod tests {
                 assert!(name.contains("beardog"));
                 println!("✅ BIOMEOS_PIPE_DIR works: {}", name);
             }
-            _ => panic!("Expected NamedPipe endpoint, got {:?}", endpoint),
+            other => {
+                return Err(BearDogError::invalid_input(format!(
+                    "Expected NamedPipe endpoint, got {:?}",
+                    other
+                )));
+            }
         }
+        Ok(())
     }
 
     #[test]
-    fn test_primal_name_variations() {
+    fn test_primal_name_variations() -> Result<(), BearDogError> {
         for primal in &["alpha", "beta", "gamma", "delta", "epsilon"] {
-            let endpoint =
-                WindowsSocket::create_endpoint(primal).expect("Windows endpoint for primal");
+            let endpoint = WindowsSocket::create_endpoint(primal)
+                .map_err(|e| BearDogError::system(format!("Windows endpoint for primal: {e}")))?;
             match endpoint {
                 SocketEndpoint::NamedPipe(name) => {
                     assert!(name.contains(primal));
                     println!("✅ {} → {}", primal, name);
                 }
-                _ => panic!("Expected NamedPipe endpoint, got {:?}", endpoint),
+                other => {
+                    return Err(BearDogError::invalid_input(format!(
+                        "Expected NamedPipe endpoint, got {:?}",
+                        other
+                    )));
+                }
             }
         }
+        Ok(())
     }
 }
