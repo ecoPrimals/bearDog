@@ -267,7 +267,7 @@ mod tests {
             let result = system
                 .record_performance_metric(
                     format!("metric_{i}"),
-                    i as f64 * 10.0,
+                    f64::from(i) * 10.0,
                     MetricType::Counter,
                 )
                 .await;
@@ -429,7 +429,7 @@ mod tests {
                 system_clone
                     .record_performance_metric(
                         format!("concurrent_{i}"),
-                        i as f64,
+                        f64::from(i),
                         MetricType::Counter,
                     )
                     .await

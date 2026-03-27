@@ -169,7 +169,8 @@ mod tests {
 
         let recovery_attempts = 3;
         let successful_recoveries = 2;
-        let success_rate = (successful_recoveries as f64 / recovery_attempts as f64) * 100.0;
+        let success_rate =
+            (f64::from(successful_recoveries) / f64::from(recovery_attempts)) * 100.0;
 
         assert!(success_rate > 0.0, "Recovery metrics should be tracked");
     }

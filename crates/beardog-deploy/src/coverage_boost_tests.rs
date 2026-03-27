@@ -140,7 +140,7 @@ fn deployment_config_clone_and_monitoring_toggle() {
     let mut c = crate::DeploymentConfig::default();
     c.monitoring_enabled = false;
     c.region = "us-west".to_string();
-    let c2 = c.clone();
+    let c2 = c;
     assert_eq!(c2.region, "us-west");
     assert!(!c2.monitoring_enabled);
 }

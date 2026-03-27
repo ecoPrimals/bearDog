@@ -18,6 +18,7 @@ use super::{
 use crate::btsp_provider::BeardogBtspProvider;
 use crate::platform::{PlatformSocket, PlatformStream, Socket, SocketEndpoint};
 use anyhow::{Context, Result};
+use beardog_ipc::protocol::JSONRPC_VERSION;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -62,7 +63,7 @@ impl UnixSocketIpcServer {
 
         // Remove existing socket file if present (ASYNC - non-blocking!)
         if socket_path.exists() {
-            info!("🧹 Removing existing socket: {}", socket_path.display());
+            info!(path = %socket_path.display(), "Removing existing socket");
             tokio::fs::remove_file(&socket_path)
                 .await
                 .context("Failed to remove existing socket")?;
@@ -144,7 +145,7 @@ impl UnixSocketIpcServer {
     /// # Errors
     /// Returns error if unable to remove socket file
     pub async fn stop(&self) -> Result<()> {
-        info!("🛑 Stopping Unix socket IPC server...");
+        info!("Stopping Unix socket IPC server");
 
         // Mark as not ready (atomic, lock-free!)
         self.is_ready
@@ -159,7 +160,7 @@ impl UnixSocketIpcServer {
         // Remove socket file
         if self.socket_path.exists() {
             std::fs::remove_file(&self.socket_path).context("Failed to remove socket file")?;
-            info!("🧹 Removed socket: {}", self.socket_path.display());
+            info!(path = %self.socket_path.display(), "Removed socket");
         }
 
         Ok(())
@@ -176,15 +177,15 @@ impl UnixSocketIpcServer {
         {
             let mut is_running = self.is_running.write().await;
             if *is_running {
-                warn!("⚠️  Unix socket IPC server already running");
+                warn!("Unix socket IPC server already running");
                 return Ok(());
             }
             *is_running = true;
         }
 
         info!(
-            "🔌 Starting Unix socket IPC server: {}",
-            self.socket_path.display()
+            path = %self.socket_path.display(),
+            "Starting Unix socket IPC server"
         );
 
         // Platform-agnostic socket binding (ecoBin v2.0)
@@ -194,7 +195,7 @@ impl UnixSocketIpcServer {
         } else {
             "Unix (filesystem)"
         };
-        info!("   Platform: {}", platform_type);
+        info!(platform = platform_type, "IPC server platform");
 
         // Create endpoint from stored socket_path
         let endpoint = SocketEndpoint::Filesystem(self.socket_path.clone());
@@ -212,10 +213,13 @@ impl UnixSocketIpcServer {
             .store(true, std::sync::atomic::Ordering::Release);
 
         info!(
-            "✅ Unix socket IPC server listening: {}",
-            endpoint.display()
+            endpoint = %endpoint.display(),
+            "Unix socket IPC server listening"
         );
-        info!("   Status: READY ✅ (atomic flag set)");
+        info!(
+            status = "ready",
+            "Unix socket IPC server status (atomic flag set)"
+        );
 
         // Accept connections loop (universal platform support!)
         loop {
@@ -225,12 +229,12 @@ impl UnixSocketIpcServer {
                     let server = Arc::clone(&self);
                     tokio::spawn(async move {
                         if let Err(e) = server.handle_connection(stream).await {
-                            error!("❌ Connection handler error: {}", e);
+                            error!(error = %e, "Connection handler error");
                         }
                     });
                 }
                 Err(e) => {
-                    error!("❌ Failed to accept connection: {}", e);
+                    error!(error = %e, "Failed to accept connection");
                 }
             }
         }
@@ -245,7 +249,7 @@ impl UnixSocketIpcServer {
     /// # Errors
     /// Returns error if unable to read from stream or handle request
     async fn handle_connection(&self, stream: Box<dyn PlatformStream>) -> Result<()> {
-        debug!("📥 New IPC connection (universal platform)");
+        debug!("New IPC connection (universal platform)");
 
         // Phase 3 plan: Full universal stream refactoring. Handlers will be refactored to use
         // AsyncRead/AsyncWrite traits directly, eliminating platform-specific downcasting.
@@ -264,12 +268,12 @@ impl UnixSocketIpcServer {
 
             match buf_stream.read_until(b'\n', &mut buffer).await {
                 Ok(0) => {
-                    debug!("📤 Client disconnected immediately");
+                    debug!("Client disconnected immediately");
                     return Ok(());
                 }
                 Ok(_) => {}
                 Err(e) => {
-                    error!("❌ Failed to read from stream: {}", e);
+                    error!(error = %e, "Failed to read from stream");
                     return Err(anyhow::anyhow!("Failed to read: {e}"));
                 }
             }
@@ -278,7 +282,7 @@ impl UnixSocketIpcServer {
             let stream = buf_stream.into_inner();
 
             if first_line.trim().is_empty() {
-                debug!("📤 Empty request, ignoring");
+                debug!("Empty request, ignoring");
                 return Ok(());
             }
 
@@ -289,17 +293,18 @@ impl UnixSocketIpcServer {
             match protocol {
                 Protocol::JsonRpc => {
                     info!(
-                        "📡 JSON-RPC connection (security level: {}) - PRIMARY protocol",
-                        protocol.security_level()
+                        security_level = protocol.security_level(),
+                        protocol = "json_rpc",
+                        "JSON-RPC connection (primary protocol)"
                     );
                 }
                 Protocol::Http => {
                     warn!(
-                        "⚠️  HTTP connection (security level: {})",
-                        protocol.security_level()
+                        security_level = protocol.security_level(),
+                        protocol = "http",
+                        "HTTP connection (lower security than JSON-RPC for inter-primal communication)"
                     );
-                    warn!("⚠️  HTTP is less secure than JSON-RPC for inter-primal communication");
-                    warn!("⚠️  Consider migrating to JSON-RPC 2.0 over Unix sockets");
+                    warn!("Consider migrating to JSON-RPC 2.0 over Unix sockets");
                 }
             }
 
@@ -317,7 +322,7 @@ impl UnixSocketIpcServer {
         #[cfg(not(unix))]
         {
             // For non-Unix platforms, implement similar logic
-            warn!("⚠️  Non-Unix platform handler not yet fully implemented");
+            warn!("Non-Unix platform handler not yet fully implemented");
             return Err(anyhow::anyhow!(
                 "Platform not yet supported in this handler"
             ));
@@ -350,12 +355,12 @@ impl UnixSocketIpcServer {
             line_buf.clear();
             match buf_stream.read_until(b'\n', &mut line_buf).await {
                 Ok(0) => {
-                    debug!("📤 Client disconnected gracefully");
+                    debug!("Client disconnected gracefully");
                     return Ok(());
                 }
                 Ok(_) => {}
                 Err(e) => {
-                    error!("❌ Read error: {}", e);
+                    error!(error = %e, "Read error");
                     return Err(anyhow::anyhow!("Read failed: {e}"));
                 }
             }
@@ -368,16 +373,16 @@ impl UnixSocketIpcServer {
             match self.handle_one_jsonrpc_request_universal(&line).await {
                 Ok(response) => {
                     if let Err(e) = buf_stream.get_mut().write_all(response.as_bytes()).await {
-                        warn!("⚠️  Failed to write response: {}", e);
+                        warn!(error = %e, "Failed to write response");
                         break;
                     }
                     if let Err(e) = buf_stream.get_mut().write_all(b"\n").await {
-                        warn!("⚠️  Failed to write newline: {}", e);
+                        warn!(error = %e, "Failed to write newline");
                         break;
                     }
                 }
                 Err(e) => {
-                    warn!("⚠️  Error handling request: {}", e);
+                    warn!(error = %e, "Error handling request");
                     break;
                 }
             }
@@ -404,9 +409,9 @@ impl UnixSocketIpcServer {
         let mut request: JsonRpcRequest = match serde_json::from_str(line.trim()) {
             Ok(req) => req,
             Err(e) => {
-                warn!("⚠️  Invalid JSON-RPC request: {}", e);
+                warn!(error = %e, "Invalid JSON-RPC request");
                 let error_response = JsonRpcResponse {
-                    jsonrpc: "2.0".to_string(),
+                    jsonrpc: JSONRPC_VERSION.to_string(),
                     result: None,
                     error: Some(JsonRpcError {
                         code: -32700,
@@ -419,7 +424,7 @@ impl UnixSocketIpcServer {
             }
         };
 
-        debug!("📨 JSON-RPC request: {}", request.method);
+        debug!(method = %request.method, "JSON-RPC request");
 
         // Take id to avoid clone (zero-copy: wateringHole standard)
         let id = request.id.take().unwrap_or(serde_json::Value::Null);
@@ -427,7 +432,7 @@ impl UnixSocketIpcServer {
         // Validate JSON-RPC version
         if request.jsonrpc != "2.0" {
             let error_response = JsonRpcResponse {
-                jsonrpc: "2.0".to_string(),
+                jsonrpc: JSONRPC_VERSION.to_string(),
                 result: None,
                 error: Some(JsonRpcError {
                     code: -32600,
@@ -450,13 +455,13 @@ impl UnixSocketIpcServer {
             .await
         {
             Ok(result) => JsonRpcResponse {
-                jsonrpc: "2.0".to_string(),
+                jsonrpc: JSONRPC_VERSION.to_string(),
                 result: Some(result),
                 error: None,
                 id,
             },
             Err(error_msg) => JsonRpcResponse {
-                jsonrpc: "2.0".to_string(),
+                jsonrpc: JSONRPC_VERSION.to_string(),
                 result: None,
                 error: Some(JsonRpcError {
                     code: -32601,
@@ -478,14 +483,14 @@ impl UnixSocketIpcServer {
     /// This method routes requests through the trait-based handler registry,
     /// bypassing the legacy router for cleaner, more efficient processing.
     async fn handle_jsonrpc_via_registry(&self, request: &JsonRpcRequest) -> JsonRpcResponse {
-        debug!("→ JSON-RPC Request: {}", request.method);
+        debug!(method = %request.method, "JSON-RPC request (registry)");
 
         let id = request.id.clone().unwrap_or(serde_json::Value::Null);
 
         // Validate JSON-RPC version
         if request.jsonrpc != "2.0" {
             return JsonRpcResponse {
-                jsonrpc: "2.0".to_string(),
+                jsonrpc: JSONRPC_VERSION.to_string(),
                 result: None,
                 error: Some(JsonRpcError {
                     code: -32600,
@@ -509,7 +514,7 @@ impl UnixSocketIpcServer {
         // Build response with proper error codes
         match result {
             Ok(value) => JsonRpcResponse {
-                jsonrpc: "2.0".to_string(),
+                jsonrpc: JSONRPC_VERSION.to_string(),
                 result: Some(value),
                 error: None,
                 id,
@@ -526,7 +531,7 @@ impl UnixSocketIpcServer {
                     };
 
                 JsonRpcResponse {
-                    jsonrpc: "2.0".to_string(),
+                    jsonrpc: JSONRPC_VERSION.to_string(),
                     result: None,
                     error: Some(JsonRpcError {
                         code,

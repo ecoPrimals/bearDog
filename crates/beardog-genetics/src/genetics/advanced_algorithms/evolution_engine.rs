@@ -154,9 +154,29 @@ impl GeneticEvolutionEngine {
             population_size: self.evolution_config.population_size,
             average_fitness: avg_fitness,
             best_fitness,
-            diversity_index: 0.5, // Placeholder
+            diversity_index: self.compute_diversity_index(),
             convergence_rate: 0.0,
         })
+    }
+
+    /// Compute population diversity as the ratio of unique fitness values to population size.
+    ///
+    /// Returns a value in \[0.0, 1.0\] where 1.0 means every individual has a distinct fitness.
+    fn compute_diversity_index(&self) -> f64 {
+        let population = self.population_manager.get_population();
+        if population.is_empty() {
+            return 0.0;
+        }
+        let mut unique: std::collections::HashSet<u64> = std::collections::HashSet::new();
+        for ind in &population {
+            unique.insert(ind.fitness_score.to_bits());
+        }
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "display/metric, precision loss acceptable"
+        )]
+        let diversity = unique.len() as f64 / population.len() as f64;
+        diversity
     }
 
     /// Get best individual

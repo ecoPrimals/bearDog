@@ -35,7 +35,7 @@ mod tests {
         let normal_samples = vec![100, 105, 98, 102, 101, 99, 103, 100, 104, 102];
 
         for &sample in &normal_samples {
-            detector.add_sample(sample as f64);
+            detector.add_sample(f64::from(sample));
         }
 
         detector.establish_baseline();

@@ -551,4 +551,50 @@ mod tests {
         assert_eq!(pred.predictions.len(), 4);
         assert!(pred.uncertainty.as_ref().is_some_and(|u| !u.is_empty()));
     }
+
+    #[tokio::test]
+    async fn test_decision_approve_with_monitoring_branch() {
+        let config = create_test_config();
+        let system = HybridIntelligenceSystem::new(config).expect("Should create system");
+        let mut context = HashMap::new();
+        context.insert("risk_level".to_string(), serde_json::json!(0.2));
+        context.insert("data_quality".to_string(), serde_json::json!(0.92));
+        context.insert("system_confidence".to_string(), serde_json::json!(0.92));
+        let decision = system.make_decision(context).await.expect("decision");
+        assert_eq!(decision.decision, "approve_with_monitoring");
+    }
+
+    #[tokio::test]
+    async fn test_decision_reject_high_risk_when_confidence_low() {
+        let config = create_test_config();
+        let system = HybridIntelligenceSystem::new(config).expect("Should create system");
+        let mut context = HashMap::new();
+        context.insert("risk_level".to_string(), serde_json::json!(0.9));
+        context.insert("data_quality".to_string(), serde_json::json!(0.1));
+        context.insert("system_confidence".to_string(), serde_json::json!(0.1));
+        let decision = system.make_decision(context).await.expect("decision");
+        assert_eq!(decision.decision, "reject_high_risk");
+    }
+
+    #[tokio::test]
+    async fn test_make_decision_confidence_branch_with_non_finite_json_number() {
+        let config = create_test_config();
+        let system = HybridIntelligenceSystem::new(config).expect("Should create system");
+        let mut context = HashMap::new();
+        context.insert(
+            "risk_level".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(1)),
+        );
+        context.insert(
+            "data_quality".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(1)),
+        );
+        context.insert(
+            "system_confidence".to_string(),
+            serde_json::Value::String("not-a-number".to_string()),
+        );
+        let decision = system.make_decision(context).await.expect("decision");
+        assert!(decision.confidence >= 0.0 && decision.confidence <= 1.0);
+        assert!(!decision.decision.is_empty());
+    }
 }

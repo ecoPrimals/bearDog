@@ -19,7 +19,7 @@ use tracing::{debug, info, warn};
 pub(crate) async fn listen_mdns_announcements(
     env: &EcosystemListenerEnvInputs,
 ) -> Result<Vec<PrimalAnnouncement>, BearDogError> {
-    debug!("🔍 Listening for mDNS primal announcements...");
+    debug!("Listening for mDNS primal announcements");
 
     let announcements = Vec::new();
 
@@ -52,14 +52,14 @@ pub(crate) async fn listen_mdns_announcements(
 pub(crate) async fn poll_http_discovery(
     env: &EcosystemListenerEnvInputs,
 ) -> Result<Vec<PrimalAnnouncement>, BearDogError> {
-    debug!("🌐 Polling HTTP discovery endpoints...");
+    debug!("Polling HTTP discovery endpoints");
 
     let mut announcements = Vec::new();
 
     let discovery_endpoints = env.discovery_endpoints();
 
     for endpoint in discovery_endpoints {
-        debug!("📡 Checking discovery endpoint: {}", endpoint);
+        debug!(%endpoint, "Checking discovery endpoint");
 
         // Attempt HTTP discovery request with timeout
         match tokio::time::timeout(
@@ -94,7 +94,7 @@ pub(crate) fn check_environment_announcements_with_lookup<G>(
 where
     G: FnMut(&str) -> Result<String, std::env::VarError>,
 {
-    debug!("🔧 Checking environment for primal announcements...");
+    debug!("Checking environment for primal announcements");
 
     let mut announcements = Vec::new();
 
@@ -108,10 +108,7 @@ where
 
     for var in &env_vars {
         if let Ok(endpoint) = get_var(var) {
-            debug!(
-                "🔍 Found primal endpoint in environment: {} = {}",
-                var, endpoint
-            );
+            debug!(var, %endpoint, "Found primal endpoint in environment");
 
             // Create announcement from environment variable
             let capability = match *var {
@@ -167,7 +164,7 @@ pub(crate) fn check_environment_announcements_for_test(
 
 /// Discover primals via service mesh
 pub(crate) fn discover_service_mesh_primals() -> Vec<PrimalAnnouncement> {
-    debug!("🕸️ Discovering primals via service mesh...");
+    debug!("Discovering primals via service mesh");
 
     // Minimal implementation - production deployments should integrate with service mesh
     // like Istio, Linkerd, or Consul Connect for automatic service discovery
@@ -181,21 +178,21 @@ pub(crate) async fn process_primal_announcement(
     discovered_capabilities: &Arc<RwLock<HashMap<ServiceCapabilityType, Vec<UniversalCapability>>>>,
 ) -> Result<(), BearDogError> {
     info!(
-        "📢 Processing primal announcement from: {}",
-        announcement.primal_id
+        primal_id = %announcement.primal_id,
+        "Processing primal announcement"
     );
 
     // Validate announcement
     if announcement.primal_id.is_empty() {
-        warn!("⚠️ Invalid announcement: empty primal ID");
+        warn!("Invalid announcement: empty primal ID");
         return Ok(());
     }
 
     // Get endpoint or create placeholder for announcement-only primals
     let endpoint = announcement.endpoints.first().cloned().unwrap_or_else(|| {
         warn!(
-            "⚠️ No endpoints provided for primal {}, using placeholder (announcement-only mode)",
-            announcement.primal_id
+            primal_id = %announcement.primal_id,
+            "No endpoints provided for primal, using placeholder (announcement-only mode)"
         );
         UniversalEndpoint {
             url: UNKNOWN_ENDPOINT_URL.to_string(),
@@ -226,8 +223,8 @@ pub(crate) async fn process_primal_announcement(
         || primal_id_lower.contains("deprecated")
     {
         warn!(
-            "🚨 Potential sovereignty violation detected in primal ID: {}",
-            discovered_primal.primal_id
+            primal_id = %discovered_primal.primal_id,
+            "Potential sovereignty violation detected in primal ID"
         );
         warn!(
             "   Each primal should only know itself and discover others through universal adapter"
@@ -294,9 +291,9 @@ pub(crate) async fn process_primal_announcement(
     }
 
     info!(
-        "✅ Primal announcement processed: {} with {} capabilities",
-        announcement.primal_id,
-        announcement.capabilities.len()
+        primal_id = %announcement.primal_id,
+        capability_count = announcement.capabilities.len(),
+        "Primal announcement processed"
     );
 
     Ok(())

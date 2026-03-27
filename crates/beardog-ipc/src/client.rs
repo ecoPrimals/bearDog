@@ -61,7 +61,7 @@ impl SongbirdClient {
                 ))
             })?;
 
-        info!("✅ Connected to IPC registry at {}", client.socket_path);
+        info!(socket_path = %client.socket_path, "Connected to IPC registry");
         Ok(client)
     }
 
@@ -86,14 +86,14 @@ impl SongbirdClient {
         capabilities: Vec<Capability>,
     ) -> IpcResult<()> {
         info!(
-            "📝 Registering {} with capabilities: {:?}",
-            primal_name, capabilities
+            primal_name,
+            ?capabilities,
+            "Registering primal with IPC registry"
         );
 
-        let request = JsonRpcRequest {
-            jsonrpc: "2.0".to_string(),
-            method: "ipc.register".to_string(),
-            params: json!({
+        let request = JsonRpcRequest::new(
+            "ipc.register",
+            json!({
                 "name": primal_name,
                 "endpoint": format!("/primal/{}", primal_name),
                 "capabilities": capabilities.iter().map(super::types::Capability::as_str).collect::<Vec<_>>(),
@@ -102,8 +102,8 @@ impl SongbirdClient {
                     "description": "BearDog - Cryptographic Security Primal"
                 }
             }),
-            id: self.next_request_id(),
-        };
+            self.next_request_id(),
+        );
 
         let response = self.send_request(request).await?;
 
@@ -115,8 +115,8 @@ impl SongbirdClient {
             {
                 *self.primal_name.write().await = Some(primal_name.to_string());
                 info!(
-                    "✅ Successfully registered {} with IPC registry",
-                    primal_name
+                    primal_name,
+                    "Successfully registered primal with IPC registry"
                 );
                 Ok(())
             } else {
@@ -147,16 +147,15 @@ impl SongbirdClient {
     /// # }
     /// ```
     pub async fn find_capability(&self, capability: &str) -> IpcResult<Vec<ServiceInfo>> {
-        debug!("🔍 Finding services with capability: {}", capability);
+        debug!(capability, "Finding services by capability");
 
-        let request = JsonRpcRequest {
-            jsonrpc: "2.0".to_string(),
-            method: "ipc.find_capability".to_string(),
-            params: json!({
+        let request = JsonRpcRequest::new(
+            "ipc.find_capability",
+            json!({
                 "capability": capability
             }),
-            id: self.next_request_id(),
-        };
+            self.next_request_id(),
+        );
 
         let response = self.send_request(request).await?;
 
@@ -172,9 +171,8 @@ impl SongbirdClient {
                 .collect();
 
             debug!(
-                "✅ Found {} services with capability '{}'",
-                services.len(),
-                capability
+                count = services.len(),
+                capability, "Found services with capability"
             );
             Ok(service_infos)
         } else if let Some(error) = response.error {
@@ -190,17 +188,16 @@ impl SongbirdClient {
 
     /// Resolve a specific primal by name
     pub async fn resolve(&self, primal_name: &str) -> IpcResult<ServiceInfo> {
-        debug!("🔍 Resolving primal: {}", primal_name);
+        debug!(primal_name, "Resolving primal");
 
         let key = crate::ipc_resolve_target_param_key();
         let mut params = serde_json::Map::new();
         params.insert(key, serde_json::Value::String(primal_name.to_string()));
-        let request = JsonRpcRequest {
-            jsonrpc: "2.0".to_string(),
-            method: "ipc.resolve".to_string(),
-            params: serde_json::Value::Object(params),
-            id: self.next_request_id(),
-        };
+        let request = JsonRpcRequest::new(
+            "ipc.resolve",
+            serde_json::Value::Object(params),
+            self.next_request_id(),
+        );
 
         let response = self.send_request(request).await?;
 
@@ -221,22 +218,21 @@ impl SongbirdClient {
             .as_ref()
             .ok_or_else(|| IpcError::Protocol("Not registered yet".to_string()))?;
 
-        let request = JsonRpcRequest {
-            jsonrpc: "2.0".to_string(),
-            method: "ipc.heartbeat".to_string(),
-            params: json!({
+        let request = JsonRpcRequest::new(
+            "ipc.heartbeat",
+            json!({
                 "name": name
             }),
-            id: self.next_request_id(),
-        };
+            self.next_request_id(),
+        );
 
         let response = self.send_request(request).await?;
 
         if response.result.is_some() {
-            debug!("💓 Heartbeat sent");
+            debug!("Heartbeat sent");
             Ok(())
         } else if let Some(error) = response.error {
-            warn!("⚠️ Heartbeat error: {:?}", error);
+            warn!(?error, "Heartbeat error");
             Err(IpcError::Protocol(format!("Heartbeat error: {error:?}")))
         } else {
             Err(IpcError::Protocol("Invalid heartbeat response".to_string()))

@@ -13,6 +13,7 @@ mod tests {
         let args = ServerArgs {
             socket: "/tmp/test.sock".to_string(),
             r#abstract: false,
+            port: None,
             listen: None,
             family_id: Some("test_family".to_string()),
             orchestrator_id: Some("test_orch".to_string()),
@@ -30,6 +31,7 @@ mod tests {
         let args = ServerArgs {
             socket: "/tmp/beardog.sock".to_string(),
             r#abstract: false,
+            port: None,
             listen: None,
             family_id: None,
             orchestrator_id: None,
@@ -44,8 +46,9 @@ mod tests {
     #[test]
     fn test_server_args_abstract_socket() {
         let args = ServerArgs {
-            socket: "/tmp/beardog.sock".to_string(), // Ignored when abstract is true
+            socket: "/tmp/beardog.sock".to_string(),
             r#abstract: true,
+            port: None,
             listen: None,
             family_id: Some("stun_test".to_string()),
             orchestrator_id: None,
@@ -60,6 +63,7 @@ mod tests {
         let args = ServerArgs {
             socket: "/tmp/ignored.sock".to_string(),
             r#abstract: true,
+            port: None,
             listen: None,
             family_id: None,
             orchestrator_id: None,
@@ -75,6 +79,7 @@ mod tests {
         let args = ServerArgs {
             socket: "/tmp/ignored.sock".to_string(),
             r#abstract: true,
+            port: None,
             listen: None,
             family_id: Some("alpha".to_string()),
             orchestrator_id: None,
@@ -87,6 +92,7 @@ mod tests {
         let args = ServerArgs {
             socket: "/var/run/beardog.sock".to_string(),
             r#abstract: false,
+            port: None,
             listen: None,
             family_id: Some("fam99".to_string()),
             orchestrator_id: None,
@@ -102,6 +108,7 @@ mod tests {
         let args = ServerArgs {
             socket: "/tmp/custom.sock".to_string(),
             r#abstract: false,
+            port: None,
             listen: None,
             family_id: None,
             orchestrator_id: None,
@@ -114,6 +121,7 @@ mod tests {
         let args1 = ServerArgs {
             socket: "/tmp/test.sock".to_string(),
             r#abstract: true,
+            port: None,
             listen: None,
             family_id: Some("family1".to_string()),
             orchestrator_id: Some("orch1".to_string()),

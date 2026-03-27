@@ -48,9 +48,9 @@ fn test_invalid_utf8_handling() {
 #[test]
 fn test_numeric_overflow_detection() {
     let max_value = u32::MAX;
-    let test_value = (max_value as u64) + 1;
+    let test_value = u64::from(max_value) + 1;
 
-    assert!(test_value > max_value as u64, "Should detect overflow");
+    assert!(test_value > u64::from(max_value), "Should detect overflow");
 
     // Verify: Should return NumericOverflow error
 }
@@ -243,7 +243,7 @@ fn test_ip_address_validation() {
 #[test]
 fn test_port_number_validation() {
     let valid_ports = [80, 443, 8080, 3000];
-    let invalid_ports = [0, 70000, u16::MAX as u32 + 1];
+    let invalid_ports = [0, 70000, u32::from(u16::MAX) + 1];
 
     for port in &valid_ports {
         assert!(*port > 0 && *port <= 65535, "Valid port range");

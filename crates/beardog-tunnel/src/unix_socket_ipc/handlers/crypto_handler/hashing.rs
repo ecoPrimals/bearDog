@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 //! Standalone hashing, cipher-aware hashing, and HMAC variants.
 
@@ -107,5 +108,124 @@ pub async fn route(
         }
 
         _ => Ok(None),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::route;
+    use base64::Engine;
+    use serde_json::json;
+
+    fn b64(data: &[u8]) -> String {
+        base64::engine::general_purpose::STANDARD.encode(data)
+    }
+
+    #[tokio::test]
+    async fn hashing_route_unknown_method_returns_none() {
+        assert!(
+            route("crypto.unknown_hash", None)
+                .await
+                .expect("route")
+                .is_none()
+        );
+    }
+
+    #[tokio::test]
+    async fn hashing_route_sha256_requires_params() {
+        let err = route("crypto.sha256", None)
+            .await
+            .expect_err("missing params");
+        assert!(err.contains("Missing parameters") || err.contains("Missing"));
+    }
+
+    #[tokio::test]
+    async fn hashing_route_sha256_success() {
+        let params = json!({ "data": b64(b"abc") });
+        let out = route("crypto.sha256", Some(&params))
+            .await
+            .expect("route")
+            .expect("some");
+        assert_eq!(out["algorithm"], "sha256");
+        assert_eq!(out["output_bits"], 256);
+    }
+
+    #[tokio::test]
+    async fn hashing_route_sha384_and_sha512() {
+        let p = json!({ "data": b64(b"x") });
+        let o384 = route("crypto.sha384", Some(&p))
+            .await
+            .expect("r")
+            .expect("v");
+        assert_eq!(o384["algorithm"], "sha384");
+        let o512 = route("crypto.sha512", Some(&p))
+            .await
+            .expect("r")
+            .expect("v");
+        assert_eq!(o512["algorithm"], "sha512");
+    }
+
+    #[tokio::test]
+    async fn hashing_route_sha1_and_sha3_256() {
+        let p = json!({ "data": b64(b"legacy") });
+        let o1 = route("crypto.sha1", Some(&p)).await.expect("r").expect("v");
+        assert_eq!(o1["algorithm"], "sha1");
+        let o3 = route("crypto.sha3_256", Some(&p))
+            .await
+            .expect("r")
+            .expect("v");
+        assert_eq!(o3["algorithm"], "sha3_256");
+    }
+
+    #[tokio::test]
+    async fn hashing_route_blake3_and_hash_for_cipher() {
+        let p_blake = json!({ "data": b64(b"msg") });
+        let blake = route("crypto.blake3_hash", Some(&p_blake))
+            .await
+            .expect("r")
+            .expect("v");
+        assert_eq!(blake["algorithm"], "BLAKE3");
+
+        let p_cipher = json!({ "data": b64(b"TLS"), "cipher_suite": 0x1301u64 });
+        let hc = route("crypto.hash_for_cipher", Some(&p_cipher))
+            .await
+            .expect("r")
+            .expect("v");
+        assert_eq!(hc["cipher_suite"], 0x1301);
+    }
+
+    #[tokio::test]
+    async fn hashing_route_hmac_sha256_requires_key() {
+        let p = json!({ "data": b64(b"d") });
+        let err = route("crypto.hmac_sha256", Some(&p))
+            .await
+            .expect_err("bad hmac params");
+        assert!(!err.is_empty());
+    }
+
+    #[tokio::test]
+    async fn hashing_route_beardog_aliases_match_sha3_and_onion() {
+        let p = json!({ "data": b64(b"onion") });
+        let a = route("beardog.crypto.sha3_256", Some(&p))
+            .await
+            .expect("r")
+            .expect("v");
+        let b = route("crypto.sha3_256", Some(&p))
+            .await
+            .expect("r")
+            .expect("v");
+        assert_eq!(a["hash"], b["hash"]);
+
+        let onion = json!({ "public_key": b64(&[0u8; 32]) });
+        let derived = route("beardog.crypto.derive_onion_address", Some(&onion))
+            .await
+            .expect("r")
+            .expect("v");
+        assert!(
+            derived
+                .get("onion_address")
+                .and_then(|v| v.as_str())
+                .is_some_and(|s| s.ends_with(".onion"))
+        );
     }
 }

@@ -573,19 +573,20 @@ fn test_hsm_performance_monitoring() {
     let total_time_ms = 5000;
 
     // Calculate throughput
-    let throughput_ops_per_sec = (operations_completed as f64 / total_time_ms as f64) * 1000.0;
+    let throughput_ops_per_sec =
+        (f64::from(operations_completed) / f64::from(total_time_ms)) * 1000.0;
     assert!(
         throughput_ops_per_sec > 1000.0,
         "Throughput should be > 1000 ops/sec"
     );
 
     // Monitor latency
-    let avg_latency_ms = total_time_ms as f64 / operations_completed as f64;
+    let avg_latency_ms = f64::from(total_time_ms) / f64::from(operations_completed);
     assert!(avg_latency_ms < 1.0, "Average latency should be < 1ms");
 
     // Monitor error rate
     let error_count = 5;
-    let error_rate = error_count as f64 / operations_completed as f64;
+    let error_rate = f64::from(error_count) / f64::from(operations_completed);
     assert!(error_rate < 0.001, "Error rate should be < 0.1%");
 
     // Monitor resource usage

@@ -513,3 +513,137 @@ async fn btsp_routes_tunnel_establish_legacy_namespaced() {
     assert!(v.get("id").is_some());
     assert!(v.get("peer_id").is_some());
 }
+
+#[tokio::test]
+async fn btsp_tunnel_establish_unified_internal_returns_response_shape() {
+    use crate::tunnel::hsm::SoftwareHsmConfig;
+    use crate::tunnel::hsm::manager::HsmManager;
+    use crate::tunnel::hsm::software_hsm::RustSoftwareHsm;
+    use beardog_genetics::ecosystem_evolution::EcosystemGeneticEngine;
+    use std::sync::Arc;
+
+    let mut hsm = HsmManager::new();
+    let software_hsm = RustSoftwareHsm::new(SoftwareHsmConfig::default())
+        .await
+        .expect("software hsm");
+    hsm.register_hsm_provider(
+        crate::tunnel::hsm::types::HsmTier::Software,
+        Arc::new(software_hsm),
+    )
+    .expect("register");
+    let hsm = Arc::new(hsm);
+    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+    let provider = Arc::new(
+        BeardogBtspProvider::new(hsm, genetics)
+            .await
+            .expect("provider"),
+    );
+
+    let handler = BtspHandler;
+    let params = serde_json::json!({
+        "peer_id": "peer-unified-internal",
+        "peer_endpoint": "unix:///tmp/btsp-unified-internal.sock",
+        "trust_mode": { "type": "genetic_lineage", "verify_ancestry": true },
+        "protocol": { "type": "btsp_native", "version": "2.0", "features": [] },
+    });
+    let v = handler
+        .handle("btsp.tunnel_establish", Some(&params), &provider)
+        .await
+        .expect("unified internal establish");
+    assert_eq!(v.get("mode").and_then(|x| x.as_str()), Some("internal"));
+    assert_eq!(
+        v.get("protocol").and_then(|x| x.as_str()),
+        Some("btsp_native")
+    );
+    assert!(v.get("tunnel_id").is_some());
+}
+
+#[tokio::test]
+async fn btsp_tunnel_encrypt_decrypt_status_close_roundtrip() {
+    use crate::tunnel::hsm::SoftwareHsmConfig;
+    use crate::tunnel::hsm::manager::HsmManager;
+    use crate::tunnel::hsm::software_hsm::RustSoftwareHsm;
+    use beardog_capabilities::traits::{PeerEndpoint, SecureTunnelProvider};
+    use beardog_genetics::ecosystem_evolution::EcosystemGeneticEngine;
+    use std::sync::Arc;
+
+    let mut hsm = HsmManager::new();
+    let software_hsm = RustSoftwareHsm::new(SoftwareHsmConfig::default())
+        .await
+        .expect("software hsm");
+    hsm.register_hsm_provider(
+        crate::tunnel::hsm::types::HsmTier::Software,
+        Arc::new(software_hsm),
+    )
+    .expect("register");
+    let hsm = Arc::new(hsm);
+    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+    let provider = Arc::new(
+        BeardogBtspProvider::new(hsm, genetics)
+            .await
+            .expect("provider"),
+    );
+
+    let handle = provider
+        .establish_tunnel(PeerEndpoint {
+            id: "peer-roundtrip".to_string(),
+            endpoint: "unix:///tmp/btsp-roundtrip.sock".to_string(),
+            public_key: Some(vec![7u8; 32]),
+        })
+        .await
+        .expect("establish");
+
+    let handler = BtspHandler;
+    let tunnel_json = serde_json::to_value(&handle).expect("tunnel json");
+    let plain_b64 = base64::engine::general_purpose::STANDARD.encode(b"hello-tunnel");
+    let enc_params = serde_json::json!({
+        "tunnel": tunnel_json,
+        "data": plain_b64,
+    });
+    let enc = handler
+        .handle("btsp.tunnel_encrypt", Some(&enc_params), &provider)
+        .await
+        .expect("tunnel encrypt");
+    let cipher_b64 = enc
+        .get("ciphertext")
+        .and_then(|x| x.as_str())
+        .expect("ciphertext b64");
+
+    let dec_params = serde_json::json!({
+        "tunnel": tunnel_json,
+        "data": cipher_b64,
+    });
+    let dec = handler
+        .handle("btsp.tunnel_decrypt", Some(&dec_params), &provider)
+        .await
+        .expect("tunnel decrypt");
+    let out_b64 = dec
+        .get("plaintext")
+        .and_then(|x| x.as_str())
+        .expect("plaintext b64");
+    use base64::Engine;
+    let round = base64::engine::general_purpose::STANDARD
+        .decode(out_b64)
+        .expect("decode roundtrip plaintext");
+    assert_eq!(round, b"hello-tunnel");
+
+    let st = handler
+        .handle(
+            "btsp.tunnel_status",
+            Some(&serde_json::json!({ "tunnel": tunnel_json })),
+            &provider,
+        )
+        .await
+        .expect("tunnel status");
+    assert!(st.get("tunnel_id").is_some() || st.get("active").is_some());
+
+    let close = handler
+        .handle(
+            "btsp.tunnel_close",
+            Some(&serde_json::json!({ "tunnel_id": handle.id })),
+            &provider,
+        )
+        .await
+        .expect("tunnel close");
+    assert_eq!(close.get("success").and_then(|x| x.as_bool()), Some(true));
+}

@@ -360,3 +360,139 @@ fn test_get_discovery_socket_paths_integration_with_env() {
         "real env integration must return at least fallback paths"
     );
 }
+
+#[test]
+fn test_build_discovery_socket_paths_ipc_then_discovery_when_distinct() {
+    let ipc = "/tmp/ipc-first.sock".to_string();
+    let disc = "/tmp/discovery-second.sock".to_string();
+    let paths = BeardogBtspProvider::build_discovery_socket_paths(
+        Some(ipc.clone()),
+        Some(disc.clone()),
+        None,
+    );
+    assert_eq!(paths.first().map(String::as_str), Some(ipc.as_str()));
+    assert_eq!(paths.get(1).map(String::as_str), Some(disc.as_str()));
+}
+
+#[test]
+fn test_build_discovery_socket_paths_dedupes_identical_ipc_and_discovery() {
+    let same = "/tmp/one-socket.sock".to_string();
+    let paths = BeardogBtspProvider::build_discovery_socket_paths(
+        Some(same.clone()),
+        Some(same.clone()),
+        None,
+    );
+    assert_eq!(
+        paths.iter().filter(|p| p.as_str() == same.as_str()).count(),
+        1
+    );
+}
+
+#[test]
+fn test_build_discovery_socket_paths_dev_matches_generic_skips_duplicate_dev() {
+    let generic = beardog_ipc::DISCOVERY_SOCKET_FALLBACK.to_string();
+    let paths =
+        BeardogBtspProvider::build_discovery_socket_paths(None, None, Some(generic.clone()));
+    assert_eq!(
+        paths
+            .iter()
+            .filter(|p| p.as_str() == generic.as_str())
+            .count(),
+        1
+    );
+}
+
+#[tokio::test]
+async fn test_generate_lineage_proof_helper_hashes_path() {
+    let hsm = create_test_hsm().await;
+    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+    let provider = BeardogBtspProvider::new(hsm, genetics)
+        .await
+        .expect("provider");
+
+    let proof = provider
+        .generate_lineage_proof(&["a".to_string(), "b".to_string()])
+        .await
+        .expect("lineage proof");
+    assert!(proof.starts_with("lineage_proof_"));
+    assert!(proof.len() > 32);
+}
+
+#[tokio::test]
+async fn test_find_lineage_path_empty_for_unknown_peer() {
+    let hsm = create_test_hsm().await;
+    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+    let provider = BeardogBtspProvider::new(hsm, genetics)
+        .await
+        .expect("provider");
+
+    let path = provider
+        .find_lineage_path("any-lineage", "not-in-trust-db", 5)
+        .await
+        .expect("find_lineage_path");
+    assert!(path.is_empty());
+}
+
+#[tokio::test]
+async fn test_encrypt_decrypt_lineage_roundtrip() {
+    let hsm = create_test_hsm().await;
+    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+    let provider = BeardogBtspProvider::new(hsm, genetics)
+        .await
+        .expect("provider");
+
+    let key = [9u8; 32];
+    let ciphertext = provider
+        .encrypt_with_lineage(b"payload-bytes", &key)
+        .await
+        .expect("encrypt");
+    assert!(ciphertext.len() > 12);
+
+    let plaintext = provider
+        .decrypt_with_lineage(&ciphertext, &key)
+        .await
+        .expect("decrypt");
+    assert_eq!(plaintext, b"payload-bytes");
+}
+
+#[tokio::test]
+async fn test_decrypt_lineage_rejects_short_ciphertext() {
+    let hsm = create_test_hsm().await;
+    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+    let provider = BeardogBtspProvider::new(hsm, genetics)
+        .await
+        .expect("provider");
+
+    let key = [1u8; 32];
+    let err = provider
+        .decrypt_with_lineage(b"short", &key)
+        .await
+        .expect_err("too short");
+    assert!(format!("{err}").to_lowercase().contains("short"));
+}
+
+#[tokio::test]
+async fn test_pin_and_update_peer_trust_promotes_after_three_connections() {
+    let hsm = create_test_hsm().await;
+    let genetics = Arc::new(EcosystemGeneticEngine::new().expect("genetics"));
+    let provider = BeardogBtspProvider::new(hsm, genetics)
+        .await
+        .expect("provider");
+
+    let level = provider
+        .pin_peer_key("peer-pin", &[5u8; 32])
+        .await
+        .expect("pin");
+    assert_eq!(level, TrustLevel::Tentative);
+
+    // Pin starts connection_count at 1; two more updates reach 3 and promote to Trusted.
+    for _ in 0..2 {
+        provider
+            .update_peer_trust("peer-pin")
+            .await
+            .expect("update");
+    }
+
+    let record = provider.get_peer_trust_record("peer-pin").expect("record");
+    assert_eq!(record.trust_level, TrustLevel::Trusted);
+}

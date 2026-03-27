@@ -204,23 +204,33 @@ impl IntegrationEngine {
     /// # Errors
     /// - `Err(BearDogError)` if any critical integration component fails
     pub fn check_integration_health(&self) -> Result<(), BearDogError> {
-        let mut health_status = serde_json::Map::new();
+        let universal_adapter = self.check_universal_adapter_health().is_ok();
+        let capability_discovery = self.check_capability_discovery_health().is_ok();
+        let service_mesh = self.ecosystem_integrated && self.discover_ecosystem_services().is_ok();
 
-        // Check various integration points
+        let mut health_status = serde_json::Map::new();
         health_status.insert(
             "universal_adapter".to_string(),
-            serde_json::Value::Bool(true),
+            serde_json::Value::Bool(universal_adapter),
         );
-
         health_status.insert(
             "capability_discovery".to_string(),
-            serde_json::Value::Bool(true),
+            serde_json::Value::Bool(capability_discovery),
+        );
+        health_status.insert(
+            "service_mesh".to_string(),
+            serde_json::Value::Bool(service_mesh),
         );
 
-        health_status.insert("service_mesh".to_string(), serde_json::Value::Bool(true));
-
         info!("Integration health check completed: {:?}", health_status);
-        Ok(())
+
+        if universal_adapter && capability_discovery && service_mesh {
+            Ok(())
+        } else {
+            Err(BearDogError::system(
+                "One or more integration health checks failed (see logged status)".to_string(),
+            ))
+        }
     }
 
     ///
@@ -263,8 +273,12 @@ impl IntegrationEngine {
             );
         }
 
-        // Check service mesh health
-        health_status.insert("service_mesh".to_string(), serde_json::Value::Bool(true));
+        // Service mesh: integrated and discovery returns a provider list
+        let service_mesh = self.ecosystem_integrated && self.discover_ecosystem_services().is_ok();
+        health_status.insert(
+            "service_mesh".to_string(),
+            serde_json::Value::Bool(service_mesh),
+        );
 
         info!(
             "Comprehensive integration health check completed: {:?}",
@@ -273,32 +287,22 @@ impl IntegrationEngine {
         Ok(serde_json::Value::Object(health_status))
     }
 
-    #[expect(
-        clippy::unused_self,
-        reason = "Instance reserved for real adapter health checks"
-    )]
-    #[expect(
-        clippy::unnecessary_wraps,
-        reason = "Result reserved for health check errors"
-    )]
-    const fn check_universal_adapter_health(&self) -> Result<(), BearDogError> {
-        // Universal adapter health check implementation
-        // This is a placeholder for future health check logic
-        Ok(())
+    fn check_universal_adapter_health(&self) -> Result<(), BearDogError> {
+        let Some(hsm) = self.universal_hsm.as_ref() else {
+            return Err(BearDogError::system(
+                "Universal HSM adapter not configured".to_string(),
+            ));
+        };
+        hsm.get_ecosystem_status().map(|_| ())
     }
 
-    #[expect(
-        clippy::unused_self,
-        reason = "Instance reserved for real discovery health checks"
-    )]
-    #[expect(
-        clippy::unnecessary_wraps,
-        reason = "Result reserved for health check errors"
-    )]
-    const fn check_capability_discovery_health(&self) -> Result<(), BearDogError> {
-        // Capability discovery health check implementation
-        // This is a placeholder for future health check logic
-        Ok(())
+    fn check_capability_discovery_health(&self) -> Result<(), BearDogError> {
+        let Some(_hsm) = self.universal_hsm.as_ref() else {
+            return Err(BearDogError::system(
+                "Capability discovery requires Universal HSM".to_string(),
+            ));
+        };
+        self.discover_ecosystem_services().map(|_| ())
     }
 }
 
@@ -347,10 +351,19 @@ mod tests {
     }
 
     #[test]
-    fn test_check_integration_health() {
+    fn test_check_integration_health_without_hsm_fails() {
         let engine = IntegrationEngine::default();
         let result = engine.check_integration_health();
-        assert!(result.is_ok());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_check_integration_health_when_fully_integrated_ok() {
+        use crate::ecosystem_integration::ecosystem_genetic_spawner::spawner::UniversalHsmManager;
+        let mut engine = IntegrationEngine::default();
+        engine.universal_hsm = Some(Arc::new(UniversalHsmManager::new()));
+        assert!(engine.integrate_with_ecosystem().is_ok());
+        assert!(engine.check_integration_health().is_ok());
     }
 
     #[test]

@@ -299,7 +299,7 @@ fn test_error_recovery_metrics() {
     // TEST_DOMAIN: security
     // TEST_PRIORITY: important
 
-    let success_rate = (successful_recoveries as f64 / total_attempts as f64) * 100.0;
+    let success_rate = (f64::from(successful_recoveries) / f64::from(total_attempts)) * 100.0;
     assert!(
         success_rate >= 90.0,
         "Recovery rate should be high: {success_rate:.1}%"

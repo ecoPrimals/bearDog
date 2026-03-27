@@ -207,3 +207,165 @@ pub async fn handle_tls_verify_certificate(params: Option<&Value>) -> Result<Val
         "algorithm": "X.509"
     }))
 }
+
+#[cfg(test)]
+mod tls_certificate_tests {
+    use super::*;
+    use base64::Engine;
+    use serde_json::json;
+
+    /// Self-signed test cert: CN + SAN `test.example.com`, valid 2026-03-27 .. 2028-06-29 (GMT).
+    const TEST_LEAF_CERT_DER_B64: &str = "MIIDNDCCAhygAwIBAgIUf+M7I0CH2ZID6J0thpRUase1uBEwDQYJKoZIhvcNAQELBQAwGzEZMBcGA1UEAwwQdGVzdC5leGFtcGxlLmNvbTAeFw0yNjAzMjcxOTQxMTNaFw0yODA2MjkxOTQxMTNaMBsxGTAXBgNVBAMMEHRlc3QuZXhhbXBsZS5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCTewKgJskFWRc0UyPWlK971NNatMnxcXRmHSgSoy6zoQSroHa8q0iwoXqP4iy5x5FXsIHy48LoYEjFaZurWQYdgKgu+PVScYes5fjGY1y9ekiJu8w1d3w3ACPjJdJgL/imcVE5Bt23Eipe/o96wcCle7zCq5Od3KOJmJQtrjVdty8WaKL9AJc+pbARiE+85uyIgist/7vw3Crz7rd9i2R9F452GyaeEVR7ujcEzuctu0+/qJf/I6nSKzPQlh9KUeb4iseczwCE2pCyDIOJ2bMf4FLo8edHl9NYhucin90MuQQ9vgpQuWHxbvCLYMN2m17PPa51JtLV/et4gkkDe/zNAgMBAAGjcDBuMB0GA1UdDgQWBBT0usnXENpMnE3jfAbxup+2BHSC/zAfBgNVHSMEGDAWgBT0usnXENpMnE3jfAbxup+2BHSC/zAPBgNVHRMBAf8EBTADAQH/MBsGA1UdEQQUMBKCEHRlc3QuZXhhbXBsZS5jb20wDQYJKoZIhvcNAQELBQADggEBAFMVy0sug1e8xq3j1UibW9+WuX5wZ1v9AoXRBiaPyWeAPa1994r/4Qz9w2M0+U4os9EqF/zSOi7S0rLot6b6igbhNk8WrLoleQXVB/BTYAZY7gqxaclZVC1CpjJEDoWFMPN7QQvqUiddLrlPd+t75KxDGQgK5YrA+h93UJY3/auWEdY95+pwPaOgQFnw+Ng+VJIa490GPrQR1LH5pfinu0q2sY+acSFhbU7TsXzXihESBtrJ9YkTbEImtuk8aVOeENreLLPEbfNHLIsGwM88Fre5ci8TUtwA86QTbQiyAz0GeJjsWCOWRYEQ53vxJdTJCXKgzVngfNN5qfyfzTNrC14=";
+
+    #[tokio::test]
+    async fn verify_rejects_missing_params() {
+        let err = handle_tls_verify_certificate(None).await.unwrap_err();
+        assert!(err.contains("Missing params"));
+    }
+
+    #[tokio::test]
+    async fn verify_rejects_missing_certificate_chain_field() {
+        let params = json!({
+            "server_name": "test.example.com",
+            "current_time_unix": 1774640500_i64
+        });
+        let err = handle_tls_verify_certificate(Some(&params))
+            .await
+            .unwrap_err();
+        assert!(err.contains("certificate_chain"));
+    }
+
+    #[tokio::test]
+    async fn verify_rejects_missing_server_name() {
+        let params = json!({
+            "certificate_chain": [TEST_LEAF_CERT_DER_B64],
+            "current_time_unix": 1774640500_i64
+        });
+        let err = handle_tls_verify_certificate(Some(&params))
+            .await
+            .unwrap_err();
+        assert!(err.contains("server_name"));
+    }
+
+    #[tokio::test]
+    async fn verify_rejects_missing_current_time() {
+        let params = json!({
+            "certificate_chain": [TEST_LEAF_CERT_DER_B64],
+            "server_name": "test.example.com"
+        });
+        let err = handle_tls_verify_certificate(Some(&params))
+            .await
+            .unwrap_err();
+        assert!(err.contains("current_time_unix"));
+    }
+
+    #[tokio::test]
+    async fn verify_rejects_non_string_chain_entry() {
+        let params = json!({
+            "certificate_chain": [42],
+            "server_name": "test.example.com",
+            "current_time_unix": 1774640500_i64
+        });
+        let err = handle_tls_verify_certificate(Some(&params))
+            .await
+            .unwrap_err();
+        assert!(err.contains("not a string"));
+    }
+
+    #[tokio::test]
+    async fn verify_rejects_invalid_base64_entry() {
+        let params = json!({
+            "certificate_chain": ["not-valid-base64!!!"],
+            "server_name": "test.example.com",
+            "current_time_unix": 1774640500_i64
+        });
+        let err = handle_tls_verify_certificate(Some(&params))
+            .await
+            .unwrap_err();
+        assert!(err.contains("base64") || err.contains("Invalid"));
+    }
+
+    #[tokio::test]
+    async fn verify_rejects_empty_chain() {
+        let params = json!({
+            "certificate_chain": [],
+            "server_name": "test.example.com",
+            "current_time_unix": 1774640500_i64
+        });
+        let err = handle_tls_verify_certificate(Some(&params))
+            .await
+            .unwrap_err();
+        assert!(err.contains("empty"));
+    }
+
+    #[tokio::test]
+    async fn verify_rejects_malformed_der() {
+        let junk = base64::engine::general_purpose::STANDARD.encode([1u8, 2, 3, 4]);
+        let params = json!({
+            "certificate_chain": [junk],
+            "server_name": "test.example.com",
+            "current_time_unix": 1774640500_i64
+        });
+        let err = handle_tls_verify_certificate(Some(&params))
+            .await
+            .unwrap_err();
+        assert!(err.contains("parse") || err.contains("Failed"));
+    }
+
+    #[tokio::test]
+    async fn verify_not_yet_valid_returns_json() {
+        let params = json!({
+            "certificate_chain": [TEST_LEAF_CERT_DER_B64],
+            "server_name": "test.example.com",
+            "current_time_unix": 1_000_000_000_i64
+        });
+        let v = handle_tls_verify_certificate(Some(&params))
+            .await
+            .expect("ok json");
+        assert_eq!(v["valid"].as_bool(), Some(false));
+        assert!(v["error"].as_str().unwrap_or("").contains("not yet valid"));
+    }
+
+    #[tokio::test]
+    async fn verify_expired_returns_json() {
+        let params = json!({
+            "certificate_chain": [TEST_LEAF_CERT_DER_B64],
+            "server_name": "test.example.com",
+            "current_time_unix": 2_000_000_000_i64
+        });
+        let v = handle_tls_verify_certificate(Some(&params))
+            .await
+            .expect("ok json");
+        assert_eq!(v["valid"].as_bool(), Some(false));
+        assert!(v["error"].as_str().unwrap_or("").contains("expired"));
+    }
+
+    #[tokio::test]
+    async fn verify_name_mismatch_returns_json() {
+        let params = json!({
+            "certificate_chain": [TEST_LEAF_CERT_DER_B64],
+            "server_name": "wrong.example.com",
+            "current_time_unix": 1774640500_i64
+        });
+        let v = handle_tls_verify_certificate(Some(&params))
+            .await
+            .expect("ok json");
+        assert_eq!(v["valid"].as_bool(), Some(false));
+        assert!(v["error"].as_str().unwrap_or("").contains("does not match"));
+    }
+
+    #[tokio::test]
+    async fn verify_valid_leaf_succeeds() {
+        let params = json!({
+            "certificate_chain": [TEST_LEAF_CERT_DER_B64],
+            "server_name": "test.example.com",
+            "current_time_unix": 1774640500_i64
+        });
+        let v = handle_tls_verify_certificate(Some(&params))
+            .await
+            .expect("ok json");
+        assert_eq!(v["valid"].as_bool(), Some(true));
+        assert!(v["public_key"].as_str().is_some_and(|s| !s.is_empty()));
+        assert_eq!(v["algorithm"].as_str(), Some("X.509"));
+    }
+}

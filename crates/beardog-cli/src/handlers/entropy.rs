@@ -119,12 +119,12 @@ pub async fn handle_entropy_collect(
     output_path: &str,
     identity: Option<&str>,
 ) -> Result<(), BearDogError> {
-    println!("🌱 BearDog Human Entropy Collection");
+    println!("BearDog Human Entropy Collection");
     println!("===================================");
     println!();
 
     // Step 1: Discover available HSMs (vendor-agnostic discovery, zero hardcoding)
-    println!("🔍 Discovering available HSMs...");
+    println!("Discovering available HSMs...");
 
     // Use actual HSM discovery engine (evolved from placeholder)
     let discovery = DiscoveryEngine::new()?;
@@ -139,9 +139,9 @@ pub async fn handle_entropy_collect(
     // Note: PKCS#11, Cloud KMS, Network HSMs are also available but may be slow to probe
 
     if discovered_hsms.is_empty() {
-        println!("❌ No HSMs found!");
+        println!("No HSMs found!");
         println!();
-        println!("💡 Troubleshooting:");
+        println!("Troubleshooting:");
         println!("   - Check if hardware is connected (USB tokens, etc.)");
         println!("   - On Android: adb devices (for StrongBox)");
         println!("   - Install a PKCS#11 provider for software fallback");
@@ -161,7 +161,7 @@ pub async fn handle_entropy_collect(
         })
         .collect();
 
-    println!("✅ Discovered {} HSM(s):", available_hsms.len());
+    println!("Discovered {} HSM(s):", available_hsms.len());
     for hsm in &available_hsms {
         println!(
             "   • {} (Tier: {}, Type: {})",
@@ -171,18 +171,18 @@ pub async fn handle_entropy_collect(
     println!();
 
     // Step 2: Select best HSM based on preference (algorithm-agnostic)
-    println!("🎯 Selecting HSM based on preference: '{device_preference}'");
+    println!("Selecting HSM based on preference: '{device_preference}'");
 
     let selected_hsm = select_hsm_by_preference(&available_hsms, device_preference)?;
 
-    println!("✅ Selected: {}", selected_hsm.name);
+    println!("Selected: {}", selected_hsm.name);
     println!("   Tier: {}", selected_hsm.tier);
     println!("   Type: {}", selected_hsm.hsm_type);
     println!();
 
     // Step 3: Collect entropy
     let entropy_bytes = if human_input {
-        println!("🎤 Collecting LIVE human interaction entropy...");
+        println!("Collecting LIVE human interaction entropy...");
         println!("   (Interactive keyboard and mouse capture)");
         println!();
 
@@ -194,7 +194,7 @@ pub async fn handle_entropy_collect(
 
         println!();
         println!(
-            "✅ Collected {} interactions",
+            "Collected {} interactions",
             result.metrics.total_interactions
         );
         println!("   Duration: {:.1}s", result.duration_ms as f64 / 1000.0);
@@ -212,7 +212,7 @@ pub async fn handle_entropy_collect(
         println!();
 
         // CRITICAL: Validate that entropy is from live feed (NO SIMULATION)
-        println!("🔒 Validating entropy hierarchy compliance...");
+        println!("Validating entropy hierarchy compliance...");
         let validator = LiveFeedValidator::new();
 
         // Build metadata for validation
@@ -237,27 +237,27 @@ pub async fn handle_entropy_collect(
             validator.validate_live_feed_only(&result.entropy_bytes, &metadata)?;
 
         if !validation_result.is_live {
-            println!("❌ ENTROPY HIERARCHY VIOLATION!");
+            println!("ENTROPY HIERARCHY VIOLATION!");
             println!("   Detected simulated entropy (not live human input)");
             return Err(BearDogError::validation(
                 "Human entropy failed live feed validation. Refusing to use simulated data.",
             ));
         }
 
-        println!("✅ Entropy hierarchy validated");
+        println!("Entropy hierarchy validated");
         println!("   Live feed confirmed");
         println!();
 
         result.entropy_bytes
     } else {
-        println!("🔢 Collecting hardware entropy from HSM...");
+        println!("Collecting hardware entropy from HSM...");
 
         // Generate random bytes directly from HSM
         // System CSPRNG (OsRng) - production-grade entropy source
         let entropy = generate_system_entropy(32)?;
 
         println!(
-            "✅ Collected {} bytes from {}",
+            "Collected {} bytes from {}",
             entropy.len(),
             selected_hsm.name
         );
@@ -270,7 +270,7 @@ pub async fn handle_entropy_collect(
     let quality_score = calculate_entropy_quality(&entropy_bytes);
     let seed_id = Uuid::new_v4();
 
-    println!("📊 Entropy Quality Analysis:");
+    println!("Entropy Quality Analysis:");
     println!("   Quality Score: {:.2}%", quality_score * 100.0);
     println!(
         "   Assessment: {}",
@@ -279,7 +279,7 @@ pub async fn handle_entropy_collect(
     println!();
 
     // Step 5: Create seed metadata
-    println!("🎉 Generated Entropy Seed");
+    println!("Generated Entropy Seed");
     println!("   ID: {seed_id}");
     println!("   Quality Tier: {quality_tier}");
     println!("   Quality Score: {:.2}%", quality_score * 100.0);
@@ -307,9 +307,9 @@ pub async fn handle_entropy_collect(
         .map_err(|e| BearDogError::serialization(&e.to_string()))?;
     fs::write(output_path, json)?;
 
-    println!("💾 Saved to: {output_path}");
+    println!("Saved to: {output_path}");
     println!();
-    println!("💡 Next steps:");
+    println!("Next steps:");
     println!("   • View seed info: beardog entropy info --seed {output_path}");
     println!("   • Use for keys: beardog key generate --key-id my-key --seed {output_path}");
 
@@ -318,7 +318,7 @@ pub async fn handle_entropy_collect(
 
 /// Handle entropy info command
 pub async fn handle_entropy_info(seed_path: &str) -> Result<(), BearDogError> {
-    println!("🔍 Entropy Seed Information");
+    println!("Entropy Seed Information");
     println!("==========================");
     println!();
 
@@ -328,7 +328,7 @@ pub async fn handle_entropy_info(seed_path: &str) -> Result<(), BearDogError> {
         serde_json::from_str(&json).map_err(|e| BearDogError::serialization(&e.to_string()))?;
 
     // Display info
-    println!("📋 Seed Details:");
+    println!("Seed Details:");
     println!("   ID: {}", seed.seed_id);
     println!("   Quality Tier: {}", seed.quality_tier);
     println!("   Quality Score: {:.2}%", seed.quality_score * 100.0);
@@ -346,7 +346,7 @@ pub async fn handle_entropy_info(seed_path: &str) -> Result<(), BearDogError> {
     // Decode entropy bytes
     let entropy_bytes = base64_decode(&seed.entropy_bytes_b64)?;
     println!();
-    println!("📊 Entropy Data:");
+    println!("Entropy Data:");
     println!("   Size: {} bytes", entropy_bytes.len());
     println!(
         "   First 32 bytes (hex): {}",
@@ -428,13 +428,13 @@ pub fn load_entropy_file(path: &str) -> Result<Vec<u8>, BearDogError> {
 
 fn entropy_quality_assessment_label(quality_score: f64) -> &'static str {
     if quality_score > 0.95 {
-        "✅ Excellent"
+        "Excellent"
     } else if quality_score > 0.85 {
-        "✅ Good"
+        "Good"
     } else if quality_score > 0.70 {
-        "⚠️  Acceptable"
+        "Acceptable"
     } else {
-        "❌ Poor"
+        "Poor"
     }
 }
 
@@ -924,6 +924,35 @@ mod entropy_handler_tests {
                 endpoint: "https://hsm".to_string(),
             })
             .contains("rest")
+        );
+    }
+
+    #[test]
+    fn select_hsm_by_preference_empty_list_errors() {
+        let empty: Vec<HsmInfo> = vec![];
+        assert!(select_hsm_by_preference(&empty, "auto").is_err());
+        assert!(select_hsm_by_preference(&empty, "software").is_err());
+        assert!(select_hsm_by_preference(&empty, "mobile").is_err());
+        assert!(select_hsm_by_preference(&empty, "usb").is_err());
+    }
+
+    #[test]
+    fn select_hsm_by_preference_case_insensitive() {
+        let hsms = vec![HsmInfo {
+            name: "s".to_string(),
+            tier: "Software".to_string(),
+            hsm_type: "t".to_string(),
+        }];
+        assert!(select_hsm_by_preference(&hsms, "SOFTWARE").is_ok());
+        assert!(select_hsm_by_preference(&hsms, "Auto").is_ok());
+    }
+
+    #[test]
+    fn base64_roundtrip_ascii() {
+        let raw = b"entropy-test-bytes";
+        assert_eq!(
+            base64_decode(&base64_encode(raw)).expect("decode"),
+            raw.as_slice()
         );
     }
 }

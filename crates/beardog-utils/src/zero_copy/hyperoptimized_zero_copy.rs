@@ -806,7 +806,7 @@ mod tests {
             buffer[0] = 10;
             buffer[1] = 20;
             buffer[2] = 30;
-            buffer[0] as i32 + buffer[1] as i32 + buffer[2] as i32
+            i32::from(buffer[0]) + i32::from(buffer[1]) + i32::from(buffer[2])
         })?;
 
         assert_eq!(result, 60);

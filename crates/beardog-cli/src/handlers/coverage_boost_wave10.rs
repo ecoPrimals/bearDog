@@ -11,6 +11,7 @@ fn resolve_socket_path_family_bare_filename_uses_empty_parent() {
     let args = ServerArgs {
         socket: "beardog.sock".to_string(),
         r#abstract: false,
+        port: None,
         listen: None,
         family_id: Some("bare".to_string()),
         orchestrator_id: None,
@@ -27,6 +28,7 @@ fn resolve_socket_path_with_listen_addr_still_returns_socket_for_explicit() {
     let args = ServerArgs {
         socket: "/run/bd.sock".to_string(),
         r#abstract: false,
+        port: None,
         listen: Some("0.0.0.0:0".to_string()),
         family_id: None,
         orchestrator_id: None,

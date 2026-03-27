@@ -343,18 +343,22 @@ impl SecureCrossPrimalMessenger {
             primal.service_id
         );
 
-        let _response_data = self
+        let start = std::time::Instant::now();
+        let response_data = self
             .discovery_service
             .send_request(primal, compute_request)
             .await?;
+        let elapsed = start.elapsed();
+
+        let ciphertext = serde_json::to_vec(&response_data).unwrap_or_default();
 
         let secure_response = SecurePrimalResponse {
-            ciphertext: vec![], // Placeholder
+            ciphertext,
             responder_id: primal.service_id.clone(),
             capability_used: UniversalCapabilityType::Compute {
                 abilities: vec![ComputeAbility::DataAnalysis],
             },
-            processing_time_ms: 0,
+            processing_time_ms: u64::try_from(elapsed.as_millis()).unwrap_or(u64::MAX),
         };
 
         Ok(secure_response)
@@ -399,15 +403,19 @@ impl SecureCrossPrimalMessenger {
             "storage_type": "encrypted",
         });
 
-        let _response_data = self.discovery_service.send_request(primal, payload).await?;
+        let start = std::time::Instant::now();
+        let response_data = self.discovery_service.send_request(primal, payload).await?;
+        let elapsed = start.elapsed();
+
+        let ciphertext = serde_json::to_vec(&response_data).unwrap_or_default();
 
         let secure_response = SecurePrimalResponse {
-            ciphertext: vec![],
+            ciphertext,
             responder_id: primal.service_id.clone(),
             capability_used: UniversalCapabilityType::Storage {
                 characteristics: vec![StorageCharacteristic::Encrypted],
             },
-            processing_time_ms: 0,
+            processing_time_ms: u64::try_from(elapsed.as_millis()).unwrap_or(u64::MAX),
         };
 
         Ok(secure_response)

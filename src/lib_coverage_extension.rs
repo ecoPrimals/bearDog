@@ -497,4 +497,29 @@ mod root_lib_coverage_extension_tests {
         assert_eq!(framework.stats.services_discovered, 0);
         assert_eq!(framework.stats.zero_copy_operations, 0);
     }
+
+    #[test]
+    fn test_service_info_preserves_multiple_metadata_keys() {
+        let mut metadata = HashMap::new();
+        metadata.insert("region".to_string(), "us-west".to_string());
+        metadata.insert("tier".to_string(), "prod".to_string());
+
+        let service = ServiceInfo {
+            name: "multi-meta".to_string(),
+            capabilities: vec!["read".to_string()],
+            endpoint: "https://svc.local:8443".to_string(),
+            metadata,
+        };
+
+        assert_eq!(service.metadata.get("region"), Some(&"us-west".to_string()));
+        assert_eq!(service.metadata.get("tier"), Some(&"prod".to_string()));
+    }
+
+    #[test]
+    fn test_framework_stats_equality_for_zero_defaults() {
+        let a = FrameworkStats::default();
+        let b = FrameworkStats::default();
+        assert_eq!(a.services_discovered, b.services_discovered);
+        assert_eq!(a.cache_hit_ratio, b.cache_hit_ratio);
+    }
 }

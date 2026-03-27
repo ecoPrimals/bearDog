@@ -92,7 +92,18 @@ impl DnsSdDiscovery {
         }
 
         // Step 1: Browse for services (PTR query)
-        let service_instances = self.browse_services(&service_type).await?;
+        // Treat browse timeout as empty results -- no DNS infrastructure is not an error
+        let service_instances = match self.browse_services(&service_type).await {
+            Ok(instances) => instances,
+            Err(DiscoveryError::Timeout(_)) => {
+                debug!(
+                    "DNS-SD browse timed out for {} -- treating as empty",
+                    capability
+                );
+                Vec::new()
+            }
+            Err(e) => return Err(e),
+        };
 
         if service_instances.is_empty() {
             info!("No DNS-SD services found for {}", capability);

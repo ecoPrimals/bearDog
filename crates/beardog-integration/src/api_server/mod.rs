@@ -38,14 +38,15 @@ use tower_http::{cors::CorsLayer, timeout::TimeoutLayer, trace::TraceLayer};
 use tracing::info;
 
 use beardog_errors::BearDogError;
+use beardog_types::constants::domains::timeouts::HTTP_REQUEST_TIMEOUT;
 
 use crate::connection_tracker::ActiveConnectionGuard;
 
 /// Default listen port (matches [`crate::DEFAULT_INTEGRATION_API_PORT`]).
 pub const DEFAULT_API_SERVER_LISTEN_PORT: u16 = crate::DEFAULT_INTEGRATION_API_PORT;
 
-/// Default per-request handler timeout.
-pub const DEFAULT_API_REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
+/// Default per-request handler timeout (centralized HTTP API default).
+pub const DEFAULT_API_REQUEST_TIMEOUT: Duration = HTTP_REQUEST_TIMEOUT;
 
 // ── Shared state ────────────────────────────────────────────────────────────
 

@@ -290,7 +290,7 @@ fn test_very_large_nonce() {
 
 #[test]
 fn test_encrypted_data_with_max_timestamp() {
-    let far_future = SystemTime::UNIX_EPOCH + Duration::from_secs(u32::MAX as u64);
+    let far_future = SystemTime::UNIX_EPOCH + Duration::from_secs(u64::from(u32::MAX));
     let data = EncryptedData {
         ciphertext: vec![1, 2, 3],
         algorithm: CryptoAlgorithm::Aes256Gcm,

@@ -107,7 +107,7 @@ pub async fn handle_status(verbose: bool) -> Result<(), BearDogError> {
         println!("📚 Documentation:");
         println!("   • User Guide: docs/USER_GUIDE_CLI.md");
         println!("   • Architecture: specs/current/integration/");
-        println!("   • GitHub: https://github.com/eastgate-software/beardog");
+        println!("   • GitHub: https://github.com/ecoPrimals/beardog");
         println!();
     }
 

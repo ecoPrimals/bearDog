@@ -402,7 +402,7 @@ mod tests {
 
         for i in 0..100 {
             let success = i % 10 != 0; // 90% success rate
-            let latency = (i as f64) * 1.5;
+            let latency = f64::from(i) * 1.5;
             tracker
                 .record_operation("provider-1".to_string(), success, latency)
                 .await;
@@ -639,7 +639,7 @@ mod tests {
 
         for i in 1..=5 {
             tracker
-                .record_operation(format!("provider-{i}"), true, i as f64)
+                .record_operation(format!("provider-{i}"), true, f64::from(i))
                 .await;
         }
 

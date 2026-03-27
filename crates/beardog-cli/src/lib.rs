@@ -55,14 +55,19 @@ pub struct ServerArgs {
     #[arg(long)]
     pub r#abstract: bool,
 
-    /// TCP listen address (Tier 2 - Universal fallback)
-    /// Example: --listen {loopback}:9900 (use `BEARDOG_LISTEN_ADDR` / `BEARDOG_TCP_IPC_PORT` from config for defaults)
+    /// TCP port for JSON-RPC listener (UniBin v1.1 mandatory)
     ///
-    /// Use for:
-    /// - Cross-device communication
-    /// - When native IPC unavailable
-    /// - Testing/development
+    /// Binds a newline-delimited JSON-RPC server on 0.0.0.0:<PORT>.
+    /// Required by `PRIMAL_IPC_PROTOCOL` and `UNIBIN_ARCHITECTURE_STANDARD` v1.1.
+    /// Override bind address with --listen.
     #[arg(long)]
+    pub port: Option<u16>,
+
+    /// TCP listen address (overrides --port with full addr:port)
+    ///
+    /// Example: --listen 127.0.0.1:9900
+    /// Use for cross-device communication or when native IPC is unavailable.
+    #[arg(long, conflicts_with = "port")]
     pub listen: Option<String>,
 
     /// Family ID for BirdSong

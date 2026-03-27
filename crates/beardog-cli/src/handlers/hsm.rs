@@ -21,11 +21,11 @@ pub(crate) fn find_hsm_for_cli<'a>(
 
 /// Handle HSM discovery command
 pub async fn handle_hsm_discover(verbose: bool) -> Result<(), BearDogError> {
-    println!("🔍 BearDog HSM Discovery");
+    println!("BearDog HSM Discovery");
     println!("========================");
     println!();
 
-    println!("🔎 Scanning for HSM devices...");
+    println!("Scanning for HSM devices...");
     println!("   • Software HSMs (ANY PKCS#11 provider)");
     println!("   • Hardware tokens (ANY FIDO2/CTAP2 device)");
     println!("   • Mobile HSMs (ANY platform keystore)");
@@ -36,9 +36,9 @@ pub async fn handle_hsm_discover(verbose: bool) -> Result<(), BearDogError> {
     let hsms = discover_hsms_agnostic().await?;
 
     if hsms.is_empty() {
-        println!("⚠️  No HSM devices found");
+        println!("No HSM devices found");
         println!();
-        println!("💡 Tips:");
+        println!("Tips:");
         println!("   • Install a PKCS#11 provider for software HSM");
         println!("   • Connect hardware security token (any FIDO2/CTAP2 device)");
         println!("   • Connect Android device with ADB enabled");
@@ -46,7 +46,7 @@ pub async fn handle_hsm_discover(verbose: bool) -> Result<(), BearDogError> {
         return Ok(());
     }
 
-    println!("✅ Found {} HSM device(s):", hsms.len());
+    println!("Found {} HSM device(s):", hsms.len());
     println!();
 
     for (idx, hsm) in hsms.iter().enumerate() {
@@ -70,7 +70,7 @@ pub async fn handle_hsm_discover(verbose: bool) -> Result<(), BearDogError> {
     reason = "Exposed for tests and future hsm list subcommand wiring."
 )]
 pub async fn handle_hsm_list() -> Result<(), BearDogError> {
-    println!("🔍 BearDog HSM Discovery");
+    println!("BearDog HSM Discovery");
     println!("========================");
     println!();
 
@@ -78,7 +78,7 @@ pub async fn handle_hsm_list() -> Result<(), BearDogError> {
     let hsms = discover_hsms_agnostic().await?;
 
     if hsms.is_empty() {
-        println!("❌ No HSM devices detected");
+        println!("No HSM devices detected");
         println!();
         println!("Try:");
         println!("  • beardog hsm discover --verbose  (for detailed scan)");
@@ -88,7 +88,7 @@ pub async fn handle_hsm_list() -> Result<(), BearDogError> {
         return Ok(());
     }
 
-    println!("✅ Discovered {} HSM(s):", hsms.len());
+    println!("Discovered {} HSM(s):", hsms.len());
     println!();
 
     for hsm in &hsms {
@@ -104,7 +104,7 @@ pub async fn handle_hsm_list() -> Result<(), BearDogError> {
 
 /// Handle HSM capabilities command - show what a specific HSM can do
 pub async fn handle_hsm_capabilities(hsm_id: &str) -> Result<(), BearDogError> {
-    println!("🔍 HSM Capabilities for: {hsm_id}");
+    println!("HSM Capabilities for: {hsm_id}");
     println!("================================");
     println!();
 
@@ -115,43 +115,43 @@ pub async fn handle_hsm_capabilities(hsm_id: &str) -> Result<(), BearDogError> {
     let hsm = find_hsm_for_cli(&hsms, hsm_id);
 
     if let Some(hsm) = hsm {
-        println!("📋 HSM: {}", hsm.name);
+        println!("HSM: {}", hsm.name);
         println!("   Type: {}", hsm.hsm_type);
         println!("   Tier: {}", hsm.tier);
         println!();
 
-        println!("✨ Capabilities:");
-        println!("   ✅ Key Generation");
-        println!("   ✅ Encryption/Decryption");
-        println!("   ✅ Digital Signatures");
-        println!("   ✅ Random Number Generation");
+        println!("Capabilities:");
+        println!("   Key Generation");
+        println!("   Encryption/Decryption");
+        println!("   Digital Signatures");
+        println!("   Random Number Generation");
 
         // Type-specific capabilities
         match hsm.hsm_type.as_str() {
             "Software" => {
-                println!("   ✅ Unlimited key storage");
-                println!("   ✅ All crypto algorithms");
-                println!("   ⚠️  Software-based security");
+                println!("   Unlimited key storage");
+                println!("   All crypto algorithms");
+                println!("   Software-based security");
             }
             "Hardware" => {
-                println!("   ✅ Hardware-backed keys");
-                println!("   ✅ Physical tamper resistance");
-                println!("   ✅ Secure element storage");
+                println!("   Hardware-backed keys");
+                println!("   Physical tamper resistance");
+                println!("   Secure element storage");
             }
             "Mobile" => {
-                println!("   ✅ Biometric integration");
-                println!("   ✅ Platform keystore");
-                println!("   ✅ App-isolated keys");
+                println!("   Biometric integration");
+                println!("   Platform keystore");
+                println!("   App-isolated keys");
             }
             _ => {}
         }
 
         println!();
-        println!("💡 Usage:");
+        println!("Usage:");
         println!("   beardog key generate my-key --hsm {}", hsm.id);
         println!("   beardog hsm test {} --iterations 10", hsm.id);
     } else {
-        println!("❌ HSM not found: {hsm_id}");
+        println!("HSM not found: {hsm_id}");
         println!();
         println!("Available HSMs:");
         for hsm in &hsms {
@@ -165,7 +165,7 @@ pub async fn handle_hsm_capabilities(hsm_id: &str) -> Result<(), BearDogError> {
 
 /// Handle HSM test command - perform operations to verify HSM functionality
 pub async fn handle_hsm_test(hsm_id: &str, iterations: usize) -> Result<(), BearDogError> {
-    println!("🧪 Testing HSM: {hsm_id}");
+    println!("Testing HSM: {hsm_id}");
     println!("================================");
     println!();
 
@@ -176,44 +176,44 @@ pub async fn handle_hsm_test(hsm_id: &str, iterations: usize) -> Result<(), Bear
     let hsm = find_hsm_for_cli(&hsms, hsm_id);
 
     if let Some(hsm) = hsm {
-        println!("📋 Testing: {} ({})", hsm.name, hsm.tier);
+        println!("Testing: {} ({})", hsm.name, hsm.tier);
         println!("   Iterations: {iterations}");
         println!();
 
-        println!("🔬 Test Suite:");
+        println!("Test Suite:");
         println!();
 
         // Test 1: Random number generation
-        println!("1️⃣  Random Number Generation");
-        println!("   Status: ✅ PASS");
+        println!("1. Random Number Generation");
+        println!("   Status: PASS");
         println!("   Details: Generated {iterations} random values");
         println!();
 
         // Test 2: Key generation
-        println!("2️⃣  Key Generation");
-        println!("   Status: ✅ PASS");
+        println!("2. Key Generation");
+        println!("   Status: PASS");
         println!("   Details: Created {iterations} test keys");
         println!();
 
         // Test 3: Encryption/Decryption
-        println!("3️⃣  Encryption/Decryption Round-Trip");
-        println!("   Status: ✅ PASS");
+        println!("3. Encryption/Decryption Round-Trip");
+        println!("   Status: PASS");
         println!("   Details: {iterations} successful round-trips");
         println!();
 
         // Test 4: Signature verification
-        println!("4️⃣  Digital Signature Verification");
-        println!("   Status: ✅ PASS");
+        println!("4. Digital Signature Verification");
+        println!("   Status: PASS");
         println!("   Details: {iterations} signatures verified");
         println!();
 
         println!("════════════════════════════════");
-        println!("✅ All Tests Passed ({}/4)", 4);
+        println!("All Tests Passed ({}/4)", 4);
         println!();
-        println!("💡 HSM '{}' is functioning correctly", hsm.name);
+        println!("HSM '{}' is functioning correctly", hsm.name);
         println!();
     } else {
-        println!("❌ HSM not found: {hsm_id}");
+        println!("HSM not found: {hsm_id}");
         println!();
         println!("Available HSMs:");
         for hsm in &hsms {

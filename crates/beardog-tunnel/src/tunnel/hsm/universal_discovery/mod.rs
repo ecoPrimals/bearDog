@@ -569,6 +569,7 @@ impl UniversalHsmDiscovery {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tunnel::hsm::types::HsmTier;
 
     #[tokio::test]
     async fn test_discovery_creation() -> Result<(), Box<dyn std::error::Error>> {
@@ -583,6 +584,23 @@ mod tests {
         let config = DiscoveryConfig::default();
         assert!(config.enable_human_entropy_elevation);
         assert_eq!(config.minimum_entropy_quality, 0.8);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_discover_all_hsms_populates_registry_and_queries() -> Result<(), BearDogError> {
+        let mut discovery = UniversalHsmDiscovery::new(DiscoveryConfig::default()).await?;
+        let hsms = discovery.discover_all_hsms()?;
+        assert!(
+            !hsms.is_empty(),
+            "software HSM discoverer should yield at least one HSM"
+        );
+
+        let _entropy_supported = discovery.get_human_entropy_hsms();
+        let _by_tier = discovery.get_hsms_by_tier(&HsmTier::Software);
+        let best = discovery.get_best_hsm_for_operation("sign")?;
+        assert!(best.is_some());
+
         Ok(())
     }
 }

@@ -17,6 +17,7 @@
 
 use beardog_core::capabilities::BearDogCapabilities;
 use beardog_errors::BearDogError;
+use crate::protocol::JSONRPC_VERSION;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -257,7 +258,7 @@ impl SongbirdClient {
 
         self.request_id += 1;
         let request = JsonRpcRequest {
-            jsonrpc: "2.0".to_string(),
+            jsonrpc: JSONRPC_VERSION.to_string(),
             method: method.to_string(),
             params,
             id: self.request_id,
@@ -319,7 +320,7 @@ mod tests {
     #[test]
     fn test_json_rpc_request_serialization() {
         let request = JsonRpcRequest {
-            jsonrpc: "2.0".to_string(),
+            jsonrpc: JSONRPC_VERSION.to_string(),
             method: "primal.ping".to_string(),
             params: None,
             id: 1,

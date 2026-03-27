@@ -369,4 +369,31 @@ mod tests {
         let c = IntegrationConfig::default();
         assert_eq!(c.api_port, DEFAULT_INTEGRATION_API_PORT);
     }
+
+    #[test]
+    fn default_upa_url_uses_explicit_port_when_host_env_unset() {
+        let _guard = INTEGRATION_ENV_LOCK
+            .lock()
+            .expect("integration env test lock poisoned");
+        beardog_errors::process_env::remove_var("BEARDOG_UPA_URL");
+        beardog_errors::process_env::remove_var("BEARDOG_UPA_HOST");
+        beardog_errors::process_env::set_var("BEARDOG_UPA_PORT", "9443");
+        let u = default_upa_url();
+        beardog_errors::process_env::remove_var("BEARDOG_UPA_PORT");
+        assert!(u.contains(":9443"));
+        assert!(u.starts_with("https://"));
+    }
+
+    #[test]
+    fn default_upa_url_constant_is_https_documented_fallback() {
+        assert!(DEFAULT_UPA_URL.starts_with("https://"));
+    }
+
+    #[test]
+    fn integration_config_default_clones_and_debugs() {
+        let c = IntegrationConfig::default();
+        let _ = format!("{c:?}");
+        let c2 = c.clone();
+        assert_eq!(c2.api_port, c.api_port);
+    }
 }

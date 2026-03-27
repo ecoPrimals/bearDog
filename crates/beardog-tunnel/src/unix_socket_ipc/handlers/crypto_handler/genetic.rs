@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 //! Lineage, entropy, challenge, and device-enrollment genetic crypto routing.
 
@@ -183,8 +184,14 @@ pub async fn route(
 }
 
 #[cfg(test)]
-mod genetic_route_tests {
+mod tests {
     use super::route;
+    use base64::Engine;
+    use serde_json::json;
+
+    fn seed32() -> String {
+        base64::engine::general_purpose::STANDARD.encode([11u8; 32])
+    }
 
     #[tokio::test]
     async fn genetic_route_unknown_method_returns_none() {
@@ -223,5 +230,84 @@ mod genetic_route_tests {
             err.contains("verify_lineage") || err.contains("Parameters required"),
             "{err}"
         );
+    }
+
+    #[tokio::test]
+    async fn genetic_route_derive_lineage_beacon_key_empty_uses_default_seed() {
+        let out = route("genetic.derive_lineage_beacon_key", Some(&json!({})))
+            .await
+            .expect("route")
+            .expect("some");
+        assert_eq!(out["domain"], "birdsong_beacon_v1");
+        assert_eq!(out["key_size_bytes"], 32);
+    }
+
+    #[tokio::test]
+    async fn genetic_route_mix_entropy_empty_tiers_uses_machine_entropy() {
+        let out = route("genetic.mix_entropy", Some(&json!({})))
+            .await
+            .expect("route")
+            .expect("some");
+        assert!(out.get("entropy").is_some());
+        assert!(out.get("quality_score").is_some());
+    }
+
+    #[tokio::test]
+    async fn genetic_route_derive_lineage_key_success() {
+        let s = seed32();
+        let params = json!({
+            "our_family_id": "fam-a",
+            "peer_family_id": "fam-b",
+            "context": "unit-test",
+            "lineage_seed": s,
+        });
+        let out = route("genetic.derive_lineage_key", Some(&params))
+            .await
+            .expect("route")
+            .expect("some");
+        assert_eq!(out["method"], "Blake3-Lineage-KDF");
+    }
+
+    #[tokio::test]
+    async fn genetic_route_generate_then_verify_lineage_proof() {
+        let s = seed32();
+        let proof_req = json!({
+            "our_family_id": "fam-a",
+            "peer_family_id": "fam-b",
+            "lineage_seed": s,
+        });
+        let proof_val = route("genetic.generate_lineage_proof", Some(&proof_req))
+            .await
+            .expect("route")
+            .expect("some");
+        let proof = proof_val["proof"].as_str().expect("proof");
+
+        let verify = json!({
+            "our_family_id": "fam-a",
+            "peer_family_id": "fam-b",
+            "lineage_proof": proof,
+            "lineage_seed": s,
+        });
+        let v = route("genetic.verify_lineage", Some(&verify))
+            .await
+            .expect("route")
+            .expect("some");
+        assert_eq!(v["valid"], true);
+    }
+
+    #[tokio::test]
+    async fn genetic_route_generate_challenge_success() {
+        let challenge = route(
+            "genetic.generate_challenge",
+            Some(&json!({
+                "challenger_node_id": "n1",
+                "target_family_id": "fam-t",
+            })),
+        )
+        .await
+        .expect("route")
+        .expect("some");
+        assert!(challenge["nonce"].as_str().expect("nonce").len() >= 32);
+        assert!(!challenge["challenge_id"].as_str().expect("id").is_empty());
     }
 }

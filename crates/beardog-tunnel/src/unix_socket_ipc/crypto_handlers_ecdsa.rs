@@ -464,33 +464,6 @@ pub async fn handle_verify_ecdsa_secp384r1(
 }
 
 // ============================================================================
-// ECDSA P-521 (secp521r1) - FUTURE IMPLEMENTATION
-// ============================================================================
-//
-// NOTE: P-521 implementation postponed due to rand_core version conflict.
-// The p521 crate (v0.14.0-rc) uses rand_core 0.10-rc, while our codebase
-// uses rand_core 0.6. This creates type incompatibility for OsRng.
-//
-// Impact: < 1% of HTTPS servers use P-521 (ultra-rare)
-// Priority: Low - Ed448 and RSA provide better coverage
-// Status: Will implement when p521 crate reaches stable release
-//
-// Commented out for future reference:
-/*
-pub async fn handle_sign_ecdsa_secp521r1(
-    params: Option<&serde_json::Value>,
-) -> Result<serde_json::Value, String> {
-    Err("ECDSA P-521 not yet implemented (< 1% server usage)".to_string())
-}
-
-pub async fn handle_verify_ecdsa_secp521r1(
-    params: Option<&serde_json::Value>,
-) -> Result<serde_json::Value, String> {
-    Err("ECDSA P-521 not yet implemented (< 1% server usage)".to_string())
-}
-*/
-
-// ============================================================================
 // Tests
 // ============================================================================
 

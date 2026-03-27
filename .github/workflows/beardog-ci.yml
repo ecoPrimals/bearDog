@@ -43,16 +43,16 @@ jobs:
     - name: 🔍 Check all crates compile
       run: cargo check --workspace --all-targets
       
-    - name: 📏 Verify 2000-line limit compliance
+    - name: Verify 1000-line limit compliance
       run: |
-        echo "🔍 Checking file size compliance (2000 lines max)..."
-        OVERSIZED=$(find . -name "*.rs" -not -path "./target/*" -not -path "./archive/*" -exec wc -l {} \; | awk '$1 > 2000 {print $2 " has " $1 " lines"}')
+        echo "Checking file size compliance (1000 lines max per CONTRIBUTING.md)..."
+        OVERSIZED=$(find . -name "*.rs" -not -path "./target/*" -not -path "./archives/*" -exec wc -l {} \; | awk '$1 > 1000 {print $2 " has " $1 " lines"}')
         if [ -n "$OVERSIZED" ]; then
-          echo "❌ Files exceeding 2000 lines found:"
+          echo "Files exceeding 1000 lines found:"
           echo "$OVERSIZED"
           exit 1
         else
-          echo "✅ All files comply with 2000-line limit"
+          echo "All files comply with 1000-line limit"
         fi
 
   # Unified Configuration Validation
@@ -181,8 +181,8 @@ jobs:
           echo "✅ Benchmarks compile successfully"
         fi
         
-        # Validate zero-cost abstractions compile
-        cargo check -p beardog-types --features zero-cost
+        # Validate beardog-types with all optional features (config, test-utils)
+        cargo check -p beardog-types --all-features
 
   # Code Quality & Standards
   code-quality:

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+// Phase 2: Network resilience e2e tests
 //! Circuit Breaker Pattern Tests
 //!
 //! Tests for circuit breaker failure detection and recovery.

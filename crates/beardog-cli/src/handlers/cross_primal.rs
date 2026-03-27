@@ -463,4 +463,80 @@ mod tests {
             _ => panic!("expected SendSecure"),
         }
     }
+
+    #[tokio::test]
+    async fn test_handle_cross_primal_routes_discover_primals() {
+        use clap::Parser;
+        let cmd = CrossPrimalCommand::try_parse_from([
+            "beardog",
+            "discover-primals",
+            "--capability",
+            "network",
+        ])
+        .expect("parse discover-primals");
+        let r = handle_cross_primal(cmd).await;
+        assert!(r.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_handle_cross_primal_routes_send_secure_compute() {
+        use clap::Parser;
+        let dir = TempDir::new().expect("temp dir for compute send_secure");
+        let msg = dir.path().join("m.bin");
+        std::fs::write(&msg, b"payload").expect("write message");
+        let cmd = CrossPrimalCommand::try_parse_from([
+            "beardog",
+            "send-secure",
+            "--message",
+            msg.to_str().expect("utf8 path"),
+            "--capability",
+            "compute",
+        ])
+        .expect("parse send-secure compute");
+        let r = handle_cross_primal(cmd).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_handle_cross_primal_routes_send_secure_storage() {
+        use clap::Parser;
+        let dir = TempDir::new().expect("temp dir for storage send_secure");
+        let msg = dir.path().join("s.bin");
+        std::fs::write(&msg, b"store").expect("write message");
+        let cmd = CrossPrimalCommand::try_parse_from([
+            "beardog",
+            "send-secure",
+            "--message",
+            msg.to_str().expect("utf8 path"),
+            "--capability",
+            "storage",
+        ])
+        .expect("parse send-secure storage");
+        let r = handle_cross_primal(cmd).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_handle_send_secure_service_mesh_branch() {
+        let dir = TempDir::new().expect("temp dir for service_mesh send_secure");
+        let msg = dir.path().join("mesh.bin");
+        std::fs::write(&msg, b"x").expect("write message");
+        let r = handle_send_secure(msg.to_str().expect("utf8 path"), "service_mesh", None).await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_ceremony_reads_seed_then_fails_session() {
+        let dir = TempDir::new().expect("temp dir for key ceremony");
+        let seed = dir.path().join("seed.bin");
+        std::fs::write(&seed, b"seed-bytes").expect("write seed");
+        let out = dir.path().join("shared.key");
+        let r = handle_key_ceremony(
+            seed.to_str().expect("seed path"),
+            out.to_str().expect("out path"),
+            "high",
+        )
+        .await;
+        assert!(r.is_err());
+    }
 }

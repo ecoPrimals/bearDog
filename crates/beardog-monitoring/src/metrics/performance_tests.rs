@@ -30,19 +30,46 @@ mod performance_tests {
     }
 
     #[test]
-    fn test_performance_engine_get_metrics() {
+    fn test_performance_engine_get_metrics_aggregates_recorded_events() {
         let config = PerformanceConfig::default();
         let engine = PerformanceEngine::new(config).unwrap();
 
-        let metrics = engine.get_metrics();
-        assert!(metrics.is_ok());
+        let empty = engine.get_metrics().unwrap();
+        assert_eq!(empty.cpu_usage, 0.0);
+        assert_eq!(empty.error_rate, 0.0);
 
-        let metrics = metrics.unwrap();
-        assert_eq!(metrics.cpu_usage, 0.5);
-        assert_eq!(metrics.memory_usage, 0.3);
-        assert_eq!(metrics.request_latency_ms, 25.0);
-        assert_eq!(metrics.throughput_rps, 1000.0);
-        assert_eq!(metrics.error_rate, 0.01);
+        engine
+            .record_event(&MetricEvent {
+                category: MetricCategory::Performance,
+                name: "cpu_usage_pct".to_string(),
+                value: MetricValue::Gauge(42.0),
+                labels: std::collections::HashMap::new(),
+                timestamp: std::time::SystemTime::now(),
+            })
+            .unwrap();
+        engine
+            .record_event(&MetricEvent {
+                category: MetricCategory::Performance,
+                name: "request_latency_ms".to_string(),
+                value: MetricValue::Gauge(10.0),
+                labels: std::collections::HashMap::new(),
+                timestamp: std::time::SystemTime::now(),
+            })
+            .unwrap();
+        engine
+            .record_event(&MetricEvent {
+                category: MetricCategory::Performance,
+                name: "api_errors".to_string(),
+                value: MetricValue::Counter(1),
+                labels: std::collections::HashMap::new(),
+                timestamp: std::time::SystemTime::now(),
+            })
+            .unwrap();
+
+        let metrics = engine.get_metrics().unwrap();
+        assert_eq!(metrics.cpu_usage, 42.0);
+        assert_eq!(metrics.request_latency_ms, 10.0);
+        assert!((metrics.error_rate - 1.0 / 3.0).abs() < 1e-9);
     }
 
     #[test]

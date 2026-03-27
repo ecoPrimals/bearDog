@@ -108,13 +108,13 @@ doc_lazy_continuation = { level = "allow", priority = 1 }
 too_long_first_doc_paragraph = { level = "allow", priority = 1 }
 empty_docs = { level = "allow", priority = 1 }
 
-# ── Cast safety — workspace allow remains required (2026-03 audit: removing any
-#    of these trips `cargo clippy --workspace --all-features -- -D warnings`).
-#    Prefer per-site #[expect(clippy::cast_*, reason = "...")] for new code. ───
+# ── Cast safety — workspace allows remain for legacy code; new code MUST use
+#    per-site #[expect(clippy::cast_*, reason = "...")] and Type::from() for
+#    lossless conversions.  cast_lossless promoted to warn (use From/Into). ───
 cast_possible_truncation = { level = "allow", priority = 1 }
 cast_precision_loss = { level = "allow", priority = 1 }
 cast_sign_loss = { level = "allow", priority = 1 }
-cast_lossless = { level = "allow", priority = 1 }
+cast_lossless = { level = "warn", priority = 1 }
 cast_possible_wrap = { level = "allow", priority = 1 }
 
 # ── Unwrap / expect — warn at workspace level to catch regressions.

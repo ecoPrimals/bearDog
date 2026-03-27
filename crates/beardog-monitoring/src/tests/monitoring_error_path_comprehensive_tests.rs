@@ -195,7 +195,9 @@ async fn test_concurrent_metric_collection_with_failures() -> Result<()> {
                 collector.clear_failure();
             }
 
-            let result = collector.collect(&format!("metric_{i}"), i as f64).await;
+            let result = collector
+                .collect(&format!("metric_{i}"), f64::from(i))
+                .await;
 
             // Verify expected behavior
             if i % 10 == 0 {
@@ -357,7 +359,7 @@ async fn test_concurrent_metric_writes_no_data_loss() -> Result<()> {
         let collector = Arc::clone(&collector);
         handles.push(tokio::spawn(async move {
             collector
-                .collect(&format!("metric_{i}"), i as f64)
+                .collect(&format!("metric_{i}"), f64::from(i))
                 .await
                 .expect("collect should succeed");
         }));
@@ -426,7 +428,9 @@ async fn test_metric_buffer_overflow() -> Result<()> {
 
     // Collect a large number of metrics
     for i in 0..10_000 {
-        collector.collect(&format!("metric_{i}"), i as f64).await?;
+        collector
+            .collect(&format!("metric_{i}"), f64::from(i))
+            .await?;
     }
 
     // Verify all collected
@@ -466,7 +470,7 @@ async fn test_memory_pressure_graceful_degradation() -> Result<()> {
             // Each task collects multiple metrics
             for j in 0..20 {
                 let _ = collector
-                    .collect(&format!("metric_{i}_{j}"), (i * j) as f64)
+                    .collect(&format!("metric_{i}_{j}"), f64::from(i * j))
                     .await;
                 tokio::task::yield_now().await;
             }
@@ -502,7 +506,9 @@ async fn test_automatic_recovery_from_transient_failures() -> Result<()> {
             collector.clear_failure();
         }
 
-        let result = collector.collect(&format!("metric_{i}"), i as f64).await;
+        let result = collector
+            .collect(&format!("metric_{i}"), f64::from(i))
+            .await;
 
         if i % 2 == 0 {
             assert!(result.is_err());
@@ -534,7 +540,7 @@ async fn test_graceful_shutdown_during_active_operations() -> Result<()> {
                     break;
                 }
                 () = async {
-                    let _ = collector_clone.collect(&format!("metric_{count}"), count as f64).await;
+                    let _ = collector_clone.collect(&format!("metric_{count}"), f64::from(count)).await;
                     count += 1;
                     tokio::task::yield_now().await;
                 } => {}
@@ -602,7 +608,9 @@ async fn test_partial_failure_handling() -> Result<()> {
                 collector.clear_failure();
             }
 
-            collector.collect(&format!("metric_{i}"), i as f64).await
+            collector
+                .collect(&format!("metric_{i}"), f64::from(i))
+                .await
         }));
     }
 
@@ -697,7 +705,9 @@ async fn test_rapid_failure_recovery_cycles() -> Result<()> {
             collector.clear_failure();
         }
 
-        let _ = collector.collect(&format!("metric_{i}"), i as f64).await;
+        let _ = collector
+            .collect(&format!("metric_{i}"), f64::from(i))
+            .await;
     }
 
     // System should remain stable
@@ -724,7 +734,9 @@ async fn test_concurrent_failure_injection() -> Result<()> {
             }
             // else: no change
 
-            let _ = collector.collect(&format!("metric_{i}"), i as f64).await;
+            let _ = collector
+                .collect(&format!("metric_{i}"), f64::from(i))
+                .await;
         }));
     }
 

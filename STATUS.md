@@ -1,6 +1,6 @@
 # BearDog Status
 
-**Last Updated**: March 24, 2026
+**Last Updated**: March 27, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -11,15 +11,15 @@
 | Metric | Status | Details |
 |--------|--------|---------|
 | **Build** | Clean | Zero errors, edition 2024 |
-| **Clippy** | 0 warnings | Pedantic + nursery + cast lints + unwrap/expect warn, workspace-centralized |
+| **Clippy** | 0 warnings | Pedantic + nursery + `cast_lossless` warn + unwrap/expect warn, workspace-centralized |
 | **Missing Docs** | 0 warnings | All public items documented |
 | **Pure Rust** | 100% | Zero C dependencies (ecoBin) |
 | **Unsafe Code** | 0 production | `forbid(unsafe_code)` workspace-wide + all crate `lib.rs` |
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 14,499+ passing | Fully concurrent, zero sleeps in non-chaos |
-| **Coverage** | 86.70%+ line | llvm-cov workspace (targeting 90%) |
+| **Tests** | 14,600+ passing | Fully concurrent, zero sleeps in non-chaos |
+| **Coverage** | 87.31%+ line | llvm-cov workspace (targeting 90%) |
 | **Serial Tests** | 0 | `#[serial]` fully eliminated |
 | **cargo deny** | 4/4 pass | Advisories, bans, licenses, sources |
 | **License** | AGPL-3.0-only | SPDX headers on all .rs files |
@@ -38,7 +38,7 @@
 
 ---
 
-## Per-Crate Coverage (March 24, 2026, llvm-cov)
+## Per-Crate Coverage (March 27, 2026, llvm-cov)
 
 | Crate | Line Coverage | Notes |
 |-------|---------------|-------|
@@ -47,16 +47,16 @@
 | beardog-auth | 93.0% | — |
 | beardog-utils | 92.3% | — |
 | beardog-genetics | 89.9% | — |
-| beardog-ipc | 86.0% | — |
-| beardog-core | ~85% | capability router, cross-primal, discovery boosted |
-| beardog-discovery | ~85% | service registry, DNS-SD, announcer, config boosted |
-| beardog-types | ~84% | HSM, monitoring, performance, K8s, production config boosted |
-| beardog-installer | ~84% | CLI, deployment, validator, binary, BiomeOS boosted |
-| beardog-cli | ~83% | entropy, key mix, client, cross-primal, daemon boosted |
-| beardog-tunnel | ~83% | server, BTSP, IPC, crypto fault injection, BufReader opt |
-| beardog-deploy | ~82% | command runner, android, builder, device coverage boosted |
+| beardog-ipc | 86.5% | JSON-RPC batch path, protocol router |
+| beardog-core | ~86% | capability router, cross-primal, discovery |
+| beardog-discovery | ~85% | service registry, DNS-SD, announcer, config |
+| beardog-types | ~84% | HSM, monitoring, performance, K8s, production config |
+| beardog-installer | ~84% | CLI, deployment, validator, binary, BiomeOS |
+| beardog-cli | ~83% | UniBin `--port`, entropy, key mix, client, daemon |
+| beardog-tunnel | ~83% | NDJSON framing, structured tracing, IPC, BTSP |
+| beardog-deploy | ~82% | command runner, android, builder, device coverage |
 | beardog-integration | new | Tower Atomic UPA client, heartbeat, connection tracking |
-| **Overall** | **86.70%** | llvm-cov workspace |
+| **Overall** | **87.31%** | llvm-cov workspace (up from 86.70%) |
 
 ---
 
@@ -70,7 +70,7 @@
 | Dependency Injection | Pure `Default`, `from_env()` at startup, `from_env_provider()` for tests |
 | Zero Hardcoding | 20+ named constants extracted; capability-based discovery everywhere |
 | Self-Knowledge | Primals discover peers at runtime via capability registry |
-| JSON-RPC + tarpc | Both protocols supported |
+| JSON-RPC + tarpc | Both protocols supported; JSON-RPC batch requests supported |
 | AGPL-3.0-only | License verified; SPDX headers on all .rs files |
 | `forbid(unsafe_code)` | Workspace level + every crate `lib.rs` (beardog-errors platform FFI documented per wateringHole) |
 | Workspace Lints | Centralized clippy pedantic + nursery + cast + unwrap/expect warn |
@@ -84,21 +84,21 @@
 
 ---
 
-## Recent Improvements (March 24, 2026)
+## Recent Improvements (March 27, 2026)
 
-### Wave 15: Ecosystem Absorption, IPC Evolution, Semantic Naming v2.1.0, Self-Knowledge & Coverage Push
+### Wave 17: Comprehensive Audit, UniBin Compliance, NDJSON & Coverage Push
 
-- **IPC error types** — `DispatchOutcome` and `IpcErrorPhase` added to `beardog-ipc` (from rhizoCrypt/LoamSpine pattern); `route_with_outcome()` on `HandlerRegistry`; `normalize_method()` for canonical name normalization
-- **Health handler v2.1.0** — Differentiated liveness (`"alive"`), readiness (`"ready"` + capabilities count), and deep check (`"healthy"` + timestamp) per wateringHole Semantic Method Naming Standard v2.1.0
-- **Self-knowledge** — Removed ~75 hardcoded "Songbird" references from production handler code; BearDog now describes operations generically, not naming peer primals
-- **`#[expect(reason)]` migration** — 30+ production `#[allow(clippy::...)]` evolved to `#[expect(clippy::..., reason = "...")]` with contextual reasons; 6 stale annotations removed
-- **Production stubs evolved** — Migration adapters return `not_implemented` errors; universal adapter uses real timing; BirdSong encrypt/decrypt returns 501; placeholder JSON eliminated
-- **deny.toml** — 8 cross-primal type crate bans added (songbird-types, squirrel-types, etc.) + `provenance-trio-types` ban; enforces JSON-RPC wire-only contracts
-- **60+ deep tests** — beardog-integration (HTTP router), beardog-production (disaster recovery), beardog-errors (result extensions), beardog-deploy (command runner), beardog-installer (env locking)
-- **Coverage 87.08% → 87.35%** (lines); 81.98% → 82.27% (functions)
-- **Discovery documentation** — 5-tier discovery pattern and credential resolution chain added to CONTEXT.md and ARCHITECTURE.md
-- **14,447+ tests passing** — 0 failures
-- **All gates green** — fmt, clippy `-D warnings`, doc, deny, test all clean
+- **Coverage** — 87.31% line (up from 86.70%); broader llvm-cov pass after audit fixes
+- **Tests** — 14,600+ passing (more than Wave 16 baseline)
+- **JSON-RPC** — Batch request support on the wire path
+- **UniBin** — `--port` behavior aligned with compliance expectations
+- **NDJSON** — Wire framing corrected for streamed JSON lines
+- **Observability** — Structured tracing logging evolved across hot paths
+- **Production stubs** — Further evolution toward explicit not-implemented / real behavior
+- **Repository URLs** — Normalized across manifests and metadata
+- **Features** — Dead feature flags removed; CI uses valid `beardog-types` feature sets
+- **Linting** — `cast_lossless` promoted to warn alongside existing cast hygiene
+- **Cleanup** — Commented-out debris removed in core, auth, tunnel, and tests per wateringHole standard
 
 ### Wave 16: Full Ecosystem Audit, api_server Refactor, Zero-Copy IPC, Edition 2024 Showcase & Debris Cleanup
 
@@ -113,6 +113,20 @@
 - **Clippy doc compliance** — `missing_errors_doc` fixed in `result_extensions.rs` (8 methods)
 - **Debris cleanup** — `audit.log` artifacts removed; stale test `README.md` links fixed; Dockerfile toolchain aligned to 1.93.0; `tests_NEEDS_FIXING` comment references cleaned
 - **14,499+ tests passing** — 0 failures
+- **All gates green** — fmt, clippy `-D warnings`, doc, deny, test all clean
+
+### Wave 15: Ecosystem Absorption, IPC Evolution, Semantic Naming v2.1.0, Self-Knowledge & Coverage Push
+
+- **IPC error types** — `DispatchOutcome` and `IpcErrorPhase` added to `beardog-ipc` (from rhizoCrypt/LoamSpine pattern); `route_with_outcome()` on `HandlerRegistry`; `normalize_method()` for canonical name normalization
+- **Health handler v2.1.0** — Differentiated liveness (`"alive"`), readiness (`"ready"` + capabilities count), and deep check (`"healthy"` + timestamp) per wateringHole Semantic Method Naming Standard v2.1.0
+- **Self-knowledge** — Removed ~75 hardcoded "Songbird" references from production handler code; BearDog now describes operations generically, not naming peer primals
+- **`#[expect(reason)]` migration** — 30+ production `#[allow(clippy::...)]` evolved to `#[expect(clippy::..., reason = "...")]` with contextual reasons; 6 stale annotations removed
+- **Production stubs evolved** — Migration adapters return `not_implemented` errors; universal adapter uses real timing; BirdSong encrypt/decrypt returns 501; placeholder JSON eliminated
+- **deny.toml** — 8 cross-primal type crate bans added (songbird-types, squirrel-types, etc.) + `provenance-trio-types` ban; enforces JSON-RPC wire-only contracts
+- **60+ deep tests** — beardog-integration (HTTP router), beardog-production (disaster recovery), beardog-errors (result extensions), beardog-deploy (command runner), beardog-installer (env locking)
+- **Coverage 87.08% → 87.35%** (lines); 81.98% → 82.27% (functions)
+- **Discovery documentation** — 5-tier discovery pattern and credential resolution chain added to CONTEXT.md and ARCHITECTURE.md
+- **14,447+ tests passing** — 0 failures
 - **All gates green** — fmt, clippy `-D warnings`, doc, deny, test all clean
 
 ### Wave 14: Deep Debt Audit, Test Evolution, scyBorg Compliance & Zero-Copy
@@ -240,7 +254,7 @@ cargo check --workspace --all-features        # Compile — clean
 cargo test --workspace                        # Tests — 0 failures
 cargo doc --workspace --no-deps               # Docs — clean
 cargo deny check                              # Advisories, bans, licenses, sources
-cargo llvm-cov --workspace --summary-only     # Coverage — 86.70%
+cargo llvm-cov --workspace --summary-only     # Coverage — 87.31%
 ```
 
 ---

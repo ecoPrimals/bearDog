@@ -714,4 +714,42 @@ mod tests {
         .expect_err("no lineage on decrypt key");
         assert!(err.to_string().contains("lineage") || err.to_string().contains("Lineage"));
     }
+
+    #[tokio::test]
+    async fn test_birdsong_decrypt_with_child_key_lineage_chain() {
+        let dir = TempDir::new().expect("temp dir for child lineage decrypt test");
+        let home = dir.path();
+
+        let root = sample_stored_key("lineage-root", &[9u8; 32]);
+        let mut child = sample_stored_key("lineage-child", &[9u8; 32]);
+        child.lineage = Some(key_store::KeyLineageInfo {
+            parent_key_id: Some("lineage-root".to_string()),
+            depth: 1,
+        });
+        key_store::save_key_to_home(&root, home).expect("save lineage-root");
+        key_store::save_key_to_home(&child, home).expect("save lineage-child");
+
+        let out = dir.path().join("chain.birdsong");
+        handle_birdsong_encrypt_with_home(
+            "child-lineage-msg",
+            "AllDescendants",
+            "lineage-root",
+            Some(
+                out.to_str()
+                    .expect("chain.birdsong path must be valid UTF-8"),
+            ),
+            home,
+        )
+        .await
+        .expect("encrypt for child lineage test");
+
+        handle_birdsong_decrypt_with_home(
+            out.to_str()
+                .expect("chain.birdsong path must be valid UTF-8"),
+            "lineage-child",
+            home,
+        )
+        .await
+        .expect("decrypt with child key in lineage");
+    }
 }

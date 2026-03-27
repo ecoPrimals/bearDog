@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 //! # UPA Registration Client (Tower Atomic Edition)
 //!
@@ -308,6 +309,100 @@ impl UpaClient {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::{Value, json};
+
+    #[test]
+    fn upa_client_config_default_is_empty_url() {
+        let c = UpaClientConfig::default();
+        assert!(c.upa_url.is_empty());
+    }
+
+    #[test]
+    fn registration_request_serde_roundtrip_with_metadata() {
+        let req = RegistrationRequest {
+            service_name: "svc".to_string(),
+            version: "1.0.0".to_string(),
+            capabilities: vec!["a".to_string(), "b".to_string()],
+            endpoint: "/tmp/sock".to_string(),
+            metadata: Some(json!({ "k": "v" })),
+        };
+        let json = serde_json::to_string(&req).expect("serialize");
+        let back: RegistrationRequest = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.service_name, "svc");
+        assert_eq!(back.metadata, Some(json!({ "k": "v" })));
+    }
+
+    #[test]
+    fn registration_request_skips_none_metadata_in_json() {
+        let req = RegistrationRequest {
+            service_name: "s".to_string(),
+            version: "1".to_string(),
+            capabilities: vec![],
+            endpoint: "e".to_string(),
+            metadata: None,
+        };
+        let v = serde_json::to_value(&req).expect("to_value");
+        assert!(v.get("metadata").is_none());
+    }
+
+    #[test]
+    fn registration_response_serde_roundtrip() {
+        let r = RegistrationResponse {
+            service_id: "id-1".to_string(),
+            token: "tok".to_string(),
+            registered_at: "2026-01-01T00:00:00Z".to_string(),
+        };
+        let s = serde_json::to_string(&r).expect("ser");
+        let back: RegistrationResponse = serde_json::from_str(&s).expect("de");
+        assert_eq!(back.token, "tok");
+    }
+
+    #[test]
+    fn registration_response_parse_fails_on_wrong_types() {
+        let v = json!({
+            "service_id": 123,
+            "token": "t",
+            "registered_at": "now"
+        });
+        assert!(serde_json::from_value::<RegistrationResponse>(v).is_err());
+    }
+
+    #[test]
+    fn load_metrics_service_info_service_status_serde() {
+        let m = LoadMetrics {
+            cpu_percent: 12.5,
+            memory_percent: 44.0,
+            active_connections: 3,
+        };
+        let v = serde_json::to_string(&m).expect("m");
+        let m2: LoadMetrics = serde_json::from_str(&v).expect("m2");
+        assert!((m2.cpu_percent - 12.5).abs() < f32::EPSILON);
+
+        let si = ServiceInfo {
+            id: "x".to_string(),
+        };
+        let s2: ServiceInfo =
+            serde_json::from_str(&serde_json::to_string(&si).expect("ser")).expect("de");
+
+        let st = ServiceStatus {
+            status: "ok".to_string(),
+        };
+        assert_eq!(s2.id, "x");
+        assert_eq!(st.status, "ok");
+    }
+
+    #[test]
+    fn discover_services_array_parsing_empty_and_missing() {
+        let full = json!({ "services": [] });
+        let services: Vec<Value> =
+            serde_json::from_value(full["services"].clone()).unwrap_or_default();
+        assert!(services.is_empty());
+
+        let missing = json!({});
+        let fallback: Vec<Value> =
+            serde_json::from_value(missing["services"].clone()).unwrap_or_default();
+        assert!(fallback.is_empty());
+    }
 
     #[tokio::test]
     #[ignore = "Requires a UPA endpoint (env / capability)"]

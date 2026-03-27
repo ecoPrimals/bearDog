@@ -275,3 +275,52 @@ impl ExecutionStatus {
 // Re-export canonical workflow types when available
 // Note: Using unified canonical providers for workflow functionality
 pub use crate::canonical::providers_unified::traits::*;
+
+#[cfg(test)]
+mod workflow_type_tests {
+    use super::{
+        ApprovalStatus, ExecutionStatus, StepType, TriggerType, Workflow, WorkflowExecution,
+    };
+    use serde_json::json;
+
+    #[test]
+    fn execution_status_terminal_and_active() {
+        assert!(ExecutionStatus::Completed.is_terminal());
+        assert!(ExecutionStatus::Failed.is_terminal());
+        assert!(ExecutionStatus::Cancelled.is_terminal());
+        assert!(!ExecutionStatus::Running.is_terminal());
+
+        assert!(ExecutionStatus::Running.is_active());
+        assert!(ExecutionStatus::Pending.is_active());
+        assert!(ExecutionStatus::WaitingForApproval.is_active());
+        assert!(!ExecutionStatus::Completed.is_active());
+    }
+
+    #[test]
+    fn workflow_defaults_are_serializable() {
+        let w: Workflow = Workflow::default();
+        let v = serde_json::to_value(&w).expect("serialize workflow default");
+        assert_eq!(
+            v.get("name").and_then(|x| x.as_str()),
+            Some("Untitled Workflow")
+        );
+    }
+
+    #[test]
+    fn workflow_execution_default_roundtrip() {
+        let e: WorkflowExecution = WorkflowExecution::default();
+        let json = serde_json::to_string(&e).expect("to string");
+        let back: WorkflowExecution = serde_json::from_str(&json).expect("from str");
+        assert_eq!(back.status, ExecutionStatus::Pending);
+    }
+
+    #[test]
+    fn step_and_trigger_enums_json() {
+        let st = StepType::Custom("x".into());
+        assert_eq!(serde_json::to_value(&st).unwrap(), json!({"Custom": "x"}));
+        let tt = TriggerType::Custom("y".into());
+        assert_eq!(serde_json::to_value(&tt).unwrap(), json!({"Custom": "y"}));
+        let ap = ApprovalStatus::Rejected;
+        assert_eq!(serde_json::to_string(&ap).unwrap(), "\"Rejected\"");
+    }
+}

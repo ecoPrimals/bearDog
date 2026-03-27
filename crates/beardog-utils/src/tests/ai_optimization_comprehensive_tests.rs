@@ -79,7 +79,11 @@ fn test_resource_predictor_multiple_samples() {
     let mut predictor = ResourcePredictor::new(10).unwrap();
 
     for i in 0..5 {
-        let result = predictor.add_sample(50.0 + i as f64, 60.0 + i as f64, 10.0 + i as f64);
+        let result = predictor.add_sample(
+            50.0 + f64::from(i),
+            60.0 + f64::from(i),
+            10.0 + f64::from(i),
+        );
         assert!(result.is_ok());
     }
 }
@@ -148,7 +152,9 @@ fn test_resource_predictor_get_trend_cpu() {
     // TEST_PRIORITY: normal
     // Add increasing trend
     for i in 0..20 {
-        predictor.add_sample(50.0 + i as f64, 60.0, 10.0).unwrap();
+        predictor
+            .add_sample(50.0 + f64::from(i), 60.0, 10.0)
+            .unwrap();
     }
 
     let trend = predictor.get_trend("cpu");
@@ -163,7 +169,9 @@ fn test_resource_predictor_get_trend_memory() {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: core
         // TEST_PRIORITY: normal
-        predictor.add_sample(50.0, 60.0 + i as f64, 10.0).unwrap();
+        predictor
+            .add_sample(50.0, 60.0 + f64::from(i), 10.0)
+            .unwrap();
     }
 
     // TEST_CATEGORY: integration
@@ -184,7 +192,9 @@ fn test_resource_predictor_get_trend_network() {
     // TEST_PRIORITY: normal
 
     for i in 0..20 {
-        predictor.add_sample(50.0, 60.0, 10.0 + i as f64).unwrap();
+        predictor
+            .add_sample(50.0, 60.0, 10.0 + f64::from(i))
+            .unwrap();
     }
 
     let trend = predictor.get_trend("network");
@@ -213,7 +223,9 @@ fn test_resource_predictor_window_overflow() {
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     for i in 0..10 {
-        predictor.add_sample(i as f64, i as f64, i as f64).unwrap();
+        predictor
+            .add_sample(f64::from(i), f64::from(i), f64::from(i))
+            .unwrap();
     }
 
     // Should still work
@@ -558,9 +570,9 @@ fn test_full_ai_workflow() {
     for i in 0..20 {
         predictor
             .add_sample(
-                50.0 + i as f64,
-                60.0 + i as f64,
-                (i as f64).mul_add(0.1, 10.0),
+                50.0 + f64::from(i),
+                60.0 + f64::from(i),
+                f64::from(i).mul_add(0.1, 10.0),
             )
             .unwrap();
     }

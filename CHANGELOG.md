@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### March 27, 2026 -- Wave 17: Comprehensive Audit, UniBin Compliance, NDJSON & Coverage Push
+
+- **Coverage** — 87.31% line (up from 86.70%); llvm-cov workspace pass after audit fixes
+- **Tests** — 14,600+ passing
+- **JSON-RPC** — Batch request support on the wire path
+- **UniBin** — `--port` compliance alignment
+- **NDJSON** — Wire framing fixes for streamed JSON lines
+- **Observability** — Structured tracing logging on hot paths
+- **Production stubs** — Further evolution (explicit not-implemented / real behavior)
+- **Manifests** — Repository URLs normalized; dead feature flags removed
+- **Linting** — `cast_lossless` promoted to warn
+- **CI** — `beardog-types` check uses `--all-features`; file-size scan excludes `./archives/*` (not typo `./archive/*`)
+- **Cleanup** — Commented-out debris removed (core tests, `safety.rs`, tunnel ECDSA notes)
+- **Tests** — `discover_socket_path_*` unit tests clear `BEARDOG_LOCAL_SOCKET_DIR` under the existing env lock (fixes parallel-test flake)
+
 ### March 24, 2026 -- Wave 16: Full Ecosystem Audit, api_server Refactor, Zero-Copy & Debris Cleanup
 
 - **Full wateringHole audit** — Cross-referenced PRIMAL_IPC_PROTOCOL, SEMANTIC_METHOD_NAMING, ECOBIN, UNIBIN, ZERO_HARDCODING, primalSpring standards

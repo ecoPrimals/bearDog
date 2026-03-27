@@ -240,7 +240,11 @@ impl ComplianceHandler {
         }
     }
 
-    /// Placeholder hook for data-residency and sovereignty rules (returns no violations today).
+    /// Check data-residency and sovereignty rules.
+    ///
+    /// BearDog is a cryptographic primal -- it does not store user data or control
+    /// data residency. Returns no violations because sovereignty constraints are
+    /// enforced at the orchestrator / storage-primal level.
     pub const fn check_sovereignty_compliance(
         &self,
         _event: &ComplianceEvent,
@@ -248,7 +252,10 @@ impl ComplianceHandler {
         Ok(vec![])
     }
 
-    /// Placeholder hook for additional privacy-policy checks beyond per-standard evaluation.
+    /// Check privacy-policy compliance beyond per-standard evaluation.
+    ///
+    /// BearDog processes cryptographic material, not PII. Privacy violations
+    /// are assessed by primals that handle user-facing data (e.g. Squirrel).
     pub const fn check_privacy_compliance(
         &self,
         _event: &ComplianceEvent,

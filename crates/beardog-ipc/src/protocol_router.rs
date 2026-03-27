@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! # 🔀 Protocol Router for BearDog IPC
+//! # Protocol Router for BearDog IPC
 //!
 //! **AUTOMATIC PROTOCOL DETECTION AND ROUTING** (v1.0.0)
 //!

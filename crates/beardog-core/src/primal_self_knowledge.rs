@@ -67,7 +67,9 @@
 
 use beardog_config::domains::network_ports::DEFAULT_API_PORT;
 use beardog_errors::BearDogError;
-use beardog_types::canonical::discovery::{UniversalCapabilityType, UniversalServiceDescriptor};
+use beardog_types::canonical::discovery::{
+    SecurityService, UniversalCapabilityType, UniversalServiceDescriptor,
+};
 
 type Result<T> = std::result::Result<T, BearDogError>;
 use serde::{Deserialize, Serialize};
@@ -641,13 +643,30 @@ impl PrimalSelfKnowledge {
 
     /// Get this primal's capabilities (self-knowledge)
     ///
+    /// Maps the identity's [`Capability`] set into the canonical
+    /// [`UniversalCapabilityType`] taxonomy. Only capabilities that BearDog
+    /// itself advertises are returned.
+    ///
     /// # Errors
     ///
     /// Returns error if capabilities cannot be retrieved or converted.
-    pub const fn get_self_capabilities(&self) -> Result<Vec<UniversalCapabilityType>> {
-        // Convert string capabilities to UniversalCapabilityType
-        // This is a simplified mapping - real implementation would be more comprehensive
-        Ok(vec![]) // Placeholder - capabilities are stored as strings in PrimalIdentity
+    pub fn get_self_capabilities(&self) -> Result<Vec<UniversalCapabilityType>> {
+        let mut caps = Vec::new();
+        for cap in &self.identity.capabilities {
+            match cap {
+                Capability::Hsm => caps.push(UniversalCapabilityType::Security {
+                    services: vec![SecurityService::KeyManagement],
+                }),
+                Capability::Encryption => caps.push(UniversalCapabilityType::Security {
+                    services: vec![SecurityService::Encryption],
+                }),
+                Capability::Authentication => caps.push(UniversalCapabilityType::Security {
+                    services: vec![SecurityService::Authentication],
+                }),
+                _ => {}
+            }
+        }
+        Ok(caps)
     }
 
     /// Discover other primals by capability (runtime discovery)

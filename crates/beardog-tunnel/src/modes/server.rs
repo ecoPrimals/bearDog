@@ -532,3 +532,41 @@ mod neural_registration_tests {
         assert_eq!(p.beardog_primal_type, Some("ignored".to_string()));
     }
 }
+
+/// Additional unit tests: struct construction, defaults, and edge cases for helpers used by
+/// server startup (without running the full async `run` lifecycle).
+#[cfg(test)]
+mod tests {
+    use super::{NeuralRegistrationParams, family_id_preview_from_seed};
+    use beardog_types::primal_identity::PrimalIdentity;
+
+    #[test]
+    fn neural_registration_params_default_clone_debug() {
+        let a = NeuralRegistrationParams::default();
+        let b = a.clone();
+        assert_eq!(format!("{a:?}"), format!("{b:?}"));
+        let id = PrimalIdentity::for_test("f", "n1");
+        assert_eq!(
+            a.registration_instance_id(&id),
+            b.registration_instance_id(&id)
+        );
+    }
+
+    #[test]
+    fn registration_instance_id_formats_with_hyphenated_node_id() {
+        let p = NeuralRegistrationParams {
+            instance_override: None,
+            primal_type: Some("relay".to_string()),
+            beardog_primal_type: None,
+        };
+        let id = PrimalIdentity::for_test("fam", "node-with-dashes");
+        assert_eq!(p.registration_instance_id(&id), "relay-node-with-dashes");
+    }
+
+    #[test]
+    fn family_id_preview_takes_first_four_alphanumeric_only() {
+        assert_eq!(family_id_preview_from_seed("Z9##wxyz"), "z9wx");
+        // Unicode letters are alphanumeric in Rust; use symbols-only for empty preview.
+        assert_eq!(family_id_preview_from_seed("@#$%^&*()"), "");
+    }
+}

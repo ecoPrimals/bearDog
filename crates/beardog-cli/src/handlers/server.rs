@@ -42,37 +42,44 @@ pub(crate) fn resolve_server_socket_path(args: &ServerArgs) -> String {
 
 /// Handle server command - start long-running service
 pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
-    info!("🐻🐕 BearDog Server Mode - Starting...");
+    info!("BearDog server starting");
 
     // Determine socket path - use abstract socket if --abstract flag is set,
     // or derive family-scoped socket if --family-id is provided
     let socket_path = resolve_server_socket_path(&args);
     if args.r#abstract {
-        info!("   Transport: Abstract Socket (SELinux-safe)");
-        info!("   Socket: {} (no filesystem)", socket_path);
+        info!(transport = "abstract", "transport selected");
+        info!(socket_path = %socket_path, "abstract socket path");
     } else if args.family_id.is_some() {
-        info!("   Multi-family socket: {}", socket_path);
+        info!(socket_path = %socket_path, "multi-family socket");
     }
 
+    // Resolve --port into --listen (UniBin v1.1: `server --port <PORT>`)
+    let effective_listen = match (args.port, &args.listen) {
+        (Some(port), None) => Some(format!("0.0.0.0:{port}")),
+        (None, Some(addr)) => Some(addr.clone()),
+        _ => None,
+    };
+
     // Determine transport mode
-    if let Some(ref addr) = args.listen {
-        info!("   Transport: TCP (Tier 2 - Universal)");
-        info!("   Listen: {}", addr);
+    if let Some(ref addr) = effective_listen {
+        info!(transport = "tcp", tier = 2, "transport selected");
+        info!(listen = %addr, "listen address");
     } else if !args.r#abstract {
-        info!("   Transport: Unix Socket (Tier 1 - Native)");
-        info!("   Socket: {}", socket_path);
+        info!(transport = "unix", tier = 1, "transport selected");
+        info!(socket_path = %socket_path, "unix socket path");
     }
 
     if let Some(ref family_id) = args.family_id {
-        info!("   Family ID: {}", family_id);
+        info!(family_id = %family_id, "family id");
     }
 
     if let Some(ref orchestrator_id) = args.orchestrator_id {
-        info!("   Orchestrator ID: {}", orchestrator_id);
+        info!(orchestrator_id = %orchestrator_id, "orchestrator id");
     }
 
     // Create HSM manager with software provider
-    info!("🔧 Initializing HSM manager...");
+    info!("initializing HSM manager");
     let mut hsm = HsmManager::new();
     let config = SoftwareHsmConfig::default();
     let software_hsm =
@@ -87,26 +94,26 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
             message: format!("Failed to register HSM provider: {e}"),
         })?;
     let hsm = Arc::new(hsm);
-    info!("✅ HSM manager initialized");
+    info!("HSM manager initialized");
 
     // Create genetics engine
-    info!("🔧 Initializing genetics engine...");
+    info!("initializing genetics engine");
     let genetics =
         Arc::new(
             EcosystemGeneticEngine::new().map_err(|e| BearDogError::Initialization {
                 message: format!("Failed to create genetics engine: {e}"),
             })?,
         );
-    info!("✅ Genetics engine initialized");
+    info!("Genetics engine initialized");
 
     // Create BTSP provider (provides all capabilities)
-    info!("🔧 Initializing BTSP provider...");
+    info!("initializing BTSP provider");
     let btsp_provider = Arc::new(BeardogBtspProvider::new(hsm, genetics).await.map_err(|e| {
         BearDogError::Initialization {
             message: format!("Failed to create BTSP provider: {e}"),
         }
     })?);
-    info!("✅ BTSP provider initialized");
+    info!("BTSP provider initialized");
 
     // Create primal identity from environment (fail-fast if not configured)
     let identity = Arc::new(
@@ -117,23 +124,21 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         })?,
     );
     info!(
-        "🆔 Identity: family={}, node={}",
-        identity.family_id(),
-        identity.node_id()
+        family_id = %identity.family_id(),
+        node_id = %identity.node_id(),
+        "identity"
     );
 
     // Construct primal name for registration (before identity is moved)
     let primal_name = format!("beardog-{}", identity.node_id());
     // socket_path is already determined above based on --abstract flag
-    let tcp_addr = args.listen.clone();
+    let tcp_addr = effective_listen;
 
     // ================================================================
     // PHASE 3: MULTI-TRANSPORT SERVER (Deep Debt Evolution)
     // ================================================================
 
-    info!("🌐 Creating multi-transport server...");
-    info!("   Platform: Universal (all available transports)");
-    info!("   Deep Debt: Agnostic + Runtime Discovery");
+    info!(platform = "universal", "creating multi-transport server");
 
     // Create multi-transport server (binds all available)
     let server = MultiTransportServer::bind_all_available(
@@ -145,13 +150,13 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     .await?;
 
     info!(
-        "✅ Multi-transport server created: {} transport(s)",
-        server.transport_count()
+        transport_count = server.transport_count(),
+        "multi-transport server created"
     );
 
     // Auto-register with Neural API if available (Tower Atomic TRUE PRIMAL)
     if let Some(neural_socket) = discover_neural_api_socket() {
-        info!("🌐 Neural API detected at: {}", neural_socket);
+        info!(neural_socket = %neural_socket, "Neural API detected");
 
         // Register primary socket path
         let registration_addr = if let Some(ref tcp) = tcp_addr {
@@ -161,11 +166,11 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         };
 
         match register_with_neural_api(&neural_socket, &primal_name, registration_addr).await {
-            Ok(()) => info!("✅ BearDog registered with Neural API (Tower Atomic enabled)"),
-            Err(e) => warn!("⚠️  Neural API registration failed (non-fatal): {}", e),
+            Ok(()) => info!("BearDog registered with Neural API"),
+            Err(e) => warn!(error = %e, "Neural API registration failed (non-fatal)"),
         }
     } else {
-        info!("ℹ️  No Neural API detected - running in standalone mode");
+        info!(mode = "standalone", "no Neural API detected");
     }
 
     // Start all transports (runs until Ctrl+C)
@@ -173,140 +178,3 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
 
     Ok(())
 }
-
-/*
-/// OLD IMPLEMENTATION: Single transport mode (DEPRECATED by Phase 3)
-///
-/// This code remains for reference but is no longer used.
-/// Phase 3 evolution: Single → Multi-transport
-fn _old_single_transport_server_code() {
-    // This function exists purely for documentation - shows evolution path
-    //
-    // Before Phase 3:
-    // - User chose EITHER Unix socket OR TCP
-    // - Manual selection required
-    // - Not universal
-    //
-    // After Phase 3:
-    // - Server binds ALL available transports
-    // - Automatic platform detection
-    // - Universal deployment
-
-    /*
-    if let Some(ref listen_addr) = args.listen {
-        // TCP mode (Tier 2 - Android, Windows, universal)
-        info!("🌐 Creating TCP IPC server...");
-
-        let bind_addr: std::net::SocketAddr = listen_addr.parse().map_err(|e| {
-            BearDogError::Initialization {
-                message: format!("Invalid listen address '{}': {}", listen_addr, e),
-            }
-        })?;
-
-        let tcp_server = TcpIpcServer::new(bind_addr, btsp_provider, identity);
-        info!("✅ TCP server created");
-
-        // Auto-register with Neural API if available (Tower Atomic TRUE PRIMAL)
-        if let Some(neural_socket) = discover_neural_api_socket() {
-            info!("🌐 Neural API detected at: {}", neural_socket);
-            match register_with_neural_api(&neural_socket, &primal_name, listen_addr).await {
-                Ok(_) => info!("✅ BearDog registered with Neural API (Tower Atomic enabled)"),
-                Err(e) => warn!("⚠️  Neural API registration failed (non-fatal): {}", e),
-            }
-        } else {
-            info!("ℹ️  No Neural API detected - running in standalone mode");
-        }
-
-        // Start TCP server
-        info!("🚀 Starting TCP server...");
-        info!("");
-        info!("╔════════════════════════════════════════════════════════════════╗");
-        info!("║                                                                ║");
-        info!("║        🐻🐕 BearDog Server READY - TCP Mode (Tier 2)          ║");
-        info!("║                                                                ║");
-        info!("╚════════════════════════════════════════════════════════════════╝");
-        info!("");
-        info!("📡 Listening on: {}", listen_addr);
-        info!("🔐 Crypto API: Ed25519, X25519, ChaCha20-Poly1305, Blake3");
-        info!("🔌 Protocol: JSON-RPC 2.0 over TCP");
-        info!("🏗️  Architecture: Tower Atomic (BearDog + Songbird)");
-        info!("📱 Platform: Universal (Android, Windows, Linux, macOS)");
-        info!("");
-        info!("Press Ctrl+C to stop");
-        info!("");
-
-        tcp_server.start().await.map_err(|e| BearDogError::System {
-            message: format!("TCP server error: {}", e),
-            category: Default::default(),
-        })?;
-
-        info!("✅ TCP server stopped");
-        return Ok(());
-    }
-
-    // Unix socket mode (Tier 1 - Native)
-    info!("🔌 Creating Unix socket IPC server...");
-
-    let server = Arc::new(
-        UnixSocketIpcServer::new(&args.socket, btsp_provider, identity)
-            .await
-            .map_err(|e| BearDogError::Initialization {
-                message: format!("Failed to create server: {}", e),
-            })?,
-    );
-    info!("✅ Server created");
-
-    // Auto-register with Neural API if available (Tower Atomic TRUE PRIMAL)
-    if let Some(neural_socket) = discover_neural_api_socket() {
-        info!("🌐 Neural API detected at: {}", neural_socket);
-
-        match register_with_neural_api(&neural_socket, &primal_name, &socket_path).await {
-            Ok(_) => info!("✅ BearDog registered with Neural API (Tower Atomic enabled)"),
-            Err(e) => warn!("⚠️  Neural API registration failed (non-fatal): {}", e),
-        }
-    } else {
-        info!("ℹ️  No Neural API detected - running in standalone mode");
-    }
-
-    // Start server (this blocks until shutdown)
-    info!("🚀 Starting server...");
-    info!("");
-    info!("╔════════════════════════════════════════════════════════════════╗");
-    info!("║                                                                ║");
-    info!("║        🐻🐕 BearDog Server READY - Tower Atomic Enabled       ║");
-    info!("║                                                                ║");
-    info!("╚════════════════════════════════════════════════════════════════╝");
-    info!("");
-    info!("📡 Listening on: {}", args.socket);
-    info!("🔐 Crypto API: Ed25519, X25519, ChaCha20-Poly1305, Blake3");
-    info!("🔌 Protocol: JSON-RPC 2.0 over Unix sockets");
-    info!("🏗️  Architecture: Tower Atomic (BearDog + Songbird)");
-    info!("");
-    info!("Press Ctrl+C to stop");
-    info!("");
-
-    // Handle Ctrl+C gracefully
-    let server_clone: Arc<UnixSocketIpcServer> = Arc::clone(&server);
-    tokio::spawn(async move {
-        tokio::signal::ctrl_c()
-            .await
-            .expect("Failed to listen for Ctrl+C");
-        info!("");
-        info!("🛑 Received Ctrl+C, shutting down gracefully...");
-        if let Err(e) = server_clone.stop().await {
-            error!("❌ Error during shutdown: {}", e);
-        }
-        std::process::exit(0);
-    });
-
-    // Start server (blocks until stopped)
-    server.start().await.map_err(|e| BearDogError::System {
-        message: format!("Server error: {}", e),
-        category: Default::default(),
-    })?;
-
-    info!("✅ Server stopped");
-    Ok(())
-    */
-}
-*/

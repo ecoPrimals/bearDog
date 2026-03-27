@@ -20,6 +20,7 @@
 //!
 //! Instead of N primal-specific clients, we have 1 universal client that adapts to any registry
 
+use crate::protocol::JSONRPC_VERSION;
 use beardog_core::capabilities::{BearDogCapabilities, Capability};
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -315,7 +316,7 @@ impl PrimalRegistryClient {
 
         self.request_id += 1;
         let request = JsonRpcRequest {
-            jsonrpc: "2.0".to_string(),
+            jsonrpc: JSONRPC_VERSION.to_string(),
             method: method.to_string(),
             params,
             id: self.request_id,
@@ -379,7 +380,7 @@ mod tests {
     #[test]
     fn test_json_rpc_request_serialization() -> Result<(), serde_json::Error> {
         let request = JsonRpcRequest {
-            jsonrpc: "2.0".to_string(),
+            jsonrpc: JSONRPC_VERSION.to_string(),
             method: "primal.ping".to_string(),
             params: None,
             id: 1,

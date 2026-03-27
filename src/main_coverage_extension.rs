@@ -466,4 +466,96 @@ mod main_coverage_deep_tests {
         let d = parse_cli(&["beardog", "daemon"]).expect("daemon");
         assert!(matches!(d.command, Commands::Daemon(DaemonArgs { .. })));
     }
+
+    #[test]
+    fn cli_parses_entropy_info_seed_path() {
+        let cli = parse_cli(&["beardog", "entropy", "info", "--seed", "/tmp/seed.json"])
+            .expect("parse entropy info");
+        match cli.command {
+            Commands::Entropy {
+                action: EntropyAction::Info { seed },
+            } => assert_eq!(seed, "/tmp/seed.json"),
+            _ => panic!("expected Entropy Info"),
+        }
+    }
+
+    #[test]
+    fn cli_parses_key_export_with_encrypt() {
+        let cli = parse_cli(&[
+            "beardog",
+            "key",
+            "export",
+            "--key-id",
+            "kid-1",
+            "--output",
+            "/tmp/out.pem",
+            "--encrypt",
+        ])
+        .expect("parse key export");
+        match cli.command {
+            Commands::Key {
+                action:
+                    KeyAction::Export {
+                        key_id,
+                        output,
+                        encrypt,
+                    },
+            } => {
+                assert_eq!(key_id, "kid-1");
+                assert_eq!(output, "/tmp/out.pem");
+                assert!(encrypt);
+            }
+            _ => panic!("expected Key Export"),
+        }
+    }
+
+    #[test]
+    fn cli_parses_key_import_decrypt() {
+        let cli = parse_cli(&[
+            "beardog",
+            "key",
+            "import",
+            "--input",
+            "/tmp/in.pem",
+            "--key-id",
+            "kid-2",
+            "--decrypt",
+        ])
+        .expect("parse key import");
+        match cli.command {
+            Commands::Key {
+                action:
+                    KeyAction::Import {
+                        input,
+                        key_id,
+                        decrypt,
+                    },
+            } => {
+                assert_eq!(input, "/tmp/in.pem");
+                assert_eq!(key_id.as_deref(), Some("kid-2"));
+                assert!(decrypt);
+            }
+            _ => panic!("expected Key Import"),
+        }
+    }
+
+    #[test]
+    fn cli_parses_stream_decrypt_short_flags() {
+        let cli = parse_cli(&[
+            "beardog",
+            "stream-decrypt",
+            "-i",
+            "/tmp/in.bin",
+            "-o",
+            "/tmp/out.out",
+        ])
+        .expect("parse stream-decrypt");
+        match cli.command {
+            Commands::StreamDecrypt { input, output } => {
+                assert_eq!(input, "/tmp/in.bin");
+                assert_eq!(output, "/tmp/out.out");
+            }
+            _ => panic!("expected StreamDecrypt"),
+        }
+    }
 }

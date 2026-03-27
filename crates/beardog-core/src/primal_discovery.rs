@@ -56,6 +56,8 @@
 use crate::self_knowledge::{Endpoint, SimpleCapability};
 use beardog_errors::BearDogError;
 use beardog_types::constants::domains::network::ipc_discovery as ipc;
+use beardog_types::constants::domains::system::intervals::PRIMAL_DISCOVERY_CACHE_TTL;
+use beardog_types::constants::domains::timeouts::HEALTH_CHECK_TIMEOUT;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::ffi::OsStr;
@@ -153,7 +155,7 @@ impl DiscoveryQuery {
         Self {
             name: Some(name.into()),
             capabilities: Vec::new(),
-            timeout: Duration::from_secs(5),
+            timeout: HEALTH_CHECK_TIMEOUT,
         }
     }
 
@@ -163,7 +165,7 @@ impl DiscoveryQuery {
         Self {
             name: None,
             capabilities: vec![capability],
-            timeout: Duration::from_secs(5),
+            timeout: HEALTH_CHECK_TIMEOUT,
         }
     }
 
@@ -193,7 +195,7 @@ impl PrimalDiscovery {
     /// Accepts explicit configuration for concurrent-safe operation.
     #[must_use]
     pub fn new(method: DiscoveryMethod) -> Self {
-        Self::with_cache_ttl(method, Duration::from_secs(300))
+        Self::with_cache_ttl(method, PRIMAL_DISCOVERY_CACHE_TTL)
     }
 
     /// Create discovery engine with explicit method and cache TTL
@@ -228,7 +230,7 @@ impl PrimalDiscovery {
         let cache_ttl = beardog_errors::process_env::var("DISCOVERY_CACHE_TTL_SECS")
             .ok()
             .and_then(|s| s.parse().ok())
-            .map_or(Duration::from_secs(300), Duration::from_secs); // 5 minutes default
+            .map_or(PRIMAL_DISCOVERY_CACHE_TTL, Duration::from_secs);
 
         Ok(Self {
             method,
@@ -586,7 +588,7 @@ impl PrimalDiscovery {
             "method": "upa.discover",
             "params": {
                 "capability": capability,
-                "timeout_ms": 5000
+                "timeout_ms": HEALTH_CHECK_TIMEOUT.as_millis() as u64
             },
             "id": 1
         });

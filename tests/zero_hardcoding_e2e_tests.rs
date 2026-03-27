@@ -5,6 +5,7 @@
 //! Validates that `BearDog` works with ANY registry implementation
 
 use beardog_core::capabilities::BearDogCapabilities;
+use beardog_ipc::protocol::JSONRPC_VERSION;
 use beardog_ipc::{JsonRpcRequest, PrimalRegistryClient};
 use std::path::PathBuf;
 
@@ -88,7 +89,7 @@ fn test_e2e_json_rpc_universal_protocol() {
     // Verify we use standard JSON-RPC 2.0, not vendor-specific protocols
 
     let request = JsonRpcRequest {
-        jsonrpc: "2.0".to_string(),
+        jsonrpc: JSONRPC_VERSION.to_string(),
         method: "primal.register".to_string(),
         params: Some(serde_json::json!({
             "primal_id": "beardog",

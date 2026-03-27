@@ -1,7 +1,7 @@
 [package]
 name = "beardog"
 description = "BearDog Security Provider - Quantum-resistant cryptography and HSM integration for the ecoPrimals ecosystem"
-repository = "https://github.com/eastgate-software/beardog"
+repository = "https://github.com/ecoPrimals/beardog"
 rust-version = "1.93.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"

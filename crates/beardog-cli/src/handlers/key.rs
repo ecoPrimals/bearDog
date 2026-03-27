@@ -752,4 +752,41 @@ mod key_handler_tests {
             .unwrap_err();
         assert!(format!("{err}").contains("missing-id") || format!("{err}").contains("not found"));
     }
+
+    #[test]
+    fn select_cli_hsm_empty_list_errors_for_all_preferences() {
+        let empty: Vec<CliHsmInfo> = vec![];
+        assert!(select_cli_hsm_for_preference(&empty, "auto").is_err());
+        assert!(select_cli_hsm_for_preference(&empty, "software").is_err());
+        assert!(select_cli_hsm_for_preference(&empty, "hardware").is_err());
+        assert!(select_cli_hsm_for_preference(&empty, "mobile").is_err());
+    }
+
+    #[test]
+    fn select_cli_hsm_case_insensitive_preference() {
+        let hs = vec![sample_cli_hsm("Software", "soft")];
+        assert_eq!(
+            select_cli_hsm_for_preference(&hs, "SOFTWARE")
+                .expect("uppercase software")
+                .name,
+            "soft"
+        );
+        assert_eq!(
+            select_cli_hsm_for_preference(&hs, "Auto")
+                .expect("mixed case auto")
+                .name,
+            "soft"
+        );
+    }
+
+    #[test]
+    fn select_cli_hsm_auto_skips_unknown_tiers_until_software() {
+        let hsms = vec![
+            sample_cli_hsm("CloudOnly", "cloud"),
+            sample_cli_hsm("Software", "sw"),
+        ];
+        let picked = select_cli_hsm_for_preference(&hsms, "auto").expect("fallback to software");
+        assert_eq!(picked.tier, "Software");
+        assert_eq!(picked.name, "sw");
+    }
 }

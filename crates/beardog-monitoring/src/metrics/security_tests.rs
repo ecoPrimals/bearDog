@@ -30,19 +30,40 @@ mod security_tests {
     }
 
     #[test]
-    fn test_security_engine_get_metrics() {
+    fn test_security_engine_get_metrics_reflects_counters() {
         let config = SecurityMetricsConfig::default();
         let engine = SecurityMetricsEngine::new(config).unwrap();
 
-        let metrics = engine.get_metrics();
-        assert!(metrics.is_ok());
+        let fresh = engine.get_metrics().unwrap();
+        assert_eq!(fresh.failed_auth_attempts, 0);
+        assert_eq!(fresh.successful_auths, 0);
+        assert_eq!(fresh.threat_level, 0.0);
+        assert_eq!(fresh.compliance_score, 1.0);
 
-        let metrics = metrics.unwrap();
-        assert_eq!(metrics.failed_auth_attempts, 5);
-        assert_eq!(metrics.successful_auths, 1250);
-        assert_eq!(metrics.blocked_requests, 12);
-        assert_eq!(metrics.threat_level, 0.2);
-        assert_eq!(metrics.compliance_score, 0.95);
+        engine
+            .record_event(&MetricEvent {
+                category: MetricCategory::Security,
+                name: "auth_failure".to_string(),
+                value: MetricValue::Counter(2),
+                labels: std::collections::HashMap::new(),
+                timestamp: std::time::SystemTime::now(),
+            })
+            .unwrap();
+        engine
+            .record_event(&MetricEvent {
+                category: MetricCategory::Security,
+                name: "auth_success_total".to_string(),
+                value: MetricValue::Counter(8),
+                labels: std::collections::HashMap::new(),
+                timestamp: std::time::SystemTime::now(),
+            })
+            .unwrap();
+
+        let metrics = engine.get_metrics().unwrap();
+        assert_eq!(metrics.failed_auth_attempts, 2);
+        assert_eq!(metrics.successful_auths, 8);
+        assert!(metrics.threat_level > 0.0);
+        assert!(metrics.compliance_score < 1.0);
     }
 
     #[test]
@@ -151,6 +172,27 @@ mod security_tests {
     fn test_security_metrics_high_auth_attempts() {
         let config = SecurityMetricsConfig::default();
         let engine = SecurityMetricsEngine::new(config).unwrap();
+
+        engine
+            .record_event(&MetricEvent {
+                category: MetricCategory::Security,
+                name: "auth_failure".to_string(),
+                value: MetricValue::Counter(1),
+                labels: std::collections::HashMap::new(),
+                timestamp: std::time::SystemTime::now(),
+            })
+            .unwrap();
+        for _ in 0..50 {
+            engine
+                .record_event(&MetricEvent {
+                    category: MetricCategory::Security,
+                    name: "auth_success".to_string(),
+                    value: MetricValue::Counter(1),
+                    labels: std::collections::HashMap::new(),
+                    timestamp: std::time::SystemTime::now(),
+                })
+                .unwrap();
+        }
 
         let metrics = engine.get_metrics().unwrap();
         assert!(metrics.failed_auth_attempts < metrics.successful_auths);

@@ -4,6 +4,12 @@
 
 use serde::{Deserialize, Serialize};
 
+/// Default FIDO2 relying party ID when [`SoloV2Config`] is constructed with [`Default`].
+///
+/// Deployments should set [`SoloV2Config::relying_party_id`] from application configuration
+/// rather than relying on this fallback.
+pub const DEFAULT_SOLO_V2_RELYING_PARTY_ID: &str = "beardog.dev";
+
 /// Solo V2 device information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SoloV2DeviceInfo {
@@ -89,7 +95,7 @@ impl Default for SoloV2Config {
     fn default() -> Self {
         Self {
             device_id: None,
-            relying_party_id: "beardog.dev".to_string(), // Default RP ID
+            relying_party_id: DEFAULT_SOLO_V2_RELYING_PARTY_ID.to_string(),
             require_user_presence: true,
             require_user_verification: true,
             user_interaction_timeout: 30,

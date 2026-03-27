@@ -1,7 +1,7 @@
 [package]
 name = "beardog-tunnel"
 description = "BearDog tunnel module"
-repository = "https://github.com/eastgate-software/beardog"
+repository = "https://github.com/ecoPrimals/beardog"
 rust-version = "1.93.0"
 homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
@@ -119,10 +119,9 @@ diagnostics = []
 tpm-provider = []
 pkcs11-provider = []
 
-# Architecture features
-zero-cost-architecture = []
-universal-discovery = []
-primal-sovereignty = []
+# Architecture features (reserved for future wiring)
+# zero-cost-architecture, universal-discovery, primal-sovereignty removed:
+# no cfg(feature) gates existed in source -- dead flags per audit.
 
 # Hardware features (evolved to Pure Rust - ecoBin compliant)
 # ctap-hid-fido2 removed - evolved to beardog-hid (pure Rust)
@@ -131,7 +130,7 @@ usb-discovery = ["beardog-hid"]      # Generic USB HID discovery
 ctap2 = ["beardog-hid"]              # CTAP2 protocol (via beardog-hid)
 
 # Platform features
-ecosystem = []
+# `ecosystem` removed: no cfg(feature) gate existed in source -- dead flag.
 default = []
 android_native = []
 pixel8_optimizations = [ "android_native",]

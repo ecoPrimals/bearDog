@@ -24,6 +24,7 @@
 //! - Compares enum dispatch vs Box<dyn> for zero-cost validation
 
 use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, criterion_main};
+#[cfg(feature = "profiling")]
 use pprof::criterion::{Output, PProfProfiler};
 use std::time::Duration;
 

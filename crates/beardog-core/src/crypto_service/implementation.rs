@@ -714,4 +714,174 @@ mod tests {
 
         assert!(result.is_err());
     }
+
+    #[tokio::test]
+    async fn test_encrypt_chacha20_roundtrip() {
+        let service =
+            BearDogCryptoService::new(test_config()).expect("BearDogCryptoService::new in test");
+        let plaintext = b"chacha-payload";
+        let enc = service
+            .encrypt(
+                plaintext,
+                CryptoAlgorithm::ChaCha20Poly1305,
+                EncryptOptions {
+                    key_id: "k-chacha".to_string(),
+                    associated_data: Some(b"ad".to_vec()),
+                },
+            )
+            .await
+            .expect("encrypt chacha");
+        let dec = service
+            .decrypt(
+                &enc,
+                DecryptOptions {
+                    key_id: "k-chacha".to_string(),
+                    associated_data: Some(b"ad".to_vec()),
+                },
+            )
+            .await
+            .expect("decrypt chacha");
+        assert_eq!(dec, plaintext);
+    }
+
+    #[tokio::test]
+    async fn test_encrypt_aes128_roundtrip() {
+        let service =
+            BearDogCryptoService::new(test_config()).expect("BearDogCryptoService::new in test");
+        let plaintext = b"aes128";
+        let enc = service
+            .encrypt(
+                plaintext,
+                CryptoAlgorithm::Aes128Gcm,
+                EncryptOptions {
+                    key_id: "k-aes128".to_string(),
+                    associated_data: None,
+                },
+            )
+            .await
+            .expect("encrypt aes128");
+        let dec = service
+            .decrypt(
+                &enc,
+                DecryptOptions {
+                    key_id: String::new(),
+                    associated_data: None,
+                },
+            )
+            .await
+            .expect("decrypt uses metadata key_id");
+        assert_eq!(dec, plaintext);
+    }
+
+    #[tokio::test]
+    async fn test_decrypt_requires_tag() {
+        let service =
+            BearDogCryptoService::new(test_config()).expect("BearDogCryptoService::new in test");
+        let mut bad = service
+            .encrypt(
+                b"x",
+                CryptoAlgorithm::Aes256Gcm,
+                EncryptOptions {
+                    key_id: "k".to_string(),
+                    associated_data: None,
+                },
+            )
+            .await
+            .expect("encrypt");
+        bad.metadata.tag = None;
+        let err = service
+            .decrypt(
+                &bad,
+                DecryptOptions {
+                    key_id: "k".to_string(),
+                    associated_data: None,
+                },
+            )
+            .await
+            .expect_err("tag required");
+        assert!(err.to_string().contains("tag") || err.to_string().contains("Authentication"));
+    }
+
+    #[tokio::test]
+    async fn test_sign_ecdsa_p256_produces_der_signature() {
+        let service =
+            BearDogCryptoService::new(test_config()).expect("BearDogCryptoService::new in test");
+        let msg = b"ecdsa-msg";
+        let sig = service
+            .sign(
+                msg,
+                SignatureAlgorithm::EcdsaP256,
+                SignOptions {
+                    key_id: "ecdsa-key".to_string(),
+                    context: None,
+                },
+            )
+            .await
+            .expect("sign ecdsa");
+        assert!(!sig.signature.is_empty());
+        assert_eq!(sig.algorithm, SignatureAlgorithm::EcdsaP256);
+    }
+
+    #[tokio::test]
+    async fn test_generate_rsa_key_invalid_size_errors() {
+        let service =
+            BearDogCryptoService::new(test_config()).expect("BearDogCryptoService::new in test");
+        let err = service
+            .generate_rsa_key("bad-rsa", 1024)
+            .expect_err("invalid rsa size");
+        assert!(err.to_string().contains("2048") || err.to_string().contains("Invalid"));
+    }
+
+    #[tokio::test]
+    async fn test_generate_rsa_key_2048_stores_public_key() {
+        let service =
+            BearDogCryptoService::new(test_config()).expect("BearDogCryptoService::new in test");
+        let pk = service
+            .generate_rsa_key("unit-rsa-2048", 2048)
+            .expect("generate rsa 2048");
+        assert!(!pk.is_empty());
+        let loaded = service
+            .get_public_key("unit-rsa-2048")
+            .expect("get public rsa");
+        assert_eq!(loaded, pk);
+    }
+
+    #[tokio::test]
+    async fn test_generate_key_with_explicit_key_id() {
+        let service =
+            BearDogCryptoService::new(test_config()).expect("BearDogCryptoService::new in test");
+        let info = service
+            .generate_key(
+                KeyAlgorithm::Ed25519,
+                KeyGenOptions {
+                    key_id: Some("fixed-id-1".to_string()),
+                    use_hsm: false,
+                    use_genetic: false,
+                    purpose: None,
+                    ..Default::default()
+                },
+            )
+            .await
+            .expect("generate_key");
+        assert_eq!(info.key_id, "fixed-id-1");
+    }
+
+    #[tokio::test]
+    async fn test_get_capabilities_includes_audit_feature_when_enabled() {
+        let mut cfg = test_config();
+        cfg.audit_enabled = true;
+        let service = BearDogCryptoService::new(cfg).expect("BearDogCryptoService::new in test");
+        let caps = service.get_capabilities().await.expect("caps");
+        assert!(caps.features.iter().any(|f| f == "audit"));
+    }
+
+    #[tokio::test]
+    async fn test_get_public_key_missing_errors() {
+        let service =
+            BearDogCryptoService::new(test_config()).expect("BearDogCryptoService::new in test");
+        let err = service
+            .get_public_key("no-such-key")
+            .expect_err("missing pubkey");
+        assert!(err.to_string().contains("not found") || err.to_string().contains("Public key"));
+    }
 }

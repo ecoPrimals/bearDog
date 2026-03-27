@@ -408,19 +408,23 @@ impl MultiTransportServer {
                                 Ok((mut stream, peer)) => {
                                     info!("📥 JSON-RPC connection from {}", peer);
 
-                                    // Handle JSON-RPC in spawned task
+                                    // NDJSON: newline-delimited JSON-RPC per PRIMAL_IPC_PROTOCOL v3.1
                                     tokio::spawn(async move {
-                                        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+                                        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
-                                        let mut buf = vec![0u8; 4096];
-                                        if let Ok(n) = stream.read(&mut buf).await
-                                            && n > 0
-                                        {
-                                            let line = String::from_utf8_lossy(&buf[..n]);
+                                        let (reader, mut writer) = stream.split();
+                                        let mut lines = BufReader::new(reader).lines();
+
+                                        while let Ok(Some(line)) = lines.next_line().await {
+                                            if line.is_empty() {
+                                                continue;
+                                            }
                                             if let Some(response) =
                                                 handle_jsonrpc_request_line(&line)
                                             {
-                                                let _ = stream.write_all(response.as_bytes()).await;
+                                                let mut resp = response;
+                                                resp.push('\n');
+                                                let _ = writer.write_all(resp.as_bytes()).await;
                                             }
                                         }
                                     });

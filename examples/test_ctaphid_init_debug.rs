@@ -33,10 +33,12 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
 
     #[cfg(not(feature = "fido2"))]
     {
-        println!("⚠️  FIDO2 feature not enabled!");
+        println!("FIDO2 feature not enabled.");
         println!("   Run with: cargo run --example test_ctaphid_init_debug --features fido2");
-        return Ok(());
     }
+
+    #[cfg(not(feature = "fido2"))]
+    return Ok(());
 
     #[cfg(feature = "fido2")]
     {
@@ -219,7 +221,7 @@ async fn main() -> Result<(), beardog_errors::BearDogError> {
         println!("   2. Try: sudo chmod 666 /dev/hidraw*");
         println!("   3. Verify device is not locked by another process");
         println!("   4. Try unplugging and replugging the device");
-    }
 
-    Ok(())
+        Ok(())
+    }
 }

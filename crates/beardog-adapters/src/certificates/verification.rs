@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Copyright 2025 EcoPrimals BearDog Team
-// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Certificate verification
 
@@ -8,6 +7,15 @@ use super::types::*;
 use chrono::Utc;
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use std::fmt;
+
+/// License/pricing page URL shown when verification requires a commercial license.
+///
+/// Set at **compile time** with the `BEARDOG_LICENSE_PRICING_URL` environment variable
+/// (e.g. `BEARDOG_LICENSE_PRICING_URL=https://example.com/pricing cargo build -p beardog-adapters`).
+pub const LICENSE_PRICING_URL: &str = match option_env!("BEARDOG_LICENSE_PRICING_URL") {
+    Some(url) => url,
+    None => "https://beardog.dev/pricing",
+};
 
 /// Verifies adapter unlock certificates
 pub struct CertificateVerifier {
@@ -195,7 +203,7 @@ impl fmt::Display for VerificationError {
             Self::LicenseRequired { classification } => {
                 write!(
                     f,
-                    "🔒 License required for {classification} classification. Visit https://beardog.dev/pricing"
+                    "🔒 License required for {classification} classification. Visit {LICENSE_PRICING_URL}"
                 )
             }
             Self::LicenseExpired { expired_at } => {

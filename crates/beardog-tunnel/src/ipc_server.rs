@@ -251,7 +251,9 @@ impl IpcServer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use beardog_core::capabilities::{Capability, CapabilityRequest, ResponseStatus};
+    use beardog_core::capabilities::{
+        Capability, CapabilityRequest, CapabilityResponse, ResponseStatus,
+    };
 
     struct TestHandler;
 
@@ -364,6 +366,33 @@ mod tests {
         let handler: Arc<dyn IpcHandler> = Arc::new(TestHandler);
         let srv = IpcServer::new(p.clone(), handler);
         assert_eq!(srv.socket_path, p);
+    }
+
+    #[test]
+    fn ipc_message_capability_response_roundtrips_json() -> Result<(), BearDogError> {
+        let resp = CapabilityResponse {
+            request_id: "r99".to_string(),
+            status: ResponseStatus::Success,
+            data: Some(serde_json::json!({"ok": true})),
+            error: None,
+        };
+        let msg = IpcMessage::CapabilityResponse(resp);
+        let json = serde_json::to_string(&msg)
+            .map_err(|e| BearDogError::serialization(&format!("cap resp serde: {e}")))?;
+        let back: IpcMessage = serde_json::from_str(&json)
+            .map_err(|e| BearDogError::serialization(&format!("cap resp de: {e}")))?;
+        match back {
+            IpcMessage::CapabilityResponse(r) => {
+                assert_eq!(r.request_id, "r99");
+                assert!(matches!(r.status, ResponseStatus::Success));
+            }
+            other => {
+                return Err(BearDogError::invalid_input(&format!(
+                    "expected CapabilityResponse, got {other:?}"
+                )));
+            }
+        }
+        Ok(())
     }
 
     #[test]

@@ -341,6 +341,8 @@ pub mod intervals {
     pub const GC_INTERVAL: Duration = Duration::from_secs(60);
     /// Periodic cache eviction / TTL sweep
     pub const CACHE_CLEANUP_INTERVAL: Duration = Duration::from_secs(300);
+    /// Default TTL for cached primal discovery results (when `DISCOVERY_CACHE_TTL_SECS` is unset).
+    pub const PRIMAL_DISCOVERY_CACHE_TTL: Duration = Duration::from_secs(300);
     /// Stale connection pool purge interval
     pub const CONNECTION_CLEANUP_INTERVAL: Duration = Duration::from_secs(60);
     /// Temp directory scrub interval

@@ -274,15 +274,94 @@ async fn get_community_usage(template_id: &TemplateId) -> Result<CommunityUsage,
 
 /// Get security assessment
 async fn get_security_assessment(
-    _template_id: &TemplateId,
+    template_id: &TemplateId,
 ) -> Result<SecurityAssessment, BearDogError> {
-    // Planned: Get actual assessment from recent validation runs. For now returns clean assessment.
-    tracing::debug!("Security assessment: returning placeholder (validation integration pending)");
+    let lineage = get_template_lineage(template_id).await?;
+    let community = get_community_usage(template_id).await?;
+
+    let last_scan = lineage_latest_scan_rfc3339(&lineage);
+    let vulnerabilities_found = count_lineage_security_findings(&lineage);
+    let threat_level = threat_level_from_signals(
+        vulnerabilities_found,
+        community.success_rate,
+        community.deployments,
+    );
+
+    tracing::debug!(
+        template_id = %template_id,
+        vulnerabilities_found,
+        threat_level = %threat_level,
+        "Security assessment derived from lineage and community metrics"
+    );
+
     Ok(SecurityAssessment {
-        last_scan: chrono::Utc::now().to_rfc3339(),
-        vulnerabilities_found: 0,
-        threat_level: "none".to_string(),
+        last_scan,
+        vulnerabilities_found,
+        threat_level,
     })
+}
+
+fn lineage_latest_scan_rfc3339(lineage: &[crate::graph_security::types::LineageVersion]) -> String {
+    let mut latest = chrono::Utc::now();
+    for v in lineage {
+        for ts in [v.modified_at.as_deref(), v.created_at.as_deref()] {
+            let Some(s) = ts else {
+                continue;
+            };
+            if let Ok(dt) = chrono::DateTime::parse_from_rfc3339(s) {
+                let utc = dt.with_timezone(&chrono::Utc);
+                if utc > latest {
+                    latest = utc;
+                }
+            }
+        }
+    }
+    latest.to_rfc3339()
+}
+
+/// Counts security-relevant lineage signals: unsigned edits after the initial version and
+/// high-risk change types (best-effort without external scanners).
+fn count_lineage_security_findings(
+    lineage: &[crate::graph_security::types::LineageVersion],
+) -> u32 {
+    let mut n = 0u32;
+    for (idx, v) in lineage.iter().enumerate() {
+        if idx > 0 && v.signature.is_none() {
+            n = n.saturating_add(1);
+        }
+        let ct = v.change_type.to_lowercase();
+        if ct.contains("security") && (ct.contains("issue") || ct.contains("vuln")) {
+            n = n.saturating_add(1);
+        }
+    }
+    n
+}
+
+fn threat_level_from_signals(
+    vulnerabilities_found: u32,
+    success_rate: Option<f64>,
+    deployments: u64,
+) -> String {
+    if vulnerabilities_found > 5 {
+        return "critical".to_string();
+    }
+    if vulnerabilities_found > 0 {
+        return "medium".to_string();
+    }
+    if let Some(rate) = success_rate
+        && rate < 0.75
+    {
+        return "medium".to_string();
+    }
+    if deployments < 3 {
+        return "low".to_string();
+    }
+    if let Some(rate) = success_rate
+        && rate < 0.9
+    {
+        return "low".to_string();
+    }
+    "none".to_string()
 }
 
 /// Calculate overall trust score

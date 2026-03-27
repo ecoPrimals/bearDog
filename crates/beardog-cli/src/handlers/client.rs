@@ -14,7 +14,7 @@ use tokio::net::UnixStream;
 use tracing::{error, info};
 
 fn default_local_socket_parent_dir() -> std::path::PathBuf {
-    std::env::var("BEARDOG_LOCAL_SOCKET_DIR")
+    beardog_errors::process_env::var("BEARDOG_LOCAL_SOCKET_DIR")
         .map_or_else(|_| std::env::temp_dir(), std::path::PathBuf::from)
 }
 
@@ -271,6 +271,9 @@ fn print_help() {
 mod client_handler_tests {
     use super::*;
     use std::collections::HashMap;
+    use std::sync::Mutex;
+
+    static CLIENT_ENV_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn test_build_jsonrpc_request_method_only() {
@@ -309,6 +312,10 @@ mod client_handler_tests {
 
     #[test]
     fn test_discover_socket_path_primal_name() {
+        let _guard = CLIENT_ENV_LOCK
+            .lock()
+            .expect("client env test lock poisoned");
+        beardog_errors::process_env::remove_var("BEARDOG_LOCAL_SOCKET_DIR");
         let mut map = HashMap::new();
         map.insert("PRIMAL_NAME".to_string(), "myprimal".to_string());
         let get = |k: &str| map.get(k).cloned();
@@ -321,6 +328,10 @@ mod client_handler_tests {
 
     #[test]
     fn test_discover_socket_path_beardog_name_fallback() {
+        let _guard = CLIENT_ENV_LOCK
+            .lock()
+            .expect("client env test lock poisoned");
+        beardog_errors::process_env::remove_var("BEARDOG_LOCAL_SOCKET_DIR");
         let mut map = HashMap::new();
         map.insert("BEARDOG_NAME".to_string(), "other".to_string());
         let get = |k: &str| map.get(k).cloned();
@@ -329,6 +340,21 @@ mod client_handler_tests {
             .display()
             .to_string();
         assert_eq!(discover_socket_path_with(get), expected);
+    }
+
+    #[test]
+    fn test_discover_socket_path_uses_beardog_local_socket_dir_env() {
+        let _guard = CLIENT_ENV_LOCK
+            .lock()
+            .expect("client env test lock poisoned");
+        let dir = tempfile::tempdir().expect("tempdir for BEARDOG_LOCAL_SOCKET_DIR test");
+        beardog_errors::process_env::set_var("BEARDOG_LOCAL_SOCKET_DIR", dir.path().as_os_str());
+        let mut map = HashMap::new();
+        map.insert("PRIMAL_NAME".to_string(), "sockname".to_string());
+        let get = |k: &str| map.get(k).cloned();
+        let expected = dir.path().join("sockname.sock").display().to_string();
+        assert_eq!(discover_socket_path_with(get), expected);
+        beardog_errors::process_env::remove_var("BEARDOG_LOCAL_SOCKET_DIR");
     }
 
     #[test]
@@ -394,6 +420,37 @@ mod client_handler_tests {
             .await
             .expect_err("api error");
         assert!(err.to_string().contains("Server error") || err.to_string().contains("error"));
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn test_send_command_invalid_json_response() {
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+        let (client, mut server) =
+            tokio::net::UnixStream::pair().expect("UnixStream::pair for invalid JSON test");
+        tokio::spawn(async move {
+            let mut line = String::new();
+            let mut reader = BufReader::new(&mut server);
+            reader
+                .read_line(&mut line)
+                .await
+                .expect("server read request line");
+            server
+                .write_all(b"not-json\n")
+                .await
+                .expect("server write bad response");
+        });
+
+        let (read_half, mut write_half) = client.into_split();
+        let mut reader = BufReader::new(read_half);
+        let err = send_command(&mut write_half, &mut reader, "crypto.blake3_hash")
+            .await
+            .expect_err("parse response");
+        assert!(
+            err.to_string().contains("parse") || err.to_string().contains("Failed"),
+            "{err}"
+        );
     }
 
     #[cfg(unix)]

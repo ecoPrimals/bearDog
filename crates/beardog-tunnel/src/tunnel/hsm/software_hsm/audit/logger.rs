@@ -5,11 +5,63 @@
 use super::super::types::{AuditLogEntry, AuditLogFilter, AuditLogger, OperationResult};
 use super::storage::PersistentAuditStorage;
 use beardog_errors::BearDogError;
+use chrono::{DateTime, Utc};
+use std::collections::VecDeque;
 use std::fmt::Write as _;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tracing::debug;
 // NOTE: beardog_security::handlers doesn't exist yet - commented out
 // use beardog_security::handlers::audit_management::AuditStatistics;
 use std::sync::Arc;
+use tokio::sync::Mutex;
+
+/// Capacity for the in-memory ring buffer of raw [`beardog_types::hsm::AuditEvent`] records.
+const MEMORY_AUDIT_EVENT_CAP: usize = 10_000;
+
+/// One in-memory audit record with wall-clock ingestion time.
+#[derive(Debug, Clone)]
+pub struct MemoryAuditRecord {
+    /// When the event was recorded into the ring buffer (UTC).
+    pub recorded_at: DateTime<Utc>,
+    /// Original HSM audit event.
+    pub event: beardog_types::hsm::AuditEvent,
+}
+
+fn utc_to_system_time(dt: DateTime<Utc>) -> SystemTime {
+    let secs = dt.timestamp();
+    let nanos = dt.timestamp_subsec_nanos();
+    if secs >= 0 {
+        UNIX_EPOCH + Duration::new(secs as u64, nanos)
+    } else {
+        UNIX_EPOCH
+    }
+}
+
+fn audit_event_to_log_entry(event: &beardog_types::hsm::AuditEvent) -> AuditLogEntry {
+    let timestamp: DateTime<Utc> = event.timestamp.into();
+    let outcome = event
+        .metadata
+        .get("outcome")
+        .map(std::string::String::as_str);
+    let result = match outcome {
+        Some("failure" | "failed" | "error") => OperationResult::Failure(
+            event
+                .metadata
+                .get("error")
+                .cloned()
+                .unwrap_or_else(|| "operation failed".to_string()),
+        ),
+        _ => OperationResult::Success,
+    };
+    AuditLogEntry {
+        timestamp,
+        operation: format!("audit_event:{}", event.event_type),
+        user_id: event.metadata.get("user_id").cloned(),
+        key_id: event.metadata.get("resource").cloned(),
+        result,
+        metadata: event.metadata.clone(),
+    }
+}
 
 /// Context for crypto operations logging
 #[derive(Debug, Clone)]
@@ -34,6 +86,7 @@ pub struct CryptoOperationLog {
 #[derive(Debug, Clone)]
 pub struct DefaultAuditLogger {
     storage: Arc<PersistentAuditStorage>,
+    memory_audit_events: Arc<Mutex<VecDeque<MemoryAuditRecord>>>,
 }
 
 impl DefaultAuditLogger {
@@ -46,16 +99,35 @@ impl DefaultAuditLogger {
     /// Create audit logger with custom storage path
     pub async fn with_storage_path(storage_path: std::path::PathBuf) -> Result<Self, BearDogError> {
         let storage = Arc::new(PersistentAuditStorage::new(storage_path, 10000).await?);
-        Ok(Self { storage })
+        Ok(Self {
+            storage,
+            memory_audit_events: Arc::new(Mutex::new(VecDeque::new())),
+        })
     }
 
-    /// Log an audit event (stub for missing AuditEvent type)
+    /// Log a typed HSM [`beardog_types::hsm::AuditEvent`]: records to a bounded in-memory ring
+    /// buffer (newest entries retained) and persists a normalized [`AuditLogEntry`].
     pub async fn log_audit_event(
         &self,
-        _event: beardog_types::hsm::AuditEvent,
+        event: beardog_types::hsm::AuditEvent,
     ) -> Result<(), BearDogError> {
-        // Stub implementation - convert to AuditLogEntry and log
-        debug!("Logging audit event (stub implementation)");
+        let recorded_at = Utc::now();
+        {
+            let mut q = self.memory_audit_events.lock().await;
+            q.push_back(MemoryAuditRecord {
+                recorded_at,
+                event: event.clone(),
+            });
+            while q.len() > MEMORY_AUDIT_EVENT_CAP {
+                q.pop_front();
+            }
+        }
+        let entry = audit_event_to_log_entry(&event);
+        self.storage.append_entry(&entry).await?;
+        debug!(
+            "Logged audit event type={} (memory buffer len capped at {})",
+            event.event_type, MEMORY_AUDIT_EVENT_CAP
+        );
         Ok(())
     }
 
@@ -218,8 +290,24 @@ impl DefaultAuditLogger {
     pub async fn get_audit_statistics(
         &self,
     ) -> Result<beardog_types::hsm::AuditStatistics, BearDogError> {
-        // Mock implementation - replace with real statistics gathering
-        Ok(beardog_types::hsm::AuditStatistics::new())
+        let filter = AuditLogFilter::default();
+        let entries = self.storage.get_entries(&filter).await?;
+        let mut stats = beardog_types::hsm::AuditStatistics::new();
+        let mut last_activity = SystemTime::UNIX_EPOCH;
+        for entry in &entries {
+            stats.total_operations = stats.total_operations.saturating_add(1);
+            if matches!(entry.result, OperationResult::Failure(_)) {
+                stats.failed_operations = stats.failed_operations.saturating_add(1);
+            }
+            let t = utc_to_system_time(entry.timestamp);
+            if t > last_activity {
+                last_activity = t;
+            }
+        }
+        if stats.total_operations > 0 {
+            stats.last_audit = last_activity;
+        }
+        Ok(stats)
     }
 
     /// Export audit log in specified format
@@ -332,7 +420,8 @@ mod tests {
             .expect("sec");
 
         let stats = logger.get_audit_statistics().await.expect("stats");
-        assert_eq!(stats.total_operations, 0); // mock returns new()
+        assert_eq!(stats.total_operations, 6);
+        assert_eq!(stats.failed_operations, 2);
 
         let json = logger.export_audit_log("json").await.expect("json export");
         assert!(json.starts_with(b"[") || !json.is_empty());
@@ -345,7 +434,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn log_audit_event_stub_ok() {
+    async fn log_audit_event_records_memory_and_storage() {
         let dir = tempdir().expect("tempdir for audit logger test");
         let logger = DefaultAuditLogger::with_storage_path(dir.path().join("a.log"))
             .await
@@ -355,5 +444,7 @@ mod tests {
             .log_audit_event(ev)
             .await
             .expect("default audit event should log");
+        let stats = logger.get_audit_statistics().await.expect("stats");
+        assert_eq!(stats.total_operations, 1);
     }
 }

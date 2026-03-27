@@ -397,3 +397,42 @@ fn test_derive_entropy_bytes_includes_scroll_deltas() {
     let out = InteractionEntropyCollector::derive_entropy_bytes(&events, &metrics);
     assert_eq!(out.len(), 32);
 }
+
+#[test]
+fn test_calculate_metrics_all_keyboard_no_mouse_events() {
+    let events: Vec<InteractionEvent> = (0..4)
+        .map(|i| InteractionEvent {
+            interaction_type: InteractionType::KeyPress,
+            timestamp_nanos: (i as u128) * 5_000_000,
+            data: InteractionData::Keyboard {
+                is_char: true,
+                is_modifier: false,
+            },
+        })
+        .collect();
+    let m = InteractionEntropyCollector::calculate_metrics(&events, 100);
+    assert_eq!(m.keyboard_events, 4);
+    assert_eq!(m.mouse_events, 0);
+    assert_eq!(m.movement_entropy, 0.5);
+}
+
+#[test]
+fn test_shannon_entropy_two_buckets() {
+    let intervals = vec![0.0_f64, 50.0, 100.0];
+    let e = InteractionEntropyCollector::calculate_shannon_entropy(&intervals);
+    assert!(e > 0.0 && e <= 1.0);
+}
+
+#[test]
+fn test_calculate_movement_entropy_single_mouse_sample() {
+    let events = vec![InteractionEvent {
+        interaction_type: InteractionType::MouseMove,
+        timestamp_nanos: 0,
+        data: InteractionData::Mouse {
+            delta_x: 10,
+            delta_y: -10,
+        },
+    }];
+    let m = InteractionEntropyCollector::calculate_movement_entropy(&events);
+    assert_eq!(m, 0.0);
+}

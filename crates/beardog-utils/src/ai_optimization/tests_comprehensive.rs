@@ -43,7 +43,7 @@ fn test_resource_predictor_multiple_samples() {
     let mut predictor = ResourcePredictor::new(5).expect("ResourcePredictor::new");
 
     for i in 1..=10 {
-        let result = predictor.add_sample(i as f64, i as f64 * 2.0, i as f64 * 0.5);
+        let result = predictor.add_sample(f64::from(i), f64::from(i) * 2.0, f64::from(i) * 0.5);
         assert!(result.is_ok());
     }
 }
@@ -113,7 +113,7 @@ fn test_window_size_limiting() {
     // Add more samples than window size
     for i in 1..=5 {
         predictor
-            .add_sample(i as f64 * 10.0, i as f64 * 20.0, i as f64)
+            .add_sample(f64::from(i) * 10.0, f64::from(i) * 20.0, f64::from(i))
             .expect("add_sample");
     }
 
@@ -138,7 +138,7 @@ fn test_get_trend_cpu() {
     // Add increasing trend with enough samples for proper comparison
     for i in 1..=20 {
         predictor
-            .add_sample(i as f64 * 10.0, 50.0, 10.0)
+            .add_sample(f64::from(i) * 10.0, 50.0, 10.0)
             .expect("add_sample");
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
@@ -162,7 +162,7 @@ fn test_get_trend_memory() {
     // TEST_PRIORITY: normal
     for i in 1..=20 {
         predictor
-            .add_sample(50.0, i as f64 * 5.0, 10.0)
+            .add_sample(50.0, f64::from(i) * 5.0, 10.0)
             .expect("add_sample");
     }
 
@@ -182,7 +182,7 @@ fn test_get_trend_network() {
     // TEST_PRIORITY: normal
     for i in 1..=20 {
         predictor
-            .add_sample(50.0, 60.0, i as f64 * 2.0)
+            .add_sample(50.0, 60.0, f64::from(i) * 2.0)
             .expect("add_sample");
     }
 

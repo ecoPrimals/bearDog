@@ -81,7 +81,7 @@ impl ProductionUniversalAdapter {
     ) -> Result<serde_json::Value, BearDogError> {
         // Log the attempted operation for debugging
         tracing::warn!(
-            "⚠️ execute_on_system called but not implemented: system={}, operation={}",
+            "execute_on_system called but not implemented: system={}, operation={}",
             system,
             operation
         );

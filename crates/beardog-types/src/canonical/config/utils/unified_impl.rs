@@ -510,3 +510,48 @@ impl UnifiedConfigUtils {
         }
     }
 }
+
+#[cfg(test)]
+mod unified_impl_coverage_tests {
+    use super::UnifiedConfigUtils;
+    use serde_json::json;
+
+    #[test]
+    fn merge_configs_recurses_into_nested_objects() {
+        let base = json!({
+            "outer": { "a": 1, "b": { "x": 10, "y": 20 } },
+            "keep": true
+        });
+        let override_config = json!({
+            "outer": { "b": { "y": 99, "z": 3 } },
+            "new": "field"
+        });
+        let merged: serde_json::Value =
+            UnifiedConfigUtils::merge_configs(base, override_config).expect("merge");
+        assert_eq!(merged["outer"]["a"], 1);
+        assert_eq!(merged["outer"]["b"]["x"], 10);
+        assert_eq!(merged["outer"]["b"]["y"], 99);
+        assert_eq!(merged["outer"]["b"]["z"], 3);
+        assert_eq!(merged["keep"], true);
+        assert_eq!(merged["new"], "field");
+    }
+
+    #[test]
+    fn merge_configs_non_object_override_replaces_entire_subtree() {
+        let base = json!({ "k": { "nested": 1 } });
+        let override_config = json!({ "k": "scalar" });
+        let merged: serde_json::Value =
+            UnifiedConfigUtils::merge_configs(base, override_config).expect("merge");
+        assert_eq!(merged["k"], "scalar");
+    }
+
+    #[test]
+    fn get_standard_config_paths_includes_home_and_etc_entries() {
+        let paths = UnifiedConfigUtils::get_standard_config_paths("myapp-ci");
+        assert!(paths.iter().any(|p| p.ends_with("myapp-ci.toml")));
+        assert!(paths.iter().any(|p| {
+            p.components()
+                .any(|c| c.as_os_str() == ".config" || c.as_os_str() == "etc")
+        }));
+    }
+}

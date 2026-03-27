@@ -93,7 +93,7 @@ impl MethodHandler for HealthHandler {
         match method {
             // Liveness: minimal, fast — "am I alive?"
             "ping" | "health" | "health.liveness" => {
-                info!("🏥 Liveness probe");
+                info!(probe = "liveness", "Health handler");
                 Ok(serde_json::json!({
                     "status": "alive",
                     "primal": primal,
@@ -102,7 +102,7 @@ impl MethodHandler for HealthHandler {
             }
             // Readiness: "can I serve requests?"
             "health.readiness" => {
-                info!("🏥 Readiness probe");
+                info!(probe = "readiness", "Health handler");
                 Ok(serde_json::json!({
                     "status": "ready",
                     "primal": primal,
@@ -113,7 +113,7 @@ impl MethodHandler for HealthHandler {
             }
             // Deep check: full health with timestamp
             _ => {
-                info!("🏥 Health check requested");
+                info!(probe = "deep_check", "Health handler");
                 Ok(serde_json::json!({
                     "status": "healthy",
                     "primal": primal,

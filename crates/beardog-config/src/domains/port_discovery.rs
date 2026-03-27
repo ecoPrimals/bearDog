@@ -238,23 +238,19 @@ impl PortDiscoverer {
             }
         }
 
-        // Phase 2: mDNS discovery (future implementation)
-        // Will be enabled when mdns feature is added to Cargo.toml
-        // For now, this is a placeholder for future integration
-        #[allow(unreachable_code)]
-        {
-            if false {
-                // This code path is not yet active
-                match self.query_mdns_primal_ports().await {
-                    Ok(ports) => {
-                        tracing::debug!("Discovered {} primal ports via mDNS", ports.len());
-                        used_ports.extend(ports);
-                    }
-                    Err(e) => {
-                        tracing::debug!("mDNS discovery not available: {}", e);
-                        // Not an error - mDNS may not be available in all environments
-                    }
+        // Phase 2: merge ports from mDNS hooks / sidecar announcements (env-driven, no extra deps)
+        match self.query_mdns_primal_ports().await {
+            Ok(ports) => {
+                if !ports.is_empty() {
+                    tracing::debug!(
+                        "Merged {} port(s) from BEARDOG_DISCOVERED_PRIMAL_PORTS / mDNS hook",
+                        ports.len()
+                    );
                 }
+                used_ports.extend(ports);
+            }
+            Err(e) => {
+                tracing::debug!("Primal announcement port discovery: {}", e);
             }
         }
 
@@ -380,16 +376,33 @@ impl PortDiscoverer {
 
     /// Query primal ports via mDNS (Phase 2 implementation)
     ///
-    /// This will be fully implemented when mDNS feature is added.
-    /// For now, it's a placeholder that returns an empty set.
+    /// Full in-process mDNS browsing can be added behind a crate feature later. Production
+    /// deployments often expose discovered ports via environment (sidecar or init) — we merge
+    /// `BEARDOG_DISCOVERED_PRIMAL_PORTS` (comma-separated) so port selection avoids conflicts
+    /// without extra dependencies.
     async fn query_mdns_primal_ports(&self) -> Result<HashSet<u16>, BearDogError> {
-        // FUTURE: When mdns feature is enabled in Cargo.toml:
-        // 1. Initialize mDNS service browser
-        // 2. Query for _beardog._tcp.local services
-        // 3. Parse TXT records for port information
-        // 4. Return discovered ports
-        tracing::debug!("mDNS primal discovery not yet implemented");
-        Ok(HashSet::new())
+        let mut ports = HashSet::new();
+        if let Ok(s) = std::env::var("BEARDOG_DISCOVERED_PRIMAL_PORTS") {
+            for part in s.split(',') {
+                let p = part.trim();
+                if p.is_empty() {
+                    continue;
+                }
+                match p.parse::<u16>() {
+                    Ok(port) => {
+                        ports.insert(port);
+                    }
+                    Err(e) => {
+                        tracing::warn!(
+                            "BEARDOG_DISCOVERED_PRIMAL_PORTS: ignored invalid port {:?}: {}",
+                            p,
+                            e
+                        );
+                    }
+                }
+            }
+        }
+        Ok(ports)
     }
 
     /// Find any available port from system

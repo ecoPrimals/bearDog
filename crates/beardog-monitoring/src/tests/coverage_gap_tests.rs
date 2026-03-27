@@ -174,7 +174,9 @@ fn test_trend_analyzer_increasing_trend() {
     let config = TrendConfig::default();
     let analyzer = TrendAnalyzer::new(config);
 
-    let metrics: Vec<MetricDataPoint> = (0..10).map(|i| make_data_point(i as f64 * 10.0)).collect();
+    let metrics: Vec<MetricDataPoint> = (0..10)
+        .map(|i| make_data_point(f64::from(i) * 10.0))
+        .collect();
 
     let trend = analyzer.analyze_trends(&metrics);
     assert_eq!(trend.direction, TrendDirection::Increasing);
@@ -187,7 +189,7 @@ fn test_trend_analyzer_decreasing_trend() {
     let analyzer = TrendAnalyzer::new(config);
 
     let metrics: Vec<MetricDataPoint> = (0..10)
-        .map(|i| make_data_point((i as f64).mul_add(-10.0, 100.0)))
+        .map(|i| make_data_point(f64::from(i).mul_add(-10.0, 100.0)))
         .collect();
 
     let trend = analyzer.analyze_trends(&metrics);
@@ -211,7 +213,9 @@ fn test_trend_analyzer_more_than_10_points_uses_last_10() {
     let config = TrendConfig::default();
     let analyzer = TrendAnalyzer::new(config);
 
-    let metrics: Vec<MetricDataPoint> = (0..20).map(|i| make_data_point(i as f64 * 5.0)).collect();
+    let metrics: Vec<MetricDataPoint> = (0..20)
+        .map(|i| make_data_point(f64::from(i) * 5.0))
+        .collect();
 
     let trend = analyzer.analyze_trends(&metrics);
     assert_eq!(trend.direction, TrendDirection::Increasing);

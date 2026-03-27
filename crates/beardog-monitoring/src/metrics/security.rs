@@ -6,17 +6,31 @@
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
+use std::sync::Mutex;
 
 /// Records security-category [`super::MetricEvent`] values and exposes aggregate counters.
 #[derive(Debug)]
 pub struct SecurityMetricsEngine {
     _config: SecurityMetricsConfig,
+    state: Mutex<SecurityState>,
+}
+
+#[derive(Debug, Default)]
+struct SecurityState {
+    failed_auth_attempts: u64,
+    successful_auths: u64,
+    blocked_requests: u64,
+    /// Events seen (for threat level normalization).
+    total_events: u64,
 }
 
 impl SecurityMetricsEngine {
     /// Creates a new instance
-    pub const fn new(config: SecurityMetricsConfig) -> Result<Self, BearDogError> {
-        Ok(Self { _config: config })
+    pub fn new(config: SecurityMetricsConfig) -> Result<Self, BearDogError> {
+        Ok(Self {
+            _config: config,
+            state: Mutex::new(SecurityState::default()),
+        })
     }
 
     /// Starts service
@@ -26,21 +40,53 @@ impl SecurityMetricsEngine {
         Ok(())
     }
 
-    /// Records a security-category event (placeholder for future correlation).
-    pub const fn record_event(&self, _event: &super::MetricEvent) -> Result<(), BearDogError> {
-        // Security event processing logic
+    /// Records a security-category event and updates aggregate counters / threat signals.
+    pub fn record_event(&self, event: &super::MetricEvent) -> Result<(), BearDogError> {
+        let mut state = self
+            .state
+            .lock()
+            .map_err(|_| BearDogError::system("security metrics lock poisoned".to_string()))?;
+        state.total_events = state.total_events.saturating_add(1);
+        let name = event.name.to_lowercase();
+        let delta = match &event.value {
+            super::MetricValue::Counter(c) => *c,
+            super::MetricValue::Gauge(g) => g.round() as u64,
+            super::MetricValue::Histogram(h) => h.len() as u64,
+            super::MetricValue::Summary { count, .. } => *count,
+        };
+        if name.contains("auth") && (name.contains("fail") || name.contains("failure")) {
+            state.failed_auth_attempts = state.failed_auth_attempts.saturating_add(delta);
+        } else if name.contains("auth") && name.contains("success") {
+            state.successful_auths = state.successful_auths.saturating_add(delta);
+        } else if name.contains("blocked") {
+            state.blocked_requests = state.blocked_requests.saturating_add(delta);
+        }
         Ok(())
     }
 
     /// Gets metrics
     /// Gets metrics
-    pub const fn get_metrics(&self) -> Result<SecurityMetrics, BearDogError> {
+    pub fn get_metrics(&self) -> Result<SecurityMetrics, BearDogError> {
+        let state = self
+            .state
+            .lock()
+            .map_err(|_| BearDogError::system("security metrics lock poisoned".to_string()))?;
+        let threat_level = if state.total_events == 0 {
+            0.0
+        } else {
+            let num = 0.5f64.mul_add(
+                state.blocked_requests as f64,
+                state.failed_auth_attempts as f64,
+            );
+            (num / state.total_events as f64).min(1.0)
+        };
+        let compliance_score = 0.5f64.mul_add(-threat_level, 1.0).clamp(0.0, 1.0);
         Ok(SecurityMetrics {
-            failed_auth_attempts: 5,
-            successful_auths: 1250,
-            blocked_requests: 12,
-            threat_level: 0.2,
-            compliance_score: 0.95,
+            failed_auth_attempts: state.failed_auth_attempts,
+            successful_auths: state.successful_auths,
+            blocked_requests: state.blocked_requests,
+            threat_level,
+            compliance_score,
         })
     }
 }

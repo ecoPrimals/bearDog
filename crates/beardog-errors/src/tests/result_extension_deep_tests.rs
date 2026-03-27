@@ -85,14 +85,14 @@ fn option_ok_or_missing_required() {
 
 #[test]
 fn error_chain_with_context() {
-    let e = std::io::Error::new(std::io::ErrorKind::Other, "root");
+    let e = std::io::Error::other("root");
     let b: BearDogError = e.chain_with_context("wrapped");
     assert!(b.to_string().contains("wrapped"));
 }
 
 #[test]
 fn error_chain_with_lazy_context() {
-    let e = std::io::Error::new(std::io::ErrorKind::Other, "root");
+    let e = std::io::Error::other("root");
     let b: BearDogError = e.chain_with_lazy_context(|| "lazy".to_string());
     assert!(b.to_string().contains("lazy"));
 }

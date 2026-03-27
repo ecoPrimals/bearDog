@@ -305,7 +305,7 @@ impl BtspHandler {
             params.peer_id, params.peer_endpoint
         );
         info!(
-            "📡 External mode (HTTPS) is not implemented in BearDog; use the calling primal's BTSP external mode API (Tower Atomic pattern)"
+            "External mode (HTTPS) is not implemented in BearDog; use the calling primal's BTSP external mode API (Tower Atomic pattern)"
         );
 
         Err(format!(

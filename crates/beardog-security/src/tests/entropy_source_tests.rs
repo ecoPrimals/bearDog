@@ -36,7 +36,7 @@ mod tests {
         }
 
         // Check basic distribution properties
-        let avg: f64 = values.iter().map(|&x| x as f64).sum::<f64>() / values.len() as f64;
+        let avg: f64 = values.iter().map(|&x| f64::from(x)).sum::<f64>() / values.len() as f64;
 
         // Average should be near 127.5 for uniform distribution
         assert!(

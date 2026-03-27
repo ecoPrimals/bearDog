@@ -69,7 +69,7 @@ fn test_performance_monitor_summary_with_history() {
     // Add some performance data
     for i in 0..20 {
         let metrics = PerformanceMetrics {
-            avg_response_time_ms: 10.0 + (i as f64),
+            avg_response_time_ms: 10.0 + f64::from(i),
             p95_response_time_ms: 20.0,
             p99_response_time_ms: 30.0,
             requests_per_second: 100.0,
@@ -106,7 +106,7 @@ fn test_performance_monitor_history_retention() {
     // Add more than the 1000 limit
     for i in 0..1200 {
         let metrics = PerformanceMetrics {
-            avg_response_time_ms: i as f64,
+            avg_response_time_ms: f64::from(i),
             p95_response_time_ms: 20.0,
             p99_response_time_ms: 30.0,
             // TEST_CATEGORY: integration

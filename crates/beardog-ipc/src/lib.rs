@@ -184,31 +184,36 @@ impl IpcSocketDiscoveryOptions {
 #[must_use]
 pub fn resolve_ipc_socket_from_options(opts: &IpcSocketDiscoveryOptions) -> String {
     if let Some(socket) = &opts.ipc_socket {
-        tracing::info!("📡 IPC socket from IPC_SOCKET env: {}", socket);
+        tracing::info!(source = "IPC_SOCKET", socket = %socket, "IPC socket resolved");
         return socket.clone();
     }
 
     if let Some(socket) = &opts.discovery_socket {
-        tracing::info!("📡 IPC socket from DISCOVERY_SOCKET env: {}", socket);
+        tracing::info!(source = "DISCOVERY_SOCKET", socket = %socket, "IPC socket resolved");
         return socket.clone();
     }
 
     if let Some(svc) = opts.ipc_capability_services.first() {
         let path = beardog_discovery::primary_url_to_ipc_socket_path(&svc.endpoint.primary_url);
         if !path.is_empty() {
-            tracing::info!("📡 IPC socket from capability discovery (ipc): {}", path);
+            tracing::info!(source = "capability_ipc", socket = %path, "IPC socket resolved");
             return path;
         }
     }
 
     if let Some(dev) = &opts.beardog_dev_discovery_socket {
-        tracing::info!("📡 IPC socket from BEARDOG_DEV_DISCOVERY_SOCKET: {}", dev);
+        tracing::info!(
+            source = "BEARDOG_DEV_DISCOVERY_SOCKET",
+            socket = %dev,
+            "IPC socket resolved"
+        );
         return dev.clone();
     }
 
     tracing::debug!(
-        "📡 IPC socket using fallback: {}",
-        DISCOVERY_SOCKET_FALLBACK
+        source = "fallback",
+        socket = DISCOVERY_SOCKET_FALLBACK,
+        "IPC socket resolved"
     );
     DISCOVERY_SOCKET_FALLBACK.to_string()
 }
@@ -246,8 +251,9 @@ pub fn ipc_resolve_target_param_key() -> String {
     )
 }
 
-/// Default heartbeat interval (30 seconds)
-pub const DEFAULT_HEARTBEAT_INTERVAL: std::time::Duration = std::time::Duration::from_secs(30);
+/// Default heartbeat interval (aligned with [`beardog_types::constants::domains::system::intervals::HEARTBEAT_INTERVAL`]).
+pub const DEFAULT_HEARTBEAT_INTERVAL: std::time::Duration =
+    beardog_types::constants::domains::system::intervals::HEARTBEAT_INTERVAL;
 
 #[cfg(test)]
 mod tests {

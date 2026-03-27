@@ -196,67 +196,6 @@ impl BearDogGenetics {
     // Other methods moved to genetics_impl.rs
 }
 
-// Note: The rest of the implementation below was moved to genetics_impl.rs
-// for better organization. This comment section can be removed in cleanup.
-
-impl BearDogGenetics {
-    // Placeholder to prevent compilation errors - real impl in genetics_impl.rs
-    /*
-        let genetics = Self {
-            id: format!("key-{}", uuid::Uuid::new_v4()),
-            crypto_chromosomes: vec![],
-            security_traits: SecurityTraits::default(),
-            capabilities: vec![],
-            spawn_restrictions: vec![],
-            generation: parent_genetics.first().map_or(0, |p| p.generation + 1),
-            parent_genetics: if parent_genetics.is_empty() {
-                None
-            } else {
-                Some(parent_genetics.iter().map(|p| p.id.clone()).collect())
-            },
-            mutations: vec![],
-            fitness_score: 0.8,
-            security_clearance: SecurityClearance::Medium,
-            specializations: vec![NodeSpecialization::GeneralPurpose],
-            constraints: Some(constraints),
-            constraint_signature: Some(signature.to_bytes().to_vec()),
-            public_key: Some(signing_key.verifying_key().to_bytes().to_vec()),
-        };
-
-        Ok(genetics)
-    }
-
-    /// Verify that an operation is allowed by this key's constraints
-    ///
-    /// This is the core enforcement method. It:
-    /// 1. Verifies the constraint signature (detects tampering)
-    /// 2. Checks if the operation violates any constraints
-    ///
-    /// # Errors
-    ///
-    /// Returns error if:
-    /// - Constraints have been tampered with
-    /// - Operation violates any constraint
-    /// - Key has expired
-    /// - Required co-signers are missing
-    ///
-    /// # Example
-    ///
-    /// ```rust,ignore
-    /// use beardog_genetics::genetics::constraints::KeyOperation;
-    ///
-    /// let delete_op = KeyOperation::Delete {
-    ///     path: "protected/data.txt".to_string(),
-    /// };
-    ///
-    /// match key.verify_operation(&delete_op) {
-    ///     Ok(()) => println!("Operation allowed"),
-    ///     Err(e) => println!("Operation blocked: {}", e),
-    /// }
-    /// ```
-    */ // End placeholder - real impl in genetics_impl.rs
-}
-
 /// Describes one cryptographic primitive family and its relative cost/security posture.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptoChromosome {
