@@ -85,3 +85,6 @@ workspace = true
 
 [dependencies.zeroize]
 workspace = true
+
+[dev-dependencies]
+anyhow = { workspace = true }

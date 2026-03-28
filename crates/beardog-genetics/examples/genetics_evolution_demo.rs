@@ -6,6 +6,7 @@
 // from horizontal gene transfer integration across ecosystem primals,
 // using only the beardog-genetics crate directly.
 
+use anyhow::Result;
 use beardog_genetics::ecosystem_evolution::{
     BinaryAccessPattern, BinaryTrust, CoordinationModel, EcosystemGeneticEngine,
     EcosystemMembership, HierarchicalPattern, TrustEvolution, migrate_from_binary_patterns,
@@ -13,7 +14,7 @@ use beardog_genetics::ecosystem_evolution::{
 use beardog_types::canonical::HealthStatus;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     println!("🧬 BearDog Pure Genetics Evolution Demonstration");
     println!("===============================================");
     println!("🌱 Showcasing Horizontal Gene Transfer Across Ecosystem Primals");

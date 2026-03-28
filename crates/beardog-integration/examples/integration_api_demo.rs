@@ -5,11 +5,12 @@
 //!
 //! Run with: `cargo run -p beardog-integration --example integration_api_demo`
 
+use anyhow::Result;
 use beardog_integration::IntegrationConfig;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     // Initialize tracing
     tracing_subscriber::registry()
         .with(

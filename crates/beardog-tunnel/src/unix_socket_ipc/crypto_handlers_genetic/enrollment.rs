@@ -21,6 +21,7 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
 use hkdf::Hkdf;
+use serde::Deserialize;
 use serde_json::{Value, json};
 use sha2::Sha256;
 use tracing::{debug, info, warn};
@@ -36,12 +37,13 @@ use tracing::{debug, info, warn};
 ///
 /// # Performance
 /// - Expected: < 200μs (HKDF-SHA256)
-pub async fn handle_derive_device_seed(params: Value) -> Result<Value, BearDogError> {
+pub async fn handle_derive_device_seed(params: &Value) -> Result<Value, BearDogError> {
     debug!("🧬 RPC: genetic.derive_device_seed");
 
-    let request: DeriveDeviceSeedRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid derive_device_seed params: {e}"))
-    })?;
+    let request: DeriveDeviceSeedRequest =
+        DeriveDeviceSeedRequest::deserialize(params).map_err(|e| {
+            BearDogError::invalid_input(&format!("Invalid derive_device_seed params: {e}"))
+        })?;
 
     let root_seed = BASE64.decode(&request.root_seed).map_err(|e| {
         BearDogError::invalid_input(&format!("Invalid root_seed (not base64): {e}"))
@@ -112,12 +114,13 @@ pub async fn handle_derive_device_seed(params: Value) -> Result<Value, BearDogEr
 ///
 /// # Performance
 /// - Expected: < 500μs (Ed25519 sign)
-pub async fn handle_sign_lineage_certificate(params: Value) -> Result<Value, BearDogError> {
+pub async fn handle_sign_lineage_certificate(params: &Value) -> Result<Value, BearDogError> {
     debug!("🧬 RPC: genetic.sign_lineage_certificate");
 
-    let request: SignLineageCertificateRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid sign_lineage_certificate params: {e}"))
-    })?;
+    let request: SignLineageCertificateRequest = SignLineageCertificateRequest::deserialize(params)
+        .map_err(|e| {
+            BearDogError::invalid_input(&format!("Invalid sign_lineage_certificate params: {e}"))
+        })?;
 
     let parent_seed = BASE64.decode(&request.parent_seed).map_err(|e| {
         BearDogError::invalid_input(&format!("Invalid parent_seed (not base64): {e}"))
@@ -211,12 +214,13 @@ pub async fn handle_sign_lineage_certificate(params: Value) -> Result<Value, Bea
 ///
 /// # Performance
 /// - Expected: < 300μs (Ed25519 verify)
-pub async fn handle_verify_lineage_certificate(params: Value) -> Result<Value, BearDogError> {
+pub async fn handle_verify_lineage_certificate(params: &Value) -> Result<Value, BearDogError> {
     debug!("🔍 RPC: genetic.verify_lineage_certificate");
 
-    let request: VerifyLineageCertificateRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid verify_lineage_certificate params: {e}"))
-    })?;
+    let request: VerifyLineageCertificateRequest =
+        VerifyLineageCertificateRequest::deserialize(params).map_err(|e| {
+            BearDogError::invalid_input(&format!("Invalid verify_lineage_certificate params: {e}"))
+        })?;
 
     let cert = &request.certificate;
 
@@ -347,7 +351,7 @@ mod tests {
             "device_id": "pixel8a",
         });
 
-        let result = handle_derive_device_seed(params).await?;
+        let result = handle_derive_device_seed(&params).await?;
         let response: DeriveDeviceSeedResponse = serde_json::from_value(result)?;
 
         assert_eq!(response.device_id, "pixel8a");
@@ -371,14 +375,14 @@ mod tests {
         let entropy1 = BASE64.encode(b"usb_desktop_entropy_1234567890!!");
         let entropy2 = BASE64.encode(b"pixel8a_mobile_entropy_987654!!");
 
-        let result1 = handle_derive_device_seed(json!({
+        let result1 = handle_derive_device_seed(&json!({
             "root_seed": root_seed.clone(),
             "device_entropy": entropy1,
             "device_id": "usb-desktop",
         }))
         .await?;
 
-        let result2 = handle_derive_device_seed(json!({
+        let result2 = handle_derive_device_seed(&json!({
             "root_seed": root_seed,
             "device_entropy": entropy2,
             "device_id": "pixel8a",
@@ -412,9 +416,9 @@ mod tests {
         });
 
         let resp1: DeriveDeviceSeedResponse =
-            serde_json::from_value(handle_derive_device_seed(params.clone()).await?)?;
+            serde_json::from_value(handle_derive_device_seed(&params).await?)?;
         let resp2: DeriveDeviceSeedResponse =
-            serde_json::from_value(handle_derive_device_seed(params).await?)?;
+            serde_json::from_value(handle_derive_device_seed(&params).await?)?;
 
         assert_eq!(
             resp1.device_seed, resp2.device_seed,
@@ -432,7 +436,7 @@ mod tests {
         let child_signing_key = SigningKey::from_bytes(&[42u8; 32]);
         let child_public_key = BASE64.encode(child_signing_key.verifying_key().to_bytes());
 
-        let sign_result = handle_sign_lineage_certificate(json!({
+        let sign_result = handle_sign_lineage_certificate(&json!({
             "parent_seed": parent_seed,
             "parent_device_id": "usb-desktop",
             "child_public_key": child_public_key,
@@ -447,7 +451,7 @@ mod tests {
         assert_eq!(sign_response.certificate.parent_device_id, "usb-desktop");
         assert_eq!(sign_response.certificate.child_device_id, "pixel8a");
 
-        let verify_result = handle_verify_lineage_certificate(json!({
+        let verify_result = handle_verify_lineage_certificate(&json!({
             "certificate": sign_response.certificate,
             "expected_family_id": "8ff3b864a4bc589a",
             "trust_anchors": [],
@@ -474,7 +478,7 @@ mod tests {
         let child_key = SigningKey::from_bytes(&[99u8; 32]);
         let child_pubkey = BASE64.encode(child_key.verifying_key().to_bytes());
 
-        let sign_result = handle_sign_lineage_certificate(json!({
+        let sign_result = handle_sign_lineage_certificate(&json!({
             "parent_seed": parent_seed,
             "parent_device_id": "device-a",
             "child_public_key": child_pubkey,
@@ -484,7 +488,7 @@ mod tests {
         .await?;
         let sign_response: SignLineageCertificateResponse = serde_json::from_value(sign_result)?;
 
-        let verify_result = handle_verify_lineage_certificate(json!({
+        let verify_result = handle_verify_lineage_certificate(&json!({
             "certificate": sign_response.certificate,
             "expected_family_id": "family_bbb",
             "trust_anchors": [],
@@ -504,7 +508,7 @@ mod tests {
         let short_seed = BASE64.encode(b"only_16_bytes!!");
         let device_entropy = BASE64.encode(b"device_entropy_data_32_bytes!!!!");
 
-        let result = handle_derive_device_seed(json!({
+        let result = handle_derive_device_seed(&json!({
             "root_seed": short_seed,
             "device_entropy": device_entropy,
             "device_id": "test-device",
@@ -528,7 +532,7 @@ mod tests {
             let device_id = format!("device-{}", i);
 
             tasks.spawn(async move {
-                handle_derive_device_seed(json!({
+                handle_derive_device_seed(&json!({
                     "root_seed": root,
                     "device_entropy": entropy,
                     "device_id": device_id,
@@ -567,7 +571,7 @@ mod tests {
         let root_seed = BASE64.encode(b"genesis_root_seed_for_e2e_test!!");
 
         // Genesis derives its device seed
-        let genesis_result = handle_derive_device_seed(json!({
+        let genesis_result = handle_derive_device_seed(&json!({
             "root_seed": root_seed.clone(),
             "device_entropy": BASE64.encode(b"genesis_device_hardware_entropy!"),
             "device_id": "genesis-device",
@@ -576,7 +580,7 @@ mod tests {
         let genesis_seed: DeriveDeviceSeedResponse = serde_json::from_value(genesis_result)?;
 
         // USB Tower derives its device seed
-        let usb_result = handle_derive_device_seed(json!({
+        let usb_result = handle_derive_device_seed(&json!({
             "root_seed": root_seed.clone(),
             "device_entropy": BASE64.encode(b"usb_tower_hardware_entropy_here!"),
             "device_id": "usb-tower",
@@ -595,7 +599,7 @@ mod tests {
         );
         let usb_pubkey = BASE64.encode(usb_signing_key.verifying_key().to_bytes());
 
-        let cert_result = handle_sign_lineage_certificate(json!({
+        let cert_result = handle_sign_lineage_certificate(&json!({
             "parent_seed": genesis_seed.device_seed,
             "parent_device_id": "genesis-device",
             "child_public_key": usb_pubkey,
@@ -605,7 +609,7 @@ mod tests {
         .await?;
         let usb_cert: SignLineageCertificateResponse = serde_json::from_value(cert_result)?;
 
-        let verify_result = handle_verify_lineage_certificate(json!({
+        let verify_result = handle_verify_lineage_certificate(&json!({
             "certificate": usb_cert.certificate,
             "expected_family_id": "test-family-e2e",
             "trust_anchors": [],
@@ -619,13 +623,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_derive_device_seed_invalid_json() {
-        let r = handle_derive_device_seed(json!("not-an-object")).await;
+        let r = handle_derive_device_seed(&json!("not-an-object")).await;
         assert!(r.is_err());
     }
 
     #[tokio::test]
     async fn test_derive_device_seed_short_device_entropy() {
-        let r = handle_derive_device_seed(json!({
+        let r = handle_derive_device_seed(&json!({
             "root_seed": BASE64.encode([1u8; 32]),
             "device_entropy": BASE64.encode([2u8; 8]),
             "device_id": "x",
@@ -639,7 +643,7 @@ mod tests {
         let root = BASE64.encode([3u8; 32]);
         let ent = BASE64.encode([4u8; 16]);
         let a: DeriveDeviceSeedResponse = serde_json::from_value(
-            handle_derive_device_seed(json!({
+            handle_derive_device_seed(&json!({
                 "root_seed": root.clone(),
                 "device_entropy": ent.clone(),
                 "device_id": "dev",
@@ -650,7 +654,7 @@ mod tests {
         )
         .expect("parse");
         let b: DeriveDeviceSeedResponse = serde_json::from_value(
-            handle_derive_device_seed(json!({
+            handle_derive_device_seed(&json!({
                 "root_seed": root,
                 "device_entropy": ent,
                 "device_id": "dev",
@@ -670,7 +674,7 @@ mod tests {
         let child = SigningKey::from_bytes(&[6u8; 32]);
         let child_pk = BASE64.encode(child.verifying_key().to_bytes());
 
-        let sign = handle_sign_lineage_certificate(json!({
+        let sign = handle_sign_lineage_certificate(&json!({
             "parent_seed": parent_seed,
             "parent_device_id": "p",
             "child_public_key": child_pk,
@@ -681,7 +685,7 @@ mod tests {
         .await?;
         let resp: SignLineageCertificateResponse = serde_json::from_value(sign)?;
 
-        let verify = handle_verify_lineage_certificate(json!({
+        let verify = handle_verify_lineage_certificate(&json!({
             "certificate": resp.certificate,
             "expected_family_id": "fam",
             "trust_anchors": [],
@@ -701,7 +705,7 @@ mod tests {
         let child = SigningKey::from_bytes(&[8u8; 32]);
         let child_pk = BASE64.encode(child.verifying_key().to_bytes());
 
-        let sign = handle_sign_lineage_certificate(json!({
+        let sign = handle_sign_lineage_certificate(&json!({
             "parent_seed": parent_seed,
             "parent_device_id": "p",
             "child_public_key": child_pk,
@@ -714,7 +718,7 @@ mod tests {
         sig[0] ^= 0xFF;
         resp.certificate.parent_signature = BASE64.encode(&sig);
 
-        let verify = handle_verify_lineage_certificate(json!({
+        let verify = handle_verify_lineage_certificate(&json!({
             "certificate": resp.certificate,
             "expected_family_id": "fam2",
             "trust_anchors": [],
@@ -734,7 +738,7 @@ mod tests {
         let child = SigningKey::from_bytes(&[10u8; 32]);
         let child_pk = BASE64.encode(child.verifying_key().to_bytes());
 
-        let sign = handle_sign_lineage_certificate(json!({
+        let sign = handle_sign_lineage_certificate(&json!({
             "parent_seed": parent_seed,
             "parent_device_id": "root",
             "child_public_key": child_pk.clone(),
@@ -744,7 +748,7 @@ mod tests {
         .await?;
         let resp: SignLineageCertificateResponse = serde_json::from_value(sign)?;
 
-        let verify = handle_verify_lineage_certificate(json!({
+        let verify = handle_verify_lineage_certificate(&json!({
             "certificate": resp.certificate.clone(),
             "expected_family_id": "fam3",
             "trust_anchors": [resp.certificate.clone()],
@@ -764,7 +768,7 @@ mod tests {
         let child = SigningKey::from_bytes(&[12u8; 32]);
         let child_pk = BASE64.encode(child.verifying_key().to_bytes());
 
-        let sign = handle_sign_lineage_certificate(json!({
+        let sign = handle_sign_lineage_certificate(&json!({
             "parent_seed": parent_seed,
             "parent_device_id": "p",
             "child_public_key": child_pk,
@@ -787,7 +791,7 @@ mod tests {
             parent_public_key: BASE64.encode([0u8; 32]),
         };
 
-        let verify = handle_verify_lineage_certificate(json!({
+        let verify = handle_verify_lineage_certificate(&json!({
             "certificate": resp.certificate,
             "expected_family_id": "fam4",
             "trust_anchors": [other],

@@ -161,9 +161,6 @@ impl UniversalAdapter {
         let start = std::time::Instant::now();
         debug!("Handling generic request to: {}", request.endpoint);
 
-        // Mock processing - instant response (no artificial delay)
-        // In production, this would be actual I/O which has real latency
-
         // Create response
         Ok(AdapterResponse {
             request_id: request.request_id,

@@ -19,13 +19,9 @@ pub async fn route(
         "genetic.derive_lineage_key" => {
             info!("🧬 Genetic: derive_lineage_key (lineage-based key derivation)");
             Ok(Some(
-                handle_derive_lineage_key(
-                    params
-                        .ok_or_else(|| {
-                            "Parameters required for genetic.derive_lineage_key".to_string()
-                        })?
-                        .clone(),
-                )
+                handle_derive_lineage_key(params.ok_or_else(|| {
+                    "Parameters required for genetic.derive_lineage_key".to_string()
+                })?)
                 .await
                 .map_err(|e| e.to_string())?,
             ))
@@ -34,13 +30,9 @@ pub async fn route(
         "genetic.derive_lineage_beacon_key" => {
             info!("🌑 Genetic: derive_lineage_beacon_key (TRUE Dark Forest beacon key)");
             Ok(Some(
-                handle_derive_lineage_beacon_key(
-                    params
-                        .ok_or_else(|| {
-                            "Parameters required for genetic.derive_lineage_beacon_key".to_string()
-                        })?
-                        .clone(),
-                )
+                handle_derive_lineage_beacon_key(params.ok_or_else(|| {
+                    "Parameters required for genetic.derive_lineage_beacon_key".to_string()
+                })?)
                 .await
                 .map_err(|e| e.to_string())?,
             ))
@@ -51,8 +43,7 @@ pub async fn route(
             Ok(Some(
                 handle_mix_entropy(
                     params
-                        .ok_or_else(|| "Parameters required for genetic.mix_entropy".to_string())?
-                        .clone(),
+                        .ok_or_else(|| "Parameters required for genetic.mix_entropy".to_string())?,
                 )
                 .await
                 .map_err(|e| e.to_string())?,
@@ -63,11 +54,9 @@ pub async fn route(
             info!("🔍 Genetic: verify_lineage (family relationship verification)");
             Ok(Some(
                 handle_verify_lineage(
-                    params
-                        .ok_or_else(|| {
-                            "Parameters required for genetic.verify_lineage".to_string()
-                        })?
-                        .clone(),
+                    params.ok_or_else(|| {
+                        "Parameters required for genetic.verify_lineage".to_string()
+                    })?,
                 )
                 .await
                 .map_err(|e| e.to_string())?,
@@ -77,13 +66,9 @@ pub async fn route(
         "genetic.generate_lineage_proof" => {
             info!("🔐 Genetic: generate_lineage_proof (proof generation)");
             Ok(Some(
-                handle_generate_lineage_proof(
-                    params
-                        .ok_or_else(|| {
-                            "Parameters required for genetic.generate_lineage_proof".to_string()
-                        })?
-                        .clone(),
-                )
+                handle_generate_lineage_proof(params.ok_or_else(|| {
+                    "Parameters required for genetic.generate_lineage_proof".to_string()
+                })?)
                 .await
                 .map_err(|e| e.to_string())?,
             ))
@@ -92,13 +77,9 @@ pub async fn route(
         "genetic.generate_challenge" => {
             info!("🎲 Genetic: generate_challenge (challenge generation)");
             Ok(Some(
-                handle_generate_challenge(
-                    params
-                        .ok_or_else(|| {
-                            "Parameters required for genetic.generate_challenge".to_string()
-                        })?
-                        .clone(),
-                )
+                handle_generate_challenge(params.ok_or_else(|| {
+                    "Parameters required for genetic.generate_challenge".to_string()
+                })?)
                 .await
                 .map_err(|e| e.to_string())?,
             ))
@@ -107,13 +88,9 @@ pub async fn route(
         "genetic.respond_to_challenge" => {
             info!("🔐 Genetic: respond_to_challenge (challenge response)");
             Ok(Some(
-                handle_respond_to_challenge(
-                    params
-                        .ok_or_else(|| {
-                            "Parameters required for genetic.respond_to_challenge".to_string()
-                        })?
-                        .clone(),
-                )
+                handle_respond_to_challenge(params.ok_or_else(|| {
+                    "Parameters required for genetic.respond_to_challenge".to_string()
+                })?)
                 .await
                 .map_err(|e| e.to_string())?,
             ))
@@ -122,13 +99,9 @@ pub async fn route(
         "genetic.verify_challenge_response" => {
             info!("🔍 Genetic: verify_challenge_response (response verification)");
             Ok(Some(
-                handle_verify_challenge_response(
-                    params
-                        .ok_or_else(|| {
-                            "Parameters required for genetic.verify_challenge_response".to_string()
-                        })?
-                        .clone(),
-                )
+                handle_verify_challenge_response(params.ok_or_else(|| {
+                    "Parameters required for genetic.verify_challenge_response".to_string()
+                })?)
                 .await
                 .map_err(|e| e.to_string())?,
             ))
@@ -137,13 +110,9 @@ pub async fn route(
         "genetic.derive_device_seed" => {
             info!("🧬 Genetic: derive_device_seed (unique device derivation)");
             Ok(Some(
-                handle_derive_device_seed(
-                    params
-                        .ok_or_else(|| {
-                            "Parameters required for genetic.derive_device_seed".to_string()
-                        })?
-                        .clone(),
-                )
+                handle_derive_device_seed(params.ok_or_else(|| {
+                    "Parameters required for genetic.derive_device_seed".to_string()
+                })?)
                 .await
                 .map_err(|e| e.to_string())?,
             ))
@@ -152,13 +121,9 @@ pub async fn route(
         "genetic.sign_lineage_certificate" => {
             info!("🧬 Genetic: sign_lineage_certificate (device enrollment)");
             Ok(Some(
-                handle_sign_lineage_certificate(
-                    params
-                        .ok_or_else(|| {
-                            "Parameters required for genetic.sign_lineage_certificate".to_string()
-                        })?
-                        .clone(),
-                )
+                handle_sign_lineage_certificate(params.ok_or_else(|| {
+                    "Parameters required for genetic.sign_lineage_certificate".to_string()
+                })?)
                 .await
                 .map_err(|e| e.to_string())?,
             ))
@@ -167,13 +132,9 @@ pub async fn route(
         "genetic.verify_lineage_certificate" => {
             info!("🔍 Genetic: verify_lineage_certificate (certificate verification)");
             Ok(Some(
-                handle_verify_lineage_certificate(
-                    params
-                        .ok_or_else(|| {
-                            "Parameters required for genetic.verify_lineage_certificate".to_string()
-                        })?
-                        .clone(),
-                )
+                handle_verify_lineage_certificate(params.ok_or_else(|| {
+                    "Parameters required for genetic.verify_lineage_certificate".to_string()
+                })?)
                 .await
                 .map_err(|e| e.to_string())?,
             ))

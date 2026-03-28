@@ -16,6 +16,7 @@ use crate::tunnel::hsm::software_hsm::crypto_providers::genetic_crypto::GeneticC
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
+use serde::Deserialize;
 use serde_json::{Value, json};
 use tracing::{debug, info, warn};
 
@@ -25,12 +26,13 @@ use tracing::{debug, info, warn};
 ///
 /// # Performance
 /// - Expected: < 100μs (secure random nonce generation)
-pub async fn handle_generate_challenge(params: Value) -> Result<Value, BearDogError> {
+pub async fn handle_generate_challenge(params: &Value) -> Result<Value, BearDogError> {
     debug!("🎲 RPC: genetic.generate_challenge");
 
-    let request: GenerateChallengeRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid generate_challenge params: {e}"))
-    })?;
+    let request: GenerateChallengeRequest =
+        GenerateChallengeRequest::deserialize(params).map_err(|e| {
+            BearDogError::invalid_input(&format!("Invalid generate_challenge params: {e}"))
+        })?;
 
     let mut nonce = [0u8; 32];
     use rand::RngCore;
@@ -59,12 +61,13 @@ pub async fn handle_generate_challenge(params: Value) -> Result<Value, BearDogEr
 ///
 /// # Performance
 /// - Expected: < 500μs (HMAC-SHA512 with lineage key)
-pub async fn handle_respond_to_challenge(params: Value) -> Result<Value, BearDogError> {
+pub async fn handle_respond_to_challenge(params: &Value) -> Result<Value, BearDogError> {
     debug!("🔐 RPC: genetic.respond_to_challenge");
 
-    let request: RespondToChallengeRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid respond_to_challenge params: {e}"))
-    })?;
+    let request: RespondToChallengeRequest = RespondToChallengeRequest::deserialize(params)
+        .map_err(|e| {
+            BearDogError::invalid_input(&format!("Invalid respond_to_challenge params: {e}"))
+        })?;
 
     let seed_bytes = std::fs::read(&request.our_family_seed_path).map_err(|e| {
         BearDogError::system(format!(
@@ -123,12 +126,13 @@ pub async fn handle_respond_to_challenge(params: Value) -> Result<Value, BearDog
 ///
 /// # Performance
 /// - Expected: < 600μs (constant-time HMAC comparison + lineage verification)
-pub async fn handle_verify_challenge_response(params: Value) -> Result<Value, BearDogError> {
+pub async fn handle_verify_challenge_response(params: &Value) -> Result<Value, BearDogError> {
     debug!("🔍 RPC: genetic.verify_challenge_response");
 
-    let request: VerifyChallengeResponseRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid verify_challenge_response params: {e}"))
-    })?;
+    let request: VerifyChallengeResponseRequest =
+        VerifyChallengeResponseRequest::deserialize(params).map_err(|e| {
+            BearDogError::invalid_input(&format!("Invalid verify_challenge_response params: {e}"))
+        })?;
 
     let our_seed_bytes = std::fs::read(&request.our_family_seed_path).map_err(|e| {
         BearDogError::system(format!(
@@ -205,7 +209,7 @@ mod tests {
             "challenger_node_id": "node-a",
             "target_family_id": "fam-1",
         });
-        let v = handle_generate_challenge(params).await.expect("generate");
+        let v = handle_generate_challenge(&params).await.expect("generate");
         let nonce = v.get("nonce").and_then(|x| x.as_str()).expect("nonce");
         assert_eq!(nonce.len(), 64);
         assert!(v.get("challenge_id").and_then(|x| x.as_str()).is_some());
@@ -213,7 +217,7 @@ mod tests {
 
     #[tokio::test]
     async fn generate_challenge_rejects_malformed_params() {
-        let err = handle_generate_challenge(json!("not-an-object"))
+        let err = handle_generate_challenge(&json!("not-an-object"))
             .await
             .unwrap_err();
         let msg = format!("{err}");
@@ -233,7 +237,7 @@ mod tests {
             "challenger_node_id": "c1",
             "target_family_id": "fam-x",
         });
-        let challenge = handle_generate_challenge(gen_params)
+        let challenge = handle_generate_challenge(&gen_params)
             .await
             .expect("generate challenge");
         let nonce = challenge["nonce"].as_str().expect("nonce");
@@ -243,7 +247,7 @@ mod tests {
             "our_family_seed_path": seed_path.to_string_lossy(),
             "our_node_id": "responder-1",
         });
-        let resp = handle_respond_to_challenge(respond_params)
+        let resp = handle_respond_to_challenge(&respond_params)
             .await
             .expect("respond");
 
@@ -254,7 +258,7 @@ mod tests {
             "lineage_proof": resp["lineage_proof"],
             "our_family_seed_path": seed_path.to_string_lossy(),
         });
-        let verified = handle_verify_challenge_response(verify_params)
+        let verified = handle_verify_challenge_response(&verify_params)
             .await
             .expect("verify");
         assert_eq!(verified["valid"], true);
@@ -267,7 +271,7 @@ mod tests {
         let seed_path = dir.path().join("family.seed");
         std::fs::write(&seed_path, b"x").expect("write seed");
 
-        let err = handle_respond_to_challenge(json!({
+        let err = handle_respond_to_challenge(&json!({
             "nonce": "not-hex",
             "our_family_seed_path": seed_path.to_string_lossy(),
             "our_node_id": "n",
@@ -283,7 +287,7 @@ mod tests {
         let seed_path = dir.path().join("family.seed");
         std::fs::write(&seed_path, b"same-seed").expect("write seed");
 
-        let challenge = handle_generate_challenge(json!({
+        let challenge = handle_generate_challenge(&json!({
             "challenger_node_id": "c",
             "target_family_id": "f",
         }))
@@ -291,7 +295,7 @@ mod tests {
         .expect("gen");
         let nonce = challenge["nonce"].as_str().expect("nonce");
 
-        let resp = handle_respond_to_challenge(json!({
+        let resp = handle_respond_to_challenge(&json!({
             "nonce": nonce,
             "our_family_seed_path": seed_path.to_string_lossy(),
             "our_node_id": "r",
@@ -303,7 +307,7 @@ mod tests {
         let last = bad_hex.pop().unwrap();
         bad_hex.push(if last == '0' { '1' } else { '0' });
 
-        let out = handle_verify_challenge_response(json!({
+        let out = handle_verify_challenge_response(&json!({
             "nonce": nonce,
             "response": bad_hex,
             "responder_node_id": "r",
@@ -322,7 +326,7 @@ mod tests {
         let seed_path = dir.path().join("family.seed");
         std::fs::write(&seed_path, b"seed").expect("write seed");
 
-        let challenge = handle_generate_challenge(json!({
+        let challenge = handle_generate_challenge(&json!({
             "challenger_node_id": "c",
             "target_family_id": "f",
         }))
@@ -330,7 +334,7 @@ mod tests {
         .expect("gen");
         let nonce = challenge["nonce"].as_str().expect("nonce");
 
-        let resp = handle_respond_to_challenge(json!({
+        let resp = handle_respond_to_challenge(&json!({
             "nonce": nonce,
             "our_family_seed_path": seed_path.to_string_lossy(),
             "our_node_id": "r",
@@ -338,7 +342,7 @@ mod tests {
         .await
         .expect("respond");
 
-        let err = handle_verify_challenge_response(json!({
+        let err = handle_verify_challenge_response(&json!({
             "nonce": nonce,
             "response": resp["response"],
             "responder_node_id": "r",

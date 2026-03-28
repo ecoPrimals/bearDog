@@ -6,13 +6,10 @@
 //! without using unchecked memory patterns directly.
 
 use super::traits::PlatformSecurityProvider;
-use crate::tunnel::hsm::types::{
-    HsmKey, KeyHealthStatus, KeyMaterial, KeyMetadata, KeyType, UniversalKey,
-};
+use crate::tunnel::hsm::types::{HsmKey, KeyType};
 use beardog_errors::BearDogError;
-use chrono::Utc;
 use std::collections::HashMap;
-use tracing::{info, warn};
+use tracing::info;
 
 /// Safe iOS security provider
 pub struct SafeIosProvider {
@@ -75,13 +72,6 @@ impl SafeIosProvider {
 
         #[cfg(not(target_os = "ios"))]
         {
-            // For development/testing, use software fallback with clear warning
-            warn!(
-                "⚠️ DEVELOPMENT MODE: Using software fallback for iOS Secure Enclave key generation"
-            );
-            info!("📝 In production on iOS device, this would use hardware Secure Enclave");
-
-            // Generate a software key that mimics Secure Enclave behavior
             self.generate_key_software_fallback(key_id, key_type)
         }
     }
@@ -90,92 +80,23 @@ impl SafeIosProvider {
     fn generate_key_secure_enclave(
         &self,
         key_id: &str,
-        key_type: &KeyType,
+        _key_type: &KeyType,
     ) -> Result<HsmKey, BearDogError> {
-        info!("🍎 Using iOS Secure Enclave for key generation");
-
-        // Generate key using Secure Enclave
-        // In production, this would call iOS Security.framework APIs:
-        // - SecKeyCreateRandomKey with kSecAttrTokenIDSecureEnclave
-        // - Private key stays in Secure Enclave, only public key accessible
-
-        // Generate a placeholder public key (P-256 default for EllipticCurve)
-        // In production, this would come from SecKeyCopyPublicKey
-        let public_key = vec![0u8; 65]; // P-256 uncompressed: 0x04 + X (32) + Y (32)
-
         info!(
-            "✅ Successfully generated iOS Secure Enclave key: {}",
+            "🍎 Using iOS Secure Enclave for key generation (not yet wired): {}",
             key_id
         );
 
-        // Return UniversalKey (HsmKey is an alias)
-        Ok(UniversalKey {
-            id: key_id.to_string(),
-            hsm_type: "ios_secure_enclave".to_string(),
-            key_type: key_type.clone(),
-            metadata: KeyMetadata {
-                key_id: key_id.to_string(),
-                key_type: key_type.clone(),
-                alias: Some("ios_secure_enclave".to_string()),
-                created_at: Utc::now(),
-                expires_at: None,
-                tags: {
-                    let mut tags = HashMap::new();
-                    tags.insert("provider".to_string(), "ios_secure_enclave".to_string());
-                    tags.insert("hardware_backed".to_string(), "true".to_string());
-                    tags.insert("secure_enclave".to_string(), "true".to_string());
-                    tags
-                },
-            },
-            key_material: KeyMaterial::Reference {
-                key_reference: key_id.to_string(),
-                hsm_instance: "ios_secure_enclave".to_string(),
-            },
-            hsm_tier: "hardware".to_string(),
-            health_status: KeyHealthStatus::Healthy,
-            attestation: None,
-            created_at: Utc::now(),
-        })
+        Err(BearDogError::not_implemented("iOS Secure Enclave: Phase 2"))
     }
 
     #[cfg(not(target_os = "ios"))]
     fn generate_key_software_fallback(
         &self,
-        key_id: &str,
-        key_type: &KeyType,
+        _key_id: &str,
+        _key_type: &KeyType,
     ) -> Result<HsmKey, BearDogError> {
-        warn!("⚠️ Using software fallback - NOT hardware Secure Enclave");
-
-        // Generate placeholder key for development/testing
-        let _public_key = [0u8; 65]; // P-256 uncompressed point (placeholder)
-
-        Ok(UniversalKey {
-            id: key_id.to_string(),
-            hsm_type: "ios_software_fallback".to_string(),
-            key_type: key_type.clone(),
-            metadata: KeyMetadata {
-                key_id: key_id.to_string(),
-                key_type: key_type.clone(),
-                alias: Some("ios_software_fallback".to_string()),
-                created_at: Utc::now(),
-                expires_at: None,
-                tags: {
-                    let mut tags = HashMap::new();
-                    tags.insert("provider".to_string(), "ios_software_fallback".to_string());
-                    tags.insert("hardware_backed".to_string(), "false".to_string());
-                    tags.insert("warning".to_string(), "development_mode".to_string());
-                    tags
-                },
-            },
-            key_material: KeyMaterial::Reference {
-                key_reference: key_id.to_string(),
-                hsm_instance: "software_fallback".to_string(),
-            },
-            hsm_tier: "software".to_string(),
-            health_status: KeyHealthStatus::Degraded, // Using degraded for software fallback
-            attestation: None,
-            created_at: Utc::now(),
-        })
+        Err(BearDogError::not_implemented("iOS Secure Enclave: Phase 2"))
     }
 
     /// Safe data signing implementation
@@ -197,29 +118,22 @@ impl SafeIosProvider {
 
         #[cfg(not(target_os = "ios"))]
         {
-            // For development/testing, use software fallback
-            warn!("⚠️ DEVELOPMENT MODE: Using software fallback for signing");
-            info!("📝 In production on iOS device, this would use hardware Secure Enclave");
-
             self.sign_data_software_fallback(key_id, data)
         }
     }
 
     #[cfg(target_os = "ios")]
-    fn sign_data_secure_enclave(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        info!("🍎 Using iOS Secure Enclave for signing");
+    fn sign_data_secure_enclave(
+        &self,
+        key_id: &str,
+        _data: &[u8],
+    ) -> Result<Vec<u8>, BearDogError> {
+        info!(
+            "🍎 Using iOS Secure Enclave for signing (not yet wired): {}",
+            key_id
+        );
 
-        // Sign using Secure Enclave
-        // In production, this would call iOS Security.framework APIs:
-        // - SecKeyCreateSignature with private key reference
-        // - Uses ECDSA with SHA-256 or SHA-384
-
-        // Generate a placeholder signature (64 bytes for P-256 ECDSA)
-        let signature = vec![0u8; 64]; // Placeholder: R (32 bytes) + S (32 bytes)
-
-        info!("✅ Successfully signed data with iOS Secure Enclave");
-
-        Ok(signature)
+        Err(BearDogError::not_implemented("iOS Secure Enclave: Phase 2"))
     }
 
     #[cfg(not(target_os = "ios"))]
@@ -228,12 +142,7 @@ impl SafeIosProvider {
         _key_id: &str,
         _data: &[u8],
     ) -> Result<Vec<u8>, BearDogError> {
-        warn!("⚠️ Using software fallback - NOT hardware Secure Enclave");
-
-        // Return a placeholder signature for development/testing
-        let signature = vec![0u8; 64]; // P-256 ECDSA signature placeholder
-
-        Ok(signature)
+        Err(BearDogError::not_implemented("iOS Secure Enclave: Phase 2"))
     }
 
     /// Safe signature verification implementation
@@ -256,10 +165,6 @@ impl SafeIosProvider {
 
         #[cfg(not(target_os = "ios"))]
         {
-            // For development/testing, use software fallback
-            warn!("⚠️ DEVELOPMENT MODE: Using software fallback for verification");
-            info!("📝 In production on iOS device, this would use hardware Secure Enclave");
-
             self.verify_signature_software_fallback(key_id, data, signature)
         }
     }
@@ -268,25 +173,15 @@ impl SafeIosProvider {
     fn verify_signature_secure_enclave(
         &self,
         key_id: &str,
-        data: &[u8],
-        signature: &[u8],
+        _data: &[u8],
+        _signature: &[u8],
     ) -> Result<bool, BearDogError> {
-        info!("🍎 Using iOS Secure Enclave for signature verification");
+        info!(
+            "🍎 Using iOS Secure Enclave for signature verification (not yet wired): {}",
+            key_id
+        );
 
-        // Verify using Secure Enclave
-        // In production, this would call iOS Security.framework APIs:
-        // - SecKeyVerifySignature with public key reference
-
-        // Placeholder verification (check signature length as basic validation)
-        let is_valid = signature.len() >= 64;
-
-        if is_valid {
-            info!("✅ Signature verified successfully");
-        } else {
-            warn!("⚠️ Signature verification failed");
-        }
-
-        Ok(is_valid)
+        Err(BearDogError::not_implemented("iOS Secure Enclave: Phase 2"))
     }
 
     #[cfg(not(target_os = "ios"))]
@@ -294,14 +189,9 @@ impl SafeIosProvider {
         &self,
         _key_id: &str,
         _data: &[u8],
-        signature: &[u8],
+        _signature: &[u8],
     ) -> Result<bool, BearDogError> {
-        warn!("⚠️ Using software fallback - NOT hardware Secure Enclave");
-
-        // Placeholder verification for development/testing
-        let is_valid = signature.len() >= 64;
-
-        Ok(is_valid)
+        Err(BearDogError::not_implemented("iOS Secure Enclave: Phase 2"))
     }
 
     /// Get capabilities of this provider
@@ -341,6 +231,21 @@ impl Default for SafeIosProvider {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use beardog_errors::{BearDogError, SystemErrorCategory};
+    use serial_test::serial;
+
+    fn assert_ios_se_phase2_not_implemented(err: BearDogError) {
+        match err {
+            BearDogError::System { category, message } => {
+                assert_eq!(category, SystemErrorCategory::NotImplemented);
+                assert!(
+                    message.contains("iOS Secure Enclave: Phase 2"),
+                    "unexpected message: {message}"
+                );
+            }
+            other => panic!("expected System NotImplemented, got {other:?}"),
+        }
+    }
 
     #[test]
     fn test_ios_provider_creation() {
@@ -349,9 +254,9 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_secure_enclave_availability_check() {
         let provider = SafeIosProvider::new().expect("SafeIosProvider::new");
-        // Should be false in development environment
         assert!(!provider.is_hardware_backed() || cfg!(target_os = "ios"));
     }
 
@@ -398,6 +303,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn sign_data_errors_when_secure_enclave_unavailable() {
         let provider = SafeIosProvider::new().expect("SafeIosProvider::new");
         if provider.is_hardware_backed() {
@@ -408,6 +314,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn ios_secure_enclave_env_true_enables_hardware_flag() {
         let prev = beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE").ok();
         beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", "true");
@@ -420,21 +327,15 @@ mod tests {
     }
 
     #[test]
-    fn generate_key_software_fallback_when_se_env_true_off_ios() {
+    #[serial]
+    fn generate_key_returns_not_implemented_when_se_env_true() {
         let prev = beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE").ok();
         beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", "true");
         let provider = SafeIosProvider::new().expect("provider");
-        let key = provider
+        let err = provider
             .generate_key("k-fallback", &KeyType::EllipticCurve)
-            .expect("keygen software fallback path off-iOS");
-        assert!(!key.id.is_empty());
-        if cfg!(not(target_os = "ios")) {
-            assert!(
-                key.hsm_type.contains("software") || key.hsm_type.contains("ios"),
-                "hsm_type={}",
-                key.hsm_type
-            );
-        }
+            .expect_err("keygen until Phase 2");
+        assert_ios_se_phase2_not_implemented(err);
         match prev {
             Some(v) => beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", v),
             None => beardog_errors::process_env::remove_var("IOS_SECURE_ENCLAVE_AVAILABLE"),
@@ -442,18 +343,19 @@ mod tests {
     }
 
     #[test]
-    fn sign_and_verify_roundtrip_when_se_env_true_off_ios() {
+    #[serial]
+    fn sign_and_verify_return_not_implemented_when_se_env_true() {
         let prev = beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE").ok();
         beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", "true");
         let provider = SafeIosProvider::new().expect("provider");
-        let sig = provider
+        let err = provider
             .sign_data("sk1", b"hello-ios-safe")
-            .expect("sign with SE flag");
-        assert_eq!(sig.len(), 64);
-        let ok = provider
-            .verify_signature("sk1", b"hello-ios-safe", &sig)
-            .expect("verify");
-        assert!(ok);
+            .expect_err("sign until Phase 2");
+        assert_ios_se_phase2_not_implemented(err);
+        let err = provider
+            .verify_signature("sk1", b"hello-ios-safe", &[0u8; 64])
+            .expect_err("verify until Phase 2");
+        assert_ios_se_phase2_not_implemented(err);
         match prev {
             Some(v) => beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", v),
             None => beardog_errors::process_env::remove_var("IOS_SECURE_ENCLAVE_AVAILABLE"),
@@ -461,16 +363,15 @@ mod tests {
     }
 
     #[test]
-    fn verify_signature_short_input_returns_false_off_ios() {
+    #[serial]
+    fn verify_signature_returns_not_implemented_for_short_signature_when_se_env_true() {
         let prev = beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE").ok();
         beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", "true");
         let provider = SafeIosProvider::new().expect("provider");
-        let ok = provider
+        let err = provider
             .verify_signature("vk", b"data", &[0u8; 8])
-            .expect("verify returns result");
-        if cfg!(not(target_os = "ios")) {
-            assert!(!ok);
-        }
+            .expect_err("verify until Phase 2");
+        assert_ios_se_phase2_not_implemented(err);
         match prev {
             Some(v) => beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", v),
             None => beardog_errors::process_env::remove_var("IOS_SECURE_ENCLAVE_AVAILABLE"),
@@ -493,6 +394,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn env_false_explicit_disables_hardware() {
         let prev = beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE").ok();
         beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", "false");

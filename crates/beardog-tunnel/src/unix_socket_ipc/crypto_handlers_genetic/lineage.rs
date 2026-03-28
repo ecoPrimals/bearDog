@@ -19,6 +19,7 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
 use hkdf::Hkdf;
+use serde::Deserialize;
 use serde_json::{Value, json};
 use sha2::Sha256;
 use tracing::{debug, info, warn};
@@ -29,12 +30,13 @@ use tracing::{debug, info, warn};
 ///
 /// # Performance
 /// - Expected: < 500μs (Blake3 KDF with lineage mixing)
-pub async fn handle_derive_lineage_key(params: Value) -> Result<Value, BearDogError> {
+pub async fn handle_derive_lineage_key(params: &Value) -> Result<Value, BearDogError> {
     debug!("🧬 RPC: genetic.derive_lineage_key");
 
-    let request: DeriveLineageKeyRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid derive_lineage_key params: {e}"))
-    })?;
+    let request: DeriveLineageKeyRequest =
+        DeriveLineageKeyRequest::deserialize(params).map_err(|e| {
+            BearDogError::invalid_input(&format!("Invalid derive_lineage_key params: {e}"))
+        })?;
 
     let lineage_seed = BASE64.decode(&request.lineage_seed).map_err(|e| {
         BearDogError::invalid_input(&format!("Invalid lineage_seed (not base64): {e}"))
@@ -71,7 +73,7 @@ pub async fn handle_derive_lineage_key(params: Value) -> Result<Value, BearDogEr
 ///
 /// # Performance
 /// - Expected: < 100μs (HKDF-SHA256)
-pub async fn handle_derive_lineage_beacon_key(params: Value) -> Result<Value, BearDogError> {
+pub async fn handle_derive_lineage_beacon_key(params: &Value) -> Result<Value, BearDogError> {
     debug!("🌑 RPC: genetic.derive_lineage_beacon_key (TRUE Dark Forest)");
 
     let lineage_seed_b64 = params
@@ -115,10 +117,10 @@ pub async fn handle_derive_lineage_beacon_key(params: Value) -> Result<Value, Be
 ///
 /// # Performance
 /// - Expected: < 200μs (Blake3 entropy mixing)
-pub async fn handle_mix_entropy(params: Value) -> Result<Value, BearDogError> {
+pub async fn handle_mix_entropy(params: &Value) -> Result<Value, BearDogError> {
     debug!("🌱 RPC: genetic.mix_entropy");
 
-    let request: MixEntropyRequest = serde_json::from_value(params)
+    let request: MixEntropyRequest = MixEntropyRequest::deserialize(params)
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid mix_entropy params: {e}")))?;
 
     let tier3 = request
@@ -169,10 +171,10 @@ pub async fn handle_mix_entropy(params: Value) -> Result<Value, BearDogError> {
 ///
 /// # Performance
 /// - Expected: < 300μs (Blake3 proof verification)
-pub async fn handle_verify_lineage(params: Value) -> Result<Value, BearDogError> {
+pub async fn handle_verify_lineage(params: &Value) -> Result<Value, BearDogError> {
     debug!("🔍 RPC: genetic.verify_lineage");
 
-    let request: VerifyLineageRequest = serde_json::from_value(params)
+    let request: VerifyLineageRequest = VerifyLineageRequest::deserialize(params)
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid verify_lineage params: {e}")))?;
 
     let lineage_proof = BASE64
@@ -221,12 +223,13 @@ pub async fn handle_verify_lineage(params: Value) -> Result<Value, BearDogError>
 ///
 /// # Performance
 /// - Expected: < 400μs (Blake3 + HMAC)
-pub async fn handle_generate_lineage_proof(params: Value) -> Result<Value, BearDogError> {
+pub async fn handle_generate_lineage_proof(params: &Value) -> Result<Value, BearDogError> {
     debug!("🔐 RPC: genetic.generate_lineage_proof");
 
-    let request: GenerateLineageProofRequest = serde_json::from_value(params).map_err(|e| {
-        BearDogError::invalid_input(&format!("Invalid generate_lineage_proof params: {e}"))
-    })?;
+    let request: GenerateLineageProofRequest = GenerateLineageProofRequest::deserialize(params)
+        .map_err(|e| {
+            BearDogError::invalid_input(&format!("Invalid generate_lineage_proof params: {e}"))
+        })?;
 
     let lineage_seed = BASE64
         .decode(&request.lineage_seed)
@@ -271,7 +274,7 @@ mod tests {
             "lineage_seed": lineage_seed,
         });
 
-        let result = handle_derive_lineage_key(params).await?;
+        let result = handle_derive_lineage_key(&params).await?;
         let response: DeriveLineageKeyResponse = serde_json::from_value(result)?;
 
         assert!(!response.key.is_empty(), "Key should not be empty");
@@ -292,7 +295,7 @@ mod tests {
             "tier1_machine": null,
         });
 
-        let result = handle_mix_entropy(params).await?;
+        let result = handle_mix_entropy(&params).await?;
         let response: MixEntropyResponse = serde_json::from_value(result)?;
 
         assert!(!response.entropy.is_empty());
@@ -317,7 +320,7 @@ mod tests {
             "tier1_machine": tier1,
         });
 
-        let result = handle_mix_entropy(params).await?;
+        let result = handle_mix_entropy(&params).await?;
         let response: MixEntropyResponse = serde_json::from_value(result)?;
 
         assert_eq!(response.tiers_used, 3);
@@ -336,7 +339,7 @@ mod tests {
             "lineage_seed": lineage_seed.clone(),
         });
 
-        let gen_result = handle_generate_lineage_proof(gen_params).await?;
+        let gen_result = handle_generate_lineage_proof(&gen_params).await?;
         let gen_response: GenerateLineageProofResponse = serde_json::from_value(gen_result)?;
 
         let verify_params = json!({
@@ -346,7 +349,7 @@ mod tests {
             "lineage_seed": lineage_seed,
         });
 
-        let verify_result = handle_verify_lineage(verify_params).await?;
+        let verify_result = handle_verify_lineage(&verify_params).await?;
         let verify_response: VerifyLineageResponse = serde_json::from_value(verify_result)?;
 
         assert!(verify_response.valid, "Lineage should verify");
@@ -367,7 +370,7 @@ mod tests {
             "lineage_seed": lineage_seed,
         });
 
-        let result = handle_verify_lineage(params).await?;
+        let result = handle_verify_lineage(&params).await?;
         let response: VerifyLineageResponse = serde_json::from_value(result)?;
 
         assert!(!response.valid, "Invalid proof should not verify");
@@ -385,7 +388,7 @@ mod tests {
             "lineage_seed": "not-valid-base64!!!",
         });
 
-        let result = handle_derive_lineage_key(params).await;
+        let result = handle_derive_lineage_key(&params).await;
         assert!(result.is_err(), "Invalid base64 should fail");
     }
 
@@ -394,7 +397,7 @@ mod tests {
         let lineage_seed = BASE64.encode(b"test_lineage_seed_for_beacons");
         let params = json!({ "lineage_seed": lineage_seed });
 
-        let result = handle_derive_lineage_beacon_key(params).await?;
+        let result = handle_derive_lineage_beacon_key(&params).await?;
 
         assert!(result.get("beacon_key").is_some());
         assert_eq!(
@@ -430,8 +433,8 @@ mod tests {
         let lineage_seed = BASE64.encode(b"deterministic_test_seed_12345");
         let params = json!({ "lineage_seed": lineage_seed });
 
-        let result1 = handle_derive_lineage_beacon_key(params.clone()).await?;
-        let result2 = handle_derive_lineage_beacon_key(params).await?;
+        let result1 = handle_derive_lineage_beacon_key(&params).await?;
+        let result2 = handle_derive_lineage_beacon_key(&params).await?;
 
         let key1 = result1
             .get("beacon_key")
@@ -456,8 +459,8 @@ mod tests {
         let seed1 = BASE64.encode(b"family_alpha_seed_value_here_");
         let seed2 = BASE64.encode(b"family_beta_seed_different!!!");
 
-        let result1 = handle_derive_lineage_beacon_key(json!({ "lineage_seed": seed1 })).await?;
-        let result2 = handle_derive_lineage_beacon_key(json!({ "lineage_seed": seed2 })).await?;
+        let result1 = handle_derive_lineage_beacon_key(&json!({ "lineage_seed": seed1 })).await?;
+        let result2 = handle_derive_lineage_beacon_key(&json!({ "lineage_seed": seed2 })).await?;
 
         let key1 = result1
             .get("beacon_key")
@@ -479,7 +482,7 @@ mod tests {
     #[tokio::test]
     async fn test_derive_lineage_beacon_key_empty_params() -> Result<(), Box<dyn std::error::Error>>
     {
-        let result = handle_derive_lineage_beacon_key(json!({})).await?;
+        let result = handle_derive_lineage_beacon_key(&json!({})).await?;
         assert!(result.get("beacon_key").is_some());
 
         let key_hex = result
