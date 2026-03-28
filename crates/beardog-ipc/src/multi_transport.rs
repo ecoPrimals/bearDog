@@ -414,8 +414,18 @@ impl MultiTransportServer {
 
                                         let (reader, mut writer) = stream.split();
                                         let mut lines = BufReader::new(reader).lines();
+                                        let read_timeout = std::time::Duration::from_secs(30);
 
-                                        while let Ok(Some(line)) = lines.next_line().await {
+                                        loop {
+                                            let line = match tokio::time::timeout(read_timeout, lines.next_line()).await {
+                                                Ok(Ok(Some(line))) => line,
+                                                Ok(Ok(None)) => break,
+                                                Ok(Err(_)) => break,
+                                                Err(_) => {
+                                                    warn!("TCP JSON-RPC read timeout ({}s) — dropping idle connection", read_timeout.as_secs());
+                                                    break;
+                                                }
+                                            };
                                             if line.is_empty() {
                                                 continue;
                                             }

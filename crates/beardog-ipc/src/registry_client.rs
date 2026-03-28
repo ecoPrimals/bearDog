@@ -338,14 +338,16 @@ impl PrimalRegistryClient {
             .await
             .map_err(|e| BearDogError::system(format!("Failed to write newline: {e}")))?;
 
-        // Read response
         let mut reader = BufReader::new(stream);
         let mut response_line = String::new();
 
-        reader
-            .read_line(&mut response_line)
-            .await
-            .map_err(|e| BearDogError::system(format!("Failed to read response: {e}")))?;
+        tokio::time::timeout(
+            std::time::Duration::from_secs(30),
+            reader.read_line(&mut response_line),
+        )
+        .await
+        .map_err(|_| BearDogError::system("Registry response read timed out (30s)".to_string()))?
+        .map_err(|e| BearDogError::system(format!("Failed to read response: {e}")))?;
 
         debug!("← Received: {}", response_line.trim());
 
