@@ -103,7 +103,6 @@ impl MemoryKeyManager {
     /// # Errors
     /// Returns an error if the operation fails.
     /// Gets key
-    /// Gets key
     pub fn get_key(&self, key_id: &str) -> Result<Vec<u8>, BearDogError> {
         let keys = self
             .keys
@@ -118,7 +117,6 @@ impl MemoryKeyManager {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    /// Removes key
     /// Removes key
     pub fn delete_key(&mut self, key_id: &str) -> Result<(), BearDogError> {
         let mut keys = self

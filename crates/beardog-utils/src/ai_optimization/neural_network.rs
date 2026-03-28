@@ -127,7 +127,6 @@ impl SimpleNeuralNetwork {
     }
 
     /// Gets `prediction_confidence`
-    /// Gets `prediction_confidence`
     #[must_use]
     pub fn get_prediction_confidence(&self) -> f64 {
         // Simple confidence measure based on output variance

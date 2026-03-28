@@ -103,7 +103,6 @@ where
 /// # Errors
 /// Returns an error if the operation fails.
     /// Checks if empty
-    /// Checks if empty
     pub fn is_empty(&self) -> Result<bool, BearDogError> {
         let buffer = self.buffer.lock()
             .map_err(|_| BearDogError::system("Ring buffer lock poisoned"))?;
@@ -116,7 +115,6 @@ where
     }
 
 /// Get Stats operation.
-    /// Gets stats
     /// Gets stats
     pub fn get_stats(&self) -> &SafeRingBufferStats {
         &self.stats
@@ -295,7 +293,6 @@ impl SafeSharedBufferPool {
 
 /// Get Stats operation.
     /// Gets stats
-    /// Gets stats
     pub fn get_stats(&self) -> &SafeSharedBufferStats {
         &self.stats
     }
@@ -357,7 +354,6 @@ impl SafeStringInterner {
 
 /// Get Stats operation.
     /// Gets stats
-    /// Gets stats
     pub fn get_stats(&self) -> &SafeStringInternerStats {
         &self.stats
     }
@@ -366,7 +362,6 @@ impl SafeStringInterner {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Cleans up resources
     /// Cleans up resources
     pub fn cleanup(&self) -> Result<usize, BearDogError> {
         let mut strings = self.strings.lock()

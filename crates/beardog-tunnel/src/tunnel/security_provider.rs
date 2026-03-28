@@ -91,20 +91,17 @@ impl BStpSecurityManager {
 
 /// Get Healing Engine operation.
     /// Gets healing_engine
-    /// Gets healing_engine
     pub fn get_healing_engine(&self) -> &Arc<RwLock<GeneticSecurityHealing>> {
         &self.healing_engine
     }
 
 /// Get Auth Engine operation.
     /// Gets auth_engine
-    /// Gets auth_engine
     pub fn get_auth_engine(&self) -> &Arc<CrossNodeAuthEngine> {
         &self.auth_engine
     }
 
 /// Get Threat Engine operation.
-    /// Gets threat_engine
     /// Gets threat_engine
     pub fn get_threat_engine(&self) -> &Arc<ThreatDetectionEngine> {
         &self.threat_engine
@@ -250,20 +247,17 @@ impl BStpSecurityManager {
 impl SessionMonitor {
 /// Get Session Id operation.
     /// Gets session_id
-    /// Gets session_id
     pub fn get_session_id(&self) -> &str {
         &self.session_id
     }
 
 /// Get Created At operation.
     /// Gets created_at
-    /// Gets created_at
     pub fn get_created_at(&self) -> SystemTime {
         self.created_at
     }
 
 /// Get Age Seconds operation.
-    /// Gets age_seconds
     /// Gets age_seconds
     pub fn get_age_seconds(&self) -> u64 {
         self.created_at.elapsed().map_or(0, |d| d.as_secs())

@@ -5,18 +5,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone)]
     /// The executed at value
-    /// The executed at value
     pub executed_at: DateTime<Utc>,
 
-    /// Whether success is enabled
     /// Whether success is enabled
     pub success: bool,
 
     /// Optional details
-    /// Optional details
     pub details: Option<String>,
 
-    /// The executor value
     /// The executor value
     pub executor: String,
 }
@@ -70,7 +66,6 @@ impl ThreatAction {
 
     /// Is Automated operation.
     /// Checks if automated
-    /// Checks if automated
     pub fn is_automated(&self) -> bool {
         matches!(
             self,
@@ -83,7 +78,6 @@ impl ThreatAction {
     }
 
     /// Is Reversible operation.
-    /// Checks if reversible
     /// Checks if reversible
     pub fn is_reversible(&self) -> bool {
         matches!(
@@ -117,7 +111,6 @@ impl ThreatAction {
 impl ThreatStatus {
     /// Is Terminal operation.
     /// Checks if terminal
-    /// Checks if terminal
     pub fn is_terminal(&self) -> bool {
         matches!(
             self,
@@ -129,7 +122,6 @@ impl ThreatStatus {
     }
 
     /// Is Active operation.
-    /// Checks if active
     /// Checks if active
     pub fn is_active(&self) -> bool {
         matches!(
@@ -232,7 +224,6 @@ impl MitigationStep {
 
     /// Is Recent operation.
     /// Checks if recent
-    /// Checks if recent
     pub fn is_recent(&self, minutes: i64) -> bool {
         self.duration_minutes() <= minutes
     }
@@ -251,7 +242,6 @@ impl ResponseAction {
 
     /// Is Reversible operation.
     /// Checks if reversible
-    /// Checks if reversible
     pub fn is_reversible(&self) -> bool {
         matches!(
             self,
@@ -262,7 +252,6 @@ impl ResponseAction {
     }
 
     /// Get Target operation.
-    /// Gets tarvalue
     /// Gets tarvalue
     pub fn get_target(&self) -> &str {
         match self {

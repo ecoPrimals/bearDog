@@ -82,7 +82,6 @@ impl SafeBufferPool {
 
     /// Gets statistics about pool usage
     /// Gets stats
-    /// Gets stats
     #[must_use]
     pub const fn get_stats(&self) -> &PoolStats {
         &self.stats

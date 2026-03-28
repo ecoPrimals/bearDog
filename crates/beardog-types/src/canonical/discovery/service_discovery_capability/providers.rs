@@ -89,11 +89,16 @@ impl DnsHttpDiscovery {
         }
     }
 
-    /// Query DNS SRV records for a service
+    /// Query DNS SRV records for a service.
+    ///
+    /// DNS resolution lives in the runtime layer (`beardog-core` / `beardog-discovery`)
+    /// rather than in this types crate.  This default returns an empty set so callers
+    /// degrade gracefully until a resolver is wired in.
     async fn query_dns_srv(&self, service: &str) -> Result<Vec<ServiceDescriptor>, DiscoveryError> {
-        // Real implementation would use trust-dns-resolver
-        // For now, stub that returns empty to maintain compatibility
-        tracing::debug!("DNS SRV query for: {}", service);
+        tracing::debug!(
+            service,
+            "DNS SRV query — no resolver available in types crate"
+        );
         Ok(Vec::new())
     }
 

@@ -123,7 +123,6 @@ impl SecurityHardeningValidation {
 
 /// Update operation.
     /// Updates item
-    /// Updates item
     pub fn update(bool,
         access_controls: bool,
         audit_logging: bool,
@@ -253,7 +252,6 @@ impl VulnerabilityScanResults {
 
 /// Has High Severity Issues operation.
     /// Checks if high severity issues
-    /// Checks if high severity issues
     pub fn has_high_severity_issues(&self) -> bool {
         self.critical_vulnerabilities > 0 || self.high_vulnerabilities > 0
 
@@ -285,12 +283,10 @@ impl PenetrationTestConfiguration {
 
 /// Set Intensity operation.
     /// Sets intensity
-    /// Sets intensity
     pub fn set_intensity(&mut self, intensity: IntensityLevel) {
         self.test_intensity = intensity;
 
 /// Set Safe Mode operation.
-    /// Sets safe_mode
     /// Sets safe_mode
     pub fn set_safe_mode(&mut self, enabled: bool) {
         self.safe_mode = enabled;
@@ -306,7 +302,6 @@ impl PenetrationTestResults {
         self.test_completed_safely && self.successful_attacks == 0
 
 /// Has Security Breaches operation.
-    /// Checks if security breaches
     /// Checks if security breaches
     pub fn has_security_breaches(&self) -> bool {
         self.successful_attacks > 0

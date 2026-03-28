@@ -288,13 +288,11 @@ impl WorkflowDefinition {
 
     /// Get a step by ID
     /// Gets step
-    /// Gets step
     pub fn get_step(&self, step_id: &str) -> Option<&WorkflowStep> {
         self.steps.iter().find(|step| step.id == step_id)
     }
 
     /// Validate the workflow definition
-    /// Validates input
     /// Validates input
     pub fn validate(&self) -> Result<(), String> {
         if self.name.is_empty() {
@@ -328,7 +326,6 @@ impl WorkflowDefinition {
         Ok(())
     }
 
-    /// Checks if circular dependencies
     /// Checks if circular dependencies
     pub fn has_circular_dependencies(&self) -> bool {
         // Simple cycle detection using DFS
@@ -389,7 +386,6 @@ impl WorkflowExecution {
 
     /// Start the workflow execution
     /// Starts service
-    /// Starts service
     pub fn start(&mut self) {
         self.started_at = Some(Utc::now());
         self.state.status = WorkflowStatus::Running;
@@ -426,7 +422,6 @@ impl WorkflowExecution {
     }
 
     /// Check if execution is complete
-    /// Checks if complete
     /// Checks if complete
     pub fn is_complete(&self) -> bool {
         matches!(

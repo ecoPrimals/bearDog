@@ -19,24 +19,17 @@ pub struct ThreatDetectionEngine {
     /// Active detection configuration (thresholds, feature flags, etc.).
     pub config: ThreatDetectionConfig,
     /// Mapping of threat feeds
-    /// Mapping of threat feeds
     pub threat_feeds: HashMap<String, ThreatIntelligenceFeed>,
-    /// Collection of detection rules
     /// Collection of detection rules
     pub detection_rules: Vec<DetectionRule>,
     /// Collection of ml models
-    /// Collection of ml models
     pub ml_models: Vec<MlModel>,
-    /// Collection of blocked sources
     /// Collection of blocked sources
     pub blocked_sources: Vec<String>,
     /// Collection of quarantined systems
-    /// Collection of quarantined systems
     pub quarantined_systems: Vec<String>,
     /// Collection of active threats
-    /// Collection of active threats
     pub active_threats: Vec<ThreatEvent>,
-    /// The stats value
     /// The stats value
     pub stats: ThreatDetectionStats,
 }
@@ -49,39 +42,27 @@ pub struct MlModel {
     /// Registry id for this model.
     pub id: String,
     /// Name of the item
-    /// Name of the item
     pub name: String,
-    /// The description value
     /// The description value
     pub description: String,
     /// The version value
-    /// The version value
     pub version: String,
-    /// The accuracy value
     /// The accuracy value
     pub accuracy: f64,
     /// The precision value
-    /// The precision value
     pub precision: f64,
-    /// The recall value
     /// The recall value
     pub recall: f64,
     /// The f1 score value
-    /// The f1 score value
     pub f1_score: f64,
-    /// The created at value
     /// The created at value
     pub created_at: DateTime<Utc>,
     /// The last updated value
-    /// The last updated value
     pub last_updated: DateTime<Utc>,
-    /// The model type value
     /// The model type value
     pub model_type: String,
     /// Number of `training_data_size`
-    /// Number of `training_data_size`
     pub training_data_size: u64,
-    /// Whether `is_active` is enabled
     /// Whether `is_active` is enabled
     pub is_active: bool,
 }
@@ -90,20 +71,15 @@ pub struct MlModel {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatDetectionStats {
     /// Number of `total_threats_detected`
-    /// Number of `total_threats_detected`
     pub total_threats_detected: u64,
-    /// Mapping of threats by severity
     /// Mapping of threats by severity
     pub threats_by_severity: HashMap<String, u64>,
     /// The false positive rate value
-    /// The false positive rate value
     pub false_positive_rate: f64,
-    /// The detection accuracy value
     /// The detection accuracy value
     pub detection_accuracy: f64,
     /// Mean latency from ingest to classification over recent evaluations.
     pub average_detection_time_ms: f64,
-    /// The last updated value
     /// The last updated value
     pub last_updated: DateTime<Utc>,
 }
@@ -146,7 +122,6 @@ impl ThreatDetectionEngine {
 
     /// Update a threat feed\
     /// Updates `threat_feed`
-    /// Updates `threat_feed`
     pub fn update_threat_feed(&mut self, feed: ThreatIntelligenceFeed) {
         self.threat_feeds.insert(feed.id.clone(), feed);
     }
@@ -157,7 +132,6 @@ impl ThreatDetectionEngine {
     }
 
     /// Remove a detection rule
-    /// Removes rule
     /// Removes rule
     pub fn remove_rule(&mut self, rule_id: &str) -> bool {
         if let Some(pos) = self.detection_rules.iter().position(|r| r.id == rule_id) {
@@ -174,7 +148,6 @@ impl ThreatDetectionEngine {
     }
 
     /// Get detection statistics
-    /// Gets stats
     /// Gets stats
     #[must_use]
     pub const fn get_stats(&self) -> &ThreatDetectionStats {

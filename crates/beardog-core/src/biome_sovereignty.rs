@@ -115,7 +115,6 @@ impl BiomeSovereigntyManager {
 
     /// Create a new manager with custom configuration
     /// Creates a new instance
-    /// Creates a new instance
     #[must_use]
     pub fn new_with_config(biome_id: String, config: BiomeSovereigntyConfig) -> Self {
         Self {
@@ -225,7 +224,6 @@ impl BiomeSovereigntyManager {
     }
 
     /// Get the current sovereignty status
-    /// Gets `sovereignty_status`
     /// Gets `sovereignty_status`
     #[must_use]
     pub fn get_sovereignty_status(&self) -> SovereigntyStatus {

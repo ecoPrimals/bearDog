@@ -51,7 +51,6 @@ impl ZeroCopyString {
 
     /// Check if empty
     /// Checks if empty
-    /// Checks if empty
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.inner.is_empty()
@@ -115,7 +114,6 @@ pub enum CommonString {
 impl CommonString {
     /// Try to create from string
     /// Parses `common_string`
-    /// Parses `common_string`
     #[must_use]
     pub fn parse_common_string(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
@@ -165,7 +163,6 @@ pub fn is_likely_id(s: &str) -> bool {
         || (s.len() > 10 && s.chars().all(|c| c.is_alphanumeric() || c == '-'))
 }
 
-/// Checks if common value
 /// Checks if common value
 #[must_use]
 pub fn is_common_value(s: &str) -> bool {

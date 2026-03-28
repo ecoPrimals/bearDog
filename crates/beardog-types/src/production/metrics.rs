@@ -122,7 +122,6 @@ impl ProductionMetricsCollector {
     /// - System metric sources are unavailable
     /// - Configuration validation fails
     /// Starts collection
-    /// Starts collection
     pub fn start_collection(&mut self) -> Result<(), BearDogError> {
         if self.is_collecting {
             return Err(BearDogError::business(
@@ -144,7 +143,6 @@ impl ProductionMetricsCollector {
     ///
     /// # Errors
     /// Returns `BearDogError` if collection is not currently active
-    /// Stops collection
     /// Stops collection
     pub fn stop_collection(&mut self) -> Result<(), BearDogError> {
         if !self.is_collecting {
@@ -199,14 +197,12 @@ impl ProductionMetricsCollector {
     /// Get metrics collection configuration
     #[must_use]
     /// Gets config
-    /// Gets config
     pub const fn get_config(&self) -> &MetricsConfig {
         &self.config
     }
 
     /// Get historical metrics data
     #[must_use]
-    /// Gets `metrics_history`
     /// Gets `metrics_history`
     pub fn get_metrics_history(&self) -> &[CurrentMetrics] {
         &self.metrics_history

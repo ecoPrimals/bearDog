@@ -66,7 +66,6 @@ impl EncryptionService {
 
     /// Check if the service is initialized
     /// Checks if initialized
-    /// Checks if initialized
     #[must_use]
     pub const fn is_initialized(&self) -> bool {
         true // Always initialized after construction

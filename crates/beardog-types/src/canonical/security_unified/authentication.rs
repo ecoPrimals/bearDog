@@ -31,7 +31,6 @@ pub struct TokenConfig {
 impl AuthenticationConfig {
     /// Validate
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }

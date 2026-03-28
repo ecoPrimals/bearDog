@@ -111,7 +111,6 @@ impl UsbDeviceRegistry {}
         })
 /// Get Registered Devices operation.
     /// Gets registered_devices
-    /// Gets registered_devices
     pub fn get_registered_devices(&self) -> Vec<&UsbDeviceInfo> {
         self.devices.values().collect()}
 
@@ -119,7 +118,6 @@ impl UsbDeviceRegistry {}
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Cleans up connections
     /// Cleans up connections
     pub fn cleanup_connections(&mut self) -> Result<(), BearDogError> {
         with_operation_context("cleanup_usb_connections", || async {

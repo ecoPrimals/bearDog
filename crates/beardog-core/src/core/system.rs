@@ -266,7 +266,6 @@ impl BearDogCore {
     /// # Errors
     /// Returns an error if the operation fails.
     /// Initializes componentialize
-    /// Initializes componentialize
     pub async fn initialize(&mut self) -> Result<(), BearDogError> {
         info!("🚀 Initializing BearDog Core");
 
@@ -298,7 +297,6 @@ impl BearDogCore {
     ///
     /// # Errors
     /// Returns an error if HSM initialization fails.
-    /// Initializes `componentialize_hsm_management`
     /// Initializes `componentialize_hsm_management`
     pub async fn initialize_hsm_management(&self) -> Result<(), BearDogError> {
         info!("🔐 Initializing HSM management capabilities");

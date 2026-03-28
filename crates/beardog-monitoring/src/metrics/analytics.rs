@@ -20,13 +20,11 @@ impl AnalyticsEngine {
     }
 
     /// Starts service
-    /// Starts service
     pub fn start(&self) -> Result<(), BearDogError> {
         tracing::info!("Analytics engine started");
         Ok(())
     }
 
-    /// Gets summary
     /// Gets summary
     pub const fn get_summary(&self) -> Result<AnalyticsSummary, BearDogError> {
         Ok(AnalyticsSummary {

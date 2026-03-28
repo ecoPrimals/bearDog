@@ -296,7 +296,6 @@ impl AdvancedPerformanceMonitor {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Gets metrics
-    /// Gets metrics
     pub fn get_metrics(&self) -> Result<AdvancedPerformanceMetrics, BearDogError> {
         self.update_metrics()?;
         let metrics = self.metrics.read().clone();

@@ -48,7 +48,6 @@ impl BufferPool {
 
 /// Get Buffer operation.
     /// Gets buffer
-    /// Gets buffer
     pub fn get_buffer(&self, size: usize) -> BytesMut {
         let size_class = self.size_class(size);
         {
@@ -95,7 +94,6 @@ impl BufferPool {
             _ => size.div_ceil(1048576) * 1048576, // Round up to MB
 
 /// Get Stats operation.
-    /// Gets stats
     /// Gets stats
     pub fn get_stats(&self) -> BufferPoolStats {
         BufferPoolStats {

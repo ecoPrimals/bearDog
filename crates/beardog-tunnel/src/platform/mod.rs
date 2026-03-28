@@ -52,6 +52,8 @@ pub mod wasm;
 use std::path::PathBuf;
 use tokio::io::{AsyncRead, AsyncWrite};
 
+use beardog_types::constants::domains::config::system::DEFAULT_SYSTEM_NAME;
+
 /// Platform-specific socket endpoint types
 #[derive(Debug, Clone)]
 pub enum SocketEndpoint {
@@ -123,7 +125,7 @@ pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEn
         .map(str::to_string)
         .or_else(|| beardog_errors::process_env::var("PRIMAL_NAME").ok())
         .or_else(|| beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME").ok())
-        .unwrap_or_else(|| "beardog".to_string());
+        .unwrap_or_else(|| DEFAULT_SYSTEM_NAME.to_string());
     let ns = beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_ipc_subdir_from_optional(None);
     SocketEndpoint::Abstract(format!("@{ns}_{primal_name}"))
 }
@@ -141,7 +143,7 @@ pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEn
         .map(str::to_string)
         .or_else(|| beardog_errors::process_env::var("PRIMAL_NAME").ok())
         .or_else(|| beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME").ok())
-        .unwrap_or_else(|| "beardog".to_string());
+        .unwrap_or_else(|| DEFAULT_SYSTEM_NAME.to_string());
     SocketEndpoint::Filesystem(PathBuf::from(format!("/tmp/{primal_name}.sock")))
 }
 
@@ -159,7 +161,7 @@ pub fn default_socket_endpoint_from_env() -> SocketEndpoint {
 pub fn default_socket_endpoint() -> SocketEndpoint {
     let primal_name = beardog_errors::process_env::var("PRIMAL_NAME")
         .or_else(|_| beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME"))
-        .unwrap_or_else(|_| "beardog".to_string());
+        .unwrap_or_else(|_| DEFAULT_SYSTEM_NAME.to_string());
     windows::create_endpoint_with(
         &primal_name,
         beardog_errors::process_env::var("BEARDOG_PIPE")
@@ -189,7 +191,7 @@ pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEn
         .map(str::to_string)
         .or_else(|| beardog_errors::process_env::var("PRIMAL_NAME").ok())
         .or_else(|| beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME").ok())
-        .unwrap_or_else(|| "beardog".to_string());
+        .unwrap_or_else(|| DEFAULT_SYSTEM_NAME.to_string());
     SocketEndpoint::InProcess(primal_name)
 }
 

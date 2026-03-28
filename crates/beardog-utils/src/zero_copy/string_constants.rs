@@ -89,7 +89,6 @@ pub mod components {
 
 /// Create Shared String operation.
     /// Creates shared_string
-    /// Creates shared_string
     pub fn create_shared_string(s: &str) -> Arc<String> {
     Arc::new(s.to_string())
 }

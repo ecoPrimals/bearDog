@@ -391,13 +391,11 @@ impl HybridIntelligenceSystem {
 
     /// Gets current system metrics
     /// Gets metrics
-    /// Gets metrics
     pub async fn get_metrics(&self) -> IntelligenceMetrics {
         *self.metrics.read().await
     }
 
     /// Gets current system health
-    /// Gets health
     /// Gets health
     pub async fn get_health(&self) -> HealthStatus {
         *self.health.read().await

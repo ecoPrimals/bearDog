@@ -64,7 +64,6 @@ impl IntegrationEngine {
     /// # Errors
     /// Returns an error if the operation fails.
     /// Initializes `componentialize_universal_hsm`
-    /// Initializes `componentialize_universal_hsm`
     pub fn initialize_universal_hsm(&mut self) -> Result<(), BearDogError> {
         info!("🔐 Initializing Universal HSM Architecture");
 

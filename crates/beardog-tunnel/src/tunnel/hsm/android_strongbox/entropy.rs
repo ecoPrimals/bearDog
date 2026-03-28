@@ -72,7 +72,6 @@ impl ChallengeGenerator {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Validates challenge
-    /// Validates challenge
     pub fn validate_challenge(&self, challenge: &[u8]) -> Result<bool, BearDogError> {
         debug!("🔍 Validating challenge of {} bytes", challenge.len({} bytes", challenge.len({} bytes", challenge.len());
 
@@ -175,7 +174,6 @@ impl AndroidEntropySource {
         *max_count <= threshold as u32
 
 /// Get Info operation.
-    /// Gets info
     /// Gets info
     pub fn get_info(&self) -> EntropySourceInfo {
         EntropySourceInfo {

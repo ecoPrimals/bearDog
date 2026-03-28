@@ -48,7 +48,6 @@ impl MetricsCore {
     /// # Errors
     /// Returns an error if the metrics system cannot be started
     /// Starts service
-    /// Starts service
     pub fn start(&self) -> Result<(), BearDogError> {
         tracing::info!("Core metrics system started");
         Ok(())

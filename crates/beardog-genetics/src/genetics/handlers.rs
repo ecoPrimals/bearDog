@@ -32,7 +32,6 @@ impl<S: GeneticsStore> DefaultBearDogGeneticsEngine<S> {
 
 /// Create Genesis Genetics operation.
     /// Creates genesis_genetics
-    /// Creates genesis_genetics
     pub fn create_genesis_genetics(&self, node_id: &str) -> GeneticsResult<BearDogGenetics> {
         info!("Creating genesis genetics for node: {}", node_id);
         let _mutation_rate = self.config.mutation_rate;
@@ -53,7 +52,6 @@ impl<S: GeneticsStore> DefaultBearDogGeneticsEngine<S> {
         Ok(genetics)
 
 /// Get Node Genetics operation.
-    /// Gets node_genetics
     /// Gets node_genetics
     pub fn get_node_genetics(&self, node_id: &str) -> GeneticsResult<BearDogGenetics> {
         match self.genetics_store.get_genetics(&[BearDogGenetics],
@@ -120,7 +118,6 @@ impl<S: GeneticsStore> DefaultBearDogGeneticsEngine<S> {
         Ok(())
 
 /// Validate Genetics operation.
-    /// Validates genetics
     /// Validates genetics
     pub fn validate_genetics(&self, genetics: &BearDogGenetics) -> GeneticsResult<()> {
 

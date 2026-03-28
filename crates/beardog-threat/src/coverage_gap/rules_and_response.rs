@@ -272,10 +272,11 @@ mod response_gap_tests {
     }
 
     #[test]
-    fn test_collect_forensics_returns_empty() {
+    fn test_collect_forensics_returns_artifacts() {
         let handler = make_handler(true);
         let threat = make_threat();
-        let result = handler.collect_forensics(&threat).unwrap();
-        assert!(result.is_empty());
+        let artifacts = handler.collect_forensics(&threat).unwrap();
+        assert!(!artifacts.is_empty());
+        assert!(artifacts.iter().any(|a| a.starts_with("threat_id:")));
     }
 }

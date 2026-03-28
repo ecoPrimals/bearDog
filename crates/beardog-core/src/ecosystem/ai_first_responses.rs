@@ -502,7 +502,6 @@ impl<T> AIFirstResponseBuilder<T> {
 
     /// Build operation.
     /// Builds component
-    /// Builds component
     #[expect(
         clippy::cast_possible_truncation,
         reason = "Millis duration clamped to u64::MAX before cast"

@@ -25,7 +25,6 @@ use crate::monitoring::MonitoringService;
 use crate::utils::env_utils::EnvUtils;
 use crate::BearDogCore;
  /// Configuration management
- /// Configuration management
 pub mod config;
 pub mod health;
 pub mod operations;
@@ -61,7 +60,6 @@ impl ProductionManager {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Starts service
     /// Starts service
     pub fn start(&mut self) -> Result<(), BearDogError> {
         info!("🚀 Starting production system");
@@ -234,7 +232,6 @@ impl ProductionManager {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Validates production_environment
-    /// Validates production_environment
     pub fn validate_production_environment(&self) -> Result<EnvironmentValidation, BearDogError> {
         let mut validation = EnvironmentValidation::new();
         validation.update(true, true, true, true, true);
@@ -245,13 +242,11 @@ impl ProductionManager {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Validates dependencies
-    /// Validates dependencies
     pub fn validate_dependencies(&self) -> Result<DependencyValidation, BearDogError> {
         let mut validation = DependencyValidation::new();
         validation.update(true, true, true, true);
 
 /// Validate Production Configuration operation.
-    /// Validates production_configuration
     /// Validates production_configuration
     pub fn validate_production_configuration(
         &self,
@@ -263,7 +258,6 @@ impl ProductionManager {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Runs pre_deployment_safety_checks
-    /// Runs pre_deployment_safety_checks
     pub fn run_pre_deployment_safety_checks(&self) -> Result<SafetyChecks, BearDogError> {
         let mut safety = SafetyChecks::new();
         safety.update(true, true, true, true);
@@ -273,7 +267,6 @@ impl ProductionManager {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Gets system_health_status
     /// Gets system_health_status
     pub fn get_system_health_status(&self) -> Result<SystemHealthStatus, BearDogError> {
         let mut status = SystemHealthStatus::new();
@@ -288,7 +281,6 @@ impl ProductionManager {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Gets component_health_status
     /// Gets component_health_status
     pub fn get_component_health_status(&self) -> Result<ComponentHealthStatus, BearDogError> {
         let mut status = ComponentHealthStatus::new();
@@ -363,7 +355,6 @@ impl ProductionManager {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Validates security_hardening
-    /// Validates security_hardening
     pub fn validate_security_hardening(&self) -> Result<SecurityHardeningValidation, BearDogError> {
         let mut validation = SecurityHardeningValidation::new();
 
@@ -371,7 +362,6 @@ impl ProductionManager {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Validates network_security
     /// Validates network_security
     pub fn validate_network_security(&self) -> Result<NetworkSecurityValidation, BearDogError> {
         let mut validation = NetworkSecurityValidation::new();
@@ -381,7 +371,6 @@ impl ProductionManager {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Validates data_protection
-    /// Validates data_protection
     pub fn validate_data_protection(&self) -> Result<DataProtectionValidation, BearDogError> {
         let mut validation = DataProtectionValidation::new();
 
@@ -390,7 +379,6 @@ impl ProductionManager {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Validates compliance_requirements
-    /// Validates compliance_requirements
     pub fn validate_compliance_requirements(&self) -> Result<ComplianceValidation, BearDogError> {
         let mut validation = ComplianceValidation::new();
 
@@ -398,7 +386,6 @@ impl ProductionManager {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Runs vulnerability_scan
     /// Runs vulnerability_scan
     pub fn run_vulnerability_scan(&self) -> Result<VulnerabilityScanResults, BearDogError> {
         let mut results = VulnerabilityScanResults::new(&UnifiedTestingConfig,
@@ -414,7 +401,6 @@ impl ProductionManager {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Validates startup_procedures
-    /// Validates startup_procedures
     pub fn validate_startup_procedures(&self) -> Result<StartupValidation, BearDogError> {
         let mut validation = StartupValidation::new();
         validation.initialization_sequence_correct = true;
@@ -428,7 +414,6 @@ impl ProductionManager {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Validates shutdown_procedures
-    /// Validates shutdown_procedures
     pub fn validate_shutdown_procedures(&self) -> Result<ShutdownValidation, BearDogError> {
         let mut validation = ShutdownValidation::new();
         validation.graceful_shutdown_supported = true;
@@ -440,7 +425,6 @@ impl ProductionManager {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Validates backup_procedures
     /// Validates backup_procedures
     pub fn validate_backup_procedures(&self) -> Result<BackupValidation, BearDogError> {
         let mut validation = BackupValidation::new();
@@ -455,7 +439,6 @@ impl ProductionManager {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Validates maintenance_procedures
-    /// Validates maintenance_procedures
     pub fn validate_maintenance_procedures(&self) -> Result<MaintenanceValidation, BearDogError> {
         let mut validation = MaintenanceValidation::new();
         validation.maintenance_windows_defined = true;
@@ -467,7 +450,6 @@ impl ProductionManager {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Validates monitoring_procedures
     /// Validates monitoring_procedures
     pub fn validate_monitoring_procedures(&self) -> Result<MonitoringValidation, BearDogError> {
         let mut validation = MonitoringValidation::new();
@@ -481,7 +463,6 @@ impl ProductionManager {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Validates operational_runbooks
-    /// Validates operational_runbooks
     pub fn validate_operational_runbooks(&self) -> Result<RunbookValidation, BearDogError> {
         let mut validation = RunbookValidation::new();
         validation.runbooks_comprehensive = true;
@@ -491,13 +472,11 @@ impl ProductionManager {
 
 /// Validate Disaster Recovery Plan operation.
     /// Validates disaster_recovery_plan
-    /// Validates disaster_recovery_plan
     pub fn validate_disaster_recovery_plan(
     ) -> Result<DisasterRecoveryValidation, BearDogError> {
         let mut validation = DisasterRecoveryValidation::new();
 
 /// Validate Business Continuity Plan operation.
-    /// Validates business_continuity_plan
     /// Validates business_continuity_plan
     pub fn validate_business_continuity_plan(
     ) -> Result<BusinessContinuityValidation, BearDogError> {
@@ -531,7 +510,6 @@ impl ProductionManager {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Validates rto_rpo_compliance
     /// Validates rto_rpo_compliance
     pub fn validate_rto_rpo_compliance(&self) -> Result<RtoRpoValidation, BearDogError> {
         let mut validation = RtoRpoValidation::new(&UnifiedTestingConfig,

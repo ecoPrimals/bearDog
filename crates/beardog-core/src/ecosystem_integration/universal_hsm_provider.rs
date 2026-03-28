@@ -137,13 +137,11 @@ impl UniversalHsmManager {
 
     /// Get current metrics
     /// Gets metrics
-    /// Gets metrics
     pub fn get_metrics(&self) -> Result<HsmMetrics, BearDogError> {
         let metrics = self.metrics.read();
         Ok(metrics.clone())
     }
 
-    /// Gets ecosystem_status
     /// Gets ecosystem_status
     pub fn get_ecosystem_status(&self) -> Result<serde_json::Value, BearDogError> {
         let health_status = self.health_status.read();
@@ -171,7 +169,6 @@ impl UniversalHsmManager {
     }
 
     /// Execute HSM operation
-    /// Executes operation
     /// Executes operation
     pub fn execute_operation(
         &self,

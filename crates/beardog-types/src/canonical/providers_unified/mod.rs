@@ -9,7 +9,6 @@ use serde::{Deserialize, Serialize};
 pub mod connection;
 /// Core module
 /// Core functionality
-/// Core functionality
 pub mod core;
 /// Discovery module (deprecated - use service_discovery instead)
 pub mod discovery;

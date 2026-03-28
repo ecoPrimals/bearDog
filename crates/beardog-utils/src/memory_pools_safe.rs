@@ -96,7 +96,6 @@ where
 
     /// Get pool statistics
     /// Gets stats
-    /// Gets stats
     pub fn get_stats(&self) -> Result<PoolStats, std::io::Error> {
         let stats = self
             .stats

@@ -59,7 +59,6 @@ impl RustBuilder {
     /// # Errors
     /// Returns error if any build step fails
     /// Builds `android_app`
-    /// Builds `android_app`
     pub async fn build_android_app(&self, release: bool, target: &str) -> Result<(), BearDogError> {
         info!("🔨 Building BearDog Android application...");
 

@@ -85,7 +85,6 @@ where
     /// # Errors
     /// Returns an error if the workflow processing fails or is rejected by the processor
     /// Processes data
-    /// Processes data
     pub async fn process(&self, workflow: Workflow) -> Result<WorkflowResult, P::Error> {
         self.processor.process_workflow(workflow).await
     }
@@ -94,7 +93,6 @@ where
     ///
     /// # Errors
     /// Returns an error if the workflow is invalid or unsupported
-    /// Validates input
     /// Validates input
     pub fn validate(&self, workflow: &Workflow) -> Result<(), P::Error> {
         self.processor.validate_workflow(workflow)

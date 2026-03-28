@@ -28,7 +28,6 @@ impl<S: GeneticsStore> GeneticsAPI<S> {
     /// # Errors
     /// Returns an error if the operation fails.
     /// Creates genesis_genetics
-    /// Creates genesis_genetics
     pub fn create_genesis_genetics(&self, _node_id: &str) -> Result<BearDogGenetics, BearDogError> {
         self.engine.generate_genesis_genetics()
     }
@@ -37,7 +36,6 @@ impl<S: GeneticsStore> GeneticsAPI<S> {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    /// Gets node_genetics
     /// Gets node_genetics
     pub fn get_node_genetics(&self, node_id: &str) -> Result<BearDogGenetics, BearDogError> {
         self.engine.get_node_genetics(node_id)

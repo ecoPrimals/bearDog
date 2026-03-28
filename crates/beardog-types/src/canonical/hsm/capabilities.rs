@@ -428,7 +428,6 @@ pub struct CapabilitySummary {
     /// Normalized score from [`HsmCapabilities::performance_rating`].
     pub performance_rating: f64,
     /// Number of certifications
-    /// Number of certifications
     pub certifications: usize,
     /// Advanced features available
     /// Whether `advanced_features` is enabled

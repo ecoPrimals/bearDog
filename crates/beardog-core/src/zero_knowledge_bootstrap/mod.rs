@@ -600,7 +600,6 @@ impl ZeroKnowledgeBootstrap {
 
     /// Get current ecosystem state
     /// Gets `ecosystem_state`
-    /// Gets `ecosystem_state`
     pub async fn get_ecosystem_state(&self) -> EcosystemState {
         let capabilities = self.discovered_capabilities.read().await;
         let primals = self.discovered_primals.read().await;

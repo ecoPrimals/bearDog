@@ -56,7 +56,6 @@ impl ZeroCopyManager {
     }
 
     /// Gets `shared_string`
-    /// Gets `shared_string`
     pub fn get_shared_string<S: AsRef<str>>(&self, s: S) -> Arc<str> {
         let s_ref = s.as_ref();
 
@@ -152,7 +151,6 @@ impl ZeroCopyManager {
 
     /// Cleanup expired cache entries
     /// Cleans up expired
-    /// Cleans up expired
     pub fn cleanup_expired(&self) {
         let mut last_cleanup = self.last_cleanup.write();
         let now = Instant::now();
@@ -182,7 +180,6 @@ impl ZeroCopyManager {
     }
 
     /// Get optimization statistics
-    /// Gets stats
     /// Gets stats
     #[must_use]
     pub fn get_stats(&self) -> Arc<ZeroCopyStats> {
@@ -281,7 +278,6 @@ impl OptimizedString {
 
     /// Check if this is using zero-copy optimization
     /// Checks if optimized
-    /// Checks if optimized
     #[must_use]
     pub fn is_optimized(&self) -> bool {
         matches!(self, OptimizedString::Shared(_))
@@ -326,7 +322,6 @@ impl OptimizedBytes {
     }
 
     /// Check if this is using zero-copy optimization
-    /// Checks if optimized
     /// Checks if optimized
     #[must_use]
     pub fn is_optimized(&self) -> bool {
@@ -437,13 +432,11 @@ impl<T> ZeroCopyBuilder<T> {
 
     /// Build the final value
     /// Builds component
-    /// Builds component
     pub fn build(self) -> T {
         self.inner
     }
 
     /// Check if optimizations were applied
-    /// Checks if optimized
     /// Checks if optimized
     pub fn is_optimized(&self) -> bool {
         self.optimized

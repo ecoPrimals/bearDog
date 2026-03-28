@@ -16,7 +16,6 @@ pub struct ConfigLoader;
 impl ConfigLoader {
 
     /// Loads from_file
-    /// Loads from_file
     pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<BearDogConfig, BearDogError> {
         let path = path.as_ref();
         let content = fs::read_to_string(path)?;
@@ -24,7 +23,6 @@ impl ConfigLoader {
         Ok(config)
     }
 
-    /// Loads with_fallback
     /// Loads with_fallback
     pub fn load_with_fallback(primary: &str, fallbacks: &[&str]) -> Result<BearDogConfig, BearDogError> {
         if let Ok(config) = Self::load_from_file(primary) {
@@ -37,13 +35,11 @@ impl ConfigLoader {
         Err(anyhow::anyhow!("No valid configuration file found"))
 
     /// Saves to_file
-    /// Saves to_file
     pub fn save_to_file<P: AsRef<Path>>(config: &BearDogConfig, path: P) -> Result<(), BearDogError> {
         let content = toml::to_string_pretty(config)?;
         fs::write(path, content)?;
 }
 
-/// Loads config_file
 /// Loads config_file
 pub fn load_config_file(path: &str) -> Result<BearDogConfig, BearDogError> {
     let config = ConfigLoader::load_from_file(path)?;
@@ -54,11 +50,9 @@ pub fn load_config_file(path: &str) -> Result<BearDogConfig, BearDogError> {
     Ok(config)
 
 /// Validates config_file
-/// Validates config_file
 pub fn validate_config_file(path: &str) -> bool {
     load_config_file(path).is_ok()
 
-/// Gets config_paths
 /// Gets config_paths
 pub fn get_config_paths() -> Vec<String> {
     vec![
@@ -126,7 +120,6 @@ pub fn check_config_permissions(path: &str) -> Result<bool, BearDogError> {
     Ok(true)
 
 /// Creates default_config
-/// Creates default_config
 pub fn create_default_config(path: &str) -> Result<(), BearDogError> {
     let default_config = BearDogConfig::default();
     let content = toml::to_string_pretty(&default_config)
@@ -150,7 +143,6 @@ pub fn backup_config_file(path: &str) -> Result<String, BearDogError> {
         .map_err(|e| anyhow::anyhow!("Failed to backup config file: {}", e))?;
     Ok(backup_path)
 
-/// Validates env_vars
 /// Validates env_vars
 pub fn validate_env_vars() -> Vec<String> {
     let mut errors = Vec::new();

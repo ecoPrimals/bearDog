@@ -247,13 +247,11 @@ impl NetworkConfig {
     /// Check if TLS is properly configured
     #[must_use]
     /// Checks if tls configured
-    /// Checks if tls configured
     pub const fn is_tls_configured(&self) -> bool {
         self.tls_enabled && self.tls_cert_path.is_some() && self.tls_key_path.is_some()
     }
 
     /// Validate the network configuration
-    /// Validates input
     /// Validates input
     pub fn validate(&self) -> Result<(), String> {
         if self.port == 0 {

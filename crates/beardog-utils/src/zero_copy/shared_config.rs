@@ -64,7 +64,6 @@ impl SharedConfigManager {
 
     /// Remove configuration
     /// Removes item
-    /// Removes item
     pub fn remove(&self, key: &str) -> bool {
         let mut configs = self.configs.write().unwrap_or_else(|poisoned| {
             tracing::warn!("Shared config lock poisoned on remove, recovering");
@@ -94,7 +93,6 @@ impl SharedConfigManager {
     }
 
     /// Check if empty
-    /// Checks if empty
     /// Checks if empty
     pub fn is_empty(&self) -> bool {
         self.configs

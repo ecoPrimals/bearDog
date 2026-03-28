@@ -6,6 +6,7 @@
 
 use super::*;
 use beardog_errors::BearDogError;
+use beardog_types::constants::domains::config::system::DEFAULT_SYSTEM_NAME;
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
 
@@ -392,7 +393,7 @@ impl Default for ProductionConfig {
 impl Default for ApplicationConfig {
     fn default() -> Self {
         Self {
-            name: "beardog".to_string(),
+            name: DEFAULT_SYSTEM_NAME.to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             environment: "development".to_string(),
             instance_id: uuid::Uuid::new_v4().to_string(),
@@ -437,9 +438,9 @@ impl Default for DatabaseConnection {
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(5432),
             database: beardog_errors::process_env::var("BEARDOG_DB_NAME")
-                .unwrap_or_else(|_| "beardog".to_string()),
+                .unwrap_or_else(|_| DEFAULT_SYSTEM_NAME.to_string()),
             username: beardog_errors::process_env::var("BEARDOG_DB_USER")
-                .unwrap_or_else(|_| "beardog".to_string()),
+                .unwrap_or_else(|_| DEFAULT_SYSTEM_NAME.to_string()),
             password: String::new(),
             ssl_mode: "require".to_string(),
             connection_timeout: 5,

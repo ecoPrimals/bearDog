@@ -2,14 +2,14 @@
 
 //! Canonical, object-safe HSM provider trait.
 //!
-//! [`HsmKeyProvider`] is the single authoritative abstraction for all
+//! `HsmKeyProvider` is the single authoritative abstraction for all
 //! key-management and crypto operations backed by either hardware
 //! (Android StrongBox, iOS Secure Enclave, TPM, PKCS#11) or software
 //! (RustCrypto in-process key store).
 //!
 //! It is intentionally lighter than the full `BearDogProvider` hierarchy so
 //! it can be used as `Arc<dyn HsmKeyProvider>` for dynamic dispatch in the
-//! [`HsmProviderRegistry`] and JSON-RPC handlers.
+//! `HsmProviderRegistry` and JSON-RPC handlers.
 
 use async_trait::async_trait;
 use beardog_errors::BearDogError;

@@ -18,12 +18,9 @@ pub struct ThreatAnalysisMetrics {
     /// Total `analyze_threat` invocations.
     pub analyses_performed: u64,
     /// Number of `threats_detected`
-    /// Number of `threats_detected`
     pub threats_detected: u64,
     /// Number of `false_positives`
-    /// Number of `false_positives`
     pub false_positives: u64,
-    /// The detection accuracy value
     /// The detection accuracy value
     pub detection_accuracy: f64,
 }
@@ -44,12 +41,9 @@ pub struct ThreatDetectionEngine {
     /// Canonical threat configuration controlling thresholds and features.
     pub config: ThreatDetectionConfig,
     /// Collection of detection rules
-    /// Collection of detection rules
     pub detection_rules: Vec<DetectionRule>,
     /// Mapping of threat signatures
-    /// Mapping of threat signatures
     pub threat_signatures: HashMap<String, String>,
-    /// The metrics value
     /// The metrics value
     pub metrics: ThreatAnalysisMetrics,
 }
@@ -72,14 +66,12 @@ impl ThreatDetectionEngine {
     }
 
     /// Removes rule
-    /// Removes rule
     pub fn remove_rule(&mut self, rule_id: &str) -> bool {
         let initial_len = self.detection_rules.len();
         self.detection_rules.retain(|rule| rule.id != rule_id);
         self.detection_rules.len() < initial_len
     }
 
-    /// Updates `threat_signatures`
     /// Updates `threat_signatures`
     pub fn update_threat_signatures(
         &mut self,
@@ -126,14 +118,11 @@ impl Default for ThreatDetectionEngine {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatAnalysisResult {
     /// Whether `threat_detected` is enabled
-    /// Whether `threat_detected` is enabled
     pub threat_detected: bool,
     /// Score returned by the heuristic (not calibrated to a global scale).
     pub confidence_score: f64,
     /// The threat type value
-    /// The threat type value
     pub threat_type: ThreatType,
-    /// The details value
     /// The details value
     pub details: String,
 }

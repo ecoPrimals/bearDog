@@ -51,7 +51,6 @@ impl ComponentManager {
     /// # Errors
     /// Returns an error if the operation fails.
     /// Updates `component_status`
-    /// Updates `component_status`
     pub async fn update_component_status(
         &self,
         name: &str,
@@ -71,7 +70,6 @@ impl ComponentManager {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    /// Gets `component_status`
     /// Gets `component_status`
     pub async fn get_component_status(&self, name: &str) -> Result<ComponentStatus, BearDogError> {
         let components = self.components.read().await;
@@ -110,7 +108,6 @@ impl ComponentManager {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    /// Gets `system_health`
     /// Gets `system_health`
     pub async fn get_system_health(&self) -> Result<HealthStatus, BearDogError> {
         let all_healthy = self.all_components_healthy().await?;

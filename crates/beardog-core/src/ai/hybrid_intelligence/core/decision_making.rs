@@ -406,22 +406,48 @@ impl DecisionEngine {
         }
     }
     
-    /// Assess data quality
-    async fn assess_data_quality(&self, _data: &serde_json::Value) -> f64 {
-        // Placeholder implementation
-        0.8
+    /// Assess data quality from a JSON payload.
+    ///
+    /// Scores based on structural richness: penalises null/empty payloads, rewards
+    /// object depth and field count.  Returns a value in `0.0..=1.0`.
+    async fn assess_data_quality(&self, data: &serde_json::Value) -> f64 {
+        match data {
+            serde_json::Value::Null => 0.0,
+            serde_json::Value::Bool(_) | serde_json::Value::Number(_) | serde_json::Value::String(s) if s.is_empty() => 0.3,
+            serde_json::Value::String(_) => 0.6,
+            serde_json::Value::Array(arr) => {
+                if arr.is_empty() { 0.3 } else { (0.5 + 0.05 * arr.len() as f64).min(1.0) }
+            }
+            serde_json::Value::Object(map) => {
+                if map.is_empty() { 0.3 } else { (0.5 + 0.05 * map.len() as f64).min(1.0) }
+            }
+        }
     }
-    
-    /// Assess decision complexity
-    async fn assess_complexity(&self, _context: &DecisionContext) -> f64 {
-        // Placeholder implementation
-        0.7
+
+    /// Assess decision complexity from context.
+    ///
+    /// Uses the number of constraints and the decision type to estimate complexity
+    /// on a `0.0..=1.0` scale.
+    async fn assess_complexity(&self, context: &DecisionContext) -> f64 {
+        let base = match context.decision_type.as_str() {
+            "security" | "cryptographic" => 0.8,
+            "operational" | "deployment" => 0.6,
+            _ => 0.5,
+        };
+        let constraint_factor = (context.constraints.len() as f64 * 0.05).min(0.3);
+        (base + constraint_factor).min(1.0)
     }
-    
-    /// Get historical accuracy for decision type
-    async fn get_historical_accuracy(&self, _decision_type: &str) -> f64 {
-        // Placeholder implementation
-        0.75
+
+    /// Look up historical accuracy for a given decision type.
+    ///
+    /// Falls back to the engine's overall success rate when no per-type data exists.
+    async fn get_historical_accuracy(&self, decision_type: &str) -> f64 {
+        let key = format!("historical_{decision_type}");
+        self.metrics
+            .success_rate_by_confidence
+            .get(&key)
+            .copied()
+            .unwrap_or(self.metrics.average_confidence)
     }
 }
 

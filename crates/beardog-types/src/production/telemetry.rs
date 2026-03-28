@@ -42,13 +42,11 @@ impl TelemetryCollector {
 
     /// Start Collection
     /// Starts collection
-    /// Starts collection
     pub fn start_collection(&mut self) -> Result<(), BearDogError> {
         Ok(())
     }
 
     /// Stop Collection
-    /// Stops collection
     /// Stops collection
     pub fn stop_collection(&mut self) -> Result<(), BearDogError> {
         Ok(())

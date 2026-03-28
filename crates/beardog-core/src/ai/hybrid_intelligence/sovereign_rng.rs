@@ -384,7 +384,6 @@ impl SovereignRng {
 
     /// Clear expired cache entries
     /// Cleans up cache
-    /// Cleans up cache
     #[expect(
         clippy::cast_sign_loss,
         reason = "Cache age in seconds is non-negative for valid entries"
@@ -427,7 +426,6 @@ impl SovereignRng {
 
     /// Get entropy usage statistics
     /// Gets `entropy_stats`
-    /// Gets `entropy_stats`
     #[must_use]
     pub fn get_entropy_stats(&self) -> SovereignRngStats {
         SovereignRngStats {
@@ -458,7 +456,6 @@ pub struct NeuralNetworkEntropyIntegration;
 
 impl NeuralNetworkEntropyIntegration {
     /// Convert `WeightInitialization` enum to human entropy initializer
-    /// Creates `human_entropy_initializer`
     /// Creates `human_entropy_initializer`
     #[must_use]
     pub fn create_human_entropy_initializer(

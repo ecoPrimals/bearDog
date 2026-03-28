@@ -387,7 +387,6 @@ impl NetworkConfig {
 
     #[must_use]
     /// Gets `service_url`
-    /// Gets `service_url`
     pub fn get_service_url(&self, service: &str, path: &str) -> String {
         let port = match service {
             "admin" => self.service_ports.admin_port,

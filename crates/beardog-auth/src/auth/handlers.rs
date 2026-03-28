@@ -291,7 +291,6 @@ impl AuthenticationHandler {
 
     /// Validate session token
     /// Validates session
-    /// Validates session
     pub fn validate_session(&self, token: &str) -> Result<&SessionData, BearDogError> {
         self.active_sessions
             .values()
@@ -308,7 +307,6 @@ impl AuthenticationHandler {
 
     /// Clean expired sessions
     /// Cleans up `expired_sessions`
-    /// Cleans up `expired_sessions`
     pub fn cleanup_expired_sessions(&mut self) {
         let now = chrono::Utc::now();
         self.active_sessions
@@ -324,14 +322,12 @@ impl AuthenticationHandler {
     }
 
     /// Gets `login_attempts`
-    /// Gets `login_attempts`
     #[must_use]
     pub fn get_login_attempts(&self, user_id: &str) -> u32 {
         self.login_attempts.get(user_id).copied().unwrap_or(0)
     }
 
     /// Check if a user is currently locked out
-    /// Checks if user locked
     /// Checks if user locked
     #[must_use]
     pub fn is_user_locked(&self, user_id: &str) -> bool {

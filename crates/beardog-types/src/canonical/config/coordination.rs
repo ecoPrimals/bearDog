@@ -740,7 +740,6 @@ impl CoordinationConfig {
 
     /// Get current coordination model type
     /// Gets coordination_type
-    /// Gets coordination_type
     pub fn get_coordination_type(&self) -> String {
         match &self.coordination_model {
             CoordinationModel::Distributed { .. } => "distributed".to_string(),
@@ -752,7 +751,6 @@ impl CoordinationConfig {
     }
 
     /// Validate coordination configuration
-    /// Validates input
     /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         // Validate coordination model specific requirements

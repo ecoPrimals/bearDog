@@ -158,7 +158,6 @@ impl MonitoringService {
     /// # Errors
     /// Returns an error if monitoring cannot be started
     /// Starts monitoring
-    /// Starts monitoring
     pub fn start_monitoring(&self) -> Result<(), BearDogError> {
         tracing::info!("Starting monitoring service");
         Ok(())
@@ -168,7 +167,6 @@ impl MonitoringService {
     ///
     /// # Errors
     /// Returns an error if monitoring cannot be stopped
-    /// Stops monitoring
     /// Stops monitoring
     pub fn stop_monitoring(&self) -> Result<(), BearDogError> {
         tracing::info!("Stopping monitoring service");
@@ -213,7 +211,6 @@ impl MonitoringService {
     /// # Errors
     /// Returns an error if health status cannot be determined
     /// Gets `health_status`
-    /// Gets `health_status`
     pub const fn get_health_status(&self) -> Result<HealthStatus, BearDogError> {
         Ok(HealthStatus::Healthy)
     }
@@ -233,7 +230,6 @@ impl MonitoringService {
     /// # Errors
     /// Returns an error if snapshots cannot be retrieved
     /// Gets snapshots
-    /// Gets snapshots
     pub async fn get_snapshots(&self) -> Result<Vec<MonitoringSnapshot>, BearDogError> {
         Ok(self.snapshots.read().await.clone())
     }
@@ -243,7 +239,6 @@ impl MonitoringService {
     /// # Errors
     /// Returns an error if no snapshots are available
     /// Gets `latest_snapshot`
-    /// Gets `latest_snapshot`
     pub async fn get_latest_snapshot(&self) -> Result<Option<MonitoringSnapshot>, BearDogError> {
         let snapshots = self.snapshots.read().await;
         Ok(snapshots.last().cloned())
@@ -251,7 +246,6 @@ impl MonitoringService {
 
     /// Gets system uptime in seconds
     #[must_use]
-    /// Gets `uptime_seconds`
     /// Gets `uptime_seconds`
     pub fn get_uptime_seconds(&self) -> u64 {
         self.start_time.elapsed().as_secs()
@@ -414,7 +408,6 @@ impl MonitoringService {
     ///
     /// # Errors
     /// Returns an error if alerts cannot be retrieved
-    /// Gets `recent_alerts`
     /// Gets `recent_alerts`
     pub async fn get_recent_alerts(&self, limit: usize) -> Result<Vec<String>, BearDogError> {
         let alerts = self.alerts.read().await;

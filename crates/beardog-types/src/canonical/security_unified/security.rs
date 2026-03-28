@@ -15,7 +15,6 @@ pub struct SecurityConfig {
 impl SecurityConfig {
     /// Validate
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }

@@ -144,42 +144,32 @@ pub struct SecurityIncident {
     pub id: String,
     /// Incident title
     /// The title value
-    /// The title value
     pub title: String,
     /// Incident description
-    /// The description value
     /// The description value
     pub description: String,
     /// Incident severity level
     /// The severity value
-    /// The severity value
     pub severity: super::ThreatSeverity,
     /// Current incident status
-    /// Current status of the component
     /// Current status of the component
     pub status: IncidentStatus,
     /// Incident creation timestamp
     /// The created at value
-    /// The created at value
     pub created_at: SystemTime,
     /// Incident last update timestamp
-    /// The updated at value
     /// The updated at value
     pub updated_at: SystemTime,
     /// Assigned analyst or team
     /// Optional assigned to
-    /// Optional assigned to
     pub assigned_to: Option<String>,
     /// Related threat event IDs
-    /// Collection of threat events
     /// Collection of threat events
     pub threat_events: Vec<String>,
     /// Incident response actions
     /// Collection of response actions
-    /// Collection of response actions
     pub response_actions: Vec<String>,
     /// Incident notes and updates
-    /// Collection of notes
     /// Collection of notes
     pub notes: Vec<String>,
 }
@@ -210,7 +200,6 @@ impl SecurityIncident {
     }
 
     /// Update incident status
-    /// Updates status
     /// Updates status
     pub fn update_status(&mut self, status: IncidentStatus) {
         self.status = status;

@@ -38,13 +38,11 @@ impl OptimizationHistory {
     }
 
     /// Gets `total_actions`
-    /// Gets `total_actions`
     #[must_use]
     pub fn get_total_actions(&self) -> usize {
         self.optimization_actions.len()
     }
 
-    /// Gets `successful_actions`
     /// Gets `successful_actions`
     #[must_use]
     pub fn get_successful_actions(&self) -> usize {
@@ -54,7 +52,6 @@ impl OptimizationHistory {
             .count()
     }
 
-    /// Gets `average_improvement`
     /// Gets `average_improvement`
     #[must_use]
     pub fn get_average_improvement(&self) -> f64 {
@@ -76,7 +73,6 @@ impl OptimizationHistory {
         }
     }
 
-    /// Gets `success_rate`
     /// Gets `success_rate`
     #[must_use]
     pub fn get_success_rate(&self, optimization_type: &str) -> Option<f64> {
@@ -120,7 +116,6 @@ impl OptimizationHistory {
         }
     }
 
-    /// Gets `recent_actions`
     /// Gets `recent_actions`
     #[must_use]
     pub fn get_recent_actions(&self, count: usize) -> Vec<&OptimizationAction> {

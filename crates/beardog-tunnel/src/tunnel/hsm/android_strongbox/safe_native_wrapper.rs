@@ -75,7 +75,6 @@ impl SafeAndroidStrongBoxWrapper {
 
     /// Initialize native Android handles safely
     /// Initializes componentialize_native_handles
-    /// Initializes componentialize_native_handles
     pub fn initialize_native_handles(&mut self) -> Result<(), BearDogError> {
         info!("🔧 Initializing Android native handles");
 
@@ -172,7 +171,6 @@ impl SafeAndroidStrongBoxWrapper {
 
     /// Get device capabilities
     /// Gets device_capabilities
-    /// Gets device_capabilities
     pub fn get_device_capabilities(&self) -> &DeviceCapabilities {
         &self.device_capabilities
     }
@@ -198,7 +196,6 @@ impl SafeAndroidStrongBoxWrapper {
     }
 
     /// Get operation metrics
-    /// Gets operation_metrics
     /// Gets operation_metrics
     pub async fn get_operation_metrics(&self) -> HashMap<String, OperationMetrics> {
         self.operation_metrics.read().await.clone()

@@ -229,7 +229,6 @@ impl SafeMemoryPool {
             stats: PoolStats::default(),
 
     /// Gets buffer
-    /// Gets buffer
     pub fn get_buffer(&mut self, size: usize) -> SafeSecureBuffer {
         if let Some(pool) = self.pools.get_mut(&size) {
             if let Some(buffer) = pool.pop() {

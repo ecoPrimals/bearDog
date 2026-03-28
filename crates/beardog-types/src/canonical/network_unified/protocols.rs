@@ -18,7 +18,6 @@ pub struct ProtocolsConfig {
 impl ProtocolsConfig {
     /// Validate
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }

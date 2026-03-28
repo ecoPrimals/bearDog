@@ -35,7 +35,7 @@ impl Default for RequestContext {
             pattern_consistency: 0.0,
             request_rate: 0,
             tls_enabled: false,
-            source_ip: "0.0.0.0".to_string(),
+            source_ip: std::net::Ipv4Addr::UNSPECIFIED.to_string(),
             license_key: None,
         }
     }

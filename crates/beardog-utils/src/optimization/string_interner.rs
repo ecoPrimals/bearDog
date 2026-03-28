@@ -63,7 +63,6 @@ impl StringInterner {
 
     /// Get interning statistics
     /// Gets stats
-    /// Gets stats
     pub fn get_stats(&self) -> Result<InternerStats, BearDogError> {
         let stats = self
             .stats
@@ -106,7 +105,6 @@ impl StringInterner {
     }
 
     /// Check if interner is empty
-    /// Checks if empty
     /// Checks if empty
     pub fn is_empty(&self) -> Result<bool, BearDogError> {
         Ok(self.len()? == 0)

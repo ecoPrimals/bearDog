@@ -209,7 +209,6 @@ impl EcosystemNode {
 
     /// Updates the health status of the node
     /// Updates health
-    /// Updates health
     pub fn update_health(&mut self, status: HealthStatus) {
         self.health_status = status;
         self.last_seen = Utc::now();

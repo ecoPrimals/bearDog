@@ -125,7 +125,6 @@ impl CanonicalSecurityConfig {
 
     /// Validate the security configuration
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         self.authentication.validate()?;
         self.authorization.validate()?;

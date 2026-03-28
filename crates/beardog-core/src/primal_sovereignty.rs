@@ -141,7 +141,6 @@ impl SovereigntyManager {
 
     /// Get current sovereignty status
     /// Gets `sovereignty_status`
-    /// Gets `sovereignty_status`
     #[must_use]
     pub fn get_sovereignty_status(&self) -> SovereigntyStatus {
         SovereigntyStatus {

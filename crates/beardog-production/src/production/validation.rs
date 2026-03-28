@@ -184,7 +184,6 @@ impl DeploymentReadinessCheck {
 
 /// Update operation.
     /// Updates item
-    /// Updates item
     pub fn update(bool,
         security_met: bool,
         performance_met: bool,
@@ -198,7 +197,6 @@ impl DeploymentReadinessCheck {
         self.backup_systems_ready = backup_ready;
 
 /// Is Ready operation.
-    /// Checks if ready
     /// Checks if ready
     pub fn is_ready(&self) -> bool {
         self.configuration_valid
@@ -242,7 +240,6 @@ impl DeploymentReadinessCheck {
         self.security_policies_applied = security_applied;
 
 /// Is Valid operation.
-    /// Checks if valid
     /// Checks if valid
     pub fn is_valid(false,
             crypto_libraries_verified: false,

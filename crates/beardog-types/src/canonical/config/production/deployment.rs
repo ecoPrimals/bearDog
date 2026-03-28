@@ -154,7 +154,6 @@ impl Default for CanaryConfig {
 impl DeploymentConfig {
     /// Validate
     /// Validates input
-    /// Validates input
     pub const fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }

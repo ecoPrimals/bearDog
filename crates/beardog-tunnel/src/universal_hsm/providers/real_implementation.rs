@@ -56,7 +56,6 @@ impl ProductionSoftwareHsm {
 
     /// Initialize secure HSM session
     /// Initializes componentialize_session
-    /// Initializes componentialize_session
     pub fn initialize_session(&mut self) -> Result<String, BearDogError> {
         info!("🔐 Initializing secure HSM session");
 
@@ -106,7 +105,6 @@ impl ProductionSoftwareHsm {
     }
 
     /// Get HSM health status
-    /// Gets health
     /// Gets health
     pub fn get_health(&self) -> Result<HsmHealth, BearDogError> {
         let status = HsmHealth {

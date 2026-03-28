@@ -31,13 +31,11 @@ impl InMemoryGeneticsStore {
 
     /// Get operation.
     /// Gets value
-    /// Gets value
     pub fn get(&self, id: &str) -> Option<&BearDogGenetics> {
         self.genetics.get(id)
     }
 
     /// Remove operation.
-    /// Removes item
     /// Removes item
     pub fn remove(&mut self, id: &str) -> Option<BearDogGenetics> {
         self.genetics.remove(id)
@@ -49,7 +47,6 @@ impl InMemoryGeneticsStore {
     }
 
     /// Is Empty operation.
-    /// Checks if empty
     /// Checks if empty
     pub fn is_empty(&self) -> bool {
         self.genetics.is_empty()

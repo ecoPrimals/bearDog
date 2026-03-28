@@ -68,7 +68,6 @@ impl AlignedBuffer {
 
     /// Set the used length of the buffer
     /// Sets length
-    /// Sets length
     pub fn set_length(&mut self, length: usize) {
         assert!(length <= self.data.len(), "Length exceeds buffer capacity");
         self.length = length;
@@ -86,7 +85,6 @@ impl AlignedBuffer {
         );
     }
 
-    /// Checks if expired
     /// Checks if expired
     pub fn is_expired(&self) -> bool {
         let now = std::time::SystemTime::now()
@@ -174,7 +172,6 @@ impl SIMDAlignedPool {
     /// # Panics
     /// Panics if the internal buffer pool lock is poisoned due to a panic in another thread
     /// Gets buffer
-    /// Gets buffer
     pub fn get_buffer(&self, required_size: usize) -> Result<AlignedBuffer, BearDogError> {
         let optimal_size = self.find_optimal_size(required_size);
 
@@ -253,7 +250,6 @@ impl SIMDAlignedPool {
     }
 
     /// Cleans up expired
-    /// Cleans up expired
     pub fn cleanup_expired(&self) {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -282,7 +278,6 @@ impl SIMDAlignedPool {
     }
 
     /// Get comprehensive statistics
-    /// Gets stats
     /// Gets stats
     pub fn get_stats(&self) -> HyperZeroCopyStats {
         let buffers = self.buffers.read().unwrap_or_else(|poisoned| {

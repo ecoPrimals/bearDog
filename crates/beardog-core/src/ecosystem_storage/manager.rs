@@ -57,7 +57,6 @@ impl EcosystemStorageManager {
 
     /// Process a storage request
     /// Processes request
-    /// Processes request
     ///
     /// # Errors
     /// Returns an error if the storage operation fails
@@ -82,7 +81,6 @@ impl EcosystemStorageManager {
     }
 
     /// Get storage metrics
-    /// Gets metrics
     /// Gets metrics
     pub async fn get_metrics(&self) -> StorageMetrics {
         self.metrics.read().await.clone()

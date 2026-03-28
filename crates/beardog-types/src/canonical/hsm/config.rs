@@ -531,7 +531,6 @@ impl HsmProviderConfig {
 
     /// Check if the configuration is valid
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), String> {
         let base = self.base_config();
 
@@ -658,7 +657,6 @@ impl HsmConfigBuilder {
     }
 
     /// Build the final configuration
-    /// Builds component
     /// Builds component
     pub fn build(self) -> Result<HsmProviderConfig, String> {
         self.config.validate()?;

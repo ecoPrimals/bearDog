@@ -220,7 +220,6 @@ impl Default for DisasterRecoveryConfig {
 impl OperationalConfig {
     /// Validate
     /// Validates input
-    /// Validates input
     pub const fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }

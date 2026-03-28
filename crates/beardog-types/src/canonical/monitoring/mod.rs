@@ -34,7 +34,6 @@ pub mod alerting;
 pub mod analytics;
 /// Core module
 /// Core functionality
-/// Core functionality
 pub mod core;
 /// Health module
 pub mod health;

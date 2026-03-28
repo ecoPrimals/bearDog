@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Validation helpers
-
-// Placeholder for validation helpers
+//! Configuration validation helpers.
+//!
+//! Reserved for structural and semantic validation of loaded configs.

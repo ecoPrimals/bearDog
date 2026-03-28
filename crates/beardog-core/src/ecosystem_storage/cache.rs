@@ -75,7 +75,6 @@ impl CacheManager {
 
     /// Get cached data with zero-copy optimization
     /// Gets value
-    /// Gets value
     pub fn get(&mut self, key: &str) -> Option<std::sync::Arc<Vec<u8>>> {
         // Check TTL first
         let should_remove = self
@@ -138,7 +137,6 @@ impl CacheManager {
     }
 
     /// Remove entry from cache
-    /// Removes item
     /// Removes item
     pub fn remove(&mut self, key: &str) -> bool {
         if let Some(entry) = self.entries.remove(key) {

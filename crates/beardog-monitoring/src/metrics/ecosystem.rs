@@ -20,7 +20,6 @@ impl EcosystemMonitor {
     }
 
     /// Starts service
-    /// Starts service
     pub fn start(&self) -> Result<(), BearDogError> {
         tracing::info!("Ecosystem monitor started");
         Ok(())
@@ -32,7 +31,6 @@ impl EcosystemMonitor {
         Ok(())
     }
 
-    /// Gets metrics
     /// Gets metrics
     pub fn get_metrics(&self) -> Result<EcosystemMetrics, BearDogError> {
         Ok(EcosystemMetrics {

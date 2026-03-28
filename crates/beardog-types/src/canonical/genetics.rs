@@ -460,7 +460,6 @@ impl GeneticsSystemConfig {
 
     /// Validate the genetics configuration
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), String> {
         // Validate population size
         if self.genetics.population_size < 2 {
@@ -504,7 +503,6 @@ impl GeneticsSystemConfig {
     }
 
     /// Check if multi-objective optimization is enabled
-    /// Checks if multi objective
     /// Checks if multi objective
     pub fn is_multi_objective(&self) -> bool {
         self.genetics.fitness_config.multi_objective

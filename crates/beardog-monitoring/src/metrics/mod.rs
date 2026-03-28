@@ -103,7 +103,6 @@ impl UnifiedMetricsSystem {
 
     /// Start the unified metrics system
     /// Starts service
-    /// Starts service
     pub fn start(&self) -> Result<(), BearDogError> {
         // Start all subsystems
         self.core.start()?;
@@ -142,7 +141,6 @@ impl UnifiedMetricsSystem {
     ///
     /// # Errors
     /// Returns an error if system metrics cannot be collected
-    /// Gets `system_metrics`
     /// Gets `system_metrics`
     pub fn get_system_metrics(&self) -> Result<SystemMetrics, BearDogError> {
         let performance_metrics = self.performance.get_metrics()?;

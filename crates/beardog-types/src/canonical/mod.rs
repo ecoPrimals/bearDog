@@ -140,7 +140,6 @@ pub mod biome;
 pub mod capabilities;
 /// Config module
 /// Configuration management
-/// Configuration management
 pub mod config; // ✅ NEW: Unified canonical configuration system
 // Use config::unified_simple::WorkingUnifiedConfig
 /// Constants module

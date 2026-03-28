@@ -86,7 +86,6 @@ impl HealthChecker {
     /// # Errors
     /// Returns an error if monitoring cannot be started
     /// Starts `health_monitoring`
-    /// Starts `health_monitoring`
     pub fn start_health_monitoring(&mut self) -> Result<(), BearDogError> {
         tracing::info!(
             "Starting health monitoring with interval: {}s",
@@ -99,7 +98,6 @@ impl HealthChecker {
     ///
     /// # Errors
     /// Returns an error if monitoring cannot be stopped cleanly
-    /// Stops monitoring
     /// Stops monitoring
     pub fn stop_monitoring(&mut self) -> Result<(), BearDogError> {
         Ok(())

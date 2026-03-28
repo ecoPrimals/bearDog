@@ -78,14 +78,12 @@ pub struct CrossNodeAuthorization {
 impl CrossNodeAuthorization {
     /// Is Valid operation.
     /// Checks if valid
-    /// Checks if valid
     #[must_use]
     pub fn is_valid(&self) -> bool {
         self.is_active && Utc::now() < self.expires_at
     }
 
     /// Has Permission operation.
-    /// Checks if permission
     /// Checks if permission
     #[must_use]
     pub fn has_permission(&self, permission: &ResourcePermission) -> bool {

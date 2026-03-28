@@ -40,19 +40,16 @@ impl AndroidDeviceInfo {
 
 /// Is Strongbox Available operation.
     /// Checks if strongbox available
-    /// Checks if strongbox available
     pub fn is_strongbox_available(&self) -> bool {
         self.strongbox_version.is_some()
 
 /// Is Optimal Security Config operation.
-    /// Checks if optimal security config
     /// Checks if optimal security config
     pub fn is_optimal_security_config(&self) -> bool {
             && self.titan_m_version.is_some()
             && self.verified_boot_state == VerifiedBootState::Green
 
 /// Get Capabilities operation.
-    /// Gets capabilities
     /// Gets capabilities
     pub fn get_capabilities(&self) -> DeviceCapabilities {
         DeviceCapabilities {
@@ -62,17 +59,14 @@ impl AndroidDeviceInfo {
 
 /// Is Hardware Backed operation.
     /// Checks if hardware backed
-    /// Checks if hardware backed
     pub fn is_hardware_backed(&self) -> bool {
         self.strongbox_version.is_some() && self.titan_m_version.is_some()
 
 /// Is Key Attestation Supported operation.
     /// Checks if key attestation supported
-    /// Checks if key attestation supported
     pub fn is_key_attestation_supported(&self) -> bool {
 
 /// Get Strongbox Implementation operation.
-    /// Gets strongbox_implementation
     /// Gets strongbox_implementation
     pub fn get_strongbox_implementation(&self) -> StrongBoxImplementation {
         if self.titan_m_version.is_some() {
@@ -90,7 +84,6 @@ impl AndroidDeviceInfo {
                     .strongbox_version
 
 /// Get Hardware Backed operation.
-    /// Gets hardware_backed
     /// Gets hardware_backed
     pub fn get_hardware_backed(bool,
 
@@ -115,7 +108,6 @@ impl DeviceCapabilities {
             biometric_support,
 
 /// Is Production Ready operation.
-    /// Checks if production ready
     /// Checks if production ready
     pub fn is_production_ready(&self) -> bool {
         self.strongbox_available && self.titan_m_available && self.verified_boot_green

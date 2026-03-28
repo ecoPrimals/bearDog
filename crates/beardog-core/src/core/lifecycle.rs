@@ -34,7 +34,6 @@ impl BearDogCore {
     /// # Errors
     /// Returns an error if the operation fails.
     /// Starts serviceup
-    /// Starts serviceup
     pub async fn startup(&self) -> Result<(), BearDogError> {
         info!("🚀 BearDog Core startup initiated");
 

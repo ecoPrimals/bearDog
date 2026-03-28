@@ -87,7 +87,6 @@ where
 }
 
 /// Validates input
-/// Validates input
 pub fn validate_input<T, F>(value: T, validator: F, field_name: &str) -> Result<T, BearDogError>
 where
     F: FnOnce(&T) -> bool,
@@ -124,7 +123,6 @@ where
     result
 }
 
-/// Loads config_with_fallback
 /// Loads config_with_fallback
 pub fn load_config_with_fallback<T>(
     primary_loader: impl FnOnce() -> Result<T, BearDogError>,

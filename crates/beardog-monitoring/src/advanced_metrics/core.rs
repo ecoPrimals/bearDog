@@ -154,7 +154,6 @@ impl AdvancedMetricsSystem {
 
     /// Get metrics summary
     /// Gets `metrics_summary`
-    /// Gets `metrics_summary`
     pub async fn get_metrics_summary(&self) -> MetricsSummary {
         let store = self.metrics_store.read().await;
 

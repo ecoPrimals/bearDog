@@ -17,75 +17,52 @@ pub struct DetectionRule {
     /// Unique rule id for APIs and metrics.
     pub id: String,
     /// Name of the item
-    /// Name of the item
     pub name: String,
-    /// The description value
     /// The description value
     pub description: String,
     /// The rule type value
-    /// The rule type value
     pub rule_type: ThreatRuleType,
-    /// The severity value
     /// The severity value
     pub severity: ThreatSeverity,
     /// The condition value
-    /// The condition value
     pub condition: RuleCondition,
-    /// Whether feature is enabled
     /// Whether feature is enabled
     pub enabled: bool,
     /// Number of priority
-    /// Number of priority
     pub priority: u8,
-    /// Collection of tags
     /// Collection of tags
     pub tags: Vec<String>,
     /// The created at value
-    /// The created at value
     pub created_at: DateTime<Utc>,
-    /// The updated at value
     /// The updated at value
     pub updated_at: DateTime<Utc>,
     /// The created by value
-    /// The created by value
     pub created_by: String,
     /// The version value
-    /// The version value
     pub version: String,
-    /// Mapping of metadata
     /// Mapping of metadata
     pub metadata: HashMap<String, String>,
     // Additional fields needed by handlers
     /// The threat type value
-    /// The threat type value
     pub threat_type: ThreatType,
     /// Number of detection
-    /// Number of detection
     pub detection_count: u64,
-    /// Number of `false_positive`
     /// Number of `false_positive`
     pub false_positive_count: u64,
     /// Estimated precision prior used when fusing with ML or intel signals.
     pub confidence_score: f64,
     /// The detection logic value
-    /// The detection logic value
     pub detection_logic: String,
-    /// Optional mitre technique
     /// Optional mitre technique
     pub mitre_technique: Option<String>,
     /// Optional mitre tactic
-    /// Optional mitre tactic
     pub mitre_tactic: Option<String>,
-    /// The author value
     /// The author value
     pub author: String,
     /// Collection of actions
-    /// Collection of actions
     pub actions: Vec<String>,
     /// The modified at value
-    /// The modified at value
     pub modified_at: DateTime<Utc>,
-    /// Collection of references
     /// Collection of references
     pub references: Vec<String>,
 }
@@ -127,7 +104,6 @@ impl Default for DetectionRule {
 /// Types of threat detection rules
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// Types of threat rule
-/// Types of threat rule
 pub enum ThreatRuleType {
     /// Signature-based detection
     Signature,
@@ -160,9 +136,7 @@ pub struct RuleExecutionResult {
     /// Id of the evaluated rule.
     pub rule_id: String,
     /// Name of the rule
-    /// Name of the rule
     pub rule_name: String,
-    /// Whether matched is enabled
     /// Whether matched is enabled
     pub matched: bool,
     /// Confidence assigned by the rule engine when `matched` is true.
@@ -170,19 +144,15 @@ pub struct RuleExecutionResult {
     /// Time spent evaluating the rule predicate.
     pub execution_time_ms: u64,
     /// Collection of matched conditions
-    /// Collection of matched conditions
     pub matched_conditions: Vec<String>,
     /// Optional threat type
-    /// Optional threat type
     pub threat_type: Option<ThreatType>,
-    /// The severity value
     /// The severity value
     pub severity: ThreatSeverity,
     /// Human-readable strings explaining why the rule fired or did not.
     pub evidence: Vec<String>,
     /// Evaluation time in UTC.
     pub timestamp: DateTime<Utc>,
-    /// Mapping of metadata
     /// Mapping of metadata
     pub metadata: HashMap<String, String>,
 }
@@ -193,35 +163,25 @@ pub struct RulePerformanceMetrics {
     /// Rule these metrics summarize.
     pub rule_id: String,
     /// Number of `total_executions`
-    /// Number of `total_executions`
     pub total_executions: u64,
-    /// Number of `true_positives`
     /// Number of `true_positives`
     pub true_positives: u64,
     /// Number of `false_positives`
-    /// Number of `false_positives`
     pub false_positives: u64,
     /// Number of `true_negatives`
-    /// Number of `true_negatives`
     pub true_negatives: u64,
-    /// Number of `false_negatives`
     /// Number of `false_negatives`
     pub false_negatives: u64,
     /// Mean wall time per `execute` call, updated incrementally.
     pub avg_execution_time_ms: f64,
     /// The accuracy value
-    /// The accuracy value
     pub accuracy: f64,
-    /// The precision value
     /// The precision value
     pub precision: f64,
     /// The recall value
-    /// The recall value
     pub recall: f64,
     /// The f1 score value
-    /// The f1 score value
     pub f1_score: f64,
-    /// The last updated value
     /// The last updated value
     pub last_updated: DateTime<Utc>,
 }
@@ -232,12 +192,9 @@ pub struct RuleValidationResult {
     /// True when there are no blocking errors in `errors`.
     pub is_valid: bool,
     /// Collection of errors
-    /// Collection of errors
     pub errors: Vec<String>,
     /// Collection of warnings
-    /// Collection of warnings
     pub warnings: Vec<String>,
-    /// Collection of suggestions
     /// Collection of suggestions
     pub suggestions: Vec<String>,
 }
@@ -287,7 +244,6 @@ impl DetectionRule {
 
     /// Execute the rule against event data
     /// Executes operation
-    /// Executes operation
     #[must_use]
     #[expect(
         clippy::cast_possible_truncation,
@@ -327,7 +283,6 @@ impl DetectionRule {
     }
 
     /// Validate the rule configuration
-    /// Validates input
     /// Validates input
     #[must_use]
     pub fn validate(&self) -> RuleValidationResult {
@@ -393,14 +348,12 @@ impl DetectionRule {
 
     /// Remove a tag from the rule
     /// Removes tag
-    /// Removes tag
     pub fn remove_tag(&mut self, tag: &str) {
         self.tags.retain(|t| t != tag);
         self.updated_at = Utc::now();
     }
 
     /// Update rule priority
-    /// Sets priority
     /// Sets priority
     pub fn set_priority(&mut self, priority: u8) {
         self.priority = priority.min(100);
@@ -415,14 +368,12 @@ impl DetectionRule {
 
     /// Check if rule is high priority
     /// Checks if high priority
-    /// Checks if high priority
     #[must_use]
     pub const fn is_high_priority(&self) -> bool {
         self.priority >= 80
     }
 
     /// Check if rule is complex
-    /// Checks if complex
     /// Checks if complex
     #[must_use]
     pub const fn is_complex(&self) -> bool {
@@ -457,7 +408,6 @@ impl RulePerformanceMetrics {
     }
 
     /// Update metrics with execution result
-    /// Updates `with_result`
     /// Updates `with_result`
     pub fn update_with_result(
         &mut self,

@@ -62,7 +62,6 @@ impl BearDogCore {
     ///
     /// # Returns
     /// Gets `license_status`
-    /// Gets `license_status`
     #[must_use]
     pub fn get_license_status(&self) -> LicenseValidation {
         LicenseValidation {

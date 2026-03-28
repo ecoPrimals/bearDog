@@ -11,40 +11,28 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
     /// The source type value
-    /// The source type value
     pub source_type: String,
-    /// Optional ip address
     /// Optional ip address
     pub ip_address: Option<String>,
     /// Name of the hostitem
-    /// Name of the hostitem
     pub hostname: Option<String>,
-    /// Optional geolocation
     /// Optional geolocation
     pub geolocation: Option<GeoLocation>,
     /// Optional user agent
-    /// Optional user agent
     pub user_agent: Option<String>,
-    /// The reputation score value
     /// The reputation score value
     pub reputation_score: f64,
     /// Optional threat actor
-    /// Optional threat actor
     pub threat_actor: Option<String>,
-    /// The classification value
     /// The classification value
     pub classification: SourceClassification,
     pub confidence_score: f64,
     /// Optional first seen
-    /// Optional first seen
     pub first_seen: Option<DateTime<Utc>>,
-    /// Optional last seen
     /// Optional last seen
     pub last_seen: Option<DateTime<Utc>>,
     /// The threat score value
-    /// The threat score value
     pub threat_score: f64,
-    /// Mapping of metadata
     /// Mapping of metadata
     pub metadata: HashMap<String, serde_json::Value>,
 }
@@ -65,42 +53,30 @@ impl Default for ThreatSource {
             last_seen: Some(chrono::Utc::now(0.0,
             metadata: HashMap::with_capacity(String,
     /// The target type value
-    /// The target type value
     pub target_type: String,
     pub resource_id: String,
     pub node_id: Option<String>,
     /// Number of user_acitems
-    /// Number of user_acitems
     pub user_account: Option<String>,
-    /// The asset criticality value
     /// The asset criticality value
     pub asset_criticality: AssetCriticality,
     /// The protection level value
-    /// The protection level value
     pub protection_level: ProtectionLevel,
-    /// Optional service
     /// Optional service
     pub service: Option<String>,
     /// Optional port
-    /// Optional port
     pub port: Option<u16>,
     /// Optional protocol
-    /// Optional protocol
     pub protocol: Option<String>,
-    /// Mapping of metadata
     /// Mapping of metadata
     pub metadata: HashMap<String, serde_json::Value>,
 
     /// The resource type value
-    /// The resource type value
     pub resource_type: String,
-    /// The criticality value
     /// The criticality value
     pub criticality: AssetCriticality,
     /// Optional ip address
-    /// Optional ip address
     pub ip_address: Option<String>,
-    /// Name of the hostitem
     /// Name of the hostitem
     pub hostname: Option<String>,
 }
@@ -197,24 +173,17 @@ impl Default for ProtectionLevel {
 
 #[derive(Debug, Clone)]
     /// Optional region
-    /// Optional region
     pub region: Option<String>,
-    /// Optional city
     /// Optional city
     pub city: Option<String>,
     /// Optional latitude
-    /// Optional latitude
     pub latitude: Option<f64>,
-    /// Optional longitude
     /// Optional longitude
     pub longitude: Option<f64>,
     /// Whether is_tor_exit is enabled
-    /// Whether is_tor_exit is enabled
     pub is_tor_exit: bool,
     /// Whether is_vpn is enabled
-    /// Whether is_vpn is enabled
     pub is_vpn: bool,
-    /// Whether is_proxy is enabled
     /// Whether is_proxy is enabled
     pub is_proxy: bool,
 }
@@ -243,20 +212,17 @@ impl Default for GeoLocation {
 
     /// Is Trusted operation.
     /// Checks if trusted
-    /// Checks if trusted
     pub fn is_trusted(&self) -> bool {
         matches!(self.classification, SourceClassification::Trusted)
     }
 
     /// Is External operation.
     /// Checks if external
-    /// Checks if external
     pub fn is_external(&self) -> bool {
         matches!(self.classification, SourceClassification::External)
     }
 
     /// Is High Threat operation.
-    /// Checks if high threat
     /// Checks if high threat
     pub fn is_high_threat(&self) -> bool {
         matches!(
@@ -267,13 +233,11 @@ impl Default for GeoLocation {
 
     /// Is Malicious operation.
     /// Checks if malicious
-    /// Checks if malicious
     pub fn is_malicious(&self) -> bool {
         matches!(self.classification, SourceClassification::Malicious)
     }
 
     /// Is Trustworthy operation.
-    /// Checks if trustworthy
     /// Checks if trustworthy
     pub fn is_trustworthy(&self) -> bool {
         self.is_trusted()
@@ -320,7 +284,6 @@ impl Default for GeoLocation {
 
     /// Is Critical operation.
     /// Checks if critical
-    /// Checks if critical
     pub fn is_critical(&self) -> bool {
         matches!(
             self.asset_criticality,
@@ -330,7 +293,6 @@ impl Default for GeoLocation {
 
     /// Is Well Protected operation.
     /// Checks if well protected
-    /// Checks if well protected
     pub fn is_well_protected(&self) -> bool {
         matches!(
             self.protection_level,
@@ -339,7 +301,6 @@ impl Default for GeoLocation {
     }
 
     /// Is High Value operation.
-    /// Checks if high value
     /// Checks if high value
     pub fn is_high_value(&self) -> bool {
         self.is_critical()
@@ -364,13 +325,11 @@ impl GeoLocation {
 
     /// Is High Risk Country operation.
     /// Checks if high risk country
-    /// Checks if high risk country
     pub fn is_high_risk_country(&self) -> bool {
         matches!(self.country.as_str(), "CN" | "RU" | "KP" | "IR" | "Unknown")
     }
 
     /// Is Anonymized operation.
-    /// Checks if anonymized
     /// Checks if anonymized
     pub fn is_anonymized(&self) -> bool {
         self.is_tor_exit || self.is_vpn || self.is_proxy

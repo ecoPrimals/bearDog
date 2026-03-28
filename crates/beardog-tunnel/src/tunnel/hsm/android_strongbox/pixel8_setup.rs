@@ -77,7 +77,6 @@ impl Pixel8GrapheneOSSetup {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Initializes componentialize_hsm
-    /// Initializes componentialize_hsm
     pub fn initialize_hsm(&self) -> Result<Arc<AndroidStrongBoxHsm, BearDogError>> {
         info!("🚀 Initializing Android StrongBox HSM on Pixel 8");
 
@@ -95,7 +94,6 @@ impl Pixel8GrapheneOSSetup {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Creates anchor_key
     /// Creates anchor_key
     pub fn create_anchor_key(&self, hsm: &AndroidStrongBoxHsm) -> Result<HsmKey, BearDogError> {
         info!("🔑 Creating BearDog security anchor key on Pixel 8");

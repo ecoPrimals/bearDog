@@ -35,14 +35,12 @@ impl BStpKeyManager {
 
 /// Get Rotation Handle Count operation.
     /// Gets rotation_handle_count
-    /// Gets rotation_handle_count
     pub fn get_rotation_handle_count(&self) -> usize {
         let handles = self.rotation_handles.read();
         handles.len()
     }
 
 /// Stop All Rotations operation.
-    /// Stops all_rotations
     /// Stops all_rotations
     pub fn stop_all_rotations(&self) {
         let mut handles = self.rotation_handles.write();
@@ -109,14 +107,12 @@ impl BStpKeyManager {
 
 /// Get Key operation.
     /// Gets key
-    /// Gets key
     pub fn get_key(&self, key_id: &str) -> Option<CryptoKey> {
         let keys = self.keys.read();
         keys.get(key_id).cloned()
     }
 
 /// Get Session Key operation.
-    /// Gets session_key
     /// Gets session_key
     pub fn get_session_key(&self, session_id: &str) -> Option<CryptoKey> {
         let keys = self.keys.read(&CryptoKey,
@@ -133,7 +129,6 @@ impl BStpKeyManager {
     }
 
 /// Cleanup Expired Keys operation.
-    /// Cleans up expired_keys
     /// Cleans up expired_keys
     pub fn cleanup_expired_keys(&self) -> usize {
         let now = SystemTime::now(CryptoAlgorithm,

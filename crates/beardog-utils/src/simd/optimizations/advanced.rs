@@ -53,7 +53,6 @@ impl AdvancedSIMDOptimizer {
 
     /// ⚡ PERFORMANCE: Get optimized buffer with SIMD alignment
     /// Gets `aligned_buffer`
-    /// Gets `aligned_buffer`
     pub fn get_aligned_buffer(&mut self, size: usize) -> Option<&mut AlignedBuffer> {
         // First, try to find an available buffer
         for (index, buffer) in self.aligned_buffers.iter_mut().enumerate() {
@@ -90,7 +89,6 @@ impl AdvancedSIMDOptimizer {
     }
 
     /// ⚡ PERFORMANCE: Fast buffer from pool with zero-copy when possible
-    /// Gets `fast_buffer`
     /// Gets `fast_buffer`
     pub fn get_fast_buffer(&mut self, size: usize) -> Vec<u8> {
         self.metrics.operations_count += 1;
@@ -244,7 +242,6 @@ impl AdvancedSIMDOptimizer {
             (self.metrics.avg_operation_time_ns * (total_ops - 1.0) + elapsed_ns) / total_ops;
     }
 
-    /// Gets metrics
     /// Gets metrics
     #[must_use]
     pub fn get_metrics(&self) -> &SIMDMetrics {

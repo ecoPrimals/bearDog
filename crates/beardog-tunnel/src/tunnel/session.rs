@@ -89,7 +89,6 @@ impl SecureSession {
     }
 
     /// Checks if expired
-    /// Checks if expired
     #[must_use]
     pub fn is_expired(&self) -> bool {
         SystemTime::now() > self.expires_at
@@ -159,7 +158,6 @@ impl SessionManager {
     }
 
     /// Creates session
-    /// Creates session
     pub async fn create_session(
         &self,
         session_id: String,
@@ -180,20 +178,17 @@ impl SessionManager {
     }
 
     /// Gets session
-    /// Gets session
     pub async fn get_session(&self, session_id: &str) -> Option<SecureSession> {
         let sessions = self.sessions.read().await;
         sessions.get(session_id).cloned()
     }
 
     /// Removes session
-    /// Removes session
     pub async fn remove_session(&self, session_id: &str) -> Option<SecureSession> {
         let mut sessions = self.sessions.write().await;
         sessions.remove(session_id)
     }
 
-    /// Cleans up `expired_sessions`
     /// Cleans up `expired_sessions`
     pub async fn cleanup_expired_sessions(&self) -> Result<usize, BearDogError> {
         let mut sessions = self.sessions.write().await;

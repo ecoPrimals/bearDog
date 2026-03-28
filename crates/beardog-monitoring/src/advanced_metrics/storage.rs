@@ -49,7 +49,6 @@ impl MetricsStore {
 
     /// Get security metric by event type
     /// Gets `security_metric`
-    /// Gets `security_metric`
     #[must_use]
     pub fn get_security_metric(&self, event_type: &SecurityEventType) -> Option<&SecurityMetric> {
         self.security.get(&format!("{event_type:?}"))
@@ -63,7 +62,6 @@ impl MetricsStore {
 
     /// Get ecosystem metric by service
     /// Gets `ecosystem_metric`
-    /// Gets `ecosystem_metric`
     #[must_use]
     pub fn get_ecosystem_metric(&self, service: &str) -> Option<&EcosystemMetric> {
         self.ecosystem.get(service)
@@ -76,7 +74,6 @@ impl MetricsStore {
     }
 
     /// Get custom metric by name
-    /// Gets `custom_metric`
     /// Gets `custom_metric`
     #[must_use]
     pub fn get_custom_metric(&self, name: &str) -> Option<&CustomMetric> {

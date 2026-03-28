@@ -50,7 +50,6 @@ mod auth_tests {
 
     impl MockSessionData {
         /// Checks if valid
-        /// Checks if valid
         pub fn is_valid(&self) -> bool {
             self.expires_at > std::time::SystemTime::now()
         }

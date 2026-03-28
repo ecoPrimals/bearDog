@@ -98,7 +98,6 @@ where
 
     /// Get a value by key
     /// Gets value
-    /// Gets value
     pub fn get(&self, key: &K) -> Option<V> {
         debug!("🔍 Safe concurrent lookup");
 
@@ -114,7 +113,6 @@ where
     }
 
     /// Remove a key-value pair
-    /// Removes item
     /// Removes item
     pub fn remove(&self, key: &K) -> Option<V> {
         debug!("🗑️ Safe concurrent remove");
@@ -134,7 +132,6 @@ where
 
     /// Check if empty
     /// Checks if empty
-    /// Checks if empty
     pub fn is_empty(&self) -> bool {
         self.inner.is_empty()
     }
@@ -145,7 +142,6 @@ where
         self.stats.size.store(0, Ordering::Relaxed);
     }
 
-    /// Gets stats
     /// Gets stats
     pub fn get_stats(&self) -> SafeConcurrentStats {
         SafeConcurrentStats {
@@ -215,7 +211,6 @@ where
 
     /// Get with access time update
     /// Gets value
-    /// Gets value
     pub fn get(&self, key: &K) -> Option<V> {
         debug!("🔍 Safe concurrent cache lookup");
 
@@ -249,7 +244,6 @@ where
 
     /// Remove entry
     /// Removes item
-    /// Removes item
     pub fn remove(&self, key: &K) -> Option<V> {
         let mut data = self.data.write();
         if let Some((value, _)) = data.remove(key) {
@@ -266,7 +260,6 @@ where
     }
 
     /// Check if empty
-    /// Checks if empty
     /// Checks if empty
     pub fn is_empty(&self) -> bool {
         self.data.read().is_empty()
@@ -293,7 +286,6 @@ where
         }
     }
 
-    /// Gets stats
     /// Gets stats
     pub fn get_stats(&self) -> SafeConcurrentStats {
         SafeConcurrentStats {
@@ -356,7 +348,6 @@ where
     }
 
     /// Check if empty
-    /// Checks if empty
     /// Checks if empty
     pub fn is_empty(&self) -> bool {
         self.inner.is_empty()

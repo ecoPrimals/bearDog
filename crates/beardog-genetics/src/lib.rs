@@ -154,7 +154,6 @@ impl GeneticsManager {
 
     /// Update the configuration
     /// Updates config
-    /// Updates config
     pub fn update_config(&mut self, config: GeneticsConfig) {
         self.config = config;
     }

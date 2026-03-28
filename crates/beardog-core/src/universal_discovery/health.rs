@@ -215,14 +215,12 @@ impl HealthMonitor {
 
     /// Get the current health status of a specific service
     /// Gets `service_health`
-    /// Gets `service_health`
     #[must_use]
     pub const fn get_service_health(&self, _service_id: &str) -> Option<HealthStatus> {
         // Implementation would return current health status
         None
     }
 
-    /// Gets `health_statistics`
     /// Gets `health_statistics`
     #[must_use]
     pub fn get_health_statistics(&self) -> HealthStatistics {

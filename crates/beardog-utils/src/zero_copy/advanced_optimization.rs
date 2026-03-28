@@ -49,7 +49,6 @@ impl ZeroCopyOptimizer {
 
 /// Create Zero Copy View operation.
     /// Creates zero_copy_view
-    /// Creates zero_copy_view
     pub fn create_zero_copy_view<'a, T>(&self, data: &'a T) -> ZeroCopyView<'a, T> {
         self.optimization_stats
             .zero_copy_operations
@@ -68,7 +67,6 @@ impl ZeroCopyOptimizer {
     }
 
 /// Create Shared Data operation.
-    /// Creates shared_data
     /// Creates shared_data
     pub fn create_shared_data<T>(&self, data: T) -> Arc<T> {
         self.optimization_stats
@@ -128,7 +126,6 @@ impl<'a, T> ZeroCopyView<'a, T> {
     }
 
 /// Get operation.
-    /// Gets value
     /// Gets value
     pub fn get(&self) -> &T {
         self.access_count

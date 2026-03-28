@@ -80,7 +80,6 @@ impl CanonicalSessionConfig {
 
     /// Validate
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.timeout_seconds == 0 {
             return Err(BearDogError::security(

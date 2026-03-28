@@ -20,7 +20,6 @@ impl ExportEngine {
     }
 
     /// Starts service
-    /// Starts service
     pub fn start(&self) -> Result<(), BearDogError> {
         tracing::info!("Export engine started");
         Ok(())

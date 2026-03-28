@@ -45,7 +45,6 @@ pub struct ComputeDiscoveryConfig {
     /// Number of `cache_duration_ms`
     pub cache_duration_ms: u64,
     /// Preferred compute architectures
-    /// Preferred compute architectures
     pub preferred_architectures: Vec<ComputeArchitecture>,
     /// Minimum performance score required (0.0-100.0)
     pub min_performance_score: f64,
@@ -500,7 +499,6 @@ impl UniversalComputeClient {
         metrics.total_compute_time_ms += response.processing_time_ms;
     }
 
-    /// Gets metrics
     /// Gets metrics
     pub async fn get_metrics(&self) -> ComputeMetrics {
         self.metrics.read().await.clone()

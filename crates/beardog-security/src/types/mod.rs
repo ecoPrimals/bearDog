@@ -245,7 +245,6 @@ impl BearDogSecurityProvider {
 
     /// Is Account Locked operation.
     /// Checks if account locked
-    /// Checks if account locked
     pub fn is_account_locked(&self, user_id: &str) -> bool {
         let locked_accounts = self.locked_accounts.read();
         if let Some(locked_until) = locked_accounts.get(user_id) {
@@ -294,7 +293,6 @@ impl RateLimiter {
 
     /// Is Rate Limited operation.
     /// Checks if rate limited
-    /// Checks if rate limited
     pub fn is_rate_limited(&mut self, identifier: &str) -> bool {
         let now = Utc::now();
         let state = self
@@ -339,7 +337,6 @@ impl SessionStore {
 
     /// Create Session operation.
     /// Creates session
-    /// Creates session
     pub fn create_session(
         &self,
         user_id: &str,
@@ -362,7 +359,6 @@ impl SessionStore {
     }
 
     /// Validate Session operation.
-    /// Validates session
     /// Validates session
     pub fn validate_session(&self, session_id: &str) -> Option<SessionData> {
         let sessions = self.sessions.read();

@@ -203,7 +203,6 @@ impl SystemMetrics {
 
     /// Update timestamp to current time
     /// Updates timestamp
-    /// Updates timestamp
     pub fn update_timestamp(&mut self) {
         self.timestamp = SystemTime::now();
     }
@@ -214,7 +213,6 @@ impl SystemMetrics {
     }
 
     /// Get a custom metric value
-    /// Gets custom_metric
     /// Gets custom_metric
     pub fn get_custom_metric(&self, name: &str) -> Option<f64> {
         self.custom.get(name).copied()

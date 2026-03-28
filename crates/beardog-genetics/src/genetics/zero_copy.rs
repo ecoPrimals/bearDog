@@ -73,7 +73,6 @@ impl GeneticsPool {
 
     /// Get Pool operation.
     /// Gets pool
-    /// Gets pool
     pub fn get_pool(&mut self, pool_id: &str) -> Option<&mut Vec<u8>> {
         if let Some(metadata) = self.metadata.get_mut(pool_id) {
             metadata.last_accessed = Utc::now();
@@ -167,13 +166,11 @@ impl LineageTracker {
 
     /// Get Lineage operation.
     /// Gets lineage
-    /// Gets lineage
     pub fn get_lineage(&self, genetics_id: &str) -> Option<&LineageInfo> {
         self.lineages.get(genetics_id)
     }
 
     /// Get Descendants operation.
-    /// Gets descendants
     /// Gets descendants
     pub fn get_descendants(&self, genetics_id: &str) -> Vec<String> {
         let mut descendants = Vec::new();
@@ -187,7 +184,6 @@ impl LineageTracker {
     }
 
     /// Get Ancestors operation.
-    /// Gets ancestors
     /// Gets ancestors
     pub fn get_ancestors(&self, genetics_id: &str) -> Vec<String> {
         let mut ancestors = Vec::new();

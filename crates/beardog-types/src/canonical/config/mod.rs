@@ -259,7 +259,6 @@ pub struct ConfigurationSummary {
     /// The security level value
     pub security_level: String,
     /// Whether monitoring is enabled
-    /// Whether monitoring is enabled
     pub monitoring_enabled: bool,
     /// Whether HSM functionality is enabled
     /// Whether hsm is enabled

@@ -361,7 +361,6 @@ impl HsmMigrationService {
     /// Create a migration report summary
     #[must_use]
     /// Creates `migration_summary`
-    /// Creates `migration_summary`
     pub fn create_migration_summary(report: &MigrationReport) -> String {
         format!(
             "HSM Configuration Migration Summary:\n\

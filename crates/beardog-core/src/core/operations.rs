@@ -135,7 +135,6 @@ impl BearDogCore {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Gets spawn_status
-    /// Gets spawn_status
     pub fn get_spawn_status(&self, node_id: &str) -> Result<String, BearDogError> {
 
         if node_id.starts_with("beardog_node_") {
@@ -151,7 +150,6 @@ impl BearDogCore {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Gets hsm_status
     /// Gets hsm_status
     pub fn get_hsm_status(&self) -> Result<String, BearDogError> {
 
@@ -174,7 +172,6 @@ impl BearDogCore {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Gets hsm_tiers
     /// Gets hsm_tiers
     pub fn get_hsm_tiers(&self) -> Result<Vec<String>, BearDogError> {
 

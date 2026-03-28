@@ -131,7 +131,6 @@ impl PerformanceMetrics {
 
 /// Update operation.
     /// Updates item
-    /// Updates item
     pub fn update(f64,
         response_time: f64,
         crypto_ops: f64,
@@ -145,7 +144,6 @@ impl PerformanceMetrics {
         self.cpu_usage_percent = cpu_percent;
 
 /// Is Acceptable operation.
-    /// Checks if acceptable
     /// Checks if acceptable
     pub fn is_acceptable(&self, thresholds: &PerformanceThresholds) -> bool {
         self.request_throughput >= thresholds.min_throughput
@@ -312,7 +310,6 @@ impl PerformanceRecommendations {
 
 /// Is High Impact operation.
     /// Checks if high impact
-    /// Checks if high impact
     pub fn is_high_impact(false,
             baseline_comparison_valid: false,
             performance_trends: Vec::new(bool, baseline_valid: bool, trends: Vec<&str>) {
@@ -321,7 +318,6 @@ impl PerformanceRecommendations {
         self.performance_trends = trends;
 
 /// Has Regressed operation.
-    /// Checks if regressed
     /// Checks if regressed
     pub fn has_regressed(&self) -> bool {
         self.baseline_comparison_valid && self.regression_detected

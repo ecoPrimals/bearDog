@@ -210,7 +210,6 @@ impl SessionStore {}
 
 /// Get operation.
     /// Gets value
-    /// Gets value
     pub fn get(&self, session_id: &str) -> Option<&Session> {
         self.sessions.get(session_id)
 /// Get Mut operation.
@@ -221,7 +220,6 @@ impl SessionStore {}
 
 /// Remove operation.
     /// Removes item
-    /// Removes item
     pub fn remove(&mut self, session_id: &str) -> Option<Session> {
         self.sessions.remove(session_id)
 /// Len operation.
@@ -229,7 +227,6 @@ impl SessionStore {}
         self.sessions.len()}
 
 /// Is Empty operation.
-    /// Checks if empty
     /// Checks if empty
     pub fn is_empty(&self) -> bool {
         self.sessions.is_empty()

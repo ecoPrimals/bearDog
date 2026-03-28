@@ -211,7 +211,6 @@ impl SovereignCryptoUtils {
 
     /// Get migration statistics
     /// Gets migration_statistics
-    /// Gets migration_statistics
     pub fn get_migration_statistics(
         &self,
     ) -> Result<beardog_core::migration::MigrationStatistics, BearDogError> {

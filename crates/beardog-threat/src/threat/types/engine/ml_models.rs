@@ -14,63 +14,45 @@ pub struct MlModel {
     /// Stable model id used in registries and predictions.
     pub id: String,
     /// Name of the item
-    /// Name of the item
     pub name: String,
-    /// The description value
     /// The description value
     pub description: String,
     /// The model type value
-    /// The model type value
     pub model_type: MlModelType,
-    /// The version value
     /// The version value
     pub version: String,
     /// The accuracy value
-    /// The accuracy value
     pub accuracy: f64,
-    /// The precision value
     /// The precision value
     pub precision: f64,
     /// The recall value
-    /// The recall value
     pub recall: f64,
-    /// The f1 score value
     /// The f1 score value
     pub f1_score: f64,
     /// Number of `training_data_size`
-    /// Number of `training_data_size`
     pub training_data_size: usize,
-    /// Number of feature
     /// Number of feature
     pub feature_count: usize,
     /// Collection of features
-    /// Collection of features
     pub features: Vec<String>,
-    /// Name of the features
     /// Name of the features
     pub feature_names: Vec<String>, // Alias for compatibility
     /// The created at value
-    /// The created at value
     pub created_at: DateTime<Utc>,
-    /// The last trained value
     /// The last trained value
     pub last_trained: DateTime<Utc>,
     /// The last updated value
-    /// The last updated value
     pub last_updated: DateTime<Utc>,
-    /// Whether `is_active` is enabled
     /// Whether `is_active` is enabled
     pub is_active: bool,
     /// Latest offline evaluation metrics for this artifact.
     pub performance_metrics: ModelPerformanceMetrics,
-    /// Mapping of metadata
     /// Mapping of metadata
     pub metadata: HashMap<String, String>,
 }
 
 /// Types of machine learning models
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-/// Types of ml model
 /// Types of ml model
 pub enum MlModelType {
     /// Classification model
@@ -105,27 +87,19 @@ pub enum MlModelType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelPerformanceMetrics {
     /// The accuracy value
-    /// The accuracy value
     pub accuracy: f64,
-    /// The precision value
     /// The precision value
     pub precision: f64,
     /// The recall value
-    /// The recall value
     pub recall: f64,
-    /// The f1 score value
     /// The f1 score value
     pub f1_score: f64,
     /// The specificity value
-    /// The specificity value
     pub specificity: f64,
-    /// The sensitivity value
     /// The sensitivity value
     pub sensitivity: f64,
     /// The auc roc value
-    /// The auc roc value
     pub auc_roc: f64,
-    /// The confusion matrix value
     /// The confusion matrix value
     pub confusion_matrix: ConfusionMatrix,
     /// Mean cross-validation score from the last training run.
@@ -135,7 +109,6 @@ pub struct ModelPerformanceMetrics {
     /// Typical single-sample inference latency measured during validation.
     pub inference_time_ms: u64,
     /// Number of `model_size_bytes`
-    /// Number of `model_size_bytes`
     pub model_size_bytes: u64,
 }
 
@@ -143,15 +116,11 @@ pub struct ModelPerformanceMetrics {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ConfusionMatrix {
     /// Number of `true_positives`
-    /// Number of `true_positives`
     pub true_positives: u64,
-    /// Number of `true_negatives`
     /// Number of `true_negatives`
     pub true_negatives: u64,
     /// Number of `false_positives`
-    /// Number of `false_positives`
     pub false_positives: u64,
-    /// Number of `false_negatives`
     /// Number of `false_negatives`
     pub false_negatives: u64,
 }
@@ -162,19 +131,15 @@ pub struct ModelPrediction {
     /// Id of the model that produced this output.
     pub model_id: String,
     /// The prediction value
-    /// The prediction value
     pub prediction: PredictionValue,
     /// Normalized confidence for the top prediction or marginal.
     pub confidence: f64,
     /// Mapping of probability scores
-    /// Mapping of probability scores
     pub probability_scores: HashMap<String, f64>,
-    /// Mapping of feature importance
     /// Mapping of feature importance
     pub feature_importance: HashMap<String, f64>,
     /// Time spent computing this prediction on the serving path.
     pub prediction_time_ms: u64,
-    /// The model version value
     /// The model version value
     pub model_version: String,
     /// When the prediction was emitted.
@@ -207,17 +172,13 @@ pub enum PredictionValue {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelTrainingConfig {
     /// The algorithm value
-    /// The algorithm value
     pub algorithm: String,
     /// Mapping of hyperparameters
-    /// Mapping of hyperparameters
     pub hyperparameters: HashMap<String, serde_json::Value>,
-    /// The training data path value
     /// The training data path value
     pub training_data_path: String,
     /// Fraction of data reserved for validation (0.0–1.0).
     pub validation_split: f64,
-    /// The test split value
     /// The test split value
     /// Holdout fraction for final testing.
     pub test_split: f64,
@@ -226,15 +187,11 @@ pub struct ModelTrainingConfig {
     /// Hard cap on training duration to bound operational cost.
     pub max_training_time_minutes: u32,
     /// Number of `early_stopping_patience`
-    /// Number of `early_stopping_patience`
     pub early_stopping_patience: u32,
-    /// The target accuracy value
     /// The target accuracy value
     pub target_accuracy: f64,
     /// Whether `feature_selection` is enabled
-    /// Whether `feature_selection` is enabled
     pub feature_selection: bool,
-    /// Whether `feature_engineering` is enabled
     /// Whether `feature_engineering` is enabled
     pub feature_engineering: bool,
 }
@@ -275,7 +232,6 @@ impl MlModel {
 
     /// Check if model is high accuracy
     /// Checks if high accuracy
-    /// Checks if high accuracy
     #[must_use]
     pub fn is_high_accuracy(&self) -> bool {
         self.accuracy > 0.85
@@ -290,7 +246,6 @@ impl MlModel {
 
     /// Get model age in days
     /// Gets `age_days`
-    /// Gets `age_days`
     #[must_use]
     pub fn get_age_days(&self) -> i64 {
         (Utc::now() - self.created_at).num_days()
@@ -298,14 +253,12 @@ impl MlModel {
 
     /// Update model accuracy
     /// Updates accuracy
-    /// Updates accuracy
     pub fn update_accuracy(&mut self, accuracy: f64) {
         self.accuracy = accuracy;
         self.last_updated = Utc::now();
     }
 
     /// Update training timestamp
-    /// Updates `training_timestamp`
     /// Updates `training_timestamp`
     pub fn update_training_timestamp(&mut self) {
         self.last_trained = Utc::now();
@@ -352,24 +305,17 @@ pub struct ModelSummary {
     /// Model id matching [`MlModel::id`].
     pub id: String,
     /// Name of the item
-    /// Name of the item
     pub name: String,
-    /// The model type value
     /// The model type value
     pub model_type: MlModelType,
     /// The accuracy value
-    /// The accuracy value
     pub accuracy: f64,
-    /// Whether `is_active` is enabled
     /// Whether `is_active` is enabled
     pub is_active: bool,
     /// Number of `age_days`
-    /// Number of `age_days`
     pub age_days: i64,
     /// Number of feature
-    /// Number of feature
     pub feature_count: usize,
-    /// The last trained value
     /// The last trained value
     pub last_trained: DateTime<Utc>,
 }
@@ -471,7 +417,6 @@ impl ModelPrediction {
     }
 
     /// Check if prediction is high confidence
-    /// Checks if high confidence
     /// Checks if high confidence
     #[must_use]
     pub fn is_high_confidence(&self) -> bool {

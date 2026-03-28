@@ -193,7 +193,6 @@ impl ThreatDetectionEngine {
 
     /// Update threat intelligence feed (delegated to engine)
     /// Updates `threat_feed_handler`
-    /// Updates `threat_feed_handler`
     pub fn update_threat_feed_handler(
         &mut self,
         feed: ThreatIntelligenceFeed,
@@ -213,7 +212,6 @@ impl ThreatDetectionEngine {
     }
 
     /// Get threat feed statistics
-    /// Gets `feed_statistics`
     /// Gets `feed_statistics`
     #[must_use]
     pub fn get_feed_statistics(&self) -> ThreatFeedStats {
@@ -243,15 +241,11 @@ impl ThreatDetectionEngine {
 #[derive(Debug, Clone)]
 pub struct ThreatFeedStats {
     /// Number of `total_feeds`
-    /// Number of `total_feeds`
     pub total_feeds: usize,
-    /// Number of `active_feeds`
     /// Number of `active_feeds`
     pub active_feeds: usize,
     /// Number of `total_indicators`
-    /// Number of `total_indicators`
     pub total_indicators: usize,
-    /// The last updated value
     /// The last updated value
     pub last_updated: chrono::DateTime<chrono::Utc>,
 }

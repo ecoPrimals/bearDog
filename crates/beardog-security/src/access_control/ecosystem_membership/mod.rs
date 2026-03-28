@@ -131,7 +131,6 @@ impl EcosystemMembershipManager {
     }
 
     /// Updates membership
-    /// Updates membership
     pub fn update_membership(
         &mut self,
         entity_id: &str,
@@ -145,7 +144,6 @@ impl EcosystemMembershipManager {
         )
     }
 
-    /// Gets membership
     /// Gets membership
     pub fn get_membership(&self, entity_id: &str) -> Option<&MembershipEntry> {
         self.membership_database.get_membership(entity_id)
@@ -169,7 +167,6 @@ impl EcosystemMembershipManager {
     }
 
     /// Get health status of the membership system
-    /// Gets health_status
     /// Gets health_status
     pub fn get_health_status(&self) -> HealthStatus {
         // Simplified health check - in production would check various metrics
@@ -244,12 +241,10 @@ impl MembershipDatabase {
     }
 
     /// Gets membership
-    /// Gets membership
     pub fn get_membership(&self, entity_id: &str) -> Option<&MembershipEntry> {
         self.entries.get(entity_id)
     }
 
-    /// Updates membership
     /// Updates membership
     pub fn update_membership(
         &mut self,

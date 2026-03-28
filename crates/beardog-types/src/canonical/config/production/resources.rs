@@ -481,7 +481,6 @@ impl ResourceManagementConfig {
 
     /// Validate the resource configuration
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         // Validate memory settings
         if let (Some(initial), Some(max)) = (

@@ -448,7 +448,6 @@ impl EcosystemGeneticSpawner {
     /// # Errors
     /// Returns an error if the operation fails.
     /// Gets `active_spawns`
-    /// Gets `active_spawns`
     pub async fn get_active_spawns(&self) -> Result<Vec<EcosystemSpawningOperation>, BearDogError> {
         let active_spawns = self.active_spawns.read().await;
         Ok(active_spawns.values().cloned().collect())
@@ -458,7 +457,6 @@ impl EcosystemGeneticSpawner {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    /// Gets `hybrid_nodes`
     /// Gets `hybrid_nodes`
     pub async fn get_hybrid_nodes(&self) -> Result<Vec<EcosystemHybridNode>, BearDogError> {
         let nodes = self.hybrid_nodes.read().await;

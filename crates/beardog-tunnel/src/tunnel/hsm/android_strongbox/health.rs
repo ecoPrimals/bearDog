@@ -40,7 +40,6 @@ impl AndroidHealthMonitor {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Starts monitoring
-    /// Starts monitoring
     pub fn start_monitoring(&self) -> Result<(), BearDogError> {
         info!("🔍 Starting Android StrongBox health monitoring");
 
@@ -52,7 +51,6 @@ impl AndroidHealthMonitor {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Gets health_status
     /// Gets health_status
     pub fn get_health_status(&self) -> Result<HsmHealthStatus, BearDogError> {
         debug!("🔍 Getting overall health status");

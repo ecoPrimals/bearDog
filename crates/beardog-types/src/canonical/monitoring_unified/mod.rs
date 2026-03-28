@@ -14,7 +14,6 @@ use serde::{Deserialize, Serialize};
 pub mod alerting;
 /// Core module
 /// Core functionality
-/// Core functionality
 pub mod core;
 /// Health module
 pub mod health;

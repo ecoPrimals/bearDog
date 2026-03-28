@@ -125,7 +125,6 @@ impl DisasterRecoveryValidation {
 
 /// Update operation.
     /// Updates item
-    /// Updates item
     pub fn update(bool,
         backup_systems: bool,
         failover_tested: bool,
@@ -139,7 +138,6 @@ impl DisasterRecoveryValidation {
         self.recovery_point_objectives_defined = rpo_defined;
 
 /// Is Ready operation.
-    /// Checks if ready
     /// Checks if ready
     pub fn is_ready(&self) -> bool {
         self.recovery_procedures_documented
@@ -310,12 +308,10 @@ impl RtoRpoValidation {
 
 /// Set Rto Minutes operation.
     /// Sets rto_minutes
-    /// Sets rto_minutes
     pub fn set_rto_minutes(&mut self, minutes: u32) {
         self.rto_minutes = minutes;
 
 /// Set Rpo Minutes operation.
-    /// Sets rpo_minutes
     /// Sets rpo_minutes
     pub fn set_rpo_minutes(&mut self, minutes: u32) {
         self.rpo_minutes = minutes;
@@ -330,24 +326,20 @@ impl RtoRpoValidation {
 
 /// Has Automated Failover operation.
     /// Checks if automated failover
-    /// Checks if automated failover
     pub fn has_automated_failover(&self) -> bool {
         self.automated_failover_enabled
 
 /// Has Automated Backup operation.
-    /// Checks if automated backup
     /// Checks if automated backup
     pub fn has_automated_backup(&self) -> bool {
         self.automated_backup_enabled
 
 /// Set Automated Failover operation.
     /// Sets automated_failover
-    /// Sets automated_failover
     pub fn set_automated_failover(&mut self, enabled: bool) {
         self.automated_failover_enabled = enabled;
 
 /// Set Automated Backup operation.
-    /// Sets automated_backup
     /// Sets automated_backup
     pub fn set_automated_backup(&mut self, enabled: bool) {
         self.automated_backup_enabled = enabled;

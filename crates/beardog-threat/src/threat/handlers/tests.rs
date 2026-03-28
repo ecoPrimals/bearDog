@@ -685,9 +685,10 @@ mod response_tests {
         let handler = AutomatedThreatResponseHandler::new(config);
         let threat = create_test_threat_event();
 
-        let result = handler.collect_forensics(&threat);
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap().len(), 0); // Simplified implementation returns empty vec
+        let artifacts = handler.collect_forensics(&threat).unwrap();
+        assert!(!artifacts.is_empty());
+        assert!(artifacts.iter().any(|a| a.starts_with("threat_id:")));
+        assert!(artifacts.iter().any(|a| a.starts_with("severity:")));
     }
 
     #[test]
@@ -744,9 +745,12 @@ mod response_tests {
         for i in 1..=5 {
             let mut threat = create_test_threat_event();
             threat.id = format!("forensic_{i}");
-            let result = handler.collect_forensics(&threat);
-            assert!(result.is_ok());
-            assert_eq!(result.unwrap().len(), 0);
+            let artifacts = handler.collect_forensics(&threat).unwrap();
+            assert!(
+                artifacts
+                    .iter()
+                    .any(|a| a == &format!("threat_id:forensic_{i}"))
+            );
         }
     }
 

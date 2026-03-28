@@ -368,7 +368,6 @@ impl SelfDiscoveryManager {
 
     /// Update health status
     /// Updates `health_status`
-    /// Updates `health_status`
     pub fn update_health_status(&mut self, status: HealthStatus) {
         self.identity.health_status = status;
     }

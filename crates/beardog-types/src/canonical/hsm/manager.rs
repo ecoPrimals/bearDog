@@ -72,7 +72,6 @@ impl HsmManager {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Gets available_tiers
-    /// Gets available_tiers
     pub fn get_available_tiers(&self) -> Result<Vec<HsmTier>, BearDogError>> {
         Ok(vec![
             HsmTier::Software,

@@ -136,7 +136,6 @@ impl SecuritySentinel {
     /// # Errors
     /// Returns an error if monitoring cannot be started
     /// Starts monitoring
-    /// Starts monitoring
     pub fn start_monitoring(&self) -> Result<(), BearDogError> {
         self.monitoring_active.store(true, Ordering::Relaxed);
         tracing::info!("Security monitoring started");
@@ -148,7 +147,6 @@ impl SecuritySentinel {
     /// # Errors
     /// Returns an error if monitoring cannot be stopped
     /// Stops monitoring
-    /// Stops monitoring
     pub fn stop_monitoring(&self) -> Result<(), BearDogError> {
         self.monitoring_active.store(false, Ordering::Relaxed);
         tracing::info!("Security monitoring stopped");
@@ -159,7 +157,6 @@ impl SecuritySentinel {
     ///
     /// # Errors
     /// Returns an error if the event cannot be processed
-    /// Processes `security_event`
     /// Processes `security_event`
     pub async fn process_security_event(
         &self,
@@ -205,7 +202,6 @@ impl SecuritySentinel {
     /// # Errors
     /// Returns an error if the status report cannot be generated
     /// Gets `status_report`
-    /// Gets `status_report`
     pub async fn get_status_report(&self) -> Result<SecurityStatusReport, BearDogError> {
         let stats = self.stats.read().await.clone();
         let status = if self.monitoring_active.load(Ordering::Relaxed) {
@@ -235,14 +231,12 @@ impl SecuritySentinel {
     /// Checks if monitoring is currently active
     #[must_use]
     /// Checks if monitoring active
-    /// Checks if monitoring active
     pub fn is_monitoring_active(&self) -> bool {
         self.monitoring_active.load(Ordering::Relaxed)
     }
 
     /// Gets the current event count
     #[must_use]
-    /// Gets `event_count`
     /// Gets `event_count`
     pub fn get_event_count(&self) -> usize {
         self.event_counter.load(Ordering::Relaxed)

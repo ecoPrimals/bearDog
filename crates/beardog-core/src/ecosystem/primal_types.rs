@@ -464,7 +464,6 @@ impl PrimalError {
     /// # Returns
     /// A `PrimalError` with "`InitializationFailed`" error code
     /// Initializes `componentialization_failed`
-    /// Initializes `componentialization_failed`
     pub fn initialization_failed(message: impl Into<String>) -> Self {
         Self::new("InitializationFailed", message)
     }
@@ -658,7 +657,6 @@ impl Default for UniversalIntegrationConfig {
 pub struct PrimalTypeMigrationHelper;
 
 impl PrimalTypeMigrationHelper {
-    /// Gets `migration_guidance`
     /// Gets `migration_guidance`
     #[must_use]
     pub const fn get_migration_guidance() -> &'static str {

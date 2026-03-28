@@ -4,54 +4,41 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone)]
     /// Number of threat_threshold
-    /// Number of threat_threshold
     pub threat_threshold: u8,
 
-    /// Whether automated_response is enabled
     /// Whether automated_response is enabled
     pub automated_response: bool,
 
     /// Number of max_alerts_per_minute
-    /// Number of max_alerts_per_minute
     pub max_alerts_per_minute: u32,
 
-    /// Whether ml_enhancement is enabled
     /// Whether ml_enhancement is enabled
     pub ml_enhancement: bool,
 
     /// Collection of threat feeds
-    /// Collection of threat feeds
     pub threat_feeds: Vec<String>,
 
-    /// Whether auto_quarantine is enabled
     /// Whether auto_quarantine is enabled
     pub auto_quarantine: bool,
 
     /// Collection of notification endpoints
-    /// Collection of notification endpoints
     pub notification_endpoints: Vec<String>,
 
-    /// Whether feature is enabled
     /// Whether feature is enabled
     pub enabled: bool,
 
     /// The rules path value
-    /// The rules path value
     pub rules_path: String,
 
-    /// Collection of monitor paths
     /// Collection of monitor paths
     pub monitor_paths: Vec<String>,
 
     /// The alert threshold value
-    /// The alert threshold value
     pub alert_threshold: f64,
 
     /// Number of cache_size
-    /// Number of cache_size
     pub cache_size: usize,
 
-    /// Number of monitoring_interval
     /// Number of monitoring_interval
     pub monitoring_interval: u64,
 }
@@ -84,7 +71,6 @@ impl ThreatDetectionConfig {
     }
 
     /// Is Valid operation.
-    /// Checks if valid
     /// Checks if valid
     pub fn is_valid(&self) -> bool {
         self.threat_threshold <= 100

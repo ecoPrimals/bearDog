@@ -395,7 +395,6 @@ impl MonitoringMigrationService {
     /// Create a migration report summary
     #[must_use]
     /// Creates `monitoring_migration_summary`
-    /// Creates `monitoring_migration_summary`
     pub fn create_monitoring_migration_summary(report: &MonitoringMigrationReport) -> String {
         format!(
             "Monitoring Configuration Migration Summary:\n\

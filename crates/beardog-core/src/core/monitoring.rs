@@ -428,7 +428,6 @@ impl SystemMonitor {
     /// # Returns
     /// Current `SystemMetrics` with resource utilization data
     /// Gets `system_metrics`
-    /// Gets `system_metrics`
     pub async fn get_system_metrics(&self) -> SystemMetrics {
         *self.metrics.read().await
     }

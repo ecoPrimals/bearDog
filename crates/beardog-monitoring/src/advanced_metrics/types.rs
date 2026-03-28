@@ -97,7 +97,6 @@ pub struct MetricDataPoint {
     /// The value value
     pub value: f64,
     /// Optional context
-    /// Optional context
     pub context: Option<String>,
 }
 

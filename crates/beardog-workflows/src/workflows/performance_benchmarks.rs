@@ -124,7 +124,6 @@ impl WorkflowPerformanceBenchmarks {
 
 /// Run Comprehensive Benchmarks operation.
     /// Runs comprehensive_benchmarks
-    /// Runs comprehensive_benchmarks
     pub fn run_comprehensive_benchmarks() -> ComprehensiveBenchmarkResults {
         println!("🏁 Running comprehensive zero-cost performance benchmarks...");
         println!("{}", "=".repeat(60));

@@ -353,9 +353,7 @@ impl Default for EvolutionStats {
 pub struct GeneticsProviderUtils;
 
 impl GeneticsProviderUtils {
-    /// Create a basic genetics provider
-    /// Creates `basic_provider`
-    /// Creates `basic_provider`
+    /// Create a basic genetics provider.
     pub fn create_basic_provider(
         _config: serde_json::Value,
     ) -> Result<serde_json::Value, BearDogError> {
@@ -373,9 +371,7 @@ impl GeneticsProviderUtils {
         Ok(Value::Object(result))
     }
 
-    /// Create a biome genetics handler
-    /// Creates `biome_handler`
-    /// Creates `biome_handler`
+    /// Create a biome genetics handler.
     pub fn create_biome_handler(
         biome_config: serde_json::Value,
     ) -> Result<BiomeGeneticsData, BearDogError> {
@@ -385,7 +381,7 @@ impl GeneticsProviderUtils {
                 .and_then(|v| v.as_str())
                 .unwrap_or("default")
                 .to_string(),
-            signature: vec![0u8; 64], // Placeholder
+            signature: Vec::new(),
             trust_level: 0.5,
             health_status: "healthy".to_string(),
             metadata: HashMap::new(),
@@ -393,8 +389,6 @@ impl GeneticsProviderUtils {
     }
 
     /// Validate genetic parameters
-    /// Validates `genetic_params`
-    /// Validates `genetic_params`
     pub fn validate_genetic_params(
         params: &GeneticParameters,
     ) -> impl std::future::Future<Output = Result<Vec<serde_json::Value>, BearDogError>> + Send
@@ -423,9 +417,7 @@ impl GeneticsProviderUtils {
 pub struct EvolutionEngineUtils;
 
 impl EvolutionEngineUtils {
-    /// Create a basic evolution engine
-    /// Creates `basic_engine`
-    /// Creates `basic_engine`
+    /// Create a basic evolution engine.
     pub fn create_basic_engine(
         _config: serde_json::Value,
     ) -> Result<serde_json::Value, BearDogError> {
@@ -439,13 +431,11 @@ impl EvolutionEngineUtils {
         Ok(Value::Object(result))
     }
 
-    /// Create biome genetics data
-    /// Creates `biome_data`
-    /// Creates `biome_data`
+    /// Create biome genetics data with an empty (unsigned) signature.
     pub fn create_biome_data(biome_id: String) -> Result<BiomeGeneticsData, BearDogError> {
         Ok(BiomeGeneticsData {
             biome_id,
-            signature: vec![0u8; 64],
+            signature: Vec::new(),
             trust_level: 0.5,
             health_status: "healthy".to_string(),
             metadata: HashMap::new(),

@@ -9,7 +9,6 @@ pub mod android;
 pub mod capabilities;
 /// Config module
 /// Configuration management
-/// Configuration management
 pub mod config;
 /// Discovery configuration (HSM-specific)
 pub mod discovery;

@@ -38,7 +38,6 @@ impl PerformanceOptimizer {
 
     /// Initialize Optimizations
     /// Initializes `componentialize_optimizations`
-    /// Initializes `componentialize_optimizations`
     pub fn initialize_optimizations(&mut self) -> Result<(), BearDogError> {
         Ok(())
     }

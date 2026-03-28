@@ -34,7 +34,6 @@ impl SecurityMetricsEngine {
     }
 
     /// Starts service
-    /// Starts service
     pub fn start(&self) -> Result<(), BearDogError> {
         tracing::info!("Security metrics engine started");
         Ok(())
@@ -64,7 +63,6 @@ impl SecurityMetricsEngine {
         Ok(())
     }
 
-    /// Gets metrics
     /// Gets metrics
     pub fn get_metrics(&self) -> Result<SecurityMetrics, BearDogError> {
         let state = self

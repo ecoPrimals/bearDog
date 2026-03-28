@@ -342,7 +342,6 @@ pub enum WeightInitialization {
     /// Ones initialization
     Ones,
     /// Random normal initialization
-    /// Random normal initialization
     RandomNormal {
         /// Mean value
         mean: f64,

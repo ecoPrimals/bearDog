@@ -256,7 +256,6 @@ impl Default for DashboardConfig {
 impl ObservabilityConfig {
     /// Validate
     /// Validates input
-    /// Validates input
     pub const fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }

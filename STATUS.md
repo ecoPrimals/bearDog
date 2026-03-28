@@ -19,7 +19,7 @@
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
 | **Tests** | 15,100+ passing | Fully concurrent, zero sleeps in non-chaos |
-| **Coverage** | 90.05% line | llvm-cov workspace — target met |
+| **Coverage** | 90.16% line | llvm-cov workspace — target met |
 | **Serial Tests** | 0 | `#[serial]` fully eliminated |
 | **cargo deny** | 4/4 pass | Advisories, bans, licenses, sources |
 | **License** | AGPL-3.0-only | SPDX headers on all .rs files |
@@ -56,7 +56,7 @@
 | beardog-tunnel | ~83% | NDJSON framing, structured tracing, IPC, BTSP |
 | beardog-deploy | ~82% | command runner, android, builder, device coverage |
 | beardog-integration | new | Tower Atomic UPA client, heartbeat, connection tracking |
-| **Overall** | **90.05%** | llvm-cov workspace — 90% target met |
+| **Overall** | **90.16%** | llvm-cov workspace — 90% target met |
 
 ---
 
@@ -85,6 +85,17 @@
 ---
 
 ## Recent Improvements (March 28, 2026)
+
+### Wave 23: Massive Orphan Purge, Doc Dedup, Lint Tightening & Self-Knowledge Constants
+
+- **36 orphan .rs files removed (~8,500+ LOC)** — Systematic module-tree audit confirmed 36 files across 14 crates were never compiled (not in any `mod` declaration or `#[path]`). Includes: 9 in `beardog-core`, 8 in `beardog-errors`, 4 in `beardog-monitoring`, 3 in `beardog-security`, 5 in `beardog-types`, 3 in `beardog-utils`, and others across `production`, `adapters`, `config`, `tunnel`, `genetics`, `deploy`, `cli`, `ipc`, `integration-tests`
+- **858 duplicated doc comment lines deduplicated** — Automated scan found 858 consecutive identical `///` lines across 196 files; all removed, improving doc output and reducing noise
+- **`empty_docs` lint promoted to `warn`** — 3 empty `///` comments in `beardog-types/production/monitoring.rs` replaced with real descriptions; lint level raised from `allow` to `warn` in workspace `Cargo.toml`
+- **Hardcoded `"beardog"` string literals → `DEFAULT_SYSTEM_NAME` constant** — 7 production fallback sites in `beardog-tunnel/platform/mod.rs` (4 platform endpoints) and `beardog-production/config_management/runtime.rs` (3 defaults) now reference the canonical constant
+- **Empty placeholder modules evolved** — `beardog-config/{discovery,validation,defaults}.rs` and `beardog-traits/unified/{storage,network}.rs` placeholder comments replaced with proper module-level documentation
+- **Dependency audit** — `serde_yaml` confirmed ecoBin-compliant (unsafe-libyaml is Rust-translated, no C linker); `hostname` uses `libc` (standard OS interface); `bcrypt` uses RustCrypto `blowfish` (pure Rust); documented `serde_yaml` deprecation status with `yaml_serde` migration note
+- **90.16% line coverage maintained** — 0 failures, all gates green
+- **All gates green** — fmt ✓, clippy `-D warnings` ✓, doc `-D warnings` ✓, build ✓, test ✓
 
 ### Wave 22: Deep Debt Evolution — Hot-Path Clones, iOS Fake Crypto Fix, Mock Cleanup
 
@@ -334,7 +345,7 @@ cargo check --workspace --all-features        # Compile — clean
 cargo test --workspace                        # Tests — 0 failures
 cargo doc --workspace --no-deps               # Docs — clean
 cargo deny check                              # Advisories, bans, licenses, sources
-cargo llvm-cov --workspace --summary-only     # Coverage — 90.05%
+cargo llvm-cov --workspace --summary-only     # Coverage — 90.16%
 ```
 
 ---

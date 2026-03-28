@@ -289,7 +289,6 @@ impl GeneticSpawningEngine {
 
     /// Get Config operation.
     /// Gets config
-    /// Gets config
     #[must_use]
     pub const fn get_config(&self) -> &GeneticsConfig {
         &self.config

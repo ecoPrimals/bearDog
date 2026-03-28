@@ -28,12 +28,9 @@ pub struct MlPrediction {
     /// Model belief in the assigned [`RiskLevel`] (0.0–1.0).
     pub confidence: f64,
     /// The risk level value
-    /// The risk level value
     pub risk_level: RiskLevel,
     /// Collection of reasoning
-    /// Collection of reasoning
     pub reasoning: Vec<String>,
-    /// The model version value
     /// The model version value
     pub model_version: String,
     /// End-to-end time for this prediction on the hot path.
@@ -59,18 +56,13 @@ pub enum RiskLevel {
 #[derive(Debug, Clone)]
 pub struct MlModel {
     /// Name of the item
-    /// Name of the item
     pub name: String,
-    /// The version value
     /// The version value
     pub version: String,
     /// The model type value
-    /// The model type value
     pub model_type: String,
     /// The accuracy value
-    /// The accuracy value
     pub accuracy: f64,
-    /// The last updated value
     /// The last updated value
     pub last_updated: chrono::DateTime<chrono::Utc>,
 }
@@ -296,7 +288,6 @@ impl MlEngine {
 
     /// Get engine statistics
     /// Gets stats
-    /// Gets stats
     #[must_use]
     pub fn get_stats(&self) -> MlEngineStats {
         MlEngineStats {
@@ -318,15 +309,11 @@ impl MlEngine {
 #[derive(Debug, Clone)]
 pub struct MlEngineStats {
     /// Number of `local_predictions`
-    /// Number of `local_predictions`
     pub local_predictions: u64,
-    /// Number of `network_predictions`
     /// Number of `network_predictions`
     pub network_predictions: u64,
     /// Number of `models_loaded`
-    /// Number of `models_loaded`
     pub models_loaded: usize,
-    /// Number of `cache_size`
     /// Number of `cache_size`
     pub cache_size: usize,
 }

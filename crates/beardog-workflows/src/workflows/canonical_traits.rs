@@ -246,7 +246,6 @@ where
     /// # Errors
     /// Returns an error if the operation fails.
     /// Creates workflow
-    /// Creates workflow
     pub async fn create_workflow(&self, workflow: R::Workflow) -> Result<(), R::Error>
     where
         O::Error: std::fmt::Debug,
@@ -267,7 +266,6 @@ where
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    /// Executes workflow
     /// Executes workflow
     pub async fn execute_workflow(
         &self,

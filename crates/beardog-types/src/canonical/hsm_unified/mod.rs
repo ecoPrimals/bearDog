@@ -14,7 +14,6 @@ pub mod cloud;
 pub mod connection;
 /// Core module
 /// Core functionality
-/// Core functionality
 pub mod core;
 /// Key management module
 pub mod key_management;

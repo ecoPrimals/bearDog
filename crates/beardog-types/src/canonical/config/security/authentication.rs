@@ -353,7 +353,6 @@ impl CanonicalAuthenticationConfig {
 
     /// Validate authentication configuration
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.jwt_secret.as_ref() == "CHANGE_ME_IN_PRODUCTION"
             || self.jwt_secret.as_ref() == "MUST_SET_IN_PRODUCTION"

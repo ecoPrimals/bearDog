@@ -38,7 +38,6 @@ impl AndroidAttestationService {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Initializes componentialize
-    /// Initializes componentialize
     pub fn initialize(&self) -> Result<(), BearDogError> {
         info!("🔍 Initializing attestation service");
 
@@ -128,7 +127,6 @@ impl AndroidAttestationService {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Loads certificate_from_path
     /// Loads certificate_from_path
     pub fn load_certificate_from_path(path: &str) -> Result<Vec<u8>, BearDogError>> {
         debug!("📜 Loading certificate from: {}", path);

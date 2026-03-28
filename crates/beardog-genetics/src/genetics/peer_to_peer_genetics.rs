@@ -34,7 +34,6 @@ impl GeneticsNode {
     }
 
     /// Updates last_seen
-    /// Updates last_seen
     pub fn update_last_seen(&mut self) {
         self.last_seen = Utc::now();
     }
@@ -121,12 +120,10 @@ impl P2PGeneticsNetwork {
     }
 
     /// Removes node
-    /// Removes node
     pub fn remove_node(&mut self, node_id: &str) -> Option<GeneticsNode> {
         self.nodes.remove(node_id)
     }
 
-    /// Gets node
     /// Gets node
     pub fn get_node(&self, node_id: &str) -> Option<&GeneticsNode> {
         self.nodes.get(node_id)

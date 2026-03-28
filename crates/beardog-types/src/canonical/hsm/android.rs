@@ -396,7 +396,6 @@ impl AndroidHsmConfig {
 
     /// Validate the Android HSM configuration
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), String> {
         // Validate API level
         if self.device_info.api_level < self.security_requirements.min_api_level {

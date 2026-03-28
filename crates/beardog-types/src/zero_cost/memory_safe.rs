@@ -127,7 +127,6 @@ impl SafeZeroCopyMemoryPool {
 
     /// Get current memory usage statistics
     /// Gets metrics
-    /// Gets metrics
     pub fn get_metrics(&self) -> SafeMemoryPoolMetrics {
         SafeMemoryPoolMetrics {
             allocations: AtomicUsize::new(self.stats.allocations.load(Ordering::Relaxed)),
@@ -212,13 +211,11 @@ where
 
     /// Check if the buffer is empty
     /// Checks if empty
-    /// Checks if empty
     pub fn is_empty(&self) -> bool {
         self.current_size.load(Ordering::Relaxed) == 0
     }
 
     /// Check if the buffer is full
-    /// Checks if full
     /// Checks if full
     pub fn is_full(&self) -> bool {
         self.current_size.load(Ordering::Relaxed) >= self.capacity

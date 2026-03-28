@@ -206,7 +206,6 @@ impl HsmProviderType {
     /// Check if provider supports cloud-based operations
     #[must_use]
     /// Checks if cloud based
-    /// Checks if cloud based
     pub fn is_cloud_based(&self) -> bool {
         match self {
             Self::Cloud { .. } => true,
@@ -219,7 +218,6 @@ impl HsmProviderType {
 
     /// Check if provider is hardware-based
     #[must_use]
-    /// Checks if hardware based
     /// Checks if hardware based
     pub fn is_hardware_based(&self) -> bool {
         match self {
@@ -251,7 +249,6 @@ impl HsmProviderConfig {
     /// Create a new modern HSM provider config with capability discovery
     #[must_use]
     /// Creates a new instance
-    /// Creates a new instance
     pub fn new_with_capability_discovery(
         name: String,
         capability_type: CapabilityType,
@@ -282,7 +279,6 @@ impl HsmProviderConfig {
     }
 
     #[must_use]
-    /// Gets `migration_recommendation`
     /// Gets `migration_recommendation`
     pub fn get_migration_recommendation(&self) -> Option<String> {
         if self.uses_deprecated_patterns() {

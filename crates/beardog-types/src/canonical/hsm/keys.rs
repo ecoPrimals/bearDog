@@ -413,7 +413,6 @@ impl HsmKey {
     /// Check if the key is active and can be used
     #[must_use]
     /// Checks if active
-    /// Checks if active
     pub fn is_active(&self) -> bool {
         self.health.status == "healthy" && self.expires_at.is_none_or(|exp| exp > SystemTime::now())
     }
@@ -439,13 +438,11 @@ impl HsmKey {
 
     /// Remove a tag from the key metadata
     /// Removes tag
-    /// Removes tag
     pub fn remove_tag(&mut self, tag: &str) {
         self.metadata.tags.retain(|t| t != tag);
     }
 
     /// Set a custom attribute
-    /// Sets attribute
     /// Sets attribute
     pub fn set_attribute(&mut self, key: String, value: String) {
         self.metadata.attributes.insert(key, value);
@@ -454,14 +451,12 @@ impl HsmKey {
     /// Get a custom attribute
     #[must_use]
     /// Gets attribute
-    /// Gets attribute
     pub fn get_attribute(&self, key: &str) -> Option<&String> {
         self.metadata.attributes.get(key)
     }
 
     /// Check if the key is expired
     #[must_use]
-    /// Checks if expired
     /// Checks if expired
     pub fn is_expired(&self) -> bool {
         self.expires_at.is_some_and(|exp| exp <= SystemTime::now())
@@ -477,7 +472,6 @@ impl HsmKey {
     }
 
     /// Update key health status
-    /// Updates health
     /// Updates health
     pub fn update_health(&mut self, status: String) {
         self.health.status = status;
@@ -515,14 +509,12 @@ impl KeyManager {
 
     #[must_use]
     /// Validates `key_id`
-    /// Validates `key_id`
     pub const fn validate_key_id(key_id: &str) -> bool {
         !key_id.is_empty() && key_id.len() <= 255
     }
 
     /// Check if algorithm is supported
     #[must_use]
-    /// Checks if algorithm supported
     /// Checks if algorithm supported
     pub fn is_algorithm_supported(algorithm: &str) -> bool {
         matches!(

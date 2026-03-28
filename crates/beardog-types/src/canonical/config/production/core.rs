@@ -215,7 +215,6 @@ impl ProductionCoreConfig {
 
     /// Validate the core configuration
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.service_name.is_empty() {
             return Err(BearDogError::Business {
@@ -264,7 +263,6 @@ impl ProductionCoreConfig {
 
     /// Check if this is a production environment
     #[must_use]
-    /// Checks if production
     /// Checks if production
     pub const fn is_production(&self) -> bool {
         matches!(

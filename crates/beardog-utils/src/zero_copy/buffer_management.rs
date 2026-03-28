@@ -83,7 +83,6 @@ impl SafeZeroCopyBuffer {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Sets length
-    /// Sets length
     pub fn set_length(&mut self, length: usize) -> Result<(), BearDogError> {
         if length > self.capacity {
             return Err(BearDogError::validation("Length exceeds buffer capacity"));
@@ -225,7 +224,6 @@ impl SafeBufferPool {
 
 /// Get Stats operation.
     /// Gets stats
-    /// Gets stats
     pub fn get_stats(&self) -> &SafeBufferStats {
         &self.stats
     }
@@ -283,7 +281,6 @@ impl SafeBufferBuilder {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Builds component
     /// Builds component
     pub fn build(self) -> Result<SafeZeroCopyBuffer, BearDogError> {
         let mut buffer = SafeZeroCopyBuffer::with_capacity({} bytes, alignment hint: {}", self.capacity, self.alignment_hint);

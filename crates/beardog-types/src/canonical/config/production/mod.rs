@@ -27,7 +27,6 @@ use serde::{Deserialize, Serialize};
 // Domain-specific production configuration modules
 /// Core module
 /// Core functionality
-/// Core functionality
 pub mod core;
 /// Deployment module
 pub mod deployment;
@@ -104,7 +103,6 @@ impl UnifiedProductionConfig {
     }
 
     /// Validate the entire production configuration
-    /// Validates input
     /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         self.core.validate()?;

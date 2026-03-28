@@ -116,7 +116,6 @@ where
 
     /// Execute workflow with context
     /// Executes workflow
-    /// Executes workflow
     pub async fn execute_workflow(
         &mut self,
         workflow: R::Workflow,

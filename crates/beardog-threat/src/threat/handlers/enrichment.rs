@@ -10,7 +10,6 @@ use beardog_errors::BearDogError;
 /// Optional enrichment stage that can attach [`ExternalIntelligence`] to threats.
 pub struct ThreatEnrichmentHandler {
     /// Whether feature is enabled
-    /// Whether feature is enabled
     pub enabled: bool,
 }
 
@@ -49,15 +48,11 @@ impl Default for ThreatEnrichmentHandler {
 #[derive(Debug, Clone)]
 pub struct NetworkContextInfo {
     /// The network segment value
-    /// The network segment value
     pub network_segment: String,
-    /// The security zone value
     /// The security zone value
     pub security_zone: String,
     /// The access level value
-    /// The access level value
     pub access_level: String,
-    /// Whether `is_trusted` is enabled
     /// Whether `is_trusted` is enabled
     pub is_trusted: bool,
 }
@@ -76,7 +71,6 @@ impl Default for NetworkContextInfo {
 /// Short free-text enrichment blob returned by [`ThreatEnrichmentHandler::enrich_threat`].
 #[derive(Debug, Clone)]
 pub struct ExternalIntelligence {
-    /// The description value
     /// The description value
     pub description: String,
     /// Confidence that the enrichment applies to the queried threat (0.0–1.0).

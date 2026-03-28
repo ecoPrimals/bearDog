@@ -22,38 +22,29 @@ pub struct ThreatDetectionEngine {
     pub config: ThreatDetectionConfig,
 
     /// Mapping of active threats
-    /// Mapping of active threats
     pub active_threats: HashMap<String, ThreatEvent>,
 
-    /// The blocked sources value
     /// The blocked sources value
     pub blocked_sources: HashSet<String>,
 
     /// The quarantined systems value
-    /// The quarantined systems value
     pub quarantined_systems: HashSet<String>,
 
-    /// Mapping of threat feeds
     /// Mapping of threat feeds
     pub threat_feeds: HashMap<String, ThreatIntelligenceFeed>,
 
     /// Collection of detection rules
-    /// Collection of detection rules
     pub detection_rules: Vec<DetectionRule>,
 
-    /// The stats value
     /// The stats value
     pub stats: ThreatDetectionStats,
 
     /// Mapping of ml models
-    /// Mapping of ml models
     pub ml_models: HashMap<String, MlModel>,
 
     /// Optional ml engine
-    /// Optional ml engine
     pub ml_engine: Option<Arc<SmartThreatMLEngine>>,
 
-    /// The event history value
     /// The event history value
     pub event_history: Arc<RwLock<Vec<ThreatEvent>>>,
 
@@ -98,7 +89,6 @@ impl ThreatDetectionEngine {
         Ok(engine)
     }
 
-    /// Removes rule
     /// Removes rule
     pub fn remove_rule(&mut self, rule_id: &str) -> bool {
         self.remove_detection_rule(rule_id)

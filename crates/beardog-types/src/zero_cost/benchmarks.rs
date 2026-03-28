@@ -31,7 +31,6 @@ impl PerformanceBenchmark {
 
     /// Run
     /// Runs process
-    /// Runs process
     pub fn run<F>(&self, mut operation: F) -> BenchmarkResult
     where
         F: FnMut(),
@@ -269,7 +268,6 @@ pub struct PerformanceTestSuite {
 
 impl PerformanceTestSuite {
     /// Run Comprehensive Suite
-    /// Runs comprehensive_suite
     /// Runs comprehensive_suite
     pub fn run_comprehensive_suite() -> Self {
         let mut results = Vec::new();

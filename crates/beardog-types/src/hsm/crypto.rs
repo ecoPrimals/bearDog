@@ -10,7 +10,7 @@ use crate::BearDogError;
 ///
 /// # Migration (v0.10.0)
 ///
-/// This trait is superseded by [`beardog_traits::hsm::HsmKeyProvider`] which
+/// This trait is superseded by `beardog_traits::hsm::HsmKeyProvider` which
 /// provides a unified, object-safe interface for all HSM backends.
 /// New code should use `HsmKeyProvider` via the `HsmProviderRegistry`.
 /// This trait will be removed in a future release.

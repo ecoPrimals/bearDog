@@ -28,7 +28,6 @@ pub enum ThreatSeverity {
 /// Threat types
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// Types of threat
-/// Types of threat
 pub enum ThreatType {
     /// Represents malware variant
     Malware,
@@ -119,26 +118,19 @@ pub enum DetectionMethod {
 pub struct ThreatIndicator {
     pub id: String,
     /// The indicator type value
-    /// The indicator type value
     pub indicator_type: IndicatorType,
-    /// The value value
     /// The value value
     pub value: String,
     pub confidence: f64,
     /// The severity value
-    /// The severity value
     pub severity: String,
-    /// The source value
     /// The source value
     pub source: String,
     pub timestamp: DateTime<Utc>,
     /// Mapping of metadata
-    /// Mapping of metadata
     pub metadata: HashMap<String, String>,
     /// The created at value
-    /// The created at value
     pub created_at: DateTime<Utc>,
-    /// Optional expires at
     /// Optional expires at
     pub expires_at: Option<DateTime<Utc>>,
 }
@@ -151,36 +143,28 @@ pub struct ThreatIntelligenceIndicator {
     pub id: String,
     /// Type of indicator (IP, domain, hash, etc.)
     /// The indicator type value
-    /// The indicator type value
     pub indicator_type: IndicatorType,
     /// The actual indicator value
-    /// The value value
     /// The value value
     pub value: String,
     /// Confidence level (0.0 to 1.0)
     pub confidence: f64,
     /// Severity level
     /// The severity value
-    /// The severity value
     pub severity: String,
     /// Human-readable description
-    /// The description value
     /// The description value
     pub description: String,
     /// Associated tags
     /// Collection of tags
-    /// Collection of tags
     pub tags: Vec<String>,
     /// First time this indicator was seen
-    /// The first seen value
     /// The first seen value
     pub first_seen: chrono::DateTime<chrono::Utc>,
     /// Last time this indicator was seen
     /// The last seen value
-    /// The last seen value
     pub last_seen: chrono::DateTime<chrono::Utc>,
     /// Additional metadata
-    /// The metadata value
     /// The metadata value
     pub metadata: std::collections::HashMap<String, String>,
 }

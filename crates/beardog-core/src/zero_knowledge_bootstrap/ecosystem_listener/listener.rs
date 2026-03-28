@@ -347,14 +347,12 @@ impl EcosystemListener {
 
     /// Get current listening metrics
     /// Gets metrics
-    /// Gets metrics
     #[must_use]
     pub const fn get_metrics(&self) -> &EcosystemListenerMetrics {
         &self.metrics
     }
 
     /// Stop all listening tasks
-    /// Stops listening
     /// Stops listening
     pub fn stop_listening(&mut self) {
         info!("🛑 Stopping ecosystem listening...");

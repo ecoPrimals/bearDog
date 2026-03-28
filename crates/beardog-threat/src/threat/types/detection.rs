@@ -71,7 +71,6 @@ pub enum DetectionMethod {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 /// Types of evidence
-/// Types of evidence
 pub enum EvidenceType {
     /// Represents network traffic variant
     NetworkTraffic,
@@ -187,88 +186,68 @@ pub enum EvidenceData {
     Hash(EvidenceType,
 
     /// The description value
-    /// The description value
     pub description: String,
 
-    /// The data value
     /// The data value
     pub data: EvidenceData,
 
     /// The collected at value
-    /// The collected at value
     pub collected_at: DateTime<Utc>,
 
     /// Collection of chain of custody
-    /// Collection of chain of custody
     pub chain_of_custody: Vec<String>,
 
-    /// The reliability value
     /// The reliability value
     pub reliability: f64,
 }
 
 #[derive(Debug, Clone)]
     /// The dest ip value
-    /// The dest ip value
     pub dest_ip: String,
 
-    /// Number of source_port
     /// Number of source_port
     pub source_port: u16,
 
     /// Number of dest_port
-    /// Number of dest_port
     pub dest_port: u16,
 
-    /// The protocol value
     /// The protocol value
     pub protocol: String,
 
     /// Number of payload_size
-    /// Number of payload_size
     pub payload_size: usize,
 
-    /// Collection of flags
     /// Collection of flags
     pub flags: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
     /// The message value
-    /// The message value
     pub message: String,
 
     /// The source value
-    /// The source value
     pub source: String,
 
-    /// Mapping of additional fields
     /// Mapping of additional fields
     pub additional_fields: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone)]
     /// Number of file_size
-    /// Number of file_size
     pub file_size: u64,
 
-    /// The file type value
     /// The file type value
     pub file_type: String,
 
     /// Optional hash md5
-    /// Optional hash md5
     pub hash_md5: Option<String>,
 
-    /// Optional hash sha256
     /// Optional hash sha256
     pub hash_sha256: Option<String>,
 
     /// Optional created at
-    /// Optional created at
     pub created_at: Option<DateTime<Utc>>,
 
-    /// Optional modified at
     /// Optional modified at
     pub modified_at: Option<DateTime<Utc>>,
 }
@@ -393,7 +372,6 @@ impl ThreatEvidence {
 
     /// Is Highly Reliable operation.
     /// Checks if highly reliable
-    /// Checks if highly reliable
     pub fn is_highly_reliable(&self) -> bool {
         self.reliability > 0.8
     }
@@ -427,7 +405,6 @@ impl NetworkPacketData {
 
     /// Is Suspicious Port operation.
     /// Checks if suspicious port
-    /// Checks if suspicious port
     pub fn is_suspicious_port(&str, message: &str, source: &str) -> Self {
         Self {
             log_level: log_level.to_string(),
@@ -442,7 +419,6 @@ impl NetworkPacketData {
     }
 
     /// Is Suspicious operation.
-    /// Checks if suspicious
     /// Checks if suspicious
     pub fn is_suspicious(&self) -> bool {
         let suspicious_extensions = [

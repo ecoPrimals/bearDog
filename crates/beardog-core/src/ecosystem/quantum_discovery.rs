@@ -354,7 +354,6 @@ impl QuantumDiscoveryEngine {
 
     /// Create quantum entanglements between related capabilities
     /// Creates quantum_entanglement
-    /// Creates quantum_entanglement
     pub fn create_quantum_entanglement(
         &mut self,
         capability_a: CapabilityType,

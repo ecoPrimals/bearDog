@@ -361,7 +361,6 @@ impl UniversalEcosystemExtension {
 
 /// Get Ecosystem Extension operation.
     /// Gets ecosystem_extension
-    /// Gets ecosystem_extension
     pub fn get_ecosystem_extension(&self) -> Box<dyn EcosystemComputeExtension> {
         Box::new(UniversalEcosystemExtension)
     }
@@ -402,13 +401,11 @@ impl HealingProcess {
 
 /// Get Id operation.
     /// Gets id
-    /// Gets id
     pub fn get_id(&self) -> &str {
         &self.id
     }
 
 /// Get Issue operation.
-    /// Gets issue
     /// Gets issue
     pub fn get_issue(&self) -> &SecurityIssue {
         &self.issue
@@ -416,20 +413,17 @@ impl HealingProcess {
 
 /// Get Healing Genes operation.
     /// Gets healing_genes
-    /// Gets healing_genes
     pub fn get_healing_genes(&self) -> &HealingGenes {
         &self.healing_genes
     }
 
 /// Get Started At operation.
     /// Gets started_at
-    /// Gets started_at
     pub fn get_started_at(&self) -> SystemTime {
         self.started_at
     }
 
 /// Get Status operation.
-    /// Gets status
     /// Gets status
     pub fn get_status(&self) -> &HealingStatus {
         &self.status

@@ -80,14 +80,12 @@ pub mod utilities {
 
     /// Get unified trait system version
     /// Gets `unified_version`
-    /// Gets `unified_version`
     #[must_use]
     pub const fn get_unified_version() -> &'static str {
         "3.0.0"
     }
 
     /// Check if unified traits are being used correctly
-    /// Validates `unified_usage`
     /// Validates `unified_usage`
     #[must_use]
     pub const fn validate_unified_usage() -> bool {

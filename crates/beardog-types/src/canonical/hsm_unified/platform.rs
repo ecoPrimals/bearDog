@@ -18,7 +18,6 @@ pub struct PlatformConfig {
 impl PlatformConfig {
     /// Validate
     /// Validates input
-    /// Validates input
     pub const fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }

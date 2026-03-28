@@ -28,7 +28,6 @@ impl ProductionConfigValidator {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Validates config
-    /// Validates config
     pub fn validate_config(config: &ProductionConfig) -> Result<(), BearDogError> {
         Self::validate_cluster_config(&config.cluster)?;
         Self::validate_backup_config(&config.backup)?;
@@ -40,7 +39,6 @@ impl ProductionConfigValidator {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Validates cluster_config
     /// Validates cluster_config
     pub fn validate_cluster_config(config: &ClusterConfig) -> Result<(), BearDogError> {
         if config.nodes.is_empty() {
@@ -58,7 +56,6 @@ impl ProductionConfigValidator {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Validates node_config
     /// Validates node_config
     pub fn validate_node_config(config: &NodeConfig) -> Result<(), BearDogError> {
         if config.id.is_empty() {
@@ -81,7 +78,6 @@ impl ProductionConfigValidator {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Validates backup_config
-    /// Validates backup_config
     pub fn validate_backup_config(config: &BackupConfig) -> Result<(), BearDogError> {
         if config.enabled && config.retention_days == 0 {
             return Err(BearDogError::configuration("Backup retention days must be greater than 0 when backups are enabled".to_string()));
@@ -94,7 +90,6 @@ impl ProductionConfigValidator {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Validates maintenance_config
     /// Validates maintenance_config
     pub fn validate_maintenance_config(config: &MaintenanceConfig) -> Result<(), BearDogError> {
         for window in &config.maintenance_windows {
@@ -140,7 +135,6 @@ impl ProductionConfigBuilder {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Builds component
     /// Builds component
     pub fn build(self) -> Result<ProductionConfig, BearDogError> {
         ProductionConfigValidator::validate_config(&self.config)?;

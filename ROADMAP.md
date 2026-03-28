@@ -21,7 +21,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 1000 lines of code (production)
 - 15,100+ tests passing (fully concurrent, zero sleeps in non-chaos)
-- 90.05% line coverage (llvm-cov workspace) — target met
+- 90.16% line coverage (llvm-cov workspace) — target met
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - Zero `#[serial_test::serial]` — all tests concurrent via unique isolated resources
 - `cargo deny` passes all 4 checks
@@ -59,7 +59,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ### Test Coverage to 90% — DONE (Wave 20)
 
-Coverage reached **90.05% line** (89.18% region, 84.90% function). 15,100+ tests passing.
+Coverage reached **90.16% line** (89.32% region, 84.94% function). 15,100+ tests passing.
 
 ### primalSpring Composition Fixes — DONE (Wave 18c)
 

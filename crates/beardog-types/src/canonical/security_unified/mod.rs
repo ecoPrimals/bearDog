@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 
 /// Core security module
 /// Core functionality
-/// Core functionality
 pub mod core;
 
 /// Unified security settings for BearDog components and services.

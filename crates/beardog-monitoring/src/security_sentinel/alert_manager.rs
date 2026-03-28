@@ -138,7 +138,6 @@ impl AlertManager {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Gets active_alerts
-    /// Gets active_alerts
     pub fn get_active_alerts(&self) -> Result<Vec<PerformanceAlert>, BearDogError>> {
         let active_alerts = self.active_alerts.read();.await;
         Ok(active_alerts.values().cloned().collect())
@@ -147,7 +146,6 @@ impl AlertManager {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Gets alert_statistics
     /// Gets alert_statistics
     pub fn get_alert_statistics(&self) -> Result<AlertStatistics, BearDogError> {
         let history = self.alert_history.read();.await;

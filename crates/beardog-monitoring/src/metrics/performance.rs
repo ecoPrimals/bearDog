@@ -43,7 +43,6 @@ impl PerformanceEngine {
     }
 
     /// Starts service
-    /// Starts service
     pub fn start(&self) -> Result<(), BearDogError> {
         tracing::info!("Performance metrics engine started");
         Ok(())
@@ -89,7 +88,6 @@ impl PerformanceEngine {
         Ok(())
     }
 
-    /// Gets metrics
     /// Gets metrics
     pub fn get_metrics(&self) -> Result<PerformanceMetrics, BearDogError> {
         let state = self

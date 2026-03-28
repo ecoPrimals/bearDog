@@ -25,26 +25,20 @@ pub struct ThreatEvent {
     pub id: String,
     /// Type of threat detected
     /// The threat type value
-    /// The threat type value
     pub threat_type: ThreatType,
     /// Severity level of the threat
-    /// The severity value
     /// The severity value
     pub severity: ThreatSeverity,
     /// Current status of the threat
     /// Current status of the component
-    /// Current status of the component
     pub status: ThreatStatus,
     /// Source of the threat
-    /// The source value
     /// The source value
     pub source: ThreatSource,
     /// Target of the threat
     /// The target value
-    /// The target value
     pub target: ThreatTarget,
     /// Timestamp when threat was detected
-    /// The detected at value
     /// The detected at value
     pub detected_at: SystemTime,
     /// Wall-clock time associated with the event for correlation and ordering.
@@ -53,48 +47,37 @@ pub struct ThreatEvent {
     pub confidence: f64,
     /// Threat score (0-100)
     /// Number of score
-    /// Number of score
     pub score: u8,
     /// Threat description
     /// The description value
-    /// The description value
     pub description: String,
     /// Detection method used
-    /// The detection method value
     /// The detection method value
     pub detection_method: DetectionMethod,
     /// Human-readable or structured evidence strings supporting the finding.
     pub evidence: Vec<String>,
     /// Recommended actions
     /// Collection of recommended actions
-    /// Collection of recommended actions
     pub recommended_actions: Vec<ThreatAction>,
     /// Assigned analyst
-    /// Optional assigned analyst
     /// Optional assigned analyst
     pub assigned_analyst: Option<String>,
     /// Related events
     /// Collection of related events
-    /// Collection of related events
     pub related_events: Vec<String>,
     /// Raw event data
-    /// Optional raw data
     /// Optional raw data
     pub raw_data: Option<serde_json::Value>,
     /// Whether threat has been mitigated
     /// Whether mitigated is enabled
-    /// Whether mitigated is enabled
     pub mitigated: bool,
     /// Mitigation actions taken
-    /// Collection of mitigation actions
     /// Collection of mitigation actions
     pub mitigation_actions: Vec<ThreatAction>,
     /// Additional metadata
     /// Mapping of metadata
-    /// Mapping of metadata
     pub metadata: HashMap<String, String>,
     /// Mitigation steps taken
-    /// Collection of mitigation steps
     /// Collection of mitigation steps
     pub mitigation_steps: Vec<MitigationStep>,
 }
@@ -104,7 +87,6 @@ pub struct ThreatEvent {
 pub struct ThreatSource {
     /// Source type (IP, domain, process, etc.)
     /// The source type value
-    /// The source type value
     pub source_type: String,
     /// Source identifier
     pub identifier: String,
@@ -112,50 +94,38 @@ pub struct ThreatSource {
     pub id: String,
     /// IP address if applicable
     /// Optional ip address
-    /// Optional ip address
     pub ip_address: Option<String>,
     /// Hostname if applicable
-    /// Name of the hostitem
     /// Name of the hostitem
     pub hostname: Option<String>,
     /// User agent if applicable
     /// Optional user agent
-    /// Optional user agent
     pub user_agent: Option<String>,
     /// Geographic location if available
     /// Optional location
-    /// Optional location
     pub location: Option<String>,
     /// Optional geolocation
-    /// Optional geolocation
     pub geolocation: Option<String>,
-    /// Optional threat actor
     /// Optional threat actor
     pub threat_actor: Option<String>,
     /// Source classification
     /// The classification value
-    /// The classification value
     pub classification: SourceClassification,
     /// Reputation score if available
     /// Optional reputation
-    /// Optional reputation
     pub reputation: Option<f64>,
     /// Reputation score (alias)
-    /// The reputation score value
     /// The reputation score value
     pub reputation_score: f64,
     /// Normalized confidence in source attribution, in the same 0.0–1.0 scale as threat confidence.
     pub confidence_score: f64,
     /// First seen timestamp
     /// Optional first seen
-    /// Optional first seen
     pub first_seen: Option<SystemTime>,
     /// Last seen timestamp
     /// Optional last seen
-    /// Optional last seen
     pub last_seen: Option<SystemTime>,
     /// Additional metadata
-    /// Mapping of metadata
     /// Mapping of metadata
     pub metadata: HashMap<String, String>,
 }
@@ -188,7 +158,6 @@ impl Default for ThreatSource {
 pub struct ThreatTarget {
     /// Target type (system, service, data, etc.)
     /// The target type value
-    /// The target type value
     pub target_type: String,
     /// Human-readable target label (service name, host, etc.).
     pub identifier: String,
@@ -200,46 +169,35 @@ pub struct ThreatTarget {
     pub node_id: Option<String>,
     /// User account if applicable
     /// Number of `user_acitems`
-    /// Number of `user_acitems`
     pub user_account: Option<String>,
     /// Asset criticality
-    /// The asset criticality value
     /// The asset criticality value
     pub asset_criticality: AssetCriticality,
     /// Protection level
     /// The protection level value
-    /// The protection level value
     pub protection_level: ProtectionLevel,
     /// Service name if applicable
-    /// Optional service
     /// Optional service
     pub service: Option<String>,
     /// Port number if applicable
     /// Optional port
-    /// Optional port
     pub port: Option<u16>,
     /// Protocol if applicable
-    /// Optional protocol
     /// Optional protocol
     pub protocol: Option<String>,
     /// Additional metadata
     /// Mapping of metadata
-    /// Mapping of metadata
     pub metadata: HashMap<String, String>,
     /// Resource type
-    /// The resource type value
     /// The resource type value
     pub resource_type: String,
     /// Criticality level of the target
     /// The criticality value
-    /// The criticality value
     pub criticality: ThreatSeverity,
     /// IP address if applicable
     /// Optional ip address
-    /// Optional ip address
     pub ip_address: Option<String>,
     /// Hostname if applicable
-    /// Name of the hostitem
     /// Name of the hostitem
     pub hostname: Option<String>,
 }
@@ -527,20 +485,16 @@ impl std::fmt::Display for IndicatorType {
 pub struct ThreatIndicator {
     /// Indicator type
     /// The indicator type value
-    /// The indicator type value
     pub indicator_type: IndicatorType,
     /// Indicator value
-    /// The value value
     /// The value value
     pub value: String,
     /// Provider confidence that this indicator is malicious or relevant (0.0–1.0).
     pub confidence: f64,
     /// Source of indicator
     /// The source value
-    /// The source value
     pub source: String,
     /// Timestamp when indicator was created
-    /// The created at value
     /// The created at value
     pub created_at: SystemTime,
 }
@@ -552,26 +506,20 @@ pub struct ThreatIntelligenceFeed {
     pub id: String,
     /// Feed name
     /// Name of the item
-    /// Name of the item
     pub name: String,
     /// Feed source
-    /// The source value
     /// The source value
     pub source: String,
     /// Last update timestamp
     /// The last updated value
-    /// The last updated value
     pub last_updated: SystemTime,
     /// Whether feed is enabled
-    /// Whether feature is enabled
     /// Whether feature is enabled
     pub enabled: bool,
     /// Feed reliability score
     /// The reliability value
-    /// The reliability value
     pub reliability: f64,
     /// Indicators in this feed
-    /// Collection of indicators
     /// Collection of indicators
     pub indicators: Vec<ThreatIndicator>,
 }
@@ -583,16 +531,13 @@ pub struct MitigationStep {
     pub id: String,
     /// Action taken
     /// The action value
-    /// The action value
     pub action: String,
     /// When the mitigation action started or completed (implementation-defined).
     pub timestamp: SystemTime,
     /// Result of the action
     /// The result value
-    /// The result value
     pub result: String,
     /// Success status
-    /// Whether success is enabled
     /// Whether success is enabled
     pub success: bool,
 }
@@ -604,24 +549,19 @@ pub struct SecurityEvent {
     pub id: String,
     /// Event type
     /// The event type value
-    /// The event type value
     pub event_type: String,
     /// Event timestamp
     pub timestamp: SystemTime,
     /// Event severity
     /// The severity value
-    /// The severity value
     pub severity: ThreatSeverity,
     /// Event source
-    /// The source value
     /// The source value
     pub source: String,
     /// Event description
     /// The description value
-    /// The description value
     pub description: String,
     /// Additional event data
-    /// Mapping of data
     /// Mapping of data
     pub data: HashMap<String, String>,
 }
@@ -667,22 +607,17 @@ pub struct MlModel {
     pub id: String,
     /// Model name
     /// Name of the item
-    /// Name of the item
     pub name: String,
     /// Model type
-    /// The model type value
     /// The model type value
     pub model_type: MlModelType,
     /// Model accuracy score
     /// The accuracy value
-    /// The accuracy value
     pub accuracy: f64,
     /// Model version
     /// The version value
-    /// The version value
     pub version: String,
     /// Model training timestamp
-    /// The trained at value
     /// The trained at value
     pub trained_at: SystemTime,
 }
@@ -713,26 +648,20 @@ pub struct IncidentResponse {
     pub threat_id: String,
     /// Response status
     /// Current status of the component
-    /// Current status of the component
     pub status: ResponseStatus,
     /// Response team assigned
-    /// The assigned team value
     /// The assigned team value
     pub assigned_team: String,
     /// Response start time
     /// The started at value
-    /// The started at value
     pub started_at: SystemTime,
     /// Response completion time
-    /// Optional completed at
     /// Optional completed at
     pub completed_at: Option<SystemTime>,
     /// Response actions taken
     /// Collection of actions
-    /// Collection of actions
     pub actions: Vec<ResponseAction>,
     /// Response notes
-    /// The notes value
     /// The notes value
     pub notes: String,
 }
@@ -759,20 +688,16 @@ pub struct ResponseAction {
     pub id: String,
     /// Action type
     /// The action type value
-    /// The action type value
     pub action_type: String,
     /// Action description
-    /// The description value
     /// The description value
     pub description: String,
     /// Action timestamp
     pub timestamp: SystemTime,
     /// Action result
     /// The result value
-    /// The result value
     pub result: String,
     /// Action success status
-    /// Whether success is enabled
     /// Whether success is enabled
     pub success: bool,
 }
@@ -821,13 +746,11 @@ impl ThreatEvent {
 
     /// Update threat status
     /// Updates status
-    /// Updates status
     pub fn update_status(&mut self, status: ThreatStatus) {
         self.status = status;
     }
 
     /// Check if threat is active
-    /// Checks if active
     /// Checks if active
     #[must_use]
     pub const fn is_active(&self) -> bool {
@@ -845,30 +768,23 @@ pub struct DetectionRule {
     pub id: String,
     /// Human-readable rule name
     /// Name of the item
-    /// Name of the item
     pub name: String,
     /// Rule description
-    /// The description value
     /// The description value
     pub description: String,
     /// Rule pattern or signature
     /// The pattern value
-    /// The pattern value
     pub pattern: String,
     /// Rule severity
     /// The severity value
-    /// The severity value
     pub severity: ThreatSeverity,
     /// Rule enabled status
-    /// Whether feature is enabled
     /// Whether feature is enabled
     pub enabled: bool,
     /// Tuning weight or belief in the rule’s precision when fused with other signals.
     pub confidence: f64,
     /// The condition value
-    /// The condition value
     pub condition: RuleCondition,
-    /// The rule type value
     /// The rule type value
     pub rule_type: ThreatRuleType,
 }

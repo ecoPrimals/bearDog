@@ -199,7 +199,6 @@ impl SafeSimdOptimizer {
 
     /// Get processing statistics
     /// Gets stats
-    /// Gets stats
     #[must_use]
     pub fn get_stats(&self) -> &SafeSimdStats {
         &self.stats

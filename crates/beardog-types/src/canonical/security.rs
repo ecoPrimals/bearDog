@@ -442,7 +442,6 @@ impl SecurityConfig {
 
     /// Validate the security configuration
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), String> {
         if self.authentication.max_failed_attempts == 0 {
             return Err("Max failed attempts must be greater than 0".to_string());

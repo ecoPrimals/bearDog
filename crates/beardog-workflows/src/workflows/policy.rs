@@ -19,7 +19,6 @@ impl WorkflowScheduler {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Starts service
-    /// Starts service
     pub fn start(&mut self) -> Result<(), BearDogError> {
         if self.cleanup_enabled {
             info!("Starting workflow scheduler with cleanup enabled");
@@ -90,7 +89,6 @@ impl WorkflowScheduler {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Cleans up expired_workflows
     /// Cleans up expired_workflows
     pub fn cleanup_expired_workflows(&self) -> Result<u32, BearDogError> {
         info!("Starting manual cleanup of expired workflows");

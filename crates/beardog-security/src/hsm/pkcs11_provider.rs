@@ -94,7 +94,6 @@ impl Pkcs11HsmProvider {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Initializes componentialize
-    /// Initializes componentialize
     pub fn initialize({}", self.library_path);
         warn!("🎰 Slot ID: {}", self.slot_id);
 
@@ -152,7 +151,6 @@ impl Pkcs11HsmProvider {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Gets capabilities
     /// Gets capabilities
     pub fn get_capabilities(&self) -> Result<Pkcs11Capabilities, BearDogError> {
         let session = self.session_handle
@@ -263,7 +261,6 @@ impl Pkcs11ConfigBuilder {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-    /// Builds component
     /// Builds component
     pub fn build(self) -> Result<HsmConfig, BearDogError> {
         let library_path = self.library_path

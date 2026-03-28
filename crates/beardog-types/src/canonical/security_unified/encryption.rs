@@ -18,7 +18,6 @@ pub struct EncryptionConfig {
 impl EncryptionConfig {
     /// Validate
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }

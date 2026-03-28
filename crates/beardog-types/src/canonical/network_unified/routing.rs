@@ -18,7 +18,6 @@ pub struct RoutingConfig {
 impl RoutingConfig {
     /// Validate
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }

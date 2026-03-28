@@ -27,7 +27,6 @@
 
 // Public API modules
 /// Configuration management
-/// Configuration management
 pub mod config;
 /// Connection pooling and management
 pub mod connection;

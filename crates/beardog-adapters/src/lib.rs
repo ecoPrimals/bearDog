@@ -206,7 +206,6 @@ impl UniversalAdapter {
 
     /// Execute capability request with timeout, retry, and caching
     /// Executes capability
-    /// Executes capability
     #[expect(
         clippy::cast_possible_wrap,
         reason = "Backoff jitter uses small millisecond delays; fits in i64 arithmetic"
@@ -362,7 +361,6 @@ impl UniversalAdapter {
     }
 
     /// Get available capabilities
-    /// Gets capabilities
     /// Gets capabilities
     #[must_use]
     pub fn get_capabilities(&self) -> &[String] {

@@ -101,7 +101,6 @@ impl StorageRequest {
 
     /// Create a delete request
     /// Removes
-    /// Removes
     #[must_use]
     pub fn delete(key: String) -> Self {
         Self::new(StorageOperation::Delete, key)

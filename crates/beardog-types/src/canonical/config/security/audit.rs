@@ -80,7 +80,6 @@ impl CanonicalAuditConfig {
 
     /// Validate
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.enabled && self.retention_days == 0 {
             return Err(BearDogError::security(

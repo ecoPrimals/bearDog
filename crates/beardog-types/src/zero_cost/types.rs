@@ -158,7 +158,6 @@ pub struct HsmKey {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthStatus {
     /// Current status of the component
-    /// Current status of the component
     pub status: String,
     /// When this status was recorded
     pub timestamp: chrono::DateTime<chrono::Utc>,

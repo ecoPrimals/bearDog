@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 
 /// Core module
 /// Core functionality
-/// Core functionality
 pub mod core;
 pub use core::*;
 

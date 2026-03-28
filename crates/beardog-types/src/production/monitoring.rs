@@ -238,7 +238,7 @@ pub struct MetricsSummary {
     pub timestamp: DateTime<Utc>,
 }
 
-///
+/// Aggregated performance summary for trend analysis.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceSummary {
     /// Number of `trend_indicator`
@@ -354,7 +354,6 @@ impl SystemMetricsCollector {
     /// # Errors
     /// Returns `BearDogError` if collection cannot be started
     /// Starts collection
-    /// Starts collection
     pub fn start_collection(&mut self) -> Result<(), BearDogError> {
         // Implementation would start background collection
         Ok(())
@@ -369,7 +368,6 @@ impl SystemMetricsCollector {
     ///
     /// # Errors
     /// Returns `BearDogError` if metrics analysis fails
-    /// Gets summary
     /// Gets summary
     pub fn get_summary(&self) -> Result<MetricsSummary, BearDogError> {
         Ok(MetricsSummary {
@@ -387,14 +385,12 @@ impl SystemMetricsCollector {
     /// Get monitoring configuration
     #[must_use]
     /// Gets config
-    /// Gets config
     pub const fn get_config(&self) -> &MonitoringConfig {
         &self.config
     }
 
     /// Get collected metrics history
     #[must_use]
-    /// Gets `metrics_history`
     /// Gets `metrics_history`
     pub fn get_metrics_history(&self) -> &[super::metrics::CurrentMetrics] {
         &self.metrics_history
@@ -497,13 +493,12 @@ impl AlertManager {
     /// # Errors
     /// Returns `BearDogError` if alert retrieval fails
     /// Gets `recent_alerts`
-    /// Gets `recent_alerts`
     pub fn get_recent_alerts(&self, limit: usize) -> Result<Vec<Alert>, BearDogError> {
         Ok(self.active_alerts.iter().take(limit).cloned().collect())
     }
 }
 
-///
+/// Tracks performance metrics over time for regression detection.
 #[derive(Debug)]
 pub struct PerformanceMonitor {
     performance_history: Vec<super::PerformanceMetrics>,
@@ -534,7 +529,6 @@ impl PerformanceMonitor {
     /// # Errors
     /// Returns `BearDogError` if initialization fails
     /// Initializes componentialize
-    /// Initializes componentialize
     pub fn initialize(&mut self) -> Result<(), BearDogError> {
         // Implementation would initialize performance monitoring
         Ok(())
@@ -556,7 +550,6 @@ impl PerformanceMonitor {
     ///
     /// # Errors
     /// Returns `BearDogError` if analysis fails
-    /// Gets summary
     /// Gets summary
     pub fn get_summary(&self) -> Result<PerformanceSummary, BearDogError> {
         // Analyze performance history to generate meaningful summary
@@ -669,7 +662,7 @@ impl Default for HealthStatus {
     }
 }
 
-///
+/// Top-level system health monitor aggregating subsystem metrics.
 #[derive(Debug)]
 pub struct SystemMonitor {
     /// System monitoring configuration
@@ -709,7 +702,6 @@ impl SystemMonitor {
     /// # Errors
     /// Returns `BearDogError` if initialization fails
     /// Initializes componentialize
-    /// Initializes componentialize
     pub fn initialize(&mut self) -> Result<(), BearDogError> {
         // Implementation would initialize system monitoring
         Ok(())
@@ -742,7 +734,6 @@ impl SystemMonitor {
     ///
     /// # Errors
     /// Returns `BearDogError` if overview generation fails
-    /// Gets overview
     /// Gets overview
     pub fn get_overview(&self) -> Result<SystemOverview, BearDogError> {
         // Use configuration to determine what metrics to include
@@ -787,13 +778,11 @@ impl SystemMonitor {
     /// Get monitoring configuration
     #[must_use]
     /// Gets config
-    /// Gets config
     pub const fn get_config(&self) -> &SystemConfig {
         &self.config
     }
 
     /// Update monitoring configuration
-    /// Updates config
     /// Updates config
     pub fn update_config(&mut self, config: SystemConfig) {
         self.config = config;
@@ -801,7 +790,6 @@ impl SystemMonitor {
 
     /// Get monitoring interval from configuration
     #[must_use]
-    /// Gets `monitoring_interval`
     /// Gets `monitoring_interval`
     pub const fn get_monitoring_interval(&self) -> u64 {
         self.config.system_interval_seconds

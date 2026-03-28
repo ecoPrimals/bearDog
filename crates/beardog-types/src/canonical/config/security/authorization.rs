@@ -107,7 +107,6 @@ impl CanonicalAuthorizationConfig {
 
     /// Validate authorization configuration
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.default_role.is_empty() {
             return Err(BearDogError::security(
@@ -163,7 +162,6 @@ pub struct RoleConfig {
 
 impl RoleConfig {
     /// Validate role configuration
-    /// Validates input
     /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.name.is_empty() {

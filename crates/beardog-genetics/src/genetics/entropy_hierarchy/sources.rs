@@ -49,7 +49,6 @@ impl EntropyMixingEngine {
 
     /// Create entropy seed from mixed sources
     /// Creates `entropy_seed`
-    /// Creates `entropy_seed`
     pub fn create_entropy_seed(
         &self,
         entropy_data: Vec<u8>,
@@ -118,7 +117,6 @@ impl EntropyMixingEngine {
 
     /// Validate entropy source quality
     /// Validates `source_quality`
-    /// Validates `source_quality`
     pub fn validate_source_quality(
         &self,
         source: &HumanEntropySource,
@@ -134,7 +132,6 @@ impl EntropyMixingEngine {
         }
     }
 
-    /// Creates `fusion_algorithm`
     /// Creates `fusion_algorithm`
     #[must_use]
     pub fn create_fusion_algorithm(&self, strategy: MixingStrategy) -> FusionAlgorithm {
@@ -178,7 +175,6 @@ impl EntropySourceManager {
 
     /// Get registered source
     /// Gets source
-    /// Gets source
     #[must_use]
     pub fn get_source(&self, id: &str) -> Option<&HumanEntropySource> {
         self.source_registry.get(id)
@@ -191,7 +187,6 @@ impl EntropySourceManager {
     }
 
     /// Remove entropy source
-    /// Removes source
     /// Removes source
     pub fn remove_source(&mut self, id: &str) -> Option<HumanEntropySource> {
         self.source_registry.remove(id)

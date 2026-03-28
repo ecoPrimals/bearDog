@@ -183,7 +183,6 @@ impl AuditEngine {
 
     /// Get events by type
     /// Gets `events_by_type`
-    /// Gets `events_by_type`
     #[must_use]
     pub fn get_events_by_type(&self, event_type: &AuditEventType) -> Vec<&AuditEvent> {
         self.events
@@ -196,7 +195,6 @@ impl AuditEngine {
 
     /// Get events by user
     /// Gets `events_by_user`
-    /// Gets `events_by_user`
     #[must_use]
     pub fn get_events_by_user(&self, user_id: &str) -> Vec<&AuditEvent> {
         self.events
@@ -206,7 +204,6 @@ impl AuditEngine {
     }
 
     /// Get events in time range
-    /// Gets `events_in_range`
     /// Gets `events_in_range`
     #[must_use]
     pub fn get_events_in_range(
@@ -235,7 +232,6 @@ impl AuditEngine {
     }
 
     /// Clear old events
-    /// Cleans up `old_events`
     /// Cleans up `old_events`
     pub fn cleanup_old_events(&mut self, cutoff: chrono::DateTime<chrono::Utc>) {
         self.events.retain(|event| event.timestamp > cutoff);

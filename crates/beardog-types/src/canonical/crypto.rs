@@ -540,7 +540,6 @@ impl CryptoConfig {
 
     /// Validate the cryptographic configuration
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), String> {
         // Validate key sizes
         match &self.encryption.algorithm {

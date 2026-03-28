@@ -123,7 +123,6 @@ pub enum RuleCondition {
 impl RuleCondition {
     /// Check if this condition is complex (has nested conditions)
     /// Checks if complex
-    /// Checks if complex
     #[must_use]
     pub const fn is_complex(&self) -> bool {
         matches!(
@@ -314,7 +313,6 @@ impl ConditionBuilder {
 
     /// Build as AND condition
     /// Builds and
-    /// Builds and
     #[must_use]
     pub fn build_and(self) -> RuleCondition {
         if self.conditions.len() == 1 {
@@ -329,7 +327,6 @@ impl ConditionBuilder {
     }
 
     /// Build as OR condition
-    /// Builds or
     /// Builds or
     #[must_use]
     pub fn build_or(self) -> RuleCondition {

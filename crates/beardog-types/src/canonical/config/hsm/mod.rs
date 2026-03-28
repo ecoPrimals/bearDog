@@ -17,7 +17,6 @@ use std::time::Duration;
 pub mod cloud;
 /// Core module
 /// Core functionality
-/// Core functionality
 pub mod core;
 /// Discovery module
 pub mod discovery;

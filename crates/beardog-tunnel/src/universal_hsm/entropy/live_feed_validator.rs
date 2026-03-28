@@ -49,7 +49,6 @@ impl LiveFeedValidator {
     /// CRITICAL: Validate that entropy is from live feed only
     /// Returns error if ANY simulated entropy is detected
     /// Validates live_feed_only
-    /// Validates live_feed_only
     pub fn validate_live_feed_only(
         &self,
         entropy_data: &[u8],

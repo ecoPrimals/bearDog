@@ -13,7 +13,6 @@ impl EntropySeed {
 
 /// New Human Entropy operation.
     /// Creates a new instance
-    /// Creates a new instance
     pub fn new_human_entropy(EntropyClass,
         lifetime_policy: SeedLifetimePolicy,
         owner_identity: HumanIdentity,
@@ -45,7 +44,6 @@ impl EntropySeed {
     }
 
 /// New Event Seed operation.
-    /// Creates a new instance
     /// Creates a new instance
     pub fn new_event_seed(SocialContext,
         sharing_policy: SharingPolicy,
@@ -93,7 +91,6 @@ impl EntropySeed {
             social_context: Some(event_context_clone), // Use cloned context
 
 /// Is Valid operation.
-    /// Checks if valid
     /// Checks if valid
     pub fn is_valid(&self) -> bool {
 
@@ -219,7 +216,6 @@ impl EntropySeed {
 
 /// Get Entropy Tier operation.
     /// Gets entropy_tier
-    /// Gets entropy_tier
     pub fn get_entropy_tier(&self) -> u8 {
         match &self.entropy_class {
             EntropyClass::HumanLivedExperience { .. } => 3,
@@ -235,7 +231,6 @@ impl EntropySeed {
 
 /// Get Current Owner operation.
     /// Gets current_owner
-    /// Gets current_owner
     pub fn get_current_owner(&self) -> Option<&HumanIdentity> {
         match &self.ownership {
             SeedOwnership::HumanOwned { owner_identity, .. } => Some(owner_identity),
@@ -244,7 +239,6 @@ impl EntropySeed {
             SeedOwnership::MachineOwned { .. } => None,   // Machine ownership
 
 /// Get Usage Stats operation.
-    /// Gets usage_stats
     /// Gets usage_stats
     pub fn get_usage_stats(&self) -> HashMap<String, u32> {
         let mut stats = HashMap::with_capacity(16);
@@ -257,7 +251,6 @@ impl EntropySeed {
         self.usage_policy.requires_approval
 
 /// Get Remaining Uses operation.
-    /// Gets remaining_uses
     /// Gets remaining_uses
     pub fn get_remaining_uses(&self, operation: &str) -> Option<u32> {
         self.usage_policy.max_uses.map(|max_uses| {

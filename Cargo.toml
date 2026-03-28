@@ -99,14 +99,15 @@ needless_pass_by_ref_mut = { level = "allow", priority = 1 }
 # Match arms using `_` for single remaining variant — sometimes clearer than naming it.
 match_wildcard_for_single_variants = { level = "allow", priority = 1 }
 
-# ── Pedantic doc lints — kept allow while doc coverage ramps up ──────────────
+# ── Pedantic doc lints — promoted incrementally as doc coverage improves ──────
 missing_errors_doc = { level = "allow", priority = 1 }
 missing_panics_doc = { level = "allow", priority = 1 }
 doc_markdown = { level = "allow", priority = 1 }
 doc_link_with_quotes = { level = "allow", priority = 1 }
 doc_lazy_continuation = { level = "allow", priority = 1 }
 too_long_first_doc_paragraph = { level = "allow", priority = 1 }
-empty_docs = { level = "allow", priority = 1 }
+# PROMOTED: empty doc comments are never useful — write a real sentence.
+empty_docs = { level = "warn", priority = 1 }
 
 # ── Cast safety — workspace allows remain for legacy code; new code MUST use
 #    per-site #[expect(clippy::cast_*, reason = "...")] and Type::from() for
@@ -167,8 +168,10 @@ scrypt = "0.11"           # Memory-hard KDF - stable version (evolved from RC)
 # Networking
 tokio-tungstenite = "0.24"  # WebSocket for BTSP tunnel transport only
 
-# Database
-sled = "0.34"
+# Serialization formats
+# NOTE: serde_yaml is deprecated upstream; internally uses unsafe-libyaml which
+# is a Rust translation of C libyaml (no C compiler needed — ecoBin compliant).
+# Track yaml_serde (github.com/yaml/yaml-serde) as the maintained successor.
 serde_yaml = "0.9"
 
 # Serialization
@@ -270,7 +273,6 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true }
-serial_test = "3.0"
 thiserror = { workspace = true }
 
 # Optional dependencies for examples

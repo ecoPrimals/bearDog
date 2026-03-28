@@ -498,7 +498,6 @@ impl PerformanceOptimizer {
     }
 
     /// Gets metrics
-    /// Gets metrics
     pub fn get_metrics(&self) -> &PerformanceMetrics {
         &self.metrics
     }

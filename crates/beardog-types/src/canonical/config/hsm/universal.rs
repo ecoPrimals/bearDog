@@ -197,7 +197,6 @@ impl UniversalHsmConfig {
 
     /// Check if this configuration is compatible with a capability
     /// Checks if compatible with
-    /// Checks if compatible with
     pub fn is_compatible_with(&self, capability_type: &str) -> bool {
         self.capability_config
             .required_capabilities
@@ -205,7 +204,6 @@ impl UniversalHsmConfig {
     }
 
     /// Get security level requirement
-    /// Gets security_level
     /// Gets security_level
     pub fn get_security_level(&self) -> &str {
         &self

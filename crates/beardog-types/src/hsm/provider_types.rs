@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Canonical HSM provider types for the unified [`HsmKeyProvider`] trait.
+//! Canonical HSM provider types for the unified `HsmKeyProvider` trait.
 //!
 //! These types are shared across all HSM backends (software, Android StrongBox,
 //! iOS Secure Enclave, PKCS#11, TPM) and form the vocabulary of the
@@ -9,7 +9,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-/// Identifies the kind of HSM backend behind an [`HsmKeyProvider`](crate::hsm::provider_types) implementation.
+/// Identifies the kind of HSM backend behind an `HsmKeyProvider` implementation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum HsmProviderType {
     /// Pure-Rust in-process key store (RustCrypto). Always available.
@@ -75,7 +75,7 @@ impl std::fmt::Display for HsmAlgorithm {
     }
 }
 
-/// Parameters for key generation via [`HsmKeyProvider::generate_key`].
+/// Parameters for key generation via `HsmKeyProvider::generate_key`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyGenParams {
     /// Algorithm to use for the generated key.
@@ -144,7 +144,7 @@ impl HsmCapabilitySet {
     }
 }
 
-/// Preference passed to [`HsmProviderRegistry::select`] to control backend choice.
+/// Preference passed to `HsmProviderRegistry::select` to control backend choice.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SelectionPreference {
     /// Use the highest-security available backend (hardware > software).

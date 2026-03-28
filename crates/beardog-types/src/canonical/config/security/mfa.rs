@@ -54,7 +54,6 @@ impl CanonicalMfaConfig {
 
     /// Validate
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.enabled {
             self.totp.validate()?;
@@ -99,7 +98,6 @@ impl Default for TotpConfig {
 impl TotpConfig {
     /// Validate
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.enabled && self.issuer.is_empty() {
             return Err(BearDogError::security(
@@ -135,7 +133,6 @@ impl Default for SmsConfig {
 
 impl SmsConfig {
     /// Validate
-    /// Validates input
     /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.enabled && self.from_number.is_empty() {

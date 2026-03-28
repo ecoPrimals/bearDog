@@ -113,7 +113,6 @@ impl EntropyManager {
 /// # Errors
 /// Returns an error if the operation fails.
     /// Creates biometric_hash
-    /// Creates biometric_hash
     pub fn create_biometric_hash(&self, data: &[u8]) -> Result<BiometricHash, BearDogError> {
         use sha2::{Digest, Sha256};
 
@@ -126,13 +125,11 @@ impl EntropyManager {
 
 /// Get Seed operation.
     /// Gets seed
-    /// Gets seed
     pub fn get_seed(&self, seed_id: &Uuid) -> Option<&EntropySeed> {
         self.seeds.get(seed_id)
     }
 
 /// Cleanup Expired Seeds operation.
-    /// Cleans up expired_seeds
     /// Cleans up expired_seeds
     pub fn cleanup_expired_seeds(&mut self) {
         let expiry_duration = chrono::Duration::hours(self.config.seed_expiry_hours as i64);
@@ -149,7 +146,6 @@ impl EntropyManager {
     }
 
 /// Get Stats operation.
-    /// Gets stats
     /// Gets stats
     pub fn get_stats(&self) -> EntropyStats {
         let mut stats = EntropyStats {

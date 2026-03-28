@@ -19,7 +19,6 @@ pub struct HsmKeyManagementConfig {
 impl HsmKeyManagementConfig {
     /// Validate
     /// Validates input
-    /// Validates input
     pub const fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }

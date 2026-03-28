@@ -500,7 +500,6 @@ impl SovereignEntropyMigrationManager {
 
     /// Get migration statistics
     /// Gets `migration_statistics`
-    /// Gets `migration_statistics`
     pub async fn get_migration_statistics(&self) -> MigrationStatistics {
         self.statistics.read().await.clone()
     }

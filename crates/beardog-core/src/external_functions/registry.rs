@@ -44,7 +44,6 @@ impl ExternalFunctionRegistry {
 
     /// Load a library
     /// Loads library
-    /// Loads library
     ///
     /// # Errors
     /// Returns an error if the library loading fails
@@ -94,7 +93,6 @@ impl ExternalFunctionRegistry {
         }
     }
 
-    /// Gets `library_info`
     /// Gets `library_info`
     ///
     /// # Errors

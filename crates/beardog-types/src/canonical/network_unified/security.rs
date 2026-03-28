@@ -18,7 +18,6 @@ pub struct NetworkSecurityConfig {
 impl NetworkSecurityConfig {
     /// Validate
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }

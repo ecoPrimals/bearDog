@@ -37,8 +37,7 @@ impl Default for ModernServiceDiscovery {
 }
 
 impl ModernServiceDiscovery {
-    /// Create a new modern service discovery instance
-    /// Creates a new instance
+    /// Create a new modern service discovery instance.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -48,17 +47,28 @@ impl ModernServiceDiscovery {
         }
     }
 
-    /// Discover services with the specified capability
+    /// Discover services with the specified capability.
+    ///
+    /// Queries the local `discovered_providers` registry populated by runtime
+    /// IPC announcements.  Returns an empty list when no providers have been
+    /// registered for the requested capability — callers must handle graceful
+    /// degradation.
     ///
     /// # Errors
-    /// Returns an error if the capability discovery fails or if the universal adapter encounters issues.
+    /// Returns an error if the capability type is unrecognised by the registry.
     pub fn discover_capability(
         &mut self,
-        _capability: CapabilityType,
+        capability: CapabilityType,
     ) -> Result<Vec<String>, BearDogError> {
-        // Implementation would use the universal adapter to discover services
-        // For now, this is a placeholder
-        Ok(vec![])
+        let key = format!("{capability:?}");
+        match self.discovered_providers.get(&key) {
+            Some(serde_json::Value::Array(arr)) => Ok(arr
+                .iter()
+                .filter_map(|v| v.as_str().map(String::from))
+                .collect()),
+            Some(serde_json::Value::String(s)) => Ok(vec![s.clone()]),
+            Some(_) | None => Ok(Vec::new()),
+        }
     }
 
     /// Start the service discovery instance

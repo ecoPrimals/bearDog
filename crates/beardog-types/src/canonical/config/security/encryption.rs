@@ -66,7 +66,6 @@ impl CanonicalEncryptionConfig {
 
     /// Validate
     /// Validates input
-    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.default_algorithm.is_empty() {
             return Err(BearDogError::security(
@@ -84,7 +83,6 @@ pub struct KeyDerivationConfig {
     /// The algorithm value
     pub algorithm: String,
 
-    /// Number of iterations
     /// Number of iterations
     pub iterations: u32,
 
@@ -110,7 +108,6 @@ impl Default for KeyDerivationConfig {
 
 impl KeyDerivationConfig {
     /// Validate
-    /// Validates input
     /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.iterations < 10000 {

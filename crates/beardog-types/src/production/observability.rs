@@ -42,7 +42,6 @@ impl ObservabilityEngine {
 
     /// Start Monitoring
     /// Starts monitoring
-    /// Starts monitoring
     pub fn start_monitoring(&mut self) -> Result<(), BearDogError> {
         tracing::info!(
             "Starting observability monitoring with config: {:?}",
@@ -53,7 +52,6 @@ impl ObservabilityEngine {
 
     /// Stop Monitoring
     /// Stops monitoring
-    /// Stops monitoring
     pub fn stop_monitoring(&mut self) -> Result<(), BearDogError> {
         tracing::info!("Stopping observability monitoring");
         Ok(())
@@ -61,7 +59,6 @@ impl ObservabilityEngine {
 
     /// Get configuration
     #[must_use]
-    /// Gets config
     /// Gets config
     pub const fn get_config(&self) -> &ObservabilityConfig {
         &self.config
