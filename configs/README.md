@@ -74,7 +74,7 @@ BEARDOG_<SECTION>_<KEY>=value
 Examples:
 ```bash
 export BEARDOG_SERVER_PORT=8080
-export BEARDOG_DATABASE_URL="postgresql://..."
+export BEARDOG_DATABASE_URL="sqlite:///var/lib/beardog/state.db"
 export BEARDOG_SECURITY_HSM_ENABLED=true
 ```
 

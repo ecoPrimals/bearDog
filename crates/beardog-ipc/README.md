@@ -6,7 +6,7 @@
 ## Overview
 
 This crate provides BearDog's implementation of the ecoPrimals Primal IPC Protocol, enabling:
-- Registration with Songbird service registry
+- Registration with orchestrator service registry
 - Capability-based service discovery
 - JSON-RPC 2.0 communication over Unix sockets
 - Runtime primal discovery (zero hardcoded knowledge)
@@ -19,7 +19,7 @@ The primary client type is **`OrchestratorRegistryClient`**. The name **`Songbir
 use beardog_ipc::{OrchestratorRegistryClient, Capability};
 // `SongbirdClient` is a deprecated alias for `OrchestratorRegistryClient`.
 
-// Register with Songbird on startup
+// Register with orchestrator on startup
 let client = OrchestratorRegistryClient::connect().await?;
 client.register(
     "beardog",
@@ -52,7 +52,7 @@ let response = client.call(&crypto_service.endpoint, "crypto.sign", params).awai
 This crate implements:
 - ✅ `/primal/*` namespace convention
 - ✅ JSON-RPC 2.0 message format
-- ✅ Songbird registration protocol
+- ✅ Orchestrator registry registration protocol
 - ✅ Capability-based discovery
 - ✅ Heartbeat mechanism
 - ✅ Unix socket transport (tokio)
@@ -77,6 +77,7 @@ JSON-RPC Call
 
 ## Standards References
 
-- [Primal IPC Protocol](../../wateringHole/PRIMAL_IPC_PROTOCOL.md)
-- [Inter-Primal Interactions](../../wateringHole/INTER_PRIMAL_INTERACTIONS.md)
-- [UniBin Standard](../../wateringHole/UNIBIN_ARCHITECTURE_STANDARD.md)
+Standards live in `ecoPrimals/infra/wateringHole/`:
+- `PRIMAL_IPC_PROTOCOL.md` — IPC protocol specification
+- `INTER_PRIMAL_INTERACTIONS.md` — Cross-primal communication patterns
+- `UNIBIN_ARCHITECTURE_STANDARD.md` — Universal binary architecture

@@ -4,10 +4,6 @@ Active development and validation scripts.
 
 ## Structure
 
-### `active/deployment/`
-
-- `deploy.sh` — Deployment orchestration
-
 ### `active/validation/`
 
 - `validate-system.sh` — System validation (MSRV, build, binary checks)
@@ -23,5 +19,6 @@ Active development and validation scripts.
 
 ## Archived
 
-Profiling scripts, ecosystem deployment, and CI scaffolds moved to
+Profiling scripts, ecosystem deployment, CI scaffolds, and stale deployment
+automation (`deploy.sh`) moved to
 `ecoPrimals/infra/wateringHole/fossilRecord/beardog/` as fossil record (March 2026).

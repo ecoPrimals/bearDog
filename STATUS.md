@@ -38,7 +38,7 @@
 
 ---
 
-## Per-Crate Coverage (March 27, 2026, llvm-cov)
+## Per-Crate Coverage (March 28, 2026, llvm-cov)
 
 | Crate | Line Coverage | Notes |
 |-------|---------------|-------|
@@ -85,6 +85,18 @@
 ---
 
 ## Recent Improvements (March 28, 2026)
+
+### Wave 22: Deep Debt Evolution — Hot-Path Clones, iOS Fake Crypto Fix, Mock Cleanup
+
+- **Genetic RPC hot-path clone elimination** — Handlers in `crypto_handlers_genetic/` now take `&serde_json::Value` and use `Deserialize::deserialize(params)` instead of cloning the entire `Value` per request
+- **iOS safe_ffi: fake crypto → proper errors** — Placeholder keys, zeroed signatures, and length-only verification replaced with `BearDogError::not_implemented("iOS Secure Enclave: Phase 2")`; crypto operations never return fake success
+- **Stale mock labels cleaned** — `mobile_setup.rs` "(mock)" → "(software fallback)"; stale "Mock processing" comment removed from universal adapter
+- **Examples evolved** — `Box<dyn Error>` → `anyhow::Result<()>` in integration and genetics example binaries
+- **Socket path centralization** — `doctor.rs` uses `DEFAULT_SOCKET_PATH` for default primal socket discovery
+- **InMemoryStorageBackend** — Documented ephemeral no-op semantics
+- **Dependency audit** — Confirmed: no `ring`, no `openssl-sys`, no `sled`, no `unsafe`; `blake3` correctly `pure`-featured; clean ecoBin tree
+- **ios_safe test race fixed** — `#[serial]` on env-var-sensitive availability check
+- **90.05% line coverage maintained** — 0 failures, all gates green
 
 ### Wave 21: StrongBox HSM Abstraction, Production Mock Evolution, Self-Knowledge & Debt Elimination
 

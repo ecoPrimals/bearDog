@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### March 28, 2026 -- Wave 22: Deep Debt Evolution — Hot-Path Clones, iOS Fake Crypto, Mock Cleanup
+
+- **Hot-path clone elimination** — Genetic RPC handlers take `&Value` + `Deserialize::deserialize` instead of `Value::clone()` per request
+- **iOS safe_ffi** — Placeholder keys/zeroed signatures replaced with `not_implemented` errors (fake crypto success is a security risk)
+- **Mock label cleanup** — "(mock)" → "(software fallback)" in production logs; stale comment removed
+- **Examples** — `Box<dyn Error>` → `anyhow::Result<()>`
+- **Socket path centralization** — `doctor.rs` uses `DEFAULT_SOCKET_PATH`
+- **Dependency audit clean** — No `ring`, no `openssl-sys`, no `sled`, no `unsafe`; `blake3` pure-featured
+- **Coverage** — 90.05% line maintained, 0 failures
+
 ### March 28, 2026 -- Wave 21: StrongBox HSM Abstraction, Production Mock Evolution, Self-Knowledge
 
 - **Canonical `HsmKeyProvider` trait** — Unified HSM provider trait in `beardog-traits` with supporting types in `beardog-types`; object-safe, `#[async_trait]`, supports software and hardware backends
