@@ -130,10 +130,6 @@ pub mod self_knowledge;
 /// Thin integration layer re-exporting the production universal adapter implementation.
 pub mod universal_adapter;
 
-// Service discovery for distributed BearDog deployments
-// Note: Service discovery functionality is provided by beardog-adapters
-// pub mod service_discovery;
-
 /// Universal service discovery and network orchestration
 ///
 /// Zero-knowledge discovery system that finds and coordinates services

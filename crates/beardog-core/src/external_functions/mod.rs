@@ -18,35 +18,8 @@
 //!
 //! The external functions system is organized into focused modules:
 //! - **types**: Core type definitions and data structures
-// - **registry**: Function registry and library management
-// - **safety**: Safety checking and validation policies
-//
-// ## Usage
-//
-// ```rust
-// use beardog_core::external_functions::{
-//     ExternalFunctionRegistry, RegistryConfig, FunctionSignature, ParameterType
-// };
-//
-// // Create registry with default config
-// let registry = ExternalFunctionRegistry::default();
-//
-// // Load a library
-// let lib_id = registry.load_library("/path/to/library.so")?;
-//
-// // Cache a function
-// let signature = FunctionSignature {
-//     parameters: vec![ParameterType::Int32, ParameterType::CString],
-//     return_type: ReturnType::Type(ParameterType::Int32),
-//     calling_convention: CallingConvention::C,
-//     attributes: vec![],
-// };
-//
-// let func_id = registry.cache_function(&lib_id, "my_function", signature)?;
-//
-// // Call the function
-// let result = registry.call_cached_function(&func_id, parameters)?;
-// ```
+//! - **registry**: Function registry and library management
+//! - **safety**: Safety checking and validation policies
 
 // Module declarations
 /// Function registry and library management

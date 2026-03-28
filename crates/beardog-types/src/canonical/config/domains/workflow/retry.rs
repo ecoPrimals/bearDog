@@ -122,3 +122,62 @@ impl Default for RetryConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::canonical::traits::RetryStrategy;
+    use std::io::Error;
+
+    #[test]
+    fn retry_config_explicit_roundtrip_serde() {
+        let c = RetryConfig {
+            max_attempts: 5,
+            initial_delay: Duration::from_millis(50),
+            backoff_multiplier: 1.5,
+            max_delay: Duration::from_secs(10),
+        };
+        let v = serde_json::to_value(&c).expect("serialize RetryConfig");
+        let back: RetryConfig = serde_json::from_value(v).expect("deserialize RetryConfig");
+        assert_eq!(c, back);
+    }
+
+    #[test]
+    fn retry_strategy_trait_methods() {
+        let c = RetryConfig {
+            max_attempts: 3,
+            initial_delay: Duration::from_millis(100),
+            backoff_multiplier: 2.0,
+            max_delay: Duration::from_secs(1),
+        };
+        assert_eq!(c.max_attempts(), 3);
+        assert_eq!(c.backoff_multiplier(), 2.0);
+        assert!(!c.is_limit_reached(2));
+        assert!(c.is_limit_reached(3));
+        let d0 = c.delay_for_attempt(0);
+        assert!(d0 > Duration::ZERO);
+        let err = Error::other("transient");
+        assert!(c.should_retry_error(&err));
+        let total = c.total_delay(2);
+        assert!(total >= d0);
+    }
+
+    #[test]
+    fn delay_for_attempt_respects_max_delay_cap() {
+        let c = RetryConfig {
+            max_attempts: 10,
+            initial_delay: Duration::from_secs(9_999),
+            backoff_multiplier: 10.0,
+            max_delay: Duration::from_millis(5),
+        };
+        assert_eq!(c.delay_for_attempt(100), Duration::from_millis(5));
+    }
+
+    #[test]
+    fn default_config_clone_debug() {
+        let c = RetryConfig::default();
+        let _ = format!("{c:?}");
+        let d = c.clone();
+        assert_eq!(d.max_attempts, c.max_attempts);
+    }
+}

@@ -238,8 +238,6 @@ pub type Duration = std::time::Duration;
 
 /// **Progress Stream** - Asynchronous progress stream
 /// Note: Generic parameter allows for zero-cost abstractions
-// Legacy type - futures dependency not available
-// pub type ProgressStream<T> = std::pin::Pin<Box<dyn futures::Stream<Item = T> + Send>>;
 
 /// **Command Receiver** - Command channel receiver (requires tokio)
 pub type CommandReceiver = std::sync::mpsc::Receiver<StreamingCommand>;

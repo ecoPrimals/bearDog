@@ -126,7 +126,7 @@ impl CapabilitiesHandler {
                     "type": "jwt_secrets",
                     "version": "1.0",
                     "methods": ["generate_jwt_secret"],
-                    "description": "JWT secret generation for authentication systems (e.g., NestGate)"
+                    "description": "JWT secret generation for authentication systems (e.g., sovereign storage primals)"
                 },
                 {
                     "type": "crypto",
@@ -162,6 +162,7 @@ impl CapabilitiesHandler {
             ],
             "version": env!("CARGO_PKG_VERSION"),
             "protocols": ["tarpc", "json-rpc", "http"],
+            "wire_format": "ndjson",
             "btsp_enabled": true,
             "collaborative_intelligence": true,
         }))

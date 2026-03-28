@@ -176,6 +176,8 @@ impl BearDogCapabilities {
         let mut metadata = HashMap::new();
         metadata.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());
         metadata.insert("primal_type".to_string(), "security".to_string());
+        metadata.insert("wire_format".to_string(), "ndjson".to_string());
+        metadata.insert("protocol".to_string(), "jsonrpc-2.0".to_string());
 
         // Self-knowledge pattern: discover primal name from environment
         let primal_name = beardog_errors::process_env::var("PRIMAL_NAME")

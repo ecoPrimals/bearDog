@@ -190,3 +190,33 @@ pub fn log_hkdf_derivation(input_len: usize, salt_len: usize, info: &str, output
 #[cfg(not(feature = "diagnostics"))]
 #[inline(always)]
 pub fn log_hkdf_derivation(_input_len: usize, _salt_len: usize, _info: &str, _output_len: usize) {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn diagnostic_no_ops_are_callable_without_panicking() {
+        log_aes128_gcm_encrypt(32, 12, 64, b"aad", 80);
+        log_aes256_gcm_encrypt(32, 12, 64, &[], 80);
+        log_chacha20_poly1305_encrypt(32, 12, 100, b"ctx", 116);
+        log_chacha20_poly1305_decrypt(&[1u8; 32], &[2; 12], &[3; 8], &[4; 16], Some(b"aad"));
+        log_chacha20_poly1305_decrypt(&[1u8; 32], &[2; 12], &[3; 8], &[4; 16], None);
+        log_hkdf_derivation(48, 32, "info", 64);
+    }
+}
+
+#[cfg(all(test, feature = "diagnostics"))]
+mod diagnostics_feature_tests {
+    use super::*;
+
+    #[test]
+    fn diagnostic_verbose_paths_execute() {
+        log_aes128_gcm_encrypt(16, 12, 0, b"", 16);
+        log_aes128_gcm_encrypt(16, 12, 10, b"aad-bytes", 26);
+        log_aes256_gcm_encrypt(32, 12, 5, b"x", 21);
+        log_chacha20_poly1305_encrypt(32, 12, 7, b"y", 23);
+        log_chacha20_poly1305_decrypt(&[0xff; 32], &[1; 12], &[], &[0; 16], None);
+        log_hkdf_derivation(10, 8, "hkdf", 32);
+    }
+}

@@ -19,6 +19,9 @@
 .DS_Store
 Thumbs.db
 
+# Cursor artifacts
+.cursor_mock_audit.txt
+
 # Logs
 /logs/
 *.log
@@ -46,8 +49,9 @@ showcase-validation-test/
 !showcase/
 !showcase/**/*
 
-# Session archives (moved to parent)
+# Session archives (moved to fossilRecord)
 archive/
+archives/
 session-reports-*/
 *DEC_*_2025*.md
 *DEC_*_2025/

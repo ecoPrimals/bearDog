@@ -221,11 +221,13 @@ async fn run_compute_workflow(workload_path: &PathBuf, config: DemoConfig) -> Re
 
 // Configuration structure
 #[derive(Debug, Clone, serde::Deserialize)]
-#[allow(dead_code)]
 struct DemoConfig {
-    compute_endpoint: String,
-    compute_timeout_secs: u64,
-    key_expiry_hours: u32,
+    #[serde(rename = "toadstool_endpoint")]
+    _compute_endpoint: String,
+    #[serde(rename = "compute_timeout_secs")]
+    _compute_timeout_secs: u64,
+    #[serde(rename = "key_expiry_hours")]
+    _key_expiry_hours: u32,
 }
 
 fn load_config(path: &PathBuf) -> Result<DemoConfig> {
@@ -268,10 +270,8 @@ struct BearDogComputeSecurityService {
 #[derive(Clone)]
 struct GeneticKey {
     id: String,
-    #[allow(dead_code)]
-    purpose: String,
-    #[allow(dead_code)]
-    algorithm: String,
+    _purpose: String,
+    _algorithm: String,
     key_bytes: Vec<u8>,
 }
 
@@ -281,15 +281,13 @@ struct KeyHandle {
 
 struct EncryptedWorkload {
     data: Vec<u8>,
-    #[allow(dead_code)]
-    key_id: String,
+    _key_id: String,
     job_type: String,
 }
 
 struct EncryptedResults {
     data: Vec<u8>,
-    #[allow(dead_code)]
-    job_id: String,
+    _job_id: String,
 }
 
 async fn initialize_beardog_compute_security() -> Result<Arc<BearDogComputeSecurityService>> {
@@ -313,8 +311,8 @@ impl BearDogComputeSecurityService {
         let key_id = format!("gk_compute_{}", chrono::Utc::now().timestamp());
         let key = GeneticKey {
             id: key_id.clone(),
-            purpose: "compute-workload".to_string(),
-            algorithm: "AES-256-GCM".to_string(),
+            _purpose: "compute-workload".to_string(),
+            _algorithm: "AES-256-GCM".to_string(),
             key_bytes,
         };
         
@@ -337,7 +335,7 @@ impl BearDogComputeSecurityService {
         
         Ok(EncryptedWorkload {
             data: encrypted_data,
-            key_id: key.id,
+            _key_id: key.id,
             job_type: workload.job_type.clone(),
         })
     }
@@ -389,7 +387,7 @@ async fn execute_compute_job(
     
     Ok(EncryptedResults {
         data: result_data.clone(),
-        job_id: _job_id.to_string(),
+        _job_id: _job_id.to_string(),
     })
 }
 

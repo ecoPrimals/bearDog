@@ -689,3 +689,89 @@ fn test_issue_adapter_certificate_rejects_expired_key() {
     );
     assert!(r.is_err());
 }
+
+#[test]
+fn constraint_description_with_and_without_constraints() {
+    let bare = BearDogGenetics::default();
+    assert!(
+        bare.constraint_description().contains("No constraints"),
+        "default genetics should describe unrestricted keys"
+    );
+
+    let constraints = KeyConstraints {
+        data_access: DataAccessConstraint {
+            immutable_paths: vec!["data/*".to_string()],
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let entropy = vec![2u8; 32];
+    let key = BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![]).unwrap();
+    let desc = key.constraint_description();
+    assert!(
+        !desc.is_empty() && desc != "No constraints (unrestricted)",
+        "constrained key should produce a non-trivial description: {desc}"
+    );
+}
+
+#[test]
+fn issue_adapter_certificate_happy_path() {
+    use beardog_types::adapter_certificates::AdapterClassification;
+    let constraints = KeyConstraints {
+        lifetime: LifetimeConstraint {
+            expires_at: Utc::now() + Duration::days(30),
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let entropy = vec![3u8; 32];
+    let key = BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![]).unwrap();
+    let cert = key
+        .issue_adapter_certificate(
+            "beardog-adapters::demo::network",
+            AdapterClassification::Human,
+            Duration::hours(6),
+        )
+        .expect("valid key should issue adapter certificate");
+    assert_eq!(cert.adapter_id, "beardog-adapters::demo::network");
+    assert!(
+        !cert.signature.is_empty(),
+        "certificate should carry a signature"
+    );
+}
+
+#[test]
+fn issue_adapter_certificate_requires_public_key() {
+    use beardog_types::adapter_certificates::AdapterClassification;
+    let constraints = KeyConstraints::default();
+    let entropy = vec![4u8; 32];
+    let mut key =
+        BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![]).unwrap();
+    key.public_key = None;
+    let r = key.issue_adapter_certificate(
+        "adapter::nopk",
+        AdapterClassification::Human,
+        Duration::hours(1),
+    );
+    assert!(r.is_err(), "missing public key should block issuance");
+}
+
+#[test]
+fn verify_constraint_integrity_invalid_signature_length() {
+    let constraints = KeyConstraints {
+        data_access: DataAccessConstraint {
+            immutable_paths: vec!["raw/*".to_string()],
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let entropy = vec![5u8; 32];
+    let mut key =
+        BearDogGenetics::generate_with_constraints(&entropy, constraints, vec![]).unwrap();
+    key.constraint_signature = Some(vec![0u8; 10]);
+    let r = key.verify_constraint_integrity();
+    assert!(
+        r.is_err(),
+        "wrong signature length should fail integrity check"
+    );
+}

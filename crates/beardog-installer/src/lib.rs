@@ -40,7 +40,9 @@ pub mod validator;
 pub use arch::{ArchError, Architecture};
 pub use deployment::{DeploymentError, DeploymentManager};
 pub use installer::{BinaryInstaller, InstallerError};
-pub use platform::{BiomeOSPaths, OperatingSystem, PlatformError};
+#[allow(deprecated)]
+pub use platform::BiomeOSPaths;
+pub use platform::{OperatingSystem, PlatformError, PlatformPaths};
 pub use types::{DeploymentProgress, DeploymentReport, DeploymentStatus, PrimalName};
 pub use validator::{BinaryValidator, ValidationError, ValidationReport};
 
@@ -82,7 +84,7 @@ mod tests {
     #[test]
     fn test_discover_paths() {
         // Should be able to discover paths on current platform
-        let paths = BiomeOSPaths::discover();
+        let paths = PlatformPaths::discover();
         assert!(paths.is_ok());
     }
 }

@@ -190,4 +190,65 @@ mod doctor_tests {
         let res = run(true, Some("/nonexistent/doctor.sock".into()), "json".into()).await;
         assert!(res.is_ok());
     }
+
+    #[tokio::test]
+    async fn doctor_run_text_format_non_comprehensive_completes() {
+        let res = run(
+            false,
+            Some("/nonexistent/doctor-text.sock".into()),
+            "text".into(),
+        )
+        .await;
+        assert!(res.is_ok());
+    }
+
+    #[tokio::test]
+    async fn doctor_run_text_format_comprehensive_completes() {
+        let res = run(
+            true,
+            Some("/nonexistent/doctor-comprehensive.sock".into()),
+            "text".into(),
+        )
+        .await;
+        assert!(res.is_ok());
+    }
+
+    #[tokio::test]
+    async fn doctor_run_text_when_socket_path_exists_file() {
+        let tmp = tempfile::NamedTempFile::new().expect("temp file for doctor path");
+        let path = tmp.path().to_string_lossy().into_owned();
+        let res = run(false, Some(path), "text".into()).await;
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn doctor_json_status_line_parses_as_json_value() {
+        let line = doctor_json_status_line(true);
+        let v: serde_json::Value = serde_json::from_str(&line).expect("valid JSON line");
+        assert_eq!(v.get("status").and_then(|x| x.as_str()), Some("ok"));
+    }
+
+    #[test]
+    fn doctor_json_status_line_includes_package_version() {
+        let line = doctor_json_status_line(false);
+        assert!(line.contains(env!("CARGO_PKG_VERSION")));
+        assert!(line.contains("\"status\":\"ok\""));
+    }
+
+    #[test]
+    fn doctor_json_comprehensive_flag_roundtrip() {
+        assert!(doctor_json_status_line(true).contains("true"));
+        assert!(doctor_json_status_line(false).contains("false"));
+    }
+
+    #[tokio::test]
+    async fn doctor_run_unknown_format_falls_through_to_text() {
+        let res = run(
+            false,
+            Some("/nonexistent/doctor-fmt.sock".into()),
+            "pretty".into(),
+        )
+        .await;
+        assert!(res.is_ok());
+    }
 }

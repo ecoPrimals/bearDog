@@ -1,49 +1,27 @@
-# BearDog Scripts Directory
+# BearDog Scripts
 
-Active development, deployment, and maintenance scripts.
+Active development and validation scripts.
 
-## Directory Structure
+## Structure
 
-### Active Scripts
+### `active/deployment/`
 
-Scripts currently maintained and used in production workflows:
+- `deploy.sh` — Deployment orchestration
 
-- **`active/deployment/`** - Production deployment scripts
-  - `deploy.sh` - Deployment orchestration
-- **`active/validation/`** - System validation and security scripts
-  - `validate-system.sh` - Comprehensive system validation
-  - `security_audit.sh` - Security audit and compliance checks
-  - `security_hardening_validation.sh` - Security hardening checks
+### `active/validation/`
 
-### Deployment
-
-- **`deployment/`** - Unified ecosystem deployment
-  - `deploy-unified-ecosystem.sh` - Full ecosystem deployment
-
-### Profiling
-
-- **`profiling/`** - Performance profiling helpers
-  - `analyze_clones.sh` - Clone site analysis
-  - `generate_flamegraph.sh` - CPU flame graphs
-  - `profile_benchmarks.sh` - Benchmark profiling
-  - `profile_memory.sh` - Memory profiling
-  - `setup_profiling.sh` - Profiling environment setup
+- `validate-system.sh` — System validation (MSRV, build, binary checks)
+- `security_audit.sh` — Security audit and compliance
+- `security_hardening_validation.sh` — Production hardening checks
 
 ## Usage
 
 ```bash
-# Run system validation
 ./scripts/active/validation/validate-system.sh
-
-# Security audit
 ./scripts/active/validation/security_audit.sh
 ```
 
-## Archived Scripts
+## Archived
 
-Historical scripts (migration, pedantic, performance, modernization) have been moved
-to `ecoPrimals/archive/` as fossil record.
-
----
-
-**BearDog**: 100% Pure Rust Cryptographic Service Provider
+Profiling scripts, ecosystem deployment, and CI scaffolds moved to
+`ecoPrimals/infra/wateringHole/fossilRecord/beardog/` as fossil record (March 2026).

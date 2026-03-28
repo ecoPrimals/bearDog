@@ -32,25 +32,11 @@
 //! }
 //! ```
 
-// PKCS#11 provider temporarily disabled due to syntax errors
-// pub mod pkcs11_provider;
-
 #[cfg(feature = "fido2")]
 pub mod fido2;
 
-// TPM 2.0 support coming soon
-// #[cfg(feature = "tpm2")]
-// pub mod tpm2;
-
-// OpenPGP Card support coming soon
-// #[cfg(feature = "openpgp")]
-// pub mod openpgp;
-
 #[cfg(target_os = "android")]
 pub mod android_strongbox;
-
-// Re-exports
-// pub use pkcs11_provider::*;
 
 #[cfg(feature = "fido2")]
 pub use fido2::*;

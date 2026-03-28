@@ -413,4 +413,110 @@ mod tests {
             Err(e) => println!("⚠️  UPA not available: {e}"),
         }
     }
+
+    #[test]
+    fn registration_request_json_matches_expected_rpc_field_names() {
+        let req = RegistrationRequest {
+            service_name: "n".to_string(),
+            version: "v".to_string(),
+            capabilities: vec!["cap".to_string()],
+            endpoint: "/tmp/x".to_string(),
+            metadata: None,
+        };
+        let v = serde_json::to_value(&req).expect("to_value");
+        assert_eq!(v["service_name"], json!("n"));
+        assert_eq!(v["endpoint"], json!("/tmp/x"));
+        assert_eq!(v["capabilities"], json!(["cap"]));
+    }
+
+    #[test]
+    fn heartbeat_with_metrics_json_shape() {
+        let params = json!({
+            "service_id": "sid",
+            "token": "tok",
+            "metrics": LoadMetrics {
+                cpu_percent: 1.0,
+                memory_percent: 2.0,
+                active_connections: 3,
+            }
+        });
+        assert_eq!(params["service_id"], json!("sid"));
+        assert_eq!(params["metrics"]["active_connections"], json!(3));
+    }
+
+    #[test]
+    fn load_metrics_boundary_values_roundtrip() {
+        let m = LoadMetrics {
+            cpu_percent: 0.0,
+            memory_percent: 100.0,
+            active_connections: 0,
+        };
+        let s = serde_json::to_string(&m).expect("serialize LoadMetrics");
+        let back: LoadMetrics = serde_json::from_str(&s).expect("deserialize LoadMetrics");
+        assert_eq!(back.active_connections, 0);
+        assert!((back.memory_percent - 100.0).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn upa_client_config_preserves_legacy_url_string() {
+        let c = UpaClientConfig {
+            upa_url: "https://ignored.example".to_string(),
+        };
+        assert_eq!(c.upa_url, "https://ignored.example");
+    }
+
+    #[test]
+    fn service_status_serde_roundtrip() {
+        let st = ServiceStatus {
+            status: "degraded".to_string(),
+        };
+        let j = serde_json::to_string(&st).expect("serialize ServiceStatus");
+        let back: ServiceStatus = serde_json::from_str(&j).expect("deserialize ServiceStatus");
+        assert_eq!(back.status, "degraded");
+    }
+
+    #[test]
+    fn deregister_and_register_params_json_shapes() {
+        let reg = json!({
+            "service_name": "a",
+            "version": "1",
+            "capabilities": [],
+            "endpoint": "e",
+            "metadata": serde_json::Value::Null,
+        });
+        assert!(reg.get("service_name").is_some());
+
+        let dereg = json!({
+            "service_id": "id",
+            "token": "t",
+        });
+        assert_eq!(dereg["token"], json!("t"));
+    }
+
+    #[test]
+    fn discover_params_json_shape() {
+        let p = json!({ "capability": "beardog.crypto" });
+        assert_eq!(p["capability"], json!("beardog.crypto"));
+    }
+
+    #[test]
+    fn registration_response_partial_json_errors() {
+        let bad = json!({
+            "service_id": "only-one-field"
+        });
+        assert!(serde_json::from_value::<RegistrationResponse>(bad).is_err());
+    }
+
+    #[test]
+    fn load_metrics_clone_and_debug() {
+        let m = LoadMetrics {
+            cpu_percent: 5.0,
+            memory_percent: 6.0,
+            active_connections: 7,
+        };
+        let c = m.clone();
+        assert_eq!(c.active_connections, 7);
+        let s = format!("{m:?}");
+        assert!(s.contains("LoadMetrics") || s.contains("cpu"));
+    }
 }

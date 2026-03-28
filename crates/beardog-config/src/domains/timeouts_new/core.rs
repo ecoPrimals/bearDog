@@ -165,3 +165,67 @@ impl TimeoutConfig {
         Duration::from_secs(self.request_timeout_secs)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::TimeoutConfig;
+    use crate::domains::timeouts_new::default_timeouts;
+    use std::time::Duration;
+
+    #[test]
+    fn duration_accessors_match_defaults() {
+        let c = TimeoutConfig::default();
+        assert_eq!(
+            c.health_check_duration(),
+            Duration::from_secs(default_timeouts::HEALTH_CHECK_SECS)
+        );
+        assert_eq!(
+            c.hsm_operation_duration(),
+            Duration::from_secs(default_timeouts::HSM_OPERATION_SECS)
+        );
+        assert_eq!(
+            c.hsm_probe_duration(),
+            Duration::from_millis(default_timeouts::HSM_PROBE_MILLIS)
+        );
+        assert_eq!(
+            c.discovery_operation_duration(),
+            Duration::from_secs(default_timeouts::DISCOVERY_OPERATION_SECS)
+        );
+        assert_eq!(
+            c.ai_decision_duration(),
+            Duration::from_secs(default_timeouts::AI_DECISION_SECS)
+        );
+        assert_eq!(
+            c.ai_request_duration(),
+            Duration::from_secs(default_timeouts::AI_REQUEST_SECS)
+        );
+        assert_eq!(
+            c.ai_batch_timeout_duration(),
+            Duration::from_millis(default_timeouts::AI_BATCH_TIMEOUT_MILLIS)
+        );
+        assert_eq!(
+            c.pool_idle_duration(),
+            Duration::from_secs(default_timeouts::POOL_IDLE_SECS)
+        );
+        assert_eq!(
+            c.max_connection_age_duration(),
+            Duration::from_secs(default_timeouts::MAX_CONNECTION_AGE_SECS)
+        );
+        assert_eq!(
+            c.network_operation_duration(),
+            Duration::from_secs(default_timeouts::NETWORK_OPERATION_SECS)
+        );
+        assert_eq!(
+            c.dns_resolution_timeout_duration(),
+            Duration::from_secs(default_timeouts::DNS_RESOLUTION_TIMEOUT_SECS)
+        );
+        assert_eq!(
+            c.connection_timeout_duration(),
+            Duration::from_secs(default_timeouts::CONNECTION_TIMEOUT_SECS)
+        );
+        assert_eq!(
+            c.request_timeout_duration(),
+            Duration::from_secs(default_timeouts::REQUEST_TIMEOUT_SECS)
+        );
+    }
+}

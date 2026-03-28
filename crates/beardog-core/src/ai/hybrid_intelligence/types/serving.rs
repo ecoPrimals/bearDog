@@ -88,3 +88,81 @@ pub struct CachingConfig {
     /// Policy for removing entries when cache reaches capacity (LRU, LFU, FIFO, TTL)
     pub eviction_policy: EvictionPolicy,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json;
+
+    #[test]
+    fn serving_config_default_clone_debug() {
+        let c = ServingConfig::default();
+        assert_eq!(c.max_concurrent_requests, 100);
+        assert_eq!(c.request_timeout, Duration::from_secs(30));
+        assert_eq!(c.load_balancing, LoadBalancingStrategy::RoundRobin);
+        let _ = format!("{c:?}");
+        let c2 = c.clone();
+        assert_eq!(c.max_concurrent_requests, c2.max_concurrent_requests);
+        assert_eq!(c.request_timeout, c2.request_timeout);
+        assert_eq!(c.load_balancing, c2.load_balancing);
+    }
+
+    #[test]
+    fn serving_config_from_env_without_mutation() {
+        let c = ServingConfig::from_env();
+        assert!(c.max_concurrent_requests > 0);
+        assert_eq!(c.load_balancing, LoadBalancingStrategy::RoundRobin);
+    }
+
+    #[test]
+    fn load_balancing_and_eviction_serde_roundtrip() {
+        for strat in [
+            LoadBalancingStrategy::RoundRobin,
+            LoadBalancingStrategy::LeastConnections,
+            LoadBalancingStrategy::WeightedRoundRobin,
+            LoadBalancingStrategy::Random,
+        ] {
+            let j = serde_json::to_string(&strat).expect("serialize strategy");
+            let back: LoadBalancingStrategy = serde_json::from_str(&j).expect("deserialize");
+            assert_eq!(strat, back);
+        }
+        for pol in [
+            EvictionPolicy::Lru,
+            EvictionPolicy::Lfu,
+            EvictionPolicy::Fifo,
+            EvictionPolicy::Ttl,
+        ] {
+            let j = serde_json::to_string(&pol).expect("serialize policy");
+            let back: EvictionPolicy = serde_json::from_str(&j).expect("deserialize");
+            assert_eq!(pol, back);
+        }
+    }
+
+    #[test]
+    fn serving_config_serde_roundtrip() {
+        let c = ServingConfig {
+            max_concurrent_requests: 42,
+            request_timeout: Duration::from_secs(7),
+            load_balancing: LoadBalancingStrategy::LeastConnections,
+        };
+        let j = serde_json::to_string(&c).expect("serialize ServingConfig");
+        let back: ServingConfig = serde_json::from_str(&j).expect("deserialize ServingConfig");
+        assert_eq!(c.max_concurrent_requests, back.max_concurrent_requests);
+        assert_eq!(c.request_timeout, back.request_timeout);
+        assert_eq!(c.load_balancing, back.load_balancing);
+    }
+
+    #[test]
+    fn caching_config_serde_roundtrip() {
+        let c = CachingConfig {
+            max_cache_size: 1000,
+            ttl: Duration::from_secs(120),
+            eviction_policy: EvictionPolicy::Lfu,
+        };
+        let j = serde_json::to_string(&c).expect("serialize CachingConfig");
+        let back: CachingConfig = serde_json::from_str(&j).expect("deserialize CachingConfig");
+        assert_eq!(c.max_cache_size, back.max_cache_size);
+        assert_eq!(c.ttl, back.ttl);
+        assert_eq!(c.eviction_policy, back.eviction_policy);
+    }
+}

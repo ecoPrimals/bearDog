@@ -27,12 +27,12 @@ use tracing::{info, warn};
 ///
 /// # Core Operations (6 methods, internal mode)
 ///
-/// - `btsp.contact_exchange` - Exchange contact info via genetic lineage
-/// - `btsp.tunnel_establish` - **UNIFIED**: Establish secure tunnel (internal OR external)
-/// - `btsp.tunnel_encrypt` - Encrypt data through tunnel
-/// - `btsp.tunnel_decrypt` - Decrypt data from tunnel
-/// - `btsp.tunnel_status` - Get tunnel status
-/// - `btsp.tunnel_close` - Close tunnel gracefully
+/// - `btsp.contact.exchange` (semantic) / `btsp.contact_exchange` — Exchange contact info via genetic lineage
+/// - `btsp.tunnel.establish` / `btsp.tunnel_establish` — **UNIFIED**: Establish secure tunnel (internal OR external)
+/// - `btsp.tunnel.encrypt` / `btsp.tunnel_encrypt` — Encrypt data through tunnel
+/// - `btsp.tunnel.decrypt` / `btsp.tunnel_decrypt` — Decrypt data from tunnel
+/// - `btsp.tunnel.status` / `btsp.tunnel_status` — Get tunnel status
+/// - `btsp.tunnel.close` / `btsp.tunnel_close` — Close tunnel gracefully
 ///
 /// # Unified Operations (3 new methods, Phase 2+)
 ///
@@ -50,27 +50,33 @@ pub struct BtspHandler;
 impl MethodHandler for BtspHandler {
     fn methods(&self) -> Vec<&'static str> {
         vec![
-            // Contact exchange
+            // Contact exchange (semantic `domain.operation` first; path-like = backward compat)
+            "btsp.contact.exchange",
             "beardog./btsp/contact/exchange",
             "btsp.contact_exchange",
             "btsp.contact/exchange",
             // Tunnel establishment (UNIFIED - supports internal + external)
+            "btsp.tunnel.establish",
             "beardog./btsp/tunnel/establish",
             "btsp.tunnel_establish",
             "btsp.tunnel/establish",
             // Tunnel encryption
+            "btsp.tunnel.encrypt",
             "beardog./btsp/tunnel/encrypt",
             "btsp.tunnel_encrypt",
             "btsp.tunnel/encrypt",
             // Tunnel decryption
+            "btsp.tunnel.decrypt",
             "beardog./btsp/tunnel/decrypt",
             "btsp.tunnel_decrypt",
             "btsp.tunnel/decrypt",
             // Tunnel status
+            "btsp.tunnel.status",
             "beardog./btsp/tunnel/status",
             "btsp.tunnel_status",
             "btsp.tunnel/status",
             // Tunnel close
+            "btsp.tunnel.close",
             "beardog./btsp/tunnel/close",
             "btsp.tunnel_close",
             "btsp.tunnel/close",
@@ -87,18 +93,36 @@ impl MethodHandler for BtspHandler {
         params: Option<&serde_json::Value>,
         btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
-        // Match on method (ignoring namespace variations)
-        if method.ends_with("contact_exchange") || method.contains("/contact/exchange") {
+        // Match on method (semantic `btsp.*` dot names, legacy underscores, path-like beardog.*)
+        if method == "btsp.contact.exchange"
+            || method.ends_with("contact_exchange")
+            || method.contains("/contact/exchange")
+        {
             self.handle_contact_exchange(params, btsp_provider).await
-        } else if method.ends_with("tunnel_establish") || method.contains("/tunnel/establish") {
+        } else if method == "btsp.tunnel.establish"
+            || method.ends_with("tunnel_establish")
+            || method.contains("/tunnel/establish")
+        {
             self.handle_tunnel_establish(params, btsp_provider).await
-        } else if method.ends_with("tunnel_encrypt") || method.contains("/tunnel/encrypt") {
+        } else if method == "btsp.tunnel.encrypt"
+            || method.ends_with("tunnel_encrypt")
+            || method.contains("/tunnel/encrypt")
+        {
             self.handle_tunnel_encrypt(params, btsp_provider).await
-        } else if method.ends_with("tunnel_decrypt") || method.contains("/tunnel/decrypt") {
+        } else if method == "btsp.tunnel.decrypt"
+            || method.ends_with("tunnel_decrypt")
+            || method.contains("/tunnel/decrypt")
+        {
             self.handle_tunnel_decrypt(params, btsp_provider).await
-        } else if method.ends_with("tunnel_status") || method.contains("/tunnel/status") {
+        } else if method == "btsp.tunnel.status"
+            || method.ends_with("tunnel_status")
+            || method.contains("/tunnel/status")
+        {
             self.handle_tunnel_status(params, btsp_provider).await
-        } else if method.ends_with("tunnel_close") || method.contains("/tunnel/close") {
+        } else if method == "btsp.tunnel.close"
+            || method.ends_with("tunnel_close")
+            || method.contains("/tunnel/close")
+        {
             self.handle_tunnel_close(params, btsp_provider).await
         } else if method == "btsp.configure_tls" {
             self.handle_configure_tls(params, btsp_provider).await

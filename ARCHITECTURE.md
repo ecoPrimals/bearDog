@@ -1,8 +1,8 @@
 # BearDog Architecture
 
-**Last Updated**: March 24, 2026
+**Last Updated**: March 28, 2026
 **Status**: Production Ready
-**Crates**: 30 | **Tests**: 14,447+ | **Coverage**: 87.35%+ | **MSRV**: 1.93.0
+**Crates**: 30 | **Tests**: 15,100+ | **Coverage**: 90.05% | **MSRV**: 1.93.0
 
 ---
 
@@ -21,7 +21,7 @@ BearDog provides **crypto atoms** to the ecoPrimals ecosystem. Every primal dele
 **Principles**:
 - Separation of concerns: protocol logic in primals, crypto in BearDog
 - Single audit surface for crypto correctness
-- HSM abstraction: software, hardware (PKCS#11), mobile (StrongBox)
+- HSM abstraction: software (RustCrypto), hardware (PKCS#11, TPM), mobile (StrongBox, Secure Enclave) via `HsmKeyProvider` trait + `HsmProviderRegistry`
 - Family isolation: per-family key derivation
 
 ---
@@ -115,6 +115,21 @@ pub trait ConsolidatedProvider: Send + Sync + 'static {
 }
 ```
 
+### Canonical HSM Trait (v0.10.0+)
+
+```
+HsmKeyProvider (beardog-traits::hsm)
+├── RustSoftwareHsm         (RustCrypto, always available)
+├── AndroidStrongBoxHsm     (JNI bridge, cfg(target_os = "android"))
+├── [future] IosSecureEnclave
+├── [future] Pkcs11Provider
+└── [future] TpmProvider
+
+HsmProviderRegistry → discover() → select(PreferHardware | RequireHardware | SoftwareOnly)
+```
+
+The canonical `HsmKeyProvider` trait is object-safe and async. It supersedes 5 legacy trait hierarchies (`CryptoProvider`, `HsmProviderTrait`, `HsmCapabilities`, unified `HsmProvider`, canonical `HsmProvider`) which carry migration doc sections and will be removed in v0.10.0.
+
 ### Domain-Specific Traits
 
 - **`UniversalHsmProvider`**: HSM-specific operations (crypto, keys, signing)
@@ -201,4 +216,4 @@ Key material derived from family seed. Family A never shares keys with Family B.
 
 ---
 
-**Last Updated**: March 23, 2026
+**Last Updated**: March 28, 2026

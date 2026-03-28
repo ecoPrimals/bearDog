@@ -88,3 +88,41 @@ impl HsmDiscoveryConfig {
         Self::default()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json;
+
+    #[test]
+    fn default_permissive_and_restrictive() {
+        let d = HsmDiscoveryConfig::default();
+        let p = HsmDiscoveryConfig::permissive();
+        assert!(d.enable_software_hsm);
+        assert!(p.enable_software_hsm);
+        let r = HsmDiscoveryConfig::restrictive();
+        assert!(!r.enable_software_hsm);
+        assert!(r.enable_network_hsm);
+        assert!(r.minimum_entropy_quality >= d.minimum_entropy_quality);
+    }
+
+    #[test]
+    fn serde_json_roundtrip() {
+        let c = HsmDiscoveryConfig::default();
+        let j = serde_json::to_string(&c).expect("serialize HsmDiscoveryConfig");
+        let back: HsmDiscoveryConfig = serde_json::from_str(&j).expect("deserialize");
+        assert_eq!(c.enable_tpm, back.enable_tpm);
+        assert_eq!(c.minimum_entropy_quality, back.minimum_entropy_quality);
+        assert_eq!(c.enable_cloud_kms, back.enable_cloud_kms);
+    }
+
+    #[test]
+    fn debug_clone_smoke() {
+        let c = HsmDiscoveryConfig::restrictive();
+        let s = format!("{c:?}");
+        assert!(
+            s.contains("base") || s.contains("HsmDiscoveryConfig"),
+            "{s}"
+        );
+    }
+}

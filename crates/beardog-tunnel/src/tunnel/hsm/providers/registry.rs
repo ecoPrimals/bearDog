@@ -225,6 +225,147 @@ impl Default for UniversalProviderRegistry {
     }
 }
 
+// ── Canonical HsmProviderRegistry ───────────────────────────────────────
+
+use beardog_traits::hsm::HsmKeyProvider;
+use beardog_types::hsm::{HsmProviderType, SelectionPreference};
+use std::sync::Arc;
+
+/// Runtime registry of `HsmKeyProvider` backends.
+///
+/// Holds `Arc<dyn HsmKeyProvider>` instances and selects the best one
+/// according to [`SelectionPreference`].
+pub struct HsmProviderRegistry {
+    providers: Vec<Arc<dyn HsmKeyProvider>>,
+}
+
+impl HsmProviderRegistry {
+    /// Create an empty registry.
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            providers: Vec::new(),
+        }
+    }
+
+    /// Probe the current platform and register all available providers.
+    ///
+    /// On non-Android hosts this registers only the software provider.
+    /// On Android it additionally probes for StrongBox availability.
+    pub async fn discover() -> Self {
+        let mut registry = Self::new();
+
+        let sw = crate::tunnel::hsm::software_hsm::create_default_software_hsm()
+            .await
+            .map(|hsm| Arc::new(hsm) as Arc<dyn HsmKeyProvider>);
+
+        if let Ok(provider) = sw {
+            info!("HSM registry: registered software-rustcrypto provider");
+            registry.providers.push(provider);
+        }
+
+        // On Android, try to register StrongBox
+        #[cfg(target_os = "android")]
+        {
+            if let Ok(sb) =
+                crate::tunnel::hsm::android_strongbox::AndroidStrongBoxHsm::with_defaults()
+            {
+                if beardog_traits::hsm::HsmKeyProvider::is_available(&sb) {
+                    info!("HSM registry: registered android-strongbox provider");
+                    registry.providers.push(Arc::new(sb));
+                }
+            }
+        }
+
+        registry
+    }
+
+    /// Manually register a provider.
+    pub fn register(&mut self, provider: Arc<dyn HsmKeyProvider>) {
+        info!(
+            "HSM registry: manually registered provider '{}'",
+            provider.provider_id()
+        );
+        self.providers.push(provider);
+    }
+
+    /// Select the best available provider according to `preference`.
+    ///
+    /// Falls back to the software provider when no hardware provider
+    /// is available and `PreferHardware` was requested.
+    pub fn select(
+        &self,
+        preference: SelectionPreference,
+    ) -> Result<Arc<dyn HsmKeyProvider>, BearDogError> {
+        let available: Vec<_> = self
+            .providers
+            .iter()
+            .filter(|p| p.is_available())
+            .cloned()
+            .collect();
+
+        if available.is_empty() {
+            return Err(BearDogError::system(
+                "No HSM providers are available".to_string(),
+            ));
+        }
+
+        match preference {
+            SelectionPreference::PreferHardware => {
+                if let Some(hw) = available
+                    .iter()
+                    .find(|p| p.provider_type() != HsmProviderType::Software)
+                {
+                    return Ok(Arc::clone(hw));
+                }
+                Ok(Arc::clone(&available[0]))
+            }
+            SelectionPreference::RequireHardware => available
+                .iter()
+                .find(|p| p.provider_type() != HsmProviderType::Software)
+                .cloned()
+                .ok_or_else(|| {
+                    BearDogError::system("No hardware-backed HSM provider available".to_string())
+                }),
+            SelectionPreference::SoftwareOnly => available
+                .iter()
+                .find(|p| p.provider_type() == HsmProviderType::Software)
+                .cloned()
+                .ok_or_else(|| {
+                    BearDogError::system("No software HSM provider available".to_string())
+                }),
+        }
+    }
+
+    /// Convenience: always returns the software fallback.
+    pub fn software_fallback(&self) -> Result<Arc<dyn HsmKeyProvider>, BearDogError> {
+        self.select(SelectionPreference::SoftwareOnly)
+    }
+
+    /// Number of registered providers.
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.providers.len()
+    }
+
+    /// Whether the registry is empty.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.providers.is_empty()
+    }
+
+    /// Iterate over registered providers.
+    pub fn iter(&self) -> impl Iterator<Item = &Arc<dyn HsmKeyProvider>> {
+        self.providers.iter()
+    }
+}
+
+impl Default for HsmProviderRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -371,5 +512,205 @@ mod tests {
             SelectionStrategy::BestPerformance
         );
         Ok(())
+    }
+
+    // ── canonical HsmProviderRegistry tests ────────────────────────────
+
+    use beardog_types::hsm::{
+        HsmCapabilitySet, HsmProviderType as CanonicalType, KeyGenParams, KeyHandle,
+    };
+
+    struct FakeHwProvider;
+
+    #[async_trait::async_trait]
+    impl HsmKeyProvider for FakeHwProvider {
+        fn provider_id(&self) -> &'static str {
+            "fake-hw"
+        }
+        fn provider_type(&self) -> CanonicalType {
+            CanonicalType::AndroidStrongBox
+        }
+        fn is_available(&self) -> bool {
+            true
+        }
+        fn capabilities(&self) -> HsmCapabilitySet {
+            HsmCapabilitySet::default()
+        }
+        async fn generate_key(
+            &self,
+            p: &KeyGenParams,
+        ) -> Result<KeyHandle, beardog_errors::BearDogError> {
+            Ok(KeyHandle {
+                key_id: "hw-key".into(),
+                algorithm: p.algorithm,
+                hardware_backed: true,
+                created_at_ms: 0,
+            })
+        }
+        async fn delete_key(&self, _: &str) -> Result<(), beardog_errors::BearDogError> {
+            Ok(())
+        }
+        async fn key_exists(&self, _: &str) -> Result<bool, beardog_errors::BearDogError> {
+            Ok(true)
+        }
+        async fn encrypt(
+            &self,
+            _: &str,
+            d: &[u8],
+        ) -> Result<Vec<u8>, beardog_errors::BearDogError> {
+            Ok(d.to_vec())
+        }
+        async fn decrypt(
+            &self,
+            _: &str,
+            d: &[u8],
+        ) -> Result<Vec<u8>, beardog_errors::BearDogError> {
+            Ok(d.to_vec())
+        }
+        async fn sign(&self, _: &str, d: &[u8]) -> Result<Vec<u8>, beardog_errors::BearDogError> {
+            Ok(d.to_vec())
+        }
+        async fn verify(
+            &self,
+            _: &str,
+            _: &[u8],
+            _: &[u8],
+        ) -> Result<bool, beardog_errors::BearDogError> {
+            Ok(true)
+        }
+    }
+
+    struct FakeSwProvider;
+
+    #[async_trait::async_trait]
+    impl HsmKeyProvider for FakeSwProvider {
+        fn provider_id(&self) -> &'static str {
+            "fake-sw"
+        }
+        fn provider_type(&self) -> CanonicalType {
+            CanonicalType::Software
+        }
+        fn is_available(&self) -> bool {
+            true
+        }
+        fn capabilities(&self) -> HsmCapabilitySet {
+            HsmCapabilitySet::default()
+        }
+        async fn generate_key(
+            &self,
+            p: &KeyGenParams,
+        ) -> Result<KeyHandle, beardog_errors::BearDogError> {
+            Ok(KeyHandle {
+                key_id: "sw-key".into(),
+                algorithm: p.algorithm,
+                hardware_backed: false,
+                created_at_ms: 0,
+            })
+        }
+        async fn delete_key(&self, _: &str) -> Result<(), beardog_errors::BearDogError> {
+            Ok(())
+        }
+        async fn key_exists(&self, _: &str) -> Result<bool, beardog_errors::BearDogError> {
+            Ok(true)
+        }
+        async fn encrypt(
+            &self,
+            _: &str,
+            d: &[u8],
+        ) -> Result<Vec<u8>, beardog_errors::BearDogError> {
+            Ok(d.to_vec())
+        }
+        async fn decrypt(
+            &self,
+            _: &str,
+            d: &[u8],
+        ) -> Result<Vec<u8>, beardog_errors::BearDogError> {
+            Ok(d.to_vec())
+        }
+        async fn sign(&self, _: &str, d: &[u8]) -> Result<Vec<u8>, beardog_errors::BearDogError> {
+            Ok(d.to_vec())
+        }
+        async fn verify(
+            &self,
+            _: &str,
+            _: &[u8],
+            _: &[u8],
+        ) -> Result<bool, beardog_errors::BearDogError> {
+            Ok(true)
+        }
+    }
+
+    #[test]
+    fn canonical_registry_empty_select_fails() {
+        let reg = HsmProviderRegistry::new();
+        assert!(reg.is_empty());
+        assert!(reg.select(SelectionPreference::PreferHardware).is_err());
+    }
+
+    #[test]
+    fn canonical_registry_prefer_hardware_picks_hw() {
+        let mut reg = HsmProviderRegistry::new();
+        reg.register(Arc::new(FakeSwProvider));
+        reg.register(Arc::new(FakeHwProvider));
+
+        let p = reg.select(SelectionPreference::PreferHardware).unwrap();
+        assert_eq!(p.provider_type(), CanonicalType::AndroidStrongBox);
+    }
+
+    #[test]
+    fn canonical_registry_prefer_hardware_falls_back_to_sw() {
+        let mut reg = HsmProviderRegistry::new();
+        reg.register(Arc::new(FakeSwProvider));
+
+        let p = reg.select(SelectionPreference::PreferHardware).unwrap();
+        assert_eq!(p.provider_type(), CanonicalType::Software);
+    }
+
+    #[test]
+    fn canonical_registry_require_hardware_fails_without_hw() {
+        let mut reg = HsmProviderRegistry::new();
+        reg.register(Arc::new(FakeSwProvider));
+
+        assert!(reg.select(SelectionPreference::RequireHardware).is_err());
+    }
+
+    #[test]
+    fn canonical_registry_software_only() {
+        let mut reg = HsmProviderRegistry::new();
+        reg.register(Arc::new(FakeSwProvider));
+        reg.register(Arc::new(FakeHwProvider));
+
+        let p = reg.select(SelectionPreference::SoftwareOnly).unwrap();
+        assert_eq!(p.provider_type(), CanonicalType::Software);
+    }
+
+    #[test]
+    fn canonical_registry_software_fallback() {
+        let mut reg = HsmProviderRegistry::new();
+        reg.register(Arc::new(FakeSwProvider));
+        reg.register(Arc::new(FakeHwProvider));
+
+        let p = reg.software_fallback().unwrap();
+        assert_eq!(p.provider_id(), "fake-sw");
+    }
+
+    #[test]
+    fn canonical_registry_len_and_iter() {
+        let mut reg = HsmProviderRegistry::new();
+        reg.register(Arc::new(FakeSwProvider));
+        reg.register(Arc::new(FakeHwProvider));
+        assert_eq!(reg.len(), 2);
+
+        let ids: Vec<_> = reg.iter().map(|p| p.provider_id()).collect();
+        assert!(ids.contains(&"fake-sw"));
+        assert!(ids.contains(&"fake-hw"));
+    }
+
+    #[tokio::test]
+    async fn canonical_registry_discover_creates_software() {
+        let reg = HsmProviderRegistry::discover().await;
+        assert!(!reg.is_empty());
+        let sw = reg.software_fallback().unwrap();
+        assert_eq!(sw.provider_type(), CanonicalType::Software);
     }
 }

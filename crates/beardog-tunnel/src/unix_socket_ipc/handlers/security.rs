@@ -55,16 +55,16 @@ impl MethodHandler for SecurityHandler {
             "trust.lineage",
             "security.get_lineage",
             "trust.get_lineage",
-            // BirdSong encryption
-            "beardog.birdsong.encrypt",
+            // BirdSong encryption (semantic domain.operation first; beardog.* = backward compat)
             "birdsong.encrypt",
-            "beardog.birdsong.decrypt",
+            "beardog.birdsong.encrypt",
             "birdsong.decrypt",
-            // JWT secret generation
-            "beardog.generate_jwt_secret",
+            "beardog.birdsong.decrypt",
+            // JWT secret generation (semantic security.* first; beardog.* = backward compat)
             "security.generate_jwt_secret",
-            "beardog.jwt_secret",
             "security.jwt_secret",
+            "beardog.generate_jwt_secret",
+            "beardog.jwt_secret",
         ]
     }
 
@@ -82,16 +82,16 @@ impl MethodHandler for SecurityHandler {
             "security.lineage" | "trust.lineage" | "security.get_lineage" | "trust.get_lineage" => {
                 self.handle_lineage().await
             }
-            "beardog.birdsong.encrypt" | "birdsong.encrypt" => {
+            "birdsong.encrypt" | "beardog.birdsong.encrypt" => {
                 self.handle_birdsong_encrypt(params, btsp_provider).await
             }
-            "beardog.birdsong.decrypt" | "birdsong.decrypt" => {
+            "birdsong.decrypt" | "beardog.birdsong.decrypt" => {
                 self.handle_birdsong_decrypt(params, btsp_provider).await
             }
-            "beardog.generate_jwt_secret"
-            | "security.generate_jwt_secret"
-            | "beardog.jwt_secret"
-            | "security.jwt_secret" => self.handle_generate_jwt_secret(params).await,
+            "security.generate_jwt_secret"
+            | "security.jwt_secret"
+            | "beardog.generate_jwt_secret"
+            | "beardog.jwt_secret" => self.handle_generate_jwt_secret(params).await,
             _ => Err(format!("Method not found: {method}")),
         }
     }
@@ -405,8 +405,31 @@ mod tests {
         assert!(methods.contains(&"birdsong.encrypt"));
         assert!(methods.contains(&"birdsong.decrypt"));
 
-        // Should support JWT secrets
+        // Should support JWT secrets (semantic names primary in list order)
         assert!(methods.contains(&"security.generate_jwt_secret"));
+        assert!(methods.contains(&"security.jwt_secret"));
+        assert!(methods.contains(&"beardog.generate_jwt_secret"));
+        assert!(methods.contains(&"beardog.jwt_secret"));
+
+        let i_bird = methods
+            .iter()
+            .position(|&m| m == "birdsong.encrypt")
+            .expect("birdsong.encrypt");
+        let i_old_bird = methods
+            .iter()
+            .position(|&m| m == "beardog.birdsong.encrypt")
+            .expect("beardog.birdsong.encrypt");
+        assert!(i_bird < i_old_bird);
+
+        let i_sec = methods
+            .iter()
+            .position(|&m| m == "security.generate_jwt_secret")
+            .expect("security.generate_jwt_secret");
+        let i_bd_jwt = methods
+            .iter()
+            .position(|&m| m == "beardog.generate_jwt_secret")
+            .expect("beardog.generate_jwt_secret");
+        assert!(i_sec < i_bd_jwt);
     }
 
     #[tokio::test]
@@ -532,6 +555,40 @@ mod tests {
                 .decode(secret)
                 .is_ok()
         );
+    }
+
+    #[tokio::test]
+    async fn test_jwt_secret_read_alias_matches_generate() {
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = SecurityHandler::new(identity);
+        let params = serde_json::json!({ "strength": "low" });
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+        let via_read = handler
+            .handle("security.jwt_secret", Some(&params), &btsp_provider)
+            .await
+            .expect("security.jwt_secret");
+        let via_legacy = handler
+            .handle("beardog.jwt_secret", Some(&params), &btsp_provider)
+            .await
+            .expect("beardog.jwt_secret");
+        assert_eq!(via_read["byte_length"], via_legacy["byte_length"]);
+        assert_eq!(via_read["strength"], via_legacy["strength"]);
+    }
+
+    #[tokio::test]
+    async fn test_birdsong_encrypt_semantic_alias_requires_params() {
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let handler = SecurityHandler::new(identity);
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+        let e1 = handler
+            .handle("birdsong.encrypt", None, &btsp_provider)
+            .await
+            .expect_err("missing params");
+        let e2 = handler
+            .handle("beardog.birdsong.encrypt", None, &btsp_provider)
+            .await
+            .expect_err("missing params");
+        assert_eq!(e1, e2);
     }
 
     #[tokio::test]

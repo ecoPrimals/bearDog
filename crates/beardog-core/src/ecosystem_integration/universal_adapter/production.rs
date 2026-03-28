@@ -166,3 +166,97 @@ impl ProductionUniversalAdapter {
         Ok(Value::Object(response))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ecosystem_integration::universal_adapter::config::{
+        ProductionConfig, ProductionFeature, UniversalAdapterConfig,
+    };
+    use crate::ecosystem_integration::universal_adapter::types::{
+        AdapterOperation, AdapterRequest,
+    };
+
+    fn sample_production_adapter() -> ProductionUniversalAdapter {
+        ProductionUniversalAdapter::new(
+            UniversalAdapterConfig::default(),
+            ProductionConfig {
+                enabled_features: vec![
+                    ProductionFeature::ProductionMode,
+                    ProductionFeature::EnhancedLogging,
+                ],
+            },
+        )
+    }
+
+    #[test]
+    fn production_config_accessor_returns_reference() {
+        let a = sample_production_adapter();
+        assert!(
+            a.production_config()
+                .is_enabled(ProductionFeature::ProductionMode)
+        );
+        assert!(a.production_config().enhanced_logging());
+    }
+
+    #[test]
+    fn core_adapter_accessor_exposes_config() {
+        let a = sample_production_adapter();
+        assert_eq!(
+            a.core_adapter().config().adapter_id,
+            UniversalAdapterConfig::default().adapter_id
+        );
+    }
+
+    #[test]
+    fn execute_on_system_returns_not_implemented() {
+        let a = sample_production_adapter();
+        let err = a
+            .execute_on_system("hsm", "op", serde_json::json!({}))
+            .expect_err("routing must not be implemented yet");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("not implemented") || msg.contains("Not implemented"),
+            "error should surface not-implemented: {msg}"
+        );
+    }
+
+    #[test]
+    fn health_check_initialized_vs_uninitialized() {
+        let good = sample_production_adapter();
+        let v = good
+            .health_check_all()
+            .expect("health aggregation should succeed");
+        assert_eq!(v["overall_status"], "healthy");
+
+        let mut cfg = UniversalAdapterConfig::default();
+        cfg.adapter_name.clear();
+        let empty = ProductionUniversalAdapter::new(
+            cfg,
+            ProductionConfig {
+                enabled_features: vec![],
+            },
+        );
+        let v2 = empty.health_check_all().expect("health check");
+        assert_eq!(v2["overall_status"], "degraded");
+    }
+
+    #[tokio::test]
+    async fn process_request_delegates_to_core() {
+        let a = sample_production_adapter();
+        let req = AdapterRequest::new(
+            AdapterOperation::HealthCheck,
+            "http://localhost".to_string(),
+        );
+        let rid = req.request_id;
+        let res = a
+            .process_request(req)
+            .await
+            .expect("health check request should be handled");
+        assert_eq!(res.request_id, rid);
+        assert!(
+            res.payload.is_some(),
+            "health response should include payload"
+        );
+    }
+}

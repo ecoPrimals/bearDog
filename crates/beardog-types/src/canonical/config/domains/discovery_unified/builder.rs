@@ -125,3 +125,67 @@ impl UnifiedDiscoveryConfigBuilder {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::UnifiedDiscoveryConfigBuilder;
+    use crate::canonical::config::domains::discovery_unified::{
+        DiscoveryCacheConfig, DiscoveryProtocol, DiscoverySecurityConfig, LoadBalancingConfig,
+        NetworkDiscoveryConfig, QuantumDiscoveryConfig, ServiceRegistryConfig,
+        UnifiedDiscoveryConfig,
+    };
+    use std::sync::Arc;
+
+    #[test]
+    fn builder_new_and_from_env_are_noops_on_fields() {
+        let b = UnifiedDiscoveryConfigBuilder::new().from_env();
+        let c = b.build();
+        let d = UnifiedDiscoveryConfig::default();
+        assert_eq!(c.enabled, d.enabled);
+    }
+
+    #[test]
+    fn builder_overrides_all_sections() {
+        let reg = ServiceRegistryConfig::default();
+        let net = NetworkDiscoveryConfig::default();
+        let q = QuantumDiscoveryConfig::default();
+        let cache = DiscoveryCacheConfig::default();
+        let sec = DiscoverySecurityConfig::default();
+        let lb = LoadBalancingConfig::default();
+
+        let c = UnifiedDiscoveryConfig::builder()
+            .enabled(false)
+            .service_id("svc-x")
+            .add_protocol(DiscoveryProtocol::Http {
+                endpoint: "http://h".into(),
+                timeout_ms: 100,
+            })
+            .registry(reg.clone())
+            .network(net.clone())
+            .quantum(q.clone())
+            .cache(cache.clone())
+            .security(sec.clone())
+            .load_balancing(lb.clone())
+            .build();
+
+        assert!(!c.enabled);
+        assert_eq!(c.service_id.as_ref(), "svc-x");
+        assert_eq!(c.enabled_protocols.len(), 1);
+        assert_eq!(c.registry, reg);
+        assert_eq!(c.network, net);
+        assert_eq!(c.quantum, q);
+        assert_eq!(c.cache, cache);
+        assert_eq!(c.security, sec);
+        assert_eq!(c.load_balancing, lb);
+    }
+
+    #[test]
+    fn builder_empty_protocols_use_defaults() {
+        let c = UnifiedDiscoveryConfigBuilder::new()
+            .service_id("only-id")
+            .build();
+        let d = UnifiedDiscoveryConfig::default();
+        assert_eq!(c.enabled_protocols, d.enabled_protocols);
+        assert_eq!(c.service_id, Arc::from("only-id"));
+    }
+}

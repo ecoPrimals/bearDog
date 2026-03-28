@@ -10,7 +10,7 @@
 //! ```text
 //! Server Startup
 //!   ↓
-//! PrimalIdentity::from_env() (read once, fail-fast)
+//! PrimalIdentity::from_env() (read once, standalone fallback)
 //!   ↓
 //! Arc<PrimalIdentity> (immutable, shared)
 //!   ↓
@@ -23,11 +23,18 @@
 //!
 //! - **Concurrent-Safe**: No global mutable state
 //! - **Testable**: Explicit configuration in tests
-//! - **Fail-Fast**: Errors at startup, not runtime
+//! - **Standalone-Safe**: Defaults to standalone mode per UniBin v1.1
 //! - **Explicit**: Dependencies visible in signatures
 //! - **Zero-Cost**: Arc provides cheap cloning
 
-use beardog_errors::BearDogError;
+/// Default family identifier used when no environment variable is set.
+///
+/// Per UniBin v1.1 / PRIMAL IPC Protocol v3.1: primals MUST NOT hard-fail
+/// on missing identity env vars; they default to standalone mode.
+pub const DEFAULT_STANDALONE_FAMILY: &str = "standalone";
+
+/// Default node identifier used when no environment variable is set.
+pub const DEFAULT_STANDALONE_NODE: &str = "default";
 
 /// Primal identity configuration
 ///
@@ -36,70 +43,69 @@ use beardog_errors::BearDogError;
 ///
 /// # Examples
 ///
-/// ```no_run
+/// ```
 /// use beardog_types::primal_identity::PrimalIdentity;
 ///
-/// // Server startup (reads environment once)
-/// let identity = PrimalIdentity::from_env()?;
+/// // Server startup (reads environment, falls back to standalone)
+/// let identity = PrimalIdentity::from_env();
 ///
 /// // Test (explicit configuration)
 /// let identity = PrimalIdentity::for_test("nat0", "tower1");
-/// # Ok::<(), beardog_errors::BearDogError>(())
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PrimalIdentity {
     /// Genetic family identifier
     ///
-    /// Example: "nat0", "prod-family"
+    /// Example: "nat0", "prod-family", "standalone"
     pub family_id: String,
 
     /// Node identifier within the family
     ///
-    /// Example: "tower1", "node-alpha"
+    /// Example: "tower1", "node-alpha", "default"
     pub node_id: String,
+
+    /// Whether this identity was resolved from environment or defaulted
+    is_standalone: bool,
 }
 
 impl PrimalIdentity {
-    /// Create identity from environment variables
+    /// Create identity from environment variables with standalone fallback.
     ///
     /// Reads from:
-    /// 1. `FAMILY_ID` or `BEARDOG_FAMILY_ID`
-    /// 2. `NODE_ID` or `BEARDOG_NODE_ID`
+    /// 1. `FAMILY_ID` or `BEARDOG_FAMILY_ID` (defaults to `"standalone"`)
+    /// 2. `NODE_ID` or `BEARDOG_NODE_ID` (defaults to `"default"`)
     ///
-    /// # Errors
-    ///
-    /// Returns error if either environment variable is not set.
-    /// This is intentional - we want to fail fast at startup if
-    /// identity is not configured.
+    /// Per UniBin v1.1 / PRIMAL IPC Protocol v3.1, primals MUST NOT
+    /// hard-fail when identity env vars are absent. Standalone mode
+    /// is fully operational for local-only usage.
     ///
     /// # Examples
     ///
     /// ```bash
+    /// # Orchestrated mode:
     /// export FAMILY_ID=nat0
     /// export NODE_ID=tower1
+    ///
+    /// # Standalone mode (no env vars needed):
+    /// beardog server --port 9000
     /// ```
-    pub fn from_env() -> Result<Self, BearDogError> {
+    #[must_use]
+    pub fn from_env() -> Self {
         let family_id = std::env::var("FAMILY_ID")
             .or_else(|_| std::env::var("BEARDOG_FAMILY_ID"))
-            .map_err(|_| {
-                BearDogError::configuration(
-                    "FAMILY_ID or BEARDOG_FAMILY_ID must be set. \
-                     This identifies the genetic family this primal belongs to. \
-                     Example: export FAMILY_ID=nat0",
-                )
-            })?;
+            .ok();
 
         let node_id = std::env::var("NODE_ID")
             .or_else(|_| std::env::var("BEARDOG_NODE_ID"))
-            .map_err(|_| {
-                BearDogError::configuration(
-                    "NODE_ID or BEARDOG_NODE_ID must be set. \
-                     This identifies this specific node within the family. \
-                     Example: export NODE_ID=tower1",
-                )
-            })?;
+            .ok();
 
-        Ok(Self { family_id, node_id })
+        let is_standalone = family_id.is_none() && node_id.is_none();
+
+        Self {
+            family_id: family_id.unwrap_or_else(|| DEFAULT_STANDALONE_FAMILY.to_owned()),
+            node_id: node_id.unwrap_or_else(|| DEFAULT_STANDALONE_NODE.to_owned()),
+            is_standalone,
+        }
     }
 
     /// Create identity for testing
@@ -120,7 +126,14 @@ impl PrimalIdentity {
         Self {
             family_id: family_id.into(),
             node_id: node_id.into(),
+            is_standalone: false,
         }
+    }
+
+    /// Whether this identity is running in standalone mode (no env vars were set).
+    #[must_use]
+    pub const fn is_standalone(&self) -> bool {
+        self.is_standalone
     }
 
     /// Get family ID
@@ -154,6 +167,7 @@ mod tests {
 
         assert_eq!(identity.family_id(), "test-family");
         assert_eq!(identity.node_id(), "test-node");
+        assert!(!identity.is_standalone());
     }
 
     #[test]
@@ -180,10 +194,15 @@ mod tests {
     }
 
     #[test]
-    fn test_from_env_success_equivalent() {
-        let identity = PrimalIdentity::for_test("env-family", "env-node");
-        assert_eq!(identity.family_id(), "env-family");
-        assert_eq!(identity.node_id(), "env-node");
+    fn test_standalone_defaults() {
+        let identity = PrimalIdentity {
+            family_id: DEFAULT_STANDALONE_FAMILY.to_owned(),
+            node_id: DEFAULT_STANDALONE_NODE.to_owned(),
+            is_standalone: true,
+        };
+        assert_eq!(identity.family_id(), "standalone");
+        assert_eq!(identity.node_id(), "default");
+        assert!(identity.is_standalone());
     }
 
     #[test]
@@ -191,5 +210,35 @@ mod tests {
         let identity = PrimalIdentity::for_test("beardog-family", "beardog-node");
         assert_eq!(identity.family_id(), "beardog-family");
         assert_eq!(identity.node_id(), "beardog-node");
+    }
+
+    #[test]
+    fn encryption_tag_escapes_nothing_special_chars_in_family_id() {
+        let identity = PrimalIdentity::for_test("fam:with:colons", "n");
+        assert_eq!(identity.encryption_tag(), "beardog:family:fam:with:colons");
+    }
+
+    #[test]
+    fn debug_contains_family_and_node() {
+        let identity = PrimalIdentity::for_test("test-fam", "test-nod");
+        let d = format!("{identity:?}");
+        assert!(d.contains("test-fam") && d.contains("test-nod"));
+    }
+
+    #[test]
+    fn accessors_match_fields_after_for_test() {
+        let i = PrimalIdentity::for_test("alpha", "beta");
+        assert_eq!(i.family_id, i.family_id().to_string());
+        assert_eq!(i.node_id, i.node_id().to_string());
+    }
+
+    #[test]
+    fn standalone_struct_reflects_is_standalone_accessor() {
+        let i = PrimalIdentity {
+            family_id: DEFAULT_STANDALONE_FAMILY.to_owned(),
+            node_id: DEFAULT_STANDALONE_NODE.to_owned(),
+            is_standalone: true,
+        };
+        assert!(i.is_standalone());
     }
 }

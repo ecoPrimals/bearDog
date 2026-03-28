@@ -251,11 +251,13 @@ pub trait CryptoProvider: BearDogProvider {
 ///
 /// HSM providers offer the highest level of key security and tamper resistance.
 ///
-/// ## HSM Principles
+/// # Migration (v0.10.0)
 ///
-/// - **Hardware Root of Trust**: Keys never leave secure hardware
-/// - **Tamper Resistance**: Physical attacks are detected and countered
-/// - **High Assurance**: Certified security levels (FIPS 140-2, Common Criteria)
+/// This trait requires the full `BearDogProvider + SecurityProvider + CryptoProvider`
+/// hierarchy, making it impractical for dynamic dispatch.  New code should use
+/// [`crate::hsm::HsmKeyProvider`] which is object-safe and supports
+/// `Arc<dyn HsmKeyProvider>` through `HsmProviderRegistry`.
+/// This trait will be removed in a future release.
 pub trait HsmProvider: BearDogProvider + SecurityProvider + CryptoProvider {
     /// Serialized health, tamper, and utilization snapshot for dashboards.
     type HsmStatus: Send + Sync + Clone + Serialize + for<'de> Deserialize<'de>;

@@ -119,3 +119,48 @@ async fn _detect_etcd() -> Result<EtcdDiscovery, DiscoveryError> {
         reason: "etcd auto-detection not yet implemented (Phase 2)".to_string(),
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn create_service_discovery_yields_working_provider() {
+        let discovery = create_service_discovery()
+            .await
+            .expect("factory should return a discovery implementation");
+        let name = discovery.provider_name();
+        assert!(
+            name.contains("kubernetes") || name.contains("dns"),
+            "unexpected provider: {name}"
+        );
+    }
+
+    #[tokio::test]
+    #[allow(deprecated)]
+    async fn phase2_detect_stubs_return_backend_unavailable() {
+        let e = _detect_kubernetes()
+            .await
+            .expect_err("kubernetes stub should err");
+        match e {
+            DiscoveryError::BackendUnavailable { provider, .. } => {
+                assert_eq!(provider, "kubernetes");
+            }
+            other => panic!("unexpected error: {other:?}"),
+        }
+        let e = _detect_consul().await.expect_err("consul stub");
+        match e {
+            DiscoveryError::BackendUnavailable { provider, .. } => {
+                assert_eq!(provider, "consul");
+            }
+            other => panic!("unexpected error: {other:?}"),
+        }
+        let e = _detect_etcd().await.expect_err("etcd stub");
+        match e {
+            DiscoveryError::BackendUnavailable { provider, .. } => {
+                assert_eq!(provider, "etcd");
+            }
+            other => panic!("unexpected error: {other:?}"),
+        }
+    }
+}

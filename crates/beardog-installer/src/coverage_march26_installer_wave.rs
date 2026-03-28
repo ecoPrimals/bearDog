@@ -5,7 +5,7 @@
 use crate::arch::{ArchError, Architecture};
 use crate::deployment::DeploymentError;
 use crate::installer::{BinaryInstaller, InstallerError};
-use crate::platform::{BiomeOSPaths, OperatingSystem, PlatformError};
+use crate::platform::{OperatingSystem, PlatformError, PlatformPaths};
 use crate::types::{DeploymentProgress, DeploymentReport, DeploymentStatus, PrimalName};
 use crate::validator::{BinaryValidator, ValidationError};
 
@@ -139,7 +139,7 @@ fn locate_binary_finds_flat_release_layout() {
     let bin = release.join("beardog");
     std::fs::write(&bin, b"x").expect("write");
 
-    let paths = BiomeOSPaths {
+    let paths = PlatformPaths {
         bin_dir: temp.path().join("bin"),
         data_dir: temp.path().join("data"),
         config_dir: temp.path().join("config"),
@@ -212,7 +212,7 @@ fn deployment_report_display_includes_arch_os_lines() {
 
 #[test]
 fn biome_paths_all_dirs_length_five() {
-    let paths = BiomeOSPaths::discover().expect("paths");
+    let paths = PlatformPaths::discover().expect("paths");
     assert_eq!(paths.all_dirs().len(), 5);
 }
 

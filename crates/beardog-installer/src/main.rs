@@ -25,7 +25,7 @@
 
 use anyhow::Result;
 use beardog_installer::{
-    BiomeOSPaths, PrimalName, cli, deployment::DeploymentManager, validator::BinaryValidator,
+    PlatformPaths, PrimalName, cli, deployment::DeploymentManager, validator::BinaryValidator,
 };
 use clap::{Parser, Subcommand};
 use std::path::{Path, PathBuf};
@@ -166,7 +166,7 @@ async fn install_primals(source_dir: &Path, primals: &[PrimalName]) -> Result<()
 async fn validate_primals(primals: &[PrimalName]) -> Result<()> {
     println!("🔍 Validating {} primals...\n", primals.len());
 
-    let paths = BiomeOSPaths::discover()?;
+    let paths = PlatformPaths::discover()?;
     let validator = BinaryValidator::new();
 
     let binaries: Vec<_> = primals
@@ -211,7 +211,7 @@ async fn uninstall_primals(source_dir: &Path, primals: &[PrimalName]) -> Result<
 
 /// Show installation paths
 async fn show_paths() -> Result<()> {
-    let paths = BiomeOSPaths::discover()?;
+    let paths = PlatformPaths::discover()?;
 
     println!("📂 Installation Paths:\n");
     println!("  Binaries:      {}", paths.bin_dir.display());

@@ -2,6 +2,7 @@
 
 //! Software HSM configuration
 
+use beardog_types::constants::domains::system::defaults::DEFAULT_KEY_STORAGE_DIR;
 use serde::{Deserialize, Serialize};
 
 /// Software HSM configuration
@@ -26,7 +27,7 @@ impl Default for SoftwareHsmConfig {
                 beardog_errors::process_env::var("XDG_DATA_HOME")
                     .map(|xdg| format!("{}/beardog/keys", xdg))
             })
-            .unwrap_or_else(|_| "/tmp/beardog/keys".to_string());
+            .unwrap_or_else(|_| DEFAULT_KEY_STORAGE_DIR.to_string());
         
         Self {
             provider_id: "software-hsm".to_string(),

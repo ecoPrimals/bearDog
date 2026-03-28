@@ -520,6 +520,6 @@ mod root_lib_coverage_extension_tests {
         let a = FrameworkStats::default();
         let b = FrameworkStats::default();
         assert_eq!(a.services_discovered, b.services_discovered);
-        assert_eq!(a.cache_hit_ratio, b.cache_hit_ratio);
+        assert_f64_approx_eq(a.cache_hit_ratio, b.cache_hit_ratio);
     }
 }

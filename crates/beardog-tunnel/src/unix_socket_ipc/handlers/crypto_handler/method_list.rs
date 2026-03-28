@@ -42,6 +42,7 @@ pub fn crypto_method_names() -> Vec<&'static str> {
         "crypto.sha512",
         "crypto.sha1",
         "crypto.sha3_256",
+        "crypto.derive_onion_address",
         "crypto.hmac_sha384",
         "crypto.hmac_sha512",
         "crypto.hmac_blake3",
@@ -111,4 +112,30 @@ pub fn crypto_method_names() -> Vec<&'static str> {
         "beardog.crypto.tor_cell_decrypt",
         "beardog.crypto.tor_kdf",
     ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::crypto_method_names;
+
+    #[test]
+    fn semantic_crypto_methods_registered_before_beardog_aliases() {
+        let names = crypto_method_names();
+        let i_sem = names
+            .iter()
+            .position(|&m| m == "crypto.sha3_256")
+            .expect("crypto.sha3_256");
+        let i_bd = names
+            .iter()
+            .position(|&m| m == "beardog.crypto.sha3_256")
+            .expect("beardog.crypto.sha3_256");
+        assert!(
+            i_sem < i_bd,
+            "semantic crypto.sha3_256 should appear before beardog.crypto.sha3_256 in method list"
+        );
+        assert!(names.contains(&"crypto.derive_onion_address"));
+        assert!(names.contains(&"beardog.crypto.derive_onion_address"));
+        assert!(names.contains(&"crypto.hash"));
+        assert!(names.contains(&"beardog.crypto.blake3_hash"));
+    }
 }

@@ -8,18 +8,18 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 30 | **Tests**: 14,499+ | **Coverage**: 86.70%+
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 30 | **Tests**: 15,100+ | **Coverage**: 90.05%
 
 ---
 
 ## Overview
 
-BearDog provides secure cryptographic operations for all primals through the **Tower Atomic Pattern**. Each primal delegates crypto to BearDog via JSON-RPC over Unix sockets, keeping a single auditable crypto codebase.
+BearDog provides secure cryptographic operations for all primals through the **Tower Atomic Pattern**. Each primal delegates crypto to BearDog via **JSON-RPC 2.0 over NDJSON** (newline-delimited JSON), keeping a single auditable crypto codebase. Every request and response is a single JSON object terminated by `\n`.
 
 ```
 ┌─────────────┐                    ┌─────────────┐
 │  Any Primal │ ←─ JSON-RPC ────→ │  BearDog    │
-│ (Protocol)  │    Unix Socket     │  (Crypto)   │
+│ (Protocol)  │  NDJSON framing    │  (Crypto)   │
 └─────────────┘                    └─────────────┘
      Zero crypto code                 All crypto operations
 ```
@@ -88,6 +88,8 @@ cargo run --release --bin beardog -- server
 | iOS | TCP | Ready |
 
 BearDog auto-detects the platform and binds appropriate transports.
+
+**Wire format**: All transports use **NDJSON** (newline-delimited JSON-RPC 2.0). Each request must be a single line terminated by `\n`. Responses are likewise newline-terminated. Idle connections without a newline are timed out after 30 seconds.
 
 ---
 
@@ -169,8 +171,8 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
 | **Files > 1000 LOC** | 0 (production code) |
-| **Tests** | 14,499+ (fully concurrent, zero sleeps in non-chaos) |
-| **Coverage** | 86.70%+ line (llvm-cov workspace) |
+| **Tests** | 15,100+ (fully concurrent, zero sleeps in non-chaos) |
+| **Coverage** | 90.05% line (llvm-cov workspace) |
 | **Serial Tests** | 0 (`#[serial]` fully eliminated) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |
 | **License** | AGPL-3.0-only (SPDX headers on all .rs files) |

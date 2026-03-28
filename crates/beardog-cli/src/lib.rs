@@ -57,7 +57,7 @@ pub struct ServerArgs {
 
     /// TCP port for JSON-RPC listener (UniBin v1.1 mandatory)
     ///
-    /// Binds a newline-delimited JSON-RPC server on 0.0.0.0:<PORT>.
+    /// Binds a newline-delimited JSON-RPC server on `0.0.0.0:<PORT>`.
     /// Required by `PRIMAL_IPC_PROTOCOL` and `UNIBIN_ARCHITECTURE_STANDARD` v1.1.
     /// Override bind address with --listen.
     #[arg(long)]

@@ -299,13 +299,13 @@ pub async fn handle_key_revoke_with_home(
     println!("\n🔐 What This Means:");
     println!("   ✅ Your tower: Will REFUSE to mix with this key immediately");
     println!("   ✅ Your operations: Protected right now");
-    println!("   ⏱️  Other towers: Will learn via Songbird propagation (~1-5 minutes)");
+    println!("   ⏱️  Other towers: Will learn via orchestrator propagation (~1-5 minutes)");
     println!("   ⏱️  Offline keys: Will expire naturally (based on key's expiry)");
 
     println!("\n💡 Sovereign Revocation:");
     println!("   • Can't remote-delete the key (sovereignty!)");
     println!("   • Can refuse to cooperate with it ✅");
-    println!("   • Propagates via Songbird (no central server)");
+    println!("   • Propagates via ecosystem orchestrator (no central server)");
     println!("   • Bounded risk via key expiry");
 
     Ok(())

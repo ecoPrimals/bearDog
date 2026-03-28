@@ -24,23 +24,28 @@ use tracing::{error, info, warn};
 
 #[derive(Debug, Clone, Deserialize)]
 struct DemoConfig {
-    #[allow(dead_code)]
-    ceremony: CeremonyConfig,
+    #[serde(rename = "ceremony")]
+    _ceremony: CeremonyConfig,
     cluster: ClusterConfig,
     consensus: ConsensusConfig,
-    #[allow(dead_code)]
-    versioning: VersioningConfig,
-    performance: PerformanceConfig,
-    validation: ValidationConfig,
-    #[allow(dead_code)]
-    audit: AuditConfig,
+    #[serde(rename = "versioning")]
+    _versioning: VersioningConfig,
+    #[serde(rename = "performance")]
+    _performance: PerformanceConfig,
+    #[serde(rename = "validation")]
+    _validation: ValidationConfig,
+    #[serde(rename = "audit")]
+    _audit: AuditConfig,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 struct CeremonyConfig {
-    name: String,
-    description: String,
-    max_duration_ms: u64,
+    #[serde(rename = "name")]
+    _name: String,
+    #[serde(rename = "description")]
+    _description: String,
+    #[serde(rename = "max_duration_ms")]
+    _max_duration_ms: u64,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -51,54 +56,65 @@ struct ClusterConfig {
 
 #[derive(Debug, Clone, Deserialize)]
 struct ConsensusConfig {
-    #[allow(dead_code)]
-    algorithm: String,
-    read_quorum: usize,
+    #[serde(rename = "algorithm")]
+    _algorithm: String,
+    #[serde(rename = "read_quorum")]
+    _read_quorum: usize,
     write_quorum: usize,
-    #[allow(dead_code)]
-    proposal_timeout_ms: u64,
-    #[allow(dead_code)]
-    vote_timeout_ms: u64,
-    #[allow(dead_code)]
-    commit_timeout_ms: u64,
+    #[serde(rename = "proposal_timeout_ms")]
+    _proposal_timeout_ms: u64,
+    #[serde(rename = "vote_timeout_ms")]
+    _vote_timeout_ms: u64,
+    #[serde(rename = "commit_timeout_ms")]
+    _commit_timeout_ms: u64,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 struct VersioningConfig {
-    strategy: String,
-    conflict_resolution: String,
+    #[serde(rename = "strategy")]
+    _strategy: String,
+    #[serde(rename = "conflict_resolution")]
+    _conflict_resolution: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 struct PerformanceConfig {
-    registration_target_ms: u64,
-    discovery_target_ms: u64,
-    sync_target_ms: u64,
-    conflict_resolution_target_ms: u64,
+    #[serde(rename = "registration_target_ms")]
+    _registration_target_ms: u64,
+    #[serde(rename = "discovery_target_ms")]
+    _discovery_target_ms: u64,
+    #[serde(rename = "sync_target_ms")]
+    _sync_target_ms: u64,
+    #[serde(rename = "conflict_resolution_target_ms")]
+    _conflict_resolution_target_ms: u64,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 struct ValidationConfig {
-    #[allow(dead_code)]
-    test_registration: bool,
-    #[allow(dead_code)]
-    test_discovery: bool,
-    #[allow(dead_code)]
-    test_consensus: bool,
-    #[allow(dead_code)]
-    test_fault_tolerance: bool,
-    #[allow(dead_code)]
-    test_versioning: bool,
-    #[allow(dead_code)]
-    test_conflict_resolution: bool,
+    #[serde(rename = "test_registration")]
+    _test_registration: bool,
+    #[serde(rename = "test_discovery")]
+    _test_discovery: bool,
+    #[serde(rename = "test_consensus")]
+    _test_consensus: bool,
+    #[serde(rename = "test_fault_tolerance")]
+    _test_fault_tolerance: bool,
+    #[serde(rename = "test_versioning")]
+    _test_versioning: bool,
+    #[serde(rename = "test_conflict_resolution")]
+    _test_conflict_resolution: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 struct AuditConfig {
-    log_level: String,
-    include_performance: bool,
-    include_consensus_details: bool,
-    hash_algorithm: String,
+    #[serde(rename = "log_level")]
+    _log_level: String,
+    #[serde(rename = "include_performance")]
+    _include_performance: bool,
+    #[serde(rename = "include_consensus_details")]
+    _include_consensus_details: bool,
+    #[serde(rename = "hash_algorithm")]
+    _hash_algorithm: String,
 }
 
 // ============================================================================
@@ -109,12 +125,12 @@ struct AuditConfig {
 struct Scenario {
     scenario_name: String,
     scenario_id: String,
-    #[allow(dead_code)]
-    operation: String,
-    #[allow(dead_code)]
-    cluster_config: ClusterConfigScenario,
-    #[allow(dead_code)]
-    operations: Vec<Operation>,
+    #[serde(rename = "operation")]
+    _operation: String,
+    #[serde(rename = "cluster_config")]
+    _cluster_config: ClusterConfigScenario,
+    #[serde(rename = "operations")]
+    _operations: Vec<Operation>,
     test_cases: Vec<TestCase>,
     expected_results: ExpectedResults,
 }
@@ -165,8 +181,8 @@ struct ExpectedResults {
     sync_ms: u64,
     conflict_resolution_ms: u64,
     test_cases_passed: usize,
-    #[allow(dead_code)]
-    consensus_success_rate: u64,
+    #[serde(rename = "consensus_success_rate")]
+    _consensus_success_rate: u64,
 }
 
 // ============================================================================

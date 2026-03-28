@@ -575,11 +575,11 @@ impl MigrationAdapter for HsmMigrationAdapter {
     }
 }
 
-// Stub implementations for other migration adapters
-
+/// Security provider migration adapter (Phase 2 — returns `not_implemented` until wired)
 pub struct SecurityMigrationAdapter;
 
 impl SecurityMigrationAdapter {
+    /// Creates a new security migration adapter.
     pub fn new() -> Self {
         Self
     }
@@ -587,12 +587,13 @@ impl SecurityMigrationAdapter {
 
 impl MigrationAdapter for SecurityMigrationAdapter {
     fn discover_providers(&self) -> Result<Vec<DiscoveredProvider>> {
-        // Stub implementation - would discover security providers
         Ok(vec![])
     }
 
     fn migrate_provider(&self, _discovered: &DiscoveredProvider) -> Result<Arc<dyn ConsolidatedProvider>> {
-        Err(BearDogError::system("Security migration not yet implemented"))
+        Err(BearDogError::not_implemented(
+            "Security migration adapter: pending Phase 2 provider wiring",
+        ))
     }
 
     fn adapter_name(&self) -> &str {
@@ -604,9 +605,11 @@ impl MigrationAdapter for SecurityMigrationAdapter {
     }
 }
 
+/// Storage provider migration adapter (Phase 2 — returns `not_implemented` until wired)
 pub struct StorageMigrationAdapter;
 
 impl StorageMigrationAdapter {
+    /// Creates a new storage migration adapter.
     pub fn new() -> Self {
         Self
     }
@@ -614,12 +617,13 @@ impl StorageMigrationAdapter {
 
 impl MigrationAdapter for StorageMigrationAdapter {
     fn discover_providers(&self) -> Result<Vec<DiscoveredProvider>> {
-        // Stub implementation - would discover storage providers
         Ok(vec![])
     }
 
     fn migrate_provider(&self, _discovered: &DiscoveredProvider) -> Result<Arc<dyn ConsolidatedProvider>> {
-        Err(BearDogError::system("Storage migration not yet implemented"))
+        Err(BearDogError::not_implemented(
+            "Storage migration adapter: pending Phase 2 provider wiring",
+        ))
     }
 
     fn adapter_name(&self) -> &str {
@@ -631,9 +635,11 @@ impl MigrationAdapter for StorageMigrationAdapter {
     }
 }
 
+/// Network provider migration adapter (Phase 2 — returns `not_implemented` until wired)
 pub struct NetworkMigrationAdapter;
 
 impl NetworkMigrationAdapter {
+    /// Creates a new network migration adapter.
     pub fn new() -> Self {
         Self
     }
@@ -641,12 +647,13 @@ impl NetworkMigrationAdapter {
 
 impl MigrationAdapter for NetworkMigrationAdapter {
     fn discover_providers(&self) -> Result<Vec<DiscoveredProvider>> {
-        // Stub implementation - would discover network providers
         Ok(vec![])
     }
 
     fn migrate_provider(&self, _discovered: &DiscoveredProvider) -> Result<Arc<dyn ConsolidatedProvider>> {
-        Err(BearDogError::system("Network migration not yet implemented"))
+        Err(BearDogError::not_implemented(
+            "Network migration adapter: pending Phase 2 provider wiring",
+        ))
     }
 
     fn adapter_name(&self) -> &str {

@@ -445,3 +445,200 @@ impl Default for SecurityInfo {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::Utc;
+    use serde_json;
+    use std::collections::HashMap;
+    use std::path::PathBuf;
+
+    #[test]
+    fn registry_and_performance_defaults() {
+        let r = ExternalFunctionsRegistryConfig::default();
+        assert_eq!(r.max_libraries, 100);
+        assert!(r.enable_caching);
+        let p = PerformanceInfo::default();
+        assert_eq!(p.cpu_intensity, CpuIntensity::Low);
+        assert!(!p.io_operations);
+        let s = SecurityInfo::default();
+        assert_eq!(s.clearance_required, SecurityClearance::Public);
+    }
+
+    #[test]
+    fn security_clearance_serde_roundtrip() {
+        for c in [
+            SecurityClearance::Public,
+            SecurityClearance::Internal,
+            SecurityClearance::Restricted,
+            SecurityClearance::Confidential,
+            SecurityClearance::Secret,
+            SecurityClearance::TopSecret,
+        ] {
+            let j = serde_json::to_string(&c).expect("serialize clearance");
+            let back: SecurityClearance = serde_json::from_str(&j).expect("deserialize");
+            assert_eq!(c, back);
+        }
+    }
+
+    #[test]
+    fn library_status_and_safety_level_debug() {
+        let _ = format!("{:?}", LibraryStatus::Loaded);
+        let _ = format!("{:?}", SafetyLevel::Sandboxed);
+    }
+
+    #[test]
+    fn access_restriction_clone_and_debug_variants() {
+        let start = Utc::now();
+        let end = start + chrono::Duration::hours(1);
+        let window = AccessRestriction::TimeWindow(start, end);
+        let window_copy = window.clone();
+        let _ = format!("{window:?}");
+        match (&window, &window_copy) {
+            (AccessRestriction::TimeWindow(s1, e1), AccessRestriction::TimeWindow(s2, e2)) => {
+                assert_eq!(*s1, *s2);
+                assert_eq!(*e1, *e2);
+            }
+            _ => panic!("expected TimeWindow"),
+        }
+        let user_restrict = AccessRestriction::User("alice".to_string());
+        match &user_restrict {
+            AccessRestriction::User(name) => assert_eq!(name, "alice"),
+            _ => panic!("expected User variant"),
+        }
+        let role_restrict = AccessRestriction::Role("admin".to_string());
+        let _ = format!("{role_restrict:?}");
+        let ip_restrict = AccessRestriction::IpAddress("10.0.0.1".to_string());
+        let _ = format!("{ip_restrict:?}");
+        let custom_restrict = AccessRestriction::Custom("k".to_string(), "v".to_string());
+        let _ = format!("{custom_restrict:?}");
+    }
+
+    #[test]
+    fn parameter_and_return_types_recursive_debug() {
+        let p = ParameterType::Array(Box::new(ParameterType::Int32), 4);
+        let _ = format!("{p:?}");
+        let r = ReturnType::Result(
+            Box::new(ReturnType::Void),
+            Box::new(ReturnType::Type(ParameterType::CString)),
+        );
+        let _ = format!("{r:?}");
+    }
+
+    #[test]
+    fn calling_convention_and_function_attribute_roundtrip() {
+        let cc = CallingConvention::Custom("vector".to_string());
+        let _ = format!("{cc:?}");
+        let fa = FunctionAttribute::Custom("noinline".to_string());
+        let _ = format!("{fa:?}");
+    }
+
+    #[test]
+    fn function_value_variants() {
+        let v = FunctionValue::Array(vec![
+            FunctionValue::Integer(1),
+            FunctionValue::String("x".to_string()),
+        ]);
+        let _ = format!("{v:?}");
+    }
+
+    #[test]
+    fn external_function_and_result_smoke() {
+        let sig = FunctionSignature {
+            parameters: vec![ParameterType::Int32],
+            return_type: ReturnType::Void,
+            calling_convention: CallingConvention::C,
+            attributes: vec![FunctionAttribute::Pure],
+        };
+        let meta = FunctionMetadata {
+            description: "d".to_string(),
+            safety_level: SafetyLevel::Safe,
+            performance: PerformanceInfo::default(),
+            security: SecurityInfo::default(),
+            custom: HashMap::new(),
+        };
+        let ef = ExternalFunction {
+            id: "id".to_string(),
+            name: "n".to_string(),
+            signature: sig,
+            metadata: meta,
+            library_id: "lib".to_string(),
+        };
+        let _ = format!("{ef:?}");
+        let fr = FunctionResult {
+            success: true,
+            value: Some(FunctionValue::Boolean(true)),
+            error: None,
+            execution_time_us: 1,
+        };
+        let _ = format!("{fr:?}");
+    }
+
+    #[test]
+    fn library_handle_and_function_handle_clone() {
+        let lm = LibraryMetadata {
+            version: "1".to_string(),
+            description: "d".to_string(),
+            author: "a".to_string(),
+            license: "MIT".to_string(),
+            exported_functions: vec![],
+            dependencies: vec![],
+            custom: HashMap::new(),
+        };
+        let lh = LibraryHandle {
+            id: "lid".to_string(),
+            name: "ln".to_string(),
+            path: PathBuf::from("/tmp/lib.so"),
+            metadata: lm,
+            loaded_at: Utc::now(),
+            status: LibraryStatus::Loaded,
+        };
+        let lh2 = lh.clone();
+        assert_eq!(lh.id, lh2.id);
+        let fh = FunctionHandle {
+            id: "fid".to_string(),
+            name: "fn".to_string(),
+            library_id: "lid".to_string(),
+            signature: FunctionSignature {
+                parameters: vec![],
+                return_type: ReturnType::Void,
+                calling_convention: CallingConvention::System,
+                attributes: vec![],
+            },
+            call_count: 0,
+            last_called: None,
+            metadata: FunctionMetadata {
+                description: "d".to_string(),
+                safety_level: SafetyLevel::Verified,
+                performance: PerformanceInfo::default(),
+                security: SecurityInfo::default(),
+                custom: HashMap::new(),
+            },
+        };
+        let fh2 = fh.clone();
+        assert_eq!(fh.call_count, fh2.call_count);
+    }
+
+    #[test]
+    fn function_parameter_smoke() {
+        let fp = FunctionParameter {
+            name: "x".to_string(),
+            param_type: ParameterType::Pointer(Box::new(ParameterType::UInt8)),
+            required: true,
+            default_value: None,
+        };
+        let _ = format!("{fp:?}");
+    }
+
+    #[test]
+    fn cpu_intensity_variants() {
+        let v = [
+            CpuIntensity::Low,
+            CpuIntensity::Medium,
+            CpuIntensity::High,
+            CpuIntensity::Critical,
+        ];
+        assert_eq!(v.len(), 4);
+    }
+}

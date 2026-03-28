@@ -4,6 +4,8 @@
 //!
 //! This module provides safe, memory-safe-only access to iOS Secure Enclave
 //! functionality for iPhone and iPad devices.
+//!
+//! The `safe_secure_enclave_replacement` submodule remains disabled until its syntax issues are fixed.
 
 use beardog_errors::BearDogError;
 use beardog_types::canonical::providers_unified::traits::UnifiedProvider as PlatformProvider;
@@ -12,13 +14,11 @@ use tracing::info;
 pub mod capability;
 pub mod operations;
 pub mod safe_secure_enclave;
-// pub mod safe_secure_enclave_replacement; // NOTE: File has syntax errors, disabled temporarily
 pub mod types;
 
 pub use capability::*;
 pub use operations::*;
 pub use safe_secure_enclave::*;
-// pub use safe_secure_enclave_replacement::*; // Disabled
 pub use types::*;
 
 pub use beardog_types::constants::domains::security::hsm::{

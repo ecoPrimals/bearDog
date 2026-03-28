@@ -1,307 +1,98 @@
-name: BearDog Canonical CI/CD Pipeline
+name: BearDog CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
 
 jobs:
-  # Unified Build Health Check
-  build-health:
-    name: 🏗️ Build Health Check
+  quality:
+    name: Quality Gates
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        rust: [stable, beta, 1.70.0] # MSRV
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Rust ${{ matrix.rust }}
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust (pinned via rust-toolchain.toml)
       uses: dtolnay/rust-toolchain@master
       with:
-        toolchain: ${{ matrix.rust }}
+        toolchain: "1.93.0"
         components: rustfmt, clippy
-        
-    - name: Cache dependencies
-      uses: actions/cache@v3
+
+    - uses: actions/cache@v4
       with:
         path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
+          ~/.cargo/registry/
+          ~/.cargo/git/
           target/
-        key: ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
-        
-    - name: 🔍 Check all crates compile
-      run: cargo check --workspace --all-targets
-      
-    - name: Verify 1000-line limit compliance
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Format check
+      run: cargo fmt --all -- --check
+
+    - name: Clippy (workspace lints, -D warnings)
+      run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+    - name: Doc check
+      run: RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+
+    - name: Build
+      run: cargo build --workspace --all-targets
+
+    - name: File size compliance (1000 LOC max)
       run: |
-        echo "Checking file size compliance (1000 lines max per CONTRIBUTING.md)..."
         OVERSIZED=$(find . -name "*.rs" -not -path "./target/*" -not -path "./archives/*" -exec wc -l {} \; | awk '$1 > 1000 {print $2 " has " $1 " lines"}')
         if [ -n "$OVERSIZED" ]; then
-          echo "Files exceeding 1000 lines found:"
+          echo "Files exceeding 1000 lines:"
           echo "$OVERSIZED"
           exit 1
-        else
-          echo "All files comply with 1000-line limit"
         fi
 
-  # Unified Configuration Validation
-  config-validation:
-    name: ⚙️ Configuration System Validation
+  test:
+    name: Test Suite
     runs-on: ubuntu-latest
-    
+    needs: quality
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
-      
-    - name: 🔧 Test unified configuration system
-      run: |
-        echo "🔍 Validating unified configuration template..."
-        
-        # Test environment variable substitution
-        source configs/environments/development.env
-        
-        # Validate configuration template exists and is valid TOML
-        if [ ! -f "configs/beardog-config-template.toml" ]; then
-          echo "❌ Unified configuration template not found"
-          exit 1
-        fi
-        
-        echo "✅ Unified configuration system validated"
-        
-    - name: 🧪 Test migration script
-      run: |
-        echo "🔍 Testing configuration migration script..."
-        chmod +x scripts/migrate-config.sh
-        
-        # Test migration script with sample config
-        if [ -f "configs/production-config.toml" ]; then
-          ./scripts/migrate-config.sh configs/production-config.toml test-output.env
-          if [ -f "test-output.env" ]; then
-            echo "✅ Migration script working correctly"
-            rm test-output.env
-          else
-            echo "❌ Migration script failed to generate output"
-            exit 1
-          fi
-        fi
+    - uses: actions/checkout@v4
 
-  # Error System Validation
-  error-system-validation:
-    name: 🚨 Error System Validation
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
-      
-    - name: 🔍 Validate unified error system
-      run: |
-        echo "🔍 Checking for legacy error patterns..."
-        
-        # Check that deprecated error variants were removed
-        LEGACY_ERRORS=$(grep -r "BearDogError::\(Authentication\|Authorization\|Internal\|Timeout\|Connection\|Parsing\|NotFound\|AlreadyExists\)" crates/ --include="*.rs" || true)
-        
-        if [ -n "$LEGACY_ERRORS" ]; then
-          echo "❌ Legacy error patterns found:"
-          echo "$LEGACY_ERRORS"
-          exit 1
-        else
-          echo "✅ No legacy error patterns found"
-        fi
-        
-    - name: 🧪 Test error system compilation
-      run: cargo check -p beardog-errors
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: "1.93.0"
 
-  # Type System Validation
-  type-system-validation:
-    name: 📋 Type System Validation
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
-      
-    - name: 🔍 Validate canonical type system
-      run: |
-        echo "🔍 Validating canonical type system..."
-        
-        # Ensure beardog-types compiles successfully
-        cargo check -p beardog-types
-        
-        # Check for type fragmentation
-        TYPE_DUPLICATES=$(find crates/ -name "*.rs" -exec grep -l "struct.*Config\|struct.*Request\|struct.*Response" {} \; | wc -l)
-        echo "📊 Found $TYPE_DUPLICATES files with config/request/response types"
-        
-        echo "✅ Type system validation complete"
+    - uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry/
+          ~/.cargo/git/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-  # Security & Performance Tests
-  security-performance:
-    name: 🔒 Security & Performance
+    - name: Test (workspace)
+      run: cargo test --workspace
+
+    - name: Doc tests
+      run: cargo test --workspace --doc
+
+  security:
+    name: Security Audit
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
-      
-    - name: 🔒 Security audit
+    - uses: actions/checkout@v4
+
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: "1.93.0"
+
+    - name: cargo deny
       run: |
-        cargo install cargo-audit
+        cargo install cargo-deny --locked
+        cargo deny check
+
+    - name: cargo audit
+      run: |
+        cargo install cargo-audit --locked
         cargo audit
-        
-    - name: 🚀 Performance validation
-      run: |
-        echo "🔍 Running performance validation..."
-        
-        # Check if benchmarks exist and can compile
-        if [ -d "benches" ]; then
-          cargo check --benches
-          echo "✅ Benchmarks compile successfully"
-        fi
-        
-        # Validate beardog-types with all optional features (config, test-utils)
-        cargo check -p beardog-types --all-features
-
-  # Code Quality & Standards
-  code-quality:
-    name: 📝 Code Quality & Standards
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        components: rustfmt, clippy
-        
-    - name: 📐 Format check
-      run: cargo fmt --all -- --check
-      
-    - name: 🔍 Clippy analysis
-      run: |
-        cargo clippy --workspace --all-targets -- \
-          -D warnings \
-          -W clippy::all \
-          -W clippy::pedantic \
-          -A clippy::module_name_repetitions \
-          -A clippy::too_many_lines
-          
-    - name: 📚 Documentation check
-      run: |
-        RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
-        
-    - name: 🧪 Test suite
-      run: |
-        cargo test --workspace --lib
-        cargo test --workspace --doc
-
-  # Integration & End-to-End Tests
-  integration-tests:
-    name: 🔗 Integration Tests
-    runs-on: ubuntu-latest
-    needs: [build-health, config-validation, error-system-validation]
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
-      
-    - name: 🔗 Integration test compilation
-      run: |
-        # Test that all integration points compile
-        cargo check -p beardog-workflows
-        cargo check -p beardog-utils
-        cargo check -p beardog-core
-        
-    - name: 🧪 Cross-crate compatibility
-      run: |
-        echo "🔍 Testing cross-crate compatibility..."
-        
-        # Test that unified types work across crates
-        cargo test --workspace integration_
-        
-        echo "✅ Cross-crate compatibility validated"
-
-  # Deployment Readiness
-  deployment-readiness:
-    name: 🚀 Deployment Readiness
-    runs-on: ubuntu-latest
-    needs: [code-quality, security-performance, integration-tests]
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
-      
-    - name: 🏗️ Production build
-      run: |
-        cargo build --release --workspace
-        
-    - name: 📦 Package validation
-      run: |
-        echo "🔍 Validating release packages..."
-        
-        # Ensure all crates can be packaged
-        for crate in crates/*/; do
-          if [ -f "$crate/Cargo.toml" ]; then
-            echo "📦 Checking $(basename $crate)..."
-            cargo package --manifest-path "$crate/Cargo.toml" --no-verify
-          fi
-        done
-        
-        echo "✅ All packages validated for deployment"
-        
-    - name: 📊 Generate deployment report
-      run: |
-        echo "# 🎉 BearDog Deployment Readiness Report" > deployment-report.md
-        echo "" >> deployment-report.md
-        echo "**Date:** $(date)" >> deployment-report.md
-        echo "**Commit:** ${{ github.sha }}" >> deployment-report.md
-        echo "" >> deployment-report.md
-        echo "## ✅ Validation Results" >> deployment-report.md
-        echo "" >> deployment-report.md
-        echo "- ✅ Build health validated across Rust versions" >> deployment-report.md
-        echo "- ✅ Unified configuration system operational" >> deployment-report.md
-        echo "- ✅ Error system modernization complete" >> deployment-report.md
-        echo "- ✅ Type system unification validated" >> deployment-report.md
-        echo "- ✅ Security audit passed" >> deployment-report.md
-        echo "- ✅ Code quality standards met" >> deployment-report.md
-        echo "- ✅ Integration tests passed" >> deployment-report.md
-        echo "- ✅ Production build successful" >> deployment-report.md
-        echo "" >> deployment-report.md
-        echo "🚀 **BearDog v3.0.0 is PRODUCTION READY!**" >> deployment-report.md
-        
-    - name: 📤 Upload deployment report
-      uses: actions/upload-artifact@v3
-      with:
-        name: deployment-readiness-report
-        path: deployment-report.md 

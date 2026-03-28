@@ -242,3 +242,172 @@ impl std::fmt::Debug for CryptoProviderManager {
             .finish()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::super::UniversalCryptoProvider;
+    use super::super::algorithms::{
+        AesMode, AsymmetricAlgorithm, CryptoAlgorithm, CryptoOperation, HashAlgorithm,
+        SignatureAlgorithm, SymmetricAlgorithm,
+    };
+    use super::super::providers::RustCryptoProvider;
+    use super::super::requirements::CryptoRequirements;
+    use super::*;
+    use std::sync::Arc;
+
+    #[tokio::test]
+    async fn crypto_provider_manager_new_default_register_and_select() {
+        let mgr = CryptoProviderManager::new();
+        let prov = Arc::new(RustCryptoProvider::new()) as Arc<dyn UniversalCryptoProvider>;
+        mgr.register_provider(prov)
+            .await
+            .expect("register RustCrypto provider");
+
+        let alg = CryptoAlgorithm::Symmetric(SymmetricAlgorithm::Aes {
+            mode: AesMode::Gcm,
+            key_size: 256,
+        });
+        let reqs = CryptoRequirements {
+            algorithm: Some(alg.clone()),
+            require_constant_time: false,
+            prefer_performance: true,
+            ..CryptoRequirements::default()
+        };
+        let chosen = mgr
+            .select_provider(&reqs)
+            .await
+            .expect("select provider for AES-256-GCM");
+        assert_eq!(chosen.provider_name(), "RustCrypto");
+
+        let list = mgr.get_providers().await;
+        assert_eq!(list.len(), 1);
+
+        let caps = mgr
+            .get_capabilities("RustCrypto")
+            .await
+            .expect("cached capabilities");
+        assert_eq!(caps.provider_name, "RustCrypto");
+    }
+
+    #[tokio::test]
+    async fn select_provider_errors_when_empty() {
+        let mgr = CryptoProviderManager::default();
+        let err = mgr
+            .select_provider(&CryptoRequirements::default())
+            .await
+            .expect_err("no providers");
+        let msg = format!("{err}");
+        assert!(
+            msg.contains("No crypto providers") || msg.contains("not found"),
+            "{msg}"
+        );
+    }
+
+    #[tokio::test]
+    async fn select_provider_no_candidate_when_constant_time_required_for_hash() {
+        let mgr = CryptoProviderManager::new();
+        let prov = Arc::new(RustCryptoProvider::new()) as Arc<dyn UniversalCryptoProvider>;
+        mgr.register_provider(prov).await.expect("register");
+
+        let reqs = CryptoRequirements {
+            operation: CryptoOperation::Hashing,
+            algorithm: Some(CryptoAlgorithm::Hash(HashAlgorithm::Sha256)),
+            require_constant_time: true,
+            ..CryptoRequirements::default()
+        };
+        let err = mgr
+            .select_provider(&reqs)
+            .await
+            .expect_err("SHA-256 not in constant_time_ops list");
+        let m = format!("{err}");
+        assert!(
+            m.contains("requirements") || m.contains("No provider"),
+            "{m}"
+        );
+    }
+
+    #[tokio::test]
+    async fn select_provider_rejects_excessive_latency_budget() {
+        let mgr = CryptoProviderManager::new();
+        let prov = Arc::new(RustCryptoProvider::new()) as Arc<dyn UniversalCryptoProvider>;
+        mgr.register_provider(prov).await.expect("register");
+
+        let alg = CryptoAlgorithm::Symmetric(SymmetricAlgorithm::Aes {
+            mode: AesMode::Gcm,
+            key_size: 256,
+        });
+        let reqs = CryptoRequirements {
+            algorithm: Some(alg),
+            max_latency_us: Some(1),
+            require_constant_time: false,
+            ..CryptoRequirements::default()
+        };
+        mgr.select_provider(&reqs)
+            .await
+            .expect_err("latency 5us exceeds 1us budget");
+    }
+
+    #[tokio::test]
+    async fn select_provider_prefers_hardware_when_required_and_available() {
+        let mgr = CryptoProviderManager::new();
+        let prov = Arc::new(RustCryptoProvider::new()) as Arc<dyn UniversalCryptoProvider>;
+        mgr.register_provider(prov).await.expect("register");
+
+        let alg = CryptoAlgorithm::Signature(SignatureAlgorithm::Ed25519);
+        let reqs = CryptoRequirements {
+            operation: CryptoOperation::Signing,
+            algorithm: Some(alg),
+            require_hardware_accel: true,
+            require_constant_time: false,
+            prefer_performance: false,
+            ..CryptoRequirements::default()
+        };
+        let p = mgr
+            .select_provider(&reqs)
+            .await
+            .expect("hardware bonus path");
+        assert_eq!(p.provider_name(), "RustCrypto");
+    }
+
+    #[tokio::test]
+    async fn select_provider_security_scoring_branch_non_performance() {
+        let mgr = CryptoProviderManager::new();
+        let prov = Arc::new(RustCryptoProvider::new()) as Arc<dyn UniversalCryptoProvider>;
+        mgr.register_provider(prov).await.expect("register");
+
+        let alg = CryptoAlgorithm::Symmetric(SymmetricAlgorithm::ChaCha20Poly1305);
+        let reqs = CryptoRequirements {
+            algorithm: Some(alg),
+            prefer_performance: false,
+            require_constant_time: false,
+            ..CryptoRequirements::default()
+        };
+        mgr.select_provider(&reqs)
+            .await
+            .expect("side-channel scoring branch");
+    }
+
+    #[tokio::test]
+    async fn crypto_provider_manager_debug_smoke() {
+        let mgr = CryptoProviderManager::new();
+        let s = format!("{mgr:?}");
+        assert!(s.contains("CryptoProviderManager"));
+    }
+
+    #[tokio::test]
+    async fn select_provider_no_asymmetric_support_in_rustcrypto() {
+        let mgr = CryptoProviderManager::new();
+        let prov = Arc::new(RustCryptoProvider::new()) as Arc<dyn UniversalCryptoProvider>;
+        mgr.register_provider(prov).await.expect("register");
+
+        let reqs = CryptoRequirements {
+            operation: CryptoOperation::AsymmetricEncryption,
+            algorithm: Some(CryptoAlgorithm::Asymmetric(AsymmetricAlgorithm::EciesP256)),
+            require_constant_time: false,
+            ..CryptoRequirements::default()
+        };
+        mgr.select_provider(&reqs)
+            .await
+            .expect_err("RustCrypto has no asymmetric algorithms registered");
+    }
+}

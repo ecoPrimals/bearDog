@@ -16,41 +16,41 @@ use tokio::sync::Barrier;
 // ============================================================================
 
 #[tokio::test]
-async fn test_e2e_unix_socket_ping() {
-    // This test validates the protocol structure
+async fn test_e2e_unix_socket_health_liveness() {
+    // This test validates the protocol structure (ecosystem standard: health.liveness)
 
     let _request = serde_json::json!({
         "jsonrpc": "2.0",
-        "method": "beardog.ping",
+        "method": "health.liveness",
         "id": 1
     });
 
     let request_str = serde_json::to_string(&_request).unwrap();
-    assert!(request_str.contains("beardog.ping"));
+    assert!(request_str.contains("health.liveness"));
 
-    // Expected response structure
+    // Expected response shape (matches HealthHandler liveness branch: status, primal, version)
     let expected_response = serde_json::json!({
         "jsonrpc": "2.0",
         "result": {
-            "pong": true,
-            "timestamp": "2026-01-04T16:00:00Z"
+            "status": "alive",
+            "version": env!("CARGO_PKG_VERSION")
         },
         "id": 1
     });
 
-    assert!(expected_response["result"]["pong"].as_bool().unwrap());
+    assert_eq!(expected_response["result"]["status"], "alive");
 }
 
 #[tokio::test]
 async fn test_e2e_capabilities_query() {
     let _request = serde_json::json!({
         "jsonrpc": "2.0",
-        "method": "beardog.capabilities",
+        "method": "capabilities.list",
         "id": 2
     });
 
     let request_str = serde_json::to_string(&_request).unwrap();
-    assert!(request_str.contains("beardog.capabilities"));
+    assert!(request_str.contains("capabilities.list"));
 
     // Expected response
     let expected_response = serde_json::json!({
@@ -374,7 +374,7 @@ async fn test_e2e_low_latency_json_rpc() {
     for _ in 0..1000 {
         let request = serde_json::json!({
             "jsonrpc": "2.0",
-            "method": "beardog.ping",
+            "method": "health.liveness",
             "id": 1
         });
 

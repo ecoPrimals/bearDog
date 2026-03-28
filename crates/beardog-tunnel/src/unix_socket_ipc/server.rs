@@ -22,7 +22,15 @@ use beardog_ipc::protocol::JSONRPC_VERSION;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::time::Duration;
 use tracing::{debug, error, info, warn};
+
+/// Per-read timeout for NDJSON connections.
+///
+/// Prevents indefinite blocking when a client connects but never sends a
+/// newline (e.g. raw `nc` probes, `curl` health checks). On timeout the
+/// connection is closed and the task freed.
+const IPC_READ_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Unix socket IPC server for inter-primal communication
 pub struct UnixSocketIpcServer {
@@ -266,13 +274,24 @@ impl UnixSocketIpcServer {
             let mut buf_stream = BufReader::new(stream);
             let mut buffer = Vec::with_capacity(1024);
 
-            match buf_stream.read_until(b'\n', &mut buffer).await {
-                Ok(0) => {
+            let read_result =
+                tokio::time::timeout(IPC_READ_TIMEOUT, buf_stream.read_until(b'\n', &mut buffer))
+                    .await;
+
+            match read_result {
+                Err(_elapsed) => {
+                    warn!(
+                        timeout_secs = IPC_READ_TIMEOUT.as_secs(),
+                        "IPC initial read timed out — closing idle connection"
+                    );
+                    return Ok(());
+                }
+                Ok(Ok(0)) => {
                     debug!("Client disconnected immediately");
                     return Ok(());
                 }
-                Ok(_) => {}
-                Err(e) => {
+                Ok(Ok(_)) => {}
+                Ok(Err(e)) => {
                     error!(error = %e, "Failed to read from stream");
                     return Err(anyhow::anyhow!("Failed to read: {e}"));
                 }
@@ -353,13 +372,27 @@ impl UnixSocketIpcServer {
 
         loop {
             line_buf.clear();
-            match buf_stream.read_until(b'\n', &mut line_buf).await {
-                Ok(0) => {
+
+            let read_result = tokio::time::timeout(
+                IPC_READ_TIMEOUT,
+                buf_stream.read_until(b'\n', &mut line_buf),
+            )
+            .await;
+
+            match read_result {
+                Err(_elapsed) => {
+                    debug!(
+                        timeout_secs = IPC_READ_TIMEOUT.as_secs(),
+                        "IPC read timed out — closing idle connection"
+                    );
+                    return Ok(());
+                }
+                Ok(Ok(0)) => {
                     debug!("Client disconnected gracefully");
                     return Ok(());
                 }
-                Ok(_) => {}
-                Err(e) => {
+                Ok(Ok(_)) => {}
+                Ok(Err(e)) => {
                     error!(error = %e, "Read error");
                     return Err(anyhow::anyhow!("Read failed: {e}"));
                 }

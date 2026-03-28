@@ -37,8 +37,11 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+use crate::tunnel::hsm::providers::HsmProviderRegistry;
 use crate::tunnel::hsm::types::key::HsmKey;
 use crate::tunnel::hsm::types::tier::HsmTier;
+use beardog_traits::hsm::HsmKeyProvider;
+use beardog_types::hsm::SelectionPreference;
 
 pub use capability::DefaultHsmCapabilityDetector;
 pub use config::{HsmManagerConfig, SimpleHsmTier};
@@ -222,6 +225,7 @@ pub struct HsmProviderSelection {
 /// * [`HsmManagerConfig`] - Configuration options
 pub struct HsmManager {
     hsm_providers: HashMap<String, Arc<dyn HsmProvider>>,
+    canonical_registry: HsmProviderRegistry,
     _config: HsmManagerConfig,
     _health_monitor: Arc<DefaultHsmHealthMonitor>,
     _failover_manager: Arc<DefaultHsmFailoverManager>,
@@ -263,6 +267,7 @@ impl HsmManager {
     pub fn new() -> Self {
         Self {
             hsm_providers: HashMap::new(),
+            canonical_registry: HsmProviderRegistry::new(),
             _config: HsmManagerConfig::default(),
             _health_monitor: Arc::new(DefaultHsmHealthMonitor::default()),
             _failover_manager: Arc::new(DefaultHsmFailoverManager::default()),
@@ -424,7 +429,12 @@ impl HsmManager {
             }
         }
 
-        info!("🎯 HSM Manager auto-initialization complete");
+        // Populate canonical registry alongside legacy providers
+        manager.canonical_registry = HsmProviderRegistry::discover().await;
+        info!(
+            "🎯 HSM Manager auto-initialization complete ({} canonical providers)",
+            manager.canonical_registry.len()
+        );
         Ok(manager)
     }
 
@@ -636,61 +646,47 @@ impl HsmManager {
 
     /// Delete a cryptographic key
     ///
-    /// Deletes a key from the HSM provider. This operation is irreversible and will
-    /// remove the key from secure storage. Any data encrypted with this key will
-    /// become inaccessible.
-    ///
-    /// # Arguments
-    ///
-    /// * `key_id` - Identifier of the key to delete
-    ///
-    /// # Returns
-    ///
-    /// * `Ok(())` - Key deleted successfully
-    /// * `Err(BearDogError)` - Deletion failed
-    ///
     /// # Errors
-    ///
-    /// Returns an error if:
-    /// * No HSM providers are registered
-    /// * All providers are unavailable
-    /// * Key does not exist (provider-dependent)
-    /// * Deletion fails in the provider
-    ///
-    /// # Security
-    ///
-    /// This operation should be used carefully as it permanently removes cryptographic
-    /// material. Ensure that:
-    /// * The key is no longer needed for any operations
-    /// * All data encrypted with the key has been re-encrypted or is no longer needed
-    /// * The key is not part of a key hierarchy that other keys depend on
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// use beardog_tunnel::tunnel::hsm::manager::HsmManager;
-    ///
-    /// let manager = HsmManager::new();
-    /// // Register providers and generate key...
-    ///
-    /// // Delete ephemeral session key after use
-    /// manager.delete_key("session_key_123").await?;
-    /// println!("Session key deleted");
-    /// ```
-    ///
-    /// # See Also
-    ///
-    /// * [`generate_key`](Self::generate_key) - Generate a new key
-    /// * [`HsmProvider::delete_key`] - Provider-level key deletion
+    /// Returns an error if no provider is available or the deletion fails.
     pub async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
-        // Get the first available provider
         let provider = self
             .hsm_providers
             .values()
             .find(|p| p.is_available())
             .ok_or_else(|| BearDogError::not_found("No HSM providers available".to_string()))?;
 
-        // Delete the key using the provider
         provider.delete_key(key_id).await
+    }
+
+    // ── canonical HsmKeyProvider access ─────────────────────────────────
+
+    /// Select the best canonical [`HsmKeyProvider`] according to `preference`.
+    ///
+    /// # Errors
+    /// Returns an error if no matching provider is available.
+    pub fn select_canonical_provider(
+        &self,
+        preference: SelectionPreference,
+    ) -> Result<Arc<dyn HsmKeyProvider>, BearDogError> {
+        self.canonical_registry.select(preference)
+    }
+
+    /// Shorthand: select the best available provider (hardware preferred).
+    ///
+    /// # Errors
+    /// Returns an error if no provider is available.
+    pub fn canonical_provider(&self) -> Result<Arc<dyn HsmKeyProvider>, BearDogError> {
+        self.canonical_registry
+            .select(SelectionPreference::PreferHardware)
+    }
+
+    /// Reference to the underlying canonical provider registry.
+    pub fn canonical_registry(&self) -> &HsmProviderRegistry {
+        &self.canonical_registry
+    }
+
+    /// Mutable reference to register additional canonical providers.
+    pub fn canonical_registry_mut(&mut self) -> &mut HsmProviderRegistry {
+        &mut self.canonical_registry
     }
 }

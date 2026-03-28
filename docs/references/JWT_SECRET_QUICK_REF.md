@@ -87,7 +87,7 @@ All these work identically:
 ```json
 {
   "jsonrpc": "2.0",
-  "method": "beardog.capabilities",
+  "method": "capabilities.list",
   "id": 1
 }
 ```

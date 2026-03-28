@@ -3,7 +3,7 @@
 //!
 //! Demonstrates the Phase 3 integration API server with all 17 endpoints.
 //!
-//! Run with: cargo run --example api_demo
+//! Run with: `cargo run -p beardog-integration --example integration_api_demo`
 
 use beardog_integration::IntegrationConfig;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -131,7 +131,7 @@ fn print_next_steps() {
     println!("   - Add E2E encryption\n");
 
     println!("   Immediate Tasks:");
-    println!("   1. Test with live Songbird UPA");
+    println!("   1. Test with live orchestrator UPA");
     println!("   2. Performance benchmarking");
     println!("   3. Increase test coverage (70% → 90%)");
     println!("   4. Production deployment planning\n");

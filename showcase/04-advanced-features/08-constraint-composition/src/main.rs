@@ -14,67 +14,89 @@ use tracing::info;
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct DemoConfig {
-    ceremony: CeremonyConfig,
-    constraints: ConstraintsConfig,
-    conflict_resolution: ConflictResolutionConfig,
-    validation: ValidationConfig,
-    performance: PerformanceConfig,
-    audit: AuditConfig,
+    #[serde(rename = "ceremony")]
+    _ceremony: CeremonyConfig,
+    #[serde(rename = "constraints")]
+    _constraints: ConstraintsConfig,
+    #[serde(rename = "conflict_resolution")]
+    _conflict_resolution: ConflictResolutionConfig,
+    #[serde(rename = "validation")]
+    _validation: ValidationConfig,
+    #[serde(rename = "performance")]
+    _performance: PerformanceConfig,
+    #[serde(rename = "audit")]
+    _audit: AuditConfig,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct CeremonyConfig {
-    name: String,
-    description: String,
-    max_duration_ms: u64,
+    #[serde(rename = "name")]
+    _name: String,
+    #[serde(rename = "description")]
+    _description: String,
+    #[serde(rename = "max_duration_ms")]
+    _max_duration_ms: u64,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct ConstraintsConfig {
-    enable_and: bool,
-    enable_or: bool,
-    enable_not: bool,
-    enable_implies: bool,
-    enable_nesting: bool,
-    max_nesting_depth: u32,
-    enable_inheritance: bool,
+    #[serde(rename = "enable_and")]
+    _enable_and: bool,
+    #[serde(rename = "enable_or")]
+    _enable_or: bool,
+    #[serde(rename = "enable_not")]
+    _enable_not: bool,
+    #[serde(rename = "enable_implies")]
+    _enable_implies: bool,
+    #[serde(rename = "enable_nesting")]
+    _enable_nesting: bool,
+    #[serde(rename = "max_nesting_depth")]
+    _max_nesting_depth: u32,
+    #[serde(rename = "enable_inheritance")]
+    _enable_inheritance: bool,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct ConflictResolutionConfig {
-    strategy: String,
-    detect_conflicts: bool,
-    fail_on_unresolvable: bool,
+    #[serde(rename = "strategy")]
+    _strategy: String,
+    #[serde(rename = "detect_conflicts")]
+    _detect_conflicts: bool,
+    #[serde(rename = "fail_on_unresolvable")]
+    _fail_on_unresolvable: bool,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct ValidationConfig {
-    enable_runtime_checks: bool,
-    cache_evaluations: bool,
-    performance_target_ms: u64,
+    #[serde(rename = "enable_runtime_checks")]
+    _enable_runtime_checks: bool,
+    #[serde(rename = "cache_evaluations")]
+    _cache_evaluations: bool,
+    #[serde(rename = "performance_target_ms")]
+    _performance_target_ms: u64,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct PerformanceConfig {
-    composition_target_ms: u64,
-    validation_target_ms: u64,
-    conflict_detection_target_ms: u64,
-    resolution_target_ms: u64,
+    #[serde(rename = "composition_target_ms")]
+    _composition_target_ms: u64,
+    #[serde(rename = "validation_target_ms")]
+    _validation_target_ms: u64,
+    #[serde(rename = "conflict_detection_target_ms")]
+    _conflict_detection_target_ms: u64,
+    #[serde(rename = "resolution_target_ms")]
+    _resolution_target_ms: u64,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct AuditConfig {
-    log_level: String,
-    include_performance: bool,
-    log_constraint_trees: bool,
+    #[serde(rename = "log_level")]
+    _log_level: String,
+    #[serde(rename = "include_performance")]
+    _include_performance: bool,
+    #[serde(rename = "log_constraint_trees")]
+    _log_constraint_trees: bool,
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -82,15 +104,18 @@ struct AuditConfig {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct Scenario {
-    scenario_name: String,
-    scenario_id: String,
-    operation: String,
+    #[serde(rename = "scenario_name")]
+    _scenario_name: String,
+    #[serde(rename = "scenario_id")]
+    _scenario_id: String,
+    #[serde(rename = "operation")]
+    _operation: String,
     constraint_definitions: Vec<ConstraintDefinition>,
     compositions: Vec<Composition>,
     test_cases: Vec<TestCase>,
-    expected_results: ExpectedResults,
+    #[serde(rename = "expected_results")]
+    _expected_results: ExpectedResults,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -119,12 +144,15 @@ struct TestCase {
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct ExpectedResults {
-    composition_ms: u64,
-    validation_ms: u64,
-    conflict_detection_ms: u64,
-    test_cases_passed: u32,
+    #[serde(rename = "composition_ms")]
+    _composition_ms: u64,
+    #[serde(rename = "validation_ms")]
+    _validation_ms: u64,
+    #[serde(rename = "conflict_detection_ms")]
+    _conflict_detection_ms: u64,
+    #[serde(rename = "test_cases_passed")]
+    _test_cases_passed: u32,
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

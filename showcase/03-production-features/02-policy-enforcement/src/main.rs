@@ -217,9 +217,9 @@ async fn run_policy_enforcement(policy_path: &PathBuf) -> Result<()> {
 
 // Configuration
 #[derive(Debug, Clone, serde::Deserialize)]
-#[allow(dead_code)]
 struct DemoConfig {
-    enforcement_mode: String,
+    #[serde(rename = "enforcement_mode")]
+    _enforcement_mode: String,
 }
 
 fn load_config(path: &PathBuf) -> Result<DemoConfig> {

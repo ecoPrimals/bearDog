@@ -107,3 +107,59 @@ impl Default for DiversityMetrics {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::Ordering;
+
+    #[test]
+    fn evolution_metrics_new_default_and_clone() {
+        let m = EvolutionMetrics::new();
+        m.total_generations.store(7, Ordering::Relaxed);
+        m.successful_mutations.store(2, Ordering::Relaxed);
+        let c = m.clone();
+        assert_eq!(c.total_generations.load(Ordering::Relaxed), 7);
+        assert_eq!(c.successful_mutations.load(Ordering::Relaxed), 2);
+        assert_eq!(m.total_generations.load(Ordering::Relaxed), 7);
+
+        let d: EvolutionMetrics = EvolutionMetrics::default();
+        assert_eq!(d.total_generations.load(Ordering::Relaxed), 0);
+    }
+
+    #[test]
+    fn evolution_metrics_all_counters_increment() {
+        let m = EvolutionMetrics::new();
+        m.total_generations.fetch_add(1, Ordering::Relaxed);
+        m.successful_mutations.fetch_add(1, Ordering::Relaxed);
+        m.successful_crossovers.fetch_add(1, Ordering::Relaxed);
+        m.convergence_events.fetch_add(1, Ordering::Relaxed);
+        m.diversity_events.fetch_add(1, Ordering::Relaxed);
+        m.fitness_improvements.fetch_add(1, Ordering::Relaxed);
+        assert_eq!(m.total_generations.load(Ordering::Relaxed), 1);
+        assert_eq!(m.fitness_improvements.load(Ordering::Relaxed), 1);
+    }
+
+    #[test]
+    fn diversity_metrics_new_default_clone() {
+        let m = DiversityMetrics::new();
+        m.genetic_diversity.store(3, Ordering::Relaxed);
+        let c = m.clone();
+        assert_eq!(c.genetic_diversity.load(Ordering::Relaxed), 3);
+        assert_eq!(m.genetic_diversity.load(Ordering::Relaxed), 3);
+        let d = DiversityMetrics::default();
+        assert_eq!(d.phenotypic_diversity.load(Ordering::Relaxed), 0);
+    }
+
+    #[test]
+    fn diversity_metrics_all_fields_roundtrip_via_clone() {
+        let m = DiversityMetrics::new();
+        m.genetic_diversity.store(10, Ordering::Relaxed);
+        m.phenotypic_diversity.store(11, Ordering::Relaxed);
+        m.behavioral_diversity.store(12, Ordering::Relaxed);
+        m.specialization_spread.store(13, Ordering::Relaxed);
+        let c = m.clone();
+        assert_eq!(c.specialization_spread.load(Ordering::Relaxed), 13);
+        assert_eq!(m.behavioral_diversity.load(Ordering::Relaxed), 12);
+    }
+}

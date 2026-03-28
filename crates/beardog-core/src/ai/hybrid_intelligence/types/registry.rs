@@ -111,3 +111,33 @@ impl AIRegistryConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use beardog_types::canonical::config::network::NetworkConfig;
+
+    #[test]
+    fn ai_registry_config_default() {
+        let c = AIRegistryConfig::default();
+        assert!(matches!(c.registry_type, RegistryType::Local));
+        assert!(c.auth.is_none());
+        let net = NetworkConfig::default();
+        assert_eq!(
+            c.endpoint,
+            format!("{}:{}", net.default_host, net.service_ports.ai_port)
+        );
+    }
+
+    #[test]
+    fn ai_registry_config_from_env() {
+        let c = AIRegistryConfig::from_env();
+        assert!(matches!(c.registry_type, RegistryType::Local));
+        assert!(c.auth.is_none());
+        let net = NetworkConfig::default();
+        assert_eq!(
+            c.endpoint,
+            format!("{}:{}", net.default_host, net.service_ports.ai_port)
+        );
+    }
+}

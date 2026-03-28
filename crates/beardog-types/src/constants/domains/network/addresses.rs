@@ -178,3 +178,68 @@ pub fn dns_servers_from_env() -> Vec<String> {
         |s| s.split(',').map(str::trim).map(String::from).collect(),
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn localhost_and_wildcard_constants_match_expected_literals() {
+        assert_eq!(DEFAULT_LOCALHOST_IPV4_STR, "127.0.0.1");
+        assert_eq!(DEFAULT_LOCALHOST_IPV6_STR, "::1");
+        assert_eq!(DEFAULT_WILDCARD_IPV4_STR, "0.0.0.0");
+        assert_eq!(DEFAULT_WILDCARD_IPV6_STR, "::");
+    }
+
+    #[test]
+    fn deprecated_aliases_match_modern_names() {
+        assert_eq!(LOCALHOST_IPV4, DEFAULT_LOCALHOST_IPV4_STR);
+        assert_eq!(LOCALHOST_IPV6, DEFAULT_LOCALHOST_IPV6_STR);
+        assert_eq!(WILDCARD_IPV4, DEFAULT_WILDCARD_IPV4_STR);
+        assert_eq!(WILDCARD_IPV6, DEFAULT_WILDCARD_IPV6_STR);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn deprecated_bind_and_metrics_constants_exist() {
+        assert_eq!(DEFAULT_BIND_ADDRESS, WILDCARD_IPV4);
+        assert!(DEFAULT_METRICS_BIND.contains(':'));
+        assert!(DEFAULT_HEALTH_BIND.contains(':'));
+        assert_eq!(MULTICAST_ADDRESS, "224.0.0.251");
+    }
+
+    #[test]
+    fn default_bind_address_helpers_consistent() {
+        let b = default_bind_address();
+        assert_eq!(b, WILDCARD_IPV4.to_string());
+        let api = default_api_bind();
+        assert!(api.contains(':'), "api bind should include port");
+        let m = default_metrics_bind();
+        assert!(m.contains(':'));
+        let h = default_health_bind();
+        assert!(h.contains(':'));
+    }
+
+    #[test]
+    fn multicast_address_helpers() {
+        assert_eq!(multicast_address(), "224.0.0.251".to_string());
+        let from_env = multicast_address_from_env();
+        assert!(
+            !from_env.is_empty(),
+            "multicast_address_from_env must yield a non-empty address string"
+        );
+    }
+
+    #[test]
+    fn dns_servers_fallback_list() {
+        let s = dns_servers();
+        assert_eq!(s.len(), FALLBACK_DNS_SERVERS.len());
+        assert!(s.iter().any(|x| x == "8.8.8.8"));
+    }
+
+    #[test]
+    fn broadcast_and_dns_port() {
+        assert_eq!(BROADCAST_ADDRESS, "255.255.255.255");
+        assert_eq!(DEFAULT_DNS_PORT, 53);
+    }
+}

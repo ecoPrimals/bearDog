@@ -115,6 +115,12 @@ pub mod defaults {
     pub const DEFAULT_CACHE_DIR: &str = "/var/cache/beardog";
     /// Configuration constant: default temp dir
     pub const DEFAULT_TEMP_DIR: &str = "/tmp/beardog";
+    /// Default Unix socket path for IPC (last-resort fallback).
+    pub const DEFAULT_SOCKET_PATH: &str = "/tmp/beardog.sock";
+    /// Default TCP discovery file path (filename under `/tmp` search order).
+    pub const DEFAULT_IPC_PORT_FILE: &str = "/tmp/beardog-ipc-port";
+    /// Default software key storage directory when env and XDG paths are unset.
+    pub const DEFAULT_KEY_STORAGE_DIR: &str = "/tmp/beardog/keys";
 
     /// Environment defaults
     pub const DEFAULT_ENVIRONMENT: &str = "production";
@@ -559,4 +565,83 @@ pub mod states {
     pub const PENDING: &str = "pending";
     /// Entity terminated after an error
     pub const FAILED: &str = "failed ";
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ConstantRegistry;
+    use super::application;
+    use super::compile_time;
+    use super::defaults;
+    use super::environment;
+    use super::errors;
+    use super::intervals;
+    use super::limits;
+    use super::performance;
+    use super::timeouts;
+    use super::versions;
+    use std::time::Duration;
+
+    fn assert_nonempty(s: &str) {
+        assert!(!s.trim().is_empty(), "expected non-empty string");
+    }
+
+    #[test]
+    fn version_strings_non_empty() {
+        assert_nonempty(versions::BEARDOG_VERSION);
+        assert_nonempty(versions::WORKFLOW_SYSTEM_VERSION);
+        assert_nonempty(versions::PROTOCOL_VERSION);
+        assert_nonempty(versions::BUILD_TARGET);
+        assert_nonempty(versions::BUILD_OS);
+        assert_nonempty(versions::BUILD_FAMILY);
+    }
+
+    #[test]
+    fn defaults_and_limits_sane() {
+        assert!(defaults::DEFAULT_BUFFER_SIZE > 0);
+        assert!(limits::MAX_MEMORY_USAGE >= limits::MIN_BUFFER_SIZE);
+        assert!(timeouts::CONNECTION_TIMEOUT > Duration::ZERO);
+        assert!(intervals::HEALTH_CHECK_INTERVAL > Duration::ZERO);
+    }
+
+    #[test]
+    fn errors_and_environment_prefixes() {
+        assert!(errors::ERROR_CODE_PREFIX.contains("BEARDOG"));
+        assert!(environment::ENV_PREFIX.starts_with("BEARDOG"));
+        assert_nonempty(environment::CONFIG_FILE_NAME);
+    }
+
+    #[test]
+    fn application_metadata() {
+        assert_nonempty(application::APP_NAME);
+        assert_nonempty(application::USER_AGENT);
+        assert!(application::FEATURE_HSM_SUPPORT);
+    }
+
+    #[test]
+    fn compile_time_and_performance_flags() {
+        assert!(compile_time::CRC32_TABLE_SIZE > 0);
+        assert!(performance::IO_BUFFER_SIZE > 0);
+        assert!(performance::MAX_CPU_UTILIZATION > performance::TARGET_CPU_UTILIZATION);
+    }
+
+    #[test]
+    fn timeouts_helper_default_timeout_ms() {
+        let ms = timeouts::default_timeout_ms();
+        assert!(ms > 0);
+    }
+
+    #[test]
+    fn constant_registry_default() {
+        let r = ConstantRegistry::default();
+        assert!(!r.version_info.beardog_version.is_empty());
+        assert!(r.performance_tuning.worker_threads > 0);
+        assert!(r.security_settings.max_login_attempts > 0);
+    }
+
+    #[test]
+    fn states_and_workflow_reexports() {
+        assert_nonempty(super::states::ACTIVE);
+        assert!(super::workflow::DEFAULT_TASK_TIMEOUT > Duration::ZERO);
+    }
 }

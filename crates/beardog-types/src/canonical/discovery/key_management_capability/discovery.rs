@@ -168,6 +168,21 @@ fn select_best_kms(available: &[KmsDiscoveryResult]) -> Option<&KmsDiscoveryResu
         .or_else(|| available.first())
 }
 
+#[cfg(test)]
+mod tests {
+    use super::create_key_management;
+
+    /// Exercise full discovery path + software HSM fallback without mutating process environment
+    /// (`set_var`/`remove_var` are `unsafe` in newer Rust; this crate forbids `unsafe`).
+    #[tokio::test]
+    async fn create_key_management_returns_software_hsm() {
+        let kms = create_key_management()
+            .await
+            .expect("software HSM always available");
+        assert_eq!(kms.provider_name(), "SecureSoftwareHSM");
+    }
+}
+
 /// KMS discovery result (vendor-agnostic)
 #[derive(Debug, Clone)]
 struct KmsDiscoveryResult {

@@ -47,6 +47,15 @@ use serde_json::Value;
 /// let key = derive_key_from_id("prod", "signature")?;
 /// // Use key for signing operations
 /// ```
+/// Exposes [`derive_key_from_id`] to integration tests in other modules (e.g. crypto RPC routers).
+#[cfg(test)]
+pub(crate) fn derive_key_from_id_for_tests(
+    key_id: &str,
+    purpose: &str,
+) -> Result<[u8; 32], String> {
+    derive_key_from_id(key_id, purpose)
+}
+
 pub(super) fn derive_key_from_id(key_id: &str, purpose: &str) -> Result<[u8; 32], String> {
     // Get master key from environment or generate deterministic key
     let master_key = beardog_errors::process_env::var("BEARDOG_MASTER_KEY")

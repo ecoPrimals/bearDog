@@ -370,3 +370,104 @@ pub struct NetworkInterface {
     /// Optional mtu
     pub mtu: Option<u32>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
+    #[test]
+    fn network_config_default_serializes() {
+        let n = NetworkConfig::default();
+        let v = serde_json::to_value(&n).expect("serialize NetworkConfig");
+        let _: NetworkConfig = serde_json::from_value(v).expect("deserialize NetworkConfig");
+    }
+
+    #[test]
+    fn cache_config_default() {
+        let c = CacheConfig::default();
+        assert!(c.enable_cache);
+        assert_eq!(c.cache_ttl_secs, 300);
+    }
+
+    #[test]
+    fn tls_config_roundtrip() {
+        let t = TlsConfig {
+            cert_file: "/c.pem".into(),
+            key_file: "/k.pem".into(),
+            ca_file: Some("/ca.pem".into()),
+            verify_client: true,
+            min_version: TlsVersion::TlsV1_3,
+            cipher_suites: vec!["TLS_AES_128_GCM_SHA256".into()],
+        };
+        let v = serde_json::to_value(&t).expect("serialize TlsConfig");
+        let back: TlsConfig = serde_json::from_value(v).expect("deserialize");
+        assert!(matches!(back.min_version, TlsVersion::TlsV1_3));
+    }
+
+    #[test]
+    fn security_config_accessors_and_default() {
+        let s = SecurityConfig::default();
+        assert!(!s.enable_auth());
+        assert!(s.enable_rate_limiting());
+        assert!(!s.enable_ip_allowlist());
+        assert!(!s.enable_encryption());
+
+        let s2 = SecurityConfig {
+            auth: Some(AuthConfig {
+                method: AuthenticationMethod::ApiKey,
+                api_keys: vec!["k".into()],
+                jwt_secret: None,
+            }),
+            rate_limit: None,
+            ip_allowlist: Some(vec![IpAddr::V4(Ipv4Addr::new(10, 0, 0, 1))]),
+            encryption: Some(EncryptionConfig {
+                algorithm: "AES-256-GCM".into(),
+            }),
+        };
+        assert!(s2.enable_auth());
+        assert!(!s2.enable_rate_limiting());
+        assert!(s2.enable_ip_allowlist());
+        assert!(s2.enable_encryption());
+    }
+
+    #[test]
+    fn validate_config_errors() {
+        let bad_range = NetworkConfig {
+            discovery_port_range: (100, 100),
+            ..NetworkConfig::default()
+        };
+        assert!(NetworkUtils::validate_config(&bad_range).is_err());
+
+        let mut bad_pkt = NetworkConfig::default();
+        bad_pkt.max_packet_size = 0;
+        assert!(NetworkUtils::validate_config(&bad_pkt).is_err());
+
+        let ok = NetworkConfig::default();
+        NetworkUtils::validate_config(&ok).expect("valid config");
+    }
+
+    #[test]
+    fn network_utils_get_interfaces() {
+        let r = NetworkUtils::get_network_interfaces();
+        assert!(r.is_ok());
+        assert!(r.expect("interfaces").is_empty());
+    }
+
+    #[tokio::test]
+    async fn is_port_available_localhost() {
+        let addr: SocketAddr = "127.0.0.1:0".parse().expect("parse addr");
+        let avail = NetworkUtils::is_port_available(&addr)
+            .await
+            .expect("is_port_available");
+        assert!(avail);
+    }
+
+    #[tokio::test]
+    async fn find_available_port_in_tight_range() {
+        let found = NetworkUtils::find_available_port(20000, 20005)
+            .await
+            .expect("scan");
+        assert!(found.is_some());
+    }
+}

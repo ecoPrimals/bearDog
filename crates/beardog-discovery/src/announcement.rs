@@ -156,3 +156,66 @@ impl Announcer {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Announcer;
+    use crate::config::AnnouncementConfig;
+    use crate::types::{Capability, PrimalInfo, ServiceEndpoint};
+    use std::collections::HashMap;
+
+    fn sample_config(enabled: bool, methods: Vec<&str>) -> AnnouncementConfig {
+        AnnouncementConfig {
+            enabled,
+            methods: methods.into_iter().map(String::from).collect(),
+            announcement_interval_secs: 5,
+            ttl_secs: 30,
+            mdns: Default::default(),
+        }
+    }
+
+    fn sample_primal(id: &str) -> PrimalInfo {
+        PrimalInfo {
+            primal_id: id.to_string(),
+            primal_type: "test".to_string(),
+            version: "0.0.1".to_string(),
+            display_name: "Announce Test".to_string(),
+            capabilities: vec![Capability {
+                capability_type: "test.cap".to_string(),
+                version: "1".to_string(),
+                features: vec![],
+                parameters: HashMap::new(),
+            }],
+            endpoint: ServiceEndpoint {
+                primary_url: "http://127.0.0.1:9".to_string(),
+                fallback_urls: vec![],
+                use_tls: false,
+                path_prefix: None,
+            },
+        }
+    }
+
+    #[tokio::test]
+    async fn announcer_builder_and_disabled_start() {
+        let a = Announcer::new(
+            sample_config(false, vec!["mdns"]),
+            sample_primal("inline-ann-1"),
+        );
+        a.start()
+            .await
+            .expect("disabled announcer should return Ok without I/O");
+    }
+
+    #[tokio::test]
+    async fn announcer_covers_all_branches_inline() {
+        let config = sample_config(
+            true,
+            vec!["mdns", "environment", "service_registry", "unknown_method"],
+        );
+        Announcer::new(config, sample_primal("inline-ann-2"))
+            .with_service_registry_url(Some("http://registry:8500".to_string()))
+            .start()
+            .await
+            .expect("combined announcement paths should complete");
+    }
+}

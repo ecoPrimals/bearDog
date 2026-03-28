@@ -1,6 +1,6 @@
 # BearDog Status
 
-**Last Updated**: March 27, 2026
+**Last Updated**: March 28, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -18,8 +18,8 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 14,600+ passing | Fully concurrent, zero sleeps in non-chaos |
-| **Coverage** | 87.31%+ line | llvm-cov workspace (targeting 90%) |
+| **Tests** | 15,100+ passing | Fully concurrent, zero sleeps in non-chaos |
+| **Coverage** | 90.05% line | llvm-cov workspace — target met |
 | **Serial Tests** | 0 | `#[serial]` fully eliminated |
 | **cargo deny** | 4/4 pass | Advisories, bans, licenses, sources |
 | **License** | AGPL-3.0-only | SPDX headers on all .rs files |
@@ -56,7 +56,7 @@
 | beardog-tunnel | ~83% | NDJSON framing, structured tracing, IPC, BTSP |
 | beardog-deploy | ~82% | command runner, android, builder, device coverage |
 | beardog-integration | new | Tower Atomic UPA client, heartbeat, connection tracking |
-| **Overall** | **87.31%** | llvm-cov workspace (up from 86.70%) |
+| **Overall** | **90.05%** | llvm-cov workspace — 90% target met |
 
 ---
 
@@ -66,11 +66,11 @@
 |----------|--------|
 | Edition 2024 | MSRV 1.93.0, all crates, `rust-toolchain.toml` pinned |
 | Pure Rust (ecoBin) | Zero C deps; blake3 pure feature; sysinfo removed |
-| UniBin/ecoBin | Single binary, cross-compilation ready |
+| UniBin/ecoBin | Single binary, standalone identity fallback per UniBin v1.1, cross-compilation ready |
 | Dependency Injection | Pure `Default`, `from_env()` at startup, `from_env_provider()` for tests |
 | Zero Hardcoding | 20+ named constants extracted; capability-based discovery everywhere |
 | Self-Knowledge | Primals discover peers at runtime via capability registry |
-| JSON-RPC + tarpc | Both protocols supported; JSON-RPC batch requests supported |
+| JSON-RPC | Primary IPC protocol with NDJSON framing and batch support; tarpc optional behind feature gate in `beardog-ipc` |
 | AGPL-3.0-only | License verified; SPDX headers on all .rs files |
 | `forbid(unsafe_code)` | Workspace level + every crate `lib.rs` (beardog-errors platform FFI documented per wateringHole) |
 | Workspace Lints | Centralized clippy pedantic + nursery + cast + unwrap/expect warn |
@@ -84,12 +84,80 @@
 
 ---
 
-## Recent Improvements (March 27, 2026)
+## Recent Improvements (March 28, 2026)
+
+### Wave 21: StrongBox HSM Abstraction, Production Mock Evolution, Self-Knowledge & Debt Elimination
+
+- **Canonical HSM trait (`HsmKeyProvider`)** — New lightweight, object-safe `#[async_trait]` trait in `beardog-traits` with types in `beardog-types` (`HsmProviderType`, `HsmAlgorithm`, `KeyGenParams`, `KeyHandle`, `HsmCapabilitySet`, `SelectionPreference`). Unifies 5 overlapping trait hierarchies into one canonical path.
+- **Software HSM provider** — `RustSoftwareHsm` implements `HsmKeyProvider` with full algorithm-to-key-type mapping
+- **Android StrongBox provider** — `AndroidStrongBoxHsm` implements `HsmKeyProvider`; `keystore.rs` rewritten with `#[cfg(target_os = "android")]` JNI bridge + non-Android stub
+- **HSM Provider Registry** — `HsmProviderRegistry` with `discover()`, `select(preference)`, `software_fallback()` for dynamic provider selection (`PreferHardware`, `RequireHardware`, `SoftwareOnly`)
+- **HsmManager integration** — `canonical_registry` field added; auto-init discovers available providers; `select_canonical_provider()` and `canonical_provider()` exposed
+- **5 legacy HSM traits deprecated** — `CryptoProvider`, `HsmProviderTrait`, `HsmCapabilities`, 2x `HsmProvider` marked with `# Migration (v0.10.0)` doc sections (doc-comment approach avoids breaking `-D warnings`)
+- **Production mock evolution** — Adapter `duration_ms` now uses real `Instant` timing (was hardcoded); `validate_canonical_usage()` now validates semver; `UniversalHsmManager` tracks real uptime/provider count
+- **Self-knowledge evolution** — `SongbirdClient` → `OrchestratorRegistryClient` (alias for backward compat); `BiomeOSPaths` → `PlatformPaths`; "BiomeOS"/"Songbird"/"NestGate" string literals genericized in production paths
+- **Dead orphan cleanup** — `songbird_client.rs` and `discovery_adapter.rs` removed (never in mod tree)
+- **Socket path centralization** — `DEFAULT_SOCKET_PATH`, `DEFAULT_IPC_PORT_FILE`, `DEFAULT_KEY_STORAGE_DIR` constants replace inline `/tmp/beardog*` strings
+- **Coverage** — 90.05% line (up from 90.03%), 89.22% region, 84.84% function
+- **15,100+ tests passing** — 0 failures
+- **All gates green** — fmt ✓, clippy `-D warnings` ✓, doc ✓, build ✓
+
+### Wave 18: Deep Audit Execution, UniBin Identity Compliance, Stub Evolution & Debt Elimination
+
+- **UniBin v1.1 compliance** — `PrimalIdentity::from_env()` evolved from hard-fail to standalone fallback; `is_standalone()` accessor added; all callers updated (cli, tunnel)
+- **Clippy fully clean** — `absurd_extreme_comparisons` (usize `>= 0`), `float_cmp` (lib_coverage_extension), unfulfilled `#[expect(dead_code)]` (pkcs11 provider under `--all-features`), `unused_mut` (3 benchmark files) all resolved
+- **Format clean** — `cargo fmt` regression in genetics + monitoring comprehensive tests fixed
+- **Doc clean** — Unclosed HTML tag in `beardog-cli` doc comment escaped
+- **Orphan file cleanup** — Removed `ai_powered_analysis.rs` (682 LOC mock neural network) and `quantum_optimizations.rs` (633 LOC mock quantum simulator) from `beardog-utils`; never compiled (not in mod tree)
+- **Production stub evolution** — Migration adapters (Security, Storage, Network) evolved from `BearDogError::system()` to `BearDogError::not_implemented()` with descriptive Phase 2 messages
+- **Semantic method naming** — `beardog.ping` → `health.liveness`, `beardog.capabilities` → `capabilities.list` in e2e tests per wateringHole standard
+- **Showcase dead_code cleanup** — `#[allow(dead_code)]` replaced with `_` field prefixes and `#[serde(rename)]` across showcase examples
+- **STATUS.md accuracy** — tarpc claim corrected (optional behind feature gate, not "both supported"); UniBin standalone noted
+- **toadstool_client debris** — Stale comment removed, proper module doc added
+- **Coverage push** — 31 new tests across deploy, cli, tunnel, types (+coverage_expansion, wave3 tests)
+- **Wave 18b: Deep Coverage Push** — 115 additional tests (61 beardog-types, 51 beardog-tunnel, 3 other)
+  - beardog-types: cloud HSM, discovery factories, retry/workflow/engine configs, MFA/security/encryption, alerting, adapter chains, network constants, IPC discovery, performance providers
+  - beardog-tunnel: crypto RPC handlers (password_kdf, kex_aead, aliases, signatures, router), platform, mobile HSM, safe_ffi (android, ios, biometric, mod), collaboration service
+- **Songbird IPC registration** — `handle_server` now attempts best-effort ecosystem registry registration (non-fatal per PRIMAL IPC Protocol v3.1)
+- **Doc reference cleanup** — `beardog.capabilities` → `capabilities.list` in JWT_SECRET_QUICK_REF.md
+- **Clippy stack threshold** — Raised `stack-size-threshold` in `clippy.toml` to 1MB (test harness array for ~3000 tests exceeds 512KB default)
+- **14,756+ tests passing** — 0 failures
+- **Coverage** — 88.07% line (up from 87.35%), 83.68% function, 88.77% region
+- **All gates green** — fmt, clippy `-D warnings`, doc, build all clean
+
+### Wave 18c: primalSpring Composition Debt + General Audit (March 28, 2026)
+
+- **TCP read timeout (primalSpring #1)** — All NDJSON read sites wrapped with `tokio::time::timeout(30s)`: `tcp_ipc/server.rs`, `unix_socket_ipc/server.rs` (initial + loop), `ipc_server.rs`. Idle connections from probes (`nc`, `curl`) now time out cleanly instead of blocking forever.
+- **NDJSON wire format documented (primalSpring #2)** — README overview and transport section now explain NDJSON framing. Capability metadata includes `wire_format: "ndjson"` and `protocol: "jsonrpc-2.0"`.
+- **Commented-out code cleanup** — Removed dead code blocks from `beardog-core/tests/mod.rs`, `beardog-errors/lib.rs`, `beardog-core/external_ffi.rs`, `beardog-core/external_functions/mod.rs`, `beardog-tunnel/hsm/crypto_providers/mod.rs`
+- **All gates green** — fmt ✓, clippy `-D warnings` ✓, doc ✓, build ✓, 14,756 tests passing, 0 failures
+
+### Wave 20: 90% Coverage Target Met (March 28, 2026)
+
+- **Coverage push** — 200+ new tests across beardog-tunnel (multi_transport, crypto manager, audit storage, diagnostics, zero-cost HSM), beardog-genetics (metrics, evolution engine, interaction capture types), beardog-integration (UPA client, heartbeat), beardog-types (health monitoring, network client, key management discovery, workflow, AI config, discovery builder, capabilities, PKCS#11, system/math constants, HSM discovery, config implementations), beardog-core (network discovery, performance optimizer, universal discovery types, crypto service types, serving/deployment types, external functions), beardog-errors (android), beardog-auth (genetics impl), beardog-discovery (announcements)
+- **90% line coverage achieved** — 90.03% line, 84.90% function, 89.18% region
+- **Clippy clean** — Fixed redundant clones, `io_other_error`, `into_iter` on single-element collections, manual `RangeInclusive::contains`, unit-value `let` binding, `drop()` on non-Drop type
+- **15,085+ tests passing** — 0 failures
+- **All gates green** — fmt ✓, clippy `-D warnings` ✓, doc ✓, build ✓
+
+### Wave 19: Deep Debt Evolution, Semantic Naming, Coverage Push (March 28, 2026)
+
+- **Coverage push** — 138 new tests (50+ beardog-tunnel, 81+ beardog-types/core): modes/server, doctor, ios_safe, tls12_dot, tls_ops, software_hsm, hsm/config, security/authorization, discovery/providers, workflow/retry, addresses, ipc_discovery, ecosystem_storage/operations, production adapter
+- **Semantic method naming evolution** — Added `domain.operation` semantic aliases as PRIMARY; `beardog.*` names kept as backward-compat:
+  - Security: `birdsong.encrypt`/`birdsong.decrypt` (was only `beardog.birdsong.*`)
+  - BTSP: `btsp.contact.exchange`, `btsp.tunnel.*` (was only path-like `beardog./btsp/...`)
+  - Crypto: `crypto.derive_onion_address` added to method_list (was missing)
+  - Method list tests enforce semantic names appear first
+- **Example collision fixed** — `beardog-integration/examples/api_demo.rs` → `integration_api_demo.rs`
+- **Commented-out code cleanup** — Removed dead code from `unified_types.rs`, `hsm_unified.rs`, `config/mod.rs`, `hsm/mod.rs` (security+tunnel), `lib.rs` (core+errors), `unix_socket_ipc/mod.rs`, `ios_secure_enclave/mod.rs`, `hybrid_intelligence/mod.rs`
+- **14,894+ tests passing** — 0 failures
+- **Coverage** — 88.46% line (up from 88.07%), 84.06% function, 89.19% region
+- **All gates green** — fmt ✓, clippy `-D warnings` ✓, doc ✓, build ✓
 
 ### Wave 17: Comprehensive Audit, UniBin Compliance, NDJSON & Coverage Push
 
-- **Coverage** — 87.31% line (up from 86.70%); broader llvm-cov pass after audit fixes
-- **Tests** — 14,600+ passing (more than Wave 16 baseline)
+- **Coverage** — 87.35% line (up from 87.31%); broader llvm-cov pass after audit fixes
+- **Tests** — 14,641+ passing (more than Wave 16 baseline)
 - **JSON-RPC** — Batch request support on the wire path
 - **UniBin** — `--port` behavior aligned with compliance expectations
 - **NDJSON** — Wire framing corrected for streamed JSON lines
@@ -254,7 +322,7 @@ cargo check --workspace --all-features        # Compile — clean
 cargo test --workspace                        # Tests — 0 failures
 cargo doc --workspace --no-deps               # Docs — clean
 cargo deny check                              # Advisories, bans, licenses, sources
-cargo llvm-cov --workspace --summary-only     # Coverage — 87.31%
+cargo llvm-cov --workspace --summary-only     # Coverage — 90.05%
 ```
 
 ---

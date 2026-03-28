@@ -108,3 +108,231 @@ pub async fn route(
         _ => Ok(None),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::route;
+    use base64::Engine;
+    use base64::engine::general_purpose::STANDARD as BASE64;
+    use serde_json::json;
+
+    #[tokio::test]
+    async fn route_x25519_generate_ephemeral() {
+        let out = route("crypto.x25519_generate_ephemeral", None)
+            .await
+            .expect("route")
+            .expect("x25519 gen");
+        assert!(out.get("public_key").and_then(|x| x.as_str()).is_some());
+        assert!(out.get("secret_key").and_then(|x| x.as_str()).is_some());
+    }
+
+    #[tokio::test]
+    async fn route_x25519_derive_roundtrip() {
+        let alice = route("crypto.x25519_generate_ephemeral", None)
+            .await
+            .expect("route")
+            .expect("alice");
+        let bob = route("crypto.x25519_generate_ephemeral", None)
+            .await
+            .expect("route")
+            .expect("bob");
+        let alice_secret = alice
+            .get("secret_key")
+            .and_then(|x| x.as_str())
+            .expect("alice secret");
+        let alice_pub = alice
+            .get("public_key")
+            .and_then(|x| x.as_str())
+            .expect("alice pub");
+        let bob_secret = bob
+            .get("secret_key")
+            .and_then(|x| x.as_str())
+            .expect("bob secret");
+        let bob_pub = bob
+            .get("public_key")
+            .and_then(|x| x.as_str())
+            .expect("bob pub");
+
+        let s1 = json!({
+            "our_secret": alice_secret,
+            "their_public": bob_pub,
+        });
+        let s2 = json!({
+            "our_secret": bob_secret,
+            "their_public": alice_pub,
+        });
+        let out1 = route("crypto.x25519_derive_secret", Some(&s1))
+            .await
+            .expect("route")
+            .expect("derive 1");
+        let out2 = route("crypto.x25519_derive_secret", Some(&s2))
+            .await
+            .expect("route")
+            .expect("derive 2");
+        assert_eq!(
+            out1.get("shared_secret").and_then(|x| x.as_str()),
+            out2.get("shared_secret").and_then(|x| x.as_str())
+        );
+    }
+
+    #[tokio::test]
+    async fn route_ecdh_p256_generate_and_derive() {
+        let empty = json!({});
+        let a = route("crypto.ecdh_p256_generate", Some(&empty))
+            .await
+            .expect("route")
+            .expect("p256 gen a");
+        let b = route("crypto.ecdh_p256_generate", Some(&empty))
+            .await
+            .expect("route")
+            .expect("p256 gen b");
+        let derive_a = json!({
+            "private_key": a.get("private_key").and_then(|x| x.as_str()).expect("priv a"),
+            "peer_public_key": b.get("public_key").and_then(|x| x.as_str()).expect("pub b"),
+        });
+        let derive_b = json!({
+            "private_key": b.get("private_key").and_then(|x| x.as_str()).expect("priv b"),
+            "peer_public_key": a.get("public_key").and_then(|x| x.as_str()).expect("pub a"),
+        });
+        let s1 = route("crypto.ecdh_p256_derive", Some(&derive_a))
+            .await
+            .expect("route")
+            .expect("derive a");
+        let s2 = route("crypto.ecdh_p256_derive", Some(&derive_b))
+            .await
+            .expect("route")
+            .expect("derive b");
+        assert_eq!(
+            s1.get("shared_secret").and_then(|x| x.as_str()),
+            s2.get("shared_secret").and_then(|x| x.as_str())
+        );
+    }
+
+    #[tokio::test]
+    async fn route_ecdh_p384_generate() {
+        let empty = json!({});
+        let out = route("crypto.ecdh_p384_generate", Some(&empty))
+            .await
+            .expect("route")
+            .expect("p384 gen");
+        assert_eq!(out.get("curve").and_then(|x| x.as_str()), Some("P-384"));
+    }
+
+    #[tokio::test]
+    async fn route_chacha20_encrypt_decrypt_roundtrip() {
+        let key = [7u8; 32];
+        let key_b64 = BASE64.encode(key);
+        let plain = b"hello chacha aead";
+        let plain_b64 = BASE64.encode(plain);
+        let enc_params = json!({
+            "plaintext": plain_b64,
+            "key": key_b64,
+        });
+        let enc = route("crypto.chacha20_poly1305_encrypt", Some(&enc_params))
+            .await
+            .expect("route")
+            .expect("encrypt");
+        let dec_params = json!({
+            "ciphertext": enc.get("ciphertext").and_then(|x| x.as_str()).expect("ct"),
+            "nonce": enc.get("nonce").and_then(|x| x.as_str()).expect("nonce"),
+            "tag": enc.get("tag").and_then(|x| x.as_str()).expect("tag"),
+            "key": key_b64,
+        });
+        let dec = route("crypto.chacha20_poly1305_decrypt", Some(&dec_params))
+            .await
+            .expect("route")
+            .expect("decrypt");
+        let pt = BASE64
+            .decode(
+                dec.get("plaintext")
+                    .and_then(|x| x.as_str())
+                    .expect("plaintext b64"),
+            )
+            .expect("decode plaintext");
+        assert_eq!(pt, plain);
+    }
+
+    #[tokio::test]
+    async fn route_aes256_gcm_roundtrip() {
+        let key = [9u8; 32];
+        let key_b64 = BASE64.encode(key);
+        let plain = b"aes256 payload";
+        let plain_b64 = BASE64.encode(plain);
+        let enc_params = json!({
+            "plaintext": plain_b64,
+            "key": key_b64,
+        });
+        let enc = route("crypto.aes256_gcm_encrypt", Some(&enc_params))
+            .await
+            .expect("route")
+            .expect("aes enc");
+        let dec_params = json!({
+            "ciphertext": enc.get("ciphertext").and_then(|x| x.as_str()).expect("ct"),
+            "nonce": enc.get("nonce").and_then(|x| x.as_str()).expect("nonce"),
+            "key": key_b64,
+        });
+        let dec = route("crypto.aes256_gcm_decrypt", Some(&dec_params))
+            .await
+            .expect("route")
+            .expect("aes dec");
+        let pt = BASE64
+            .decode(
+                dec.get("plaintext")
+                    .and_then(|x| x.as_str())
+                    .expect("plaintext b64"),
+            )
+            .expect("decode plaintext");
+        assert_eq!(pt, plain);
+    }
+
+    #[tokio::test]
+    async fn route_aes128_gcm_roundtrip() {
+        let key = [3u8; 16];
+        let key_b64 = BASE64.encode(key);
+        let plain = b"aes128";
+        let plain_b64 = BASE64.encode(plain);
+        let enc_params = json!({
+            "plaintext": plain_b64,
+            "key": key_b64,
+        });
+        let enc = route("crypto.aes128_gcm_encrypt", Some(&enc_params))
+            .await
+            .expect("route")
+            .expect("aes128 enc");
+        let dec_params = json!({
+            "ciphertext": enc.get("ciphertext").and_then(|x| x.as_str()).expect("ct"),
+            "nonce": enc.get("nonce").and_then(|x| x.as_str()).expect("nonce"),
+            "key": key_b64,
+        });
+        let dec = route("crypto.aes128_gcm_decrypt", Some(&dec_params))
+            .await
+            .expect("route")
+            .expect("aes128 dec");
+        let pt = BASE64
+            .decode(
+                dec.get("plaintext")
+                    .and_then(|x| x.as_str())
+                    .expect("plaintext b64"),
+            )
+            .expect("decode plaintext");
+        assert_eq!(pt, plain);
+    }
+
+    #[tokio::test]
+    async fn route_ecdh_p256_missing_params_errors() {
+        let err = route("crypto.ecdh_p256_derive", None)
+            .await
+            .expect_err("missing params");
+        assert!(err.contains("Missing parameters"));
+    }
+
+    #[tokio::test]
+    async fn route_unknown_method_returns_none() {
+        assert!(
+            route("crypto.no_such_kex", None)
+                .await
+                .expect("route")
+                .is_none()
+        );
+    }
+}

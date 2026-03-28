@@ -43,6 +43,13 @@ pub struct HealthStatus {
 }
 
 /// HSM Provider trait
+///
+/// # Migration (v0.10.0)
+///
+/// Superseded by [`beardog_traits::hsm::HsmKeyProvider`] which is the
+/// canonical, object-safe HSM abstraction.  Use `HsmProviderRegistry`
+/// for runtime provider selection.
+/// This trait will be removed in a future release.
 #[async_trait]
 pub trait HsmProvider: Send + Sync {
     /// Get provider information

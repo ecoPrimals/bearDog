@@ -250,4 +250,114 @@ mod tests {
         config.user_agent = Arc::from(String::new().as_str());
         assert!(config.validate().is_err());
     }
+
+    #[test]
+    fn client_validation_connection_and_request_timeout_zero() {
+        let mut c = ClientConfiguration::default();
+        c.connection_timeout_seconds = 0;
+        assert!(c.validate().is_err());
+        c = ClientConfiguration::default();
+        c.request_timeout_seconds = 0;
+        assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn retry_validation_base_delay_and_backoff() {
+        let mut r = RetryConfiguration {
+            max_attempts: 1,
+            base_delay_ms: 10,
+            max_delay_ms: 100,
+            backoff_multiplier: 2.0,
+            enable_exponential_backoff: true,
+            retryable_status_codes: vec![],
+        };
+        assert!(r.validate().is_ok());
+
+        r.base_delay_ms = 0;
+        assert!(r.validate().is_err());
+
+        r = RetryConfiguration {
+            max_attempts: 1,
+            base_delay_ms: 10,
+            max_delay_ms: 100,
+            backoff_multiplier: 0.0,
+            enable_exponential_backoff: false,
+            retryable_status_codes: vec![],
+        };
+        assert!(r.validate().is_err());
+    }
+
+    #[test]
+    fn retry_strategy_exponential_and_linear_delays() {
+        let r = RetryConfiguration {
+            max_attempts: 5,
+            base_delay_ms: 10,
+            max_delay_ms: 1000,
+            backoff_multiplier: 2.0,
+            enable_exponential_backoff: true,
+            retryable_status_codes: vec![],
+        };
+        assert_eq!(r.delay_for_attempt(0), std::time::Duration::from_millis(10));
+        assert_eq!(r.delay_for_attempt(1), std::time::Duration::from_millis(20));
+        assert_eq!(
+            r.total_delay(3),
+            r.delay_for_attempt(0) + r.delay_for_attempt(1) + r.delay_for_attempt(2)
+        );
+
+        let linear = RetryConfiguration {
+            max_attempts: 3,
+            base_delay_ms: 50,
+            max_delay_ms: 50,
+            backoff_multiplier: 2.0,
+            enable_exponential_backoff: false,
+            retryable_status_codes: vec![],
+        };
+        assert_eq!(
+            linear.delay_for_attempt(0),
+            std::time::Duration::from_millis(50)
+        );
+    }
+
+    #[test]
+    fn retry_strategy_should_retry_error_filters_4xx() {
+        let r = RetryConfiguration {
+            max_attempts: 3,
+            base_delay_ms: 50,
+            max_delay_ms: 500,
+            backoff_multiplier: 2.0,
+            enable_exponential_backoff: true,
+            retryable_status_codes: vec![500],
+        };
+        assert!(!r.should_retry_error(&std::io::Error::other("HTTP 401 unauthorized")));
+        assert!(!r.should_retry_error(&std::io::Error::other("status 403")));
+        assert!(!r.should_retry_error(&std::io::Error::other("400 bad")));
+        assert!(r.should_retry_error(&std::io::Error::other("500 server")));
+    }
+
+    #[test]
+    fn retry_strategy_limit_and_backoff_multiplier() {
+        let r = RetryConfiguration {
+            max_attempts: 2,
+            base_delay_ms: 1,
+            max_delay_ms: 10,
+            backoff_multiplier: 1.5,
+            enable_exponential_backoff: true,
+            retryable_status_codes: vec![],
+        };
+        assert!(r.is_limit_reached(2));
+        assert!(!r.is_limit_reached(1));
+        assert_eq!(r.backoff_multiplier(), 1.5);
+    }
+
+    #[test]
+    fn client_config_json_roundtrip() {
+        let c = ClientConfiguration::default();
+        let v = serde_json::to_value(&c).expect("serialize ClientConfiguration");
+        let back: ClientConfiguration = serde_json::from_value(v).expect("deserialize");
+        assert_eq!(c.max_redirects, back.max_redirects);
+        assert_eq!(
+            c.connection_timeout_seconds,
+            back.connection_timeout_seconds
+        );
+    }
 }

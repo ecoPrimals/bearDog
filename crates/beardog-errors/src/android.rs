@@ -171,3 +171,86 @@ impl From<AndroidError> for crate::BearDogError {
         Self::system(err.to_string())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn phase_display_all_variants() {
+        assert_eq!(format!("{}", Phase::One), "Phase 1");
+        assert_eq!(format!("{}", Phase::Two), "Phase 2");
+        assert_eq!(format!("{}", Phase::Three), "Phase 3");
+    }
+
+    #[test]
+    fn phase2_not_implemented_builder_formats() {
+        let err = phase2_not_implemented(
+            "binder-ipc",
+            "Wire up AIDL/Binder stubs.",
+            Some("Use local socket until Phase 2."),
+        );
+        let s = err.to_string();
+        assert!(s.contains("binder-ipc"), "display should name feature: {s}");
+        assert!(s.contains("Phase 2"), "display should mention phase: {s}");
+        let wrapped: crate::BearDogError = err.into();
+        let msg = wrapped.to_string();
+        assert!(
+            msg.contains("binder-ipc"),
+            "BearDogError should preserve context: {msg}"
+        );
+    }
+
+    #[test]
+    fn unsupported_platform_display_lists_alternatives() {
+        let err = AndroidError::UnsupportedPlatform {
+            platform: "linux-desktop".to_string(),
+            feature: "strongbox",
+            alternatives: vec!["software-hsm", "pkcs11"],
+        };
+        let s = err.to_string();
+        assert!(s.contains("linux-desktop"), "{s}");
+        assert!(s.contains("strongbox"), "{s}");
+        assert!(s.contains("software-hsm"), "{s}");
+    }
+
+    #[test]
+    fn strongbox_not_available_tee_branch() {
+        let err = AndroidError::StrongBoxNotAvailable {
+            manufacturer: "Acme".to_string(),
+            model: "Phone X".to_string(),
+            android_version: "14".to_string(),
+            tee_fallback_available: true,
+        };
+        let s = err.to_string();
+        assert!(s.contains("StrongBox"), "{s}");
+        assert!(s.contains("TEE"), "{s}");
+    }
+
+    #[test]
+    fn strongbox_not_available_no_tee_branch() {
+        let err = AndroidError::StrongBoxNotAvailable {
+            manufacturer: "Acme".to_string(),
+            model: "Phone Y".to_string(),
+            android_version: "13".to_string(),
+            tee_fallback_available: false,
+        };
+        let s = err.to_string();
+        assert!(s.contains("Software HSM"), "{s}");
+    }
+
+    #[test]
+    fn phase2_with_tracking_and_without_workaround() {
+        let err = AndroidError::Phase2NotImplemented {
+            feature: "nfc-hsm",
+            phase: Phase::Three,
+            tracking_issue: None,
+            workaround: None,
+            implementation_notes: "Notes only.",
+        };
+        let s = err.to_string();
+        assert!(s.contains("nfc-hsm"), "{s}");
+        assert!(s.contains("Phase 3"), "{s}");
+        assert!(s.contains("Notes only."), "{s}");
+    }
+}

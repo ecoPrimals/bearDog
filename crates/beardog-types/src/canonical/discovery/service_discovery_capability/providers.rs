@@ -244,3 +244,116 @@ impl ServiceDiscoveryCapability for DnsHttpDiscovery {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::canonical::capabilities::ServiceCapabilityType;
+
+    #[tokio::test]
+    async fn consul_try_create_returns_backend_unavailable() {
+        let e = ConsulDiscovery::try_create()
+            .await
+            .expect_err("consul backend should be unavailable until implemented");
+        match e {
+            DiscoveryError::BackendUnavailable { provider, .. } => {
+                assert_eq!(provider, "consul");
+            }
+            other => panic!("unexpected error variant: {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn etcd_try_create_returns_backend_unavailable() {
+        let e = EtcdDiscovery::try_create()
+            .await
+            .expect_err("etcd backend should be unavailable until implemented");
+        match e {
+            DiscoveryError::BackendUnavailable { provider, .. } => {
+                assert_eq!(provider, "etcd");
+            }
+            other => panic!("unexpected error variant: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn dns_http_discovery_default_and_new_match() {
+        let a = DnsHttpDiscovery::new();
+        let b = DnsHttpDiscovery::default();
+        assert_eq!(format!("{a:?}"), format!("{b:?}"));
+    }
+
+    #[test]
+    fn dns_http_discovery_with_domains_clone() {
+        let d = DnsHttpDiscovery::with_domains(vec!["custom".to_string()]);
+        let c = d.clone();
+        assert_eq!(format!("{d:?}"), format!("{c:?}"));
+    }
+
+    #[tokio::test]
+    async fn dns_http_discover_by_capability_runs() {
+        let d = DnsHttpDiscovery::default();
+        let out = d
+            .discover_by_capability(ServiceCapabilityType::ServiceMesh)
+            .await
+            .expect("stub discovery should return Ok");
+        assert!(out.is_empty());
+    }
+
+    #[tokio::test]
+    async fn dns_http_discover_localhost_yields_endpoint() {
+        let d = DnsHttpDiscovery::with_domains(vec![]);
+        let out = d
+            .discover_by_name("localhost")
+            .await
+            .expect("localhost resolution should succeed");
+        assert!(!out.is_empty(), "expected at least one localhost endpoint");
+    }
+
+    #[tokio::test]
+    async fn dns_http_register_service_errors() {
+        let d = DnsHttpDiscovery::default();
+        let desc = ServiceDescriptor {
+            instance_id: ServiceInstanceId::new("i1"),
+            endpoint: "http://x".to_string(),
+            capabilities: vec![],
+            metadata: HashMap::new(),
+            health: ServiceHealth::Healthy,
+            priority: 1,
+            protocol: ServiceProtocol::Http,
+        };
+        let e = d
+            .register_service(desc)
+            .await
+            .expect_err("DNS mode must reject registration");
+        match e {
+            DiscoveryError::Other { message } => {
+                assert!(message.contains("not supported"), "{message}");
+            }
+            other => panic!("unexpected: {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn dns_http_unregister_and_renew_noop() {
+        let d = DnsHttpDiscovery::default();
+        let id = RegistrationId::new("r1");
+        d.unregister_service(&id).await.expect("unregister noop");
+        d.renew_registration(&id).await.expect("renew noop");
+    }
+
+    #[tokio::test]
+    async fn dns_http_health_check_ok() {
+        let d = DnsHttpDiscovery::default();
+        let h = d.health_check().await.expect("health check");
+        assert!(h.is_healthy);
+    }
+
+    #[test]
+    fn dns_http_provider_name_and_capabilities() {
+        let d = DnsHttpDiscovery::default();
+        assert_eq!(d.provider_name(), "dns-http-fallback");
+        let c = d.capabilities();
+        assert!(!c.supports_registration);
+    }
+}

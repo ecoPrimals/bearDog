@@ -14,7 +14,16 @@ use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::RwLock;
+use tokio::time::Duration;
 use tracing::{debug, error, info, warn};
+
+/// Per-read timeout for TCP NDJSON connections.
+///
+/// Prevents indefinite blocking when a client connects but never sends a
+/// newline (common with raw `nc` or `curl` probes). On timeout the connection
+/// is closed and the task freed. Value chosen to be generous for legitimate
+/// clients while still bounding resource usage.
+const TCP_READ_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// TCP IPC Server
 ///
@@ -116,14 +125,33 @@ impl TcpIpcServer {
         loop {
             line.clear();
 
-            // Read JSON-RPC request (newline-delimited)
-            match reader.read_line(&mut line).await {
-                Ok(0) => {
-                    // Connection closed
+            // Read JSON-RPC request (NDJSON). Wrapped with timeout to prevent
+            // indefinite blocking when probes connect without sending a newline.
+            let read_result =
+                tokio::time::timeout(TCP_READ_TIMEOUT, reader.read_line(&mut line)).await;
+
+            let bytes_read = match read_result {
+                Err(_elapsed) => {
+                    warn!(
+                        peer = %peer_addr,
+                        timeout_secs = TCP_READ_TIMEOUT.as_secs(),
+                        "TCP read timed out — closing idle connection"
+                    );
+                    break;
+                }
+                Ok(Err(e)) => {
+                    warn!("Read error from {}: {}", peer_addr, e);
+                    break;
+                }
+                Ok(Ok(n)) => n,
+            };
+
+            match bytes_read {
+                0 => {
                     debug!("Connection closed by peer: {}", peer_addr);
                     break;
                 }
-                Ok(n) => {
+                n => {
                     debug!("📨 Received {} bytes from {}", n, peer_addr);
 
                     let request_str = line.trim();
@@ -198,10 +226,6 @@ impl TcpIpcServer {
                     }
 
                     debug!("📤 Response sent to {}", peer_addr);
-                }
-                Err(e) => {
-                    error!("Failed to read from {}: {}", peer_addr, e);
-                    break;
                 }
             }
         }

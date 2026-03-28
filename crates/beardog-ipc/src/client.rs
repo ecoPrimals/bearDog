@@ -23,7 +23,7 @@ use tracing::{debug, info, warn};
 
 /// Client for the Primal IPC registry transport (capability discovery, `ipc.register`, etc.).
 #[derive(Debug)]
-pub struct SongbirdClient {
+pub struct OrchestratorRegistryClient {
     /// Registry Unix socket path (from env / capability discovery)
     socket_path: String,
     /// Request ID counter
@@ -32,7 +32,7 @@ pub struct SongbirdClient {
     primal_name: Arc<RwLock<Option<String>>>,
 }
 
-impl SongbirdClient {
+impl OrchestratorRegistryClient {
     /// Create a new client (socket path defaults to [`DISCOVERY_SOCKET_FALLBACK`] until [`connect`](Self::connect)).
     pub fn new() -> Self {
         Self {
@@ -69,10 +69,10 @@ impl SongbirdClient {
     ///
     /// # Example
     /// ```no_run
-    /// # use beardog_ipc::{SongbirdClient, Capability};
+    /// # use beardog_ipc::{OrchestratorRegistryClient, Capability};
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = SongbirdClient::connect().await?;
+    /// let client = OrchestratorRegistryClient::connect().await?;
     /// client.register(
     ///     "beardog",
     ///     vec![Capability::Crypto, Capability::BTSP],
@@ -135,10 +135,10 @@ impl SongbirdClient {
     ///
     /// # Example
     /// ```no_run
-    /// # use beardog_ipc::SongbirdClient;
+    /// # use beardog_ipc::OrchestratorRegistryClient;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = SongbirdClient::connect().await?;
+    /// let client = OrchestratorRegistryClient::connect().await?;
     /// let crypto_services = client.find_capability("crypto").await?;
     /// for service in crypto_services {
     ///     println!("Found: {} at {}", service.name, service.endpoint);
@@ -307,14 +307,14 @@ impl SongbirdClient {
     }
 }
 
-impl Default for SongbirdClient {
+impl Default for OrchestratorRegistryClient {
     fn default() -> Self {
         Self::new()
     }
 }
 
 #[cfg(test)]
-impl SongbirdClient {
+impl OrchestratorRegistryClient {
     pub(crate) fn with_socket_path_for_test(path: impl Into<String>) -> Self {
         Self {
             socket_path: path.into(),
@@ -323,7 +323,7 @@ impl SongbirdClient {
         }
     }
 
-    /// Same validation as [`SongbirdClient::connect`], but uses a caller-provided socket path.
+    /// Same validation as [`OrchestratorRegistryClient::connect`], but uses a caller-provided socket path.
     pub(crate) async fn connect_test(self) -> IpcResult<Self> {
         let _stream = UnixStream::connect(&self.socket_path).await.map_err(|e| {
             IpcError::Connection(format!(
@@ -454,7 +454,8 @@ mod tests {
         let _guard = spawn_line_json_mock(&path, true, Arc::clone(&ready));
         ready.notified().await;
 
-        let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
+        let client =
+            OrchestratorRegistryClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
         let client = client.connect_test().await.expect("connect mock");
 
         client
@@ -480,7 +481,8 @@ mod tests {
         let _guard = spawn_line_json_mock(&path, false, Arc::clone(&ready));
         ready.notified().await;
 
-        let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
+        let client =
+            OrchestratorRegistryClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
         let client = client
             .connect_test()
             .await
@@ -501,7 +503,8 @@ mod tests {
         let _guard = spawn_line_json_mock(&path, true, Arc::clone(&ready));
         ready.notified().await;
 
-        let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
+        let client =
+            OrchestratorRegistryClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
         let client = client
             .connect_test()
             .await
@@ -532,7 +535,8 @@ mod tests {
         });
         ready.notified().await;
 
-        let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
+        let client =
+            OrchestratorRegistryClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
         let err = client
             .find_capability("crypto")
             .await
@@ -548,7 +552,8 @@ mod tests {
         let _guard = spawn_line_json_mock(&path, true, Arc::clone(&ready));
         ready.notified().await;
 
-        let client = SongbirdClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
+        let client =
+            OrchestratorRegistryClient::with_socket_path_for_test(path.to_string_lossy().as_ref());
         let client = client
             .connect_test()
             .await
@@ -561,19 +566,19 @@ mod tests {
 
     #[test]
     fn test_client_creation() {
-        let client = SongbirdClient::new();
+        let client = OrchestratorRegistryClient::new();
         assert_eq!(client.socket_path, DISCOVERY_SOCKET_FALLBACK);
     }
 
     #[test]
     fn test_client_default() {
-        let client = SongbirdClient::default();
+        let client = OrchestratorRegistryClient::default();
         assert_eq!(client.socket_path, DISCOVERY_SOCKET_FALLBACK);
     }
 
     #[test]
     fn test_request_id_increment() {
-        let client = SongbirdClient::new();
+        let client = OrchestratorRegistryClient::new();
         assert_eq!(client.next_request_id(), 1);
         assert_eq!(client.next_request_id(), 2);
         assert_eq!(client.next_request_id(), 3);
@@ -581,14 +586,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_heartbeat_handle_creation_and_drop() {
-        let client = SongbirdClient::new();
+        let client = OrchestratorRegistryClient::new();
         let handle = client.start_heartbeat(Duration::from_secs(3600));
         drop(handle);
     }
 
     #[tokio::test]
     async fn test_connect_requires_socket() {
-        let result = SongbirdClient::connect().await;
+        let result = OrchestratorRegistryClient::connect().await;
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(
@@ -599,8 +604,8 @@ mod tests {
 
     #[test]
     fn test_request_id_unique_per_client() {
-        let c1 = SongbirdClient::new();
-        let c2 = SongbirdClient::new();
+        let c1 = OrchestratorRegistryClient::new();
+        let c2 = OrchestratorRegistryClient::new();
         let id1 = c1.next_request_id();
         let id2 = c2.next_request_id();
         assert_eq!(id1, 1);
@@ -609,8 +614,8 @@ mod tests {
 
     #[test]
     fn songbird_client_debug_includes_socket() {
-        let c = SongbirdClient::with_socket_path_for_test("/tmp/unit-test.sock");
+        let c = OrchestratorRegistryClient::with_socket_path_for_test("/tmp/unit-test.sock");
         let s = format!("{c:?}");
-        assert!(s.contains("SongbirdClient") || s.contains("socket"));
+        assert!(s.contains("OrchestratorRegistryClient") || s.contains("socket"));
     }
 }

@@ -20,12 +20,12 @@
 //! ## Quick Start
 //!
 //! ```no_run
-//! use beardog_ipc::{SongbirdClient, Capability};
+//! use beardog_ipc::{OrchestratorRegistryClient, Capability};
 //!
 //! #[tokio::main]
 //! async fn main() -> anyhow::Result<()> {
 //!     // Connect to IPC registry (socket from env / capability discovery)
-//!     let client = SongbirdClient::connect().await?;
+//!     let client = OrchestratorRegistryClient::connect().await?;
 //!     
 //!     // Register BearDog capabilities
 //!     client.register(
@@ -67,7 +67,11 @@ pub mod tarpc_types;
 pub mod multi_transport;
 pub mod protocol_router;
 
-pub use client::SongbirdClient;
+pub use client::OrchestratorRegistryClient;
+
+/// Deprecated alias for [`OrchestratorRegistryClient`].
+#[deprecated(since = "0.9.0", note = "use `OrchestratorRegistryClient` instead")]
+pub type SongbirdClient = OrchestratorRegistryClient;
 pub use dispatch::{DispatchOutcome, IpcErrorPhase};
 pub use error::{IpcError, IpcResult};
 pub use method_names::normalize_method;

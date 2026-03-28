@@ -268,3 +268,49 @@ impl UnifiedBearDogConfig {
         Ok(config)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::UnifiedBearDogConfig;
+    use crate::canonical::config::unified::metadata::Environment;
+
+    #[test]
+    fn load_and_from_env_default_path() {
+        let a = UnifiedBearDogConfig::load().expect("load with defaults should validate");
+        let b = UnifiedBearDogConfig::from_env().expect("from_env aliases load");
+        assert_eq!(
+            a.metadata.environment, b.metadata.environment,
+            "load and from_env should agree"
+        );
+    }
+
+    #[test]
+    fn development_and_production_presets() {
+        let d = UnifiedBearDogConfig::development();
+        assert_eq!(d.metadata.environment, Environment::Development);
+        let p = UnifiedBearDogConfig::production();
+        assert_eq!(p.metadata.environment, Environment::Production);
+    }
+
+    #[test]
+    fn validate_rejects_empty_beardog_version() {
+        let mut c = UnifiedBearDogConfig::default();
+        c.metadata.version.beardog_version.clear();
+        let err = c
+            .validate()
+            .expect_err("empty version should fail validation");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("version") || msg.contains("empty"),
+            "unexpected validation message: {msg}"
+        );
+    }
+
+    #[test]
+    fn migrate_from_legacy_succeeds() {
+        let m = UnifiedBearDogConfig::migrate_from_legacy().expect("migrate");
+        assert!(m.monitoring.enabled);
+        assert_eq!(m.metadata.environment, Environment::Development);
+        assert!(!m.metadata.version.beardog_version.is_empty());
+    }
+}

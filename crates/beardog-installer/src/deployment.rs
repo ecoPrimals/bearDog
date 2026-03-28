@@ -17,7 +17,7 @@
 use crate::{
     Architecture, OperatingSystem,
     installer::{BinaryInstaller, InstallerError},
-    platform::BiomeOSPaths,
+    platform::PlatformPaths,
     types::{DeploymentProgress, DeploymentReport, DeploymentStatus, PrimalName},
 };
 use std::sync::Arc;
@@ -31,7 +31,7 @@ use tracing::{error, info, warn};
 pub struct DeploymentManager {
     arch: Architecture,
     os: OperatingSystem,
-    paths: BiomeOSPaths,
+    paths: PlatformPaths,
     /// Binary installer (public for uninstallation)
     pub installer: Arc<BinaryInstaller>,
     progress: Arc<RwLock<Vec<DeploymentProgress>>>,
@@ -52,7 +52,7 @@ impl DeploymentManager {
     pub async fn new(source_dir: std::path::PathBuf) -> Result<Self, DeploymentError> {
         let arch = Architecture::detect()?;
         let os = OperatingSystem::detect()?;
-        let paths = BiomeOSPaths::discover()?;
+        let paths = PlatformPaths::discover()?;
         paths.ensure_exists().await?;
 
         let installer = Arc::new(BinaryInstaller::new(paths.clone(), source_dir));
@@ -304,7 +304,7 @@ mod tests {
     use tempfile::TempDir;
     use tokio::fs;
 
-    /// `DeploymentManager` installs into real user paths from `BiomeOSPaths::discover()`; avoid races.
+    /// `DeploymentManager` installs into real user paths from `PlatformPaths::discover()`; avoid races.
     static DEPLOYMENT_TEST_LOCK: Mutex<()> = Mutex::new(());
 
     async fn setup_test_env() -> (TempDir, std::path::PathBuf) {

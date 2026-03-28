@@ -55,6 +55,12 @@ where
 }
 
 /// HSM provider trait for zero-cost abstractions
+///
+/// # Migration (v0.10.0)
+///
+/// Superseded by [`beardog_traits::hsm::HsmKeyProvider`] which supports
+/// both compile-time and dynamic dispatch via `Arc<dyn HsmKeyProvider>`.
+/// This trait will be removed in a future release.
 pub trait HsmProviderTrait: Send + Sync + 'static {
     /// Associated capabilities type
     type Capabilities: HsmCapabilities;
@@ -72,6 +78,11 @@ pub trait HsmProviderTrait: Send + Sync + 'static {
 }
 
 /// HSM capabilities trait for compile-time capability queries
+///
+/// # Migration (v0.10.0)
+///
+/// Superseded by [`beardog_types::hsm::HsmCapabilitySet`].
+/// This trait will be removed in a future release.
 pub trait HsmCapabilities: Send + Sync + 'static {
     /// Supported algorithm names
     const ALGORITHMS: &'static [&'static str];
@@ -165,4 +176,109 @@ where
     P: HsmProviderTrait,
 {
     ZeroCostHsmProvider::new(provider)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use beardog_types::canonical::HsmKey;
+
+    struct TestSoftwareProvider;
+
+    impl HsmProviderTrait for TestSoftwareProvider {
+        type Capabilities = SoftwareHsmCapabilities;
+        const CAPABILITIES: &'static Self::Capabilities = &SoftwareHsmCapabilities;
+
+        fn execute_operation(&self, operation: HsmOperation) -> Result<HsmKey, BearDogError> {
+            match operation {
+                HsmOperation::KeyDeletion { .. } => Err(BearDogError::not_found(
+                    "key already removed in test provider".to_string(),
+                )),
+                _ => Ok(HsmKey::default()),
+            }
+        }
+
+        fn generate_key_typed<A>(&self, _algorithm: A) -> Result<HsmKey, BearDogError>
+        where
+            A: KeyAlgorithm,
+            Self: SupportsAlgorithm<A>,
+        {
+            Ok(HsmKey::default())
+        }
+    }
+
+    impl SupportsAlgorithm<Aes256> for TestSoftwareProvider {}
+
+    #[test]
+    fn zero_cost_provider_new_and_capabilities_pointer() {
+        let p = ZeroCostHsmProvider::new(TestSoftwareProvider);
+        let _caps = ZeroCostHsmProvider::<TestSoftwareProvider>::capabilities();
+        assert!(<SoftwareHsmCapabilities as HsmCapabilities>::ALGORITHMS.contains(&"AES-256"));
+        assert_eq!(
+            <SoftwareHsmCapabilities as HsmCapabilities>::SECURITY_LEVEL,
+            SecurityLevel::Software
+        );
+        let _ = format!("{:?}", SecurityLevel::TrustedExecutionEnvironment);
+        let _ = format!("{:?}", SecurityLevel::SecureEnclave);
+        let _ = format!("{:?}", SecurityLevel::HardwareSecurityModule);
+        let _ = p;
+    }
+
+    #[test]
+    fn execute_operation_happy_path_and_key_deletion_error() {
+        let p = ZeroCostHsmProvider::new(TestSoftwareProvider);
+        let key = p
+            .execute_operation(HsmOperation::KeyGeneration {
+                key_id: "k".to_string(),
+                key_size: 256,
+            })
+            .expect("key generation op");
+        assert!(!key.key_id.is_empty());
+
+        let err = p
+            .execute_operation(HsmOperation::KeyDeletion {
+                key_id: "missing".to_string(),
+            })
+            .expect_err("test provider rejects deletion");
+        assert!(
+            format!("{err}").contains("removed") || format!("{err}").contains("not found"),
+            "{err}"
+        );
+    }
+
+    #[test]
+    fn generate_key_typed_aes256() {
+        let p = ZeroCostHsmProvider::new(TestSoftwareProvider);
+        let k = p.generate_key(Aes256).expect("typed generate");
+        assert_eq!(k.algorithm, "AES");
+    }
+
+    #[test]
+    fn migrate_to_zero_cost_is_identity_shape() {
+        let z = migrate_to_zero_cost(TestSoftwareProvider);
+        z.execute_operation(HsmOperation::Signing {
+            key_id: "s".to_string(),
+            algorithm: "ed25519".to_string(),
+        })
+        .expect("signing operation through migrated wrapper");
+    }
+
+    #[test]
+    fn key_algorithm_constants() {
+        assert_eq!(Aes256::NAME, "AES-256");
+        assert_eq!(Rsa2048::KEY_SIZE, 2048);
+        assert_eq!(EcdsaP256::NAME, "ECDSA-P256");
+    }
+
+    #[test]
+    fn android_and_ios_capability_statics() {
+        assert_eq!(
+            <AndroidStrongboxCapabilities as HsmCapabilities>::SECURITY_LEVEL,
+            SecurityLevel::HardwareSecurityModule
+        );
+        assert_eq!(
+            <IOSSecureEnclaveCapabilities as HsmCapabilities>::MAX_KEY_SIZE,
+            256
+        );
+    }
 }

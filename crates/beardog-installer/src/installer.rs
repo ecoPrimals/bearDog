@@ -14,7 +14,7 @@
 //! - Platform-agnostic (works everywhere)
 //! - Atomic operations (all-or-nothing)
 
-use crate::{Architecture, OperatingSystem, platform::BiomeOSPaths, types::PrimalName};
+use crate::{Architecture, OperatingSystem, platform::PlatformPaths, types::PrimalName};
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 use tokio::fs;
@@ -24,7 +24,7 @@ use tracing::{debug, info, warn};
 ///
 /// Handles installation of genomeBin binaries to the target system.
 pub struct BinaryInstaller {
-    paths: BiomeOSPaths,
+    paths: PlatformPaths,
     source_dir: PathBuf,
 }
 
@@ -34,7 +34,7 @@ impl BinaryInstaller {
     /// # Arguments
     /// - `paths`: Installation paths
     /// - `source_dir`: Directory containing compiled binaries
-    pub const fn new(paths: BiomeOSPaths, source_dir: PathBuf) -> Self {
+    pub const fn new(paths: PlatformPaths, source_dir: PathBuf) -> Self {
         Self { paths, source_dir }
     }
 
@@ -45,9 +45,9 @@ impl BinaryInstaller {
     /// # Examples
     /// ```no_run
     /// # use beardog_installer::installer::BinaryInstaller;
-    /// # use beardog_installer::{BiomeOSPaths, Architecture, OperatingSystem, PrimalName};
+    /// # use beardog_installer::{PlatformPaths, Architecture, OperatingSystem, PrimalName};
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let paths = BiomeOSPaths::discover()?;
+    /// let paths = PlatformPaths::discover()?;
     /// let source = std::path::PathBuf::from("./target/release");
     /// let installer = BinaryInstaller::new(paths, source);
     ///
@@ -259,7 +259,7 @@ mod tests {
             .await
             .expect("write fake binary");
 
-        let paths = BiomeOSPaths {
+        let paths = PlatformPaths {
             bin_dir: bin_dir.clone(),
             data_dir: temp.path().join("data"),
             config_dir: temp.path().join("config"),
@@ -303,7 +303,7 @@ mod tests {
             .await
             .expect("write binary");
 
-        let paths = BiomeOSPaths {
+        let paths = PlatformPaths {
             bin_dir: bin_dir.clone(),
             data_dir: temp.path().join("data"),
             config_dir: temp.path().join("config"),
@@ -331,7 +331,7 @@ mod tests {
 
         fs::create_dir_all(&bin_dir).await.expect("create bin dir");
 
-        let paths = BiomeOSPaths {
+        let paths = PlatformPaths {
             bin_dir: bin_dir.clone(),
             data_dir: temp.path().join("data"),
             config_dir: temp.path().join("config"),
@@ -358,7 +358,7 @@ mod tests {
         let temp = TempDir::new().expect("tempdir");
         let bin_dir = temp.path().join("bin");
 
-        let paths = BiomeOSPaths {
+        let paths = PlatformPaths {
             bin_dir: bin_dir.clone(),
             data_dir: temp.path().join("data"),
             config_dir: temp.path().join("config"),
@@ -383,7 +383,7 @@ mod tests {
         let target_bin = source_dir.join("x86_64-unknown-linux-gnu").join("beardog");
         std::fs::write(&target_bin, b"x").expect("write");
 
-        let paths = BiomeOSPaths {
+        let paths = PlatformPaths {
             bin_dir: temp.path().join("bin"),
             data_dir: temp.path().join("data"),
             config_dir: temp.path().join("config"),
@@ -412,7 +412,7 @@ mod tests {
         let candidate = gnu_dir.join("beardog");
         std::fs::write(&candidate, b"y").expect("write");
 
-        let paths = BiomeOSPaths {
+        let paths = PlatformPaths {
             bin_dir: temp.path().join("bin"),
             data_dir: temp.path().join("data"),
             config_dir: temp.path().join("config"),
@@ -436,7 +436,7 @@ mod tests {
         let source_dir = temp.path().join("empty");
         std::fs::create_dir_all(&source_dir).expect("mkdir");
 
-        let paths = BiomeOSPaths {
+        let paths = PlatformPaths {
             bin_dir: temp.path().join("bin"),
             data_dir: temp.path().join("data"),
             config_dir: temp.path().join("config"),
@@ -465,7 +465,7 @@ mod tests {
         let bin_dir = temp.path().join("bin");
         std::fs::create_dir_all(&bin_dir).expect("mkdir");
 
-        let paths = BiomeOSPaths {
+        let paths = PlatformPaths {
             bin_dir: bin_dir.clone(),
             data_dir: temp.path().join("data"),
             config_dir: temp.path().join("config"),
@@ -488,7 +488,7 @@ mod tests {
             .await
             .expect("create file where bin dir should be");
 
-        let paths = BiomeOSPaths {
+        let paths = PlatformPaths {
             bin_dir: bin_path.clone(),
             data_dir: temp.path().join("data"),
             config_dir: temp.path().join("config"),
@@ -525,7 +525,7 @@ mod tests {
         let exe = target_dir.join("beardog.exe");
         std::fs::write(&exe, b"x").expect("write exe");
 
-        let paths = BiomeOSPaths {
+        let paths = PlatformPaths {
             bin_dir: temp.path().join("bin"),
             data_dir: temp.path().join("data"),
             config_dir: temp.path().join("config"),

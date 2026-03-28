@@ -1,4 +1,4 @@
-# beardog-ipc - Songbird IPC Client
+# beardog-ipc — Orchestrator registry IPC client
 **Version**: 0.1.0  
 **Purpose**: Primal IPC Protocol Implementation (JSON-RPC over Unix Sockets)  
 **Standard**: `/wateringHole/PRIMAL_IPC_PROTOCOL.md`
@@ -11,13 +11,16 @@ This crate provides BearDog's implementation of the ecoPrimals Primal IPC Protoc
 - JSON-RPC 2.0 communication over Unix sockets
 - Runtime primal discovery (zero hardcoded knowledge)
 
+The primary client type is **`OrchestratorRegistryClient`**. The name **`SongbirdClient`** remains as a deprecated type alias for the same type.
+
 ## Usage
 
 ```rust
-use beardog_ipc::{SongbirdClient, Capability};
+use beardog_ipc::{OrchestratorRegistryClient, Capability};
+// `SongbirdClient` is a deprecated alias for `OrchestratorRegistryClient`.
 
 // Register with Songbird on startup
-let client = SongbirdClient::connect().await?;
+let client = OrchestratorRegistryClient::connect().await?;
 client.register(
     "beardog",
     vec![
@@ -59,7 +62,7 @@ This crate implements:
 ```
 BearDog Startup
     ↓
-SongbirdClient::register()
+OrchestratorRegistryClient::register()
     ↓ JSON-RPC over /primal/songbird
 Songbird Registry
     ↓

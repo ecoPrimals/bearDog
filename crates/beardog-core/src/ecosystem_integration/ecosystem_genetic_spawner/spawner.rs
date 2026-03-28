@@ -16,6 +16,7 @@ use crate::ecosystem_integration::universal_compute_client::UniversalComputeClie
 use beardog_errors::BearDogError;
 use beardog_types::canonical::config::genetics::GeneticsConfig;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use tokio::sync::RwLock;
 use tracing::{debug, error, info};
 use uuid::Uuid;
@@ -26,7 +27,8 @@ use uuid::Uuid;
 /// across the `BearDog` ecosystem, abstracting hardware-specific details
 #[derive(Debug)]
 pub struct UniversalHsmManager {
-    // Placeholder fields
+    boot_instant: std::time::Instant,
+    registered_providers: AtomicUsize,
 }
 
 impl Default for UniversalHsmManager {
@@ -38,8 +40,16 @@ impl Default for UniversalHsmManager {
 impl UniversalHsmManager {
     /// Creates a new instance
     #[must_use]
-    pub const fn new() -> Self {
-        Self {}
+    pub fn new() -> Self {
+        Self {
+            boot_instant: std::time::Instant::now(),
+            registered_providers: AtomicUsize::new(0),
+        }
+    }
+
+    /// Increments the count of registered ecosystem HSM providers for status reporting.
+    pub fn register_provider(&self) {
+        self.registered_providers.fetch_add(1, Ordering::Relaxed);
     }
 
     /// Get the current status of the ecosystem
@@ -56,11 +66,28 @@ impl UniversalHsmManager {
     ///
     /// Returns `Err(BearDogError)` if status retrieval fails.
     pub fn get_ecosystem_status(&self) -> Result<serde_json::Value, BearDogError> {
-        // Placeholder implementation
         use serde_json::{Map, Value};
+        let uptime_secs = self.boot_instant.elapsed().as_secs();
+        let provider_count = self.registered_providers.load(Ordering::Relaxed);
         let mut status = Map::new();
-        status.insert("status".to_string(), Value::String("healthy".to_string()));
-        status.insert("hsm_available".to_string(), Value::Bool(true));
+        let status_label = if provider_count > 0 {
+            "operational"
+        } else {
+            "no_registered_providers"
+        };
+        status.insert(
+            "status".to_string(),
+            Value::String(status_label.to_string()),
+        );
+        status.insert("hsm_available".to_string(), Value::Bool(provider_count > 0));
+        status.insert(
+            "uptime_seconds".to_string(),
+            Value::Number(uptime_secs.into()),
+        );
+        status.insert(
+            "provider_count".to_string(),
+            Value::Number(provider_count.into()),
+        );
         Ok(Value::Object(status))
     }
 }
@@ -130,10 +157,15 @@ impl EcosystemGeneticSpawner {
         primal_id: &str,
         client: UniversalComputeClient,
     ) -> Result<(), BearDogError> {
-        self.primal_clients
+        if self
+            .primal_clients
             .write()
             .await
-            .insert(primal_id.to_string(), client);
+            .insert(primal_id.to_string(), client)
+            .is_none()
+        {
+            self.universal_hsm.register_provider();
+        }
         debug!("🔌 Registered primal client: {}", primal_id);
         Ok(())
     }
@@ -489,10 +521,30 @@ mod tests {
             .expect("ecosystem status in test");
         assert_eq!(
             status.get("status").and_then(|v| v.as_str()),
-            Some("healthy")
+            Some("no_registered_providers")
         );
         assert_eq!(
             status
+                .get("hsm_available")
+                .and_then(serde_json::Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            status
+                .get("provider_count")
+                .and_then(serde_json::Value::as_u64),
+            Some(0)
+        );
+        manager.register_provider();
+        let status2 = manager
+            .get_ecosystem_status()
+            .expect("ecosystem status after register in test");
+        assert_eq!(
+            status2.get("status").and_then(|v| v.as_str()),
+            Some("operational")
+        );
+        assert_eq!(
+            status2
                 .get("hsm_available")
                 .and_then(serde_json::Value::as_bool),
             Some(true)

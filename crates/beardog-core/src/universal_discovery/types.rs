@@ -307,3 +307,95 @@ pub struct ProtocolStatistics {
     /// The last activity value
     pub last_activity: DateTime<Utc>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::Utc;
+    use std::collections::HashMap;
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+
+    fn hash_of(p: &DiscoveryProtocol) -> u64 {
+        let mut h = DefaultHasher::new();
+        p.hash(&mut h);
+        h.finish()
+    }
+
+    #[test]
+    fn discovery_protocol_hash_variants_distinct() {
+        let http = DiscoveryProtocol::Http {
+            endpoint: "http://a".into(),
+            headers: std::collections::HashMap::from([("h".into(), "v".into())]),
+        };
+        let dns = DiscoveryProtocol::Dns {
+            domain: "d".into(),
+            servers: vec!["8.8.8.8".into()],
+        };
+        assert_ne!(hash_of(&http), hash_of(&dns));
+        let mdns = DiscoveryProtocol::Mdns {
+            service_type: "_t._tcp".into(),
+            interface: "eth0".into(),
+            timeout_ms: 1,
+            continuous_monitoring: false,
+        };
+        let consul = DiscoveryProtocol::Consul {
+            address: "c".into(),
+            datacenter: "dc".into(),
+        };
+        let etcd = DiscoveryProtocol::Etcd {
+            endpoints: vec!["e".into()],
+            key_prefix: "/p".into(),
+            timeout_ms: 1,
+        };
+        assert_ne!(hash_of(&mdns), hash_of(&consul));
+        assert_ne!(hash_of(&consul), hash_of(&etcd));
+    }
+
+    #[test]
+    fn universal_discovery_config_default_and_serde() {
+        let c = UniversalDiscoveryConfig::default();
+        let v = serde_json::to_value(&c).expect("serialize config");
+        let _: UniversalDiscoveryConfig = serde_json::from_value(v).expect("deserialize");
+    }
+
+    #[test]
+    fn universal_discovery_from_env_smoke() {
+        let _ = UniversalDiscoveryConfig::from_env();
+    }
+
+    #[test]
+    fn discovery_events_roundtrip() {
+        let ev = DiscoveryEvent::ServiceRegistered {
+            service_id: "s".into(),
+            service_name: "n".into(),
+        };
+        let v = serde_json::to_value(&ev).expect("serialize event");
+        let back: DiscoveryEvent = serde_json::from_value(v).expect("deserialize");
+        let _ = format!("{back:?}");
+
+        let ev2 = DiscoveryEvent::ProtocolError {
+            protocol: DiscoveryProtocol::Dns {
+                domain: "x".into(),
+                servers: vec![],
+            },
+            error: "e".into(),
+            timestamp: Utc::now(),
+        };
+        let v = serde_json::to_value(&ev2).expect("serialize protocol error");
+        let _: DiscoveryEvent = serde_json::from_value(v).expect("deserialize");
+    }
+
+    #[test]
+    fn discovery_statistics_default_construct() {
+        let s = DiscoveryStatistics {
+            total_services: 0,
+            healthy_services: 0,
+            unhealthy_services: 0,
+            protocol_statistics: HashMap::new(),
+            uptime: std::time::Duration::ZERO,
+        };
+        let v = serde_json::to_value(&s).expect("serialize empty protocol stats");
+        let _: DiscoveryStatistics = serde_json::from_value(v).expect("deserialize stats");
+    }
+}

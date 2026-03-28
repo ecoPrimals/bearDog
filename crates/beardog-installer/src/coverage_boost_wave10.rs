@@ -402,7 +402,7 @@ async fn validator_validate_all_mixed() {
 
 #[test]
 fn biome_os_paths_discover_and_all_dirs() {
-    let paths = crate::platform::BiomeOSPaths::discover().expect("discover paths");
+    let paths = crate::platform::PlatformPaths::discover().expect("discover paths");
     let dirs = paths.all_dirs();
     assert!(dirs.len() >= 4);
     for d in &dirs {
@@ -412,7 +412,7 @@ fn biome_os_paths_discover_and_all_dirs() {
 
 #[tokio::test]
 async fn biome_os_paths_ensure_exists_creates_dirs() {
-    let paths = crate::platform::BiomeOSPaths::discover().expect("discover paths");
+    let paths = crate::platform::PlatformPaths::discover().expect("discover paths");
     paths
         .ensure_exists()
         .await

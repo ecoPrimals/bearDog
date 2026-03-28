@@ -142,7 +142,7 @@ impl EncryptionHandler {
             key_ref
         );
 
-        // Note: BiomeOS tests expect 'encrypted_data' and 'tag' fields
+        // Note: legacy compatibility tests expect 'encrypted_data' and 'tag' fields
         // ChaCha20-Poly1305 includes the authentication tag in the ciphertext
         // We provide it separately for compatibility
         let tag_b64 = if ciphertext.len() >= 16 {
@@ -183,7 +183,7 @@ impl EncryptionHandler {
 
         let params = params.ok_or("Missing params for decryption")?;
 
-        // Accept both 'encrypted_data' (BiomeOS format) and 'ciphertext' (standard format)
+        // Accept both 'encrypted_data' (legacy compatibility format) and 'ciphertext' (standard format)
         let ciphertext_b64 = params
             .get("encrypted_data")
             .or_else(|| params.get("ciphertext"))
@@ -195,7 +195,7 @@ impl EncryptionHandler {
             .and_then(|v| v.as_str())
             .ok_or("Missing nonce")?;
 
-        // Tag is provided separately in BiomeOS format but is embedded in ChaCha20-Poly1305
+        // Tag is provided separately in legacy compatibility format but is embedded in ChaCha20-Poly1305
         // We'll ignore it for now as it's part of the ciphertext
         let _tag_b64 = params.get("tag").and_then(|v| v.as_str());
 
@@ -247,7 +247,7 @@ impl EncryptionHandler {
         );
 
         Ok(serde_json::json!({
-            "data": plaintext_b64, // BiomeOS format
+            "data": plaintext_b64, // legacy compatibility format
             "plaintext": plaintext_b64, // Standard format
             "verified": true, // Authentication tag verified (implicit in ChaCha20-Poly1305)
             "key_ref": key_ref,

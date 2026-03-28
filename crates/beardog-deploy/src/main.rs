@@ -228,3 +228,28 @@ async fn full_command(
     println!("✅ Full deployment completed successfully!");
     Ok(())
 }
+
+#[cfg(test)]
+mod cli_entry_tests {
+    use super::*;
+    use crate::command_runner::mock::MockAdbCommandRunner;
+
+    #[test]
+    fn check_command_device_only_skips_toolchain_verify() {
+        let android = AndroidDeployment::new(None, 33);
+        let dm = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner::new()));
+        check_command(&android, &dm, true).expect("adb mock should satisfy device check");
+    }
+
+    #[test]
+    fn run_command_delegates_to_device_manager() {
+        let dm = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner::new()));
+        run_command(&dm, &["extra".to_string()]).expect("mock launch");
+    }
+
+    #[test]
+    fn logs_command_snapshot_mode() {
+        let dm = DeviceManager::with_command_runner(Box::new(MockAdbCommandRunner::new()));
+        logs_command(&dm, "com.beardog.test", false).expect("logcat snapshot");
+    }
+}

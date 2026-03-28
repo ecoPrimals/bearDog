@@ -18,10 +18,13 @@ use beardog_errors::BearDogError;
 ///
 /// Returns a Vec of validation error messages if canonical usage is incorrect.
 pub fn validate_canonical_usage() -> Result<(), Vec<String>> {
-    let errors = Vec::new();
-
-    // Add validation logic here as needed
-    // For now, we assume canonical usage is correct
+    let mut errors = Vec::new();
+    let v = crate::VERSION.trim();
+    if v.is_empty() {
+        errors.push("canonical version string is empty".to_string());
+    } else if semver::Version::parse(v).is_err() {
+        errors.push(format!("canonical version '{v}' is not valid semver"));
+    }
 
     if errors.is_empty() {
         Ok(())

@@ -28,9 +28,13 @@ use crate::tunnel::hsm::types::config::{
 use crate::tunnel::hsm::types::*;
 use crate::tunnel::hsm::{GenerateKeyRequest, HsmConfig};
 use beardog_errors::BearDogError;
-use beardog_types::hsm::AuditEvent;
+use beardog_traits::hsm::HsmKeyProvider;
+use beardog_types::hsm::{
+    AuditEvent, HsmAlgorithm, HsmCapabilitySet, HsmProviderType, KeyGenParams, KeyHandle,
+};
 use bytes::Bytes;
 use chrono::Utc;
+use std::collections::HashSet;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
@@ -768,5 +772,106 @@ impl RustSoftwareHsm {
     ) -> Result<HsmKey, BearDogError> {
         self.derive_key_from_root(root_key_id, derivation_data)
             .await
+    }
+
+    /// Map an [`HsmAlgorithm`] to the internal [`KeyType`] used by the legacy key store.
+    fn algorithm_to_key_type(algorithm: HsmAlgorithm) -> KeyType {
+        match algorithm {
+            HsmAlgorithm::Aes256Gcm | HsmAlgorithm::HmacSha256 => KeyType::Aes,
+            HsmAlgorithm::ChaCha20Poly1305 => KeyType::ChaCha20,
+            HsmAlgorithm::Ed25519 | HsmAlgorithm::X25519 => KeyType::Ed25519,
+            HsmAlgorithm::EcdsaP256 | HsmAlgorithm::EcdsaP384 => KeyType::EllipticCurve,
+            HsmAlgorithm::Rsa2048 | HsmAlgorithm::Rsa4096 => KeyType::Rsa,
+        }
+    }
+}
+
+// ── canonical HsmKeyProvider ───────────────────────────────────────────
+
+#[async_trait::async_trait]
+impl HsmKeyProvider for RustSoftwareHsm {
+    fn provider_id(&self) -> &'static str {
+        "software-rustcrypto"
+    }
+
+    fn provider_type(&self) -> HsmProviderType {
+        HsmProviderType::Software
+    }
+
+    fn is_available(&self) -> bool {
+        true
+    }
+
+    fn capabilities(&self) -> HsmCapabilitySet {
+        HsmCapabilitySet {
+            algorithms: HashSet::from([
+                HsmAlgorithm::Aes256Gcm,
+                HsmAlgorithm::ChaCha20Poly1305,
+                HsmAlgorithm::Ed25519,
+                HsmAlgorithm::EcdsaP256,
+                HsmAlgorithm::EcdsaP384,
+                HsmAlgorithm::X25519,
+                HsmAlgorithm::HmacSha256,
+                HsmAlgorithm::Rsa2048,
+                HsmAlgorithm::Rsa4096,
+            ]),
+            hardware_backed: false,
+            supports_key_export: true,
+            max_keys: 0,
+        }
+    }
+
+    async fn generate_key(&self, params: &KeyGenParams) -> Result<KeyHandle, BearDogError> {
+        let key_type = Self::algorithm_to_key_type(params.algorithm);
+        let key_id = params
+            .label
+            .clone()
+            .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+
+        let request = GenerateKeyRequest {
+            key_id: key_id.clone(),
+            key_type,
+        };
+        let _hsm_key = self.generate_software_key(&request).await?;
+
+        Ok(KeyHandle {
+            key_id,
+            algorithm: params.algorithm,
+            hardware_backed: false,
+            created_at_ms: u64::try_from(Utc::now().timestamp_millis()).unwrap_or(0),
+        })
+    }
+
+    async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
+        HsmProvider::delete_key(self, key_id).await
+    }
+
+    async fn key_exists(&self, key_id: &str) -> Result<bool, BearDogError> {
+        let store = self.key_store.read().await;
+        match store.get_key(key_id).await {
+            Ok(_) => Ok(true),
+            Err(_) => Ok(false),
+        }
+    }
+
+    async fn encrypt(&self, key_id: &str, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        HsmProvider::encrypt(self, key_id, plaintext).await
+    }
+
+    async fn decrypt(&self, key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        HsmProvider::decrypt(self, key_id, ciphertext).await
+    }
+
+    async fn sign(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        HsmProvider::sign(self, key_id, data).await
+    }
+
+    async fn verify(
+        &self,
+        key_id: &str,
+        data: &[u8],
+        signature: &[u8],
+    ) -> Result<bool, BearDogError> {
+        HsmProvider::verify(self, key_id, data, signature).await
     }
 }

@@ -352,7 +352,7 @@ mod tests {
 
     #[test]
     fn test_endpoint_creation() {
-        let endpoint = Socket::create_endpoint("test_beardog").unwrap();
+        let endpoint = Socket::create_endpoint("test_beardog").expect("create_endpoint");
 
         match endpoint {
             SocketEndpoint::Abstract(name) => {
@@ -360,7 +360,8 @@ mod tests {
                 println!("Abstract endpoint: {}", name);
             }
             SocketEndpoint::Filesystem(path) => {
-                assert!(path.to_str().unwrap().contains("test_beardog"));
+                let s = path.to_str().expect("utf-8 path");
+                assert!(s.contains("test_beardog"));
                 println!("Filesystem endpoint: {}", path.display());
             }
             #[cfg(windows)]
@@ -380,5 +381,32 @@ mod tests {
                 println!("In-process channel endpoint: {}", channel);
             }
         }
+    }
+
+    #[test]
+    fn socket_endpoint_display_matches_variant() {
+        let fs = SocketEndpoint::Filesystem(PathBuf::from("/tmp/x.sock"));
+        assert_eq!(fs.display(), "/tmp/x.sock");
+        let abs = SocketEndpoint::Abstract("@ns_primal".to_string());
+        assert_eq!(abs.display(), "@ns_primal");
+    }
+
+    #[cfg(all(unix, not(target_os = "android")))]
+    #[test]
+    fn default_socket_endpoint_for_primal_sets_path() {
+        let ep = default_socket_endpoint_for_primal(Some("myprimal"));
+        match ep {
+            SocketEndpoint::Filesystem(p) => {
+                let s = p.to_str().expect("utf-8 path");
+                assert!(s.contains("myprimal"), "path={s}");
+            }
+            other => panic!("expected filesystem socket on this platform: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn default_socket_path_is_non_empty() {
+        let p = default_socket_path();
+        assert!(!p.is_empty());
     }
 }

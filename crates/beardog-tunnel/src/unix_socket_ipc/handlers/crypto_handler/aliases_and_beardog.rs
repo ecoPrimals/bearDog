@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Semantic aliases, `beardog.crypto.*` namespaced helpers, onion identity, and Tor protocol ops.
+//! Semantic `crypto.*` operations are primary; `beardog.crypto.*` names are backward-compat aliases.
 
 use crate::unix_socket_ipc::crypto_handlers_hashing::handle_generate_onion_identity;
 use crate::unix_socket_ipc::crypto_handlers_tor::{
@@ -162,5 +162,173 @@ pub async fn route(
         }
 
         _ => Ok(None),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::route;
+    use crate::unix_socket_ipc::handlers::crypto::utils::derive_key_from_id_for_tests;
+    use base64::Engine;
+    use base64::engine::general_purpose::STANDARD as BASE64;
+    use beardog_core::crypto_service::algorithms::asymmetric;
+    use serde_json::json;
+
+    #[tokio::test]
+    async fn route_crypto_hash_alias() {
+        let params = json!({ "data": BASE64.encode(b"blake3-input") });
+        let out = route("crypto.hash", Some(&params))
+            .await
+            .expect("route")
+            .expect("hash");
+        assert_eq!(
+            out.get("algorithm").and_then(|x| x.as_str()),
+            Some("BLAKE3")
+        );
+    }
+
+    #[tokio::test]
+    async fn route_crypto_hmac_alias() {
+        let params = json!({
+            "key": BASE64.encode(b"secret-hmac-key-123456789012"),
+            "data": BASE64.encode(b"authenticated payload"),
+        });
+        let out = route("crypto.hmac", Some(&params))
+            .await
+            .expect("route")
+            .expect("hmac");
+        assert!(out.get("mac").and_then(|x| x.as_str()).is_some());
+    }
+
+    #[tokio::test]
+    async fn route_crypto_sign_and_verify_alias() {
+        let key_id = "aliases-alias-sign";
+        let purpose = "general";
+        let msg = BASE64.encode(b"message to sign");
+        let sign_params = json!({
+            "message": msg,
+            "key_id": key_id,
+            "purpose": purpose,
+        });
+        let sig = route("crypto.sign", Some(&sign_params))
+            .await
+            .expect("route")
+            .expect("sign");
+        let sig_b64 = sig.get("signature").and_then(|x| x.as_str()).expect("sig");
+        let seed =
+            derive_key_from_id_for_tests(key_id, purpose).expect("derive_key_from_id_for_tests");
+        let (_sk, pk) =
+            asymmetric::generate_ed25519_from_seed(&seed).expect("generate_ed25519_from_seed");
+        let verify_params = json!({
+            "public_key": BASE64.encode(pk),
+            "message": msg,
+            "signature": sig_b64,
+        });
+        let v = route("crypto.verify", Some(&verify_params))
+            .await
+            .expect("route")
+            .expect("verify");
+        assert_eq!(v.get("valid").and_then(|x| x.as_bool()), Some(true));
+    }
+
+    #[tokio::test]
+    async fn route_crypto_encrypt_decrypt_alias() {
+        let key = [11u8; 32];
+        let key_b64 = BASE64.encode(key);
+        let plain = b"alias secret";
+        let enc_params = json!({
+            "plaintext": BASE64.encode(plain),
+            "key": key_b64,
+        });
+        let enc = route("crypto.encrypt", Some(&enc_params))
+            .await
+            .expect("route")
+            .expect("enc");
+        let dec_params = json!({
+            "ciphertext": enc.get("ciphertext").and_then(|x| x.as_str()).expect("ct"),
+            "nonce": enc.get("nonce").and_then(|x| x.as_str()).expect("nonce"),
+            "tag": enc.get("tag").and_then(|x| x.as_str()).expect("tag"),
+            "key": key_b64,
+        });
+        let dec = route("crypto.decrypt", Some(&dec_params))
+            .await
+            .expect("route")
+            .expect("dec");
+        let pt = BASE64
+            .decode(
+                dec.get("plaintext")
+                    .and_then(|x| x.as_str())
+                    .expect("pt b64"),
+            )
+            .expect("decode");
+        assert_eq!(pt, plain);
+    }
+
+    #[tokio::test]
+    async fn route_crypto_generate_keypair_and_derive_secret_alias() {
+        let a = route("crypto.generate_keypair", None)
+            .await
+            .expect("route")
+            .expect("a");
+        let b = route("crypto.generate_keypair", None)
+            .await
+            .expect("route")
+            .expect("b");
+        let p = json!({
+            "our_secret": a.get("secret_key").and_then(|x| x.as_str()).expect("sa"),
+            "their_public": b.get("public_key").and_then(|x| x.as_str()).expect("pb"),
+        });
+        let s1 = route("crypto.derive_secret", Some(&p))
+            .await
+            .expect("route")
+            .expect("s1");
+        let p2 = json!({
+            "our_secret": b.get("secret_key").and_then(|x| x.as_str()).expect("sb"),
+            "their_public": a.get("public_key").and_then(|x| x.as_str()).expect("pa"),
+        });
+        let s2 = route("crypto.derive_secret", Some(&p2))
+            .await
+            .expect("route")
+            .expect("s2");
+        assert_eq!(
+            s1.get("shared_secret").and_then(|x| x.as_str()),
+            s2.get("shared_secret").and_then(|x| x.as_str())
+        );
+    }
+
+    #[tokio::test]
+    async fn route_beardog_crypto_namespaced_helpers() {
+        let b3 = json!({ "data": BASE64.encode(b"namespaced") });
+        let h = route("beardog.crypto.blake3_hash", Some(&b3))
+            .await
+            .expect("route")
+            .expect("blake3");
+        assert!(h.get("hash").and_then(|x| x.as_str()).is_some());
+
+        let hm = json!({
+            "key": BASE64.encode(b"k".repeat(32)),
+            "data": BASE64.encode(b"d"),
+        });
+        let mac = route("beardog.crypto.hmac_sha256", Some(&hm))
+            .await
+            .expect("route")
+            .expect("hmac");
+        assert!(mac.get("mac").and_then(|x| x.as_str()).is_some());
+
+        let onion = route("beardog.crypto.generate_onion_identity", None)
+            .await
+            .expect("route")
+            .expect("onion");
+        assert!(onion.get("public_key").is_some() || onion.get("onion_address").is_some());
+    }
+
+    #[tokio::test]
+    async fn route_unknown_method_returns_none() {
+        assert!(
+            route("crypto.not_an_alias", Some(&json!({})))
+                .await
+                .expect("route")
+                .is_none()
+        );
     }
 }

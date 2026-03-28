@@ -112,7 +112,7 @@ impl OperatingSystem {
 /// # Philosophy
 /// Zero hardcoding - all paths discovered via platform APIs.
 #[derive(Debug, Clone)]
-pub struct BiomeOSPaths {
+pub struct PlatformPaths {
     /// Binary installation directory
     ///
     /// - Linux: `$HOME/.local/bin` or `$XDG_DATA_HOME/biomeos/bin`
@@ -154,14 +154,14 @@ pub struct BiomeOSPaths {
     pub cache_dir: PathBuf,
 }
 
-impl BiomeOSPaths {
+impl PlatformPaths {
     /// Discover paths using platform standards (zero hardcoding)
     ///
     /// # Examples
     /// ```
-    /// use beardog_installer::platform::BiomeOSPaths;
+    /// use beardog_installer::platform::PlatformPaths;
     ///
-    /// let paths = BiomeOSPaths::discover().expect("home directory for paths");
+    /// let paths = PlatformPaths::discover().expect("home directory for paths");
     /// println!("Install to: {}", paths.bin_dir.display());
     /// ```
     ///
@@ -227,9 +227,9 @@ impl BiomeOSPaths {
     ///
     /// # Examples
     /// ```no_run
-    /// # use beardog_installer::platform::BiomeOSPaths;
+    /// # use beardog_installer::platform::PlatformPaths;
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let paths = BiomeOSPaths::discover()?;
+    /// let paths = PlatformPaths::discover()?;
     /// paths.ensure_exists().await?;
     /// # Ok(())
     /// # }
@@ -266,6 +266,10 @@ impl BiomeOSPaths {
         ]
     }
 }
+
+/// Deprecated alias for [`PlatformPaths`].
+#[deprecated(since = "0.9.0", note = "use `PlatformPaths` instead")]
+pub type BiomeOSPaths = PlatformPaths;
 
 /// Platform detection errors
 #[derive(Debug, Error)]
@@ -315,7 +319,7 @@ mod tests {
 
     #[test]
     fn test_discover_paths() {
-        let paths = BiomeOSPaths::discover().expect("discover paths");
+        let paths = PlatformPaths::discover().expect("discover paths");
 
         // Paths should be valid and contain expected patterns
         let bin_str = paths.bin_dir.to_str().expect("bin_dir utf-8");
@@ -356,7 +360,7 @@ mod tests {
         use tempfile::TempDir;
 
         let temp = TempDir::new().expect("tempdir");
-        let paths = BiomeOSPaths {
+        let paths = PlatformPaths {
             bin_dir: temp.path().join("bin"),
             data_dir: temp.path().join("data"),
             config_dir: temp.path().join("config"),
@@ -376,7 +380,7 @@ mod tests {
 
     #[test]
     fn test_all_dirs() {
-        let paths = BiomeOSPaths::discover().expect("discover paths");
+        let paths = PlatformPaths::discover().expect("discover paths");
         let all = paths.all_dirs();
 
         assert_eq!(all.len(), 5);

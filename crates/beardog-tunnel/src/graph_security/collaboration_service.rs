@@ -305,6 +305,12 @@ mod tests {
         let _service = CollaborationService::default();
     }
 
+    #[test]
+    fn new_with_adapter_compatibility() {
+        let _svc = CollaborationService::_new_with_adapter(());
+        let _svc2 = CollaborationService::_new_with_adapter("any-adapter");
+    }
+
     // ========================================================================================
     // Template Info Tests
     // ========================================================================================

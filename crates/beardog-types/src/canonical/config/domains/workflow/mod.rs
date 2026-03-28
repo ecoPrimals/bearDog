@@ -239,3 +239,101 @@ impl BearDogConfig for ConsolidatedWorkflowConfig {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::canonical::config::r#trait::BearDogConfig;
+
+    #[test]
+    fn consolidated_workflow_default_domain_validate() {
+        let c = ConsolidatedWorkflowConfig::default();
+        assert!(c.enabled);
+        assert_eq!(ConsolidatedWorkflowConfig::domain(), "workflow");
+        c.validate()
+            .expect("default workflow config should validate");
+    }
+
+    #[test]
+    fn consolidated_workflow_serde_roundtrip() {
+        let c = ConsolidatedWorkflowConfig::default();
+        let v = serde_json::to_value(&c).expect("serialize workflow config");
+        let back: ConsolidatedWorkflowConfig =
+            serde_json::from_value(v).expect("deserialize workflow config");
+        assert_eq!(c, back);
+    }
+
+    #[test]
+    fn validate_errors_when_enabled_and_invalid_engine() {
+        let mut c = ConsolidatedWorkflowConfig::default();
+        c.engine.worker_pool_size = 0;
+        assert!(c.validate().is_err());
+
+        c = ConsolidatedWorkflowConfig::default();
+        c.engine.queue.capacity = 0;
+        assert!(c.validate().is_err());
+
+        c = ConsolidatedWorkflowConfig::default();
+        c.scheduling.max_concurrent = 0;
+        assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn validate_persistence_pool_when_enabled() {
+        let mut c = ConsolidatedWorkflowConfig::default();
+        c.persistence.enabled = true;
+        c.persistence.connection.pool_size = 0;
+        assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn validate_escalation_rules_when_enabled() {
+        let mut c = ConsolidatedWorkflowConfig::default();
+        c.escalation.enabled = true;
+        c.escalation.rules.clear();
+        assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn validate_skips_subchecks_when_disabled() {
+        let mut c = ConsolidatedWorkflowConfig::default();
+        c.enabled = false;
+        c.engine.worker_pool_size = 0;
+        c.validate()
+            .expect("disabled workflow skips engine validation");
+    }
+
+    #[test]
+    fn merge_prefers_other_when_enabled() {
+        let base = ConsolidatedWorkflowConfig::default();
+        let mut other = ConsolidatedWorkflowConfig::default();
+        other.enabled = true;
+        other.engine.worker_pool_size = 42;
+        let m = base.merge(&other).expect("merge");
+        assert_eq!(m.engine.worker_pool_size, 42);
+    }
+
+    #[test]
+    fn merge_keeps_base_engine_when_other_disabled() {
+        let base = ConsolidatedWorkflowConfig::default();
+        let mut other = ConsolidatedWorkflowConfig::default();
+        other.enabled = false;
+        other.engine.worker_pool_size = 99;
+        let m = base.merge(&other).expect("merge");
+        assert_eq!(m.engine.worker_pool_size, base.engine.worker_pool_size);
+    }
+
+    #[test]
+    fn to_toml_roundtrip() {
+        let c = ConsolidatedWorkflowConfig::default();
+        let s = c.to_toml().expect("to_toml");
+        assert!(!s.is_empty());
+        let parsed: ConsolidatedWorkflowConfig = toml::from_str(&s).expect("from_str");
+        assert_eq!(parsed.enabled, c.enabled);
+    }
+
+    #[test]
+    fn from_env_smoke() {
+        let _ = ConsolidatedWorkflowConfig::from_env();
+    }
+}

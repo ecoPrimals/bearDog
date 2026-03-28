@@ -15,75 +15,105 @@ use tracing::info;
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct DemoConfig {
-    ceremony: CeremonyConfig,
-    benchmarks: BenchmarksConfig,
-    categories: CategoriesConfig,
-    targets: TargetsConfig,
-    validation: ValidationConfig,
-    audit: AuditConfig,
+    #[serde(rename = "ceremony")]
+    _ceremony: CeremonyConfig,
+    #[serde(rename = "benchmarks")]
+    _benchmarks: BenchmarksConfig,
+    #[serde(rename = "categories")]
+    _categories: CategoriesConfig,
+    #[serde(rename = "targets")]
+    _targets: TargetsConfig,
+    #[serde(rename = "validation")]
+    _validation: ValidationConfig,
+    #[serde(rename = "audit")]
+    _audit: AuditConfig,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct CeremonyConfig {
-    name: String,
-    description: String,
-    max_duration_ms: u64,
+    #[serde(rename = "name")]
+    _name: String,
+    #[serde(rename = "description")]
+    _description: String,
+    #[serde(rename = "max_duration_ms")]
+    _max_duration_ms: u64,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct BenchmarksConfig {
-    num_iterations: usize,
-    warmup_iterations: usize,
-    enable_profiling: bool,
+    #[serde(rename = "num_iterations")]
+    _num_iterations: usize,
+    #[serde(rename = "warmup_iterations")]
+    _warmup_iterations: usize,
+    #[serde(rename = "enable_profiling")]
+    _enable_profiling: bool,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct CategoriesConfig {
-    cryptographic: bool,
-    key_management: bool,
-    storage: bool,
-    network: bool,
-    ecosystem: bool,
+    #[serde(rename = "cryptographic")]
+    _cryptographic: bool,
+    #[serde(rename = "key_management")]
+    _key_management: bool,
+    #[serde(rename = "storage")]
+    _storage: bool,
+    #[serde(rename = "network")]
+    _network: bool,
+    #[serde(rename = "ecosystem")]
+    _ecosystem: bool,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct TargetsConfig {
-    key_generation: u64,
-    signing: u64,
-    verification: u64,
-    encryption: u64,
-    decryption: u64,
-    hashing: u64,
-    key_derivation: u64,
-    key_rotation: u64,
-    constraint_validation: u64,
-    storage_write: u64,
-    storage_read: u64,
-    network_connection: u64,
-    multi_primal: u64,
-    consensus: u64,
+    #[serde(rename = "key_generation")]
+    _key_generation: u64,
+    #[serde(rename = "signing")]
+    _signing: u64,
+    #[serde(rename = "verification")]
+    _verification: u64,
+    #[serde(rename = "encryption")]
+    _encryption: u64,
+    #[serde(rename = "decryption")]
+    _decryption: u64,
+    #[serde(rename = "hashing")]
+    _hashing: u64,
+    #[serde(rename = "key_derivation")]
+    _key_derivation: u64,
+    #[serde(rename = "key_rotation")]
+    _key_rotation: u64,
+    #[serde(rename = "constraint_validation")]
+    _constraint_validation: u64,
+    #[serde(rename = "storage_write")]
+    _storage_write: u64,
+    #[serde(rename = "storage_read")]
+    _storage_read: u64,
+    #[serde(rename = "network_connection")]
+    _network_connection: u64,
+    #[serde(rename = "multi_primal")]
+    _multi_primal: u64,
+    #[serde(rename = "consensus")]
+    _consensus: u64,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct ValidationConfig {
-    require_all_pass: bool,
-    allow_margin: f64,
-    report_percentiles: bool,
+    #[serde(rename = "require_all_pass")]
+    _require_all_pass: bool,
+    #[serde(rename = "allow_margin")]
+    _allow_margin: f64,
+    #[serde(rename = "report_percentiles")]
+    _report_percentiles: bool,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct AuditConfig {
-    log_level: String,
-    include_performance: bool,
-    generate_report: bool,
+    #[serde(rename = "log_level")]
+    _log_level: String,
+    #[serde(rename = "include_performance")]
+    _include_performance: bool,
+    #[serde(rename = "generate_report")]
+    _generate_report: bool,
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -91,13 +121,13 @@ struct AuditConfig {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct BenchmarkSuite {
     benchmark_suite: String,
     suite_id: String,
     version: String,
     benchmarks: Vec<BenchmarkDefinition>,
-    expected_results: ExpectedResults,
+    #[serde(rename = "expected_results")]
+    _expected_results: ExpectedResults,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -111,11 +141,13 @@ struct BenchmarkDefinition {
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct ExpectedResults {
-    benchmarks_passed: u32,
-    total_duration_ms: u64,
-    performance_grade: String,
+    #[serde(rename = "benchmarks_passed")]
+    _benchmarks_passed: u32,
+    #[serde(rename = "total_duration_ms")]
+    _total_duration_ms: u64,
+    #[serde(rename = "performance_grade")]
+    _performance_grade: String,
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

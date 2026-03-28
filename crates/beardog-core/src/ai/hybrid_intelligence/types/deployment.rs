@@ -102,3 +102,72 @@ impl ResourceRequirements {
 )]
 pub type HealthCheckConfig =
     beardog_types::canonical::config::domains::network::monitoring::HealthCheckConfiguration;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use beardog_types::canonical::config::domains::network::monitoring::HealthCheckConfiguration;
+    use serde_json;
+
+    #[test]
+    fn deployment_config_default_roundtrip() {
+        let d = DeploymentConfig::default();
+        assert!(matches!(d.strategy, DeploymentStrategy::Rolling));
+        let j = serde_json::to_string(&d).expect("serialize DeploymentConfig");
+        let back: DeploymentConfig = serde_json::from_str(&j).expect("deserialize");
+        assert_eq!(d.strategy, back.strategy);
+        assert_eq!(d.resources.cpu, back.resources.cpu);
+        assert_eq!(d.resources.memory, back.resources.memory);
+    }
+
+    #[test]
+    fn deployment_strategy_variants_serde() {
+        for s in [
+            DeploymentStrategy::BlueGreen,
+            DeploymentStrategy::Canary,
+            DeploymentStrategy::Rolling,
+            DeploymentStrategy::Recreate,
+        ] {
+            let j = serde_json::to_string(&s).expect("serialize strategy");
+            let back: DeploymentStrategy = serde_json::from_str(&j).expect("deserialize");
+            assert_eq!(s, back);
+        }
+    }
+
+    #[test]
+    fn resource_requirements_default_and_from_env() {
+        let r = ResourceRequirements::default();
+        assert_eq!(r.cpu, 1.0);
+        assert_eq!(r.memory, 1024);
+        assert!(r.gpu.is_none());
+        assert_eq!(r.storage, 10);
+        let r2 = ResourceRequirements::from_env();
+        assert!(r2.cpu.is_finite());
+        assert!(r2.memory > 0);
+    }
+
+    #[test]
+    fn resource_requirements_serde_roundtrip() {
+        let r = ResourceRequirements {
+            cpu: 2.5,
+            memory: 4096,
+            gpu: Some(1),
+            storage: 50,
+        };
+        let j = serde_json::to_string(&r).expect("serialize ResourceRequirements");
+        let back: ResourceRequirements = serde_json::from_str(&j).expect("deserialize");
+        assert_eq!(r.cpu, back.cpu);
+        assert_eq!(r.memory, back.memory);
+        assert_eq!(r.gpu, back.gpu);
+        assert_eq!(r.storage, back.storage);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn deprecated_health_check_alias_matches_target() {
+        let h: HealthCheckConfig = HealthCheckConfiguration::default();
+        assert!(h.enabled);
+        assert_eq!(h.interval_seconds, 30);
+        assert_eq!(h.endpoint, "/health");
+    }
+}

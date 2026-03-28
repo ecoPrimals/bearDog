@@ -307,3 +307,99 @@ impl CapabilityType {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn capability_type_as_string() {
+        let sec = CapabilityType::Security(SecurityCapability::Encryption {
+            algorithms: vec!["aes".into()],
+            key_sizes: vec![256],
+            hardware_acceleration: true,
+        });
+        assert_eq!(sec.as_string(), "security");
+        let ai = CapabilityType::AI(AICapability::MachineLearning {
+            algorithms: vec![],
+            training_support: true,
+            inference_support: false,
+        });
+        assert_eq!(ai.as_string(), "ai");
+        let genetic_cap = CapabilityType::Genetic(GeneticCapability::Optimization {
+            population_size: 10,
+            mutation_rate: 0.1,
+            crossover_rate: 0.5,
+        });
+        assert_eq!(genetic_cap.as_string(), "genetic");
+        assert_eq!(CapabilityType::Custom("x".into()).as_string(), "custom_x");
+    }
+
+    #[test]
+    fn security_ai_genetic_variants_serde_roundtrip() {
+        let sec = SecurityCapability::Authentication {
+            methods: vec!["jwt".into()],
+            mfa_support: true,
+            biometric_support: false,
+        };
+        let v = serde_json::to_value(&sec).expect("serialize SecurityCapability");
+        let _: SecurityCapability = serde_json::from_value(v).expect("deserialize");
+
+        let ai = AICapability::NLP {
+            languages: vec!["en".into()],
+            sentiment_analysis: true,
+            entity_extraction: false,
+        };
+        let v = serde_json::to_value(&ai).expect("serialize AICapability");
+        let _: AICapability = serde_json::from_value(v).expect("deserialize");
+
+        let g = GeneticCapability::Evolution {
+            adaptive: true,
+            multi_objective: false,
+            parallel_processing: true,
+        };
+        let v = serde_json::to_value(&g).expect("serialize GeneticCapability");
+        let _: GeneticCapability = serde_json::from_value(v).expect("deserialize");
+    }
+
+    #[test]
+    fn capability_registration_and_health_serde() {
+        let reg = CapabilityRegistration {
+            capability: CapabilityType::Custom("t".into()),
+            metadata: CapabilityMetadata::default(),
+            enabled: true,
+            priority: 1,
+            health_status: CapabilityHealth::Degraded,
+        };
+        let v = serde_json::to_value(&reg).expect("serialize registration");
+        let back: CapabilityRegistration = serde_json::from_value(v).expect("deserialize");
+        assert!(back.enabled);
+        let _ = format!("{:?}", back.health_status);
+    }
+
+    #[test]
+    fn bear_dog_ai_architecture_default_and_security_ml_serde() {
+        let arch = BearDogAIArchitecture::default();
+        assert!(!arch.enabled);
+        let v = serde_json::to_value(&arch).expect("serialize arch");
+        let back: BearDogAIArchitecture = serde_json::from_value(v).expect("deserialize arch");
+        assert_eq!(back.security_ml.len(), arch.security_ml.len());
+
+        let sml = SecurityMLCapability::CryptographicOptimizationML {
+            algorithm_selection: true,
+            key_rotation_optimization: false,
+            performance_tuning: true,
+        };
+        let v = serde_json::to_value(&sml).expect("serialize SecurityMLCapability");
+        let _: SecurityMLCapability = serde_json::from_value(v).expect("deserialize");
+    }
+
+    #[test]
+    fn resource_requirements_default() {
+        let r = ResourceRequirements::default();
+        assert_eq!(r.cpu_cores, Some(1.0));
+        assert!(!r.gpu_required);
+        let m = CapabilityMetadata::default();
+        assert_eq!(m.name, "unknown");
+    }
+}

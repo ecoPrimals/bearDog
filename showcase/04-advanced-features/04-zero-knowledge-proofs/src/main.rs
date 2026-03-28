@@ -104,8 +104,8 @@ struct Scenario {
 struct ProofRequest {
     proof_id: String,
     proof_type: String,
-    #[allow(dead_code)]
-    description: String,
+    #[serde(rename = "description")]
+    _description: String,
     prover: String,
     verifier: String,
     data: serde_json::Value,
@@ -173,8 +173,7 @@ enum Proof {
 struct Prover {
     private_key: Scalar,
     public_key: RistrettoPoint,
-    #[allow(dead_code)]
-    config: DemoConfig,
+    _config: DemoConfig,
 }
 
 impl Prover {
@@ -190,7 +189,7 @@ impl Prover {
         Self {
             private_key,
             public_key,
-            config,
+            _config: config,
         }
     }
 
@@ -199,7 +198,7 @@ impl Prover {
         Self {
             private_key,
             public_key,
-            config,
+            _config: config,
         }
     }
 
@@ -298,13 +297,12 @@ impl Prover {
 }
 
 struct Verifier {
-    #[allow(dead_code)]
-    config: DemoConfig,
+    _config: DemoConfig,
 }
 
 impl Verifier {
     fn new(config: DemoConfig) -> Self {
-        Self { config }
+        Self { _config: config }
     }
 
     /// Verify Schnorr proof

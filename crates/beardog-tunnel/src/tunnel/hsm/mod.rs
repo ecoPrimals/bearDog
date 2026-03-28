@@ -14,11 +14,6 @@ pub mod android_strongbox;
 #[cfg(feature = "solo-v2")]
 pub mod solo_v2;
 
-// iOS Secure Enclave support
-// ARCHIVED: ios_secure_enclave needs reconstruction (file corruption)
-// #[cfg(target_os = "ios")]
-// pub mod ios_secure_enclave;
-
 // HSM infrastructure
 // ARCHIVED: capabilities.rs → HsmCapabilityDetector is in manager/capability.rs
 pub mod config;
@@ -95,9 +90,6 @@ pub use types::status::HsmHealthStatus as HealthStatus;
 
 #[cfg(target_os = "android")]
 pub use android_strongbox::AndroidStrongBox;
-
-#[cfg(target_os = "ios")]
-pub use ios_secure_enclave::IosSecureEnclave;
 
 /// Request to generate a new key in the HSM
 #[derive(Debug, Clone)]

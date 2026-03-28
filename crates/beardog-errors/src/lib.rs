@@ -100,8 +100,6 @@ pub mod categories;
 /// Convenient constructor functions for creating domain-specific errors.
 pub mod constructors_unified;
 
-// pub mod error_types; // Removed - using categories.rs as single source
-
 /// Idiomatic Rust error handling patterns
 ///
 /// Extension traits and helpers for idiomatic error handling in Rust.
@@ -471,11 +469,5 @@ mod existing_tests {
         let _genetics = BearDogError::genetics("test".to_string());
 
         // Note: These methods don't exist in the current implementation
-        // let _deployment = BearDogError::deployment("test".to_string());
-        // let _memory = BearDogError::memory("test".to_string());
-        // let _monitoring = BearDogError::monitoring("test".to_string());
-        // let _compliance = BearDogError::compliance("test".to_string());
-        // let _cryptographic = BearDogError::cryptographic("test".to_string());
-        // let _tunnel = BearDogError::tunnel("test".to_string());
     }
 }

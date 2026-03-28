@@ -232,3 +232,69 @@ fn parse_endpoint_url_max_u16_port() {
     assert_eq!(port, 65535);
     assert_eq!(path.as_deref(), Some("/z"));
 }
+
+#[test]
+fn parse_endpoint_url_no_scheme_treats_whole_string_as_host_fallback() {
+    let (p, h, port, path) = EcosystemDiscoveryAdapter::parse_endpoint_url("192.168.1.1:9090");
+    assert_eq!(p, "http");
+    assert_eq!(h, "192.168.1.1:9090");
+    assert_eq!(port, 8080);
+    assert_eq!(path, None);
+}
+
+#[test]
+fn parse_endpoint_url_host_port_path_without_explicit_port_uses_default() {
+    let (p, h, port, path) =
+        EcosystemDiscoveryAdapter::parse_endpoint_url("https://api.example/v1");
+    assert_eq!(p, "https");
+    assert_eq!(h, "api.example");
+    assert_eq!(port, 8080);
+    assert_eq!(path.as_deref(), Some("/v1"));
+}
+
+#[test]
+fn parse_endpoint_url_invalid_port_segment_falls_back_default_in_path_branch() {
+    let (p, h, port, path) = EcosystemDiscoveryAdapter::parse_endpoint_url("http://h:badport/x");
+    assert_eq!(p, "http");
+    assert_eq!(h, "h");
+    assert_eq!(port, 8080);
+    assert_eq!(path.as_deref(), Some("/x"));
+}
+
+#[test]
+fn server_args_port_only_without_listen() {
+    let a = ServerArgs::try_parse_from(["beardog", "--port", "9000"]).expect("parse");
+    assert_eq!(a.port, Some(9000));
+    assert!(a.listen.is_none());
+}
+
+#[test]
+fn server_args_conflicting_port_and_listen_rejected() {
+    let err = ServerArgs::try_parse_from(["beardog", "--port", "1", "--listen", "127.0.0.1:2"])
+        .expect_err("clap should reject");
+    let msg = format!("{err}");
+    assert!(
+        msg.contains("conflict") || msg.contains("cannot") || msg.contains("used with"),
+        "{msg}"
+    );
+}
+
+#[test]
+fn client_args_default_socket_non_empty() {
+    let a = ClientArgs::try_parse_from(["beardog"]).expect("parse");
+    assert!(!a.socket.is_empty());
+    assert!(a.command.is_none());
+}
+
+#[test]
+fn daemon_args_default_paths_contain_basename() {
+    let a = DaemonArgs::try_parse_from(["beardog"]).expect("parse");
+    assert!(a.pid_file.contains("beardog.pid"));
+    assert!(a.log_file.contains("beardog.log"));
+}
+
+#[test]
+fn doctor_args_format_yaml_like_string_preserved() {
+    let a = DoctorArgs::try_parse_from(["beardog", "--format", "yaml"]).expect("parse");
+    assert_eq!(a.format, "yaml");
+}

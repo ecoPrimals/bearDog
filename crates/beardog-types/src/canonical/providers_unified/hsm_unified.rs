@@ -16,18 +16,15 @@
 //! ## Modular Architecture
 //!
 //! The HSM system is organized into focused modules:
-//! - [`provider`] - Core HSM provider enum and main implementation
 //! - [`configs`] - Platform-specific HSM configurations
 //! - [`keys`] - HSM key management and specifications
 //! - [`security`] - Security levels and cryptographic algorithms
 
-// pub mod provider; // Temporarily disabled during unification
 pub mod configs;
 pub mod keys;
 pub mod security;
 
 // Re-export main types for backward compatibility
-// pub use provider::HsmUnifiedProvider; // Temporarily disabled
 pub use configs::{
     AndroidHsmConfig, IosHsmConfig, SoftwareHsmConfig, StrongBoxHsmConfig,
 };

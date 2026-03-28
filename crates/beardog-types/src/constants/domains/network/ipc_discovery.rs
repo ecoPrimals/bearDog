@@ -146,3 +146,68 @@ fn resolve_upa_registry_endpoint_from_optional(
     }
     default_upa_registry_unix_uri()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn constants_are_non_empty() {
+        assert!(!BIOMEOS_RUNTIME_SOCKET_SUBDIR.is_empty());
+        assert!(!BEARDOG_TCP_DISCOVERY_FILENAME.is_empty());
+        assert!(!DEFAULT_UPA_REGISTRY_SOCKET_NAME.is_empty());
+    }
+
+    #[test]
+    fn resolve_biomeos_ipc_subdir_explicit_trims() {
+        assert_eq!(
+            resolve_biomeos_ipc_subdir_from_optional(Some("  ns  ")),
+            "ns"
+        );
+    }
+
+    #[test]
+    fn resolve_biomeos_ipc_subdir_falls_back_to_default() {
+        assert_eq!(
+            resolve_biomeos_ipc_subdir_from_optional(None),
+            BIOMEOS_RUNTIME_SOCKET_SUBDIR.to_string()
+        );
+    }
+
+    #[test]
+    fn biomeos_tmp_socket_root_default() {
+        let p = biomeos_tmp_socket_root();
+        assert!(!p.as_os_str().is_empty());
+    }
+
+    #[test]
+    fn biomeos_ipc_socket_dir_from_components_override_wins() {
+        let p = biomeos_ipc_socket_dir_from_components(Some("/override/path"), Some("/xdg"), None);
+        assert_eq!(p, PathBuf::from("/override/path"));
+    }
+
+    #[test]
+    fn biomeos_ipc_socket_dir_from_components_xdg_joins_namespace() {
+        let p = biomeos_ipc_socket_dir_from_components(None, Some("/run/user/1"), Some("myns"));
+        assert_eq!(p, PathBuf::from("/run/user/1/myns"));
+    }
+
+    #[test]
+    fn biomeos_ipc_socket_dir_from_components_temp_fallback() {
+        let p = biomeos_ipc_socket_dir_from_components(None, None, Some("z"));
+        assert!(p.ends_with("z"));
+    }
+
+    #[test]
+    fn resolve_upa_registry_endpoint_matches_default_helper() {
+        let a = resolve_upa_registry_endpoint();
+        let b = default_upa_registry_unix_uri();
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn default_upa_registry_unix_uri_starts_with_unix_scheme() {
+        let u = default_upa_registry_unix_uri();
+        assert!(u.starts_with("unix://"), "expected unix URI, got {u}");
+    }
+}

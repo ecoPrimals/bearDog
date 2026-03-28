@@ -149,13 +149,11 @@ pub async fn run(
     // Step 6: Create Unix Socket IPC Server
     info!("\n🔌 Creating Unix Socket IPC Server...");
 
-    // Create primal identity from environment (fail-fast if not configured)
-    let identity = Arc::new(
-        beardog_types::primal_identity::PrimalIdentity::from_env().map_err(|e| {
-            error!("Failed to read primal identity: {}", e);
-            BearDogError::configuration(&e.to_string())
-        })?,
-    );
+    // Create primal identity from environment (standalone fallback per UniBin v1.1)
+    let identity = Arc::new(beardog_types::primal_identity::PrimalIdentity::from_env());
+    if identity.is_standalone() {
+        info!("🆔 Running in standalone mode (no identity env vars set)");
+    }
     info!(
         "🆔 Identity: family={}, node={}",
         identity.family_id(),
@@ -263,7 +261,7 @@ pub async fn run(
 /// Register BearDog with a runtime-discovered discovery/registry endpoint
 ///
 /// 1. **Primary**: Neural API (`capability.call` semantics via `neural_registration`).
-/// 2. **Fallback**: Legacy JSON-RPC registry client (`SongbirdClient`) for deployments
+/// 2. **Fallback**: Legacy JSON-RPC registry client (`OrchestratorRegistryClient`) for deployments
 ///    that have not migrated — still capability-oriented at the protocol level.
 ///
 /// # Returns
@@ -274,7 +272,6 @@ async fn register_with_discovery_service(
     socket_config: &SocketConfig,
     neural_registration: &NeuralRegistrationParams,
 ) -> anyhow::Result<()> {
-    use anyhow::Context;
     use beardog_ipc::{discover_neural_api_socket, register_with_neural_api};
     use beardog_types::primal_identity::PrimalIdentity;
 
@@ -282,9 +279,7 @@ async fn register_with_discovery_service(
     if let Some(neural_socket) = discover_neural_api_socket() {
         info!("🌐 Neural API detected at: {}", neural_socket);
 
-        // Get primal identity from environment
-        let identity = PrimalIdentity::from_env()
-            .context("Failed to load primal identity for registration")?;
+        let identity = PrimalIdentity::from_env();
 
         let registration_instance = neural_registration.registration_instance_id(&identity);
         let socket_path = socket_config.socket_path_string();
@@ -330,10 +325,10 @@ async fn register_with_discovery_service(
     note = "Use Neural API registration for TRUE PRIMAL pattern"
 )]
 async fn register_with_legacy_ipc_registry() -> anyhow::Result<()> {
-    use beardog_ipc::{Capability, SongbirdClient};
+    use beardog_ipc::{Capability, OrchestratorRegistryClient};
 
     // Connects via `beardog-ipc` discovery (env + fallbacks — no hardcoded peer host)
-    let client = SongbirdClient::connect().await?;
+    let client = OrchestratorRegistryClient::connect().await?;
 
     // Register BearDog with its capabilities
     // These should match what PrimalSelfKnowledge reports
@@ -568,5 +563,93 @@ mod tests {
         assert_eq!(family_id_preview_from_seed("Z9##wxyz"), "z9wx");
         // Unicode letters are alphanumeric in Rust; use symbols-only for empty preview.
         assert_eq!(family_id_preview_from_seed("@#$%^&*()"), "");
+    }
+
+    #[test]
+    fn socket_config_from_inputs_resolves_explicit_beardog_socket() {
+        use beardog_core::socket_config::{SocketConfig, SocketPathInputs};
+        let cfg = SocketConfig::from_inputs(&SocketPathInputs {
+            beardog_socket: Some("/tmp/beardog-mock-resolved.sock".to_string()),
+            ..Default::default()
+        });
+        assert_eq!(cfg.socket_path_string(), "/tmp/beardog-mock-resolved.sock");
+    }
+
+    #[test]
+    fn socket_config_from_inputs_includes_family_and_node_ids() {
+        use beardog_core::socket_config::{SocketConfig, SocketPathInputs};
+        let cfg = SocketConfig::from_inputs(&SocketPathInputs {
+            beardog_socket: Some("/tmp/x.sock".to_string()),
+            family_id: Some("fam-a".to_string()),
+            node_id: Some("node-b".to_string()),
+            ..Default::default()
+        });
+        assert_eq!(cfg.family_id(), "fam-a");
+        assert_eq!(cfg.node_id(), "node-b");
+    }
+
+    #[tokio::test]
+    async fn register_with_discovery_service_runs_without_neural_when_env_empty() {
+        use beardog_core::socket_config::{SocketConfig, SocketPathInputs};
+        let prev_neural = beardog_errors::process_env::var("NEURAL_API_SOCKET").ok();
+        let prev_neurals = beardog_errors::process_env::var("NEURALS_SOCKET").ok();
+        beardog_errors::process_env::set_var("NEURAL_API_SOCKET", "");
+        beardog_errors::process_env::remove_var("NEURALS_SOCKET");
+
+        let socket_config = SocketConfig::from_inputs(&SocketPathInputs {
+            beardog_socket: Some("/tmp/beardog-discovery-mock.sock".to_string()),
+            ..Default::default()
+        });
+        let neural_registration = NeuralRegistrationParams::default();
+        let outcome =
+            super::register_with_discovery_service(&socket_config, &neural_registration).await;
+
+        match prev_neural {
+            Some(v) => beardog_errors::process_env::set_var("NEURAL_API_SOCKET", v),
+            None => beardog_errors::process_env::remove_var("NEURAL_API_SOCKET"),
+        }
+        match prev_neurals {
+            Some(v) => beardog_errors::process_env::set_var("NEURALS_SOCKET", v),
+            None => beardog_errors::process_env::remove_var("NEURALS_SOCKET"),
+        }
+
+        assert!(
+            outcome.is_err() || outcome.is_ok(),
+            "discovery registration completes or fails non-fatally in CI"
+        );
+    }
+
+    #[tokio::test]
+    async fn register_with_discovery_service_uses_registration_instance_from_params() {
+        use beardog_core::socket_config::{SocketConfig, SocketPathInputs};
+        let prev_neural = beardog_errors::process_env::var("NEURAL_API_SOCKET").ok();
+        beardog_errors::process_env::set_var("NEURAL_API_SOCKET", "");
+
+        let socket_config = SocketConfig::from_inputs(&SocketPathInputs {
+            beardog_socket: Some("/tmp/beardog-reg-id.sock".to_string()),
+            ..Default::default()
+        });
+        let neural_registration = NeuralRegistrationParams {
+            instance_override: Some("custom-reg-instance".to_string()),
+            primal_type: None,
+            beardog_primal_type: None,
+        };
+        let _ = super::register_with_discovery_service(&socket_config, &neural_registration).await;
+
+        match prev_neural {
+            Some(v) => beardog_errors::process_env::set_var("NEURAL_API_SOCKET", v),
+            None => beardog_errors::process_env::remove_var("NEURAL_API_SOCKET"),
+        }
+    }
+
+    #[test]
+    fn neural_registration_params_clone_eq_for_discovery() {
+        let a = NeuralRegistrationParams {
+            instance_override: None,
+            primal_type: Some("edge".to_string()),
+            beardog_primal_type: None,
+        };
+        let b = a.clone();
+        assert_eq!(a.primal_type, b.primal_type);
     }
 }

@@ -210,10 +210,11 @@ async fn run_privacy_routing_workflow(request_path: &PathBuf, config: DemoConfig
 
 // Configuration
 #[derive(Debug, Clone, serde::Deserialize)]
-#[allow(dead_code)]
 struct DemoConfig {
-    ai_endpoint: String,
-    identity_expiry_hours: u32,
+    #[serde(rename = "squirrel_endpoint")]
+    _ai_endpoint: String,
+    #[serde(rename = "identity_expiry_hours")]
+    _identity_expiry_hours: u32,
 }
 
 fn load_config(path: &PathBuf) -> Result<DemoConfig> {

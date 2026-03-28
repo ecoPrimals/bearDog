@@ -8,10 +8,18 @@ async fn test_btsp_handler_methods() {
     let methods = handler.methods();
 
     // Should have:
-    // - 6 core operations × 3 aliases each = 18 methods
+    // - 6 core operations × 4 aliases each (semantic dot + beardog path + underscore + slash) = 24
     // - 3 new unified methods = 3 methods
-    // Total = 21 methods
-    assert_eq!(methods.len(), 21);
+    // Total = 27 methods
+    assert_eq!(methods.len(), 27);
+
+    // Semantic domain.operation names (primary in registry)
+    assert!(methods.contains(&"btsp.contact.exchange"));
+    assert!(methods.contains(&"btsp.tunnel.establish"));
+    assert!(methods.contains(&"btsp.tunnel.encrypt"));
+    assert!(methods.contains(&"btsp.tunnel.decrypt"));
+    assert!(methods.contains(&"btsp.tunnel.status"));
+    assert!(methods.contains(&"btsp.tunnel.close"));
 
     // Check core operations have their aliases
     assert!(methods.contains(&"btsp.contact_exchange"));
@@ -94,6 +102,21 @@ async fn btsp_routes_namespaced_contact_exchange_alias() {
         !err.is_empty(),
         "expected routing to contact_exchange error path: {err}"
     );
+}
+
+#[tokio::test]
+async fn btsp_semantic_dot_contact_exchange_routes_same_as_underscore() {
+    let handler = BtspHandler;
+    let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+    let err_dot = handler
+        .handle("btsp.contact.exchange", None, &provider)
+        .await
+        .unwrap_err();
+    let err_us = handler
+        .handle("btsp.contact_exchange", None, &provider)
+        .await
+        .unwrap_err();
+    assert_eq!(err_dot, err_us);
 }
 
 #[tokio::test]
@@ -601,7 +624,7 @@ async fn btsp_tunnel_encrypt_decrypt_status_close_roundtrip() {
         "data": plain_b64,
     });
     let enc = handler
-        .handle("btsp.tunnel_encrypt", Some(&enc_params), &provider)
+        .handle("btsp.tunnel.encrypt", Some(&enc_params), &provider)
         .await
         .expect("tunnel encrypt");
     let cipher_b64 = enc
@@ -614,7 +637,7 @@ async fn btsp_tunnel_encrypt_decrypt_status_close_roundtrip() {
         "data": cipher_b64,
     });
     let dec = handler
-        .handle("btsp.tunnel_decrypt", Some(&dec_params), &provider)
+        .handle("btsp.tunnel.decrypt", Some(&dec_params), &provider)
         .await
         .expect("tunnel decrypt");
     let out_b64 = dec
@@ -629,7 +652,7 @@ async fn btsp_tunnel_encrypt_decrypt_status_close_roundtrip() {
 
     let st = handler
         .handle(
-            "btsp.tunnel_status",
+            "btsp.tunnel.status",
             Some(&serde_json::json!({ "tunnel": tunnel_json })),
             &provider,
         )
@@ -639,7 +662,7 @@ async fn btsp_tunnel_encrypt_decrypt_status_close_roundtrip() {
 
     let close = handler
         .handle(
-            "btsp.tunnel_close",
+            "btsp.tunnel.close",
             Some(&serde_json::json!({ "tunnel_id": handle.id })),
             &provider,
         )

@@ -346,4 +346,65 @@ mod tests {
 
         assert!(mts.transport_count() >= 1);
     }
+
+    #[tokio::test]
+    async fn bind_all_available_counts_two_when_unix_and_ephemeral_tcp() {
+        let dir = tempdir().expect("tempdir");
+        let sock = dir.path().join("mts_two.sock");
+        let provider = test_btsp_provider().await;
+        let identity = Arc::new(PrimalIdentity::for_test("fam", "node"));
+
+        let mts = MultiTransportServer::bind_all_available(
+            provider,
+            identity,
+            sock.to_string_lossy().as_ref(),
+            Some("127.0.0.1:0"),
+        )
+        .await
+        .expect("bind unix and tcp");
+
+        assert!(
+            mts.transport_count() >= 2,
+            "expected unix + tcp on supported platforms"
+        );
+    }
+
+    #[tokio::test]
+    async fn bind_all_available_uses_default_tcp_when_none_provided() {
+        let dir = tempdir().expect("tempdir");
+        let sock = dir.path().join("mts_default_tcp.sock");
+        let provider = test_btsp_provider().await;
+        let identity = Arc::new(PrimalIdentity::for_test("fam", "node"));
+
+        let mts = MultiTransportServer::bind_all_available(
+            provider,
+            identity,
+            sock.to_string_lossy().as_ref(),
+            None,
+        )
+        .await
+        .expect("default tcp port from config");
+
+        assert!(mts.transport_count() >= 1);
+    }
+
+    #[tokio::test]
+    async fn bind_all_available_transport_count_reflects_bound_transports() {
+        let dir = tempdir().expect("tempdir");
+        let sock = dir.path().join("mts_count.sock");
+        let provider = test_btsp_provider().await;
+        let identity = Arc::new(PrimalIdentity::for_test("fam", "node"));
+
+        let mts = MultiTransportServer::bind_all_available(
+            provider,
+            identity,
+            sock.to_string_lossy().as_ref(),
+            Some("127.0.0.1:0"),
+        )
+        .await
+        .expect("bind");
+
+        let n = mts.transport_count();
+        assert!((1..=2).contains(&n), "unexpected transport count {n}");
+    }
 }

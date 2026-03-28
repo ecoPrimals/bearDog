@@ -407,3 +407,63 @@ mod tests {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests_always {
+    use super::*;
+
+    #[tokio::test]
+    async fn tpm_new_matches_feature_flag() {
+        #[cfg(not(feature = "tpm-provider"))]
+        {
+            let err = match TpmUniversalProvider::new().await {
+                Err(e) => e,
+                Ok(_) => panic!("TPM provider should be disabled without feature"),
+            };
+            let msg = err.to_string();
+            assert!(
+                msg.contains("TPM") || msg.contains("not_implemented") || msg.contains("tpm"),
+                "unexpected error message: {msg}"
+            );
+        }
+        #[cfg(feature = "tpm-provider")]
+        {
+            let p = TpmUniversalProvider::new()
+                .await
+                .expect("TPM provider should construct with feature");
+            assert_eq!(p.get_security_level(), 3);
+            assert_eq!(p.tpm_version(), &TpmVersion::V2_0);
+        }
+    }
+
+    #[test]
+    fn tpm_version_security_levels_via_manual_construct() {
+        let v1 = TpmUniversalProvider {
+            capabilities: None,
+            tpm_version: TpmVersion::V1_2,
+            metadata: HashMap::new(),
+        };
+        assert_eq!(v1.get_security_level(), 2);
+        let v2 = TpmUniversalProvider {
+            capabilities: None,
+            tpm_version: TpmVersion::V2_0,
+            metadata: HashMap::new(),
+        };
+        assert_eq!(v2.get_security_level(), 3);
+        assert!(v2.capabilities().is_none());
+    }
+
+    #[test]
+    fn tpm_capabilities_clone_and_debug() {
+        let c = TpmCapabilities {
+            manufacturer: "TestMfr".to_string(),
+            vendor_string: "Vendor".to_string(),
+            firmware_version: "1.0".to_string(),
+            pcr_banks: vec!["SHA256".to_string()],
+        };
+        let c2 = c.clone();
+        let s = format!("{c:?}");
+        assert!(s.contains("TestMfr"), "{s}");
+        assert_eq!(c2.firmware_version, "1.0");
+    }
+}

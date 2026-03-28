@@ -48,6 +48,9 @@
 
 #![warn(rust_2018_idioms)]
 
+/// Canonical, object-safe HSM provider trait and registry types.
+pub mod hsm;
+
 /// Modern unified trait system (primary)
 ///
 /// The unified trait system provides consistent interfaces across all `BearDog` components.

@@ -285,3 +285,93 @@ fn test_error_conditions() {
     assert_eq!(timeout.status, StorageStatus::Timeout);
     assert_eq!(cancelled.status, StorageStatus::Cancelled);
 }
+
+#[test]
+fn storage_request_json_roundtrip_preserves_shape() {
+    let req = StorageRequest {
+        request_id: Uuid::new_v4(),
+        operation: StorageOperation::Copy,
+        key: "k".to_string(),
+        data: Some(vec![1, 2]),
+        metadata: HashMap::from([("m".to_string(), "v".to_string())]),
+        timestamp: Utc::now(),
+        timeout_secs: Some(99),
+        source_key: Some("a".to_string()),
+        destination_key: Some("b".to_string()),
+    };
+    let v = serde_json::to_value(&req).expect("serialize request");
+    let back: StorageRequest = serde_json::from_value(v.clone()).expect("deserialize request");
+    let v2 = serde_json::to_value(&back).expect("re-serialize");
+    assert_eq!(v, v2, "JSON roundtrip must be stable");
+}
+
+#[test]
+fn storage_response_json_roundtrip_preserves_shape() {
+    let resp = StorageResponse {
+        request_id: Uuid::new_v4(),
+        status: StorageStatus::InProgress,
+        data: None,
+        metadata: HashMap::new(),
+        timestamp: Utc::now(),
+        duration_ms: 42,
+        error_message: None,
+        storage_location: Some("loc".to_string()),
+    };
+    let v = serde_json::to_value(&resp).expect("serialize response");
+    let back: StorageResponse = serde_json::from_value(v).expect("deserialize response");
+    assert_eq!(
+        serde_json::to_value(&back).expect("back"),
+        serde_json::to_value(&resp).expect("orig")
+    );
+}
+
+#[test]
+fn storage_operation_all_variants_roundtrip_json() {
+    for op in [
+        StorageOperation::Store,
+        StorageOperation::Retrieve,
+        StorageOperation::Delete,
+        StorageOperation::List,
+        StorageOperation::Copy,
+        StorageOperation::Move,
+        StorageOperation::Backup,
+        StorageOperation::Restore,
+    ] {
+        let v = serde_json::to_value(op).expect("ser op");
+        let back: StorageOperation = serde_json::from_value(v).expect("de op");
+        assert_eq!(back, op);
+    }
+}
+
+#[test]
+fn storage_status_all_variants_roundtrip_json() {
+    for st in [
+        StorageStatus::Pending,
+        StorageStatus::InProgress,
+        StorageStatus::Success,
+        StorageStatus::Failed,
+        StorageStatus::Cancelled,
+        StorageStatus::Timeout,
+    ] {
+        let v = serde_json::to_value(st).expect("ser status");
+        let back: StorageStatus = serde_json::from_value(v).expect("de status");
+        assert_eq!(back, st);
+    }
+}
+
+#[test]
+fn storage_request_debug_includes_operation() {
+    let r = StorageRequest::retrieve("key-a".to_string());
+    let s = format!("{r:?}");
+    assert!(
+        s.contains("Retrieve"),
+        "debug should mention operation: {s}"
+    );
+}
+
+#[test]
+fn storage_response_failure_includes_message_in_debug() {
+    let r = StorageResponse::failure(Uuid::nil(), "boom".to_string());
+    let s = format!("{r:?}");
+    assert!(s.contains("boom"), "debug should include error: {s}");
+}

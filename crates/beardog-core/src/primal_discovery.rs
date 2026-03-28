@@ -467,7 +467,7 @@ impl PrimalDiscovery {
             Ok(e) => e,
             Err(e) => {
                 debug!(
-                    "BiomeOS IPC socket directory not readable ({}): {}",
+                    "Platform IPC socket directory not readable ({}): {}",
                     dir.display(),
                     e
                 );

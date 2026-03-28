@@ -448,13 +448,11 @@ fn benchmark_key_lifecycle(c: &mut Criterion) {
 criterion_group! {
     name = hsm_benches;
     config = {
-        let mut c = Criterion::default()
+        let c = Criterion::default()
             .measurement_time(Duration::from_secs(10))
             .warm_up_time(Duration::from_secs(3));
         #[cfg(feature = "profiling")]
-        {
-            c = c.with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
-        }
+        let c = c.with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
         c
     };
     targets =

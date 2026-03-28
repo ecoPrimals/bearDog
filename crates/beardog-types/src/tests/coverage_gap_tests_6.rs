@@ -112,7 +112,7 @@ mod config_utils_tests {
         let stats = UnifiedConfigUtils::get_shared_config_stats();
         // Global state is shared across concurrent tests — assert the stats
         // struct is well-formed rather than pinning a specific count.
-        assert!(stats.memory_usage_estimate_kb >= 0);
+        let _ = stats.memory_usage_estimate_kb;
     }
 
     #[test]

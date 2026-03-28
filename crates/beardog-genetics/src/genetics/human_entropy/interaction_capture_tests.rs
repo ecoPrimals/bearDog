@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 use super::*;
+use chrono::Utc;
 
 #[test]
 fn test_interaction_capture_config_default() {
@@ -435,4 +436,150 @@ fn test_calculate_movement_entropy_single_mouse_sample() {
     }];
     let m = InteractionEntropyCollector::calculate_movement_entropy(&events);
     assert_eq!(m, 0.0);
+}
+
+#[test]
+fn interaction_event_serde_roundtrip() {
+    let ev = InteractionEvent {
+        interaction_type: InteractionType::MouseClick,
+        timestamp_nanos: 123,
+        data: InteractionData::Click {
+            button: MouseButton::Middle,
+        },
+    };
+    let j = serde_json::to_string(&ev).expect("ser");
+    let back: InteractionEvent = serde_json::from_str(&j).expect("de");
+    assert_eq!(back.timestamp_nanos, 123);
+}
+
+#[test]
+fn interaction_capture_result_and_metrics_serde() {
+    let m = InteractionMetrics {
+        total_interactions: 2,
+        keyboard_events: 1,
+        mouse_events: 1,
+        avg_interval_ms: 10.0,
+        interval_std_dev: 1.0,
+        timing_entropy: 0.5,
+        movement_entropy: 0.5,
+        overall_quality: 0.8,
+    };
+    let r = InteractionCaptureResult {
+        interactions: vec![],
+        collection_start: Utc::now(),
+        duration_ms: 100,
+        quality_score: 0.8,
+        entropy_bytes: vec![1, 2, 3],
+        metrics: m.clone(),
+    };
+    let js = serde_json::to_string(&r).expect("result ser");
+    let back: InteractionCaptureResult = serde_json::from_str(&js).expect("result de");
+    assert_eq!(back.entropy_bytes, vec![1, 2, 3]);
+    let jm = serde_json::to_string(&m).expect("metrics ser");
+    let _: InteractionMetrics = serde_json::from_str(&jm).expect("metrics de");
+}
+
+#[test]
+fn interaction_type_and_data_exhaustive_serde_smoke() {
+    let types = vec![
+        InteractionType::KeyPress,
+        InteractionType::KeyRelease,
+        InteractionType::MouseMove,
+        InteractionType::MouseClick,
+        InteractionType::MouseScroll,
+    ];
+    for t in types {
+        let j = serde_json::to_string(&t).expect("type ser");
+        let _: InteractionType = serde_json::from_str(&j).expect("type de");
+    }
+    let data = vec![
+        InteractionData::Keyboard {
+            is_char: true,
+            is_modifier: false,
+        },
+        InteractionData::Mouse {
+            delta_x: 1,
+            delta_y: -1,
+        },
+        InteractionData::Click {
+            button: MouseButton::Left,
+        },
+        InteractionData::Scroll { delta: 2 },
+    ];
+    for d in data {
+        let j = serde_json::to_string(&d).expect("data ser");
+        let _: InteractionData = serde_json::from_str(&j).expect("data de");
+    }
+}
+
+#[test]
+fn interaction_capture_config_fields_non_default() {
+    let c = InteractionCaptureConfig {
+        target_interactions: 10,
+        timeout_seconds: 30,
+        min_quality: 0.5,
+        enable_keyboard: false,
+        enable_mouse: true,
+    };
+    assert_eq!(c.target_interactions, 10);
+    assert!(!c.enable_keyboard);
+}
+
+#[test]
+fn constants_match_defaults() {
+    let d = InteractionCaptureConfig::default();
+    assert_eq!(d.target_interactions, DEFAULT_INTERACTION_CAPTURE_TARGET);
+    assert_eq!(d.timeout_seconds, DEFAULT_INTERACTION_CAPTURE_TIMEOUT_SECS);
+    assert!((d.min_quality - DEFAULT_INTERACTION_CAPTURE_MIN_QUALITY).abs() < f64::EPSILON);
+}
+
+#[test]
+fn calculate_overall_quality_zero_duration_guard() {
+    let q = InteractionEntropyCollector::calculate_overall_quality(0.5, 0.5, 1, 0);
+    assert!(q.is_finite());
+}
+
+#[test]
+fn calculate_metrics_single_event_interval_std_dev_zero() {
+    let events = vec![InteractionEvent {
+        interaction_type: InteractionType::KeyPress,
+        timestamp_nanos: 100,
+        data: InteractionData::Keyboard {
+            is_char: false,
+            is_modifier: false,
+        },
+    }];
+    let m = InteractionEntropyCollector::calculate_metrics(&events, 1);
+    assert_eq!(m.interval_std_dev, 0.0);
+}
+
+#[test]
+fn mouse_button_json_roundtrip() {
+    for b in [MouseButton::Left, MouseButton::Right, MouseButton::Middle] {
+        let j = serde_json::to_string(&b).expect("button ser");
+        let back: MouseButton = serde_json::from_str(&j).expect("button de");
+        assert_eq!(back, b);
+    }
+}
+
+#[test]
+fn interaction_collector_new_const() {
+    let c = InteractionEntropyCollector::new(InteractionCaptureConfig::default());
+    let _: &InteractionEntropyCollector = &c;
+}
+
+#[test]
+fn calculate_overall_quality_quantity_weight_saturates_at_fifty_events() {
+    let q40 = InteractionEntropyCollector::calculate_overall_quality(0.4, 0.4, 40, 10_000);
+    let q50 = InteractionEntropyCollector::calculate_overall_quality(0.4, 0.4, 50, 10_000);
+    assert!(
+        q50 >= q40,
+        "quantity score should not decrease when crossing the 50-event target"
+    );
+}
+
+#[test]
+fn calculate_shannon_entropy_two_equal_intervals_high_repeat() {
+    let e = InteractionEntropyCollector::calculate_shannon_entropy(&[5.0, 5.0, 5.0, 5.0]);
+    assert_eq!(e, 0.0);
 }

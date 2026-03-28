@@ -171,6 +171,148 @@ impl PersistentAuditStorage {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::super::types::{AuditLogEntry, AuditLogFilter, OperationResult};
+    use super::*;
+    use chrono::Utc;
+    use tempfile::tempdir;
+
+    fn sample_entry(op: &str) -> AuditLogEntry {
+        AuditLogEntry {
+            timestamp: Utc::now(),
+            operation: op.to_string(),
+            user_id: Some("u1".to_string()),
+            key_id: Some("k1".to_string()),
+            result: OperationResult::Success,
+            metadata: std::collections::HashMap::new(),
+        }
+    }
+
+    #[tokio::test]
+    async fn persistent_audit_storage_new_append_get_and_stats() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("audit.log");
+        let storage = PersistentAuditStorage::new(path.clone(), 100)
+            .await
+            .expect("storage init");
+
+        assert_eq!(storage.stats_cache_ttl, 300);
+        let e1 = sample_entry("op_a");
+        storage.append_entry(&e1).await.expect("append first entry");
+        storage
+            .log_entry(sample_entry("op_b"))
+            .await
+            .expect("log_entry alias");
+
+        let all = storage
+            .get_entries(&AuditLogFilter::default())
+            .await
+            .expect("get all");
+        assert_eq!(all.len(), 2);
+
+        let filtered = storage
+            .get_entries(&AuditLogFilter {
+                operation: Some("op_a".to_string()),
+                ..Default::default()
+            })
+            .await
+            .expect("filtered");
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered[0].operation, "op_a");
+
+        let stats = storage.get_storage_stats().await.expect("stats");
+        assert_eq!(stats.file_path, path);
+        assert!(stats.file_size_bytes > 0);
+        assert_eq!(stats.cache_size, 2);
+        assert_eq!(stats.max_cache_size, 100);
+    }
+
+    #[tokio::test]
+    async fn persistent_audit_storage_load_cache_skips_invalid_json_lines() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("audit_partial.log");
+        let valid = sample_entry("valid_line");
+        let line = serde_json::to_string(&valid).expect("serialize entry");
+        tokio::fs::write(&path, format!("not-json\n{line}\n"))
+            .await
+            .expect("seed file");
+
+        let storage = PersistentAuditStorage::new(path, 10)
+            .await
+            .expect("load with bad line");
+        let entries = storage
+            .get_entries(&AuditLogFilter::default())
+            .await
+            .expect("get");
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].operation, "valid_line");
+    }
+
+    #[tokio::test]
+    async fn persistent_audit_storage_cache_eviction_respects_max() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("audit_evict.log");
+        let storage = PersistentAuditStorage::new(path, 2).await.expect("storage");
+
+        for i in 0..5 {
+            let mut e = sample_entry("same_op");
+            e.operation = format!("op_{i}");
+            storage.append_entry(&e).await.expect("append");
+        }
+        let entries = storage
+            .get_entries(&AuditLogFilter::default())
+            .await
+            .expect("get");
+        assert_eq!(entries.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn persistent_audit_storage_missing_file_starts_empty() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("missing.log");
+        let storage = PersistentAuditStorage::new(path, 5)
+            .await
+            .expect("new without existing file");
+        let entries = storage
+            .get_entries(&AuditLogFilter::default())
+            .await
+            .expect("get");
+        assert!(entries.is_empty());
+        let stats = storage.get_storage_stats().await.expect("stats");
+        assert_eq!(stats.cache_size, 0);
+        assert_eq!(stats.file_size_bytes, 0);
+    }
+
+    #[tokio::test]
+    async fn audit_log_filter_time_bounds() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("audit_time.log");
+        let storage = PersistentAuditStorage::new(path, 20)
+            .await
+            .expect("storage");
+
+        let mut old = sample_entry("old");
+        old.timestamp = Utc::now() - chrono::Duration::hours(2);
+        storage.append_entry(&old).await.expect("old");
+
+        let mut new = sample_entry("new");
+        new.timestamp = Utc::now();
+        storage.append_entry(&new).await.expect("new");
+
+        let from = Utc::now() - chrono::Duration::hours(1);
+        let list = storage
+            .get_entries(&AuditLogFilter {
+                from_time: Some(from),
+                ..Default::default()
+            })
+            .await
+            .expect("from filter");
+        assert_eq!(list.len(), 1);
+        assert_eq!(list[0].operation, "new");
+    }
+}
+
 /// Storage statistics
 #[derive(Debug, Clone)]
 pub struct StorageStats {

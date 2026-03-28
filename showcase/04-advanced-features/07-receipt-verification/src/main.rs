@@ -19,75 +19,95 @@ use uuid::Uuid;
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct DemoConfig {
-    ceremony: CeremonyConfig,
-    receipts: ReceiptsConfig,
-    verification: VerificationConfig,
+    #[serde(rename = "ceremony")]
+    _ceremony: CeremonyConfig,
+    #[serde(rename = "receipts")]
+    _receipts: ReceiptsConfig,
+    #[serde(rename = "verification")]
+    _verification: VerificationConfig,
     forensics: ForensicsConfig,
     performance: PerformanceConfig,
-    validation: ValidationConfig,
-    audit: AuditConfig,
+    #[serde(rename = "validation")]
+    _validation: ValidationConfig,
+    #[serde(rename = "audit")]
+    _audit: AuditConfig,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct CeremonyConfig {
-    name: String,
-    description: String,
-    max_duration_ms: u64,
+    #[serde(rename = "name")]
+    _name: String,
+    #[serde(rename = "description")]
+    _description: String,
+    #[serde(rename = "max_duration_ms")]
+    _max_duration_ms: u64,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct ReceiptsConfig {
-    hash_algorithm: String,
-    signature_algorithm: String,
-    enable_chain_linking: bool,
+    #[serde(rename = "hash_algorithm")]
+    _hash_algorithm: String,
+    #[serde(rename = "signature_algorithm")]
+    _signature_algorithm: String,
+    #[serde(rename = "enable_chain_linking")]
+    _enable_chain_linking: bool,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct VerificationConfig {
-    check_signatures: bool,
-    check_hash_chain: bool,
-    check_timestamps: bool,
-    detect_tampering: bool,
+    #[serde(rename = "check_signatures")]
+    _check_signatures: bool,
+    #[serde(rename = "check_hash_chain")]
+    _check_hash_chain: bool,
+    #[serde(rename = "check_timestamps")]
+    _check_timestamps: bool,
+    #[serde(rename = "detect_tampering")]
+    _detect_tampering: bool,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct ForensicsConfig {
-    enable_timeline: bool,
-    enable_chain_of_custody: bool,
+    #[serde(rename = "enable_timeline")]
+    _enable_timeline: bool,
+    #[serde(rename = "enable_chain_of_custody")]
+    _enable_chain_of_custody: bool,
     compliance_standards: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct PerformanceConfig {
     receipt_generation_target_ms: u64,
-    verification_target_ms: u64,
-    forensic_analysis_target_ms: u64,
-    tamper_detection_accuracy: u8,
+    #[serde(rename = "verification_target_ms")]
+    _verification_target_ms: u64,
+    #[serde(rename = "forensic_analysis_target_ms")]
+    _forensic_analysis_target_ms: u64,
+    #[serde(rename = "tamper_detection_accuracy")]
+    _tamper_detection_accuracy: u8,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct ValidationConfig {
-    test_generation: bool,
-    test_verification: bool,
-    test_tamper_detection: bool,
-    test_forensics: bool,
-    test_compliance: bool,
+    #[serde(rename = "test_generation")]
+    _test_generation: bool,
+    #[serde(rename = "test_verification")]
+    _test_verification: bool,
+    #[serde(rename = "test_tamper_detection")]
+    _test_tamper_detection: bool,
+    #[serde(rename = "test_forensics")]
+    _test_forensics: bool,
+    #[serde(rename = "test_compliance")]
+    _test_compliance: bool,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct AuditConfig {
-    log_level: String,
-    include_performance: bool,
-    hash_algorithm: String,
+    #[serde(rename = "log_level")]
+    _log_level: String,
+    #[serde(rename = "include_performance")]
+    _include_performance: bool,
+    #[serde(rename = "hash_algorithm")]
+    _hash_algorithm: String,
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -95,14 +115,17 @@ struct AuditConfig {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct Scenario {
-    scenario_name: String,
-    scenario_id: String,
-    operation: String,
+    #[serde(rename = "scenario_name")]
+    _scenario_name: String,
+    #[serde(rename = "scenario_id")]
+    _scenario_id: String,
+    #[serde(rename = "operation")]
+    _operation: String,
     operations: Vec<Operation>,
     test_cases: Vec<TestCase>,
-    expected_results: ExpectedResults,
+    #[serde(rename = "expected_results")]
+    _expected_results: ExpectedResults,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -124,13 +147,17 @@ struct TestCase {
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct ExpectedResults {
-    generation_ms: u64,
-    verification_ms: u64,
-    forensic_analysis_ms: u64,
-    tamper_detection_accuracy: u8,
-    test_cases_passed: u32,
+    #[serde(rename = "generation_ms")]
+    _generation_ms: u64,
+    #[serde(rename = "verification_ms")]
+    _verification_ms: u64,
+    #[serde(rename = "forensic_analysis_ms")]
+    _forensic_analysis_ms: u64,
+    #[serde(rename = "tamper_detection_accuracy")]
+    _tamper_detection_accuracy: u8,
+    #[serde(rename = "test_cases_passed")]
+    _test_cases_passed: u32,
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

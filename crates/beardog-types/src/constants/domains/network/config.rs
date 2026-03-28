@@ -100,3 +100,44 @@ pub fn default_storage_endpoint() -> String {
 pub fn default_storage_endpoint_from_env() -> String {
     std::env::var("BEARDOG_STORAGE_ENDPOINT").unwrap_or_else(|_| default_storage_endpoint())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn localhost_aliases_and_default_ports() {
+        assert_eq!(LOCALHOST_NAME, DEFAULT_LOCALHOST_NAME_STR);
+        assert_eq!(DEFAULT_POSTGRES_PORT, 5432);
+        assert_eq!(DEFAULT_GRAFANA_PORT, 3000);
+        assert!(!LOCALHOST_IPV4.is_empty());
+        assert!(!LOCALHOST_IPV6.is_empty());
+    }
+
+    #[test]
+    fn default_endpoints_include_host_and_port() {
+        let h = default_service_host();
+        let p = default_service_port();
+        assert!(!h.is_empty());
+        assert!(p > 0);
+
+        let db = default_database_url();
+        assert!(db.contains("postgresql://"));
+        assert!(db.contains(&format!(":{DEFAULT_POSTGRES_PORT}/")));
+
+        let disc = default_discovery_endpoint();
+        assert!(disc.contains("/discovery"));
+        let comp = default_compute_endpoint();
+        assert!(comp.contains("/compute"));
+        let stor = default_storage_endpoint();
+        assert!(stor.contains("/storage"));
+    }
+
+    #[test]
+    fn default_urls_from_env_fallback() {
+        let _ = default_database_url_from_env();
+        let _ = default_discovery_endpoint_from_env();
+        let _ = default_compute_endpoint_from_env();
+        let _ = default_storage_endpoint_from_env();
+    }
+}

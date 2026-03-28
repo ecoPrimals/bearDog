@@ -115,17 +115,18 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     })?);
     info!("BTSP provider initialized");
 
-    // Create primal identity from environment (fail-fast if not configured)
-    let identity = Arc::new(
-        beardog_types::primal_identity::PrimalIdentity::from_env().map_err(|e| {
-            BearDogError::Initialization {
-                message: format!("Failed to read primal identity: {e}"),
-            }
-        })?,
-    );
+    // Create primal identity from environment (standalone fallback per UniBin v1.1)
+    let identity = Arc::new(beardog_types::primal_identity::PrimalIdentity::from_env());
+    if identity.is_standalone() {
+        info!(
+            mode = "standalone",
+            "no identity env vars set — running in standalone mode"
+        );
+    }
     info!(
         family_id = %identity.family_id(),
         node_id = %identity.node_id(),
+        standalone = identity.is_standalone(),
         "identity"
     );
 
@@ -158,7 +159,6 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     if let Some(neural_socket) = discover_neural_api_socket() {
         info!(neural_socket = %neural_socket, "Neural API detected");
 
-        // Register primary socket path
         let registration_addr = if let Some(ref tcp) = tcp_addr {
             tcp.as_str()
         } else {
@@ -166,15 +166,41 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         };
 
         match register_with_neural_api(&neural_socket, &primal_name, registration_addr).await {
-            Ok(()) => info!("BearDog registered with Neural API"),
+            Ok(()) => info!("registered with Neural API"),
             Err(e) => warn!(error = %e, "Neural API registration failed (non-fatal)"),
         }
     } else {
         info!(mode = "standalone", "no Neural API detected");
     }
 
+    // Best-effort orchestrator registry registration (non-fatal per PRIMAL IPC Protocol v3.1)
+    attempt_songbird_registration(&socket_path, tcp_addr.as_deref()).await;
+
     // Start all transports (runs until Ctrl+C)
     server.start_all().await?;
 
     Ok(())
+}
+
+/// Best-effort registration with ecosystem IPC registry (non-fatal).
+///
+/// Attempts to connect to the orchestrator's IPC registry socket
+/// (Songbird or equivalent) and register BearDog's capabilities.
+/// Failure is logged and swallowed per PRIMAL IPC Protocol v3.1:
+/// registration SHOULD be attempted but MUST NOT prevent standalone operation.
+async fn attempt_songbird_registration(_socket_path: &str, _tcp_addr: Option<&str>) {
+    use beardog_ipc::{Capability, OrchestratorRegistryClient};
+
+    let Ok(client) = OrchestratorRegistryClient::connect().await else {
+        info!("no IPC registry socket found (standalone operation)");
+        return;
+    };
+
+    let capabilities = vec![Capability::Crypto, Capability::BTSP, Capability::Ed25519];
+
+    if let Err(e) = client.register("beardog", capabilities).await {
+        warn!(error = %e, "IPC registry registration failed (non-fatal)");
+    } else {
+        info!("registered with ecosystem IPC registry");
+    }
 }

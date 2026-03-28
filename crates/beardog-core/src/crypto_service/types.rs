@@ -184,3 +184,38 @@ impl Default for CryptoServiceState {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn crypto_service_config_default() {
+        let c = CryptoServiceConfig::default();
+        assert_eq!(c.service_name, "beardog");
+        assert!(c.audit_enabled);
+        assert!(!c.hsm_enabled);
+    }
+
+    #[test]
+    fn crypto_service_config_from_env_smoke() {
+        let _ = CryptoServiceConfig::from_env();
+    }
+
+    #[test]
+    fn crypto_service_state_new_default_uptime_and_count() {
+        let s = CryptoServiceState::new();
+        assert_eq!(s.operation_count(), 0);
+        let _ = s.uptime();
+        let s2 = CryptoServiceState::default();
+        assert_eq!(s2.operation_count(), 0);
+    }
+
+    #[test]
+    fn crypto_service_config_clone_debug() {
+        let c = CryptoServiceConfig::default();
+        let _ = format!("{c:?}");
+        let c2 = c.clone();
+        assert_eq!(c2.service_name, c.service_name);
+    }
+}

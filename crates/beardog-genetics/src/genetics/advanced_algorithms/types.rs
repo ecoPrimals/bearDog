@@ -368,3 +368,124 @@ pub struct OptimizationConstraint {
     /// Fixed value
     pub fixed_value: Option<f64>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::genetics::entropy_hierarchy::{
+        EntropyClass, MachineEntropySource, MachineSourceType,
+    };
+    use chrono::Utc;
+
+    #[test]
+    fn genetic_signature_serde_roundtrip() {
+        let sig = GeneticSignature::default();
+        let json = serde_json::to_string(&sig).expect("serialize GeneticSignature");
+        let back: GeneticSignature = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.biome_id, sig.biome_id);
+    }
+
+    #[test]
+    fn evolution_config_serde_roundtrip() {
+        let c = EvolutionConfig::default();
+        let json = serde_json::to_string(&c).expect("ser");
+        let back: EvolutionConfig = serde_json::from_str(&json).expect("de");
+        assert_eq!(back.population_size, c.population_size);
+        assert_eq!(back.mutation_rate, c.mutation_rate);
+    }
+
+    #[test]
+    fn evolution_config_from_env_returns_valid_structure() {
+        let c = EvolutionConfig::from_env();
+        assert!(c.population_size > 0);
+        assert!(c.mutation_rate >= 0.0 && c.mutation_rate <= 1.0);
+        assert!(c.max_generations > 0);
+    }
+
+    #[test]
+    fn genetic_individual_generation_snapshot_and_mutation_record_serde() {
+        let ind = GeneticIndividual::default();
+        let js = serde_json::to_string(&ind).expect("ind ser");
+        let _: GeneticIndividual = serde_json::from_str(&js).expect("ind de");
+
+        let snap = GenerationSnapshot::default();
+        let s = serde_json::to_string(&snap).expect("snap ser");
+        let _: GenerationSnapshot = serde_json::from_str(&s).expect("snap de");
+
+        let m = MutationRecord::default();
+        let ms = serde_json::to_string(&m).expect("mut ser");
+        let _: MutationRecord = serde_json::from_str(&ms).expect("mut de");
+    }
+
+    #[test]
+    fn mutation_type_roundtrip_json() {
+        let variants = [
+            MutationType::Random,
+            MutationType::EntropyQualityAdjustment,
+            MutationType::TrustLevelShift,
+            MutationType::SpecializationChange,
+            MutationType::PerformanceOptimization,
+        ];
+        for v in variants {
+            let j = serde_json::to_string(&v).expect("serde");
+            let back: MutationType = serde_json::from_str(&j).expect("de");
+            assert_eq!(back, v);
+        }
+    }
+
+    #[test]
+    fn performance_metrics_and_fitness_criterion_defaults() {
+        let pm = PerformanceMetrics::default();
+        assert_eq!(pm.authorization_success_rate, 0.5);
+        let fc = FitnessCriterion::default();
+        assert_eq!(fc.weight, 1.0);
+        let og = OptimizationGoal::default();
+        assert_eq!(og.optimization_strategy, "maximize");
+        let oc = OptimizationConstraint::default();
+        assert!(oc.name.is_empty());
+    }
+
+    #[test]
+    fn genetic_signature_custom_entropy_class_roundtrip() {
+        let sig = GeneticSignature {
+            biome_id: "b".to_string(),
+            signature_hash: "h".to_string(),
+            entropy_class: EntropyClass::StoreBoughtMachine {
+                quality_score: 0.9,
+                source_type: MachineEntropySource {
+                    source_type: MachineSourceType::CSPRNG {
+                        algorithm: "x".to_string(),
+                        seed_source: "y".to_string(),
+                    },
+                    algorithm: "x".to_string(),
+                    seed_source: "y".to_string(),
+                    quality_metrics: std::collections::HashMap::new(),
+                },
+                generation_timestamp: Utc::now(),
+                reproducibility_index: 0.1,
+            },
+            quality_score: 0.8,
+            created_at: Utc::now(),
+            lineage_depth: 3,
+            mixed_signatures: vec!["a".to_string()],
+        };
+        let json = serde_json::to_string(&sig).expect("ser");
+        let back: GeneticSignature = serde_json::from_str(&json).expect("de");
+        assert_eq!(back.biome_id, "b");
+        assert_eq!(back.lineage_depth, 3);
+    }
+
+    #[test]
+    fn optimization_constraint_serde_with_bounds() {
+        let c = OptimizationConstraint {
+            name: "cpu".to_string(),
+            min_value: Some(0.0),
+            max_value: Some(1.0),
+            fixed_value: None,
+        };
+        let j = serde_json::to_string(&c).expect("ser");
+        let back: OptimizationConstraint = serde_json::from_str(&j).expect("de");
+        assert_eq!(back.name, "cpu");
+        assert_eq!(back.min_value, Some(0.0));
+    }
+}

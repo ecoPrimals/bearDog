@@ -185,4 +185,49 @@ mod tests {
             assert_eq!(return_code_description(0xFFFFFFFF), "Unknown error code");
         }
     }
+
+    #[test]
+    fn return_code_description_covers_all_branches() {
+        use return_codes::*;
+        let pairs = [
+            (CKR_OK, "Success"),
+            (CKR_CANCEL, "cancelled"),
+            (CKR_HOST_MEMORY, "memory"),
+            (CKR_SLOT_ID_INVALID, "slot"),
+            (CKR_GENERAL_ERROR, "General"),
+            (CKR_FUNCTION_FAILED, "Function failed"),
+            (CKR_ARGUMENTS_BAD, "arguments"),
+            (CKR_NO_EVENT, "No event"),
+            (CKR_NEED_TO_CREATE_THREADS, "threads"),
+            (CKR_CANT_LOCK, "lock"),
+            (CKR_ATTRIBUTE_TYPE_INVALID, "attribute type"),
+            (CKR_ATTRIBUTE_VALUE_INVALID, "attribute value"),
+            (CKR_OPERATION_ACTIVE, "active"),
+            (CKR_OPERATION_NOT_INITIALIZED, "not initialized"),
+            (CKR_USER_PIN_NOT_INITIALIZED, "PIN not set"),
+            (CKR_PIN_INCORRECT, "Incorrect PIN"),
+            (CKR_PIN_LOCKED, "locked"),
+            (CKR_PIN_EXPIRED, "expired"),
+            (CKR_SESSION_HANDLE_INVALID, "session"),
+            (CKR_OBJECT_HANDLE_INVALID, "object"),
+            (CKR_TOKEN_NOT_PRESENT, "not present"),
+            (CKR_TOKEN_WRITE_PROTECTED, "write-protected"),
+        ];
+        for (code, needle) in pairs {
+            let d = return_code_description(code);
+            assert!(
+                d.contains(needle) || d == "Success",
+                "code {code:#x} -> {d:?} expected needle {needle:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn object_classes_and_key_types_nonzero_distinct() {
+        use key_types::*;
+        use object_classes::*;
+        assert_ne!(CKO_DATA, CKO_CERTIFICATE);
+        assert_ne!(CKK_RSA, CKK_AES);
+        assert!(CKK_EC > 0);
+    }
 }

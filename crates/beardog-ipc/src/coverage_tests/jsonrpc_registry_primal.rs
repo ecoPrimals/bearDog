@@ -9,18 +9,18 @@ use crate::registry_client::{
 use std::path::PathBuf;
 
 // ============================================================================
-// SongbirdClient tests (public API only)
+// OrchestratorRegistryClient tests (public API only)
 // ============================================================================
 
 #[test]
 fn test_songbird_client_new_creates_instance() {
-    let _client = crate::SongbirdClient::new();
-    // SongbirdClient::new() should not panic
+    let _client = crate::OrchestratorRegistryClient::new();
+    // OrchestratorRegistryClient::new() should not panic
 }
 
 #[test]
 fn test_songbird_client_default_creates_instance() {
-    let _client = crate::SongbirdClient::default();
+    let _client = crate::OrchestratorRegistryClient::default();
 }
 
 // ============================================================================

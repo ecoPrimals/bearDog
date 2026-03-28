@@ -214,11 +214,12 @@ async fn run_encryption_workflow(file_path: &PathBuf, config: DemoConfig) -> Res
 
 // Configuration structure
 #[derive(Debug, Clone, serde::Deserialize)]
-#[allow(dead_code)]
 struct DemoConfig {
     storage_path: String,
-    key_rotation_days: u32,
-    compression_level: i32,
+    #[serde(rename = "key_rotation_days")]
+    _key_rotation_days: u32,
+    #[serde(rename = "compression_level")]
+    _compression_level: i32,
 }
 
 fn load_config(path: &PathBuf) -> Result<DemoConfig> {

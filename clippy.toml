@@ -22,6 +22,11 @@ disallowed-methods = [
 # Allow unwrap in test code
 allow-unwrap-in-tests = true
 
+# The Rust test harness collects all #[test] descriptors into a stack-allocated
+# array. With ~3000 tests in beardog-types the harness function alone exceeds
+# the default 512 KB. This threshold is raised to accommodate it.
+stack-size-threshold = 1_048_576
+
 # Code quality thresholds
 # Workspace `[workspace.lints.clippy]` allows `wildcard_imports`; this only affects
 # diagnostics when that allow is removed or narrowed.

@@ -71,28 +71,3 @@ mod bootstrap_error_scenarios_tests;
 #[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
 #[cfg(test)]
 mod registry_edge_cases_tests;
-
-// October 20, 2025: Additional test modules (temporarily disabled due to compilation errors)
-#[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
-// #[cfg(test)]
-// mod initialization_tests;
-//
-#[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
-// #[cfg(test)]
-// mod initialization_edge_cases_tests;
-//
-#[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
-// #[cfg(test)]
-// mod ecosystem_registration_tests;
-//
-#[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
-// #[cfg(test)]
-// mod self_identity_tests;
-//
-#[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
-// #[cfg(test)]
-// mod core_state_tests;
-//
-#[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
-// #[cfg(test)]
-// mod discovery_protocol_tests;

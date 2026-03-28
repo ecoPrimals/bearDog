@@ -17,65 +17,85 @@ use uuid::Uuid;
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct DemoConfig {
-    ceremony: CeremonyConfig,
-    federation: FederationConfig,
-    discovery: DiscoveryConfig,
-    sovereignty: SovereigntyConfig,
-    performance: PerformanceConfig,
-    audit: AuditConfig,
+    #[serde(rename = "ceremony")]
+    _ceremony: CeremonyConfig,
+    #[serde(rename = "federation")]
+    _federation: FederationConfig,
+    #[serde(rename = "discovery")]
+    _discovery: DiscoveryConfig,
+    #[serde(rename = "sovereignty")]
+    _sovereignty: SovereigntyConfig,
+    #[serde(rename = "performance")]
+    _performance: PerformanceConfig,
+    #[serde(rename = "audit")]
+    _audit: AuditConfig,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct CeremonyConfig {
-    name: String,
-    description: String,
-    max_duration_ms: u64,
+    #[serde(rename = "name")]
+    _name: String,
+    #[serde(rename = "description")]
+    _description: String,
+    #[serde(rename = "max_duration_ms")]
+    _max_duration_ms: u64,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct FederationConfig {
-    num_towers: u32,
-    regions: Vec<String>,
-    consensus_algorithm: String,
-    consensus_timeout_ms: u64,
-    require_all_towers: bool,
+    #[serde(rename = "num_towers")]
+    _num_towers: u32,
+    #[serde(rename = "regions")]
+    _regions: Vec<String>,
+    #[serde(rename = "consensus_algorithm")]
+    _consensus_algorithm: String,
+    #[serde(rename = "consensus_timeout_ms")]
+    _consensus_timeout_ms: u64,
+    #[serde(rename = "require_all_towers")]
+    _require_all_towers: bool,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct DiscoveryConfig {
-    enable_auto_discovery: bool,
-    discovery_timeout_ms: u64,
-    announce_capabilities: bool,
+    #[serde(rename = "enable_auto_discovery")]
+    _enable_auto_discovery: bool,
+    #[serde(rename = "discovery_timeout_ms")]
+    _discovery_timeout_ms: u64,
+    #[serde(rename = "announce_capabilities")]
+    _announce_capabilities: bool,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct SovereigntyConfig {
-    enforce_boundaries: bool,
-    allow_cross_border: bool,
-    gdpr_strict_mode: bool,
+    #[serde(rename = "enforce_boundaries")]
+    _enforce_boundaries: bool,
+    #[serde(rename = "allow_cross_border")]
+    _allow_cross_border: bool,
+    #[serde(rename = "gdpr_strict_mode")]
+    _gdpr_strict_mode: bool,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct PerformanceConfig {
-    discovery_target_ms: u64,
-    trust_establishment_target_ms: u64,
-    consensus_target_ms: u64,
-    operation_target_ms: u64,
+    #[serde(rename = "discovery_target_ms")]
+    _discovery_target_ms: u64,
+    #[serde(rename = "trust_establishment_target_ms")]
+    _trust_establishment_target_ms: u64,
+    #[serde(rename = "consensus_target_ms")]
+    _consensus_target_ms: u64,
+    #[serde(rename = "operation_target_ms")]
+    _operation_target_ms: u64,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct AuditConfig {
-    log_level: String,
-    include_performance: bool,
-    enable_cross_tower_audit: bool,
+    #[serde(rename = "log_level")]
+    _log_level: String,
+    #[serde(rename = "include_performance")]
+    _include_performance: bool,
+    #[serde(rename = "enable_cross_tower_audit")]
+    _enable_cross_tower_audit: bool,
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -83,15 +103,18 @@ struct AuditConfig {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct Scenario {
-    scenario_name: String,
-    scenario_id: String,
-    operation: String,
+    #[serde(rename = "scenario_name")]
+    _scenario_name: String,
+    #[serde(rename = "scenario_id")]
+    _scenario_id: String,
+    #[serde(rename = "operation")]
+    _operation: String,
     towers: Vec<TowerDefinition>,
     operations: Vec<OperationDefinition>,
     test_cases: Vec<TestCase>,
-    expected_results: ExpectedResults,
+    #[serde(rename = "expected_results")]
+    _expected_results: ExpectedResults,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -131,13 +154,17 @@ struct TestCase {
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct ExpectedResults {
-    discovery_ms: u64,
-    trust_establishment_ms: u64,
-    consensus_ms: u64,
-    operation_ms: u64,
-    test_cases_passed: u32,
+    #[serde(rename = "discovery_ms")]
+    _discovery_ms: u64,
+    #[serde(rename = "trust_establishment_ms")]
+    _trust_establishment_ms: u64,
+    #[serde(rename = "consensus_ms")]
+    _consensus_ms: u64,
+    #[serde(rename = "operation_ms")]
+    _operation_ms: u64,
+    #[serde(rename = "test_cases_passed")]
+    _test_cases_passed: u32,
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

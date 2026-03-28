@@ -516,3 +516,86 @@ impl EcosystemOptimizerConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use beardog_types::canonical::HealthStatus;
+    use std::time::{Duration, Instant};
+
+    #[test]
+    fn ecosystem_optimizer_config_default_and_from_env() {
+        let d = EcosystemOptimizerConfig::default();
+        assert_eq!(d.max_connections, 100);
+        assert_eq!(d.rate_limit, 1000);
+        let _ = EcosystemOptimizerConfig::from_env();
+    }
+
+    #[tokio::test]
+    async fn optimizer_new_and_service_mesh_discovery() {
+        let opt = EcosystemPerformanceOptimizer::new(EcosystemOptimizerConfig::default());
+        let r = opt
+            .optimize_service_mesh_discovery("mesh")
+            .await
+            .expect("discovery");
+        assert_eq!(r.len(), 2);
+        assert!(r[0].contains("mesh"));
+    }
+
+    #[tokio::test]
+    async fn connection_pool_add_and_get() {
+        let pool = CapabilityConnectionPool::new(PoolConfig {
+            max_pool_size: 10,
+            min_pool_size: 1,
+            idle_timeout: Duration::from_secs(1),
+            max_connection_age: Duration::from_secs(60),
+        });
+        assert!(pool.get_connection("x").await.is_err());
+        pool.add_connection("x".into(), "http://localhost:1".into())
+            .await
+            .expect("add");
+        let ep = pool.get_connection("x").await.expect("get");
+        assert_eq!(ep, "http://localhost:1");
+    }
+
+    #[test]
+    fn connection_state_metrics_and_health_enums() {
+        let _ = ConnectionState::Connecting;
+        let m = ConnectionMetrics::default();
+        assert_eq!(m.bytes_sent, 0);
+        let h = ConnectionHealthStatus::Unknown;
+        assert_ne!(h, ConnectionHealthStatus::Healthy);
+    }
+
+    #[test]
+    fn performance_metrics_clone_and_ecosystem_health() {
+        let mut pm = PerformanceMetrics::default();
+        pm.service_mesh.total_requests = 1;
+        let pm2 = pm.clone();
+        assert_eq!(
+            pm2.service_mesh.total_requests,
+            pm.service_mesh.total_requests
+        );
+        let eh = EcosystemHealth {
+            service_mesh: ServiceHealth {
+                status: HealthStatus::Healthy,
+                response_time: Duration::from_millis(1),
+                success_rate: 1.0,
+                last_check: Instant::now(),
+            },
+            compute: ServiceHealth {
+                status: HealthStatus::Healthy,
+                response_time: Duration::from_millis(2),
+                success_rate: 1.0,
+                last_check: Instant::now(),
+            },
+            cache: CacheHealth {
+                hit_rate: 0.9,
+                size_mb: 1.0,
+                item_count: 2,
+            },
+            overall_score: 1.0,
+        };
+        let _ = format!("{eh:?}");
+    }
+}

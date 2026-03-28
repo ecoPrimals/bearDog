@@ -292,4 +292,44 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn validate_policy_touch_id_required_without_hardware_errors() {
+        let auth = SafeBiometricAuthenticator::default();
+        assert!(!auth.is_available());
+        let err = auth
+            .validate_policy(&BiometricPolicy::TouchIdRequired)
+            .expect_err("no Touch ID");
+        assert!(err.to_string().contains("Touch ID") || err.to_string().contains("security"));
+    }
+
+    #[test]
+    fn validate_policy_face_id_required_without_hardware_errors() {
+        let auth = SafeBiometricAuthenticator::default();
+        let err = auth
+            .validate_policy(&BiometricPolicy::FaceIdRequired)
+            .expect_err("no Face ID");
+        assert!(err.to_string().contains("Face ID") || err.to_string().contains("security"));
+    }
+
+    #[test]
+    fn biometric_auth_result_fields() {
+        let r = BiometricAuthResult {
+            success: false,
+            biometric_type: Some(BiometricType::Any),
+            error_message: Some("e".to_string()),
+        };
+        assert!(!r.success);
+        assert_eq!(r.biometric_type, Some(BiometricType::Any));
+    }
+
+    #[tokio::test]
+    async fn authenticate_without_hardware_errors() {
+        let auth = SafeBiometricAuthenticator::default();
+        let err = auth
+            .authenticate(BiometricPolicy::None, "reason")
+            .await
+            .expect_err("no hardware");
+        assert!(err.to_string().contains("not available") || err.to_string().contains("hardware"));
+    }
 }

@@ -270,4 +270,72 @@ mod tests {
         assert_eq!(survivors.len(), 2);
         assert_eq!(survivors[0], 0); // Highest fitness first
     }
+
+    #[test]
+    fn genetic_evolution_engine_default_matches_new_default_config() {
+        let a = GeneticEvolutionEngine::default();
+        let b = GeneticEvolutionEngine::new(EvolutionConfig::default());
+        assert_eq!(
+            a.evolution_config.population_size,
+            b.evolution_config.population_size
+        );
+    }
+
+    #[test]
+    fn evolve_generation_updates_metrics_and_best_fitness() {
+        let config = EvolutionConfig {
+            population_size: 4,
+            elitism_percentage: 0.25,
+            ..Default::default()
+        };
+        let engine = GeneticEvolutionEngine::new(config);
+        let sigs = vec![GeneticSignature::default(); 4];
+        engine.initialize_population(sigs).expect("seed population");
+        let snap = engine.evolve_generation().expect("one generation");
+        assert_eq!(snap.population_size, 4);
+        assert!(snap.average_fitness >= 0.0);
+        assert!(snap.best_fitness >= snap.average_fitness || snap.generation == 1);
+
+        let best = engine.get_best_individual();
+        assert!(best.is_some());
+        let best = best.expect("best exists after evolution");
+        assert!(best.fitness_score >= 0.0);
+    }
+
+    #[test]
+    fn evolve_generation_increments_generation_counter() {
+        let config = EvolutionConfig {
+            population_size: 3,
+            ..Default::default()
+        };
+        let engine = GeneticEvolutionEngine::new(config);
+        engine
+            .initialize_population(vec![GeneticSignature::default(); 3])
+            .expect("init");
+        let g1 = engine.evolve_generation().expect("g1");
+        let g2 = engine.evolve_generation().expect("g2");
+        assert!(g2.generation > g1.generation);
+    }
+
+    #[test]
+    fn get_best_individual_none_when_population_empty() {
+        let engine = GeneticEvolutionEngine::new(EvolutionConfig {
+            population_size: 2,
+            ..Default::default()
+        });
+        assert!(engine.get_best_individual().is_none());
+    }
+
+    #[test]
+    fn diversity_index_in_snapshot_is_bounded() {
+        let engine = GeneticEvolutionEngine::new(EvolutionConfig {
+            population_size: 5,
+            ..Default::default()
+        });
+        engine
+            .initialize_population(vec![GeneticSignature::default(); 5])
+            .expect("init");
+        let snap = engine.evolve_generation().expect("evo");
+        assert!(snap.diversity_index >= 0.0 && snap.diversity_index <= 1.0);
+    }
 }

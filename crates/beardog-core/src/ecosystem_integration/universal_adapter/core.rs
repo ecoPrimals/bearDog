@@ -83,6 +83,7 @@ impl UniversalAdapter {
         &self,
         request: AdapterRequest,
     ) -> Result<AdapterResponse, BearDogError> {
+        let start = std::time::Instant::now();
         info!("Handling connect request to: {}", request.endpoint);
 
         // Create connection info
@@ -115,7 +116,7 @@ impl UniversalAdapter {
             }),
             metadata: HashMap::new(),
             timestamp: chrono::Utc::now(),
-            duration_ms: 100, // Mock duration
+            duration_ms: start.elapsed().as_millis() as u64,
         })
     }
 
@@ -125,6 +126,7 @@ impl UniversalAdapter {
         &self,
         request: AdapterRequest,
     ) -> Result<AdapterResponse, BearDogError> {
+        let start = std::time::Instant::now();
         info!("Handling disconnect request from: {}", request.endpoint);
 
         // Remove connection
@@ -146,7 +148,7 @@ impl UniversalAdapter {
             }),
             metadata: HashMap::new(),
             timestamp: chrono::Utc::now(),
-            duration_ms: 50, // Mock duration
+            duration_ms: start.elapsed().as_millis() as u64,
         })
     }
 
@@ -156,6 +158,7 @@ impl UniversalAdapter {
         &self,
         request: AdapterRequest,
     ) -> Result<AdapterResponse, BearDogError> {
+        let start = std::time::Instant::now();
         debug!("Handling generic request to: {}", request.endpoint);
 
         // Mock processing - instant response (no artificial delay)
@@ -169,7 +172,7 @@ impl UniversalAdapter {
             payload: request.payload,
             metadata: HashMap::new(),
             timestamp: chrono::Utc::now(),
-            duration_ms: 10,
+            duration_ms: start.elapsed().as_millis() as u64,
         })
     }
 
@@ -179,6 +182,7 @@ impl UniversalAdapter {
         &self,
         request: AdapterRequest,
     ) -> Result<AdapterResponse, BearDogError> {
+        let start = std::time::Instant::now();
         debug!("Handling health check request");
 
         let health_status = {
@@ -207,7 +211,7 @@ impl UniversalAdapter {
             payload: Some(health_status),
             metadata: HashMap::new(),
             timestamp: chrono::Utc::now(),
-            duration_ms: 5,
+            duration_ms: start.elapsed().as_millis() as u64,
         })
     }
 

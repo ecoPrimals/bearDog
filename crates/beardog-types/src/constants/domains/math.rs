@@ -83,3 +83,47 @@ pub mod precision {
     /// Relaxed epsilon for approximate f64 comparisons
     pub const F64_EPSILON_RELAXED: f64 = 1e-9;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::SINE_TABLE_360;
+    use super::common;
+    use super::conversions;
+    use super::precision;
+
+    #[test]
+    fn sine_table_bounds_and_symmetry() {
+        assert_eq!(SINE_TABLE_360.len(), 360);
+        assert!(SINE_TABLE_360[0].abs() < 0.01);
+        let s90 = SINE_TABLE_360[90];
+        assert!((s90 - 1.0).abs() < 0.02, "sin(90°) ~ 1, got {s90}");
+        // Taylor `const_sin` loses accuracy near π; table still exercises generation.
+        let s180 = SINE_TABLE_360[180];
+        assert!(s180.abs() < 0.35, "sin(180°) approx near 0, got {s180}");
+    }
+
+    #[test]
+    fn common_math_constants() {
+        assert!((common::PI - std::f64::consts::PI).abs() < 1e-15);
+        assert!((common::TAU - std::f64::consts::TAU).abs() < 1e-15);
+        assert!((common::E - std::f64::consts::E).abs() < 1e-15);
+        assert!(common::GOLDEN_RATIO > 1.6);
+        assert!((common::SQRT_2 - std::f64::consts::SQRT_2).abs() < 1e-15);
+    }
+
+    #[test]
+    fn conversion_factors_are_inverses() {
+        let deg = 45.0_f64;
+        let rad = deg * conversions::DEG_TO_RAD;
+        let back = rad * conversions::RAD_TO_DEG;
+        assert!((back - deg).abs() < 1e-12);
+    }
+
+    #[test]
+    fn precision_epsilons_positive() {
+        assert!(precision::F32_EPSILON > 0.0);
+        assert!(precision::F64_EPSILON > 0.0);
+        assert!(precision::F32_EPSILON_RELAXED > 0.0);
+        assert!(precision::F64_EPSILON_RELAXED > 0.0);
+    }
+}

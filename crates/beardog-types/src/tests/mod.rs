@@ -138,3 +138,13 @@ mod coverage_gap_tests_9;
 
 // March 2026: receipt, adapter certificates, constraint builtins
 mod coverage_march26_types_wave;
+
+// March 2026: wave 18 — cloud HSM, discovery, workflow/security, constants, HSM config, performance
+#[allow(
+    unused_imports,
+    clippy::module_inception,
+    dead_code,
+    deprecated,
+    clippy::float_cmp
+)]
+mod coverage_gap_wave18;

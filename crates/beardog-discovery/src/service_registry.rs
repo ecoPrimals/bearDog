@@ -152,12 +152,11 @@ impl ServiceRegistryDiscovery {
         info!("🔍 Discovering service registry providers (capability-based)");
 
         // Use mDNS/DNS-SD to find services with "service_registry" capability
-        // This could be Consul, etcd, NestGate, or any custom provider!
         let providers = self.discover_via_mdns("service_registry").await?;
 
         if providers.is_empty() {
             warn!("⚠️  No service registry providers discovered");
-            warn!("   Hint: Start a service registry (Consul, etcd, NestGate)");
+            warn!("   Hint: Start a service registry (Consul, etcd, or ecosystem storage primal)");
             warn!("   Or use mDNS/DNS-SD discovery instead");
             return Err(DiscoveryError::BackendUnavailable {
                 provider: "service_registry".to_string(),
@@ -233,7 +232,7 @@ impl ServiceRegistryDiscovery {
 
         // Delegate to provider via its advertised interface
         // Provider could be:
-        // - Unix socket (local primal like NestGate)
+        // - Unix socket (local peer primal)
         // - HTTP endpoint (external registry like Consul)
         // - Custom protocol (any provider!)
 

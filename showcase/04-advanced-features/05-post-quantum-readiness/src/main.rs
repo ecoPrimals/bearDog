@@ -34,39 +34,52 @@ use x25519_dalek::{EphemeralSecret, PublicKey as X25519PublicKey};
 
 #[derive(Debug, Clone, Deserialize)]
 struct DemoConfig {
-    #[allow(dead_code)]
-    ceremony: CeremonyConfig,
-    algorithms: AlgorithmsConfig,
-    #[allow(dead_code)]
-    security_levels: SecurityLevelsConfig,
+    #[serde(rename = "ceremony")]
+    _ceremony: CeremonyConfig,
+    #[serde(rename = "algorithms")]
+    _algorithms: AlgorithmsConfig,
+    #[serde(rename = "security_levels")]
+    _security_levels: SecurityLevelsConfig,
     migration: MigrationConfig,
-    performance: PerformanceConfig,
-    compliance: ComplianceConfig,
+    #[serde(rename = "performance")]
+    _performance: PerformanceConfig,
+    #[serde(rename = "compliance")]
+    _compliance: ComplianceConfig,
     validation: ValidationConfig,
-    #[allow(dead_code)]
-    audit: AuditConfig,
+    #[serde(rename = "audit")]
+    _audit: AuditConfig,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 struct CeremonyConfig {
-    name: String,
-    description: String,
-    max_duration_ms: u64,
+    #[serde(rename = "name")]
+    _name: String,
+    #[serde(rename = "description")]
+    _description: String,
+    #[serde(rename = "max_duration_ms")]
+    _max_duration_ms: u64,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 struct AlgorithmsConfig {
-    classical_signature: String,
-    classical_kem: String,
-    pqc_signature: String,
-    pqc_kem: String,
+    #[serde(rename = "classical_signature")]
+    _classical_signature: String,
+    #[serde(rename = "classical_kem")]
+    _classical_kem: String,
+    #[serde(rename = "pqc_signature")]
+    _pqc_signature: String,
+    #[serde(rename = "pqc_kem")]
+    _pqc_kem: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 struct SecurityLevelsConfig {
-    classical: u32,
-    post_quantum: u32,
-    hybrid: u32,
+    #[serde(rename = "classical")]
+    _classical: u32,
+    #[serde(rename = "post_quantum")]
+    _post_quantum: u32,
+    #[serde(rename = "hybrid")]
+    _hybrid: u32,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -79,28 +92,34 @@ struct MigrationConfig {
 
 #[derive(Debug, Clone, Deserialize)]
 struct PerformanceConfig {
-    keygen_target_ms: u64,
-    encap_target_ms: u64,
-    decap_target_ms: u64,
-    sign_target_ms: u64,
-    verify_target_ms: u64,
-    hybrid_target_ms: u64,
-    #[allow(dead_code)]
-    profile_operations: bool,
-    #[allow(dead_code)]
-    compare_classical_pqc: bool,
+    #[serde(rename = "keygen_target_ms")]
+    _keygen_target_ms: u64,
+    #[serde(rename = "encap_target_ms")]
+    _encap_target_ms: u64,
+    #[serde(rename = "decap_target_ms")]
+    _decap_target_ms: u64,
+    #[serde(rename = "sign_target_ms")]
+    _sign_target_ms: u64,
+    #[serde(rename = "verify_target_ms")]
+    _verify_target_ms: u64,
+    #[serde(rename = "hybrid_target_ms")]
+    _hybrid_target_ms: u64,
+    #[serde(rename = "profile_operations")]
+    _profile_operations: bool,
+    #[serde(rename = "compare_classical_pqc")]
+    _compare_classical_pqc: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 struct ComplianceConfig {
-    #[allow(dead_code)]
-    nist_standardized: bool,
-    #[allow(dead_code)]
-    fips_203_compliant: bool,
-    #[allow(dead_code)]
-    fips_204_compliant: bool,
-    #[allow(dead_code)]
-    cnsa_2_0_ready: bool,
+    #[serde(rename = "nist_standardized")]
+    _nist_standardized: bool,
+    #[serde(rename = "fips_203_compliant")]
+    _fips_203_compliant: bool,
+    #[serde(rename = "fips_204_compliant")]
+    _fips_204_compliant: bool,
+    #[serde(rename = "cnsa_2_0_ready")]
+    _cnsa_2_0_ready: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -109,16 +128,20 @@ struct ValidationConfig {
     test_encapsulation: bool,
     test_signatures: bool,
     test_hybrid_mode: bool,
-    #[allow(dead_code)]
-    test_migration_path: bool,
+    #[serde(rename = "test_migration_path")]
+    _test_migration_path: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 struct AuditConfig {
-    log_level: String,
-    include_performance: bool,
-    include_size_comparison: bool,
-    hash_algorithm: String,
+    #[serde(rename = "log_level")]
+    _log_level: String,
+    #[serde(rename = "include_performance")]
+    _include_performance: bool,
+    #[serde(rename = "include_size_comparison")]
+    _include_size_comparison: bool,
+    #[serde(rename = "hash_algorithm")]
+    _hash_algorithm: String,
 }
 
 // ============================================================================
@@ -129,8 +152,8 @@ struct AuditConfig {
 struct Scenario {
     scenario_name: String,
     scenario_id: String,
-    #[allow(dead_code)]
-    operation: String,
+    #[serde(rename = "operation")]
+    _operation: String,
     test_phases: Vec<TestPhase>,
     test_cases: Vec<TestCase>,
     expected_results: ExpectedResults,
@@ -141,10 +164,10 @@ struct Scenario {
 struct TestPhase {
     phase_id: String,
     phase_name: String,
-    #[allow(dead_code)]
-    description: String,
-    #[allow(dead_code)]
-    algorithms: HashMap<String, String>,
+    #[serde(rename = "description")]
+    _description: String,
+    #[serde(rename = "algorithms")]
+    _algorithms: HashMap<String, String>,
     quantum_safe: bool,
 }
 

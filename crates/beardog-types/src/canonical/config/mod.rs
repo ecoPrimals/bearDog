@@ -37,7 +37,6 @@
 
 // BearDogError no longer needed in this module after deprecated config removal
 use serde::{Deserialize, Serialize};
-// use std::collections::HashMap; // Unused import
 
 // Domain-specific configuration modules
 

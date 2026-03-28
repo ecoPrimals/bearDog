@@ -17,6 +17,7 @@ pub mod key_lifecycle;
 pub mod managers;
 pub mod mobile;
 pub mod mobile_hsm;
+pub mod provider_types;
 pub mod providers;
 
 // Re-export commonly used types
@@ -36,4 +37,7 @@ pub use key_lifecycle::{
 pub use managers::{DefaultHsmFailoverManager, DefaultHsmHealthMonitor};
 pub use mobile::{AndroidDeviceInfo, SecurityLevel};
 pub use mobile_hsm::{AndroidStrongBoxHsm, IosSecureEnclaveHsm};
+pub use provider_types::{
+    HsmAlgorithm, HsmCapabilitySet, HsmProviderType, KeyGenParams, KeyHandle, SelectionPreference,
+};
 pub use providers::{CryptoProviderConfig, ProviderCapabilities};

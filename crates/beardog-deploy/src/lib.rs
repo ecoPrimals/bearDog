@@ -65,6 +65,9 @@ mod coverage_boost_tests;
 #[cfg(test)]
 mod deploy_coverage_wave2;
 
+#[cfg(test)]
+mod deploy_coverage_wave3;
+
 /// High-level knobs for a BearDog deployment run (environment, scale, and observability).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeploymentConfig {

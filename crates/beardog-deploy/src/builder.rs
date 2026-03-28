@@ -85,7 +85,7 @@ impl RustBuilder {
     /// # Errors
     /// Returns error if NDK is not found or target is unsupported
     /// Sets `valueup_build_environment`
-    fn setup_build_environment(target: &str) -> Result<(), BearDogError> {
+    pub(crate) fn setup_build_environment(target: &str) -> Result<(), BearDogError> {
         debug!("🔧 Setting up build environment for {target}");
 
         // Get NDK path from environment
@@ -110,7 +110,7 @@ impl RustBuilder {
     /// # Errors
     /// Returns error if NDK path is not configured
     /// Gets `ndk_path`
-    fn get_ndk_path() -> Result<String, BearDogError> {
+    pub(crate) fn get_ndk_path() -> Result<String, BearDogError> {
         beardog_errors::process_env::var("ANDROID_NDK_HOME")
             .or_else(|_| beardog_errors::process_env::var("NDK_HOME"))
             .map_err(|_| BearDogError::system("ANDROID_NDK_HOME not set".to_string()))

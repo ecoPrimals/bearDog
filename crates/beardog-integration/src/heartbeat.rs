@@ -228,4 +228,69 @@ mod tests {
         // Memory should be between 0-100
         assert!(metrics.memory_percent >= 0.0 && metrics.memory_percent <= 100.0);
     }
+
+    #[test]
+    fn heartbeat_config_clone_and_fields() {
+        let a = HeartbeatConfig {
+            interval: Duration::from_secs(15),
+            service_id: "svc-a".to_string(),
+            token: "tok-a".to_string(),
+        };
+        let b = a.clone();
+        assert_eq!(b.interval, a.interval);
+        assert_eq!(b.service_id, "svc-a");
+        assert_eq!(b.token, "tok-a");
+    }
+
+    #[test]
+    fn heartbeat_config_debug_and_duration_edges() {
+        let c = HeartbeatConfig {
+            interval: Duration::from_millis(500),
+            service_id: "s".to_string(),
+            token: "t".to_string(),
+        };
+        let d = format!("{c:?}");
+        assert!(d.contains("HeartbeatConfig") || d.contains("interval"));
+    }
+
+    #[test]
+    fn load_metrics_for_heartbeat_payload_defaults() {
+        let m = LoadMetrics {
+            cpu_percent: 0.0,
+            memory_percent: 0.0,
+            active_connections: 0,
+        };
+        assert_eq!(m.active_connections, 0);
+    }
+
+    #[test]
+    fn heartbeat_config_token_and_service_id_non_empty() {
+        let c = HeartbeatConfig {
+            interval: Duration::from_secs(60),
+            service_id: "id-1".to_string(),
+            token: "secret-token".to_string(),
+        };
+        assert!(!c.service_id.is_empty());
+        assert!(!c.token.is_empty());
+    }
+
+    #[test]
+    fn heartbeat_service_new_does_not_panic_when_client_ok() {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("runtime");
+        rt.block_on(async {
+            let Ok(upa) = UpaClient::new(UpaClientConfig::default()).await else {
+                return;
+            };
+            let upa = Arc::new(upa);
+            let config = HeartbeatConfig {
+                interval: Duration::from_secs(3600),
+                service_id: "x".to_string(),
+                token: "y".to_string(),
+            };
+            let _svc = HeartbeatService::new(upa, config);
+        });
+    }
 }

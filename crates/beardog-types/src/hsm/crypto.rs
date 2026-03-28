@@ -8,21 +8,12 @@ use crate::BearDogError;
 
 /// Cryptographic Provider Trait
 ///
-/// Defines the interface for cryptographic operations that can be backed
-/// by different implementations (RustCrypto, OpenSSL, etc.).
+/// # Migration (v0.10.0)
 ///
-/// # Implementations
-///
-/// - **RustCryptoProvider**: Pure Rust cryptography using RustCrypto libraries (✅ RECOMMENDED)
-/// - **OpenSslCryptoProvider**: OpenSSL library integration (for compatibility)
-///
-/// # Thread Safety
-///
-/// All implementations must be `Send + Sync` for use in async contexts.
-///
-/// # Generic Parameters
-///
-/// - `KeyType`: The key type enumeration used by the implementation
+/// This trait is superseded by [`beardog_traits::hsm::HsmKeyProvider`] which
+/// provides a unified, object-safe interface for all HSM backends.
+/// New code should use `HsmKeyProvider` via the `HsmProviderRegistry`.
+/// This trait will be removed in a future release.
 #[async_trait::async_trait]
 pub trait CryptoProvider<KeyType = ()>: Send + Sync
 where

@@ -170,18 +170,17 @@ struct RecoverySystem {
     state: Arc<Mutex<SystemState>>,
 }
 
-#[allow(dead_code)]
 struct SystemState {
-    healthy: bool,
-    retry_count: u32,
+    _healthy: bool,
+    _retry_count: u32,
 }
 
 impl RecoverySystem {
     fn new() -> Self {
         Self {
             state: Arc::new(Mutex::new(SystemState {
-                healthy: true,
-                retry_count: 0,
+                _healthy: true,
+                _retry_count: 0,
             })),
         }
     }
@@ -245,8 +244,7 @@ impl RecoverySystem {
 struct CircuitBreaker {
     failure_threshold: u32,
     failures: Arc<Mutex<u32>>,
-    #[allow(dead_code)]
-    timeout: Duration,
+    _timeout: Duration,
 }
 
 impl CircuitBreaker {
@@ -254,7 +252,7 @@ impl CircuitBreaker {
         Self {
             failure_threshold,
             failures: Arc::new(Mutex::new(0)),
-            timeout,
+            _timeout: timeout,
         }
     }
     

@@ -387,4 +387,120 @@ mod tests {
         assert!(capabilities.contains_key("biometric_auth"));
         assert!(capabilities.contains_key("keychain_access"));
     }
+
+    #[test]
+    fn default_ios_provider_constructible() {
+        let d = SafeIosProvider::default();
+        assert!(
+            d.capabilities().contains_key("secure_enclave") || d.capabilities().is_empty(),
+            "default is either populated or empty fallback"
+        );
+    }
+
+    #[test]
+    fn sign_data_errors_when_secure_enclave_unavailable() {
+        let provider = SafeIosProvider::new().expect("SafeIosProvider::new");
+        if provider.is_hardware_backed() {
+            return;
+        }
+        let err = provider.sign_data("k", b"x").expect_err("no SE");
+        assert!(err.to_string().contains("Secure Enclave") || err.to_string().contains("security"));
+    }
+
+    #[test]
+    fn ios_secure_enclave_env_true_enables_hardware_flag() {
+        let prev = beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE").ok();
+        beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", "true");
+        let provider = SafeIosProvider::new().expect("SafeIosProvider::new with SE env");
+        assert!(provider.is_hardware_backed());
+        match prev {
+            Some(v) => beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", v),
+            None => beardog_errors::process_env::remove_var("IOS_SECURE_ENCLAVE_AVAILABLE"),
+        }
+    }
+
+    #[test]
+    fn generate_key_software_fallback_when_se_env_true_off_ios() {
+        let prev = beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE").ok();
+        beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", "true");
+        let provider = SafeIosProvider::new().expect("provider");
+        let key = provider
+            .generate_key("k-fallback", &KeyType::EllipticCurve)
+            .expect("keygen software fallback path off-iOS");
+        assert!(!key.id.is_empty());
+        if cfg!(not(target_os = "ios")) {
+            assert!(
+                key.hsm_type.contains("software") || key.hsm_type.contains("ios"),
+                "hsm_type={}",
+                key.hsm_type
+            );
+        }
+        match prev {
+            Some(v) => beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", v),
+            None => beardog_errors::process_env::remove_var("IOS_SECURE_ENCLAVE_AVAILABLE"),
+        }
+    }
+
+    #[test]
+    fn sign_and_verify_roundtrip_when_se_env_true_off_ios() {
+        let prev = beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE").ok();
+        beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", "true");
+        let provider = SafeIosProvider::new().expect("provider");
+        let sig = provider
+            .sign_data("sk1", b"hello-ios-safe")
+            .expect("sign with SE flag");
+        assert_eq!(sig.len(), 64);
+        let ok = provider
+            .verify_signature("sk1", b"hello-ios-safe", &sig)
+            .expect("verify");
+        assert!(ok);
+        match prev {
+            Some(v) => beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", v),
+            None => beardog_errors::process_env::remove_var("IOS_SECURE_ENCLAVE_AVAILABLE"),
+        }
+    }
+
+    #[test]
+    fn verify_signature_short_input_returns_false_off_ios() {
+        let prev = beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE").ok();
+        beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", "true");
+        let provider = SafeIosProvider::new().expect("provider");
+        let ok = provider
+            .verify_signature("vk", b"data", &[0u8; 8])
+            .expect("verify returns result");
+        if cfg!(not(target_os = "ios")) {
+            assert!(!ok);
+        }
+        match prev {
+            Some(v) => beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", v),
+            None => beardog_errors::process_env::remove_var("IOS_SECURE_ENCLAVE_AVAILABLE"),
+        }
+    }
+
+    #[test]
+    fn capabilities_returns_expected_keys() {
+        let p = SafeIosProvider::new().expect("provider");
+        let c = p.capabilities();
+        assert_eq!(c.get("biometric_auth"), Some(&true));
+        assert_eq!(c.get("keychain_access"), Some(&true));
+    }
+
+    #[test]
+    fn two_providers_independent_hardware_flags() {
+        let p1 = SafeIosProvider::new().expect("p1");
+        let p2 = SafeIosProvider::new().expect("p2");
+        assert_eq!(p1.is_hardware_backed(), p2.is_hardware_backed());
+    }
+
+    #[test]
+    fn env_false_explicit_disables_hardware() {
+        let prev = beardog_errors::process_env::var("IOS_SECURE_ENCLAVE_AVAILABLE").ok();
+        beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", "false");
+        let provider = SafeIosProvider::new().expect("provider");
+        assert!(!provider.is_hardware_backed());
+        match prev {
+            Some(v) => beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", v),
+            None => beardog_errors::process_env::remove_var("IOS_SECURE_ENCLAVE_AVAILABLE"),
+        }
+    }
 }

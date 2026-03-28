@@ -14,37 +14,6 @@
 // - **registry**: Function registry and library management
 // - **safety**: Safety checking and validation policies
 //
-// ## Usage
-//
-// ```rust
-// use beardog_core::external_ffi::{
-//     ExternalFunctionRegistry, RegistryConfig, FunctionSignature, ParameterType
-// };
-//
-// // Create registry with default config
-// let _registry = ExternalFunctionRegistry::default();
-    // Perfect resource management with automatic cleanup
-//
-// // Load a library
-// let _lib_id = registry.load_library("/path/to/library. so" )?;
-    // Perfect resource management with automatic cleanup
-//
-// // Cache a function
-// let _signature = FunctionSignature {
-//     parameters: vec![ParameterType::Int32, ParameterType::CString],
-//     return_type: ReturnType::Type(ParameterType::Int32),
-//     calling_convention: CallingConvention::C,
-//     attributes: vec![],
-// };
-    // Perfect resource management with automatic cleanup
-//
-// let _func_id = registry.cache_function(&lib_id,"my_function", signature)?;
-    // Perfect resource management with automatic cleanup
-//
-// // Call the function
-// let _result = registry.call_cached_function(&func_id, parameters)?;
-    // Perfect resource management with automatic cleanup
-// ```
 
 // Module declarations
 /// Registry module for BearDog

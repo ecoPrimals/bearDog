@@ -4,8 +4,7 @@
 pub mod factory;
 /// Genetic crypto provider (100% Pure Rust, zero FFI)
 pub mod genetic_crypto;
-// openssl_crypto removed - using pure Rust alternatives (GeneticCrypto, RustCrypto)
-// pub mod ring_crypto;  // REMOVED: Has C dependencies, use RustCrypto instead (100% Pure Rust!)
+// openssl_crypto / ring_crypto removed — pure Rust alternatives (GeneticCrypto, RustCrypto). REMOVED: ring had C dependencies; use RustCrypto instead.
 /// RustCrypto-based provider (100% Pure Rust)
 pub mod rust_crypto;
 
@@ -23,8 +22,7 @@ pub use beardog_types::hsm::CryptoProvider;
 
 // ✅ Export all crypto provider implementations (ordered by recommendation)
 pub use genetic_crypto::GeneticCryptoProvider; // RECOMMENDED (100% Pure Rust)
-// OpenSslCryptoProvider removed - pure Rust alternatives available
-// pub use ring_crypto::RingCryptoProvider;  // REMOVED: C dependencies, use RustCryptoProvider instead!
+// OpenSslCryptoProvider / RingCryptoProvider removed — pure Rust alternatives available (REMOVED: Ring had C deps; use RustCryptoProvider).
 pub use rust_crypto::RustCryptoProvider;
 #[cfg(test)]
 mod tests {
@@ -104,10 +102,6 @@ mod tests {
         let genetic_caps = get_crypto_provider_capabilities(&CryptoBackend::GeneticCrypto);
 
         // Ring removed - 100% Pure Rust now!
-        // let ring_caps = get_crypto_provider_capabilities(&CryptoBackend::Ring);
-        // OpenSSL removed - 100% Pure Rust now!
-        // let openssl_caps = get_crypto_provider_capabilities(&CryptoBackend::OpenSsl);
-
         assert!(rust_caps.supports_aes);
         assert!(genetic_caps.supports_aes);
         // assert!(ring_caps.supports_aes);

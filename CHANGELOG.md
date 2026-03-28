@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### March 28, 2026 -- Wave 21: StrongBox HSM Abstraction, Production Mock Evolution, Self-Knowledge
+
+- **Canonical `HsmKeyProvider` trait** — Unified HSM provider trait in `beardog-traits` with supporting types in `beardog-types`; object-safe, `#[async_trait]`, supports software and hardware backends
+- **HSM Provider Registry** — `HsmProviderRegistry` with `discover()`, `select()`, `software_fallback()` for automatic provider selection based on `PreferHardware`/`RequireHardware`/`SoftwareOnly` preference
+- **Android StrongBox bridge** — `keystore.rs` rewritten with `#[cfg(target_os = "android")]` JNI bridge; non-Android stubs for development
+- **5 legacy HSM traits deprecated** — Migration doc sections added to `CryptoProvider`, `HsmProviderTrait`, `HsmCapabilities`, 2x `HsmProvider`
+- **Production mock evolution** — Real timing in adapter responses, semver validation in `validate_canonical_usage()`, live state in `UniversalHsmManager`
+- **Self-knowledge** — `SongbirdClient` → `OrchestratorRegistryClient`, `BiomeOSPaths` → `PlatformPaths`, string literals genericized
+- **Dead code cleanup** — Removed orphan `songbird_client.rs` and `discovery_adapter.rs`
+- **Socket path centralization** — 3 new `DEFAULT_*` constants replacing inline `/tmp/beardog*` paths
+- **Coverage** — 90.05% line, 15,100+ tests passing
+
+### March 28, 2026 -- Wave 18-20: Deep Debt Evolution, 90% Coverage, Semantic Naming
+
+- **90% coverage achieved** — 90.03% line, 89.18% region, 84.90% function (llvm-cov workspace)
+- **15,085+ tests passing** — 0 failures (up from 14,600 in Wave 17)
+- **UniBin v1.1 compliance** — `PrimalIdentity::from_env()` evolved to standalone fallback with `is_standalone()` accessor
+- **TCP/Unix read timeout** — All NDJSON read sites wrapped with `tokio::time::timeout(30s)` per primalSpring audit
+- **NDJSON wire format documented** — README transport section, capability metadata includes `wire_format: "ndjson"`
+- **Semantic method naming** — `domain.operation` primary names (`birdsong.encrypt`, `btsp.contact.exchange`, `crypto.derive_onion_address`) with `beardog.*` as backward-compatible aliases
+- **Songbird IPC registration** — Best-effort ecosystem registry registration at server startup
+- **Commented-out code cleanup** — Removed dead code from 15+ files per wateringHole standard
+- **Orphan file cleanup** — Removed `ai_powered_analysis.rs` (682 LOC) and `quantum_optimizations.rs` (633 LOC) from beardog-utils
+- **Clippy clean** — Resolved `float_cmp`, `await_holding_lock`, `unfulfilled_lint_expectations`, `large_stack_frames`, `io_other_error`, `redundant_clone`, `into_iter` on singletons
+- **Showcase cleanup** — `#[allow(dead_code)]` replaced with `_` prefixes and `#[serde(rename)]`
+- **Production stub evolution** — Migration adapters return `BearDogError::not_implemented()` with Phase 2 messages
+- **Debris cleanup** — `.pedantic_clippy.toml` and `.tarpaulin.toml` removed (superseded by workspace config and llvm-cov)
+- **Archive migration** — `archives/` moved to ecoPrimals fossilRecord
+- **Root docs updated** — All metrics current (tests, coverage, completion status)
+
 ### March 27, 2026 -- Wave 17: Comprehensive Audit, UniBin Compliance, NDJSON & Coverage Push
 
 - **Coverage** — 87.31% line (up from 86.70%); llvm-cov workspace pass after audit fixes

@@ -6,6 +6,7 @@
 
 use crate::DoctorArgs;
 use beardog_errors::BearDogError;
+use beardog_types::constants::domains::system::defaults::DEFAULT_KEY_STORAGE_DIR;
 use serde_json::json;
 use tracing::info;
 
@@ -164,7 +165,7 @@ async fn check_key_storage() -> HealthCheck {
             beardog_errors::process_env::var("HOME")
                 .map(|home| std::path::PathBuf::from(home).join(".local/share/beardog/keys"))
         })
-        .unwrap_or_else(|_| std::path::PathBuf::from("/tmp/beardog_keys")); // Last resort
+        .unwrap_or_else(|_| std::path::PathBuf::from(DEFAULT_KEY_STORAGE_DIR)); // Last resort
 
     if key_dir.exists() || std::fs::create_dir_all(&key_dir).is_ok() {
         HealthCheck {

@@ -255,7 +255,6 @@ async fn run_bob_node(config: DemoConfig) -> Result<()> {
 
 // Configuration structure
 #[derive(Debug, Clone, serde::Deserialize)]
-#[allow(dead_code)]
 struct DemoConfig {
     node_name: String,
     listen_address: String,

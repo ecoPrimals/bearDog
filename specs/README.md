@@ -1,9 +1,9 @@
 # BearDog Specifications
 
-**Last Updated**: March 23, 2026
+**Last Updated**: March 28, 2026
 **Version**: 0.9.0
 **Status**: Production Ready
-**Crates**: 30 | **Tests**: 14,447+ passing | **Coverage**: 87.35%+ (llvm-cov line coverage)
+**Crates**: 30 | **Tests**: 15,100+ passing | **Coverage**: 90.05% (llvm-cov line coverage)
 
 ---
 
@@ -12,8 +12,8 @@
 | Metric | Status | Details |
 |--------|--------|---------|
 | Build | Clean | Zero errors, minimal warnings |
-| Tests | 14,447+ passing | 30 crates, 100% pass rate |
-| Coverage | 87.35%+ (llvm-cov) | 9 crates above 90% target |
+| Tests | 15,100+ passing | 30 crates, 100% pass rate |
+| Coverage | 90.05% (llvm-cov) | 9 crates above 90% target |
 | Memory Safety | ZERO unsafe | 100% safe Rust |
 | Pure Rust | 100% | Zero C dependencies (RustCrypto suite) |
 | Production panics | 0 | All production paths use `Result<T, E>` |
@@ -66,7 +66,7 @@ Deployment, monitoring, and operational specifications.
 
 | Spec | Status | Description |
 |------|--------|-------------|
-| [PRODUCTION_READINESS_SPECIFICATION_v2.0.0](current/production/PRODUCTION_READINESS_SPECIFICATION_v2.0.0.md) | Current | Production requirements |
+| [PRODUCTION_READINESS_SPECIFICATION](current/production/PRODUCTION_READINESS_SPECIFICATION.md) | Current | Production requirements |
 | [CONFIGURATION_MANAGEMENT](current/production/CONFIGURATION_MANAGEMENT.md) | Current | Config hierarchy |
 | [DISASTER_RECOVERY_RESILIENCE](current/production/DISASTER_RECOVERY_RESILIENCE.md) | Current | DR and resilience |
 
@@ -154,10 +154,10 @@ BEARDOG_ECOSYSTEM_SECURITY_INTEGRATION → SONGBIRD_INTEGRATION → UNIVERSAL_AD
 
 ## Historical Notes
 
-Specs from 2025 (October-December) are preserved for historical reference. Many metrics from that era (4% coverage, 22 crates, 435 tests) are now vastly outdated. Current metrics are in [STATUS.md](../STATUS.md) (14,447+ tests, 87.35%+ line coverage as of March 24, 2026).
+Specs from 2025 (October-December) are preserved for historical reference. Many metrics from that era (4% coverage, 22 crates, 435 tests) are now vastly outdated. Current metrics are in [STATUS.md](../STATUS.md) (15,100+ tests, 90.05% line coverage as of March 28, 2026).
 
 The `experiments/` directory contains live experimental validation from the cryptographic foundation phase.
 
 ---
 
-**Last Updated**: March 23, 2026
+**Last Updated**: March 28, 2026

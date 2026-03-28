@@ -1,222 +1,163 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+//! Android Keystore JNI bridge.
+//!
+//! On `target_os = "android"` this module calls through JNI to the
+//! Android Keystore API, requesting StrongBox-backed keys when available.
+//!
+//! On all other platforms the public functions return
+//! [`BearDogError::not_implemented`] so that the software fallback is used.
 
-
-use super::super::types::{AndroidHsmConfig, HsmHealthStatus, HsmKey, KeyType};
-use crate::tunnel::hsm::types::*;
 use beardog_errors::BearDogError;
-use std::collections::HashMap;
-use tracing::{debug, error, info, warn};
-impl AndroidKeystore {
 
-/// New operation.
-///
-/// # Errors
-/// Returns an error if the operation fails.
-    /// Creates a new instance
-    pub async fn new(config: KeystoreConfig) -> Result<Self, BearDogError> {
-        info!("🔐 Initializing Android Keystore integration");
+// ── Android JNI bridge (compiled only on Android) ──────────────────────
 
-        let strongbox_implementation = super::native_device_detection::NativeAndroidDeviceDetector::detect_strongbox_implementation()?;
-        let strongbox_available = super::native_device_detection::NativeAndroidDeviceDetector::check_strongbox_availability({:?}", strongbox_implementation);
-        }
-        let keystore = Self {
-            config,
-            strongbox_available,
-            strongbox_implementation,}
+#[cfg(target_os = "android")]
+mod platform {
+    use beardog_errors::BearDogError;
+    use jni::objects::{JObject, JString, JValue};
+    use jni::JNIEnv;
+    use tracing::{debug, error, info};
 
-            #[cfg(None, // Will be initialized when needed
-        };
+    /// Obtain a `KeyStore` Java object pointing at `"AndroidKeyStore"`.
+    fn open_keystore(env: &mut JNIEnv<'_>) -> Result<JObject<'_>, BearDogError> {
+        let ks_class = env
+            .find_class("java/security/KeyStore")
+            .map_err(|e| BearDogError::system(format!("KeyStore class not found: {e}")))?;
 
-        keystore.test_keystore_access()?;
-        info!("✅ Android Keystore integration initialized");
-        Ok(keystore)
+        let provider: JString<'_> = env
+            .new_string("AndroidKeyStore")
+            .map_err(|e| BearDogError::system(format!("JNI string: {e}")))?;
+
+        let ks = env
+            .call_static_method(
+                ks_class,
+                "getInstance",
+                "(Ljava/lang/String;)Ljava/security/KeyStore;",
+                &[JValue::Object(&provider)],
+            )
+            .and_then(|v| v.l())
+            .map_err(|e| BearDogError::system(format!("KeyStore.getInstance: {e}")))?;
+
+        env.call_method(&ks, "load", "(Ljava/security/KeyStore$LoadStoreParameter;)V", &[JValue::Object(&JObject::null())])
+            .map_err(|e| BearDogError::system(format!("KeyStore.load: {e}")))?;
+
+        Ok(ks)
     }
 
-    #[cfg(target_os = "android")]
-/// Initialize Native Handle operation.
-///
-/// # Errors
-/// Returns an error if the operation fails.
-    /// Initializes componentialize_native_handle
-    /// Initializes componentialize_native_handle
-    pub fn initialize_native_handle(&mut self) -> Result<(), BearDogError> {
-        info!("🔌 Initializing native Android keystore handle");
-        let handle = AndroidNativeHandle {
-            device_context: "pixel8-strongbox".to_string(&str,
-        key_type: &KeyType,
+    pub fn generate_strongbox_key(
+        env: &mut JNIEnv<'_>,
+        key_alias: &str,
+        algorithm: &str,
+        _key_size: u32,
         require_strongbox: bool,
     ) -> Result<(), BearDogError> {
-        info!("🔐 Native Android: Generating StrongBox key: {}", key_id);
+        info!("JNI: generating key alias={key_alias} algo={algorithm} strongbox={require_strongbox}");
+        let _ks = open_keystore(env)?;
+        // Phase 2: wire KeyGenParameterSpec.Builder with setIsStrongBoxBacked(true)
+        Err(BearDogError::not_implemented(
+            "StrongBox JNI key generation: parameter builder wiring pending",
+        ))
+    }
 
-        super::native_keystore_ops::NativeKeystoreOperations::generate_strongbox_key(StrongBox key generated: {}", key_id);
+    pub fn delete_key(env: &mut JNIEnv<'_>, key_alias: &str) -> Result<(), BearDogError> {
+        let ks = open_keystore(env)?;
+        let alias: JString<'_> = env
+            .new_string(key_alias)
+            .map_err(|e| BearDogError::system(format!("JNI string: {e}")))?;
+        env.call_method(
+            &ks,
+            "deleteEntry",
+            "(Ljava/lang/String;)V",
+            &[JValue::Object(&alias)],
+        )
+        .map_err(|e| BearDogError::system(format!("KeyStore.deleteEntry: {e}")))?;
+        debug!("JNI: deleted key alias={key_alias}");
+        Ok(())
+    }
 
+    pub fn key_exists(env: &mut JNIEnv<'_>, key_alias: &str) -> Result<bool, BearDogError> {
+        let ks = open_keystore(env)?;
+        let alias: JString<'_> = env
+            .new_string(key_alias)
+            .map_err(|e| BearDogError::system(format!("JNI string: {e}")))?;
+        let exists = env
+            .call_method(
+                &ks,
+                "containsAlias",
+                "(Ljava/lang/String;)Z",
+                &[JValue::Object(&alias)],
+            )
+            .and_then(|v| v.z())
+            .map_err(|e| BearDogError::system(format!("KeyStore.containsAlias: {e}")))?;
+        Ok(exists)
+    }
 
-    fn native_sign_with_strongbox_key(&[u8],
-    ) -> Result<Vec<u8>, BearDogError>> {
-        info!("✍️ Native Android: Signing with StrongBox key: {}", key_id);
+    pub fn is_strongbox_available(env: &mut JNIEnv<'_>) -> bool {
+        env.find_class("android/security/keystore/StrongBoxUnavailableException")
+            .is_ok()
+    }
+}
 
-        let signature = super::native_keystore_ops::NativeKeystoreOperations::sign_with_keystore(
-            data,
-            super::native_keystore_ops::SigningAlgorithm::EcdsaSha256,
-        info!("✅ Native Android: Data signed ({} bytes)", signature.len(&[u8],
-    ) -> Result<bool, BearDogError> {
-        info!(
-            "🔍 Native Android: Verifying signature with StrongBox key: {}",
-            key_id
-        );
+// ── Stub bridge (non-Android) ──────────────────────────────────────────
 
-        let is_valid = super::native_keystore_ops::NativeKeystoreOperations::verify_with_keystore(Signature verification result: {}",
-            is_valid
-        Ok(&AndroidKeyAlgorithm,
-        key_size: u32,
-    ) -> Result<KeyType, BearDogError> {
-        match algorithm {
-            AndroidKeyAlgorithm::Ec => match key_size {
-                256 => Ok(KeyType::EllipticCurve),
-                384 => Ok(KeyType::EllipticCurve),
-                521 => Ok(KeyType::EccP521),
-                _ => Err(BearDogError::unsupported_operation(
-                    &format!("EC-{key_size} key type")
-                )),
-            },
-            AndroidKeyAlgorithm::Rsa => Ok(KeyType::Rsa), // Vendor-agnostic RSA
-            AndroidKeyAlgorithm::Aes => match key_size {
-                128 | 192 | 256 => Ok(KeyType::Aes), // Vendor-agnostic AES
-                _ => Err(BearDogError::unsupported_operation(
-                    &format!("AES-{key_size} key type")
-                )),
-            },
+#[cfg(not(target_os = "android"))]
+mod platform {
+    use beardog_errors::BearDogError;
 
-/// Is Strongbox Available operation.
-    /// Checks if strongbox available
-    /// Checks if strongbox available
-    pub fn is_strongbox_available(&self) -> bool {
-        self.strongbox_available
+    pub fn generate_strongbox_key(
+        _key_alias: &str,
+        _algorithm: &str,
+        _key_size: u32,
+        _require_strongbox: bool,
+    ) -> Result<(), BearDogError> {
+        Err(BearDogError::not_implemented(
+            "StrongBox key generation requires target_os = android",
+        ))
+    }
 
-/// Test Keystore Access operation.
-///
-/// # Errors
-/// Returns an error if the operation fails.
-    pub fn test_keystore_access(&self) -> Result<(), BearDogError> {
-        info!("🔍 Testing Android Keystore access");
+    pub fn delete_key(_key_alias: &str) -> Result<(), BearDogError> {
+        Err(BearDogError::not_implemented(
+            "StrongBox key deletion requires target_os = android",
+        ))
+    }
 
-        if !self.strongbox_available {
-            return Err(BearDogError::Unavailable {
-                message: "StrongBox keystore is not available on this device".to_string(&str, params: &AndroidKeyParams) -> Result<(), BearDogError> {
-        info!("🔐 Generating key in Android Keystore: {}", key_id);
+    pub fn key_exists(_key_alias: &str) -> Result<bool, BearDogError> {
+        Ok(false)
+    }
 
-        if !params.strongbox_required && self.strongbox_available {
-            warn!("⚠️ StrongBox available but not required - using StrongBox anyway for security");
-        #[cfg(target_os = "android")]
-        {
+    pub fn is_strongbox_available() -> bool {
+        std::env::var("ANDROID_STRONGBOX_AVAILABLE")
+            .map(|v| v == "1" || v == "true")
+            .unwrap_or(false)
+    }
+}
 
-            if let Some(ref native_handle) = self.native_handle {
-                let key_type =
-                    self.convert_algorithm_to_keytype(&params.algorithm, params.key_size)?;
-                return self
-                    .native_generate_strongbox_key(key_id, &key_type, params.strongbox_required)
-                    ;
-            } else {
+pub use platform::*;
 
-                warn!("Native Android handle not initialized, falling back to mock implementation");
-            }
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-        debug!(
-            "Mock key generation - algorithm={:?}, size={}, strongbox={}",
-            params.algorithm, params.key_size, params.strongbox_required
+    #[test]
+    fn strongbox_not_available_on_host() {
+        assert!(!is_strongbox_available());
+    }
 
-        tokio::time::sleep(tokio::time::Duration::from_millis({}",
+    #[test]
+    fn generate_returns_not_implemented_on_host() {
+        let err = generate_strongbox_key("test", "AES", 256, true).unwrap_err();
+        assert!(err.to_string().contains("android"));
+    }
 
-/// Get Certificate Chain operation.
-///
-/// # Errors
-/// Returns an error if the operation fails.
-    /// Gets certificate_chain
-    /// Gets certificate_chain
-    pub fn get_certificate_chain(&self, key_id: &str) -> Result<Vec<Vec<u8>, BearDogError>>> {
-        info!("📜 Retrieving certificate chain for key: {}", key_id);
+    #[test]
+    fn delete_returns_not_implemented_on_host() {
+        let err = delete_key("test").unwrap_err();
+        assert!(err.to_string().contains("android"));
+    }
 
-        self.safe_get_certificate_chain(key_id)
-
-
-    fn safe_get_certificate_chain(&self, key_id: &str) -> Result<Vec<Vec<u8>, BearDogError>>> {
-        info!("📜 Safe certificate chain generation for: {}", key_id);
-
-        let mock_cert = self.generate_safe_mock_certificate({} certificates",
-            certificate_chain.len()
-        Ok(certificate_chain)
-
-
-    fn generate_safe_mock_certificate(&self, key_id: &str) -> Result<Vec<u8>, BearDogError>> {
-
-        let mut cert_data = Vec::new(&str, challenge: &[u8]) -> Result<Vec<u8>, BearDogError>> {
-        info!("🔐 Safe key attestation for: {}", key_id);
-
-        self.safe_attest_key(&str, challenge: &[u8]) -> Result<Vec<u8>, BearDogError>> {
-        info!("🔐 Generating safe attestation for key: {}", key_id);
-
-        use beardog_security::crypto_utils::BearDogCrypto;
-
-        let mut attestation_data = Vec::new();
-        attestation_data.extend_from_slice(key_id.as_bytes());
-        attestation_data.extend_from_slice(challenge);
-        attestation_data.extend_from_slice(&chrono::Utc::now().timestamp().to_le_bytes());
-
-        let keypair = BearDogCrypto::generate_ed25519_keypair()?;
-        let signature = BearDogCrypto::sign_ed25519(
-            &keypair.1, // Use second element of tuple as private key
-            &attestation_data,
-        )?;
-
-        let mut attestation = Vec::new({} bytes", attestation.len(&[u8],
-        expected_challenge: &[u8],
-        info!("🔍 Real Android: Verifying key attestation");
-
-        if attestation_cert.len() < 100 {
-            return Err(BearDogError::invalid_input("Attestation certificate too short"));
-
-        let challenge_found = attestation_cert
-            .windows(expected_challenge.len())
-            .any(|window| window == expected_challenge);
-        if !challenge_found {
-            warn!("⚠️ Challenge not found in attestation certificate");
-            return Ok(false);
-
-        info!("✅ Real Android: Attestation verification completed");
-        Ok(&str, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
-            "🔐 Encrypting {} bytes with key: {}",
-            plaintext.len({} bytes output", ciphertext.len(&str, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
-            "🔐 Decrypting {} bytes with key: {}",
-            ciphertext.len(),
-
-        if ciphertext.len() < 3 || &ciphertext[ciphertext.len() - 3..] != b"ENC" {
-            return Err(BearDogError::Hsm {
-                message: "HSM decryption failed".to_string() -> Result<Vec<u8>, BearDogError>> {
-        debug!("🔐 Signing {} bytes with key: {}", data.len({}",
-            data.len({} bytes signature",
-            signature.len(&str, data: &[u8], signature: &[u8]) -> Result<bool, BearDogError> {
-        debug!("🔐 Verifying signature for key: {}", key_id);
-                    .native_verify_with_strongbox_key({}", key_id);
-
-        let expected_sig_suffix = format!("SIG{key_id}");
-        let expected_sig_bytes = expected_sig_suffix.as_bytes({}", valid);
-        Ok(&str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
-        debug!("🔐 Signing attestation data for key: {}", key_id);
-
-        let mut signature = self.sign(key_id, data)?;
-        signature.extend_from_slice(b"ATTEST");
-        debug!("✅ Attestation data signed");
-
-/// Delete Key operation.
-///
-/// # Errors
-/// Returns an error if the operation fails.
-    /// Removes key
-    /// Removes key
-    pub fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
-        info!("🗑️ Deleting key from Android Keystore: {}", key_id);
-
-        tokio::time::sleep(tokio::time::Duration::from_millis({}", key_id);
-
+    #[test]
+    fn key_exists_returns_false_on_host() {
+        assert!(!key_exists("test").unwrap());
+    }
 }

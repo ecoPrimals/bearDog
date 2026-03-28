@@ -256,3 +256,166 @@ pub struct AbacPolicyConfig {
     /// The decision value
     pub decision: String,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn json_eq<T: serde::Serialize>(a: &T, b: &T) {
+        let ja = serde_json::to_value(a).expect("serialize a");
+        let jb = serde_json::to_value(b).expect("serialize b");
+        assert_eq!(ja, jb, "JSON representations must match");
+    }
+
+    #[test]
+    fn canonical_authorization_default_debug_clone() {
+        let c = CanonicalAuthorizationConfig::default();
+        let _ = format!("{c:?}");
+        assert_eq!(c.default_role, "user");
+    }
+
+    #[test]
+    fn canonical_authorization_production_validates() {
+        let p = CanonicalAuthorizationConfig::production();
+        p.validate().expect("production preset must validate");
+        assert!(p.roles.contains_key("admin"));
+        assert_eq!(p.auth_cache_ttl_seconds, 60);
+    }
+
+    #[test]
+    fn validate_rejects_empty_default_role() {
+        let mut c = CanonicalAuthorizationConfig::default();
+        c.default_role.clear();
+        assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn validate_rejects_missing_default_role_in_roles() {
+        let mut c = CanonicalAuthorizationConfig::default();
+        c.default_role = "ghost".to_string();
+        assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn validate_rejects_role_name_mismatch() {
+        let mut c = CanonicalAuthorizationConfig::default();
+        c.roles.insert(
+            "key".to_string(),
+            RoleConfig {
+                name: "other".to_string(),
+                description: "d".to_string(),
+                permissions: vec!["p".to_string()],
+                inherits_from: vec![],
+                enabled: true,
+            },
+        );
+        c.default_role = "key".to_string();
+        assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn validate_rejects_role_without_permissions_or_inheritance() {
+        let mut c = CanonicalAuthorizationConfig::default();
+        c.roles.insert(
+            "user".to_string(),
+            RoleConfig {
+                name: "user".to_string(),
+                description: "d".to_string(),
+                permissions: vec![],
+                inherits_from: vec![],
+                enabled: true,
+            },
+        );
+        assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn role_config_validate_errors() {
+        let bad = RoleConfig {
+            name: String::new(),
+            description: "d".to_string(),
+            permissions: vec!["a".to_string()],
+            inherits_from: vec![],
+            enabled: true,
+        };
+        assert!(bad.validate().is_err());
+    }
+
+    #[test]
+    fn serde_roundtrip_authorization_and_nested() {
+        let mut c = CanonicalAuthorizationConfig::default();
+        c.roles.insert(
+            "user".to_string(),
+            RoleConfig {
+                name: "user".to_string(),
+                description: "u".to_string(),
+                permissions: vec!["read".to_string()],
+                inherits_from: vec![],
+                enabled: true,
+            },
+        );
+        let v = serde_json::to_value(&c).expect("to value");
+        let back: CanonicalAuthorizationConfig = serde_json::from_value(v).expect("from value");
+        json_eq(&c, &back);
+
+        let perm = PermissionConfig {
+            name: "p1".to_string(),
+            description: "d".to_string(),
+            resource_type: "r".to_string(),
+            actions: vec!["get".to_string()],
+            conditions: vec!["c".to_string()],
+        };
+        json_eq(
+            &perm,
+            &serde_json::from_value(serde_json::to_value(&perm).unwrap()).unwrap(),
+        );
+
+        let rule = ResourceRuleConfig {
+            resource_pattern: "/x/*".to_string(),
+            required_permissions: vec!["p".to_string()],
+            methods: vec!["GET".to_string()],
+            conditions: HashMap::from([("k".to_string(), "v".to_string())]),
+        };
+        json_eq(
+            &rule,
+            &serde_json::from_value(serde_json::to_value(&rule).unwrap()).unwrap(),
+        );
+
+        let abac = AbacPolicyConfig {
+            name: "pol".to_string(),
+            description: "d".to_string(),
+            subject_attributes: HashMap::from([("s".to_string(), "1".to_string())]),
+            resource_attributes: HashMap::new(),
+            action: "read".to_string(),
+            environment_attributes: HashMap::new(),
+            decision: "allow".to_string(),
+        };
+        json_eq(
+            &abac,
+            &serde_json::from_value(serde_json::to_value(&abac).unwrap()).unwrap(),
+        );
+    }
+
+    #[test]
+    fn valid_config_with_matching_role_passes() {
+        let mut c = CanonicalAuthorizationConfig::default();
+        c.roles.insert(
+            c.default_role.clone(),
+            RoleConfig {
+                name: c.default_role.clone(),
+                description: "d".to_string(),
+                permissions: vec!["x".to_string()],
+                inherits_from: vec![],
+                enabled: true,
+            },
+        );
+        c.validate().expect("valid authz config");
+    }
+
+    #[test]
+    fn production_has_shorter_auth_cache_than_default() {
+        let d = CanonicalAuthorizationConfig::default();
+        let p = CanonicalAuthorizationConfig::production();
+        assert!(p.auth_cache_ttl_seconds < d.auth_cache_ttl_seconds);
+    }
+}

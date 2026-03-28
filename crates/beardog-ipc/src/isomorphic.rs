@@ -24,6 +24,9 @@
 
 use anyhow::{Context, Result};
 use beardog_types::constants::domains::network::ipc_discovery as ipc_layout;
+use beardog_types::constants::domains::system::defaults::{
+    DEFAULT_IPC_PORT_FILE, DEFAULT_SOCKET_PATH,
+};
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use tokio::io::{AsyncRead, AsyncWrite};
@@ -164,10 +167,7 @@ pub fn get_unix_socket_paths_with(hints: &UnixSocketPathHints) -> Vec<PathBuf> {
         paths.push(p);
     }
 
-    let mut tmp_path = ipc_layout::biomeos_tmp_socket_root();
-    tmp_path.push(&subdir);
-    tmp_path.push(format!("{stem}.sock"));
-    paths.push(tmp_path);
+    paths.push(PathBuf::from(DEFAULT_SOCKET_PATH));
 
     paths
 }
@@ -245,11 +245,7 @@ pub fn get_tcp_discovery_file_candidates_with(hints: &TcpDiscoveryPathHints) -> 
         ));
     }
 
-    files.push(format!(
-        "{}/{}",
-        ipc_layout::biomeos_tmp_socket_root().display(),
-        ipc_layout::BEARDOG_TCP_DISCOVERY_FILENAME
-    ));
+    files.push(DEFAULT_IPC_PORT_FILE.to_string());
 
     files
 }

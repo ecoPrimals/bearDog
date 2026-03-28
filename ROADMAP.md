@@ -1,6 +1,6 @@
 # BearDog Roadmap
 
-**Updated**: March 24, 2026
+**Updated**: March 28, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,8 +20,8 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 1000 lines of code (production)
-- 14,447+ tests passing (fully concurrent, zero sleeps in non-chaos)
-- 87.35% line coverage (llvm-cov workspace)
+- 15,100+ tests passing (fully concurrent, zero sleeps in non-chaos)
+- 90.05% line coverage (llvm-cov workspace) — target met
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - Zero `#[serial_test::serial]` — all tests concurrent via unique isolated resources
 - `cargo deny` passes all 4 checks
@@ -55,34 +55,20 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ---
 
-## In Progress
+## Recently Completed
 
-### Test Coverage to 90%
+### Test Coverage to 90% — DONE (Wave 20)
 
-Coverage at 87.35% overall. Top crates above target; remaining crates approaching via targeted test waves.
+Coverage reached **90.05% line** (89.18% region, 84.90% function). 15,100+ tests passing.
 
-| Crate | Line Coverage | Status |
-|-------|-------------|--------|
-| beardog-traits | 99.4% | Above target |
-| beardog-capabilities | 98.0% | Above target |
-| beardog-auth | 93.0% | Above target |
-| beardog-utils | 92.3% | Above target |
-| beardog-genetics | 89.9% | At target |
-| beardog-ipc | 86.0% | Approaching |
-| beardog-core | ~85% | Approaching |
-| beardog-discovery | ~85% | Boosted (Wave 11) |
-| beardog-types | ~84% | Boosted (Wave 11) |
-| beardog-installer | ~84% | Boosted (Wave 11) |
-| beardog-cli | ~83% | Boosted (Wave 11) |
-| beardog-tunnel | ~83% | Boosted (Wave 11 + fault injection) |
-| beardog-deploy | ~82% | Boosted (Wave 11) |
+### primalSpring Composition Fixes — DONE (Wave 18c)
 
-### primalSpring Capability Audit Fixes
+1. TCP read timeout — All NDJSON read sites wrapped with `tokio::time::timeout(30s)`
+2. NDJSON wire format documented in README and capability metadata
 
-~~Three quick fixes from the primalSpring capability audit~~ — **DONE (Wave 10)**:
-1. ~~Register `health.liveness` and `health.readiness` method aliases~~ — already registered
-2. ~~Register `capabilities.list` method alias~~ — already registered; added `capability.list` + `primal.capabilities`
-3. ~~Register bare crypto method aliases for TLS 1.3 compatibility~~ — already bridged in `HandlerRegistry::route`
+### Semantic Method Naming — DONE (Wave 19)
+
+Primary `domain.operation` names (`birdsong.encrypt`, `btsp.contact.exchange`, `crypto.derive_onion_address`) with `beardog.*` kept as backward-compatible aliases.
 
 ---
 
@@ -111,9 +97,9 @@ Current in-memory storage backend evolves to persistent NestGate-backed storage 
 
 Fully generic methods: `crypto.encrypt` + `{"algorithm": "aes-256-gcm"}` instead of algorithm-specific method names. Requires coordination across ecosystem primals via wateringHole standards.
 
-### CI & Docker Scaffold Cleanup
+### CI & Docker Scaffold Cleanup — DONE (Wave 20)
 
-The `.github/workflows/` files and `docker-compose.yml` reference scripts and services from early development that no longer exist (`scripts/run_benchmarks.sh`, `scripts/deploy-staging.sh`, `scripts/migrate-config.sh`, `postgres`/`redis` services in docker-compose). These are aspirational scaffolds that should be reconciled with the actual BearDog architecture (Unix socket IPC, no database dependencies) when CI is activated.
+Dead CI workflows (7 files), `docker-compose.yml`, stale profiling scripts, and deployment scripts removed. Moved to `ecoPrimals/infra/wateringHole/fossilRecord/beardog/`. Retained and fixed: `beardog-ci.yml` (pinned 1.93.0, correct workspace commands) and `Dockerfile` (correct binary name, no phantom features).
 
 ---
 
@@ -130,4 +116,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: March 23, 2026
+**Last Updated**: March 28, 2026

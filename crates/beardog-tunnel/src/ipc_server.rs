@@ -16,7 +16,11 @@ use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{UnixListener, UnixStream};
 use tokio::sync::RwLock;
-use tracing::{error, info, warn};
+use tokio::time::Duration;
+use tracing::{debug, error, info, warn};
+
+/// Per-read timeout for IPC connections (prevents indefinite blocking from probes).
+const IPC_READ_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Generic IPC message envelope
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -148,46 +152,52 @@ impl IpcServer {
 
         loop {
             line.clear();
-            match reader.read_line(&mut line).await {
-                Ok(0) => {
-                    // Connection closed
+
+            let read_result =
+                tokio::time::timeout(IPC_READ_TIMEOUT, reader.read_line(&mut line)).await;
+
+            let bytes_read = match read_result {
+                Err(_elapsed) => {
+                    debug!(
+                        timeout_secs = IPC_READ_TIMEOUT.as_secs(),
+                        "IPC read timed out — closing idle connection"
+                    );
                     break;
                 }
-                Ok(_) => {
-                    // Parse message
-                    let message: IpcMessage = match serde_json::from_str(&line) {
-                        Ok(msg) => msg,
-                        Err(e) => {
-                            warn!("Failed to parse IPC message: {}", e);
-                            continue;
-                        }
-                    };
-
-                    // Handle message
-                    let response =
-                        Self::handle_message(message, &handler, &active_connections).await;
-
-                    // Send response
-                    if let Some(response_msg) = response {
-                        let response_json = serde_json::to_string(&response_msg).map_err(|e| {
-                            BearDogError::system(format!("Failed to serialize response: {e}"))
-                        })?;
-
-                        writer
-                            .write_all(response_json.as_bytes())
-                            .await
-                            .map_err(|e| {
-                                BearDogError::system(format!("Failed to write response: {e}"))
-                            })?;
-                        writer.write_all(b"\n").await.map_err(|e| {
-                            BearDogError::system(format!("Failed to write newline: {e}"))
-                        })?;
-                    }
+                Ok(Err(e)) => {
+                    error!("Failed to read from IPC client: {}", e);
+                    break;
                 }
+                Ok(Ok(n)) => n,
+            };
+
+            if bytes_read == 0 {
+                break;
+            }
+
+            let message: IpcMessage = match serde_json::from_str(&line) {
+                Ok(msg) => msg,
                 Err(e) => {
-                    error!("Failed to read from stream: {}", e);
-                    break;
+                    warn!("Failed to parse IPC message: {}", e);
+                    continue;
                 }
+            };
+
+            let response = Self::handle_message(message, &handler, &active_connections).await;
+
+            if let Some(response_msg) = response {
+                let response_json = serde_json::to_string(&response_msg).map_err(|e| {
+                    BearDogError::system(format!("Failed to serialize response: {e}"))
+                })?;
+
+                writer
+                    .write_all(response_json.as_bytes())
+                    .await
+                    .map_err(|e| BearDogError::system(format!("Failed to write response: {e}")))?;
+                writer
+                    .write_all(b"\n")
+                    .await
+                    .map_err(|e| BearDogError::system(format!("Failed to write newline: {e}")))?;
             }
         }
 

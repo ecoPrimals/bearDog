@@ -46,3 +46,6 @@ mod hsm_provider_integration_tests;
 
 #[cfg(test)]
 mod tunnel_coverage_wave2;
+
+#[cfg(test)]
+mod tunnel_coverage_wave3;

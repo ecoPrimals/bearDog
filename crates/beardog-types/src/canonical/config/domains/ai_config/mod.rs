@@ -188,3 +188,66 @@ impl BearDogConfig for ConsolidatedAiConfig {
         "ai"
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::canonical::config::r#trait::BearDogConfig;
+
+    #[test]
+    fn consolidated_ai_default_and_domain() {
+        let c = ConsolidatedAiConfig::default();
+        assert!(!c.enabled);
+        assert_eq!(ConsolidatedAiConfig::domain(), "ai");
+    }
+
+    #[test]
+    fn consolidated_ai_validate_ok_when_disabled_even_if_invalid_floats() {
+        let mut c = ConsolidatedAiConfig::default();
+        c.hybrid_intelligence.human_oversight_level = 2.0;
+        c.validate().expect("validation skipped when AI disabled");
+    }
+
+    #[test]
+    fn consolidated_ai_validate_oversight_range() {
+        let mut c = ConsolidatedAiConfig::default();
+        c.enabled = true;
+        c.hybrid_intelligence.human_oversight_level = 1.5;
+        assert!(c.validate().is_err());
+        c.hybrid_intelligence.human_oversight_level = 0.5;
+        c.hybrid_intelligence.auto_decision_threshold = 2.0;
+        assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn consolidated_ai_merge() {
+        let a = ConsolidatedAiConfig::default();
+        let mut b = ConsolidatedAiConfig::default();
+        b.enabled = true;
+        let m = a.merge(&b).expect("merge");
+        assert!(m.enabled);
+
+        let b2 = ConsolidatedAiConfig::default();
+        let m2 = b.merge(&b2).expect("merge when other disabled");
+        assert_eq!(m2.enabled, b.enabled);
+    }
+
+    #[test]
+    fn consolidated_ai_from_env_and_toml() {
+        let c = ConsolidatedAiConfig::from_env().expect("from_env");
+        let s = c.to_toml().expect("to_toml");
+        assert!(!s.is_empty());
+    }
+
+    #[test]
+    fn hybrid_intelligence_and_inference_defaults_serde() {
+        let h = HybridIntelligenceConfig::default();
+        let v = serde_json::to_value(&h).expect("serialize hybrid");
+        let _: HybridIntelligenceConfig = serde_json::from_value(v).expect("deserialize hybrid");
+
+        let i = InferenceConfig::default();
+        let v = serde_json::to_value(&i).expect("serialize inference");
+        let back: InferenceConfig = serde_json::from_value(v).expect("deserialize inference");
+        assert_eq!(i, back);
+    }
+}

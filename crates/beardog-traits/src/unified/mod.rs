@@ -58,7 +58,7 @@ pub use genetics::*;
 pub use hsm_multi_credential::*;
 pub use security::*;
 
-// **NEW**: Re-export unified provider traits (these replace all scattered provider traits)
+// Re-export unified provider traits (these replace all scattered provider traits)
 pub use providers::{
     AdapterProvider, BearDogProvider, CryptoProvider, GeneticsProvider, HsmProvider,
     MonitoringProvider, SecurityProvider, WorkflowProvider,

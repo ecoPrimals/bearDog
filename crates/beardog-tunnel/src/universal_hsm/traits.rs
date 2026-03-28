@@ -107,3 +107,75 @@ impl Default for ProviderInfo {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json;
+
+    #[test]
+    fn provider_info_default_and_clone() {
+        let a = ProviderInfo::default();
+        let b = a.clone();
+        assert_eq!(a.name, "Unknown Provider");
+        assert_eq!(a.provider_type, ProviderType::Software);
+        assert_eq!(a.version, "0.0.0");
+        assert!(!a.capabilities_verified);
+        assert_eq!(a.name, b.name);
+        assert_eq!(a.provider_type, b.provider_type);
+    }
+
+    #[test]
+    fn provider_type_display_all_variants() {
+        let cases = [
+            (ProviderType::MobileHardware, "Mobile Hardware Security"),
+            (ProviderType::DesktopHardware, "Desktop Hardware Security"),
+            (ProviderType::Software, "Software HSM"),
+            (ProviderType::Pkcs11, "PKCS#11 HSM"),
+            (ProviderType::Tpm, "TPM 2.0+"),
+            (ProviderType::Cloud, "Cloud HSM"),
+            (ProviderType::UsbToken, "USB Security Token"),
+            (ProviderType::NetworkHsm, "Network HSM"),
+            (ProviderType::Custom, "Custom HSM"),
+        ];
+        for (p, expected) in cases {
+            assert_eq!(
+                format!("{p}"),
+                expected,
+                "ProviderType display mismatch for {p:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn provider_info_serde_json_roundtrip() {
+        let info = ProviderInfo {
+            name: "Test".to_string(),
+            provider_type: ProviderType::Pkcs11,
+            version: "1.2.3".to_string(),
+            capabilities_verified: true,
+        };
+        let json = serde_json::to_string(&info).expect("serialize ProviderInfo");
+        let back: ProviderInfo = serde_json::from_str(&json).expect("deserialize ProviderInfo");
+        assert_eq!(info.name, back.name);
+        assert_eq!(info.provider_type, back.provider_type);
+        assert_eq!(info.version, back.version);
+        assert_eq!(info.capabilities_verified, back.capabilities_verified);
+    }
+
+    #[test]
+    fn platform_enum_serde_roundtrip() {
+        for p in [
+            Platform::Mobile,
+            Platform::Desktop,
+            Platform::Server,
+            Platform::Embedded,
+            Platform::Wasm,
+            Platform::Universal,
+        ] {
+            let json = serde_json::to_string(&p).expect("serialize Platform");
+            let back: Platform = serde_json::from_str(&json).expect("deserialize Platform");
+            assert_eq!(p, back);
+        }
+    }
+}

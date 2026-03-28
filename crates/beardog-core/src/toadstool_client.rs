@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Removed unuse crate::ecosystem_integration::universal_compute_client::{UniversalComputeClient, UniversalComputeRequest, UniversalComputeResponse};
-
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
-
+//! Ecosystem genetic spawner re-exports for cross-primal compute orchestration.
 
 pub use crate::ecosystem_integration::ecosystem_genetic_spawner::{
     ComputeResourceAllocation, EcosystemCapability, EcosystemGeneticBlueprint,

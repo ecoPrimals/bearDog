@@ -75,6 +75,12 @@ pub struct KeyUsageLog {
 }
 
 /// Key lifecycle and crypto operations backed by an HSM or HSM emulator.
+///
+/// # Migration (v0.10.0)
+///
+/// Superseded by [`crate::hsm::HsmKeyProvider`] which is object-safe and
+/// used with `HsmProviderRegistry` for runtime provider selection.
+/// This trait will be removed in a future release.
 pub trait HsmProvider: BaseProvider {
     /// Creates a new key of `key_type` with vendor `metadata`.
     fn generate_key(

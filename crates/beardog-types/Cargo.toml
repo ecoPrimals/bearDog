@@ -21,6 +21,7 @@ workspace = true
 beardog-config = { path = "../beardog-config" }
 
 serde_json = "1.0"
+semver = "1.0"
 thiserror = { workspace = true }
 tracing = "0.1"
 tokio = { version = "1.0", features = ["rt", "rt-multi-thread", "time", "fs", "macros"], optional = true }

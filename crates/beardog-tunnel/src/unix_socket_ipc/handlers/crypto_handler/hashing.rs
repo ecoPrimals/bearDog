@@ -67,6 +67,14 @@ pub async fn route(
             ))
         }
 
+        "crypto.derive_onion_address" => {
+            info!("🧅 Crypto: derive_onion_address (Tor v3, semantic primary)");
+            let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
+            Ok(Some(
+                handle_derive_onion_address(params_ref).map_err(|e| e.to_string())?,
+            ))
+        }
+
         "crypto.hmac_sha384" => {
             info!("🔐 Crypto: hmac_sha384 (high-security MAC)");
             let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
@@ -92,7 +100,7 @@ pub async fn route(
         }
 
         "beardog.crypto.sha3_256" => {
-            info!("🧅 Crypto: beardog.crypto.sha3_256 (onion service crypto)");
+            info!("🧅 Crypto: beardog.crypto.sha3_256 (backward-compat alias)");
             let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
             Ok(Some(
                 handle_sha3_256(params_ref).map_err(|e| e.to_string())?,
@@ -100,7 +108,7 @@ pub async fn route(
         }
 
         "beardog.crypto.derive_onion_address" => {
-            info!("🧅 Crypto: beardog.crypto.derive_onion_address (Tor v3)");
+            info!("🧅 Crypto: beardog.crypto.derive_onion_address (backward-compat alias)");
             let params_ref = params.ok_or_else(|| "Missing parameters".to_string())?;
             Ok(Some(
                 handle_derive_onion_address(params_ref).map_err(|e| e.to_string())?,
@@ -217,12 +225,20 @@ mod tests {
         assert_eq!(a["hash"], b["hash"]);
 
         let onion = json!({ "public_key": b64(&[0u8; 32]) });
-        let derived = route("beardog.crypto.derive_onion_address", Some(&onion))
+        let derived_sem = route("crypto.derive_onion_address", Some(&onion))
             .await
             .expect("r")
             .expect("v");
+        let derived_bd = route("beardog.crypto.derive_onion_address", Some(&onion))
+            .await
+            .expect("r")
+            .expect("v");
+        assert_eq!(
+            derived_sem.get("onion_address"),
+            derived_bd.get("onion_address")
+        );
         assert!(
-            derived
+            derived_sem
                 .get("onion_address")
                 .and_then(|v| v.as_str())
                 .is_some_and(|s| s.ends_with(".onion"))

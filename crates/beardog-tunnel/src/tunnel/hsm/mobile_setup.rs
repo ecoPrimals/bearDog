@@ -203,4 +203,48 @@ mod tests {
         // May fail if dependencies not available, but should not panic
         let _ = result;
     }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn initialize_mobile_hsm_manager_dev_config_succeeds() {
+        let setup = create_dev_config();
+        assert!(!setup.require_mobile_for_critical);
+        let mgr = initialize_mobile_hsm_manager(setup)
+            .await
+            .expect("dev manager");
+        let _ = mgr.get_routing_metrics();
+    }
+
+    #[tokio::test]
+    async fn initialize_mobile_hsm_manager_default_errors_when_mobile_required_on_non_android() {
+        if cfg!(target_os = "android") {
+            return;
+        }
+        let setup = MobileHsmSetup::default();
+        assert!(setup.require_mobile_for_critical);
+        let result = initialize_mobile_hsm_manager(setup).await;
+        let err = match result {
+            Err(e) => e,
+            Ok(_) => panic!("expected error when mobile HSM required on non-android"),
+        };
+        assert!(
+            err.to_string().contains("Mobile HSM required")
+                || err.to_string().contains("unavailable"),
+            "unexpected err: {err}"
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn demo_mobile_operations_runs() {
+        let mgr = HsmManager::new();
+        demo_mobile_operations(&mgr)
+            .await
+            .expect("demo_mobile_operations");
+    }
+
+    #[test]
+    fn create_pixel8_graphene_config_matches_defaults_shape() {
+        let p = create_pixel8_graphene_config();
+        assert!(p.require_mobile_for_critical);
+        assert!(p.enable_graphene_optimizations);
+    }
 }

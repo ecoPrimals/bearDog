@@ -236,3 +236,88 @@ impl RateLimitingConfig {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Arc;
+
+    fn sample_valid_security_config() -> CanonicalSecurityConfig {
+        let mut c = CanonicalSecurityConfig::default();
+        c.authentication.jwt_secret = Arc::from("01234567890123456789012345678901");
+        c.authorization = CanonicalAuthorizationConfig::production();
+        c
+    }
+
+    #[test]
+    fn canonical_security_default_new_equivalent() {
+        let a = CanonicalSecurityConfig::default();
+        let b = CanonicalSecurityConfig::new();
+        let ja = serde_json::to_value(&a).expect("serialize default");
+        let jb = serde_json::to_value(&b).expect("serialize new");
+        assert_eq!(ja, jb);
+    }
+
+    #[test]
+    fn canonical_security_production_sets_flags() {
+        let p = CanonicalSecurityConfig::production();
+        assert!(p.enable_encryption);
+        assert!(p.enable_hsm);
+        let v = serde_json::to_value(&p).expect("serialize production");
+        assert!(v.get("authentication").is_some());
+    }
+
+    #[test]
+    fn canonical_security_validate_happy_path() {
+        let c = sample_valid_security_config();
+        c.validate().expect("sample config should validate");
+    }
+
+    #[test]
+    fn canonical_security_default_validate_fails_on_placeholder_jwt() {
+        let c = CanonicalSecurityConfig::default();
+        assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn rate_limiting_with_defaults_matches_default_impl() {
+        let a = RateLimitingConfig::with_defaults();
+        let b = RateLimitingConfig::default();
+        assert_eq!(
+            serde_json::to_value(&a).expect("a"),
+            serde_json::to_value(&b).expect("b")
+        );
+    }
+
+    #[test]
+    fn rate_limiting_from_env_provider_overrides() {
+        let r = RateLimitingConfig::from_env_provider(|k| match k {
+            "BEARDOG_RATE_LIMIT_MAX_REQUESTS_PER_MIN" => Some("250".to_string()),
+            "BEARDOG_RATE_LIMIT_BURST_CAPACITY" => Some("20".to_string()),
+            "BEARDOG_RATE_LIMIT_WINDOW_SECS" => Some("120".to_string()),
+            _ => None,
+        });
+        assert_eq!(r.max_requests_per_minute, 250);
+        assert_eq!(r.burst_capacity, 20);
+        assert_eq!(r.window_seconds, 120);
+    }
+
+    #[test]
+    fn rate_limiting_production_has_nonzero_fields() {
+        let r = RateLimitingConfig::production();
+        assert!(r.max_requests_per_minute > 0);
+        assert!(r.burst_capacity > 0);
+        assert!(r.window_seconds > 0);
+    }
+
+    #[test]
+    fn rate_limiting_serde_roundtrip() {
+        let r = RateLimitingConfig::with_defaults();
+        let v = serde_json::to_value(&r).expect("to json");
+        let back: RateLimitingConfig = serde_json::from_value(v).expect("from json");
+        assert_eq!(
+            serde_json::to_value(&back).expect("back"),
+            serde_json::to_value(&r).expect("orig")
+        );
+    }
+}

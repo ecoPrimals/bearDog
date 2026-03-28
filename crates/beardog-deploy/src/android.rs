@@ -110,7 +110,7 @@ impl AndroidDeployment {
     ///
     /// # Errors
     /// Returns error if Rust compiler is not found
-    fn check_rust_compiler() -> Result<()> {
+    pub(crate) fn check_rust_compiler() -> Result<()> {
         if !Self::check_command_available("rustc") {
             return Err(BearDogError::system(
                 "Rust compiler not found. Please install Rust.".to_string(),
@@ -164,9 +164,11 @@ impl AndroidDeployment {
     /// # Errors
     /// Returns error if rustup command fails
     /// Checks if target installed
-    fn is_target_installed(target: &str) -> Result<bool> {
+    pub(crate) fn is_target_installed(target: &str) -> Result<bool> {
+        let path = beardog_errors::process_env::var_os("PATH").unwrap_or_default();
         let output = Command::new("rustup")
             .args(["target", "list", "--installed"])
+            .env("PATH", path)
             .output()
             .map_err(|e| BearDogError::system(format!("Failed to check installed targets: {e}")))?;
 
@@ -184,9 +186,11 @@ impl AndroidDeployment {
     ///
     /// # Errors
     /// Returns error if target installation fails
-    fn install_target(target: &str) -> Result<()> {
+    pub(crate) fn install_target(target: &str) -> Result<()> {
+        let path = beardog_errors::process_env::var_os("PATH").unwrap_or_default();
         let status = Command::new("rustup")
             .args(["target", "add", target])
+            .env("PATH", path)
             .status()
             .map_err(|e| BearDogError::system(format!("Failed to run rustup: {e}")))?;
 
@@ -208,7 +212,7 @@ impl AndroidDeployment {
     ///
     /// # Errors
     /// Returns error if NDK is not found or misconfigured
-    fn verify_android_ndk(&self) -> Result<()> {
+    pub(crate) fn verify_android_ndk(&self) -> Result<()> {
         info!("📱 Checking Android NDK");
 
         // Check for NDK path in various locations
@@ -225,7 +229,7 @@ impl AndroidDeployment {
     ///
     /// # Errors
     /// Returns error if NDK cannot be located
-    fn find_ndk_path(&self) -> Result<String> {
+    pub(crate) fn find_ndk_path(&self) -> Result<String> {
         // Check provided path first
         if let Some(ref path) = self.ndk_path
             && std::path::Path::new(path).exists()
@@ -287,8 +291,10 @@ impl AndroidDeployment {
     fn install_cargo_ndk() -> Result<()> {
         info!("📦 Installing cargo-ndk from crates.io");
 
+        let path = beardog_errors::process_env::var_os("PATH").unwrap_or_default();
         let status = Command::new("cargo")
             .args(["install", "cargo-ndk"])
+            .env("PATH", path)
             .status()
             .map_err(|e| BearDogError::system(format!("Failed to run cargo install: {e}")))?;
 

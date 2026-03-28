@@ -344,3 +344,97 @@ pub struct OptimizationConfig {
     /// Optional configuration for automated hyperparameter tuning (grid search, random search, Bayesian)
     pub hyperparameter_optimization: Option<HyperparameterOptimization>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ai::hybrid_intelligence::decision_engine::DecisionStrategy;
+
+    #[test]
+    fn training_config_default() {
+        let c = TrainingConfig::default();
+        assert_eq!(c.batch_size, 32);
+        assert_eq!(c.epochs, 100);
+        assert_eq!(c.learning_rate, 0.001);
+        assert_eq!(c.validation_split, 0.2);
+        assert!(c.early_stopping.is_none());
+        assert!(c.regularization.is_none());
+    }
+
+    #[test]
+    fn training_config_from_env_defaults() {
+        let c = TrainingConfig::from_env();
+        assert_eq!(c.batch_size, 32);
+        assert_eq!(c.epochs, 100);
+        assert_eq!(c.learning_rate, 0.001);
+        assert_eq!(c.validation_split, 0.2);
+    }
+
+    #[test]
+    fn inference_config_default_and_from_env() {
+        let d = InferenceConfig::default();
+        assert_eq!(d.batch_size, 1);
+        assert_eq!(d.max_inference_time_ms, 1000);
+        assert!(d.caching.is_none());
+        let e = InferenceConfig::from_env();
+        assert_eq!(e.batch_size, 1);
+        assert_eq!(e.max_inference_time_ms, 1000);
+        assert!(e.caching.is_none());
+    }
+
+    #[test]
+    fn neural_network_config_default() {
+        let c = NeuralNetworkConfig::default();
+        assert_eq!(c.training_params.batch_size, 32);
+        assert_eq!(c.training_params.epochs, 100);
+        assert!(!c.optimization.mixed_precision);
+    }
+
+    #[test]
+    fn decision_engine_config_default() {
+        let c = DecisionEngineConfig::default();
+        assert_eq!(c.strategies, vec![DecisionStrategy::MachineLearning]);
+        assert_eq!(c.timeout, std::time::Duration::from_millis(1000));
+    }
+
+    #[test]
+    fn model_management_config_default() {
+        let c = ModelManagementConfig::default();
+        assert!(matches!(
+            c.versioning_strategy,
+            VersioningStrategy::Semantic
+        ));
+    }
+
+    #[test]
+    fn preprocessing_config_default() {
+        let c = PreprocessingConfig::default();
+        assert_eq!(c.normalization, NormalizationStrategy::ZScore);
+        assert_eq!(c.missing_value_handling, MissingValueStrategy::FillMean);
+    }
+
+    #[test]
+    fn learning_prediction_optimization_serde_roundtrip() {
+        let lc = LearningConfig::default();
+        let v = serde_json::to_value(&lc).unwrap();
+        let back: LearningConfig = serde_json::from_value(v).unwrap();
+        assert_eq!(
+            serde_json::to_value(&lc).unwrap(),
+            serde_json::to_value(&back).unwrap()
+        );
+        let pc = PredictionConfig::default();
+        let v = serde_json::to_value(&pc).unwrap();
+        let back: PredictionConfig = serde_json::from_value(v).unwrap();
+        assert_eq!(
+            serde_json::to_value(&pc).unwrap(),
+            serde_json::to_value(&back).unwrap()
+        );
+        let oc = OptimizationConfig::default();
+        let v = serde_json::to_value(&oc).unwrap();
+        let back: OptimizationConfig = serde_json::from_value(v).unwrap();
+        assert_eq!(
+            serde_json::to_value(&oc).unwrap(),
+            serde_json::to_value(&back).unwrap()
+        );
+    }
+}

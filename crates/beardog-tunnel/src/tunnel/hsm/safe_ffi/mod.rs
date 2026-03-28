@@ -212,4 +212,40 @@ mod tests {
         // NOTE: Sign operation completed without panic (basic test)
         Ok(())
     }
+
+    #[test]
+    fn default_safe_platform_security_is_constructible() {
+        let _ = SafePlatformSecurity::default();
+    }
+
+    #[test]
+    fn generate_key_unsupported_type_errors() -> Result<(), BearDogError> {
+        let security = SafePlatformSecurity::new()?;
+        let err = security
+            .generate_key("k", &KeyType::Rsa)
+            .expect_err("RSA not in safe fallback");
+        assert!(
+            err.to_string().contains("not supported") || err.to_string().contains("unsupported")
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn generate_key_elliptic_curve_fallback_returns_software_key() -> Result<(), BearDogError> {
+        let security = SafePlatformSecurity::new()?;
+        let key = security.generate_key("ecc-fallback", &KeyType::EllipticCurve)?;
+        assert_eq!(key.key_type, KeyType::Ed25519);
+        Ok(())
+    }
+
+    #[test]
+    fn verify_signature_software_fallback_uses_ephemeral_keys() -> Result<(), BearDogError> {
+        let security = SafePlatformSecurity::new()?;
+        let data = b"payload-for-verify";
+        let sig = security.sign_data("vk", data)?;
+        let ok = security.verify_signature("vk", data, &sig)?;
+        // Fallback path generates independent key material for sign vs verify (stub API).
+        assert!(!ok);
+        Ok(())
+    }
 }

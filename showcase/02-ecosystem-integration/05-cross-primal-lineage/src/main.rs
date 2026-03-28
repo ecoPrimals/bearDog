@@ -206,10 +206,11 @@ async fn run_lineage_workflow(scenario_path: &PathBuf, config: DemoConfig) -> Re
 
 // Configuration
 #[derive(Debug, Clone, serde::Deserialize)]
-#[allow(dead_code)]
 struct DemoConfig {
-    max_lineage_depth: u32,
-    key_expiry_hours: u32,
+    #[serde(rename = "max_lineage_depth")]
+    _max_lineage_depth: u32,
+    #[serde(rename = "key_expiry_hours")]
+    _key_expiry_hours: u32,
 }
 
 fn load_config(path: &PathBuf) -> Result<DemoConfig> {

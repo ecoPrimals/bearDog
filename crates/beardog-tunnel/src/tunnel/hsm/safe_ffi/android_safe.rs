@@ -119,4 +119,44 @@ mod tests {
         assert!(!provider.is_hardware_backed() || provider.is_hardware_backed());
         Ok(())
     }
+
+    #[test]
+    fn generate_key_returns_not_implemented() -> Result<(), Box<dyn std::error::Error>> {
+        use crate::tunnel::hsm::types::KeyType;
+        let provider = SafeAndroidProvider::new()?;
+        let err = provider
+            .generate_key("kid", &KeyType::Ed25519)
+            .expect_err("StrongBox placeholder");
+        assert!(
+            err.to_string().contains("Not yet implemented"),
+            "unexpected: {err}"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn sign_data_returns_not_implemented() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = SafeAndroidProvider::new()?;
+        let err = provider
+            .sign_data("kid", b"data")
+            .expect_err("StrongBox placeholder");
+        assert!(
+            err.to_string().contains("Not yet implemented"),
+            "unexpected: {err}"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn verify_signature_returns_not_implemented() -> Result<(), Box<dyn std::error::Error>> {
+        let provider = SafeAndroidProvider::new()?;
+        let err = provider
+            .verify_signature("kid", b"data", b"sig")
+            .expect_err("StrongBox placeholder");
+        assert!(
+            err.to_string().contains("Not yet implemented"),
+            "unexpected: {err}"
+        );
+        Ok(())
+    }
 }

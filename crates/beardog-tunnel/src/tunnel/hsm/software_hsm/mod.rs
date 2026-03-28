@@ -309,3 +309,141 @@ pub struct SoftwareHsmCapabilities {
     /// Whether keys are hardware-backed (always false for software HSM)
     pub hardware_backed: bool,
 }
+
+#[cfg(test)]
+mod module_public_api_tests {
+    use super::{
+        Algorithm, BUILD_INFO, CryptoBackend, FileConfig, KeySource, KeyStoreConfig, MemoryConfig,
+        SoftwareHsmCapabilities, SoftwareHsmConfig, VERSION, get_capabilities_summary,
+        validate_config,
+    };
+    use crate::tunnel::hsm::manager::implementation::HsmProvider;
+    use crate::tunnel::hsm::types::{KeyStorageType, KeyType, MemoryProtectionLevel};
+
+    fn key_store(cache_size: usize) -> KeyStoreConfig {
+        KeyStoreConfig {
+            storage_type: KeyStorageType::Memory,
+            encryption_key_source: KeySource::Derived,
+            backup_enabled: false,
+            cache_size,
+            file_config: None,
+            db_config: None,
+        }
+    }
+
+    fn sample_config(cache_size: usize, level: MemoryProtectionLevel) -> SoftwareHsmConfig {
+        SoftwareHsmConfig {
+            implementation: "unit".to_string(),
+            crypto_backend: CryptoBackend::Ring,
+            memory_protection: MemoryProtectionLevel::High,
+            enable_key_caching: true,
+            max_cached_keys: 64,
+            key_storage: key_store(cache_size),
+            memory_config: MemoryConfig {
+                protection_level: level,
+                secure_allocation: true,
+                clear_on_dealloc: true,
+                lock_memory: false,
+                guard_pages: false,
+            },
+            key_store_config: key_store(cache_size),
+            encryption_algorithm: Algorithm::Aes256Gcm,
+        }
+    }
+
+    #[test]
+    fn version_and_build_info_non_empty() {
+        assert!(!VERSION.is_empty());
+        assert!(BUILD_INFO.contains("Software HSM"));
+        assert!(BUILD_INFO.contains(env!("CARGO_PKG_VERSION")));
+    }
+
+    #[test]
+    fn validate_config_ok_when_cache_positive() {
+        let c = sample_config(10, MemoryProtectionLevel::High);
+        validate_config(&c).expect("valid config");
+    }
+
+    #[test]
+    fn validate_config_err_when_cache_zero() {
+        let c = sample_config(0, MemoryProtectionLevel::High);
+        let err = validate_config(&c).expect_err("cache 0");
+        assert!(err.to_string().contains("Cache size") || err.to_string().contains("cache"));
+    }
+
+    #[test]
+    fn validate_config_accepts_maximum_protection_level() {
+        let c = sample_config(8, MemoryProtectionLevel::Maximum);
+        validate_config(&c).expect("maximum level branch");
+    }
+
+    #[test]
+    fn get_capabilities_summary_covers_key_types_and_flags() {
+        let s = get_capabilities_summary();
+        assert!(s.supported_key_types.contains(&KeyType::Aes));
+        assert!(s.supports_key_generation);
+        assert!(!s.hardware_backed);
+        assert_eq!(s.max_key_size, 4096);
+    }
+
+    #[test]
+    fn algorithm_serde_roundtrip_all_variants() {
+        for a in [
+            Algorithm::Aes256Gcm,
+            Algorithm::ChaCha20Poly1305,
+            Algorithm::EccP256,
+            Algorithm::EccP384,
+            Algorithm::EcdsaSha256,
+            Algorithm::RsaSha256,
+            Algorithm::HkdfSha256,
+        ] {
+            let json = serde_json::to_string(&a).expect("serialize");
+            let back: Algorithm = serde_json::from_str(&json).expect("deserialize");
+            assert_eq!(format!("{a:?}"), format!("{back:?}"));
+        }
+    }
+
+    #[test]
+    fn software_hsm_capabilities_serde_roundtrip() {
+        let s = get_capabilities_summary();
+        let json = serde_json::to_string(&s).expect("cap ser");
+        let back: SoftwareHsmCapabilities = serde_json::from_str(&json).expect("cap de");
+        assert_eq!(back.max_key_size, s.max_key_size);
+        assert_eq!(back.supports_key_export, s.supports_key_export);
+    }
+
+    #[test]
+    fn file_config_debug_fields() {
+        let f = FileConfig {
+            base_path: "/var/keys".to_string(),
+            file_permissions: 0o600,
+            backup_path: Some("/backup".to_string()),
+        };
+        assert_eq!(f.file_permissions, 0o600);
+    }
+
+    #[test]
+    fn key_source_variants_cover_all() {
+        use super::KeySource as KS;
+        let _ = (KS::Derived, KS::Hardware, KS::External);
+    }
+
+    #[tokio::test]
+    async fn create_default_software_hsm_succeeds() {
+        let hsm = super::create_default_software_hsm()
+            .await
+            .expect("create_default_software_hsm");
+        let h = hsm.health_check().await.expect("health");
+        assert!(h.is_healthy);
+    }
+
+    #[tokio::test]
+    async fn create_file_and_database_aliases_match_default() {
+        let a = super::create_default_software_hsm().await.expect("default");
+        let b = super::create_file_software_hsm().await.expect("file");
+        let c = super::create_database_software_hsm().await.expect("db");
+        assert_eq!(a.health_check().await.unwrap().is_healthy, true);
+        assert_eq!(b.health_check().await.unwrap().is_healthy, true);
+        assert_eq!(c.health_check().await.unwrap().is_healthy, true);
+    }
+}
