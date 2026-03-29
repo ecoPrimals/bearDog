@@ -6,19 +6,19 @@
 //!
 //! # Methods
 //!
-//! - `encryption.encrypt` - ChaCha20-Poly1305 encryption (HSM-backed)
-//! - `encryption.decrypt` - ChaCha20-Poly1305 decryption (HSM-backed)
+//! - `encryption.encrypt` - ChaCha20-Poly1305 encryption (software KDF from key reference)
+//! - `encryption.decrypt` - ChaCha20-Poly1305 decryption (software KDF from key reference)
 //!
 //! # Architecture
 //!
 //! This handler provides generic AEAD (Authenticated Encryption with Associated Data)
-//! operations using ChaCha20-Poly1305. Keys are derived from HSM-backed key references
-//! using SHA-256 for sub-federation use cases.
+//! operations using ChaCha20-Poly1305. Session keys are derived from key reference
+//! strings using SHA-256 for sub-federation use cases.
 //!
 //! # Algorithm
 //!
 //! - **Cipher**: ChaCha20-Poly1305 (faster and safer than AES-GCM)
-//! - **Key Derivation**: SHA-256 from HSM key reference
+//! - **Key Derivation**: SHA-256 from key reference string
 //! - **Nonce**: 96-bit random nonce (generated per encryption)
 //! - **Tag**: 128-bit authentication tag (embedded in ciphertext)
 //!
@@ -73,7 +73,7 @@ impl MethodHandler for EncryptionHandler {
 }
 
 impl EncryptionHandler {
-    /// Generic encryption method - REAL HSM-backed implementation
+    /// Generic encryption method - software ChaCha20-Poly1305
     ///
     /// # Parameters
     /// - `data`: Base64-encoded plaintext
@@ -137,7 +137,7 @@ impl EncryptionHandler {
         let nonce_b64 = base64::engine::general_purpose::STANDARD.encode(nonce);
 
         info!(
-            "🔒 Encrypted {} bytes with key_ref={}, algorithm=ChaCha20-Poly1305 (HSM-backed)",
+            "🔒 Encrypted {} bytes with key_ref={}, algorithm=ChaCha20-Poly1305",
             plaintext.len(),
             key_ref
         );
@@ -163,7 +163,7 @@ impl EncryptionHandler {
         }))
     }
 
-    /// Generic decryption method - REAL HSM-backed implementation
+    /// Generic decryption method - software ChaCha20-Poly1305
     ///
     /// # Parameters
     /// - `encrypted_data` or `ciphertext`: Base64-encoded ciphertext
@@ -241,7 +241,7 @@ impl EncryptionHandler {
         let plaintext_b64 = base64::engine::general_purpose::STANDARD.encode(&plaintext);
 
         info!(
-            "🔓 Decrypted {} bytes with key_ref={} (HSM-backed)",
+            "🔓 Decrypted {} bytes with key_ref={}",
             ciphertext.len(),
             key_ref
         );

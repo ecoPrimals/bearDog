@@ -72,6 +72,7 @@ pub fn crypto_method_names() -> Vec<&'static str> {
         "crypto.kdf.tls12_prf",
         // Genetic crypto operations (Phase 5)
         "genetic.derive_lineage_key",
+        "genetic.derive_lineage_beacon_key",
         "genetic.mix_entropy",
         "genetic.verify_lineage",
         "genetic.generate_lineage_proof",

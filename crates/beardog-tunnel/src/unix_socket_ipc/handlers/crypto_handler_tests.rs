@@ -27,7 +27,7 @@ fn test_crypto_handler_methods() {
     //   - 10 beardog.crypto.* (Songbird Onion Service)
     //   - 2 Tor v3 Phase 1 (crypto.derive_onion_address semantic + beardog.crypto.* alias; generate_onion_identity)
     //   - 6 Tor Phase 2 (ntor_client_init, ntor_client_finish, ntor_server_respond, cell_encrypt, cell_decrypt, tor_kdf)
-    assert_eq!(methods.len(), 92);
+    assert_eq!(methods.len(), 93);
 
     // Verify all core crypto methods are present
     assert!(methods.contains(&"crypto.sign_ed25519"));

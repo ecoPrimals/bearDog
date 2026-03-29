@@ -81,13 +81,28 @@ pub async fn handle_derive_lineage_beacon_key(params: &Value) -> Result<Value, B
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
-    let lineage_seed = if lineage_seed_b64.is_empty() {
-        vec![0u8; 32]
-    } else {
-        BASE64.decode(lineage_seed_b64).map_err(|e| {
-            BearDogError::invalid_input(&format!("Invalid lineage_seed (not base64): {e}"))
-        })?
-    };
+    if lineage_seed_b64.is_empty() {
+        return Err(BearDogError::invalid_input(
+            "lineage_seed is required (empty seed would produce a predictable key)",
+        ));
+    }
+
+    let lineage_seed = BASE64.decode(lineage_seed_b64).map_err(|e| {
+        BearDogError::invalid_input(&format!("Invalid lineage_seed (not base64): {e}"))
+    })?;
+
+    if lineage_seed.len() < 16 {
+        return Err(BearDogError::invalid_input(&format!(
+            "lineage_seed too short: {} bytes (minimum 16)",
+            lineage_seed.len()
+        )));
+    }
+
+    if lineage_seed.iter().all(|&b| b == 0) {
+        return Err(BearDogError::invalid_input(
+            "lineage_seed is all zeros (would produce a predictable key)",
+        ));
+    }
 
     let domain = b"birdsong_beacon_v1";
     let mut okm = [0u8; 32];
@@ -480,18 +495,22 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_derive_lineage_beacon_key_empty_params() -> Result<(), Box<dyn std::error::Error>>
-    {
-        let result = handle_derive_lineage_beacon_key(&json!({})).await?;
-        assert!(result.get("beacon_key").is_some());
+    async fn test_derive_lineage_beacon_key_empty_params_rejected() {
+        let result = handle_derive_lineage_beacon_key(&json!({})).await;
+        assert!(result.is_err(), "Empty lineage_seed should be rejected");
+    }
 
-        let key_hex = result
-            .get("beacon_key")
-            .and_then(|v| v.as_str())
-            .expect("beacon_key hex in test");
-        let key_bytes = hex::decode(key_hex)?;
-        assert_eq!(key_bytes.len(), 32);
+    #[tokio::test]
+    async fn test_derive_lineage_beacon_key_zero_seed_rejected() {
+        let zero_seed = BASE64.encode([0u8; 32]);
+        let result = handle_derive_lineage_beacon_key(&json!({ "lineage_seed": zero_seed })).await;
+        assert!(result.is_err(), "All-zero lineage_seed should be rejected");
+    }
 
-        Ok(())
+    #[tokio::test]
+    async fn test_derive_lineage_beacon_key_short_seed_rejected() {
+        let short_seed = BASE64.encode([1u8; 8]);
+        let result = handle_derive_lineage_beacon_key(&json!({ "lineage_seed": short_seed })).await;
+        assert!(result.is_err(), "Short lineage_seed should be rejected");
     }
 }

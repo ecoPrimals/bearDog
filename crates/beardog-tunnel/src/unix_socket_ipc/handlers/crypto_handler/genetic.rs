@@ -194,13 +194,14 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn genetic_route_derive_lineage_beacon_key_empty_uses_default_seed() {
-        let out = route("genetic.derive_lineage_beacon_key", Some(&json!({})))
+    async fn genetic_route_derive_lineage_beacon_key_empty_seed_rejected() {
+        let err = route("genetic.derive_lineage_beacon_key", Some(&json!({})))
             .await
-            .expect("route")
-            .expect("some");
-        assert_eq!(out["domain"], "birdsong_beacon_v1");
-        assert_eq!(out["key_size_bytes"], 32);
+            .expect_err("empty seed should be rejected");
+        assert!(
+            err.contains("lineage_seed") || err.contains("required"),
+            "{err}"
+        );
     }
 
     #[tokio::test]

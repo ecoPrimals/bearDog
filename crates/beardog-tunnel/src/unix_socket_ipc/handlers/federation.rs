@@ -125,7 +125,7 @@ impl FederationHandler {
             "relationship": relationship,
             "trust_level": trust_level,
             "verified_at": Utc::now().to_rfc3339(),
-            "verification_method": "genetic_lineage_hkdf",
+            "verification_method": "family_id_equality",
             "our_family": our_family,
             "peer_family": peer_family_id,
             "peer_node": peer_node_id,
