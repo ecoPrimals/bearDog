@@ -42,9 +42,9 @@ impl Default for OpenSslCryptoProvider {
     }
 }
 
-/// RustCrypto Cryptographic Provider
+/// `RustCrypto` Cryptographic Provider
 ///
-/// Pure Rust cryptographic provider using RustCrypto libraries.
+/// Pure Rust cryptographic provider using `RustCrypto` libraries.
 /// No unchecked memory patterns, fully audited cryptographic primitives.
 ///
 /// # Features
@@ -56,7 +56,7 @@ impl Default for OpenSslCryptoProvider {
 pub struct RustCryptoProvider;
 
 impl RustCryptoProvider {
-    /// Creates a new RustCrypto provider
+    /// Creates a new `RustCrypto` provider
     #[must_use]
     pub const fn new() -> Self {
         Self

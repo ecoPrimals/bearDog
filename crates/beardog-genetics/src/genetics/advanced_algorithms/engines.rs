@@ -80,6 +80,10 @@ impl FitnessEvaluator {
     }
 
     /// Evaluate fitness
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future fitness rules.
     pub fn evaluate_fitness(&self, individual: &GeneticIndividual) -> Result<f64, BearDogError> {
         let base_fitness = individual.genetic_signature.quality_score;
         let performance_bonus = individual.performance_metrics.authorization_success_rate * 0.2;
@@ -124,6 +128,10 @@ impl MutationEngine {
     }
 
     /// Apply mutation
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future mutation failures.
     pub fn apply_mutation(
         &self,
         individual: &mut GeneticIndividual,
@@ -172,6 +180,10 @@ impl CrossoverEngine {
     }
 
     /// Perform crossover
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future crossover failures.
     pub fn crossover(
         &self,
         parent1: &GeneticIndividual,
@@ -232,6 +244,10 @@ impl SelectionEngine {
     }
 
     /// Select parents using tournament selection
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future selection failures.
     pub fn select_parents(
         &self,
         population: &[GeneticIndividual],
@@ -263,6 +279,10 @@ impl SelectionEngine {
     }
 
     /// Select survivors
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future selection failures.
     pub fn select_survivors(
         &self,
         population: &[GeneticIndividual],

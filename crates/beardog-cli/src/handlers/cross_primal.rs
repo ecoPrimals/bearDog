@@ -58,7 +58,7 @@ enum CrossPrimalAction {
         #[clap(long)]
         message: String,
 
-        /// Required capability (network, service_mesh, compute, storage)
+        /// Required capability (network, `service_mesh`, compute, storage)
         #[clap(long)]
         capability: String,
 
@@ -69,7 +69,7 @@ enum CrossPrimalAction {
 
     /// List discovered primals by capability
     DiscoverPrimals {
-        /// Capability to filter by (network, service_mesh, compute, storage, security)
+        /// Capability to filter by (network, `service_mesh`, compute, storage, security)
         #[clap(long)]
         capability: String,
     },

@@ -100,6 +100,10 @@ impl CertificateIssuer {
     }
 
     /// Issue a certificate for an adapter
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when classification, license checks, or certificate construction fails.
     pub async fn issue_certificate(
         &self,
         adapter_id: String,

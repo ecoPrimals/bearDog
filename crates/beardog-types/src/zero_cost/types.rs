@@ -93,7 +93,7 @@ pub use crate::canonical::providers_unified::traits::security_traits::KeyType as
 
 /// Zero-cost specific key types with fixed parameters
 ///
-/// For new code, use `CanonicalKeyType` from beardog_types::canonical.
+/// For new code, use `CanonicalKeyType` from `beardog_types::canonical`.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum KeyType {
     /// RSA 2048-bit key

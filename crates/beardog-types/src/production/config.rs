@@ -53,7 +53,7 @@ use serde::{Deserialize, Serialize};
 // TOP-LEVEL CONFIGURATION
 // ============================================================================
 
-/// Production-grade ecosystem configuration for BearDog
+/// Production-grade ecosystem configuration for `BearDog`
 ///
 /// This is the primary configuration struct for production deployments, providing
 /// comprehensive control over monitoring, observability, health checks, metrics,
@@ -141,7 +141,7 @@ pub struct ProductionConfig {
     pub optimization: optimization::OptimizationConfig,
     /// Health check configuration for readiness and liveness probes
     pub health: health::HealthConfig,
-    /// Metrics collection settings for Prometheus, StatsD, and custom exporters
+    /// Metrics collection settings for Prometheus, `StatsD`, and custom exporters
     pub metrics: metrics::MetricsConfig,
     /// Telemetry configuration for distributed tracing and APM integration
     pub telemetry: telemetry::TelemetryConfig,
@@ -159,13 +159,13 @@ pub struct ProductionConfig {
 ///
 /// # Fields
 ///
-/// - **environment_level**: Deployment environment (Dev, Staging, Production, Critical)
-/// - **service_name**: Unique service identifier within the ecosystem
-/// - **service_version**: Semantic version for deployment tracking
-/// - **deployment_id**: Unique deployment instance identifier
+/// - **`environment_level`**: Deployment environment (Dev, Staging, Production, Critical)
+/// - **`service_name`**: Unique service identifier within the ecosystem
+/// - **`service_version`**: Semantic version for deployment tracking
+/// - **`deployment_id`**: Unique deployment instance identifier
 /// - **region**: Cloud region or availability zone
-/// - **cluster_id**: Orchestration cluster identifier (K8s, ECS, etc.)
-/// - **node_id**: Node/host identifier (hostname or instance ID)
+/// - **`cluster_id`**: Orchestration cluster identifier (K8s, ECS, etc.)
+/// - **`node_id`**: Node/host identifier (hostname or instance ID)
 /// - **flags**: Feature flags for runtime capability control
 ///
 /// # Examples
@@ -264,13 +264,13 @@ impl ProductionCoreConfig {
 ///
 /// # Flag Descriptions
 ///
-/// - **advanced_monitoring**: Detailed metrics collection and alerting
-/// - **distributed_tracing**: Request flow visualization (OpenTelemetry, Jaeger)
-/// - **performance_profiling**: CPU/memory profiling and flame graphs (dev/staging only)
-/// - **security_auditing**: Comprehensive security event logging
-/// - **auto_scaling**: Horizontal scaling based on load metrics
-/// - **circuit_breakers**: Fault tolerance and cascading failure prevention
-/// - **rate_limiting**: Request throttling for abuse prevention
+/// - **`advanced_monitoring`**: Detailed metrics collection and alerting
+/// - **`distributed_tracing`**: Request flow visualization (OpenTelemetry, Jaeger)
+/// - **`performance_profiling`**: CPU/memory profiling and flame graphs (dev/staging only)
+/// - **`security_auditing`**: Comprehensive security event logging
+/// - **`auto_scaling`**: Horizontal scaling based on load metrics
+/// - **`circuit_breakers`**: Fault tolerance and cascading failure prevention
+/// - **`rate_limiting`**: Request throttling for abuse prevention
 /// - **caching**: Response caching for improved performance
 ///
 /// # Examples

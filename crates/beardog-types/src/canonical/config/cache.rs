@@ -172,7 +172,7 @@ pub struct CanonicalCacheConfig {
 
 /// **Cache Tier Configuration** - Tier-specific settings for multi-level caching
 ///
-/// BearDog supports 3 cache tiers with different performance characteristics:
+/// `BearDog` supports 3 cache tiers with different performance characteristics:
 ///
 /// - **L1**: Fast in-memory cache (CPU cache-friendly, entry-based)
 /// - **L2**: Compressed memory cache (memory-efficient, compressed storage)
@@ -446,7 +446,7 @@ impl CanonicalCacheConfig {
 
 /// Type alias for backward compatibility
 ///
-/// **Unified from**: Multiple CacheConfig definitions across the codebase
+/// **Unified from**: Multiple `CacheConfig` definitions across the codebase
 pub type CacheConfig = CanonicalCacheConfig;
 
 /// L1 Cache configuration type alias
@@ -493,7 +493,7 @@ pub type PerformanceCacheConfig = CanonicalCacheConfig;
 // MIGRATION GUIDE
 // ============================================================================
 
-/// **Migration Guide** for beardog-utils/caching/config::CacheConfig
+/// **Migration Guide** for `beardog-utils/caching/config::CacheConfig`
 ///
 /// ```rust,ignore
 /// // OLD: beardog-utils/caching/config

@@ -62,7 +62,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// - **Development**: Local development, verbose logs, relaxed validation
 /// - **Staging**: Production-like with debugging, full logging
-/// - **PreProduction**: Final validation before production, strict monitoring
+/// - **`PreProduction`**: Final validation before production, strict monitoring
 /// - **Production**: Optimized for performance and reliability
 /// - **Critical**: Maximum reliability, strictest validation, 24/7 monitoring
 ///

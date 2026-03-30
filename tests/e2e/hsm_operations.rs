@@ -201,7 +201,11 @@ mod tests {
             let caps = detect_hsm_capabilities(hsm).await;
             detected_capabilities.push(((*hsm).to_string(), caps));
         }
-        assert!(detected_capabilities.iter().any(|(_, caps)| !caps.is_empty()));
+        assert!(
+            detected_capabilities
+                .iter()
+                .any(|(_, caps)| !caps.is_empty())
+        );
 
         ctx.initialize_hsm("software").unwrap();
         assert_eq!(ctx.check_hsm_health("software"), "healthy");

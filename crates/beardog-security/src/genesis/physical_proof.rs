@@ -40,7 +40,7 @@ impl From<PhysicalProofError> for BearDogError {
 ///
 /// # Trust Levels
 ///
-/// - **Hardware Key** (SoloKey, YubiKey): ⭐⭐⭐⭐⭐ Maximum
+/// - **Hardware Key** (`SoloKey`, `YubiKey`): ⭐⭐⭐⭐⭐ Maximum
 /// - **QR Code + OOB**: ⭐⭐⭐⭐ High
 /// - **NFC Tap**: ⭐⭐⭐⭐ High
 /// - **Bluetooth**: ⭐⭐⭐ Medium
@@ -84,6 +84,11 @@ impl PhysicalProximityVerifier {
     /// # Returns
     ///
     /// Ok(TrustLevel) if channel is valid and meets requirements
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if trust level is below the configured minimum, genesis requirements are not
+    /// met, or channel attestation fails.
     pub fn verify(&self, channel: PhysicalChannelType) -> Result<TrustLevel, PhysicalProofError> {
         // 1. Get trust level for channel
         let trust_level = channel.trust_level();

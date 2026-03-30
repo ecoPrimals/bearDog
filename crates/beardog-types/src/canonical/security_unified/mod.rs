@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 /// Core functionality
 pub mod core;
 
-/// Unified security settings for BearDog components and services.
+/// Unified security settings for `BearDog` components and services.
 ///
 /// Ensures consistent security posture and compliance with organizational requirements.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

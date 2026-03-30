@@ -8,7 +8,7 @@
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-/// Workflow engine configuration for BearDog
+/// Workflow engine configuration for `BearDog`
 ///
 /// Controls the behavior of the workflow orchestration engine, including
 /// execution limits, timeout policies, and retry strategies.

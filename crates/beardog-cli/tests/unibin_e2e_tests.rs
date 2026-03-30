@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![allow(clippy::expect_used, clippy::unwrap_used, clippy::float_cmp)]
 
-//! E2E tests for UniBin commands
+//! E2E tests for `UniBin` commands
 
 use assert_cmd::Command;
 use predicates::prelude::*;

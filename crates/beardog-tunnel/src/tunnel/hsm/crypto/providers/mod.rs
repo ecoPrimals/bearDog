@@ -2,7 +2,7 @@
 
 //! Crypto Provider Implementations
 //!
-//! Concrete implementations of the UniversalCryptoProvider trait for various crypto libraries.
+//! Concrete implementations of the `UniversalCryptoProvider` trait for various crypto libraries.
 
 pub mod rustcrypto;
 

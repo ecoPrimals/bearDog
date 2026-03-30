@@ -149,6 +149,11 @@ impl GenesisWitnessVerifier {
     /// # Returns
     ///
     /// Ok(()) if witness is valid, Err otherwise
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the witness is not authorized, keys or signature are invalid, or the
+    /// signature is too old.
     pub fn verify(
         &self,
         witness: &GenesisWitness,
@@ -228,7 +233,7 @@ impl GenesisWitnessVerifier {
 
     /// Verify Ed25519 signature
     ///
-    /// Signs: BLAKE3(new_node_id || timestamp || witness_device_id)
+    /// Signs: `BLAKE3`(`new_node_id` || `timestamp` || `witness_device_id`)
     ///
     /// # Security
     ///

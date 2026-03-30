@@ -67,6 +67,10 @@ impl CertificateRenewal {
     /// Ok(true) if renewed successfully
     /// Ok(false) if renewal not needed or not allowed
     /// Err if renewal failed
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when re-issuance or certificate storage fails.
     pub async fn renew(
         &self,
         adapter_id: &str,

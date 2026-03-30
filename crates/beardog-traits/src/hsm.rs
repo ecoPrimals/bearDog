@@ -17,7 +17,7 @@ use beardog_types::hsm::{HsmCapabilitySet, HsmProviderType, KeyGenParams, KeyHan
 
 /// Object-safe HSM provider contract.
 ///
-/// Every HSM backend (software, StrongBox, Secure Enclave, PKCS#11, TPM)
+/// Every HSM backend (software, `StrongBox`, Secure Enclave, PKCS#11, TPM)
 /// implements this trait. The registry holds `Arc<dyn HsmKeyProvider>` and
 /// selects the best available backend at runtime.
 #[async_trait]

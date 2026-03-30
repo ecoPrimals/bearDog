@@ -3,7 +3,7 @@
 //! Threat Response Configuration
 //!
 //! This module provides automated threat response configuration
-//! for the BearDog security system.
+//! for the `BearDog` security system.
 
 use serde::{Deserialize, Serialize};
 

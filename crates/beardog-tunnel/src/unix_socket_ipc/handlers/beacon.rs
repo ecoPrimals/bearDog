@@ -39,7 +39,7 @@ pub struct BeaconManager {
     our_beacon: Arc<RwLock<Option<BeaconSeed>>>,
 
     /// Known beacon seeds (from meetings)
-    /// Key: BeaconId (hex), Value: BeaconSeed
+    /// Key: `BeaconId` (hex), Value: `BeaconSeed`
     known_beacons: Arc<RwLock<HashMap<String, BeaconSeed>>>,
 }
 
@@ -53,6 +53,9 @@ impl BeaconManager {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if beacon handling fails.
     /// Initialize with beacon seed (from env or derivation)
     pub async fn initialize(&self, beacon: BeaconSeed) -> Result<(), BearDogError> {
         let mut our_beacon = self.our_beacon.write().await;
@@ -77,6 +80,9 @@ impl BeaconManager {
         Ok(beacon)
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if encryption fails.
     /// Add known beacon from meeting
     pub async fn add_known_beacon(&self, beacon: BeaconSeed) -> Result<(), BearDogError> {
         let id_hex = beacon.id().to_hex();
@@ -93,6 +99,9 @@ impl Default for BeaconManager {
     }
 }
 
+/// # Errors
+///
+/// Returns an error if encryption fails.
 /// beacon.generate - Generate new beacon seed
 ///
 /// Returns the public beacon ID (safe to share).
@@ -113,7 +122,10 @@ pub async fn handle_beacon_generate(
     }))
 }
 
-/// beacon.get_id - Get our public beacon ID
+/// # Errors
+///
+/// Returns an error if decryption fails.
+/// `beacon.get_id` - Get our public beacon ID
 pub async fn handle_beacon_get_id(
     beacon_manager: &Arc<BeaconManager>,
     _params: Option<&Value>,
@@ -130,6 +142,9 @@ pub async fn handle_beacon_get_id(
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if decryption fails.
 /// beacon.encrypt - Encrypt data with our beacon seed
 ///
 /// # Request
@@ -176,7 +191,10 @@ pub async fn handle_beacon_encrypt(
     }))
 }
 
-/// beacon.try_decrypt - Try to decrypt with our beacon seed
+/// # Errors
+///
+/// Returns an error if decryption fails.
+/// `beacon.try_decrypt` - Try to decrypt with our beacon seed
 ///
 /// # Request
 /// ```json
@@ -254,7 +272,10 @@ pub async fn handle_beacon_try_decrypt(
     }
 }
 
-/// beacon.try_decrypt_any - Try to decrypt with any known beacon seed
+/// # Errors
+///
+/// Returns an error if decryption fails.
+/// `beacon.try_decrypt_any` - Try to decrypt with any known beacon seed
 ///
 /// Iterates through all known beacons (from meetings) and tries to decrypt.
 /// Returns the first successful decryption with the matching beacon ID.
@@ -340,7 +361,10 @@ pub async fn handle_beacon_try_decrypt_any(
     }))
 }
 
-/// beacon.list_known - List known beacon IDs (from meetings)
+/// # Errors
+///
+/// Returns an error if key derivation fails.
+/// `beacon.list_known` - List known beacon IDs (from meetings)
 pub async fn handle_beacon_list_known(
     beacon_manager: &Arc<BeaconManager>,
     _params: Option<&Value>,
@@ -357,7 +381,10 @@ pub async fn handle_beacon_list_known(
     }))
 }
 
-/// beacon.add_known - Add a known beacon (meeting exchange)
+/// # Errors
+///
+/// Returns an error if key derivation fails.
+/// `beacon.add_known` - Add a known beacon (meeting exchange)
 ///
 /// # Request
 /// ```json
@@ -413,7 +440,7 @@ use super::MethodHandler;
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
 
-/// BeaconHandler wraps BeaconManager for HandlerRegistry integration
+/// `BeaconHandler` wraps `BeaconManager` for `HandlerRegistry` integration
 ///
 /// This handler exposes Dark Forest beacon methods via JSON-RPC.
 pub struct BeaconHandler {

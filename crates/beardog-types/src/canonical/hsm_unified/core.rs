@@ -67,7 +67,7 @@ pub struct HsmCoreConfig {
 
 /// HSM Type - Hardware Security Module Backend Types
 ///
-/// Defines the various types of HSM backends supported by BearDog.
+/// Defines the various types of HSM backends supported by `BearDog`.
 /// Each type has different characteristics, performance profiles, and use cases.
 ///
 /// ## HSM Types
@@ -75,9 +75,9 @@ pub struct HsmCoreConfig {
 /// - **Software** - Software-based HSM (default, no hardware required)
 /// - **Hardware** - Dedicated HSM hardware (highest security)
 /// - **Network** - Network-attached HSM (shared across systems)
-/// - **Cloud** - Cloud-based HSM service (AWS CloudHSM, Azure Key Vault)
-/// - **UsbToken** - USB security token (YubiKey, etc.)
-/// - **SmartCard** - Smart card HSM
+/// - **Cloud** - Cloud-based HSM service (AWS `CloudHSM`, Azure Key Vault)
+/// - **`UsbToken`** - USB security token (`YubiKey`, etc.)
+/// - **`SmartCard`** - Smart card HSM
 /// - **Mobile** - Mobile device secure enclave
 /// - **Pkcs11** - PKCS#11 standard interface HSM
 ///

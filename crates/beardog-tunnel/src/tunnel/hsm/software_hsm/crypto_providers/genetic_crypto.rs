@@ -41,7 +41,7 @@ type HmacSha256 = Hmac<Sha256>;
 
 /// Genetic Crypto Provider - 100% Pure Rust implementation
 ///
-/// This provider uses only Pure Rust cryptography from the RustCrypto ecosystem,
+/// This provider uses only Pure Rust cryptography from the `RustCrypto` ecosystem,
 /// eliminating all FFI boundaries and C dependencies.
 ///
 /// # Performance
@@ -129,6 +129,9 @@ impl GeneticCryptoProvider {
         self.lineage_seed.is_some()
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails in the underlying HSM provider.
     /// Generate cryptographically secure random bytes
     ///
     /// Uses `OsRng` which provides platform-specific CSRNG:
@@ -420,7 +423,7 @@ impl GeneticCryptoProvider {
     /// 2. Our primal ID (self-knowledge)
     /// 3. Peer primal ID (discovered at runtime)
     /// 4. Context data (purpose, session ID, etc.)
-    /// 5. Hardware entropy (OsRng)
+    /// 5. Hardware entropy (`OsRng`)
     ///
     /// # Arguments
     ///
@@ -498,6 +501,9 @@ impl GeneticCryptoProvider {
         Ok(derived_key.as_bytes().to_vec())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// **Phase 5**: Mix entropy from multiple tiers
     ///
     /// Three-tier entropy hierarchy:
@@ -509,7 +515,7 @@ impl GeneticCryptoProvider {
     ///
     /// * `tier3_human` - Optional Tier 3 human entropy
     /// * `tier2_supervised` - Optional Tier 2 supervised entropy
-    /// * `tier1_machine` - Tier 1 machine entropy (always present via OsRng)
+    /// * `tier1_machine` - Tier 1 machine entropy (always present via `OsRng`)
     ///
     /// # Returns
     ///
@@ -611,6 +617,9 @@ impl GeneticCryptoProvider {
         Ok((mixed.as_bytes().to_vec(), final_quality))
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// **Phase 5**: Verify genetic lineage relationship
     ///
     /// Check if two family IDs share a common genetic ancestor.

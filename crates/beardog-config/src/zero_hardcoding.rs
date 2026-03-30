@@ -5,7 +5,7 @@
 //! Modern, idiomatic Rust configuration system that eliminates ALL hardcoding:
 //! - Ports (8080, 9000, etc.) → Environment or Port 0 (OS auto-select)
 //! - IPs (localhost, 127.0.0.1) → Environment or runtime discovery
-//! - Timeouts (Duration::from_secs) → Environment-driven with smart defaults
+//! - Timeouts (`Duration::from_secs`) → Environment-driven with smart defaults
 //!
 //! ## Philosophy
 //!

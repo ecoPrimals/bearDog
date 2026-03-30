@@ -7,11 +7,11 @@
 //! - Cell encryption/decryption
 //! - Tor-specific KDF operations
 //!
-//! **Architecture**: BearDog provides crypto primitives, Songbird implements protocol
+//! **Architecture**: `BearDog` provides crypto primitives, Songbird implements protocol
 //!
 //! **Reference**: <https://spec.torproject.org/tor-spec>
 //!
-//! Pure Rust implementation using RustCrypto (zero C dependencies).
+//! Pure Rust implementation using `RustCrypto` (zero C dependencies).
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
@@ -28,7 +28,7 @@ use x25519_dalek::{EphemeralSecret, PublicKey, StaticSecret};
 /// Protocol identifier for ntor
 const NTOR_PROTOID: &[u8] = b"ntor-curve25519-sha256-1";
 
-/// Key derivation tweak for KEY_SEED extraction
+/// Key derivation tweak for `KEY_SEED` extraction
 const NTOR_T_KEY: &[u8] = b"ntor-curve25519-sha256-1:key_extract";
 
 /// Key derivation tweak for verification MAC
@@ -47,6 +47,9 @@ const NTOR_SERVER: &[u8] = b"Server";
 // NTOR HANDSHAKE - CLIENT SIDE
 // ============================================================================
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Handle `beardog.crypto.tor_ntor_client_init` - Initialize client-side ntor
 ///
 /// Generates ephemeral X25519 keypair and prepares handshake state.
@@ -131,6 +134,9 @@ pub async fn handle_tor_ntor_client_init(params: Option<&Value>) -> Result<Value
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if decryption fails.
 /// Handle `beardog.crypto.tor_ntor_client_finish` - Complete client-side ntor
 ///
 /// Verifies server response and derives circuit keys.
@@ -284,6 +290,9 @@ pub async fn handle_tor_ntor_client_finish(params: Option<&Value>) -> Result<Val
 // NTOR HANDSHAKE - SERVER SIDE
 // ============================================================================
 
+/// # Errors
+///
+/// Returns an error if the Tor-related operation fails.
 /// Handle `beardog.crypto.tor_ntor_server_respond` - Server-side ntor response
 ///
 /// For hidden service rendezvous points.
@@ -443,9 +452,12 @@ pub async fn handle_tor_ntor_server_respond(params: Option<&Value>) -> Result<Va
 // CELL ENCRYPTION (ChaCha20 counter mode)
 // ============================================================================
 
+/// # Errors
+///
+/// Returns an error if decryption fails.
 /// Handle `beardog.crypto.tor_cell_encrypt` - Encrypt Tor relay cell
 ///
-/// Uses ChaCha20 in counter mode (NOT AEAD - cells are authenticated by digest).
+/// Uses `ChaCha20` in counter mode (NOT AEAD - cells are authenticated by digest).
 ///
 /// **Input**:
 /// ```json
@@ -509,9 +521,12 @@ pub async fn handle_tor_cell_encrypt(params: Option<&Value>) -> Result<Value, Be
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if decryption fails.
 /// Handle `beardog.crypto.tor_cell_decrypt` - Decrypt Tor relay cell
 ///
-/// Same as encrypt (ChaCha20 is symmetric).
+/// Same as encrypt (`ChaCha20` is symmetric).
 pub async fn handle_tor_cell_decrypt(params: Option<&Value>) -> Result<Value, BearDogError> {
     let params = params.ok_or_else(|| BearDogError::invalid_input("Missing parameters"))?;
 
@@ -562,6 +577,9 @@ pub async fn handle_tor_cell_decrypt(params: Option<&Value>) -> Result<Value, Be
 // TOR KDF
 // ============================================================================
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 /// Handle `beardog.crypto.tor_kdf` - Tor-specific key derivation
 ///
 /// Expands a key seed into multiple derived keys using HKDF-SHA256.
@@ -641,13 +659,13 @@ struct CircuitKeys {
     df: [u8; 20],
     /// Backward digest key (Db) - 20 bytes
     db: [u8; 20],
-    /// Forward encryption key (Kf) - 16 bytes for AES-128 or 32 for ChaCha20
+    /// Forward encryption key (Kf) - 16 bytes for AES-128 or 32 for `ChaCha20`
     kf: [u8; 16],
-    /// Backward encryption key (Kb) - 16 bytes for AES-128 or 32 for ChaCha20
+    /// Backward encryption key (Kb) - 16 bytes for AES-128 or 32 for `ChaCha20`
     kb: [u8; 16],
 }
 
-/// Derive circuit keys from KEY_SEED using HKDF
+/// Derive circuit keys from `KEY_SEED` using HKDF
 ///
 /// Returns an error if HKDF expansion produces unexpected output length.
 fn derive_circuit_keys(key_seed: &[u8]) -> Result<CircuitKeys, BearDogError> {
@@ -710,7 +728,7 @@ fn hkdf_expand(prk: &[u8], info: &[u8], length: usize) -> Result<Vec<u8>, BearDo
     Ok(output)
 }
 
-/// ChaCha20 counter mode (for cell encryption)
+/// `ChaCha20` counter mode (for cell encryption)
 ///
 /// Returns an error if `key` is not exactly 32 bytes.
 fn chacha20_counter_mode(key: &[u8], counter: u64, data: &mut [u8]) -> Result<(), BearDogError> {
@@ -734,7 +752,7 @@ fn chacha20_counter_mode(key: &[u8], counter: u64, data: &mut [u8]) -> Result<()
     Ok(())
 }
 
-/// Fixed state encryption key (for protecting client_state)
+/// Fixed state encryption key (for protecting `client_state`)
 ///
 /// NOTE: In a production system, this would be derived from a session key
 /// or use proper AEAD. For the ntor handshake, the client state only needs

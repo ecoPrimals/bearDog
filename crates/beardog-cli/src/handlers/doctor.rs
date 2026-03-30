@@ -30,6 +30,11 @@ fn discover_socket_path() -> String {
 }
 
 /// Handle doctor command - health diagnostics
+///
+/// # Errors
+///
+/// Returns an error if JSON output serialization fails, or if any health check fails when
+/// diagnostics require a fully healthy system.
 pub async fn handle_doctor(args: DoctorArgs) -> Result<(), BearDogError> {
     info!("🩺 BearDog Doctor - Health Diagnostics");
     info!("");

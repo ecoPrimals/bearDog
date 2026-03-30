@@ -11,7 +11,7 @@ use std::env::VarError;
 /// Capability metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityMetadata {
-    /// Unique capability identifier (e.g., "secure_tunnel", "lineage_signing")
+    /// Unique capability identifier (e.g., "`secure_tunnel`", "`lineage_signing`")
     pub id: String,
 
     /// Capability version (semantic versioning)
@@ -111,7 +111,7 @@ pub struct PrimalInfo {
     /// Unique primal instance identifier (UUID)
     pub id: String,
 
-    /// Primal type (e.g., "cryptographic_services", "storage", "compute")
+    /// Primal type (e.g., "`cryptographic_services`", "storage", "compute")
     pub primal_type: String,
 
     /// Self-description

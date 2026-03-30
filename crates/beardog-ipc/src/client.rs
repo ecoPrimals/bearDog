@@ -43,6 +43,10 @@ impl OrchestratorRegistryClient {
     }
 
     /// Connect to the IPC registry (validates socket exists)
+    ///
+    /// # Errors
+    ///
+    /// Returns [`IpcError::Connection`] when the Unix socket cannot be opened.
     pub async fn connect() -> IpcResult<Self> {
         let socket_path = resolve_ipc_socket_from_options(&IpcSocketDiscoveryOptions::from_env());
         let client = Self {
@@ -80,6 +84,10 @@ impl OrchestratorRegistryClient {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns [`IpcError`] when the JSON-RPC call fails or registration is rejected.
     pub async fn register(
         &self,
         primal_name: &str,
@@ -146,6 +154,10 @@ impl OrchestratorRegistryClient {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns [`IpcError::Protocol`] when the response is invalid or reports an RPC error.
     pub async fn find_capability(&self, capability: &str) -> IpcResult<Vec<ServiceInfo>> {
         debug!(capability, "Finding services by capability");
 
@@ -187,6 +199,10 @@ impl OrchestratorRegistryClient {
     }
 
     /// Resolve a specific primal by name
+    ///
+    /// # Errors
+    ///
+    /// Returns [`IpcError::Protocol`] when resolution fails or the payload cannot be parsed.
     pub async fn resolve(&self, primal_name: &str) -> IpcResult<ServiceInfo> {
         debug!(primal_name, "Resolving primal");
 
@@ -212,6 +228,10 @@ impl OrchestratorRegistryClient {
     }
 
     /// Send heartbeat to maintain registration
+    ///
+    /// # Errors
+    ///
+    /// Returns [`IpcError::Protocol`] when not registered or the heartbeat RPC fails.
     pub async fn heartbeat(&self) -> IpcResult<()> {
         let primal_name = self.primal_name.read().await;
         let name = primal_name

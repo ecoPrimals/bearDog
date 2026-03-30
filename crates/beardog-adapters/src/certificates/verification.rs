@@ -19,7 +19,7 @@ pub const LICENSE_PRICING_URL: &str = match option_env!("BEARDOG_LICENSE_PRICING
 
 /// Verifies adapter unlock certificates
 pub struct CertificateVerifier {
-    /// BearDog public key for verification
+    /// `BearDog` public key for verification
     verifying_key: VerifyingKey,
 }
 
@@ -30,6 +30,11 @@ impl CertificateVerifier {
     }
 
     /// Verify a certificate is valid
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VerificationError`] when the certificate is expired, the signature is invalid, or
+    /// license requirements are not met.
     pub fn verify(&self, cert: &AdapterUnlockCertificate) -> Result<(), VerificationError> {
         // 1. Check expiry
         if cert.is_expired() {
@@ -124,6 +129,10 @@ impl CertificateVerifier {
     }
 
     /// Verify certificate allows a specific operation
+    ///
+    /// # Errors
+    ///
+    /// Returns [`VerificationError`] from [`Self::verify`] or when the operation is outside scope.
     pub fn verify_operation(
         &self,
         cert: &AdapterUnlockCertificate,

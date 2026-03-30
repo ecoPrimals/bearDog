@@ -3,11 +3,11 @@
 //! Internal helpers for graph security operations
 //!
 //! This module provides internal helper functions that use the module-level
-//! CollaborationService for runtime capability discovery.
+//! `CollaborationService` for runtime capability discovery.
 //!
 //! # Architecture
 //!
-//! Uses a module-level static CollaborationService (initialized once on first use)
+//! Uses a module-level static `CollaborationService` (initialized once on first use)
 //! to discover collaboration capabilities at runtime. This follows the TRUE PRIMAL
 //! principle: "Primals only have self-knowledge and discover others at runtime."
 //!
@@ -22,7 +22,7 @@ use beardog_errors::BearDogError;
 use std::sync::{Arc, LazyLock};
 use tracing::{debug, info};
 
-/// Module-level CollaborationService (initialized once on first use)
+/// Module-level `CollaborationService` (initialized once on first use)
 ///
 /// This static service is shared across all graph security operations for
 /// efficient runtime capability discovery.
@@ -39,9 +39,12 @@ pub fn collaboration_service() -> Arc<CollaborationService> {
     COLLABORATION.clone()
 }
 
+/// # Errors
+///
+/// Returns an error if the Tor-related operation fails.
 /// Get creator info via collaboration capability
 ///
-/// Discovers any primal with Collaboration::TemplateStorage capability
+/// Discovers any primal with `Collaboration::TemplateStorage` capability
 /// and retrieves template creator information.
 ///
 /// # Arguments
@@ -58,9 +61,12 @@ pub async fn get_creator_info(
     collab.get_template_info(template_id).await
 }
 
+/// # Errors
+///
+/// Returns an error if genetic or lineage processing fails.
 /// Get lineage via collaboration capability
 ///
-/// Discovers any primal with Collaboration::LineageTracking capability
+/// Discovers any primal with `Collaboration::LineageTracking` capability
 /// and retrieves template lineage history.
 ///
 /// # Arguments
@@ -77,9 +83,12 @@ pub async fn get_lineage(
     collab.get_lineage(template_id).await
 }
 
+/// # Errors
+///
+/// Returns an error if the Tor-related operation fails.
 /// Get community usage via collaboration capability
 ///
-/// Discovers any primal with Collaboration::CommunityMetrics capability
+/// Discovers any primal with `Collaboration::CommunityMetrics` capability
 /// and retrieves community usage metrics.
 ///
 /// # Arguments
@@ -96,9 +105,12 @@ pub async fn get_community_metrics(
     collab.get_community_metrics(template_id).await
 }
 
+/// # Errors
+///
+/// Returns an error if the Tor-related operation fails.
 /// Get user permissions via collaboration capability
 ///
-/// Discovers any primal with Collaboration::PermissionManagement capability
+/// Discovers any primal with `Collaboration::PermissionManagement` capability
 /// and retrieves user permissions for a resource.
 ///
 /// # Arguments

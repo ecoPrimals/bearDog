@@ -35,7 +35,7 @@
 //!
 //! ## Example
 //!
-//! BearDog utilities provide safe, high-performance operations
+//! `BearDog` utilities provide safe, high-performance operations
 //! for cryptography, SIMD, zero-copy, and more.
 //!
 //! See module documentation for specific usage examples.

@@ -15,23 +15,39 @@ pub struct EcosystemMonitor {
 
 impl EcosystemMonitor {
     /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future validation.
     pub const fn new(config: EcosystemConfig) -> Result<Self, BearDogError> {
         Ok(Self { _config: config })
     }
 
     /// Starts service
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future startup failures.
     pub fn start(&self) -> Result<(), BearDogError> {
         tracing::info!("Ecosystem monitor started");
         Ok(())
     }
 
     /// Records an ecosystem-scoped metric event (routing hook for future logic).
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future processing failures.
     pub const fn record_event(&self, _event: &super::MetricEvent) -> Result<(), BearDogError> {
         // Ecosystem event processing logic
         Ok(())
     }
 
     /// Gets metrics
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future collection failures.
     pub fn get_metrics(&self) -> Result<EcosystemMetrics, BearDogError> {
         Ok(EcosystemMetrics {
             active_connections: 150,

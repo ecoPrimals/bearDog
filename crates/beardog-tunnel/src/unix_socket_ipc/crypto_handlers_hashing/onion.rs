@@ -9,6 +9,9 @@ use serde_json::{Value, json};
 use sha2::Digest;
 use sha3::Sha3_256;
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 /// Handle `beardog.crypto.derive_onion_address` - Tor v3 onion address derivation
 pub fn handle_derive_onion_address(params: &Value) -> Result<Value, BearDogError> {
     let pubkey_b64 = params
@@ -55,6 +58,9 @@ pub fn handle_derive_onion_address(params: &Value) -> Result<Value, BearDogError
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if key derivation fails.
 /// Handle `beardog.crypto.generate_onion_identity` - Generate Tor v3 onion identity
 pub async fn handle_generate_onion_identity(params: Option<&Value>) -> Result<Value, String> {
     use ed25519_dalek::SigningKey;

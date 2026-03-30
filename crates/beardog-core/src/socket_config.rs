@@ -299,6 +299,11 @@ impl SocketConfig {
     /// 2. Old socket file is removed (prevents "address already in use")
     ///
     /// Call this before binding to the socket.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` with a message when the parent directory cannot be created or the stale socket
+    /// file cannot be removed.
     pub fn prepare(&self) -> Result<(), String> {
         // Ensure parent directory exists
         if let Some(parent) = self.socket_path.parent()

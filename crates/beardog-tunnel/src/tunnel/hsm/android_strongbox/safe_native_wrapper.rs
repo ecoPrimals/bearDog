@@ -73,6 +73,9 @@ impl SafeAndroidStrongBoxWrapper {
             == "true"
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails in the underlying HSM provider.
     /// Initialize native Android handles safely
     /// Initializes componentialize_native_handles
     pub fn initialize_native_handles(&mut self) -> Result<(), BearDogError> {
@@ -86,6 +89,9 @@ impl SafeAndroidStrongBoxWrapper {
         Ok(())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails in the underlying HSM provider.
     /// Generate hardware-backed key safely
     pub fn safe_generate_key(
         &mut self,
@@ -116,6 +122,9 @@ impl SafeAndroidStrongBoxWrapper {
         Ok(generated_key_id)
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if signing fails in the underlying HSM provider.
     pub fn safe_sign(&mut self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         info!("🔏 Safe signing for key: {}", key_id);
 
@@ -142,6 +151,9 @@ impl SafeAndroidStrongBoxWrapper {
         Ok(signature)
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if verification fails in the underlying HSM provider.
     /// Verify signature safely
     pub fn safe_verify(
         &self,

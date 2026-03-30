@@ -8,6 +8,15 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "compile-time assert guarantees value fits u32"
+)]
+const SECONDS_PER_HOUR_U32: u32 = {
+    assert!(time::SECONDS_PER_HOUR <= u32::MAX as u64);
+    time::SECONDS_PER_HOUR as u32
+};
+
 /// Snapshot of the handset capabilities relevant to hardware-backed keys.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AndroidDeviceInfo {
@@ -51,7 +60,7 @@ impl Default for AndroidDeviceInfo {
     }
 }
 
-/// Play Integrity / SafetyNet style verdict flags used when gating key creation.
+/// Play Integrity / `SafetyNet` style verdict flags used when gating key creation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeviceIntegrity {
     /// Basic integrity verdict
@@ -127,7 +136,7 @@ pub struct StrongBoxConfig {
     /// `StrongBox` available
     /// Whether available is enabled
     pub available: bool,
-    /// When true, high-value keys must be created in StrongBox if present. **Default:** `false`.
+    /// When true, high-value keys must be created in `StrongBox` if present. **Default:** `false`.
     pub required_for_sensitive: bool,
     /// Supported key types in `StrongBox`
     /// Collection of supported key types
@@ -285,7 +294,7 @@ impl Default for AndroidHsmSession {
             device_info: AndroidDeviceInfo::default(),
             created_at: Utc::now(),
             last_access: Utc::now(),
-            timeout_seconds: time::SECONDS_PER_HOUR as u32, // 1 hour
+            timeout_seconds: SECONDS_PER_HOUR_U32, // 1 hour
             active_keys: Vec::new(),
             metadata: HashMap::new(),
         }
@@ -377,7 +386,8 @@ impl Default for PerformanceSettings {
     fn default() -> Self {
         Self {
             max_concurrent_operations: 10,
-            operation_timeout_ms: defaults::DEFAULT_MAX_RESPONSE_TIME_MS as u32, // 5 seconds
+            operation_timeout_ms: u32::try_from(defaults::DEFAULT_MAX_RESPONSE_TIME_MS)
+                .unwrap_or(u32::MAX), // 5 seconds
             key_cache_size: 100,
             connection_pool_size: 5,
             enable_batching: true,
@@ -396,6 +406,10 @@ impl AndroidHsmConfig {
 
     /// Validate the Android HSM configuration
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if API level, integrity, verified boot, or manufacturer constraints are not met.
     pub fn validate(&self) -> Result<(), String> {
         // Validate API level
         if self.device_info.api_level < self.security_requirements.min_api_level {

@@ -36,8 +36,8 @@ use crate::hsm::fido2::{
 
 /// Universal HSM entropy orchestrator
 ///
-/// Connects all available hardware security modules (FIDO2, Android StrongBox,
-/// iOS Secure Enclave) to BearDog's entropy hierarchy system.
+/// Connects all available hardware security modules (FIDO2, Android `StrongBox`,
+/// iOS Secure Enclave) to `BearDog`'s entropy hierarchy system.
 pub struct HsmEntropyOrchestrator {
     /// Available FIDO2 providers
     #[cfg(feature = "fido2")]
@@ -83,13 +83,21 @@ impl HsmEntropyOrchestrator {
     ///
     /// This method will:
     /// 1. Discover FIDO2 devices (if feature enabled)
-    /// 2. Check for Android StrongBox (if on Android)
+    /// 2. Check for Android `StrongBox` (if on Android)
     /// 3. Check for iOS Secure Enclave (if on iOS)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if orchestrator initialization fails.
     pub async fn new() -> Result<Self, BearDogError> {
         Self::new_with_config(OrchestratorConfig::default()).await
     }
 
     /// Initialize with custom configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if orchestrator initialization fails.
     pub async fn new_with_config(config: OrchestratorConfig) -> Result<Self, BearDogError> {
         info!("🌐 Initializing Universal HSM Entropy Orchestrator");
 
@@ -237,6 +245,10 @@ impl HsmEntropyOrchestrator {
     /// # Returns
     ///
     /// Seed ID in the entropy hierarchy system
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if no suitable HSM is available, entropy generation fails, or mixing fails.
     pub async fn generate_human_entropy(
         &mut self,
         length: usize,
@@ -256,6 +268,10 @@ impl HsmEntropyOrchestrator {
     ///
     /// Advanced API that provides detailed control over entropy generation
     /// and returns comprehensive result information.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if no suitable HSM is available, entropy generation fails, or mixing fails.
     pub async fn generate_entropy(
         &mut self,
         request: EntropyGenerationRequest,

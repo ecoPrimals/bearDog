@@ -34,6 +34,10 @@ impl Announcer {
     }
 
     /// Start announcing this primal's capabilities
+    ///
+    /// # Errors
+    ///
+    /// Returns [`crate::error::Error`] when announcement transport setup fails.
     pub async fn start(&self) -> Result<()> {
         if !self.config.enabled {
             debug!("Announcement disabled");

@@ -153,6 +153,10 @@ impl BenchmarkSuite {
     }
 
     /// Runs warmup then timed iterations, records latencies, and stores a [`BenchmarkResult`].
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok`; the `Result` is reserved for future benchmark harness failures.
     pub fn benchmark<F, R>(&mut self, name: &str, mut benchmark_fn: F) -> Result<(), BearDogError>
     where
         F: FnMut() -> R,
@@ -277,6 +281,10 @@ impl BenchmarkSuite {
     }
 
     /// Same as [`Self::benchmark`] but returns observed operations per second.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if [`Self::benchmark`] fails.
     pub fn benchmark_throughput<F, R>(
         &mut self,
         name: &str,
@@ -291,6 +299,10 @@ impl BenchmarkSuite {
     }
 
     /// Same as [`Self::benchmark`] but returns mean iteration latency.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if [`Self::benchmark`] fails.
     pub fn benchmark_latency<F, R>(
         &mut self,
         name: &str,

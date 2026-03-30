@@ -28,6 +28,10 @@ pub struct DiscoveryConfig {
 
 impl DiscoveryConfig {
     /// Load configuration from TOML file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the file cannot be read or TOML parsing fails.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let content = std::fs::read_to_string(path)?;
         let config: Self = toml::from_str(&content)?;
@@ -209,13 +213,13 @@ pub struct ServiceSelectionConfig {
 /// Serialized form of [`crate::types::QoSWeights`] for TOML configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QoSWeightsConfig {
-    /// Weight for latency in QoS scoring.
+    /// Weight for latency in `QoS` scoring.
     pub latency: f64,
-    /// Weight for throughput in QoS scoring.
+    /// Weight for throughput in `QoS` scoring.
     pub throughput: f64,
-    /// Weight for availability in QoS scoring.
+    /// Weight for availability in `QoS` scoring.
     pub availability: f64,
-    /// Weight for reliability in QoS scoring.
+    /// Weight for reliability in `QoS` scoring.
     pub reliability: f64,
 }
 

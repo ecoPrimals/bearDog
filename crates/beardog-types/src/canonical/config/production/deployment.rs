@@ -79,14 +79,14 @@ impl RolloutConfig {
     /// Default rollout percentage (100%)
     pub const DEFAULT_PERCENTAGE: f64 = 100.0;
 
-    /// Create RolloutConfig with hardcoded defaults
+    /// Create `RolloutConfig` with hardcoded defaults
     pub const fn with_defaults() -> Self {
         Self {
             percentage: Self::DEFAULT_PERCENTAGE,
         }
     }
 
-    /// Create RolloutConfig from environment variables
+    /// Create `RolloutConfig` from environment variables
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -105,14 +105,14 @@ impl CanaryConfig {
     /// Default canary percentage (10%)
     pub const DEFAULT_PERCENTAGE: f64 = 10.0;
 
-    /// Create CanaryConfig with hardcoded defaults
+    /// Create `CanaryConfig` with hardcoded defaults
     pub const fn with_defaults() -> Self {
         Self {
             percentage: Self::DEFAULT_PERCENTAGE,
         }
     }
 
-    /// Create CanaryConfig from environment variables
+    /// Create `CanaryConfig` from environment variables
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -154,6 +154,10 @@ impl Default for CanaryConfig {
 impl DeploymentConfig {
     /// Validate
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Never returns an error; reserved for future validation rules.
     pub const fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Server Mode - Primary BearDog operational mode
+//! Server Mode - Primary `BearDog` operational mode
 //!
 //! Modern async/concurrent Rust architecture with clean error handling.
 
@@ -56,13 +56,18 @@ impl NeuralRegistrationParams {
     }
 }
 
-/// Run BearDog in server mode
+/// Run `BearDog` in server mode
 ///
 /// Modern async architecture with:
 /// - Clean separation of concerns
 /// - Structured error handling
 /// - Graceful shutdown
 /// - Lock-free concurrency
+///
+/// # Errors
+///
+/// Returns an error if self-knowledge discovery, HSM initialization, BTSP setup, socket binding,
+/// or server startup fails.
 pub async fn run(
     socket: Option<String>,
     daemon: bool,
@@ -258,7 +263,7 @@ pub async fn run(
     Ok(())
 }
 
-/// Register BearDog with a runtime-discovered discovery/registry endpoint
+/// Register `BearDog` with a runtime-discovered discovery/registry endpoint
 ///
 /// 1. **Primary**: Neural API (`capability.call` semantics via `neural_registration`).
 /// 2. **Fallback**: Legacy JSON-RPC registry client (`OrchestratorRegistryClient`) for deployments
@@ -267,7 +272,7 @@ pub async fn run(
 /// # Returns
 ///
 /// Ok(()) if registered successfully with any service, Err if all methods fail.
-/// Non-fatal - BearDog can operate standalone without discovery.
+/// Non-fatal - `BearDog` can operate standalone without discovery.
 async fn register_with_discovery_service(
     socket_config: &SocketConfig,
     neural_registration: &NeuralRegistrationParams,

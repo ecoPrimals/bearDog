@@ -3,7 +3,7 @@
 //! Advanced Security Features Configuration
 //!
 //! This module provides genetic security, ecosystem membership, and trust computation
-//! configuration structures for the BearDog security system.
+//! configuration structures for the `BearDog` security system.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

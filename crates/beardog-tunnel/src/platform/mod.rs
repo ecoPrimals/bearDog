@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Platform-specific socket implementations for BearDog
+//! Platform-specific socket implementations for `BearDog`
 //!
 //! This module provides platform-agnostic IPC through compile-time platform detection.
 //! Each platform uses its native, optimal socket mechanism:
@@ -9,7 +9,7 @@
 //! - **Linux/macOS**: Filesystem Unix sockets (`/run/user/UID/biomeos/beardog.sock`)
 //! - **Windows**: Named pipes (`\\.\pipe\biomeos_beardog`)
 //! - **iOS**: XPC services (documented, awaiting Pure Rust bindings)
-//! - **WASM**: In-process channels (BroadcastChannel)
+//! - **WASM**: In-process channels (`BroadcastChannel`)
 //!
 //! ## TRUE ecoBin v2.0 Compliance
 //!
@@ -224,12 +224,12 @@ pub fn default_socket_path() -> String {
 /// All platforms provide async read/write through this unified interface.
 pub trait PlatformStream: AsyncRead + AsyncWrite + Send + Sync + Unpin {}
 
-/// Universal platform listener trait (replaces UnixListener)
+/// Universal platform listener trait (replaces `UnixListener`)
 ///
 /// **Modern Idiomatic Rust**: This trait abstracts over platform-specific listener types:
 /// - `tokio::net::UnixListener` (Unix, Android, macOS)
 /// - `tokio::net::windows::named_pipe::ServerOptions` (Windows)  
-/// - Custom BroadcastChannel listener (WASM)
+/// - Custom `BroadcastChannel` listener (WASM)
 ///
 /// **Philosophy**: "1 unified codebase" - same API works everywhere!
 #[async_trait::async_trait]
@@ -238,6 +238,10 @@ pub trait PlatformListener: Send + Sync {
     ///
     /// Returns a boxed stream that can be used for bidirectional communication.
     /// Platform-specific implementations provide their native stream type.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if accepting the next connection fails.
     async fn accept(&mut self) -> std::io::Result<Box<dyn PlatformStream>>;
 
     /// Get the local address/identifier of this listener
@@ -247,6 +251,10 @@ pub trait PlatformListener: Send + Sync {
     /// - Android: Abstract socket name
     /// - Windows: Named pipe path
     /// - WASM: Channel identifier
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the local address cannot be read from the listener.
     fn local_addr(&self) -> std::io::Result<String>;
 }
 
@@ -265,6 +273,10 @@ pub trait PlatformSocket {
     ///
     /// # Returns
     /// Platform-specific socket endpoint
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the endpoint path or configuration cannot be created.
     fn create_endpoint(primal_name: &str) -> std::io::Result<SocketEndpoint>;
 
     /// Bind listener to endpoint (EVOLVED: Now universal!)
@@ -288,6 +300,10 @@ pub trait PlatformSocket {
     /// // Works on Unix, Windows, Android, iOS, WASM!
     /// let stream = listener.accept().await?;
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the listener cannot be bound to the endpoint.
     fn bind(endpoint: &SocketEndpoint) -> std::io::Result<Box<dyn PlatformListener>>;
 }
 

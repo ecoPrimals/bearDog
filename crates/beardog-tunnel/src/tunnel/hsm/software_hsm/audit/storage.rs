@@ -24,6 +24,9 @@ pub struct PersistentAuditStorage {
 }
 
 impl PersistentAuditStorage {
+    /// # Errors
+    ///
+    /// Returns an error if deserialization fails.
     /// Create new persistent audit storage
     pub async fn new(
         file_path: std::path::PathBuf,
@@ -86,6 +89,9 @@ impl PersistentAuditStorage {
         Ok(())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if serialization fails.
     /// Append new audit entry
     pub async fn append_entry(&self, entry: &AuditLogEntry) -> Result<(), BearDogError> {
         // Add to cache
@@ -133,11 +139,17 @@ impl PersistentAuditStorage {
         Ok(())
     }
 
-    /// Log audit entry (alias for append_entry)
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
+    /// Log audit entry (alias for `append_entry`)
     pub async fn log_entry(&self, entry: AuditLogEntry) -> Result<(), BearDogError> {
         self.append_entry(&entry).await
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// Get audit entries matching filter
     pub async fn get_entries(
         &self,
@@ -154,6 +166,9 @@ impl PersistentAuditStorage {
         Ok(filtered)
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// Get storage statistics
     pub async fn get_storage_stats(&self) -> Result<StorageStats, BearDogError> {
         let cache_size = self.cache.read().await.len();

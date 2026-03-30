@@ -24,6 +24,10 @@ impl PerformanceAnalyzer {
     }
 
     /// Runs analysis logic on a single metric (currently a no-op success path).
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future analysis failures.
     pub const fn analyze_metric(
         &self,
         _metric: &PerformanceMetric,

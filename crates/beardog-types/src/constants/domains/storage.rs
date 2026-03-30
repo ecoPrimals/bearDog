@@ -2,7 +2,7 @@
 
 //! Storage Domain Constants
 //!
-//! Canonical storage-related constants for the BearDog ecosystem.
+//! Canonical storage-related constants for the `BearDog` ecosystem.
 //! These constants are used across storage operations, backends, and caching.
 
 /// Storage location identifiers

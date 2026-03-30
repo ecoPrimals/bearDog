@@ -20,6 +20,9 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use tracing::{debug, info, warn};
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Handle `genetic.generate_challenge` RPC method
 ///
 /// Generates a cryptographic challenge for lineage verification.
@@ -55,6 +58,9 @@ pub async fn handle_generate_challenge(params: &Value) -> Result<Value, BearDogE
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Handle `genetic.respond_to_challenge` RPC method
 ///
 /// Responds to a lineage challenge by generating HMAC proof.
@@ -119,6 +125,9 @@ pub async fn handle_respond_to_challenge(params: &Value) -> Result<Value, BearDo
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Handle `genetic.verify_challenge_response` RPC method
 ///
 /// Verifies a challenge response for lineage authentication.

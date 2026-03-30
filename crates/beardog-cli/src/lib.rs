@@ -3,9 +3,9 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 #![cfg_attr(test, allow(clippy::float_cmp))]
 
-//! BearDog CLI Library
+//! `BearDog` CLI Library
 //!
-//! This library provides the core functionality for the BearDog CLI,
+//! This library provides the core functionality for the `BearDog` CLI,
 //! including command handlers and argument definitions.
 //!
 //! # Socket Path Discovery (TRUE PRIMAL)
@@ -37,9 +37,9 @@ pub struct ServerArgs {
     /// **Deep Debt Evolution**: Platform-agnostic runtime discovery!
     ///
     /// Defaults:
-    /// - Android: @biomeos_beardog (abstract socket, bypasses SELinux)
+    /// - Android: @`biomeos_beardog` (abstract socket, bypasses `SELinux`)
     /// - Linux/macOS: `{temp}/beardog.sock` (platform temp dir + primal name; override dir with `BEARDOG_SOCKET_TMP_DIR` / `BEARDOG_LOCAL_SOCKET_DIR` in client handler)
-    /// - Windows: \\.\pipe\biomeos_beardog (named pipe)
+    /// - Windows: `\\.\pipe\biomeos_beardog` (named pipe)
     ///
     /// Override with --socket for custom path
     #[arg(long, default_value_t = default_socket_path())]
@@ -48,14 +48,14 @@ pub struct ServerArgs {
     /// Use abstract socket (Linux/Android SELinux-safe)
     ///
     /// Forces abstract socket mode regardless of platform detection.
-    /// Abstract sockets bypass SELinux restrictions on Android.
-    /// Format: @biomeos_beardog_{family_id}
+    /// Abstract sockets bypass `SELinux` restrictions on Android.
+    /// Format: @`biomeos_beardog`_{`family_id`}
     ///
     /// Use when deploying to Android with aarch64-linux-musl target.
     #[arg(long)]
     pub r#abstract: bool,
 
-    /// TCP port for JSON-RPC listener (UniBin v1.1 mandatory)
+    /// TCP port for JSON-RPC listener (`UniBin` v1.1 mandatory)
     ///
     /// Binds a newline-delimited JSON-RPC server on `0.0.0.0:<PORT>`.
     /// Required by `PRIMAL_IPC_PROTOCOL` and `UNIBIN_ARCHITECTURE_STANDARD` v1.1.
@@ -70,7 +70,7 @@ pub struct ServerArgs {
     #[arg(long, conflicts_with = "port")]
     pub listen: Option<String>,
 
-    /// Family ID for BirdSong
+    /// Family ID for `BirdSong`
     #[arg(long)]
     pub family_id: Option<String>,
 
@@ -79,9 +79,9 @@ pub struct ServerArgs {
     pub orchestrator_id: Option<String>,
 }
 
-/// Get platform-native default socket path via SocketConfig
+/// Get platform-native default socket path via `SocketConfig`
 ///
-/// **TRUE PRIMAL**: Uses SocketConfig's 5-tier discovery instead of hardcoding
+/// **TRUE PRIMAL**: Uses `SocketConfig`'s 5-tier discovery instead of hardcoding
 ///
 /// Discovery order (per Primal IPC Protocol):
 /// 1. `BEARDOG_SOCKET` env var
@@ -117,9 +117,9 @@ fn default_log_path() -> String {
 /// Daemon mode arguments
 #[derive(Parser, Debug, Clone)]
 pub struct DaemonArgs {
-    /// Socket path (uses SocketConfig discovery)
+    /// Socket path (uses `SocketConfig` discovery)
     ///
-    /// **TRUE PRIMAL**: Automatic 5-tier discovery via SocketConfig
+    /// **TRUE PRIMAL**: Automatic 5-tier discovery via `SocketConfig`
     #[arg(long, default_value_t = default_socket_path())]
     pub socket: String,
 
@@ -135,7 +135,7 @@ pub struct DaemonArgs {
     #[arg(long, default_value_t = default_log_path())]
     pub log_file: String,
 
-    /// Family ID for BirdSong
+    /// Family ID for `BirdSong`
     #[arg(long)]
     pub family_id: Option<String>,
 
@@ -147,9 +147,9 @@ pub struct DaemonArgs {
 /// Client mode arguments
 #[derive(Parser, Debug, Clone)]
 pub struct ClientArgs {
-    /// Socket path to connect to (uses SocketConfig discovery)
+    /// Socket path to connect to (uses `SocketConfig` discovery)
     ///
-    /// **TRUE PRIMAL**: Automatic 5-tier discovery via SocketConfig
+    /// **TRUE PRIMAL**: Automatic 5-tier discovery via `SocketConfig`
     #[arg(long, default_value_t = default_socket_path())]
     pub socket: String,
 

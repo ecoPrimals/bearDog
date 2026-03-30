@@ -206,6 +206,10 @@ impl UniversalAdapter {
 
     /// Execute capability request with timeout, retry, and caching
     /// Executes capability
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the outbound HTTP request fails after retries.
     #[expect(
         clippy::cast_possible_wrap,
         reason = "Backoff jitter uses small millisecond delays; fits in i64 arithmetic"

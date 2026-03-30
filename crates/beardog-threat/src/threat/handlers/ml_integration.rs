@@ -14,6 +14,10 @@ use std::hash::{Hash, Hasher};
 
 impl ThreatDetectionEngine {
     /// Analyze With ML operation.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future ML pipeline failures.
     pub fn analyze_with_ml(
         &self,
         _event_data: &HashMap<&str, &str>,
@@ -85,6 +89,10 @@ impl ThreatDetectionEngine {
     }
 
     /// Calculate threat score using ML model
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future model errors.
     #[expect(
         clippy::cast_precision_loss,
         reason = "Hash mod 1000 as score; acceptable precision for heuristic threat metric"

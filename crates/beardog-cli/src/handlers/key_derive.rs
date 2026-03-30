@@ -8,6 +8,11 @@ use chrono::{Duration, Utc};
 use std::path::Path;
 
 /// Handle key derivation command
+///
+/// # Errors
+///
+/// Returns an error if the key home cannot be resolved, the master key cannot be loaded or
+/// decoded, HKDF derivation fails, expiry parsing fails, or saving keys or receipts fails.
 pub async fn handle_key_derive(
     master_key_id: &str,
     purpose: &str,
@@ -26,6 +31,11 @@ pub async fn handle_key_derive(
 }
 
 /// Same as [`handle_key_derive`] but keys and receipts live under `home` (tests / DI).
+///
+/// # Errors
+///
+/// Returns an error if the master key cannot be loaded or decoded, HKDF derivation fails, expiry
+/// parsing fails, or saving keys or receipts fails.
 pub async fn handle_key_derive_with_home(
     master_key_id: &str,
     purpose: &str,
@@ -178,6 +188,10 @@ fn derive_key_hkdf(master_key: &[u8], context: &[u8]) -> Result<Vec<u8>, BearDog
 }
 
 /// Parse a duration like `24h`, `30d`, or `1y` into an absolute UTC expiry.
+///
+/// # Errors
+///
+/// Returns an error if the duration string is malformed or the numeric component is invalid.
 pub fn parse_duration(duration_str: &str) -> Result<chrono::DateTime<Utc>, BearDogError> {
     let duration_str = duration_str.trim().to_lowercase();
 

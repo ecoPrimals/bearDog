@@ -87,6 +87,9 @@ impl SoloV2Provider {
     ///
     /// Current: Returns empty vec if no devices found (graceful degradation)
     #[cfg(feature = "solo-v2")]
+    /// # Errors
+    ///
+    /// Returns an error if the Tor-related operation fails.
     pub fn discover_devices() -> Result<Vec<SoloV2DeviceInfo>, BearDogError> {
         // Real implementation: USB HID device enumeration using Pure Rust beardog-hid
 
@@ -143,6 +146,9 @@ impl SoloV2Provider {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails in the underlying HSM provider.
     /// Set PIN for device operations
     ///
     /// # Arguments

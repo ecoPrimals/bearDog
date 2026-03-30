@@ -43,6 +43,9 @@ pub struct BStpSecurityManager {
 
 impl BStpSecurityManager {
 
+    /// # Errors
+    ///
+    /// Returns an error if decryption fails.
 /// New operation.
     /// Creates a new instance
     pub async fn new(Arc<EncryptionEngine>,

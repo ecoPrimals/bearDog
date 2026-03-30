@@ -253,6 +253,10 @@ impl NetworkConfig {
 
     /// Validate the network configuration
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if port, TLS paths, or connection pool bounds are invalid.
     pub fn validate(&self) -> Result<(), String> {
         if self.port == 0 {
             return Err("Port must be greater than 0".to_string());

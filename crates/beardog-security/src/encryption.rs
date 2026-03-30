@@ -79,10 +79,14 @@ impl EncryptionService {
     ///
     /// # Arguments
     /// * `input_bytes` - The plaintext data to encrypt
-    /// * `key` - The encryption key (must match configured key_size)
+    /// * `key` - The encryption key (must match configured `key_size`)
     ///
     /// # Returns
     /// Encrypted data with embedded nonce (first 12 bytes)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key size is wrong or AES-GCM encryption fails.
     pub fn encrypt(&self, input_bytes: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
         self.encrypt_data(input_bytes, key)
     }
@@ -95,11 +99,19 @@ impl EncryptionService {
     ///
     /// # Returns
     /// The original plaintext data
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key size is wrong, ciphertext is too short, or decryption fails.
     pub fn decrypt(&self, encrypted_data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
         self.decrypt_data(encrypted_data, key)
     }
 
     /// Encrypt Data operation.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key size is wrong or AES-GCM encryption fails.
     pub fn encrypt_data(&self, input_bytes: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
         debug!("🔒 Encrypting {} bytes of data", input_bytes.len());
 
@@ -129,6 +141,10 @@ impl EncryptionService {
     }
 
     /// Decrypt Data operation.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key size is wrong, ciphertext is too short, or decryption fails.
     pub fn decrypt_data(&self, encrypted_data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
         debug!("🔓 Decrypting {} bytes of data", encrypted_data.len());
 

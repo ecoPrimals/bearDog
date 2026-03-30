@@ -26,6 +26,11 @@ use uuid::Uuid;
 /// # Returns
 ///
 /// Origin audit with trust score and risk assessment
+///
+/// # Errors
+///
+/// Returns an error if creator identity, lineage, community metrics, or security assessment
+/// cannot be fetched, or if chain-of-custody verification fails due to invalid encoding or serialization.
 pub async fn audit_origin(template_id: &TemplateId) -> Result<OriginAudit, BearDogError> {
     let audit_id = Uuid::new_v4().to_string();
 
@@ -123,7 +128,7 @@ async fn get_template_lineage(
 /// # Current Limitations
 ///
 /// Full verification requires public keys for all signers, which will be
-/// retrieved via CollaborationService once available. Until then, we perform
+/// retrieved via `CollaborationService` once available. Until then, we perform
 /// basic validation (signature format, lineage continuity).
 ///
 /// # Future Implementation

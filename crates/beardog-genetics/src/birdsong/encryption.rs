@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! BirdSong broadcast encryption and decryption
+//! `BirdSong` broadcast encryption and decryption
 
 use chacha20poly1305::{
     ChaCha20Poly1305, Nonce,
@@ -15,13 +15,13 @@ use beardog_errors::BearDogError;
 use super::key_derivation::LineageKeyDerivation;
 use super::types::{BirdSongBroadcast, BirdSongDecryptRequest, BirdSongEncryptRequest};
 
-/// BirdSong encryption manager
+/// `BirdSong` encryption manager
 pub struct BirdSongEncryption {
     kdf: std::sync::Arc<LineageKeyDerivation>,
 }
 
 impl BirdSongEncryption {
-    /// Create new BirdSong encryption manager
+    /// Create new `BirdSong` encryption manager
     ///
     /// # Arguments
     ///
@@ -97,7 +97,7 @@ impl BirdSongEncryption {
         Ok(broadcast)
     }
 
-    /// Decrypt a BirdSong broadcast
+    /// Decrypt a `BirdSong` broadcast
     ///
     /// Verifies the lineage proof and decrypts if the node is authorized.
     ///

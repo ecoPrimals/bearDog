@@ -182,7 +182,7 @@ impl Default for CanonicalAuthConfig {
 /// # Security Recommendations
 ///
 /// - **Local**: Use only for development; implement proper password hashing
-/// - **OAuth2**: Recommended for user-facing applications; validate tokens properly
+/// - **`OAuth2`**: Recommended for user-facing applications; validate tokens properly
 /// - **LDAP**: Good for corporate environments; use TLS for connections
 /// - **SAML**: Best for enterprise SSO; validate assertions carefully
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -196,7 +196,7 @@ pub enum AuthProvider {
 
     /// OAuth 2.0 authentication provider
     ///
-    /// Delegates authentication to third-party OAuth2 providers (Google, GitHub, etc.).
+    /// Delegates authentication to third-party `OAuth2` providers (Google, GitHub, etc.).
     /// **Security**: Validate access tokens, use PKCE flow for public clients.
     /// **Use Case**: User-facing applications, mobile apps, web services.
     OAuth2,

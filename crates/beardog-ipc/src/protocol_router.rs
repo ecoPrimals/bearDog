@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! # Protocol Router for BearDog IPC
+//! # Protocol Router for `BearDog` IPC
 //!
 //! **AUTOMATIC PROTOCOL DETECTION AND ROUTING** (v1.0.0)
 //!
@@ -99,8 +99,12 @@ impl ProtocolDetector {
 
     /// Detect protocol from first bytes (non-consuming peek)
     ///
-    /// Returns (detected_protocol, peeked_bytes) so caller can prepend
+    /// Returns (`detected_protocol`, `peeked_bytes`) so caller can prepend
     /// peeked bytes back to the stream if needed.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`io::Error`] when reading from `stream` fails.
     pub async fn detect(&self, stream: &mut TcpStream) -> io::Result<(Protocol, Vec<u8>)> {
         let mut buf = vec![0u8; self.peek_size];
 

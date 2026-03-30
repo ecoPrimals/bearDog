@@ -17,6 +17,10 @@ use std::sync::Arc;
 ///
 /// * `Ok(Arc<dyn KeyManagementCapability>)` - Best available KMS
 /// * `Err(KmsError)` - If all providers fail (unlikely)
+///
+/// # Errors
+///
+/// Returns an error if the software HSM provider cannot be constructed (e.g. entropy failure).
 pub async fn create_key_management() -> Result<Arc<dyn KeyManagementCapability>, KmsError> {
     // VENDOR-AGNOSTIC APPROACH: Discover ANY available KMS
     // We detect capabilities, not vendor names

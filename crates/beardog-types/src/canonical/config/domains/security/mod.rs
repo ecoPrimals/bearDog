@@ -355,6 +355,10 @@ impl Default for ConsolidatedSecurityConfiguration {
 
 impl ConsolidatedSecurityConfiguration {
     /// Validate the entire security configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if authentication, encryption, rate limiting, or trust computation settings are invalid.
     pub fn validate(&self) -> Result<(), BearDogError> {
         // Validate authentication settings
         if self.authentication.session_timeout_seconds == 0 {

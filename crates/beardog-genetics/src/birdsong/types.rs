@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Core types for BirdSong lineage and encryption
+//! Core types for `BirdSong` lineage and encryption
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -46,7 +46,7 @@ pub struct LineageChain {
     pub chain_id: String,
     /// Root node (genesis) of this lineage
     pub root_node: LineageNode,
-    /// All nodes in this lineage chain (node_id -> LineageNode)
+    /// All nodes in this lineage chain (`node_id` -> `LineageNode`)
     pub nodes: std::collections::HashMap<String, LineageNode>,
     /// Parent-child relationships with signatures
     pub relationships: Vec<LineageRelationship>,
@@ -62,7 +62,7 @@ pub struct LineageRelationship {
     /// Child node ID
     pub child_id: String,
     /// Parent's signature of the relationship (Ed25519)
-    /// Signs: HMAC(parent_id || child_id || child_public_key || timestamp)
+    /// Signs: `HMAC(parent_id` || `child_id` || `child_public_key` || timestamp)
     pub parent_signature: Vec<u8>,
     /// Optional witness signatures for accountability
     pub witness_signatures: Vec<WitnessSignature>,
@@ -98,7 +98,7 @@ pub struct LineageProof {
     pub generated_at: DateTime<Utc>,
 }
 
-/// A hint about which lineage can decrypt a BirdSong broadcast
+/// A hint about which lineage can decrypt a `BirdSong` broadcast
 ///
 /// This is public metadata attached to encrypted broadcasts,
 /// allowing family members to know they should try to decrypt.
@@ -116,7 +116,7 @@ pub struct LineageHint {
     pub version: u8,
 }
 
-/// A BirdSong encryption key derived from lineage
+/// A `BirdSong` encryption key derived from lineage
 #[derive(Debug, Clone)]
 pub struct BirdSongKey {
     /// The symmetric key material (ChaCha20-Poly1305, 32 bytes)
@@ -139,7 +139,7 @@ impl Drop for BirdSongKey {
     }
 }
 
-/// Request to encrypt a BirdSong broadcast
+/// Request to encrypt a `BirdSong` broadcast
 #[derive(Debug, Clone)]
 pub struct BirdSongEncryptRequest {
     /// Plaintext data to encrypt
@@ -150,7 +150,7 @@ pub struct BirdSongEncryptRequest {
     pub associated_data: Option<Vec<u8>>,
 }
 
-/// Encrypted BirdSong broadcast
+/// Encrypted `BirdSong` broadcast
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BirdSongBroadcast {
     /// Lineage hint (public, tells family to try decrypting)
@@ -165,7 +165,7 @@ pub struct BirdSongBroadcast {
     pub broadcast_at: DateTime<Utc>,
 }
 
-/// Request to decrypt a BirdSong broadcast
+/// Request to decrypt a `BirdSong` broadcast
 #[derive(Debug, Clone)]
 pub struct BirdSongDecryptRequest {
     /// Encrypted broadcast
@@ -185,7 +185,7 @@ pub struct LineageVerificationResult {
     pub failure_reason: Option<String>,
 }
 
-/// Configuration for BirdSong encryption
+/// Configuration for `BirdSong` encryption
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BirdSongConfig {
     /// Key rotation interval in seconds

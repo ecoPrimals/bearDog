@@ -69,6 +69,10 @@ pub fn try_get_env_required(key: &str) -> Result<String, beardog_errors::BearDog
 }
 
 /// Required env with custom lookup.
+///
+/// # Errors
+///
+/// Returns [`beardog_errors::BearDogError::configuration`] if the variable is unset.
 pub fn try_get_env_required_with(
     get: impl Fn(&str) -> Option<String>,
     key: &str,
@@ -116,7 +120,11 @@ impl NetworkConfig {
         }
     }
 
-    /// Get as SocketAddr
+    /// Get as `SocketAddr`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `host` is not a valid IP address string.
     pub fn to_socket_addr(&self) -> Result<SocketAddr, std::net::AddrParseError> {
         let ip: IpAddr = self.host.parse()?;
         Ok(SocketAddr::new(ip, self.port))

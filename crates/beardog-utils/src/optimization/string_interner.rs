@@ -15,13 +15,13 @@ pub struct StringInterner {
 /// Aggregate interner traffic for tests and metrics hooks.
 #[derive(Debug, Clone, Default)]
 pub struct InternerStats {
-    /// Number of total_requests
+    /// Number of `total_requests`
     pub total_requests: u64,
-    /// Number of cache_hits
+    /// Number of `cache_hits`
     pub cache_hits: u64,
-    /// Number of unique_strings
+    /// Number of `unique_strings`
     pub unique_strings: usize,
-    /// Number of memory_saved
+    /// Number of `memory_saved`
     pub memory_saved: usize,
 }
 
@@ -36,6 +36,10 @@ impl StringInterner {
     }
 
     /// Intern a string, returning a shared reference
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if an internal mutex is poisoned.
     pub fn intern(&self, s: &str) -> Result<Arc<str>, BearDogError> {
         let mut strings = self
             .strings
@@ -63,6 +67,10 @@ impl StringInterner {
 
     /// Get interning statistics
     /// Gets stats
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the stats mutex is poisoned.
     pub fn get_stats(&self) -> Result<InternerStats, BearDogError> {
         let stats = self
             .stats
@@ -72,6 +80,10 @@ impl StringInterner {
     }
 
     /// Get hit ratio
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the stats mutex is poisoned.
     pub fn hit_ratio(&self) -> Result<f64, BearDogError> {
         let stats = self
             .stats
@@ -96,6 +108,10 @@ impl StringInterner {
     }
 
     /// Get number of unique strings
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the intern table mutex is poisoned.
     pub fn len(&self) -> Result<usize, BearDogError> {
         let strings = self
             .strings
@@ -106,11 +122,19 @@ impl StringInterner {
 
     /// Check if interner is empty
     /// Checks if empty
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if [`Self::len`] fails.
     pub fn is_empty(&self) -> Result<bool, BearDogError> {
         Ok(self.len()? == 0)
     }
 
     /// Clear all interned strings
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the intern table or stats mutex is poisoned.
     pub fn clear(&self) -> Result<(), BearDogError> {
         let mut strings = self
             .strings
@@ -128,6 +152,10 @@ impl StringInterner {
     }
 
     /// Get memory usage estimate in bytes
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the intern table mutex is poisoned.
     pub fn memory_usage(&self) -> Result<usize, BearDogError> {
         let strings = self
             .strings
@@ -145,6 +173,10 @@ impl StringInterner {
     }
 
     /// Get memory efficiency ratio
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the stats mutex is poisoned or [`Self::memory_usage`] fails.
     pub fn memory_efficiency(&self) -> Result<f64, BearDogError> {
         let stats = self
             .stats
@@ -179,6 +211,10 @@ pub fn global_interner() -> &'static StringInterner {
 }
 
 /// Convenience function to intern a string using the global interner
+///
+/// # Errors
+///
+/// Returns an error if [`StringInterner::intern`] fails.
 pub fn intern_string(s: &str) -> Result<Arc<str>, BearDogError> {
     global_interner().intern(s)
 }

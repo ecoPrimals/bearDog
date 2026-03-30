@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![allow(clippy::expect_used, clippy::unwrap_used, clippy::float_cmp)]
 
-//! Chaos and Fault Injection Tests for BearDog UniBin
+//! Chaos and Fault Injection Tests for `BearDog` `UniBin`
 //!
 //! **Philosophy**: "test issues will be production issues"
 //! - NO sleeps (real concurrency)

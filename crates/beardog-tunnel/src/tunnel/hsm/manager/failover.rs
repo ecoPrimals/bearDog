@@ -118,6 +118,9 @@ impl FailoverManager {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     /// Execute operation with failover
     pub async fn execute_with_failover<T, F, Fut>(&self, operation: F) -> Result<T, BearDogError>
     where

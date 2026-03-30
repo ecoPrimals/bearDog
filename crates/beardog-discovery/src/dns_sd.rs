@@ -56,11 +56,19 @@ pub struct DnsSdDiscovery {
 
 impl DnsSdDiscovery {
     /// Create new DNS-SD discovery client with default configuration
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from [`Self::with_config`].
     pub async fn new() -> Result<Self> {
         Self::with_config(DnsSdConfig::default()).await
     }
 
     /// Create new DNS-SD discovery client with custom configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the DNS resolver cannot be built.
     pub async fn with_config(config: DnsSdConfig) -> Result<Self> {
         let resolver = TokioResolver::builder_with_config(
             config.resolver_config.clone(),
@@ -80,6 +88,10 @@ impl DnsSdDiscovery {
     ///
     /// Performs real DNS queries following RFC 6763 DNS-SD specification.
     /// Returns all discovered services advertising the given capability.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when DNS-SD resolution fails irrecoverably.
     pub async fn discover(&self, capability: &str) -> Result<Vec<DiscoveredService>> {
         let service_type = Self::capability_to_service_name(capability);
 

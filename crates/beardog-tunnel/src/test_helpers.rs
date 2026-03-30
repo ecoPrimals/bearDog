@@ -137,6 +137,9 @@ pub mod mocks {
 
     // Implement contact_exchange as a separate impl block (not part of trait)
     impl MockBtspProvider {
+        /// # Errors
+        ///
+        /// Returns an error if genetic or lineage processing fails.
         pub async fn contact_exchange(
             &self,
             target_peer_id: &str,

@@ -6,8 +6,8 @@
 //! configuration validation, and error recovery.
 
 use beardog_errors::BearDogError;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 // ========================================================================
 // Initialization Edge Cases

@@ -47,7 +47,7 @@ use std::fmt;
 pub struct KeyId(String);
 
 impl KeyId {
-    /// Creates a new KeyId from any string-like value
+    /// Creates a new `KeyId` from any string-like value
     pub fn new(id: impl Into<String>) -> Self {
         Self(id.into())
     }
@@ -57,7 +57,7 @@ impl KeyId {
         &self.0
     }
 
-    /// Consumes the KeyId and returns the inner String
+    /// Consumes the `KeyId` and returns the inner String
     pub fn into_inner(self) -> String {
         self.0
     }
@@ -122,7 +122,7 @@ impl KeyId {
 pub struct ServiceInstanceId(String);
 
 impl ServiceInstanceId {
-    /// Creates a new ServiceInstanceId from any string-like value
+    /// Creates a new `ServiceInstanceId` from any string-like value
     pub fn new(id: impl Into<String>) -> Self {
         Self(id.into())
     }
@@ -132,7 +132,7 @@ impl ServiceInstanceId {
         &self.0
     }
 
-    /// Consumes the ServiceInstanceId and returns the inner String
+    /// Consumes the `ServiceInstanceId` and returns the inner String
     pub fn into_inner(self) -> String {
         self.0
     }
@@ -185,7 +185,7 @@ impl Borrow<str> for ServiceInstanceId {
 pub struct RegistrationId(String);
 
 impl RegistrationId {
-    /// Creates a new RegistrationId from any string-like value
+    /// Creates a new `RegistrationId` from any string-like value
     pub fn new(id: impl Into<String>) -> Self {
         Self(id.into())
     }
@@ -195,7 +195,7 @@ impl RegistrationId {
         &self.0
     }
 
-    /// Consumes the RegistrationId and returns the inner String
+    /// Consumes the `RegistrationId` and returns the inner String
     pub fn into_inner(self) -> String {
         self.0
     }

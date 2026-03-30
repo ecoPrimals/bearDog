@@ -17,7 +17,7 @@
 //! # Architecture
 //!
 //! - **Complete Implementation**: No mocks, all operations are production-ready
-//! - **Pure Rust**: 100% RustCrypto ecosystem, zero C dependencies
+//! - **Pure Rust**: 100% `RustCrypto` ecosystem, zero C dependencies
 //! - **Capability-Based**: Methods exposed as discoverable capabilities
 //! - **Self-Knowledge Only**: No hardcoded primal names or external service assumptions
 //!

@@ -2,7 +2,7 @@
 
 //! # Consolidated Network Configuration Domain
 //!
-//! This module consolidates ALL network-related configuration structs across the BearDog
+//! This module consolidates ALL network-related configuration structs across the `BearDog`
 //! ecosystem into a single, unified network configuration system. It eliminates fragmentation
 //! by providing a canonical network configuration that replaces 12+ scattered network configs.
 //!
@@ -46,7 +46,7 @@ pub use server::*;
 
 /// **CONSOLIDATED NETWORK CONFIGURATION** - Single source of truth for all network settings
 ///
-/// This structure consolidates all network-related configurations across the BearDog ecosystem,
+/// This structure consolidates all network-related configurations across the `BearDog` ecosystem,
 /// eliminating fragmentation and providing a unified network configuration interface.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ConsolidatedNetworkConfiguration {
@@ -93,6 +93,10 @@ pub struct ConsolidatedNetworkConfiguration {
 
 impl ConsolidatedNetworkConfiguration {
     /// Validate the network configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if server, client, endpoints, rate limiting, or connection pool settings are invalid.
     pub fn validate(&self) -> Result<(), BearDogError> {
         // Validate server configuration
         self.server.validate()?;
@@ -177,8 +181,8 @@ impl ConsolidatedNetworkConfiguration {
 
 /// **CANONICAL** Rate limiting configuration
 ///
-/// This is the single source of truth for rate limiting settings across BearDog.
-/// Consolidates all RateLimitConfig variants from:
+/// This is the single source of truth for rate limiting settings across `BearDog`.
+/// Consolidates all `RateLimitConfig` variants from:
 /// - `beardog-types/src/network.rs`
 /// - `beardog-types/src/canonical/monitoring/mod.rs`
 /// - `beardog-types/src/canonical/config/domains/security.rs`
@@ -317,6 +321,10 @@ impl RateLimitConfig {
     }
 
     /// Validate rate limit configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if rate limiting is enabled but limits, window, or burst settings are invalid.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.enabled {
             if self.max_requests == 0 {
@@ -366,12 +374,12 @@ pub type RateLimitConfiguration = RateLimitConfig;
 // - beardog-utils (2 variants)
 // - beardog-types/network.rs (4 variants)
 
-/// Primary NetworkConfig alias - points to consolidated configuration
+/// Primary `NetworkConfig` alias - points to consolidated configuration
 ///
 /// **CONSOLIDATED (Nov 11, 2025)**: Use `ConsolidatedNetworkConfiguration` for new code.
 ///
 /// This type alias maintains backward compatibility with the most common
-/// NetworkConfig usage pattern across the codebase.
+/// `NetworkConfig` usage pattern across the codebase.
 pub type NetworkConfig = ConsolidatedNetworkConfiguration;
 
 /// Network discovery configuration alias
@@ -406,7 +414,7 @@ pub type NetworkMonitoringConfig = NetworkMonitoringConfiguration;
 
 /// Network environment configuration alias (from beardog-utils)
 ///
-/// **CONSOLIDATED**: Use ConsolidatedNetworkConfiguration with environment variable loading.
+/// **CONSOLIDATED**: Use `ConsolidatedNetworkConfiguration` with environment variable loading.
 pub type NetworkEnvConfig = ConsolidatedNetworkConfiguration;
 
 /// Networking configuration alias (from beardog-production)
@@ -435,9 +443,9 @@ impl NetworkScanConfig {
     }
 }
 
-/// Network core configuration alias (from network_unified)
+/// Network core configuration alias (from `network_unified`)
 ///
-/// **CONSOLIDATED**: Use ConsolidatedNetworkConfiguration instead.
+/// **CONSOLIDATED**: Use `ConsolidatedNetworkConfiguration` instead.
 pub type NetworkCoreConfig = ConsolidatedNetworkConfiguration;
 
 // =============================================================================
@@ -453,7 +461,7 @@ impl ConsolidatedNetworkConfiguration {
         config
     }
 
-    /// Create from bind address (SocketAddr pattern)
+    /// Create from bind address (`SocketAddr` pattern)
     pub fn from_bind_address(addr: std::net::SocketAddr) -> Self {
         let mut config = Self::default();
         config.server.bind_address = addr.ip().to_string();
@@ -461,7 +469,11 @@ impl ConsolidatedNetworkConfiguration {
         config
     }
 
-    /// Get bind address as SocketAddr for compatibility
+    /// Get bind address as `SocketAddr` for compatibility
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the bind address or port cannot be resolved to a socket address.
     pub fn to_bind_address(&self) -> Result<std::net::SocketAddr, BearDogError> {
         use std::net::ToSocketAddrs;
         let addr_str = format!("{}:{}", self.server.bind_address, self.server.port);

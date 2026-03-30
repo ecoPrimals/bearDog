@@ -6,7 +6,7 @@
 //! timeouts, and load balancing.
 //!
 //! This is the canonical location for connection pool configuration.
-//! All other ConnectionPoolConfig variants should use this via type aliases.
+//! All other `ConnectionPoolConfig` variants should use this via type aliases.
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -14,8 +14,8 @@ use std::time::Duration;
 
 /// **CANONICAL** Connection pool configuration
 ///
-/// This is the single source of truth for connection pool settings across BearDog.
-/// Consolidates all ConnectionPoolConfig variants from:
+/// This is the single source of truth for connection pool settings across `BearDog`.
+/// Consolidates all `ConnectionPoolConfig` variants from:
 /// - `beardog-types/src/network.rs`
 /// - `beardog-types/src/canonical/network.rs`
 /// - `beardog-types/src/canonical/providers_unified/connection.rs`
@@ -121,7 +121,7 @@ where
 #[deprecated(since = "3.1.0", note = "Use ConnectionPoolConfig instead")]
 pub type ConnectionPoolConfiguration = ConnectionPoolConfig;
 
-/// Timeout configuration - consolidates TimeoutConfig variants
+/// Timeout configuration - consolidates `TimeoutConfig` variants
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeoutConfiguration {
     /// Connection establishment timeout
@@ -142,7 +142,7 @@ pub struct TimeoutConfiguration {
     pub shutdown_timeout_seconds: u64,
 }
 
-/// Load balancer configuration - consolidates LoadBalancerConfig variants
+/// Load balancer configuration - consolidates `LoadBalancerConfig` variants
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadBalancerConfiguration {
     /// Load balancing algorithm
@@ -243,7 +243,7 @@ impl FailoverConfiguration {
     pub const DEFAULT_BACKOFF_SECS: u64 =
         crate::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u64;
 
-    /// Create FailoverConfiguration with hardcoded defaults
+    /// Create `FailoverConfiguration` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -256,7 +256,7 @@ impl FailoverConfiguration {
         }
     }
 
-    /// Create FailoverConfiguration from environment variables
+    /// Create `FailoverConfiguration` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -298,7 +298,7 @@ impl ConnectionPoolConfig {
     /// Default maintenance interval in seconds
     pub const DEFAULT_MAINTENANCE_INTERVAL_SECS: u64 = 60;
 
-    /// Create ConnectionPoolConfig with hardcoded defaults
+    /// Create `ConnectionPoolConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -318,7 +318,7 @@ impl ConnectionPoolConfig {
         }
     }
 
-    /// Create ConnectionPoolConfig from environment variables
+    /// Create `ConnectionPoolConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -390,7 +390,7 @@ impl TimeoutConfiguration {
     /// Default shutdown timeout in seconds
     pub const DEFAULT_SHUTDOWN_TIMEOUT_SECS: u64 = 30;
 
-    /// Create TimeoutConfiguration with hardcoded defaults
+    /// Create `TimeoutConfiguration` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -410,7 +410,7 @@ impl TimeoutConfiguration {
         }
     }
 
-    /// Create TimeoutConfiguration from environment variables
+    /// Create `TimeoutConfiguration` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -480,7 +480,7 @@ impl LoadBalancerHealthCheckConfiguration {
     /// Default healthy threshold
     pub const DEFAULT_HEALTHY_THRESHOLD: u32 = 2;
 
-    /// Create LoadBalancerHealthCheckConfiguration with hardcoded defaults
+    /// Create `LoadBalancerHealthCheckConfiguration` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -495,7 +495,7 @@ impl LoadBalancerHealthCheckConfiguration {
         }
     }
 
-    /// Create LoadBalancerHealthCheckConfiguration from environment variables
+    /// Create `LoadBalancerHealthCheckConfiguration` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -539,7 +539,7 @@ impl CircuitBreakerConfiguration {
     /// Default minimum throughput
     pub const DEFAULT_MIN_THROUGHPUT: u32 = 20;
 
-    /// Create CircuitBreakerConfiguration with hardcoded defaults
+    /// Create `CircuitBreakerConfiguration` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -559,7 +559,7 @@ impl CircuitBreakerConfiguration {
         }
     }
 
-    /// Create CircuitBreakerConfiguration from environment variables
+    /// Create `CircuitBreakerConfiguration` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -606,6 +606,10 @@ impl Default for FailoverConfiguration {
 
 impl ConnectionPoolConfig {
     /// Validate connection pool configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if pool min/max sizes are inconsistent or zero.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.max_size < self.min_size {
             return Err(BearDogError::configuration(
@@ -623,6 +627,10 @@ impl ConnectionPoolConfig {
 
 impl TimeoutConfiguration {
     /// Validate timeout configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if connection or request timeouts are zero.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.connection_timeout_seconds == 0 {
             return Err(BearDogError::configuration(

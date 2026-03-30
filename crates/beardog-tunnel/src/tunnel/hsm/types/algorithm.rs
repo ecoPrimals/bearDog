@@ -110,7 +110,7 @@ pub enum HashAlgorithm {
     Sha3_384,
     /// SHA3-512
     Sha3_512,
-    /// BLAKE2b
+    /// `BLAKE2b`
     Blake2b,
     /// BLAKE2s
     Blake2s,
@@ -184,7 +184,7 @@ pub enum CryptographicAlgorithm {
     EcdsaP256,
     /// ECDSA with P-384
     EcdsaP384,
-    /// Ed25519 (EdDSA)
+    /// Ed25519 (`EdDSA`)
     Ed25519,
     /// HMAC-SHA256
     HmacSha256,

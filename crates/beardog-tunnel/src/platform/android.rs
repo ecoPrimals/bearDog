@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Android abstract socket implementation for BearDog
+//! Android abstract socket implementation for `BearDog`
 //!
-//! **Platform:** Android (ARM64, x86_64, all architectures)
+//! **Platform:** Android (ARM64, `x86_64`, all architectures)
 //! **Transport:** Abstract Unix domain sockets (Linux namespace)
 //! **Path Format:** `@biomeos_beardog` (@ indicates abstract namespace)
 //!
@@ -13,7 +13,7 @@
 //!
 //! ## Why Abstract Sockets?
 //!
-//! Android uses SELinux which blocks filesystem-based Unix sockets in user-space.
+//! Android uses `SELinux` which blocks filesystem-based Unix sockets in user-space.
 //! Abstract sockets bypass this by using pure namespace-based IPC with no filesystem.
 //!
 //! **Technical Details:**
@@ -44,7 +44,7 @@ use tracing::{debug, info};
 /// Android abstract socket implementation
 pub struct AndroidSocket;
 
-/// Wrapper to make UnixStream implement PlatformStream
+/// Wrapper to make `UnixStream` implement `PlatformStream`
 pub struct AndroidPlatformStream(UnixStream);
 
 impl PlatformStream for AndroidPlatformStream {}

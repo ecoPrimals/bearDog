@@ -1,39 +1,55 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+#![allow(missing_docs)] // Phase 2 quantum vocabulary types mirror domain concepts; module docs cover intent.
 
-// Quantum-Inspired Discovery System
-//
-// This advanced system uses quantum computing principles to optimize capability
-// discovery and selection, achieving unprecedented performance in complex
-// multi-dimensional capability spaces.
+//! Quantum-inspired capability orchestration (experimental).
+//!
+//! **Important**: The “quantum” pipeline (superposition, annealing, entanglement graph) is
+//! **Phase 2 research** and is not wired to real hardware or to heuristic optimization yet.
+//! Capability **resolution** uses the same runtime discovery path as the rest of
+//! [`crate::primal_self_knowledge`]: [`PrimalDiscovery`] (mDNS when enabled, registry when
+//! configured, cached peers). Callers must supply [`PrimalDiscovery`] via
+//! [`QuantumDiscoveryEngine::with_primal_discovery`]; otherwise discovery returns
+//! [`BearDogError`] via [`not_implemented`](beardog_errors::not_implemented).
 
-use beardog_errors::BearDogError;
-use beardog_errors::BearDogError;
+use crate::primal_self_knowledge::{DiscoveredPrimal, Endpoint, PrimalDiscovery};
+use beardog_errors::{BearDogError, not_implemented};
 use beardog_types::canonical::capabilities::{
-    CapabilityType, ServiceCapabilityType, UniversalCapability,
+    AuthConfig, AuthType, CapabilityType, CircuitBreakerConfig, EndpointConfig, HealthStatus,
+    PerformanceMetrics, ProviderInfo, SecurityLevel, UniversalCapability,
 };
+use beardog_types::canonical::providers_unified::core::ProviderType;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
-/// Quantum-inspired capability discovery engine
+type Result<T> = std::result::Result<T, BearDogError>;
+
+/// Quantum-inspired capability discovery engine (orchestration shell over [`PrimalDiscovery`]).
 pub struct QuantumDiscoveryEngine {
+    #[allow(dead_code)]
     quantum_space: Arc<RwLock<QuantumCapabilitySpace>>,
 
+    #[allow(dead_code)]
     superposition_states: Arc<RwLock<Vec<SuperpositionState>>>,
 
-    /// Entanglement relationships between capabilities
+    /// Entanglement relationships between capabilities (Phase 2; not populated in production yet).
+    #[allow(dead_code)]
     entanglements: Arc<RwLock<HashMap<String, Vec<QuantumEntanglement>>>>,
 
     /// Engine configuration
     config: QuantumDiscoveryConfig,
 
     metrics: QuantumMetrics,
+
+    /// When set, [`Self::quantum_discover_capabilities`] uses ecosystem runtime discovery.
+    primal_discovery: Option<Arc<PrimalDiscovery>>,
 }
 
-/// Quantum capability space representation
+/// Quantum capability space representation (Phase 2 state; reserved for future heuristics).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QuantumCapabilitySpace {
     /// Capability qubits in superposition
@@ -63,8 +79,8 @@ pub struct CapabilityQubit {
     /// Quality metrics in quantum space
     quantum_quality: QuantumQuality,
 
-    /// Last coherence check
-    last_coherence_check: std::time::Instant,
+    /// Last coherence check (wall clock; serde-safe)
+    last_coherence_check: DateTime<Utc>,
 }
 
 /// Quantum quality metrics
@@ -218,7 +234,7 @@ pub struct QuantumMeasurement {
     pub probability: f64,
 
     /// Measurement timestamp
-    pub timestamp: std::time::Instant,
+    pub timestamp: DateTime<Utc>,
 
     /// Quantum decoherence after measurement
     pub decoherence_time_ms: u64,
@@ -260,8 +276,7 @@ pub enum InterferenceType {
 
 #[derive(Debug, Clone)]
 pub struct QuantumDiscoveryConfig {
-    /// Maximum superposition states to maintain
-    /// Number of max_superposition_states
+    /// Maximum superposition states to maintain.
     pub max_superposition_states: usize,
 
     /// Quantum coherence time in milliseconds
@@ -270,17 +285,28 @@ pub struct QuantumDiscoveryConfig {
     /// The measurement threshold value
     pub measurement_threshold: f64,
 
-    /// Enable quantum error correction
-    /// Whether enable_error_correction is enabled
+    /// Enable quantum error correction.
     pub enable_error_correction: bool,
 
     /// Quantum annealing temperature
     /// The annealing temperature value
     pub annealing_temperature: f64,
 
-    /// Maximum entanglement distance
-    /// Number of max_entanglement_distance
+    /// Maximum entanglement distance.
     pub max_entanglement_distance: u32,
+}
+
+impl Default for QuantumDiscoveryConfig {
+    fn default() -> Self {
+        Self {
+            max_superposition_states: 100,
+            coherence_time_ms: 1000,
+            measurement_threshold: 0.5,
+            enable_error_correction: false,
+            annealing_temperature: 1.0,
+            max_entanglement_distance: 10,
+        }
+    }
 }
 
 /// Quantum discovery metrics
@@ -288,12 +314,10 @@ pub struct QuantumDiscoveryConfig {
 pub struct QuantumMetrics {
     pub measurements_performed: u64,
 
-    /// Superposition states created
-    /// Number of superposition_states_created
+    /// Superposition states created.
     pub superposition_states_created: u64,
 
-    /// Entanglements discovered
-    /// Number of entanglements_discovered
+    /// Entanglements discovered.
     pub entanglements_discovered: u64,
 
     /// Average quantum coherence time
@@ -305,10 +329,14 @@ pub struct QuantumMetrics {
 }
 
 impl QuantumDiscoveryEngine {
-    /// Create a new quantum discovery engine
-    /// Creates a new instance
+    /// Create a new engine without [`PrimalDiscovery`]. [`Self::quantum_discover_capabilities`]
+    /// will return [`not_implemented`](beardog_errors::not_implemented) until
+    /// [`Self::with_primal_discovery`] is used.
+    #[must_use]
     pub fn new(config: QuantumDiscoveryConfig) -> Self {
-        info!("🌌 Initializing Quantum-Inspired Discovery Engine");
+        info!(
+            "Initializing quantum-inspired discovery orchestration (PrimalDiscovery not attached)"
+        );
 
         Self {
             quantum_space: Arc::new(RwLock::new(QuantumCapabilitySpace::new())),
@@ -316,294 +344,175 @@ impl QuantumDiscoveryEngine {
             entanglements: Arc::new(RwLock::new(HashMap::new())),
             config,
             metrics: QuantumMetrics::default(),
+            primal_discovery: None,
         }
     }
 
-    /// Discover capabilities using quantum superposition
-    pub fn quantum_discover_capabilities(
+    /// Attach runtime [`PrimalDiscovery`] (same pattern as [`crate::primal_self_knowledge::PrimalSelfKnowledge`]).
+    #[must_use]
+    pub fn with_primal_discovery(
+        config: QuantumDiscoveryConfig,
+        primal_discovery: Arc<PrimalDiscovery>,
+    ) -> Self {
+        info!("Quantum-inspired discovery orchestration bound to PrimalDiscovery");
+        Self {
+            quantum_space: Arc::new(RwLock::new(QuantumCapabilitySpace::new())),
+            superposition_states: Arc::new(RwLock::new(Vec::new())),
+            entanglements: Arc::new(RwLock::new(HashMap::new())),
+            config,
+            metrics: QuantumMetrics::default(),
+            primal_discovery: Some(primal_discovery),
+        }
+    }
+
+    /// Resolve requested capabilities using [`PrimalDiscovery`] (mDNS / registry / cache).
+    ///
+    /// Does not fabricate endpoints or provider identities. Phase 2 quantum heuristics
+    /// (superposition collapse, annealing) are not applied to the result set yet.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `PrimalDiscovery` was not provided via
+    /// [`with_primal_discovery`](Self::with_primal_discovery), or if the underlying
+    /// discovery mechanism fails.
+    pub async fn quantum_discover_capabilities(
         &mut self,
         request_capabilities: Vec<CapabilityType>,
     ) -> Result<Vec<UniversalCapability>> {
-        info!("🔬 Initiating quantum capability discovery");
+        info!("Quantum discovery: resolving capabilities via PrimalDiscovery");
         debug!("Requested capabilities: {:?}", request_capabilities);
 
-        // Create superposition state for parallel exploration
-        let superposition_id = self
-            .create_superposition_state(&request_capabilities)
-            ?;
+        let Some(discovery) = self.primal_discovery.as_ref() else {
+            return Err(not_implemented(
+                "Quantum discovery orchestration requires PrimalDiscovery; use QuantumDiscoveryEngine::with_primal_discovery",
+            ));
+        };
 
-        // Apply quantum gates for optimization
-        self.apply_quantum_gates(&superposition_id)?;
+        if request_capabilities.len() > self.config.max_superposition_states {
+            warn!(
+                "Requested {} capabilities exceeds max_superposition_states {}; truncating",
+                request_capabilities.len(),
+                self.config.max_superposition_states
+            );
+        }
 
-        // Measure quantum states to collapse to optimal solution
-        let measurement = self.perform_quantum_measurement(&superposition_id)?;
+        let mut out: Vec<UniversalCapability> = Vec::new();
+        let mut seen: HashSet<(String, String)> = HashSet::new();
 
-        // Convert quantum measurement to capability results
-        let capabilities = self
-            .quantum_measurement_to_capabilities(&measurement)
-            ?;
+        for capability_type in request_capabilities
+            .into_iter()
+            .take(self.config.max_superposition_states)
+        {
+            let token = capability_type.discovery_env_token();
+            let primals = discovery.discover_by_capability(&token).await?;
+            for primal in primals {
+                if primal.endpoints.is_empty() {
+                    warn!(
+                        "Discovered primal {} advertises no endpoints; skipping",
+                        primal.name
+                    );
+                    continue;
+                }
+                for ep in &primal.endpoints {
+                    let uc = universal_capability_from_discovered_primal(
+                        &primal,
+                        capability_type.clone(),
+                        ep,
+                    )?;
+                    let key = (
+                        uc.provider.provider_id.clone(),
+                        uc.endpoint.base_url.clone(),
+                    );
+                    if seen.insert(key) {
+                        out.push(uc);
+                    }
+                }
+            }
+        }
 
-        info!(
-            "✨ Quantum discovery complete: {} capabilities found",
-            capabilities.len()
-        );
         self.metrics.measurements_performed += 1;
-
-        Ok(capabilities)
+        info!(
+            "Quantum discovery complete: {} capability advertisements collected",
+            out.len()
+        );
+        Ok(out)
     }
 
-    /// Create quantum entanglements between related capabilities
-    /// Creates quantum_entanglement
+    /// **Phase 2**: quantum entanglement graph over capability relationships — not implemented.
+    ///
+    /// # Errors
+    ///
+    /// Always returns a not-implemented error (Phase 2).
     pub fn create_quantum_entanglement(
         &mut self,
-        capability_a: CapabilityType,
-        capability_b: CapabilityType,
-        entanglement_type: EntanglementType,
+        _capability_a: CapabilityType,
+        _capability_b: CapabilityType,
+        _entanglement_type: EntanglementType,
     ) -> Result<QuantumEntanglement> {
-        debug!(
-            "🔗 Creating quantum entanglement: {:?} ↔ {:?}",
-            capability_a, capability_b
-        );
-
-        let strength = self
-            .calculate_entanglement_strength(&capability_a, &capability_b)
-            ?;
-        let bell_state = self.determine_bell_state(&entanglement_type, strength);
-
-        let entanglement = QuantumEntanglement {
-            capability_a: capability_a.clone(),
-            capability_b: capability_b.clone(),
-            strength,
-            entanglement_type,
-            bell_state,
-        };
-
-        // Store entanglement
-        let mut entanglements = self.entanglements.write();
-        entanglements
-            .entry(capability_a.as_capability_id())
-            .or_insert_with(Vec::new)
-            .push(entanglement.clone());
-
-        self.metrics.entanglements_discovered += 1;
-        info!(
-            "🌟 Quantum entanglement created with strength {:.3}",
-            strength
-        );
-
-        Ok(entanglement)
+        Err(not_implemented(
+            "Phase 2: quantum entanglement graph (historical correlations / dependency analysis)",
+        ))
     }
 
-    /// Optimize capability selection using quantum annealing
+    /// **Phase 2**: quantum annealing over candidate capabilities — not implemented.
+    ///
+    /// # Errors
+    ///
+    /// Always returns a not-implemented error (Phase 2).
     pub fn quantum_anneal_selection(
         &self,
-        candidates: Vec<UniversalCapability>,
-        optimization_criteria: Vec<OptimizationCriterion>,
+        _candidates: Vec<UniversalCapability>,
+        _optimization_criteria: Vec<OptimizationCriterion>,
     ) -> Result<Vec<UniversalCapability>> {
-        info!("🔥 Applying quantum annealing optimization");
-
-        let mut temperature = self.config.annealing_temperature;
-        let mut current_selection = candidates.clone();
-        let mut best_selection = current_selection.clone();
-        let mut best_energy = self
-            .calculate_energy(&best_selection, &optimization_criteria)
-            ?;
-
-        // Simulated quantum annealing process
-        while temperature > 0.01 {
-            // Generate neighboring solution
-            let neighbor = self.generate_neighbor_solution(&current_selection)?;
-            let neighbor_energy = self
-                .calculate_energy(&neighbor, &optimization_criteria)
-                ?;
-
-            // Accept or reject based on quantum probability
-            let energy_diff = neighbor_energy - best_energy;
-            let acceptance_probability = if energy_diff < 0.0 {
-                1.0
-            } else {
-                (-energy_diff / temperature).exp()
-            };
-
-            if rand::random::<f64>() < acceptance_probability {
-                current_selection = neighbor;
-                if neighbor_energy < best_energy {
-                    best_selection = current_selection.clone();
-                    best_energy = neighbor_energy;
-                }
-            }
-
-            // Cool down
-            temperature *= 0.95;
-        }
-
-        info!(
-            "❄️ Quantum annealing complete: optimized to energy {:.3}",
-            best_energy
-        );
-        Ok(best_selection)
+        Err(not_implemented(
+            "Phase 2: quantum annealing selection over discovered capabilities",
+        ))
     }
+}
 
-    /// Creates superposition_state
-    fn create_superposition_state(
-        &mut self,
-        capabilities: &[CapabilityType],
-    ) -> Result<Uuid> {
-        let state_id = Uuid::new_v4();
+/// Map a discovered primal endpoint into a canonical [`UniversalCapability`].
+fn universal_capability_from_discovered_primal(
+    primal: &DiscoveredPrimal,
+    capability_type: CapabilityType,
+    endpoint: &Endpoint,
+) -> Result<UniversalCapability> {
+    let base_url = endpoint.url();
+    let version = "0".to_string();
 
-        // Initialize amplitudes in equal superposition
-        let amplitude = 1.0 / (capabilities.len() as f64).sqrt();
-        let amplitudes = vec![amplitude; capabilities.len()];
-
-        let superposition = SuperpositionState {
-            id: state_id,
-            capabilities: capabilities.to_vec(),
-            amplitudes,
-            interference_patterns: Vec::new(),
-            collapse_probability: 0.0,
-        };
-
-        self.superposition_states.write().push(superposition);
-        self.metrics.superposition_states_created += 1;
-
-        debug!(
-            "🌊 Created superposition state with {} capabilities",
-            capabilities.len()
-        );
-        Ok(state_id)
-    }
-
-    fn apply_quantum_gates(&self, _state_id: &Uuid) -> Result<(), BearDogError> {
-        debug!("⚛️ Applying quantum gates for optimization");
-
-        // Simulate quantum gate operations
-        // In a real implementation, this would manipulate quantum amplitudes
-        // and phases to optimize the discovery process
-
-        Ok(())
-    }
-
-    fn perform_quantum_measurement(
-        &mut self,
-        state_id: &Uuid,
-    ) -> Result<QuantumMeasurement> {
-        debug!("📏 Performing quantum measurement");
-
-        // Find the superposition state
-        let superposition_states = self.superposition_states.read();
-        let state = superposition_states
-            .iter()
-            .find(|s| s.id == *state_id)
-            .ok_or_else(|| BearDogError::not_found("Superposition state not found".to_string()))?;
-
-        // Simulate measurement collapse
-        let results: Vec<bool> = state
-            .amplitudes
-            .iter()
-            .map(|amplitude| rand::random::<f64>() < amplitude.powi(2))
-            .collect();
-
-        let measurement = QuantumMeasurement {
-            id: Uuid::new_v4(),
-            capabilities: state.capabilities.clone(),
-            results,
-            probability: state.collapse_probability,
-            timestamp: std::time::Instant::now(),
-            decoherence_time_ms: 100, // Simulate quick decoherence
-        };
-
-        Ok(measurement)
-    }
-
-    /// Convert quantum measurement to actual capabilities
-    fn quantum_measurement_to_capabilities(
-        &self,
-        measurement: &QuantumMeasurement,
-    ) -> Result<Vec<UniversalCapability>> {
-        let mut capabilities = Vec::new();
-
-        for (i, &measured) in measurement.results.iter().enumerate() {
-            if measured {
-                if let Some(capability_type) = measurement.capabilities.get(i) {
-                    // Create capability discovery result
-                    // In real implementation, this would query actual providers
-                    let capability = self.create_discovered_capability(capability_type.clone());
-                    capabilities.push(capability);
-                }
-            }
-        }
-
-        Ok(capabilities)
-    }
-
-    /// Calculate entanglement strength between capabilities
-    fn calculate_entanglement_strength(
-        &self,
-        _capability_a: &CapabilityType,
-        _capability_b: &CapabilityType,
-    ) -> Result<f64> {
-        // Simulate entanglement strength calculation
-        // In real implementation, this would analyze historical usage patterns,
-        // performance correlations, and architectural dependencies
-        Ok(rand::random::<f64>() * 0.8 + 0.2) // 0.2 to 1.0
-    }
-
-    fn determine_bell_state(
-        &self,
-        entanglement_type: &EntanglementType,
-        strength: f64,
-    ) -> BellState {
-        match entanglement_type {
-            EntanglementType::Synergistic if strength > 0.7 => BellState::PhiPlus,
-            EntanglementType::Exclusive if strength > 0.7 => BellState::PhiMinus,
-            EntanglementType::Correlated => BellState::PsiPlus,
-            EntanglementType::AntiCorrelated => BellState::PsiMinus,
-            _ => BellState::PhiPlus, // Default
-        }
-    }
-
-    fn calculate_energy(
-        &self,
-        _selection: &[UniversalCapability],
-        _criteria: &[OptimizationCriterion],
-    ) -> Result<f64> {
-        // Simulate energy calculation for optimization
-        Ok(rand::random::<f64>() * 100.0)
-    }
-
-    fn generate_neighbor_solution(
-        &self,
-        current: &[UniversalCapability],
-    ) -> Result<Vec<UniversalCapability>> {
-        // Simple neighbor: randomly modify one capability
-        let mut neighbor = current.to_vec();
-        if !neighbor.is_empty() {
-            let index = rand::random::<usize>() % neighbor.len();
-            // Modify the capability slightly (mock implementation)
-            neighbor[index] = neighbor[index].clone();
-        }
-        Ok(neighbor)
-    }
-
-    /// Creates discovered_capability
-    fn create_discovered_capability(&self, capability_type: CapabilityType) -> UniversalCapability {
-        // This is a simplified mock - real implementation would create actual capabilities
-        UniversalCapability {
-            capability_type,
-            provider: format!("quantum-provider-{}", Uuid::new_v4()),
-            endpoint: "http://quantum-discovered:8080".to_string(),
-            auth_config: HashMap::new(),
-            health_status: beardog_types::canonical::capabilities::HealthStatus::Healthy,
-            performance_metrics: HashMap::new(),
-            security_level: beardog_types::canonical::capabilities::SecurityLevel::High,
-            metadata: HashMap::new(),
-        }
-    }
+    Ok(UniversalCapability {
+        capability_type,
+        provider: ProviderInfo {
+            provider_id: primal.name.clone(),
+            provider_name: primal.name.clone(),
+            provider_type: ProviderType::Generic,
+            version,
+            region: None,
+        },
+        endpoint: EndpointConfig {
+            base_url,
+            api_version: None,
+            timeout_ms: 30_000,
+            max_retries: 3,
+            circuit_breaker: CircuitBreakerConfig::default(),
+        },
+        auth_config: AuthConfig {
+            auth_type: AuthType::None,
+            api_key: None,
+            bearer_token: None,
+            cert_path: None,
+            custom_params: HashMap::new(),
+        },
+        health_status: HealthStatus::Unknown,
+        performance: PerformanceMetrics::default(),
+        security_level: SecurityLevel::Standard,
+        metadata: HashMap::new(),
+    })
 }
 
 impl QuantumCapabilitySpace {
     /// Create new quantum capability space
     /// Creates a new instance
+    #[must_use]
     pub fn new() -> Self {
         Self {
             capability_qubits: HashMap::new(),
@@ -611,6 +520,12 @@ impl QuantumCapabilitySpace {
             measurement_history: Vec::new(),
             coherence_time_ms: 1000, // 1 second default coherence
         }
+    }
+}
+
+impl Default for QuantumCapabilitySpace {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -632,4 +547,40 @@ pub enum OptimizationCriterion {
 
     /// Custom optimization function
     Custom(String),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::primal_self_knowledge::{PrimalIdentity, PrimalIdentityEnvInputs};
+
+    #[tokio::test]
+    async fn discover_without_primal_discovery_is_not_implemented() {
+        let mut engine = QuantumDiscoveryEngine::new(QuantumDiscoveryConfig::default());
+        let err = engine
+            .quantum_discover_capabilities(vec![CapabilityType::Security])
+            .await
+            .expect_err("expected not implemented");
+        let msg = format!("{err}");
+        assert!(
+            msg.contains("PrimalDiscovery") || msg.contains("not implemented"),
+            "{msg}"
+        );
+    }
+
+    #[tokio::test]
+    async fn discover_with_primal_discovery_returns_empty_without_peers() {
+        let identity =
+            PrimalIdentity::from_inputs(&PrimalIdentityEnvInputs::default()).expect("identity");
+        let discovery = Arc::new(PrimalDiscovery::new(identity));
+        let mut engine = QuantumDiscoveryEngine::with_primal_discovery(
+            QuantumDiscoveryConfig::default(),
+            discovery,
+        );
+        let caps = engine
+            .quantum_discover_capabilities(vec![CapabilityType::Security])
+            .await
+            .expect("discovery");
+        assert!(caps.is_empty());
+    }
 }

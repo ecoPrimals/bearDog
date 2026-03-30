@@ -2,7 +2,7 @@
 
 //! Concurrent-Safe Security Configuration Module
 //!
-//! Security configuration and policies for BearDog.
+//! Security configuration and policies for `BearDog`.
 //!
 //! ## Design Pattern: Explicit Environment Loading
 //!
@@ -111,6 +111,10 @@ impl SecurityConfig {
     }
 
     /// Validate security configuration
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future policy checks.
     pub const fn validate(&self) -> ConfigResult<()> {
         Ok(())
     }
@@ -131,7 +135,7 @@ impl Default for SecurityConfig {
     }
 }
 
-/// Builder for SecurityConfig
+/// Builder for `SecurityConfig`
 #[derive(Debug, Default)]
 pub struct SecurityConfigBuilder {
     strict_mode: Option<bool>,

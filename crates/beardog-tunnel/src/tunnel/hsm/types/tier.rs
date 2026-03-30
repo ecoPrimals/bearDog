@@ -24,7 +24,7 @@ pub enum SmartphoneType {
         manufacturer: String,
         /// Android version
         android_version: String,
-        /// StrongBox version (if available)
+        /// `StrongBox` version (if available)
         strongbox_version: Option<String>,
     },
 }
@@ -41,9 +41,9 @@ pub enum SecureEnclaveType {
         /// Key attestation support
         key_attestation: bool,
     },
-    /// Android StrongBox
+    /// Android `StrongBox`
     AndroidStrongBox {
-        /// StrongBox implementation type
+        /// `StrongBox` implementation type
         implementation: StrongBoxImplementation,
         /// Hardware-backed security
         hardware_backed: bool,
@@ -73,12 +73,12 @@ pub enum SecureEnclaveType {
     },
 }
 
-/// StrongBox implementation types
+/// `StrongBox` implementation types
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum StrongBoxImplementation {
     /// Qualcomm implementation
     Qualcomm,
-    /// MediaTek implementation
+    /// `MediaTek` implementation
     MediaTek,
     /// Samsung implementation
     Samsung,
@@ -95,20 +95,20 @@ pub enum AttestationLevel {
     TrustedExecutionEnvironment,
     /// Hardware attestation
     Hardware,
-    /// StrongBox attestation (highest level)
+    /// `StrongBox` attestation (highest level)
     StrongBox,
 }
 
 /// Software HSM types
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SoftwareHsmType {
-    /// SoftHSM v2
+    /// `SoftHSM` v2
     SoftHsm,
     /// OpenSSL-based implementation
     OpenSsl,
     /// Rust crypto implementation
     RustCrypto,
-    /// BearDog native implementation
+    /// `BearDog` native implementation
     BearDogNative,
     /// Custom software HSM
     Custom(String),

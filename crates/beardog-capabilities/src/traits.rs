@@ -3,7 +3,7 @@
 //! Generic capability trait definitions
 //!
 //! These traits define capabilities without any primal-specific knowledge.
-//! BearDog implements these traits, and any primal can consume them.
+//! `BearDog` implements these traits, and any primal can consume them.
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -57,7 +57,7 @@ pub struct TunnelStatus {
 /// crypto, mTLS, WireGuard-like schemes), but consumers only see this generic
 /// interface.
 ///
-/// **Note**: Documentation may reference "BTSP" (BearDog Tunnel Security Protocol)
+/// **Note**: Documentation may reference "BTSP" (`BearDog` Tunnel Security Protocol)
 /// for developer context, but the code remains fully generic.
 #[async_trait]
 pub trait SecureTunnelProvider: Send + Sync {

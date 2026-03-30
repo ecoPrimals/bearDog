@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![forbid(unsafe_code)]
 
-//! BearDog UniBin — one binary, multiple operational modes.
+//! `BearDog` `UniBin` — one binary, multiple operational modes.
 //!
 //! Subcommands cover the full CLI surface: service lifecycle, crypto operations,
 //! key management, HSM discovery, entropy, and diagnostics.
@@ -81,7 +81,7 @@ enum Commands {
         #[arg(short, long)]
         output: String,
     },
-    /// BirdSong lineage-based encryption
+    /// `BirdSong` lineage-based encryption
     Birdsong {
         #[command(subcommand)]
         action: BirdsongAction,
@@ -258,7 +258,7 @@ enum HsmAction {
 
 #[derive(Debug, Subcommand)]
 enum BirdsongAction {
-    /// Encrypt with BirdSong lineage
+    /// Encrypt with `BirdSong` lineage
     Encrypt {
         #[arg(long)]
         message: String,
@@ -269,7 +269,7 @@ enum BirdsongAction {
         #[arg(short, long)]
         output: Option<String>,
     },
-    /// Decrypt with BirdSong lineage
+    /// Decrypt with `BirdSong` lineage
     Decrypt {
         #[arg(short, long)]
         input: String,

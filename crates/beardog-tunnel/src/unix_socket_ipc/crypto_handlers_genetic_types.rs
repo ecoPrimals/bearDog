@@ -275,7 +275,7 @@ pub struct DeriveDeviceSeedResponse {
     /// Domain separation used
     pub domain: String,
     /// Proof that this seed was derived from the root (for verification)
-    /// This is a commitment: HMAC(root_seed, device_seed || device_id)
+    /// This is a commitment: `HMAC(root_seed`, `device_seed` || `device_id`)
     pub derivation_proof: String,
 }
 
@@ -326,10 +326,10 @@ pub struct LineageCertificate {
     /// Certificate expiration timestamp (Unix seconds, optional)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expires_at: Option<u64>,
-    /// Depth in lineage tree (parent_depth + 1)
+    /// Depth in lineage tree (`parent_depth` + 1)
     pub depth: u32,
     /// Parent's signature of the certificate (base64-encoded Ed25519 signature)
-    /// Signs: version || parent_id || child_id || child_pubkey || family_id || issued_at || depth
+    /// Signs: version || `parent_id` || `child_id` || `child_pubkey` || `family_id` || `issued_at` || depth
     pub parent_signature: String,
     /// Parent's public key (base64-encoded Ed25519 public key, for verification)
     pub parent_public_key: String,

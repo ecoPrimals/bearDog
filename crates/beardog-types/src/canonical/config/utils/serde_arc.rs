@@ -7,6 +7,10 @@ use std::sync::Arc;
 ///
 /// This allows `Arc<str>` fields to be serialized as normal strings,
 /// maintaining compatibility with existing configuration formats.
+///
+/// # Errors
+///
+/// Returns an error if serialization fails.
 pub fn serialize_arc_str<S>(arc_str: &Arc<str>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: serde::Serializer,
@@ -18,6 +22,10 @@ where
 ///
 /// Creates an `Arc<str>` from the deserialized string, enabling
 /// 10x faster cloning operations compared to regular `String`.
+///
+/// # Errors
+///
+/// Returns an error if deserialization fails.
 pub fn deserialize_arc_str<'de, D>(deserializer: D) -> Result<Arc<str>, D::Error>
 where
     D: serde::Deserializer<'de>,

@@ -3,7 +3,7 @@
 //! TLS 1.3 Signature Operations and Finished MAC
 //!
 //! This module implements cryptographic signature operations for TLS 1.3 handshakes,
-//! including Ed25519 signing for CertificateVerify and HMAC computation for the Finished message.
+//! including Ed25519 signing for `CertificateVerify` and HMAC computation for the Finished message.
 //!
 //! # Handlers
 //!
@@ -14,7 +14,7 @@
 //!
 //! - RFC 8446 Section 4.4.3: Certificate Verify
 //! - RFC 8446 Section 4.4.4: Finished
-//! - RFC 8032: Edwards-Curve Digital Signature Algorithm (EdDSA)
+//! - RFC 8032: Edwards-Curve Digital Signature Algorithm (`EdDSA`)
 //! - RFC 2104: HMAC
 
 use base64::Engine;
@@ -27,7 +27,7 @@ use tracing::{debug, info};
 // Import shared utility for key derivation
 use super::super::utils::derive_key_from_id;
 
-/// Handle tls.sign_handshake method
+/// Handle `tls.sign_handshake` method
 ///
 /// Signs TLS handshake messages with Ed25519 for ClientKeyExchange/CertificateVerify.
 /// This is used in TLS 1.3 to prove possession of the private key.
@@ -37,7 +37,7 @@ use super::super::utils::derive_key_from_id;
 /// - `message`: Base64-encoded handshake messages to sign
 /// - `algorithm`: Signature algorithm (default: "ed25519")
 /// - `key_id`: Key identifier for TLS signing key (optional)
-/// - `purpose`: Purpose string for key derivation (default: "tls_handshake")
+/// - `purpose`: Purpose string for key derivation (default: "`tls_handshake`")
 ///
 /// # Returns
 ///
@@ -73,7 +73,7 @@ use super::super::utils::derive_key_from_id;
 ///
 /// # References
 ///
-/// - RFC 8032: Edwards-Curve Digital Signature Algorithm (EdDSA)
+/// - RFC 8032: Edwards-Curve Digital Signature Algorithm (`EdDSA`)
 /// - RFC 8446 Section 4.4.3: Certificate Verify
 pub async fn handle_tls_sign_handshake(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for tls.sign_handshake")?;
@@ -146,9 +146,9 @@ pub async fn handle_tls_sign_handshake(params: Option<&Value>) -> Result<Value, 
     }))
 }
 
-/// Handle tls.compute_finished_verify_data method
+/// Handle `tls.compute_finished_verify_data` method
 ///
-/// Computes the TLS 1.3 Finished message verify_data for client or server.
+/// Computes the TLS 1.3 Finished message `verify_data` for client or server.
 /// Implements RFC 8446 Section 4.4.4:
 ///
 /// ```text
@@ -159,7 +159,7 @@ pub async fn handle_tls_sign_handshake(params: Option<&Value>) -> Result<Value, 
 /// # Algorithm
 ///
 /// Where:
-/// - BaseKey is either `client_handshake_traffic_secret` or `server_handshake_traffic_secret`
+/// - `BaseKey` is either `client_handshake_traffic_secret` or `server_handshake_traffic_secret`
 /// - Transcript-Hash covers all handshake messages up to (but not including) Finished
 /// - HMAC uses SHA-256 or SHA-384 depending on cipher suite
 ///

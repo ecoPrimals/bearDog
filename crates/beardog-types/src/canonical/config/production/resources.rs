@@ -131,7 +131,7 @@ impl NetworkResourceConfig {
     /// Default write timeout in seconds
     pub const DEFAULT_WRITE_TIMEOUT_SECS: u64 = 30;
 
-    /// Create NetworkResourceConfig with hardcoded defaults
+    /// Create `NetworkResourceConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -146,7 +146,7 @@ impl NetworkResourceConfig {
         }
     }
 
-    /// Create NetworkResourceConfig from environment variables
+    /// Create `NetworkResourceConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -231,7 +231,7 @@ impl StorageResourceConfig {
     /// Default log retention in days
     pub const DEFAULT_LOG_RETENTION_DAYS: u32 = 30;
 
-    /// Create StorageResourceConfig with hardcoded defaults
+    /// Create `StorageResourceConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -246,7 +246,7 @@ impl StorageResourceConfig {
         }
     }
 
-    /// Create StorageResourceConfig from environment variables
+    /// Create `StorageResourceConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -293,7 +293,7 @@ impl ConnectionConfig {
     /// Default health check interval in seconds
     pub const DEFAULT_HEALTH_CHECK_INTERVAL_SECS: u64 = 60;
 
-    /// Create ConnectionConfig with hardcoded defaults
+    /// Create `ConnectionConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -306,7 +306,7 @@ impl ConnectionConfig {
         }
     }
 
-    /// Create ConnectionConfig from environment variables
+    /// Create `ConnectionConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -343,7 +343,7 @@ impl ConnectionConfig {
 }
 
 impl GcTuningConfig {
-    /// Create GcTuningConfig with hardcoded defaults
+    /// Create `GcTuningConfig` with hardcoded defaults
     pub const fn with_defaults() -> Self {
         Self {
             strategy: GcStrategy::Default,
@@ -352,7 +352,7 @@ impl GcTuningConfig {
         }
     }
 
-    /// Create GcTuningConfig from environment variables
+    /// Create `GcTuningConfig` from environment variables
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -481,6 +481,10 @@ impl ResourceManagementConfig {
 
     /// Validate the resource configuration
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if memory, network, storage, or connection limits are inconsistent or out of range.
     pub fn validate(&self) -> Result<(), BearDogError> {
         // Validate memory settings
         if let (Some(initial), Some(max)) = (

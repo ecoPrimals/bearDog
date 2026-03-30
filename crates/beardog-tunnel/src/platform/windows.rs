@@ -106,6 +106,9 @@ impl PlatformSocket for WindowsSocket {
     }
 }
 
+/// # Errors
+///
+/// Returns an error if the operation fails.
 /// Build named-pipe endpoint with explicit overrides (tests; DI).
 ///
 /// `beardog_pipe`: exact pipe path (equivalent to `BEARDOG_PIPE`).

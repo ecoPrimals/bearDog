@@ -225,11 +225,19 @@ impl PrimalSelfKnowledge {
     }
 
     /// Discover from the process environment (`std::env::var`, read-only).
+    ///
+    /// # Errors
+    ///
+    /// Same as [`Self::discover_from_inputs`].
     pub fn discover_from_env() -> Result<Self, BearDogError> {
         Self::discover_from_inputs(&SelfKnowledgeInputs::from_env())
     }
 
     /// Discover self-knowledge at runtime (reads environment via [`SelfKnowledgeInputs::from_env`]).
+    ///
+    /// # Errors
+    ///
+    /// Same as [`Self::discover_from_inputs`].
     pub fn discover() -> Result<Self, BearDogError> {
         Self::discover_from_env()
     }
@@ -354,6 +362,10 @@ impl Endpoint {
     /// - `grpc://127.0.0.1:8900`
     /// - `unix:///run/user/1000/biomeos/foo.sock` (PRIMAL IPC)
     /// - On Unix, an absolute path `/run/.../foo.sock` is treated as a Unix socket
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the unix path is empty or the host:port portion cannot be parsed.
     pub fn parse(s: &str) -> Result<Self, BearDogError> {
         let trimmed = s.trim();
         if let Some(rest) = trimmed
@@ -482,6 +494,10 @@ fn discover_capabilities() -> Vec<SimpleCapability> {
 /// 1. Explicit `beardog_listen_addr`
 /// 2. `beardog_port` (with 127.0.0.1)
 /// 3. Default: 127.0.0.1:0 (let OS assign port)
+///
+/// # Errors
+///
+/// Returns [`BearDogError`] when listen addresses or ports from inputs are invalid or cannot be resolved.
 pub fn discover_endpoints_from_inputs(
     inputs: &EndpointInputs,
 ) -> Result<Vec<Endpoint>, BearDogError> {
@@ -540,6 +556,10 @@ pub fn discover_endpoints_from_inputs(
 }
 
 /// Discover endpoints using [`EndpointInputs::from_env`].
+///
+/// # Errors
+///
+/// Same as [`discover_endpoints_from_inputs`].
 pub fn discover_endpoints_from_env() -> Result<Vec<Endpoint>, BearDogError> {
     discover_endpoints_from_inputs(&EndpointInputs::from_env())
 }

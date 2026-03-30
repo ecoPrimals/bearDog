@@ -15,9 +15,9 @@
 //!
 //! # Architecture: Tower Atomic Pattern
 //!
-//! BearDog provides the cryptographic "atoms" via JSON-RPC:
+//! `BearDog` provides the cryptographic "atoms" via JSON-RPC:
 //! - The calling primal orchestrates the TLS 1.2 handshake
-//! - BearDog executes the crypto operations
+//! - `BearDog` executes the crypto operations
 //! - Zero crypto code duplication across primals
 //! - Pure Rust for both (ecoBin compliant)
 //!
@@ -43,7 +43,7 @@
 //! - **NIST Curves**: P-256 (128-bit security), P-384 (192-bit security)
 //! - **AES-GCM**: AEAD with 128-bit or 256-bit keys, 12-byte nonces, 16-byte tags
 //! - **TLS 1.2 PRF**: HMAC-SHA256 or HMAC-SHA384 based key expansion
-//! - **Pure Rust**: 100% RustCrypto, zero C dependencies
+//! - **Pure Rust**: 100% `RustCrypto`, zero C dependencies
 //!
 //! # Usage
 //!
@@ -82,6 +82,9 @@ use tracing::{debug, info};
 // ECDHE with NIST P-256 (secp256r1)
 // =============================================================================
 
+/// # Errors
+///
+/// Returns an error if key derivation fails.
 /// Handle crypto.ecdhe.p256.generate method
 ///
 /// Generates an ephemeral P-256 (secp256r1) keypair for ECDHE key exchange.
@@ -139,7 +142,10 @@ pub async fn handle_ecdhe_p256_generate(params: Option<&Value>) -> Result<Value,
     }))
 }
 
-/// Handle crypto.ecdhe.p256.compute_shared method
+/// # Errors
+///
+/// Returns an error if the ECDH operation fails.
+/// Handle `crypto.ecdhe.p256.compute_shared` method
 ///
 /// Computes ECDH shared secret using P-256.
 ///
@@ -205,6 +211,9 @@ pub async fn handle_ecdhe_p256_compute_shared(params: Option<&Value>) -> Result<
 // ECDHE with NIST P-384 (secp384r1)
 // =============================================================================
 
+/// # Errors
+///
+/// Returns an error if key derivation fails.
 /// Handle crypto.ecdhe.p384.generate method
 ///
 /// Generates an ephemeral P-384 (secp384r1) keypair for ECDHE key exchange.
@@ -262,7 +271,10 @@ pub async fn handle_ecdhe_p384_generate(params: Option<&Value>) -> Result<Value,
     }))
 }
 
-/// Handle crypto.ecdhe.p384.compute_shared method
+/// # Errors
+///
+/// Returns an error if encryption fails.
+/// Handle `crypto.ecdhe.p384.compute_shared` method
 ///
 /// Computes ECDH shared secret using P-384.
 ///
@@ -328,7 +340,10 @@ pub async fn handle_ecdhe_p384_compute_shared(params: Option<&Value>) -> Result<
 // AES-GCM AEAD (128-bit and 256-bit)
 // =============================================================================
 
-/// Handle crypto.aead.aes_128_gcm.encrypt method
+/// # Errors
+///
+/// Returns an error if encryption fails.
+/// Handle `crypto.aead.aes_128_gcm.encrypt` method
 ///
 /// Encrypts data using AES-128-GCM AEAD.
 ///
@@ -443,7 +458,10 @@ pub async fn handle_aes_128_gcm_encrypt(params: Option<&Value>) -> Result<Value,
     }))
 }
 
-/// Handle crypto.aead.aes_128_gcm.decrypt method
+/// # Errors
+///
+/// Returns an error if decryption fails.
+/// Handle `crypto.aead.aes_128_gcm.decrypt` method
 ///
 /// Decrypts and verifies data using AES-128-GCM AEAD.
 ///
@@ -547,7 +565,10 @@ pub async fn handle_aes_128_gcm_decrypt(params: Option<&Value>) -> Result<Value,
     }))
 }
 
-/// Handle crypto.aead.aes_256_gcm.encrypt method
+/// # Errors
+///
+/// Returns an error if encryption fails.
+/// Handle `crypto.aead.aes_256_gcm.encrypt` method
 ///
 /// Encrypts data using AES-256-GCM AEAD.
 ///
@@ -653,7 +674,10 @@ pub async fn handle_aes_256_gcm_encrypt(params: Option<&Value>) -> Result<Value,
     }))
 }
 
-/// Handle crypto.aead.aes_256_gcm.decrypt method
+/// # Errors
+///
+/// Returns an error if decryption fails.
+/// Handle `crypto.aead.aes_256_gcm.decrypt` method
 ///
 /// Decrypts and verifies data using AES-256-GCM AEAD.
 ///
@@ -755,7 +779,10 @@ pub async fn handle_aes_256_gcm_decrypt(params: Option<&Value>) -> Result<Value,
 // TLS 1.2 PRF (Pseudorandom Function)
 // =============================================================================
 
-/// Handle crypto.kdf.tls12_prf method
+/// # Errors
+///
+/// Returns an error if hashing fails.
+/// Handle `crypto.kdf.tls12_prf` method
 ///
 /// TLS 1.2 Pseudorandom Function for key expansion (RFC 5246 Section 5).
 ///
@@ -763,7 +790,7 @@ pub async fn handle_aes_256_gcm_decrypt(params: Option<&Value>) -> Result<Value,
 ///
 /// - `secret`: Base64-encoded secret (e.g., premaster secret or master secret)
 /// - `label`: ASCII label string (e.g., "master secret", "key expansion")
-/// - `seed`: Base64-encoded seed data (e.g., client_random + server_random)
+/// - `seed`: Base64-encoded seed data (e.g., `client_random` + `server_random`)
 /// - `output_len`: Desired output length in bytes
 /// - `hash`: Hash algorithm ("sha256" or "sha384", default "sha256")
 ///

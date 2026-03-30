@@ -46,6 +46,9 @@ impl LiveFeedValidator {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// CRITICAL: Validate that entropy is from live feed only
     /// Returns error if ANY simulated entropy is detected
     /// Validates live_feed_only

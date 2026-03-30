@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-/// Self-enforcing constraints embedded in a BearDog key
+/// Self-enforcing constraints embedded in a `BearDog` key
 ///
 /// These constraints are cryptographically signed by the key's private key,
 /// making them tamper-proof. Any operation must pass constraint verification.
@@ -50,7 +50,7 @@ pub enum ScopeConstraint {
 
     /// Limited to specific domains
     Limited {
-        /// Allowed domain identifiers (e.g., "climate_modeling", "medical_research")
+        /// Allowed domain identifiers (e.g., "`climate_modeling`", "`medical_research`")
         domains: Vec<String>,
     },
 

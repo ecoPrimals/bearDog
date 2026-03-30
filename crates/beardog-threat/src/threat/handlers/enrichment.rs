@@ -22,6 +22,10 @@ impl ThreatEnrichmentHandler {
     }
 
     /// Enrich threat with external intelligence
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future enrichment failures.
     pub fn enrich_threat(
         &self,
         _threat_id: &str,

@@ -5,7 +5,7 @@
 //! Provides core security capabilities including:
 //! - Trust evaluation based on genetic family lineage
 //! - Lineage information for identity verification
-//! - BirdSong encryption/decryption for secure discovery
+//! - `BirdSong` encryption/decryption for secure discovery
 //! - JWT secret generation for authentication systems
 
 use super::MethodHandler;
@@ -23,7 +23,7 @@ use tracing::{debug, info};
 /// Supports:
 /// - `security.evaluate` / `trust.evaluate` - Evaluate trust level based on genetic family
 /// - `security.lineage` / `trust.lineage` - Get genetic lineage information
-/// - `birdsong.encrypt` / `birdsong.decrypt` - BirdSong encryption for secure discovery
+/// - `birdsong.encrypt` / `birdsong.decrypt` - `BirdSong` encryption for secure discovery
 /// - `security.generate_jwt_secret` - Generate cryptographically secure JWT secrets
 ///
 /// # Architecture
@@ -98,7 +98,7 @@ impl MethodHandler for SecurityHandler {
 }
 
 impl SecurityHandler {
-    /// Create a new SecurityHandler with explicit identity injection
+    /// Create a new `SecurityHandler` with explicit identity injection
     ///
     /// # Arguments
     ///
@@ -247,9 +247,9 @@ impl SecurityHandler {
         }))
     }
 
-    /// Handle BirdSong encryption request
+    /// Handle `BirdSong` encryption request
     ///
-    /// Encrypts plaintext for a specific family using BirdSong protocol.
+    /// Encrypts plaintext for a specific family using `BirdSong` protocol.
     async fn handle_birdsong_encrypt(
         &self,
         params: Option<&serde_json::Value>,
@@ -279,9 +279,9 @@ impl SecurityHandler {
         }))
     }
 
-    /// Handle BirdSong decryption request
+    /// Handle `BirdSong` decryption request
     ///
-    /// Decrypts ciphertext from a specific family using BirdSong protocol.
+    /// Decrypts ciphertext from a specific family using `BirdSong` protocol.
     /// Gracefully returns success=false if not for our family (privacy).
     async fn handle_birdsong_decrypt(
         &self,

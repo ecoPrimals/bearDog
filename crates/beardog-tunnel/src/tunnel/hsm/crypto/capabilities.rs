@@ -93,11 +93,11 @@ pub enum SideChannelResistance {
 /// Supported platforms
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Platform {
-    /// Linux (x86_64, aarch64)
+    /// Linux (`x86_64`, aarch64)
     Linux,
     /// macOS (Apple Silicon, Intel)
     MacOs,
-    /// Windows (x86_64)
+    /// Windows (`x86_64`)
     Windows,
     /// Android (ARM, ARM64)
     Android,

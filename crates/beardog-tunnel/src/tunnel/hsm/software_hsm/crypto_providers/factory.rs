@@ -50,8 +50,8 @@ pub async fn create_crypto_provider(
 ///
 /// **TRUE PRIMAL**: Only 100% Pure Rust backends supported! 🦀
 ///
-/// - GeneticCrypto: RECOMMENDED (100% Pure Rust, hardware acceleration)
-/// - RustCrypto: Standard (100% Pure Rust, ARM-ready, no C compiler needed)
+/// - `GeneticCrypto`: RECOMMENDED (100% Pure Rust, hardware acceleration)
+/// - `RustCrypto`: Standard (100% Pure Rust, ARM-ready, no C compiler needed)
 pub fn get_supported_crypto_backends() -> Vec<CryptoBackend> {
     vec![
         CryptoBackend::GeneticCrypto, // RECOMMENDED: 100% Pure Rust + Hardware Acceleration
@@ -130,10 +130,10 @@ pub const fn get_crypto_provider_capabilities(
 ///
 /// **TRUE PRIMAL**: Only 100% Pure Rust backends! 🦀
 ///
-/// - GeneticCrypto: ✅ RECOMMENDED (100% Pure Rust)
-/// - RustCrypto: ✅ Standard (100% Pure Rust)
-/// - Ring: ✅ Supported (auto-fallback to RustCrypto for ARM compatibility)
-/// - OpenSsl: ✅ Supported (auto-fallback to RustCrypto for Pure Rust sovereignty)
+/// - `GeneticCrypto`: ✅ RECOMMENDED (100% Pure Rust)
+/// - `RustCrypto`: ✅ Standard (100% Pure Rust)
+/// - Ring: ✅ Supported (auto-fallback to `RustCrypto` for ARM compatibility)
+/// - `OpenSsl`: ✅ Supported (auto-fallback to `RustCrypto` for Pure Rust sovereignty)
 pub const fn is_crypto_backend_supported(backend: &CryptoBackend) -> bool {
     // Only Pure Rust backends supported - Ring and OpenSsl evolved out! 🦀
     matches!(
@@ -144,9 +144,9 @@ pub const fn is_crypto_backend_supported(backend: &CryptoBackend) -> bool {
 
 /// Get Recommended Crypto Backend.
 ///
-/// **UPDATED**: Now recommends GeneticCrypto (100% Pure Rust, zero FFI)
+/// **UPDATED**: Now recommends `GeneticCrypto` (100% Pure Rust, zero FFI)
 ///
-/// GeneticCrypto provides:
+/// `GeneticCrypto` provides:
 /// - 100% memory safe (borrow checker enforced)
 /// - Zero FFI boundaries (full compiler optimization)
 /// - Hardware acceleration (AES-NI, AVX2)

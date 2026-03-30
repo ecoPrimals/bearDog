@@ -11,6 +11,11 @@ use std::fs;
 use std::sync::Arc;
 
 /// Handle decryption command
+///
+/// # Errors
+///
+/// Returns an error if the key cannot be loaded, I/O on stdin/file fails, ciphertext parsing or
+/// HSM decryption fails, or the output cannot be written.
 pub async fn handle_decrypt(
     key_id: &str,
     input_path: &str,

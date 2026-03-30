@@ -16,7 +16,7 @@ pub struct SafeAndroidProvider {
 }
 
 impl SafeAndroidProvider {
-    /// Creates a new SafeAndroidProvider instance
+    /// Creates a new `SafeAndroidProvider` instance
     ///
     /// # Errors
     /// Returns an error if provider initialization fails.
@@ -33,7 +33,7 @@ impl SafeAndroidProvider {
         })
     }
 
-    /// Checks if StrongBox is available on this device
+    /// Checks if `StrongBox` is available on this device
     fn check_strongbox_availability() -> bool {
         beardog_errors::process_env::var("ANDROID_STRONGBOX_AVAILABLE")
             .map(|v| v == "true")

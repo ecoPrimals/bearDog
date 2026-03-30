@@ -64,6 +64,10 @@ impl CrossNodeAuthEngine {
     }
 
     /// Verify authorization proof
+    ///
+    /// # Errors
+    ///
+    /// Currently returns [`Ok`] with `true`/`false`; the `Result` type is reserved for future crypto failures.
     pub fn verify_authorization_proof(
         &self,
         proof: &AuthorizationProof,
@@ -85,6 +89,10 @@ impl CrossNodeAuthEngine {
     }
 
     /// Revoke authorization
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError::not_found`] when `auth_id` is unknown.
     pub fn revoke_authorization(&mut self, auth_id: &str) -> Result<(), BearDogError> {
         if let Some(auth) = self.active_authorizations.get_mut(auth_id) {
             auth.is_active = false;

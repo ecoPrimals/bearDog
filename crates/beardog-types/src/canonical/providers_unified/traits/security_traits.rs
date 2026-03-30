@@ -68,7 +68,7 @@ pub trait UnifiedSecurityProvider: UnifiedProvider {
 
 /// **HSM PROVIDER TRAIT** - For Hardware Security Module providers
 ///
-/// This trait defines the interface for Hardware Security Module (HSM) operations in the BearDog
+/// This trait defines the interface for Hardware Security Module (HSM) operations in the `BearDog`
 /// ecosystem. HSMs provide secure key generation, storage, and cryptographic operations with
 /// hardware-backed security guarantees.
 ///
@@ -83,7 +83,7 @@ pub trait UnifiedSecurityProvider: UnifiedProvider {
 ///
 /// - **Hardware HSM**: Physical security modules (PKCS#11, network-attached)
 /// - **Software HSM**: Software implementations for development/testing
-/// - **Cloud HSM**: Cloud-based HSM services (AWS CloudHSM, Azure Dedicated HSM, etc.)
+/// - **Cloud HSM**: Cloud-based HSM services (AWS `CloudHSM`, Azure Dedicated HSM, etc.)
 /// - **Mobile HSM**: Platform-specific secure enclaves (Android Keystore, iOS Secure Enclave)
 ///
 /// # Key Features

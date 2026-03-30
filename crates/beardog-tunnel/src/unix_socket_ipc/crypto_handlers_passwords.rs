@@ -8,7 +8,7 @@
 //! **Modern**: Argon2id (OWASP recommended since 2023)
 //! **Legacy**: PBKDF2 (still common in iOS/macOS/legacy systems)
 //!
-//! Pure Rust implementations using RustCrypto crates (zero C dependencies).
+//! Pure Rust implementations using `RustCrypto` crates (zero C dependencies).
 //!
 //! # Password Hashing Best Practices
 //!
@@ -32,7 +32,7 @@
 //! PBKDF2 (Password-Based Key Derivation Function 2) is a legacy standard.
 //! Still used by:
 //! - iOS/macOS password storage
-//! - WPA2/WPA3 WiFi encryption
+//! - WPA2/WPA3 `WiFi` encryption
 //! - Legacy enterprise systems
 //!
 //! **Not recommended for new systems** - use Argon2id instead!
@@ -49,6 +49,9 @@ use rand::rngs::OsRng;
 use serde_json::{Value, json};
 use sha2::Sha256;
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 /// Handle `crypto.argon2id_hash` - Argon2id password hashing
 ///
 /// Hashes a password using Argon2id (OWASP recommended).
@@ -117,6 +120,9 @@ pub fn handle_argon2id_hash(params: &Value) -> Result<Value, BearDogError> {
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if verification fails in the underlying HSM provider.
 /// Handle `crypto.argon2id_verify` - Argon2id password verification
 ///
 /// Verifies a password against an Argon2id hash.
@@ -169,6 +175,9 @@ pub fn handle_argon2id_verify(params: &Value) -> Result<Value, BearDogError> {
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 /// Handle `crypto.pbkdf2_sha256` - PBKDF2-HMAC-SHA256 key derivation
 ///
 /// Derives a key from a password using PBKDF2 with SHA-256.

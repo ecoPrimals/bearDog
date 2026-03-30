@@ -22,7 +22,7 @@ fn default_local_socket_parent_dir() -> std::path::PathBuf {
 static ACTIVE_SOCKET: OnceLock<String> = OnceLock::new();
 
 /// Get the socket path using self-knowledge pattern.
-/// Priority: ACTIVE_SOCKET > BEARDOG_SOCKET > PRIMAL_NAME-based > default
+/// Priority: `ACTIVE_SOCKET` > `BEARDOG_SOCKET` > PRIMAL_NAME-based > default
 fn discover_socket_path() -> String {
     discover_socket_path_with(|key| std::env::var(key).ok())
 }
@@ -47,6 +47,10 @@ fn discover_socket_path_with(get: impl Fn(&str) -> Option<String>) -> String {
 }
 
 /// Handle client command - interactive REPL
+///
+/// # Errors
+///
+/// Returns an error if the Unix socket cannot be opened, or sending/receiving IPC commands fails.
 pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
     info!("🐻🐕 BearDog Client Mode");
     info!("   Connecting to: {}", args.socket);

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Neural API Auto-Registration for BearDog
+//! Neural API Auto-Registration for `BearDog`
 //!
-//! Registers BearDog's crypto capabilities with Neural API on startup.
+//! Registers `BearDog`'s crypto capabilities with Neural API on startup.
 //! This enables TRUE PRIMAL pattern with semantic routing via `capability.call`.
 //!
 //! ## Architecture
@@ -25,7 +25,7 @@
 //!
 //! ## Semantic Routing
 //!
-//! Neural API translates semantic method names to BearDog's actual method names:
+//! Neural API translates semantic method names to `BearDog`'s actual method names:
 //!
 //! ```text
 //! Consumer: "crypto.generate_keypair"
@@ -37,7 +37,7 @@
 //! BearDog executes
 //! ```
 //!
-//! This enables zero-coupling evolution: BearDog can change its API without
+//! This enables zero-coupling evolution: `BearDog` can change its API without
 //! breaking consumers.
 
 use anyhow::{Context, Result};
@@ -46,7 +46,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::UnixStream;
 use tracing::{debug, info, warn};
 
-/// Register BearDog's capabilities with Neural API
+/// Register `BearDog`'s capabilities with Neural API
 ///
 /// This registers three main capabilities:
 /// 1. `crypto` - Core cryptographic operations
@@ -54,13 +54,17 @@ use tracing::{debug, info, warn};
 /// 3. `genetic_lineage` - Genetic lineage verification
 ///
 /// Each capability includes semantic mappings that translate generic
-/// operation names to BearDog's specific method names.
+/// operation names to `BearDog`'s specific method names.
 ///
 /// # Arguments
 ///
 /// * `neural_socket` - Path to Neural API Unix socket
 /// * `primal_name` - Primal identifier (e.g., "beardog-nat0")
 /// * `socket_path` - Path to this primal's Unix socket (e.g., "/tmp/beardog-nat0.sock")
+///
+/// # Errors
+///
+/// Returns an error when the Neural API socket is unreachable or registration fails.
 pub async fn register_with_neural_api(
     neural_socket: &str,
     primal_name: &str,

@@ -2,7 +2,7 @@
 
 //! Capability detector module
 //!
-//! NOTE: This module depends on universal_hsm_discovery which is currently
+//! NOTE: This module depends on `universal_hsm_discovery` which is currently
 //! commented out pending systematic rebuild.
 
 // pub use crate::universal_hsm_discovery::capability_detection::*;

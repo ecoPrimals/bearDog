@@ -1,6 +1,6 @@
 # BearDog Roadmap
 
-**Updated**: March 28, 2026
+**Updated**: March 30, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -14,14 +14,14 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 - Rust edition 2024 (MSRV 1.93.0, `rust-toolchain.toml` pinned)
 - 100% Pure Rust (zero C dependencies, RustCrypto suite)
-- 91+ JSON-RPC crypto methods (semantic naming)
-- 0 clippy warnings (pedantic + nursery + cast + unwrap/expect warn, workspace-centralized)
-- 0 missing documentation warnings (all public items documented)
+- 93 JSON-RPC crypto methods (semantic naming)
+- 0 clippy warnings (pedantic + nursery + all cast lints warn + `doc_markdown` warn + `missing_errors_doc` warn + unwrap/expect warn, workspace-centralized)
+- 0 missing documentation warnings (all public items documented, all `# Errors` sections present)
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 1000 lines of code (production)
-- 15,100+ tests passing (fully concurrent, zero sleeps in non-chaos)
-- 90.16% line coverage (llvm-cov workspace) — target met
+- 15,320+ tests passing (fully concurrent, zero sleeps in non-chaos)
+- 89.57% line coverage (llvm-cov workspace) — target 90%
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - Zero `#[serial_test::serial]` — all tests concurrent via unique isolated resources
 - `cargo deny` passes all 4 checks
@@ -35,7 +35,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - Android StrongBox integration (complete)
 - HSM abstraction (software, PKCS#11, StrongBox)
 - All production `unwrap()`/`expect()` eliminated (zero panic paths)
-- SPDX license headers on all 2,026 .rs files (100%)
+- SPDX license headers on all 2,007 .rs files (100%)
 - ecoBin C-dependency compliance (sysinfo removed, blake3 pure, pprof optional)
 - Smart refactoring of oversized files into submodule directories
 - All mocks isolated behind `cfg(test)` / `test-utils` feature
@@ -116,4 +116,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: March 28, 2026
+**Last Updated**: March 30, 2026

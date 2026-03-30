@@ -77,6 +77,9 @@ pub(super) fn derive_key_from_id(key_id: &str, purpose: &str) -> Result<[u8; 32]
 // Base64 Helpers
 // ============================================================================
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Decode base64 with a descriptive field name for error messages
 ///
 /// # Example
@@ -90,6 +93,9 @@ pub fn decode_base64_field(field_name: &str, input: &str) -> Result<Vec<u8>, Bea
     })
 }
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Decode base64 returning String error (for handlers using Result<_, String>)
 ///
 /// This is a transition helper while migrating to proper error types.
@@ -103,6 +109,9 @@ pub fn decode_base64_field_str(field_name: &str, input: &str) -> Result<Vec<u8>,
 // Parameter Extraction Helpers
 // ============================================================================
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Require parameters from a JSON-RPC request
 ///
 /// # Example
@@ -122,6 +131,9 @@ pub fn extract_str_param<'a>(params: &'a Value, field: &str) -> Option<&'a str> 
     params.get(field).and_then(|v| v.as_str())
 }
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Extract a required string parameter from JSON
 ///
 /// Returns an error if the field doesn't exist or isn't a string.
@@ -139,6 +151,9 @@ pub fn extract_u64_param(params: &Value, field: &str) -> Option<u64> {
 // Deserialization Helpers
 // ============================================================================
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Deserialize JSON parameters into a typed request with method-specific errors
 ///
 /// # Example
@@ -154,6 +169,9 @@ pub fn deserialize_request<T: DeserializeOwned>(
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid {method_name} params: {e}")))
 }
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Deserialize with String error (transition helper)
 pub fn deserialize_request_str<T: DeserializeOwned>(
     params: Value,
@@ -166,7 +184,7 @@ pub fn deserialize_request_str<T: DeserializeOwned>(
 // Error Conversion Helpers
 // ============================================================================
 
-/// Convert any Display error to a BearDogError with context
+/// Convert any Display error to a `BearDogError` with context
 ///
 /// # Example
 ///

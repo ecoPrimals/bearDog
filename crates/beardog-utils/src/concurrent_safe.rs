@@ -187,6 +187,11 @@ where
     }
 
     /// Insert with LRU eviction
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok` with the previous value if the key existed; the `Result` is
+    /// reserved for future error paths.
     pub fn insert(&self, key: K, value: V) -> Result<Option<V>, BearDogError> {
         debug!("📝 Safe concurrent cache insert");
 

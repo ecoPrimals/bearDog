@@ -108,6 +108,9 @@ impl DefaultHsmManager {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the provider is not registered.
     /// Register an HSM provider
     pub fn register_provider(
         &mut self,
@@ -118,6 +121,9 @@ impl DefaultHsmManager {
         Ok(())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the provider is not registered.
     /// Get a provider by ID
     pub fn get_provider(&self, id: &str) -> Result<&dyn HsmProvider, BearDogError> {
         self.hsm_providers

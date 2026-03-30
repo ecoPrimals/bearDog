@@ -54,7 +54,7 @@ pub mod auth {
     /// API key settings
     /// Length of generated API keys in bytes
     pub const API_KEY_LENGTH: usize = 32;
-    /// Prefix for generated BearDog API keys
+    /// Prefix for generated `BearDog` API keys
     pub const API_KEY_PREFIX: &str = "bd_";
     /// Default lifetime of API keys (1 year)
     pub const API_KEY_LIFETIME: Duration = Duration::from_secs(86400 * 365); // 1 year

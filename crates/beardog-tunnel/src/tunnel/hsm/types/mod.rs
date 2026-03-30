@@ -58,7 +58,7 @@ impl Default for HsmCapabilities {
 // Algorithm enumeration for compatibility
 /// Canonical cryptographic algorithm enumeration
 ///
-/// Unified algorithm definitions for all HSM operations across BearDog.
+/// Unified algorithm definitions for all HSM operations across `BearDog`.
 /// This enum consolidates algorithm specifications from multiple sources.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Algorithm {
@@ -203,7 +203,7 @@ pub struct AndroidKeyParams {
     pub key_size: u32,
     /// Allowed key purposes
     pub purposes: Vec<AndroidKeyPurpose>,
-    /// Require StrongBox hardware
+    /// Require `StrongBox` hardware
     pub strongbox_required: bool,
     /// Require user authentication
     pub user_authentication_required: bool,
@@ -249,7 +249,7 @@ impl AndroidKeyParams {
         self.purposes = purposes;
     }
 
-    /// Set StrongBox requirement
+    /// Set `StrongBox` requirement
     pub fn set_strongbox_required(&mut self, required: bool) {
         self.strongbox_required = required;
     }
@@ -298,7 +298,7 @@ impl Default for AndroidKeystoreConfig {
 /// Android HSM configuration - canonical definition
 #[derive(Debug, Clone)]
 pub struct AndroidHsmConfig {
-    /// Enable StrongBox hardware security
+    /// Enable `StrongBox` hardware security
     pub strongbox_enabled: bool,
     /// Key parameters
     pub key_params: AndroidKeyParams,
@@ -349,7 +349,7 @@ impl Default for IOSHsmConfig {
 /// Android device capabilities
 #[derive(Debug, Clone)]
 pub struct AndroidDeviceCapabilities {
-    /// StrongBox hardware available
+    /// `StrongBox` hardware available
     pub strongbox_available: bool,
     /// Key attestation available
     pub key_attestation_available: bool,
@@ -502,7 +502,7 @@ impl AndroidKeystore {
         Ok(challenge)
     }
 
-    /// Check if StrongBox is available on this device
+    /// Check if `StrongBox` is available on this device
     pub const fn is_strongbox_available(&self) -> bool {
         self.capabilities.strongbox_available
     }

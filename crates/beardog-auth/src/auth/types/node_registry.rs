@@ -71,27 +71,51 @@ pub struct NodeInfo {
     pub genetics: Option<BearDogGenetics>,
 }
 
-/// Abstraction over directory services that track participating BearDog nodes.
+/// Abstraction over directory services that track participating `BearDog` nodes.
 pub trait NodeRegistry: Send + Sync {
     /// Looks up metadata previously registered for `node_id`.
+    ///
+    /// # Errors
+    ///
+    /// Implementations return [`BearDogError`] when the node is unknown or the backing store fails.
     fn get_node_info(&self, node_id: &str) -> Result<NodeInfo, BearDogError>;
 
     /// Persists or replaces registration details for a node.
+    ///
+    /// # Errors
+    ///
+    /// Implementations return [`BearDogError`] when persistence or validation fails.
     fn register_node(&mut self, node_info: NodeInfo) -> Result<(), BearDogError>;
 
     /// Gets `trust_level`
+    ///
+    /// # Errors
+    ///
+    /// Implementations return [`BearDogError`] when the node is unknown or trust cannot be read.
     fn get_trust_level(&self, node_id: &str) -> Result<f64, BearDogError>;
 
     /// Updates `trust_level`
+    ///
+    /// # Errors
+    ///
+    /// Implementations return [`BearDogError`] when the node is unknown or the update fails.
     fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> Result<(), BearDogError>;
 }
 
 /// Validates or mints [`AuthorizationProof`] values for cross-node calls.
 pub trait ProofVerifier: Send + Sync {
     /// Returns `Ok(true)` when `proof` is well-formed, fresh, and cryptographically acceptable.
+    ///
+    /// # Errors
+    ///
+    /// Implementations return [`BearDogError`] when cryptographic verification cannot complete.
     fn verify_authorization_proof(&self, proof: &AuthorizationProof) -> Result<bool, BearDogError>;
 
     /// Constructs a new proof binding `operation` to `authorization`.
+    ///
+    /// # Errors
+    ///
+    /// Implementations return [`BearDogError`] when proof generation fails.
     fn generate_proof(
         &self,
         authorization: &CrossNodeAuthorization,
@@ -102,12 +126,20 @@ pub trait ProofVerifier: Send + Sync {
 /// Orchestrates long-running cross-node workflows that require authorization context.
 pub trait WorkflowEngine: Send + Sync {
     /// Enqueues a workflow and returns an opaque `workflow_id` for status polling.
+    ///
+    /// # Errors
+    ///
+    /// Implementations return [`BearDogError`] when the workflow cannot be accepted.
     fn submit_workflow(
         &mut self,
         request: CrossNodeWorkflowRequest,
     ) -> Result<String, BearDogError>;
 
     /// Retrieves the latest [`WorkflowStatus`] for a previously submitted workflow.
+    ///
+    /// # Errors
+    ///
+    /// Implementations return [`BearDogError`] when `workflow_id` is unknown or status is unavailable.
     fn get_workflow_status(&self, workflow_id: &str) -> Result<WorkflowStatus, BearDogError>;
 }
 

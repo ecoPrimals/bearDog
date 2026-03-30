@@ -2,7 +2,7 @@
 
 //! Service type labels and discovery timeouts.
 
-/// Note: Use default_health_port(), default_metrics_port()
+/// Note: Use `default_health_port()`, `default_metrics_port()`
 /// functions for environment-aware configuration
 pub use super::timeouts::DNS_RESOLUTION_TIMEOUT;
 

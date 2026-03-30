@@ -46,11 +46,19 @@ pub struct MdnsDiscovery {
 
 impl MdnsDiscovery {
     /// Create new mDNS discovery client with default configuration
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from [`Self::with_config`].
     pub fn new() -> Result<Self> {
         Self::with_config(MdnsConfig::default())
     }
 
     /// Create new mDNS discovery client with custom configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns [`DiscoveryError::InitializationFailed`] when the mDNS daemon cannot start.
     pub fn with_config(config: MdnsConfig) -> Result<Self> {
         let daemon = ServiceDaemon::new()
             .map_err(|e| DiscoveryError::InitializationFailed(e.to_string()))?;
@@ -66,6 +74,10 @@ impl MdnsDiscovery {
     ///
     /// Performs real mDNS queries for services advertising the given capability.
     /// Returns all discovered services within the configured timeout.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when mDNS browse or resolution fails.
     pub async fn discover(&self, capability: &str) -> Result<Vec<DiscoveredService>> {
         let service_type = Self::capability_to_service_type(capability);
 
@@ -138,7 +150,7 @@ impl MdnsDiscovery {
         format!("_{}._tcp.local.", capability.to_lowercase())
     }
 
-    /// Convert mDNS ServiceInfo to DiscoveredService
+    /// Convert mDNS `ServiceInfo` to `DiscoveredService`
     fn convert_to_discovered(
         &self,
         info: &ServiceInfo,
@@ -269,6 +281,10 @@ impl MdnsDiscovery {
     /// Allows this service to be discovered by other primals.
     /// This is how we implement self-knowledge: announce what we ARE,
     /// discover what others ARE at runtime.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`DiscoveryError`] when hostname resolution or mDNS registration fails.
     pub fn announce(
         &self,
         capability: &str,

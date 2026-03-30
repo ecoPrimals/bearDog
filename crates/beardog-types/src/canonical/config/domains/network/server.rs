@@ -74,6 +74,10 @@ impl Default for SocketBufferConfiguration {
 
 impl ServerConfiguration {
     /// Validate server configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if port, max connections, or bind address is invalid.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.port == 0 {
             return Err(BearDogError::configuration("Server port cannot be 0"));
@@ -93,6 +97,10 @@ impl ServerConfiguration {
 
 impl SocketBufferConfiguration {
     /// Validate socket buffer configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if send or receive buffer size is zero.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.send_buffer_size == 0 {
             return Err(BearDogError::configuration("Send buffer size cannot be 0"));

@@ -59,6 +59,10 @@ impl SafeSimdProcessor {
     }
 
     /// Safe SIMD hash computation using stable Rust features
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if an internal hash helper fails.
     pub fn safe_simd_hash(&self, input_data: &[u8]) -> Result<[u8; 32], BearDogError> {
         debug!("🔐 Computing safe SIMD hash for {} bytes", input_data.len());
 

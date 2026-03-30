@@ -114,6 +114,9 @@ impl SafeSecureEnclave {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails in the underlying HSM provider.
     /// Safe key generation
     pub async fn safe_generate_key(
         &self,
@@ -161,6 +164,9 @@ impl SafeSecureEnclave {
         })
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if signing fails in the underlying HSM provider.
     /// Safe data signing
     pub async fn safe_sign(
         &self,
@@ -180,6 +186,9 @@ impl SafeSecureEnclave {
         Ok(signature)
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if verification fails in the underlying HSM provider.
     /// Safe signature verification
     pub async fn safe_verify(
         &self,

@@ -51,6 +51,9 @@ impl TpmHsmProvider {
         Self { device_path }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the provider is not registered.
     /// Initialize TPM connection
     ///
     /// **REAL IMPLEMENTATION**: Pure Rust TPM discovery!
@@ -99,6 +102,9 @@ impl TpmHsmProvider {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the Tor-related operation fails.
     /// Get TPM version
     ///
     /// **REAL IMPLEMENTATION**: Returns TPM 2.0 (validated during init)

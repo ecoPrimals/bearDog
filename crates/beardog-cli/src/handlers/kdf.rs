@@ -34,6 +34,10 @@ impl KdfConfig {
     }
 
     /// Derive key material from password/seed using configured KDF
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the KDF type is unknown or key derivation fails.
     pub fn derive_key(
         &self,
         password: &[u8],

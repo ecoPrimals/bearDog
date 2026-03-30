@@ -212,6 +212,9 @@ impl SoftwareHealthMonitor {
         Ok(())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the Tor-related operation fails.
     /// Record operation for metrics
     pub async fn record_operation(
         &self,

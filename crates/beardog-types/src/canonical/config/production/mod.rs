@@ -55,7 +55,7 @@ pub use environment::{EnvironmentType, EnvironmentValidation, ModernSecretsConfi
 ///
 /// across the `BearDog` ecosystem while maintaining backward compatibility.
 ///
-/// Note: CanonicalProductionConfig type alias removed. Use UnifiedProductionConfig directly.
+/// Note: `CanonicalProductionConfig` type alias removed. Use `UnifiedProductionConfig` directly.
 /// **UNIFIED PRODUCTION CONFIGURATION** - Primary production config
 ///
 /// This consolidates all production configurations into a single, comprehensive system
@@ -104,6 +104,10 @@ impl UnifiedProductionConfig {
 
     /// Validate the entire production configuration
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if any nested section (core, environment, resources, operations, deployment, observability) fails validation.
     pub fn validate(&self) -> Result<(), BearDogError> {
         self.core.validate()?;
         self.environment.validate()?;

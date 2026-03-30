@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 /// Each variant wraps a specific algorithm category.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CryptoAlgorithm {
-    /// Symmetric encryption algorithm (AES, ChaCha20, etc.)
+    /// Symmetric encryption algorithm (AES, `ChaCha20`, etc.)
     Symmetric(SymmetricAlgorithm),
     /// Asymmetric encryption algorithm (RSA-OAEP, ECIES, etc.)
     Asymmetric(AsymmetricAlgorithm),
@@ -75,7 +75,7 @@ pub enum SymmetricAlgorithm {
     },
     /// ChaCha20-Poly1305 AEAD cipher (256-bit key)
     ChaCha20Poly1305,
-    /// ChaCha20 stream cipher (non-authenticated)
+    /// `ChaCha20` stream cipher (non-authenticated)
     ChaCha20 {
         /// Key size in bits (typically 256)
         key_size: u32,
@@ -248,7 +248,7 @@ pub enum HashAlgorithm {
     Sha3_384,
     /// SHA3-512 (Keccak-based, 512-bit output)
     Sha3_512,
-    /// BLAKE2b (variable output up to 512 bits)
+    /// `BLAKE2b` (variable output up to 512 bits)
     Blake2b {
         /// Output size in bytes (1-64)
         output_size: usize,

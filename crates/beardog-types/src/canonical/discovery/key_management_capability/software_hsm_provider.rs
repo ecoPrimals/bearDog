@@ -7,11 +7,11 @@ use crate::canonical::types::ids::KeyId;
 use async_trait::async_trait;
 use std::sync::Arc;
 
-/// Software HSM provider using SecureSoftwareHsm
+/// Software HSM provider using `SecureSoftwareHsm`
 ///
 /// This implementation provides a pure-Rust HSM for environments without
 /// hardware security modules. All keys are encrypted at rest and operations
-/// use modern cryptography from the RustCrypto ecosystem.
+/// use modern cryptography from the `RustCrypto` ecosystem.
 pub struct SoftwareHsmProvider {
     /// Inner secure software HSM implementation
     inner: Arc<super::super::software_hsm_impl::SecureSoftwareHsm>,

@@ -138,6 +138,10 @@ impl AdvancedSIMDOptimizer {
 
     /// ⚡ PERFORMANCE: Vectorized memory operations (basic implementation)
     /// Note: Uses standard Rust copy. Full SIMD vectorization pending platform-specific optimization.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `src` and `dst` lengths differ.
     pub fn simd_memory_copy(&mut self, src: &[u8], dst: &mut [u8]) -> Result<(), BearDogError> {
         if src.len() != dst.len() {
             return Err(BearDogError::validation(
@@ -167,6 +171,10 @@ impl AdvancedSIMDOptimizer {
     }
 
     /// ⚡ PERFORMANCE: Vectorized data processing
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if a sub-operation (XOR, AND, byte swap) fails validation.
     pub fn simd_process_data(
         &mut self,
         data: &mut [u8],

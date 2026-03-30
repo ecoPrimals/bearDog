@@ -229,9 +229,13 @@ pub trait CacheStrategy: Send + Sync {
     /// Returns `Ok(())` if valid, or `Err(String)` with error description.
     ///
     /// ## Validation Rules
-    /// - max_entries should be > 0 (unless disabled)
+    /// - `max_entries` should be > 0 (unless disabled)
     /// - TTL should be reasonable (not too short, not absurdly long)
-    /// - max_size_bytes (if set) should be reasonable
+    /// - `max_size_bytes` (if set) should be reasonable
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if enabled cache limits, TTL, or size constraints are invalid.
     fn validate(&self) -> Result<(), String> {
         // Check if caching is effectively disabled
         if !self.is_enabled() {

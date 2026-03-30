@@ -61,7 +61,7 @@ pub struct BearDogGenetics {
     #[serde(default)]
     pub constraint_signature: Option<Vec<u8>>,
 
-    /// Public key for constraint verification (optional, can be derived from crypto_chromosomes)
+    /// Public key for constraint verification (optional, can be derived from `crypto_chromosomes`)
     #[serde(default)]
     pub public_key: Option<Vec<u8>>,
 }

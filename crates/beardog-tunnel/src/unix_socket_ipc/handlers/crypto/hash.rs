@@ -26,7 +26,7 @@
 //! - **Output Size**: 32 bytes (256-bit, default)
 //! - **Speed**: Extremely fast (~3 GB/s single-core, highly parallelizable)
 //! - **Security**: 128-bit collision resistance
-//! - **Use Case**: Primary hash for BearDog (faster than SHA-256)
+//! - **Use Case**: Primary hash for `BearDog` (faster than SHA-256)
 //!
 //! ### Methods
 //!
@@ -77,15 +77,18 @@ use serde_json::Value;
 use sha2::{Digest, Sha256, Sha384};
 use tracing::{debug, info};
 
-/// Handle crypto.hash_for_cipher method
+/// # Errors
+///
+/// Returns an error if hashing fails.
+/// Handle `crypto.hash_for_cipher` method
 ///
 /// Cipher-aware hashing for TLS 1.3 - selects hash algorithm based on cipher suite.
 ///
 /// # TLS 1.3 Cipher Suites (RFC 8446)
 ///
-/// - **0x1301** (TLS_AES_128_GCM_SHA256): Uses SHA-256 (32 bytes)
-/// - **0x1302** (TLS_AES_256_GCM_SHA384): Uses SHA-384 (48 bytes)
-/// - **0x1303** (TLS_CHACHA20_POLY1305_SHA256): Uses SHA-256 (32 bytes)
+/// - **0x1301** (`TLS_AES_128_GCM_SHA256)`: Uses SHA-256 (32 bytes)
+/// - **0x1302** (`TLS_AES_256_GCM_SHA384)`: Uses SHA-384 (48 bytes)
+/// - **0x1303** (`TLS_CHACHA20_POLY1305_SHA256)`: Uses SHA-256 (32 bytes)
 ///
 /// # Parameters
 ///
@@ -113,7 +116,7 @@ use tracing::{debug, info};
 /// # TRUE PRIMAL Pattern
 ///
 /// This method enables callers to hash data without knowing which algorithm to use.
-/// BearDog owns the crypto decisions; callers pass `cipher_suite`.
+/// `BearDog` owns the crypto decisions; callers pass `cipher_suite`.
 pub async fn handle_hash_for_cipher(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.hash_for_cipher")?;
 
@@ -186,6 +189,9 @@ pub async fn handle_hash_for_cipher(params: Option<&Value>) -> Result<Value, Str
 }
 /// Handle BLAKE3 hash operations via JSON-RPC
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 pub async fn handle_blake3_hash(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.blake3_hash")?;
 
@@ -218,7 +224,10 @@ pub async fn handle_blake3_hash(params: Option<&Value>) -> Result<Value, String>
     }))
 }
 
-/// Handle crypto.hmac_sha256 method
+/// # Errors
+///
+/// Returns an error if hashing fails.
+/// Handle `crypto.hmac_sha256` method
 ///
 /// Computes HMAC-SHA256 authentication tag.
 ///

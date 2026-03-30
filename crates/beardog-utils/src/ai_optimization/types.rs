@@ -152,6 +152,10 @@ impl PerformanceModel {
     }
 
     /// Applies a tiny learning-rate nudge when CPU/memory look saturated.
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok(())`; the `Result` is reserved for future validation.
     pub fn update_weights(&mut self, sample: &PerformanceSample) -> Result<(), BearDogError> {
         // Simplified weight update logic
         let learning_rate = 0.01;

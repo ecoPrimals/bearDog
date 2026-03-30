@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Unix filesystem socket implementation for BearDog  
+//! Unix filesystem socket implementation for `BearDog`  
 //!
 //! **Platform:** Linux, BSD, Solaris (all Unix-like systems)
 //! **Transport:** Filesystem Unix domain sockets
@@ -29,7 +29,7 @@ use tracing::{debug, info};
 /// Unix filesystem socket implementation
 pub struct UnixSocket;
 
-/// Wrapper to make UnixStream implement PlatformStream
+/// Wrapper to make `UnixStream` implement `PlatformStream`
 pub struct UnixPlatformStream(UnixStream);
 
 impl PlatformStream for UnixPlatformStream {}
@@ -105,6 +105,10 @@ impl UnixListenHints {
 
 impl UnixSocket {
     /// Create a filesystem socket endpoint using explicit path hints.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if socket directories cannot be created or the endpoint path is invalid.
     pub fn create_endpoint_with(
         primal_name: &str,
         hints: &UnixListenHints,

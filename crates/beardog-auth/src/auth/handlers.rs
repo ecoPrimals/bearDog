@@ -82,6 +82,10 @@ impl AuthenticationHandler {
     /// - Integrate with identity providers (LDAP, OAuth, SAML)
     /// - Enforce password complexity requirements
     /// - Handle user lifecycle (creation, updates, deletion)
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when password hashing fails.
     pub fn register_user(
         &mut self,
         user_id: &str,
@@ -113,6 +117,10 @@ impl AuthenticationHandler {
     }
 
     /// Authenticate user and create session with rate limiting
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] on lockout, credential verification failure, or missing permissions.
     #[expect(
         clippy::cast_possible_wrap,
         reason = "Session timeout hours from config fit i64 for chrono Duration"
@@ -291,6 +299,10 @@ impl AuthenticationHandler {
 
     /// Validate session token
     /// Validates session
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the token is unknown or expired.
     pub fn validate_session(&self, token: &str) -> Result<&SessionData, BearDogError> {
         self.active_sessions
             .values()
@@ -299,6 +311,10 @@ impl AuthenticationHandler {
     }
 
     /// Logout and invalidate session
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future session store failures.
     pub fn logout(&mut self, token: &str) -> Result<(), BearDogError> {
         self.active_sessions
             .retain(|_, session| session.token != token);
@@ -316,6 +332,10 @@ impl AuthenticationHandler {
     /// Clears failed-attempt counters for `user_id` after administrative unlock or password reset.
     ///
     /// Returns `Ok(())` even if the user had no recorded attempts.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future persistence failures.
     pub fn reset_login_attempts(&mut self, user_id: &str) -> Result<(), BearDogError> {
         self.login_attempts.remove(user_id);
         Ok(())

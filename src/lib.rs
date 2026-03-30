@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![forbid(unsafe_code)]
 
-//! # BearDog: Sovereign Computing Platform
+//! # `BearDog`: Sovereign Computing Platform
 //!
-//! BearDog is a sovereign computing platform for distributed, capability-oriented workflows
+//! `BearDog` is a sovereign computing platform for distributed, capability-oriented workflows
 //! with zero-trust defaults, configurable discovery, and performance-oriented data handling.
 //!
 //! ## Key features
@@ -113,6 +113,10 @@ impl Default for FrameworkConfig {
 
 impl BearDogFramework {
     /// Create a new `BearDog` framework instance
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future initialization failures.
     pub async fn new() -> Result<Self, BearDogError> {
         info!("🐻 Initializing BearDog Sovereign Computing Platform");
 
@@ -123,6 +127,10 @@ impl BearDogFramework {
     }
 
     /// Create a new framework with custom configuration
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future initialization failures.
     pub async fn with_config(config: FrameworkConfig) -> Result<Self, BearDogError> {
         info!("🐻 Initializing BearDog with custom configuration");
         debug!(
@@ -137,6 +145,11 @@ impl BearDogFramework {
     }
 
     /// Discover services using universal capability-based discovery
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError::Configuration`] when compute or storage endpoints are missing from
+    /// config and environment.
     pub async fn discover_services(&mut self) -> Result<Vec<ServiceInfo>, BearDogError> {
         info!("🔍 Discovering services with universal capability-based discovery");
 
@@ -207,6 +220,10 @@ impl BearDogFramework {
     }
 
     /// Demonstrate hyperoptimized zero-copy performance
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future benchmark failures.
     pub async fn demonstrate_zero_copy_performance(&mut self) -> Result<(), BearDogError> {
         info!("⚡ Demonstrating hyperoptimized zero-copy performance");
 

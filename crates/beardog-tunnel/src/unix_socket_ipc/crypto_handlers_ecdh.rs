@@ -9,7 +9,7 @@
 //! **Performance**: < 1ms per operation (hardware accelerated on modern CPUs)
 //! **Security**: NIST-approved curves, 128-bit (P-256) and 192-bit (P-384) security
 //!
-//! Pure Rust implementation using RustCrypto `p256` and `p384` crates (zero C dependencies).
+//! Pure Rust implementation using `RustCrypto` `p256` and `p384` crates (zero C dependencies).
 //!
 //! # TLS 1.3 Handshake Flow
 //!
@@ -47,6 +47,9 @@ use rand::rngs::OsRng;
 use serde_json::{Value, json};
 use zeroize::Zeroizing;
 
+/// # Errors
+///
+/// Returns an error if key derivation fails.
 /// Handle `crypto.ecdh_p256_generate` - Generate P-256 ECDH keypair
 ///
 /// Generates an ephemeral ECDH keypair for TLS 1.3 key exchange.
@@ -96,6 +99,9 @@ pub fn handle_ecdh_p256_generate(_params: &Value) -> Result<Value, BearDogError>
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if key derivation fails.
 /// Handle `crypto.ecdh_p256_derive` - Derive shared secret using P-256 ECDH
 ///
 /// Performs ECDH key agreement to derive a shared secret.
@@ -171,6 +177,9 @@ pub fn handle_ecdh_p256_derive(params: &Value) -> Result<Value, BearDogError> {
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if key derivation fails.
 /// Handle `crypto.ecdh_p384_generate` - Generate P-384 ECDH keypair
 ///
 /// Generates an ephemeral ECDH keypair for TLS 1.3 key exchange.
@@ -220,6 +229,9 @@ pub fn handle_ecdh_p384_generate(_params: &Value) -> Result<Value, BearDogError>
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if key derivation fails.
 /// Handle `crypto.ecdh_p384_derive` - Derive shared secret using P-384 ECDH
 ///
 /// Performs ECDH key agreement to derive a shared secret using P-384.

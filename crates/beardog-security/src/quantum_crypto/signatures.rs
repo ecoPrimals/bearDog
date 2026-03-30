@@ -28,11 +28,19 @@ pub struct DilithiumEngine {
 
 impl DilithiumEngine {
     /// Create a new Dilithium engine with specified security level
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok`; reserved for future validation.
     pub const fn new(security_level: SecurityLevel) -> Result<Self, BearDogError> {
         Ok(Self { security_level })
     }
 
     /// Generate a Dilithium keypair
+    ///
+    /// # Errors
+    ///
+    /// Currently infallible in this simulation.
     pub fn generate_keypair(&self) -> Result<QuantumSignature, BearDogError> {
         use rand::RngCore;
         let mut rng = rand::rngs::OsRng;
@@ -73,6 +81,10 @@ impl DilithiumEngine {
     }
 
     /// Sign a message
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the system clock is before the UNIX epoch (timestamp for the result).
     pub fn sign(
         &self,
         _private_key: &[u8],
@@ -112,6 +124,10 @@ impl DilithiumEngine {
     /// # Note
     /// Simulation returns `true`. Production implementations must perform
     /// actual cryptographic verification.
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok(true)` in this simulation.
     pub const fn verify(
         &self,
         _public_key: &[u8],
@@ -157,11 +173,19 @@ pub struct SphincsEngine {
 
 impl SphincsEngine {
     /// Create a new SPHINCS+ engine with specified security level
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok`; reserved for future validation.
     pub const fn new(security_level: SecurityLevel) -> Result<Self, BearDogError> {
         Ok(Self { security_level })
     }
 
     /// Generate a SPHINCS+ keypair
+    ///
+    /// # Errors
+    ///
+    /// Currently infallible in this simulation.
     pub fn generate_keypair(&self) -> Result<QuantumSignature, BearDogError> {
         use rand::RngCore;
         let mut rng = rand::rngs::OsRng;
@@ -181,6 +205,10 @@ impl SphincsEngine {
     }
 
     /// Sign a message
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the system clock is before the UNIX epoch (timestamp for the result).
     pub fn sign(
         &self,
         _private_key: &[u8],
@@ -210,6 +238,10 @@ impl SphincsEngine {
     /// # Note
     /// Simulation returns `true`. Production implementations must perform
     /// actual cryptographic verification.
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok(true)` in this simulation.
     pub const fn verify(
         &self,
         _public_key: &[u8],

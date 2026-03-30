@@ -269,6 +269,9 @@ impl Default for DefaultEncryptionKey {
 }
 
 impl DefaultEncryptionKey {
+    /// # Errors
+    ///
+    /// Returns an error if decryption fails.
     /// Derive key from `BEARDOG_HSM_MASTER_KEY` env var or generate random (dev/test).
     /// Production deployments MUST set `BEARDOG_HSM_MASTER_KEY` for deterministic key derivation.
     pub fn from_env() -> Result<Self, BearDogError> {
@@ -280,6 +283,9 @@ impl DefaultEncryptionKey {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if decryption fails.
     /// Derive 256-bit key from master secret using HKDF-SHA256.
     pub fn from_master_secret(master_secret: &[u8]) -> Result<Self, BearDogError> {
         let hk = Hkdf::<Sha256>::new(None, master_secret);
@@ -295,6 +301,9 @@ impl DefaultEncryptionKey {
         })
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if decryption fails.
     /// Create new encryption key with random material (dev/test). Prefer `from_env()` for production.
     pub fn new() -> Result<Self, BearDogError> {
         let key_bytes: [u8; 32] = rand::random();
@@ -314,11 +323,17 @@ impl DefaultEncryptionKey {
         );
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if decryption fails.
     /// Initialize the encryption key
     pub async fn initialize(&self) -> Result<(), BearDogError> {
         Ok(())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if decryption fails.
     /// Encrypt data
     pub async fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
         self.ensure_initialized();
@@ -339,6 +354,9 @@ impl DefaultEncryptionKey {
         Ok(result)
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if key deletion fails in the underlying HSM provider.
     /// Decrypt data
     pub async fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
         self.ensure_initialized();

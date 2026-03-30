@@ -24,7 +24,7 @@ use std::fmt;
 pub struct NodeId(String);
 
 impl NodeId {
-    /// Create a new NodeId
+    /// Create a new `NodeId`
     #[must_use]
     pub fn new(id: impl Into<String>) -> Self {
         Self(id.into())
@@ -80,7 +80,7 @@ impl fmt::Display for NodeId {
 pub struct ResourceId(String);
 
 impl ResourceId {
-    /// Create a new ResourceId
+    /// Create a new `ResourceId`
     #[must_use]
     pub fn new(id: impl Into<String>) -> Self {
         Self(id.into())
@@ -135,7 +135,7 @@ impl fmt::Display for ResourceId {
 pub struct ServiceId(String);
 
 impl ServiceId {
-    /// Create a new ServiceId
+    /// Create a new `ServiceId`
     #[must_use]
     pub fn new(id: impl Into<String>) -> Self {
         Self(id.into())
@@ -253,7 +253,7 @@ impl fmt::Display for Port {
 pub struct TrustLevel(f64);
 
 impl TrustLevel {
-    /// Create a new TrustLevel, clamping to valid range
+    /// Create a new `TrustLevel`, clamping to valid range
     ///
     /// # Examples
     ///

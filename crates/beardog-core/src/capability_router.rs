@@ -230,11 +230,20 @@ impl CapabilityRouter {
     }
 
     /// Build discovery from the process environment (`std::env::var` via [`PrimalDiscovery::from_env`]).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when [`PrimalDiscovery::from_env`] fails.
     pub fn from_env() -> Result<Self, BearDogError> {
         Ok(Self::new(PrimalDiscovery::from_env()?))
     }
 
     /// Route a request to the best primal for a capability
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when discovery fails, no primals provide the capability, or routing
+    /// cannot select a target.
     pub async fn route(
         &mut self,
         capability: SimpleCapability,

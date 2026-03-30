@@ -3,7 +3,7 @@
 //! Pure Rust system metrics collection via /proc filesystem.
 //!
 //! Reads CPU and memory stats directly from the Linux procfs without
-//! external dependencies. Falls back to NotImplemented on non-Linux.
+//! external dependencies. Falls back to `NotImplemented` on non-Linux.
 
 use beardog_errors::BearDogError;
 use std::sync::Arc;
@@ -174,6 +174,10 @@ impl SystemMetrics {
     ///
     /// Uses delta between two `/proc/stat` reads. First call returns 0.0
     /// (no previous baseline). Subsequent calls return actual usage.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when `/proc/stat` cannot be read, or the CPU baseline lock is poisoned.
     #[cfg(target_os = "linux")]
     #[expect(
         clippy::cast_precision_loss,
@@ -203,6 +207,9 @@ impl SystemMetrics {
         Ok(usage)
     }
 
+    /// # Errors
+    ///
+    /// Always returns [`BearDogError::not_implemented`] on non-Linux targets.
     #[cfg(not(target_os = "linux"))]
     pub fn collect_cpu_usage(&self) -> Result<f64, BearDogError> {
         Err(BearDogError::not_implemented(
@@ -211,6 +218,10 @@ impl SystemMetrics {
     }
 
     /// Collect memory usage as a percentage (0.0–100.0).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when `/proc/meminfo` cannot be read or parsed.
     #[cfg(target_os = "linux")]
     pub fn collect_memory_usage(&self) -> Result<f64, BearDogError> {
         let usage = read_memory_usage()?;
@@ -218,6 +229,9 @@ impl SystemMetrics {
         Ok(usage)
     }
 
+    /// # Errors
+    ///
+    /// Always returns [`BearDogError::not_implemented`] on non-Linux targets.
     #[cfg(not(target_os = "linux"))]
     pub fn collect_memory_usage(&self) -> Result<f64, BearDogError> {
         Err(BearDogError::not_implemented(
@@ -228,6 +242,10 @@ impl SystemMetrics {
     /// Collect average response time in milliseconds since last call.
     ///
     /// Resets the accumulator after reading.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future instrumentation failures.
     #[expect(
         clippy::cast_precision_loss,
         reason = "Average latency from atomic counters; f64 sufficient for reporting"
@@ -244,6 +262,10 @@ impl SystemMetrics {
     /// Collect error rate as a percentage (0.0–100.0) since last call.
     ///
     /// Resets the error counter after reading.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future instrumentation failures.
     #[expect(
         clippy::cast_precision_loss,
         reason = "Error ratio from atomic counters; f64 sufficient for percentage"
@@ -260,6 +282,10 @@ impl SystemMetrics {
     /// Collect throughput in operations per second since last window reset.
     ///
     /// Resets the request counter and window after reading.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the throughput window lock is poisoned.
     #[expect(
         clippy::cast_precision_loss,
         reason = "Ops per second from counts and elapsed; f64 sufficient for throughput"

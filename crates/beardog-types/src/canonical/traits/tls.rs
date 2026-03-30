@@ -180,6 +180,10 @@ pub trait TlsConfiguration: Send + Sync {
     /// - Certificate and key paths exist (if required)
     /// - No deprecated TLS versions
     /// - Peer verification is enabled (or acknowledged as disabled)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the minimum TLS version is deprecated or other validation rules fail.
     fn validate(&self) -> Result<(), String> {
         // Check TLS version security
         if self.min_tls_version().is_deprecated() {

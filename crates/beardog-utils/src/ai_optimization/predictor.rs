@@ -15,6 +15,10 @@ pub struct ResourcePredictor {
 
 impl ResourcePredictor {
     /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `window_size` is zero.
     pub fn new(window_size: usize) -> Result<Self, BearDogError> {
         if window_size == 0 {
             return Err(BearDogError::invalid_input(
@@ -31,6 +35,10 @@ impl ResourcePredictor {
     }
 
     /// Pushes a correlated triple of readings, trimming to `prediction_window`.
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok(())`.
     pub fn add_sample(&mut self, cpu: f64, memory: f64, network: f64) -> Result<(), BearDogError> {
         // Add new samples
         self.cpu_history.push_back(cpu);
@@ -52,6 +60,10 @@ impl ResourcePredictor {
     }
 
     /// Mean of the CPU deque.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there is no CPU history yet.
     pub fn predict_cpu_usage(&self) -> Result<f64, BearDogError> {
         if self.cpu_history.is_empty() {
             return Err(BearDogError::invalid_input("No CPU history available"));
@@ -68,6 +80,10 @@ impl ResourcePredictor {
     }
 
     /// Mean of the memory deque.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there is no memory history yet.
     pub fn predict_memory_usage(&self) -> Result<f64, BearDogError> {
         if self.memory_history.is_empty() {
             return Err(BearDogError::invalid_input("No memory history available"));
@@ -83,6 +99,10 @@ impl ResourcePredictor {
     }
 
     /// Mean of the network deque.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there is no network history yet.
     pub fn predict_network_latency(&self) -> Result<f64, BearDogError> {
         if self.network_history.is_empty() {
             return Err(BearDogError::invalid_input("No network history available"));
@@ -98,6 +118,10 @@ impl ResourcePredictor {
     }
 
     /// Linear slope estimate over `"cpu"`, `"memory"`, or `"network"` history.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `resource_type` is not one of the supported strings.
     pub fn get_trend(&self, resource_type: &str) -> Result<f64, BearDogError> {
         let history = match resource_type {
             "cpu" => &self.cpu_history,

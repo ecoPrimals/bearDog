@@ -25,6 +25,10 @@ pub fn safe_parallel_min(input_slice: &[u64]) -> Option<u64> {
 }
 
 /// Safe element-wise addition with overflow protection
+///
+/// # Errors
+///
+/// Returns an error if slice lengths differ or any pairwise addition overflows.
 pub fn safe_elementwise_add(a: &[u64], b: &[u64]) -> Result<Vec<u64>, BearDogError> {
     if a.len() != b.len() {
         return Err(BearDogError::validation("Array lengths must match"));

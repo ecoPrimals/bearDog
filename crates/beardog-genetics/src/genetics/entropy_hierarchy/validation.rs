@@ -21,6 +21,12 @@ impl EntropyValidator {
     }
 
     /// Validate entropy class meets hierarchy requirements
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when any sub-check ([`Self::validate_entropy_quality`],
+    /// [`Self::validate_entropy_age`], [`Self::validate_biometric_verification`], or
+    /// [`Self::validate_ownership_proof`]) fails.
     pub fn validate_entropy(&self, entropy: &EntropyClass) -> Result<(), BearDogError> {
         self.validate_entropy_quality(entropy)?;
         self.validate_entropy_age(entropy)?;
@@ -30,6 +36,11 @@ impl EntropyValidator {
     }
 
     /// Validate entropy quality meets minimum thresholds
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the quality score for the entropy class is below the configured
+    /// minimum.
     pub fn validate_entropy_quality(&self, entropy: &EntropyClass) -> Result<bool, BearDogError> {
         match entropy {
             EntropyClass::HumanLivedExperience { quality_score, .. } => {
@@ -61,6 +72,10 @@ impl EntropyValidator {
     }
 
     /// Validate entropy age is within acceptable limits
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the entropy timestamp is older than the configured maximum age.
     pub fn validate_entropy_age(&self, entropy: &EntropyClass) -> Result<bool, BearDogError> {
         let timestamp = match entropy {
             EntropyClass::HumanLivedExperience {
@@ -98,6 +113,11 @@ impl EntropyValidator {
     ///
     /// For `HumanLivedExperience` entropy, validates the biometric signature
     /// to ensure the entropy genuinely comes from a human source.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when required biometric verification is enabled but the hash or
+    /// proof data is missing, too short, or invalid.
     pub fn validate_biometric_verification(
         &self,
         entropy: &EntropyClass,
@@ -153,6 +173,11 @@ impl EntropyValidator {
     /// Validate ownership proof if required
     ///  
     /// Ensures the human who provided the entropy can prove ownership.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when required ownership proof is enabled but data is missing,
+    /// stale, or invalid.
     pub fn validate_ownership_proof(&self, entropy: &EntropyClass) -> Result<bool, BearDogError> {
         if !self.config.require_ownership_proof {
             return Ok(true);

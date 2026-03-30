@@ -10,6 +10,10 @@ use super::core::ProviderType as CoreProviderType;
 use beardog_errors::BearDogError;
 
 /// Migrate from legacy provider config
+///
+/// # Errors
+///
+/// This function currently always returns `Ok` with constructed defaults.
 pub fn migrate_from_legacy() -> Result<CanonicalProviderConfig, BearDogError> {
     // Create a default configuration with sensible production settings
     let mut config = CanonicalProviderConfig::default();
@@ -29,6 +33,10 @@ pub fn migrate_from_legacy() -> Result<CanonicalProviderConfig, BearDogError> {
 }
 
 /// Migrate from legacy provider config with specific settings
+///
+/// # Errors
+///
+/// Returns an error if the base migration fails (currently only via [`migrate_from_legacy`]).
 pub fn migrate_from_legacy_with_settings(
     name: &str,
     provider_type: CoreProviderType,

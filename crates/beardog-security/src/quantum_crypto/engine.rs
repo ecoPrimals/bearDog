@@ -65,6 +65,10 @@ impl QuantumCryptoEngine {
     ///
     /// # Arguments
     /// * `security_level` - Security level for all operations
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if a sub-engine (Kyber, Dilithium, or SPHINCS+) fails to initialize.
     pub fn new(security_level: SecurityLevel) -> Result<Self, BearDogError> {
         let kyber_engine = Arc::new(KyberEngine::new(security_level)?);
         let dilithium_engine = Arc::new(DilithiumEngine::new(security_level)?);
@@ -80,6 +84,10 @@ impl QuantumCryptoEngine {
     }
 
     /// Create with custom configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if [`Self::new`] fails.
     pub fn with_config(
         security_level: SecurityLevel,
         hybrid_mode: bool,
@@ -92,18 +100,30 @@ impl QuantumCryptoEngine {
     // ========== KEM Operations ==========
 
     /// Generate a KEM keypair
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if Kyber key generation fails.
     pub fn generate_kem_keypair(&self) -> Result<QuantumKEM, BearDogError> {
         self.increment_ops();
         self.kyber_engine.generate_keypair()
     }
 
     /// Encapsulate a shared secret
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if encapsulation fails.
     pub fn encapsulate(&self, peer_public_key: &[u8]) -> Result<QuantumKeyExchange, BearDogError> {
         self.increment_ops();
         self.kyber_engine.encapsulate(peer_public_key)
     }
 
     /// Decapsulate a shared secret
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if decapsulation fails.
     pub fn decapsulate(
         &self,
         ciphertext: &[u8],
@@ -118,12 +138,20 @@ impl QuantumCryptoEngine {
     /// Generate a signature keypair
     ///
     /// Uses Dilithium by default for balance of security and performance.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if Dilithium key generation fails.
     pub fn generate_signature_keypair(&self) -> Result<QuantumSignature, BearDogError> {
         self.increment_ops();
         self.dilithium_engine.generate_keypair()
     }
 
     /// Generate a signature keypair with specific algorithm
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails for the selected algorithm.
     pub fn generate_signature_keypair_with(
         &self,
         algorithm: SignatureAlgorithm,
@@ -138,6 +166,10 @@ impl QuantumCryptoEngine {
     }
 
     /// Sign a message
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the private key is missing or signing fails.
     pub fn sign(
         &self,
         keypair: &QuantumSignature,
@@ -162,6 +194,10 @@ impl QuantumCryptoEngine {
     }
 
     /// Verify a signature
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if verification fails internally (simulation currently returns `Ok(true)`).
     pub fn verify(
         &self,
         keypair: &QuantumSignature,

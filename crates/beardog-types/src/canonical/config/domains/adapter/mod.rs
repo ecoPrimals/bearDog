@@ -215,6 +215,10 @@ impl UnifiedAdapterConfig {
     }
 
     /// Create adapter configuration for development environment
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if applying environment overrides fails.
     pub fn development() -> Result<Self, BearDogError> {
         let mut config = Self::default();
         config.apply_environment_overrides("development")?;
@@ -222,6 +226,10 @@ impl UnifiedAdapterConfig {
     }
 
     /// Create adapter configuration for production environment
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if applying environment overrides fails.
     pub fn production() -> Result<Self, BearDogError> {
         let mut config = Self::default();
         config.apply_environment_overrides("production")?;

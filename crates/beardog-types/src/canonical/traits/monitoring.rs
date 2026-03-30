@@ -256,6 +256,10 @@ pub trait MonitoringConfig: Send + Sync {
     ///
     /// Checks that the configuration is valid and reasonable.
     /// Returns `Ok(())` if valid, or `Err(String)` with error description.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if monitoring is enabled but endpoint, interval, or sampling settings are invalid.
     fn validate(&self) -> Result<(), String> {
         // Check if disabled
         if !self.is_enabled() {

@@ -386,6 +386,9 @@ pub struct FileStorageBackend {
 }
 
 impl FileStorageBackend {
+    /// # Errors
+    ///
+    /// Returns an error if filesystem access fails.
     /// Create new file storage backend
     pub async fn new(config: &KeyStoreConfig) -> Result<Self, BearDogError> {
         // Use the path from the new canonical KeyStoreConfig
@@ -468,6 +471,9 @@ impl StorageBackendTrait for FileStorageBackend {
 pub struct DatabaseStorageBackend;
 
 impl DatabaseStorageBackend {
+    /// # Errors
+    ///
+    /// Returns an error if encryption fails.
     /// Create new database storage backend
     pub async fn new(_config: &KeyStoreConfig) -> Result<Self, BearDogError> {
         Ok(Self)
@@ -563,6 +569,9 @@ pub struct MemoryStorageBackend {
 }
 
 impl MemoryStorageBackend {
+    /// # Errors
+    ///
+    /// Returns an error if encryption fails.
     /// Create new memory storage backend
     pub async fn new() -> Result<Self, BearDogError> {
         Ok(Self {
@@ -623,6 +632,9 @@ pub struct DefaultEncryptionKey {
 }
 
 impl DefaultEncryptionKey {
+    /// # Errors
+    ///
+    /// Returns an error if decryption fails.
     /// Create new default encryption key
     pub async fn create(
         _config: &SoftwareHsmConfig,

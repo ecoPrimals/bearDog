@@ -9,6 +9,9 @@ use super::{
     aliases_and_beardog, genetic, hashing, kex_aead, password_kdf, signatures, tls_ops, tls12_dot,
 };
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 pub async fn dispatch(
     method: &str,
     params: Option<&serde_json::Value>,

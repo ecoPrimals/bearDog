@@ -8,7 +8,7 @@
 //!
 //! - **No Consul hardcoding** - discovers service registries at runtime
 //! - **No etcd hardcoding** - discovers service registries at runtime
-//! - **Capability-based** - "who can provide service_registry capability?"
+//! - **Capability-based** - "who can provide `service_registry` capability?"
 //! - **Runtime discovery** - finds providers dynamically
 //!
 //! ## Evolution
@@ -18,8 +18,8 @@
 //!
 //! ## How It Works
 //!
-//! 1. Query for "service_registry" capability via mDNS/DNS-SD
-//! 2. Connect to discovered provider (any: Consul, etcd, NestGate, etc.)
+//! 1. Query for "`service_registry`" capability via mDNS/DNS-SD
+//! 2. Connect to discovered provider (any: Consul, etcd, `NestGate`, etc.)
 //! 3. Query via standard capability interface
 //! 4. Cache results
 //!
@@ -36,7 +36,7 @@ use tracing::{debug, info, warn};
 /// Capability-based service registry discovery
 ///
 /// Discovers service registries at runtime via capability query.
-/// Works with ANY provider: Consul, etcd, NestGate, custom registries, etc.
+/// Works with ANY provider: Consul, etcd, `NestGate`, custom registries, etc.
 #[derive(Clone)]
 pub struct ServiceRegistryDiscovery {
     /// Discovered service registry providers (capability-based)
@@ -70,6 +70,10 @@ impl ServiceRegistryDiscovery {
     /// Create new capability-based service registry discovery
     ///
     /// Discovers service registries at runtime via capability query.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future initialization failures.
     pub async fn new() -> Result<Self> {
         info!("🔍 Capability-based service registry discovery (zero hardcoding!)");
 
@@ -95,6 +99,10 @@ impl ServiceRegistryDiscovery {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when registry providers cannot be discovered or queried.
     pub async fn discover(&self, capability: &str) -> Result<Vec<DiscoveredService>> {
         debug!("🔍 Discovering services with capability: {}", capability);
 
@@ -143,10 +151,10 @@ impl ServiceRegistryDiscovery {
 
     /// Discover service registry providers via capability query
     ///
-    /// Finds ANY service that provides "service_registry" capability:
+    /// Finds ANY service that provides "`service_registry`" capability:
     /// - Consul (if available)
     /// - etcd (if available)
-    /// - NestGate (if available)
+    /// - `NestGate` (if available)
     /// - Custom registries (if available)
     async fn discover_registry_providers(&self) -> Result<()> {
         info!("🔍 Discovering service registry providers (capability-based)");
@@ -170,7 +178,7 @@ impl ServiceRegistryDiscovery {
 
     /// Discover providers via mDNS (capability-based)
     ///
-    /// Uses the MdnsDiscovery module to find services advertising the capability.
+    /// Uses the `MdnsDiscovery` module to find services advertising the capability.
     /// Returns providers that can be queried for services.
     async fn discover_via_mdns(&self, capability: &str) -> Result<Vec<DiscoveredProvider>> {
         debug!("🔍 mDNS discovery for capability: {}", capability);
@@ -283,6 +291,10 @@ impl ServiceRegistryDiscovery {
     }
 
     /// Force re-discovery of registry providers
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when provider discovery fails.
     pub async fn refresh_providers(&self) -> Result<()> {
         info!("🔄 Refreshing service registry providers");
         self.registry_providers.write().await.clear();

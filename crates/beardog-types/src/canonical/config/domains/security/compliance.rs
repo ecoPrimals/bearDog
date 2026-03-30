@@ -3,7 +3,7 @@
 //! Security Compliance and Data Sovereignty Configuration
 //!
 //! This module provides compliance validation, reporting, and data sovereignty
-//! configuration structures for the BearDog security system.
+//! configuration structures for the `BearDog` security system.
 
 use serde::{Deserialize, Serialize};
 

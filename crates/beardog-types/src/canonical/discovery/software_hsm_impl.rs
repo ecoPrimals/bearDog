@@ -80,6 +80,10 @@ impl SecureSoftwareHsm {
     /// - Generates a fresh primary key from OS entropy
     /// - All stored keys are encrypted with the primary key
     /// - Primary key is zeroed on drop
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if OS random bytes cannot be read for the primary key.
     pub fn new() -> Result<Self, KmsError> {
         let mut primary_key = Zeroizing::new([0u8; 32]);
         getrandom::getrandom(primary_key.as_mut()).map_err(|e| KmsError::Other {

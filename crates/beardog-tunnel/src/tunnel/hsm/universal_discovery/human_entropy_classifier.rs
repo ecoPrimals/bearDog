@@ -93,9 +93,10 @@ impl Default for TierElevationCriteria {
 }
 
 impl HumanEntropyClassifier {
-    /// Creates a new HumanEntropyClassifier instance
+    /// Creates a new `HumanEntropyClassifier` instance
     ///
     /// # Errors
+    ///
     /// Returns an error if component initialization fails.
     pub fn new() -> Result<Self, BearDogError> {
         info!("🧠 Initializing Human Entropy Classifier");
@@ -114,6 +115,7 @@ impl HumanEntropyClassifier {
     /// Creates instance with custom criteria
     ///
     /// # Errors
+    ///
     /// Returns an error if initialization fails.
     pub fn with_criteria(criteria: TierElevationCriteria) -> Result<Self, BearDogError> {
         info!("🧠 Initializing Human Entropy Classifier with custom criteria");
@@ -134,6 +136,10 @@ impl HumanEntropyClassifier {
     }
 
     /// Classifies human entropy support
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if capability assessment or tier evaluation fails.
     pub fn classify_human_entropy_support(
         &self,
         capabilities: &UniversalHsmCapabilities,
@@ -295,6 +301,10 @@ impl HumanEntropyClassifier {
     }
 
     /// Gets ranked entropy methods
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if ranking fails.
     pub fn get_ranked_methods(
         &self,
         assessment: &HumanEntropyAssessment,
@@ -315,7 +325,11 @@ impl HumanEntropyClassifier {
 }
 
 impl EntropyQualityAssessor {
-    /// Creates a new EntropyQualityAssessor
+    /// Creates a new `EntropyQualityAssessor`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the assessor cannot be initialized.
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             _min_entropy_bits: 128.0,
@@ -328,6 +342,10 @@ impl EntropyQualityAssessor {
     }
 
     /// Calculates quality score
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the quality score cannot be computed.
     pub fn calculate_quality_score(
         &self,
         method_scores: &HashMap<HumanEntropyMethod, f64>,
@@ -381,7 +399,11 @@ impl EntropyQualityAssessor {
 }
 
 impl HumanEntropyMethodEvaluator {
-    /// Creates a new HumanEntropyMethodEvaluator
+    /// Creates a new `HumanEntropyMethodEvaluator`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the evaluator cannot be initialized.
     pub fn new() -> Result<Self, BearDogError> {
         let mut method_weights = HashMap::with_capacity(8);
         let mut quality_multipliers = HashMap::with_capacity(8);
@@ -410,6 +432,9 @@ impl HumanEntropyMethodEvaluator {
         })
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if HSM discovery fails.
     /// Evaluates entropy methods
     pub fn evaluate_entropy_methods(
         &self,

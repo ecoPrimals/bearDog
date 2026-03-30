@@ -236,7 +236,10 @@ pub async fn handle_tls_derive_secrets(params: Option<&Value>) -> Result<Value, 
     }))
 }
 
-/// Handle tls.derive_handshake_secrets method
+/// # Errors
+///
+/// Returns an error if hashing fails.
+/// Handle `tls.derive_handshake_secrets` method
 ///
 /// Derives TLS 1.3 HANDSHAKE traffic secrets using the full RFC 8446 key schedule.
 /// This is the FIRST key derivation stage - used for encrypting handshake messages.
@@ -244,15 +247,15 @@ pub async fn handle_tls_derive_secrets(params: Option<&Value>) -> Result<Value, 
 /// # Parameters
 ///
 /// - `pre_master_secret`: Base64-encoded ECDH shared secret (32 bytes for X25519)
-/// - `client_random`: Base64-encoded ClientHello random (32 bytes)
-/// - `server_random`: Base64-encoded ServerHello random (32 bytes)
-/// - `transcript_hash`: Base64-encoded SHA-256(ClientHello + ServerHello) (32 bytes)
+/// - `client_random`: Base64-encoded `ClientHello` random (32 bytes)
+/// - `server_random`: Base64-encoded `ServerHello` random (32 bytes)
+/// - `transcript_hash`: Base64-encoded SHA-256(ClientHello + `ServerHello`) (32 bytes)
 ///
 /// # Returns
 ///
-/// - `client_write_key`: Base64-encoded client key (32 bytes for ChaCha20)
+/// - `client_write_key`: Base64-encoded client key (32 bytes for `ChaCha20`)
 /// - `client_write_iv`: Base64-encoded client IV/nonce (12 bytes)
-/// - `server_write_key`: Base64-encoded server key (32 bytes for ChaCha20)
+/// - `server_write_key`: Base64-encoded server key (32 bytes for `ChaCha20`)
 /// - `server_write_iv`: Base64-encoded server IV/nonce (12 bytes)
 ///
 /// # Difference from `tls.derive_application_secrets`
@@ -478,7 +481,10 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
     }))
 }
 
-/// Handle tls.derive_application_secrets method
+/// # Errors
+///
+/// Returns an error if hashing fails.
+/// Handle `tls.derive_application_secrets` method
 ///
 /// Derives TLS 1.3 APPLICATION traffic secrets using the full RFC 8446 key schedule.
 /// This is the SECOND key derivation stage - used for encrypting HTTP application data.

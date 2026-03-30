@@ -44,12 +44,21 @@ pub struct LineageSummary {
 }
 
 /// Handle key lineage query command
+///
+/// # Errors
+///
+/// Returns an error if the key home cannot be resolved, or lineage tree construction fails.
 pub async fn handle_key_lineage(key_id: &str, json: bool) -> Result<(), BearDogError> {
     let home = key_store::home_dir_for_keys()?;
     handle_key_lineage_for_home(key_id, json, home.as_path()).await
 }
 
 /// Same as [`handle_key_lineage`], but uses keys under `home/.beardog/keys` (tests / DI).
+///
+/// # Errors
+///
+/// Returns an error if the key cannot be loaded, the lineage root cannot be found, or the tree
+/// cannot be built.
 pub async fn handle_key_lineage_for_home(
     key_id: &str,
     json: bool,

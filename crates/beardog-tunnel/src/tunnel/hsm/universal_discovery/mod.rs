@@ -92,17 +92,17 @@ pub enum HsmInterfaceType {
         /// Network port
         port: u16,
     },
-    /// USB-attached HSM (YubiHSM, Solo, etc.)
+    /// USB-attached HSM (`YubiHSM`, Solo, etc.)
     UsbHsm {
         /// USB device identifier
         device_id: String,
     },
     /// Software-based HSM implementation
     SoftwareHsm {
-        /// Implementation name (e.g., "SoftHSM2", "HashiCorp Vault")
+        /// Implementation name (e.g., "`SoftHSM2`", "`HashiCorp` Vault")
         implementation: String,
     },
-    /// Mobile device HSM (Android StrongBox, iOS Secure Enclave)
+    /// Mobile device HSM (Android `StrongBox`, iOS Secure Enclave)
     MobileHsm {
         /// Platform name (Android, iOS)
         platform: String,
@@ -371,7 +371,7 @@ pub enum HsmHealthStatus {
 }
 
 impl UniversalHsmDiscovery {
-    /// Creates a new UniversalHsmDiscovery instance
+    /// Creates a new `UniversalHsmDiscovery` instance
     ///
     /// # Errors
     /// Returns an error if component initialization fails.
@@ -397,9 +397,9 @@ impl UniversalHsmDiscovery {
     /// - PKCS#11 libraries
     /// - Cloud KMS (AWS, GCP, Azure)
     /// - Network HSMs
-    /// - USB HSMs (YubiHSM, Solo)
-    /// - Software HSMs (BearDog Native, SoftHSM)
-    /// - Mobile HSMs (Android StrongBox, iOS Secure Enclave)
+    /// - USB HSMs (`YubiHSM`, Solo)
+    /// - Software HSMs (`BearDog` Native, `SoftHSM`)
+    /// - Mobile HSMs (Android `StrongBox`, iOS Secure Enclave)
     /// - TPMs
     /// - Smart Cards
     ///

@@ -29,6 +29,10 @@ use std::time::SystemTime;
 /// Threat intelligence feed manager
 impl ThreatDetectionEngine {
     /// Process threat intelligence feeds
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when feed indicator checks fail.
     pub fn check_threat_feeds(
         &self,
         event_data: &HashMap<String, String>,
@@ -193,6 +197,10 @@ impl ThreatDetectionEngine {
 
     /// Update threat intelligence feed (delegated to engine)
     /// Updates `threat_feed_handler`
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError::not_found`] when no feed exists for `feed.id`.
     pub fn update_threat_feed_handler(
         &mut self,
         feed: ThreatIntelligenceFeed,

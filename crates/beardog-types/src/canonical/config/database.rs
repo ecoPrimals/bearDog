@@ -134,9 +134,9 @@ use std::time::Duration;
 ///
 /// # Connection String Formats
 ///
-/// - PostgreSQL: `postgresql://user:pass@host:port/database?sslmode=require`
-/// - MySQL: `mysql://user:pass@host:port/database`
-/// - SQLite: `sqlite:///path/to/database.db` or `sqlite::memory:` for in-memory
+/// - `PostgreSQL`: `postgresql://user:pass@host:port/database?sslmode=require`
+/// - `MySQL`: `mysql://user:pass@host:port/database`
+/// - `SQLite`: `sqlite:///path/to/database.db` or `sqlite::memory:` for in-memory
 ///
 /// # Performance Tuning
 ///

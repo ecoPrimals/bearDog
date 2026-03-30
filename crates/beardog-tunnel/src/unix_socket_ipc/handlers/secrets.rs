@@ -29,14 +29,14 @@
 //!
 //! # Storage Backend
 //!
-//! Uses capability-based discovery to find a storage provider (e.g., NestGate)
+//! Uses capability-based discovery to find a storage provider (e.g., `NestGate`)
 //! at runtime. Falls back to local in-memory storage when no external provider
-//! is available. This follows the TRUE PRIMAL principle: BearDog discovers
+//! is available. This follows the TRUE PRIMAL principle: `BearDog` discovers
 //! storage capabilities at runtime, never hardcodes another primal's name.
 //!
 //! # Security
 //!
-//! - Each secret gets a unique encryption key derived via HKDF from family_seed + secret_name
+//! - Each secret gets a unique encryption key derived via HKDF from `family_seed` + `secret_name`
 //! - ChaCha20-Poly1305 AEAD provides confidentiality + integrity
 //! - Random nonce per encryption (never reused)
 //! - Family-scoped: different families derive different keys for the same secret name
@@ -79,7 +79,7 @@ pub struct SecretsHandler {
     /// Primal identity for family-scoped key derivation
     identity: Arc<PrimalIdentity>,
     /// In-memory encrypted secret store (name -> encrypted entry)
-    /// Production evolution: replace with NestGate storage.store capability
+    /// Production evolution: replace with `NestGate` storage.store capability
     store: Arc<RwLock<HashMap<String, EncryptedSecret>>>,
 }
 
@@ -95,9 +95,9 @@ impl SecretsHandler {
     /// Derive a per-secret encryption key from family seed + secret name
     ///
     /// Uses HKDF-SHA256 with:
-    /// - IKM: family_id bytes (the family seed identity)
+    /// - IKM: `family_id` bytes (the family seed identity)
     /// - Salt: "beardog-secrets-v1" (domain separation)
-    /// - Info: secret_name (per-secret key derivation)
+    /// - Info: `secret_name` (per-secret key derivation)
     ///
     /// Returns a 32-byte key suitable for ChaCha20-Poly1305
     fn derive_secret_key(&self, secret_name: &str) -> Result<[u8; 32], String> {

@@ -110,7 +110,7 @@ pub struct PrimalInfo {
 ///
 /// This client works with:
 /// - Any JSON-RPC primal registry (orchestrator-agnostic)
-/// - Consul (HashiCorp service mesh)
+/// - Consul (`HashiCorp` service mesh)
 /// - etcd (Kubernetes/Cloud Native registry)
 /// - Custom registries
 /// - ANY system that speaks JSON-RPC 2.0
@@ -142,6 +142,10 @@ impl PrimalRegistryClient {
     /// Connect to registry
     ///
     /// Establishes Unix socket connection to ANY JSON-RPC 2.0 registry
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the Unix socket connection fails.
     pub async fn connect(&mut self) -> Result<(), BearDogError> {
         info!("🔌 Connecting to primal registry at {:?}", self.socket_path);
 
@@ -166,6 +170,10 @@ impl PrimalRegistryClient {
     /// # Universal Adapter
     ///
     /// This works with any registry that understands JSON-RPC method "primal.register"
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the RPC fails or the registry reports an error.
     pub async fn register(
         &mut self,
         capabilities: &BearDogCapabilities,
@@ -220,6 +228,10 @@ impl PrimalRegistryClient {
     /// # Universal Discovery
     ///
     /// We don't care WHO provides the capability, just that someone does
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when no provider exists or the response cannot be parsed.
     pub async fn get_provider(&mut self, capability: &str) -> Result<PrimalInfo, BearDogError> {
         debug!("🔍 Querying registry for capability: {}", capability);
 
@@ -251,6 +263,10 @@ impl PrimalRegistryClient {
     }
 
     /// List all registered primals
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the RPC fails or the registry list cannot be parsed.
     pub async fn list_all(&mut self) -> Result<Vec<PrimalInfo>, BearDogError> {
         debug!("📋 Listing all primals from registry");
 
@@ -271,6 +287,10 @@ impl PrimalRegistryClient {
     }
 
     /// Ping registry to verify connection
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the ping RPC fails.
     pub async fn ping(&mut self) -> Result<(), BearDogError> {
         let response = self.send_request("primal.ping", None).await?;
 
@@ -282,6 +302,10 @@ impl PrimalRegistryClient {
     }
 
     /// Unregister from registry (graceful shutdown)
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the registry reports an unregistration error.
     pub async fn unregister(&mut self, primal_id: &str) -> Result<(), BearDogError> {
         info!("👋 Unregistering {} from registry", primal_id);
 

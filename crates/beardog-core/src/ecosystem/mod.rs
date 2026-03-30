@@ -40,6 +40,8 @@ pub mod primal_interface;
 pub mod primal_trait;
 /// Shared types for primal operations
 pub mod primal_types;
+/// Quantum-inspired orchestration over [`crate::primal_self_knowledge::PrimalDiscovery`]
+pub mod quantum_discovery;
 /// Self-discovery and capability detection
 pub mod self_discovery;
 /// Service registration and capability-based discovery

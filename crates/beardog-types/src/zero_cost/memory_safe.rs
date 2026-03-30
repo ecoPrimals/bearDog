@@ -182,6 +182,10 @@ where
     }
 
     /// Try to push an item to the buffer
+    ///
+    /// # Errors
+    ///
+    /// Returns the item unchanged if the buffer is full.
     pub fn try_push(&self, item: T) -> Result<(), T> {
         let current_size = self.current_size.load(Ordering::Relaxed);
         if current_size >= self.capacity {

@@ -10,7 +10,7 @@
 //! - **TOFU (Trust On First Use)**: Initial trust establishment with new peers
 //! - **Progressive trust**: Promotion based on successful connections  
 //! - **mTLS**: Mutual TLS for connection establishment (now Unix sockets)
-//! - **BirdSong session keys**: Genetic cryptography for lineage-aware encryption
+//! - **`BirdSong` session keys**: Genetic cryptography for lineage-aware encryption
 
 // NOTE: TrustManager implementation was removed - dead code
 // The trust management logic lives directly on BeardogBtspProvider

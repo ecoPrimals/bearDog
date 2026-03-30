@@ -37,6 +37,10 @@ impl KubernetesDiscovery {
     ///
     /// * `Ok(Self)` - Successfully configured for Kubernetes
     /// * `Err(DiscoveryError)` - Not in Kubernetes or configuration failed
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when not in-cluster and no kubeconfig is available, or setup fails.
     pub async fn try_create() -> Result<Self, DiscoveryError> {
         // Check for in-cluster indicators
         let in_cluster = Self::detect_in_cluster();

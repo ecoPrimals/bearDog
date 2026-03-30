@@ -102,6 +102,10 @@ impl Default for ThreatDetectionStats {
 impl ThreatDetectionEngine {
     /// Create a new threat detection engine
     /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future configuration validation.
     pub fn new(config: ThreatDetectionConfig) -> Result<Self, BearDogError> {
         Ok(Self {
             config,

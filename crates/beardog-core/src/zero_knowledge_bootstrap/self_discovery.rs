@@ -149,11 +149,19 @@ impl SelfDiscoveryEngine {
     }
 
     /// Create an engine using environment-derived inputs (see [`SelfDiscoveryEnvInputs::from_env`]).
+    ///
+    /// # Errors
+    ///
+    /// Same as [`Self::with_inputs`].
     pub fn from_env() -> Result<Self, BearDogError> {
         Self::with_inputs(SelfDiscoveryEnvInputs::from_env())
     }
 
     /// Create an engine with explicit discovery inputs (no environment reads).
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future initialization failures.
     pub fn with_inputs(inputs: SelfDiscoveryEnvInputs) -> Result<Self, BearDogError> {
         info!("🌱 Initializing Self-Discovery Engine");
         info!("🎯 Mission: Discover own capabilities without hardcoded knowledge");

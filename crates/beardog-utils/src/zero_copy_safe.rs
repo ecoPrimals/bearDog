@@ -17,9 +17,11 @@ pub struct SafeZeroCopyBuffer {
 impl SafeZeroCopyBuffer {
     /// With Capacity operation.
     ///
-    /// # Errors
-    /// Returns an error if the operation fails.
     /// Creates instance with capacity
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok`; the `Result` is reserved for future allocation validation.
     pub fn with_capacity(capacity: usize) -> Result<Self, BearDogError> {
         debug!("🛡️ Creating SafeZeroCopyBuffer with capacity {}", capacity);
 
@@ -46,6 +48,10 @@ impl SafeZeroCopyBuffer {
 
     /// As Slice operation.
     /// Returns as slice
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `start + len` exceeds the active window.
     pub fn as_slice(&self, start: usize, len: usize) -> Result<Self, BearDogError> {
         if start + len > self.length {
             return Err(BearDogError::validation(

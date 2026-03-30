@@ -188,7 +188,7 @@ impl Constraint for EnvironmentalConstraint {
 /// Network SSID constraint
 ///
 /// # Use Case
-/// "Allow access only when connected to specific WiFi network"
+/// "Allow access only when connected to specific `WiFi` network"
 ///
 /// # Example
 /// ```rust,ignore
@@ -200,7 +200,7 @@ impl Constraint for EnvironmentalConstraint {
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkSsidConstraint {
-    /// List of allowed WiFi SSIDs
+    /// List of allowed `WiFi` SSIDs
     pub allowed_ssids: Vec<String>,
 }
 

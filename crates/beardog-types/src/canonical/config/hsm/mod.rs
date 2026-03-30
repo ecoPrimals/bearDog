@@ -785,6 +785,10 @@ impl Default for HsmBackupConfig {
 pub trait HsmConfigValidation {
     /// Validate the HSM configuration
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if timeouts, pool size, retry policy, or health check settings are invalid.
     fn validate(&self) -> Result<(), BearDogError>;
 
     /// Check configuration compatibility

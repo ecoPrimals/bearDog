@@ -77,6 +77,9 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use tracing::info;
 
+/// # Errors
+///
+/// Returns an error if encryption fails.
 /// Export TLS session keys to SSLKEYLOGFILE (for Wireshark decryption)
 ///
 /// This function exports TLS 1.3 session secrets in the format required by Wireshark
@@ -94,9 +97,9 @@ use tracing::info;
 ///
 /// # Parameters
 ///
-/// - `client_random`: 32-byte client random from ClientHello
-/// - `handshake_secrets`: Optional tuple of (client_hs_secret, server_hs_secret)
-/// - `application_secrets`: Optional tuple of (client_app_secret, server_app_secret)
+/// - `client_random`: 32-byte client random from `ClientHello`
+/// - `handshake_secrets`: Optional tuple of (`client_hs_secret`, `server_hs_secret`)
+/// - `application_secrets`: Optional tuple of (`client_app_secret`, `server_app_secret`)
 ///
 /// # Returns
 ///

@@ -69,10 +69,10 @@ use domains::{
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-/// Primary configuration for BearDog
+/// Primary configuration for `BearDog`
 ///
 /// This is the root configuration structure that contains all configurable
-/// aspects of BearDog. It can be loaded from files, environment variables,
+/// aspects of `BearDog`. It can be loaded from files, environment variables,
 /// or created programmatically.
 ///
 /// # Examples

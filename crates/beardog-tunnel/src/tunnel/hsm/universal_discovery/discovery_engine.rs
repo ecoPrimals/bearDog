@@ -113,11 +113,11 @@ pub enum TpmInterfaceType {
 /// Software HSM implementations
 #[derive(Debug, Clone)]
 pub enum SoftwareHsmImplementation {
-    /// BearDog's native software HSM
+    /// `BearDog`'s native software HSM
     BearDogNative,
     /// OpenSSL-based provider
     OpenSsl,
-    /// SoftHSM2 PKCS#11 provider
+    /// `SoftHSM2` PKCS#11 provider
     SoftHsm,
     /// Microsoft CNG provider
     MicrosoftCng,
@@ -132,16 +132,17 @@ pub enum SoftwareHsmImplementation {
     },
 }
 
-/// Android StrongBox discoverer
+/// Android `StrongBox` discoverer
 pub struct AndroidStrongBoxDiscoverer;
 
 /// iOS Secure Enclave discoverer
 pub struct IosSecureEnclaveDiscoverer;
 
 impl DiscoveryEngine {
-    /// Creates a new DiscoveryEngine instance
+    /// Creates a new `DiscoveryEngine` instance
     ///
     /// # Errors
+    ///
     /// Returns an error if any discoverer fails to initialize.
     pub fn new() -> Result<Self, BearDogError> {
         info!("🔍 Initializing HSM Discovery Engine");
@@ -159,48 +160,80 @@ impl DiscoveryEngine {
     }
 
     /// Discovers PKCS#11 HSMs
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if PKCS#11 discovery fails.
     pub fn discover_pkcs11_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         info!("🔍 Discovering PKCS#11 HSMs");
         self.pkcs11_discoverer.discover()
     }
 
     /// Discovers Cloud KMS instances
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if Cloud KMS discovery fails.
     pub fn discover_cloud_kms_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         info!("☁️ Discovering Cloud KMS instances");
         self.cloud_kms_discoverer.discover()
     }
 
     /// Discovers Network HSMs
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if network HSM discovery fails.
     pub fn discover_network_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         info!("🌐 Discovering Network HSMs");
         self.network_hsm_discoverer.discover()
     }
 
     /// Discovers USB HSMs
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if USB HSM discovery fails.
     pub fn discover_usb_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         info!("🔌 Discovering USB HSMs");
         self.usb_hsm_discoverer.discover()
     }
 
     /// Discovers Software HSMs
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if software HSM discovery fails.
     pub fn discover_software_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         info!("💻 Discovering Software HSMs");
         self.software_hsm_discoverer.discover()
     }
 
     /// Discovers Mobile HSMs
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if mobile HSM discovery fails.
     pub fn discover_mobile_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         info!("📱 Discovering Mobile HSMs");
         self.mobile_hsm_discoverer.discover()
     }
 
     /// Discovers TPMs
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if TPM discovery fails.
     pub fn discover_tpm_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         info!("🔐 Discovering TPMs");
         self.tpm_discoverer.discover()
     }
 
     /// Discovers Smart Cards
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if smart card discovery fails.
     pub fn discover_smartcard_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         info!("💳 Discovering Smart Cards");
         self.smartcard_discoverer.discover()
@@ -209,6 +242,10 @@ impl DiscoveryEngine {
 
 impl Pkcs11Discoverer {
     /// Creates a new PKCS#11 discoverer
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the discoverer cannot be initialized.
     pub fn new() -> Result<Self, BearDogError> {
         let search_paths = Self::get_default_search_paths();
         let library_patterns = Self::get_library_patterns();
@@ -220,6 +257,10 @@ impl Pkcs11Discoverer {
     }
 
     /// Discovers PKCS#11 libraries
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if PKCS#11 discovery fails.
     pub fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         let mut discovered = Vec::new();
 
@@ -242,7 +283,7 @@ impl Pkcs11Discoverer {
 
     /// Gets default search paths for PKCS#11 libraries
     ///
-    /// Paths can be overridden via BEARDOG_HSM_LIBRARY_PATHS environment variable
+    /// Paths can be overridden via `BEARDOG_HSM_LIBRARY_PATHS` environment variable
     /// (colon-separated on Unix, semicolon-separated on Windows)
     fn get_default_search_paths() -> Vec<PathBuf> {
         // Check for environment override first
@@ -346,6 +387,10 @@ impl Pkcs11Discoverer {
 
 impl CloudKmsDiscoverer {
     /// Creates a new Cloud KMS discoverer
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the discoverer cannot be initialized.
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             _enabled_providers: vec!["aws".to_string(), "azure".to_string(), "gcp".to_string()],
@@ -353,6 +398,10 @@ impl CloudKmsDiscoverer {
     }
 
     /// Discovers cloud KMS instances
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if Cloud KMS discovery fails.
     pub fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         warn!("☁️ Cloud KMS discovery not yet implemented");
         Ok(Vec::new())
@@ -361,6 +410,10 @@ impl CloudKmsDiscoverer {
 
 impl NetworkHsmDiscoverer {
     /// Creates a new Network HSM discoverer
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the discoverer cannot be initialized.
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             _common_ports: DEFAULT_DISCOVERY_PORTS.to_vec(),
@@ -375,6 +428,10 @@ impl NetworkHsmDiscoverer {
     }
 
     /// Discovers network HSMs
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if network HSM discovery fails.
     pub fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         warn!("🌐 Network HSM discovery not yet implemented");
         Ok(Vec::new())
@@ -383,6 +440,10 @@ impl NetworkHsmDiscoverer {
 
 impl UsbHsmDiscoverer {
     /// Creates a new USB HSM discoverer
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the discoverer cannot be initialized.
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             _hsm_vendor_ids: vec![0x1050, 0x20a0, 0x04e6], // YubiKey, Nitrokey, etc.
@@ -394,6 +455,10 @@ impl UsbHsmDiscoverer {
     }
 
     /// Discovers USB HSMs
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if USB HSM discovery fails.
     pub fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         warn!("🔌 USB HSM discovery not yet implemented");
         Ok(Vec::new())
@@ -402,6 +467,10 @@ impl UsbHsmDiscoverer {
 
 impl SoftwareHsmDiscoverer {
     /// Creates a new Software HSM discoverer
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the discoverer cannot be initialized.
     pub fn new() -> Result<Self, BearDogError> {
         let implementations = vec![
             SoftwareHsmImplementation::BearDogNative,
@@ -419,6 +488,10 @@ impl SoftwareHsmDiscoverer {
     }
 
     /// Discovers software HSMs
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if software HSM discovery fails.
     pub fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         let mut discovered = Vec::new();
 
@@ -492,6 +565,10 @@ impl SoftwareHsmDiscoverer {
 
 impl MobileHsmDiscoverer {
     /// Creates a new Mobile HSM discoverer
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the discoverer cannot be initialized.
     pub const fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             _android_discoverer: AndroidStrongBoxDiscoverer,
@@ -500,6 +577,10 @@ impl MobileHsmDiscoverer {
     }
 
     /// Discovers mobile HSMs
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if mobile HSM discovery fails.
     pub fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         warn!("📱 Mobile HSM discovery not yet implemented");
         Ok(Vec::new())
@@ -508,6 +589,10 @@ impl MobileHsmDiscoverer {
 
 impl TpmDiscoverer {
     /// Creates a new TPM discoverer
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the discoverer cannot be initialized.
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             _interface_types: vec![TpmInterfaceType::Tpm20, TpmInterfaceType::Tpm12],
@@ -515,6 +600,10 @@ impl TpmDiscoverer {
     }
 
     /// Discovers TPMs
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if TPM discovery fails.
     pub fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         warn!("🔐 TPM discovery not yet implemented");
         Ok(Vec::new())
@@ -523,6 +612,10 @@ impl TpmDiscoverer {
 
 impl SmartCardDiscoverer {
     /// Creates a new Smart Card discoverer
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the discoverer cannot be initialized.
     pub const fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             _readers: Vec::new(),
@@ -530,6 +623,10 @@ impl SmartCardDiscoverer {
     }
 
     /// Discovers smart cards
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if smart card discovery fails.
     pub fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
         warn!("💳 Smart Card discovery not yet implemented");
         Ok(Vec::new())

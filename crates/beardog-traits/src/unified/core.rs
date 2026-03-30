@@ -75,13 +75,25 @@ pub trait Versionable: Identifiable {
 pub trait Serializable: Identifiable {
     /// Serialize to JSON
     /// Converts to json
+    ///
+    /// # Errors
+    ///
+    /// Implementations return [`BearDogError`] when serialization fails.
     fn to_json(&self) -> Result<String, BearDogError>;
 
     /// Serialize to TOML
     /// Converts to toml
+    ///
+    /// # Errors
+    ///
+    /// Implementations return [`BearDogError`] when serialization fails.
     fn to_toml(&self) -> Result<String, BearDogError>;
 
     /// Converts to binary
+    ///
+    /// # Errors
+    ///
+    /// Implementations return [`BearDogError`] when serialization fails.
     fn to_binary(&self) -> Result<Vec<u8>, BearDogError>;
 }
 

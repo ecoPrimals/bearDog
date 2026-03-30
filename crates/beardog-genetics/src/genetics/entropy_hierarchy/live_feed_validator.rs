@@ -83,6 +83,10 @@ impl LiveFeedValidator {
     /// 3. Timing entropy analysis
     /// 4. Uniformity check (detect simulation)
     /// 5. Pattern detection (detect PRNGs)
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when timing entropy or PRNG pattern analysis fails internally.
     pub fn validate_live_feed_only(
         &self,
         entropy_data: &[u8],

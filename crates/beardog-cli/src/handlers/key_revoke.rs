@@ -49,6 +49,10 @@ impl RevocationList {
     }
 
     /// Load revocation list from disk (`$HOME/.beardog/revocation_list.json`).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `HOME` is unset, or the file exists but cannot be read or parsed.
     #[allow(
         dead_code,
         reason = "Stable public API using HOME; in-crate paths use load_from_home."
@@ -60,6 +64,10 @@ impl RevocationList {
     }
 
     /// Load from a specific home directory (tests; no global env).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file exists but cannot be read or parsed.
     pub fn load_from_home(home: impl AsRef<Path>) -> Result<Self, BearDogError> {
         Self::load_from_path(&Self::revocation_file_path_for_home(home))
     }
@@ -78,6 +86,10 @@ impl RevocationList {
     }
 
     /// Save revocation list to disk (`$HOME/.beardog/revocation_list.json`).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `HOME` is unset, or serialization or I/O fails.
     #[allow(
         dead_code,
         reason = "Stable public API using HOME; in-crate paths use save_to_home."
@@ -89,6 +101,11 @@ impl RevocationList {
     }
 
     /// Save under a specific home directory (tests).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the parent directory cannot be created, serialization fails, or the file
+    /// cannot be written.
     pub fn save_to_home(&self, home: impl AsRef<Path>) -> Result<(), BearDogError> {
         let path = Self::revocation_file_path_for_home(home);
         self.write_to_path(&path)
@@ -135,6 +152,10 @@ impl RevocationList {
     }
 
     /// Export revocation list to file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if serialization fails or the file cannot be written.
     #[allow(
         dead_code,
         reason = "Used by revocation export handlers and future CLI wiring."
@@ -148,6 +169,10 @@ impl RevocationList {
     }
 
     /// Import revocation list from file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be read or parsed as JSON.
     #[allow(
         dead_code,
         reason = "Used by revocation import handlers and future CLI wiring."
@@ -211,6 +236,11 @@ fn revocation_home_from_env() -> Result<PathBuf, BearDogError> {
 }
 
 /// Handle key revocation command
+///
+/// # Errors
+///
+/// Returns an error if `HOME` is unset, the revocation list cannot be loaded or saved, or cascade
+/// processing fails.
 pub async fn handle_key_revoke(
     key_id: &str,
     reason: Option<&str>,
@@ -222,6 +252,10 @@ pub async fn handle_key_revoke(
 }
 
 /// Like [`handle_key_revoke`] but uses an explicit home directory (tests).
+///
+/// # Errors
+///
+/// Returns an error if the revocation list cannot be loaded or saved, or cascade processing fails.
 pub async fn handle_key_revoke_with_home(
     key_id: &str,
     reason: Option<&str>,
@@ -320,6 +354,10 @@ fn get_child_keys_in_home(parent_key_id: &str, home: &Path) -> Result<Vec<String
 }
 
 /// Handle revocation list export
+///
+/// # Errors
+///
+/// Returns an error if `HOME` is unset, the list cannot be loaded, or export I/O fails.
 #[allow(
     dead_code,
     reason = "Planned for beardog key revoke --export; use *_with_home for tests."
@@ -330,6 +368,10 @@ pub async fn handle_revocation_export(output_path: &str) -> Result<(), BearDogEr
 }
 
 /// Export the revocation list to a file, using a custom home directory (tests / DI).
+///
+/// # Errors
+///
+/// Returns an error if the list cannot be loaded or written to `output_path`.
 #[allow(
     dead_code,
     reason = "Test and DI entry point; primary export may call the HOME-based wrapper."
@@ -356,6 +398,11 @@ pub async fn handle_revocation_export_with_home(
 }
 
 /// Handle revocation list import
+///
+/// # Errors
+///
+/// Returns an error if `HOME` is unset, the import file cannot be read or parsed, or the merged
+/// list cannot be saved.
 #[allow(
     dead_code,
     reason = "Planned for beardog key revoke --import; use *_with_home for tests."
@@ -366,6 +413,10 @@ pub async fn handle_revocation_import(input_path: &str) -> Result<(), BearDogErr
 }
 
 /// Import and merge a revocation list from a file, using a custom home directory (tests / DI).
+///
+/// # Errors
+///
+/// Returns an error if the import file cannot be read or parsed, or the merged list cannot be saved.
 #[allow(
     dead_code,
     reason = "Test and DI entry point; primary import may call the HOME-based wrapper."
@@ -404,12 +455,20 @@ pub async fn handle_revocation_import_with_home(
 }
 
 /// Handle revocation check command
+///
+/// # Errors
+///
+/// Returns an error if `HOME` is unset or the revocation list cannot be loaded.
 pub async fn handle_key_check_revocation(key_id: &str) -> Result<(), BearDogError> {
     let home = revocation_home_from_env()?;
     handle_key_check_revocation_with_home(key_id, &home).await
 }
 
 /// Check whether a key has been revoked, using a custom home directory (tests / DI).
+///
+/// # Errors
+///
+/// Returns an error if the revocation list cannot be loaded.
 pub async fn handle_key_check_revocation_with_home(
     key_id: &str,
     home: &Path,
@@ -447,12 +506,20 @@ pub async fn handle_key_check_revocation_with_home(
 }
 
 /// Handle listing all revoked keys
+///
+/// # Errors
+///
+/// Returns an error if `HOME` is unset or the revocation list cannot be loaded.
 pub async fn handle_key_list_revocations() -> Result<(), BearDogError> {
     let home = revocation_home_from_env()?;
     handle_key_list_revocations_with_home(&home).await
 }
 
 /// List all revoked keys, using a custom home directory (tests / DI).
+///
+/// # Errors
+///
+/// Returns an error if the revocation list cannot be loaded.
 pub async fn handle_key_list_revocations_with_home(home: &Path) -> Result<(), BearDogError> {
     println!("📋 BearDog Revocation List");
     println!("========================\n");

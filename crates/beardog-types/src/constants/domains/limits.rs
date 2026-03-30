@@ -5,7 +5,7 @@
 //! **CANONICAL LIMIT CONSTANTS** - Single source of truth for all system limits.
 //!
 //! This module consolidates scattered limit and constraint constants across the
-//! BearDog ecosystem, providing a unified location for all maximum/minimum values:
+//! `BearDog` ecosystem, providing a unified location for all maximum/minimum values:
 //! - Connection limits
 //! - Request/response size limits
 //! - Retry limits
@@ -47,7 +47,7 @@
 //! ## Safety Considerations
 //!
 //! These limits protect against:
-//! - Denial of Service (DoS) attacks
+//! - Denial of Service (`DoS`) attacks
 //! - Resource exhaustion
 //! - Memory leaks
 //! - Runaway loops

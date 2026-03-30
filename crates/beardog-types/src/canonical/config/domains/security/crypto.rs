@@ -3,7 +3,7 @@
 //! Cryptographic Configuration
 //!
 //! This module provides encryption, key management, and cryptographic provider
-//! configuration structures for the BearDog security system.
+//! configuration structures for the `BearDog` security system.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

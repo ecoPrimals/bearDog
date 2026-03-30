@@ -2,7 +2,7 @@
 
 //! Network Port Configuration
 //!
-//! Centralized configuration for all network ports used by BearDog.
+//! Centralized configuration for all network ports used by `BearDog`.
 //! This eliminates hardcoded port numbers throughout the codebase.
 //!
 //! # Design Philosophy
@@ -37,7 +37,7 @@ use serde::{Deserialize, Serialize};
 
 /// Network ports configuration
 ///
-/// All network ports used by BearDog components. Configurable via environment
+/// All network ports used by `BearDog` components. Configurable via environment
 /// variables or config file, with secure defaults as fallback.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct NetworkPortsConfig {
@@ -117,7 +117,7 @@ pub const DEFAULT_DISCOVERY_PORT: u16 = 9090;
 pub const DEFAULT_ADMIN_PORT: u16 = 9091;
 
 /// Default debug/diagnostics port (9092)
-/// By convention, admin_port + 1 for diagnostic endpoints
+/// By convention, `admin_port` + 1 for diagnostic endpoints
 pub const DEFAULT_DEBUG_PORT: u16 = 9092;
 
 /// Default HTTPS API port (8443)
@@ -150,7 +150,7 @@ pub const DEFAULT_STORAGE_PORT: u16 = 8004;
 /// Default security service port (8005)
 pub const DEFAULT_SECURITY_PORT: u16 = 8005;
 
-/// Default database port (PostgreSQL: 5432)
+/// Default database port (`PostgreSQL`: 5432)
 pub const DEFAULT_DATABASE_PORT: u16 = 5432;
 
 /// Default Grafana port (3000)
@@ -173,7 +173,7 @@ pub const DEFAULT_PROFILING_PORT: u16 = 6060;
 /// Default gRPC server port (common convention when not using ALPN on 443)
 pub const DEFAULT_GRPC_PORT: u16 = 50051;
 
-/// Default Consul HTTP API port (HashiCorp standard)
+/// Default Consul HTTP API port (`HashiCorp` standard)
 pub const DEFAULT_CONSUL_PORT: u16 = 8500;
 
 /// Default Redis server port (IANA assigned)
@@ -289,6 +289,10 @@ impl NetworkPortsConfig {
     /// Validates that all ports are in valid range
     ///
     /// Ensures ports are non-privileged (>1024) and below max (65535).
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` when any port is `0`, privileged, or conflicts with another configured port.
     pub fn validate(&self) -> Result<(), String> {
         let ports = [
             ("api_port", self.api_port),

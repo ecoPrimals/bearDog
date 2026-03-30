@@ -27,7 +27,7 @@ pub const DEFAULT_GRAFANA_PORT: u16 = 3000;
 
 /// Get the default service host from environment or fallback
 ///
-/// ✅ MIGRATED: Now uses centralized BEARDOG_CONFIG
+/// ✅ MIGRATED: Now uses centralized `BEARDOG_CONFIG`
 pub fn default_service_host() -> String {
     use beardog_config::global::BEARDOG_CONFIG;
     BEARDOG_CONFIG.network.api.bind_address.to_string()
@@ -35,7 +35,7 @@ pub fn default_service_host() -> String {
 
 /// Get the default service port from environment or fallback
 ///
-/// ✅ MIGRATED: Now uses centralized BEARDOG_CONFIG instead of reading env vars directly
+/// ✅ MIGRATED: Now uses centralized `BEARDOG_CONFIG` instead of reading env vars directly
 pub fn default_service_port() -> u16 {
     use beardog_config::global::BEARDOG_CONFIG;
     BEARDOG_CONFIG.network.api.port

@@ -275,6 +275,10 @@ impl AIOptimizationEngine {
     }
 
     /// Gets stats
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the optimization history mutex is poisoned.
     pub fn get_stats(&self) -> Result<AIOptimizationStats, BearDogError> {
         let history = self.optimization_history.lock().map_err(|e| {
             BearDogError::internal(format!("Failed to lock optimization history: {e}"))

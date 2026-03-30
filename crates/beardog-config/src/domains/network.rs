@@ -72,6 +72,10 @@ impl NetworkConfig {
     }
 
     /// Validate network configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ConfigError`] when nested port, address, API, discovery, or admin validation fails.
     pub fn validate(&self) -> ConfigResult<()> {
         // Validate centralized ports configuration
         self.ports.validate().map_err(|e| {
@@ -183,6 +187,10 @@ impl ApiConfig {
     }
 
     /// Validate API configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ConfigError`] when the port is invalid or TLS settings are inconsistent.
     pub fn validate(&self) -> ConfigResult<()> {
         if self.port == 0 {
             return Err(ConfigError::invalid_value(
@@ -214,7 +222,7 @@ impl Default for ApiConfig {
     }
 }
 
-/// Builder for ApiConfig
+/// Builder for `ApiConfig`
 #[derive(Debug, Default)]
 pub struct ApiConfigBuilder {
     bind_address: Option<IpAddr>,
@@ -338,6 +346,10 @@ impl ServiceDiscoveryConfig {
     }
 
     /// Validate discovery configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ConfigError`] when discovery port, backends, or timing options are invalid.
     pub fn validate(&self) -> ConfigResult<()> {
         if self.port == 0 {
             return Err(ConfigError::invalid_value(
@@ -369,7 +381,7 @@ impl Default for ServiceDiscoveryConfig {
     }
 }
 
-/// Builder for ServiceDiscoveryConfig
+/// Builder for `ServiceDiscoveryConfig`
 #[derive(Debug, Default)]
 pub struct ServiceDiscoveryConfigBuilder {
     port: Option<u16>,
@@ -472,6 +484,10 @@ impl AdminConfig {
     }
 
     /// Validate admin configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ConfigError`] when the admin port is invalid for the enabled state.
     pub fn validate(&self) -> ConfigResult<()> {
         if self.enabled && self.port == 0 {
             return Err(ConfigError::invalid_value(
@@ -490,7 +506,7 @@ impl Default for AdminConfig {
     }
 }
 
-/// Builder for AdminConfig
+/// Builder for `AdminConfig`
 #[derive(Debug, Default)]
 pub struct AdminConfigBuilder {
     bind_address: Option<IpAddr>,

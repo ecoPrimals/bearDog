@@ -153,6 +153,10 @@ impl CanonicalTestConfig {
     }
 
     /// Validate the configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `max_threads` or `timeout_seconds` is zero.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.max_threads == 0 {
             return Err(beardog_errors::BearDogError::validation(
@@ -227,7 +231,7 @@ impl CanonicalApiTestConfig {
     /// Default retry delay in milliseconds
     pub const DEFAULT_RETRY_DELAY_MS: u64 = 1000;
 
-    /// Create CanonicalApiTestConfig with hardcoded defaults
+    /// Create `CanonicalApiTestConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -250,7 +254,7 @@ impl CanonicalApiTestConfig {
         }
     }
 
-    /// Create CanonicalApiTestConfig from environment variables
+    /// Create `CanonicalApiTestConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -531,7 +535,7 @@ impl CanonicalProductionTestConfig {
     /// Default canary percentage
     pub const DEFAULT_CANARY_PERCENTAGE: f64 = 5.0;
 
-    /// Create CanonicalProductionTestConfig with hardcoded defaults
+    /// Create `CanonicalProductionTestConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -552,7 +556,7 @@ impl CanonicalProductionTestConfig {
         }
     }
 
-    /// Create CanonicalProductionTestConfig from environment variables
+    /// Create `CanonicalProductionTestConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -643,7 +647,7 @@ pub type BenchmarkConfig = CanonicalBenchmarkConfig;
 /// Backward compatibility alias
 pub type ProductionTestConfig = CanonicalProductionTestConfig;
 
-/// Backward compatibility alias (old name from world_class_testing_framework)
+/// Backward compatibility alias (old name from `world_class_testing_framework`)
 pub type TestingConfiguration = CanonicalTestConfig;
 
 // ============================================================================

@@ -168,6 +168,10 @@ impl MonitoringMigrationService {
     }
 
     /// Migrate multiple legacy monitoring configurations into unified canonical config
+    ///
+    /// # Errors
+    ///
+    /// This function currently always returns `Ok`; per-item failures are recorded in the migration report.
     pub fn migrate_monitoring_configs(
         &self,
         legacy_configs: Vec<LegacyMonitoringConfig>,
@@ -413,6 +417,10 @@ impl MonitoringMigrationService {
 }
 
 /// Convenience function to migrate monitoring configurations with default options
+///
+/// # Errors
+///
+/// Same as [`MonitoringMigrationService::migrate_monitoring_configs`] (currently always `Ok`).
 pub async fn migrate_monitoring_configurations(
     legacy_configs: Vec<LegacyMonitoringConfig>,
 ) -> Result<MonitoringMigrationResult, BearDogError> {

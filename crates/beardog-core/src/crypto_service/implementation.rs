@@ -94,6 +94,11 @@ impl BearDogCryptoService {
     /// # Returns
     ///
     /// DER-encoded public key for external use
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the key size is invalid, RSA generation or encoding fails, or
+    /// storage fails.
     pub fn generate_rsa_key(&self, key_id: &str, bits: usize) -> Result<Vec<u8>> {
         use rsa::pkcs8::{EncodePrivateKey, EncodePublicKey};
         use rsa::{RsaPrivateKey, RsaPublicKey};
@@ -207,6 +212,10 @@ impl BearDogCryptoService {
     ///
     /// Public keys are safe to store and share. This enables proper
     /// signature verification without exposing private keys.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when no public key exists for `key_id`.
     pub fn get_public_key(&self, key_id: &str) -> Result<Vec<u8>> {
         // parking_lot::RwLock never panics, cleaner API!
         let keys = self.public_keys.read();

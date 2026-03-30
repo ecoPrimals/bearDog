@@ -34,6 +34,10 @@ impl CertificateStore {
     /// Store a certificate
     ///
     /// Replaces any existing certificate for the same adapter.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future persistence validation.
     pub async fn store(&self, cert: AdapterUnlockCertificate) -> Result<(), BearDogError> {
         let adapter_id = cert.adapter_id.clone();
 
@@ -64,6 +68,10 @@ impl CertificateStore {
     }
 
     /// Remove a certificate
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future storage failures.
     pub async fn remove(&self, adapter_id: &str) -> Result<(), BearDogError> {
         let mut certs = self.certificates.write().await;
         certs.remove(adapter_id);
@@ -75,6 +83,10 @@ impl CertificateStore {
     /// Clean up expired certificates
     ///
     /// Should be called periodically to prevent memory buildup.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future cleanup failures.
     pub async fn cleanup_expired(&self) -> Result<usize, BearDogError> {
         let mut certs = self.certificates.write().await;
         let now = Utc::now();

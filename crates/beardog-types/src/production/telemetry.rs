@@ -34,6 +34,10 @@ pub struct TelemetryCollector {
 impl TelemetryCollector {
     /// New
     /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// This function currently always returns `Ok`.
     pub fn new(config: &TelemetryConfig) -> Result<Self, BearDogError> {
         Ok(Self {
             _config: config.clone(),
@@ -42,12 +46,20 @@ impl TelemetryCollector {
 
     /// Start Collection
     /// Starts collection
+    ///
+    /// # Errors
+    ///
+    /// This function currently always returns `Ok`.
     pub fn start_collection(&mut self) -> Result<(), BearDogError> {
         Ok(())
     }
 
     /// Stop Collection
     /// Stops collection
+    ///
+    /// # Errors
+    ///
+    /// This function currently always returns `Ok`.
     pub fn stop_collection(&mut self) -> Result<(), BearDogError> {
         Ok(())
     }

@@ -8,6 +8,10 @@ use chrono::Utc;
 
 impl CrossNodeAuthEngine {
     /// Get trusted nodes for consensus (healthy entries only, sorted by node id).
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future registry failures.
     pub fn get_trusted_nodes(&self) -> Result<Vec<String>, BearDogError> {
         Ok(self
             .consensus_registry
@@ -18,6 +22,10 @@ impl CrossNodeAuthEngine {
     }
 
     /// Register or replace a node in the in-memory consensus registry.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when `node_id` is empty.
     pub fn register_consensus_node(
         &mut self,
         node_id: String,
@@ -39,6 +47,10 @@ impl CrossNodeAuthEngine {
     }
 
     /// Look up health for a consensus participant.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError::not_found`] when the node is not registered.
     pub fn get_consensus_node_health(
         &self,
         node_id: &str,
@@ -50,6 +62,10 @@ impl CrossNodeAuthEngine {
     }
 
     /// Update health (and last-seen) for a registered consensus node.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError::not_found`] when the node is not registered.
     pub fn set_consensus_node_health(
         &mut self,
         node_id: &str,
@@ -70,12 +86,20 @@ impl CrossNodeAuthEngine {
     }
 
     /// Validate consensus reached
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future quorum validation.
     pub const fn validate_consensus(&self, approvals: usize) -> Result<bool, BearDogError> {
         let threshold = self.get_consensus_threshold();
         Ok(approvals >= threshold)
     }
 
     /// Get quorum size
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when [`Self::get_trusted_nodes`] fails.
     pub fn quorum_size(&self) -> Result<usize, BearDogError> {
         let nodes = self.get_trusted_nodes()?;
         Ok((nodes.len() * 2) / 3)

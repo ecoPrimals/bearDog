@@ -93,7 +93,7 @@ impl AdapterClassification {
 /// A cryptographically signed certificate that grants permission to use
 /// a specific adapter. The certificate:
 ///
-/// - Is issued by a BearDog genetic key
+/// - Is issued by a `BearDog` genetic key
 /// - Inherits constraints from the issuing key
 /// - Has a time-limited validity period
 /// - Is bound to a specific adapter ID
@@ -136,7 +136,7 @@ pub struct AdapterUnlockCertificate {
 
     /// Cryptographic signature (Ed25519)
     ///
-    /// Signs: cert_id + issuer_key_id + adapter_id + classification + constraints + timestamps
+    /// Signs: `cert_id` + `issuer_key_id` + `adapter_id` + classification + constraints + timestamps
     pub signature: Vec<u8>,
 
     /// Public key of issuer (for verification)
@@ -394,7 +394,7 @@ pub struct CertificateUsageRecord {
     /// Operation timestamp
     pub timestamp: DateTime<Utc>,
 
-    /// Operation type (e.g., "send_request", "discover_primals")
+    /// Operation type (e.g., "`send_request`", "`discover_primals`")
     pub operation_type: String,
 
     /// Resource consumed (for billing)

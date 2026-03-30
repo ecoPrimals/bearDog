@@ -90,7 +90,7 @@ pub enum SecurityLevel {
     Critical,
 }
 
-/// BTSP (BearDog Tunnel Security Protocol) Configuration
+/// BTSP (`BearDog` Tunnel Security Protocol) Configuration
 ///
 /// Main configuration struct for secure tunnel setup. Controls security level,
 /// session management, and key management policies.

@@ -9,6 +9,9 @@ use crate::unix_socket_ipc::handlers::crypto::{
 };
 use tracing::info;
 
+/// # Errors
+///
+/// Returns an error if decryption fails.
 pub async fn route(
     method: &str,
     params: Option<&serde_json::Value>,

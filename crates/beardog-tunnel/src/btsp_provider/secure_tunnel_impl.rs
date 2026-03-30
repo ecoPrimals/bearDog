@@ -2,7 +2,7 @@
 
 //! Generic `SecureTunnelProvider` Implementation
 //!
-//! This is the primary interface for BearDog's secure tunnel capability.
+//! This is the primary interface for `BearDog`'s secure tunnel capability.
 //! Contains the real implementation of all tunnel operations using genetic
 //! cryptography and TOFU trust management.
 

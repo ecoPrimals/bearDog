@@ -62,12 +62,16 @@ pub trait Constraint: Send + Sync + fmt::Debug {
     ///
     /// Returns `Ok(true)` if satisfied, `Ok(false)` if not satisfied,
     /// or `Err` if evaluation failed.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the constraint cannot be evaluated against the given context.
     fn is_satisfied(&self, context: &ConstraintContext) -> Result<bool, BearDogError>;
 
     /// Human-readable description of the constraint
     fn description(&self) -> String;
 
-    /// Constraint type identifier (e.g., "time_range", "proximity", "cpu_quota")
+    /// Constraint type identifier (e.g., "`time_range`", "proximity", "`cpu_quota`")
     ///
     /// Used for constraint discovery and serialization.
     fn constraint_type(&self) -> &str;
@@ -76,6 +80,10 @@ pub trait Constraint: Send + Sync + fmt::Debug {
     ///
     /// Each constraint type should implement this to serialize its specific data.
     /// This makes the trait object-safe by not requiring `Self: Serialize`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if JSON serialization fails.
     fn serialize_json(&self) -> Result<String, BearDogError>;
 }
 
@@ -89,7 +97,7 @@ pub trait Constraint: Send + Sync + fmt::Debug {
 /// - `location`: Available if GPS/location primal present
 /// - `system_state`: Available if system monitoring enabled
 /// - `network_state`: Available if network primal present
-/// - `environment`: Extensible HashMap for any context data
+/// - `environment`: Extensible `HashMap` for any context data
 ///
 /// # Example
 /// ```rust,ignore
@@ -125,7 +133,7 @@ pub struct ConstraintContext {
 
     /// Extensible environment for novel constraint data
     ///
-    /// This HashMap allows any primal to provide context data
+    /// This `HashMap` allows any primal to provide context data
     /// that we didn't predict. Examples:
     /// - "room-temperature": 22.5
     /// - "light-level": 800

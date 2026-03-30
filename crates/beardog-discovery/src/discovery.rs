@@ -25,6 +25,10 @@ pub struct CapabilityDiscovery {
 
 impl CapabilityDiscovery {
     /// Create from configuration file
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from [`DiscoveryConfig::from_file`].
     pub async fn from_config<P: AsRef<Path>>(path: P) -> Result<Self> {
         let config = DiscoveryConfig::from_file(path)?;
         Ok(Self::new(config))
@@ -70,6 +74,10 @@ impl CapabilityDiscovery {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when underlying discovery transports fail.
     pub async fn find_by_capability(&self, capability: &str) -> Result<Vec<DiscoveredService>> {
         info!("Discovering services with capability: {}", capability);
 

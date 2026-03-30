@@ -60,6 +60,10 @@ impl AdvancedMetricsSystem {
 
     /// Records a performance sample: persists it, updates aggregates, and broadcasts
     /// [`MetricEventType::MetricUpdated`] to subscribers.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future store failures.
     pub async fn record_performance_metric(
         &self,
         name: String,
@@ -112,6 +116,10 @@ impl AdvancedMetricsSystem {
     }
 
     /// Record a security event
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future persistence failures.
     pub async fn record_security_event(&self, event: SecurityEvent) -> Result<(), BearDogError> {
         {
             let mut security = self.security_metrics.write().await;

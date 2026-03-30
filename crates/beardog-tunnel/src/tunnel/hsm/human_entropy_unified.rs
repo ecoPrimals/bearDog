@@ -44,6 +44,10 @@ impl Default for TierElevationCriteria {
 
 impl UnifiedHumanEntropyClassifier {
     /// Creates a new unified human entropy classifier
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the classifier cannot be initialized.
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             tier_criteria: TierElevationCriteria::default(),
@@ -51,6 +55,10 @@ impl UnifiedHumanEntropyClassifier {
     }
 
     /// Creates classifier with custom criteria
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the classifier cannot be constructed.
     pub const fn with_criteria(criteria: TierElevationCriteria) -> Result<Self, BearDogError> {
         Ok(Self {
             tier_criteria: criteria,
@@ -58,6 +66,10 @@ impl UnifiedHumanEntropyClassifier {
     }
 
     /// Classifies human entropy from mobile device
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if quality scoring or tier recommendation fails.
     pub fn classify_mobile_entropy(
         &self,
         sensor_data: &HashMap<String, f64>,
@@ -90,6 +102,10 @@ impl UnifiedHumanEntropyClassifier {
     }
 
     /// Checks if capabilities support ephemeral seeds
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if capability inspection fails.
     pub const fn supports_ephemeral_seeds(
         &self,
         capabilities: &HsmCapabilities,
@@ -98,6 +114,10 @@ impl UnifiedHumanEntropyClassifier {
     }
 
     /// Gets human entropy sources for a tier
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if source resolution fails.
     pub fn get_sources_for_tier(&self, tier: &HsmTier) -> Result<Vec<EntropySource>, BearDogError> {
         match tier {
             HsmTier::Mobile | HsmTier::SecureEnclave => {

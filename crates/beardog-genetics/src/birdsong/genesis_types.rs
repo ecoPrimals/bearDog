@@ -18,7 +18,7 @@ pub use beardog_security::genesis::{PhysicalChannelType, TrustLevel};
 
 /// A device that witnesses the birth of a new node
 ///
-/// During a genesis ceremony, a witness device (e.g., SoloKey, existing node)
+/// During a genesis ceremony, a witness device (e.g., `SoloKey`, existing node)
 /// cryptographically signs the creation of a new node's lineage, establishing
 /// trust through physical proximity rather than network infrastructure.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -36,14 +36,14 @@ pub struct GenesisWitness {
     pub timestamp: u64,
 
     /// Signature over new node's identity
-    /// Signs: new_node_id || timestamp || public_key
+    /// Signs: `new_node_id` || timestamp || `public_key`
     pub signature: Vec<u8>,
 }
 
 impl GenesisWitness {
     /// Create message to be signed by witness
     ///
-    /// Format: new_node_id || timestamp (8 bytes, big-endian) || witness_public_key
+    /// Format: `new_node_id` || timestamp (8 bytes, big-endian) || `witness_public_key`
     pub fn create_signing_message(
         new_node_id: &str,
         timestamp: u64,
@@ -57,6 +57,11 @@ impl GenesisWitness {
     }
 
     /// Verify this witness signature
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the public key length is wrong, the key material is invalid,
+    /// or the signature buffer cannot be parsed as Ed25519.
     pub fn verify_signature(
         &self,
         new_node_id: &str,
@@ -111,6 +116,11 @@ pub struct GeneticLineage {
 
 impl GeneticLineage {
     /// Verify this lineage's integrity
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the lineage chain has no child node or witness signature
+    /// verification fails with a cryptographic error.
     pub fn verify(&self) -> Result<bool, beardog_errors::BearDogError> {
         // 1. Verify witness signature
         // Find the child node (non-root) in the lineage
@@ -169,10 +179,10 @@ pub struct PhysicalChannelProof {
     /// Channel type
     pub channel_type: PhysicalChannelType,
 
-    /// Hardware attestation (for HardwareKey, Nfc)
+    /// Hardware attestation (for `HardwareKey`, Nfc)
     pub attestation: Option<Vec<u8>>,
 
-    /// Out-of-band verification codes (for QrCodeWithOob)
+    /// Out-of-band verification codes (for `QrCodeWithOob`)
     pub verification_codes: Option<Vec<String>>,
 
     /// Bluetooth pairing data (for Bluetooth)
@@ -191,11 +201,19 @@ impl PhysicalChannelProof {
     /// Verify this physical proof using the default attestation policy (`software`).
     ///
     /// For runtime configuration via `BEARDOG_ATTESTATION_MODE`, use [`Self::verify_from_env`].
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from [`Self::verify_with_attestation_mode`].
     pub fn verify(&self) -> Result<bool, beardog_errors::BearDogError> {
         self.verify_with_attestation_mode("software")
     }
 
     /// Verify using `BEARDOG_ATTESTATION_MODE` (default `software` when unset).
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from [`Self::verify_with_attestation_mode`].
     pub fn verify_from_env(&self) -> Result<bool, beardog_errors::BearDogError> {
         let mode = std::env::var("BEARDOG_ATTESTATION_MODE")
             .unwrap_or_else(|_| "software".to_string())
@@ -209,9 +227,14 @@ impl PhysicalChannelProof {
     ///
     /// Verifies platform-specific hardware attestation:
     /// - TPM (Trusted Platform Module) on Linux/Windows
-    /// - StrongBox on Android
+    /// - `StrongBox` on Android
     /// - Secure Enclave on iOS
     /// - Software attestation for development
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when hardware attestation verification fails internally for the
+    /// current platform and mode (e.g. malformed attestation parsing).
     pub fn verify_with_attestation_mode(
         &self,
         attestation_mode: &str,
@@ -257,7 +280,7 @@ impl PhysicalChannelProof {
     /// # Platform Support
     ///
     /// - Linux/Windows: TPM 2.0 attestation
-    /// - Android: StrongBox Keymaster attestation
+    /// - Android: `StrongBox` Keymaster attestation
     /// - iOS: Secure Enclave attestation
     /// - Development: Software-based HMAC attestation
     ///

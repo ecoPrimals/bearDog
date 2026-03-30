@@ -41,6 +41,11 @@ pub(crate) fn resolve_server_socket_path(args: &ServerArgs) -> String {
 }
 
 /// Handle server command - start long-running service
+///
+/// # Errors
+///
+/// Returns an error if neural API registration, HSM setup, or transport binding fails, or the
+/// server exits with an error.
 pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     info!("BearDog server starting");
 
@@ -185,7 +190,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
 /// Best-effort registration with ecosystem IPC registry (non-fatal).
 ///
 /// Attempts to connect to the orchestrator's IPC registry socket
-/// (Songbird or equivalent) and register BearDog's capabilities.
+/// (Songbird or equivalent) and register `BearDog`'s capabilities.
 /// Failure is logged and swallowed per PRIMAL IPC Protocol v3.1:
 /// registration SHOULD be attempted but MUST NOT prevent standalone operation.
 async fn attempt_songbird_registration(_socket_path: &str, _tcp_addr: Option<&str>) {

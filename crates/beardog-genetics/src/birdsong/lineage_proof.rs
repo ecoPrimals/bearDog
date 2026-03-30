@@ -239,6 +239,10 @@ impl LineageProofManager {
     }
 
     /// Check if a node is a descendant of another node
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok`; the `Result` type is reserved for future lineage lookup failures.
     pub fn is_descendant(
         &self,
         chain_id: &str,

@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 /// HSM-specific discovery configuration
 ///
-/// Wraps the canonical DiscoveryConfig with HSM-specific hardware detection flags.
+/// Wraps the canonical `DiscoveryConfig` with HSM-specific hardware detection flags.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmDiscoveryConfig {
     /// Base discovery configuration
@@ -22,13 +22,13 @@ pub struct HsmDiscoveryConfig {
     /// Enable network HSM discovery (HSMs accessible over network)
     pub enable_network_hsm: bool,
 
-    /// Enable USB HSM discovery (YubiKey, Nitrokey, etc.)
+    /// Enable USB HSM discovery (`YubiKey`, Nitrokey, etc.)
     pub enable_usb_hsm: bool,
 
     /// Enable software HSM discovery (software-based cryptographic modules)
     pub enable_software_hsm: bool,
 
-    /// Enable mobile HSM discovery (Android StrongBox, iOS Secure Enclave)
+    /// Enable mobile HSM discovery (Android `StrongBox`, iOS Secure Enclave)
     pub enable_mobile_hsm: bool,
 
     /// Enable TPM discovery (Trusted Platform Module)

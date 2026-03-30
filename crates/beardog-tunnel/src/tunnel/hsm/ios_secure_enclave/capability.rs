@@ -164,6 +164,9 @@ impl CapabilityDetector {
         Ok(has_t2 || has_apple_silicon)
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     /// Validates biometric policy against available features
     pub fn validate_biometric_policy(
         policy: &BiometricPolicy,

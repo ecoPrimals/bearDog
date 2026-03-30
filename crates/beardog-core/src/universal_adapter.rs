@@ -188,6 +188,10 @@ impl UniversalAdapter {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when [`PrimalSelfKnowledge::discover`] or adapter initialization fails.
     pub fn new() -> Result<Self, BearDogError> {
         let self_knowledge = PrimalSelfKnowledge::discover()?;
         Self::with_self_knowledge_and_inputs(self_knowledge, UniversalAdapterEnvInputs::from_env())
@@ -196,11 +200,19 @@ impl UniversalAdapter {
     /// Initialize adapter with explicit self-knowledge (no environment read for identity/endpoints).
     ///
     /// Use in tests and when configuration is loaded from non-env sources.
+    ///
+    /// # Errors
+    ///
+    /// Same as [`Self::with_self_knowledge_and_inputs`].
     pub fn with_self_knowledge(self_knowledge: PrimalSelfKnowledge) -> Result<Self, BearDogError> {
         Self::with_self_knowledge_and_inputs(self_knowledge, UniversalAdapterEnvInputs::from_env())
     }
 
     /// Like [`Self::with_self_knowledge`] but uses explicit adapter inputs (e.g. tests without env).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when [`PrimalDiscovery::from_env`] fails.
     pub fn with_self_knowledge_and_inputs(
         self_knowledge: PrimalSelfKnowledge,
         adapter_inputs: UniversalAdapterEnvInputs,
@@ -214,6 +226,10 @@ impl UniversalAdapter {
     }
 
     /// Full injection: self-knowledge, discovery engine, and cache TTL (no implicit env except optional callers).
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future initialization failures.
     pub fn with_self_knowledge_discovery_and_cache(
         self_knowledge: PrimalSelfKnowledge,
         discovery: PrimalDiscovery,
@@ -269,6 +285,10 @@ impl UniversalAdapter {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when primal discovery fails.
     pub async fn discover_capability(
         &self,
         capability: SimpleCapability,
@@ -319,6 +339,10 @@ impl UniversalAdapter {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when routing finds no primals or [`CapabilityRouter::route`] fails.
     pub async fn find_primal_by_capability(
         &self,
         capability: SimpleCapability,

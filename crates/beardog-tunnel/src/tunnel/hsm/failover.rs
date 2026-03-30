@@ -84,6 +84,9 @@ impl HsmFailoverManager {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     /// Executes operation with failover
     pub fn execute_with_failover<F, T>(&mut self, operation: F) -> Result<T, BearDogError>
     where

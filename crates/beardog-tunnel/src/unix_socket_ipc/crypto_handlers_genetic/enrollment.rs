@@ -26,6 +26,9 @@ use serde_json::{Value, json};
 use sha2::Sha256;
 use tracing::{debug, info, warn};
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Handle `genetic.derive_device_seed` RPC method
 ///
 /// Derives a UNIQUE device seed from the family's root genesis seed.
@@ -33,7 +36,7 @@ use tracing::{debug, info, warn};
 /// # Security Properties
 /// - Forward secrecy: compromising one device doesn't reveal root seed
 /// - Device isolation: each device has unique cryptographic material
-/// - Verifiability: derivation_proof proves correct derivation
+/// - Verifiability: `derivation_proof` proves correct derivation
 ///
 /// # Performance
 /// - Expected: < 200μs (HKDF-SHA256)
@@ -108,6 +111,9 @@ pub async fn handle_derive_device_seed(params: &Value) -> Result<Value, BearDogE
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Handle `genetic.sign_lineage_certificate` RPC method
 ///
 /// Signs a lineage certificate for device enrollment using Ed25519.
@@ -207,10 +213,13 @@ pub async fn handle_sign_lineage_certificate(params: &Value) -> Result<Value, Be
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Handle `genetic.verify_lineage_certificate` RPC method
 ///
 /// Verifies a lineage certificate's Ed25519 signature, expiration,
-/// family_id, and optional trust chain.
+/// `family_id`, and optional trust chain.
 ///
 /// # Performance
 /// - Expected: < 300μs (Ed25519 verify)

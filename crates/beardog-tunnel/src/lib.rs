@@ -32,18 +32,18 @@
     )
 )] // Pedantic/nursery clippy: relaxed only for `cfg(test)` builds (see workspace `Cargo.toml` lints).
 
-//! # BearDog Tunnel - Secure Communication and HSM Integration
+//! # `BearDog` Tunnel - Secure Communication and HSM Integration
 //!
 //! Provides secure communication tunnels and Hardware Security Module (HSM) integration
-//! for the BearDog ecosystem, enabling encrypted channels and cryptographic key management.
+//! for the `BearDog` ecosystem, enabling encrypted channels and cryptographic key management.
 //!
 //! ## Features
 //!
-//! - **Secure Tunnels**: Encrypted communication channels using the BSTP (BearDog Secure Tunnel Protocol)
-//! - **HSM Integration**: Hardware security module support for YubiKey, TPM 2.0, and mobile secure hardware
+//! - **Secure Tunnels**: Encrypted communication channels using the BSTP (`BearDog` Secure Tunnel Protocol)
+//! - **HSM Integration**: Hardware security module support for `YubiKey`, TPM 2.0, and mobile secure hardware
 //! - **Session Management**: Secure session lifecycle with automatic expiration and cleanup
 //! - **Key Management**: Hardware-backed cryptographic operations (sign, verify, encrypt, decrypt)
-//! - **Mobile HSM**: Native iOS Secure Enclave and Android StrongBox support
+//! - **Mobile HSM**: Native iOS Secure Enclave and Android `StrongBox` support
 //! - **Zero-Copy Design**: Optimized for minimal memory allocation and maximum performance
 //!
 //! ## Core Types

@@ -36,6 +36,9 @@ pub struct HsmHealth {
 }
 
 impl ProductionSoftwareHsm {
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails in the underlying HSM provider.
     /// Create new production software HSM instance
     /// Creates a new instance
     pub fn new(config: HsmConfig) -> Result<Self, BearDogError> {
@@ -54,6 +57,9 @@ impl ProductionSoftwareHsm {
         })
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails in the underlying HSM provider.
     /// Initialize secure HSM session
     /// Initializes componentialize_session
     pub fn initialize_session(&mut self) -> Result<String, BearDogError> {
@@ -66,6 +72,9 @@ impl ProductionSoftwareHsm {
         Ok(session_id)
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails in the underlying HSM provider.
     /// Generate cryptographically secure key
     pub fn generate_key(&mut self, operation: HsmOperation) -> Result<HsmKey, BearDogError> {
         let session_id = self
@@ -104,6 +113,9 @@ impl ProductionSoftwareHsm {
         Ok(hsm_key)
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// Get HSM health status
     /// Gets health
     pub fn get_health(&self) -> Result<HsmHealth, BearDogError> {
@@ -119,6 +131,9 @@ impl ProductionSoftwareHsm {
         Ok(status)
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     pub fn clear_keys(&mut self) -> Result<(), BearDogError> {
         info!("🧹 Clearing all keys from HSM");
         self.key_store.clear();
@@ -195,6 +210,9 @@ pub struct AndroidStrongBoxHsm {
 }
 
 impl AndroidStrongBoxHsm {
+    /// # Errors
+    ///
+    /// Returns an error if key derivation fails.
     /// Create new Android StrongBox HSM instance
     /// Creates a new instance
     pub fn new(config: HsmConfig) -> Result<Self, BearDogError> {
@@ -215,6 +233,9 @@ impl AndroidStrongBoxHsm {
         Ok(Self { config })
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if key derivation fails.
     /// Generate hardware-backed key
     pub fn generate_hardware_key(&self, _operation: HsmOperation) -> Result<HsmKey, BearDogError> {
         #[cfg(target_os = "android")]
@@ -242,6 +263,9 @@ pub struct IOSSecureEnclaveHsm {
 }
 
 impl IOSSecureEnclaveHsm {
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     /// Create new iOS Secure Enclave HSM instance
     /// Creates a new instance
     pub fn new(config: HsmConfig) -> Result<Self, BearDogError> {

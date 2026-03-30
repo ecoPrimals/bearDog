@@ -2,7 +2,7 @@
 
 //! Canonical HSM provider types for the unified `HsmKeyProvider` trait.
 //!
-//! These types are shared across all HSM backends (software, Android StrongBox,
+//! These types are shared across all HSM backends (software, Android `StrongBox`,
 //! iOS Secure Enclave, PKCS#11, TPM) and form the vocabulary of the
 //! provider-agnostic HSM abstraction.
 
@@ -12,13 +12,13 @@ use std::collections::HashSet;
 /// Identifies the kind of HSM backend behind an `HsmKeyProvider` implementation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum HsmProviderType {
-    /// Pure-Rust in-process key store (RustCrypto). Always available.
+    /// Pure-Rust in-process key store (`RustCrypto`). Always available.
     Software,
-    /// Android Keystore backed by StrongBox Keymaster hardware.
+    /// Android Keystore backed by `StrongBox` Keymaster hardware.
     AndroidStrongBox,
     /// iOS Secure Enclave (T2/Apple Silicon).
     IosSecureEnclave,
-    /// PKCS#11 token (Yubikey, Nitrokey, CloudHSM PKCS#11 bridge, etc.).
+    /// PKCS#11 token (Yubikey, Nitrokey, `CloudHSM` PKCS#11 bridge, etc.).
     Pkcs11,
     /// Trusted Platform Module 2.0.
     Tpm,

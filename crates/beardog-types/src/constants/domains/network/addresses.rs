@@ -156,7 +156,7 @@ pub const BROADCAST_ADDRESS: &str = "255.255.255.255";
 pub const DEFAULT_DNS_PORT: u16 = 53;
 
 /// Fallback DNS servers (well-known public DNS)
-/// These are used when BEARDOG_DNS_SERVERS environment variable is not set.
+/// These are used when `BEARDOG_DNS_SERVERS` environment variable is not set.
 /// Format: Google DNS (8.8.8.8, 8.8.4.4), Cloudflare DNS (1.1.1.1)
 pub const FALLBACK_DNS_SERVERS: &[&str] = &["8.8.8.8", "8.8.4.4", "1.1.1.1"];
 

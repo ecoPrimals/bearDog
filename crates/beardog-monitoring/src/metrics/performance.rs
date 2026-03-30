@@ -35,6 +35,10 @@ const LATENCY_SAMPLE_CAP: usize = 1000;
 
 impl PerformanceEngine {
     /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future validation.
     pub fn new(config: PerformanceConfig) -> Result<Self, BearDogError> {
         Ok(Self {
             _config: config,
@@ -43,12 +47,21 @@ impl PerformanceEngine {
     }
 
     /// Starts service
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future startup failures.
     pub fn start(&self) -> Result<(), BearDogError> {
         tracing::info!("Performance metrics engine started");
         Ok(())
     }
 
     /// Records a performance-category event: updates rolling aggregates used by [`Self::get_metrics`].
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the internal mutex is poisoned.
+    #[expect(clippy::cast_precision_loss, reason = "metrics averaging")]
     pub fn record_event(&self, event: &super::MetricEvent) -> Result<(), BearDogError> {
         let mut state = self
             .state
@@ -89,6 +102,11 @@ impl PerformanceEngine {
     }
 
     /// Gets metrics
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the internal mutex is poisoned.
+    #[expect(clippy::cast_precision_loss, reason = "metrics averaging")]
     pub fn get_metrics(&self) -> Result<PerformanceMetrics, BearDogError> {
         let state = self
             .state

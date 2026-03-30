@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Core CrossNodeAuthEngine implementation
+//! Core `CrossNodeAuthEngine` implementation
 
 use super::types::*;
 use beardog_errors::BearDogError;
@@ -53,6 +53,11 @@ impl CrossNodeAuthEngine {
     }
 
     /// Authorize access to a resource
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns [`AuthorizationResult`]; the `Result` type is reserved for future
+    /// registry failures.
     pub fn authorize(
         &self,
         subject: &Subject,
@@ -138,6 +143,10 @@ impl CrossNodeAuthEngine {
     }
 
     /// Cleanup expired data
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future persistence failures.
     pub fn cleanup_expired_data(&mut self) -> Result<(), BearDogError> {
         let now = Utc::now();
         self.active_authorizations

@@ -50,6 +50,10 @@ pub fn get_system_info() -> SystemInfo {
 }
 
 /// Handle status command
+///
+/// # Errors
+///
+/// This handler currently only prints status and always returns `Ok(())`.
 pub async fn handle_status(verbose: bool) -> Result<(), BearDogError> {
     let build_info = get_build_info();
     let system_info = get_system_info();
@@ -115,6 +119,10 @@ pub async fn handle_status(verbose: bool) -> Result<(), BearDogError> {
 }
 
 /// Handle version command
+///
+/// # Errors
+///
+/// This handler currently only prints the version and always returns `Ok(())`.
 #[allow(
     dead_code,
     reason = "Exposed for tests and future version subcommand wiring."
@@ -126,6 +134,10 @@ pub async fn handle_version() -> Result<(), BearDogError> {
 }
 
 /// Legacy function for compatibility
+///
+/// # Errors
+///
+/// Returns an error only if [`handle_status`] does (currently none).
 pub async fn show_status() -> Result<(), BearDogError> {
     handle_status(true).await
 }

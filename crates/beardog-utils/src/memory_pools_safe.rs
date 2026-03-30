@@ -48,6 +48,10 @@ where
     }
 
     /// Acquire object from pool or create new one
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the stats mutex is poisoned.
     pub fn acquire(&self) -> Result<Box<T>, std::io::Error> {
         let mut stats = self
             .stats
@@ -71,6 +75,10 @@ where
     }
 
     /// Release object back to pool
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the stats mutex is poisoned.
     pub fn release(&self, element: Box<T>) -> Result<(), std::io::Error> {
         let mut stats = self
             .stats
@@ -90,12 +98,20 @@ where
     }
 
     /// Get current pool size
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok`; the `Result` is reserved for future instrumentation.
     pub fn pool_size(&self) -> Result<usize, std::io::Error> {
         Ok(self.pool.len())
     }
 
     /// Get pool statistics
     /// Gets stats
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the stats mutex is poisoned.
     pub fn get_stats(&self) -> Result<PoolStats, std::io::Error> {
         let stats = self
             .stats
@@ -105,6 +121,10 @@ where
     }
 
     /// Clear the pool
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok`.
     pub fn clear(&self) -> Result<(), std::io::Error> {
         while self.pool.pop().is_some() {}
         Ok(())

@@ -47,7 +47,7 @@ impl ApplicationConfig {
     /// Default application description
     pub const DEFAULT_DESCRIPTION: &'static str = "BearDog Security Provider";
 
-    /// Create ApplicationConfig with defaults (no fixed product instance identity).
+    /// Create `ApplicationConfig` with defaults (no fixed product instance identity).
     ///
     /// Version and instance ID are taken from `BEARDOG_APP_VERSION` and `BEARDOG_INSTANCE_ID`
     /// when set; otherwise version is the crate version at compile time and instance ID is
@@ -64,7 +64,7 @@ impl ApplicationConfig {
         }
     }
 
-    /// Create ApplicationConfig from environment variables and system detection
+    /// Create `ApplicationConfig` from environment variables and system detection
     ///
     /// Reads configuration from environment, falling back to detected values.
     ///
@@ -98,12 +98,12 @@ impl ApplicationConfig {
 
 /// **CANONICAL** Logging configuration
 ///
-/// This is the single source of truth for logging settings across BearDog.
-/// Consolidates all LoggingConfig variants from:
+/// This is the single source of truth for logging settings across `BearDog`.
+/// Consolidates all `LoggingConfig` variants from:
 /// - `beardog-types/src/canonical/config/type_aliases.rs`
 /// - `beardog-types/src/canonical/monitoring_unified/logging.rs`
 /// - `beardog-types/src/canonical/providers_unified/monitoring.rs`
-/// - `beardog-types/src/canonical/providers/base.rs` (LoggingConfiguration)
+/// - `beardog-types/src/canonical/providers/base.rs` (`LoggingConfiguration`)
 /// - `beardog-production/src/config_management.rs`
 /// - `beardog-core/src/ai/hybrid_intelligence/types.rs`
 ///
@@ -230,7 +230,7 @@ pub enum LogRotationFrequency {
 }
 
 impl LoggingConfig {
-    /// Create LoggingConfig with hardcoded defaults
+    /// Create `LoggingConfig` with hardcoded defaults
     pub fn with_defaults() -> Self {
         Self {
             enabled: true,
@@ -248,7 +248,7 @@ impl LoggingConfig {
         }
     }
 
-    /// Create LoggingConfig from environment variables
+    /// Create `LoggingConfig` from environment variables
     pub fn from_env() -> Self {
         let level = std::env::var("BEARDOG_LOG_LEVEL")
             .ok()
@@ -289,7 +289,7 @@ impl LogLevel {
     /// Default log level
     pub const DEFAULT: Self = Self::Info;
 
-    /// Create LogLevel with defaults
+    /// Create `LogLevel` with defaults
     pub const fn with_defaults() -> Self {
         Self::DEFAULT
     }
@@ -305,7 +305,7 @@ impl LogFormat {
     /// Default log format
     pub const DEFAULT: Self = Self::Json;
 
-    /// Create LogFormat with defaults
+    /// Create `LogFormat` with defaults
     pub const fn with_defaults() -> Self {
         Self::DEFAULT
     }
@@ -324,7 +324,7 @@ impl LogRotationConfig {
     /// Default maximum number of log files to keep
     pub const DEFAULT_MAX_FILES: u32 = 10;
 
-    /// Create LogRotationConfig with hardcoded defaults
+    /// Create `LogRotationConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -336,7 +336,7 @@ impl LogRotationConfig {
         }
     }
 
-    /// Create LogRotationConfig from environment variables
+    /// Create `LogRotationConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -395,6 +395,10 @@ impl LoggingConfig {
     }
 
     /// Validate logging configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if logging is enabled without targets or rotation limits are zero.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.enabled && self.targets.is_empty() {
             return Err(BearDogError::configuration(
@@ -444,7 +448,7 @@ impl ThreadingConfig {
     pub const DEFAULT_BLOCKING_THREADS: usize =
         crate::constants::domains::system::defaults::DEFAULT_CACHE_SIZE;
 
-    /// Create ThreadingConfig with hardcoded defaults
+    /// Create `ThreadingConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables or system queries are performed.
@@ -457,13 +461,13 @@ impl ThreadingConfig {
         }
     }
 
-    /// Create ThreadingConfig from environment variables and system detection
+    /// Create `ThreadingConfig` from environment variables and system detection
     ///
     /// Reads configuration from environment, falling back to system detection.
     ///
     /// # Environment Variables
     /// - `BEARDOG_WORKER_THREADS`: Number of worker threads (default: detected from system)
-    /// - `BEARDOG_BLOCKING_THREADS`: Number of blocking threads (default: DEFAULT_CACHE_SIZE)
+    /// - `BEARDOG_BLOCKING_THREADS`: Number of blocking threads (default: `DEFAULT_CACHE_SIZE`)
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -539,7 +543,7 @@ impl ResourceConfig {
     /// Default monitoring interval in seconds
     pub const DEFAULT_MONITORING_INTERVAL_SECS: u64 = 60;
 
-    /// Create ResourceConfig with hardcoded defaults
+    /// Create `ResourceConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -552,7 +556,7 @@ impl ResourceConfig {
         }
     }
 
-    /// Create ResourceConfig from environment variables
+    /// Create `ResourceConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -595,7 +599,7 @@ impl EnvironmentConfig {
     /// Default environment type
     pub const DEFAULT_ENVIRONMENT_TYPE: &'static str = "development";
 
-    /// Create EnvironmentConfig with hardcoded defaults
+    /// Create `EnvironmentConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -607,7 +611,7 @@ impl EnvironmentConfig {
         }
     }
 
-    /// Create EnvironmentConfig from environment variables
+    /// Create `EnvironmentConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -636,6 +640,10 @@ impl Default for EnvironmentConfig {
 
 impl SystemDomainConfig {
     /// Load system configuration from environment variables
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if numeric environment variables (e.g. worker threads, max connections) fail to parse.
     pub fn from_env() -> Result<Self, BearDogError> {
         let mut config = Self::default();
 
@@ -684,6 +692,10 @@ impl SystemDomainConfig {
     }
 
     /// Validate system configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if threading, resource limits, or logging configuration is invalid.
     pub fn validate(&self) -> Result<(), BearDogError> {
         // Validate threading configuration
         if self.threading.worker_threads == 0 {

@@ -7,7 +7,7 @@
 //!
 //! **FOSSIL RECORD**: These diagnostics were CRITICAL for debugging the
 //! 100% Pure Rust HTTPS implementation (January 2026). They helped identify:
-//! - Empty AAD causing TLS decrypt_error
+//! - Empty AAD causing TLS `decrypt_error`
 //! - Key length mismatches
 //! - Nonce generation issues
 //! - Tag verification failures

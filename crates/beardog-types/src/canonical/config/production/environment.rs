@@ -233,7 +233,7 @@ impl EnvironmentValidation {
     /// Default minimum memory in MB (512 MB)
     pub const DEFAULT_MIN_MEMORY_MB: u64 = 512;
 
-    /// Create EnvironmentValidation with hardcoded defaults
+    /// Create `EnvironmentValidation` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -250,7 +250,7 @@ impl EnvironmentValidation {
         }
     }
 
-    /// Create EnvironmentValidation from environment variables
+    /// Create `EnvironmentValidation` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///

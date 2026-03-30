@@ -243,7 +243,7 @@ pub use specialized_domains::{
     UnifiedWorkflowConfig,
 };
 
-/// Unified BearDog Configuration - Single Source of Truth
+/// Unified `BearDog` Configuration - Single Source of Truth
 ///
 /// This is the **ROOT** of the unified configuration system that eliminates all
 /// fragmentation by consolidating 80+ Config structs into one comprehensive structure.
@@ -297,7 +297,7 @@ pub struct UnifiedBearDogConfig {
     /// Security policies and authentication (encryption, access control, threat detection)
     pub security: UnifiedSecurityConfig,
 
-    /// Hardware Security Module integration (YubiKey, TPM, PKCS#11)
+    /// Hardware Security Module integration (`YubiKey`, TPM, PKCS#11)
     pub hsm: UnifiedHsmConfig,
 
     /// Database connectivity and storage (pools, migrations, backups)

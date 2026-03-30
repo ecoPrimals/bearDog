@@ -277,7 +277,7 @@ pub struct HealthStatus {
     pub hsm_connected: bool,
 }
 
-/// Custom serde module for SystemTime
+/// Custom serde module for `SystemTime`
 mod time_serde {
     use serde::{Deserialize, Deserializer, Serializer};
     use std::time::{SystemTime, UNIX_EPOCH};

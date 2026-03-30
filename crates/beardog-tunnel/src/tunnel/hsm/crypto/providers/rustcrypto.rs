@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! RustCrypto Provider
+//! `RustCrypto` Provider
 //!
-//! Implementation of UniversalCryptoProvider using the RustCrypto ecosystem.
+//! Implementation of `UniversalCryptoProvider` using the `RustCrypto` ecosystem.
 
 use crate::tunnel::hsm::crypto::algorithms::*;
 use crate::tunnel::hsm::crypto::capabilities::*;
@@ -10,21 +10,21 @@ use crate::tunnel::hsm::crypto::provider::{NonceGenerator, UniversalCryptoProvid
 use async_trait::async_trait;
 use beardog_errors::BearDogError;
 
-/// RustCrypto provider implementation
+/// `RustCrypto` provider implementation
 #[derive(Debug, Clone)]
 pub struct RustCryptoProvider {
     capabilities: CryptoCapabilities,
 }
 
 impl RustCryptoProvider {
-    /// Create a new RustCrypto provider
+    /// Create a new `RustCrypto` provider
     pub fn new() -> Self {
         Self {
             capabilities: Self::build_capabilities(),
         }
     }
 
-    /// Build the capabilities for RustCrypto
+    /// Build the capabilities for `RustCrypto`
     fn build_capabilities() -> CryptoCapabilities {
         CryptoCapabilities {
             provider_name: "RustCrypto".to_string(),

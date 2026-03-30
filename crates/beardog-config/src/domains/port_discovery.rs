@@ -466,6 +466,10 @@ impl PortDiscoverer {
 /// ).await.expect("hierarchical port discovery");
 /// # }
 /// ```
+///
+/// # Errors
+///
+/// Returns [`BearDogError`] when automatic port probing fails or no valid port can be chosen.
 pub async fn discover_port_hierarchical(
     env_var: &str,
     cli_override: Option<u16>,

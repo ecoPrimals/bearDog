@@ -2,7 +2,7 @@
 
 //! Default Timeout Values
 //!
-//! Provides the Default implementation for TimeoutConfig.
+//! Provides the Default implementation for `TimeoutConfig`.
 
 use super::core::TimeoutConfig;
 

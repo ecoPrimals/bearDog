@@ -24,7 +24,7 @@ pub struct DiscoveredService {
     /// Capabilities this service provides
     pub capabilities: Vec<Capability>,
 
-    /// QoS metrics
+    /// `QoS` metrics
     pub qos: QoSMetrics,
 
     /// Health status

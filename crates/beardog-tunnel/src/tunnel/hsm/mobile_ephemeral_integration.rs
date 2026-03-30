@@ -88,6 +88,7 @@ impl MobileEphemeralKeyManager {
     /// Creates a new mobile ephemeral key manager
     ///
     /// # Errors
+    ///
     /// Returns an error if initialization fails.
     pub fn new(config: MobileEphemeralConfig) -> Result<Self, BearDogError> {
         info!("🔑 Initializing Mobile Ephemeral Key Manager");
@@ -104,6 +105,7 @@ impl MobileEphemeralKeyManager {
     /// Generates ephemeral key from human entropy
     ///
     /// # Errors
+    ///
     /// Returns an error if key generation fails.
     pub fn generate_ephemeral_key(
         &mut self,
@@ -175,6 +177,10 @@ impl MobileEphemeralKeyManager {
     }
 
     /// Cleans up expired keys
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if cleanup bookkeeping fails.
     pub fn cleanup_expired_keys(&mut self) -> Result<usize, BearDogError> {
         let now = SystemTime::now();
         let mut removed_count = 0;
@@ -202,6 +208,10 @@ impl MobileEphemeralKeyManager {
     }
 
     /// Verifies key is still valid
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if key metadata cannot be read.
     pub fn verify_key_valid(&self, key_id: &str) -> Result<bool, BearDogError> {
         match self.active_keys.get(key_id) {
             Some(metadata) => {
@@ -214,6 +224,10 @@ impl MobileEphemeralKeyManager {
 }
 
 /// Collects human entropy from mobile sensors
+///
+/// # Errors
+///
+/// Returns an error if entropy collection fails.
 pub async fn collect_mobile_entropy(user_id: &str) -> Result<HumanEntropyData, BearDogError> {
     info!("📱 Collecting mobile sensor entropy for user: {}", user_id);
 
@@ -239,6 +253,10 @@ pub async fn collect_mobile_entropy(user_id: &str) -> Result<HumanEntropyData, B
 }
 
 /// Demonstrates ephemeral key lifecycle
+///
+/// # Errors
+///
+/// Returns an error if any step of the demo (entropy, key generation, or cleanup) fails.
 pub async fn demo_ephemeral_key_lifecycle() -> Result<(), BearDogError> {
     info!("🎬 Demonstrating ephemeral key lifecycle");
 

@@ -40,6 +40,10 @@ impl ComplianceHandler {
     }
 
     /// Runs all [`Self::enabled_standards`] against `event`, records an [`AuditEntry`], and returns scored results.
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns [`Ok`]; the `Result` type is reserved for future standard evaluation failures.
     #[expect(
         clippy::cast_precision_loss,
         reason = "Violation count scales score; acceptable f64 precision for compliance display"
@@ -109,6 +113,10 @@ impl ComplianceHandler {
     }
 
     /// Applies the ruleset for one `standard` to `event`, producing structured [`ComplianceViolation`]s.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future rule engine failures.
     pub fn evaluate_standard(
         &self,
         event: &ComplianceEvent,
@@ -242,9 +250,13 @@ impl ComplianceHandler {
 
     /// Check data-residency and sovereignty rules.
     ///
-    /// BearDog is a cryptographic primal -- it does not store user data or control
+    /// `BearDog` is a cryptographic primal -- it does not store user data or control
     /// data residency. Returns no violations because sovereignty constraints are
     /// enforced at the orchestrator / storage-primal level.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future checks.
     pub const fn check_sovereignty_compliance(
         &self,
         _event: &ComplianceEvent,
@@ -254,8 +266,12 @@ impl ComplianceHandler {
 
     /// Check privacy-policy compliance beyond per-standard evaluation.
     ///
-    /// BearDog processes cryptographic material, not PII. Privacy violations
+    /// `BearDog` processes cryptographic material, not PII. Privacy violations
     /// are assessed by primals that handle user-facing data (e.g. Squirrel).
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future checks.
     pub const fn check_privacy_compliance(
         &self,
         _event: &ComplianceEvent,

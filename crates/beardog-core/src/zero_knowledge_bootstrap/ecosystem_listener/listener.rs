@@ -71,6 +71,10 @@ impl EcosystemListener {
     }
 
     /// Create a listener using [`EcosystemListenerEnvInputs::from_env`].
+    ///
+    /// # Errors
+    ///
+    /// Same as [`Self::new`].
     pub fn from_env(
         config: UnifiedBootstrapConfig,
         discovered_primals: Arc<RwLock<HashMap<String, DiscoveredPrimal>>>,

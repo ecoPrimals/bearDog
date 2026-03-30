@@ -2,7 +2,7 @@
 
 //! Canonical Security Level Definitions
 //!
-//! Unified security level enumeration for all HSM operations across BearDog.
+//! Unified security level enumeration for all HSM operations across `BearDog`.
 //! This consolidates multiple fragmented definitions into a single source of truth.
 
 use serde::{Deserialize, Serialize};
@@ -22,10 +22,10 @@ use serde::{Deserialize, Serialize};
 /// # Platform Mapping
 ///
 /// - **Software**: No hardware security, keys in memory
-/// - **TrustedExecutionEnvironment**: ARM TrustZone, Intel SGX
-/// - **SecureEnclave**: iOS Secure Enclave, isolated processor
-/// - **HardwareSecurityModule**: Dedicated security chip
-/// - **StrongBox**: Android StrongBox (Titan M, Qualcomm SPU)
+/// - **`TrustedExecutionEnvironment`**: ARM `TrustZone`, Intel SGX
+/// - **`SecureEnclave`**: iOS Secure Enclave, isolated processor
+/// - **`HardwareSecurityModule`**: Dedicated security chip
+/// - **`StrongBox`**: Android `StrongBox` (Titan M, Qualcomm SPU)
 ///
 /// # Examples
 ///
@@ -50,7 +50,7 @@ pub enum SecurityLevel {
 
     /// Trusted Execution Environment (TEE)
     ///
-    /// Hardware-isolated execution environment (ARM TrustZone, Intel SGX).
+    /// Hardware-isolated execution environment (ARM `TrustZone`, Intel SGX).
     /// Keys protected from normal OS but accessible to TEE.
     TrustedExecutionEnvironment = 1,
 
@@ -65,10 +65,10 @@ pub enum SecurityLevel {
     ///
     /// Dedicated tamper-resistant security chip.
     /// Keys stored in hardware, never exported.
-    /// Example: TPM, YubiKey HSM
+    /// Example: TPM, `YubiKey` HSM
     HardwareSecurityModule = 3,
 
-    /// Android StrongBox
+    /// Android `StrongBox`
     ///
     /// Android's highest security level using dedicated security chip.
     /// Stronger isolation and attestation than standard HSM.

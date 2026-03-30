@@ -367,9 +367,9 @@ pub enum WeightInitialization {
     HeUniform,
     /// He normal
     HeNormal,
-    /// LeCun uniform
+    /// `LeCun` uniform
     LeCunUniform,
-    /// LeCun normal
+    /// `LeCun` normal
     LeCunNormal,
     /// Orthogonal initialization
     Orthogonal {
@@ -472,17 +472,17 @@ pub enum NetworkArchitecture {
     Recurrent,
     /// Transformer
     Transformer,
-    /// ResNet architecture
+    /// `ResNet` architecture
     ResNet,
     /// VGG architecture
     Vgg,
     /// Inception architecture
     Inception,
-    /// DenseNet architecture
+    /// `DenseNet` architecture
     DenseNet,
-    /// MobileNet architecture
+    /// `MobileNet` architecture
     MobileNet,
-    /// EfficientNet architecture
+    /// `EfficientNet` architecture
     EfficientNet,
     /// Custom architecture
     Custom,
@@ -497,9 +497,9 @@ pub enum ActivationFunction {
     Tanh,
     /// Rectified Linear Unit
     Relu,
-    /// Leaky ReLU
+    /// Leaky `ReLU`
     LeakyRelu,
-    /// Parametric ReLU
+    /// Parametric `ReLU`
     PRelu,
     /// Exponential Linear Unit
     Elu,
@@ -580,11 +580,11 @@ pub enum OptimizerType {
     Sgd,
     /// Adam optimizer
     Adam,
-    /// AdaGrad
+    /// `AdaGrad`
     AdaGrad,
-    /// RMSprop
+    /// `RMSprop`
     RmsProp,
-    /// AdaDelta
+    /// `AdaDelta`
     AdaDelta,
     /// Adamax
     Adamax,

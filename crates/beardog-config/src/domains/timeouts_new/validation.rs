@@ -13,6 +13,10 @@ mod validation_comprehensive_tests;
 /// Validate timeout configuration
 ///
 /// Checks all timeout values are within acceptable operational ranges.
+///
+/// # Errors
+///
+/// Returns `Err` with a field-specific message when any timeout is outside its allowed range.
 pub fn validate_config(config: &TimeoutConfig) -> Result<(), String> {
     // Health check: 1-60 seconds
     if config.health_check_secs == 0 || config.health_check_secs > 60 {

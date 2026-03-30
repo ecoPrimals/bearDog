@@ -32,7 +32,7 @@ pub struct SafePlatformSecurity {
 }
 
 impl SafePlatformSecurity {
-    /// Creates a new SafePlatformSecurity instance
+    /// Creates a new `SafePlatformSecurity` instance
     ///
     /// # Errors
     /// Returns an error if platform provider initialization fails.

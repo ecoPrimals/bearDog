@@ -107,6 +107,10 @@ impl CanonicalAuthorizationConfig {
 
     /// Validate authorization configuration
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the default role is missing, roles are inconsistent, or a nested role fails validation.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.default_role.is_empty() {
             return Err(BearDogError::security(
@@ -163,6 +167,10 @@ pub struct RoleConfig {
 impl RoleConfig {
     /// Validate role configuration
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the role name is empty or neither permissions nor inheritance is configured.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.name.is_empty() {
             return Err(BearDogError::security(

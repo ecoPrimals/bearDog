@@ -105,7 +105,7 @@ impl Default for ProductionCoreConfig {
 }
 
 impl ProductionFeatureFlags {
-    /// Create ProductionFeatureFlags with hardcoded defaults
+    /// Create `ProductionFeatureFlags` with hardcoded defaults
     pub const fn with_defaults() -> Self {
         Self {
             enable_advanced_monitoring: true,
@@ -121,7 +121,7 @@ impl ProductionFeatureFlags {
         }
     }
 
-    /// Create ProductionFeatureFlags from environment variables
+    /// Create `ProductionFeatureFlags` from environment variables
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
     }
@@ -215,6 +215,10 @@ impl ProductionCoreConfig {
 
     /// Validate the core configuration
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if required fields (service name, version, deployment ID, region, etc.) are empty or invalid.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.service_name.is_empty() {
             return Err(BearDogError::Business {

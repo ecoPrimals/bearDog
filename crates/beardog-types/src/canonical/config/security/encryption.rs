@@ -66,6 +66,10 @@ impl CanonicalEncryptionConfig {
 
     /// Validate
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the default algorithm is empty or key derivation validation fails.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.default_algorithm.is_empty() {
             return Err(BearDogError::security(
@@ -109,6 +113,10 @@ impl Default for KeyDerivationConfig {
 impl KeyDerivationConfig {
     /// Validate
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if iteration count or salt length is below the minimum.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.iterations < 10000 {
             return Err(BearDogError::security(

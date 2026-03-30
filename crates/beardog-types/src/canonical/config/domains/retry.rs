@@ -5,19 +5,19 @@
 //! **UNIFIED CONFIGURATION** - Single source of truth for all retry configurations.
 //!
 //! This module consolidates **13 retry config variants** into one canonical implementation:
-//! 1. RetryConfig (workflow.rs) ✅
-//! 2. CanonicalRetryConfig (THIS FILE - source of truth) ✅
-//! 3. RetryConfiguration (providers/base.rs) ✅
-//! 4. RetryPolicyConfig (network_discovery.rs) ✅
-//! 5. HandoffRetryConfig (adapter.rs) ✅
-//! 6. AdapterRetryConfig ✅
-//! 7. WorkflowRetryConfig ✅
-//! 8. DiscoveryRetryConfig ✅
-//! 9. NetworkRetryConfig ✅
-//! 10. HsmRetryConfig ✅
-//! 11. AiRetryConfig ✅
-//! 12. RequestRetryConfig ✅
-//! 13. ConnectionRetryConfig ✅
+//! 1. `RetryConfig` (workflow.rs) ✅
+//! 2. `CanonicalRetryConfig` (THIS FILE - source of truth) ✅
+//! 3. `RetryConfiguration` (providers/base.rs) ✅
+//! 4. `RetryPolicyConfig` (`network_discovery.rs`) ✅
+//! 5. `HandoffRetryConfig` (adapter.rs) ✅
+//! 6. `AdapterRetryConfig` ✅
+//! 7. `WorkflowRetryConfig` ✅
+//! 8. `DiscoveryRetryConfig` ✅
+//! 9. `NetworkRetryConfig` ✅
+//! 10. `HsmRetryConfig` ✅
+//! 11. `AiRetryConfig` ✅
+//! 12. `RequestRetryConfig` ✅
+//! 13. `ConnectionRetryConfig` ✅
 //!
 //! ## Migration Guide
 //!
@@ -48,7 +48,7 @@ use crate::canonical::traits::RetryStrategy;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-/// Canonical retry configuration for all BearDog operations
+/// Canonical retry configuration for all `BearDog` operations
 ///
 /// This configuration provides a unified retry strategy that can be used
 /// across adapters, discovery, workflows, networking, and other components.
@@ -92,7 +92,7 @@ pub struct CanonicalRetryConfig {
 
     /// Backoff multiplier for exponential backoff
     ///
-    /// Each retry delay is calculated as: previous_delay * backoff_multiplier
+    /// Each retry delay is calculated as: `previous_delay` * `backoff_multiplier`
     /// Common values:
     /// - 1.0: Linear backoff (constant delay)
     /// - 2.0: Standard exponential backoff (doubles each time)
@@ -101,8 +101,8 @@ pub struct CanonicalRetryConfig {
 
     /// Enable exponential backoff strategy
     ///
-    /// When true, each retry delay is multiplied by the backoff_multiplier.
-    /// When false, all retries use the initial_delay (constant backoff).
+    /// When true, each retry delay is multiplied by the `backoff_multiplier`.
+    /// When false, all retries use the `initial_delay` (constant backoff).
     #[serde(default = "default_exponential_backoff")]
     pub enable_exponential_backoff: bool,
 }
@@ -114,11 +114,11 @@ const fn default_exponential_backoff() -> bool {
 impl Default for CanonicalRetryConfig {
     /// Default retry configuration with conservative settings
     ///
-    /// - max_attempts: 3 (initial + 2 retries)
-    /// - initial_delay: 100ms
-    /// - max_delay: 30 seconds
-    /// - backoff_multiplier: 2.0 (exponential)
-    /// - exponential_backoff: true
+    /// - `max_attempts`: 3 (initial + 2 retries)
+    /// - `initial_delay`: 100ms
+    /// - `max_delay`: 30 seconds
+    /// - `backoff_multiplier`: 2.0 (exponential)
+    /// - `exponential_backoff`: true
     fn default() -> Self {
         Self {
             max_attempts: 3,
@@ -277,6 +277,10 @@ impl CanonicalRetryConfig {
     /// Validate the retry configuration
     ///
     /// Returns an error message if the configuration is invalid.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `max_attempts`, backoff multiplier, or delay bounds are invalid.
     pub fn validate(&self) -> Result<(), String> {
         if self.max_attempts == 0 {
             return Err("max_attempts must be at least 1".to_string());
@@ -320,7 +324,7 @@ pub type RetryConfiguration = CanonicalRetryConfig;
 
 /// Retry policy configuration type alias
 ///
-/// Used in: network_discovery.rs
+/// Used in: `network_discovery.rs`
 pub type RetryPolicyConfig = CanonicalRetryConfig;
 
 /// Adapter-specific retry configuration

@@ -21,6 +21,10 @@ pub enum UserRole {
 }
 
 /// Check if a user has permission to perform a modification
+///
+/// # Errors
+///
+/// Returns an error if the user's role for the graph cannot be determined.
 pub async fn check_permission(
     user_id: &UserId,
     graph: &Graph,

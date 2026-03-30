@@ -80,6 +80,10 @@ impl CanonicalSessionConfig {
 
     /// Validate
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if session timeout is zero or the cookie name is empty.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.timeout_seconds == 0 {
             return Err(BearDogError::security(

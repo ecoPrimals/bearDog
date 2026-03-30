@@ -2,7 +2,7 @@
 
 //! Timeout Configuration Builder
 //!
-//! Provides a fluent builder pattern for constructing TimeoutConfig.
+//! Provides a fluent builder pattern for constructing `TimeoutConfig`.
 
 use super::core::TimeoutConfig;
 use super::defaults::default_timeouts;
@@ -11,7 +11,7 @@ use super::defaults::default_timeouts;
 #[path = "builder_comprehensive_tests.rs"]
 mod builder_comprehensive_tests;
 
-/// Builder for TimeoutConfig
+/// Builder for `TimeoutConfig`
 ///
 /// Provides a fluent interface for constructing timeout configurations
 /// without environment variable pollution in tests.
@@ -178,7 +178,7 @@ impl TimeoutConfigBuilder {
         self
     }
 
-    /// Build the TimeoutConfig
+    /// Build the `TimeoutConfig`
     pub fn build(self) -> TimeoutConfig {
         TimeoutConfig {
             health_check_secs: self

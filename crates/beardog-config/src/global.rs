@@ -2,7 +2,7 @@
 
 //! Global Configuration Singleton
 //!
-//! Provides thread-safe access to the global BearDog configuration.
+//! Provides thread-safe access to the global `BearDog` configuration.
 //! Uses `std::sync::LazyLock` for lazy initialization that happens exactly once.
 //!
 //! ## Usage Pattern
@@ -33,7 +33,7 @@ use crate::BearDogConfig;
 use std::sync::{Arc, LazyLock};
 use tracing::{info, warn};
 
-/// Global BearDog configuration singleton
+/// Global `BearDog` configuration singleton
 ///
 /// This is initialized exactly once on first access, loading configuration from:
 /// 1. Config file (if `BEARDOG_CONFIG_PATH` is set)

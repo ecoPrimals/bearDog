@@ -382,6 +382,9 @@ impl SafeAndroidKeystore {
     /// # Errors
     /// Returns an error if signing fails or platform is not supported
     #[cfg(target_os = "android")]
+    /// # Errors
+    ///
+    /// Returns an error if the provider is not registered.
     pub fn sign_data_safe(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         debug!("✍️ Safe signing with key: {} (Android StrongBox)", key_id);
 
@@ -411,6 +414,9 @@ impl SafeAndroidKeystore {
     /// # Errors
     /// Always returns an error indicating platform limitation
     #[cfg(not(target_os = "android"))]
+    /// # Errors
+    ///
+    /// Returns an error if the provider is not registered.
     pub fn sign_data_safe(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Err(BearDogError::unsupported_operation(
             "Android StrongBox is only available on Android platform. \
@@ -427,6 +433,9 @@ impl SafeAndroidKeystore {
     /// # Errors
     /// Returns an error if verification fails or platform is not supported
     #[cfg(target_os = "android")]
+    /// # Errors
+    ///
+    /// Returns an error if key deletion fails in the underlying HSM provider.
     pub fn verify_signature_safe(
         &self,
         key_id: &str,
@@ -456,6 +465,9 @@ impl SafeAndroidKeystore {
     /// # Errors
     /// Always returns an error indicating platform limitation
     #[cfg(not(target_os = "android"))]
+    /// # Errors
+    ///
+    /// Returns an error if key deletion fails in the underlying HSM provider.
     pub fn verify_signature_safe(
         &self,
         _key_id: &str,
@@ -506,6 +518,9 @@ impl SafeAndroidKeystore {
     /// # Errors
     /// Returns an error if detection fails or platform is not supported
     #[cfg(target_os = "android")]
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub fn detect_device_info_safe() -> Result<AndroidDeviceInfo, BearDogError> {
         debug!("📱 Detecting Android device info safely");
 
@@ -545,6 +560,9 @@ impl SafeAndroidKeystore {
     /// # Errors
     /// Always returns an error indicating platform limitation
     #[cfg(not(target_os = "android"))]
+    /// # Errors
+    ///
+    /// Returns an error if key derivation fails.
     pub fn detect_device_info_safe() -> Result<AndroidDeviceInfo, BearDogError> {
         Err(BearDogError::unsupported_operation(
             "Android device detection is only available on Android platform",

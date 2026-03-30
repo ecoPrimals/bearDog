@@ -312,6 +312,10 @@ pub trait CanonicalType: Send + Sync + Clone + Serialize + for<'de> Deserialize<
 
     /// Validate the canonical type
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the value fails domain-specific validation.
     fn validate(&self) -> Result<(), BearDogError>;
 
     /// Get the canonical version
@@ -321,9 +325,9 @@ pub trait CanonicalType: Send + Sync + Clone + Serialize + for<'de> Deserialize<
     }
 }
 
-/// Core health status - canonical across all BearDog systems
+/// Core health status - canonical across all `BearDog` systems
 ///
-/// Represents the operational health of any BearDog component, service, or system.
+/// Represents the operational health of any `BearDog` component, service, or system.
 /// This type is used throughout the ecosystem for consistent health tracking and reporting.
 ///
 /// # Health States
@@ -431,7 +435,7 @@ impl CanonicalType for SessionConfig {
 /// Security context containing authentication and authorization information
 ///
 /// Represents the complete security state for a user, session, or operation. This type
-/// is used throughout BearDog to make authorization decisions and audit security events.
+/// is used throughout `BearDog` to make authorization decisions and audit security events.
 ///
 /// # Overview
 ///
@@ -550,7 +554,7 @@ impl CanonicalType for SecurityContext {
 /// Canonical security audit event
 ///
 /// Records security-relevant actions for compliance, forensics, and monitoring.
-/// All security-sensitive operations in BearDog generate audit events for
+/// All security-sensitive operations in `BearDog` generate audit events for
 /// accountability and incident response.
 ///
 /// # Overview
@@ -763,7 +767,7 @@ pub enum PolicyDecision {
     /// Allow with conditions (condition details in string)
     ///
     /// Permission granted but additional requirements must be met.
-    /// Examples: "MFA_required", "time_restricted:9-17", "approval_needed:manager"
+    /// Examples: "`MFA_required`", "time_restricted:9-17", "`approval_needed:manager`"
     Conditional(String),
 }
 
@@ -785,7 +789,7 @@ impl CanonicalType for PolicyDecision {
 
 /// Canonical key status
 ///
-/// Lifecycle status of cryptographic keys in the BearDog system.
+/// Lifecycle status of cryptographic keys in the `BearDog` system.
 ///
 /// # Key Lifecycle
 ///

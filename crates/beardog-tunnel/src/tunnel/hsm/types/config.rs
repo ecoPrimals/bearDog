@@ -112,7 +112,7 @@ pub struct HardwareHsmConfig {
 pub enum SmartphoneHsmConfig {
     /// iOS Secure Enclave configuration
     Ios(IosHsmConfig),
-    /// Android StrongBox configuration
+    /// Android `StrongBox` configuration
     Android(AndroidHsmConfig),
 }
 
@@ -130,7 +130,7 @@ pub struct IosHsmConfig {
 /// Android HSM configuration
 #[derive(Debug, Clone)]
 pub struct AndroidHsmConfig {
-    /// Use StrongBox
+    /// Use `StrongBox`
     pub use_strongbox: bool,
     /// Require user authentication
     pub require_user_auth: bool,
@@ -188,13 +188,13 @@ impl Default for SoftwareHsmConfig {
 /// Crypto backend types
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CryptoBackendType {
-    /// GeneticCrypto - 100% Pure Rust with genetic enhancements (RECOMMENDED)
+    /// `GeneticCrypto` - 100% Pure Rust with genetic enhancements (RECOMMENDED)
     GeneticCrypto,
     /// Ring cryptography library (has C dependencies)
     Ring,
     /// OpenSSL
     OpenSsl,
-    /// RustCrypto
+    /// `RustCrypto`
     RustCrypto,
 }
 

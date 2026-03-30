@@ -2,7 +2,7 @@
 
 // ! Lineage ID wrapper for biomeOS integration
 //!
-//! Provides a simplified LineageID type that wraps chain_id + node_id
+//! Provides a simplified `LineageID` type that wraps `chain_id` + `node_id`
 //! for easier API integration with biomeOS / HTTP gateway peers.
 
 use serde::{Deserialize, Serialize};
@@ -16,12 +16,12 @@ use beardog_errors::BearDogError;
 ///
 /// Example: `lineage:tower1:1735000000:abc123def456`
 ///
-/// This wraps a chain_id and node_id internally for simplified API usage.
+/// This wraps a `chain_id` and `node_id` internally for simplified API usage.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct LineageID(String);
 
 impl LineageID {
-    /// Create a new LineageID from a formatted string
+    /// Create a new `LineageID` from a formatted string
     ///
     /// # Arguments
     ///
@@ -83,7 +83,7 @@ impl LineageID {
 
     /// Parse a lineage ID into its components
     ///
-    /// Returns (service_type, timestamp, hash, node_id)
+    /// Returns (`service_type`, timestamp, hash, `node_id`)
     ///
     /// # Errors
     ///
@@ -124,7 +124,7 @@ impl LineageID {
         Ok((service_type, timestamp, hash, node_id))
     }
 
-    /// Extract the node_id from this lineage ID
+    /// Extract the `node_id` from this lineage ID
     ///
     /// # Example
     ///
@@ -134,12 +134,17 @@ impl LineageID {
     /// let id = LineageID::new("lineage:tower:1735000000:abc123:node-1");
     /// assert_eq!(id.node_id().expect("valid lineage ID"), "node-1");
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the lineage ID string does not match the expected format
+    /// (see [`Self::parse`]).
     pub fn node_id(&self) -> Result<String, BearDogError> {
         let (_, _, _, node_id) = self.parse()?;
         Ok(node_id)
     }
 
-    /// Extract the service_type from this lineage ID
+    /// Extract the `service_type` from this lineage ID
     ///
     /// # Example
     ///
@@ -149,6 +154,11 @@ impl LineageID {
     /// let id = LineageID::new("lineage:tower:1735000000:abc123:node-1");
     /// assert_eq!(id.service_type().expect("valid lineage ID"), "tower");
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the lineage ID string does not match the expected format
+    /// (see [`Self::parse`]).
     pub fn service_type(&self) -> Result<String, BearDogError> {
         let (service_type, _, _, _) = self.parse()?;
         Ok(service_type)

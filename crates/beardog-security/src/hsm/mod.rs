@@ -2,17 +2,17 @@
 
 //! Hardware Security Module (HSM) Integration
 //!
-//! Multi-protocol HSM support for BearDog, providing truly hardware-agnostic
+//! Multi-protocol HSM support for `BearDog`, providing truly hardware-agnostic
 //! cryptographic operations.
 //!
 //! ## Supported Protocols
 //!
-//! - **PKCS#11**: Traditional smart cards, YubiKey PIV mode
-//! - **FIDO2/CTAP2**: Modern security keys (SoloKeys, YubiKey FIDO2 mode) - NEW!
-//! - **Android StrongBox**: Pixel Titan M2, mobile HSMs
+//! - **PKCS#11**: Traditional smart cards, `YubiKey` PIV mode
+//! - **FIDO2/CTAP2**: Modern security keys (`SoloKeys`, `YubiKey` FIDO2 mode) - NEW!
+//! - **Android `StrongBox`**: Pixel Titan M2, mobile HSMs
 //! - **iOS Secure Enclave**: iPhone cryptographic operations
 //! - **TPM 2.0**: Platform TPM chips (coming soon)
-//! - **OpenPGP Card**: PGP smart cards (coming soon)
+//! - **`OpenPGP` Card**: PGP smart cards (coming soon)
 //!
 //! ## Protocol-Agnostic Design
 //!

@@ -3,7 +3,7 @@
 //! Security Monitoring and Auditing Configuration
 //!
 //! This module provides audit, security monitoring, and SIEM integration
-//! configuration structures for the BearDog security system.
+//! configuration structures for the `BearDog` security system.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

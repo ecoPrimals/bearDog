@@ -66,10 +66,10 @@ use std::time::{Duration, Instant};
 // PRODUCTION ECOSYSTEM
 // ============================================================================
 
-/// Production ecosystem orchestrator for BearDog services
+/// Production ecosystem orchestrator for `BearDog` services
 ///
 /// The main coordinator for production deployments, managing monitoring, health checks,
-/// performance optimization, and observability across the entire BearDog ecosystem.
+/// performance optimization, and observability across the entire `BearDog` ecosystem.
 ///
 /// # Responsibilities
 ///
@@ -81,7 +81,7 @@ use std::time::{Duration, Instant};
 ///
 /// # Subsystems
 ///
-/// - **Metrics Collector**: Real-time metrics for Prometheus, StatsD, custom exporters
+/// - **Metrics Collector**: Real-time metrics for Prometheus, `StatsD`, custom exporters
 /// - **Health Checker**: Kubernetes readiness/liveness probe implementation
 /// - **Performance Optimizer**: Zero-copy operations, caching, resource management
 /// - **Observability Engine**: Distributed tracing, logging, APM integration
@@ -129,7 +129,7 @@ use std::time::{Duration, Instant};
 pub struct ProductionEcosystem {
     /// Production configuration controlling all subsystem behavior
     pub config: ProductionConfig,
-    /// Real-time metrics collector for Prometheus, StatsD, and custom exporters
+    /// Real-time metrics collector for Prometheus, `StatsD`, and custom exporters
     pub metrics_collector: metrics::ProductionMetricsCollector,
     /// Health checker for Kubernetes readiness/liveness probes
     pub health_checker: health::HealthChecker,

@@ -15,6 +15,10 @@ pub struct SimpleNeuralNetwork {
 
 impl SimpleNeuralNetwork {
     /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if any layer size is zero.
     pub fn new(
         input_size: usize,
         hidden_size: usize,
@@ -49,6 +53,10 @@ impl SimpleNeuralNetwork {
     }
 
     /// Runs one forward pass, mutating internal layer buffers.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `inputs` length does not match the input layer size.
     pub fn forward(&mut self, inputs: &[f64]) -> Result<Vec<f64>, BearDogError> {
         if inputs.len() != self.input_layer.len() {
             return Err(BearDogError::invalid_input(&format!(
@@ -88,6 +96,10 @@ impl SimpleNeuralNetwork {
     }
 
     /// Single gradient-style update from `expected_outputs` (simplified backprop).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `expected_outputs` length mismatches the output layer, or forward pass fails.
     pub fn train(
         &mut self,
         inputs: &[f64],

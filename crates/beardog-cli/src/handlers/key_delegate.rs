@@ -83,6 +83,10 @@ impl DelegationConstraints {
     /// Check if constraints are currently satisfied
     ///
     /// MODERNIZED: Uses trait-based constraint evaluation
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if a constraint cannot be evaluated.
     #[allow(
         dead_code,
         reason = "public delegation helpers; not referenced by all CLI entrypoints"
@@ -112,6 +116,11 @@ impl DelegationConstraints {
 }
 
 /// Handle key delegation command
+///
+/// # Errors
+///
+/// Returns an error if the key store cannot be accessed, keys cannot be loaded or saved, or
+/// delegation constraints cannot be applied.
 #[expect(
     clippy::too_many_arguments,
     reason = "CLI maps many optional delegation flags into one handler"

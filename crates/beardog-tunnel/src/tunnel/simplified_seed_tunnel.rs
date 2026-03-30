@@ -11,11 +11,11 @@ use beardog_types::canonical::*;
 pub struct SimplifiedSeedTunnel;
 
 impl SimplifiedSeedTunnel {
-    /// New operation.
+    /// Creates a new instance
     ///
     /// # Errors
-    /// Returns an error if the operation fails.
-    /// Creates a new instance
+    ///
+    /// Returns an error if the tunnel cannot be initialized.
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self)
     }

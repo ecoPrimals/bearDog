@@ -228,6 +228,10 @@ impl SimplifiedBearDogConfig {
     }
 
     /// Validate the configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if network, security, or database limits fail validation.
     pub fn validate(&self) -> Result<(), BearDogError> {
         use crate::canonical::config::r#trait::validation::{validate_port, validate_range};
 
@@ -251,6 +255,10 @@ impl SimplifiedBearDogConfig {
     }
 
     /// Load from environment variables
+    ///
+    /// # Errors
+    ///
+    /// This function currently always returns `Ok` after applying recognized environment variables.
     pub fn from_env() -> Result<Self, BearDogError> {
         let mut config = Self::default();
 

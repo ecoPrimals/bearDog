@@ -10,7 +10,7 @@
 //!
 //! ## Submodules
 //! - `registry` - Service registration and tracking
-//! - Additional modules to be added: network, quantum, cache, security, load_balancing
+//! - Additional modules to be added: network, quantum, cache, security, `load_balancing`
 //!
 //! ## Migration Path
 //! This module is being extracted from `discovery_unified` for better

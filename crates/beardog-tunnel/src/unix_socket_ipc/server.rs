@@ -43,7 +43,7 @@ pub struct UnixSocketIpcServer {
     /// Modular handler registry for JSON-RPC methods
     handler_registry: Arc<HandlerRegistry>,
 
-    /// Server running state (using RwLock for compatibility)
+    /// Server running state (using `RwLock` for compatibility)
     is_running: Arc<tokio::sync::RwLock<bool>>,
 
     /// Atomic readiness flag for lock-free checks

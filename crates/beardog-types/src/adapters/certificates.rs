@@ -12,7 +12,7 @@
 //!
 //! External adapters (Prometheus, Grafana, Consul, etc.) require unlock certificates.
 //! These certificates are:
-//! - Cryptographically signed by BearDog daemon
+//! - Cryptographically signed by `BearDog` daemon
 //! - Time-limited (15 min for commercial, 24hr for individual)
 //! - Classification-based (Human gets automatic access)
 //! - Renewable
@@ -40,14 +40,14 @@ use serde::{Deserialize, Serialize};
 
 /// Cryptographically signed certificate that unlocks an external adapter
 ///
-/// This certificate is issued by the BearDog daemon after classification and
+/// This certificate is issued by the `BearDog` daemon after classification and
 /// license checking. It grants time-limited access to an external adapter.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdapterUnlockCertificate {
     /// Unique certificate ID
     pub certificate_id: String,
 
-    /// BearDog key that issued this certificate
+    /// `BearDog` key that issued this certificate
     pub issuing_key_id: String,
 
     /// What adapter this unlocks ("prometheus", "grafana", "consul", etc.)
@@ -210,7 +210,7 @@ impl AdapterUnlockCertificate {
     ///
     /// * `adapter_id` - Which adapter to unlock
     /// * `classification` - User classification result
-    /// * `signing_key` - BearDog daemon's signing key
+    /// * `signing_key` - `BearDog` daemon's signing key
     ///
     /// # Errors
     ///

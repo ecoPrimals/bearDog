@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! BearDog UniBin - Modern Idiomatic Rust Architecture
+//! `BearDog` `UniBin` - Modern Idiomatic Rust Architecture
 //!
-//! **UniBin Architecture**: One binary, multiple modes (ecosystem standard)
+//! **`UniBin` Architecture**: One binary, multiple modes (ecosystem standard)
 //!
 //! # Usage
 //!
@@ -37,9 +37,9 @@ use beardog_tunnel::modes;
 use clap::{Parser, Subcommand};
 use tracing::Level;
 
-/// BearDog - Security & Cryptography Primal
+/// `BearDog` - Security & Cryptography Primal
 ///
-/// UniBin architecture: one binary, multiple operational modes.
+/// `UniBin` architecture: one binary, multiple operational modes.
 /// Compliant with ecoPrimals ecosystem standard (Jan 2026).
 #[derive(Parser)]
 #[command(name = "beardog")]
@@ -57,7 +57,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Start BearDog server mode (Unix socket IPC)
+    /// Start `BearDog` server mode (Unix socket IPC)
     ///
     /// Primary operational mode for production deployments.
     /// Provides cryptographic services via Unix socket JSON-RPC.
@@ -83,7 +83,7 @@ enum Commands {
         http_enabled: bool,
 
         /// HTTP bind address (only if HTTP enabled)
-        /// Default comes from BEARDOG_CONFIG (no hardcoding)
+        /// Default comes from `BEARDOG_CONFIG` (no hardcoding)
         #[arg(long)]
         bind_addr: Option<String>,
     },
@@ -108,11 +108,11 @@ enum Commands {
 
     /// Interactive client mode
     ///
-    /// Connect to BearDog server and perform operations interactively.
+    /// Connect to `BearDog` server and perform operations interactively.
     Client {
         /// Server endpoint (Unix socket or HTTP URL)
         /// Default prioritizes Primal IPC Protocol standard: /primal/beardog
-        /// Falls back to XDG runtime directory or /tmp based on SocketConfig
+        /// Falls back to XDG runtime directory or /tmp based on `SocketConfig`
         #[arg(long)]
         endpoint: Option<String>,
 
@@ -123,7 +123,7 @@ enum Commands {
 
     /// Health diagnostics and system check
     ///
-    /// Verifies BearDog installation, dependencies, and runtime health.
+    /// Verifies `BearDog` installation, dependencies, and runtime health.
     Doctor {
         /// Run comprehensive diagnostics
         #[arg(long, short = 'c')]

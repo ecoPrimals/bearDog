@@ -17,9 +17,9 @@ use super::types::{LineageChain, LineageMetadata, LineageNode, LineageRelationsh
 
 /// Manager for lineage chain operations
 pub struct LineageChainManager {
-    /// Active lineage chains (chain_id -> LineageChain)
+    /// Active lineage chains (`chain_id` -> `LineageChain`)
     chains: Arc<RwLock<HashMap<String, LineageChain>>>,
-    /// Node signing keys (node_id -> SigningKey) - ephemeral, for demo
+    /// Node signing keys (`node_id` -> `SigningKey`) - ephemeral, for demo
     /// In production, these would be stored in HSM
     signing_keys: Arc<RwLock<HashMap<String, SigningKey>>>,
 }
@@ -189,7 +189,7 @@ impl LineageChainManager {
 
     /// Sign a parent-child relationship
     ///
-    /// Signs: parent_id || child_id || child_public_key || timestamp
+    /// Signs: `parent_id` || `child_id` || `child_public_key` || timestamp
     fn sign_relationship(
         &self,
         parent_id: &str,
@@ -220,6 +220,11 @@ impl LineageChainManager {
     }
 
     /// Verify a parent-child relationship signature
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when parent public key bytes, signature length, or signature format
+    /// are invalid.
     pub fn verify_relationship(
         &self,
         relationship: &LineageRelationship,

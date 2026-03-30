@@ -86,6 +86,10 @@ impl SafeCryptoEngine {
     ///
     /// # Safety
     /// Pure Rust implementation with full memory safety guarantees
+    ///
+    /// # Errors
+    ///
+    /// Currently infallible; the `Result` is reserved for future hashing backends.
     pub fn safe_hash(&mut self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         use sha2::{Digest, Sha256};
 
@@ -100,7 +104,7 @@ impl SafeCryptoEngine {
         Ok(result)
     }
 
-    /// Encrypts data using ChaCha20 stream cipher
+    /// Encrypts data using `ChaCha20` stream cipher
     ///
     /// # Arguments
     /// * `data` - Input data to encrypt
@@ -110,11 +114,15 @@ impl SafeCryptoEngine {
     /// Encrypted data (same length as input)
     ///
     /// # Note
-    /// Uses RustCrypto's ChaCha20 with automatic SIMD acceleration.
+    /// Uses `RustCrypto`'s `ChaCha20` with automatic SIMD acceleration.
     /// For authenticated encryption, use ChaCha20-Poly1305 instead.
     ///
     /// # Safety
     /// Pure Rust implementation with full memory safety guarantees
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key length is not 32 bytes.
     pub fn safe_chacha20(&mut self, data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
         // Validate key length (ChaCha20 requires 32-byte key)
         if key.len() != 32 {
@@ -140,7 +148,7 @@ impl SafeCryptoEngine {
         Ok(result)
     }
 
-    /// Encrypts data using ChaCha20 with explicit nonce
+    /// Encrypts data using `ChaCha20` with explicit nonce
     ///
     /// # Arguments
     /// * `data` - Input data to encrypt
@@ -153,6 +161,10 @@ impl SafeCryptoEngine {
     /// # Security
     /// Never reuse a nonce with the same key. For random nonce generation,
     /// use `rand::thread_rng().fill_bytes(&mut nonce)`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key or nonce length is invalid.
     pub fn safe_chacha20_with_nonce(
         &mut self,
         data: &[u8],

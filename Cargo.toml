@@ -100,23 +100,25 @@ needless_pass_by_ref_mut = { level = "allow", priority = 1 }
 match_wildcard_for_single_variants = { level = "allow", priority = 1 }
 
 # ── Pedantic doc lints — promoted incrementally as doc coverage improves ──────
-missing_errors_doc = { level = "allow", priority = 1 }
+# PROMOTED: all public Result-returning functions must document error conditions.
+missing_errors_doc = { level = "warn", priority = 1 }
 missing_panics_doc = { level = "allow", priority = 1 }
-doc_markdown = { level = "allow", priority = 1 }
+# PROMOTED: all identifiers in doc comments must be backticked.
+doc_markdown = { level = "warn", priority = 1 }
 doc_link_with_quotes = { level = "allow", priority = 1 }
 doc_lazy_continuation = { level = "allow", priority = 1 }
 too_long_first_doc_paragraph = { level = "allow", priority = 1 }
 # PROMOTED: empty doc comments are never useful — write a real sentence.
 empty_docs = { level = "warn", priority = 1 }
 
-# ── Cast safety — workspace allows remain for legacy code; new code MUST use
-#    per-site #[expect(clippy::cast_*, reason = "...")] and Type::from() for
-#    lossless conversions.  cast_lossless promoted to warn (use From/Into). ───
-cast_possible_truncation = { level = "allow", priority = 1 }
-cast_precision_loss = { level = "allow", priority = 1 }
-cast_sign_loss = { level = "allow", priority = 1 }
+# ── Cast safety — all truncation/precision casts must use per-site
+#    #[expect(clippy::cast_*, reason = "...")] or safe conversion (From/TryFrom).
+#    Promoted to warn: truncation, precision loss, lossless, sign loss. ─────────
+cast_possible_truncation = { level = "warn", priority = 1 }
+cast_precision_loss = { level = "warn", priority = 1 }
+cast_sign_loss = { level = "warn", priority = 1 }
 cast_lossless = { level = "warn", priority = 1 }
-cast_possible_wrap = { level = "allow", priority = 1 }
+cast_possible_wrap = { level = "warn", priority = 1 }
 
 # ── Unwrap / expect — warn at workspace level to catch regressions.
 #    Test code uses per-crate cfg_attr(test, allow) or per-site #[expect]. ────

@@ -27,7 +27,7 @@ static INIT: Once = Once::new();
 /// Sets up test environment variables for consistent testing.
 /// Safe to call multiple times - initialization only happens once.
 ///
-/// NOTE: Use TestNetworkConfig presets instead of this function for isolated tests.
+/// NOTE: Use `TestNetworkConfig` presets instead of this function for isolated tests.
 /// This function sets GLOBAL environment variables that affect all tests.
 pub fn init_test_env() {
     INIT.call_once(|| {

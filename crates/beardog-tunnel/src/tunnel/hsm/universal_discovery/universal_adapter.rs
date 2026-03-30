@@ -13,7 +13,7 @@ pub struct UniversalAdapter {
 }
 
 impl UniversalAdapter {
-    /// Creates a new UniversalAdapter instance
+    /// Creates a new `UniversalAdapter` instance
     ///
     /// # Errors
     /// Returns an error if initialization fails.
@@ -22,6 +22,9 @@ impl UniversalAdapter {
         Ok(Self {})
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the RSA operation fails.
     /// Adapts HSM for universal access
     pub fn adapt(&self) -> Result<(), BearDogError> {
         info!("🔌 Adapting HSM for universal access");

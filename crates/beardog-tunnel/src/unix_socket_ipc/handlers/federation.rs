@@ -11,14 +11,14 @@
 //!
 //! # Architecture
 //!
-//! Federation operations are based on genetic lineage, BearDog's cryptographic
+//! Federation operations are based on genetic lineage, `BearDog`'s cryptographic
 //! family tree for auto-trust. Family relationships are determined at runtime
 //! using environment variables (primal self-knowledge principle).
 //!
 //! # Family Relationships
 //!
-//! - **Sibling**: Same family_id, limited trust
-//! - **Unrelated**: Different family_id, no trust
+//! - **Sibling**: Same `family_id`, limited trust
+//! - **Unrelated**: Different `family_id`, no trust
 //!
 //! # Performance
 //!
@@ -65,7 +65,7 @@ impl MethodHandler for FederationHandler {
 }
 
 impl FederationHandler {
-    /// Create a new FederationHandler with explicit identity injection
+    /// Create a new `FederationHandler` with explicit identity injection
     pub const fn new(identity: Arc<PrimalIdentity>) -> Self {
         Self { identity }
     }

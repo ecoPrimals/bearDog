@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 /// 1. The request has been classified (Human vs Commercial)
 /// 2. Commercial requests have valid licenses
 /// 3. The certificate is time-bound and must be renewed
-/// 4. The BearDog daemon has authorized this specific adapter
+/// 4. The `BearDog` daemon has authorized this specific adapter
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdapterUnlockCertificate {
     /// Unique certificate ID
@@ -31,7 +31,7 @@ pub struct AdapterUnlockCertificate {
     /// What this certificate allows
     pub scope: CertificateScope,
 
-    /// Ed25519 signature from BearDog root key
+    /// Ed25519 signature from `BearDog` root key
     pub signature: Vec<u8>,
 
     /// Key ID that signed this certificate

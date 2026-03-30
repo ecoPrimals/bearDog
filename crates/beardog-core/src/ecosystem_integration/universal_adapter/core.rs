@@ -14,6 +14,11 @@ use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
+#[inline]
+fn elapsed_ms_u64(elapsed: std::time::Duration) -> u64 {
+    u64::try_from(elapsed.as_millis()).unwrap_or(u64::MAX)
+}
+
 /// Universal adapter for ecosystem service integration
 ///
 /// Provides a unified interface for connecting to any ecosystem service through
@@ -116,7 +121,7 @@ impl UniversalAdapter {
             }),
             metadata: HashMap::new(),
             timestamp: chrono::Utc::now(),
-            duration_ms: start.elapsed().as_millis() as u64,
+            duration_ms: elapsed_ms_u64(start.elapsed()),
         })
     }
 
@@ -148,7 +153,7 @@ impl UniversalAdapter {
             }),
             metadata: HashMap::new(),
             timestamp: chrono::Utc::now(),
-            duration_ms: start.elapsed().as_millis() as u64,
+            duration_ms: elapsed_ms_u64(start.elapsed()),
         })
     }
 
@@ -169,7 +174,7 @@ impl UniversalAdapter {
             payload: request.payload,
             metadata: HashMap::new(),
             timestamp: chrono::Utc::now(),
-            duration_ms: start.elapsed().as_millis() as u64,
+            duration_ms: elapsed_ms_u64(start.elapsed()),
         })
     }
 
@@ -208,7 +213,7 @@ impl UniversalAdapter {
             payload: Some(health_status),
             metadata: HashMap::new(),
             timestamp: chrono::Utc::now(),
-            duration_ms: start.elapsed().as_millis() as u64,
+            duration_ms: elapsed_ms_u64(start.elapsed()),
         })
     }
 

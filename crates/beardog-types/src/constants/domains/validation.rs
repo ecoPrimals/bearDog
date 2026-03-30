@@ -3,8 +3,8 @@
 //! Validation Threshold Constants
 //!
 //! This module centralizes min/max limits used across validation logic throughout
-//! the BearDog codebase. Extracting these values provides:
-//! - Semantic naming (e.g., MIN_CACHE_SIZE vs magic number 100)
+//! the `BearDog` codebase. Extracting these values provides:
+//! - Semantic naming (e.g., `MIN_CACHE_SIZE` vs magic number 100)
 //! - Single source of truth for limits
 //! - Easier threshold adjustments
 //! - Better documentation of validation rules

@@ -347,6 +347,10 @@ impl Default for CircuitBreakerConfig {
 
 impl UnifiedDiscoveryConfig {
     /// Load from a custom environment provider (e.g. tests); production uses [`BearDogConfig::from_env`].
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the merged configuration fails [`BearDogConfig::validate`].
     pub fn from_env_provider(get: impl Fn(&str) -> Option<String>) -> Result<Self, BearDogError> {
         let mut config = Self::default();
 

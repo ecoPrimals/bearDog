@@ -3,13 +3,13 @@
 //! Mobile HSM Type Definitions
 //!
 //! Canonical types for mobile Hardware Security Modules including
-//! Android StrongBox and iOS Secure Enclave implementations.
+//! Android `StrongBox` and iOS Secure Enclave implementations.
 
 use serde::{Deserialize, Serialize};
 
-/// Android StrongBox HSM
+/// Android `StrongBox` HSM
 ///
-/// Represents an Android hardware-backed security module (official Android API: KeyMaster).
+/// Represents an Android hardware-backed security module (official Android API: `KeyMaster`).
 /// Available on devices with dedicated security hardware (e.g., Google Pixel with Titan M,
 /// Samsung devices with Knox, Qualcomm devices with SPU).
 ///
@@ -33,7 +33,7 @@ pub struct AndroidStrongBoxHsm {
 }
 
 impl AndroidStrongBoxHsm {
-    /// Creates a new Android StrongBox HSM with the given ID and device info
+    /// Creates a new Android `StrongBox` HSM with the given ID and device info
     #[must_use]
     pub fn new(id: impl Into<String>, device_info: super::AndroidDeviceInfo) -> Self {
         Self {
@@ -42,9 +42,9 @@ impl AndroidStrongBoxHsm {
         }
     }
 
-    /// Creates a StrongBox HSM with default ID and device info
+    /// Creates a `StrongBox` HSM with default ID and device info
     ///
-    /// This constructs the **canonical type** from defaults; it does not open StrongBox hardware.
+    /// This constructs the **canonical type** from defaults; it does not open `StrongBox` hardware.
     /// On Android builds, use the platform HSM in `beardog-tunnel` for real keystore operations.
     ///
     /// # Errors

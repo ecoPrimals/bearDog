@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Unix Socket IPC Server for BearDog
+//! Unix Socket IPC Server for `BearDog`
 //!
 //! PRIMARY inter-primal communication interface (not HTTP!)
 //!
 //! ## Architecture Principle
 //!
-//! BearDog communicates with other primals via Unix sockets, not HTTP ports.
+//! `BearDog` communicates with other primals via Unix sockets, not HTTP ports.
 //! HTTP is OPTIONAL and only for external/debugging access.
 //!
 //! ## Module Structure (Semantic Boundaries)

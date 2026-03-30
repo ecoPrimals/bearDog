@@ -15,7 +15,7 @@ use tracing::{debug, info};
 
 /// Pure Rust crypto provider with no C dependencies
 ///
-/// Uses pure Rust cryptographic libraries (RustCrypto crates) for all operations,
+/// Uses pure Rust cryptographic libraries (`RustCrypto` crates) for all operations,
 /// providing excellent portability and no dependency on external C libraries.
 #[derive(Debug, Clone)]
 pub struct RustCryptoProvider;

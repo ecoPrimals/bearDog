@@ -229,7 +229,7 @@ impl SafeOps {
         option.ok_or_else(|| BearDogError::validation(error_msg))
     }
 
-    /// Safely convert a `Result` to BearDogError with custom context
+    /// Safely convert a `Result` to `BearDogError` with custom context
     ///
     /// # Errors
     /// Returns error with contextual message if input `Result` is `Err`

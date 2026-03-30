@@ -125,6 +125,10 @@ impl CanonicalSecurityConfig {
 
     /// Validate the security configuration
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if authentication, authorization, encryption, session, MFA, or audit validation fails.
     pub fn validate(&self) -> Result<(), BearDogError> {
         self.authentication.validate()?;
         self.authorization.validate()?;
@@ -166,7 +170,7 @@ impl RateLimitingConfig {
     /// Default window in seconds
     pub const DEFAULT_WINDOW_SECS: u32 = 60;
 
-    /// Create RateLimitingConfig with hardcoded defaults
+    /// Create `RateLimitingConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -179,7 +183,7 @@ impl RateLimitingConfig {
         }
     }
 
-    /// Create RateLimitingConfig from environment variables
+    /// Create `RateLimitingConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///

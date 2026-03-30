@@ -15,6 +15,10 @@ pub struct CommercialExtractionDetector;
 
 impl CommercialExtractionDetector {
     /// Classify the given request context.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future classification failures.
     pub async fn classify(
         &self,
         ctx: &RequestContext,

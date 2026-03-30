@@ -8,6 +8,33 @@ use crate::constants::time;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "compile-time assert guarantees value fits u32"
+)]
+const ROTATION_30_DAYS_SECS: u32 = {
+    assert!(30 * time::SECONDS_PER_DAY <= u32::MAX as u64);
+    (30 * time::SECONDS_PER_DAY) as u32
+};
+
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "compile-time assert guarantees value fits u32"
+)]
+const ROTATION_90_DAYS_SECS: u32 = {
+    assert!(90 * time::SECONDS_PER_DAY <= u32::MAX as u64);
+    (90 * time::SECONDS_PER_DAY) as u32
+};
+
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "compile-time assert guarantees value fits u32"
+)]
+const SECONDS_PER_HOUR_U32: u32 = {
+    assert!(time::SECONDS_PER_HOUR <= u32::MAX as u64);
+    time::SECONDS_PER_HOUR as u32
+};
+
 /// Cryptographic algorithm enumeration
 /// `CryptoAlgorithm`
 ///
@@ -129,7 +156,7 @@ impl Default for KeyConfig {
             key_size: 256,
             kdf: KeyDerivationFunction::default(),
             usage: KeyUsage::default(),
-            rotation_interval_seconds: Some((30 * time::SECONDS_PER_DAY) as u32), // 30 days
+            rotation_interval_seconds: Some(ROTATION_30_DAYS_SECS), // 30 days
             metadata: HashMap::new(),
         }
     }
@@ -387,8 +414,8 @@ impl Default for RotationPolicy {
     fn default() -> Self {
         Self {
             automatic: true,
-            interval_seconds: (30 * time::SECONDS_PER_DAY) as u32, // 30 days
-            max_age_seconds: (90 * time::SECONDS_PER_DAY) as u32,  // 90 days
+            interval_seconds: ROTATION_30_DAYS_SECS, // 30 days
+            max_age_seconds: ROTATION_90_DAYS_SECS,  // 90 days
             rotate_on_compromise: true,
         }
     }
@@ -455,7 +482,7 @@ impl Default for RngConfig {
             algorithm: "ChaCha20".to_string(),
             entropy_source: "hardware".to_string(),
             seed_size: 32,
-            reseed_interval_seconds: time::SECONDS_PER_HOUR as u32, // 1 hour
+            reseed_interval_seconds: SECONDS_PER_HOUR_U32, // 1 hour
         }
     }
 }
@@ -540,6 +567,10 @@ impl CryptoConfig {
 
     /// Validate the cryptographic configuration
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if key sizes, algorithm/mode pairing, or other crypto settings are invalid.
     pub fn validate(&self) -> Result<(), String> {
         // Validate key sizes
         match &self.encryption.algorithm {

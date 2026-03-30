@@ -53,6 +53,10 @@ impl KeyRotationManager {
     }
 
     /// Register a new key in the lifecycle system
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the metadata store cannot be written.
     pub async fn register_key(
         &self,
         key_id: String,
@@ -86,6 +90,10 @@ impl KeyRotationManager {
     /// 6. Deprecates old key
     /// 7. Links predecessor/successor
     /// 8. Logs rotation event
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key is missing, rotation is not allowed, or state updates/logging fail.
     pub async fn rotate_key(&self, key_id: &str) -> Result<String, BearDogError> {
         info!("🔄 Starting rotation for key: {}", key_id);
 
@@ -141,6 +149,10 @@ impl KeyRotationManager {
     /// Scans all active keys and identifies those that need rotation based on:
     /// - Expiration date
     /// - Rotation interval
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the metadata store cannot be read.
     pub async fn check_rotation_needed(&self) -> Result<Vec<String>, BearDogError> {
         let metadata = self.metadata_store.read().await;
         let mut keys_to_rotate = Vec::new();
@@ -165,6 +177,11 @@ impl KeyRotationManager {
     /// Run automatic rotation for all keys that need it
     ///
     /// Returns the number of keys successfully rotated
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the rotation-needed scan fails. Individual key failures are logged and
+    /// do not fail the whole operation.
     pub async fn run_auto_rotation(&self) -> Result<usize, BearDogError> {
         if !self.config.auto_rotation_enabled {
             debug!("Auto-rotation is disabled");
@@ -205,6 +222,10 @@ impl KeyRotationManager {
     /// Clean up deprecated keys past retention period
     ///
     /// Revokes deprecated keys that have exceeded the deprecation period
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if metadata cannot be read. Per-key revoke failures are counted only when successful.
     pub async fn cleanup_deprecated_keys(&self) -> Result<usize, BearDogError> {
         info!("🧹 Starting deprecated key cleanup");
 
@@ -244,6 +265,10 @@ impl KeyRotationManager {
     /// Revoke a key
     ///
     /// Transitions the key to Revoked state, preventing all future use
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key is not found or state update fails.
     pub async fn revoke_key(&self, key_id: &str) -> Result<(), BearDogError> {
         info!("🚫 Revoking key: {}", key_id);
 
@@ -256,6 +281,10 @@ impl KeyRotationManager {
     /// Deprecate a key
     ///
     /// Transitions the key to Deprecated state
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key is not found or state update fails.
     pub async fn deprecate_key(&self, key_id: &str) -> Result<(), BearDogError> {
         info!("⚠️  Deprecating key: {}", key_id);
 
@@ -268,6 +297,10 @@ impl KeyRotationManager {
     /// Destroy a key
     ///
     /// Transitions the key to Destroyed state (final state)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key is not found or state update fails.
     pub async fn destroy_key(&self, key_id: &str) -> Result<(), BearDogError> {
         info!("💥 Destroying key: {}", key_id);
 
@@ -278,11 +311,19 @@ impl KeyRotationManager {
     }
 
     /// Get all active keys
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the metadata store cannot be read.
     pub async fn get_active_keys(&self) -> Result<Vec<String>, BearDogError> {
         self.get_keys_by_state(KeyLifecycleState::Active).await
     }
 
     /// Get key metadata
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key id is not registered.
     pub async fn get_key_metadata(
         &self,
         key_id: &str,
@@ -295,6 +336,10 @@ impl KeyRotationManager {
     }
 
     /// Get all keys in a specific state
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the metadata store cannot be read.
     pub async fn get_keys_by_state(
         &self,
         state: KeyLifecycleState,
@@ -310,6 +355,10 @@ impl KeyRotationManager {
     }
 
     /// Get rotation statistics
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if metadata or event logs cannot be read.
     pub async fn get_rotation_stats(&self) -> Result<RotationStatistics, BearDogError> {
         let metadata = self.metadata_store.read().await;
         let events = self.events_log.read().await;
@@ -351,6 +400,10 @@ impl KeyRotationManager {
     }
 
     /// Rotate key with specific reason
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key is missing, rotation is not allowed, or state updates/logging fail.
     pub async fn rotate_key_with_reason(
         &self,
         key_id: &str,
@@ -394,6 +447,10 @@ impl KeyRotationManager {
     }
 
     /// Get rotation events for a specific key
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the events log cannot be read.
     pub async fn get_rotation_events(
         &self,
         key_id: &str,
@@ -408,17 +465,29 @@ impl KeyRotationManager {
     }
 
     /// Get all rotation events
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the events log cannot be read.
     pub async fn get_all_rotation_events(&self) -> Result<Vec<KeyRotationEvent>, BearDogError> {
         let events = self.events_log.read().await;
         Ok(events.clone())
     }
 
-    /// Get keys needing rotation (alias for check_rotation_needed)
+    /// Get keys needing rotation (alias for `check_rotation_needed`)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if [`Self::check_rotation_needed`] fails.
     pub async fn get_keys_needing_rotation(&self) -> Result<Vec<String>, BearDogError> {
         self.check_rotation_needed().await
     }
 
     /// Get rotation chain for a key
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the metadata store cannot be read.
     pub async fn get_rotation_chain(&self, key_id: &str) -> Result<Vec<String>, BearDogError> {
         let metadata = self.metadata_store.read().await;
         let mut chain = vec![key_id.to_string()];

@@ -31,7 +31,7 @@ pub mod versions {
     /// Compatibility versions
     /// Minimum supported client version
     pub const MIN_SUPPORTED_CLIENT_VERSION: &str = "1.0.0";
-    /// Minimum supported Rust toolchain for building BearDog
+    /// Minimum supported Rust toolchain for building `BearDog`
     pub const MIN_RUST_VERSION: &str = "1.70.0";
     /// Maximum supported `BearDog` version
     pub const MAX_SUPPORTED_VERSION: &str = "4.0.0";
@@ -257,9 +257,9 @@ pub mod performance {
     /// How often to flush buffered I/O
     pub const FLUSH_INTERVAL: Duration = Duration::from_secs(1);
 
-    /// Default TCP_NODELAY (disable Nagle)
+    /// Default `TCP_NODELAY` (disable Nagle)
     pub const TCP_NODELAY: bool = true;
-    /// Default SO_KEEPALIVE
+    /// Default `SO_KEEPALIVE`
     pub const TCP_KEEPALIVE: bool = true;
     /// Default socket send/receive buffer size
     pub const SOCKET_BUFFER_SIZE: usize = 65536;

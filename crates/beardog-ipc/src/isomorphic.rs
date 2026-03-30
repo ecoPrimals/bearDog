@@ -2,7 +2,7 @@
 
 //! Isomorphic IPC Client Discovery
 //!
-//! This module provides automatic discovery of BearDog IPC endpoints,
+//! This module provides automatic discovery of `BearDog` IPC endpoints,
 //! supporting both Unix sockets and TCP fallback transparently.
 //!
 //! ## Isomorphic Pattern (Client-Side)
@@ -71,7 +71,7 @@ pub trait AsyncStream: AsyncRead + AsyncWrite + Send + Unpin {}
 impl AsyncStream for UnixStream {}
 impl AsyncStream for TcpStream {}
 
-/// Discover BearDog IPC endpoint (Unix or TCP)
+/// Discover `BearDog` IPC endpoint (Unix or TCP)
 ///
 /// **Isomorphic Discovery** (zero configuration):
 /// 1. Tries Unix socket paths (optimal)
@@ -96,7 +96,11 @@ impl AsyncStream for TcpStream {}
 /// ## Error Handling
 ///
 /// Returns error only if BOTH Unix and TCP discovery fail.
-/// This means BearDog is not running or unreachable.
+/// This means `BearDog` is not running or unreachable.
+///
+/// # Errors
+///
+/// Same as above: returns an error when no reachable IPC endpoint is found.
 pub async fn discover_beardog_endpoint() -> Result<IpcEndpoint> {
     // 1. Try Unix socket paths first (optimal)
     debug!("🔍 Discovering BearDog IPC endpoint...");
@@ -258,7 +262,7 @@ fn get_tcp_discovery_file_candidates() -> Vec<String> {
     })
 }
 
-/// Connect to BearDog IPC endpoint (polymorphic)
+/// Connect to `BearDog` IPC endpoint (polymorphic)
 ///
 /// **Isomorphic Connection** (automatic adaptation):
 /// - Unix socket → Uses `UnixStream`
@@ -281,8 +285,12 @@ fn get_tcp_discovery_file_candidates() -> Vec<String> {
 /// ## Error Handling
 ///
 /// Returns error if:
-/// - Discovery fails (BearDog not running)
+/// - Discovery fails (`BearDog` not running)
 /// - Connection fails (network error)
+///
+/// # Errors
+///
+/// Propagates [`discover_beardog_endpoint`] failures, or I/O errors when opening the socket.
 pub async fn connect_beardog() -> Result<Box<dyn AsyncStream>> {
     let endpoint = discover_beardog_endpoint().await?;
 

@@ -77,8 +77,9 @@ impl UnifiedMetricsSystem {
     /// Create a new unified metrics system
     ///
     /// # Errors
-    /// Returns an error if the unified metrics system cannot be initialized
-    /// Creates a new instance
+    ///
+    /// Returns [`BearDogError`] when any subsystem (`MetricsCore`, performance, security, ecosystem,
+    /// analytics, or export engine) fails to construct.
     pub fn new(config: UnifiedMetricsConfig) -> Result<Self, BearDogError> {
         let (broadcaster, _) = broadcast::channel(config.broadcast_buffer_size);
 
@@ -102,7 +103,10 @@ impl UnifiedMetricsSystem {
     }
 
     /// Start the unified metrics system
-    /// Starts service
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when any subsystem’s `start` fails.
     pub fn start(&self) -> Result<(), BearDogError> {
         // Start all subsystems
         self.core.start()?;
@@ -117,6 +121,10 @@ impl UnifiedMetricsSystem {
     }
 
     /// Record a metric event
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when a subsystem’s `record_event` fails.
     pub fn record_event(&self, event: MetricEvent) -> Result<(), BearDogError> {
         // Route event to appropriate subsystem
         match &event.category {
@@ -140,8 +148,8 @@ impl UnifiedMetricsSystem {
     /// Get comprehensive system metrics
     ///
     /// # Errors
-    /// Returns an error if system metrics cannot be collected
-    /// Gets `system_metrics`
+    ///
+    /// Returns [`BearDogError`] when performance, security, ecosystem, or analytics summaries fail.
     pub fn get_system_metrics(&self) -> Result<SystemMetrics, BearDogError> {
         let performance_metrics = self.performance.get_metrics()?;
         let security_metrics = self.security.get_metrics()?;

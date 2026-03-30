@@ -4,7 +4,7 @@
 //!
 //! **CANONICAL BUFFER CONSTANTS** - Single source of truth for all buffer sizes.
 //!
-//! This module consolidates scattered buffer size constants across the BearDog ecosystem,
+//! This module consolidates scattered buffer size constants across the `BearDog` ecosystem,
 //! providing a unified location for all memory buffer configurations used in:
 //! - Network I/O operations
 //! - File system operations
@@ -230,7 +230,7 @@ pub const DMA_BUFFER_SIZE: usize = 4_096;
 // PROTOCOL-SPECIFIC BUFFER SIZES
 // ============================================================================
 
-/// BSTP (BearDog Secure Transport Protocol) buffer size (32 KB / 32,768 bytes)
+/// BSTP (`BearDog` Secure Transport Protocol) buffer size (32 KB / 32,768 bytes)
 ///
 /// **Use for**:
 /// - BSTP message frames
@@ -257,7 +257,7 @@ pub const DISCOVERY_BUFFER_SIZE: usize = 8_192;
 ///
 /// **Use for**: Upper limit validation, prevents excessive allocations
 ///
-/// **Rationale**: Large enough for legitimate use cases, prevents DoS attacks
+/// **Rationale**: Large enough for legitimate use cases, prevents `DoS` attacks
 pub const MAX_BUFFER_SIZE: usize = 10 * 1024 * 1024;
 
 /// Minimum buffer size (256 bytes)

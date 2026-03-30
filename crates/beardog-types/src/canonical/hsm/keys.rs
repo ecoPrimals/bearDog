@@ -9,6 +9,15 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
 
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "compile-time assert guarantees value fits u32"
+)]
+const SECONDS_PER_HOUR_U32: u32 = {
+    assert!(time::SECONDS_PER_HOUR <= u32::MAX as u64);
+    time::SECONDS_PER_HOUR as u32
+};
+
 /// HSM key representation
 /// `HsmKey`
 ///
@@ -211,7 +220,7 @@ impl Default for KeyHealth {
         Self {
             status: "healthy".to_string(),
             last_check: SystemTime::now(),
-            check_interval: time::SECONDS_PER_HOUR as u32, // 1 hour
+            check_interval: SECONDS_PER_HOUR_U32, // 1 hour
             operation_count: 0,
             error_count: 0,
         }

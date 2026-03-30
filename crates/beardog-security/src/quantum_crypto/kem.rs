@@ -23,6 +23,10 @@ pub struct KyberEngine {
 
 impl KyberEngine {
     /// Create a new Kyber engine with specified security level
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok`; the `Result` is reserved for future validation.
     pub const fn new(security_level: SecurityLevel) -> Result<Self, BearDogError> {
         Ok(Self { security_level })
     }
@@ -30,6 +34,10 @@ impl KyberEngine {
     /// Generate a Kyber keypair
     ///
     /// Returns a keypair suitable for key encapsulation.
+    ///
+    /// # Errors
+    ///
+    /// Currently infallible; reserved for production KEM integration errors.
     pub fn generate_keypair(&self) -> Result<QuantumKEM, BearDogError> {
         use rand::RngCore;
         let mut rng = rand::rngs::OsRng;
@@ -70,6 +78,10 @@ impl KyberEngine {
     ///
     /// # Returns
     /// * `QuantumKeyExchange` containing shared secret and ciphertext
+    ///
+    /// # Errors
+    ///
+    /// Currently infallible in this simulation; production may fail on invalid keys.
     pub fn encapsulate(&self, _peer_public_key: &[u8]) -> Result<QuantumKeyExchange, BearDogError> {
         use rand::RngCore;
         let mut rng = rand::rngs::OsRng;
@@ -107,6 +119,10 @@ impl KyberEngine {
     ///
     /// # Returns
     /// * The derived shared secret
+    ///
+    /// # Errors
+    ///
+    /// Currently infallible in this simulation; production may fail on invalid ciphertext or keys.
     pub fn decapsulate(
         &self,
         _ciphertext: &[u8],

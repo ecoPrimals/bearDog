@@ -4,7 +4,7 @@
 
 //! # beardog-ipc - Primal IPC Protocol Implementation
 //!
-//! This crate implements the ecoPrimals Primal IPC Protocol for BearDog,
+//! This crate implements the ecoPrimals Primal IPC Protocol for `BearDog`,
 //! enabling runtime discovery and communication via capability-based IPC registries.
 //!
 //! ## Standards Compliance
@@ -111,7 +111,7 @@ pub const PROTOCOL_VERSION: &str = "1.0";
 ///
 /// EVOLUTION NOTE: This constant exists as a fallback for compatibility.
 /// Modern code should use `discover_ipc_socket()` for runtime discovery.
-/// See: primal_discovery.rs for capability-based discovery pattern.
+/// See: `primal_discovery.rs` for capability-based discovery pattern.
 ///
 /// SELF-KNOWLEDGE PRINCIPLE (Feb 4, 2026): Primals should only know themselves.
 /// The fallback uses a generic "/primal/discovery" endpoint that any discovery

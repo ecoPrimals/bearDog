@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Client Mode - Interactive BearDog client
+//! Client Mode - Interactive `BearDog` client
 //!
-//! Connect to BearDog server and perform operations.
+//! Connect to `BearDog` server and perform operations.
 
 use beardog_core::socket_config::SocketConfig;
 use tracing::info;
 
-/// Run BearDog in client mode
+/// Run `BearDog` in client mode
 ///
-/// Interactive client for connecting to BearDog server.
+/// Interactive client for connecting to `BearDog` server.
 /// Uses intelligent socket discovery following Primal IPC Protocol.
+///
+/// # Errors
+///
+/// Returns an error if client initialization or command execution fails.
 pub async fn run(endpoint: Option<String>, command: Option<String>) -> anyhow::Result<()> {
     info!("🐻 BearDog Client v{}", env!("CARGO_PKG_VERSION"));
 

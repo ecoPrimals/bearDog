@@ -36,7 +36,7 @@ use serde::{Deserialize, Serialize};
 
 /// Runtime network configuration with environment variable overrides
 ///
-/// Provides network configuration for BearDog services with all values
+/// Provides network configuration for `BearDog` services with all values
 /// configurable via environment variables. Eliminates hardcoded network
 /// addresses and ports for flexible deployment.
 ///
@@ -148,9 +148,9 @@ pub struct RuntimeNetworkConfig {
     /// Set via `BEARDOG_ADMIN_PORT` (default: 8082).
     pub admin_port: u16,
 
-    /// Database port (PostgreSQL)
+    /// Database port (`PostgreSQL`)
     ///
-    /// Port for PostgreSQL database connections.
+    /// Port for `PostgreSQL` database connections.
     /// Set via `BEARDOG_DATABASE_PORT` (default: 5432).
     pub database_port: u16,
 
@@ -325,7 +325,7 @@ impl RuntimeNetworkConfig {
 ///
 /// # Examples
 ///
-/// ## Using SoftHSM (Development)
+/// ## Using `SoftHSM` (Development)
 ///
 /// ```bash
 /// export BEARDOG_PKCS11_LIBRARY=/usr/lib/softhsm/libsofthsm2.so
@@ -363,7 +363,7 @@ pub struct RuntimeHsmConfig {
     ///
     /// Path to the PKCS#11 shared library (.so/.dll).
     /// Common locations:
-    /// - SoftHSM: `/usr/lib/softhsm/libsofthsm2.so`
+    /// - `SoftHSM`: `/usr/lib/softhsm/libsofthsm2.so`
     /// - Hardware: `/usr/lib/libpkcs11.so`
     ///
     /// Set via `BEARDOG_PKCS11_LIBRARY`.
@@ -418,7 +418,7 @@ impl RuntimeHsmConfig {
     }
 }
 
-/// Complete runtime configuration for BearDog services
+/// Complete runtime configuration for `BearDog` services
 ///
 /// Combines network and HSM configuration with environment detection.
 /// All settings are configurable via environment variables for flexible deployment.

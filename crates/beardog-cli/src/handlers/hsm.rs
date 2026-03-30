@@ -6,6 +6,10 @@ use super::hsm_agnostic;
 use beardog_errors::BearDogError;
 
 /// Discover all available HSMs using universal agnostic discovery
+///
+/// # Errors
+///
+/// Returns an error if the discovery engine cannot be initialized or discovery fails.
 pub async fn discover_hsms_agnostic() -> Result<Vec<hsm_agnostic::CliHsmInfo>, BearDogError> {
     hsm_agnostic::discover_all_hsms().await
 }
@@ -20,6 +24,10 @@ pub(crate) fn find_hsm_for_cli<'a>(
 }
 
 /// Handle HSM discovery command
+///
+/// # Errors
+///
+/// Returns an error if HSM discovery fails.
 pub async fn handle_hsm_discover(verbose: bool) -> Result<(), BearDogError> {
     println!("BearDog HSM Discovery");
     println!("========================");
@@ -65,6 +73,10 @@ pub async fn handle_hsm_discover(verbose: bool) -> Result<(), BearDogError> {
 }
 
 /// Handle HSM list command (alias for discover with less verbose output)
+///
+/// # Errors
+///
+/// Returns an error if HSM discovery fails.
 #[allow(
     dead_code,
     reason = "Exposed for tests and future hsm list subcommand wiring."
@@ -103,6 +115,10 @@ pub async fn handle_hsm_list() -> Result<(), BearDogError> {
 }
 
 /// Handle HSM capabilities command - show what a specific HSM can do
+///
+/// # Errors
+///
+/// Returns an error if HSM discovery fails.
 pub async fn handle_hsm_capabilities(hsm_id: &str) -> Result<(), BearDogError> {
     println!("HSM Capabilities for: {hsm_id}");
     println!("================================");
@@ -164,6 +180,10 @@ pub async fn handle_hsm_capabilities(hsm_id: &str) -> Result<(), BearDogError> {
 }
 
 /// Handle HSM test command - perform operations to verify HSM functionality
+///
+/// # Errors
+///
+/// Returns an error if HSM discovery fails.
 pub async fn handle_hsm_test(hsm_id: &str, iterations: usize) -> Result<(), BearDogError> {
     println!("Testing HSM: {hsm_id}");
     println!("================================");

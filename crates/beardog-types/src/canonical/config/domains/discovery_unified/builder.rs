@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Builder pattern for UnifiedDiscoveryConfig
+//! Builder pattern for `UnifiedDiscoveryConfig`
 //!
-//! This module provides a flexible builder for constructing UnifiedDiscoveryConfig
+//! This module provides a flexible builder for constructing `UnifiedDiscoveryConfig`
 //! with support for environment variable overrides and custom configuration.
 
 use super::{

@@ -58,7 +58,7 @@
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-/// Network configuration for BearDog services
+/// Network configuration for `BearDog` services
 ///
 /// Comprehensive network settings including hosts, ports, timeouts, and endpoints.
 ///
@@ -124,7 +124,7 @@ pub fn default_service_host() -> String {
 
 /// Service port configuration
 ///
-/// Port assignments for all BearDog services. Ports can be customized via
+/// Port assignments for all `BearDog` services. Ports can be customized via
 /// environment variables for flexible deployment.
 ///
 /// # Default Ports

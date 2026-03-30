@@ -4,11 +4,11 @@
 
 //! # beardog-discovery
 //!
-//! Capability-based service discovery for BearDog.
+//! Capability-based service discovery for `BearDog`.
 //!
 //! ## Architecture Principles
 //!
-//! 1. **Self-Knowledge Only**: BearDog only knows what IT provides
+//! 1. **Self-Knowledge Only**: `BearDog` only knows what IT provides
 //! 2. **Capability-Based**: Discover services by capability, not by name
 //! 3. **Zero Hardcoding**: No hardcoded service names or endpoints
 //! 4. **Runtime Discovery**: Find services at runtime via mDNS, DNS-SD, registries

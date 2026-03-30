@@ -19,7 +19,7 @@ use tracing::info;
 /// - `capabilities` / `get_capabilities` - Lists all provided capabilities
 /// - `identity` / `whoami` / `get_identity` - Returns primal identity
 ///
-/// All responses include genetic lineage (family_id, node_id) discovered
+/// All responses include genetic lineage (`family_id`, `node_id`) discovered
 /// from environment variables at runtime (no hardcoding).
 pub struct CapabilitiesHandler {
     identity: Arc<PrimalIdentity>,
@@ -62,7 +62,7 @@ impl MethodHandler for CapabilitiesHandler {
 }
 
 impl CapabilitiesHandler {
-    /// Create a new CapabilitiesHandler with explicit identity injection
+    /// Create a new `CapabilitiesHandler` with explicit identity injection
     pub fn new(identity: Arc<PrimalIdentity>) -> Self {
         Self {
             identity,
@@ -80,7 +80,7 @@ impl CapabilitiesHandler {
 
     /// Handle capabilities request
     ///
-    /// Returns a comprehensive list of all capabilities provided by BearDog,
+    /// Returns a comprehensive list of all capabilities provided by `BearDog`,
     /// including crypto, security, BTSP, graph security, and JWT generation.
     async fn handle_capabilities(&self) -> Result<serde_json::Value, String> {
         // Use injected identity (no environment variables!)
@@ -168,7 +168,7 @@ impl CapabilitiesHandler {
         }))
     }
 
-    /// Handle discover_capabilities request
+    /// Handle `discover_capabilities` request
     ///
     /// Returns a flat list of capability strings for ecosystem consistency.
     /// This mirrors the conventional `discover_capabilities` format, enabling

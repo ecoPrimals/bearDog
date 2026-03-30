@@ -33,7 +33,7 @@
 //! - **HKDF-SHA256**: Key derivation from master secret
 //! - **BLAKE3**: Beacon ID derivation (fast, cryptographically secure)
 //! - **Zeroize**: Automatic secret cleanup on drop
-//! - **OsRng**: Cryptographically secure randomness
+//! - **`OsRng`**: Cryptographically secure randomness
 
 use beardog_errors::BearDogError;
 use blake3::Hasher;
@@ -89,9 +89,9 @@ pub struct BeaconCiphertext {
 impl BeaconSeed {
     /// Generate new random beacon seed
     ///
-    /// Uses OsRng for cryptographically secure randomness.
+    /// Uses `OsRng` for cryptographically secure randomness.
     ///
-    /// **Deep Debt Principle #1**: Pure Rust crypto (OsRng, BLAKE3)
+    /// **Deep Debt Principle #1**: Pure Rust crypto (`OsRng`, BLAKE3)
     ///
     /// # Example
     ///
@@ -263,7 +263,7 @@ impl BeaconSeed {
         Ok(key)
     }
 
-    /// Create BeaconSeed from raw seed material (for meeting exchange)
+    /// Create `BeaconSeed` from raw seed material (for meeting exchange)
     ///
     /// Used when receiving beacon seed during meeting exchange.
     ///
@@ -278,7 +278,7 @@ impl BeaconSeed {
 
     /// Static beacon ID derivation (for external callers)
     ///
-    /// Allows deriving beacon ID without creating full BeaconSeed.
+    /// Allows deriving beacon ID without creating full `BeaconSeed`.
     /// Useful for meeting verification.
     #[must_use]
     pub fn derive_beacon_id_static(seed: &[u8; 32]) -> BeaconId {

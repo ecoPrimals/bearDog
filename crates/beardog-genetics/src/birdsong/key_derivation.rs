@@ -41,7 +41,7 @@ impl LineageKeyDerivation {
         })
     }
 
-    /// Derive a BirdSong key for a specific lineage
+    /// Derive a `BirdSong` key for a specific lineage
     ///
     /// Uses HKDF-SHA256 to derive keys from:
     /// - Master secret (IKM)

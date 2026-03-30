@@ -178,6 +178,10 @@ impl UltimateSafeBuffer {
     ///
     /// Returns the number of bytes written, or an error if the operation
     /// would exceed buffer bounds.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SafetyError::BufferOverflow`] if the write would exceed capacity.
     pub fn safe_write(&mut self, data: &[u8]) -> Result<usize, SafetyError> {
         // Verify bounds before any operation
         if self.write_pos + data.len() > self.capacity {
@@ -208,6 +212,10 @@ impl UltimateSafeBuffer {
     ///
     /// Returns the data read, or an error if the operation would read
     /// beyond buffer bounds.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SafetyError::ReadBeyondBounds`] if not enough data is available.
     pub fn safe_read(&mut self, len: usize) -> Result<Vec<u8>, SafetyError> {
         // Verify bounds before any operation
         if self.read_pos + len > self.write_pos {
@@ -234,6 +242,10 @@ impl UltimateSafeBuffer {
     }
 
     /// Verifies buffer integrity and safety invariants
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SafetyError::IntegrityViolation`] if positions or lengths are inconsistent.
     pub fn verify_integrity(&self) -> Result<(), SafetyError> {
         if self.read_pos > self.write_pos {
             return Err(SafetyError::IntegrityViolation {
@@ -262,7 +274,7 @@ impl<T: Send + 'static> UltimateSafeMemoryPool<T> {
     ///
     /// # Safety Guarantees
     /// - No memory leaks (automatic cleanup)
-    /// - Bounded memory usage (max_size limit)
+    /// - Bounded memory usage (`max_size` limit)
     /// - Thread-safe operations
     /// - Automatic object lifecycle management
     pub fn new<F>(factory: F, max_size: usize) -> Self
@@ -282,6 +294,10 @@ impl<T: Send + 'static> UltimateSafeMemoryPool<T> {
     ///
     /// Returns a safe wrapper that automatically returns the object to the
     /// pool when dropped, preventing memory leaks.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SafetyError::LockPoisoned`] if the pool mutex is poisoned.
     pub fn safe_borrow(&self) -> Result<SafePooledObject<T>, SafetyError> {
         let mut pool = self.pool.lock().map_err(|_| SafetyError::LockPoisoned)?;
 
@@ -365,6 +381,10 @@ impl<T: Send + Sync> SafeReference<T> {
     }
 
     /// Safely read from the reference
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SafetyError::InvalidReference`] or [`SafetyError::LockPoisoned`] on failure.
     pub fn safe_read<F, R>(&self, f: F) -> Result<R, SafetyError>
     where
         F: FnOnce(&T) -> R,
@@ -378,6 +398,10 @@ impl<T: Send + Sync> SafeReference<T> {
     }
 
     /// Safely write to the reference
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SafetyError::InvalidReference`] or [`SafetyError::LockPoisoned`] on failure.
     pub fn safe_write<F, R>(&self, f: F) -> Result<R, SafetyError>
     where
         F: FnOnce(&mut T) -> R,

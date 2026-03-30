@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Targeted coverage tests for low-coverage CLI handlers (server, hsm, daemon, cross_primal).
+//! Targeted coverage tests for low-coverage CLI handlers (server, hsm, daemon, `cross_primal`).
 
 use crate::ServerArgs;
 

@@ -27,18 +27,30 @@ pub trait BearDogConfig:
     ///
     /// This method should perform comprehensive validation of all configuration
     /// fields and return appropriate errors for invalid configurations.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if any field fails validation.
     fn validate(&self) -> Result<(), BearDogError>;
 
     /// Merge this configuration with another configuration
     ///
     /// The `other` configuration takes precedence in case of conflicts.
     /// This enables configuration layering and overrides.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if merging or deserializing the merged result fails.
     fn merge(&self, other: &Self) -> Result<Self, BearDogError>;
 
     /// Load configuration from environment variables
     ///
     /// This method should attempt to load configuration values from environment
     /// variables, falling back to defaults where appropriate.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if environment loading or validation fails.
     fn from_env() -> Result<Self, BearDogError>
     where
         Self: Sized;
@@ -47,6 +59,10 @@ pub trait BearDogConfig:
     ///
     /// This provides a standardized way to serialize configurations for
     /// storage, debugging, and documentation purposes.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if TOML serialization fails or the `config` feature is disabled.
     fn to_toml(&self) -> Result<String, BearDogError>;
 
     /// Get the configuration domain name
@@ -71,6 +87,10 @@ pub trait BearDogConfig:
     ///
     /// This method allows configurations to be modified based on the deployment
     /// environment (development, staging, production).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if overrides cannot be applied; the default implementation never fails.
     fn apply_environment_overrides(&mut self, environment: &str) -> Result<(), BearDogError> {
         let _ = environment; // Suppress unused parameter warning
         Ok(())
@@ -167,6 +187,10 @@ pub trait ConfigBuilder<T: BearDogConfig> {
     fn new() -> Self;
 
     /// Build the configuration with validation
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if building or validation fails.
     fn build(self) -> Result<T, BearDogError>;
 
     /// Build the configuration without validation (unchecked)
@@ -178,11 +202,19 @@ pub struct ConfigLoader;
 
 impl ConfigLoader {
     /// Load configuration from environment variables with prefix
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if [`BearDogConfig::from_env`] fails.
     pub fn from_env_with_prefix<T: BearDogConfig>(_prefix: &str) -> Result<T, BearDogError> {
         T::from_env()
     }
 
     /// Load configuration from TOML file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be read, TOML parsing fails, or validation fails.
     #[cfg(feature = "config")]
     pub fn from_toml_file<T: BearDogConfig>(path: &str) -> Result<T, BearDogError> {
         use std::fs;
@@ -200,6 +232,10 @@ impl ConfigLoader {
     }
 
     /// Load configuration from TOML file (feature-gated fallback)
+    ///
+    /// # Errors
+    ///
+    /// Always returns an error because the `config` feature is disabled.
     #[cfg(not(feature = "config"))]
     pub fn from_toml_file<T: BearDogConfig>(_path: &str) -> Result<T, BearDogError> {
         Err(BearDogError::configuration(
@@ -208,6 +244,10 @@ impl ConfigLoader {
     }
 
     /// Load configuration from JSON file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be read, JSON parsing fails, or validation fails.
     pub fn from_json_file<T: BearDogConfig>(path: &str) -> Result<T, BearDogError> {
         use std::fs;
 
@@ -224,6 +264,10 @@ impl ConfigLoader {
     }
 
     /// Merge multiple configurations with precedence
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the list is empty, merge fails, or final validation fails.
     pub fn merge_configs<T: BearDogConfig>(configs: Vec<T>) -> Result<T, BearDogError> {
         if configs.is_empty() {
             return Err(BearDogError::configuration(
@@ -250,6 +294,10 @@ pub mod validation {
     use super::BearDogError;
 
     /// Validate numeric range with detailed error messages
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `value` is outside `[min, max]`.
     pub fn validate_range<T>(value: T, min: T, max: T, field_name: &str) -> Result<(), BearDogError>
     where
         T: PartialOrd + std::fmt::Display + Copy,
@@ -272,6 +320,10 @@ pub mod validation {
     }
 
     /// Validate string is not empty with context
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `value` is empty or whitespace-only.
     pub fn validate_non_empty_string(value: &str, field_name: &str) -> Result<(), BearDogError> {
         if value.trim().is_empty() {
             return Err(BearDogError::configuration(&format!(
@@ -283,6 +335,10 @@ pub mod validation {
     }
 
     /// Validate collection size with detailed constraints
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the collection length is outside `[min_size, max_size]`.
     pub fn validate_collection_size<T>(
         collection: &[T],
         min_size: usize,
@@ -309,6 +365,10 @@ pub mod validation {
     }
 
     /// Validate duration is reasonable
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `duration` is shorter than `min_duration` or longer than `max_duration`.
     pub fn validate_duration(
         duration: std::time::Duration,
         min_duration: std::time::Duration,
@@ -333,6 +393,10 @@ pub mod validation {
     }
 
     /// Validate percentage value (0.0 to 1.0)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the value is out of range, NaN, or infinite.
     pub fn validate_percentage(value: f64, field_name: &str) -> Result<(), BearDogError> {
         if value < 0.0 {
             return Err(BearDogError::configuration(&format!(
@@ -366,6 +430,10 @@ pub mod validation {
     }
 
     /// Validate port number
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `port` is zero.
     pub fn validate_port(port: u16, field_name: &str) -> Result<(), BearDogError> {
         if port == 0 {
             return Err(BearDogError::configuration(&format!(
@@ -377,6 +445,10 @@ pub mod validation {
     }
 
     /// Validate network address format
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the address is empty or contains invalid characters.
     pub fn validate_network_address(address: &str, field_name: &str) -> Result<(), BearDogError> {
         if address.trim().is_empty() {
             return Err(BearDogError::configuration(&format!(
@@ -400,6 +472,10 @@ pub mod validation {
     }
 
     /// Validate collection is not empty
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `collection` is empty.
     pub fn validate_non_empty_collection<T>(
         collection: &[T],
         field_name: &str,
@@ -414,6 +490,10 @@ pub mod validation {
     }
 
     /// Validate URL format
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the URL is empty or does not start with `http://` or `https://`.
     pub fn validate_url(url: &str, field_name: &str) -> Result<(), BearDogError> {
         if url.trim().is_empty() {
             return Err(BearDogError::configuration(&format!(
@@ -433,6 +513,10 @@ pub mod validation {
     }
 
     /// Validate configuration consistency across related fields
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the consistency predicate fails.
     pub fn validate_field_consistency<T, U>(
         field1_value: T,
         field1_name: &str,
@@ -456,6 +540,10 @@ pub mod validation {
     }
 
     /// Validate resource allocation doesn't exceed 100%
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if total allocation exceeds 100% or any entry fails percentage validation.
     pub fn validate_resource_allocation(allocations: &[(f64, &str)]) -> Result<(), BearDogError> {
         let total: f64 = allocations.iter().map(|(value, _)| *value).sum();
 
@@ -477,6 +565,10 @@ pub mod validation {
     }
 
     /// Validate configuration environment compatibility
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the environment is unknown, production safety is violated, or validation fails.
     pub fn validate_environment_compatibility(
         environment: &str,
         field_name: &str,

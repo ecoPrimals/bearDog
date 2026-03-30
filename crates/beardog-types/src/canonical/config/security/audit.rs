@@ -80,6 +80,10 @@ impl CanonicalAuditConfig {
 
     /// Validate
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if auditing is enabled but retention is zero.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.enabled && self.retention_days == 0 {
             return Err(BearDogError::security(

@@ -9,7 +9,7 @@
 //! **Performance**: Hardware accelerated via AES-NI on modern CPUs
 //! **Security**: AEAD (Authenticated Encryption with Associated Data)
 //!
-//! Pure Rust implementation using RustCrypto `aes-gcm` crate (zero C dependencies).
+//! Pure Rust implementation using `RustCrypto` `aes-gcm` crate (zero C dependencies).
 //!
 //! # AEAD Overview
 //!
@@ -42,6 +42,9 @@ use rand::rngs::OsRng;
 use serde_json::{Value, json};
 use zeroize::Zeroizing;
 
+/// # Errors
+///
+/// Returns an error if encryption fails.
 /// Handle `crypto.aes256_gcm_encrypt` - AES-256-GCM encryption
 ///
 /// Encrypts data using AES-256-GCM (Galois/Counter Mode).
@@ -157,6 +160,9 @@ pub fn handle_aes256_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if decryption fails.
 /// Handle `crypto.aes256_gcm_decrypt` - AES-256-GCM decryption
 ///
 /// Decrypts and authenticates data using AES-256-GCM.
@@ -268,13 +274,16 @@ pub fn handle_aes256_gcm_decrypt(params: &Value) -> Result<Value, BearDogError> 
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if encryption fails.
 /// Handle `crypto.aes128_gcm_encrypt` - AES-128-GCM encryption
 ///
 /// Encrypts data using AES-128-GCM. Faster than AES-256 but with 128-bit security.
 /// Used by 80%+ of HTTPS as fallback cipher.
 ///
-/// **Input**: Same as aes256_gcm_encrypt but with 16-byte key
-/// **Output**: Same as aes256_gcm_encrypt
+/// **Input**: Same as `aes256_gcm_encrypt` but with 16-byte key
+/// **Output**: Same as `aes256_gcm_encrypt`
 ///
 /// **Performance**: Slightly faster than AES-256 (< 800μs for typical payloads)
 pub fn handle_aes128_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> {
@@ -379,12 +388,15 @@ pub fn handle_aes128_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if decryption fails.
 /// Handle `crypto.aes128_gcm_decrypt` - AES-128-GCM decryption
 ///
 /// Decrypts and authenticates data using AES-128-GCM.
 ///
-/// **Input**: Same as aes256_gcm_decrypt but with 16-byte key
-/// **Output**: Same as aes256_gcm_decrypt
+/// **Input**: Same as `aes256_gcm_decrypt` but with 16-byte key
+/// **Output**: Same as `aes256_gcm_decrypt`
 ///
 /// **Performance**: Slightly faster than AES-256 (< 800μs for typical payloads)
 pub fn handle_aes128_gcm_decrypt(params: &Value) -> Result<Value, BearDogError> {

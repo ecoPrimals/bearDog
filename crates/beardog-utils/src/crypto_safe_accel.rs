@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 //! Shared safe software crypto for SIMD-style accelerator modules (`sha2`, `aes`, `ctr`).
-//! Hand-written intrinsics are unnecessary; RustCrypto backends are auto-vectorized by LLVM where supported.
+//! Hand-written intrinsics are unnecessary; `RustCrypto` backends are auto-vectorized by LLVM where supported.
 
 use aes::Aes128;
 use aes::cipher::{KeyIvInit, StreamCipher, generic_array::GenericArray};

@@ -4,7 +4,7 @@
 //!
 //! Provides lineage-gated relay authorization for the relay-assisted coordinated
 //! punch protocol. Songbird's relay server calls `relay.authorize` before allowing
-//! a peer to use BearDog's family relay infrastructure.
+//! a peer to use `BearDog`'s family relay infrastructure.
 //!
 //! # Methods
 //!
@@ -26,14 +26,14 @@
 //! - **Lineage-verified peers** (valid lineage proof): Authorized with transparent masking
 //! - **Unknown peers** (no proof or different family): Denied with blocked masking
 //!
-//! BearDog NEVER touches sockets — it only answers "is this peer authorized?"
+//! `BearDog` NEVER touches sockets — it only answers "is this peer authorized?"
 //! Songbird owns all UDP/TCP transport and relay packet forwarding.
 //!
 //! # Deep Debt Alignment
 //!
 //! - **Principle #1**: Pure Rust (Blake3 lineage verification)
-//! - **Principle #2**: Separation of concerns (BearDog = identity, Songbird = transport)
-//! - **Principle #3**: No hardcoding (family_id from PrimalIdentity)
+//! - **Principle #2**: Separation of concerns (`BearDog` = identity, Songbird = transport)
+//! - **Principle #3**: No hardcoding (`family_id` from `PrimalIdentity`)
 //! - **Principle #6**: Production crypto (real lineage verification, no mocks)
 
 use super::MethodHandler;

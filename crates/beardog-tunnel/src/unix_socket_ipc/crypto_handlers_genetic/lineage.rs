@@ -8,7 +8,7 @@
 //! # Handlers
 //!
 //! - `handle_derive_lineage_key` - Derive keys from family lineage (Blake3 KDF)
-//! - `handle_derive_lineage_beacon_key` - Derive BirdSong beacon key (HKDF-SHA256)
+//! - `handle_derive_lineage_beacon_key` - Derive `BirdSong` beacon key (HKDF-SHA256)
 //! - `handle_mix_entropy` - Mix entropy across three tiers
 //! - `handle_verify_lineage` - Verify genetic family relationships
 //! - `handle_generate_lineage_proof` - Generate lineage proof (Blake3 + HMAC)
@@ -24,6 +24,9 @@ use serde_json::{Value, json};
 use sha2::Sha256;
 use tracing::{debug, info, warn};
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Handle `genetic.derive_lineage_key` RPC method
 ///
 /// Derives a cryptographic key from genetic family lineage.
@@ -65,10 +68,13 @@ pub async fn handle_derive_lineage_key(params: &Value) -> Result<Value, BearDogE
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if encryption fails.
 /// Handle `genetic.derive_lineage_beacon_key` RPC method
 ///
 /// Derives a dedicated beacon encryption key from family lineage.
-/// Uses HKDF-SHA256 with domain separation ("birdsong_beacon_v1").
+/// Uses HKDF-SHA256 with domain separation ("`birdsong_beacon_v1`").
 /// All family members with the same lineage seed derive the SAME key.
 ///
 /// # Performance
@@ -126,6 +132,9 @@ pub async fn handle_derive_lineage_beacon_key(params: &Value) -> Result<Value, B
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Handle `genetic.mix_entropy` RPC method
 ///
 /// Mixes entropy from multiple tiers for enhanced security.
@@ -180,6 +189,9 @@ pub async fn handle_mix_entropy(params: &Value) -> Result<Value, BearDogError> {
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Handle `genetic.verify_lineage` RPC method
 ///
 /// Verifies genetic family lineage relationship.
@@ -232,6 +244,9 @@ pub async fn handle_verify_lineage(params: &Value) -> Result<Value, BearDogError
     Ok(json!(response))
 }
 
+/// # Errors
+///
+/// Returns an error if serialization fails.
 /// Handle `genetic.generate_lineage_proof` RPC method
 ///
 /// Generates a cryptographic proof of genetic lineage.

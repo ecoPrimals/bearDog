@@ -107,6 +107,10 @@ impl ConfigHierarchy {
     }
 
     /// Load configuration from file
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ConfigError`] when the file cannot be read or the format is invalid.
     pub fn with_file<P: AsRef<Path>>(mut self, path: P) -> ConfigResult<Self> {
         let path = path.as_ref();
 
@@ -159,6 +163,10 @@ impl ConfigHierarchy {
     }
 
     /// Build the final configuration by merging all layers
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ConfigError`] when environment/CLI overrides cannot be applied or final validation fails.
     pub fn build(self) -> ConfigResult<BearDogConfig> {
         // Start with base (fallback + platform defaults)
         let mut config = self.base;
@@ -185,6 +193,10 @@ impl ConfigHierarchy {
     }
 
     /// Auto-discover and load config file from standard locations
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from [`Self::with_file`] when a discovered file cannot be loaded.
     pub fn with_auto_config_file(self) -> ConfigResult<Self> {
         // Try standard locations in order
         let mut locations = vec![
@@ -218,8 +230,8 @@ impl Default for ConfigHierarchy {
 /// Merge two configurations, preferring values from the override config
 ///
 /// Implements intelligent field-by-field merging:
-/// - Fields with PartialEq: Compare and use override only if different
-/// - Fields without PartialEq (paths, hsm): Always use override
+/// - Fields with `PartialEq`: Compare and use override only if different
+/// - Fields without `PartialEq` (paths, hsm): Always use override
 ///
 /// This enables partial configuration updates while preserving unchanged values.
 fn merge_configs(

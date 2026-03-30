@@ -27,6 +27,9 @@ pub struct AesGcmEncryptionKey {
 pub type DefaultEncryptionKey = AesGcmEncryptionKey;
 
 impl AesGcmEncryptionKey {
+    /// # Errors
+    ///
+    /// Returns an error if encryption fails.
     pub fn new() -> Result<Self, BearDogError> {
         let mut key_bytes = [0u8; AES_256_KEY_LEN];
         OsRng.fill_bytes(&mut key_bytes);
@@ -37,6 +40,9 @@ impl AesGcmEncryptionKey {
         })
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if encryption fails.
     pub fn from_key_material(key_material: &[u8]) -> Result<Self, BearDogError> {
         if key_material.len() != AES_256_KEY_LEN {
             return Err(BearDogError::encryption(

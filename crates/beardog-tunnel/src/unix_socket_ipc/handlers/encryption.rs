@@ -82,7 +82,7 @@ impl EncryptionHandler {
     ///
     /// # Returns
     /// - `encrypted_data`: Base64-encoded ciphertext (with embedded tag)
-    /// - `ciphertext`: Same as encrypted_data (compatibility)
+    /// - `ciphertext`: Same as `encrypted_data` (compatibility)
     /// - `nonce`: Base64-encoded 96-bit nonce
     /// - `tag`: Base64-encoded 128-bit authentication tag (last 16 bytes of ciphertext)
     async fn handle_encrypt(
@@ -172,7 +172,7 @@ impl EncryptionHandler {
     /// - `key_ref`: HSM key reference
     ///
     /// # Returns
-    /// - `data`: Base64-encoded plaintext (BiomeOS format)
+    /// - `data`: Base64-encoded plaintext (`BiomeOS` format)
     /// - `plaintext`: Same as data (standard format)
     /// - `verified`: Authentication verified (always true for ChaCha20-Poly1305)
     async fn handle_decrypt(

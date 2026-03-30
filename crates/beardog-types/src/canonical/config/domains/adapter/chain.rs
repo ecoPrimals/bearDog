@@ -77,7 +77,7 @@ impl ChainConfig {
     /// Default maximum workers
     pub const DEFAULT_MAX_WORKERS: usize = 4;
 
-    /// Create ChainConfig with hardcoded defaults
+    /// Create `ChainConfig` with hardcoded defaults
     pub fn with_defaults() -> Self {
         Self {
             max_chain_length: Self::DEFAULT_MAX_CHAIN_LENGTH,
@@ -89,7 +89,7 @@ impl ChainConfig {
         }
     }
 
-    /// Create ChainConfig from environment variables
+    /// Create `ChainConfig` from environment variables
     pub fn from_env() -> Self {
         Self {
             max_chain_length: std::env::var("BEARDOG_ADAPTER_MAX_CHAIN_LENGTH")

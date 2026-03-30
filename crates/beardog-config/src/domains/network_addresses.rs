@@ -2,7 +2,7 @@
 
 //! Network Address Configuration
 //!
-//! Centralized configuration for **self-knowledge** bind/connect addresses used by BearDog.
+//! Centralized configuration for **self-knowledge** bind/connect addresses used by `BearDog`.
 //! Aligns with `ZERO_HARDCODING_SPECIFICATION` and capability-based discovery: literals here are
 //! **documented fallbacks only**—production must set env vars, config files, or discovery-derived
 //! values. Peer / other-primal endpoints are **never** defined here; use runtime discovery.
@@ -37,7 +37,7 @@ use std::net::{IpAddr, Ipv4Addr};
 
 /// Network addresses configuration
 ///
-/// All network addresses and hostnames used by BearDog components. Configurable via
+/// All network addresses and hostnames used by `BearDog` components. Configurable via
 /// environment variables or config file, with secure defaults as fallback.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct NetworkAddressesConfig {
@@ -266,6 +266,10 @@ impl NetworkAddressesConfig {
     /// Validates that all addresses are valid
     ///
     /// Ensures addresses are properly formatted and parseable.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` with a message when any host or IP field is empty or unparsable.
     pub fn validate(&self) -> Result<(), String> {
         // Validate API host (can be hostname or IP)
         if self.api_host.is_empty() {

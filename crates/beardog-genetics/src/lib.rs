@@ -96,7 +96,7 @@ pub use birdsong::{
 #[cfg(test)]
 mod tests;
 
-/// Coordinates genetics subsystems: entropy, spawning, ecosystem evolution, and BirdSong lineage.
+/// Coordinates genetics subsystems: entropy, spawning, ecosystem evolution, and `BirdSong` lineage.
 #[derive(Debug, Clone)]
 pub struct GeneticsManager {
     config: GeneticsConfig,

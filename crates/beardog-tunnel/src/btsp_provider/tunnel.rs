@@ -28,7 +28,7 @@ pub(super) struct Tunnel {
     /// Peer's identifier
     pub peer_id: String,
 
-    /// Peer's endpoint (e.g., "unix:///tmp/peer.sock")
+    /// Peer's endpoint (e.g., `unix:///tmp/peer.sock`)
     pub _peer_endpoint: String,
 
     /// When the tunnel was established
@@ -41,7 +41,7 @@ pub(super) struct Tunnel {
 
     /// Bytes sent through this tunnel (lock-free atomic counter)
     ///
-    /// EVOLUTION: Changed from Arc<Mutex<u64>> to AtomicU64 (Jan 29, 2026)
+    /// EVOLUTION: Changed from Arc<Mutex<u64>> to `AtomicU64` (Jan 29, 2026)
     /// - Lock-free: No mutex contention
     /// - Fast: Direct atomic operations  
     /// - Safe: No unchecked memory patterns needed
@@ -49,12 +49,12 @@ pub(super) struct Tunnel {
 
     /// Bytes received through this tunnel (lock-free atomic counter)
     ///
-    /// EVOLUTION: Changed from Arc<Mutex<u64>> to AtomicU64 (Jan 29, 2026)
+    /// EVOLUTION: Changed from Arc<Mutex<u64>> to `AtomicU64` (Jan 29, 2026)
     pub bytes_received: AtomicU64,
 
     /// Last activity timestamp
     ///
-    /// NOTE: SystemTime doesn't fit in atomic, so we keep Mutex here.
+    /// NOTE: `SystemTime` doesn't fit in atomic, so we keep Mutex here.
     /// This is updated infrequently (only on activity) so mutex overhead is acceptable.
     pub last_activity: Arc<Mutex<SystemTime>>,
 

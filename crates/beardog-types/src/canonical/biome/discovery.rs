@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 /// Biome sovereignty discovery configuration
 ///
-/// Wraps the canonical DiscoveryConfig with biome-specific partnership discovery flags.
+/// Wraps the canonical `DiscoveryConfig` with biome-specific partnership discovery flags.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BiomeDiscoveryConfig {
     /// Base discovery configuration

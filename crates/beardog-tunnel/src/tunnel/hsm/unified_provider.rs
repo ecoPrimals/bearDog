@@ -43,6 +43,10 @@ impl UnifiedHsmProvider {
     }
 
     /// Registers an HSM provider
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the provider cannot be registered.
     pub fn register_provider(
         &mut self,
         id: String,
@@ -62,6 +66,10 @@ impl UnifiedHsmProvider {
     }
 
     /// Unregisters an HSM provider
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the provider cannot be unregistered.
     pub fn unregister_provider(&mut self, id: &str) -> Result<(), BearDogError> {
         info!("🗑️ Unregistering HSM provider: {}", id);
 
@@ -76,6 +84,10 @@ impl UnifiedHsmProvider {
     }
 
     /// Sets the default provider
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the provider id is not registered.
     pub fn set_default_provider(&mut self, id: String) -> Result<(), BearDogError> {
         let providers = self.providers.read();
 
@@ -91,6 +103,10 @@ impl UnifiedHsmProvider {
     }
 
     /// Gets a provider by ID
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the provider is not registered.
     pub fn get_provider(&self, id: &str) -> Result<Arc<dyn HsmProvider>, BearDogError> {
         let providers = self.providers.read();
 
@@ -101,6 +117,10 @@ impl UnifiedHsmProvider {
     }
 
     /// Gets the default provider
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if no default provider is set or lookup fails.
     pub fn get_default_provider(&self) -> Result<Arc<dyn HsmProvider>, BearDogError> {
         let default_id = self
             .default_provider
@@ -117,6 +137,10 @@ impl UnifiedHsmProvider {
     }
 
     /// Generates a key using a specific provider
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails in the underlying HSM provider.
     pub async fn generate_key_with_provider(
         &self,
         provider_id: &str,
@@ -137,6 +161,10 @@ impl UnifiedHsmProvider {
     }
 
     /// Generates a key using the default provider
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails in the underlying HSM provider.
     pub async fn generate_key(
         &self,
         key_id: &str,
@@ -153,6 +181,10 @@ impl UnifiedHsmProvider {
     }
 
     /// Signs data using a specific provider
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if signing fails in the underlying HSM provider.
     pub async fn sign_with_provider(
         &self,
         provider_id: &str,
@@ -166,6 +198,10 @@ impl UnifiedHsmProvider {
     }
 
     /// Signs data using the default provider
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if signing fails in the underlying HSM provider.
     pub async fn sign(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         debug!("✍️ Signing with default provider");
 
@@ -174,6 +210,10 @@ impl UnifiedHsmProvider {
     }
 
     /// Verifies a signature using a specific provider
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if verification fails in the underlying HSM provider.
     pub async fn verify_with_provider(
         &self,
         provider_id: &str,
@@ -188,6 +228,10 @@ impl UnifiedHsmProvider {
     }
 
     /// Verifies a signature using the default provider
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if verification fails in the underlying HSM provider.
     pub async fn verify(
         &self,
         key_id: &str,
@@ -201,6 +245,10 @@ impl UnifiedHsmProvider {
     }
 
     /// Deletes a key using a specific provider
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if key deletion fails in the underlying HSM provider.
     pub async fn delete_key_with_provider(
         &self,
         provider_id: &str,
@@ -216,6 +264,10 @@ impl UnifiedHsmProvider {
     }
 
     /// Deletes a key using the default provider
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if key deletion fails in the underlying HSM provider.
     pub async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
         debug!("🗑️ Deleting key '{}' with default provider", key_id);
 

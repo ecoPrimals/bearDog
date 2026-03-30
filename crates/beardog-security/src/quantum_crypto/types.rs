@@ -52,7 +52,7 @@ pub enum KemAlgorithm {
     /// Kyber-1024 (NIST Level 5)
     Kyber1024,
 
-    /// Classic McEliece
+    /// Classic `McEliece`
     McEliece,
 }
 

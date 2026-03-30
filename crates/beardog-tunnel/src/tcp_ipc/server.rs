@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! TCP IPC Server for BearDog
+//! TCP IPC Server for `BearDog`
 //!
 //! Provides JSON-RPC over TCP for universal platform support.
 
@@ -28,7 +28,7 @@ const TCP_READ_TIMEOUT: Duration = Duration::from_secs(30);
 /// TCP IPC Server
 ///
 /// Universal JSON-RPC server over TCP. Works on all platforms including
-/// Android where Unix sockets may be restricted by SELinux.
+/// Android where Unix sockets may be restricted by `SELinux`.
 pub struct TcpIpcServer {
     /// Bind address
     bind_addr: SocketAddr,
@@ -64,6 +64,10 @@ impl TcpIpcServer {
     }
 
     /// Start TCP server
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the TCP listener cannot be bound or the local address cannot be read.
     pub async fn start(&self) -> Result<(), BearDogError> {
         info!("🌐 Starting TCP IPC server: {}", self.bind_addr);
 

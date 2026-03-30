@@ -2,14 +2,14 @@
 
 //! # Network Security Configuration Module
 //!
-//! This module contains network security configurations including TLS, endpoint security, and DDoS protection.
+//! This module contains network security configurations including TLS, endpoint security, and `DDoS` protection.
 
 use serde::{Deserialize, Serialize};
 
 /// Network security configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkSecurityConfiguration {
-    /// DDoS protection settings
+    /// `DDoS` protection settings
     pub ddos_protection: DdosProtectionConfiguration,
     /// Enable rate limiting
     pub enable_rate_limiting: bool,
@@ -52,7 +52,7 @@ pub struct EndpointSecurityConfiguration {
     pub require_api_key: bool,
 }
 
-/// DDoS protection configuration
+/// `DDoS` protection configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DdosProtectionConfiguration {
     /// Maximum requests per IP per minute

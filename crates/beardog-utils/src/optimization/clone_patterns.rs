@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Clone Optimization Patterns for BearDog
+//! Clone Optimization Patterns for `BearDog`
 //!
 //! This module provides patterns and utilities for optimizing clone operations
-//! throughout the BearDog codebase, focusing on performance improvements.
+//! throughout the `BearDog` codebase, focusing on performance improvements.
 
 use std::borrow::Cow;
 use std::collections::HashMap;

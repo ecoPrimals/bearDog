@@ -78,6 +78,10 @@ impl MultiTransportServer {
     /// 2. TCP fallback (always attempted)
     ///
     /// Returns error only if NO transports could be bound.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if neither the Unix nor TCP transport could be bound.
     pub async fn bind_all_available(
         btsp_provider: Arc<BeardogBtspProvider>,
         identity: Arc<PrimalIdentity>,
@@ -167,6 +171,10 @@ impl MultiTransportServer {
     ///
     /// Spawns a task for each transport, runs them concurrently.
     /// If any transport fails, others continue running.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if starting a transport task fails before tasks are spawned.
     pub async fn start_all(mut self) -> Result<(), BearDogError> {
         info!("🚀 Starting all transports...");
 

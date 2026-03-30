@@ -23,7 +23,7 @@ mod ecosystem;
 mod genetics;
 mod verification;
 
-/// Password-based authentication, session issuance, and rate limiting for BearDog services.
+/// Password-based authentication, session issuance, and rate limiting for `BearDog` services.
 pub mod handlers;
 /// In-memory [`crate::auth::types::NodeRegistry`] used in tests and lightweight deployments.
 pub mod node_registry;

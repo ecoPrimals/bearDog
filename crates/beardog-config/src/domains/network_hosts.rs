@@ -2,7 +2,7 @@
 
 //! Network Host Configuration
 //!
-//! **Self-knowledge and explicit configuration** for hosts BearDog uses to bind or connect when
+//! **Self-knowledge and explicit configuration** for hosts `BearDog` uses to bind or connect when
 //! no higher layer (URLs, discovery) has supplied a value. Per `ZERO_HARDCODING_SPECIFICATION` and
 //! capability-based discovery, string literals below are **documented fallbacks**, not peer
 //! definitions: **other primals** are reached via runtime discovery (mDNS, registry, mesh)—not
@@ -96,7 +96,7 @@ pub const EXTERNAL_DISCOVERY_HINT: &str = FALLBACK_DEV_INFRASTRUCTURE_HOST;
 /// - Use mDNS/DNS-SD for local network discovery
 /// - Use service mesh/registry for production discovery
 ///
-/// All network hosts/IPs used by BearDog components. Configurable via
+/// All network hosts/IPs used by `BearDog` components. Configurable via
 /// environment variables or config file, with secure defaults as fallback.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct NetworkHostsConfig {
@@ -289,6 +289,10 @@ impl NetworkHostsConfig {
     /// Validates that all hosts are valid
     ///
     /// Ensures hosts are not empty and contain valid characters
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` when any host is empty or contains whitespace/control characters.
     pub fn validate(&self) -> Result<(), String> {
         let hosts = [
             ("api_host", &self.api_host),

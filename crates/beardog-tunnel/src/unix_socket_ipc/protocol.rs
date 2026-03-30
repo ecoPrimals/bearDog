@@ -15,6 +15,9 @@ use super::types::Protocol;
 pub struct ProtocolDetector;
 
 impl ProtocolDetector {
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     /// Detect protocol from initial connection bytes
     ///
     /// Reads the first line/bytes from the connection to determine protocol.

@@ -34,13 +34,13 @@ use std::fmt;
 
 /// Canonical cloud provider identification
 ///
-/// This enum provides a unified way to identify cloud providers across the BearDog ecosystem.
+/// This enum provides a unified way to identify cloud providers across the `BearDog` ecosystem.
 /// While capability-based discovery is preferred, explicit provider identification is sometimes
 /// necessary for discovery, configuration, and telemetry purposes.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CloudProvider {
     /// Amazon Web Services (AWS)
-    /// Services: AWS KMS, AWS CloudHSM
+    /// Services: AWS KMS, AWS `CloudHSM`
     Aws,
 
     /// Microsoft Azure
@@ -164,7 +164,7 @@ impl fmt::Display for CloudProvider {
 pub enum CloudHsmService {
     /// AWS Key Management Service
     AwsKms,
-    /// AWS CloudHSM (dedicated hardware)
+    /// AWS `CloudHSM` (dedicated hardware)
     AwsCloudHsm,
 
     /// Azure Key Vault (standard)

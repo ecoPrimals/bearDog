@@ -4,7 +4,7 @@
 //!
 //! **Unified threat detection configuration** - consolidates scattered threat configs.
 //!
-//! This module provides the canonical configuration types for the BearDog threat
+//! This module provides the canonical configuration types for the `BearDog` threat
 //! detection system, eliminating fragmentation from multiple duplicate definitions.
 //!
 //! ## Consolidation

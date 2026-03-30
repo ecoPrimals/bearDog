@@ -2,7 +2,7 @@
 
 //! Core Domain Configuration Modules
 //!
-//! This module contains the essential configuration domains for BearDog:
+//! This module contains the essential configuration domains for `BearDog`:
 //! - Application configuration
 //! - Network configuration
 //! - Security configuration

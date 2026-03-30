@@ -26,6 +26,10 @@ struct SecurityState {
 
 impl SecurityMetricsEngine {
     /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future validation.
     pub fn new(config: SecurityMetricsConfig) -> Result<Self, BearDogError> {
         Ok(Self {
             _config: config,
@@ -34,12 +38,24 @@ impl SecurityMetricsEngine {
     }
 
     /// Starts service
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future startup failures.
     pub fn start(&self) -> Result<(), BearDogError> {
         tracing::info!("Security metrics engine started");
         Ok(())
     }
 
     /// Records a security-category event and updates aggregate counters / threat signals.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the internal mutex is poisoned.
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "gauge value is a non-negative count that fits u64"
+    )]
     pub fn record_event(&self, event: &super::MetricEvent) -> Result<(), BearDogError> {
         let mut state = self
             .state
@@ -47,9 +63,13 @@ impl SecurityMetricsEngine {
             .map_err(|_| BearDogError::system("security metrics lock poisoned".to_string()))?;
         state.total_events = state.total_events.saturating_add(1);
         let name = event.name.to_lowercase();
+        #[expect(
+            clippy::cast_sign_loss,
+            reason = "gauge values represent non-negative counts"
+        )]
         let delta = match &event.value {
             super::MetricValue::Counter(c) => *c,
-            super::MetricValue::Gauge(g) => g.round() as u64,
+            super::MetricValue::Gauge(g) => g.round().max(0.0) as u64,
             super::MetricValue::Histogram(h) => h.len() as u64,
             super::MetricValue::Summary { count, .. } => *count,
         };
@@ -64,6 +84,11 @@ impl SecurityMetricsEngine {
     }
 
     /// Gets metrics
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the internal mutex is poisoned.
+    #[expect(clippy::cast_precision_loss, reason = "metrics averaging")]
     pub fn get_metrics(&self) -> Result<SecurityMetrics, BearDogError> {
         let state = self
             .state

@@ -33,11 +33,19 @@ pub struct GenesisLineageProvider {
 
 impl GenesisLineageProvider {
     /// Create new genesis lineage provider
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] if [`Self::with_config`] fails.
     pub async fn new() -> Result<Self, BearDogError> {
         Self::with_config(TrustLevel::Medium).await
     }
 
     /// Create genesis lineage provider with custom trust threshold
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future initialization failures.
     pub async fn with_config(min_trust_level: TrustLevel) -> Result<Self, BearDogError> {
         let lineage_chain_mgr = Arc::new(LineageChainManager::new());
         let lineage_proof_mgr = Arc::new(LineageProofManager::new(lineage_chain_mgr.clone()));
@@ -78,6 +86,12 @@ impl GenesisLineageProvider {
     }
 
     /// Establish genetic lineage for new node via genesis ceremony
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when witness authority checks fail, the witness signature is invalid,
+    /// trust is below [`Self::min_trust_level`], genetic ID or lineage construction fails, or
+    /// [`GeneticLineage::verify`] reports an integrity failure.
     pub async fn establish_genesis_lineage(
         &self,
         new_node_id: &str,
@@ -149,6 +163,12 @@ impl GenesisLineageProvider {
     }
 
     /// Conduct full genesis ceremony with physical proof
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when [`PhysicalChannelProof::verify_from_env`] fails (propagates the
+    /// underlying verification error). Ceremony failures from [`Self::establish_genesis_lineage`] are
+    /// captured in the result’s `error` field, not returned as `Err`.
     pub async fn conduct_genesis_ceremony(
         &self,
         new_node_id: &str,
@@ -317,6 +337,11 @@ impl GenesisLineageProvider {
 
     /// Wrapper for `verify_witness_authority` using `BEARDOG_GENESIS_MODE`
     /// (default `permissioned` when unset).
+    ///
+    /// # Errors
+    ///
+    /// Same as [`Self::verify_witness_authority`]: invalid witness keys, missing signature, or
+    /// permissioned-mode witness not trusted.
     pub fn verify_witness_authority_from_env(
         &self,
         witness: &GenesisWitness,

@@ -2,7 +2,7 @@
 
 //! # Discovery Configuration
 //!
-//! Canonical discovery configuration for all discovery types across the BearDog ecosystem.
+//! Canonical discovery configuration for all discovery types across the `BearDog` ecosystem.
 //!
 //! This module provides the base `DiscoveryConfig` struct that should be used by all crates.
 //! Domain-specific discovery needs should extend this via composition, not by redefining
@@ -24,7 +24,7 @@ use std::time::Duration;
 
 /// Canonical discovery configuration for all discovery types
 ///
-/// This is the single source of truth for discovery configuration across BearDog.
+/// This is the single source of truth for discovery configuration across `BearDog`.
 /// All crates should import this instead of defining their own `DiscoveryConfig`.
 ///
 /// ## Usage

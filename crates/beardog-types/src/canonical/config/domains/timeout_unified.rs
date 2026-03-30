@@ -41,7 +41,7 @@
 // Re-export the canonical type
 pub use super::timeout::CanonicalTimeoutConfig;
 
-/// UnifiedTimeoutConfig is now an alias to CanonicalTimeoutConfig
+/// `UnifiedTimeoutConfig` is now an alias to `CanonicalTimeoutConfig`
 ///
 /// **⚠️ DEPRECATED**: Use `CanonicalTimeoutConfig` directly instead.
 ///
@@ -53,7 +53,7 @@ pub use super::timeout::CanonicalTimeoutConfig;
 )]
 pub type UnifiedTimeoutConfig = CanonicalTimeoutConfig;
 
-/// TimeoutConfig is now an alias to CanonicalTimeoutConfig
+/// `TimeoutConfig` is now an alias to `CanonicalTimeoutConfig`
 ///
 /// **⚠️ DEPRECATED**: Use `CanonicalTimeoutConfig` directly instead.
 ///

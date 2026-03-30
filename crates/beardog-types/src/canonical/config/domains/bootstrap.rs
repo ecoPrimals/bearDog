@@ -2,13 +2,13 @@
 
 //! # Bootstrap Configuration Domain
 //!
-//! Configuration for BearDog's revolutionary **zero-knowledge bootstrap system** that
+//! Configuration for `BearDog`'s revolutionary **zero-knowledge bootstrap system** that
 //! eliminates the 2^n hardcoding problem by discovering the ecosystem dynamically.
 //!
 //! ## Zero-Knowledge Bootstrap
 //!
 //! Traditional systems require hardcoding knowledge about every possible service.
-//! BearDog uses **infant learning patterns** to:
+//! `BearDog` uses **infant learning patterns** to:
 //! - Start with zero ecosystem knowledge
 //! - Discover services through observation
 //! - Learn patterns without assumptions
@@ -66,7 +66,7 @@ use crate::canonical::config::r#trait::BearDogConfig;
 
 /// Unified Bootstrap Configuration - Zero-Knowledge Bootstrap Settings
 ///
-/// Complete configuration for BearDog's revolutionary zero-knowledge bootstrap system
+/// Complete configuration for `BearDog`'s revolutionary zero-knowledge bootstrap system
 /// that discovers the ecosystem without any hardcoded assumptions.
 ///
 /// ## Architecture
@@ -82,7 +82,7 @@ use crate::canonical::config::r#trait::BearDogConfig;
 ///
 /// Eliminates the **2^n hardcoding problem**:
 /// - Traditional: Need config for every possible service combination
-/// - BearDog: O(1) config using universal patterns
+/// - `BearDog`: O(1) config using universal patterns
 ///
 /// ## Example
 ///
@@ -194,7 +194,7 @@ impl CoreBootstrapConfig {
     /// Default minimum capabilities threshold
     pub const DEFAULT_MIN_CAPABILITIES_THRESHOLD: usize = 3;
 
-    /// Create CoreBootstrapConfig with hardcoded defaults
+    /// Create `CoreBootstrapConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -208,7 +208,7 @@ impl CoreBootstrapConfig {
         }
     }
 
-    /// Create CoreBootstrapConfig from environment variables
+    /// Create `CoreBootstrapConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -340,7 +340,7 @@ impl InfantPatternConfig {
     /// Default learning rate
     pub const DEFAULT_LEARNING_RATE: f64 = 0.1;
 
-    /// Create InfantPatternConfig with hardcoded defaults
+    /// Create `InfantPatternConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -355,7 +355,7 @@ impl InfantPatternConfig {
         }
     }
 
-    /// Create InfantPatternConfig from environment variables
+    /// Create `InfantPatternConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -509,7 +509,7 @@ impl BootstrapNetworkConfig {
     /// Default buffer size (8KB)
     pub const DEFAULT_BUFFER_SIZE: usize = 8192;
 
-    /// Create BootstrapNetworkConfig with hardcoded defaults
+    /// Create `BootstrapNetworkConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -523,7 +523,7 @@ impl BootstrapNetworkConfig {
         }
     }
 
-    /// Create BootstrapNetworkConfig from environment variables
+    /// Create `BootstrapNetworkConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -576,7 +576,7 @@ impl BootstrapPerformanceConfig {
     /// Default cache duration in seconds
     pub const DEFAULT_CACHE_DURATION_SECS: u64 = 300; // 5 minutes
 
-    /// Create BootstrapPerformanceConfig with hardcoded defaults
+    /// Create `BootstrapPerformanceConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -590,7 +590,7 @@ impl BootstrapPerformanceConfig {
         }
     }
 
-    /// Create BootstrapPerformanceConfig from environment variables
+    /// Create `BootstrapPerformanceConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -619,7 +619,7 @@ impl Default for BootstrapPerformanceConfig {
 }
 
 impl UnifiedBootstrapConfig {
-    /// Create UnifiedBootstrapConfig with hardcoded defaults
+    /// Create `UnifiedBootstrapConfig` with hardcoded defaults
     pub fn with_defaults() -> Self {
         Self {
             core: CoreBootstrapConfig::default(),
@@ -630,7 +630,7 @@ impl UnifiedBootstrapConfig {
         }
     }
 
-    /// Create UnifiedBootstrapConfig from environment variables
+    /// Create `UnifiedBootstrapConfig` from environment variables
     pub fn from_env() -> Self {
         Self {
             core: CoreBootstrapConfig::from_env(),

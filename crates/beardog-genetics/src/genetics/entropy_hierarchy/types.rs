@@ -176,7 +176,7 @@ pub struct MachineEntropySource {
 pub enum MachineSourceType {
     /// Cryptographically secure pseudo-random number generator
     CSPRNG {
-        /// Named algorithm (e.g. ChaCha20).
+        /// Named algorithm (e.g. `ChaCha20`).
         algorithm: String,
         /// Where seed material originates (hardware, OS, etc.).
         seed_source: String,

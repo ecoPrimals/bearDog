@@ -62,6 +62,11 @@ pub(crate) fn prepare_daemon_pid_file(pid_file: &str) -> Result<(), BearDogError
 }
 
 /// Handle daemon command - run as background service
+///
+/// # Errors
+///
+/// Returns an error if PID file preparation fails (e.g. daemon already running, I/O), or the
+/// embedded server handler returns an error.
 pub async fn handle_daemon(args: DaemonArgs) -> Result<(), BearDogError> {
     info!("🐻🐕 BearDog Daemon Mode - Starting...");
     info!("   Socket: {}", args.socket);

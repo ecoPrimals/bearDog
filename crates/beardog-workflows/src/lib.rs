@@ -116,6 +116,10 @@ where
 
     /// Execute workflow with context
     /// Executes workflow
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from repository save or processor [`WorkflowProcessor::process`].
     pub async fn execute_workflow(
         &mut self,
         workflow: R::Workflow,

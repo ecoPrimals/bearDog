@@ -47,7 +47,7 @@
 /// Authorization types and permission management
 ///
 /// Provides types and utilities for managing authorization, permissions,
-/// and access control within the BearDog security system.
+/// and access control within the `BearDog` security system.
 pub mod authorization_types;
 
 /// Cryptographic utility functions
@@ -142,6 +142,10 @@ use sha2::{Digest, Sha256, Sha512};
 /// # Ok(())
 /// # }
 /// ```
+///
+/// # Errors
+///
+/// Currently infallible; the `Result` is reserved for future hashing backends.
 pub fn compute_sha256_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
     let mut hasher = Sha256::new();
     hasher.update(data);
@@ -173,6 +177,10 @@ pub fn compute_sha256_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
 /// # Ok(())
 /// # }
 /// ```
+///
+/// # Errors
+///
+/// Currently infallible; the `Result` is reserved for future hashing backends.
 pub fn compute_sha512_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
     let mut hasher = Sha512::new();
     hasher.update(data);
@@ -249,6 +257,10 @@ pub fn compute_sha512_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
 ///
 /// - [`derive_key_from_password`] - For deriving keys from passwords
 /// - [`compute_sha256_hash`] - For hashing data
+///
+/// # Errors
+///
+/// Currently always returns `Ok`; the `Result` is reserved for future RNG or allocation failures.
 pub fn generate_secure_random_bytes(size: usize) -> Result<Vec<u8>, BearDogError> {
     let mut bytes = vec![0u8; size];
     rand::thread_rng().fill_bytes(&mut bytes);
@@ -360,6 +372,10 @@ pub fn generate_secure_random_bytes(size: usize) -> Result<Vec<u8>, BearDogError
 ///
 /// - [`generate_secure_random_bytes`] - For generating salts
 /// - [`constant_time_compare`] - For secure key comparison
+///
+/// # Errors
+///
+/// Currently infallible; the `Result` is reserved for future iteration limits or KDF hardening.
 pub fn derive_key_from_password(
     password: &[u8],
     salt: &[u8],

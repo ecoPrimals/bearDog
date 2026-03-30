@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Canonical workflow examples for the BearDog ecosystem
+//! Canonical workflow examples for the `BearDog` ecosystem
 //!
 //! This module provides reference implementations of workflow types,
 //! repositories, processors, observers, and commands.

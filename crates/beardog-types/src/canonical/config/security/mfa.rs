@@ -54,6 +54,10 @@ impl CanonicalMfaConfig {
 
     /// Validate
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if MFA is enabled and TOTP or SMS sub-configuration validation fails.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.enabled {
             self.totp.validate()?;
@@ -98,6 +102,10 @@ impl Default for TotpConfig {
 impl TotpConfig {
     /// Validate
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if TOTP is enabled but the issuer is empty.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.enabled && self.issuer.is_empty() {
             return Err(BearDogError::security(
@@ -134,6 +142,10 @@ impl Default for SmsConfig {
 impl SmsConfig {
     /// Validate
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if SMS is enabled but the sender number is empty.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.enabled && self.from_number.is_empty() {
             return Err(BearDogError::security(

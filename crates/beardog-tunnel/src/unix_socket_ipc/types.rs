@@ -10,13 +10,13 @@ use serde::{Deserialize, Serialize};
 /// JSON-RPC 2.0 Request structure
 ///
 /// Represents a complete JSON-RPC 2.0 request as defined by the specification.
-/// All BearDog inter-primal communication uses this format over Unix sockets.
+/// All `BearDog` inter-primal communication uses this format over Unix sockets.
 #[derive(Debug, Clone, Deserialize)]
 pub struct JsonRpcRequest {
     /// JSON-RPC version string, always "2.0"
     pub jsonrpc: String,
 
-    /// Method name to invoke (e.g., "graph.validate_template")
+    /// Method name to invoke (e.g., "`graph.validate_template`")
     pub method: String,
 
     /// Optional parameters for the method call
@@ -148,7 +148,7 @@ impl JsonRpcError {
 /// 1. JSON-RPC (PRIMARY) - Universal, comprehensive, production-ready
 /// 2. HTTP (LEGACY) - Compatibility only, less secure
 ///
-/// Note: TARPC was removed (Jan 29, 2026) - see TARPC_REMOVAL_RATIONALE_JAN_29_2026.md
+/// Note: TARPC was removed (Jan 29, 2026) - see `TARPC_REMOVAL_RATIONALE_JAN_29_2026.md`
 /// JSON-RPC provides all needed functionality with 8+ handler modules.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Protocol {

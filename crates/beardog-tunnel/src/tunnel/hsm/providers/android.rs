@@ -3,7 +3,7 @@
 //! Android HSM Provider
 //!
 //! Universal provider implementation for Android HSM capabilities,
-//! including StrongBox and TEE support.
+//! including `StrongBox` and TEE support.
 
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
@@ -13,7 +13,7 @@ use tracing::{debug, info};
 pub struct AndroidUniversalProvider {
     /// HSM capabilities
     capabilities: Option<AndroidCapabilities>,
-    /// StrongBox availability
+    /// `StrongBox` availability
     strongbox_available: bool,
     /// Trusted Execution Environment availability
     tee_available: bool,
@@ -24,7 +24,7 @@ pub struct AndroidUniversalProvider {
 /// Android-specific HSM capabilities
 #[derive(Debug, Clone)]
 pub struct AndroidCapabilities {
-    /// StrongBox support level
+    /// `StrongBox` support level
     pub strongbox_level: StrongBoxLevel,
     /// TEE type
     pub tee_type: Option<String>,
@@ -36,16 +36,16 @@ pub struct AndroidCapabilities {
     pub biometric_auth: bool,
 }
 
-/// StrongBox security levels
+/// `StrongBox` security levels
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StrongBoxLevel {
-    /// No StrongBox support
+    /// No `StrongBox` support
     None,
-    /// Basic StrongBox
+    /// Basic `StrongBox`
     Basic,
-    /// StrongBox with attestation
+    /// `StrongBox` with attestation
     WithAttestation,
-    /// Full StrongBox implementation
+    /// Full `StrongBox` implementation
     Full,
 }
 
@@ -77,7 +77,7 @@ impl AndroidUniversalProvider {
         cfg!(target_os = "android")
     }
 
-    /// Detect StrongBox availability
+    /// Detect `StrongBox` availability
     fn detect_strongbox(&mut self) -> bool {
         if !Self::is_android_platform() {
             debug!("Not on Android platform, StrongBox not available");
@@ -116,7 +116,7 @@ impl AndroidUniversalProvider {
         has_tee
     }
 
-    /// Simulate StrongBox detection based on device model
+    /// Simulate `StrongBox` detection based on device model
     fn simulate_strongbox_detection(&mut self) -> bool {
         if let Ok(model) = beardog_errors::process_env::var("ANDROID_MODEL") {
             self.device_metadata
@@ -182,7 +182,7 @@ impl AndroidUniversalProvider {
         }
     }
 
-    /// Check if StrongBox is available
+    /// Check if `StrongBox` is available
     pub const fn has_strongbox(&self) -> bool {
         self.strongbox_available
     }

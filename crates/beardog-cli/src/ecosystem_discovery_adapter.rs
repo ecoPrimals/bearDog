@@ -2,7 +2,7 @@
 
 //! # Ecosystem Discovery Adapter
 //!
-//! Bridges between EcosystemListener and PrimalDiscoveryService trait.
+//! Bridges between `EcosystemListener` and `PrimalDiscoveryService` trait.
 //! Enables the CLI to use real ecosystem discovery infrastructure.
 //!
 //! ## Modern Rust Patterns
@@ -29,17 +29,17 @@ use std::time::Duration;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
-/// Adapter that implements PrimalDiscoveryService using real ecosystem discovery
+/// Adapter that implements `PrimalDiscoveryService` using real ecosystem discovery
 ///
 /// This adapter provides a simplified interface for CLI usage, wrapping the
-/// EcosystemListener infrastructure for primal discovery.
+/// `EcosystemListener` infrastructure for primal discovery.
 ///
 /// ## Zero-Copy Design
 /// Where possible, this adapter uses `Cow<'_, str>` and borrowed slices to avoid
 /// unnecessary allocations in hot paths.
 #[derive(Debug)]
 pub struct EcosystemDiscoveryAdapter {
-    /// Shared reference to discovered primals from EcosystemListener
+    /// Shared reference to discovered primals from `EcosystemListener`
     discovered_primals: Arc<RwLock<HashMap<String, DiscoveredPrimal>>>,
     /// Shared reference to discovered capabilities
     discovered_capabilities: Arc<RwLock<HashMap<ServiceCapabilityType, Vec<UniversalCapability>>>>,
@@ -257,7 +257,7 @@ impl EcosystemDiscoveryAdapter {
     }
 }
 
-/// Implementation of PrimalDiscoveryService trait using EcosystemListener
+/// Implementation of `PrimalDiscoveryService` trait using `EcosystemListener`
 ///
 /// Modern async/await patterns with proper error handling via `?` operator
 #[async_trait::async_trait]
@@ -332,8 +332,8 @@ impl EcosystemDiscoveryAdapter {
     /// `true` if the primal provides the requested capability, `false` otherwise
     ///
     /// # Design
-    /// Maps between UniversalCapabilityType (higher-level, domain-focused) and
-    /// ServiceCapabilityType (lower-level, operation-focused) to enable flexible
+    /// Maps between `UniversalCapabilityType` (higher-level, domain-focused) and
+    /// `ServiceCapabilityType` (lower-level, operation-focused) to enable flexible
     /// capability matching across different abstraction levels.
     pub(crate) fn primal_has_capability(
         primal: &DiscoveredPrimal,

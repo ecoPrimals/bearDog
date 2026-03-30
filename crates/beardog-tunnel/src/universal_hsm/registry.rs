@@ -21,6 +21,9 @@ impl UniversalHsmRegistry {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the provider cannot be registered.
     /// Register a provider
     pub async fn register_provider(
         &self,
@@ -32,6 +35,9 @@ impl UniversalHsmRegistry {
         Ok(())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the provider cannot be registered.
     /// Unregister a provider
     pub async fn unregister_provider(&self, provider_id: &str) -> Result<(), BearDogError> {
         let mut providers = self.providers.write().await;
@@ -39,12 +45,18 @@ impl UniversalHsmRegistry {
         Ok(())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the provider cannot be registered.
     /// List all registered providers
     pub async fn list_providers(&self) -> Result<Vec<String>, BearDogError> {
         let providers = self.providers.read().await;
         Ok(providers.keys().cloned().collect())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the provider cannot be registered.
     /// Get provider type by ID
     pub async fn get_provider_type(&self, provider_id: &str) -> Result<Option<String>, BearDogError> {
         let providers = self.providers.read().await;

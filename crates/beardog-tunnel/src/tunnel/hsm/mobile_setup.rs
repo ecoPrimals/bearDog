@@ -2,7 +2,7 @@
 
 //! Mobile HSM Setup
 //!
-//! This module provides setup and initialization for mobile HSMs (Android StrongBox, iOS Secure Enclave).
+//! This module provides setup and initialization for mobile HSMs (Android `StrongBox`, iOS Secure Enclave).
 
 use super::{manager::HsmManager, software_hsm::RustSoftwareHsm};
 
@@ -96,7 +96,7 @@ pub async fn initialize_mobile_hsm_manager(
     Ok(hsm_manager)
 }
 
-/// Initializes mobile HSM (Android StrongBox)
+/// Initializes mobile HSM (Android `StrongBox`)
 async fn initialize_mobile_hsm(
     config: &AndroidHsmConfig,
 ) -> Result<AndroidStrongBoxHsm, BearDogError> {
@@ -125,7 +125,7 @@ async fn initialize_software_hsm(
     Ok(software_hsm)
 }
 
-/// Creates Pixel 8 + GrapheneOS optimized configuration
+/// Creates Pixel 8 + `GrapheneOS` optimized configuration
 pub fn create_pixel8_graphene_config() -> MobileHsmSetup {
     info!("🎯 Creating Pixel 8 + GrapheneOS optimized HSM configuration");
 

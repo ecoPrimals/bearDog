@@ -141,7 +141,7 @@ pub use super::domains::compliance::{
 
 /// Compliance framework types
 ///
-/// Major regulatory frameworks supported by BearDog.
+/// Major regulatory frameworks supported by `BearDog`.
 ///
 /// # Frameworks
 ///

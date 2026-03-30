@@ -93,6 +93,10 @@ impl From<DiscoveredHsm> for CliHsmInfo {
 }
 
 /// Discover all available HSMs using universal discovery
+///
+/// # Errors
+///
+/// Returns an error if the discovery engine cannot be initialized.
 pub async fn discover_all_hsms() -> Result<Vec<CliHsmInfo>, BearDogError> {
     let engine = DiscoveryEngine::new()?;
 
@@ -133,6 +137,10 @@ pub async fn discover_all_hsms() -> Result<Vec<CliHsmInfo>, BearDogError> {
 }
 
 /// Select best HSM based on user preference
+///
+/// # Errors
+///
+/// Returns an error if no HSMs are available or no HSM matches the preference.
 #[allow(
     dead_code,
     reason = "Exposed for tests and future interactive HSM selection."

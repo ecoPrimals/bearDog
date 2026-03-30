@@ -59,7 +59,7 @@ pub enum Transport {
         ///
         /// Can be a domain name (e.g., "api.anthropic.com"),
         /// IPv4 address (e.g., "192.168.1.1"),
-        /// or IPv6 address (e.g., "::1").
+        /// or IPv6 address (e.g., "`::1`").
         host: String,
 
         /// Port number

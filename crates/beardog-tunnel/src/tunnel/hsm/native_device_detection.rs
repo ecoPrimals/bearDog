@@ -38,7 +38,7 @@ pub enum SmartphonePlatform {
 /// Security capabilities
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SecurityCapabilities {
-    /// Whether Android StrongBox is available
+    /// Whether Android `StrongBox` is available
     pub has_strongbox: bool,
     /// Whether Apple Secure Enclave is available
     pub has_secure_enclave: bool,
@@ -48,6 +48,9 @@ pub struct SecurityCapabilities {
     pub has_biometric: bool,
 }
 
+/// # Errors
+///
+/// Returns an error if the RSA operation fails.
 /// Detects current device information
 pub fn detect_device_info() -> Result<DeviceInfo, BearDogError> {
     info!("📱 Detecting native device information");

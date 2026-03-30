@@ -90,7 +90,7 @@ impl ProductionMetricsConfig {
     /// Default metrics endpoint
     pub const DEFAULT_ENDPOINT: &'static str = "/metrics";
 
-    /// Create ProductionMetricsConfig with hardcoded defaults
+    /// Create `ProductionMetricsConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -101,7 +101,7 @@ impl ProductionMetricsConfig {
         }
     }
 
-    /// Create ProductionMetricsConfig from environment variables
+    /// Create `ProductionMetricsConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -128,7 +128,7 @@ impl ProductionLoggingConfig {
     /// Default log format
     pub const DEFAULT_FORMAT: &'static str = "json";
 
-    /// Create ProductionLoggingConfig with hardcoded defaults
+    /// Create `ProductionLoggingConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -139,7 +139,7 @@ impl ProductionLoggingConfig {
         }
     }
 
-    /// Create ProductionLoggingConfig from environment variables
+    /// Create `ProductionLoggingConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -163,7 +163,7 @@ impl ProductionTracingConfig {
     /// Default tracing endpoint
     pub const DEFAULT_ENDPOINT: &'static str = "/traces";
 
-    /// Create ProductionTracingConfig with hardcoded defaults
+    /// Create `ProductionTracingConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -174,7 +174,7 @@ impl ProductionTracingConfig {
         }
     }
 
-    /// Create ProductionTracingConfig from environment variables
+    /// Create `ProductionTracingConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -198,7 +198,7 @@ impl DashboardConfig {
     /// Default dashboard endpoint
     pub const DEFAULT_ENDPOINT: &'static str = "/dashboard";
 
-    /// Create DashboardConfig with hardcoded defaults
+    /// Create `DashboardConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -209,7 +209,7 @@ impl DashboardConfig {
         }
     }
 
-    /// Create DashboardConfig from environment variables
+    /// Create `DashboardConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -256,6 +256,10 @@ impl Default for DashboardConfig {
 impl ObservabilityConfig {
     /// Validate
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Never returns an error; reserved for future validation rules.
     pub const fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }

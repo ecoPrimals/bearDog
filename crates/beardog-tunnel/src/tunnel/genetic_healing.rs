@@ -37,6 +37,9 @@ impl GeneticSecurityHealing {
         })
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if encryption fails.
 /// Heal Security Issue operation.
     pub fn heal_security_issue(SecurityIssue,
     ) -> Result<HealingResult, BearDogError> {

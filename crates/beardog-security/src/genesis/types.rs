@@ -11,10 +11,10 @@ use serde::{Deserialize, Serialize};
 /// Physical channel type used for genesis ceremony
 ///
 /// Different physical channels provide different levels of trust and security.
-/// Hardware keys (SoloKey, YubiKey) provide the highest trust level.
+/// Hardware keys (`SoloKey`, `YubiKey`) provide the highest trust level.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum PhysicalChannelType {
-    /// Hardware security key (SoloKey, YubiKey)
+    /// Hardware security key (`SoloKey`, `YubiKey`)
     ///
     /// Trust level: ⭐⭐⭐⭐⭐ (Maximum)
     ///

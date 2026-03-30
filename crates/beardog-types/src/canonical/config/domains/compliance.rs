@@ -219,6 +219,10 @@ impl Default for ConsolidatedComplianceConfiguration {
 
 impl ConsolidatedComplianceConfiguration {
     /// Validate compliance configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if retention, audit frequency, or enabled standards are inconsistent.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.audit_retention_days == 0 {
             return Err(BearDogError::configuration(

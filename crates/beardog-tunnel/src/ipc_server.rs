@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Generic IPC Server for BearDog
+//! Generic IPC Server for `BearDog`
 //!
 //! **Design Principle**: Primal-agnostic IPC
 //! - Provides: Unix socket server
 //! - Handles: Capability-based requests
-//! - Does NOT know: Who the clients are (Songbird, ToadStool, etc.)
+//! - Does NOT know: Who the clients are (Songbird, `ToadStool`, etc.)
 //! - biomeOS routes capability requests to appropriate endpoints
 
 use beardog_core::capabilities::{CapabilityRequest, CapabilityResponse};
@@ -105,6 +105,10 @@ impl IpcServer {
     }
 
     /// Start the IPC server
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the existing socket file cannot be removed or the Unix listener cannot be bound.
     pub async fn serve(&self) -> Result<(), BearDogError> {
         // Remove existing socket if present
         if self.socket_path.exists() {

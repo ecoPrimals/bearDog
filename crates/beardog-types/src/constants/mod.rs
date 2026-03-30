@@ -64,9 +64,9 @@ pub mod network {
     /// **Override**: Set `BEARDOG_METRICS_PORT=<port>` or use config file
     pub const METRICS_PORT: u16 = 9090;
 
-    /// PostgreSQL standard port (IANA assigned)
+    /// `PostgreSQL` standard port (IANA assigned)
     ///
-    /// **Why 5432**: Officially assigned by IANA for PostgreSQL
+    /// **Why 5432**: Officially assigned by IANA for `PostgreSQL`
     /// **Standard**: IANA registry
     /// **Override**: Set `DATABASE_PORT=<port>` or use config file
     pub const POSTGRESQL_PORT: u16 = 5432;
@@ -95,7 +95,7 @@ pub mod localhost {
 
     /// IPv6 localhost address
     ///
-    /// **Why ::1**: Defined by RFC 4291 as IPv6 loopback
+    /// **Why `::1`**: Defined by RFC 4291 as IPv6 loopback
     /// **Standard**: RFC 4291
     /// **Use**: IPv6 testing, local development
     pub const LOCALHOST_V6: Ipv6Addr = Ipv6Addr::LOCALHOST;
@@ -221,7 +221,7 @@ pub mod buffers {
 pub mod time {
     /// Seconds in one hour (3600).
     pub const SECONDS_PER_HOUR: u64 = 3600;
-    /// Seconds in one calendar day (86_400).
+    /// Seconds in one calendar day (`86_400`).
     pub const SECONDS_PER_DAY: u64 = 86400;
 }
 
@@ -278,7 +278,7 @@ pub mod pools {
     /// Maximum connections in pool
     ///
     /// **Why 100**: Typical database connection limit
-    /// **Rationale**: PostgreSQL default, prevents resource exhaustion
+    /// **Rationale**: `PostgreSQL` default, prevents resource exhaustion
     /// **Override**: Set `BEARDOG_MAX_CONNECTIONS=<count>`
     pub const MAX_CONNECTIONS: usize = 100;
 

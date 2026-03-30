@@ -244,6 +244,10 @@ impl AuditEngine {
     }
 
     /// Serializes the retained event buffer to JSON for archival or SIEM forwarding.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when JSON serialization fails.
     pub fn export_events(&self) -> Result<String, BearDogError> {
         serde_json::to_string(&self.events)
             .map_err(|e| BearDogError::system(format!("Failed to serialize audit events: {e}")))

@@ -34,6 +34,10 @@ impl<const B: usize, const C: usize, const L: bool, const H: u32> Default
 
 impl<const B: usize, const C: usize, const L: bool, const H: u32> ConstConfig<B, C, L, H> {
     /// Constructs a config after checking buffer/cache size and hash-round bounds.
+    ///
+    /// # Errors
+    ///
+    /// Returns a static error message if buffer or cache size is zero, or hash rounds are out of range.
     pub const fn new() -> Result<Self, &'static str> {
         if B == 0 {
             return Err("Buffer size must be greater than 0");
@@ -87,6 +91,10 @@ impl<const B: usize, const C: usize, const L: bool, const H: u32> ConstConfig<B,
     }
 
     /// Rejects configurations whose implied memory or buffer size exceeds safe caps.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if total implied memory or buffer size exceeds internal limits.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.total_memory_usage() > 100 * 1024 * 1024 {
             // 100MB limit
@@ -340,6 +348,10 @@ pub struct ConstBuffer<const SIZE: usize> {
 
 impl<const SIZE: usize> ConstBuffer<SIZE> {
     /// Allocates zeroed storage when `SIZE` is in `(0, 1_048_576]`.
+    ///
+    /// # Errors
+    ///
+    /// Returns a static error message if `SIZE` is zero or exceeds 1 MiB.
     pub const fn new() -> Result<Self, &'static str> {
         if SIZE == 0 {
             return Err("Buffer size must be greater than 0");
@@ -385,6 +397,10 @@ impl<const SIZE: usize> ConstBuffer<SIZE> {
     }
 
     /// Appends one byte, erroring if at capacity.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the buffer is full.
     pub fn push(&mut self, byte: u8) -> Result<(), BearDogError> {
         if self.len >= SIZE {
             return Err(BearDogError::system("Buffer full".to_string()));

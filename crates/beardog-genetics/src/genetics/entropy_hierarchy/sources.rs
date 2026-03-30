@@ -31,6 +31,10 @@ impl EntropyMixingEngine {
     }
 
     /// Mix entropy sources using specified algorithm
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when no sources are given or mixing fails for the chosen strategy.
     pub fn mix_entropy_sources(
         &self,
         sources: &[Vec<u8>],
@@ -49,6 +53,10 @@ impl EntropyMixingEngine {
 
     /// Create entropy seed from mixed sources
     /// Creates `entropy_seed`
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future seed validation failures.
     pub fn create_entropy_seed(
         &self,
         entropy_data: Vec<u8>,
@@ -117,6 +125,10 @@ impl EntropyMixingEngine {
 
     /// Validate entropy source quality
     /// Validates `source_quality`
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future quality checks.
     pub fn validate_source_quality(
         &self,
         source: &HumanEntropySource,

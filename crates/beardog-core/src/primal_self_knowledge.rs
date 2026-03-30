@@ -644,7 +644,7 @@ impl PrimalSelfKnowledge {
     /// Get this primal's capabilities (self-knowledge)
     ///
     /// Maps the identity's [`Capability`] set into the canonical
-    /// [`UniversalCapabilityType`] taxonomy. Only capabilities that BearDog
+    /// [`UniversalCapabilityType`] taxonomy. Only capabilities that `BearDog`
     /// itself advertises are returned.
     ///
     /// # Errors

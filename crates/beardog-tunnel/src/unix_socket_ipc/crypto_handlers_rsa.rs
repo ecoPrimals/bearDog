@@ -2,7 +2,7 @@
 
 //! RSA Crypto Handlers
 //!
-//! Pure Rust RSA signature operations using RustCrypto's rsa crate.
+//! Pure Rust RSA signature operations using `RustCrypto`'s rsa crate.
 //!
 //! # Supported Algorithms
 //!
@@ -22,7 +22,7 @@
 //! # Architecture
 //!
 //! All operations are:
-//! - **Pure Rust**: Zero C dependencies (using RustCrypto rsa crate)
+//! - **Pure Rust**: Zero C dependencies (using `RustCrypto` rsa crate)
 //! - **No unchecked memory patterns**: Memory-safe implementation
 //! - **Zeroized**: Private keys cleared after use
 //! - **Capability-based**: Key sizes configurable, no hardcoded preferences
@@ -64,6 +64,9 @@ use zeroize::Zeroizing;
 // RSA PKCS#1 v1.5 (Legacy Support)
 // ============================================================================
 
+/// # Errors
+///
+/// Returns an error if signing fails in the underlying HSM provider.
 /// Sign data with RSA PKCS#1 v1.5 + SHA-256
 ///
 /// # RPC Method
@@ -93,11 +96,11 @@ use zeroize::Zeroizing;
 ///
 /// # Notes
 ///
-/// - Generates ephemeral RSA keypair (OsRng - Tier 1 entropy)
+/// - Generates ephemeral RSA keypair (`OsRng` - Tier 1 entropy)
 /// - Padding: PKCS#1 v1.5 (legacy, widely supported)
 /// - Hash: SHA-256 (fixed for consistency)
 /// - Key sizes: 2048 (default), 3072, 4096
-/// - Pure Rust implementation (RustCrypto rsa crate)
+/// - Pure Rust implementation (`RustCrypto` rsa crate)
 ///
 /// # Security
 ///
@@ -188,6 +191,9 @@ pub async fn handle_sign_rsa_pkcs1_sha256(
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 /// Verify RSA PKCS#1 v1.5 + SHA-256 signature
 ///
 /// # RPC Method
@@ -293,6 +299,9 @@ pub async fn handle_verify_rsa_pkcs1_sha256(
 // RSA-PSS (Modern, Recommended)
 // ============================================================================
 
+/// # Errors
+///
+/// Returns an error if signing fails in the underlying HSM provider.
 /// Sign data with RSA-PSS + SHA-256
 ///
 /// # RPC Method
@@ -322,11 +331,11 @@ pub async fn handle_verify_rsa_pkcs1_sha256(
 ///
 /// # Notes
 ///
-/// - Generates ephemeral RSA keypair (OsRng - Tier 1 entropy)
+/// - Generates ephemeral RSA keypair (`OsRng` - Tier 1 entropy)
 /// - Padding: PSS (Probabilistic Signature Scheme - modern, secure)
 /// - Hash: SHA-256 (fixed for consistency)
 /// - Key sizes: 2048 (default), 3072, 4096
-/// - Pure Rust implementation (RustCrypto rsa crate)
+/// - Pure Rust implementation (`RustCrypto` rsa crate)
 ///
 /// # Security
 ///
@@ -418,6 +427,9 @@ pub async fn handle_sign_rsa_pss_sha256(
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 /// Verify RSA-PSS + SHA-256 signature
 ///
 /// # RPC Method

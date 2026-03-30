@@ -117,6 +117,10 @@ impl UniversalCapabilityDiscovery {
     }
 
     /// Discovery using an explicit environment map (tests and injected configuration).
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future initialization failures.
     pub fn with_env_override(env: HashMap<String, String>) -> Result<Self, BearDogError> {
         Ok(Self {
             env_override: Some(env),
@@ -148,6 +152,11 @@ impl UniversalCapabilityDiscovery {
     }
 
     /// Discover using an explicit environment map (concurrent-safe tests).
+    ///
+    /// # Errors
+    ///
+    /// Same as [`Self::discover_by_capability`]: returns [`BearDogError`] when environment-based
+    /// discovery fails.
     pub fn discover_by_capability_with_vars(
         &self,
         capability: &ServiceCapabilityType,
@@ -234,6 +243,10 @@ impl SelfDiscoveryManager {
     }
 
     /// Same as [`Self::new`] but with an explicit [`UniversalCapabilityDiscovery`].
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future validation failures.
     pub fn new_with_capability_discovery(
         identity: SelfIdentity,
         config: UniversalIntegrationConfig,

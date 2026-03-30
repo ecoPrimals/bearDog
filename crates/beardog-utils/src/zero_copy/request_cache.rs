@@ -304,8 +304,18 @@ mod tests {
 
         cache.insert_at("short1".to_string(), "value1".to_string(), ttl, old);
         cache.insert_at("short2".to_string(), "value2".to_string(), ttl, old);
-        cache.insert_at("long1".to_string(), "value3".to_string(), ttl, Instant::now());
-        cache.insert_at("long2".to_string(), "value4".to_string(), ttl, Instant::now());
+        cache.insert_at(
+            "long1".to_string(),
+            "value3".to_string(),
+            ttl,
+            Instant::now(),
+        );
+        cache.insert_at(
+            "long2".to_string(),
+            "value4".to_string(),
+            ttl,
+            Instant::now(),
+        );
 
         assert_eq!(cache.len(), 4);
 

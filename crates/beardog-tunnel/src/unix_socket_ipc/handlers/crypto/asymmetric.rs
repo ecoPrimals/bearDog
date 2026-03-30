@@ -8,10 +8,10 @@
 //! # Overview
 //!
 //! Asymmetric cryptography uses key pairs (public + private) for:
-//! - **Digital Signatures**: Ed25519 (EdDSA on Curve25519)
+//! - **Digital Signatures**: Ed25519 (`EdDSA` on Curve25519)
 //! - **Key Exchange**: X25519 (ECDH on Curve25519)
 //!
-//! All operations use Pure Rust implementations from the RustCrypto ecosystem,
+//! All operations use Pure Rust implementations from the `RustCrypto` ecosystem,
 //! with zero C dependencies for universal cross-compilation.
 //!
 //! # Algorithms
@@ -79,6 +79,9 @@ use tracing::{debug, info};
 use super::utils::derive_key_from_id;
 /// Handle Ed25519 signature operations via JSON-RPC
 
+/// # Errors
+///
+/// Returns an error if key derivation fails.
 pub async fn handle_sign_ed25519(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.sign_ed25519")?;
 
@@ -134,7 +137,10 @@ pub async fn handle_sign_ed25519(params: Option<&Value>) -> Result<Value, String
     }))
 }
 
-/// Handle crypto.verify_ed25519 method
+/// # Errors
+///
+/// Returns an error if key generation fails in the underlying HSM provider.
+/// Handle `crypto.verify_ed25519` method
 ///
 /// Verifies an Ed25519 signature.
 ///
@@ -200,7 +206,10 @@ pub async fn handle_verify_ed25519(params: Option<&Value>) -> Result<Value, Stri
     }))
 }
 
-/// Handle crypto.ed25519_generate_keypair method
+/// # Errors
+///
+/// Returns an error if key generation fails in the underlying HSM provider.
+/// Handle `crypto.ed25519_generate_keypair` method
 ///
 /// Generates a new Ed25519 keypair for signing/identity.
 /// Used for onion identity generation in the ecosystem.
@@ -246,7 +255,10 @@ pub async fn handle_ed25519_generate_keypair(params: Option<&Value>) -> Result<V
     }))
 }
 
-/// Handle crypto.x25519_generate_ephemeral method
+/// # Errors
+///
+/// Returns an error if key derivation fails.
+/// Handle `crypto.x25519_generate_ephemeral` method
 ///
 /// Generates an ephemeral X25519 keypair for key exchange.
 ///
@@ -293,7 +305,10 @@ pub async fn handle_x25519_generate_ephemeral(params: Option<&Value>) -> Result<
     }))
 }
 
-/// Handle crypto.x25519_derive_secret method
+/// # Errors
+///
+/// Returns an error if key derivation fails.
+/// Handle `crypto.x25519_derive_secret` method
 ///
 /// Derives a shared secret using X25519 Diffie-Hellman.
 ///

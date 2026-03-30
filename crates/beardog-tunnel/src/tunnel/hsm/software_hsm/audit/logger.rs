@@ -31,7 +31,7 @@ fn utc_to_system_time(dt: DateTime<Utc>) -> SystemTime {
     let secs = dt.timestamp();
     let nanos = dt.timestamp_subsec_nanos();
     if secs >= 0 {
-        UNIX_EPOCH + Duration::new(secs as u64, nanos)
+        UNIX_EPOCH + Duration::new(secs.cast_unsigned(), nanos)
     } else {
         UNIX_EPOCH
     }
@@ -90,12 +90,18 @@ pub struct DefaultAuditLogger {
 }
 
 impl DefaultAuditLogger {
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// Create a new audit logger with default storage path
     pub async fn new() -> Result<Self, BearDogError> {
         let storage_path = std::path::PathBuf::from("audit.log");
         Self::with_storage_path(storage_path).await
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// Create audit logger with custom storage path
     pub async fn with_storage_path(storage_path: std::path::PathBuf) -> Result<Self, BearDogError> {
         let storage = Arc::new(PersistentAuditStorage::new(storage_path, 10000).await?);
@@ -105,6 +111,9 @@ impl DefaultAuditLogger {
         })
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// Log a typed HSM [`beardog_types::hsm::AuditEvent`]: records to a bounded in-memory ring
     /// buffer (newest entries retained) and persists a normalized [`AuditLogEntry`].
     pub async fn log_audit_event(
@@ -131,6 +140,9 @@ impl DefaultAuditLogger {
         Ok(())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// Log a detailed operation
     pub async fn log_detailed_operation(
         &self,
@@ -158,6 +170,9 @@ impl DefaultAuditLogger {
         self.storage.append_entry(&entry).await
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// Log a successful operation
     pub async fn log_success(
         &self,
@@ -176,6 +191,9 @@ impl DefaultAuditLogger {
         .await
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// Log a failed operation
     pub async fn log_failure(
         &self,
@@ -195,6 +213,9 @@ impl DefaultAuditLogger {
         .await
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// Log key generation operation
     pub async fn log_key_generation(
         &self,
@@ -218,6 +239,9 @@ impl DefaultAuditLogger {
         .await
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// Log key deletion
     pub async fn log_key_deletion(
         &self,
@@ -236,6 +260,9 @@ impl DefaultAuditLogger {
         .await
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// Log crypto operation
     pub async fn log_crypto_operation(
         &self,
@@ -263,6 +290,9 @@ impl DefaultAuditLogger {
         .await
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if serialization fails.
     /// Log security event
     pub async fn log_security_event(
         &self,
@@ -286,6 +316,9 @@ impl DefaultAuditLogger {
         .await
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if serialization fails.
     /// Get audit statistics
     pub async fn get_audit_statistics(
         &self,
@@ -310,6 +343,9 @@ impl DefaultAuditLogger {
         Ok(stats)
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if serialization fails.
     /// Export audit log in specified format
     pub async fn export_audit_log(&self, format: &str) -> Result<Vec<u8>, BearDogError> {
         match format.to_lowercase().as_str() {

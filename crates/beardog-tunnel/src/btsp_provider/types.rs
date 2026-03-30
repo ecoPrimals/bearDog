@@ -75,7 +75,7 @@ pub struct PeerTrustRecord {
 // Internal Types
 // =============================================================================
 
-/// Internal tunnel handle (uses DateTime for implementation convenience)
+/// Internal tunnel handle (uses `DateTime` for implementation convenience)
 ///
 /// This is an internal type that gets converted to the capability trait's
 /// `TunnelHandle` type which uses Unix timestamps.
@@ -109,7 +109,7 @@ impl InternalTunnelHandle {
     }
 }
 
-/// Internal tunnel status (uses DateTime for implementation convenience)
+/// Internal tunnel status (uses `DateTime` for implementation convenience)
 ///
 /// This is an internal type that gets converted to the capability trait's
 /// `TunnelStatus` type which uses Unix timestamps.

@@ -206,7 +206,7 @@ pub enum StorageBackend {
     Remote {
         /// Remote endpoint URL
         endpoint: String,
-        /// Optional bearer/API key for SaaS backends.
+        /// Optional bearer/API key for `SaaS` backends.
         api_key: Option<String>,
         /// Request timeout duration
         timeout: Duration,

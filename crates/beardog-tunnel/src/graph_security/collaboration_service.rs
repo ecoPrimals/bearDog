@@ -11,7 +11,7 @@
 //!
 //! **Current**: Returns fallback data (honest about capabilities - Principle #6)\
 //! **Blocker**: `beardog-adapters` discovery client needs wiring before integration\
-//! **Future**: Will use UniversalPrimalAdapter for TRUE runtime discovery (Principle #5)
+//! **Future**: Will use `UniversalPrimalAdapter` for TRUE runtime discovery (Principle #5)
 //!
 //! The `beardog-adapters` crate exists and is stable (211 tests passing), but requires
 //! a discovery client to be wired up before integration can proceed. The fallback data
@@ -46,7 +46,11 @@ impl CollaborationService {
 
     /// Get template information (replaces legacy `get_template_info` on a collaboration provider)
     ///
-    /// Discovers any primal with Collaboration::TemplateStorage capability
+    /// Discovers any primal with `Collaboration::TemplateStorage` capability
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if template metadata cannot be retrieved (reserved for runtime discovery).
     pub async fn get_template_info(&self, template_id: &str) -> Result<TemplateInfo> {
         info!(
             "🔍 Discovering primal with TemplateStorage capability for template: {}",
@@ -60,7 +64,11 @@ impl CollaborationService {
 
     /// Get user permissions (replaces legacy collaborator listing on a collaboration provider)
     ///
-    /// Discovers any primal with Collaboration::PermissionManagement capability
+    /// Discovers any primal with `Collaboration::PermissionManagement` capability
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if user permissions cannot be retrieved (reserved for runtime discovery).
     pub async fn get_user_permissions(
         &self,
         user_id: &str,
@@ -76,7 +84,11 @@ impl CollaborationService {
 
     /// Get template lineage (replaces legacy lineage query on a collaboration provider)
     ///
-    /// Discovers any primal with Collaboration::LineageTracking capability
+    /// Discovers any primal with `Collaboration::LineageTracking` capability
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if lineage cannot be retrieved (reserved for runtime discovery).
     pub async fn get_lineage(&self, template_id: &str) -> Result<Vec<LineageVersion>> {
         info!("🔍 Discovering primal with LineageTracking capability");
 
@@ -87,7 +99,11 @@ impl CollaborationService {
 
     /// Get community metrics (replaces legacy usage metrics on a collaboration provider)
     ///
-    /// Discovers any primal with Collaboration::CommunityMetrics capability
+    /// Discovers any primal with `Collaboration::CommunityMetrics` capability
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if community metrics cannot be retrieved (reserved for runtime discovery).
     pub async fn get_community_metrics(&self, template_id: &str) -> Result<CommunityMetrics> {
         info!("🔍 Discovering primal with CommunityMetrics capability");
 
@@ -99,7 +115,11 @@ impl CollaborationService {
 
     /// Get security assessment (replaces legacy security assessment on a collaboration provider)
     ///
-    /// Discovers any primal with Collaboration::SecurityAssessment capability
+    /// Discovers any primal with `Collaboration::SecurityAssessment` capability
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the security assessment cannot be retrieved (reserved for runtime discovery).
     pub async fn get_security_assessment(&self, template_id: &str) -> Result<SecurityAssessment> {
         info!("🔍 Discovering primal with SecurityAssessment capability");
 

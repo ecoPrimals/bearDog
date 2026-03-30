@@ -9,11 +9,11 @@ use std::sync::Arc;
 /// Counters for analysis passes and estimated bytes saved.
 #[derive(Debug, Clone, Default)]
 pub struct OptimizationStats {
-    /// Number of types_analyzed
+    /// Number of `types_analyzed`
     pub types_analyzed: u64,
-    /// Number of optimizations_applied
+    /// Number of `optimizations_applied`
     pub optimizations_applied: u64,
-    /// Number of memory_saved
+    /// Number of `memory_saved`
     pub memory_saved: u64,
 }
 

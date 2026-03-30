@@ -34,6 +34,10 @@ pub struct ObservabilityEngine {
 impl ObservabilityEngine {
     /// New
     /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// This function currently always returns `Ok`.
     pub fn new(config: &ObservabilityConfig) -> Result<Self, BearDogError> {
         Ok(Self {
             config: config.clone(),
@@ -42,6 +46,10 @@ impl ObservabilityEngine {
 
     /// Start Monitoring
     /// Starts monitoring
+    ///
+    /// # Errors
+    ///
+    /// This function currently always returns `Ok`.
     pub fn start_monitoring(&mut self) -> Result<(), BearDogError> {
         tracing::info!(
             "Starting observability monitoring with config: {:?}",
@@ -52,6 +60,10 @@ impl ObservabilityEngine {
 
     /// Stop Monitoring
     /// Stops monitoring
+    ///
+    /// # Errors
+    ///
+    /// This function currently always returns `Ok`.
     pub fn stop_monitoring(&mut self) -> Result<(), BearDogError> {
         tracing::info!("Stopping observability monitoring");
         Ok(())

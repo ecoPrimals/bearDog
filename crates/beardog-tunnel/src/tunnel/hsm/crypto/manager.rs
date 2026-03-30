@@ -28,6 +28,9 @@ impl CryptoProviderManager {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the provider is not registered.
     /// Register a crypto provider
     pub async fn register_provider(
         &self,
@@ -49,6 +52,9 @@ impl CryptoProviderManager {
         Ok(())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the provider is not registered.
     /// Find the best provider for specific requirements
     pub async fn select_provider(
         &self,

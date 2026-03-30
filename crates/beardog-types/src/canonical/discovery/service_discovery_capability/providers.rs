@@ -24,6 +24,10 @@ pub struct ConsulDiscovery {
 impl ConsulDiscovery {
     /// Attempts to construct a Consul-backed discovery client. **Current default:** returns
     /// [`DiscoveryError::BackendUnavailable`] until the client is implemented.
+    ///
+    /// # Errors
+    ///
+    /// Always returns [`DiscoveryError::BackendUnavailable`] until Consul support is implemented.
     pub async fn try_create() -> Result<Self, DiscoveryError> {
         // PHASE-2(Discovery): Implement Consul client creation
         Err(DiscoveryError::BackendUnavailable {
@@ -42,6 +46,10 @@ pub struct EtcdDiscovery {
 impl EtcdDiscovery {
     /// Attempts to construct an etcd-backed discovery client. **Current default:** returns
     /// [`DiscoveryError::BackendUnavailable`] until the client is implemented.
+    ///
+    /// # Errors
+    ///
+    /// Always returns [`DiscoveryError::BackendUnavailable`] until etcd support is implemented.
     pub async fn try_create() -> Result<Self, DiscoveryError> {
         // PHASE-2(Discovery): Implement etcd client creation
         Err(DiscoveryError::BackendUnavailable {

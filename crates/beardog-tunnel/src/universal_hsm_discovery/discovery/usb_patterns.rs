@@ -12,6 +12,9 @@ use beardog_utils::utils::error_patterns::with_operation_context;
 use tracing::{debug, info, warn};
 use std::collections::HashMap;
 
+/// # Errors
+///
+/// Returns an error if the RSA operation fails.
 /// Detect Usb Device operation.
 pub async fn detect_usb_device(u16,
     product_id: u16,
@@ -28,6 +31,9 @@ pub async fn detect_usb_device(u16,
     })
 }
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 /// Detect Hsm Capabilities operation.
 pub async fn detect_hsm_capabilities(&UsbDeviceInfo,
 ) -> Result<Vec<HsmCapability>, BearDogError>> {

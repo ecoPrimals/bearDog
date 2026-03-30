@@ -10,14 +10,14 @@ use crate::constants::defaults;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-/// Canonical timeout configuration for all BearDog operations
+/// Canonical timeout configuration for all `BearDog` operations
 ///
 /// **UNIFIED CONFIGURATION** - Consolidates all timeout configurations:
 /// - Network-level timeouts (connect, read, write, operation, idle, keepalive)
-/// - Domain-specific timeouts (health_check, hsm, discovery, ai)
+/// - Domain-specific timeouts (`health_check`, hsm, discovery, ai)
 ///
 /// This replaces:
-/// - `UnifiedTimeoutConfig` (timeout_unified.rs) - now a type alias
+/// - `UnifiedTimeoutConfig` (`timeout_unified.rs`) - now a type alias
 /// - `TimeoutConfiguration` - now a type alias
 /// - Various scattered timeout configs across crates
 ///
@@ -90,7 +90,7 @@ pub struct CanonicalTimeoutConfig {
     /// request, and response. If the entire operation doesn't complete within
     /// this time, it fails.
     ///
-    /// This should be >= connect_timeout + read_timeout + write_timeout
+    /// This should be >= `connect_timeout` + `read_timeout` + `write_timeout`
     #[serde(with = "humantime_serde")]
     pub operation_timeout: Duration,
 
@@ -292,21 +292,21 @@ impl Default for CanonicalTimeoutConfig {
     /// Suitable for most network operations in a LAN environment.
     ///
     /// Network timeouts:
-    /// - connect_timeout: 5 seconds
-    /// - read_timeout: 30 seconds
-    /// - write_timeout: 30 seconds
-    /// - operation_timeout: 60 seconds
-    /// - idle_timeout: 5 minutes
-    /// - keepalive_timeout: 60 seconds
+    /// - `connect_timeout`: 5 seconds
+    /// - `read_timeout`: 30 seconds
+    /// - `write_timeout`: 30 seconds
+    /// - `operation_timeout`: 60 seconds
+    /// - `idle_timeout`: 5 minutes
+    /// - `keepalive_timeout`: 60 seconds
     ///
     /// Domain timeouts:
-    /// - health_check_timeout: 5 seconds
-    /// - hsm_operation_timeout: 2 seconds
-    /// - hsm_probe_timeout: 500 milliseconds
-    /// - discovery_timeout: 10 seconds
-    /// - ai_decision_timeout: 30 seconds
-    /// - ai_request_timeout: 30 seconds
-    /// - ai_batch_timeout: 10 milliseconds
+    /// - `health_check_timeout`: 5 seconds
+    /// - `hsm_operation_timeout`: 2 seconds
+    /// - `hsm_probe_timeout`: 500 milliseconds
+    /// - `discovery_timeout`: 10 seconds
+    /// - `ai_decision_timeout`: 30 seconds
+    /// - `ai_request_timeout`: 30 seconds
+    /// - `ai_batch_timeout`: 10 milliseconds
     fn default() -> Self {
         Self {
             // Network timeouts
@@ -433,6 +433,10 @@ impl CanonicalTimeoutConfig {
     /// Validate the timeout configuration
     ///
     /// Returns an error message if the configuration is invalid.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if any core timeout is zero or `operation_timeout` is shorter than derived minimums.
     pub fn validate(&self) -> Result<(), String> {
         // Check that timeouts are non-zero
         if self.connect_timeout.is_zero() {
@@ -496,7 +500,7 @@ impl CanonicalTimeoutConfig {
 /// Network type for timeout validation
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NetworkType {
-    /// Local loopback (127.0.0.1, ::1)
+    /// Local loopback (127.0.0.1, `::1`)
     Local,
     /// Local Area Network
     Lan,

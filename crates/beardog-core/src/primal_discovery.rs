@@ -221,6 +221,10 @@ impl PrimalDiscovery {
     ///
     /// Convenience wrapper that reads configuration from environment variables.
     /// For concurrent-safe tests, use `new()` with explicit configuration instead.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when [`Self::detect_discovery_method`] rejects the configured method.
     pub fn from_env() -> Result<Self, BearDogError> {
         info!("🔍 Initializing primal discovery from environment...");
 
@@ -319,6 +323,10 @@ impl PrimalDiscovery {
     }
 
     /// Discover primals matching query
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when environment, UPA, mDNS, DNS-SD, or multi-method discovery fails.
     pub async fn discover(
         &mut self,
         query: DiscoveryQuery,
@@ -588,7 +596,7 @@ impl PrimalDiscovery {
             "method": "upa.discover",
             "params": {
                 "capability": capability,
-                "timeout_ms": HEALTH_CHECK_TIMEOUT.as_millis() as u64
+                "timeout_ms": u64::try_from(HEALTH_CHECK_TIMEOUT.as_millis()).unwrap_or(u64::MAX)
             },
             "id": 1
         });

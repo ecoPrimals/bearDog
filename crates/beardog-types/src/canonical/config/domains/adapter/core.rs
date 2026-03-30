@@ -103,7 +103,7 @@ impl CoreAdapterConfig {
     /// Default connection timeout in seconds
     pub const DEFAULT_CONNECTION_TIMEOUT_SECS: u64 = 30;
 
-    /// Create CoreAdapterConfig with hardcoded defaults
+    /// Create `CoreAdapterConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -118,7 +118,7 @@ impl CoreAdapterConfig {
         }
     }
 
-    /// Create CoreAdapterConfig from environment variables
+    /// Create `CoreAdapterConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     /// This makes the intent explicit and allows testing without env pollution.

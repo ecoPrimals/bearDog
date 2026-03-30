@@ -11,6 +11,10 @@ use beardog_errors::BearDogError;
 use std::collections::{HashMap, HashSet};
 
 /// Detect threats in a modification
+///
+/// # Errors
+///
+/// Returns an error if threat checks cannot be completed (e.g. internal validation failures).
 pub async fn detect_modification_threats(
     modification: &GraphModification,
     _graph: &Graph,
@@ -33,6 +37,10 @@ pub async fn detect_modification_threats(
 }
 
 /// Detect threats in a template
+///
+/// # Errors
+///
+/// Returns an error if threat scanning cannot be completed (e.g. internal validation failures).
 pub async fn detect_template_threats(
     template: &GraphTemplate,
 ) -> Result<Vec<ThreatDetails>, BearDogError> {

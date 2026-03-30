@@ -76,7 +76,7 @@ pub trait TimeoutPolicy: Send + Sync {
     /// - "sign" - Cryptographic signing (HSM)
     /// - "verify" - Cryptographic verification
     /// - "discovery" - Service discovery
-    /// - "health_check" - Health check probe
+    /// - "`health_check`" - Health check probe
     ///
     /// ## Parameters
     /// - `operation`: Name of the operation
@@ -174,6 +174,10 @@ pub trait TimeoutPolicy: Send + Sync {
     /// - Connection timeout should generally be shorter than operation timeouts
     // EVOLUTION: migrate to `Result<(), beardog_errors::BearDogError>` in a semver-major release
     // once all implementors and call sites are updated (wide trait surface).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if global or per-operation timeouts are zero or inconsistent.
     fn validate(&self) -> Result<(), String> {
         // Check connection timeout is reasonable
         let conn_timeout = self.connection_timeout();

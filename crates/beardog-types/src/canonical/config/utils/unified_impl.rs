@@ -16,6 +16,11 @@ impl UnifiedConfigUtils {
     // =============================================================================
 
     /// Load configuration from file with comprehensive error handling
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file is missing, permissions are invalid, I/O fails, or
+    /// deserialization fails for the file format.
     pub fn load_from_file<T, P>(path: P) -> Result<T, BearDogError>
     where
         T: DeserializeOwned,
@@ -55,6 +60,10 @@ impl UnifiedConfigUtils {
     }
 
     /// Load configuration with fallback paths
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if no path yields a valid configuration.
     pub fn load_with_fallback<T>(primary: &str, fallbacks: &[&str]) -> Result<T, BearDogError>
     where
         T: DeserializeOwned,
@@ -83,6 +92,10 @@ impl UnifiedConfigUtils {
     }
 
     /// Save configuration to file with proper formatting
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if directory creation, serialization, or writing the file fails.
     pub fn save_to_file<T, P>(config: &T, path: P) -> Result<(), BearDogError>
     where
         T: Serialize,
@@ -191,6 +204,10 @@ impl UnifiedConfigUtils {
     }
 
     /// Auto-load configuration from standard locations
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if no configuration file is found in standard locations or loading fails.
     pub fn auto_load_config<T>(app_name: &str) -> Result<T, BearDogError>
     where
         T: DeserializeOwned,
@@ -211,6 +228,10 @@ impl UnifiedConfigUtils {
     // =============================================================================
 
     /// Merge two configurations with override semantics
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if serializing either config or deserializing the merged JSON fails.
     pub fn merge_configs<T>(base: T, override_config: T) -> Result<T, BearDogError>
     where
         T: Serialize + DeserializeOwned,
@@ -363,6 +384,10 @@ impl UnifiedConfigUtils {
     }
 
     /// Create default configuration file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if saving the default configuration fails.
     pub fn create_default_config<T, P>(default_config: T, path: P) -> Result<(), BearDogError>
     where
         T: Serialize,
@@ -381,6 +406,10 @@ impl UnifiedConfigUtils {
     // =============================================================================
 
     /// Load configuration with environment variable overrides
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if loading the base configuration or applying environment overrides fails.
     pub fn load_with_env_overrides<T>(
         config_path: &str,
         env_prefix: &str,
@@ -402,6 +431,10 @@ impl UnifiedConfigUtils {
     }
 
     /// Like [`Self::load_with_env_overrides`], but overrides come only from `vars` (for deterministic tests).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if loading the base configuration or applying overrides fails.
     pub fn load_with_env_overrides_from_vars<T, I>(
         config_path: &str,
         env_prefix: &str,

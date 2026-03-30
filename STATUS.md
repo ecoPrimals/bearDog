@@ -1,6 +1,6 @@
 # BearDog Status
 
-**Last Updated**: March 29, 2026
+**Last Updated**: March 30, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -11,15 +11,15 @@
 | Metric | Status | Details |
 |--------|--------|---------|
 | **Build** | Clean | Zero errors, edition 2024 |
-| **Clippy** | 0 warnings | Pedantic + nursery + `cast_lossless` warn + unwrap/expect warn, workspace-centralized |
+| **Clippy** | 0 warnings | Pedantic + nursery + all cast lints warn + `doc_markdown` warn + `missing_errors_doc` warn + unwrap/expect warn, workspace-centralized |
 | **Missing Docs** | 0 warnings | All public items documented |
 | **Pure Rust** | 100% | Zero C dependencies (ecoBin) |
 | **Unsafe Code** | 0 production | `forbid(unsafe_code)` workspace-wide + all crate `lib.rs` |
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 15,180+ passing | Fully concurrent, zero sleeps in non-chaos, zero deadlocks |
-| **Coverage** | 90.16% line | llvm-cov workspace — target met |
+| **Tests** | 15,320+ passing | Fully concurrent, zero sleeps in non-chaos, zero deadlocks |
+| **Coverage** | 89.57% line | llvm-cov workspace — target 90%, `beardog-production` (59%) dragging |
 | **Serial Tests** | 0 | `#[serial]` fully eliminated |
 | **cargo deny** | 4/4 pass | Advisories, bans, licenses, sources |
 | **License** | AGPL-3.0-only | SPDX headers on all .rs files |
@@ -73,7 +73,7 @@
 | JSON-RPC | Primary IPC protocol with NDJSON framing and batch support; tarpc optional behind feature gate in `beardog-ipc` |
 | AGPL-3.0-only | License verified; SPDX headers on all .rs files |
 | `forbid(unsafe_code)` | Workspace level + every crate `lib.rs` (beardog-errors platform FFI documented per wateringHole) |
-| Workspace Lints | Centralized clippy pedantic + nursery + cast + unwrap/expect warn |
+| Workspace Lints | Centralized clippy pedantic + nursery + all cast lints warn + `doc_markdown` + `missing_errors_doc` + unwrap/expect warn |
 | All Public Items Documented | 0 missing_docs warnings |
 | File Size | 0 production files > 1000 LOC |
 | Zero Sleeps (non-chaos) | All test synchronization via barriers/channels/notifications |

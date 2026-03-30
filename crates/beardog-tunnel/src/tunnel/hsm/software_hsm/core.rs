@@ -49,7 +49,7 @@ use tracing::{debug, info};
 ///
 /// The Software HSM consists of several key components:
 /// - **Key Store**: Secure storage for cryptographic keys with encryption at rest
-/// - **Crypto Provider**: Pluggable backend (RustCrypto, Ring, or OpenSSL)
+/// - **Crypto Provider**: Pluggable backend (`RustCrypto`, Ring, or OpenSSL)
 /// - **Memory Protector**: Secure memory management with automatic zeroing
 /// - **Audit Logger**: Comprehensive logging of all cryptographic operations
 /// - **Health Monitor**: Continuous monitoring of HSM health and performance
@@ -736,6 +736,9 @@ impl HsmProvider for RustSoftwareHsm {
 }
 
 impl RustSoftwareHsm {
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// Initialize the HSM (custom method, not part of trait)
     pub async fn initialize_hsm(&self, _config: HsmConfig) -> Result<(), BearDogError> {
         info!("🔄 Initializing Rust Software HSM");
@@ -753,6 +756,9 @@ impl RustSoftwareHsm {
         Ok(())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if hashing fails.
     /// Reload HSM configuration (custom method, not part of trait)
     ///
     /// Intentional no-op until hot-reload of software HSM settings is implemented.
@@ -764,6 +770,9 @@ impl RustSoftwareHsm {
 
 /// Additional helper methods
 impl RustSoftwareHsm {
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails in the underlying HSM provider.
     /// Derive a key from a root key
     pub async fn derive_key(
         &self,

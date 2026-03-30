@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! TCP IPC Client for BearDog
+//! TCP IPC Client for `BearDog`
 //!
 //! Universal JSON-RPC client over TCP.
 
@@ -23,6 +23,11 @@ impl TcpIpcClient {
     }
 
     /// Call a JSON-RPC method
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the TCP connection fails, request/response I/O fails, JSON serialization
+    /// or parsing fails, or the RPC returns an error.
     pub async fn call(&self, method: &str, params: Option<Value>) -> Result<Value, BearDogError> {
         debug!("📞 Calling {}", method);
 

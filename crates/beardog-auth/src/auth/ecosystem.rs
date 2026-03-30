@@ -96,6 +96,10 @@ impl CrossNodeAuthEngine {
     }
 
     /// Discover node capabilities
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future discovery failures.
     pub fn discover_node_capabilities(
         &self,
         node_id: &str,

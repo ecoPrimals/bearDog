@@ -54,6 +54,9 @@ use zeroize::Zeroizing;
 // Ed448 (Edwards-curve with Curve448)
 // ============================================================================
 
+/// # Errors
+///
+/// Returns an error if key derivation fails.
 /// Sign data with Ed448
 ///
 /// # RPC Method
@@ -139,6 +142,9 @@ pub async fn handle_sign_ed448(
     Err("Ed448 signing not yet implemented - requires ed448-goldilocks API integration".to_string())
 }
 
+/// # Errors
+///
+/// Returns an error if the operation fails.
 /// Verify Ed448 signature
 ///
 /// # RPC Method

@@ -44,7 +44,7 @@ pub struct StoredKey {
     /// Child key IDs derived from this key
     #[serde(default)]
     pub children: Vec<String>,
-    /// Lineage information (for BirdSong encryption)
+    /// Lineage information (for `BirdSong` encryption)
     #[serde(default)]
     pub lineage: Option<KeyLineageInfo>,
 
@@ -61,6 +61,10 @@ pub struct StoredKey {
 }
 
 /// Keys directory under a given home (testable).
+///
+/// # Errors
+///
+/// Returns an error if the `.beardog/keys` directory cannot be created.
 pub fn get_keys_dir_for_home(home: impl AsRef<std::path::Path>) -> Result<PathBuf, BearDogError> {
     let keys_dir = home.as_ref().join(".beardog").join("keys");
     if !keys_dir.exists() {
@@ -70,6 +74,10 @@ pub fn get_keys_dir_for_home(home: impl AsRef<std::path::Path>) -> Result<PathBu
 }
 
 /// Home directory used for `get_keys_dir()` (same as `HOME` env).
+///
+/// # Errors
+///
+/// Returns an error if the `HOME` environment variable is not set.
 pub fn home_dir_for_keys() -> Result<PathBuf, BearDogError> {
     std::env::var("HOME")
         .map_err(|_| BearDogError::system("HOME environment variable not set".to_string()))
@@ -77,12 +85,21 @@ pub fn home_dir_for_keys() -> Result<PathBuf, BearDogError> {
 }
 
 /// Get the keys directory path
+///
+/// # Errors
+///
+/// Returns an error if `HOME` is unset or the keys directory cannot be created.
 pub fn get_keys_dir() -> Result<PathBuf, BearDogError> {
     let home = home_dir_for_keys()?;
     get_keys_dir_for_home(home)
 }
 
 /// Save a key to storage under a specific home directory (tests).
+///
+/// # Errors
+///
+/// Returns an error if the keys directory cannot be ensured, serialization fails, or the file
+/// cannot be written.
 pub fn save_key_to_home(
     key: &StoredKey,
     home: impl AsRef<std::path::Path>,
@@ -102,12 +119,21 @@ fn save_key_to_dir(key: &StoredKey, keys_dir: &std::path::Path) -> Result<(), Be
 }
 
 /// Save a key to storage
+///
+/// # Errors
+///
+/// Returns an error if `HOME` is unset, the keys directory cannot be created, serialization fails,
+/// or the file cannot be written.
 pub fn save_key(key: &StoredKey) -> Result<(), BearDogError> {
     let keys_dir = get_keys_dir()?;
     save_key_to_dir(key, &keys_dir)
 }
 
 /// Load a key from storage under a specific home directory (tests).
+///
+/// # Errors
+///
+/// Returns an error if the key file is missing, unreadable, or not valid JSON.
 pub fn load_key_from_home(
     key_id: &str,
     home: impl AsRef<std::path::Path>,
@@ -133,12 +159,20 @@ fn load_key_from_dir(key_id: &str, keys_dir: &std::path::Path) -> Result<StoredK
 }
 
 /// Load a key from storage
+///
+/// # Errors
+///
+/// Returns an error if `HOME` is unset, the key is not found, or the file cannot be read or parsed.
 pub fn load_key(key_id: &str) -> Result<StoredKey, BearDogError> {
     let keys_dir = get_keys_dir()?;
     load_key_from_dir(key_id, &keys_dir)
 }
 
 /// List all stored keys
+///
+/// # Errors
+///
+/// Returns an error if `HOME` is unset, the keys directory cannot be read, or per-file I/O fails.
 // Public API for callers using default HOME; CLI handlers use `list_keys_from_home` for DI.
 #[allow(
     dead_code,
@@ -150,6 +184,10 @@ pub fn list_keys() -> Result<Vec<StoredKey>, BearDogError> {
 }
 
 /// List keys under a specific home directory (tests / DI).
+///
+/// # Errors
+///
+/// Returns an error if the keys directory cannot be read or listing entries fails.
 pub fn list_keys_from_home(
     home: impl AsRef<std::path::Path>,
 ) -> Result<Vec<StoredKey>, BearDogError> {
@@ -180,6 +218,10 @@ fn list_keys_in_dir(keys_dir: &std::path::Path) -> Result<Vec<StoredKey>, BearDo
 }
 
 /// Delete a key from storage
+///
+/// # Errors
+///
+/// Returns an error if `HOME` is unset, the key is not found, or the file cannot be removed.
 // Public API for callers using default HOME; CLI handlers use `delete_key_from_home` for DI.
 #[allow(
     dead_code,
@@ -191,6 +233,10 @@ pub fn delete_key(key_id: &str) -> Result<(), BearDogError> {
 }
 
 /// Delete a key under a specific home directory (tests / DI).
+///
+/// # Errors
+///
+/// Returns an error if the key is not found or the file cannot be removed.
 pub fn delete_key_from_home(
     key_id: &str,
     home: impl AsRef<std::path::Path>,
@@ -218,6 +264,10 @@ pub fn base64_encode(data: &[u8]) -> String {
 }
 
 /// Decode base64 to bytes
+///
+/// # Errors
+///
+/// Returns an error if the input is not valid Base64.
 pub fn base64_decode(data: &str) -> Result<Vec<u8>, BearDogError> {
     use base64::Engine;
     use base64::engine::general_purpose::STANDARD;

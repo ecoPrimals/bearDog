@@ -40,10 +40,10 @@ pub struct HsmDeviceInfo {
 /// Type of HSM device
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HsmDeviceType {
-    /// FIDO2/CTAP2 security key (SoloKeys, YubiKey, etc.)
+    /// FIDO2/CTAP2 security key (`SoloKeys`, `YubiKey`, etc.)
     Fido2,
 
-    /// Android StrongBox (Titan M2, etc.)
+    /// Android `StrongBox` (Titan M2, etc.)
     AndroidStrongBox,
 
     /// iOS Secure Enclave
@@ -72,7 +72,7 @@ enum HsmSource {
     /// FIDO2 device
     Fido2(usize), // Index in fido2_providers vec
 
-    /// Android StrongBox
+    /// Android `StrongBox`
     Android,
 
     /// iOS Secure Enclave

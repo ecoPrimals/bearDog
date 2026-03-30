@@ -14,7 +14,7 @@ use tracing::{debug, info};
 
 /// Capability registry
 ///
-/// BearDog uses this to register capabilities it provides.
+/// `BearDog` uses this to register capabilities it provides.
 /// The registry handles advertisement via mDNS and HTTP.
 pub struct CapabilityRegistry {
     /// Primal information (self-knowledge)
@@ -122,7 +122,7 @@ impl CapabilityRegistry {
     /// Register a capability
     ///
     /// # Arguments
-    /// * `capability_id` - Unique identifier (e.g., "secure_tunnel")
+    /// * `capability_id` - Unique identifier (e.g., "`secure_tunnel`")
     /// * `provider` - Implementation of the capability trait
     /// * `metadata` - Capability metadata
     ///
@@ -221,6 +221,10 @@ impl CapabilityRegistry {
     ///
     /// This should be called after all capabilities are registered.
     /// The advertisement will be served via HTTP and optionally mDNS.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`crate::Error`] when HTTP or mDNS advertisement setup fails.
     pub async fn advertise(&self) -> crate::Result<()> {
         let advertisement = self.build_advertisement();
 

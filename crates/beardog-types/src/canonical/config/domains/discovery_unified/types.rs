@@ -9,7 +9,7 @@ use std::time::Duration;
 
 use crate::canonical::config::domains::retry::CanonicalRetryConfig;
 
-/// Unified discovery configuration for all BearDog discovery operations
+/// Unified discovery configuration for all `BearDog` discovery operations
 ///
 /// This struct combines service registry, network discovery, quantum discovery,
 /// caching, and security features into a single, consistent configuration.

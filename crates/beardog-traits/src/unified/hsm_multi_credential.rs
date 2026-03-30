@@ -400,19 +400,19 @@ pub struct MultiCredentialCapabilities {
 /// HSM communication protocol
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum HsmProtocol {
-    /// FIDO2/CTAP2 (SoloKeys, YubiKey FIDO2, Nitrokey FIDO2)
+    /// FIDO2/CTAP2 (`SoloKeys`, `YubiKey` FIDO2, Nitrokey FIDO2)
     Fido2,
 
-    /// PKCS#11 (YubiKey PIV, smart cards, HSMs)
+    /// PKCS#11 (`YubiKey` PIV, smart cards, HSMs)
     Pkcs11,
 
     /// TPM 2.0 (discrete or firmware TPM)
     Tpm2,
 
-    /// OpenPGP Card
+    /// `OpenPGP` Card
     OpenPgp,
 
-    /// Android StrongBox
+    /// Android `StrongBox`
     AndroidStrongBox,
 
     /// iOS Secure Enclave
@@ -434,6 +434,10 @@ pub trait CredentialIdConverter {
     /// Convert from universal ID to protocol-specific ID
     ///
     /// Note: Takes `&self` to allow stateful converters with device-specific mappings
+    ///
+    /// # Errors
+    ///
+    /// Implementations return [`BearDogError`] when `universal_id` cannot be mapped to bytes.
     #[expect(
         clippy::wrong_self_convention,
         reason = "trait method naming differs from Rust convention"
@@ -441,12 +445,12 @@ pub trait CredentialIdConverter {
     fn from_universal_id(&self, universal_id: &str) -> Result<Vec<u8>, BearDogError>;
 }
 
-/// Trait for mapping BearDog permissions to protocol-specific attributes
+/// Trait for mapping `BearDog` permissions to protocol-specific attributes
 pub trait PermissionMapper {
-    /// Map BearDog permissions to protocol-specific attributes
+    /// Map `BearDog` permissions to protocol-specific attributes
     fn map_permissions(&self, permissions: &[String]) -> HashMap<String, serde_json::Value>;
 
-    /// Map protocol-specific attributes back to BearDog permissions
+    /// Map protocol-specific attributes back to `BearDog` permissions
     fn unmap_permissions(&self, attributes: &HashMap<String, serde_json::Value>) -> Vec<String>;
 }
 

@@ -30,6 +30,10 @@ pub struct PerformanceOptimizer {
 impl PerformanceOptimizer {
     /// New
     /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// This function currently always returns `Ok`.
     pub fn new(config: &OptimizationConfig) -> Result<Self, BearDogError> {
         Ok(Self {
             _config: config.clone(),
@@ -38,11 +42,19 @@ impl PerformanceOptimizer {
 
     /// Initialize Optimizations
     /// Initializes `componentialize_optimizations`
+    ///
+    /// # Errors
+    ///
+    /// This function currently always returns `Ok`.
     pub fn initialize_optimizations(&mut self) -> Result<(), BearDogError> {
         Ok(())
     }
 
     /// Evaluate Scaling Needs
+    ///
+    /// # Errors
+    ///
+    /// Never returns an error; reserved for future scaling analysis.
     pub const fn evaluate_scaling_needs(
         &self,
         _state: &super::ProductionState,

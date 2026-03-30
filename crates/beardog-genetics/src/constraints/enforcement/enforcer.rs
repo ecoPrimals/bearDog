@@ -54,6 +54,11 @@ impl ConstraintEnforcer {
     ///
     /// This is the core enforcement mechanism. Every key operation must pass
     /// through this verification.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ConstraintViolationError`] when the constraint signature is invalid, scope,
+    /// lifetime, data access, multisig, or behavioral rules are violated.
     pub fn verify_operation(
         signed_constraints: &SignedConstraints,
         operation: &KeyOperation,
@@ -90,6 +95,10 @@ impl ConstraintEnforcer {
     }
 
     /// Like [`Self::verify_operation`] using [`ConstraintEnforcementPolicy::from_env`].
+    ///
+    /// # Errors
+    ///
+    /// Same as [`Self::verify_operation`].
     pub fn verify_operation_from_env(
         signed_constraints: &SignedConstraints,
         operation: &KeyOperation,

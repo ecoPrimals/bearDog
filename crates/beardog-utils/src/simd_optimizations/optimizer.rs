@@ -33,6 +33,10 @@ impl SafeSimdOptimizer {
     }
 
     /// Safe parallel byte processing
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok`; the `Result` is reserved for future validation.
     pub fn safe_parallel_process(
         &mut self,
         input_buffer: &[u8],
@@ -58,6 +62,10 @@ impl SafeSimdOptimizer {
     }
 
     /// Maps `transform` across `input_slice` on the current thread (LLVM may vectorize).
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok`; the `Result` is reserved for future validation.
     pub fn safe_vectorized_transform<T, F>(
         &mut self,
         input_slice: &[T],
@@ -86,6 +94,10 @@ impl SafeSimdOptimizer {
     }
 
     /// Safe batch processing
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok`; the `Result` is reserved for future validation.
     pub fn safe_batch_process<T, F>(
         &mut self,
         input_slice: &[T],
@@ -121,6 +133,10 @@ impl SafeSimdOptimizer {
     }
 
     /// Safe memory-efficient filtering
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok`; the `Result` is reserved for future validation.
     pub fn safe_filter<T, P>(
         &mut self,
         input_slice: &[T],
@@ -145,6 +161,10 @@ impl SafeSimdOptimizer {
     }
 
     /// Safe aggregation operation
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok`; the `Result` is reserved for future validation.
     pub fn safe_aggregate<T, F>(
         &mut self,
         input_slice: &[T],
@@ -166,6 +186,10 @@ impl SafeSimdOptimizer {
     }
 
     /// Safe string processing
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok`; the `Result` is reserved for future validation.
     pub fn safe_string_process(
         &mut self,
         strings: &[&str],
@@ -182,6 +206,10 @@ impl SafeSimdOptimizer {
     }
 
     /// Safe numeric operations with overflow protection
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `operation` returns `None` (overflow) for any input.
     pub fn safe_numeric_ops(
         &mut self,
         numbers: &[u64],
@@ -245,6 +273,10 @@ impl SafeSimdOptimizer {
     }
 
     /// Benchmark safe operations
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if an inner safe operation fails.
     pub fn benchmark_safe_ops(
         &mut self,
         test_input_buffer: &[u8],

@@ -71,6 +71,10 @@ impl PathConfig {
     }
 
     /// Validate path configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ConfigError::PathNotFound`] when a configured PKCS#11 library path does not exist.
     pub fn validate(&self) -> ConfigResult<()> {
         // Check if config_dir exists or can be created
         if !self.config_dir.exists() {

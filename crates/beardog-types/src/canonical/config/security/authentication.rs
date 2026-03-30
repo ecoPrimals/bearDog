@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-/// Canonical authentication configuration for BearDog
+/// Canonical authentication configuration for `BearDog`
 ///
 /// Provides comprehensive authentication configuration supporting multiple
 /// authentication mechanisms: JWT tokens, OAuth 2.0, API keys, basic auth,
@@ -219,7 +219,7 @@ impl CanonicalAuthenticationConfig {
     /// Default lockout duration in seconds
     pub const DEFAULT_LOCKOUT_DURATION_SECS: u64 = 900; // 15 minutes
 
-    /// Create CanonicalAuthenticationConfig with hardcoded defaults
+    /// Create `CanonicalAuthenticationConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -251,7 +251,7 @@ impl CanonicalAuthenticationConfig {
         }
     }
 
-    /// Create CanonicalAuthenticationConfig from environment variables
+    /// Create `CanonicalAuthenticationConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -353,6 +353,10 @@ impl CanonicalAuthenticationConfig {
 
     /// Validate authentication configuration
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if JWT secrets, expiration, OAuth settings, or password policy constraints are invalid.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.jwt_secret.as_ref() == "CHANGE_ME_IN_PRODUCTION"
             || self.jwt_secret.as_ref() == "MUST_SET_IN_PRODUCTION"

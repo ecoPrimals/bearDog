@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! BTSP (BearDog Tunnel Security Protocol) handlers - UNIFIED
+//! BTSP (`BearDog` Tunnel Security Protocol) handlers - UNIFIED
 //!
 //! Provides secure communication for both:
 //! - **Internal Mode**: P2P mesh tunneling via genetic lineage (primals)
@@ -43,7 +43,7 @@ use tracing::{info, warn};
 /// # Backward Compatibility
 ///
 /// All existing BTSP calls work unchanged! Old-style calls automatically default
-/// to internal mode (genetic lineage + btsp_native).
+/// to internal mode (genetic lineage + `btsp_native`).
 pub struct BtspHandler;
 
 #[async_trait]
@@ -195,14 +195,14 @@ impl BtspHandler {
     ///
     /// # Backward Compatibility
     ///
-    /// Old-style BTSP calls (without trust_mode/protocol) automatically default
-    /// to internal mode (genetic lineage + btsp_native), ensuring 100% compatibility.
+    /// Old-style BTSP calls (without `trust_mode/protocol`) automatically default
+    /// to internal mode (genetic lineage + `btsp_native`), ensuring 100% compatibility.
     ///
     /// # New Unified Format
     ///
-    /// External mode requires explicit trust_mode and protocol:
-    /// - trust_mode: "certificate" (for external HTTPS)
-    /// - protocol: "tls_http" (for TLS 1.3 + HTTP/2)
+    /// External mode requires explicit `trust_mode` and protocol:
+    /// - `trust_mode`: "certificate" (for external HTTPS)
+    /// - protocol: "`tls_http`" (for TLS 1.3 + HTTP/2)
     async fn handle_tunnel_establish(
         &self,
         params: Option<&serde_json::Value>,
@@ -245,7 +245,7 @@ impl BtspHandler {
 
     /// Handle unified BTSP tunnel establishment
     ///
-    /// Routes to internal or external mode based on trust_mode and protocol.
+    /// Routes to internal or external mode based on `trust_mode` and protocol.
     async fn handle_tunnel_establish_unified(
         &self,
         params: beardog_types::btsp::TunnelEstablishParams,
@@ -315,10 +315,10 @@ impl BtspHandler {
     ///
     /// # Architectural Note
     ///
-    /// External mode (HTTPS) is implemented by **Songbird**, not BearDog.
-    /// BearDog provides the crypto primitives, Songbird implements the TLS/HTTP layer.
+    /// External mode (HTTPS) is implemented by **Songbird**, not `BearDog`.
+    /// `BearDog` provides the crypto primitives, Songbird implements the TLS/HTTP layer.
     ///
-    /// This follows the **Tower Atomic pattern**: Songbird + BearDog = Secure HTTPS
+    /// This follows the **Tower Atomic pattern**: Songbird + `BearDog` = Secure HTTPS
     async fn handle_tunnel_establish_external(
         &self,
         params: beardog_types::btsp::TunnelEstablishParams,
@@ -561,7 +561,7 @@ impl BtspHandler {
     ///
     /// # Architectural Note
     ///
-    /// - **Genetic lineage verification**: Handled by BearDog (use existing trust evaluation)
+    /// - **Genetic lineage verification**: Handled by `BearDog` (use existing trust evaluation)
     /// - **Certificate verification**: Handled by Songbird (external mode)
     ///
     /// For certificate trust, use Songbird's BTSP external mode API.
@@ -639,7 +639,7 @@ impl BtspHandler {
     /// # Architectural Note
     ///
     /// HTTP operations are part of external mode, which is handled by **Songbird**.
-    /// Songbird implements HTTP/2 client and uses BearDog for TLS crypto.
+    /// Songbird implements HTTP/2 client and uses `BearDog` for TLS crypto.
     async fn handle_tunnel_send_http(
         &self,
         params: Option<&serde_json::Value>,

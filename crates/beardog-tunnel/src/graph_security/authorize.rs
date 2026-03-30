@@ -29,6 +29,11 @@ use uuid::Uuid;
 /// # Returns
 ///
 /// Authorization result with reasoning and recommendations
+///
+/// # Errors
+///
+/// Returns an error if permission checks or threat detection cannot be completed (e.g. collaboration
+/// or internal discovery failures).
 pub async fn authorize_modification(
     user_id: &UserId,
     graph: &Graph,

@@ -2,17 +2,10 @@
 
 This directory contains GitHub-specific configuration files.
 
-## Files
+## Workflows
 
-- **workflows/** - GitHub Actions CI/CD pipelines (if any)
-- **ISSUE_TEMPLATE/** - Issue templates (if any)
-- **PULL_REQUEST_TEMPLATE.md** - PR template (if any)
+- **`workflows/beardog-ci.yml`** — Quality (fmt, clippy, doc, LOC), test (workspace + doc), security (cargo-deny, cargo-audit)
 
 ## Note
 
-BearDog is a sovereign, privacy-focused project. GitHub is used for:
-- Code hosting (mirror)
-- Issue tracking (public)
-- CI/CD (if configured)
-
-Primary development may occur elsewhere for sovereignty reasons.
+BearDog is a sovereign, privacy-focused project. GitHub is used for code hosting and CI/CD. Primary development may occur elsewhere for sovereignty reasons.

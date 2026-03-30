@@ -8,6 +8,11 @@ use chrono::Utc;
 use std::path::Path;
 
 /// Handle key mixing command
+///
+/// # Errors
+///
+/// Returns an error if the key home cannot be resolved, keys cannot be loaded or decoded, mixing
+/// parameters are invalid, or saving the new key or receipt fails.
 pub async fn handle_key_mix(
     key1_id: &str,
     key2_id: &str,
@@ -28,6 +33,10 @@ pub async fn handle_key_mix(
 }
 
 /// Same as [`handle_key_mix`] but keys and receipts are rooted at `home` (tests / isolation).
+///
+/// # Errors
+///
+/// Returns an error if keys cannot be loaded or decoded, mixing fails, or persistence fails.
 pub async fn handle_key_mix_with_home(
     key1_id: &str,
     key2_id: &str,

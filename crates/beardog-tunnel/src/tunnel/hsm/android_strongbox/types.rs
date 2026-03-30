@@ -118,12 +118,18 @@ impl AndroidDeviceInfo {
     /// # Errors
     /// Returns error if detection fails
     #[cfg(target_os = "android")]
+    /// # Errors
+    ///
+    /// Returns an error if key derivation fails.
     pub fn detect() -> Result<Self, BearDogError> {
         // In real implementation, query Android system properties
         Self::new()
     }
 
     #[cfg(not(target_os = "android"))]
+    /// # Errors
+    ///
+    /// Returns an error if key derivation fails.
     pub fn detect() -> Result<Self, BearDogError> {
         // Mock implementation for non-Android platforms
         Self::new()

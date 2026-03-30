@@ -426,6 +426,10 @@ pub type RateLimitConfig = crate::canonical::config::domains::network::RateLimit
 pub trait MonitoringConfigValidation {
     /// Validate the monitoring configuration
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if any subsection (health, metrics, alerting, logging, etc.) fails validation.
     fn validate(&self) -> Result<(), BearDogError>;
 
     /// Check configuration compatibility

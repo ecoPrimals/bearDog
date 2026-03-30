@@ -251,7 +251,7 @@ impl HsmProviderRegistry {
     /// Probe the current platform and register all available providers.
     ///
     /// On non-Android hosts this registers only the software provider.
-    /// On Android it additionally probes for StrongBox availability.
+    /// On Android it additionally probes for `StrongBox` availability.
     pub async fn discover() -> Self {
         let mut registry = Self::new();
 
@@ -289,6 +289,9 @@ impl HsmProviderRegistry {
         self.providers.push(provider);
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the Tor-related operation fails.
     /// Select the best available provider according to `preference`.
     ///
     /// Falls back to the software provider when no hardware provider
@@ -337,6 +340,9 @@ impl HsmProviderRegistry {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the provider cannot be registered.
     /// Convenience: always returns the software fallback.
     pub fn software_fallback(&self) -> Result<Arc<dyn HsmKeyProvider>, BearDogError> {
         self.select(SelectionPreference::SoftwareOnly)

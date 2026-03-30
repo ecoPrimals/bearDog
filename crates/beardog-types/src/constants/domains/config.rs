@@ -3,7 +3,7 @@
 //! Configuration Constants Domain
 //!
 //! Centralized constants for configuration values to eliminate string allocations
-//! and ensure consistency across the BearDog ecosystem.
+//! and ensure consistency across the `BearDog` ecosystem.
 
 /// **PEDANTIC PERFORMANCE OPTIMIZATION** - Configuration String Constants
 ///
@@ -71,7 +71,7 @@ pub mod ai {
     /// Dense layer type
     pub const DENSE_LAYER_TYPE: &str = "dense";
 
-    /// ReLU activation
+    /// `ReLU` activation
     pub const RELU_ACTIVATION: &str = "relu";
 
     /// Softmax activation
@@ -130,10 +130,10 @@ pub mod storage {
     /// File backend
     pub const FILE_BACKEND: &str = "file";
 
-    /// SQLite backend
+    /// `SQLite` backend
     pub const SQLITE_BACKEND: &str = "sqlite";
 
-    /// SQLite memory URL
+    /// `SQLite` memory URL
     pub const SQLITE_MEMORY_URL: &str = "sqlite::memory:";
 
     /// Redis backend
@@ -217,9 +217,9 @@ pub mod compliance {
     pub const PCI_DSS_FRAMEWORK: &str = "PCI_DSS";
 }
 
-/// OpenID Connect scopes
+/// `OpenID` Connect scopes
 pub mod oidc {
-    /// OpenID scope
+    /// `OpenID` scope
     pub const OPENID_SCOPE: &str = "openid";
 
     /// Profile scope

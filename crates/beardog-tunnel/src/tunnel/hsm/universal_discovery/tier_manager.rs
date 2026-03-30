@@ -39,7 +39,7 @@ impl Default for TierScoringWeights {
 }
 
 impl TierManager {
-    /// Creates a new TierManager instance
+    /// Creates a new `TierManager` instance
     ///
     /// # Errors
     /// Returns an error if initialization fails.
@@ -145,6 +145,9 @@ impl TierManager {
         (compliance_count as f64 / 5.0).min(1.0)
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if HSM discovery fails.
     /// Selects best HSM for an operation
     pub fn select_best_hsm_for_operation<'a>(
         &self,

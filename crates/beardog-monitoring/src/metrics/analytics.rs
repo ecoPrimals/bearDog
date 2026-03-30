@@ -15,17 +15,29 @@ pub struct AnalyticsEngine {
 
 impl AnalyticsEngine {
     /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future validation.
     pub const fn new(config: AnalyticsConfig) -> Result<Self, BearDogError> {
         Ok(Self { _config: config })
     }
 
     /// Starts service
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future startup failures.
     pub fn start(&self) -> Result<(), BearDogError> {
         tracing::info!("Analytics engine started");
         Ok(())
     }
 
     /// Gets summary
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future aggregation failures.
     pub const fn get_summary(&self) -> Result<AnalyticsSummary, BearDogError> {
         Ok(AnalyticsSummary {
             total_events_processed: 50000,

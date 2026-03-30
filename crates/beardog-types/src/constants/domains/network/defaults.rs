@@ -50,9 +50,9 @@ pub fn default_admin_port() -> u16 {
 
 /// Get default debug port from configuration hierarchy
 ///
-/// Uses admin port + 1 as convention (now properly supported in NetworkConfig).
+/// Uses admin port + 1 as convention (now properly supported in `NetworkConfig`).
 ///
-/// **Note**: `debug_port` is now available in NetworkConfig via `BEARDOG_DEBUG_PORT`.
+/// **Note**: `debug_port` is now available in `NetworkConfig` via `BEARDOG_DEBUG_PORT`.
 /// Consider using `BEARDOG_CONFIG.network.service_ports.debug_port` directly.
 #[must_use]
 pub fn default_debug_port() -> u16 {

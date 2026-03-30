@@ -62,6 +62,9 @@ impl HealthMonitor {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the Tor-related operation fails.
     /// Start health monitoring
     pub async fn start_monitoring(&self) -> Result<(), BearDogError> {
         let mut running = self.running.write().await;

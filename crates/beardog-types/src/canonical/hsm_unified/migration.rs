@@ -152,6 +152,10 @@ impl HsmMigrationService {
     }
 
     /// Migrate multiple legacy HSM configurations into a unified canonical config
+    ///
+    /// # Errors
+    ///
+    /// This function currently always returns `Ok`; per-item failures are recorded in the migration report.
     pub fn migrate_hsm_configs(
         &self,
         legacy_configs: Vec<LegacyHsmConfig>,
@@ -379,6 +383,10 @@ impl HsmMigrationService {
 }
 
 /// Convenience function to migrate HSM configurations with default options
+///
+/// # Errors
+///
+/// Same as [`HsmMigrationService::migrate_hsm_configs`] (currently always `Ok`).
 pub async fn migrate_hsm_configurations(
     legacy_configs: Vec<LegacyHsmConfig>,
 ) -> Result<MigrationResult, BearDogError> {

@@ -2,17 +2,17 @@
 #![forbid(unsafe_code)]
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
-//! # BearDog Capability Framework
+//! # `BearDog` Capability Framework
 //!
 //! **"Primals know only themselves. Capabilities are discovered at runtime."**
 //!
 //! This crate provides a capability-based architecture for primal interaction,
-//! ensuring BearDog maintains sovereignty while enabling any primal to discover
+//! ensuring `BearDog` maintains sovereignty while enabling any primal to discover
 //! and use its cryptographic services.
 //!
 //! ## Core Principles
 //!
-//! 1. **Primal Sovereignty**: BearDog knows only itself
+//! 1. **Primal Sovereignty**: `BearDog` knows only itself
 //! 2. **Runtime Discovery**: Capabilities discovered via mDNS/HTTP, not hardcoded
 //! 3. **Zero Coupling**: No primal names in capability definitions
 //! 4. **Extensibility**: New primals work without code changes
@@ -45,7 +45,7 @@
 //! └──────────────────────────────────────────────────────────┘
 //! ```
 //!
-//! ## Example: Provider Side (BearDog)
+//! ## Example: Provider Side (`BearDog`)
 //!
 //! ```rust,no_run
 //! use beardog_capabilities::{CapabilityMetadata, CapabilityRegistry};
@@ -108,7 +108,7 @@
 //!
 //! ## Naming Convention
 //!
-//! **Note**: While capability IDs like "secure_tunnel" are generic, documentation
+//! **Note**: While capability IDs like "`secure_tunnel`" are generic, documentation
 //! may reference specific protocols (e.g., "BTSP") for developer context. This is
 //! acceptable as it aids human understanding while keeping the code architecture
 //! fully sovereign and agnostic.

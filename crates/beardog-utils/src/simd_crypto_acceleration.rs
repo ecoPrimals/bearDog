@@ -91,7 +91,11 @@ impl SimdCryptoAccelerator {
         }
     }
 
-    /// Safe AES-128-CTR encryption using RustCrypto (`aes` + `ctr`).
+    /// Safe AES-128-CTR encryption using `RustCrypto` (`aes` + `ctr`).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if AES-CTR application fails (e.g. invalid key length).
     pub fn safe_aes_encrypt(&self, plaintext: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
         debug!("🛡️ Using RustCrypto AES-128-CTR (safe, auto-vectorized where available)");
         let out = aes128_ctr_apply(plaintext, key)?;
@@ -99,7 +103,11 @@ impl SimdCryptoAccelerator {
         Ok(out)
     }
 
-    /// Safe SHA-256 using the `sha2` crate (RustCrypto).
+    /// Safe SHA-256 using the `sha2` crate (`RustCrypto`).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the SHA-256 digest helper fails.
     pub fn safe_sha256(&self, input_buffer: &[u8]) -> Result<[u8; 32], BearDogError> {
         debug!("🔐 Safe SHA-256 for {} bytes", input_buffer.len());
         let digest = safe_sha256_digest(input_buffer)?;
@@ -129,6 +137,10 @@ impl SimdCryptoAccelerator {
     }
 
     /// Runs micro-benchmarks for AES and SHA using the crate-private benchmark iteration count.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if a benchmarked crypto call fails.
     pub fn benchmark_operations(&self) -> Result<HashMap<String, u64>, BearDogError> {
         let mut results = HashMap::new();
 

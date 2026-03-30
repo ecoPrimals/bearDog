@@ -4,7 +4,7 @@
 //!
 //! **CANONICAL TIMEOUT CONSTANTS** - Single source of truth for all timeout durations.
 //!
-//! This module consolidates scattered timeout constants across the BearDog ecosystem,
+//! This module consolidates scattered timeout constants across the `BearDog` ecosystem,
 //! providing a unified location for all timeout configurations used in:
 //! - Network operations (connection, read, write)
 //! - Health checks and monitoring
@@ -112,7 +112,7 @@ pub const IDLE_CONNECTION_TIMEOUT: Duration = Duration::from_secs(300);
 ///
 /// **Use for**:
 /// - HTTP/HTTPS requests
-/// - RESTful API calls
+/// - `RESTful` API calls
 /// - Web service communications
 ///
 /// **Rationale**: Standard web timeout
@@ -312,7 +312,7 @@ pub const AI_BATCH_TIMEOUT: Duration = Duration::from_secs(300);
 ///
 /// **Use for**:
 /// - SQL queries
-/// - NoSQL operations
+/// - `NoSQL` operations
 /// - Database reads
 ///
 /// **Rationale**: Standard database operation time

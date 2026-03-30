@@ -2,7 +2,7 @@
 
 //! Universal Crypto Provider Trait
 //!
-//! Defines the interface all crypto providers must implement, similar to UniversalHsmProvider.
+//! Defines the interface all crypto providers must implement, similar to `UniversalHsmProvider`.
 
 use super::algorithms::*;
 use super::capabilities::CryptoCapabilities;
@@ -19,7 +19,7 @@ pub trait UniversalCryptoProvider: Send + Sync + std::fmt::Debug {
     // Provider Information
     // ============================================================================
 
-    /// Get the provider name (e.g., "RustCrypto", "Ring", "OpenSSL")
+    /// Get the provider name (e.g., "`RustCrypto`", "Ring", "OpenSSL")
     fn provider_name(&self) -> &str;
 
     /// Get the provider version

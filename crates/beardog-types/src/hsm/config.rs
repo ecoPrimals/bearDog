@@ -59,7 +59,7 @@ impl Default for DatabaseConfig {
 }
 
 impl DatabaseConfig {
-    /// Creates a PostgreSQL configuration
+    /// Creates a `PostgreSQL` configuration
     pub fn postgres(url: impl Into<String>) -> Self {
         Self {
             url: url.into(),
@@ -72,7 +72,7 @@ impl DatabaseConfig {
         }
     }
 
-    /// Creates a SQLite configuration
+    /// Creates a `SQLite` configuration
     pub fn sqlite(path: impl Into<PathBuf>) -> Self {
         let path = path.into();
         let url = format!("sqlite://{}", path.display());
@@ -87,7 +87,7 @@ impl DatabaseConfig {
         }
     }
 
-    /// Creates an in-memory SQLite configuration (for testing)
+    /// Creates an in-memory `SQLite` configuration (for testing)
     #[must_use]
     pub fn memory() -> Self {
         Self {

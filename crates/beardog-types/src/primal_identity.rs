@@ -23,13 +23,13 @@
 //!
 //! - **Concurrent-Safe**: No global mutable state
 //! - **Testable**: Explicit configuration in tests
-//! - **Standalone-Safe**: Defaults to standalone mode per UniBin v1.1
+//! - **Standalone-Safe**: Defaults to standalone mode per `UniBin` v1.1
 //! - **Explicit**: Dependencies visible in signatures
 //! - **Zero-Cost**: Arc provides cheap cloning
 
 /// Default family identifier used when no environment variable is set.
 ///
-/// Per UniBin v1.1 / PRIMAL IPC Protocol v3.1: primals MUST NOT hard-fail
+/// Per `UniBin` v1.1 / PRIMAL IPC Protocol v3.1: primals MUST NOT hard-fail
 /// on missing identity env vars; they default to standalone mode.
 pub const DEFAULT_STANDALONE_FAMILY: &str = "standalone";
 
@@ -75,7 +75,7 @@ impl PrimalIdentity {
     /// 1. `FAMILY_ID` or `BEARDOG_FAMILY_ID` (defaults to `"standalone"`)
     /// 2. `NODE_ID` or `BEARDOG_NODE_ID` (defaults to `"default"`)
     ///
-    /// Per UniBin v1.1 / PRIMAL IPC Protocol v3.1, primals MUST NOT
+    /// Per `UniBin` v1.1 / PRIMAL IPC Protocol v3.1, primals MUST NOT
     /// hard-fail when identity env vars are absent. Standalone mode
     /// is fully operational for local-only usage.
     ///

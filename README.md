@@ -8,7 +8,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 30 | **Tests**: 15,180+ | **Coverage**: 90.16%
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 30 | **Tests**: 15,320+ | **Coverage**: 89.57%
 
 ---
 
@@ -164,15 +164,15 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | Metric | Value |
 |--------|-------|
 | **Build** | Clean, 0 errors |
-| **Clippy** | 0 warnings (pedantic + nursery + cast + unwrap/expect warn) |
-| **Missing Docs** | 0 warnings |
+| **Clippy** | 0 warnings (pedantic + nursery + all cast lints warn + doc_markdown warn + missing_errors_doc warn + unwrap/expect warn) |
+| **Missing Docs** | 0 warnings (including `# Errors` sections on all `Result` functions) |
 | **Pure Rust** | 100% — zero C dependencies |
 | **Unsafe Code** | 0 production blocks (`forbid(unsafe_code)` workspace-wide) |
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
 | **Files > 1000 LOC** | 0 (production code) |
-| **Tests** | 15,180+ (fully concurrent, zero sleeps in non-chaos) |
-| **Coverage** | 90.16% line (llvm-cov workspace) |
+| **Tests** | 15,320+ (fully concurrent, zero sleeps in non-chaos) |
+| **Coverage** | 89.57% line (llvm-cov workspace, target 90%) |
 | **Serial Tests** | 0 (`#[serial]` fully eliminated) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |
 | **License** | AGPL-3.0-only (SPDX headers on all .rs files) |
@@ -186,7 +186,7 @@ Key material is derived from the family seed. A BearDog instance serving family 
 - **Result<T, E>** — Zero `.unwrap()` in production; `#[expect(clippy::expect_used, reason = "...")]` for justified invariants; `unwrap_used`/`expect_used` warn at workspace level
 - **Fully Concurrent Tests** — Zero `#[serial]`, zero sleeps in non-chaos tests
 - **< 1000 LOC** — File size discipline across all production .rs files
-- **Workspace Lints** — Centralized clippy pedantic + nursery + cast lints
+- **Workspace Lints** — Centralized clippy pedantic + nursery + all cast lints + `doc_markdown` + `missing_errors_doc` at warn
 - **SPDX headers** — Every `.rs` file has `// SPDX-License-Identifier: AGPL-3.0-only`
 - **`rust-toolchain.toml`** — Pinned toolchain with cross-compile targets
 

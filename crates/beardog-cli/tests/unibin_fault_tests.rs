@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![allow(clippy::expect_used, clippy::unwrap_used, clippy::float_cmp)]
 
-//! Fault injection tests for UniBin commands - resilience testing
+//! Fault injection tests for `UniBin` commands - resilience testing
 
 use assert_cmd::Command;
 use predicates::prelude::*;

@@ -26,6 +26,10 @@ pub struct AlignedBuffer {
 impl AlignedBuffer {
     /// Create new aligned buffer with specified capacity
     /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns `Ok`; the `Result` is reserved for future allocation limits.
     pub fn new(capacity: usize) -> Result<Self, BearDogError> {
         // Create aligned buffer using Vec with extra space for alignment
         // Use Vec with sufficient capacity for alignment
@@ -338,6 +342,10 @@ impl HyperZeroCopyManager {
     }
 
     /// Borrows a pooled buffer of `data_size`, runs `operation`, then returns it to the pool.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if a buffer of `data_size` cannot be obtained from the pool.
     pub fn zero_copy_operation<F, R>(
         &self,
         data_size: usize,

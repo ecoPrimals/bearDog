@@ -63,6 +63,9 @@ use serde_json::Value;
 use tracing::{debug, info};
 /// Handle ChaCha20-Poly1305 encryption operations via JSON-RPC
 
+/// # Errors
+///
+/// Returns an error if encryption fails.
 pub async fn handle_chacha20_poly1305_encrypt(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.chacha20_poly1305_encrypt")?;
 
@@ -134,7 +137,10 @@ pub async fn handle_chacha20_poly1305_encrypt(params: Option<&Value>) -> Result<
     }))
 }
 
-/// Handle crypto.chacha20_poly1305_decrypt method
+/// # Errors
+///
+/// Returns an error if decryption fails.
+/// Handle `crypto.chacha20_poly1305_decrypt` method
 ///
 /// Decrypts data with ChaCha20-Poly1305 AEAD.
 ///

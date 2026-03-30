@@ -2,7 +2,7 @@
 
 //! HSM Manager Module
 //!
-//! Central coordinator for Hardware Security Module operations in the BearDog ecosystem.
+//! Central coordinator for Hardware Security Module operations in the `BearDog` ecosystem.
 //! Manages multiple HSM providers with intelligent routing, failover, and health monitoring.
 //!
 //! # Module Organization
@@ -65,7 +65,7 @@ pub use performance::{HsmPerformanceTracker, OperationMetrics};
 ///
 /// # Fields
 ///
-/// * `mode` - The HSM mode to initialize ("software", "hardware", "android_strongbox", etc.)
+/// * `mode` - The HSM mode to initialize ("software", "hardware", "`android_strongbox`", etc.)
 /// * `auto_init` - Whether auto-initialization is enabled
 ///
 /// # Example
@@ -82,7 +82,7 @@ pub use performance::{HsmPerformanceTracker, OperationMetrics};
 /// ```
 #[derive(Debug, Clone)]
 pub struct HsmAutoInitConfig {
-    /// HSM mode ("software", "hardware", "android_strongbox", "ios_secure_enclave")
+    /// HSM mode ("software", "hardware", "`android_strongbox`", "`ios_secure_enclave`")
     pub mode: String,
     /// Whether auto-initialization is enabled
     pub auto_init: bool,
@@ -165,7 +165,7 @@ pub struct HsmProviderSelection {
 
 /// HSM Manager
 ///
-/// Central coordinator for Hardware Security Module operations in the BearDog ecosystem.
+/// Central coordinator for Hardware Security Module operations in the `BearDog` ecosystem.
 /// Manages multiple HSM providers, handles provider selection, failover, health monitoring,
 /// and performance tracking.
 ///
@@ -181,7 +181,7 @@ pub struct HsmProviderSelection {
 ///
 /// # Architecture
 ///
-/// The HsmManager uses a sophisticated routing system that considers:
+/// The `HsmManager` uses a sophisticated routing system that considers:
 /// * Security tier requirements (Hardware > Cloud > Software)
 /// * Provider availability and health status
 /// * Operation-specific requirements
@@ -279,13 +279,13 @@ impl HsmManager {
 
     /// Auto-initialize HSM Manager based on environment variables
     ///
-    /// This is the recommended way to initialize HsmManager for applications.
+    /// This is the recommended way to initialize `HsmManager` for applications.
     /// It automatically detects the HSM mode from environment variables and
     /// registers the appropriate provider.
     ///
     /// # Environment Variables
     ///
-    /// * `BEARDOG_HSM_MODE` - HSM mode: "software" (default), "hardware", "android_strongbox", "ios_secure_enclave"
+    /// * `BEARDOG_HSM_MODE` - HSM mode: "software" (default), "hardware", "`android_strongbox`", "`ios_secure_enclave`"
     /// * `BEARDOG_HSM_DEVICE` - Device path for hardware HSM (optional)
     /// * `BEARDOG_HSM_AUTO_INIT` - Enable auto-initialization: "true" or "false" (default: "true")
     ///
@@ -318,6 +318,9 @@ impl HsmManager {
         Self::auto_initialize_with_config(config).await
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     /// Auto-initialize HSM Manager with explicit configuration (thread-safe)
     ///
     /// This method provides explicit configuration for HSM initialization,
@@ -505,7 +508,7 @@ impl HsmManager {
     ///
     /// # Returns
     ///
-    /// HashMap containing routing metrics with the following keys:
+    /// `HashMap` containing routing metrics with the following keys:
     /// * `"total_operations"` - Total operations routed
     /// * `"provider_selections"` - Selections per provider
     /// * `"tier_usage"` - Usage count per tier
@@ -590,7 +593,7 @@ impl HsmManager {
     /// # Arguments
     ///
     /// * `key_id` - Unique identifier for the key
-    /// * `key_type` - Type of key to generate (e.g., AES, ChaCha20, ECC)
+    /// * `key_type` - Type of key to generate (e.g., AES, `ChaCha20`, ECC)
     ///
     /// # Returns
     ///

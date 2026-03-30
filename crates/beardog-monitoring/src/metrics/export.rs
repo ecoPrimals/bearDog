@@ -15,17 +15,29 @@ pub struct ExportEngine {
 
 impl ExportEngine {
     /// Creates a new instance
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future validation.
     pub const fn new(config: ExportConfig) -> Result<Self, BearDogError> {
         Ok(Self { _config: config })
     }
 
     /// Starts service
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future startup failures.
     pub fn start(&self) -> Result<(), BearDogError> {
         tracing::info!("Export engine started");
         Ok(())
     }
 
     /// Serializes or forwards the given system metrics to configured external sinks.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future export failures.
     pub const fn export_metrics(
         &self,
         _metrics: &super::SystemMetrics,

@@ -53,6 +53,10 @@ pub struct EcosystemGeneticEngine {
 
 impl EcosystemGeneticEngine {
     /// Create new ecosystem genetic engine
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future initialization failures.
     pub fn new() -> Result<Self, BearDogError> {
         info!("Initializing ecosystem genetic engine");
 
@@ -71,6 +75,10 @@ impl EcosystemGeneticEngine {
     }
 
     /// Evolve binary access patterns (allowlist/blocklist) to ecosystem membership spectrum
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future evolution failures.
     pub fn evolve_access_pattern(
         &self,
         pattern: BinaryAccessPattern,
@@ -92,6 +100,10 @@ impl EcosystemGeneticEngine {
     }
 
     /// Evolve binary trust (trusted/untrusted) to trust evolution dynamics
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future evolution failures.
     pub fn evolve_trust_pattern(
         &self,
         trust: BinaryTrust,
@@ -122,6 +134,10 @@ impl EcosystemGeneticEngine {
     }
 
     /// Evolve hierarchical patterns (primary/replica, client/server) to coordination models
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future evolution failures.
     pub fn evolve_coordination_pattern(
         &self,
         hierarchy: HierarchicalPattern,
@@ -172,6 +188,10 @@ impl EcosystemGeneticEngine {
     }
 
     /// Generate emergent behaviors from ecosystem state
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future generation failures.
     pub fn generate_emergent_behaviors(&self) -> Result<Vec<EmergentBehavior>, BearDogError> {
         info!("🌱 Generating emergent behaviors");
 
@@ -204,6 +224,11 @@ impl EcosystemGeneticEngine {
     }
 
     /// Assess ecosystem health and adaptation
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] if [`Self::generate_emergent_behaviors`] fails (currently that
+    /// call always succeeds).
     pub fn assess_ecosystem_health(&self) -> Result<EcosystemHealthReport, BearDogError> {
         info!("🏥 Assessing ecosystem health");
 
@@ -371,6 +396,10 @@ pub struct AdaptiveSecurity {
 // ============================================================================
 
 /// Migration utility to evolve from binary patterns to ecosystem models
+///
+/// # Errors
+///
+/// Currently always succeeds; the `Result` type is reserved for future validation failures.
 pub fn migrate_from_binary_patterns(
     allowlist_entries: Vec<String>,
     blocklist_entries: Vec<String>,

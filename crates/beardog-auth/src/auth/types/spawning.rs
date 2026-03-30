@@ -9,7 +9,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Runtime view of a spawned BearDog instance and its resource bindings.
+/// Runtime view of a spawned `BearDog` instance and its resource bindings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpawnedBearDog {
     /// Unique id for this spawn, distinct from genetics or parent ids.
@@ -256,7 +256,7 @@ pub enum SpawnPurpose {
     Experimentation,
 }
 
-/// Unit of work assigned to a spawned BearDog (drives scheduling and sandboxing).
+/// Unit of work assigned to a spawned `BearDog` (drives scheduling and sandboxing).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TaskType {
     /// Represents cryptographic variant

@@ -43,7 +43,7 @@ pub trait ServiceDiscoveryCapability: Send + Sync + fmt::Debug {
     ///
     /// # Arguments
     ///
-    /// * `capability` - The service capability to discover (ServiceMesh, DataStorage, etc.)
+    /// * `capability` - The service capability to discover (`ServiceMesh`, `DataStorage`, etc.)
     ///
     /// # Returns
     ///

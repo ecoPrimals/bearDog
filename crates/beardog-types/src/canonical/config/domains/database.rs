@@ -60,7 +60,7 @@ impl DatabaseConnectionConfig {
     /// Default SSL setting
     pub const DEFAULT_SSL: bool = false;
 
-    /// Create DatabaseConnectionConfig with hardcoded defaults
+    /// Create `DatabaseConnectionConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -77,13 +77,13 @@ impl DatabaseConnectionConfig {
         }
     }
 
-    /// Create DatabaseConnectionConfig from environment variables
+    /// Create `DatabaseConnectionConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
     /// # Environment Variables
-    /// - `DATABASE_URL` or `BEARDOG_DATABASE_URL`: Connection URL (default: "sqlite://beardog.db")
-    /// - `DATABASE_MAX_CONNECTIONS`: Maximum connections (default: DEFAULT_POOL_SIZE)
+    /// - `DATABASE_URL` or `BEARDOG_DATABASE_URL`: Connection URL (default: "<sqlite://beardog.db>")
+    /// - `DATABASE_MAX_CONNECTIONS`: Maximum connections (default: `DEFAULT_POOL_SIZE`)
     /// - `DATABASE_TIMEOUT_SECONDS`: Connection timeout (default: 30)
     /// - `DATABASE_SSL`: Enable SSL/TLS (default: false)
     pub fn from_env() -> Self {
@@ -134,7 +134,7 @@ impl DatabasePoolConfig {
     /// Default idle timeout in seconds
     pub const DEFAULT_IDLE_TIMEOUT_SECS: u64 = 600;
 
-    /// Create DatabasePoolConfig with hardcoded defaults
+    /// Create `DatabasePoolConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -150,13 +150,13 @@ impl DatabasePoolConfig {
         }
     }
 
-    /// Create DatabasePoolConfig from environment variables
+    /// Create `DatabasePoolConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
     /// # Environment Variables
     /// - `DATABASE_POOL_MIN_IDLE`: Minimum idle connections (default: 1)
-    /// - `DATABASE_POOL_MAX_SIZE`: Maximum pool size (default: DEFAULT_POOL_SIZE)
+    /// - `DATABASE_POOL_MAX_SIZE`: Maximum pool size (default: `DEFAULT_POOL_SIZE`)
     /// - `DATABASE_POOL_IDLE_TIMEOUT_SECONDS`: Idle timeout (default: 600)
     pub fn from_env() -> Self {
         Self::from_env_provider(|k| std::env::var(k).ok())
@@ -201,7 +201,7 @@ impl MigrationConfig {
     /// Default migration directory
     pub const DEFAULT_DIRECTORY: &'static str = "migrations";
 
-    /// Create MigrationConfig with hardcoded defaults
+    /// Create `MigrationConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -212,7 +212,7 @@ impl MigrationConfig {
         }
     }
 
-    /// Create MigrationConfig from environment variables
+    /// Create `MigrationConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -247,6 +247,10 @@ impl Default for MigrationConfig {
 
 impl DatabaseDomainConfig {
     /// Load from environment variables
+    ///
+    /// # Errors
+    ///
+    /// This function currently always returns `Ok`; merges optional `DATABASE_URL` when set.
     pub fn from_env() -> Result<Self, BearDogError> {
         let mut config = Self::default();
 
@@ -258,6 +262,10 @@ impl DatabaseDomainConfig {
     }
 
     /// Validate configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the primary database URL is empty.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.primary.url.is_empty() {
             return Err(BearDogError::validation("Database URL cannot be empty"));

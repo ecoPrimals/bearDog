@@ -87,6 +87,10 @@ impl Default for ClientConfiguration {
 
 impl ClientConfiguration {
     /// Validate client configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if timeouts, user agent, or nested retry settings are invalid.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.connection_timeout_seconds == 0 {
             return Err(BearDogError::configuration(
@@ -112,6 +116,10 @@ impl ClientConfiguration {
 
 impl RetryConfiguration {
     /// Validate retry configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if retry attempts, delays, or backoff multiplier are invalid.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.max_attempts == 0 {
             return Err(BearDogError::configuration(

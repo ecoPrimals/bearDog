@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use uuid::Uuid;
 
-/// Universal operation receipt for all BearDog operations
+/// Universal operation receipt for all `BearDog` operations
 /// Provides verifiable proof of operation execution with full metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OperationReceipt {
@@ -96,7 +96,7 @@ pub struct HsmInfo {
     /// HSM name/identifier
     pub name: String,
 
-    /// Vendor name (Yubico, SoloKeys, Google, etc.)
+    /// Vendor name (Yubico, `SoloKeys`, Google, etc.)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vendor: Option<String>,
 
@@ -167,6 +167,10 @@ impl OperationReceipt {
     }
 
     /// Save receipt to JSON file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if creating parent directories, serializing JSON, or writing the file fails.
     pub fn save_to_file(&self, path: &Path) -> Result<(), std::io::Error> {
         // Ensure parent directory exists
         if let Some(parent) = path.parent() {
@@ -179,6 +183,10 @@ impl OperationReceipt {
     }
 
     /// Load receipt from JSON file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if reading the file, parsing JSON, or [`Self::validate`] fails.
     pub fn load_from_file(path: &Path) -> Result<Self, BearDogError> {
         let json = std::fs::read_to_string(path)?;
         let receipt: Self =
@@ -188,6 +196,10 @@ impl OperationReceipt {
     }
 
     /// Validate receipt structure and required fields
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if required fields are missing or `receipt_id` is not a valid UUID.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.receipt_id.is_empty() {
             return Err(BearDogError::validation("Missing receipt_id"));

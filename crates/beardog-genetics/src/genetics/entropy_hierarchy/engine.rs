@@ -50,6 +50,10 @@ impl EntropyHierarchyManager {
 
     /// Create human entropy seed
     /// Creates `human_seed`
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when entropy quality validation fails or mixing fails to produce a seed.
     pub fn create_human_seed(
         &mut self,
         entropy_class: EntropyClass,
@@ -81,6 +85,10 @@ impl EntropyHierarchyManager {
     }
 
     /// Consumes one logical use of a seed: enforces `max_usage`, updates counters, binds output to `operation`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the seed is unknown or its usage limit is exceeded.
     pub fn use_seed(&mut self, seed_id: Uuid, operation: &str) -> Result<Vec<u8>, BearDogError> {
         let seed = self
             .active_seeds
@@ -106,6 +114,10 @@ impl EntropyHierarchyManager {
 
     /// Validate entropy age and quality
     /// Validates seed
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the seed is unknown or validation cannot be performed.
     pub fn validate_seed(&mut self, seed_id: Uuid) -> Result<bool, BearDogError> {
         let validation_start = Instant::now();
         let seed = self
@@ -143,6 +155,10 @@ impl EntropyHierarchyManager {
 
     /// Remove expired seeds
     /// Cleans up `expired_seeds`
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future cleanup failures.
     pub fn cleanup_expired_seeds(&mut self) -> Result<usize, BearDogError> {
         let mut removed_count = 0;
         let mut to_remove = Vec::new();
@@ -182,12 +198,20 @@ impl EntropyHierarchyManager {
 
     /// Initialize the manager
     /// Initializes componentialize
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future initialization failures.
     pub const fn initialize(&self) -> Result<(), BearDogError> {
         // Perform any necessary initialization
         Ok(())
     }
 
     /// Shutdown the manager
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future shutdown failures.
     pub fn shutdown(&mut self) -> Result<(), BearDogError> {
         // Clear sensitive data
         self.active_seeds.clear();

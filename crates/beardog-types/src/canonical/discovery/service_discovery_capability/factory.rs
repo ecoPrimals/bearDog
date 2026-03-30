@@ -31,6 +31,10 @@ use super::providers::{ConsulDiscovery, DnsHttpDiscovery, EtcdDiscovery};
 /// # Ok(())
 /// # }
 /// ```
+///
+/// # Errors
+///
+/// This function currently always returns `Ok`, selecting Kubernetes when available or the DNS/HTTP fallback.
 pub async fn create_service_discovery()
 -> Result<Arc<dyn ServiceDiscoveryCapability>, DiscoveryError> {
     // Try Kubernetes first (environment detection implemented)
@@ -68,7 +72,7 @@ pub async fn create_service_discovery()
 /// # Phase 2 Implementation
 ///
 /// Will check for:
-/// - KUBERNETES_SERVICE_HOST environment variable
+/// - `KUBERNETES_SERVICE_HOST` environment variable
 /// - Service account token at /var/run/secrets/kubernetes.io/
 /// - Accessible API server endpoint
 #[deprecated(
@@ -87,7 +91,7 @@ async fn _detect_kubernetes() -> Result<KubernetesDiscovery, DiscoveryError> {
 /// # Phase 2 Implementation
 ///
 /// Will check for:
-/// - CONSUL_HTTP_ADDR environment variable
+/// - `CONSUL_HTTP_ADDR` environment variable
 /// - Local agent at 127.0.0.1:8500
 /// - DNS-based agent discovery
 #[deprecated(
@@ -106,7 +110,7 @@ async fn _detect_consul() -> Result<ConsulDiscovery, DiscoveryError> {
 /// # Phase 2 Implementation
 ///
 /// Will check for:
-/// - ETCD_ENDPOINTS environment variable
+/// - `ETCD_ENDPOINTS` environment variable
 /// - Standard etcd ports (2379, 4001)
 /// - Cluster member discovery
 #[deprecated(

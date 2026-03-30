@@ -119,18 +119,15 @@ async fn property_sign_verify_roundtrip() -> Result<(), BearDogError> {
         rand::thread_rng().fill(&mut message[..]);
 
         let signing_key_bytes = provider.generate_random_bytes(32)?;
-        let public_key = SigningKey::from_bytes(
-            signing_key_bytes.as_slice().try_into().expect("32 bytes"),
-        )
-        .verifying_key()
-        .to_bytes()
-        .to_vec();
+        let public_key =
+            SigningKey::from_bytes(signing_key_bytes.as_slice().try_into().expect("32 bytes"))
+                .verifying_key()
+                .to_bytes()
+                .to_vec();
 
         let signature = provider.sign(&signing_key_bytes, &message).await?;
 
-        let verified = provider
-            .verify(&public_key, &message, &signature)
-            .await?;
+        let verified = provider.verify(&public_key, &message, &signature).await?;
 
         assert!(
             verified,
@@ -157,12 +154,11 @@ async fn property_invalid_signatures_rejected() -> Result<(), BearDogError> {
         rand::thread_rng().fill(&mut message[..]);
 
         let signing_key_bytes = provider.generate_random_bytes(32)?;
-        let public_key = SigningKey::from_bytes(
-            signing_key_bytes.as_slice().try_into().expect("32 bytes"),
-        )
-        .verifying_key()
-        .to_bytes()
-        .to_vec();
+        let public_key =
+            SigningKey::from_bytes(signing_key_bytes.as_slice().try_into().expect("32 bytes"))
+                .verifying_key()
+                .to_bytes()
+                .to_vec();
 
         let mut signature = provider.sign(&signing_key_bytes, &message).await?;
 

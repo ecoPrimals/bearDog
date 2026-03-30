@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! High-level BirdSong manager integrating all components
+//! High-level `BirdSong` manager integrating all components
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -20,7 +20,7 @@ use super::types::{
     LineageVerificationResult,
 };
 
-/// High-level BirdSong manager
+/// High-level `BirdSong` manager
 ///
 /// Provides a unified API for:
 /// - Lineage management (creating parent-child relationships)
@@ -43,7 +43,7 @@ pub struct BirdSongManager {
 }
 
 impl BirdSongManager {
-    /// Create a new BirdSong manager
+    /// Create a new `BirdSong` manager
     ///
     /// # Arguments
     ///
@@ -224,7 +224,7 @@ impl BirdSongManager {
 
     /// Encrypt discovery packet for a specific family
     ///
-    /// Uses family-specific keys derived from family_id. Only towers with the
+    /// Uses family-specific keys derived from `family_id`. Only towers with the
     /// same family ID can decrypt. This is simpler than lineage-based encryption
     /// and perfect for UDP discovery broadcasts.
     ///
@@ -416,7 +416,7 @@ impl BirdSongManager {
 
     /// Request a key for a specific lineage (with proof)
     ///
-    /// This is the key request flow mentioned in the BirdSong spec.
+    /// This is the key request flow mentioned in the `BirdSong` spec.
     ///
     /// # Arguments
     ///
@@ -507,7 +507,7 @@ impl BirdSongManager {
 
     /// Rotate all keys (increment generation)
     ///
-    /// This should be called periodically based on config.key_rotation_interval_secs
+    /// This should be called periodically based on `config.key_rotation_interval_secs`
     ///
     /// # Arguments
     ///

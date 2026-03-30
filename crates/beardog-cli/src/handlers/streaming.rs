@@ -17,6 +17,11 @@ const CHUNK_SIZE: usize = 16 * 1024 * 1024;
 /// Handle streaming encryption
 ///
 /// Encrypts large files in chunks without loading entire file into memory.
+///
+/// # Errors
+///
+/// Returns an error if the key home cannot be resolved, the input is missing, I/O fails, or
+/// per-chunk encryption fails.
 pub async fn handle_streaming_encrypt(
     key_id: &str,
     input_path: &str,
@@ -27,6 +32,10 @@ pub async fn handle_streaming_encrypt(
 }
 
 /// Same as [`handle_streaming_encrypt`] but with an explicit home directory for the key store (tests / DI).
+///
+/// # Errors
+///
+/// Returns an error if the input is missing, I/O fails, or per-chunk encryption fails.
 #[expect(
     clippy::cast_precision_loss,
     reason = "Progress ratio for large files; acceptable precision for CLI display"
@@ -117,6 +126,11 @@ pub async fn handle_streaming_encrypt_with_home(
 /// Handle streaming decryption
 ///
 /// Decrypts large files in chunks without loading entire file into memory.
+///
+/// # Errors
+///
+/// Returns an error if the key home cannot be resolved, the input format is invalid, I/O fails, or
+/// decryption fails.
 pub async fn handle_streaming_decrypt(
     input_path: &str,
     output_path: &str,
@@ -126,6 +140,10 @@ pub async fn handle_streaming_decrypt(
 }
 
 /// Same as [`handle_streaming_decrypt`] but with an explicit home directory for the key store (tests / DI).
+///
+/// # Errors
+///
+/// Returns an error if the stream header or chunks are invalid, I/O fails, or decryption fails.
 #[expect(
     clippy::cast_precision_loss,
     reason = "Progress ratio for large files; acceptable precision for CLI display"

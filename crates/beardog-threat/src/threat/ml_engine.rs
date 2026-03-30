@@ -76,7 +76,7 @@ pub struct MlEngine {
     network_predictions: u64,
 }
 
-/// Type alias for the default BearDog threat ML entry type.
+/// Type alias for the default `BearDog` threat ML entry type.
 pub type SmartThreatMLEngine = MlEngine;
 
 impl Default for MlEngine {
@@ -113,6 +113,10 @@ impl MlEngine {
     }
 
     /// Predict threat from security event
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future adapter or cache failures.
     pub async fn predict_threat(
         &self,
         event: &SecurityEvent,

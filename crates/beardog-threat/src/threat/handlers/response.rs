@@ -39,6 +39,10 @@ impl AutomatedThreatResponseHandler {
     }
 
     /// Evaluate and respond to a threat event based on the current configuration.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future playbook failures.
     pub const fn handle_threat_event(
         &self,
         threat_event: &ThreatEvent,
@@ -53,6 +57,10 @@ impl AutomatedThreatResponseHandler {
     }
 
     /// Append a threat event to the persistent history log.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future persistence failures.
     pub async fn log_threat_event(&self, threat_event: &ThreatEvent) -> Result<(), BearDogError> {
         let mut history = self.event_history.write().await;
         history.push(threat_event.clone());
@@ -60,6 +68,10 @@ impl AutomatedThreatResponseHandler {
     }
 
     /// Feed a threat event back into the intelligence model for future correlation.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future model update failures.
     pub const fn update_threat_intelligence(
         &self,
         threat_event: &ThreatEvent,
@@ -69,6 +81,10 @@ impl AutomatedThreatResponseHandler {
     }
 
     /// Activate enhanced monitoring in response to a detected threat.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future monitoring integration failures.
     pub const fn enable_enhanced_monitoring(
         &self,
         _threat_event: &ThreatEvent,
@@ -80,6 +96,10 @@ impl AutomatedThreatResponseHandler {
     ///
     /// Returns event metadata as a starting point; full artifact collection
     /// (memory snapshots, network captures) is a Phase 2 evolution.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future artifact collection failures.
     pub fn collect_forensics(
         &self,
         threat_event: &ThreatEvent,

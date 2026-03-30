@@ -2,9 +2,9 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 #![cfg_attr(test, allow(clippy::float_cmp))]
 
-//! BearDog command-line binary (`beardog`).
+//! `BearDog` command-line binary (`beardog`).
 //!
-//! Parses subcommands and dispatches to internal `handlers` modules for entropy, keys, BirdSong,
+//! Parses subcommands and dispatches to internal `handlers` modules for entropy, keys, `BirdSong`,
 //! encryption, HSM discovery, cross-primal messaging, and server/daemon modes.
 //! Shared argument types (`ServerArgs`, `DaemonArgs`, etc.) live in the
 //! `beardog-cli` library crate.
@@ -40,7 +40,7 @@ enum Commands {
     #[command(subcommand)]
     Key(KeyCommands),
 
-    /// BirdSong lineage-based encryption (privacy-preserving)
+    /// `BirdSong` lineage-based encryption (privacy-preserving)
     #[command(subcommand)]
     Birdsong(BirdSongCommands),
 
@@ -86,7 +86,7 @@ enum Commands {
     /// Show system status
     Status,
 
-    /// Start BearDog server (long-running service mode)
+    /// Start `BearDog` server (long-running service mode)
     Server(ServerArgs),
 
     /// Run as daemon (background service)
@@ -242,7 +242,7 @@ enum KeyCommands {
         #[arg(long)]
         input: String,
 
-        /// Key identifier for the imported key (optional, uses file's key_id if not provided)
+        /// Key identifier for the imported key (optional, uses file's `key_id` if not provided)
         #[arg(long)]
         key_id: Option<String>,
 
@@ -422,7 +422,7 @@ enum BirdSongCommands {
         #[arg(long)]
         message: String,
 
-        /// Lineage hint type (DirectAncestors, AllDescendants, RootOnly, Depth:min-max)
+        /// Lineage hint type (`DirectAncestors`, `AllDescendants`, `RootOnly`, Depth:min-max)
         #[arg(long)]
         hint: String,
 
@@ -435,7 +435,7 @@ enum BirdSongCommands {
         output: Option<String>,
     },
 
-    /// Decrypt BirdSong message (if in lineage)
+    /// Decrypt `BirdSong` message (if in lineage)
     Decrypt {
         /// Input file path (encrypted broadcast)
         #[arg(short, long)]

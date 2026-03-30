@@ -104,7 +104,7 @@ pub enum SmartphoneType {
 pub enum SecureEnclaveType {
     /// Apple Secure Enclave
     AppleSecureEnclave,
-    /// Android StrongBox
+    /// Android `StrongBox`
     AndroidStrongBox,
     /// Samsung Knox
     SamsungKnox,
@@ -117,11 +117,11 @@ pub enum SecureEnclaveType {
 /// Software HSM implementations
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SoftwareHsmType {
-    /// SoftHSM implementation
+    /// `SoftHSM` implementation
     SoftHsm,
     /// OpenSSL-based implementation
     OpenSsl,
-    /// BearDog native implementation
+    /// `BearDog` native implementation
     BearDogNative,
     /// Custom implementation
     Custom(String),
@@ -181,12 +181,12 @@ pub enum AndroidKeyAlgorithm {
     Hmac,
 }
 
-/// StrongBox implementation types
+/// `StrongBox` implementation types
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum StrongBoxImplementation {
     /// Qualcomm implementation
     Qualcomm,
-    /// MediaTek implementation
+    /// `MediaTek` implementation
     MediaTek,
     /// Samsung implementation
     Samsung,

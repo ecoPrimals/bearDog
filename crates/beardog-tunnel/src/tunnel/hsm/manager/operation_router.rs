@@ -115,6 +115,9 @@ impl HsmOperationRouter {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     /// Route an operation to the best provider
     pub fn route_operation(
         &self,

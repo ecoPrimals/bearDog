@@ -102,7 +102,7 @@ pub trait MethodHandler: Send + Sync {
     /// Handle a JSON-RPC request
     ///
     /// # Arguments
-    /// * `method` - The JSON-RPC method name (e.g., "crypto.sign_ed25519")
+    /// * `method` - The JSON-RPC method name (e.g., "`crypto.sign_ed25519`")
     /// * `params` - Optional parameters for the method
     /// * `btsp_provider` - The BTSP provider for accessing capabilities
     ///
@@ -204,6 +204,9 @@ impl HandlerRegistry {
         registry
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if decryption fails.
     /// Route a request to the appropriate handler
     ///
     /// Iterates through all registered handlers and delegates to the first
@@ -221,7 +224,7 @@ impl HandlerRegistry {
     ///
     /// O(n) where n is the number of handlers. In practice, n is small (< 20)
     /// and the lookup is very fast. If performance becomes an issue, we can
-    /// use a HashMap for O(1) lookup.
+    /// use a `HashMap` for O(1) lookup.
     pub async fn route(
         &self,
         method: &str,

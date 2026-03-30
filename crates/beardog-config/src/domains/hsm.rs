@@ -75,12 +75,12 @@ impl HsmConfig {
     /// Reads configuration from environment variables:
     /// - `BEARDOG_HSM_AUTO_DETECT`: Auto-detect HSMs (default: true)
     /// - `BEARDOG_HSM_PREFER_HARDWARE`: Prefer hardware HSMs (default: true)
-    /// - `BEARDOG_HSM_ENABLE_SOFTHSM`: Enable SoftHSM2 (default: true)
-    /// - `BEARDOG_HSM_ENABLE_YUBIHSM`: Enable YubiHSM (default: false)
+    /// - `BEARDOG_HSM_ENABLE_SOFTHSM`: Enable `SoftHSM2` (default: true)
+    /// - `BEARDOG_HSM_ENABLE_YUBIHSM`: Enable `YubiHSM` (default: false)
     /// - `BEARDOG_HSM_ENABLE_TPM`: Enable TPM (default: false)
-    /// - `BEARDOG_HSM_ENABLE_STRONGBOX`: Enable StrongBox (default: false)
-    /// - `SOFTHSM2_CONF`: SoftHSM2 config file path
-    /// - `BEARDOG_YUBIHSM_CONNECTOR`: YubiHSM connector URL
+    /// - `BEARDOG_HSM_ENABLE_STRONGBOX`: Enable `StrongBox` (default: false)
+    /// - `SOFTHSM2_CONF`: `SoftHSM2` config file path
+    /// - `BEARDOG_YUBIHSM_CONNECTOR`: `YubiHSM` connector URL
     #[must_use]
     pub fn from_env() -> Self {
         let defaults = Self::default();
@@ -122,6 +122,10 @@ impl HsmConfig {
     }
 
     /// Validate HSM configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ConfigError`] when no provider is enabled, paths are invalid, or options conflict.
     pub fn validate(&self) -> ConfigResult<()> {
         // Check that at least one provider is enabled
         if !self.auto_detect

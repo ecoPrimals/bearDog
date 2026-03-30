@@ -75,6 +75,10 @@ impl NetworkDiscovery {
     /// 1. Local network interfaces and IPs
     /// 2. Available ports in the configured range
     /// 3. Network reachability
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when local interface or port discovery fails.
     pub fn discover(&self) -> Result<NetworkCapabilities> {
         info!("🔍 Discovering runtime network capabilities...");
 
@@ -207,6 +211,10 @@ impl NetworkDiscovery {
     }
 
     /// Select best bind address from discovered capabilities
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when no local address or port was discovered.
     pub fn select_bind_address(capabilities: &NetworkCapabilities) -> Result<SocketAddr> {
         // Prefer first local address (prioritized by discovery)
         let addr = capabilities

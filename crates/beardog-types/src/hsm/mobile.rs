@@ -17,7 +17,7 @@ pub struct AndroidDeviceInfo {
     /// Android OS version
     pub android_version: String,
 
-    /// Whether StrongBox HSM is available (Android KeyMaster API)
+    /// Whether `StrongBox` HSM is available (Android `KeyMaster` API)
     pub strongbox_available: bool,
 
     /// Whether Trusted Execution Environment (TEE) is available
@@ -40,7 +40,7 @@ impl AndroidDeviceInfo {
         }
     }
 
-    /// Sets StrongBox availability
+    /// Sets `StrongBox` availability
     #[must_use]
     pub const fn with_strongbox(mut self, available: bool) -> Self {
         self.strongbox_available = available;
@@ -101,7 +101,7 @@ pub enum SecurityLevel {
     /// Trusted Execution Environment (TEE)
     TrustedExecutionEnvironment,
 
-    /// Hardware-backed (StrongBox on Android, Secure Enclave on iOS)
+    /// Hardware-backed (`StrongBox` on Android, Secure Enclave on iOS)
     StrongBox,
 }
 

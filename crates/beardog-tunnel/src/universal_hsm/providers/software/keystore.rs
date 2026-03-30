@@ -21,6 +21,9 @@ impl SoftwareKeyStore {
         }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if key deletion fails in the underlying HSM provider.
     /// Store a key
     pub async fn store_key(&self, key_id: String, key_data: Vec<u8>) -> Result<(), BearDogError> {
         let mut keys = self.keys.write().await;
@@ -28,12 +31,18 @@ impl SoftwareKeyStore {
         Ok(())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if key deletion fails in the underlying HSM provider.
     /// Retrieve a key
     pub async fn get_key(&self, key_id: &str) -> Result<Option<Vec<u8>>, BearDogError> {
         let keys = self.keys.read().await;
         Ok(keys.get(key_id).cloned())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if key deletion fails in the underlying HSM provider.
     /// Delete a key
     pub async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
         let mut keys = self.keys.write().await;
@@ -41,6 +50,9 @@ impl SoftwareKeyStore {
         Ok(())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if key deletion fails in the underlying HSM provider.
     /// List all key IDs
     pub async fn list_keys(&self) -> Result<Vec<String>, BearDogError> {
         let keys = self.keys.read().await;

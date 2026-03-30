@@ -82,6 +82,11 @@ fn generate_aes_key() -> Result<Vec<u8>, BearDogError> {
 }
 
 /// Handle key generation command
+///
+/// # Errors
+///
+/// Returns an error if HSM discovery or selection fails, the entropy seed cannot be read, key
+/// material generation fails, the key or receipt cannot be saved, or I/O fails.
 #[allow(
     dead_code,
     reason = "Legacy public handler kept for API stability; main uses handle_key_generate_v2"
@@ -221,12 +226,20 @@ pub async fn handle_key_generate(
 }
 
 /// Handle key list command
+///
+/// # Errors
+///
+/// Returns an error if the key home directory cannot be resolved or keys cannot be listed.
 pub async fn handle_key_list(hsm_filter: Option<&str>, _verbose: bool) -> Result<(), BearDogError> {
     let home = key_store::home_dir_for_keys()?;
     handle_key_list_with_home(hsm_filter, _verbose, &home).await
 }
 
 /// Same as [`handle_key_list`] but with an explicit home directory for the key store (tests / DI).
+///
+/// # Errors
+///
+/// Returns an error if keys cannot be listed from the given home.
 pub async fn handle_key_list_with_home(
     hsm_filter: Option<&str>,
     _verbose: bool,
@@ -271,6 +284,11 @@ pub async fn handle_key_list_with_home(
 }
 
 /// Handle key info command
+///
+/// # Errors
+///
+/// This handler is currently a stub and does not return errors; the signature is reserved for
+/// future key metadata loading.
 pub async fn handle_key_info(key_id: &str) -> Result<(), BearDogError> {
     println!("🔍 Key Information");
     println!("=================");
@@ -283,12 +301,20 @@ pub async fn handle_key_info(key_id: &str) -> Result<(), BearDogError> {
 }
 
 /// Handle key delete command
+///
+/// # Errors
+///
+/// Returns an error if the key home directory cannot be resolved or deletion fails.
 pub async fn handle_key_delete(key_id: &str, skip_confirm: bool) -> Result<(), BearDogError> {
     let home = key_store::home_dir_for_keys()?;
     handle_key_delete_with_home(key_id, skip_confirm, &home).await
 }
 
 /// Same as [`handle_key_delete`] but with an explicit home directory for the key store (tests / DI).
+///
+/// # Errors
+///
+/// Returns an error if the key cannot be deleted from storage.
 pub async fn handle_key_delete_with_home(
     key_id: &str,
     skip_confirm: bool,
@@ -313,6 +339,11 @@ pub async fn handle_key_delete_with_home(
 }
 
 /// Handle key generate with KDF and restrictions (v2)
+///
+/// # Errors
+///
+/// Returns an error if HSM discovery or selection fails, entropy seed or KDF inputs are invalid,
+/// key material derivation fails, or the key or receipt cannot be saved.
 #[expect(
     clippy::too_many_arguments,
     reason = "Key generation CLI surfaces algorithm, HSM, KDF, and policy fields together"

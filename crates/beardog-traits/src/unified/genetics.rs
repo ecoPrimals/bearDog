@@ -354,6 +354,10 @@ pub struct GeneticsProviderUtils;
 
 impl GeneticsProviderUtils {
     /// Create a basic genetics provider.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future validation.
     pub fn create_basic_provider(
         _config: serde_json::Value,
     ) -> Result<serde_json::Value, BearDogError> {
@@ -372,6 +376,10 @@ impl GeneticsProviderUtils {
     }
 
     /// Create a biome genetics handler.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future validation.
     pub fn create_biome_handler(
         biome_config: serde_json::Value,
     ) -> Result<BiomeGeneticsData, BearDogError> {
@@ -389,6 +397,10 @@ impl GeneticsProviderUtils {
     }
 
     /// Validate genetic parameters
+    ///
+    /// # Errors
+    ///
+    /// The returned future currently always resolves to [`Ok`] with optional warnings.
     pub fn validate_genetic_params(
         params: &GeneticParameters,
     ) -> impl std::future::Future<Output = Result<Vec<serde_json::Value>, BearDogError>> + Send
@@ -418,6 +430,10 @@ pub struct EvolutionEngineUtils;
 
 impl EvolutionEngineUtils {
     /// Create a basic evolution engine.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future validation.
     pub fn create_basic_engine(
         _config: serde_json::Value,
     ) -> Result<serde_json::Value, BearDogError> {
@@ -432,6 +448,10 @@ impl EvolutionEngineUtils {
     }
 
     /// Create biome genetics data with an empty (unsigned) signature.
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future validation.
     pub fn create_biome_data(biome_id: String) -> Result<BiomeGeneticsData, BearDogError> {
         Ok(BiomeGeneticsData {
             biome_id,
@@ -446,6 +466,10 @@ impl EvolutionEngineUtils {
 ///
 /// Create genetics provider from configuration
 /// Creates `genetics_provider`
+///
+/// # Errors
+///
+/// Returns [`BearDogError`] when `provider_type` is not recognized.
 pub fn create_genetics_provider(
     provider_type: &str,
     _config: serde_json::Value,
@@ -464,6 +488,10 @@ pub fn create_genetics_provider(
 
 /// Create evolution engine from configuration
 /// Creates `evolution_engine`
+///
+/// # Errors
+///
+/// Returns [`BearDogError`] when `engine_type` is not recognized.
 pub fn create_evolution_engine(
     engine_type: &str,
     _config: serde_json::Value,

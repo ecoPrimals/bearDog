@@ -42,11 +42,11 @@ where
     ///
     /// Raw key material as bytes. The length depends on the key type:
     /// - AES-256: 32 bytes
-    /// - ChaCha20: 32 bytes
+    /// - `ChaCha20`: 32 bytes
     /// - Ed25519: 32 bytes
     /// - ECC P-256: 32 bytes
     /// - ECC P-384: 48 bytes
-    /// - RSA: key_size / 8 bytes
+    /// - RSA: `key_size` / 8 bytes
     ///
     /// # Errors
     ///
@@ -116,7 +116,7 @@ where
     /// Signature bytes. The format depends on the key type:
     /// - Ed25519: 64 bytes
     /// - ECDSA P-256: 64 bytes
-    /// - RSA: key_size / 8 bytes
+    /// - RSA: `key_size` / 8 bytes
     ///
     /// # Errors
     ///

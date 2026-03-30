@@ -20,7 +20,7 @@ use tracing::{debug, info};
 
 use super::key_store;
 
-/// Handle BirdSong encrypt command
+/// Handle `BirdSong` encrypt command
 ///
 /// Encrypts a message for a specific lineage only. Only nodes within the
 /// lineage (based on hint) can decrypt the message.
@@ -28,9 +28,15 @@ use super::key_store;
 /// # Arguments
 ///
 /// * `message` - Plaintext message to encrypt
-/// * `hint_type` - Type of lineage hint ("DirectAncestors", "AllDescendants", "Depth:0-2", etc.)
+/// * `hint_type` - Type of lineage hint ("`DirectAncestors`", "`AllDescendants`", "Depth:0-2", etc.)
 /// * `root_id` - Root lineage ID
 /// * `output` - Output file path for encrypted broadcast
+///
+/// # Errors
+///
+/// Returns an error if the key home directory cannot be resolved, the lineage hint is invalid,
+/// the root key cannot be loaded or decoded, lineage KDF setup or encryption fails, serialization
+/// fails, or the output file cannot be written.
 pub async fn handle_birdsong_encrypt(
     message: &str,
     hint_type: &str,
@@ -42,6 +48,11 @@ pub async fn handle_birdsong_encrypt(
 }
 
 /// Same as [`handle_birdsong_encrypt`] but with an explicit home directory for the key store (tests / DI).
+///
+/// # Errors
+///
+/// Returns an error if the lineage hint is invalid, the root key cannot be loaded or decoded,
+/// lineage KDF setup or encryption fails, serialization fails, or the output file cannot be written.
 pub async fn handle_birdsong_encrypt_with_home(
     message: &str,
     hint_type: &str,
@@ -130,21 +141,31 @@ pub async fn handle_birdsong_encrypt_with_home(
     Ok(())
 }
 
-/// Handle BirdSong decrypt command
+/// Handle `BirdSong` decrypt command
 ///
-/// Attempts to decrypt a BirdSong broadcast. Returns success only if the
+/// Attempts to decrypt a `BirdSong` broadcast. Returns success only if the
 /// current node is authorized based on its lineage proof.
 ///
 /// # Arguments
 ///
 /// * `input` - Input file path (encrypted broadcast)
 /// * `key_id` - Key ID to use for decryption (determines lineage proof)
+///
+/// # Errors
+///
+/// Returns an error if the key home directory cannot be resolved, or decryption fails (including
+/// lineage mismatch, invalid broadcast, I/O, or crypto errors).
 pub async fn handle_birdsong_decrypt(input: &str, key_id: &str) -> Result<(), BearDogError> {
     let home = key_store::home_dir_for_keys()?;
     handle_birdsong_decrypt_with_home(input, key_id, &home).await
 }
 
 /// Same as [`handle_birdsong_decrypt`] but with an explicit home directory for the key store (tests / DI).
+///
+/// # Errors
+///
+/// Returns an error if the broadcast file cannot be read or parsed, lineage proof lookup fails,
+/// lineages mismatch, or decryption fails.
 pub async fn handle_birdsong_decrypt_with_home(
     input: &str,
     key_id: &str,
@@ -259,10 +280,10 @@ pub async fn handle_birdsong_decrypt_with_home(
 /// Parse lineage hint from string format
 ///
 /// Supported formats:
-/// - "DirectAncestors" -> min_depth=0, max_depth=1
-/// - "AllDescendants" -> min_depth=0, max_depth=100
-/// - "Depth:2-5" -> min_depth=2, max_depth=5
-/// - "RootOnly" -> min_depth=0, max_depth=0
+/// - "`DirectAncestors`" -> `min_depth=0`, `max_depth=1`
+/// - "`AllDescendants`" -> `min_depth=0`, `max_depth=100`
+/// - "Depth:2-5" -> `min_depth=2`, `max_depth=5`
+/// - "`RootOnly`" -> `min_depth=0`, `max_depth=0`
 fn parse_lineage_hint(hint_type: &str, root_id: &str) -> Result<LineageHint, BearDogError> {
     let (min_depth, max_depth) = match hint_type {
         "DirectAncestors" => (0, 1),

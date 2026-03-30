@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! TCP IPC Transport for BearDog
+//! TCP IPC Transport for `BearDog`
 //!
 //! **Purpose**: Universal IPC transport that works on ALL platforms
-//! **Primary Use**: Android (SELinux blocks Unix sockets for shell user)
+//! **Primary Use**: Android (`SELinux` blocks Unix sockets for shell user)
 //! **Secondary**: Windows, containers, cross-device
 //!
 //! ## Philosophy (Feb 2, 2026)

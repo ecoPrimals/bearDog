@@ -7,7 +7,7 @@
 //! - HMAC-SHA512: Maximum-security message authentication  
 //! - HMAC-Blake3: Modern high-performance MAC
 //!
-//! All implementations are Pure Rust from RustCrypto.
+//! All implementations are Pure Rust from `RustCrypto`.
 //!
 //! # Use Cases
 //! - JWT tokens (HMAC-SHA384/512)
@@ -36,6 +36,9 @@ use sha2::{Sha384, Sha512};
 type HmacSha384 = Hmac<Sha384>;
 type HmacSha512 = Hmac<Sha512>;
 
+/// # Errors
+///
+/// Returns an error if the operation fails.
 /// Handle HMAC-SHA384 message authentication
 ///
 /// # Input Parameters
@@ -100,6 +103,9 @@ pub fn handle_hmac_sha384(params: &Value) -> Result<Value, BearDogError> {
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if the operation fails.
 /// Handle HMAC-SHA512 message authentication
 ///
 /// # Input Parameters
@@ -164,6 +170,9 @@ pub fn handle_hmac_sha512(params: &Value) -> Result<Value, BearDogError> {
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 /// Handle HMAC-Blake3 message authentication (Modern high-performance)
 ///
 /// # Input Parameters

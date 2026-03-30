@@ -1,10 +1,14 @@
-# Documentation License
+# Licensing — scyBorg Provenance Trio
 
-All documentation, specifications, and creative content in this repository 
-(markdown files, diagrams, architecture docs) are licensed under 
-**Creative Commons Attribution-ShareAlike 4.0 International (CC-BY-SA 4.0)**.
+BearDog follows the **scyBorg Provenance Trio** defined by the ecoPrimals
+ecosystem (`wateringHole/SCYBORG_PROVENANCE_TRIO_GUIDANCE.md`):
 
-Source code remains licensed under **AGPL-3.0-only** as specified in the LICENSE file.
+| Layer | License | Scope |
+|-------|---------|-------|
+| Software | **AGPL-3.0-only** | All source code, tools, and tests (see `LICENSE`) |
+| Game mechanics | **ORC** (Open RPG Creative) | Rules, stats, and progression systems (not currently applicable to BearDog) |
+| Docs & creative | **CC-BY-SA 4.0** | All markdown docs, specifications, diagrams, and architecture guides |
 
-For the full scyBorg licensing framework, see:
-wateringHole/SCYBORG_PROVENANCE_TRIO_GUIDANCE.md
+BearDog intentionally uses **AGPL-3.0-only** (not `-or-later`).
+Core cryptographic code grants no exceptions. See `SCYBORG_EXCEPTION_PROTOCOL.md`
+for the full policy and `LYSOGENY_PROTOCOL.md` for the open prior art strategy.

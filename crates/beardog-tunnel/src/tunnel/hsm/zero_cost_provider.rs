@@ -36,6 +36,7 @@ where
     /// Execute an HSM operation through the provider
     ///
     /// # Errors
+    ///
     /// Returns an error if the operation fails.
     pub fn execute_operation(&self, operation: HsmOperation) -> Result<HsmKey, BearDogError> {
         self.provider.execute_operation(operation)
@@ -44,6 +45,7 @@ where
     /// Generate a key with compile-time algorithm verification
     ///
     /// # Errors
+    ///
     /// Returns an error if the operation fails.
     pub fn generate_key<A>(&self, algorithm: A) -> Result<HsmKey, BearDogError>
     where
@@ -68,9 +70,17 @@ pub trait HsmProviderTrait: Send + Sync + 'static {
     const CAPABILITIES: &'static Self::Capabilities;
 
     /// Executes an HSM operation
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the HSM operation fails.
     fn execute_operation(&self, operation: HsmOperation) -> Result<HsmKey, BearDogError>;
 
     /// Generates a typed key using the specified algorithm
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails for the given algorithm.
     fn generate_key_typed<A>(&self, algorithm: A) -> Result<HsmKey, BearDogError>
     where
         A: KeyAlgorithm,
@@ -125,7 +135,7 @@ impl HsmCapabilities for SoftwareHsmCapabilities {
     const SECURITY_LEVEL: SecurityLevel = SecurityLevel::Software;
 }
 
-/// Android StrongBox HSM capabilities (Phase 2)
+/// Android `StrongBox` HSM capabilities (Phase 2)
 pub struct AndroidStrongboxCapabilities;
 
 impl HsmCapabilities for AndroidStrongboxCapabilities {

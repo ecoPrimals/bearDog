@@ -57,6 +57,9 @@ impl HsmHealthMonitor {
         Self { last_check: None }
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the Tor-related operation fails.
     /// Performs a health check
     pub fn check_health(&mut self, hsm_available: bool) -> Result<HsmHealthCheck, BearDogError> {
         debug!("🔍 Performing HSM health check");

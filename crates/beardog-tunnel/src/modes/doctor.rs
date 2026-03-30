@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Doctor Mode - Health diagnostics for BearDog
+//! Doctor Mode - Health diagnostics for `BearDog`
 //!
 //! Comprehensive system health checks and diagnostics.
 
@@ -26,9 +26,13 @@ pub(crate) fn doctor_json_status_line(comprehensive: bool) -> String {
     )
 }
 
-/// Run BearDog doctor (health diagnostics)
+/// Run `BearDog` doctor (health diagnostics)
 ///
 /// Verifies installation, dependencies, and runtime health.
+///
+/// # Errors
+///
+/// Returns an error if diagnostics cannot be completed or report failure.
 pub async fn run(
     comprehensive: bool,
     socket: Option<String>,

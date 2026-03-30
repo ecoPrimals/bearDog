@@ -38,7 +38,7 @@ use zeroize::Zeroize;
 
 type HmacSha256 = Hmac<Sha256>;
 
-/// Core cryptographic operations provider for BearDog
+/// Core cryptographic operations provider for `BearDog`
 ///
 /// Provides methods for key generation, signing, verification,
 /// and other cryptographic primitives.
@@ -56,6 +56,10 @@ impl BearDogCrypto {
     }
 
     /// Sign data with Ed25519 private key
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the private key is not 32 bytes or malformed.
     pub fn sign_ed25519(private_key: &[u8], message: &[u8]) -> Result<Vec<u8>, BearDogError> {
         if private_key.len() != 32 {
             return Err(BearDogError::invalid_input(
@@ -73,6 +77,11 @@ impl BearDogCrypto {
     }
 
     /// Verify Ed25519 signature
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the public key or signature length is invalid, or the public key bytes
+    /// are not a valid Ed25519 key.
     pub fn verify_ed25519(
         public_key: &[u8],
         message: &[u8],
@@ -119,6 +128,10 @@ impl BearDogCrypto {
     }
 
     /// Derive key using PBKDF2
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `iterations` is zero.
     pub fn derive_pbkdf2_key(
         password: &[u8],
         salt: &[u8],
@@ -137,6 +150,10 @@ impl BearDogCrypto {
     }
 
     /// Encrypt data using AES-GCM
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key or nonce length is invalid, or encryption fails.
     pub fn encrypt_aes_gcm(
         key: &[u8],
         plaintext: &[u8],
@@ -173,6 +190,10 @@ impl BearDogCrypto {
     }
 
     /// Decrypt data using AES-GCM
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the key or nonce length is invalid, authentication fails, or decryption fails.
     pub fn decrypt_aes_gcm(
         key: &[u8],
         ciphertext: &[u8],
@@ -217,6 +238,10 @@ impl BearDogCrypto {
     }
 
     /// Verify Password Argon2 operation.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the stored hash string is not a valid Argon2 password hash.
     pub fn verify_password_argon2(password: &str, hash: &str) -> Result<bool, BearDogError> {
         let parsed_hash = PasswordHash::new(hash)
             .map_err(|e| BearDogError::security(format!("Invalid password hash: {e}")))?;
@@ -247,6 +272,10 @@ impl BearDogCrypto {
     ///
     /// # Returns
     /// The HMAC tag as a byte vector
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the HMAC key length is invalid for the MAC implementation.
     pub fn hmac_sha256(key: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         let mut mac = <HmacSha256 as hmac::Mac>::new_from_slice(key)
             .map_err(|e| BearDogError::security(format!("HMAC key initialization failed: {e}")))?;
@@ -265,6 +294,10 @@ impl BearDogCrypto {
     ///
     /// # Returns
     /// `true` if the HMAC matches, `false` otherwise
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if HMAC computation fails (e.g. invalid key length).
     pub fn verify_hmac_sha256(
         key: &[u8],
         data: &[u8],
@@ -302,6 +335,10 @@ impl BearDogCrypto {
     ///
     /// # Returns
     /// A secure random password string
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `length` is less than 8.
     pub fn generate_password(length: usize) -> Result<String, BearDogError> {
         if length < 8 {
             return Err(BearDogError::Business {
@@ -330,7 +367,11 @@ impl BearDogCrypto {
     /// * `prefix` - Optional prefix for the API key (e.g., "sk_", "pk_")
     ///
     /// # Returns
-    /// A secure API key string in the format "prefix_base64(random_bytes)"
+    /// A secure API key string in the format "`prefix_base64(random_bytes)`"
+    ///
+    /// # Errors
+    ///
+    /// Currently infallible; the `Result` is reserved for future validation.
     pub fn generate_api_key(prefix: &str) -> Result<String, BearDogError> {
         let random_bytes = Self::generate_secure_random(32);
         let base64_key = base64::Engine::encode(

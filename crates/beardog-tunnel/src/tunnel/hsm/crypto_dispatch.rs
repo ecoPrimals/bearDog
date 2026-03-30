@@ -47,8 +47,8 @@ use beardog_types::hsm::CryptoProvider;
 ///
 /// ## Evolution
 ///
-/// - Ring removed - evolved to RustCrypto (100% Pure Rust, no C deps!)
-/// - OpenSSL removed - evolved to RustCrypto (100% Pure Rust sovereignty!)
+/// - Ring removed - evolved to `RustCrypto` (100% Pure Rust, no C deps!)
+/// - OpenSSL removed - evolved to `RustCrypto` (100% Pure Rust sovereignty!)
 #[derive(Debug, Clone)]
 pub enum CryptoProviderDispatch {
     /// 100% Pure Rust cryptography implementation (ARM cross-compile ready!)
@@ -58,7 +58,7 @@ pub enum CryptoProviderDispatch {
 }
 
 impl CryptoProviderDispatch {
-    /// Create a RustCrypto provider (100% Pure Rust, ARM-ready!)
+    /// Create a `RustCrypto` provider (100% Pure Rust, ARM-ready!)
     pub const fn rust_crypto(provider: RustCryptoProvider) -> Self {
         Self::RustCrypto(provider)
     }
@@ -75,7 +75,7 @@ impl CryptoProviderDispatch {
     }
 }
 
-/// Implement CryptoProvider trait with zero-cost enum dispatch
+/// Implement `CryptoProvider` trait with zero-cost enum dispatch
 ///
 /// **100% Pure Rust!** - All C dependencies removed
 #[async_trait::async_trait]

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Additional Key Derivation Function (KDF) handlers for BearDog RPC
+//! Additional Key Derivation Function (KDF) handlers for `BearDog` RPC
 //!
 //! This module implements legacy and memory-hard KDF/password hashing algorithms:
 //! - bcrypt: Legacy password hashing (very common in web apps)
 //! - scrypt: Memory-hard KDF (Litecoin, legacy systems)
 //!
-//! All implementations are Pure Rust from RustCrypto.
+//! All implementations are Pure Rust from `RustCrypto`.
 //!
 //! # Phase 7: High-Priority Compatibility
 //! - bcrypt: Most requested for legacy auth system integration
@@ -16,7 +16,7 @@
 //! - bcrypt: Secure, but not OWASP 2023 recommended (use Argon2id instead)
 //! - scrypt: Memory-hard, good, but Argon2id is preferred
 //! - Both use constant-time comparison for verify operations
-//! - Random salts are generated using OsRng (CSPRNG)
+//! - Random salts are generated using `OsRng` (CSPRNG)
 //!
 //! # Performance
 //! - bcrypt: ~100-200ms (cost 12, intentionally slow)
@@ -29,6 +29,9 @@ use beardog_errors::BearDogError;
 use serde_json::{Value, json};
 use zeroize::Zeroizing;
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 /// Handle bcrypt password hashing
 ///
 /// # Input Parameters
@@ -47,8 +50,8 @@ use zeroize::Zeroizing;
 /// ```
 ///
 /// # Security
-/// - Generates random salt using OsRng
-/// - Returns PHC format: $2b$12$salt_and_hash
+/// - Generates random salt using `OsRng`
+/// - Returns PHC format: $`2b$12$salt_and_hash`
 /// - Default cost 12 (~100-200ms on modern CPU)
 /// - NOT OWASP 2023 recommended (use Argon2id)
 pub fn handle_bcrypt_hash(params: &Value) -> Result<Value, BearDogError> {
@@ -97,6 +100,9 @@ pub fn handle_bcrypt_hash(params: &Value) -> Result<Value, BearDogError> {
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if verification fails in the underlying HSM provider.
 /// Handle bcrypt password verification
 ///
 /// # Input Parameters
@@ -150,6 +156,9 @@ pub fn handle_bcrypt_verify(params: &Value) -> Result<Value, BearDogError> {
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if password processing fails.
 /// Handle scrypt key derivation
 ///
 /// # Input Parameters

@@ -10,6 +10,9 @@ use sha1::Sha1;
 use sha2::{Digest, Sha256, Sha384, Sha512};
 use sha3::Sha3_256;
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 /// Handle `crypto.sha256` - SHA-256 hashing
 pub fn handle_sha256(params: &Value) -> Result<Value, BearDogError> {
     let data_b64 = params
@@ -36,6 +39,9 @@ pub fn handle_sha256(params: &Value) -> Result<Value, BearDogError> {
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 /// Handle `crypto.sha384` - SHA-384 hashing
 pub fn handle_sha384(params: &Value) -> Result<Value, BearDogError> {
     let data_b64 = params
@@ -62,6 +68,9 @@ pub fn handle_sha384(params: &Value) -> Result<Value, BearDogError> {
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 /// Handle `crypto.sha512` - SHA-512 hashing
 pub fn handle_sha512(params: &Value) -> Result<Value, BearDogError> {
     let data_b64 = params
@@ -88,6 +97,9 @@ pub fn handle_sha512(params: &Value) -> Result<Value, BearDogError> {
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 /// Handle `crypto.sha1` - SHA-1 hashing (LEGACY ONLY - INSECURE!)
 pub fn handle_sha1(params: &Value) -> Result<Value, BearDogError> {
     let data_b64 = params
@@ -115,6 +127,9 @@ pub fn handle_sha1(params: &Value) -> Result<Value, BearDogError> {
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 /// Handle `crypto.sha3_256` - SHA3-256 hashing (Modern quantum-resistant)
 pub fn handle_sha3_256(params: &Value) -> Result<Value, BearDogError> {
     let data_b64 = params

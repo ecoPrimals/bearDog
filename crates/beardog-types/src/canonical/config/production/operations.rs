@@ -89,7 +89,7 @@ impl MaintenanceConfig {
     /// Default maintenance window duration in seconds
     pub const DEFAULT_WINDOW_DURATION_SECS: u64 = 3600;
 
-    /// Create MaintenanceConfig with hardcoded defaults
+    /// Create `MaintenanceConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -100,7 +100,7 @@ impl MaintenanceConfig {
         }
     }
 
-    /// Create MaintenanceConfig from environment variables
+    /// Create `MaintenanceConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -127,7 +127,7 @@ impl BackupConfig {
     /// Default backup interval in seconds (24 hours)
     pub const DEFAULT_INTERVAL_SECS: u64 = 86400;
 
-    /// Create BackupConfig with hardcoded defaults
+    /// Create `BackupConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -138,7 +138,7 @@ impl BackupConfig {
         }
     }
 
-    /// Create BackupConfig from environment variables
+    /// Create `BackupConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -165,7 +165,7 @@ impl DisasterRecoveryConfig {
     /// Default Recovery Time Objective in seconds (1 hour)
     pub const DEFAULT_RTO_SECS: u64 = 3600;
 
-    /// Create DisasterRecoveryConfig with hardcoded defaults
+    /// Create `DisasterRecoveryConfig` with hardcoded defaults
     ///
     /// This method is deterministic and safe for concurrent use.
     /// No environment variables are read.
@@ -176,7 +176,7 @@ impl DisasterRecoveryConfig {
         }
     }
 
-    /// Create DisasterRecoveryConfig from environment variables
+    /// Create `DisasterRecoveryConfig` from environment variables
     ///
     /// Reads configuration from environment, falling back to defaults.
     ///
@@ -220,6 +220,10 @@ impl Default for DisasterRecoveryConfig {
 impl OperationalConfig {
     /// Validate
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Never returns an error; reserved for future validation rules.
     pub const fn validate(&self) -> Result<(), BearDogError> {
         Ok(())
     }

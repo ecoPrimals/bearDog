@@ -55,13 +55,13 @@ pub struct TunnelEstablishParams {
     /// - External mode: `tcp://hostname:port`
     pub peer_endpoint: String,
 
-    /// Trust verification mode (optional, defaults to genetic_lineage)
+    /// Trust verification mode (optional, defaults to `genetic_lineage`)
     ///
     /// If not specified, defaults to `GeneticLineage` for backward compatibility.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub trust_mode: Option<TrustMode>,
 
-    /// Communication protocol (optional, defaults to btsp_native)
+    /// Communication protocol (optional, defaults to `btsp_native`)
     ///
     /// If not specified, defaults to `BtspNative` for backward compatibility.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -100,6 +100,10 @@ impl TunnelEstablishParams {
     ///
     /// Extracts the transport layer (Unix socket or TCP socket)
     /// from the `peer_endpoint` URI.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the endpoint URI cannot be parsed as a transport.
     pub fn transport(&self) -> Result<Transport, String> {
         Transport::from_endpoint(&self.peer_endpoint)
     }
@@ -127,7 +131,7 @@ pub struct TunnelEstablishResponse {
     /// Tunnel mode ("internal" or "external")
     pub mode: String,
 
-    /// Protocol type ("btsp_native" or "tls_http")
+    /// Protocol type ("`btsp_native`" or "`tls_http`")
     pub protocol: String,
 
     /// Timestamp when tunnel was established (RFC 3339)
@@ -190,7 +194,7 @@ pub struct VerifyPeerParams {
     /// Tunnel ID
     pub tunnel_id: String,
 
-    /// Trust mode ("genetic_lineage" or "certificate")
+    /// Trust mode ("`genetic_lineage`" or "certificate")
     pub trust_mode: String,
 
     /// Certificate chain (for certificate mode, base64-encoded DER)

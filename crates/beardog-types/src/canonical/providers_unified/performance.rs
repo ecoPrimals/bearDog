@@ -60,7 +60,7 @@ impl Default for PerformanceConfig {
 )]
 pub type RateLimitConfig = super::super::config::domains::network::RateLimitConfig;
 
-/// Rate limiting algorithms (DEPRECATED - use canonical RateLimitStrategy)
+/// Rate limiting algorithms (DEPRECATED - use canonical `RateLimitStrategy`)
 ///
 /// **MIGRATION**: Use `super::super::config::domains::network::RateLimitStrategy` instead.
 ///

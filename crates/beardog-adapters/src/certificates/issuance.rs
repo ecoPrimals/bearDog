@@ -2,7 +2,7 @@
 // Copyright 2025 EcoPrimals BearDog Team
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Certificate issuance by BearDog daemon
+//! Certificate issuance by `BearDog` daemon
 
 use super::types::*;
 use beardog_errors::BearDogError;
@@ -12,7 +12,7 @@ use uuid::Uuid;
 
 /// Issues adapter unlock certificates
 pub struct CertificateIssuer {
-    /// BearDog signing key
+    /// `BearDog` signing key
     signing_key: SigningKey,
 }
 
@@ -23,6 +23,10 @@ impl CertificateIssuer {
     }
 
     /// Issue a certificate based on classification
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when high-risk commercial use lacks a license or signing fails.
     #[expect(
         clippy::cast_possible_wrap,
         reason = "Expiry minutes from policy fit i64 for chrono Duration"
@@ -76,6 +80,10 @@ impl CertificateIssuer {
     }
 
     /// Issue with explicit license
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the license is expired or signing fails.
     #[expect(
         clippy::cast_possible_wrap,
         reason = "Expiry minutes from policy fit i64 for chrono Duration"
@@ -213,7 +221,7 @@ impl CertificateIssuer {
         }
     }
 
-    /// Sign certificate with BearDog key
+    /// Sign certificate with `BearDog` key
     fn sign_certificate(&self, cert: &AdapterUnlockCertificate) -> Result<Vec<u8>, BearDogError> {
         // Compute hash of certificate fields (excluding signature)
         let hash = Self::compute_cert_hash(cert)?;

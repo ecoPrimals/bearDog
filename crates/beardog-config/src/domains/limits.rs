@@ -13,7 +13,7 @@
 //! - `BEARDOG_MAX_RETRIES` - Maximum retry attempts (default: 3)
 //! - `BEARDOG_MAX_MESSAGE_SIZE` - Maximum message size in bytes (default: 1MB)
 //! - `BEARDOG_QUEUE_SIZE` - Queue size for async operations (default: 1000)
-//! - `BEARDOG_THREAD_POOL_SIZE` - Thread pool size (default: num_cpus)
+//! - `BEARDOG_THREAD_POOL_SIZE` - Thread pool size (default: `num_cpus`)
 //!
 //! # Examples
 //!
@@ -159,6 +159,10 @@ impl LimitsConfig {
     }
 
     /// Validate the configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ConfigError`] when any limit field is zero or inconsistent.
     pub fn validate(&self) -> Result<(), ConfigError> {
         if self.buffer_size == 0 {
             return Err(ConfigError::validation(

@@ -12,7 +12,7 @@ use super::metadata::Environment;
 impl UnifiedBearDogConfig {
     /// Loads configuration from environment variables and default sources
     ///
-    /// This is the primary method for loading BearDog configuration in production.
+    /// This is the primary method for loading `BearDog` configuration in production.
     /// It automatically detects the environment, loads appropriate settings, and
     /// validates the complete configuration.
     ///
@@ -133,6 +133,10 @@ impl UnifiedBearDogConfig {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if [`Self::load`] fails.
     pub fn from_env() -> Result<Self, BearDogError> {
         Self::load()
     }
@@ -203,7 +207,7 @@ impl UnifiedBearDogConfig {
 
     /// Migrates from legacy configuration formats to unified configuration
     ///
-    /// This method provides a migration path from older BearDog configuration
+    /// This method provides a migration path from older `BearDog` configuration
     /// formats (pre-unification) to the new unified configuration system. It
     /// handles configuration consolidation, field mapping, and validation.
     ///
@@ -217,7 +221,7 @@ impl UnifiedBearDogConfig {
     ///
     /// ## Supported Legacy Formats
     ///
-    /// - BearDog v2.x fragmented configurations
+    /// - `BearDog` v2.x fragmented configurations
     /// - Environment variable-based configs
     /// - TOML-based legacy configs
     ///

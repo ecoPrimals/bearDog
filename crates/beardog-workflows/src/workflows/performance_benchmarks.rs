@@ -4,6 +4,13 @@
 
 use std::time::Instant;
 
+/// Saturating conversion from `Duration` to milliseconds as `u64`.
+/// Benchmark durations never approach `u64::MAX` (~585 million years),
+/// so saturation is a compile-time safety net, not a runtime concern.
+fn duration_ms(d: std::time::Duration) -> u64 {
+    u64::try_from(d.as_millis()).unwrap_or(u64::MAX)
+}
+
 /// Results from a single benchmark run.
 #[derive(Debug, Clone)]
 pub struct BenchmarkResults {
@@ -89,6 +96,10 @@ Based on these benchmarks, the zero-cost architecture is expected to provide:
 pub struct WorkflowPerformanceBenchmarks;
 
 impl WorkflowPerformanceBenchmarks {
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "percentage calculation; sub-ULP precision is irrelevant"
+    )]
     fn pct_improvement(baseline_ms: u64, optimized_ms: u64) -> f64 {
         if baseline_ms == 0 {
             return 0.0;
@@ -114,8 +125,8 @@ impl WorkflowPerformanceBenchmarks {
         }
         let zero_cost_time = zero_start.elapsed();
 
-        let async_trait_ms = async_trait_time.as_millis() as u64;
-        let zero_cost_ms = zero_cost_time.as_millis() as u64;
+        let async_trait_ms = duration_ms(async_trait_time);
+        let zero_cost_ms = duration_ms(zero_cost_time);
         let improvement = Self::pct_improvement(async_trait_ms, zero_cost_ms);
 
         tracing::info!("Workflow Processing Results");
@@ -140,7 +151,7 @@ impl WorkflowPerformanceBenchmarks {
             for _ in 0..16 {
                 h = h.wrapping_mul(0x9E37_79B9_7F4A_7C15).wrapping_add(1);
             }
-            keys_ok = keys_ok.wrapping_add(h as usize);
+            keys_ok = keys_ok.wrapping_add(usize::try_from(h).unwrap_or(0));
         }
         let generation_time = start_time.elapsed();
 
@@ -168,28 +179,28 @@ impl WorkflowPerformanceBenchmarks {
         }
         let light_elapsed = light.elapsed();
 
-        let async_trait_ms = total_heavy.as_millis() as u64;
-        let zero_cost_ms = light_elapsed.as_millis() as u64;
+        let async_trait_ms = duration_ms(total_heavy);
+        let zero_cost_ms = duration_ms(light_elapsed);
         let improvement = Self::pct_improvement(async_trait_ms, zero_cost_ms);
 
         tracing::info!("HSM Operations Results");
         tracing::info!(
-            key_generation_ms = generation_time.as_millis() as u64,
+            key_generation_ms = duration_ms(generation_time),
             keys = operations,
             "key generation"
         );
         tracing::info!(
-            signing_ms = signing_time.as_millis() as u64,
+            signing_ms = duration_ms(signing_time),
             signatures = operations.min(4096),
             "signing"
         );
         tracing::info!(
-            verification_ms = verification_time.as_millis() as u64,
+            verification_ms = duration_ms(verification_time),
             verified = operations.min(512),
             "verification"
         );
         tracing::info!(
-            total_ms = total_heavy.as_millis() as u64,
+            total_ms = duration_ms(total_heavy),
             zero_cost_ms,
             improvement = %improvement,
             "HSM summary"
@@ -211,22 +222,22 @@ impl WorkflowPerformanceBenchmarks {
         let boxed_start = Instant::now();
         let mut boxed: Vec<Box<u32>> = Vec::with_capacity(operations);
         for i in 0..operations {
-            boxed.push(Box::new(i as u32));
+            boxed.push(Box::new(u32::try_from(i).unwrap_or(0)));
         }
         let async_trait_time = boxed_start.elapsed();
 
         let direct_start = Instant::now();
         let mut sum = 0u32;
         for i in 0..operations {
-            sum = sum.wrapping_add(i as u32);
+            sum = sum.wrapping_add(u32::try_from(i).unwrap_or(0));
         }
         let zero_cost_time = direct_start.elapsed();
 
         let _ = boxed;
         let _ = sum;
 
-        let async_trait_ms = async_trait_time.as_millis() as u64;
-        let zero_cost_ms = zero_cost_time.as_millis() as u64;
+        let async_trait_ms = duration_ms(async_trait_time);
+        let zero_cost_ms = duration_ms(zero_cost_time);
         let improvement = Self::pct_improvement(async_trait_ms, zero_cost_ms);
 
         tracing::info!("Memory Allocation Results");

@@ -133,7 +133,9 @@ impl Default for KeyManagementCapabilities {
                 std::env::var("BEARDOG_HSM_MAX_KEYS")
                     .ok()
                     .and_then(|k| k.parse().ok())
-                    .unwrap_or(defaults::DEFAULT_MAX_ENTRIES as u32), // 10K keys default
+                    .unwrap_or_else(|| {
+                        u32::try_from(defaults::DEFAULT_MAX_ENTRIES).unwrap_or(u32::MAX)
+                    }), // 10K keys default
             ),
             backup_support: true,
             recovery_support: true,
@@ -269,7 +271,9 @@ impl Default for PerformanceCapabilities {
             max_operations_per_second: std::env::var("BEARDOG_HSM_MAX_OPS_PER_SEC")
                 .ok()
                 .and_then(|o| o.parse().ok())
-                .unwrap_or(defaults::DEFAULT_MAX_ENTRIES as u32), // 10K ops/sec default
+                .unwrap_or_else(|| {
+                    u32::try_from(defaults::DEFAULT_MAX_ENTRIES).unwrap_or(u32::MAX)
+                }), // 10K ops/sec default
             concurrent_operations: 100,
             average_latency_ms: 5.0,
             throughput_mbps: 100.0,

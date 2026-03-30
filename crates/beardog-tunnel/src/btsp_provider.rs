@@ -5,7 +5,7 @@
 //! **Note**: "BTSP" is used for developer context. The implementation uses generic
 //! capability traits to maintain primal sovereignty.
 //!
-//! This module implements BearDog's secure tunnel capability using genetic cryptography
+//! This module implements `BearDog`'s secure tunnel capability using genetic cryptography
 //! and Universal HSM architecture. The capability can be discovered and used by any
 //! primal without hardcoded coupling.
 //!
@@ -103,7 +103,7 @@ use types::PeerTrustRecord;
 // BearDog BTSP Provider Implementation
 // =============================================================================
 
-/// BearDog's implementation of BTSP using genetic cryptography
+/// `BearDog`'s implementation of BTSP using genetic cryptography
 pub struct BeardogBtspProvider {
     /// HSM manager for cryptographic operations (reserved for lineage verification)
     _hsm: Arc<HsmManager>,
@@ -111,13 +111,13 @@ pub struct BeardogBtspProvider {
     /// Genetics engine for key lineage and evolution (reserved for multi-hop paths)
     _genetics: Arc<EcosystemGeneticEngine>,
 
-    /// BirdSong manager for lineage-aware encryption
+    /// `BirdSong` manager for lineage-aware encryption
     birdsong: Arc<BirdSongManager>,
 
-    /// Active tunnels (tunnel_id -> Tunnel)
+    /// Active tunnels (`tunnel_id` -> Tunnel)
     tunnels: Arc<RwLock<HashMap<String, Tunnel>>>,
 
-    /// Peer trust database (peer_id -> TrustRecord)
+    /// Peer trust database (`peer_id` -> `TrustRecord`)
     trust_db: Arc<RwLock<HashMap<String, PeerTrustRecord>>>,
 
     /// Metrics: Total tunnels established
@@ -142,6 +142,9 @@ impl BeardogBtspProvider {
     ///
     /// **DO NOT USE IN PRODUCTION CODE**
     #[cfg(test)]
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails in the underlying HSM provider.
     pub async fn new_for_testing(
         hsm: Arc<HsmManager>,
         genetics: Arc<EcosystemGeneticEngine>,
@@ -164,7 +167,7 @@ impl BeardogBtspProvider {
         })
     }
 
-    /// Create new BearDog BTSP provider
+    /// Create new `BearDog` BTSP provider
     ///
     /// # Arguments
     ///
@@ -244,10 +247,10 @@ impl BeardogBtspProvider {
             .map(|record| record.trust_level)
     }
 
-    /// Get BirdSong manager (for API server integration)
+    /// Get `BirdSong` manager (for API server integration)
     ///
-    /// Returns a reference to the BirdSong manager used by this BTSP provider.
-    /// This allows the API server to use the same BirdSong instance and master key.
+    /// Returns a reference to the `BirdSong` manager used by this BTSP provider.
+    /// This allows the API server to use the same `BirdSong` instance and master key.
     pub fn birdsong_manager(&self) -> Arc<BirdSongManager> {
         self.birdsong.clone()
     }
@@ -430,7 +433,7 @@ impl BeardogBtspProvider {
     /// No fixed peer primal names — paths come from environment and shared `beardog-ipc` fallbacks.
     ///
     /// Discovery follows this priority (self-knowledge principle):
-    /// 1. Environment variable (DISCOVERY_SOCKET)
+    /// 1. Environment variable (`DISCOVERY_SOCKET`)
     /// 2. Capability registry query
     /// 3. Generic Primal IPC discovery endpoint (/primal/discovery)
     /// 4. Local fallback for development
@@ -653,9 +656,9 @@ impl BeardogBtspProvider {
         Ok(())
     }
 
-    /// Generate session key using BirdSong lineage-aware encryption
+    /// Generate session key using `BirdSong` lineage-aware encryption
     ///
-    /// This uses BirdSong to encrypt a random session key for the peer's lineage,
+    /// This uses `BirdSong` to encrypt a random session key for the peer's lineage,
     /// ensuring only trusted peers in the same cryptographic family can derive it.
     async fn generate_session_key(&self, peer_id: &str) -> Result<Vec<u8>, BearDogError> {
         debug!(

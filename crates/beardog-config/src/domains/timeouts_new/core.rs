@@ -7,7 +7,7 @@
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-/// Timeout configuration for all BearDog operations
+/// Timeout configuration for all `BearDog` operations
 ///
 ///All timeout values can be overridden via environment variables or configuration file.
 /// Each timeout has a sensible default based on industry standards.
@@ -61,7 +61,7 @@ pub struct TimeoutConfig {
 }
 
 impl TimeoutConfig {
-    /// Create a new builder for TimeoutConfig
+    /// Create a new builder for `TimeoutConfig`
     pub fn builder() -> crate::domains::timeouts::TimeoutConfigBuilder {
         crate::domains::timeouts::TimeoutConfigBuilder::new()
     }
@@ -94,6 +94,11 @@ impl TimeoutConfig {
     /// - AI batch: 1-1000 milliseconds
     /// - Pool idle: 60-7200 seconds
     /// - Max connection age: 300-86400 seconds
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` with a descriptive message when any value is outside the ranges above
+    /// (see [`crate::domains::timeouts_new::validation::validate_config`]).
     pub fn validate(&self) -> Result<(), String> {
         crate::domains::timeouts::validation::validate_config(self)
     }

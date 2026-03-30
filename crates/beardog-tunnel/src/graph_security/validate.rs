@@ -30,6 +30,11 @@ use uuid::Uuid;
 /// # Returns
 ///
 /// Validation report with issues and recommendations
+///
+/// # Errors
+///
+/// Returns an error if signature decoding fails, vulnerability scanning fails, or template threat
+/// detection cannot run.
 pub async fn validate_template(template: &GraphTemplate) -> Result<ValidationReport, BearDogError> {
     let mut issues = Vec::new();
     let mut checks_performed = Vec::new();
@@ -162,12 +167,12 @@ fn validate_structure(template: &GraphTemplate) -> Vec<ValidationIssue> {
 /// # Current Limitations
 ///
 /// Signature verification requires the creator's public key, which will be
-/// retrieved via the CollaborationService once available. Until then, we
+/// retrieved via the `CollaborationService` once available. Until then, we
 /// issue a warning for signed templates without verification capability.
 ///
 /// # Future Implementation
 ///
-/// 1. Query CollaborationService for creator's Ed25519 public key
+/// 1. Query `CollaborationService` for creator's Ed25519 public key
 /// 2. Canonicalize template (excluding signature field)
 /// 3. Verify Ed25519 signature against canonical form
 async fn verify_signature(

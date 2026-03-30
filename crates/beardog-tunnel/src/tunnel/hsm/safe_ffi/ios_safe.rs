@@ -18,6 +18,9 @@ pub struct SafeIosProvider {
 }
 
 impl SafeIosProvider {
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails in the underlying HSM provider.
     /// Create a new safe iOS provider
     pub fn new() -> Result<Self, BearDogError> {
         info!("🍎 Initializing iOS Safe Provider");

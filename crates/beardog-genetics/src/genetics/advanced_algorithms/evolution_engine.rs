@@ -55,6 +55,10 @@ impl GeneticEvolutionEngine {
     }
 
     /// Initialize population
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future initialization validation.
     pub fn initialize_population(
         &self,
         signatures: Vec<GeneticSignature>,
@@ -78,6 +82,10 @@ impl GeneticEvolutionEngine {
     }
 
     /// Run one generation
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when selection, crossover, or mutation steps fail.
     pub fn evolve_generation(&self) -> Result<GenerationSnapshot, BearDogError> {
         let population = self.population_manager.get_population();
         let generation = u32::try_from(

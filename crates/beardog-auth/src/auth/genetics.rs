@@ -63,12 +63,21 @@ fn merge_nuclear_digests(digests: &[[u8; 32]]) -> [u8; 32] {
 
 impl CrossNodeAuthEngine {
     /// Register genetics
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future validation failures.
     pub fn register_genetics(&mut self, genetics: BearDogGenetics) -> Result<(), BearDogError> {
         self.genetics_registry.insert(genetics.id.clone(), genetics);
         Ok(())
     }
 
     /// Combine genetics from parent nodes
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when parents are missing, mismatched with the registry, or internal
+    /// invariants fail.
     pub fn combine_genetics(&self, parent_ids: &[&str]) -> Result<BearDogGenetics, BearDogError> {
         if parent_ids.is_empty() {
             return Err(BearDogError::business(
@@ -144,6 +153,10 @@ impl CrossNodeAuthEngine {
     }
 
     /// Terminate a spawn
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError::not_found`] when `spawn_id` is unknown.
     pub fn terminate_spawn(&mut self, spawn_id: &str) -> Result<(), BearDogError> {
         if let Some(spawn) = self.spawned_beardogs.get_mut(spawn_id) {
             spawn.current_status = SpawnStatus::Terminated;

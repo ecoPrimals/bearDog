@@ -52,7 +52,7 @@ pub enum LegacyHsmProviderType {
     Network,
     /// Cloud HSM service
     Cloud,
-    /// Mobile platform HSM (iOS Secure Enclave, Android StrongBox)
+    /// Mobile platform HSM (iOS Secure Enclave, Android `StrongBox`)
     Mobile,
     /// Custom HSM provider
     Custom {
@@ -531,6 +531,10 @@ impl HsmProviderConfig {
 
     /// Check if the configuration is valid
     /// Validates input
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if timeouts are zero or provider-specific required fields are missing.
     pub fn validate(&self) -> Result<(), String> {
         let base = self.base_config();
 
@@ -658,6 +662,10 @@ impl HsmConfigBuilder {
 
     /// Build the final configuration
     /// Builds component
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if [`HsmProviderConfig::validate`] fails.
     pub fn build(self) -> Result<HsmProviderConfig, String> {
         self.config.validate()?;
         Ok(self.config)

@@ -72,8 +72,11 @@ pub struct SecureSession {
 }
 
 impl SecureSession {
-    /// New operation.
-    /// Creates a new instance
+    /// Creates a new secure session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session cannot be constructed.
     pub fn new(
         session_id: &str,
         peer_node_id: &str,
@@ -145,7 +148,7 @@ impl Default for SecurityGenetics {
 /// Session manager for secure tunnel sessions
 ///
 /// Manages the lifecycle of secure sessions including creation, validation,
-/// key rotation, and cleanup. Thread-safe via RwLock.
+/// key rotation, and cleanup. Thread-safe via `RwLock`.
 #[derive(Debug)]
 pub struct SessionManager {
     /// Active sessions indexed by session ID
@@ -162,6 +165,10 @@ impl SessionManager {
     }
 
     /// Creates session
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session cannot be created or the lock cannot be acquired.
     pub async fn create_session(
         &self,
         session_id: String,
@@ -194,6 +201,10 @@ impl SessionManager {
     }
 
     /// Cleans up `expired_sessions`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session map lock cannot be acquired.
     pub async fn cleanup_expired_sessions(&self) -> Result<usize, BearDogError> {
         let mut sessions = self.sessions.write().await;
         let initial_count = sessions.len();

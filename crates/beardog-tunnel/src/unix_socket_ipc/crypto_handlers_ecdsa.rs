@@ -2,7 +2,7 @@
 
 //! ECDSA Crypto Handlers
 //!
-//! Pure Rust ECDSA signature operations using RustCrypto's elliptic curve crates.
+//! Pure Rust ECDSA signature operations using `RustCrypto`'s elliptic curve crates.
 //!
 //! # Supported Curves
 //!
@@ -20,18 +20,18 @@
 //! - `crypto.sign_ecdsa_secp384r1` - Sign data with ECDSA P-384
 //! - `crypto.verify_ecdsa_secp384r1` - Verify ECDSA P-384 signature
 //!
-//! ## ECDSA P-521 (secp521r1) - FUTURE (blocked by rand_core version conflict)
+//! ## ECDSA P-521 (secp521r1) - FUTURE (blocked by `rand_core` version conflict)
 //! - `crypto.sign_ecdsa_secp521r1` - Sign data with ECDSA P-521
 //! - `crypto.verify_ecdsa_secp521r1` - Verify ECDSA P-521 signature
 //!
-//! Note: P-521 implementation delayed due to p521 crate using rand_core 0.10-rc
-//! while our codebase uses rand_core 0.6. Will implement when p521 reaches stable.
+//! Note: P-521 implementation delayed due to p521 crate using `rand_core` 0.10-rc
+//! while our codebase uses `rand_core` 0.6. Will implement when p521 reaches stable.
 //! Impact: < 1% of servers, not blocking for 99% compatibility goal.
 //!
 //! # Architecture
 //!
 //! All operations are:
-//! - **Pure Rust**: Zero C dependencies (using RustCrypto)
+//! - **Pure Rust**: Zero C dependencies (using `RustCrypto`)
 //! - **Constant-time**: Resistant to timing attacks
 //! - **Zeroized**: Private keys cleared after use
 //! - **Production-ready**: Used by major Rust projects
@@ -72,6 +72,9 @@ use zeroize::Zeroizing;
 // ECDSA P-256 (secp256r1)
 // ============================================================================
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 /// Sign data with ECDSA P-256 (secp256r1)
 ///
 /// # RPC Method
@@ -162,6 +165,9 @@ pub async fn handle_sign_ecdsa_secp256r1(
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if the ECDSA operation fails.
 /// Verify ECDSA P-256 (secp256r1) signature
 ///
 /// # RPC Method
@@ -270,6 +276,9 @@ pub async fn handle_verify_ecdsa_secp256r1(
 // ECDSA P-384 (secp384r1)
 // ============================================================================
 
+/// # Errors
+///
+/// Returns an error if hashing fails.
 /// Sign data with ECDSA P-384 (secp384r1)
 ///
 /// # RPC Method
@@ -359,6 +368,9 @@ pub async fn handle_sign_ecdsa_secp384r1(
     }))
 }
 
+/// # Errors
+///
+/// Returns an error if the ECDSA operation fails.
 /// Verify ECDSA P-384 (secp384r1) signature
 ///
 /// # RPC Method

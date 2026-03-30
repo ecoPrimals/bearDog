@@ -5,7 +5,7 @@
 //! Constants related to ecosystem services, primal identifiers,
 //! and inter-service communication.
 
-/// Core primal identifier for BearDog
+/// Core primal identifier for `BearDog`
 ///
 /// Used throughout the ecosystem for service identification
 pub const BEARDOG_ID: &str = "beardog";
@@ -45,7 +45,7 @@ pub mod service_types {
 
 /// Version and build information
 pub mod version {
-    /// BearDog version from Cargo.toml
+    /// `BearDog` version from Cargo.toml
     pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
     /// Software HSM version
@@ -54,6 +54,6 @@ pub mod version {
     /// Workflow system version
     pub const WORKFLOW_SYSTEM_VERSION: &str = "3.1.0";
 
-    /// BearDog mission statement
+    /// `BearDog` mission statement
     pub const MISSION: &str = "Democratizing enterprise-grade security for everyone";
 }

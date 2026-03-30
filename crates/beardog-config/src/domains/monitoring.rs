@@ -2,7 +2,7 @@
 
 //! Concurrent-Safe Monitoring Configuration Module
 //!
-//! Monitoring, logging, and metrics configuration for BearDog.
+//! Monitoring, logging, and metrics configuration for `BearDog`.
 //!
 //! ## Design Pattern: Explicit Environment Loading
 //!
@@ -104,6 +104,10 @@ impl MonitoringConfig {
     }
 
     /// Validate monitoring configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ConfigError`] when log level, format, or sampling values are invalid.
     pub fn validate(&self) -> ConfigResult<()> {
         // Validate log level
         let valid_levels = ["trace", "debug", "info", "warn", "error"];
@@ -141,7 +145,7 @@ impl Default for MonitoringConfig {
     }
 }
 
-/// Builder for MonitoringConfig
+/// Builder for `MonitoringConfig`
 #[derive(Debug, Default)]
 pub struct MonitoringConfigBuilder {
     log_level: Option<String>,

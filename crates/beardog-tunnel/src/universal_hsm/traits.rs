@@ -16,12 +16,24 @@ pub trait UniversalHsmProvider: Send + Sync {
     fn get_provider_info(&self) -> ProviderInfo;
 
     /// Generate a new key
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if key generation fails.
     fn generate_key(&self, key_type: KeyType) -> Result<Vec<u8>, BearDogError>;
 
     /// Sign data with a key
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if signing fails.
     fn sign(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>;
 
     /// Verify a signature
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if verification fails.
     fn verify(&self, key_id: &str, data: &[u8], signature: &[u8]) -> Result<bool, BearDogError>;
 
     /// Get provider capabilities

@@ -217,7 +217,10 @@ async fn get_corruption_alerts(ctx: &DataIntegrityContext) -> Result<Vec<String>
 }
 
 /// Recover data from backup
-async fn recover_from_backup(ctx: &DataIntegrityContext, data_id: &str) -> Result<(), BearDogError> {
+async fn recover_from_backup(
+    ctx: &DataIntegrityContext,
+    data_id: &str,
+) -> Result<(), BearDogError> {
     let mut set = ctx.corrupted_data.lock().unwrap();
     set.remove(data_id);
     Ok(())

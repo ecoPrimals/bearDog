@@ -56,6 +56,10 @@ impl Default for EndpointsConfiguration {
 
 impl EndpointsConfiguration {
     /// Validate endpoints configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if any required URL is empty or versioning is enabled without an API version.
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.api_base_url.is_empty() {
             return Err(BearDogError::configuration("API base URL cannot be empty"));

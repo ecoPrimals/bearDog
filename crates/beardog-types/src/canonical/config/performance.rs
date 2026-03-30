@@ -7,7 +7,7 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Performance configuration for BearDog operations
+/// Performance configuration for `BearDog` operations
 ///
 /// Controls various performance-related settings including optimization levels,
 /// caching strategies, parallel processing, and resource usage limits.
@@ -40,7 +40,7 @@ use serde::{Deserialize, Serialize};
 pub struct CanonicalPerformanceConfig {
     /// Whether performance optimizations are enabled
     ///
-    /// When disabled, BearDog uses safe defaults with minimal optimization.
+    /// When disabled, `BearDog` uses safe defaults with minimal optimization.
     /// Enable in production for better performance.
     pub enabled: bool,
 
@@ -69,7 +69,7 @@ pub struct CanonicalPerformanceConfig {
     pub resource_limits: ResourceLimits,
 }
 
-/// Optimization level for BearDog operations
+/// Optimization level for `BearDog` operations
 ///
 /// Defines the intensity of performance optimizations applied.
 /// Higher levels trade more resources for better performance.
@@ -112,7 +112,7 @@ pub enum OptimizationLevel {
     Maximum,
 }
 
-/// Resource usage limits for BearDog operations
+/// Resource usage limits for `BearDog` operations
 ///
 /// Defines maximum resource consumption to prevent resource exhaustion
 /// and maintain system stability in production environments.
@@ -137,7 +137,7 @@ pub enum OptimizationLevel {
 pub struct ResourceLimits {
     /// Maximum memory usage in megabytes
     ///
-    /// BearDog will attempt to stay within this limit. Set to 0 for unlimited.
+    /// `BearDog` will attempt to stay within this limit. Set to 0 for unlimited.
     /// Recommended: 1024-4096 MB for production deployments.
     pub max_memory_mb: u64,
 

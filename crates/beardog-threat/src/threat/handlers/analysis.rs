@@ -73,6 +73,10 @@ impl ThreatDetectionEngine {
     }
 
     /// Updates `threat_signatures`
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future validation.
     pub fn update_threat_signatures(
         &mut self,
         signatures: HashMap<String, String>,
@@ -82,6 +86,10 @@ impl ThreatDetectionEngine {
     }
 
     /// Runs a trivial size-based heuristic and updates [`ThreatAnalysisMetrics`].
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds; the `Result` type is reserved for future analysis failures.
     pub fn analyze_threat(
         &mut self,
         threat_data: &[u8],

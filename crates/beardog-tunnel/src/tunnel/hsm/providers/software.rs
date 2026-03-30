@@ -28,7 +28,7 @@ pub struct SoftwareUniversalProvider {
     metadata: HashMap<String, String>,
     /// Real crypto provider implementation
     crypto_impl: Arc<dyn CryptoProvider<KeyType> + Send + Sync>,
-    /// Key storage (maps key_id -> key_material)
+    /// Key storage (maps `key_id` -> `key_material`)
     keys: HashMap<String, Vec<u8>>,
 }
 
@@ -177,6 +177,9 @@ impl SoftwareUniversalProvider {
         self.capabilities.as_ref()
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the provider is not registered.
     /// Generate a key (REAL IMPLEMENTATION)
     pub async fn generate_key(&mut self, key_id: &str, key_type: &str) -> Result<(), BearDogError> {
         info!(
@@ -215,6 +218,9 @@ impl SoftwareUniversalProvider {
         Ok(())
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the provider is not registered.
     /// Encrypt data (REAL IMPLEMENTATION)
     pub async fn encrypt(&self, key_id: &str, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
         info!("🔒 REAL encryption with software key: {}", key_id);
@@ -237,6 +243,9 @@ impl SoftwareUniversalProvider {
         Ok(ciphertext)
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the provider is not registered.
     /// Decrypt data (REAL IMPLEMENTATION)
     pub async fn decrypt(&self, key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError> {
         info!("🔓 REAL decryption with software key: {}", key_id);
@@ -259,6 +268,9 @@ impl SoftwareUniversalProvider {
         Ok(plaintext)
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the provider is not registered.
     /// Sign data (REAL IMPLEMENTATION)
     pub async fn sign(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         info!("✍️ REAL signing with software key: {}", key_id);
@@ -281,6 +293,9 @@ impl SoftwareUniversalProvider {
         Ok(signature)
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the provider is not registered.
     /// Verify signature (REAL IMPLEMENTATION)
     pub async fn verify(
         &self,

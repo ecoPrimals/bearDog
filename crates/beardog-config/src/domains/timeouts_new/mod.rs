@@ -2,11 +2,11 @@
 
 //! Modular Timeout Configuration
 //!
-//! This module provides centralized timeout configuration for all BearDog operations.
+//! This module provides centralized timeout configuration for all `BearDog` operations.
 //!
 //! ## Module Organization
 //!
-//! - `core` - Core TimeoutConfig struct and conversions
+//! - `core` - Core `TimeoutConfig` struct and conversions
 //! - `builder` - Builder pattern for configuration
 //! - `defaults` - Default timeout values
 //! - `validation` - Configuration validation logic
