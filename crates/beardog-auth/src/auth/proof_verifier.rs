@@ -59,10 +59,11 @@ impl ProofVerifier for DefaultProofVerifier {
         // In a real implementation, this would create cryptographic signatures
 
         let proof_signature = format!(
-            "proof_{}_{}_{}",
+            "proof_{}_{}_{}_{}",
             authorization.request_id,
             operation.operation_type.clone() as u8,
-            Utc::now().timestamp()
+            Utc::now().timestamp_nanos_opt().unwrap_or_default(),
+            uuid::Uuid::new_v4().as_simple(),
         );
 
         Ok(AuthorizationProof {
@@ -215,8 +216,6 @@ mod tests {
         let proof1 = verifier
             .generate_proof(&authorization, &operation)
             .expect("generate_proof in test");
-        // Sleep for 1 second since signatures use timestamp in seconds
-        std::thread::sleep(std::time::Duration::from_secs(1));
         let proof2 = verifier
             .generate_proof(&authorization, &operation)
             .expect("generate_proof in test");

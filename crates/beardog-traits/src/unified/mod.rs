@@ -53,10 +53,15 @@ pub mod storage;
 pub mod workflow;
 
 // Re-export unified traits
-pub use core::*;
-pub use genetics::*;
-pub use hsm_multi_credential::*;
-pub use security::*;
+pub use core::{
+    Configurable, HealthMonitored, Identifiable, Lifecycle, MetricsCollector, Serializable,
+    Validatable, Versionable,
+};
+pub use genetics::{BiomeGenetics, EntropyQualityAssessor, EvolutionEngine, LineageTracker};
+pub use hsm_multi_credential::{
+    CredentialIdConverter, MultiCredentialHsmProvider, PermissionMapper,
+};
+pub use security::{AuditProvider, PolicyEngine};
 
 // Re-export unified provider traits (these replace all scattered provider traits)
 pub use providers::{

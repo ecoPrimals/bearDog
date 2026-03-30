@@ -335,7 +335,7 @@ pub trait CanonicalType: Send + Sync + Clone + Serialize + for<'de> Deserialize<
 ///
 /// # Usage
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use beardog_types::canonical::HealthStatus;
 ///
 /// // Check if system is operational
@@ -443,7 +443,7 @@ impl CanonicalType for SessionConfig {
 ///
 /// # Usage
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use beardog_types::canonical::{SecurityContext, SecurityLevel, CanonicalType};
 ///
 /// // Create a security context
@@ -489,7 +489,7 @@ impl CanonicalType for SessionConfig {
 ///
 /// Always validate security contexts before use:
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use beardog_types::canonical::{SecurityContext, CanonicalType};
 ///
 /// let context = SecurityContext::default();
@@ -563,7 +563,7 @@ impl CanonicalType for SecurityContext {
 ///
 /// # Usage
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use beardog_types::canonical::{SecurityAuditEvent, AuditOutcome};
 /// use std::collections::HashMap;
 ///
@@ -607,7 +607,7 @@ impl CanonicalType for SecurityContext {
 ///
 /// Include relevant context in metadata:
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use beardog_types::canonical::SecurityAuditEvent;
 /// use std::collections::HashMap;
 ///
@@ -713,7 +713,7 @@ impl CanonicalType for SecurityAuditEvent {
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use beardog_types::canonical::PolicyDecision;
 ///
 /// // Unconditional allow
@@ -799,7 +799,7 @@ impl CanonicalType for PolicyDecision {
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use beardog_types::canonical::KeyStatus;
 ///
 /// // New key starts as pending

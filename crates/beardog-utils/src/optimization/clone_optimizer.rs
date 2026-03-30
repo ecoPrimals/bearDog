@@ -157,7 +157,7 @@ impl<T: Clone + 'static> std::ops::Deref for CopyOnWrite<T> {
 
 /// Small composable functions demonstrating each strategy.
 pub mod patterns {
-    use super::*;
+    use super::{Arc, CopyOnWrite, SharedOwnership};
 
     /// Optimize String Sharing operation.
     pub fn optimize_string_sharing(s: &str) -> Arc<str> {

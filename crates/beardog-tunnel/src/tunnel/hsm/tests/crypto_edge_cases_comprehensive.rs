@@ -407,7 +407,7 @@ async fn test_health_check_during_operations() -> Result<(), BearDogError> {
             health.is_healthy,
             "HSM should remain healthy during operations"
         );
-        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+        tokio::task::yield_now().await;
     }
 
     // Wait for background to complete

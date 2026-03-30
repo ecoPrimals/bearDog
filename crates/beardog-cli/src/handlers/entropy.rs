@@ -518,6 +518,7 @@ fn generate_system_entropy(size: usize) -> Result<Vec<u8>, BearDogError> {
 #[cfg(test)]
 mod entropy_handler_tests {
     use super::*;
+    use beardog_types::constants::network::HTTPS_PORT;
     use tempfile::TempDir;
 
     #[test]
@@ -902,7 +903,7 @@ mod entropy_handler_tests {
         assert!(
             format_hsm_interface_type_label(&T::NetworkHsm {
                 endpoint: "10.0.0.1".to_string(),
-                port: 443,
+                port: HTTPS_PORT,
             })
             .contains("10.0.0.1")
         );

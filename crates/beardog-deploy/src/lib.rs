@@ -119,10 +119,10 @@ impl DeploymentManager {
     ///
     /// Returns an error if configuration validation fails.
     pub fn initialize(&self) -> Result<(), BearDogError> {
-        println!("🚀 Initializing BearDog deployment environment");
+        tracing::info!("Initializing BearDog deployment environment");
 
         self.validate_config()?;
-        println!("✅ Deployment environment initialized successfully");
+        tracing::info!("Deployment environment initialized successfully");
         Ok(())
     }
 

@@ -95,7 +95,9 @@ impl BeaconSeed {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
+    /// use beardog_genetics::birdsong::BeaconSeed;
+    ///
     /// let beacon = BeaconSeed::generate();
     /// let id = beacon.id(); // Public beacon ID
     /// ```

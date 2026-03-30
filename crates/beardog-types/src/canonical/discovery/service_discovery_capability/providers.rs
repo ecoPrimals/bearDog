@@ -2,7 +2,9 @@
 
 //! Consul, etcd, and DNS/HTTP fallback discovery providers.
 
+use crate::constants::localhost::LOCALHOST_V4;
 use async_trait::async_trait;
+use beardog_config::domains::network_ports::DEFAULT_API_PORT_STR;
 use std::collections::HashMap;
 
 use crate::canonical::capabilities::ServiceCapabilityType;
@@ -110,10 +112,10 @@ impl DnsHttpDiscovery {
             // Use canonical network configuration instead of hardcoding
             let default_port = std::env::var("BEARDOG_DEFAULT_SERVICE_PORT")
                 .or_else(|_| std::env::var("BEARDOG_API_PORT"))
-                .unwrap_or_else(|_| "8080".to_string());
+                .unwrap_or_else(|_| DEFAULT_API_PORT_STR.to_string());
             let host = std::env::var("BEARDOG_API_HOST")
                 .or_else(|_| std::env::var("BEARDOG_LOCALHOST"))
-                .unwrap_or_else(|_| "127.0.0.1".to_string());
+                .unwrap_or_else(|_| LOCALHOST_V4.to_string());
             return Ok(vec![format!("http://{}:{}", host, default_port)]);
         }
 

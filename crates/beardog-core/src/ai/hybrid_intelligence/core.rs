@@ -209,30 +209,26 @@ impl HybridIntelligenceSystem {
     ///
     /// # Errors
     /// Returns an error if initialization fails.
-    pub fn initialize(&self) -> Result<(), BearDogError> {
+    pub async fn initialize(&self) -> Result<(), BearDogError> {
         info!(
             "Initializing hybrid intelligence system: {}",
             self.config.system_id
         );
 
-        // Initialize all enabled capabilities
         for capability in &self.config.enabled_capabilities {
             self.initialize_capability(*capability)?;
         }
 
-        // Update active capabilities
         {
-            let mut active = self.active_capabilities.blocking_write();
+            let mut active = self.active_capabilities.write().await;
             active.clear();
             active.extend_from_slice(&self.config.enabled_capabilities);
         }
 
-        // Start monitoring
         self.start_monitoring();
 
-        // Update health status
         {
-            let mut health = self.health.blocking_write();
+            let mut health = self.health.write().await;
             *health = HealthStatus::Healthy;
         }
 

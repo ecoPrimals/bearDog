@@ -15,7 +15,7 @@
 use crate::zero_copy::*;
 use crate::zero_copy_optimized;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 // =============================================================================
 // ZeroCopyManager Tests (from mod.rs)
@@ -257,20 +257,16 @@ fn test_request_cache_overwrite() {
 
 #[test]
 fn test_request_cache_expiration() {
-    // ✅ MODERNIZED: Minimal sleep for time-based test (5ms TTL + 6ms sleep)
-    // Time-based expiration requires actual time passage - this is an integration test
-    let cache = RequestCache::new(Duration::from_millis(5));
-
-    cache.insert("temp_key".to_string(), "temp_value".to_string());
-    assert_eq!(cache.get("temp_key"), Some("temp_value".to_string()));
-
-    // TEST_CATEGORY: integration
-    // TEST_DOMAIN: core
-    // TEST_PRIORITY: normal
-    // Minimal sleep to allow expiration (reduced from 20ms to 6ms)
-    std::thread::sleep(Duration::from_millis(6));
+    let cache = RequestCache::new(Duration::from_secs(60));
+    let past = Instant::now() - Duration::from_secs(3600);
+    cache.insert_at(
+        "temp_key".to_string(),
+        "temp_value".to_string(),
+        Duration::from_millis(5),
+        past,
+    );
+    assert_eq!(cache.get("temp_key"), None);
     cache.cleanup_expired();
-
     assert_eq!(cache.get("temp_key"), None);
 }
 
@@ -279,18 +275,26 @@ fn test_request_cache_expiration() {
 // TEST_PRIORITY: normal
 #[test]
 fn test_request_cache_cleanup_expired() {
-    // ✅ MODERNIZED: Minimal sleep for time-based test (5ms TTL + 6ms sleep)
-    let cache = RequestCache::new(Duration::from_millis(5));
+    let cache = RequestCache::new(Duration::from_secs(60));
+    let past = Instant::now() - Duration::from_secs(3600);
 
-    cache.insert("key1".to_string(), "value1".to_string());
-    cache.insert("key2".to_string(), "value2".to_string());
+    cache.insert_at(
+        "key1".to_string(),
+        "value1".to_string(),
+        Duration::from_millis(5),
+        past,
+    );
+    cache.insert_at(
+        "key2".to_string(),
+        "value2".to_string(),
+        Duration::from_millis(5),
+        past,
+    );
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
     assert_eq!(cache.len(), 2);
 
-    // Minimal sleep to allow expiration (reduced from 20ms to 6ms)
-    std::thread::sleep(Duration::from_millis(6));
     cache.cleanup_expired();
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: core

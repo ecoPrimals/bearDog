@@ -16,6 +16,9 @@ use std::collections::HashMap;
 // Removed unused SystemTime import
 use tracing::info;
 
+const MAX_THREAT_HISTORY_ENTRIES: usize = 5000;
+const THREAT_HISTORY_DRAIN_COUNT: usize = 1000;
+
 /// Rolled-up health for the threat management subsystem and its components.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemHealth {
@@ -178,8 +181,8 @@ impl ThreatDetectionEngine {
 
         {
             let mut history = self.event_history.write().await;
-            if history.len() > 5000 {
-                history.drain(0..1000);
+            if history.len() > MAX_THREAT_HISTORY_ENTRIES {
+                history.drain(0..THREAT_HISTORY_DRAIN_COUNT);
                 info!("Cleaned up old event history");
             }
         }

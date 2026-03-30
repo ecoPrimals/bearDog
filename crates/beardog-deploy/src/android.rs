@@ -434,11 +434,19 @@ mod tests {
 
     #[test]
     fn test_is_target_installed() {
-        // Check a target we know exists
-        if AndroidDeployment::check_rustup_available() {
-            // Check the host target - should be installed
-            let result = AndroidDeployment::is_target_installed("x86_64-unknown-linux-gnu");
-            assert!(result.is_ok());
+        if !AndroidDeployment::check_rustup_available() {
+            return;
+        }
+        // Retry up to 3 times — `rustup` uses a global file lock that can
+        // cause transient failures under heavy parallel workspace testing.
+        for attempt in 0..3 {
+            match AndroidDeployment::is_target_installed("x86_64-unknown-linux-gnu") {
+                Ok(_) => return,
+                Err(_) if attempt < 2 => {
+                    std::thread::sleep(std::time::Duration::from_millis(100));
+                }
+                Err(e) => panic!("is_target_installed failed after retries: {e}"),
+            }
         }
     }
 }

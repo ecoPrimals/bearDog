@@ -58,10 +58,7 @@ mod error_recovery_path_tests;
 #[cfg(test)]
 mod integration_engine_coverage_tests;
 
-// October 22, 2025: Core Edge Cases (High-Value Test Coverage Expansion)
-#[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]
-#[cfg(test)]
-mod core_edge_cases_oct22;
+// October 22, 2025: Core Edge Cases — compiled via `lib.rs` (`mod core_edge_cases_oct22`).
 
 // November 22, 2025: Bootstrap and Registry Error Scenario Coverage Expansion
 #[allow(unused_imports, clippy::float_cmp, clippy::useless_vec, clippy::needless_range_loop, clippy::uninlined_format_args, dead_code)]

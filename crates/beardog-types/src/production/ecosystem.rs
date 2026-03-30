@@ -459,7 +459,7 @@ impl ProductionEcosystem {
 /// ```
 ///
 /// ## Monitoring
-/// ```rust,ignore
+/// ```rust,no_run
 /// use beardog_types::production::ecosystem::ProductionState;
 ///
 /// fn check_state(state: &ProductionState) {

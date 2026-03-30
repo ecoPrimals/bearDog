@@ -83,7 +83,7 @@
 //!
 //! All configurations are validated before use:
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use beardog_types::canonical::config::UnifiedBearDogConfig;
 //!
 //! let mut config = UnifiedBearDogConfig::default();

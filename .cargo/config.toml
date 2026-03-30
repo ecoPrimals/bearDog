@@ -40,6 +40,9 @@ git-fetch-with-cli = false
 verbose = false
 quiet = false
 
-# Android NDK target configuration
+# Android NDK (aarch64): do not commit machine-specific paths. Set ANDROID_NDK_HOME to the NDK root
+# (e.g. export ANDROID_NDK_HOME="$HOME/android-dev/android-ndk-r25c") before building for this target,
+# or put a local-only override in `.cargo/config.local.toml` (merge layer; keep that file out of git).
+# Cargo expands ${VAR} in config values; see https://doc.rust-lang.org/cargo/reference/config.html
 [target.aarch64-linux-android]
-linker = "/home/eastgate/android-dev/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
+linker = "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"

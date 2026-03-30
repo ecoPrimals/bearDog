@@ -113,7 +113,7 @@ fn test_handler_method_count() {
     let handler = CryptoHandler;
     assert_eq!(
         handler.methods().len(),
-        92,
-        "Should have exactly 92 crypto methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3 + Tor Phase 2 - Feb 2026 Deep Debt Evolution)"
+        93,
+        "Should have exactly 93 crypto methods (Phase 1-8 + TLS 1.2 + Dark Forest + Device Enrollment + Onion Service + Tor v3 + Tor Phase 2 + derive_lineage_beacon_key)"
     );
 }

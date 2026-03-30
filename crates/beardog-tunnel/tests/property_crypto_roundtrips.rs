@@ -22,6 +22,7 @@
 use beardog_errors::BearDogError;
 use beardog_tunnel::tunnel::hsm::software_hsm::CryptoProvider;
 use beardog_tunnel::tunnel::hsm::software_hsm::crypto_providers::GeneticCryptoProvider;
+use ed25519_dalek::SigningKey;
 use rand::Rng;
 use std::sync::Arc;
 
@@ -107,77 +108,35 @@ async fn property_large_input_handling() -> Result<(), BearDogError> {
 ///
 /// For any message `m`, `verify(sign(m), m) == true`
 ///
-/// **Status**: IGNORED - Requires Ed25519 key pair derivation enhancement
-///
-/// **Issue**: The GeneticCryptoProvider's `generate_key_material` for Ed25519
-/// needs to be enhanced to properly derive verifying keys from signing keys.
-/// This is tracked for future enhancement but doesn't block production readiness
-/// as signature operations are thoroughly tested in the comprehensive test suites.
-///
-/// **See**: `tests/phase6_crypto_comprehensive_tests.rs` for working Ed25519 tests
-#[ignore = "Requires Ed25519 key pair derivation enhancement"]
 #[tokio::test]
 async fn property_sign_verify_roundtrip() -> Result<(), BearDogError> {
-    use beardog_tunnel::tunnel::hsm::types::key::CanonicalKeyType;
-
     let provider = Arc::new(GeneticCryptoProvider::new()?);
-    let iterations = 50;
-    let mut successful_iterations = 0;
+    let iterations = 100;
 
     for iteration in 0..iterations {
-        // Generate random message (1 to 10KB)
         let message_len = rand::thread_rng().gen_range(1..=10_000);
         let mut message = vec![0u8; message_len];
         rand::thread_rng().fill(&mut message[..]);
 
-        // Use the provider's proper key generation for Ed25519
-        // This ensures the key material is in the correct format
-        let Ok(signing_key_bytes) = provider
-            .generate_key_material(&CanonicalKeyType::Ed25519)
-            .await
-        else {
-            continue;
-        };
+        let signing_key_bytes = provider.generate_random_bytes(32)?;
+        let public_key = SigningKey::from_bytes(
+            signing_key_bytes.as_slice().try_into().expect("32 bytes"),
+        )
+        .verifying_key()
+        .to_bytes()
+        .to_vec();
 
-        // Sign the message
-        let signature = match provider.sign(&signing_key_bytes, &message).await {
-            Ok(sig) => sig,
-            Err(e) => {
-                // Log the error for debugging but continue
-                eprintln!("Sign failed at iteration {iteration}: {e:?}");
-                continue;
-            }
-        };
+        let signature = provider.sign(&signing_key_bytes, &message).await?;
 
-        // Verify the signature
-        let verified = match provider
-            .verify(&signing_key_bytes, &message, &signature)
-            .await
-        {
-            Ok(v) => v,
-            Err(e) => {
-                // Log verification errors
-                eprintln!("Verify failed at iteration {iteration}: {e:?}");
-                false
-            }
-        };
+        let verified = provider
+            .verify(&public_key, &message, &signature)
+            .await?;
 
-        // Property: verify(sign(m), m) == true
-        if verified {
-            successful_iterations += 1;
-        } else {
-            eprintln!(
-                "Signature verification failed for {message_len} bytes (iteration {iteration})"
-            );
-        }
+        assert!(
+            verified,
+            "Signature verification failed for {message_len} bytes (iteration {iteration})"
+        );
     }
-
-    // Require at least 90% success rate (45/50)
-    // Some iterations may be skipped due to key generation issues
-    assert!(
-        successful_iterations >= 45,
-        "Only {successful_iterations}/{iterations} iterations successful (expected >= 45)"
-    );
 
     Ok(())
 }
@@ -186,8 +145,6 @@ async fn property_sign_verify_roundtrip() -> Result<(), BearDogError> {
 ///
 /// For any message `m` and corrupt signature `s'`, `verify(s', m) == false`
 ///
-/// **Status**: IGNORED - Depends on signature roundtrip test
-#[ignore = "Depends on signature roundtrip test"]
 #[tokio::test]
 async fn property_invalid_signatures_rejected() -> Result<(), BearDogError> {
     let provider = Arc::new(GeneticCryptoProvider::new()?);
@@ -199,19 +156,21 @@ async fn property_invalid_signatures_rejected() -> Result<(), BearDogError> {
         let mut message = vec![0u8; message_len];
         rand::thread_rng().fill(&mut message[..]);
 
-        // Generate signing key
         let signing_key_bytes = provider.generate_random_bytes(32)?;
+        let public_key = SigningKey::from_bytes(
+            signing_key_bytes.as_slice().try_into().expect("32 bytes"),
+        )
+        .verifying_key()
+        .to_bytes()
+        .to_vec();
 
-        // Sign
         let mut signature = provider.sign(&signing_key_bytes, &message).await?;
 
-        // Corrupt signature by flipping a random bit
         let corrupt_byte = rand::thread_rng().gen_range(0..signature.len());
         signature[corrupt_byte] ^= 0x01;
 
-        // Verify (should fail)
         let verified = provider
-            .verify(&signing_key_bytes, &message, &signature)
+            .verify(&public_key, &message, &signature)
             .await
             .unwrap_or(false);
 

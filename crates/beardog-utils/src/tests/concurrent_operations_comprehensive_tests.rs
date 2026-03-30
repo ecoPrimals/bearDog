@@ -224,7 +224,6 @@ async fn test_safe_cache_eviction_under_pressure() {
         let cache = cache.clone();
         handles.push(tokio::spawn(async move {
             let _ = cache.insert(format!("key_{i}"), format!("value_{i}"));
-            tokio::time::sleep(Duration::from_micros(10)).await;
         }));
     }
 
@@ -454,7 +453,7 @@ async fn test_concurrent_clear_and_access() {
     // One task clears, others try to access
     let map_clear = map.clone();
     handles.push(tokio::spawn(async move {
-        tokio::time::sleep(Duration::from_millis(10)).await;
+        tokio::task::yield_now().await;
         map_clear.clear();
     }));
 
@@ -463,7 +462,7 @@ async fn test_concurrent_clear_and_access() {
         handles.push(tokio::spawn(async move {
             for _ in 0..10 {
                 let _ = map.get(&format!("key_{i}"));
-                tokio::time::sleep(Duration::from_millis(1)).await;
+                tokio::task::yield_now().await;
             }
         }));
     }

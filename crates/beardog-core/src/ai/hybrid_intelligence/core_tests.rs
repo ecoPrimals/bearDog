@@ -118,11 +118,7 @@ mod tests {
     async fn test_system_initialize() {
         let config = create_test_config();
         let system = HybridIntelligenceSystem::new(config).expect("Should create system");
-
-        // Initialize in a spawn_blocking to avoid runtime issues
-        let result = tokio::task::spawn_blocking(move || system.initialize()).await;
-
-        // The spawn_blocking will succeed, the initialize should return Ok
+        let result = system.initialize().await;
         assert!(result.is_ok());
     }
 
@@ -130,7 +126,6 @@ mod tests {
     async fn test_predict_with_valid_input() {
         let config = create_test_config();
         let system = HybridIntelligenceSystem::new(config).expect("Should create system");
-        // Skip initialize to avoid blocking issues
 
         let input_data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let result = system.predict(input_data, None).await;

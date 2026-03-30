@@ -17,6 +17,9 @@ pub mod canonical_traits;
 /// The [`types`](crate::workflows::types) module defines lifecycle, audit, approval, and execution states used by policies and logs.
 pub mod types;
 
+/// Synthetic zero-cost workflow performance benchmarks.
+pub mod performance_benchmarks;
+
 pub use canonical_traits::{
     Workflow, WorkflowCommand, WorkflowId, WorkflowObserver, WorkflowProcessor, WorkflowRepository,
     WorkflowService, WorkflowStatus,

@@ -21,7 +21,7 @@
 //! # Examples
 //!
 //! ## Basic Configuration
-//! ```rust,ignore
+//! ```rust,no_run
 //! use beardog_types::production::config::ProductionConfig;
 //!
 //! let config = ProductionConfig::default();
@@ -29,7 +29,7 @@
 //! ```
 //!
 //! ## Environment-Specific Configuration
-//! ```rust,ignore
+//! ```rust,no_run
 //! use beardog_types::production::{
 //!     config::{ProductionConfig, ProductionCoreConfig},
 //!     types::EnvironmentLevel,
@@ -171,7 +171,7 @@ pub struct ProductionConfig {
 /// # Examples
 ///
 /// ## Basic Usage
-/// ```rust,ignore
+/// ```rust,no_run
 /// use beardog_types::production::{
 ///     config::ProductionCoreConfig,
 ///     types::EnvironmentLevel,
@@ -187,7 +187,7 @@ pub struct ProductionConfig {
 /// ```
 ///
 /// ## With Environment Variables
-/// ```rust,ignore
+/// ```rust,no_run
 /// use beardog_types::production::config::ProductionCoreConfig;
 ///
 /// let core = ProductionCoreConfig {
@@ -310,7 +310,7 @@ impl ProductionCoreConfig {
 /// ```
 ///
 /// ## Environment-Based Configuration
-/// ```rust,ignore
+/// ```rust,no_run
 /// use beardog_types::production::{
 ///     config::ProductionFlags,
 ///     types::EnvironmentLevel,

@@ -11,7 +11,11 @@ use crate::constants::defaults;
 use beardog_errors::BearDogError;
 
 use super::builder::UnifiedDiscoveryConfigBuilder;
-use super::types::*;
+use super::types::{
+    CircuitBreakerConfig, DiscoveryCacheConfig, DiscoveryProtocol, DiscoverySecurityConfig,
+    LoadBalancingAlgorithm, LoadBalancingConfig, NetworkDiscoveryConfig, QuantumDiscoveryConfig,
+    ServiceRegistryConfig, UnifiedDiscoveryConfig,
+};
 
 impl UnifiedDiscoveryConfig {
     /// Pure static defaults (no environment variable reads)

@@ -8,8 +8,21 @@ use super::super::helpers::*;
 use super::super::{E2EMetrics, E2ETestConfig};
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use tracing::{info, warn};
+
+/// Per-scenario state for component resilience (avoids process-global statics).
+pub struct ComponentResilienceContext {
+    component_status: Mutex<HashMap<String, String>>,
+}
+
+impl ComponentResilienceContext {
+    fn new() -> Self {
+        Self {
+            component_status: Mutex::new(HashMap::new()),
+        }
+    }
+}
 
 /// Component failure and recovery scenario
 pub struct ComponentFailureScenario;
@@ -19,19 +32,20 @@ impl ComponentFailureScenario {
     pub async fn run(config: &E2ETestConfig) -> Result<E2EMetrics, BearDogError> {
         info!("🔧 Component Resilience Tests");
 
+        let ctx = ComponentResilienceContext::new();
         let mut metrics = E2EMetrics::default();
 
         // Test 1: Basic component initialization
-        Self::test_initialization(&mut metrics, config).await?;
+        Self::test_initialization(&ctx, &mut metrics, config).await?;
 
         // Test 2: Crash detection
-        Self::test_crash_detection(&mut metrics, config).await?;
+        Self::test_crash_detection(&ctx, &mut metrics, config).await?;
 
         // Test 3: Automatic recovery
-        Self::test_automatic_recovery(&mut metrics, config).await?;
+        Self::test_automatic_recovery(&ctx, &mut metrics, config).await?;
 
         // Test 4: Service continuity during failover
-        Self::test_service_continuity(&mut metrics, config).await?;
+        Self::test_service_continuity(&ctx, &mut metrics, config).await?;
 
         // Modern pattern: explicit data verification flag
         // Component resilience doesn't verify data integrity, that's data_integrity.rs
@@ -42,6 +56,7 @@ impl ComponentFailureScenario {
     }
 
     async fn test_initialization(
+        ctx: &ComponentResilienceContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
     ) -> Result<(), BearDogError> {
@@ -50,7 +65,7 @@ impl ComponentFailureScenario {
         let components = vec!["api-server", "database", "cache"];
 
         for component in components {
-            initialize_component(component).await?;
+            initialize_component(ctx, component).await?;
             metrics.successful_requests += 1;
         }
 
@@ -59,6 +74,7 @@ impl ComponentFailureScenario {
     }
 
     async fn test_crash_detection(
+        ctx: &ComponentResilienceContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
     ) -> Result<(), BearDogError> {
@@ -67,11 +83,11 @@ impl ComponentFailureScenario {
         let component = "api-server";
 
         // Simulate crash
-        simulate_component_crash(component).await;
+        simulate_component_crash(ctx, component).await;
         metrics.total_requests += 1;
 
         // Verify crash detection
-        if is_crash_detected(component).await {
+        if is_crash_detected(ctx, component).await {
             info!("  ✅ Crash detected successfully");
             metrics.successful_requests += 1;
         } else {
@@ -84,6 +100,7 @@ impl ComponentFailureScenario {
     }
 
     async fn test_automatic_recovery(
+        ctx: &ComponentResilienceContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
     ) -> Result<(), BearDogError> {
@@ -92,12 +109,12 @@ impl ComponentFailureScenario {
         let component = "database";
 
         // Trigger recovery
-        trigger_automatic_recovery(component).await?;
+        trigger_automatic_recovery(ctx, component).await?;
         metrics.total_requests += 1;
         metrics.successful_requests += 1;
 
         // Verify recovery
-        let status = get_component_status(component).await;
+        let status = get_component_status(ctx, component).await;
         if status == "healthy" {
             info!("  ✅ Component recovered successfully");
             metrics.successful_requests += 1;
@@ -111,6 +128,7 @@ impl ComponentFailureScenario {
     }
 
     async fn test_service_continuity(
+        ctx: &ComponentResilienceContext,
         metrics: &mut E2EMetrics,
         _config: &E2ETestConfig,
     ) -> Result<(), BearDogError> {
@@ -118,7 +136,7 @@ impl ComponentFailureScenario {
 
         // Send requests during failover
         for i in 0..5 {
-            match send_component_request("api-server", "test-data").await {
+            match send_component_request(ctx, "api-server", "test-data").await {
                 Ok(()) => {
                     metrics.successful_requests += 1;
                 }
@@ -139,42 +157,44 @@ impl ComponentFailureScenario {
 // =============================================================================
 
 /// Initialize component with self-knowledge only
-async fn initialize_component(component: &str) -> Result<(), BearDogError> {
+async fn initialize_component(
+    ctx: &ComponentResilienceContext,
+    component: &str,
+) -> Result<(), BearDogError> {
     info!("    Initializing component: {}", component);
 
     // Component knows only its own capabilities
-    let status_map = get_component_status_map();
-    let mut map = status_map.lock().unwrap();
+    let mut map = ctx.component_status.lock().unwrap();
     map.insert(component.to_string(), "healthy".to_string());
 
     Ok(())
 }
 
 /// Get component status (capability-based query)
-async fn get_component_status(component: &str) -> String {
-    let status_map = get_component_status_map();
-    let map = status_map.lock().unwrap();
+async fn get_component_status(ctx: &ComponentResilienceContext, component: &str) -> String {
+    let map = ctx.component_status.lock().unwrap();
     map.get(component)
         .cloned()
         .unwrap_or_else(|| "unknown".to_string())
 }
 
 /// Simulate component crash
-async fn simulate_component_crash(component: &str) {
-    let status_map = get_component_status_map();
-    let mut map = status_map.lock().unwrap();
+async fn simulate_component_crash(ctx: &ComponentResilienceContext, component: &str) {
+    let mut map = ctx.component_status.lock().unwrap();
     map.insert(component.to_string(), "crashed".to_string());
 }
 
 /// Check if crash is detected
-async fn is_crash_detected(component: &str) -> bool {
-    get_component_status(component).await == "crashed"
+async fn is_crash_detected(ctx: &ComponentResilienceContext, component: &str) -> bool {
+    get_component_status(ctx, component).await == "crashed"
 }
 
 /// Trigger automatic recovery
-async fn trigger_automatic_recovery(component: &str) -> Result<(), BearDogError> {
-    let status_map = get_component_status_map();
-    let mut map = status_map.lock().unwrap();
+async fn trigger_automatic_recovery(
+    ctx: &ComponentResilienceContext,
+    component: &str,
+) -> Result<(), BearDogError> {
+    let mut map = ctx.component_status.lock().unwrap();
     map.insert(component.to_string(), "recovering".to_string());
 
     // Simulate recovery completion
@@ -183,8 +203,12 @@ async fn trigger_automatic_recovery(component: &str) -> Result<(), BearDogError>
 }
 
 /// Send request to component
-async fn send_component_request(component: &str, _data: &str) -> Result<(), BearDogError> {
-    let status = get_component_status(component).await;
+async fn send_component_request(
+    ctx: &ComponentResilienceContext,
+    component: &str,
+    _data: &str,
+) -> Result<(), BearDogError> {
+    let status = get_component_status(ctx, component).await;
 
     match status.as_str() {
         "healthy" => Ok(()),
@@ -193,11 +217,4 @@ async fn send_component_request(component: &str, _data: &str) -> Result<(), Bear
         ))),
         _ => Ok(()), // Degraded but functional
     }
-}
-
-// Thread-safe component status (modern pattern: OnceLock + Mutex)
-fn get_component_status_map() -> &'static Mutex<HashMap<String, String>> {
-    use std::sync::OnceLock;
-    static COMPONENT_STATUS: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
-    COMPONENT_STATUS.get_or_init(|| Mutex::new(HashMap::new()))
 }

@@ -29,7 +29,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Examples
 ///
-/// ```ignore
+/// ```no_run
 /// // Note: Full path required as crate re-exports a different SecurityLevel
 /// use beardog_tunnel::tunnel::hsm::types::SecurityLevel;
 ///

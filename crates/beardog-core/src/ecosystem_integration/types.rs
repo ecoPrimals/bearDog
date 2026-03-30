@@ -50,7 +50,7 @@ pub struct EcosystemNode {
     /// Type of the node (service, compute, HSM, etc.)
     pub node_type: NodeType,
     /// Connection endpoint URL or address
-    pub endpoint: String,
+    pub endpoint: Option<String>,
     /// Current health status
     pub health_status: HealthStatus,
     /// Capabilities provided by this node
@@ -131,10 +131,10 @@ impl Default for EcosystemNode {
             id: Uuid::new_v4(),
             name: "unnamed-node".to_string(),
             node_type: NodeType::Service,
-            endpoint: beardog_errors::process_env::var("BEARDOG_ENDPOINT").unwrap_or_else(|_| {
-                beardog_errors::process_env::var("ECOSYSTEM_BASE_URL")
-                    .unwrap_or_else(|_| "https://beardog.ecoprimals.com".to_string())
-            }),
+            endpoint: std::env::var("BEARDOG_ECOSYSTEM_ENDPOINT")
+                .ok()
+                .or_else(|| std::env::var("BEARDOG_ENDPOINT").ok())
+                .or_else(|| std::env::var("ECOSYSTEM_BASE_URL").ok()),
             health_status: HealthStatus::Healthy,
             capabilities: vec!["security".to_string(), "hsm".to_string()],
             metadata: HashMap::new(),
@@ -182,7 +182,7 @@ impl EcosystemNode {
     /// Creates a new ecosystem node
     /// Creates a new instance
     #[must_use]
-    pub fn new(name: String, node_type: NodeType, endpoint: String) -> Self {
+    pub fn new(name: String, node_type: NodeType, endpoint: Option<String>) -> Self {
         Self {
             name,
             node_type,
@@ -276,23 +276,23 @@ mod tests {
         let node = EcosystemNode::new(
             "my-node".to_string(),
             NodeType::Compute,
-            "https://node.example.com".to_string(),
+            Some("https://node.example.com".to_string()),
         );
         assert_eq!(node.name, "my-node");
         assert_eq!(node.node_type, NodeType::Compute);
-        assert_eq!(node.endpoint, "https://node.example.com");
+        assert_eq!(node.endpoint, Some("https://node.example.com".to_string()));
     }
 
     #[test]
     fn test_ecosystem_node_with_capability() {
-        let node = EcosystemNode::new("n".to_string(), NodeType::Service, "ep".to_string())
+        let node = EcosystemNode::new("n".to_string(), NodeType::Service, Some("ep".to_string()))
             .with_capability("storage".to_string());
         assert!(node.capabilities.contains(&"storage".to_string()));
     }
 
     #[test]
     fn test_ecosystem_node_with_metadata() {
-        let node = EcosystemNode::new("n".to_string(), NodeType::Service, "ep".to_string())
+        let node = EcosystemNode::new("n".to_string(), NodeType::Service, Some("ep".to_string()))
             .with_metadata("k".to_string(), "v".to_string());
         assert_eq!(node.metadata.get("k"), Some(&"v".to_string()));
     }

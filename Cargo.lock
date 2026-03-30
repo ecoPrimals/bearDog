@@ -944,13 +944,18 @@ dependencies = [
 name = "beardog-production"
 version = "0.9.0"
 dependencies = [
+ "base64 0.22.1",
  "beardog-errors",
+ "beardog-security",
  "beardog-types",
  "blake3",
  "chrono",
+ "hex",
+ "hkdf",
  "serde",
  "serde_json",
  "serde_yaml",
+ "sha2 0.10.9",
  "tempfile",
  "thiserror 1.0.69",
  "tokio",

@@ -39,7 +39,7 @@ pub struct HeartbeatConfig {
 /// Heartbeat service for continuous UPA status updates
 ///
 /// ## Usage
-/// ```rust,ignore
+/// ```rust,no_run
 /// use std::sync::Arc;
 /// use std::time::Duration;
 /// use beardog_integration::{UpaClient, UpaClientConfig, HeartbeatService, HeartbeatConfig};

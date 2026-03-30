@@ -298,7 +298,7 @@ fn test_circuit_breaker_reset() {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    let circuit = CircuitBreaker::new(3);
+    let circuit = CircuitBreaker::with_cooldown(3, std::time::Duration::ZERO);
 
     for _ in 0..3 {
         circuit.record_failure();
@@ -306,9 +306,6 @@ fn test_circuit_breaker_reset() {
 
     assert!(circuit.is_open());
 
-    // ✅ MODERNIZED: Minimal sleep for time-based cooldown (50ms threshold + 6ms buffer)
-    // Circuit breaker checks elapsed time in attempt_reset(), so minimal sleep required
-    std::thread::sleep(std::time::Duration::from_millis(56));
     circuit.attempt_reset();
 
     // TEST_CATEGORY: integration
@@ -592,14 +589,20 @@ impl Component {
 struct CircuitBreaker {
     failures: Arc<AtomicUsize>,
     threshold: usize,
+    cooldown: std::time::Duration,
     last_failure: Arc<std::sync::Mutex<std::time::Instant>>,
 }
 
 impl CircuitBreaker {
     fn new(threshold: usize) -> Self {
+        Self::with_cooldown(threshold, std::time::Duration::from_millis(50))
+    }
+
+    fn with_cooldown(threshold: usize, cooldown: std::time::Duration) -> Self {
         Self {
             failures: Arc::new(AtomicUsize::new(0)),
             threshold,
+            cooldown,
             last_failure: Arc::new(std::sync::Mutex::new(std::time::Instant::now())),
         }
     }
@@ -615,7 +618,7 @@ impl CircuitBreaker {
 
     fn attempt_reset(&self) {
         let last = self.last_failure.lock().unwrap();
-        if last.elapsed() > std::time::Duration::from_millis(50) {
+        if last.elapsed() > self.cooldown {
             self.failures.store(0, Ordering::SeqCst);
         }
     }

@@ -130,7 +130,7 @@ impl HsmAutoInitConfig {
 ///
 /// # Example
 ///
-/// ```ignore
+/// ```no_run
 /// use beardog_tunnel::tunnel::hsm::manager::HsmProviderSelection;
 ///
 /// fn handle_selection(selection: HsmProviderSelection) {
@@ -253,7 +253,7 @@ impl HsmManager {
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```no_run
     /// use beardog_tunnel::tunnel::hsm::manager::HsmManager;
     ///
     /// let manager = HsmManager::new();
@@ -513,7 +513,7 @@ impl HsmManager {
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```no_run
     /// use beardog_tunnel::tunnel::hsm::manager::HsmManager;
     ///
     /// let manager = HsmManager::new();

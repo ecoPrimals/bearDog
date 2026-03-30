@@ -18,6 +18,10 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
 
+const DEFAULT_SESSION_LIFETIME_SECS: u64 = 3600;
+#[cfg_attr(not(test), allow(dead_code))]
+const DEFAULT_EXTENDED_SESSION_LIFETIME_SECS: u64 = 7200;
+
 /// Gaming-optimized security profile
 ///
 /// Balances latency requirements with security needs for gaming applications.
@@ -77,7 +81,7 @@ impl SecureSession {
         gaming_profile: GamingSecurityProfile,
     ) -> Result<Self, BearDogError> {
         let created_at = SystemTime::now();
-        let expires_at = created_at + Duration::from_secs(3600); // 1 hour default
+        let expires_at = created_at + Duration::from_secs(DEFAULT_SESSION_LIFETIME_SECS);
         Ok(Self {
             session_id: session_id.to_string(),
             peer_node_id: peer_node_id.to_string(),
@@ -101,7 +105,7 @@ impl SecureSession {
     ///
     /// # Example
     /// ```ignore
-    /// session.extend_session(Duration::from_secs(3600)); // Add 1 hour
+    /// session.extend_session(Duration::from_secs(DEFAULT_SESSION_LIFETIME_SECS));
     /// ```
     pub fn extend_session(&mut self, duration: Duration) {
         self.expires_at += duration;
@@ -250,7 +254,7 @@ mod tests {
         assert!(!session.is_expired());
 
         // Extend session
-        session.extend_session(Duration::from_secs(7200));
+        session.extend_session(Duration::from_secs(DEFAULT_EXTENDED_SESSION_LIFETIME_SECS));
         assert!(!session.is_expired());
     }
 
@@ -403,7 +407,10 @@ mod tests {
 
         // Should be close to 1 hour (3600 seconds)
         let duration = remaining.expect("non-expired session should have remaining time");
-        assert!(duration.as_secs() > 3590 && duration.as_secs() <= 3600);
+        assert!(
+            duration.as_secs() > DEFAULT_SESSION_LIFETIME_SECS.saturating_sub(10)
+                && duration.as_secs() <= DEFAULT_SESSION_LIFETIME_SECS
+        );
     }
 
     #[tokio::test]
@@ -419,7 +426,7 @@ mod tests {
             .expect("non-expired session should have remaining time");
 
         // Extend by 1 hour
-        session.extend_session(Duration::from_secs(3600));
+        session.extend_session(Duration::from_secs(DEFAULT_SESSION_LIFETIME_SECS));
 
         let after_extension = session
             .remaining_time()
@@ -427,7 +434,7 @@ mod tests {
 
         // Should have approximately 1 more hour
         assert!(after_extension > initial_remaining);
-        assert!(after_extension.as_secs() > 7000); // ~2 hours
+        assert!(after_extension.as_secs() > DEFAULT_SESSION_LIFETIME_SECS * 2 - 200);
     }
 
     #[tokio::test]

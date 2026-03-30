@@ -39,6 +39,18 @@ impl<T: Clone> RequestCache<T> {
         }
     }
 
+    /// Insert with explicit timestamp (unit tests; avoids wall-clock sleeps).
+    #[cfg(test)]
+    pub(crate) fn insert_at(&self, key: String, data: T, ttl: Duration, timestamp: Instant) {
+        let entry = CacheEntry {
+            data,
+            timestamp,
+            ttl,
+        };
+        let mut cache = self.cache.write();
+        cache.insert(key, entry);
+    }
+
     /// Insert entry into cache
     pub fn insert(&self, key: String, data: T) {
         let entry = CacheEntry {
@@ -148,22 +160,14 @@ mod tests {
 
     #[test]
     fn test_cache_expiration() {
-        // ✅ ACCEPTABLE: Cache expiration IS time-dependent behavior
-        // Using minimal sleep (1-2ms) for time-based tests is acceptable
-        // when testing actual time-dependent features.
-        //
-        // Alternative would be to mock Instant, but that requires significant
-        // production code changes for minimal benefit in this specific case.
-        let cache = RequestCache::new(Duration::from_millis(1));
-
-        cache.insert("key1".to_string(), "value1".to_string());
-        assert_eq!(cache.get("key1"), Some("value1".to_string()));
-
-        // TTL tests require real elapsed time (cache uses `Instant`, not injectable clock).
-        // Minimal sleep for TTL expiration (2ms > 1ms TTL)
-        std::thread::sleep(Duration::from_millis(2));
-
-        // Should return None after expiration
+        let cache = RequestCache::new(Duration::from_secs(60));
+        let past = Instant::now() - Duration::from_secs(3600);
+        cache.insert_at(
+            "key1".to_string(),
+            "value1".to_string(),
+            Duration::from_millis(1),
+            past,
+        );
         assert_eq!(cache.get("key1"), None);
         // But entry is still in cache until cleanup
         assert_eq!(cache.len(), 1);
@@ -171,22 +175,26 @@ mod tests {
 
     #[test]
     fn test_cache_cleanup_expired() {
-        // Use minimal TTL for fast testing
-        let cache = RequestCache::new(Duration::from_millis(1));
+        let cache = RequestCache::new(Duration::from_secs(60));
+        let past = Instant::now() - Duration::from_secs(3600);
 
-        cache.insert("key1".to_string(), "value1".to_string());
-        cache.insert("key2".to_string(), "value2".to_string());
+        cache.insert_at(
+            "key1".to_string(),
+            "value1".to_string(),
+            Duration::from_millis(1),
+            past,
+        );
+        cache.insert_at(
+            "key2".to_string(),
+            "value2".to_string(),
+            Duration::from_millis(1),
+            past,
+        );
 
         assert_eq!(cache.len(), 2);
 
-        // TTL tests require real elapsed time.
-        // Wait for TTL to expire - minimal sleep
-        std::thread::sleep(Duration::from_millis(2));
-
-        // Cleanup expired entries
         cache.cleanup_expired();
 
-        // Both entries should be removed
         assert_eq!(cache.len(), 0);
         assert!(cache.is_empty());
     }
@@ -290,31 +298,19 @@ mod tests {
 
     #[test]
     fn test_cache_mixed_expiration() {
-        // Use TTL with sufficient margin for testing (50ms)
-        let cache = RequestCache::new(Duration::from_millis(50));
+        let cache = RequestCache::new(Duration::from_secs(60));
+        let ttl = Duration::from_millis(50);
+        let old = Instant::now() - Duration::from_millis(100);
 
-        // Insert first batch
-        cache.insert("short1".to_string(), "value1".to_string());
-        cache.insert("short2".to_string(), "value2".to_string());
-
-        // TTL tests require real elapsed time.
-        // Wait until first batch is near expiration (40ms into TTL)
-        std::thread::sleep(Duration::from_millis(40));
-
-        // Insert second batch (will have full TTL remaining)
-        cache.insert("long1".to_string(), "value3".to_string());
-        cache.insert("long2".to_string(), "value4".to_string());
+        cache.insert_at("short1".to_string(), "value1".to_string(), ttl, old);
+        cache.insert_at("short2".to_string(), "value2".to_string(), ttl, old);
+        cache.insert_at("long1".to_string(), "value3".to_string(), ttl, Instant::now());
+        cache.insert_at("long2".to_string(), "value4".to_string(), ttl, Instant::now());
 
         assert_eq!(cache.len(), 4);
 
-        // TTL tests require real elapsed time.
-        // Wait for first batch to expire (20ms more = 60ms total > 50ms TTL for first batch)
-        // Second batch still has ~30ms remaining
-        std::thread::sleep(Duration::from_millis(20));
-
         cache.cleanup_expired();
 
-        // First batch should be gone, second batch still present
         assert_eq!(cache.len(), 2);
         assert_eq!(cache.get("long1"), Some("value3".to_string()));
         assert_eq!(cache.get("long2"), Some("value4".to_string()));

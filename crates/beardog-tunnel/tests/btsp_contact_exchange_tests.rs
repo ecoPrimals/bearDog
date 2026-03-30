@@ -10,7 +10,6 @@ use beardog_tunnel::tunnel::hsm::HsmManager;
 use std::sync::Arc;
 
 #[tokio::test]
-#[ignore = "Requires HSM initialization"]
 async fn test_contact_exchange_same_family() {
     // Initialize components with auto_initialize for proper HSM provider registration
 
@@ -89,7 +88,6 @@ async fn test_lineage_path_environment() {
 }
 
 #[tokio::test]
-#[ignore = "Requires HSM initialization"]
 async fn test_contact_exchange_max_hops() {
     // Initialize components with auto_initialize for proper HSM provider registration
 

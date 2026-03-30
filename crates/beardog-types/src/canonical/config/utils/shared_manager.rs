@@ -28,12 +28,12 @@ impl SharedConfigManager {
         T: Send + Sync + 'static,
         F: FnOnce() -> T,
     {
-        // Try to get existing config
+        // Fast path: read-only check for existing config with matching type
         {
             let configs = match self.configs.read() {
                 Ok(guard) => guard,
                 Err(poisoned) => {
-                    error!("SharedConfigManager lock poisoned - recovering with poisoned data");
+                    error!("SharedConfigManager lock poisoned on read — recovering");
                     poisoned.into_inner()
                 }
             };
@@ -45,19 +45,24 @@ impl SharedConfigManager {
             }
         }
 
-        // Create new config
-        let config = Arc::new(factory());
+        // Slow path: acquire write lock, re-check, then insert atomically
+        let mut configs = match self.configs.write() {
+            Ok(guard) => guard,
+            Err(poisoned) => {
+                error!("SharedConfigManager lock poisoned on write — recovering");
+                poisoned.into_inner()
+            }
+        };
+
+        // Re-check under write lock to avoid TOCTOU race
+        if let Some(config) = configs.get(key)
+            && let Ok(typed_config) = config.clone().downcast::<T>()
         {
-            let mut configs = match self.configs.write() {
-                Ok(guard) => guard,
-                Err(poisoned) => {
-                    error!("SharedConfigManager lock poisoned - recovering with poisoned data");
-                    poisoned.into_inner()
-                }
-            };
-            configs.insert(key.to_string(), config.clone());
+            return typed_config;
         }
 
+        let config = Arc::new(factory());
+        configs.insert(key.to_string(), config.clone());
         debug!("🆕 Created new shared config: {}", key);
         config
     }

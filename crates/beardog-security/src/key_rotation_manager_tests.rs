@@ -8,6 +8,7 @@
 mod tests {
     use crate::key_rotation_manager::KeyRotationManager;
     use beardog_types::hsm::{KeyLifecycleState, KeyRotationConfig, KeyRotationReason};
+    use chrono::Utc;
     use std::time::Duration;
 
     #[tokio::test]
@@ -453,9 +454,12 @@ mod tests {
             .await
             .unwrap();
 
-        // ✅ MODERNIZED: Minimal sleep for time-based rotation check (15ms→11ms, 27% reduction)
-        // Key rotation policy is time-based (10ms threshold), need to exceed it
-        tokio::time::sleep(Duration::from_millis(11)).await;
+        {
+            let mut store = manager.metadata_store.write().await;
+            if let Some(meta) = store.get_mut("needs-rotation") {
+                meta.activated_at = Some(Utc::now() - chrono::Duration::milliseconds(20));
+            }
+        }
 
         // Check keys needing rotation
         let needs_rotation = manager.get_keys_needing_rotation().await.unwrap();

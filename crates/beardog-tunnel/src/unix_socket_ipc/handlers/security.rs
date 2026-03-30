@@ -106,7 +106,8 @@ impl SecurityHandler {
     ///
     /// # Examples
     ///
-    /// ```ignore
+    /// ```no_run
+    /// use beardog_tunnel::unix_socket_ipc::handlers::security::SecurityHandler;
     /// use beardog_types::primal_identity::PrimalIdentity;
     /// use std::sync::Arc;
     ///

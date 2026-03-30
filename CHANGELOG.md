@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### March 29, 2026 -- Wave 23: Concurrency Deep Debt — ABBA Deadlock Fix, Sleep Elimination, Async Evolution
+
+- **ABBA deadlock eliminated** — Root cause of ~30% intermittent test hangs found and fixed: `tests/e2e/hsm_operations.rs` had 3 global `OnceLock<Mutex<HashMap>>` statics with inconsistent lock ordering (`initialize_hsm` locked A→B, `check_hsm_health` locked B→A). Replaced with per-test `HsmTestContext` struct — zero global state, zero cross-test contamination
+- **Global mutable state eliminated from all e2e tests** — `rate_limiting.rs` (3 global `OnceLock<AtomicUsize>` → `thread_local! Cell`), 4 disaster_recovery modules (`OnceLock<Mutex>` → per-invocation context structs)
+- **`HybridIntelligenceSystem::initialize()` evolved to async** — Was sync with `blocking_write()` that panicked in tokio runtime context; now uses `.write().await`. Test un-ignored and passing
+- **Ed25519 verify API corrected** — `GeneticCryptoProvider::verify()` restored to accept public key (not private seed); property tests updated to derive public key before verification
+- **Sleep debt eliminated** — 1s `proof_verifier` (UUID uniqueness), 1100ms `key_expiration` (zero-duration interval), 100ms `idle_tracking`, 56ms circuit breaker (configurable cooldown), plus ~10 smaller test sleeps replaced with instant-past timestamps, `yield_now()`, or zero-duration intervals
+- **Proof signature uniqueness** — `generate_proof()` now uses nanosecond timestamp + UUID instead of second-resolution timestamp
+- **Dead code cleanup** — Deleted 8 orphan files from `android_strongbox/` (49.6 KB): `health.rs`, `attestation.rs`, `core_simple.rs`, `device_info.rs`, `entropy.rs`, `keystore.rs`, `pixel8_setup.rs`, `type_safe_wrapper.rs` — none referenced by `mod.rs`
+- **Debris cleanup** — Removed `audit.log` artifacts from repo root and 2 crate directories
+- **Method count** — 93 crypto methods (registered `derive_lineage_beacon_key`)
+- **Tests** — 15,184 passed, 0 failed, 138 ignored; 10/10 stress tests clean on both e2e binaries under full parallelism
+
 ### March 28, 2026 -- Wave 22: Deep Debt Evolution — Hot-Path Clones, iOS Fake Crypto, Mock Cleanup
 
 - **Hot-path clone elimination** — Genetic RPC handlers take `&Value` + `Deserialize::deserialize` instead of `Value::clone()` per request

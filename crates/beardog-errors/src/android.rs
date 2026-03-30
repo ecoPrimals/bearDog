@@ -155,7 +155,7 @@ pub const fn phase2_not_implemented(
     AndroidError::Phase2NotImplemented {
         feature,
         phase: Phase::Two,
-        tracking_issue: Some("https://github.com/ecoPrimals/beardog/issues/TBD"),
+        tracking_issue: Some("https://github.com/ecoPrimals/beardog/issues"),
         workaround,
         implementation_notes,
     }

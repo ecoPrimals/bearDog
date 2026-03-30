@@ -43,13 +43,13 @@ pub async fn demonstrate_security_sentinel() -> Result<(), BearDogError> {
 
     // Get status report
     let report = sentinel.get_status_report().await?;
-    println!("Security Status: {}", report.status);
-    println!("Total Events: {}", report.stats.total_events);
-    println!("Auth Failures: {}", report.stats.auth_failures);
+    tracing::info!("Security Status: {}", report.status);
+    tracing::info!("Total Events: {}", report.stats.total_events);
+    tracing::info!("Auth Failures: {}", report.stats.auth_failures);
 
     // Check if monitoring is active
     if sentinel.is_monitoring_active() {
-        println!("Security monitoring is active");
+        tracing::info!("Security monitoring is active");
     }
 
     // Stop monitoring

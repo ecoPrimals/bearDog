@@ -13,7 +13,7 @@ use std::sync::Arc;
 ///
 /// Use `Arc::clone(&arc)` instead of `arc.clone()` for clarity and performance
 pub mod arc_optimization {
-    use super::*;
+    use super::Arc;
 
     /// Efficient Arc cloning for shared resources
     pub fn clone_arc_efficiently<T>(arc: &Arc<T>) -> Arc<T> {
@@ -28,7 +28,7 @@ pub mod arc_optimization {
 
 /// String deduplication via [`Arc<str>`] and cheap borrows into `&str` slices.
 pub mod string_optimization {
-    use super::*;
+    use super::{Arc, HashMap};
 
     /// In-process intern table mapping `String` keys to shared [`Arc<str>`] values.
     pub struct SharedStringPool {
@@ -69,7 +69,7 @@ pub mod string_optimization {
 
 /// Share or borrow configuration: [`Cow`] for single owners, [`Arc`] for multi-consumer.
 pub mod config_optimization {
-    use super::*;
+    use super::{Arc, Cow};
 
     /// Wrapper for configuration that can be borrowed or owned
     #[derive(Debug)]
@@ -132,7 +132,7 @@ pub mod config_optimization {
 
 /// JSON metadata as [`Cow`] or shared [`Arc`] to avoid cloning large maps.
 pub mod metadata_optimization {
-    use super::*;
+    use super::{Arc, Cow, HashMap};
     use serde_json::Value;
 
     /// Metadata that can be borrowed or owned
@@ -193,7 +193,7 @@ pub mod metadata_optimization {
 
 /// Pass requests by reference or [`Arc`] so downstream layers never clone large bodies twice.
 pub mod request_optimization {
-    use super::*;
+    use super::Arc;
 
     /// Zero-cost handle to a request living elsewhere for the lifetime `'a`.
     pub struct RequestRef<'a, T> {
@@ -239,7 +239,7 @@ pub mod request_optimization {
 
 /// Iterator- and [`Cow`]-based collection patterns to skip intermediate `Vec` clones.
 pub mod collection_optimization {
-    use super::*;
+    use super::Cow;
 
     /// Avoid cloning when collecting IDs
     pub fn collect_ids_as_refs<T>(items: &[T]) -> Vec<&str>

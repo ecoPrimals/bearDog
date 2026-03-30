@@ -1,6 +1,6 @@
 # BearDog Status
 
-**Last Updated**: March 28, 2026
+**Last Updated**: March 29, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -18,7 +18,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 15,100+ passing | Fully concurrent, zero sleeps in non-chaos |
+| **Tests** | 15,180+ passing | Fully concurrent, zero sleeps in non-chaos, zero deadlocks |
 | **Coverage** | 90.16% line | llvm-cov workspace — target met |
 | **Serial Tests** | 0 | `#[serial]` fully eliminated |
 | **cargo deny** | 4/4 pass | Advisories, bans, licenses, sources |
@@ -33,7 +33,7 @@
 
 - **Crates**: 30 in workspace (beardog-integration re-integrated)
 - **Rust Files**: 2,000+
-- **Crypto Methods**: 91+ JSON-RPC methods
+- **Crypto Methods**: 93 JSON-RPC methods
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
 
 ---

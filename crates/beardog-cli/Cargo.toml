@@ -1,7 +1,3 @@
-[[bin]]
-name = "beardog-cli-legacy"
-path = "src/main.rs"
-
 [package]
 name = "beardog-cli"
 description = "BearDog Security Manager CLI"

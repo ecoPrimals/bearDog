@@ -13,21 +13,16 @@
 //! - **Multi-Source**: Environment, files, secrets managers, container orchestration
 
 use beardog_errors::BearDogError;
-use beardog_types::canonical::config::production::environment::*;
+use beardog_types::canonical::config::type_aliases::Environment;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
-use std::fs;
-use std::path::Path;
-use tracing::{debug, info, warn};
+
+/// Result type for configuration and secrets operations in this module.
+pub type Result<T> = std::result::Result<T, BearDogError>;
 
 // Import canonical configuration types (Phase 1 Migration - Oct 2, 2025)
-use beardog_types::canonical::config::domains::database::{
-    DatabaseConnectionConfig as CanonicalDatabaseConnection,
-    DatabasePoolConfig as CanonicalConnectionPoolConfig,
-    MigrationConfig as CanonicalMigrationConfig,
-};
-use beardog_types::canonical::config::domains::system::LoggingConfig as CanonicalLoggingConfig;
+use beardog_types::canonical::config::domains::database::MigrationConfig as CanonicalMigrationConfig;
 
 /// Production configuration manager - loads and validates production configs
 ///
@@ -39,7 +34,7 @@ pub struct ProductionConfigManager {
     environment: Environment,
     config_sources: Vec<ConfigSource>,
     secrets_manager: SecretsManager,
-    config_cache: HashMap<String, ConfigValue>,
+    _config_cache: HashMap<String, ConfigValue>,
 }
 
 /// Configuration sources for loading production settings
@@ -52,24 +47,30 @@ pub enum ConfigSource {
     /// Environment variables
     Environment,
     /// Local configuration file
-    File { 
-        path: String 
+    File {
+        /// Path to the configuration file on disk.
+        path: String,
     },
     /// Universal secrets management capability
-    UniversalSecretsManagement { 
-        endpoint: String, 
+    UniversalSecretsManagement {
+        /// Backend endpoint URL or connection string.
+        endpoint: String,
+        /// Provider identifier (e.g. vault, cloud KMS).
         provider_type: String,
-        auth_config: HashMap<String, String> 
+        /// Provider-specific authentication parameters.
+        auth_config: HashMap<String, String>,
     },
     /// Universal container orchestration secrets
-    UniversalContainerSecrets { 
+    UniversalContainerSecrets {
+        /// Kubernetes or orchestrator namespace.
         namespace: String,
-        provider_type: String 
+        /// Container platform (e.g. kubernetes, docker_swarm).
+        provider_type: String,
     },
 }
 
 /// Production configuration structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ProductionConfig {
     /// Application configuration
     pub application: ApplicationConfig,
@@ -80,7 +81,7 @@ pub struct ProductionConfig {
     /// Monitoring configuration
     pub monitoring: MonitoringConfig,
     /// Logging configuration
-    pub logging: LoggingConfig,
+    pub logging: beardog_types::canonical::config::domains::system::LoggingConfig,
     /// Networking configuration
     pub networking: NetworkingConfig,
     /// Scaling configuration
@@ -131,18 +132,18 @@ pub struct ApplicationConfig {
 }
 
 /// Database configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DatabaseConfig {
     /// Primary database connection
     pub primary: DatabaseConnection,
     /// Read replica connections
     pub read_replicas: Vec<DatabaseConnection>,
     /// Connection pool configuration
-    pub connection_pool: ConnectionPoolConfig,
+    pub connection_pool: beardog_types::canonical::config::domains::network::ConnectionPoolConfig,
     /// Migration configuration
-    pub migration: MigrationConfig,
+    pub migration: beardog_types::canonical::config::domains::database::MigrationConfig,
     /// Backup configuration
-    pub backup: BackupConfig,
+    pub backup: beardog_types::canonical::config::production::operations::BackupConfig,
 }
 
 /// Database connection configuration
@@ -174,7 +175,8 @@ pub struct DatabaseConnection {
     since = "3.1.0",
     note = "Use beardog_types::canonical::config::domains::network::ConnectionPoolConfig instead"
 )]
-pub type ConnectionPoolConfig = beardog_types::canonical::config::domains::network::ConnectionPoolConfig;
+pub type ConnectionPoolConfig =
+    beardog_types::canonical::config::domains::network::ConnectionPoolConfig;
 
 /// Logging configuration (DEPRECATED - use canonical)
 ///
@@ -196,6 +198,17 @@ pub type LoggingConfig = beardog_types::canonical::config::domains::system::Logg
 )]
 pub type LogFormat = beardog_types::canonical::config::domains::system::LogFormat;
 
+/// Log level (canonical)
+pub type LogLevel = beardog_types::canonical::config::domains::system::LogLevel;
+
+/// Production security section placeholder (extend with canonical fields as needed).
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SecurityConfig {}
+
+/// Production monitoring section placeholder (extend with canonical fields as needed).
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct MonitoringConfig {}
+
 /// Log output destination
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LogOutput {
@@ -204,23 +217,30 @@ pub enum LogOutput {
     /// Standard error
     Stderr,
     /// File with rotation
-    File { 
-        path: String, 
-        rotation: FileRotation 
+    File {
+        /// Path to the log file.
+        path: String,
+        /// Rotation policy when the file rolls over.
+        rotation: FileRotation,
     },
     /// Syslog endpoint
-    Syslog { 
-        endpoint: String 
+    Syslog {
+        /// Syslog server host or socket path.
+        endpoint: String,
     },
     /// ElasticSearch endpoint
-    ElasticSearch { 
-        endpoint: String, 
-        index: String 
+    ElasticSearch {
+        /// ElasticSearch cluster URL.
+        endpoint: String,
+        /// Index name for log documents.
+        index: String,
     },
     /// Splunk endpoint
-    Splunk { 
-        endpoint: String, 
-        token: String 
+    Splunk {
+        /// Splunk HEC or indexer URL.
+        endpoint: String,
+        /// Authentication token for the Splunk API.
+        token: String,
     },
 }
 
@@ -243,14 +263,15 @@ pub struct FileRotation {
 ///
 /// For general-purpose network configuration, see:
 /// - `beardog_types::canonical::config::domains::network::ConsolidatedNetworkConfiguration`
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkingConfig {
     /// TLS configuration
     pub tls: TlsConfig,
     /// Service mesh configuration
     pub service_mesh: ServiceMeshConfig,
     /// Load balancer configuration
-    pub load_balancer: LoadBalancerConfig,
+    pub load_balancer:
+        beardog_types::canonical::config::domains::network::connection::LoadBalancerConfiguration,
     /// Rate limiting configuration
     pub rate_limiting: RateLimitingConfig,
 }
@@ -287,7 +308,7 @@ pub struct TlsConfig {
 /// It combines horizontal (HPA), vertical (VPA), and auto-scaling configurations for
 /// production K8s deployments. This is K8s-specific infrastructure configuration.
 /// Keep in `beardog-production`.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ScalingConfig {
     /// Horizontal scaling configuration (HPA)
     pub horizontal: HorizontalScalingConfig,
@@ -382,32 +403,33 @@ pub enum ComplianceStandard {
 pub struct SecretsManager {
     providers: Vec<SecretsProvider>,
     cache: HashMap<String, SecretValue>,
-    cache_ttl: u64,
+    _cache_ttl: u64,
 }
 
 /// Secrets provider types
 ///
 /// **NOTE**: This is a **production-specific runtime enum** defining secret backend types.
-/// It provides abstraction over different secret management systems (Vault, K8s, etc.).
+/// `Vault` refers to BearDog's local encrypted file store (not HashiCorp Vault).
 /// This is production infrastructure logic and belongs in `beardog-production`.
 #[derive(Debug, Clone)]
 pub enum SecretsProvider {
-    /// HashiCorp Vault
+    /// BearDog local encrypted file vault (legacy env `VAULT_*` names).
     Vault {
+        /// Vault root path or endpoint string.
         endpoint: String,
+        /// Token or passphrase used when deriving the master key.
         token: String,
+        /// Logical mount path under the vault root.
         mount_path: String,
     },
-    /// Universal secrets manager (capability-based)
-    UniversalSecretsManager {
-        capability_type: String,
-        provider_id: String,
+    /// Universal Secrets Manager — uses [`SecretsBackend`]; default backend is the file vault.
+    UniversalSecretsManagement {
+        /// Backend endpoint URL or filesystem path.
         endpoint: String,
+        /// Provider identifier for capability selection.
+        provider_type: String,
+        /// Provider-specific authentication parameters.
         auth_config: HashMap<String, String>,
-    },
-    /// Kubernetes secrets
-    KubernetesSecrets {
-        namespace: String,
     },
     /// Environment variables (fallback)
     EnvironmentVariables,
@@ -465,7 +487,8 @@ pub struct ServiceMeshConfig {
     since = "3.1.0",
     note = "Use beardog_types::canonical::config::domains::network::LoadBalancerConfiguration instead"
 )]
-pub type LoadBalancerConfig = beardog_types::canonical::config::domains::network::connection::LoadBalancerConfiguration;
+pub type LoadBalancerConfig =
+    beardog_types::canonical::config::domains::network::connection::LoadBalancerConfiguration;
 
 /// Rate limiting configuration
 ///
@@ -537,8 +560,8 @@ pub struct VerticalScalingConfig {
     pub max_memory: String,
 }
 
+pub mod secrets_backend;
 
-// Re-export from runtime module
 pub mod runtime;
-pub use runtime::*;
 
+pub use secrets_backend::{FileVaultBackend, SecretsBackend};

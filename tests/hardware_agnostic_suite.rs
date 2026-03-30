@@ -31,15 +31,14 @@ use tracing::info;
 /// This function is hardware-agnostic - it discovers and returns
 /// success if any HSM hardware is available on the system.
 pub async fn discover_any_available_hsm() -> Result<String, BearDogError> {
-    info!("🔍 Discovering available HSM hardware...");
+    info!("Discovering available HSM hardware...");
 
     // Priority 1: Check for Android StrongBox (via ADB or env var)
     if beardog_errors::process_env::var("ANDROID_STRONGBOX_AVAILABLE").is_ok() {
-        info!("✅ Found Android StrongBox (via environment)");
+        info!("Found Android StrongBox (via environment)");
         return Ok("AndroidStrongBox".to_string());
     }
 
-    // Check for Android device via ADB
     if std::process::Command::new("adb")
         .args(["shell", "pm", "list", "features"])
         .output()
@@ -47,23 +46,58 @@ pub async fn discover_any_available_hsm() -> Result<String, BearDogError> {
         .and_then(|output| String::from_utf8(output.stdout).ok())
         .is_some_and(|features| features.contains("strongbox_keystore"))
     {
-        info!("✅ Found Android StrongBox via ADB");
+        info!("Found Android StrongBox via ADB");
         return Ok("AndroidStrongBox".to_string());
     }
 
-    // Priority 2: Check for FIDO2 tokens
-    if std::path::Path::new("/dev/hidraw5").exists() {
-        info!("✅ Found FIDO2 token");
+    // Priority 2: Check for FIDO2 tokens by scanning all HID devices
+    if detect_fido2_hid_device() {
+        info!("Found FIDO2 token via HID scan");
         return Ok("FIDO2Token".to_string());
     }
 
-    // Priority 3: Check for SoftHSM2 (lowest priority for general discovery)
+    // Priority 3: Check for SoftHSM2
     if beardog_errors::process_env::var("SOFTHSM2_CONF").is_ok() {
-        info!("✅ Found SoftHSM2");
+        info!("Found SoftHSM2");
         return Ok("SoftHSM2".to_string());
     }
 
     Err(BearDogError::validation("No HSM hardware available"))
+}
+
+/// Scan `/dev/hidraw*` devices for a FIDO2/U2F security key.
+///
+/// Uses `udevadm` to inspect each HID device's USB vendor/product ID.
+/// Known FIDO2 vendor IDs: `1209` (SoloKeys), `1050` (Yubico).
+fn detect_fido2_hid_device() -> bool {
+    const FIDO2_VENDOR_IDS: &[&str] = &["1209", "1050"];
+
+    for entry in std::fs::read_dir("/dev").into_iter().flatten() {
+        let Ok(entry) = entry else { continue };
+        let name = entry.file_name();
+        let Some(name_str) = name.to_str() else {
+            continue;
+        };
+        if !name_str.starts_with("hidraw") {
+            continue;
+        }
+
+        let Ok(output) = std::process::Command::new("udevadm")
+            .args(["info", "-a"])
+            .arg(entry.path())
+            .output()
+        else {
+            continue;
+        };
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        for vendor_id in FIDO2_VENDOR_IDS {
+            if stdout.contains(&format!("ATTRS{{idVendor}}==\"{vendor_id}\"")) {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 /// Run universal test suite on any HSM
@@ -146,14 +180,12 @@ mod tests {
     #[tokio::test]
     #[ignore = "Requires SoloKey/FIDO2 token connected"]
     async fn validate_on_fido2_token() {
-        // Check if Solo 2 is connected
-        if !std::path::Path::new("/dev/hidraw5").exists() {
-            info!("⚠️  No FIDO2 token found at /dev/hidraw5");
-            // Don't panic, just skip gracefully
+        if !detect_fido2_hid_device() {
+            info!("No FIDO2 token detected via HID scan");
             return;
         }
 
-        info!("✅ Testing FIDO2 token");
+        info!("Testing FIDO2 token");
         let hsm_type = "FIDO2Token";
 
         run_universal_hsm_test_suite(hsm_type)

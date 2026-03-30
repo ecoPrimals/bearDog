@@ -174,11 +174,11 @@ pub use crate::canonical::monitoring::{
     UnifiedTracingConfig,
 };
 pub use app::{AppConfig, ApplicationConfig, CanonicalAppConfig};
-pub use auth::*;
-pub use cache::*;
-pub use compliance::*;
-pub use database::*;
-pub use genetics::*;
+pub use auth::CanonicalAuthConfig;
+pub use cache::CanonicalCacheConfig;
+pub use compliance::CanonicalComplianceConfig;
+pub use database::CanonicalDatabaseConfig;
+pub use genetics::{CanonicalGeneticsConfig, GeneticsConfig};
 pub use hsm::{UnifiedHsmConfig as ConfigHsmConfig, UnifiedHsmConfig as ConfigHsm};
 pub use monitoring_migration::{
     LegacyMonitoringConfig, MonitoringMigrationReport, MonitoringMigrationResult,
@@ -186,12 +186,12 @@ pub use monitoring_migration::{
     migrate_monitoring_configurations,
 };
 pub use network::{CanonicalNetworkConfig as ConfigNetworkConfig, NetworkConfig as ConfigNetwork};
-pub use performance::*;
+pub use performance::CanonicalPerformanceConfig;
 pub use production::*;
 pub use production::{EnvironmentLevel, EnvironmentType}; // Explicit re-export for compatibility
 pub use runtime_config::{RuntimeConfig, RuntimeHsmConfig, RuntimeNetworkConfig};
 pub use security::CanonicalSecurityConfig as ConfigSecurityConfig;
-pub use workflow::*;
+pub use workflow::CanonicalWorkflowConfig;
 
 // Re-export with canonical names to avoid conflicts
 pub use hsm::UnifiedHsmConfig;

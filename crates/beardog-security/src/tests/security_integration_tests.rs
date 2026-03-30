@@ -233,21 +233,79 @@ fn test_key_deletion() {
     assert!(result.is_err());
 }
 
-#[test]
-// TEST_CATEGORY: integration
-// TEST_DOMAIN: security
-// TEST_PRIORITY: normal
-#[ignore = "key rotation not yet implemented in current API"]
-fn test_key_rotation() {
-    // Test pending key rotation API implementation
-    // Placeholder preserved for future implementation
+#[tokio::test]
+async fn test_key_rotation() {
+    use crate::key_rotation_manager::KeyRotationManager;
+    use beardog_types::hsm::KeyLifecycleState;
+
+    let manager = KeyRotationManager::with_defaults();
+
+    manager
+        .register_key(
+            "integration-key".to_string(),
+            "aes".to_string(),
+            "aes-256-gcm".to_string(),
+        )
+        .await
+        .expect("register key");
+
+    let new_key_id = manager
+        .rotate_key("integration-key")
+        .await
+        .expect("rotate key");
+
+    let old_meta = manager
+        .get_key_metadata("integration-key")
+        .await
+        .expect("old key metadata");
+    assert_eq!(old_meta.state, KeyLifecycleState::Deprecated);
+    assert_eq!(old_meta.successor_key_id, Some(new_key_id.clone()));
+
+    let new_meta = manager
+        .get_key_metadata(&new_key_id)
+        .await
+        .expect("new key metadata");
+    assert_eq!(new_meta.state, KeyLifecycleState::Active);
+    assert_eq!(
+        new_meta.predecessor_key_id,
+        Some("integration-key".to_string())
+    );
+
+    let stats = manager.get_rotation_stats().await.expect("rotation stats");
+    assert_eq!(stats.successful_rotations, 1);
+    assert_eq!(stats.failed_rotations, 0);
 }
 
-#[test]
-#[ignore = "key expiration tracking not yet in current API"]
-fn test_key_expiration() {
-    // Test pending expiration tracking API implementation
-    // Placeholder preserved for future implementation
+#[tokio::test]
+async fn test_key_expiration() {
+    use crate::key_rotation_manager::KeyRotationManager;
+    use beardog_types::hsm::KeyRotationConfig;
+
+    let config = KeyRotationConfig {
+        rotation_interval: std::time::Duration::ZERO,
+        auto_rotation_enabled: true,
+        ..KeyRotationConfig::default()
+    };
+    let manager = KeyRotationManager::new(config);
+
+    manager
+        .register_key(
+            "expiry-key".to_string(),
+            "aes".to_string(),
+            "aes-256-gcm".to_string(),
+        )
+        .await
+        .expect("register expiry key");
+
+    // Zero-duration interval means the key is immediately past its rotation threshold
+    let needs = manager
+        .check_rotation_needed()
+        .await
+        .expect("check rotation needed");
+    assert!(
+        needs.contains(&"expiry-key".to_string()),
+        "key past its rotation interval should need rotation"
+    );
 }
 
 // TEST_CATEGORY: integration
@@ -276,17 +334,42 @@ fn test_encryption_config() {
     let _ = config.algorithm;
 }
 
-// TEST_CATEGORY: integration
-// TEST_DOMAIN: security
-// TEST_PRIORITY: normal
-#[test]
-#[ignore = "SecurityMetrics module reorganized"]
-fn test_security_metrics() {
-    // Test pending new metrics API stabilization
-    // TEST_CATEGORY: integration
-    // TEST_DOMAIN: security
-    // TEST_PRIORITY: normal
-    // Placeholder preserved for future implementation
+#[tokio::test]
+async fn test_security_metrics() {
+    use crate::key_rotation_manager::KeyRotationManager;
+
+    let manager = KeyRotationManager::with_defaults();
+
+    manager
+        .register_key(
+            "metrics-key-1".to_string(),
+            "aes".to_string(),
+            "aes-256-gcm".to_string(),
+        )
+        .await
+        .expect("register metrics key 1");
+
+    manager
+        .register_key(
+            "metrics-key-2".to_string(),
+            "ed25519".to_string(),
+            "ed25519".to_string(),
+        )
+        .await
+        .expect("register metrics key 2");
+
+    manager
+        .rotate_key("metrics-key-1")
+        .await
+        .expect("rotate metrics key 1");
+
+    let stats = manager.get_rotation_stats().await.expect("rotation stats");
+    assert_eq!(stats.total_keys, 3);
+    assert_eq!(stats.active_keys, 2);
+    assert_eq!(stats.deprecated_keys, 1);
+    assert_eq!(stats.total_rotations, 1);
+    assert_eq!(stats.successful_rotations, 1);
+    assert_eq!(stats.failed_rotations, 0);
 }
 
 #[test]

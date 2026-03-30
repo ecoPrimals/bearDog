@@ -344,8 +344,8 @@ mod tests {
         metrics.record_request(std::time::Duration::from_millis(1), false);
         metrics.record_request(std::time::Duration::from_millis(1), false);
         metrics.record_request(std::time::Duration::from_millis(1), false);
-        // Small sleep so elapsed > 0
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        // Minimal window so `elapsed` is non-zero for ops/sec
+        std::thread::sleep(std::time::Duration::from_millis(1));
         let throughput = metrics.collect_throughput().expect("throughput");
         assert!(
             throughput > 0.0,
@@ -364,7 +364,7 @@ mod tests {
             "First call should be 0.0 (no baseline), got {first}"
         );
         // Brief delay for CPU delta
-        std::thread::sleep(std::time::Duration::from_millis(50));
+        std::thread::sleep(std::time::Duration::from_millis(1));
         let second = metrics.collect_cpu_usage().expect("cpu second");
         assert!(
             (0.0..=100.0).contains(&second),

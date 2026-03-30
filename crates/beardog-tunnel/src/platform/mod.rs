@@ -53,6 +53,7 @@ use std::path::PathBuf;
 use tokio::io::{AsyncRead, AsyncWrite};
 
 use beardog_types::constants::domains::config::system::DEFAULT_SYSTEM_NAME;
+use beardog_types::constants::domains::network::ipc_discovery;
 
 /// Platform-specific socket endpoint types
 #[derive(Debug, Clone)]
@@ -144,7 +145,9 @@ pub fn default_socket_endpoint_for_primal(primal_name: Option<&str>) -> SocketEn
         .or_else(|| beardog_errors::process_env::var("PRIMAL_NAME").ok())
         .or_else(|| beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME").ok())
         .unwrap_or_else(|| DEFAULT_SYSTEM_NAME.to_string());
-    SocketEndpoint::Filesystem(PathBuf::from(format!("/tmp/{primal_name}.sock")))
+    SocketEndpoint::Filesystem(
+        ipc_discovery::biomeos_ipc_socket_dir_from_env().join(format!("{primal_name}.sock")),
+    )
 }
 
 /// Same as [`default_socket_endpoint_for_primal`] but reads `PRIMAL_NAME` from the environment.

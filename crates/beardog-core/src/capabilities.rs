@@ -12,6 +12,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+use beardog_types::constants::domains::network::ipc_discovery;
+
 /// `BearDog`'s capabilities advertised to the ecosystem
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BearDogCapabilities {
@@ -184,11 +186,14 @@ impl BearDogCapabilities {
             .or_else(|_| beardog_errors::process_env::var("BEARDOG_NAME"))
             .unwrap_or_else(|_| "beardog".to_string());
 
-        let socket_path = format!(
-            "/tmp/{}-{}.sock",
-            primal_name,
-            family_id.as_deref().unwrap_or("default")
-        );
+        let socket_path = ipc_discovery::biomeos_ipc_socket_dir_from_env()
+            .join(format!(
+                "{}-{}.sock",
+                primal_name,
+                family_id.as_deref().unwrap_or("default")
+            ))
+            .display()
+            .to_string();
 
         Self {
             primal_id: primal_name,

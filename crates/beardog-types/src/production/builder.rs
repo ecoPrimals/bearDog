@@ -116,7 +116,7 @@ impl ProductionEcosystemBuilder {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use beardog_types::production::builder::ProductionEcosystemBuilder;
     ///
     /// let builder = ProductionEcosystemBuilder::new();
@@ -136,7 +136,7 @@ impl ProductionEcosystemBuilder {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use beardog_types::production::{
     ///     builder::ProductionEcosystemBuilder,
     ///     types::EnvironmentLevel,
@@ -165,7 +165,7 @@ impl ProductionEcosystemBuilder {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use beardog_types::production::builder::ProductionEcosystemBuilder;
     ///
     /// let builder = ProductionEcosystemBuilder::new()
@@ -193,7 +193,7 @@ impl ProductionEcosystemBuilder {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use beardog_types::production::builder::ProductionEcosystemBuilder;
     ///
     /// let builder = ProductionEcosystemBuilder::new()
@@ -213,7 +213,7 @@ impl ProductionEcosystemBuilder {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use beardog_types::production::builder::ProductionEcosystemBuilder;
     ///
     /// let builder = ProductionEcosystemBuilder::new()
@@ -252,7 +252,7 @@ impl ProductionEcosystemBuilder {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use beardog_types::production::builder::ProductionEcosystemBuilder;
     ///
     /// let builder = ProductionEcosystemBuilder::new()
@@ -272,7 +272,7 @@ impl ProductionEcosystemBuilder {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use beardog_types::production::builder::ProductionEcosystemBuilder;
     ///
     /// let builder = ProductionEcosystemBuilder::new()
@@ -292,7 +292,7 @@ impl ProductionEcosystemBuilder {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use beardog_types::production::builder::ProductionEcosystemBuilder;
     ///
     /// let builder = ProductionEcosystemBuilder::new()
@@ -312,7 +312,7 @@ impl ProductionEcosystemBuilder {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use beardog_types::production::{
     ///     builder::ProductionEcosystemBuilder,
     ///     config::ProductionFlags,
@@ -336,7 +336,7 @@ impl ProductionEcosystemBuilder {
     ///
     /// # Examples
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use beardog_types::production::{
     ///     builder::ProductionEcosystemBuilder,
     ///     config::ProductionConfig,

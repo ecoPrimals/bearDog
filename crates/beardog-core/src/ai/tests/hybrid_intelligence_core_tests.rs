@@ -457,17 +457,12 @@ fn test_hybrid_intelligence_system_creation() {
     assert!(system.is_ok());
 }
 
-#[test]
-#[ignore = "Requires non-blocking runtime context - integration test"]
-fn test_hybrid_intelligence_system_initialization() {
-    // This test requires a non-async context to call blocking operations
-    // Skip in unit tests, covered by integration tests
+#[tokio::test]
+async fn test_hybrid_intelligence_system_initialization() {
     let config = HybridIntelligenceConfig::default();
     let system = HybridIntelligenceSystem::new(config).expect("Failed to create system");
-
-    // Note: initialize() uses blocking_write() which cannot be called
-    // from within an async runtime context
-    let _result = system.initialize();
+    let result = system.initialize().await;
+    assert!(result.is_ok(), "initialize() should succeed: {result:?}");
 }
 
 #[test]

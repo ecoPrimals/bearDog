@@ -130,7 +130,7 @@ async fn test_verify_family_member() {
     assert!(response["result"]["verified_at"].is_string());
     assert_eq!(
         response["result"]["verification_method"],
-        "genetic_lineage_hkdf"
+        "family_id_equality"
     );
 
     server.stop().await.unwrap();

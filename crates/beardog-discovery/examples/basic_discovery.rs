@@ -3,7 +3,7 @@
 //!
 //! This demonstrates capability-based service discovery
 
-use beardog_discovery::prelude::*;
+use beardog_discovery::prelude::{CapabilityDiscovery, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {

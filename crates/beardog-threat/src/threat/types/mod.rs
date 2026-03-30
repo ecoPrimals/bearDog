@@ -13,7 +13,7 @@ pub mod incidents;
 pub mod engine;
 
 // Re-export engine types
-pub use engine::threat_engine::*;
+pub use engine::threat_engine::ThreatDetectionEngine;
 
 // Re-export canonical threat detection configuration
 pub use beardog_types::canonical::config::domains::threat::ThreatDetectionConfig;

@@ -25,6 +25,9 @@ workspace = true
 [dependencies.beardog-errors]
 workspace = true
 
+[dependencies.beardog-security]
+workspace = true
+
 [dependencies.beardog-types]
 workspace = true
 
@@ -55,7 +58,19 @@ workspace = true
 [dependencies.serde_json]
 workspace = true
 
+[dependencies.base64]
+workspace = true
+
 [dependencies.blake3]
+workspace = true
+
+[dependencies.hex]
+workspace = true
+
+[dependencies.hkdf]
+version = "0.12"
+
+[dependencies.sha2]
 workspace = true
 
 [dev-dependencies.tempfile]

@@ -244,9 +244,9 @@ pub trait CacheStrategy: Send + Sync {
         }
 
         if self.max_entries() > 100_000_000 {
-            eprintln!(
-                "WARNING: Very large max_entries ({}), may cause memory issues",
-                self.max_entries()
+            tracing::warn!(
+                max_entries = self.max_entries(),
+                "Very large max_entries, may cause memory issues"
             );
         }
 
@@ -257,12 +257,18 @@ pub trait CacheStrategy: Send + Sync {
         }
 
         if ttl < Duration::from_secs(1) {
-            eprintln!("WARNING: Very short TTL ({ttl:?}), cache may not be effective");
+            tracing::warn!(
+                ttl = ?ttl,
+                "Very short TTL, cache may not be effective"
+            );
         }
 
         if ttl > Duration::from_secs(time::SECONDS_PER_DAY * 365) {
             // > 1 year
-            eprintln!("WARNING: Very long TTL ({ttl:?}), entries may never expire");
+            tracing::warn!(
+                ttl = ?ttl,
+                "Very long TTL, entries may never expire"
+            );
         }
 
         // Check max size if set
@@ -273,8 +279,9 @@ pub trait CacheStrategy: Send + Sync {
 
             if max_bytes > 100 * 1024 * 1024 * 1024 {
                 // > 100 GB
-                eprintln!(
-                    "WARNING: Very large max_size_bytes ({max_bytes} bytes), ensure system has enough memory"
+                tracing::warn!(
+                    max_bytes,
+                    "Very large max_size_bytes, ensure system has enough memory"
                 );
             }
         }

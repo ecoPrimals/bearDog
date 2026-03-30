@@ -14,6 +14,10 @@ use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
 
+pub(crate) const AES_GCM_NONCE_LEN: usize = 12;
+pub(crate) const AES_GCM_TAG_LEN: usize = 16;
+pub(crate) const AES_256_KEY_LEN: usize = 32;
+
 /// Supported encryption algorithms
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum EncryptionAlgorithm {
@@ -39,7 +43,7 @@ impl Default for EncryptionConfig {
     fn default() -> Self {
         Self {
             algorithm: EncryptionAlgorithm::default(),
-            key_size: 32,
+            key_size: AES_256_KEY_LEN,
         }
     }
 }
@@ -137,15 +141,15 @@ impl EncryptionService {
             )));
         }
 
-        // Minimum size check: nonce (12 bytes) + auth tag (16 bytes)
-        if encrypted_data.len() < 28 {
+        // Minimum size check: nonce + auth tag
+        if encrypted_data.len() < AES_GCM_NONCE_LEN + AES_GCM_TAG_LEN {
             return Err(BearDogError::security(
                 "Encrypted data too short (minimum 28 bytes required)".to_string(),
             ));
         }
 
-        // Extract nonce (first 12 bytes) and ciphertext (remaining bytes)
-        let (nonce, ciphertext) = encrypted_data.split_at(12);
+        // Extract nonce and ciphertext (remaining bytes)
+        let (nonce, ciphertext) = encrypted_data.split_at(AES_GCM_NONCE_LEN);
 
         // Decrypt using AES-256-GCM with authentication
         let plaintext = BearDogCrypto::decrypt_aes_gcm(key, ciphertext, nonce)?;

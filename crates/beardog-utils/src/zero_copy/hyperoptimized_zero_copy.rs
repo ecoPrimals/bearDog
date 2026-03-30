@@ -783,8 +783,6 @@ mod tests {
         let buffer = AlignedBuffer::new(256)?;
 
         let before = buffer.last_access.load(Ordering::Relaxed);
-        std::thread::sleep(std::time::Duration::from_millis(10));
-
         buffer.touch();
         let after = buffer.last_access.load(Ordering::Relaxed);
 

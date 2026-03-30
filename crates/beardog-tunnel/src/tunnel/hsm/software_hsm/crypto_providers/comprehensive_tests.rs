@@ -373,7 +373,6 @@ async fn test_encrypt_100kb_data() -> Result<(), BearDogError> {
 }
 
 #[tokio::test]
-#[ignore = "Slow test (1MB crypto); run explicitly with --ignored"]
 async fn test_encrypt_1mb_data() -> Result<(), BearDogError> {
     // Test: 1MB encryption/decryption (performance validation)
     let provider = create_crypto_provider(&CryptoBackend::RustCrypto).await?;

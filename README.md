@@ -8,7 +8,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 30 | **Tests**: 15,100+ | **Coverage**: 90.16%
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 30 | **Tests**: 15,180+ | **Coverage**: 90.16%
 
 ---
 
@@ -29,7 +29,7 @@ BearDog provides secure cryptographic operations for all primals through the **T
 - **100% Pure Rust** — Zero C dependencies (RustCrypto suite, postcard, hickory-dns)
 - **Rust 2024 Edition** — Modern idioms, MSRV 1.93.0
 - **Fully Concurrent** — Dependency injection architecture, no global mutable state
-- **91+ Crypto Methods** — Complete JSON-RPC API
+- **93 Crypto Methods** — Complete JSON-RPC API
 - **Tor v3 Support** — Onion address derivation + ntor handshake + cell crypto
 - **Multi-Family Support** — `--family-id` flag for per-family instances
 - **Secret Storage** — Encrypted secrets with family-scoped keys
@@ -171,7 +171,7 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
 | **Files > 1000 LOC** | 0 (production code) |
-| **Tests** | 15,100+ (fully concurrent, zero sleeps in non-chaos) |
+| **Tests** | 15,180+ (fully concurrent, zero sleeps in non-chaos) |
 | **Coverage** | 90.16% line (llvm-cov workspace) |
 | **Serial Tests** | 0 (`#[serial]` fully eliminated) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |

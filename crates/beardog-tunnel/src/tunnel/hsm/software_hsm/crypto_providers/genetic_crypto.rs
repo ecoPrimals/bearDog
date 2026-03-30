@@ -32,7 +32,7 @@ use aes_gcm::{
     aead::{Aead, KeyInit},
 };
 use blake3; // Faster and more secure than SHA-256
-use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
+use ed25519_dalek::{Signature, Signer, SigningKey, Verifier};
 use hmac::{Hmac, Mac};
 use rand_core::{OsRng, RngCore};
 use sha2::Sha256;
@@ -312,7 +312,7 @@ impl CryptoProvider<KeyType> for GeneticCryptoProvider {
 
         if key_material.len() != 32 {
             return Err(BearDogError::crypto_error(format!(
-                "Invalid Ed25519 public key length: expected 32 bytes, got {}",
+                "Invalid Ed25519 key length: expected 32 bytes, got {}",
                 key_material.len()
             )));
         }
@@ -324,10 +324,9 @@ impl CryptoProvider<KeyType> for GeneticCryptoProvider {
             )));
         }
 
-        // Create verifying key (Pure Rust)
         let verifying_key =
-            VerifyingKey::from_bytes(key_material.try_into().map_err(|_| {
-                BearDogError::crypto_error("Invalid public key format".to_string())
+            ed25519_dalek::VerifyingKey::from_bytes(key_material.try_into().map_err(|_| {
+                BearDogError::crypto_error("Invalid Ed25519 public key format".to_string())
             })?)
             .map_err(|e| {
                 BearDogError::crypto_error(format!("Failed to create verifying key: {e}"))

@@ -472,8 +472,8 @@ mod tests {
         let collector = PerformanceMetricsCollector::new();
         // Establish baseline
         let _first = collector.collect_metrics().await.expect("first collect");
-        // Small delay for CPU delta
-        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        // Minimal delay for CPU delta between `/proc` reads
+        tokio::time::sleep(std::time::Duration::from_millis(1)).await;
         let second = collector.collect_metrics().await.expect("second collect");
         assert!(second.cpu_usage >= 0.0 && second.cpu_usage <= 100.0);
     }

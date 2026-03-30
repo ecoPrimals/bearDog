@@ -219,7 +219,7 @@ mod tests {
     #[test]
     fn test_idle_tracking() {
         let mut status = InternalTunnelStatus::new_active();
-        thread::sleep(Duration::from_millis(100));
+        // Freshly created — idle time is essentially zero
         assert!(status.idle_seconds() >= 0);
 
         status.touch();

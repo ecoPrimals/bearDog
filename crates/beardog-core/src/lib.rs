@@ -192,6 +192,10 @@ mod crypto_service_comprehensive_tests;
 #[path = "tests/coverage_march26_core_wave.rs"]
 mod coverage_march26_core_wave;
 
+#[cfg(test)]
+#[path = "tests/core_edge_cases_oct22.rs"]
+mod core_edge_cases_oct22;
+
 // Re-export key components
 pub use core::*;
 pub use types::BearDogConfig;

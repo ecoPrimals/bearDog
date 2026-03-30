@@ -6,9 +6,8 @@
 
 use crate::DoctorArgs;
 use beardog_errors::BearDogError;
-use beardog_types::constants::domains::system::defaults::{
-    DEFAULT_KEY_STORAGE_DIR, DEFAULT_SOCKET_PATH,
-};
+use beardog_types::constants::domains::network::ipc_discovery;
+use beardog_types::constants::domains::system::defaults::DEFAULT_KEY_STORAGE_DIR;
 use serde_json::json;
 use tracing::info;
 
@@ -24,11 +23,10 @@ fn discover_socket_path() -> String {
         .or_else(|_| beardog_errors::process_env::var("BEARDOG_NAME"))
         .unwrap_or_else(|_| "beardog".to_string());
 
-    if primal_name == "beardog" {
-        DEFAULT_SOCKET_PATH.to_string()
-    } else {
-        format!("/tmp/{primal_name}.sock")
-    }
+    ipc_discovery::biomeos_ipc_socket_dir_from_env()
+        .join(format!("{primal_name}.sock"))
+        .display()
+        .to_string()
 }
 
 /// Handle doctor command - health diagnostics
