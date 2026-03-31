@@ -1,42 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 #![forbid(unsafe_code)]
 
-//! # BearDog Production Utilities
+//! # `BearDog` Production Utilities
 //!
-//! Production-ready utilities and configuration for deploying BearDog in production environments,
-//! ensuring optimal performance, reliability, and monitoring.
+//! Production readiness checks, secrets management, and disaster recovery for
+//! `BearDog` deployments.
 //!
-//! ## Features
+//! ## Modules
 //!
-//! - **Production Configuration**: Optimized settings for production deployments
-//! - **Health Checks**: Production readiness validation
-//! - **Performance Tuning**: Production-optimized performance settings
-//! - **Monitoring Integration**: Production metrics and observability
-//! - **Deployment Validation**: Pre-deployment checks and validation
-//!
-//! ## Example
-//!
-//! ```rust
-//! use beardog_production::config::production_ready;
-//!
-//! // Check if system is production ready
-//! assert!(production_ready());
-//! ```
-//!
-//! ## Architecture
-//!
-//! The production system ensures:
-//! - **Configuration Validation**: All settings verified for production
-//! - **Resource Optimization**: Memory and CPU usage optimized
-//! - **Error Resilience**: Robust error handling and recovery
-//! - **Monitoring**: Comprehensive metrics and logging
+//! - [`config`] — Runtime production-readiness gate (`production_ready()`)
+//! - [`config_management`] — Configuration loading, vault-backed secrets, runtime validation
+//! - [`disaster_recovery`] — BLAKE3 content-addressed backup integrity
 //!
 
 #![cfg_attr(test, allow(clippy::expect_used))]
 #![cfg_attr(test, allow(clippy::unwrap_used))]
-//! ## Safety
-//!
-//! All production utilities maintain memory safety with full memory safety.
 
 // October 27, 2025: Comprehensive test expansion
 #[cfg(test)]
@@ -48,27 +26,35 @@ pub mod disaster_recovery;
 /// Production configuration loading, secrets backends, and runtime validation.
 pub mod config_management;
 
-/// Production configuration and utilities
-///
-/// Provides production-ready configuration and deployment utilities.
+/// Runtime production-readiness gate.
 pub mod config {
-    /// Check if the system is production ready
+    #[cfg(test)]
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    #[cfg(test)]
+    static TEST_OVERRIDE_READY: AtomicBool = AtomicBool::new(true);
+
+    /// Returns whether the production environment passes basic readiness checks.
     ///
-    /// Validates that all production requirements are met.
+    /// Currently checks:
+    /// - `BEARDOG_MASTER_KEY` is set and at least 32 characters
     ///
-    /// # Returns
-    ///
-    /// Returns `true` if the system is ready for production deployment.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use beardog_production::config::production_ready;
-    ///
-    /// assert!(production_ready());
-    /// ```
+    /// Returns `true` when all checks pass, `false` otherwise.
     #[must_use]
-    pub const fn production_ready() -> bool {
-        true
+    pub fn production_ready() -> bool {
+        #[cfg(test)]
+        {
+            return TEST_OVERRIDE_READY.load(Ordering::Relaxed);
+        }
+        #[cfg(not(test))]
+        {
+            std::env::var("BEARDOG_MASTER_KEY").is_ok_and(|v| v.len() >= 32)
+        }
+    }
+
+    /// Test-only: set the return value of `production_ready()`.
+    #[cfg(test)]
+    pub(crate) fn set_test_production_ready(ready: bool) {
+        TEST_OVERRIDE_READY.store(ready, Ordering::Relaxed);
     }
 }

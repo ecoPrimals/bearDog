@@ -32,7 +32,7 @@ impl AesGcmEncryptionKey {
     /// Returns an error if encryption fails.
     pub fn new() -> Result<Self, BearDogError> {
         let mut key_bytes = [0u8; AES_256_KEY_LEN];
-        OsRng.fill_bytes(&mut key_bytes);
+        rand::rng().fill_bytes(&mut key_bytes);
         let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
         let cipher = Aes256Gcm::new(key);
         Ok(Self {
@@ -84,7 +84,7 @@ impl Default for AesGcmEncryptionKey {
 impl EncryptionKey for AesGcmEncryptionKey {
     async fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
         let mut nonce_bytes = [0u8; AES_GCM_NONCE_LEN];
-        OsRng.fill_bytes(&mut nonce_bytes);
+        rand::rng().fill_bytes(&mut nonce_bytes);
         let nonce = Nonce::from_slice(&nonce_bytes);
 
         let ciphertext = self

@@ -194,7 +194,7 @@ pub fn compute_sha512_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
 ///
 /// # Security Considerations
 ///
-/// - **Thread-safe**: Uses `thread_rng()` which is cryptographically secure
+/// - **Thread-safe**: Uses `rng()` which is cryptographically secure
 /// - **OS-backed**: Relies on `/dev/urandom` (Linux), `BCryptGenRandom` (Windows), etc.
 /// - **Suitable for**: Keys, IVs, nonces, salts, tokens
 /// - **Not suitable for**: Deterministic derivation (use HKDF/KDF instead)
@@ -263,7 +263,7 @@ pub fn compute_sha512_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
 /// Currently always returns `Ok`; the `Result` is reserved for future RNG or allocation failures.
 pub fn generate_secure_random_bytes(size: usize) -> Result<Vec<u8>, BearDogError> {
     let mut bytes = vec![0u8; size];
-    rand::thread_rng().fill_bytes(&mut bytes);
+    rand::rng().fill_bytes(&mut bytes);
     Ok(bytes)
 }
 

@@ -37,6 +37,7 @@
 //!
 //! **Not recommended for new systems** - use Argon2id instead!
 
+use aes_gcm::aead::OsRng;
 use argon2::{
     Argon2,
     password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
@@ -45,7 +46,6 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
 use pbkdf2::pbkdf2_hmac;
-use rand::rngs::OsRng;
 use serde_json::{Value, json};
 use sha2::Sha256;
 

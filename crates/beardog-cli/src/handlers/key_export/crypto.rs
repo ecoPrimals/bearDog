@@ -16,7 +16,7 @@ pub(crate) fn encrypt_key_material(
     use base64::{Engine, engine::general_purpose::STANDARD};
     use chacha20poly1305::{
         ChaCha20Poly1305, Nonce,
-        aead::{Aead, KeyInit, OsRng as ChaChaRng},
+        aead::{Aead, KeyInit},
     };
 
     // Generate salt for Argon2
@@ -48,8 +48,9 @@ pub(crate) fn encrypt_key_material(
     let cipher = ChaCha20Poly1305::new(&key_bytes.into());
 
     // Generate random nonce
-    let mut rng = ChaChaRng;
-    let nonce_bytes: [u8; 12] = rand::Rng::r#gen(&mut rng);
+    use rand::RngCore;
+    let mut nonce_bytes = [0u8; 12];
+    rand::rng().fill_bytes(&mut nonce_bytes);
     let nonce = Nonce::from(nonce_bytes);
 
     // Encrypt the key material

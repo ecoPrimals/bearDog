@@ -43,7 +43,6 @@ use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
 use p256::PublicKey as P256PublicKey;
 use p384::PublicKey as P384PublicKey;
-use rand::rngs::OsRng;
 use serde_json::{Value, json};
 use zeroize::Zeroizing;
 
@@ -74,9 +73,9 @@ use zeroize::Zeroizing;
 /// **Performance**: < 500μs (fast scalar multiplication)
 pub fn handle_ecdh_p256_generate(_params: &Value) -> Result<Value, BearDogError> {
     // Generate a random 32-byte secret (256 bits / 8)
-    use p256::elliptic_curve::rand_core::RngCore;
+    use rand::RngCore;
     let mut private_key_bytes = Zeroizing::new([0u8; 32]);
-    OsRng.fill_bytes(&mut *private_key_bytes);
+    rand::rng().fill_bytes(&mut *private_key_bytes);
 
     // Create secret from bytes
     use p256::elliptic_curve::SecretKey;
@@ -204,9 +203,9 @@ pub fn handle_ecdh_p256_derive(params: &Value) -> Result<Value, BearDogError> {
 /// **Performance**: < 800μs (larger curve, slower than P-256)
 pub fn handle_ecdh_p384_generate(_params: &Value) -> Result<Value, BearDogError> {
     // Generate random 48-byte secret (384 bits / 8)
-    use p384::elliptic_curve::rand_core::RngCore;
+    use rand::RngCore;
     let mut private_key_bytes = Zeroizing::new([0u8; 48]);
-    OsRng.fill_bytes(&mut *private_key_bytes);
+    rand::rng().fill_bytes(&mut *private_key_bytes);
 
     // Create secret from bytes
     use p384::elliptic_curve::SecretKey;

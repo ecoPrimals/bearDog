@@ -283,10 +283,10 @@ mod suite {
     #[test]
     fn test_chaos_random_socket_paths() {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         for _ in 0..100 {
-            let random_name = format!("/tmp/registry-{}.sock", rng.r#gen::<u32>());
+            let random_name = format!("/tmp/registry-{}.sock", rng.random::<u32>());
             let client = PrimalRegistryClient::new(PathBuf::from(&random_name));
             assert_eq!(client.socket_path, PathBuf::from(&random_name));
         }

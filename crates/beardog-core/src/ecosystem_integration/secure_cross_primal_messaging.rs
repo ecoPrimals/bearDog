@@ -38,7 +38,7 @@ use beardog_types::canonical::discovery::{
 };
 use chacha20poly1305::{
     ChaCha20Poly1305, Nonce,
-    aead::{Aead, KeyInit, OsRng},
+    aead::{Aead, KeyInit},
 };
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -512,7 +512,7 @@ impl SecureCrossPrimalMessenger {
 
         // Generate random nonce (96 bits / 12 bytes for ChaCha20-Poly1305)
         let mut nonce_bytes = [0u8; 12];
-        OsRng.fill_bytes(&mut nonce_bytes);
+        rand::rng().fill_bytes(&mut nonce_bytes);
         let nonce = Nonce::from_slice(&nonce_bytes);
 
         // Encrypt with AEAD (includes authentication tag)
@@ -545,7 +545,7 @@ impl SecureCrossPrimalMessenger {
         debug!("🔑 Performing key exchange with: {}", primal.service_id);
 
         // 1. Generate ephemeral key pair for this session (perfect forward secrecy)
-        let our_secret = EphemeralSecret::random_from_rng(rand::rngs::OsRng);
+        let our_secret = EphemeralSecret::random_from_rng(chacha20poly1305::aead::OsRng);
         let our_public = X25519PublicKey::from(&our_secret);
 
         // 2. Request peer's public key via capability-based discovery

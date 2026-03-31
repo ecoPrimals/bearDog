@@ -51,7 +51,7 @@ pub struct SoloV2KeyHandle {
 pub enum KeyType {
     /// ECDSA with P-256 curve (NIST P-256)
     EcdsaP256,
-    /// EdDSA with Ed25519 curve
+    /// `EdDSA` with Ed25519 curve
     Ed25519,
 }
 

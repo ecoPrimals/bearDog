@@ -52,7 +52,7 @@ mod tests {
         // Test various sizes
         for size in [0, 1, 16, 32, 64, 128, 256, 1024] {
             let mut bytes = vec![0u8; size];
-            rand::thread_rng().fill_bytes(&mut bytes);
+            rand::rng().fill_bytes(&mut bytes);
             assert_eq!(bytes.len(), size);
         }
     }
@@ -72,9 +72,9 @@ mod tests {
         let mut bytes2 = vec![0u8; 32];
         let mut bytes3 = vec![0u8; 32];
 
-        rand::thread_rng().fill_bytes(&mut bytes1);
-        rand::thread_rng().fill_bytes(&mut bytes2);
-        rand::thread_rng().fill_bytes(&mut bytes3);
+        rand::rng().fill_bytes(&mut bytes1);
+        rand::rng().fill_bytes(&mut bytes2);
+        rand::rng().fill_bytes(&mut bytes3);
 
         // Extremely unlikely to be equal (1 in 2^256 chance)
         assert_ne!(bytes1, bytes2);

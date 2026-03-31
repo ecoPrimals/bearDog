@@ -278,6 +278,102 @@ pub struct AlgorithmCapability {
     pub performance: PerformanceCharacteristics,
 }
 
+/// Canonical cryptographic algorithm enumeration
+///
+/// Unified algorithm definitions for all HSM operations across `BearDog`.
+/// This enum consolidates algorithm specifications from multiple sources.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+pub enum Algorithm {
+    /// AES-256 in GCM mode (symmetric encryption)
+    Aes256Gcm,
+    /// ChaCha20-Poly1305 authenticated encryption
+    ChaCha20Poly1305,
+
+    /// Elliptic Curve Cryptography with P-256 curve
+    EccP256,
+    /// Elliptic Curve Cryptography with P-384 curve
+    EccP384,
+
+    /// ECDSA with P-256 curve
+    EcdsaP256,
+    /// ECDSA with P-384 curve
+    EcdsaP384,
+    /// ECDSA with SHA-256 hash
+    EcdsaSha256,
+
+    /// RSA with SHA-256 hash
+    RsaSha256,
+    /// RSA-PSS with 2048-bit key
+    RsaPss2048,
+    /// RSA-PSS with 3072-bit key
+    RsaPss3072,
+    /// RSA-PSS with 4096-bit key
+    RsaPss4096,
+
+    /// HKDF with SHA-256 for key derivation
+    HkdfSha256,
+
+    /// Ed25519 digital signatures
+    Ed25519,
+    /// X25519 key exchange
+    X25519,
+}
+
+impl Algorithm {
+    /// Returns the security strength in bits
+    pub const fn security_bits(&self) -> usize {
+        match self {
+            Self::Aes256Gcm | Self::EccP256 | Self::EcdsaP256 | Self::Ed25519 | Self::X25519 => 256,
+            Self::EccP384 | Self::EcdsaP384 => 384,
+            Self::RsaPss2048 | Self::RsaSha256 => 112, // Effective security
+            Self::RsaPss3072 => 128,
+            Self::RsaPss4096 => 152,
+            Self::ChaCha20Poly1305 => 256,
+            Self::HkdfSha256 | Self::EcdsaSha256 => 256,
+        }
+    }
+
+    /// Returns whether this is a signature algorithm
+    pub const fn is_signature_algorithm(&self) -> bool {
+        matches!(
+            self,
+            Self::EcdsaP256
+                | Self::EcdsaP384
+                | Self::EcdsaSha256
+                | Self::RsaSha256
+                | Self::RsaPss2048
+                | Self::RsaPss3072
+                | Self::RsaPss4096
+                | Self::Ed25519
+        )
+    }
+
+    /// Returns whether this is an encryption algorithm
+    pub const fn is_encryption_algorithm(&self) -> bool {
+        matches!(self, Self::Aes256Gcm | Self::ChaCha20Poly1305)
+    }
+}
+
+impl From<Algorithm> for super::key::KeyType {
+    fn from(algo: Algorithm) -> Self {
+        match algo {
+            Algorithm::EcdsaP256 | Algorithm::EccP256 | Algorithm::EcdsaSha256 => {
+                Self::EllipticCurve
+            }
+            Algorithm::EcdsaP384 | Algorithm::EccP384 => Self::EllipticCurve,
+            Algorithm::RsaPss2048
+            | Algorithm::RsaPss3072
+            | Algorithm::RsaPss4096
+            | Algorithm::RsaSha256 => Self::Rsa,
+            Algorithm::Aes256Gcm => Self::Aes,
+            Algorithm::ChaCha20Poly1305 => Self::ChaCha20,
+            Algorithm::Ed25519 => Self::Ed25519,
+            Algorithm::X25519 => Self::X25519,
+            Algorithm::HkdfSha256 => Self::Generic, // KDF doesn't map directly to key type
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

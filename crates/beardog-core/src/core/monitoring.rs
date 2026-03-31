@@ -7,7 +7,6 @@
 
 use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;
-use rand::Rng;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -285,18 +284,19 @@ impl SystemMonitor {
     ) -> Result<(), BearDogError> {
         // In a real implementation, this would use system APIs to collect metrics
         // For now, we'll simulate with reasonable values using a thread-safe random source
+        use rand::Rng;
         use rand::SeedableRng;
         use rand::rngs::StdRng;
 
-        let mut rng = StdRng::from_entropy();
+        let mut rng = StdRng::from_os_rng();
 
         {
             let mut system_metrics = metrics.write().await;
-            system_metrics.cpu_usage_percent = rng.gen_range(10.0..70.0);
-            system_metrics.memory_usage_percent = rng.gen_range(20.0..60.0);
-            system_metrics.disk_usage_percent = rng.gen_range(30.0..80.0);
-            system_metrics.network_bytes_in += rng.gen_range(1000..10000);
-            system_metrics.network_bytes_out += rng.gen_range(1000..10000);
+            system_metrics.cpu_usage_percent = rng.random_range(10.0..70.0);
+            system_metrics.memory_usage_percent = rng.random_range(20.0..60.0);
+            system_metrics.disk_usage_percent = rng.random_range(30.0..80.0);
+            system_metrics.network_bytes_in += rng.random_range(1000..10000);
+            system_metrics.network_bytes_out += rng.random_range(1000..10000);
             system_metrics.uptime_seconds += 5; // Assuming 5-second intervals
             system_metrics.last_updated = Some(chrono::Utc::now());
         } // Drop system_metrics early to release lock
@@ -307,10 +307,11 @@ impl SystemMonitor {
     async fn check_component_health(
         health_checks: &Arc<RwLock<HashMap<String, ComponentHealth>>>,
     ) -> Result<(), BearDogError> {
+        use rand::Rng;
         use rand::SeedableRng;
         use rand::rngs::StdRng;
 
-        let mut rng = StdRng::from_entropy();
+        let mut rng = StdRng::from_os_rng();
 
         let components = vec!["core", "security", "monitoring", "genetics", "adapters"];
 
@@ -320,15 +321,15 @@ impl SystemMonitor {
             for component in components {
                 let health = ComponentHealth {
                     component_name: component.to_string(),
-                    status: if rng.gen_bool(0.95) {
+                    status: if rng.random_bool(0.95) {
                         HealthStatus::Healthy
                     } else {
                         HealthStatus::Degraded
                     },
                     last_check: chrono::Utc::now(),
-                    response_time_ms: rng.gen_range(1..50),
-                    error_count: rng.gen_range(0..5),
-                    uptime_percent: rng.gen_range(95.0..100.0),
+                    response_time_ms: rng.random_range(1..50),
+                    error_count: rng.random_range(0..5),
+                    uptime_percent: rng.random_range(95.0..100.0),
                 };
                 health_map.insert(component.to_string(), health);
             }

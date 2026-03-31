@@ -159,10 +159,9 @@ impl Fido2HsmProvider {
         {
             self.ensure_device_open().await?;
 
-            // Phase 2: Implement CTAP2 hmac-secret entropy generation. Universal CTAP2
-            // hmac-secret protocol works with any compliant device.
-            Err(BearDogError::not_implemented(
-                "FIDO2 entropy generation: hmac-secret extension ready, CTAP2 protocol pending (Phase 2)",
+            Err(BearDogError::requires_capability(
+                "fido2",
+                "FIDO2 provider requires the fido2 feature and a connected CTAP2 device; entropy via CTAP2 hmac-secret is not wired yet",
             ))
         }
 
@@ -200,9 +199,9 @@ impl Fido2HsmProvider {
         {
             self.ensure_device_open().await?;
 
-            // Phase 2: Implement CTAP2 makeCredential command. Works with any CTAP2-compliant device.
-            Err(BearDogError::not_implemented(
-                "FIDO2 key generation: Universal CTAP2 makeCredential pending (Phase 2)",
+            Err(BearDogError::requires_capability(
+                "fido2",
+                "FIDO2 provider requires the fido2 feature and a connected CTAP2 device; CTAP2 makeCredential is not wired yet",
             ))
         }
 
@@ -230,9 +229,9 @@ impl Fido2HsmProvider {
         {
             self.ensure_device_open().await?;
 
-            // Phase 2: Implement CTAP2 getAssertion command for signing.
-            Err(BearDogError::not_implemented(
-                "FIDO2 signing: Universal CTAP2 getAssertion pending (Phase 2)",
+            Err(BearDogError::requires_capability(
+                "fido2",
+                "FIDO2 provider requires the fido2 feature and a connected CTAP2 device; CTAP2 getAssertion for signing is not wired yet",
             ))
         }
 
@@ -257,9 +256,9 @@ impl Fido2HsmProvider {
         {
             self.ensure_device_open().await?;
 
-            // Phase 2: Implement CTAP2 getAssertion for user presence proof.
-            Err(BearDogError::not_implemented(
-                "FIDO2 presence: Universal CTAP2 pending (Phase 2)",
+            Err(BearDogError::requires_capability(
+                "fido2",
+                "FIDO2 provider requires the fido2 feature and a connected CTAP2 device; CTAP2 user presence is not wired yet",
             ))
         }
 
@@ -339,10 +338,9 @@ mod tests {
         let msg = err.to_string();
         assert!(
             msg.contains("Failed to open")
-                || msg.contains("not implemented")
-                || msg.contains("Phase 2")
-                || msg.contains("HID")
-                || msg.contains("not yet implemented"),
+                || msg.contains("Requires capability")
+                || msg.contains("fido2")
+                || msg.contains("HID"),
             "unexpected error: {msg}"
         );
     }
@@ -370,9 +368,8 @@ mod tests {
         let msg = err.to_string();
         assert!(
             msg.contains("Failed to open")
-                || msg.contains("not implemented")
-                || msg.contains("Phase 2")
-                || msg.contains("not yet implemented"),
+                || msg.contains("Requires capability")
+                || msg.contains("fido2"),
             "{msg}"
         );
     }
@@ -396,9 +393,8 @@ mod tests {
         let msg = err.to_string();
         assert!(
             msg.contains("Failed to open")
-                || msg.contains("not implemented")
-                || msg.contains("Phase 2")
-                || msg.contains("not yet implemented"),
+                || msg.contains("Requires capability")
+                || msg.contains("fido2"),
             "{msg}"
         );
     }
@@ -413,9 +409,8 @@ mod tests {
         let msg = err.to_string();
         assert!(
             msg.contains("Failed to open")
-                || msg.contains("not implemented")
-                || msg.contains("Phase 2")
-                || msg.contains("not yet implemented"),
+                || msg.contains("Requires capability")
+                || msg.contains("fido2"),
             "{msg}"
         );
     }

@@ -112,7 +112,7 @@ pub async fn handle_tor_ntor_client_init(params: Option<&Value>) -> Result<Value
     // NOTE: Using StaticSecret instead of EphemeralSecret because we need to
     // serialize the secret into client_state for the two-phase ntor handshake.
     // The secret is encrypted in client_state and only used once.
-    let ephemeral_secret = StaticSecret::random_from_rng(rand::thread_rng());
+    let ephemeral_secret = StaticSecret::random_from_rng(chacha20poly1305::aead::OsRng);
     let ephemeral_public = PublicKey::from(&ephemeral_secret);
 
     // Create client state (contains secret for later use)
@@ -399,7 +399,7 @@ pub async fn handle_tor_ntor_server_respond(params: Option<&Value>) -> Result<Va
     }
 
     // Generate server ephemeral keypair
-    let y_secret = EphemeralSecret::random_from_rng(rand::thread_rng());
+    let y_secret = EphemeralSecret::random_from_rng(chacha20poly1305::aead::OsRng);
     let y_public = PublicKey::from(&y_secret);
 
     // Compute shared secrets

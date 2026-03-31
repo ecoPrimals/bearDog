@@ -13,7 +13,7 @@
 //!
 //! - ✅ **Pure Rust** - Zero shell scripts, zero external commands
 //! - ✅ **Fully Async** - Tokio-based concurrent deployment
-//! - ✅ **Universal** - Works on x86_64, ARM64, RISC-V, WASM
+//! - ✅ **Universal** - Works on `x86_64`, ARM64, RISC-V, WASM
 //! - ✅ **Platform-Agnostic** - Linux, macOS, Windows, Android, iOS
 //! - ✅ **Isomorphic** - Single binary, auto-detects platform/arch
 //! - ✅ **Zero Hardcoding** - XDG Base Directory compliant
@@ -21,7 +21,7 @@
 //!
 //! ## Philosophy
 //!
-//! Follows BearDog deep debt principles:
+//! Follows `BearDog` deep debt principles:
 //! - Modern idiomatic Rust
 //! - Capability-based discovery (zero hardcoding)
 //! - Complete implementation (not wrappers)

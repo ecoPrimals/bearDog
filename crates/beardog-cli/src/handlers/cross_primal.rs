@@ -21,7 +21,7 @@ use base64::{Engine, engine::general_purpose::STANDARD};
 use beardog_core::ecosystem_integration::{PrimalDiscoveryService, SecureCrossPrimalMessenger};
 use beardog_types::canonical::discovery::{
     ComputeAbility, NetworkFunction, SecurityService, StorageCharacteristic,
-    UniversalCapabilityType,
+    UniversalCapabilityType, UniversalServiceDescriptor,
 };
 use clap::Parser;
 use std::collections::HashMap;
@@ -274,6 +274,7 @@ async fn handle_discover_primals(capability: &str) -> Result<(), beardog_errors:
         .await
     {
         Ok(primals) => {
+            let primals: Vec<UniversalServiceDescriptor> = primals;
             if primals.is_empty() {
                 println!("📋 No primals found with '{capability}' capability");
                 println!("   This is expected until other primals are running in the ecosystem");

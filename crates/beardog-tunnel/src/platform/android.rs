@@ -4,7 +4,7 @@
 //!
 //! **Platform:** Android (ARM64, `x86_64`, all architectures)
 //! **Transport:** Abstract Unix domain sockets (Linux namespace)
-//! **Path Format:** `@biomeos_beardog` (@ indicates abstract namespace)
+//! **Path Format:** `@<ecosystem-namespace>_beardog` (@ indicates abstract namespace; namespace from `resolve_biomeos_ipc_subdir_from_optional`)
 //!
 //! ## Modern Idiomatic Rust Evolution (Jan 31, 2026)
 //!
@@ -18,7 +18,7 @@
 //!
 //! **Technical Details:**
 //! - Abstract sockets use null byte (`\0`) prefix instead of filesystem path
-//! - By convention, we write them with `@` prefix (e.g., `@biomeos_beardog`)
+//! - By convention, we write them with `@` prefix (e.g., `@<namespace>_beardog`)
 //! - Rust's `UnixListener::bind` automatically converts `@` to `\0`
 //! - Kernel recognizes `\0` prefix and uses abstract namespace
 //!
@@ -35,6 +35,7 @@
 //! - ✅ No hardcoding (primal name from runtime)
 
 use super::{PlatformListener, PlatformSocket, PlatformStream, SocketEndpoint};
+use beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_ipc_subdir_from_optional;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
@@ -97,9 +98,10 @@ impl PlatformListener for AndroidPlatformListener {
 
 impl PlatformSocket for AndroidSocket {
     fn create_endpoint(primal_name: &str) -> std::io::Result<SocketEndpoint> {
-        // Abstract socket naming: @biomeos_{primal_name}
+        // Abstract socket naming: @<ecosystem-namespace>_{primal_name} (same resolver as IPC layout).
         // The @ prefix tells UnixListener to use abstract namespace
-        let abstract_name = format!("@biomeos_{primal_name}");
+        let ns = resolve_biomeos_ipc_subdir_from_optional(None);
+        let abstract_name = format!("@{ns}_{primal_name}");
 
         debug!(
             "Creating abstract socket endpoint for '{}': {}",
@@ -145,11 +147,12 @@ mod tests {
 
     #[test]
     fn test_abstract_socket_format() {
+        let ns = resolve_biomeos_ipc_subdir_from_optional(None);
         let endpoint =
             AndroidSocket::create_endpoint("beardog").expect("Android abstract endpoint");
         match endpoint {
             SocketEndpoint::Abstract(name) => {
-                assert_eq!(name, "@biomeos_beardog");
+                assert_eq!(name, format!("@{ns}_beardog"));
                 assert!(name.starts_with('@'));
                 println!("✅ Abstract socket format correct: {}", name);
             }

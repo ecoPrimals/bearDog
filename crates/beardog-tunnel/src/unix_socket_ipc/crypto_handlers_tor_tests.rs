@@ -33,7 +33,7 @@ async fn test_ntor_client_init_basic() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_ntor_full_handshake() -> Result<(), BearDogError> {
-    let server_secret = StaticSecret::random_from_rng(rand::thread_rng());
+    let server_secret = StaticSecret::random_from_rng(chacha20poly1305::aead::OsRng);
     let server_public = PublicKey::from(&server_secret);
     let node_id = [42u8; 20];
 
@@ -222,7 +222,7 @@ async fn ntor_client_finish_auth_mismatch_returns_invalid() {
     .unwrap();
 
     let mut bad_auth = vec![0u8; 32];
-    rand::thread_rng().fill_bytes(&mut bad_auth);
+    rand::rng().fill_bytes(&mut bad_auth);
     let params = json!({
         "client_state": json_str(&init, "client_state").unwrap(),
         "server_public": BASE64.encode([9u8; 32]),

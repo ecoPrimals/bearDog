@@ -24,7 +24,7 @@ impl SoftwareCryptoProvider {
     /// Returns an error if the RNG fails to generate random bytes
     pub fn generate_random(&self, len: usize) -> Result<Vec<u8>, BearDogError> {
         let mut bytes = vec![0u8; len];
-        rand::thread_rng()
+        rand::rng()
             .try_fill_bytes(&mut bytes)
             .map_err(|e| BearDogError::security(format!("Failed to generate random bytes: {e}"), e.into()))?;
         Ok(bytes)

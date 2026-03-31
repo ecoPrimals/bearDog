@@ -393,14 +393,12 @@ impl SafeAndroidKeystore {
             .get(key_id)
             .ok_or_else(|| BearDogError::not_found(format!("Key {key_id} not found")))?;
 
-        // Phase 2: JNI integration required. Actual Android StrongBox signing needs JNI bindings
-        // to Android Keystore API. Use SoftwareHSM provider as fallback until then.
+        // JNI integration required for Android Keystore API; use SoftwareHSM as fallback until wired.
         warn!(
-            "Android StrongBox signing not yet implemented (JNI Phase 2); use SoftwareHSM fallback"
+            "Android StrongBox signing requires JNI Keystore integration; use SoftwareHSM fallback"
         );
-        Err(BearDogError::not_implemented(
-            "Android StrongBox signing requires JNI integration (not yet implemented). \
-             Use SoftwareHSM provider as fallback.",
+        Err(BearDogError::not_yet_available(
+            "Android StrongBox signing requires JNI Keystore integration capability",
         ))
     }
 
@@ -452,11 +450,9 @@ impl SafeAndroidKeystore {
             .get(key_id)
             .ok_or_else(|| BearDogError::not_found(format!("Key {key_id} not found")))?;
 
-        // Phase 2: JNI integration required. Actual Android StrongBox verification needs JNI
-        // bindings to Android Keystore API.
-        warn!("Android StrongBox signature verification not yet implemented (JNI Phase 2)");
-        Err(BearDogError::not_implemented(
-            "Android StrongBox signature verification requires JNI integration (not yet implemented)",
+        warn!("Android StrongBox verification requires JNI Keystore integration");
+        Err(BearDogError::not_yet_available(
+            "Android StrongBox signature verification requires JNI Keystore integration capability",
         ))
     }
 

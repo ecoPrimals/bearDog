@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! # 🚀 tarpc Server for BearDog Crypto Operations
+//! # 🚀 tarpc Server for `BearDog` Crypto Operations
 //!
 //! **HIGH-PERFORMANCE CRYPTO RPC SERVER** (v1.0.0)
 //!

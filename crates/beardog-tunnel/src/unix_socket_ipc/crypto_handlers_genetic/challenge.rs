@@ -39,7 +39,7 @@ pub async fn handle_generate_challenge(params: &Value) -> Result<Value, BearDogE
 
     let mut nonce = [0u8; 32];
     use rand::RngCore;
-    rand::thread_rng().fill_bytes(&mut nonce);
+    rand::rng().fill_bytes(&mut nonce);
     let nonce_hex = hex::encode(nonce);
 
     use uuid::Uuid;

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! # 🌐 Multi-Transport Server for BearDog
+//! # 🌐 Multi-Transport Server for `BearDog`
 //!
 //! **CONCURRENT PROTOCOL BINDING** (v1.0.0)
 //!
@@ -66,13 +66,13 @@ pub struct MultiTransportConfig {
     pub shutdown_timeout: Duration,
 }
 
-/// Default port for tarpc server (can be overridden by BEARDOG_TARPC_PORT)
+/// Default port for tarpc server (can be overridden by `BEARDOG_TARPC_PORT`)
 const DEFAULT_TARPC_PORT: u16 = beardog_config::DEFAULT_TCP_IPC_PORT + 1;
 
-/// Default port for JSON-RPC server (can be overridden by BEARDOG_JSONRPC_PORT)
+/// Default port for JSON-RPC server (can be overridden by `BEARDOG_JSONRPC_PORT`)
 const DEFAULT_JSONRPC_PORT: u16 = beardog_config::DEFAULT_TCP_IPC_PORT;
 
-/// Default shutdown timeout in seconds (can be overridden by BEARDOG_SHUTDOWN_TIMEOUT)
+/// Default shutdown timeout in seconds (can be overridden by `BEARDOG_SHUTDOWN_TIMEOUT`)
 const DEFAULT_SHUTDOWN_TIMEOUT_SECS: u64 = 30;
 
 /// Parse `host:port`; if the string is invalid, bind loopback on `port` (never panics).
@@ -338,6 +338,10 @@ impl MultiTransportServer {
     ///
     /// Returns a handle for controlling the server.
     /// This function spawns server tasks and returns immediately.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying server setup fails before tasks are spawned.
     pub async fn start(self) -> anyhow::Result<MultiTransportHandle> {
         let (shutdown_tx, _) = broadcast::channel(1);
         let mut server_tasks: Vec<tokio::task::JoinHandle<()>> = Vec::new();
@@ -464,6 +468,10 @@ impl MultiTransportServer {
     /// Run server until shutdown signal
     ///
     /// Blocks until shutdown is signaled.
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from [`Self::start`], or from waiting for Ctrl+C / joining server tasks.
     pub async fn run(self) -> anyhow::Result<()> {
         let handle = self.start().await?;
 

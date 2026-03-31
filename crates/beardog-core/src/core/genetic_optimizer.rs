@@ -220,12 +220,12 @@ impl GeneticOptimizer {
     /// Creates the initial population of candidate solutions with random
     /// values in the optimization space.
     fn initialize_population(&self) -> Vec<Vec<f64>> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut population = Vec::with_capacity(self.config.population_size);
         for _ in 0..self.config.population_size {
             let individual: Vec<f64> = (0..10) // 10-dimensional optimization space
-                .map(|_| rng.gen_range(-1.0..1.0))
+                .map(|_| rng.random_range(-1.0..1.0))
                 .collect();
             population.push(individual);
         }
@@ -241,7 +241,7 @@ impl GeneticOptimizer {
         population: &[Vec<f64>],
         fitness_scores: &[f64],
     ) -> Vec<Vec<f64>> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut next_generation = Vec::with_capacity(self.config.population_size);
 
         // Selection, crossover, and mutation
@@ -254,14 +254,14 @@ impl GeneticOptimizer {
             let parent2 = &population[parent2_idx];
 
             // Crossover
-            let mut offspring = if rng.r#gen::<f64>() < self.config.crossover_rate {
+            let mut offspring = if rng.random::<f64>() < self.config.crossover_rate {
                 Self::crossover(parent1, parent2, &mut rng)
             } else {
                 parent1.clone()
             };
 
             // Mutation
-            if rng.r#gen::<f64>() < self.config.mutation_rate {
+            if rng.random::<f64>() < self.config.mutation_rate {
                 Self::mutate(&mut offspring, &mut rng);
             }
 
@@ -273,11 +273,11 @@ impl GeneticOptimizer {
 
     fn tournament_selection(fitness_scores: &[f64], rng: &mut impl Rng) -> usize {
         let tournament_size = 3;
-        let mut best_idx = rng.gen_range(0..fitness_scores.len());
+        let mut best_idx = rng.random_range(0..fitness_scores.len());
         let mut best_fitness = fitness_scores[best_idx];
 
         for _ in 1..tournament_size {
-            let idx = rng.gen_range(0..fitness_scores.len());
+            let idx = rng.random_range(0..fitness_scores.len());
             if fitness_scores[idx] > best_fitness {
                 best_fitness = fitness_scores[idx];
                 best_idx = idx;
@@ -288,7 +288,7 @@ impl GeneticOptimizer {
     }
 
     fn crossover(parent1: &[f64], parent2: &[f64], rng: &mut impl Rng) -> Vec<f64> {
-        let crossover_point = rng.gen_range(1..parent1.len());
+        let crossover_point = rng.random_range(1..parent1.len());
         let mut offspring = Vec::with_capacity(parent1.len());
 
         for i in 0..parent1.len() {
@@ -304,9 +304,9 @@ impl GeneticOptimizer {
 
     fn mutate(individual: &mut [f64], rng: &mut impl Rng) {
         for gene in individual.iter_mut() {
-            if rng.r#gen::<f64>() < 0.1 {
+            if rng.random::<f64>() < 0.1 {
                 // 10% chance to mutate each gene
-                *gene += rng.gen_range(-0.1..0.1);
+                *gene += rng.random_range(-0.1..0.1);
                 *gene = gene.clamp(-1.0, 1.0);
             }
         }

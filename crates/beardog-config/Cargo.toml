@@ -16,7 +16,7 @@ workspace = true
 [dependencies]
 # Error handling
 beardog-errors = { path = "../beardog-errors" }
-thiserror = "1.0"
+thiserror = { workspace = true }
 
 # Serialization formats
 serde = { version = "1.0", features = ["derive"] }

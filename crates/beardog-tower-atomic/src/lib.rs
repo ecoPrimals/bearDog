@@ -2,18 +2,18 @@
 #![forbid(unsafe_code)]
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
-//! # BearDog Tower Atomic
+//! # `BearDog` Tower Atomic
 //!
 //! **Tower Atomic** = Unix socket-based JSON-RPC for inter-primal communication
 //!
 //! ## Purpose
 //!
-//! BearDog is a **Pure Rust crypto primal** with ZERO network dependencies.
-//! When BearDog needs HTTP/TLS, it delegates to Songbird via Tower Atomic.
+//! `BearDog` is a **Pure Rust crypto primal** with ZERO network dependencies.
+//! When `BearDog` needs HTTP/TLS, it delegates to Songbird via Tower Atomic.
 //!
 //! ## Philosophy
 //!
-//! - **BearDog**: Crypto only (ed25519, x25519, chacha20, blake3)
+//! - **`BearDog`**: Crypto only (ed25519, x25519, chacha20, blake3)
 //! - **Songbird**: TLS/HTTP gateway (Pure Rust, 95% complete)
 //! - **Tower Atomic**: Inter-primal glue (Unix sockets, JSON-RPC)
 //!
@@ -84,9 +84,14 @@ impl Client {
     /// # Discovery
     ///
     /// Automatically discovers the primal's Unix socket path:
-    /// 1. Check XDG_RUNTIME_DIR (/run/user/1000/ecoPrimals/)
+    /// 1. Check `XDG_RUNTIME_DIR` (/run/user/1000/ecoPrimals/)
     /// 2. Check HOME (~/.local/share/ecoPrimals/)
     /// 3. Check /var/run/ecoPrimals/
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::PrimalNotFound`] if the primal's Unix socket cannot be located, or
+    /// [`Error::ConnectionFailed`] if the socket connection fails.
     ///
     /// # Example
     ///
@@ -115,6 +120,10 @@ impl Client {
     /// Connect to an existing Unix socket path (capability / env resolved).
     ///
     /// `peer_label` is used only for logging (e.g. socket path or discovery id).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::ConnectionFailed`] if the Unix socket cannot be opened.
     pub async fn connect_unix_path(socket_path: &Path, peer_label: &str) -> Result<Self> {
         let stream = UnixStream::connect(socket_path).await.map_err(|e| {
             Error::ConnectionFailed(format!(
@@ -142,6 +151,13 @@ impl Client {
     /// # Returns
     ///
     /// The JSON-RPC `result` field on success.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::SerializationFailed`] if the request or response JSON cannot be encoded or
+    /// decoded, [`Error::ConnectionFailed`] if the socket read or write fails, or
+    /// [`Error::JsonRpcError`] if the peer reports a JSON-RPC error or the response omits both
+    /// `result` and a well-formed error object.
     ///
     /// # Example
     ///

@@ -61,7 +61,7 @@ pub async fn send_ctap2_command(
     ))
 }
 
-/// Query device information via CTAP2 GetInfo
+/// Query device information via CTAP2 `GetInfo`
 ///
 /// Note: Phase 2 implementation pending
 #[cfg(feature = "fido2")]

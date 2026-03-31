@@ -131,9 +131,8 @@ mod auth_tests {
     }
 
     fn hash_password(password: &str) -> Result<String, Box<dyn std::error::Error>> {
-        use argon2::password_hash::SaltString;
+        use argon2::password_hash::{SaltString, rand_core::OsRng};
         use argon2::{Argon2, PasswordHasher};
-        use rand::rngs::OsRng;
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
         let password_hash = argon2
@@ -157,10 +156,10 @@ mod auth_tests {
         const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                                   abcdefghijklmnopqrstuvwxyz\
                                   0123456789";
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         use rand::Rng;
         let token: String = (0..length)
-            .map(|_| CHARSET[rng.gen_range(0..CHARSET.len())] as char)
+            .map(|_| CHARSET[rng.random_range(0..CHARSET.len())] as char)
             .collect();
         Ok(token)
     }
@@ -179,9 +178,11 @@ mod auth_tests {
 
     fn generate_mfa_token(user_id: String) -> Result<String, Box<dyn std::error::Error>> {
         let _ = user_id; // Use parameter to avoid warnings
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         use rand::Rng;
-        let token: String = (0..6).map(|_| rng.gen_range(0..10).to_string()).collect();
+        let token: String = (0..6)
+            .map(|_| rng.random_range(0..10).to_string())
+            .collect();
         Ok(token)
     }
 

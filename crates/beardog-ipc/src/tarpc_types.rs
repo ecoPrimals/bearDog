@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! # 🚀 tarpc Types and Service Trait for BearDog
+//! # 🚀 tarpc Types and Service Trait for `BearDog`
 //!
 //! **HIGH-PERFORMANCE CRYPTO RPC** (v1.0.0)
 //!
 //! Provides shared types and service trait for tarpc-based cryptographic operations.
-//! This mirrors Songbird's tarpc_types.rs pattern for protocol-agnostic architecture.
+//! This mirrors Songbird's `tarpc_types.rs` pattern for protocol-agnostic architecture.
 //!
 //! ## Performance
 //! - ~10-20 μs latency (vs 50-100 μs for JSON-RPC)
@@ -28,7 +28,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// tarpc service trait for BearDog cryptographic operations
+/// tarpc service trait for `BearDog` cryptographic operations
 ///
 /// This trait defines the async RPC interface using tarpc.
 /// Both client and server implementations use this trait.

@@ -14,7 +14,7 @@ pub const HID_READ_TIMEOUT_MS: u64 = 1000;
 /// Standard HID packet size in bytes
 pub const HID_PACKET_SIZE: usize = 64;
 
-/// Minimum HID response header size (CID + CMD + LEN_H + LEN_L + DATA)
+/// Minimum HID response header size (`CID` + `CMD` + `LEN_H` + `LEN_L` + `DATA`)
 pub const HID_MIN_RESPONSE_SIZE: usize = 5;
 
 /// Maximum response preview size for debug logging (bytes)

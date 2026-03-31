@@ -58,10 +58,10 @@ impl ProductionUniversalAdapter {
 
     /// Execute operation on a specific system
     ///
-    /// # Important: Not Yet Implemented
+    /// # Important: Subsystem routing not wired
     ///
     /// This method is a placeholder for routing operations to specific subsystems.
-    /// Currently returns an explicit error to prevent silent failures in production.
+    /// It returns an explicit [`BearDogError::unsupported_operation`] to prevent silent failures.
     ///
     /// # Implementation Required
     ///
@@ -72,26 +72,21 @@ impl ProductionUniversalAdapter {
     /// 4. Route operations through the appropriate backend
     ///
     /// # Errors
-    /// Returns `Err(BearDogError::not_implemented)` until real routing is implemented
+    /// Returns [`BearDogError::unsupported_operation`] until subsystem routing is implemented.
     pub fn execute_on_system(
         &self,
         system: &str,
         operation: &str,
         _params: serde_json::Value,
     ) -> Result<serde_json::Value, BearDogError> {
-        // Log the attempted operation for debugging
         tracing::warn!(
-            "execute_on_system called but not implemented: system={}, operation={}",
+            "execute_on_system: subsystem routing not available: system={}, operation={}",
             system,
             operation
         );
 
-        // Return explicit error instead of fake success
-        // This prevents silent failures in production
-        Err(BearDogError::not_implemented(&format!(
-            "System operation routing not implemented. \
-             Attempted: {operation} on {system}. \
-             Use direct IPC to target primals instead."
+        Err(BearDogError::unsupported_operation(format!(
+            "subsystem_operation_routing capability not available (attempted {operation} on {system}); use direct IPC to target primals"
         )))
     }
 
@@ -216,8 +211,8 @@ mod tests {
             .expect_err("routing must not be implemented yet");
         let msg = err.to_string();
         assert!(
-            msg.contains("not implemented") || msg.contains("Not implemented"),
-            "error should surface not-implemented: {msg}"
+            msg.contains("Unsupported operation") || msg.contains("subsystem_operation_routing"),
+            "error should surface unsupported operation: {msg}"
         );
     }
 

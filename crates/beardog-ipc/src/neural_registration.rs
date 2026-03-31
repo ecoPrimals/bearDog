@@ -41,6 +41,9 @@
 //! breaking consumers.
 
 use anyhow::{Context, Result};
+use beardog_types::constants::domains::network::ipc_discovery::{
+    BEARDOG_CAPABILITY_DOMAIN, resolve_biomeos_ipc_subdir_from_optional,
+};
 use serde_json::json;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::UnixStream;
@@ -80,7 +83,7 @@ pub async fn register_with_neural_api(
     let capabilities = vec![
         // Core crypto capability
         json!({
-            "capability": "crypto",
+            "capability": BEARDOG_CAPABILITY_DOMAIN,
             "primal": primal_name,
             "socket": socket_path,
             "provider": "beardog",
@@ -201,7 +204,7 @@ pub struct NeuralApiDiscoveryInputs {
     pub biomeos_socket_dir: Option<String>,
     /// `XDG_RUNTIME_DIR` for Tier 3 resolution.
     pub xdg_runtime_dir: Option<String>,
-    /// Effective UID for Tier 4 (`/run/user/{uid}/biomeos/`).
+    /// Effective UID for Tier 4 (`/run/user/{uid}/<ecosystem-namespace>/`).
     pub uid: Option<u32>,
 }
 
@@ -210,9 +213,9 @@ pub struct NeuralApiDiscoveryInputs {
 /// Resolution order:
 /// 1. `NEURAL_API_SOCKET` / `NEURALS_SOCKET` env var (explicit override)
 /// 2. `BIOMEOS_SOCKET_DIR/neural-api.sock` (orchestrator-managed directory)
-/// 3. `XDG_RUNTIME_DIR/biomeos/neural-api.sock`
-/// 4. `/run/user/{uid}/biomeos/neural-api.sock`
-/// 5. Platform temp dir: `{temp}/biomeos/neural-api.sock`, `{temp}/neural-api.sock`, optional `BEARDOG_NEURAL_API_LEGACY_SOCKET`
+/// 3. `XDG_RUNTIME_DIR/<ecosystem-namespace>/neural-api.sock` (namespace via `resolve_biomeos_ipc_subdir_from_optional` in `beardog-types`)
+/// 4. `/run/user/{uid}/<ecosystem-namespace>/neural-api.sock`
+/// 5. Platform temp dir: `{temp}/<ecosystem-namespace>/neural-api.sock`, `{temp}/neural-api.sock`, optional `BEARDOG_NEURAL_API_LEGACY_SOCKET`
 ///
 /// An empty string in an env field disables auto-registration for that slot (returns `None`).
 #[must_use]
@@ -233,6 +236,8 @@ pub fn discover_neural_api_socket_with(
 #[must_use]
 pub fn discover_neural_api_socket_from_inputs(inputs: &NeuralApiDiscoveryInputs) -> Option<String> {
     use std::path::Path;
+
+    let ecosystem_ns = resolve_biomeos_ipc_subdir_from_optional(None);
 
     // Tier 1: explicit env override
     if let Some(ref socket) = inputs.neural_api_socket {
@@ -267,16 +272,25 @@ pub fn discover_neural_api_socket_from_inputs(inputs: &NeuralApiDiscoveryInputs)
 
     // Tier 3: XDG runtime directory
     if let Some(ref xdg) = inputs.xdg_runtime_dir {
-        let path = format!("{xdg}/biomeos/neural-api.sock");
+        let path = format!("{xdg}/{ecosystem_ns}/neural-api.sock");
         if Path::new(&path).exists() {
-            info!("🔍 Found Neural API via XDG/biomeos (Tier 3): {}", path);
+            info!(
+                "🔍 Found Neural API via XDG/ecosystem namespace (Tier 3): {}",
+                path
+            );
             return Some(path);
         }
     }
 
-    // Tier 4: /run/user/{uid}/biomeos/
-    let uid = inputs.uid.unwrap_or(1000);
-    let run_path = format!("/run/user/{uid}/biomeos/neural-api.sock");
+    // Tier 4: /run/user/{uid}/<ecosystem-namespace>/
+    let uid = inputs.uid.unwrap_or_else(|| {
+        std::env::var("UID")
+            .or_else(|_| std::env::var("EUID"))
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(1000)
+    });
+    let run_path = format!("/run/user/{uid}/{ecosystem_ns}/neural-api.sock");
     if Path::new(&run_path).exists() {
         info!("🔍 Found Neural API via /run/user (Tier 4): {}", run_path);
         return Some(run_path);
@@ -285,7 +299,7 @@ pub fn discover_neural_api_socket_from_inputs(inputs: &NeuralApiDiscoveryInputs)
     // Tier 5: platform temp dir + optional legacy path (no fixed peer names)
     let tmp = std::env::temp_dir();
     let mut fallback_paths: Vec<std::path::PathBuf> = vec![
-        tmp.join("biomeos").join("neural-api.sock"),
+        tmp.join(&ecosystem_ns).join("neural-api.sock"),
         tmp.join("neural-api.sock"),
     ];
     if let Ok(extra) = std::env::var("BEARDOG_NEURAL_API_LEGACY_SOCKET")

@@ -16,15 +16,15 @@ use beardog_genetics::{
 };
 use chrono::{Duration, Utc};
 use ed25519_dalek::SigningKey;
-use rand::{Rng, rngs::OsRng};
+use rand::RngCore;
 
 // ============================================================================
 // Test Helpers
 // ============================================================================
 
 fn create_test_keypair() -> SigningKey {
-    let mut rng = OsRng;
-    let secret_bytes: [u8; 32] = rng.r#gen();
+    let mut secret_bytes = [0u8; 32];
+    rand::rng().fill_bytes(&mut secret_bytes);
     SigningKey::from_bytes(&secret_bytes)
 }
 

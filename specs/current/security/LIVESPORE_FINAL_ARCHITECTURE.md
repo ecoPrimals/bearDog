@@ -193,7 +193,7 @@ SoloKey witness + Hardware entropy → Genetic ID
 
 ```bash
 $ cd ecoPrimals/phase2/biomeOS/
-$ ./scripts/build-livespore.sh
+$ cargo build --release   # LiveSpore image build lives in biomeOS; use that repo’s targets/docs.
 
 🌱 Building BiomeOS LiveSpore...
    ├─ NUCLEUS discovery protocol ✅

@@ -203,7 +203,7 @@ fn test_software_hsm(size: usize) -> Result<EntropyTestResult, BearDogError> {
 
     let start = Instant::now();
     let mut entropy = vec![0u8; size];
-    rand::thread_rng().fill_bytes(&mut entropy);
+    rand::rng().fill_bytes(&mut entropy);
     let generation_time_ms = start.elapsed().as_millis();
 
     let shannon = calculate_shannon_entropy(&entropy);
@@ -242,7 +242,7 @@ async fn test_solokey_entropy(size: usize) -> Result<EntropyTestResult, BearDogE
     // Phase 2: Will use CTAP2 hmac-secret for real hardware entropy
     // For now, simulate high-quality hardware RNG
     let mut entropy = vec![0u8; size];
-    rand::thread_rng().fill_bytes(&mut entropy);
+    rand::rng().fill_bytes(&mut entropy);
 
     // Use entropy directly (device-specific mixing can be added later with crypto crate)
     let mixed_entropy = entropy;

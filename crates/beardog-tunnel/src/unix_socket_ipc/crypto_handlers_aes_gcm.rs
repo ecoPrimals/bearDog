@@ -38,7 +38,6 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
 use rand::RngCore;
-use rand::rngs::OsRng;
 use serde_json::{Value, json};
 use zeroize::Zeroizing;
 
@@ -116,7 +115,7 @@ pub fn handle_aes256_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
     } else {
         // Generate random 12-byte nonce
         let mut nonce = vec![0u8; 12];
-        OsRng.fill_bytes(&mut nonce);
+        rand::rng().fill_bytes(&mut nonce);
         nonce
     };
 
@@ -330,7 +329,7 @@ pub fn handle_aes128_gcm_encrypt(params: &Value) -> Result<Value, BearDogError> 
     } else {
         // Generate random 12-byte nonce
         let mut nonce = vec![0u8; 12];
-        OsRng.fill_bytes(&mut nonce);
+        rand::rng().fill_bytes(&mut nonce);
         nonce
     };
 

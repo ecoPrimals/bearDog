@@ -41,8 +41,8 @@ mod chaos_engineering_tests {
         // Randomly change HSM health
         for hsm in &discovered {
             use rand::Rng;
-            let mut rng = rand::thread_rng();
-            let status = match rng.gen_range(0..3) {
+            let mut rng = rand::rng();
+            let status = match rng.random_range(0..3) {
                 0 => HsmHealthStatus::Healthy,
                 1 => HsmHealthStatus::Degraded,
                 _ => HsmHealthStatus::Unhealthy,
@@ -61,7 +61,7 @@ mod chaos_engineering_tests {
         
         // Simulate random connection drops
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         for hsm in discovered.iter().take(3) {
             if rng.gen_bool(0.5) {
@@ -573,14 +573,14 @@ mod chaos_engineering_tests {
     #[tokio::test]
     async fn test_chaos_monkey() -> Result<(), BearDogError> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         let mut discovery = UniversalHsmDiscovery::new()?;
         let discovered = discovery.discover_all_hsms()?;
         
         // Random chaos
         for _ in 0..20 {
-            match rng.gen_range(0..4) {
+            match rng.random_range(0..4) {
                 0 => {
                     // Random discovery
                     let _ = discovery.discover_all_hsms();
@@ -591,8 +591,8 @@ mod chaos_engineering_tests {
                 }
                 2 => {
                     // Random status update
-                    if let Some(hsm) = discovered.get(rng.gen_range(0..discovered.len().max(1))) {
-                        let status = match rng.gen_range(0..3) {
+                    if let Some(hsm) = discovered.get(rng.random_range(0..discovered.len().max(1))) {
+                        let status = match rng.random_range(0..3) {
                             0 => HsmHealthStatus::Healthy,
                             1 => HsmHealthStatus::Degraded,
                             _ => HsmHealthStatus::Unhealthy,
@@ -604,10 +604,10 @@ mod chaos_engineering_tests {
                     // Random config update
                     let config = DiscoveryConfig {
                         auto_discovery_enabled: rng.gen_bool(0.5),
-                        discovery_interval: Duration::from_secs(rng.gen_range(30..120)),
-                        health_check_interval: Duration::from_secs(rng.gen_range(10..60)),
+                        discovery_interval: Duration::from_secs(rng.random_range(30..120)),
+                        health_check_interval: Duration::from_secs(rng.random_range(10..60)),
                         capability_refresh_interval: Duration::from_secs(1800),
-                        timeout: Duration::from_secs(rng.gen_range(1..10)),
+                        timeout: Duration::from_secs(rng.random_range(1..10)),
                         tier_elevation_enabled: rng.gen_bool(0.5),
                         human_entropy_priority: rng.gen_bool(0.5),
                     };

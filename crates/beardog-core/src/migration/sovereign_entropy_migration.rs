@@ -456,7 +456,7 @@ impl SovereignEntropyMigrationManager {
         warn!("⚠️  Falling back to legacy cryptographic randomness");
 
         use rand::RngCore;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut bytes = vec![0u8; key_size_bytes];
         rng.fill_bytes(&mut bytes);
 
@@ -471,7 +471,7 @@ impl SovereignEntropyMigrationManager {
         use rand::Rng;
 
         warn!("⚠️  Falling back to legacy neural weight initialization");
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let (rows, cols) = layer_shape;
 
         let mut weights = Vec::with_capacity(rows);
@@ -479,7 +479,7 @@ impl SovereignEntropyMigrationManager {
             let mut row = Vec::with_capacity(cols);
             for _ in 0..cols {
                 let limit = (6.0 / (rows + cols) as f64).sqrt();
-                row.push(rng.gen_range(-limit..limit));
+                row.push(rng.random_range(-limit..limit));
             }
             weights.push(row);
         }
@@ -491,7 +491,7 @@ impl SovereignEntropyMigrationManager {
         use rand::RngCore;
 
         warn!("⚠️  Falling back to legacy random data generation");
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut bytes = vec![0u8; data_size_bytes];
         rng.fill_bytes(&mut bytes);
 

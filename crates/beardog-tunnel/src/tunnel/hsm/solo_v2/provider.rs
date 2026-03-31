@@ -7,8 +7,19 @@ use crate::tunnel::hsm::types::HsmCapability;
 use crate::universal_hsm::traits::{ProviderInfo, ProviderType, UniversalHsmProvider};
 use beardog_errors::BearDogError;
 use std::sync::Arc;
+#[cfg(feature = "ctap2")]
+use tokio::sync::Mutex;
 use tokio::sync::RwLock;
+#[cfg(any(feature = "ctap2", feature = "usb-discovery"))]
 use tracing::info;
+
+#[cfg(feature = "ctap2")]
+use super::ctap2_protocol::{
+    build_get_assertion, build_make_credential, parse_get_assertion_response,
+    parse_make_credential_response,
+};
+#[cfg(feature = "ctap2")]
+use super::transport::Ctap2Transport;
 
 /// Solo V2 USB Security Key HSM Provider
 ///
@@ -26,12 +37,16 @@ use tracing::info;
 pub struct SoloV2Provider {
     /// Device information
     device_info: SoloV2DeviceInfo,
-    /// Configuration (used in Phase 2 CTAP2 implementation)
+    /// Configuration (`relying_party_id` and options for CTAP2 when feature `ctap2` is enabled).
+    #[cfg_attr(not(feature = "ctap2"), allow(dead_code))]
     config: SoloV2Config,
     /// PIN configuration (protected)
     pin_config: Arc<RwLock<PinConfig>>,
     /// Stored key handles
     key_handles: Arc<RwLock<std::collections::HashMap<String, SoloV2KeyHandle>>>,
+    /// CTAP2 HID transport (set via [`Self::with_ctap2_transport`] or [`Self::with_hid_device_path`])
+    #[cfg(feature = "ctap2")]
+    ctap_transport: Option<Arc<Mutex<dyn Ctap2Transport>>>,
 }
 
 impl SoloV2Provider {
@@ -65,7 +80,40 @@ impl SoloV2Provider {
             config,
             pin_config: Arc::new(RwLock::new(PinConfig::default())),
             key_handles: Arc::new(RwLock::new(std::collections::HashMap::new())),
+            #[cfg(feature = "ctap2")]
+            ctap_transport: None,
         })
+    }
+
+    /// Use a [`Ctap2Transport`] implementation (e.g. [`super::HidCtap2Transport`] or a mock for tests).
+    ///
+    /// # Errors
+    ///
+    /// Returns the same errors as [`Self::new`] if the device is not connected.
+    #[cfg(feature = "ctap2")]
+    pub fn with_ctap2_transport(
+        device_info: SoloV2DeviceInfo,
+        config: SoloV2Config,
+        transport: Arc<Mutex<dyn Ctap2Transport>>,
+    ) -> Result<Self, BearDogError> {
+        let mut s = Self::new(device_info, config)?;
+        s.ctap_transport = Some(transport);
+        Ok(s)
+    }
+
+    /// Open the HID device at `hid_path` and use it as the CTAP2 transport.
+    ///
+    /// # Errors
+    ///
+    /// Returns the same errors as [`Self::new`], or if opening the HID device fails.
+    #[cfg(feature = "ctap2")]
+    pub async fn with_hid_device_path(
+        device_info: SoloV2DeviceInfo,
+        config: SoloV2Config,
+        hid_path: &str,
+    ) -> Result<Self, BearDogError> {
+        let hid = super::hid_transport::HidCtap2Transport::open(hid_path).await?;
+        Self::with_ctap2_transport(device_info, config, Arc::new(Mutex::new(hid)))
     }
 
     /// Discover all connected Solo V2 devices
@@ -186,7 +234,7 @@ impl SoloV2Provider {
     /// # Note
     ///
     /// This is a placeholder implementation. Real implementation requires:
-    /// 1. CTAP2 MakeCredential command
+    /// 1. CTAP2 `MakeCredential` command
     /// 2. PIN verification if required
     /// 3. User presence check
     /// 4. Credential storage on device
@@ -227,7 +275,14 @@ impl SoloV2Provider {
 
             // Step 3: Send CTAP2 MakeCredential command
             let result = self
-                .ctap2_make_credential(rp_id, user_id, &client_data_hash, pin_auth.as_deref())
+                .ctap2_make_credential(
+                    rp_id,
+                    user_id,
+                    _key_id.as_str(),
+                    &client_data_hash,
+                    _key_type,
+                    pin_auth.as_deref(),
+                )
                 .await?;
 
             // Step 4: Store credential handle
@@ -249,11 +304,9 @@ impl SoloV2Provider {
 
         #[cfg(not(feature = "ctap2"))]
         {
-            // Feature not enabled - return clear error with guidance
-            Err(BearDogError::not_implemented(
-                "Solo V2 key generation requires CTAP2 feature.\n\
-                 Enable with: cargo build --features ctap2\n\
-                 Or use software HSM provider for development.",
+            Err(BearDogError::requires_capability(
+                "ctap2",
+                "Solo V2 key generation requires the ctap2 Cargo feature, a CTAP2 transport, and a connected device; enable with --features ctap2 or use a software HSM for development",
             ))
         }
     }
@@ -349,33 +402,51 @@ impl SoloV2Provider {
 
         #[cfg(not(feature = "ctap2"))]
         {
-            // Feature not enabled - return clear error with guidance
-            Err(BearDogError::not_implemented(
-                "Solo V2 signing requires CTAP2 feature.\n\
-                 Enable with: cargo build --features ctap2\n\
-                 Or use software HSM provider for development.",
+            Err(BearDogError::requires_capability(
+                "ctap2",
+                "Solo V2 signing requires the ctap2 Cargo feature, a CTAP2 transport, and a connected device; enable with --features ctap2 or use a software HSM for development",
             ))
         }
     }
 
-    /// CTAP2 MakeCredential helper (feature-gated)
+    /// CTAP2 `MakeCredential` helper (feature-gated)
     #[cfg(feature = "ctap2")]
     async fn ctap2_make_credential(
         &self,
         rp_id: &str,
         user_id: &[u8],
+        user_name: &str,
         client_data_hash: &[u8],
+        key_type: KeyType,
         pin_auth: Option<&[u8]>,
     ) -> Result<Ctap2MakeCredentialResult, BearDogError> {
-        // This would interface with actual CTAP2/FIDO2 library
-        // Placeholder for when ctap2 feature is fully integrated
-        let _ = (rp_id, user_id, client_data_hash, pin_auth);
-        Err(BearDogError::not_implemented(
-            "CTAP2 MakeCredential integration pending. Use software HSM for development.",
-        ))
+        let transport = self.ctap_transport.as_ref().ok_or_else(|| {
+            BearDogError::system(
+                "CTAP2 transport not configured; use SoloV2Provider::with_ctap2_transport or with_hid_device_path"
+                    .to_string(),
+            )
+        })?;
+
+        let alg = match key_type {
+            KeyType::Ed25519 => -8_i64,
+            KeyType::EcdsaP256 => -7_i64,
+        };
+        let pin_uv = pin_auth.map(|p| (p, 1_u64));
+        let cmd = build_make_credential(rp_id, user_id, user_name, client_data_hash, alg, pin_uv)?;
+
+        let mut guard = transport.lock().await;
+        let resp = guard.send_receive(&cmd).await?;
+        drop(guard);
+
+        let parsed = parse_make_credential_response(&resp)?;
+        Ok(Ctap2MakeCredentialResult {
+            credential_id: parsed.credential_id,
+            public_key: parsed.raw_cose_public_key,
+            attestation_statement: parsed.attestation_statement,
+        })
     }
 
-    /// CTAP2 GetAssertion helper (feature-gated)
+    /// CTAP2 `GetAssertion` helper (feature-gated)
     #[cfg(feature = "ctap2")]
     async fn ctap2_get_assertion(
         &self,
@@ -384,23 +455,38 @@ impl SoloV2Provider {
         credential_id: &[u8],
         pin_auth: Option<&[u8]>,
     ) -> Result<Ctap2GetAssertionResult, BearDogError> {
-        // This would interface with actual CTAP2/FIDO2 library
-        // Placeholder for when ctap2 feature is fully integrated
-        let _ = (rp_id, client_data_hash, credential_id, pin_auth);
-        Err(BearDogError::not_implemented(
-            "CTAP2 GetAssertion integration pending. Use software HSM for development.",
-        ))
+        let transport = self.ctap_transport.as_ref().ok_or_else(|| {
+            BearDogError::system(
+                "CTAP2 transport not configured; use SoloV2Provider::with_ctap2_transport or with_hid_device_path"
+                    .to_string(),
+            )
+        })?;
+
+        let pin_uv = pin_auth.map(|p| (p, 1_u64));
+        let cmd = build_get_assertion(rp_id, client_data_hash, &[credential_id], pin_uv)?;
+
+        let mut guard = transport.lock().await;
+        let resp = guard.send_receive(&cmd).await?;
+        drop(guard);
+
+        let parsed = parse_get_assertion_response(&resp)?;
+        Ok(Ctap2GetAssertionResult {
+            signature: parsed.signature,
+        })
     }
 }
 
-/// CTAP2 MakeCredential result
+/// CTAP2 `MakeCredential` result
 #[cfg(feature = "ctap2")]
 struct Ctap2MakeCredentialResult {
     credential_id: Vec<u8>,
     public_key: Vec<u8>,
+    /// CBOR-encoded `attStmt`; reserved for attestation chain verification.
+    #[allow(dead_code)]
+    attestation_statement: Vec<u8>,
 }
 
-/// CTAP2 GetAssertion result
+/// CTAP2 `GetAssertion` result
 #[cfg(feature = "ctap2")]
 struct Ctap2GetAssertionResult {
     signature: Vec<u8>,
@@ -425,26 +511,20 @@ impl UniversalHsmProvider for SoloV2Provider {
         // FIDO2 devices don't support symmetric encryption
         let _solo_key_type = KeyType::Ed25519;
 
-        // Generate key on device (async operation - needs runtime)
-        // For now, return error directing to async method
-        Err(BearDogError::internal(
-            "Use generate_key_on_device() async method for Solo V2".to_string(),
+        Err(BearDogError::unsupported_operation(
+            "Solo V2 requires async API: use generate_key_on_device() instead",
         ))
     }
 
     fn sign(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        // Signing requires async operation
-        // For now, return error directing to async method
-        Err(BearDogError::internal(
-            "Use sign_with_device() async method for Solo V2".to_string(),
+        Err(BearDogError::unsupported_operation(
+            "Solo V2 requires async API: use sign_with_device() instead",
         ))
     }
 
     fn verify(&self, _key_id: &str, _data: &[u8], _signature: &[u8]) -> Result<bool, BearDogError> {
-        // Verification typically done off-device with public key
-        // For now, return error directing to async method
-        Err(BearDogError::internal(
-            "Solo V2 verification requires public key extraction".to_string(),
+        Err(BearDogError::unsupported_operation(
+            "Solo V2 requires async API: use device-backed signing and verify with the returned public key",
         ))
     }
 
@@ -581,6 +661,7 @@ mod tests {
         assert!(!provider.get_capabilities().is_empty());
     }
 
+    #[cfg(not(feature = "ctap2"))]
     #[tokio::test]
     async fn solo_v2_generate_key_without_ctap2_returns_not_implemented() {
         let device_info = SoloV2DeviceInfo {
@@ -602,5 +683,170 @@ mod tests {
             msg.contains("CTAP2") || msg.contains("not implemented") || msg.contains("ctap2"),
             "{msg}"
         );
+    }
+
+    #[cfg(feature = "ctap2")]
+    mod ctap2_mock_tests {
+        use super::*;
+        use crate::tunnel::hsm::solo_v2::ctap2_protocol::{
+            CTAP2_GET_ASSERTION, CTAP2_MAKE_CREDENTIAL, CTAP2_OK, parse_get_assertion_response,
+            parse_make_credential_response,
+        };
+        use crate::tunnel::hsm::solo_v2::transport::Ctap2Transport;
+        use ciborium::Value as CborValue;
+        use std::sync::Arc;
+        use tokio::sync::Mutex;
+
+        struct MockCtap2Transport {
+            make_cred_response: Vec<u8>,
+            get_assertion_response: Vec<u8>,
+        }
+
+        impl MockCtap2Transport {
+            fn with_success_responses() -> Self {
+                let mut auth_data = vec![0u8; 32];
+                auth_data.push(0x41);
+                auth_data.extend([0u8; 4]);
+                auth_data.extend([0u8; 16]);
+                auth_data.push(0);
+                auth_data.push(4);
+                auth_data.extend_from_slice(&[1, 2, 3, 4]);
+                auth_data.extend_from_slice(&[0xa1, 0x01, 0x18, 0x2b]);
+
+                let mc = CborValue::Map(vec![
+                    (
+                        CborValue::Integer(1.into()),
+                        CborValue::Text("packed".to_string()),
+                    ),
+                    (CborValue::Integer(2.into()), CborValue::Bytes(auth_data)),
+                    (CborValue::Integer(3.into()), CborValue::Map(vec![])),
+                ]);
+                let mut mc_body = Vec::new();
+                ciborium::into_writer(&mc, &mut mc_body).unwrap();
+                let mut make_cred = vec![CTAP2_OK];
+                make_cred.extend(mc_body);
+
+                let ga = CborValue::Map(vec![
+                    (
+                        CborValue::Integer(2.into()),
+                        CborValue::Bytes(vec![0xcc; 37]),
+                    ),
+                    (
+                        CborValue::Integer(3.into()),
+                        CborValue::Bytes(vec![0xdd; 64]),
+                    ),
+                ]);
+                let mut ga_body = Vec::new();
+                ciborium::into_writer(&ga, &mut ga_body).unwrap();
+                let mut get_assert = vec![CTAP2_OK];
+                get_assert.extend(ga_body);
+
+                Self {
+                    make_cred_response: make_cred,
+                    get_assertion_response: get_assert,
+                }
+            }
+        }
+
+        #[async_trait::async_trait]
+        impl Ctap2Transport for MockCtap2Transport {
+            async fn send_receive(
+                &mut self,
+                command: &[u8],
+            ) -> Result<Vec<u8>, beardog_errors::BearDogError> {
+                match command.first() {
+                    Some(&x) if x == CTAP2_MAKE_CREDENTIAL => Ok(self.make_cred_response.clone()),
+                    Some(&x) if x == CTAP2_GET_ASSERTION => Ok(self.get_assertion_response.clone()),
+                    _ => Err(BearDogError::system(
+                        "mock: unknown CTAP command".to_string(),
+                    )),
+                }
+            }
+        }
+
+        fn sample_device() -> SoloV2DeviceInfo {
+            SoloV2DeviceInfo {
+                device_id: "test-device".to_string(),
+                product_name: "Solo V2 Test".to_string(),
+                firmware_version: "1.0.0".to_string(),
+                is_connected: true,
+                vendor_id: 0x1209,
+                product_id: 0xbeee,
+            }
+        }
+
+        #[tokio::test]
+        async fn mock_transport_make_credential_roundtrip_parse() {
+            let mock = MockCtap2Transport::with_success_responses();
+            let cmd = crate::tunnel::hsm::solo_v2::build_make_credential(
+                "rp.example",
+                b"u1",
+                "u",
+                &[0u8; 32],
+                -8,
+                None,
+            )
+            .expect("build");
+            assert_eq!(cmd[0], CTAP2_MAKE_CREDENTIAL);
+            let resp = mock.make_cred_response.clone();
+            let p = parse_make_credential_response(&resp).expect("parse");
+            assert_eq!(p.credential_id, vec![1, 2, 3, 4]);
+        }
+
+        #[tokio::test]
+        async fn mock_transport_get_assertion_roundtrip_parse() {
+            let mock = MockCtap2Transport::with_success_responses();
+            let cmd = crate::tunnel::hsm::solo_v2::build_get_assertion(
+                "rp.example",
+                &[1u8; 32],
+                &[&b"cid"[..]],
+                None,
+            )
+            .expect("build");
+            assert_eq!(cmd[0], CTAP2_GET_ASSERTION);
+            let p = parse_get_assertion_response(&mock.get_assertion_response).expect("parse");
+            assert_eq!(p.signature, vec![0xdd; 64]);
+        }
+
+        #[tokio::test]
+        async fn provider_generate_key_with_mock_transport_succeeds() {
+            let transport = Arc::new(Mutex::new(MockCtap2Transport::with_success_responses()));
+            let provider = SoloV2Provider::with_ctap2_transport(
+                sample_device(),
+                SoloV2Config::default(),
+                transport,
+            )
+            .expect("provider with mock");
+
+            let handle = provider
+                .generate_key_on_device(KeyType::Ed25519, "kid-1".to_string())
+                .await
+                .expect("generate with mock transport");
+
+            assert_eq!(handle.credential_id, vec![1, 2, 3, 4]);
+            assert!(!handle.public_key.is_empty());
+        }
+
+        #[tokio::test]
+        async fn provider_sign_with_mock_transport_succeeds() {
+            let transport = Arc::new(Mutex::new(MockCtap2Transport::with_success_responses()));
+            let provider = SoloV2Provider::with_ctap2_transport(
+                sample_device(),
+                SoloV2Config::default(),
+                transport,
+            )
+            .expect("provider with mock");
+
+            provider
+                .generate_key_on_device(KeyType::Ed25519, "kid-1".to_string())
+                .await
+                .expect("generate");
+
+            let sig = provider
+                .sign_with_device("kid-1", b"hello")
+                .await
+                .expect("sign");
+            assert_eq!(sig, vec![0xdd; 64]);
+        }
     }
 }

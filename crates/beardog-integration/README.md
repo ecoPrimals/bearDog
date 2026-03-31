@@ -1,5 +1,7 @@
 # beardog-integration
 
+**Note:** This crate is excluded from the workspace. HTTP REST API is owned by songBird per PRIMAL_RESPONSIBILITY_MATRIX.
+
 **Songbird UPA Integration for BearDog**
 
 ## Overview
@@ -18,7 +20,7 @@ This crate provides the integration layer between BearDog and Songbird's Univers
 ## Architecture
 
 Implements Phase 3 of the BirdSong Integration Roadmap:
-- `WHATS_NEXT.md` - Phase 3 specification
+- See wateringHole handoffs for phase evolution plans.
 - `BEARDOG_PHASE3_HANDOFF_DEC_21_2025.md` - Songbird handoff document
 
 ### Components

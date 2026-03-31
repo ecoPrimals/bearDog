@@ -31,7 +31,7 @@ use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use hex;
 use hmac::{Hmac, Mac};
 use pbkdf2;
-use rand::{Rng, RngCore, thread_rng};
+use rand::{Rng, RngCore, rng};
 use sha2::{Digest, Sha256};
 use subtle::ConstantTimeEq;
 use zeroize::Zeroize;
@@ -49,7 +49,7 @@ impl BearDogCrypto {
     pub fn generate_ed25519_keypair() -> (Vec<u8>, Vec<u8>) {
         let mut csprng = OsRng;
         let mut secret_bytes = [0u8; 32];
-        csprng.fill_bytes(&mut secret_bytes);
+        aes_gcm::aead::rand_core::RngCore::fill_bytes(&mut csprng, &mut secret_bytes);
         let signing_key = SigningKey::from_bytes(&secret_bytes);
         let public_key = signing_key.verifying_key();
         (secret_bytes.to_vec(), public_key.as_bytes().to_vec())
@@ -118,7 +118,7 @@ impl BearDogCrypto {
     /// Generate Secure Random operation.
     pub fn generate_secure_random(size: usize) -> Vec<u8> {
         let mut bytes = vec![0u8; size];
-        thread_rng().fill_bytes(&mut bytes);
+        rng().fill_bytes(&mut bytes);
         bytes
     }
 
@@ -347,11 +347,11 @@ impl BearDogCrypto {
             });
         }
 
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let password: String = (0..length)
             .map(|_| {
                 let charset = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?";
-                charset[rng.gen_range(0..charset.len())] as char
+                charset[rng.random_range(0..charset.len())] as char
             })
             .collect();
 

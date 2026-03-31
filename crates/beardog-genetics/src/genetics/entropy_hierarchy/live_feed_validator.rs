@@ -356,7 +356,7 @@ mod tests {
         // Real random data (should have good entropy)
         use rand::RngCore;
         let mut data = vec![0u8; 256];
-        rand::thread_rng().fill_bytes(&mut data);
+        rand::rng().fill_bytes(&mut data);
 
         let mut metadata = HashMap::new();
         metadata.insert("hardware_attestation".to_string(), "true".to_string());

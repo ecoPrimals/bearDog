@@ -30,7 +30,7 @@ impl SoftwareAttestation {
         
         // Generate unique instance ID
         let mut id_bytes = [0u8; 16];
-        rand::thread_rng()
+        rand::rng()
             .try_fill_bytes(&mut id_bytes)
             .map_err(|e| BearDogError::security(
                 format!("Failed to generate instance ID: {e}"),

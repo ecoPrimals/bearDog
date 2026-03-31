@@ -14,7 +14,6 @@
 //! - **SIMD Acceleration**: Hardware-accelerated operations for performance
 //! - **Memory Pooling**: Efficient buffer and memory management
 //! - **Property Testing**: QuickCheck-based property testing framework
-//! - **AI Optimization**: Intelligent performance optimization
 //! - **100% Safe**: Fully memory-safe in all utilities
 //!
 //! ## Core Modules
@@ -58,8 +57,6 @@
 
 mod crypto_safe_accel;
 
-/// Experimental hooks for workload-aware tuning and simple learning-style optimizers.
-pub mod ai_optimization;
 /// Micro-benchmark helpers used across Beardog utility code.
 pub mod benchmarks;
 /// Compile-time evaluation helpers (constants and static configuration).

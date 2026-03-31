@@ -4,6 +4,7 @@
 
 use beardog_types::canonical::HealthStatus;
 use beardog_types::canonical::config::network::NetworkConfig;
+use beardog_types::constants::domains::network::ports::DEFAULT_CONSUL_HTTP_PORT;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -194,7 +195,7 @@ impl Default for UniversalDiscoveryConfig {
         let network_config = NetworkConfig::default();
         let endpoint = format!(
             "http://{}:{}/v1/catalog/services",
-            network_config.default_host, 8500
+            network_config.default_host, DEFAULT_CONSUL_HTTP_PORT
         );
         Self {
             service_id: format!("primal-{}", Uuid::new_v4()),
@@ -241,7 +242,7 @@ impl UniversalDiscoveryConfig {
                     .or_else(|_| std::env::var("CONSUL_PORT"))
                     .ok()
                     .and_then(|p| p.parse::<u16>().ok())
-                    .unwrap_or(8500);
+                    .unwrap_or(DEFAULT_CONSUL_HTTP_PORT);
                 format!("http://{registry_host}:{registry_port}/v1/catalog/services")
             });
 

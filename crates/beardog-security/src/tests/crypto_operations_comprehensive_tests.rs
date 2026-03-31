@@ -618,11 +618,9 @@ mod key_rotation_tests {
 fn generate_ed25519_keypair() -> Result<Ed25519Keypair, BearDogError> {
     use ed25519_dalek::SigningKey;
     use rand::RngCore;
-    use rand::rngs::OsRng;
 
-    let mut csprng = OsRng;
     let mut seed = [0u8; 32];
-    csprng.fill_bytes(&mut seed);
+    rand::rng().fill_bytes(&mut seed);
     let signing_key = SigningKey::from_bytes(&seed);
     let verifying_key = signing_key.verifying_key();
 
@@ -692,7 +690,7 @@ fn verify_ed25519_signature(
 fn generate_aes_256_key() -> Result<Vec<u8>, BearDogError> {
     use rand::RngCore;
     let mut key = vec![0u8; 32];
-    rand::thread_rng().fill_bytes(&mut key);
+    rand::rng().fill_bytes(&mut key);
     Ok(key)
 }
 
@@ -700,7 +698,7 @@ fn generate_aes_256_key() -> Result<Vec<u8>, BearDogError> {
 fn generate_aes_nonce() -> Result<Vec<u8>, BearDogError> {
     use rand::RngCore;
     let mut nonce = vec![0u8; 12];
-    rand::thread_rng().fill_bytes(&mut nonce);
+    rand::rng().fill_bytes(&mut nonce);
     Ok(nonce)
 }
 
@@ -740,7 +738,7 @@ fn decrypt_aes_256_gcm(
 fn generate_chacha20_key() -> Result<Vec<u8>, BearDogError> {
     use rand::RngCore;
     let mut key = vec![0u8; 32];
-    rand::thread_rng().fill_bytes(&mut key);
+    rand::rng().fill_bytes(&mut key);
     Ok(key)
 }
 
@@ -748,7 +746,7 @@ fn generate_chacha20_key() -> Result<Vec<u8>, BearDogError> {
 fn generate_chacha20_nonce() -> Result<Vec<u8>, BearDogError> {
     use rand::RngCore;
     let mut nonce = vec![0u8; 12];
-    rand::thread_rng().fill_bytes(&mut nonce);
+    rand::rng().fill_bytes(&mut nonce);
     Ok(nonce)
 }
 

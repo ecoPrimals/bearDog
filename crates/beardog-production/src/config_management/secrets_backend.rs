@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Universal Secrets Manager (USM) trait and BearDog local file vault.
+//! Universal Secrets Manager (USM) trait and `BearDog` local file vault.
 //!
 //! The local vault stores AES-256-GCM sealed payloads as JSON files under the configured
-//! data directory. It does not speak to HashiCorp Vault; env names `VAULT_*` are legacy
-//! compatibility for BearDog's own encrypted store.
+//! data directory. It does not speak to `HashiCorp` Vault; env names `VAULT_*` are legacy
+//! compatibility for `BearDog`'s own encrypted store.
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
@@ -27,15 +27,31 @@ const FORMAT_VERSION: u32 = 1;
 /// [`FileVaultBackend`].
 pub trait SecretsBackend: Send + Sync {
     /// Persist a secret value under `key_id`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] on invalid `key_id`, I/O, or encryption failures.
     fn store(&self, key_id: &str, value: &str) -> Result<(), BearDogError>;
 
     /// Load plaintext for `key_id`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] if the secret is missing, corrupt, or cannot be decrypted.
     fn retrieve(&self, key_id: &str) -> Result<String, BearDogError>;
 
     /// List all secret key IDs (never values).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] on vault directory I/O failures.
     fn list(&self) -> Result<Vec<String>, BearDogError>;
 
     /// Delete `key_id`. Returns `true` if a file existed and was removed.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] on invalid `key_id` or I/O failures other than missing files.
     fn delete(&self, key_id: &str) -> Result<bool, BearDogError>;
 }
 
@@ -49,7 +65,7 @@ struct VaultSecretRecord {
     sealed: String,
 }
 
-/// BearDog encrypted file vault (AES-256-GCM, per-secret HKDF-derived keys).
+/// `BearDog` encrypted file vault (AES-256-GCM, per-secret HKDF-derived keys).
 pub struct FileVaultBackend {
     vault_dir: PathBuf,
     master_key: [u8; 32],
@@ -60,6 +76,10 @@ pub struct FileVaultBackend {
 
 impl FileVaultBackend {
     /// Opens a vault rooted at `vault_dir` using `master_key` (32-byte AES key material).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] if the vault directory cannot be created.
     pub fn new(vault_dir: PathBuf, master_key: [u8; 32]) -> Result<Self, BearDogError> {
         fs::create_dir_all(&vault_dir).map_err(|e| {
             BearDogError::system(format!(
@@ -78,6 +98,10 @@ impl FileVaultBackend {
     /// Vault provider: `endpoint` may be a filesystem path for the vault root, or empty / HTTP(S)
     /// URL to use default data-dir layout. `token` seeds the master key unless
     /// `BEARDOG_VAULT_MASTER_KEY` (64 hex chars) is set.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] if the mount path is invalid, the master key cannot be resolved, or the vault cannot be opened.
     pub fn open_for_vault_provider(
         endpoint: &str,
         token: &str,
@@ -91,6 +115,10 @@ impl FileVaultBackend {
 
     /// USM: resolve root from `endpoint` and master key from `auth_config` entries
     /// (`token`, `password`, `master_key_hex`) or `BEARDOG_VAULT_MASTER_KEY`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] if the master key cannot be resolved or the vault cannot be opened.
     pub fn open_for_usm(
         endpoint: &str,
         auth_config: &std::collections::HashMap<String, String>,
@@ -245,7 +273,7 @@ impl SecretsBackend for FileVaultBackend {
     }
 }
 
-/// Default BearDog vault root: `$BEARDOG_DATA_DIR/vault`, else `$XDG_DATA_HOME/beardog/vault`,
+/// Default `BearDog` vault root: `$BEARDOG_DATA_DIR/vault`, else `$XDG_DATA_HOME/beardog/vault`,
 /// else `{DEFAULT_DATA_DIR}/vault`, else `$HOME/.local/share/beardog/vault`.
 pub fn default_vault_root() -> PathBuf {
     if let Ok(d) = beardog_errors::process_env::var("BEARDOG_DATA_DIR") {
@@ -338,6 +366,10 @@ fn parse_hex_master(s: &str) -> Result<[u8; 32], BearDogError> {
 
 /// Resolves 32-byte master key: env `BEARDOG_VAULT_MASTER_KEY` (hex), optional `master_key_hex`
 /// from auth, else derives from `token` when present.
+///
+/// # Errors
+///
+/// Returns [`BearDogError`] if hex decoding fails or no master key source is available.
 pub fn resolve_master_key(
     token: Option<&str>,
     master_key_hex: Option<&String>,

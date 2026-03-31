@@ -1,8 +1,8 @@
 # BearDog Architecture
 
-**Last Updated**: March 28, 2026
+**Last Updated**: March 31, 2026
 **Status**: Production Ready
-**Crates**: 30 | **Tests**: 15,100+ | **Coverage**: 90.16% | **MSRV**: 1.93.0
+**Crates**: 29 | **Tests**: 14,610+ | **Coverage**: 90.16% | **MSRV**: 1.93.0
 
 ---
 
@@ -15,7 +15,7 @@ BearDog provides **crypto atoms** to the ecoPrimals ecosystem. Every primal dele
 │  Any Primal │ ←─ JSON-RPC ────→ │  BearDog    │
 │ (Protocol)  │    Unix Socket     │  (Crypto)   │
 └─────────────┘                    └─────────────┘
-     Zero crypto code                 91+ crypto methods
+     Zero crypto code                 93 crypto methods
 ```
 
 **Principles**:
@@ -73,7 +73,8 @@ BearDog provides **crypto atoms** to the ecoPrimals ecosystem. Every primal dele
 
 | Crate | Purpose |
 |-------|---------|
-| `beardog-deploy` | Deployment orchestration |
+| `beardog-deploy` | Deployment orchestration (excluded) |
+| `beardog-integration` | Tower Atomic UPA client, heartbeat (excluded) |
 | `beardog-production` | Production configuration |
 | `beardog-installer` | Installation helpers |
 | `beardog-compliance` | Compliance validation |
@@ -122,7 +123,7 @@ HsmKeyProvider (beardog-traits::hsm)
 ├── RustSoftwareHsm         (RustCrypto, always available)
 ├── AndroidStrongBoxHsm     (JNI bridge, cfg(target_os = "android"))
 ├── [future] IosSecureEnclave
-├── [future] Pkcs11Provider
+├── Pkcs11Provider
 └── [future] TpmProvider
 
 HsmProviderRegistry → discover() → select(PreferHardware | RequireHardware | SoftwareOnly)
@@ -216,4 +217,4 @@ Key material derived from family seed. Family A never shares keys with Family B.
 
 ---
 
-**Last Updated**: March 28, 2026
+**Last Updated**: March 31, 2026

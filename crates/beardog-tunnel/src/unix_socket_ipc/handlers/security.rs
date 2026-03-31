@@ -24,6 +24,7 @@ use tracing::{debug, info};
 /// - `security.evaluate` / `trust.evaluate` - Evaluate trust level based on genetic family
 /// - `security.lineage` / `trust.lineage` - Get genetic lineage information
 /// - `birdsong.encrypt` / `birdsong.decrypt` - `BirdSong` encryption for secure discovery
+/// - `birdsong.generate_encrypted_beacon` - Generate a beacon + encrypt it for a family
 /// - `security.generate_jwt_secret` - Generate cryptographically secure JWT secrets
 ///
 /// # Architecture
@@ -60,6 +61,7 @@ impl MethodHandler for SecurityHandler {
             "beardog.birdsong.encrypt",
             "birdsong.decrypt",
             "beardog.birdsong.decrypt",
+            "birdsong.generate_encrypted_beacon",
             // JWT secret generation (semantic security.* first; beardog.* = backward compat)
             "security.generate_jwt_secret",
             "security.jwt_secret",
@@ -87,6 +89,10 @@ impl MethodHandler for SecurityHandler {
             }
             "birdsong.decrypt" | "beardog.birdsong.decrypt" => {
                 self.handle_birdsong_decrypt(params, btsp_provider).await
+            }
+            "birdsong.generate_encrypted_beacon" => {
+                self.handle_generate_encrypted_beacon(params, btsp_provider)
+                    .await
             }
             "security.generate_jwt_secret"
             | "security.jwt_secret"
@@ -324,6 +330,45 @@ impl SecurityHandler {
         }
     }
 
+    /// Generate a Dark Forest beacon and encrypt a discovery payload with
+    /// `BirdSong` for a target family.
+    ///
+    /// The encrypted payload contains the public beacon ID so that only
+    /// members of the target family can learn which beacon to listen for.
+    /// The raw seed never leaves this primal.
+    ///
+    /// # Request
+    ///
+    /// ```json
+    /// { "family_id": "nat0" }
+    /// ```
+    async fn handle_generate_encrypted_beacon(
+        &self,
+        params: Option<&serde_json::Value>,
+        btsp_provider: &Arc<BeardogBtspProvider>,
+    ) -> Result<serde_json::Value, String> {
+        use beardog_genetics::birdsong::BeaconSeed;
+
+        let params = params.ok_or("Missing params")?;
+        let family_id = params["family_id"].as_str().ok_or("Missing family_id")?;
+
+        let beacon = BeaconSeed::generate();
+        let beacon_id_hex = beacon.id().to_hex();
+
+        let encrypted = btsp_provider
+            .birdsong_manager()
+            .encrypt_discovery_for_family(beacon_id_hex.as_bytes(), family_id)
+            .map_err(|e| format!("BirdSong encryption failed: {e}"))?;
+
+        let ciphertext_b64 = base64::engine::general_purpose::STANDARD.encode(&encrypted);
+
+        Ok(serde_json::json!({
+            "beacon_id": beacon_id_hex,
+            "encrypted_beacon_id": ciphertext_b64,
+            "family_id": family_id,
+        }))
+    }
+
     /// Handle JWT secret generation request
     ///
     /// Generates a cryptographically secure JWT secret for authentication systems.
@@ -360,9 +405,7 @@ impl SecurityHandler {
         // Generate cryptographically secure random bytes
         use rand::RngCore;
         let mut secret_bytes = vec![0u8; byte_length];
-        rand::thread_rng()
-            .try_fill_bytes(&mut secret_bytes)
-            .map_err(|e| format!("Failed to generate random bytes: {e}"))?;
+        rand::rng().fill_bytes(&mut secret_bytes);
 
         // Encode to base64 for safe transmission
         let secret_b64 = base64::engine::general_purpose::STANDARD.encode(&secret_bytes);

@@ -502,11 +502,11 @@ async fn build_attestation_chain(
 }
 
 fn generate_hardware_identity(participant: &Participant) -> Result<HardwareIdentity> {
-    let mut rng = rand::thread_rng();
-    let serial: u32 = rng.r#gen();
+    let mut rng = rand::rng();
+    let serial: u32 = rng.random();
 
     // Generate a signing key for demo
-    let signing_key = SigningKey::from_bytes(&rng.r#gen());
+    let signing_key = SigningKey::from_bytes(&rng.random());
     let verifying_key = signing_key.verifying_key();
     let public_key = hex::encode(verifying_key.as_bytes());
 
@@ -535,11 +535,11 @@ fn perform_boot_attestation(
     config: &DemoConfig,
 ) -> Result<BootAttestation> {
     let mut boot_measurements = HashMap::new();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Simulate PCR measurements
     for pcr_index in &config.measurements.boot_pcr_indices {
-        let measurement: [u8; 32] = rng.r#gen();
+        let measurement: [u8; 32] = rng.random();
         boot_measurements.insert(*pcr_index, hex::encode(measurement));
     }
 
@@ -556,17 +556,17 @@ fn perform_runtime_attestation(
     config: &DemoConfig,
 ) -> Result<RuntimeAttestation> {
     let mut runtime_measurements = HashMap::new();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Simulate PCR measurements
     for pcr_index in &config.measurements.runtime_pcr_indices {
-        let measurement: [u8; 32] = rng.r#gen();
+        let measurement: [u8; 32] = rng.random();
         runtime_measurements.insert(*pcr_index, hex::encode(measurement));
     }
 
     // Generate nonce and quote signature
-    let nonce: [u8; 32] = rng.r#gen();
-    let signing_key = SigningKey::from_bytes(&rng.r#gen());
+    let nonce: [u8; 32] = rng.random();
+    let signing_key = SigningKey::from_bytes(&rng.random());
     let quote_data = format!("{:?}{}", runtime_measurements, hex::encode(nonce));
     let signature = signing_key.sign(quote_data.as_bytes());
 
@@ -580,8 +580,8 @@ fn perform_runtime_attestation(
 }
 
 fn perform_key_storage_attestation(participant: &Participant) -> Result<KeyStorageAttestation> {
-    let mut rng = rand::thread_rng();
-    let signing_key = SigningKey::from_bytes(&rng.r#gen());
+    let mut rng = rand::rng();
+    let signing_key = SigningKey::from_bytes(&rng.random());
     let key_data = format!("key-{}", participant.node_id);
     let signature = signing_key.sign(key_data.as_bytes());
 

@@ -24,6 +24,7 @@ pub mod services;
 pub mod timeouts;
 
 pub use addresses::DEFAULT_DNS_PORT;
+pub use ports::DEFAULT_CONSUL_HTTP_PORT;
 // Note: Use default_api_port(), default_metrics_port(), default_metrics_bind() functions
 // instead of the deprecated constants for environment-aware configuration
 pub use limits::{MAX_CONNECTIONS, MAX_HEADER_SIZE};

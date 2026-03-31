@@ -8,7 +8,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 30 | **Tests**: 15,320+ | **Coverage**: 89.57%
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 29 | **Tests**: 14,610+ | **Coverage**: 90.16%
 
 ---
 
@@ -171,8 +171,8 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
 | **Files > 1000 LOC** | 0 (production code) |
-| **Tests** | 15,320+ (fully concurrent, zero sleeps in non-chaos) |
-| **Coverage** | 89.57% line (llvm-cov workspace, target 90%) |
+| **Tests** | 14,610+ (fully concurrent, zero sleeps in non-chaos) |
+| **Coverage** | 90.16% line (llvm-cov workspace, target 90%) |
 | **Serial Tests** | 0 (`#[serial]` fully eliminated) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |
 | **License** | AGPL-3.0-only (SPDX headers on all .rs files) |
@@ -210,4 +210,11 @@ AGPL-3.0-only — See [LICENSE](LICENSE) file.
 
 ---
 
-**BearDog**: 100% Pure Rust Cryptographic Service Provider for the ecoPrimals Ecosystem
+## Part of ecoPrimals
+
+This repo is part of the [ecoPrimals](https://github.com/ecoPrimals) sovereign
+computing ecosystem — a collection of pure Rust binaries that coordinate via
+JSON-RPC, capability-based routing, and zero compile-time coupling.
+
+See [wateringHole](https://github.com/ecoPrimals/wateringHole) for ecosystem
+documentation, standards, and the primal registry.

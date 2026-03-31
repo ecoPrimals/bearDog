@@ -364,7 +364,7 @@ impl HsmEntropyOrchestrator {
         // For now, generate cryptographically secure random bytes
         // PHASE-2(CTAP2): Integrate with actual HSM hardware once CTAP2 commands are implemented
         use rand::RngCore;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut entropy = vec![0u8; length];
         rng.fill_bytes(&mut entropy);
 

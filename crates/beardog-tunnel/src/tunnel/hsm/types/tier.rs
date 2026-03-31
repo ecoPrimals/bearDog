@@ -115,7 +115,7 @@ pub enum SoftwareHsmType {
 }
 
 /// Key storage types
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum KeyStorageType {
     /// Hardware-backed storage
     Hardware,

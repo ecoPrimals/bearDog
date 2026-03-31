@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! BearDog tarpc server type and TCP accept loop.
+//! `BearDog` tarpc server type and TCP accept loop.
 
 use std::net::SocketAddr;
 
 use crate::tarpc_types::*;
+use beardog_types::constants::domains::network::ipc_discovery::BEARDOG_CAPABILITY_DOMAIN;
 use futures::StreamExt;
 use tarpc::{
     context::Context,
@@ -14,7 +15,7 @@ use tarpc::{
 use tokio::net::TcpListener;
 use tracing::{debug, error, info};
 
-/// BearDog Crypto Server implementation
+/// `BearDog` Crypto Server implementation
 ///
 /// Implements the `BearDogCrypto` tarpc service trait.
 /// All methods delegate to the same crypto implementations used by JSON-RPC handlers.
@@ -117,8 +118,8 @@ impl Default for BearDogCryptoServer {
 // BearDogCrypto Service Implementation
 // ============================================================
 
-/// Implementation of the BearDogCrypto tarpc service trait.
-/// The `#[tarpc::service]` attribute on the trait in tarpc_types.rs generates
+/// Implementation of the `BearDogCrypto` tarpc service trait.
+/// The `#[tarpc::service]` attribute on the trait in `tarpc_types.rs` generates
 /// the necessary server plumbing - we just implement the trait normally.
 impl BearDogCrypto for BearDogCryptoServer {
     // ============================================================
@@ -127,11 +128,11 @@ impl BearDogCrypto for BearDogCryptoServer {
 
     async fn generate_ed25519(self, _: Context) -> CryptoResult<KeyPair> {
         use ed25519_dalek::SigningKey;
-        use rand::{RngCore, rngs::OsRng};
+        use rand::RngCore;
 
         // Generate 32 random bytes for the signing key
         let mut secret_bytes = [0u8; 32];
-        OsRng.fill_bytes(&mut secret_bytes);
+        rand::rng().fill_bytes(&mut secret_bytes);
 
         let signing_key = SigningKey::from_bytes(&secret_bytes);
         let verifying_key = signing_key.verifying_key();
@@ -143,12 +144,12 @@ impl BearDogCrypto for BearDogCryptoServer {
     }
 
     async fn generate_x25519_ephemeral(self, _: Context) -> CryptoResult<KeyPair> {
-        use rand::{RngCore, rngs::OsRng};
+        use rand::RngCore;
         use x25519_dalek::{PublicKey, StaticSecret};
 
         // Generate 32 random bytes for the secret key
         let mut secret_bytes = [0u8; 32];
-        OsRng.fill_bytes(&mut secret_bytes);
+        rand::rng().fill_bytes(&mut secret_bytes);
 
         let static_secret = StaticSecret::from(secret_bytes);
         let public_key = PublicKey::from(&static_secret);
@@ -161,9 +162,10 @@ impl BearDogCrypto for BearDogCryptoServer {
 
     async fn generate_ecdh_p256(self, _: Context) -> CryptoResult<KeyPair> {
         use p256::SecretKey;
-        use rand::rngs::OsRng;
+        use p256::elliptic_curve::rand_core::OsRng;
 
-        let secret_key = SecretKey::random(&mut OsRng);
+        let mut rng = OsRng;
+        let secret_key = SecretKey::random(&mut rng);
         let public_key = secret_key.public_key();
 
         Ok(KeyPair {
@@ -174,9 +176,10 @@ impl BearDogCrypto for BearDogCryptoServer {
 
     async fn generate_ecdh_p384(self, _: Context) -> CryptoResult<KeyPair> {
         use p384::SecretKey;
-        use rand::rngs::OsRng;
+        use p384::elliptic_curve::rand_core::OsRng;
 
-        let secret = SecretKey::random(&mut OsRng);
+        let mut rng = OsRng;
+        let secret = SecretKey::random(&mut rng);
         let public = secret.public_key();
 
         Ok(KeyPair {
@@ -368,7 +371,7 @@ impl BearDogCrypto for BearDogCryptoServer {
             })?
         } else {
             let mut n = [0u8; 12];
-            rand::rngs::OsRng.fill_bytes(&mut n);
+            rand::rng().fill_bytes(&mut n);
             n
         };
 
@@ -453,7 +456,7 @@ impl BearDogCrypto for BearDogCryptoServer {
             })?
         } else {
             let mut n = [0u8; 12];
-            rand::rngs::OsRng.fill_bytes(&mut n);
+            rand::rng().fill_bytes(&mut n);
             n
         };
 
@@ -714,7 +717,7 @@ impl BearDogCrypto for BearDogCryptoServer {
             version: self.version,
             family: self.primal_family,
             capabilities: vec![
-                "crypto".to_string(),
+                BEARDOG_CAPABILITY_DOMAIN.to_string(),
                 "signatures".to_string(),
                 "encryption".to_string(),
                 "hashing".to_string(),

@@ -9,8 +9,10 @@ use beardog_discovery::capability_env::{
 };
 use beardog_discovery::config::DiscoveryConfig;
 use beardog_discovery::discovery::CapabilityDiscovery;
+#[cfg(feature = "dns-sd")]
 use beardog_discovery::dns_sd::DnsSdDiscovery;
 use beardog_discovery::error::DiscoveryError;
+#[cfg(feature = "mdns")]
 use beardog_discovery::mdns::MdnsDiscovery;
 use beardog_discovery::service_registry::ServiceRegistryDiscovery;
 use beardog_discovery::types::{
@@ -328,6 +330,7 @@ async fn service_registry_discover_and_refresh() {
     r.clear_cache().await;
 }
 
+#[cfg(feature = "mdns")]
 #[tokio::test]
 async fn mdns_short_timeout_and_clear() {
     let d = MdnsDiscovery::with_config(beardog_discovery::mdns::MdnsConfig {
@@ -340,6 +343,7 @@ async fn mdns_short_timeout_and_clear() {
     d.clear_cache().await;
 }
 
+#[cfg(feature = "dns-sd")]
 #[tokio::test]
 async fn dns_sd_short_timeout() {
     let d = DnsSdDiscovery::with_config(beardog_discovery::dns_sd::DnsSdConfig {
@@ -351,7 +355,7 @@ async fn dns_sd_short_timeout() {
     let result = d.discover("noop-cap").await;
     match result {
         Ok(v) => assert!(v.is_empty(), "expected no services for noop-cap"),
-        Err(_) => {} // timeout is acceptable on short durations
+        Err(_) => {}
     }
     d.clear_cache().await;
 }

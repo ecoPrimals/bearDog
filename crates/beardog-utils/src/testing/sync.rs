@@ -37,7 +37,7 @@ pub struct EventWaiter<T: Clone + Send + Sync> {
     notify: Arc<Notify>,
 }
 
-/// Trigger for EventWaiter
+/// Trigger for [`EventWaiter`].
 pub struct EventTrigger<T: Clone + Send + Sync> {
     value: Arc<RwLock<Option<T>>>,
     notify: Arc<Notify>,
@@ -62,6 +62,10 @@ impl<T: Clone + Send + Sync> EventWaiter<T> {
     /// Wait for the event with a timeout
     ///
     /// Returns the event value or an error if timeout occurs.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`EventWaitError::Timeout`] if no value was set before the deadline.
     pub async fn wait(&self, timeout: Duration) -> Result<T, EventWaitError> {
         tokio::time::timeout(timeout, async {
             loop {

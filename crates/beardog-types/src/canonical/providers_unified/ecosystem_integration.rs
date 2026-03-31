@@ -27,7 +27,6 @@
 //! ```
 
 use beardog_errors::BearDogError;
-use beardog_errors::BearDogError;
 use super::consolidated_registry::{ConsolidatedProviderRegistry, RegistryConfig};
 use super::hsm_unified::{HsmUnifiedProvider, AndroidHsmConfig, IosHsmConfig, SoftwareHsmConfig};
 use super::traits::consolidated::{ConsolidatedProvider, ProviderInfo, ProviderType};
@@ -575,7 +574,7 @@ impl MigrationAdapter for HsmMigrationAdapter {
     }
 }
 
-/// Security provider migration adapter (Phase 2 — returns `not_implemented` until wired)
+/// Security provider migration adapter (placeholder until ecosystem security delegation is wired)
 pub struct SecurityMigrationAdapter;
 
 impl SecurityMigrationAdapter {
@@ -591,8 +590,8 @@ impl MigrationAdapter for SecurityMigrationAdapter {
     }
 
     fn migrate_provider(&self, _discovered: &DiscoveredProvider) -> Result<Arc<dyn ConsolidatedProvider>> {
-        Err(BearDogError::not_implemented(
-            "Security migration adapter: pending Phase 2 provider wiring",
+        Err(BearDogError::unsupported_operation(
+            "SecurityMigrationAdapter is a placeholder for ecosystem security delegation capability",
         ))
     }
 
@@ -605,7 +604,7 @@ impl MigrationAdapter for SecurityMigrationAdapter {
     }
 }
 
-/// Storage provider migration adapter (Phase 2 — returns `not_implemented` until wired)
+/// Storage provider migration adapter (placeholder until consolidated storage migration is wired)
 pub struct StorageMigrationAdapter;
 
 impl StorageMigrationAdapter {
@@ -621,8 +620,8 @@ impl MigrationAdapter for StorageMigrationAdapter {
     }
 
     fn migrate_provider(&self, _discovered: &DiscoveredProvider) -> Result<Arc<dyn ConsolidatedProvider>> {
-        Err(BearDogError::not_implemented(
-            "Storage migration adapter: pending Phase 2 provider wiring",
+        Err(BearDogError::unsupported_operation(
+            "StorageMigrationAdapter is a placeholder for consolidated storage provider migration capability",
         ))
     }
 
@@ -635,7 +634,7 @@ impl MigrationAdapter for StorageMigrationAdapter {
     }
 }
 
-/// Network provider migration adapter (Phase 2 — returns `not_implemented` until wired)
+/// Network provider migration adapter (placeholder until consolidated network migration is wired)
 pub struct NetworkMigrationAdapter;
 
 impl NetworkMigrationAdapter {
@@ -651,8 +650,8 @@ impl MigrationAdapter for NetworkMigrationAdapter {
     }
 
     fn migrate_provider(&self, _discovered: &DiscoveredProvider) -> Result<Arc<dyn ConsolidatedProvider>> {
-        Err(BearDogError::not_implemented(
-            "Network migration adapter: pending Phase 2 provider wiring",
+        Err(BearDogError::unsupported_operation(
+            "NetworkMigrationAdapter is a placeholder for consolidated network provider migration capability",
         ))
     }
 

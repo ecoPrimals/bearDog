@@ -42,3 +42,6 @@ pub const DHCP_CLIENT_PORT: u16 = 68;
 pub const SNMP_PORT: u16 = 161;
 /// Configuration constant: syslog port
 pub const SYSLOG_PORT: u16 = 514;
+
+/// Default Consul agent HTTP API port (official `HashiCorp` default).
+pub const DEFAULT_CONSUL_HTTP_PORT: u16 = 8500;

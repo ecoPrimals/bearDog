@@ -116,9 +116,11 @@ impl CapabilityDiscovery {
 
             let services = match method.as_str() {
                 "environment" => self.discover_via_environment(capability).await?,
-                "mdns" => self.discover_via_mdns(capability).await?,
-                "dns_sd" => self.discover_via_dns_sd(capability).await?,
                 "service_registry" => self.discover_via_service_registry(capability).await?,
+                "mdns" | "dns_sd" => {
+                    debug!("Skipping {method} — biomeOS owns network discovery");
+                    continue;
+                }
                 _ => {
                     warn!("Unknown discovery method: {}", method);
                     continue;
@@ -155,65 +157,6 @@ impl CapabilityDiscovery {
             capability,
             self.config.discovery.cache_ttl_secs,
         ))
-    }
-
-    /// Discover services via mDNS
-    ///
-    /// Discovers services on the local network using mDNS (Multicast DNS).
-    /// This is agnostic to primal types - discovers any service advertising capabilities.
-    ///
-    /// # Implementation Status
-    /// Currently gracefully falls back to other discovery methods.
-    /// Full mDNS implementation requires `mdns` crate integration.
-    ///
-    /// # Future Enhancement
-    /// - Integrate `mdns` crate for service discovery
-    /// - Query for _beardog._tcp.local or capability-specific services
-    /// - Parse TXT records for capability metadata
-    /// - Maintain discovered service cache with TTL
-    async fn discover_via_mdns(&self, capability: &str) -> Result<Vec<DiscoveredService>> {
-        debug!(
-            "mDNS discovery for capability '{}' - graceful fallback (full impl pending)",
-            capability
-        );
-
-        // Graceful fallback: return empty, allowing other discovery methods
-        // This maintains functionality while logging the limitation
-        info!(
-            "mDNS discovery not yet available for '{}', trying other methods",
-            capability
-        );
-
-        Ok(vec![])
-    }
-
-    /// Discover services via DNS-SD (DNS Service Discovery)
-    ///
-    /// Discovers services using DNS-SD (RFC 6763).
-    /// Capability-based and agnostic to specific primal implementations.
-    ///
-    /// # Implementation Status
-    /// Currently gracefully falls back to other discovery methods.
-    /// Full DNS-SD implementation requires DNS resolution and SRV record parsing.
-    ///
-    /// # Future Enhancement
-    /// - Query DNS SRV records for capability services
-    /// - Parse TXT records for service metadata
-    /// - Support both local and wide-area DNS-SD
-    /// - Cache results with appropriate TTL
-    async fn discover_via_dns_sd(&self, capability: &str) -> Result<Vec<DiscoveredService>> {
-        debug!(
-            "DNS-SD discovery for capability '{}' - graceful fallback (full impl pending)",
-            capability
-        );
-
-        // Graceful fallback: return empty, allowing other discovery methods
-        info!(
-            "DNS-SD not yet available for '{}', trying other methods",
-            capability
-        );
-
-        Ok(vec![])
     }
 
     /// Discover services via service registry (Consul, etcd, etc.)

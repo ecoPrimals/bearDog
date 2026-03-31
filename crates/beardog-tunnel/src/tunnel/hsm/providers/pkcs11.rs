@@ -46,8 +46,9 @@ impl Pkcs11UniversalProvider {
         #[cfg(not(feature = "pkcs11-provider"))]
         {
             let _ = (library_path, slot_id);
-            Err(BearDogError::not_implemented(
-                "PKCS#11 HSM provider: enable Cargo feature `pkcs11-provider` when PKCS#11 integration is wired",
+            Err(BearDogError::requires_capability(
+                "pkcs11-provider",
+                "PKCS#11 HSM provider requires the pkcs11-provider Cargo feature and a PKCS#11 library",
             ))
         }
         #[cfg(feature = "pkcs11-provider")]

@@ -113,7 +113,7 @@ impl SimdGeneticsProcessor {
             return Err(BearDogError::invalid_input("Parent index arrays must have equal length".to_string(),
 
         use rand::prelude::*;
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
 
         const BATCH_SIZE: usize = 16;
         for batch in parent1_indices
@@ -122,7 +122,7 @@ impl SimdGeneticsProcessor {
         {
             let (p1_batch, p2_batch) = batch;
             for (&p1_idx, &p2_idx) in p1_batch.iter().zip(p2_batch.iter()) {
-                if rng.r#gen::<f64>() < crossover_rate {
+                if rng.random::<f64>() < crossover_rate {
                     self.perform_uniform_crossover_vectorized(usize,
         parent2_idx: usize,
         rng: &mut impl Rng,
@@ -144,7 +144,7 @@ impl SimdGeneticsProcessor {
         let mutations_needed = (total_genes as f64 * mutation_rate) as usize;
 
         let mut mutation_positions: Vec<usize> = (0..mutations_needed)
-            .map(|_| rng.gen_range(0..total_genes))
+            .map(|_| rng.random_range(0..total_genes))
             .collect();
 
         mutation_positions.sort_unstable();

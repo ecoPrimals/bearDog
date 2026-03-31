@@ -92,10 +92,17 @@ pub struct DefaultAuditLogger {
 impl DefaultAuditLogger {
     /// # Errors
     ///
-    /// Returns an error if hashing fails.
-    /// Create a new audit logger with default storage path
+    /// Returns an error if the storage backend cannot be initialized.
+    ///
+    /// Resolves audit log path from `BEARDOG_AUDIT_DIR` (or `--audit-dir`),
+    /// falling back to the system temp directory so beardog never crashes
+    /// writing to a read-only CWD (e.g. Android `/data/local/tmp`).
     pub async fn new() -> Result<Self, BearDogError> {
-        let storage_path = std::path::PathBuf::from("audit.log");
+        let dir = std::env::var("BEARDOG_AUDIT_DIR").map_or_else(
+            |_| std::env::temp_dir().join("beardog"),
+            std::path::PathBuf::from,
+        );
+        let storage_path = dir.join("audit.log");
         Self::with_storage_path(storage_path).await
     }
 

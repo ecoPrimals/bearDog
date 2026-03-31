@@ -148,7 +148,7 @@ async fn check_entropy() -> HealthCheck {
     // Check if we can generate entropy
     use rand::RngCore;
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut buf = [0u8; 32];
     rng.fill_bytes(&mut buf);
 

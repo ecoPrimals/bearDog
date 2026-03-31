@@ -3,7 +3,8 @@
 //! Pure Rust system metrics collection via /proc filesystem.
 //!
 //! Reads CPU and memory stats directly from the Linux procfs without
-//! external dependencies. Falls back to `NotImplemented` on non-Linux.
+//! external dependencies. On non-Linux, host CPU/memory collectors return
+//! [`BearDogError::unsupported_platform`] while request-level metrics stay available.
 
 use beardog_errors::BearDogError;
 use std::sync::Arc;
@@ -209,11 +210,11 @@ impl SystemMetrics {
 
     /// # Errors
     ///
-    /// Always returns [`BearDogError::not_implemented`] on non-Linux targets.
+    /// On non-Linux targets, host CPU counters are unavailable (no `/proc/stat`).
     #[cfg(not(target_os = "linux"))]
     pub fn collect_cpu_usage(&self) -> Result<f64, BearDogError> {
-        Err(BearDogError::not_implemented(
-            "CPU metrics require Linux /proc/stat. Use sysinfo crate for cross-platform.",
+        Err(BearDogError::unsupported_platform(
+            "Host CPU metrics require Linux /proc/stat (capability: procfs_host_cpu_counters)",
         ))
     }
 
@@ -231,11 +232,11 @@ impl SystemMetrics {
 
     /// # Errors
     ///
-    /// Always returns [`BearDogError::not_implemented`] on non-Linux targets.
+    /// On non-Linux targets, host memory stats are unavailable (no `/proc/meminfo`).
     #[cfg(not(target_os = "linux"))]
     pub fn collect_memory_usage(&self) -> Result<f64, BearDogError> {
-        Err(BearDogError::not_implemented(
-            "Memory metrics require Linux /proc/meminfo. Use sysinfo crate for cross-platform.",
+        Err(BearDogError::unsupported_platform(
+            "Host memory metrics require Linux /proc/meminfo (capability: procfs_host_memory)",
         ))
     }
 

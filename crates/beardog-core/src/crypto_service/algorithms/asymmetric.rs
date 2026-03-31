@@ -289,8 +289,9 @@ pub fn sign_rsa_pss(data: &[u8], private_key_der: &[u8]) -> Result<Vec<u8>> {
     // Create PSS signing key with SHA-256
     let signing_key = BlindedSigningKey::<Sha256>::new(private_key);
 
-    // Sign with randomness
-    let mut rng = rand::thread_rng();
+    // Sign with randomness (RNG must match `rsa`'s `rand_core` 0.6)
+    use rsa::rand_core::OsRng;
+    let mut rng = OsRng;
     let signature: Signature = signing_key.sign_with_rng(&mut rng, data);
 
     Ok(signature.to_bytes().into())
@@ -412,7 +413,8 @@ mod tests {
         use rsa::{RsaPrivateKey, RsaPublicKey};
 
         // Generate a 2048-bit RSA key for testing (smaller for faster tests)
-        let mut rng = rand::thread_rng();
+        use rsa::rand_core::OsRng;
+        let mut rng = OsRng;
         let bits = 2048;
         let private_key = RsaPrivateKey::new(&mut rng, bits).expect("RSA key generation in test");
         let public_key = RsaPublicKey::from(&private_key);

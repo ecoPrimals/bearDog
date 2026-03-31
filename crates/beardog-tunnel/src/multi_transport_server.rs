@@ -34,8 +34,7 @@ use beardog_errors::BearDogError;
 use beardog_types::primal_identity::PrimalIdentity;
 use std::net::SocketAddr;
 use std::sync::Arc;
-use tokio::task::JoinHandle;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 
 /// Bound transport types
 ///
@@ -63,9 +62,6 @@ pub enum BoundTransport {
 pub struct MultiTransportServer {
     /// Successfully bound transports
     transports: Vec<BoundTransport>,
-
-    /// Running transport tasks (use anyhow for compatibility)
-    tasks: Vec<JoinHandle<anyhow::Result<()>>>,
 }
 
 impl MultiTransportServer {
@@ -159,10 +155,7 @@ impl MultiTransportServer {
             transports.len()
         );
 
-        Ok(Self {
-            transports,
-            tasks: Vec::new(),
-        })
+        Ok(Self { transports })
     }
 
     /// Start all bound transports
@@ -175,30 +168,31 @@ impl MultiTransportServer {
     /// # Errors
     ///
     /// Returns an error if starting a transport task fails before tasks are spawned.
-    pub async fn start_all(mut self) -> Result<(), BearDogError> {
+    pub async fn start_all(self) -> Result<(), BearDogError> {
         info!("🚀 Starting all transports...");
 
+        use tokio::task::JoinSet;
+
+        let mut join_set = JoinSet::new();
         for transport in self.transports {
             match transport {
                 BoundTransport::Unix(server) => {
                     let server_clone = Arc::clone(&server);
-                    let task = tokio::spawn(async move {
+                    join_set.spawn(async move {
                         server_clone.start().await.map_err(|e| {
                             error!("Unix socket server error: {}", e);
                             anyhow::anyhow!("Unix server failed: {e}")
                         })
                     });
-                    self.tasks.push(task);
                 }
                 BoundTransport::Tcp(server) => {
                     let server_clone = Arc::clone(&server);
-                    let task = tokio::spawn(async move {
+                    join_set.spawn(async move {
                         server_clone.start().await.map_err(|e| {
                             error!("TCP server error: {}", e);
                             anyhow::anyhow!("TCP server failed: {e}")
                         })
                     });
-                    self.tasks.push(task);
                 }
             }
         }
@@ -220,28 +214,34 @@ impl MultiTransportServer {
         info!("");
 
         // Wait for ALL tasks (runs until Ctrl+C or error)
-        // Use tokio's join_all which is always available
-        use tokio::task::JoinSet;
-
-        let mut join_set = JoinSet::new();
-        for task in self.tasks {
-            join_set.spawn(task);
-        }
-
-        // Wait for all tasks to complete
-        while let Some(result) = join_set.join_next().await {
-            match result {
-                Ok(Ok(Ok(()))) => {} // Task completed successfully
-                Ok(Ok(Err(e))) => {
+        let log_join_outcome =
+            |result: Result<anyhow::Result<()>, tokio::task::JoinError>| match result {
+                Ok(Ok(())) => {}
+                Ok(Err(e)) => {
                     error!("Transport task failed: {}", e);
                 }
-                Ok(Err(e)) => {
-                    error!("Transport task panicked: {}", e);
-                }
                 Err(e) => {
-                    error!("Join error: {}", e);
+                    if e.is_cancelled() {
+                        debug!("Transport task cancelled during shutdown");
+                    } else {
+                        error!("Transport task panicked: {}", e);
+                    }
+                }
+            };
+
+        tokio::select! {
+            _ = tokio::signal::ctrl_c() => {
+                info!("Ctrl+C received, shutting down transports");
+                join_set.abort_all();
+                while let Some(result) = join_set.join_next().await {
+                    log_join_outcome(result);
                 }
             }
+            () = async {
+                while let Some(result) = join_set.join_next().await {
+                    log_join_outcome(result);
+                }
+            } => ()
         }
 
         Ok(())

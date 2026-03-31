@@ -19,6 +19,7 @@ use crate::btsp_provider::BeardogBtspProvider;
 use crate::platform::{PlatformSocket, PlatformStream, Socket, SocketEndpoint};
 use anyhow::{Context, Result};
 use beardog_ipc::protocol::JSONRPC_VERSION;
+use beardog_types::constants::domains::network::ipc_discovery::BEARDOG_CAPABILITY_DOMAIN;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -31,6 +32,23 @@ use tracing::{debug, error, info, warn};
 /// newline (e.g. raw `nc` probes, `curl` health checks). On timeout the
 /// connection is closed and the task freed.
 const IPC_READ_TIMEOUT: Duration = Duration::from_secs(30);
+
+/// Filesystem path for the capability-domain symlink (`{domain}.sock`), or `None` for abstract sockets.
+#[cfg(unix)]
+fn capability_domain_symlink_path(socket_path: &Path) -> Option<PathBuf> {
+    if socket_path.to_string_lossy().starts_with('@') {
+        return None;
+    }
+    let socket_dir = socket_path.parent().unwrap_or_else(|| Path::new("."));
+    Some(socket_dir.join(format!("{BEARDOG_CAPABILITY_DOMAIN}.sock")))
+}
+
+#[cfg(unix)]
+fn remove_capability_domain_symlink_best_effort(socket_path: &Path) {
+    if let Some(p) = capability_domain_symlink_path(socket_path) {
+        let _ = std::fs::remove_file(&p);
+    }
+}
 
 /// Unix socket IPC server for inter-primal communication
 pub struct UnixSocketIpcServer {
@@ -165,6 +183,9 @@ impl UnixSocketIpcServer {
             *running = false;
         }
 
+        #[cfg(unix)]
+        remove_capability_domain_symlink_best_effort(&self.socket_path);
+
         // Remove socket file
         if self.socket_path.exists() {
             std::fs::remove_file(&self.socket_path).context("Failed to remove socket file")?;
@@ -214,6 +235,23 @@ impl UnixSocketIpcServer {
             platform_type,
             self.socket_path.display()
         ))?;
+
+        #[cfg(unix)]
+        {
+            if let Some(symlink_path) = capability_domain_symlink_path(&self.socket_path) {
+                let _ = std::fs::remove_file(&symlink_path);
+                if let Some(target_name) = self.socket_path.file_name() {
+                    if let Err(e) = std::os::unix::fs::symlink(target_name, &symlink_path) {
+                        warn!(
+                            path = %symlink_path.display(),
+                            "failed to create domain symlink: {e}"
+                        );
+                    } else {
+                        info!(path = %symlink_path.display(), "domain symlink created");
+                    }
+                }
+            }
+        }
 
         // Mark server as ready atomically (no locks needed!)
         // This enables lock-free concurrent readiness checks!
@@ -595,6 +633,22 @@ impl UnixSocketIpcServer {
 
     // Legacy handle_http_connection() removed - HTTP protocol deprecated
     // All clients should use JSON-RPC 2.0 over Unix socket
+}
+
+impl Drop for UnixSocketIpcServer {
+    fn drop(&mut self) {
+        #[cfg(unix)]
+        {
+            remove_capability_domain_symlink_best_effort(&self.socket_path);
+            if self.socket_path.exists() {
+                let _ = std::fs::remove_file(&self.socket_path);
+            }
+        }
+        #[cfg(not(unix))]
+        if self.socket_path.exists() {
+            let _ = std::fs::remove_file(&self.socket_path);
+        }
+    }
 }
 
 #[cfg(test)]

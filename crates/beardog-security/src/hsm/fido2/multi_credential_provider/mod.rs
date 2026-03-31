@@ -3,7 +3,7 @@
 //! FIDO2 Multi-Credential HSM Provider Implementation
 //!
 //! This module implements the `MultiCredentialHsmProvider` trait for FIDO2-compliant
-//! security keys (SoloKeys, YubiKey FIDO2, Nitrokey FIDO2, etc.)
+//! security keys (`SoloKeys`, `YubiKey` FIDO2, Nitrokey FIDO2, etc.)
 
 mod config;
 mod trait_bear_dog_provider;
@@ -15,7 +15,7 @@ mod tests;
 pub use config::Fido2ProviderConfig;
 
 use beardog_errors::BearDogError;
-use beardog_traits::unified::{CredentialInfo, CredentialRequest};
+use beardog_traits::unified::hsm_multi_credential::{CredentialInfo, CredentialRequest};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -26,7 +26,7 @@ use super::types::Fido2DeviceInfo;
 /// FIDO2 Multi-Credential HSM Provider
 ///
 /// Implements multi-credential operations for FIDO2-compliant security keys.
-/// This works with any FIDO2 device: SoloKeys, YubiKey 5, Nitrokey FIDO2, etc.
+/// This works with any FIDO2 device: `SoloKeys`, `YubiKey` 5, Nitrokey FIDO2, etc.
 pub struct Fido2MultiCredentialProvider {
     /// Device information
     device_info: Fido2DeviceInfo,
@@ -43,6 +43,10 @@ pub struct Fido2MultiCredentialProvider {
 
 impl Fido2MultiCredentialProvider {
     /// Create a new FIDO2 multi-credential provider
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the device does not support resident keys.
     pub async fn new(
         device_info: Fido2DeviceInfo,
         config: Option<Fido2ProviderConfig>,
@@ -84,7 +88,7 @@ impl Fido2MultiCredentialProvider {
             .map_err(|e| BearDogError::system(format!("Invalid credential ID format: {e}")))
     }
 
-    /// Send CTAP2 MakeCredential command
+    /// Send CTAP2 `MakeCredential` command
     async fn ctap2_make_credential(
         &self,
         request: &CredentialRequest,
@@ -107,7 +111,7 @@ impl Fido2MultiCredentialProvider {
         )))
     }
 
-    /// Send CTAP2 GetAssertion command
+    /// Send CTAP2 `GetAssertion` command
     async fn ctap2_get_assertion(
         &self,
         credential_id: &[u8],
@@ -131,7 +135,7 @@ impl Fido2MultiCredentialProvider {
         )))
     }
 
-    /// Enumerate credentials using CTAP2 CredentialManagement
+    /// Enumerate credentials using CTAP2 `CredentialManagement`
     async fn ctap2_enumerate_credentials(&self) -> Result<Vec<CredentialInfo>, BearDogError> {
         debug!("Enumerating credentials via CTAP2 CredentialManagement");
 
@@ -144,7 +148,7 @@ impl Fido2MultiCredentialProvider {
         Ok(creds.values().cloned().collect())
     }
 
-    /// Delete credential using CTAP2 CredentialManagement
+    /// Delete credential using CTAP2 `CredentialManagement`
     async fn ctap2_delete_credential(&self, credential_id: &[u8]) -> Result<(), BearDogError> {
         debug!(
             "Deleting credential via CTAP2 (len={})",

@@ -174,8 +174,8 @@ impl FaultInjector {
         }
 
         use rand::Rng;
-        let mut rng = rand::thread_rng();
-        rng.r#gen::<f64>() < self.config.injection_rate
+        let mut rng = rand::rng();
+        rng.random::<f64>() < self.config.injection_rate
     }
 
     /// Inject a fault at a specific point

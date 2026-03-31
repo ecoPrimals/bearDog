@@ -2,8 +2,9 @@
 
 use super::*;
 use crate::hsm::fido2::types::{Fido2Capabilities, Fido2DeviceInfo, Fido2Transport};
-use beardog_traits::unified::{
-    BearDogProvider, CredentialInfo, CredentialRequest, MultiCredentialHsmProvider,
+use beardog_traits::unified::BearDogProvider;
+use beardog_traits::unified::hsm_multi_credential::{
+    CredentialInfo, CredentialRequest, MultiCredentialHsmProvider,
 };
 use beardog_types::canonical::providers_unified::traits::HealthStatus;
 use chrono::Utc;
@@ -262,7 +263,10 @@ async fn test_multi_credential_capabilities_and_provider_trait() {
         .await
         .unwrap();
     let caps = MultiCredentialHsmProvider::get_multi_credential_capabilities(&p);
-    assert_eq!(caps.protocol, beardog_traits::unified::HsmProtocol::Fido2);
+    assert_eq!(
+        caps.protocol,
+        beardog_traits::unified::hsm_multi_credential::HsmProtocol::Fido2
+    );
     assert!(caps.supports_hierarchical_credentials);
 
     assert_eq!(p.provider_id(), "fido2_multi_credential");

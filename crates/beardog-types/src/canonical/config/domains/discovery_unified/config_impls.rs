@@ -8,6 +8,7 @@ use std::time::Duration;
 use crate::canonical::config::domains::retry::CanonicalRetryConfig;
 use crate::canonical::config::r#trait::BearDogConfig;
 use crate::constants::defaults;
+use crate::constants::domains::network::ports::DEFAULT_CONSUL_HTTP_PORT;
 use beardog_errors::BearDogError;
 
 use super::builder::UnifiedDiscoveryConfigBuilder;
@@ -48,7 +49,8 @@ impl UnifiedDiscoveryConfig {
             .unwrap_or_else(|_| {
                 let host = std::env::var("DISCOVERY_HOST")
                     .unwrap_or_else(|_| "discovery.ecosystem.internal".to_string());
-                let port = std::env::var("DISCOVERY_PORT").unwrap_or_else(|_| "8500".to_string());
+                let port = std::env::var("DISCOVERY_PORT")
+                    .unwrap_or_else(|_| DEFAULT_CONSUL_HTTP_PORT.to_string());
                 format!("http://{host}:{port}")
             });
 
@@ -84,7 +86,8 @@ impl UnifiedDiscoveryConfig {
             .unwrap_or_else(|_| {
                 let host = std::env::var("DISCOVERY_HOST")
                     .unwrap_or_else(|_| "discovery.ecosystem.internal".to_string());
-                let port = std::env::var("DISCOVERY_PORT").unwrap_or_else(|_| "8500".to_string());
+                let port = std::env::var("DISCOVERY_PORT")
+                    .unwrap_or_else(|_| DEFAULT_CONSUL_HTTP_PORT.to_string());
                 format!("http://{host}:{port}")
             });
 
@@ -225,7 +228,8 @@ impl Default for UnifiedDiscoveryConfig {
             .unwrap_or_else(|_| {
                 let host = std::env::var("DISCOVERY_HOST")
                     .unwrap_or_else(|_| "discovery.ecosystem.internal".to_string());
-                let port = std::env::var("DISCOVERY_PORT").unwrap_or_else(|_| "8500".to_string());
+                let port = std::env::var("DISCOVERY_PORT")
+                    .unwrap_or_else(|_| DEFAULT_CONSUL_HTTP_PORT.to_string());
                 format!("http://{host}:{port}")
             });
 
@@ -253,7 +257,8 @@ impl Default for ServiceRegistryConfig {
             .unwrap_or_else(|_| {
                 let host = std::env::var("REGISTRY_HOST")
                     .unwrap_or_else(|_| "consul.ecosystem.internal".to_string());
-                let port = std::env::var("REGISTRY_PORT").unwrap_or_else(|_| "8500".to_string());
+                let port = std::env::var("REGISTRY_PORT")
+                    .unwrap_or_else(|_| DEFAULT_CONSUL_HTTP_PORT.to_string());
                 format!("http://{host}:{port}")
             });
 

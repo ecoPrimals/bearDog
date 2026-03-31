@@ -39,9 +39,9 @@ async fn property_encrypt_decrypt_roundtrip() -> Result<(), BearDogError> {
 
     for iteration in 0..iterations {
         // Generate random plaintext (0 to 100KB)
-        let plaintext_len = rand::thread_rng().gen_range(0..=100_000);
+        let plaintext_len = rand::rng().random_range(0..=100_000);
         let mut plaintext = vec![0u8; plaintext_len];
-        rand::thread_rng().fill(&mut plaintext[..]);
+        rand::rng().fill(&mut plaintext[..]);
 
         // Generate random key
         let key_bytes = provider.generate_random_bytes(32)?;
@@ -91,7 +91,7 @@ async fn property_large_input_handling() -> Result<(), BearDogError> {
     // Test with 1MB plaintext
     let plaintext_len = MAX_PLAINTEXT_SIZE;
     let mut plaintext = vec![0u8; plaintext_len];
-    rand::thread_rng().fill(&mut plaintext[..]);
+    rand::rng().fill(&mut plaintext[..]);
 
     let ciphertext = provider.encrypt(&key_bytes, &plaintext).await?;
     let decrypted = provider.decrypt(&key_bytes, &ciphertext).await?;
@@ -114,9 +114,9 @@ async fn property_sign_verify_roundtrip() -> Result<(), BearDogError> {
     let iterations = 100;
 
     for iteration in 0..iterations {
-        let message_len = rand::thread_rng().gen_range(1..=10_000);
+        let message_len = rand::rng().random_range(1..=10_000);
         let mut message = vec![0u8; message_len];
-        rand::thread_rng().fill(&mut message[..]);
+        rand::rng().fill(&mut message[..]);
 
         let signing_key_bytes = provider.generate_random_bytes(32)?;
         let public_key =
@@ -149,9 +149,9 @@ async fn property_invalid_signatures_rejected() -> Result<(), BearDogError> {
 
     for iteration in 0..iterations {
         // Generate random message
-        let message_len = rand::thread_rng().gen_range(1..=1000);
+        let message_len = rand::rng().random_range(1..=1000);
         let mut message = vec![0u8; message_len];
-        rand::thread_rng().fill(&mut message[..]);
+        rand::rng().fill(&mut message[..]);
 
         let signing_key_bytes = provider.generate_random_bytes(32)?;
         let public_key =
@@ -162,7 +162,7 @@ async fn property_invalid_signatures_rejected() -> Result<(), BearDogError> {
 
         let mut signature = provider.sign(&signing_key_bytes, &message).await?;
 
-        let corrupt_byte = rand::thread_rng().gen_range(0..signature.len());
+        let corrupt_byte = rand::rng().random_range(0..signature.len());
         signature[corrupt_byte] ^= 0x01;
 
         let verified = provider
@@ -190,13 +190,13 @@ async fn property_key_derivation_determinism() -> Result<(), BearDogError> {
 
     for iteration in 0..iterations {
         // Generate random password and salt
-        let password_len = rand::thread_rng().gen_range(8..=64);
+        let password_len = rand::rng().random_range(8..=64);
         let mut password = vec![0u8; password_len];
-        rand::thread_rng().fill(&mut password[..]);
+        rand::rng().fill(&mut password[..]);
 
-        let salt_len = rand::thread_rng().gen_range(16..=32);
+        let salt_len = rand::rng().random_range(16..=32);
         let mut salt = vec![0u8; salt_len];
-        rand::thread_rng().fill(&mut salt[..]);
+        rand::rng().fill(&mut salt[..]);
 
         // Derive key twice
         let key1 = provider.derive_key(&password, &salt).await?;
@@ -222,16 +222,16 @@ async fn property_key_derivation_salt_sensitivity() -> Result<(), BearDogError> 
 
     for iteration in 0..iterations {
         // Generate random password
-        let password_len = rand::thread_rng().gen_range(8..=64);
+        let password_len = rand::rng().random_range(8..=64);
         let mut password = vec![0u8; password_len];
-        rand::thread_rng().fill(&mut password[..]);
+        rand::rng().fill(&mut password[..]);
 
         // Generate two different salts
-        let salt_len = rand::thread_rng().gen_range(16..=32);
+        let salt_len = rand::rng().random_range(16..=32);
         let mut salt1 = vec![0u8; salt_len];
         let mut salt2 = vec![0u8; salt_len];
-        rand::thread_rng().fill(&mut salt1[..]);
-        rand::thread_rng().fill(&mut salt2[..]);
+        rand::rng().fill(&mut salt1[..]);
+        rand::rng().fill(&mut salt2[..]);
 
         // Ensure they're different
         if salt1 == salt2 {
@@ -262,9 +262,9 @@ async fn property_wrong_key_decryption_fails() -> Result<(), BearDogError> {
 
     for iteration in 0..iterations {
         // Generate random plaintext
-        let plaintext_len = rand::thread_rng().gen_range(1..=1000);
+        let plaintext_len = rand::rng().random_range(1..=1000);
         let mut plaintext = vec![0u8; plaintext_len];
-        rand::thread_rng().fill(&mut plaintext[..]);
+        rand::rng().fill(&mut plaintext[..]);
 
         // Generate two different keys
         let key1 = provider.generate_random_bytes(32)?;

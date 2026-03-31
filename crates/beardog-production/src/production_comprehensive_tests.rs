@@ -14,17 +14,36 @@
 
 use super::*;
 
+fn set_test_master_key() {
+    config::set_test_production_ready(true);
+}
+
+fn clear_test_master_key() {
+    config::set_test_production_ready(false);
+}
+
 // ============================================================================
 // Production Ready Tests
 // ============================================================================
 
 #[test]
-fn test_production_ready_returns_true() {
+fn test_production_ready_returns_true_with_key() {
+    set_test_master_key();
     assert!(config::production_ready());
+    clear_test_master_key();
+}
+
+#[test]
+fn test_production_ready_returns_false_without_key() {
+    config::set_test_production_ready(false);
+    let result = config::production_ready();
+    config::set_test_production_ready(true);
+    assert!(!result);
 }
 
 #[test]
 fn test_production_ready_is_consistent() {
+    set_test_master_key();
     // Should return same value on multiple calls
     let result1 = config::production_ready();
     let result2 = config::production_ready();
@@ -33,6 +52,7 @@ fn test_production_ready_is_consistent() {
 
 #[test]
 fn test_production_ready_multiple_calls() {
+    set_test_master_key();
     for _ in 0..100 {
         assert!(config::production_ready());
     }
@@ -40,10 +60,10 @@ fn test_production_ready_multiple_calls() {
 
 #[test]
 fn test_production_ready_const() {
-    // Verify production_ready can be called in const-like contexts
-    // Testing that the function itself is const-compatible
-    let is_ready = config::production_ready();
-    assert!(is_ready);
+    set_test_master_key();
+    // production_ready() is a runtime check (env); not const-evaluable.
+    let ready: bool = config::production_ready();
+    assert!(ready);
 }
 
 // ============================================================================
@@ -52,6 +72,7 @@ fn test_production_ready_const() {
 
 #[test]
 fn test_config_module_exists() {
+    set_test_master_key();
     // Verify the config module is accessible
     let ready = config::production_ready();
     assert!(ready);
@@ -59,6 +80,7 @@ fn test_config_module_exists() {
 
 #[test]
 fn test_production_ready_is_public() {
+    set_test_master_key();
     // Verify function is exported and accessible
     use crate::config::production_ready;
     assert!(production_ready());
@@ -70,6 +92,7 @@ fn test_production_ready_is_public() {
 
 #[test]
 fn test_production_readiness_check_succeeds() {
+    set_test_master_key();
     // Simulate a production readiness check
     let is_ready = config::production_ready();
 
@@ -78,6 +101,7 @@ fn test_production_readiness_check_succeeds() {
 
 #[test]
 fn test_production_check_in_loop() {
+    set_test_master_key();
     // Test production check in various scenarios
     let mut all_ready = true;
 
@@ -93,6 +117,7 @@ fn test_production_check_in_loop() {
 
 #[test]
 fn test_production_ready_with_assertion() {
+    set_test_master_key();
     // Direct assertion pattern
     assert!(
         config::production_ready(),
@@ -102,6 +127,7 @@ fn test_production_ready_with_assertion() {
 
 #[test]
 fn test_production_ready_returns_bool() {
+    set_test_master_key();
     let result = config::production_ready();
     // Verify it returns a boolean value and is true
     // The type system already ensures it's a bool
@@ -114,6 +140,7 @@ fn test_production_ready_returns_bool() {
 
 #[test]
 fn test_production_ready_thread_safe() {
+    set_test_master_key();
     use std::thread;
 
     // TEST_CATEGORY: unit
@@ -143,6 +170,7 @@ fn test_production_ready_thread_safe() {
 
 #[test]
 fn test_production_ready_concurrent_calls() {
+    set_test_master_key();
     use std::sync::Arc;
     use std::sync::atomic::{AtomicUsize, Ordering};
     // TEST_CATEGORY: unit
@@ -185,6 +213,7 @@ fn test_production_ready_concurrent_calls() {
 
 #[test]
 fn test_production_ready_assignment() {
+    set_test_master_key();
     let ready = config::production_ready();
     let also_ready = ready;
     assert_eq!(ready, also_ready);
@@ -195,6 +224,7 @@ fn test_production_ready_assignment() {
 // TEST_PRIORITY: normal
 #[test]
 fn test_production_ready_in_conditional() {
+    set_test_master_key();
     let is_ready = config::production_ready();
     if is_ready {
         // Expected path - verify it's a boolean true
@@ -209,6 +239,7 @@ fn test_production_ready_in_conditional() {
 
 #[test]
 fn test_production_ready_as_expression() {
+    set_test_master_key();
     let message = if config::production_ready() {
         // TEST_CATEGORY: unit
         // TEST_DOMAIN: core
@@ -223,6 +254,7 @@ fn test_production_ready_as_expression() {
 
 #[test]
 fn test_production_ready_boolean_ops() {
+    set_test_master_key();
     let ready = config::production_ready();
 
     // Test boolean operations - verify ready is true
@@ -234,6 +266,7 @@ fn test_production_ready_boolean_ops() {
 
 #[test]
 fn test_production_ready_match() {
+    set_test_master_key();
     let result = config::production_ready();
     if result {
         assert!(result, "production_ready should return true");
@@ -248,6 +281,7 @@ fn test_production_ready_match() {
 
 #[test]
 fn test_doc_example_basic() {
+    set_test_master_key();
     // From doc comment example
     use crate::config::production_ready;
     assert!(production_ready());
@@ -255,6 +289,7 @@ fn test_doc_example_basic() {
 
 #[test]
 fn test_doc_example_in_application() {
+    set_test_master_key();
     // Simulating production startup
     fn startup_check() -> Result<(), String> {
         if !config::production_ready() {
@@ -306,6 +341,7 @@ fn test_production_ready_performance() {
 
 #[test]
 fn test_production_ready_no_side_effects() {
+    set_test_master_key();
     // Calling production_ready should have no side effects
     let result1 = config::production_ready();
     let result2 = config::production_ready();
@@ -327,6 +363,7 @@ fn test_production_ready_no_side_effects() {
 
 #[test]
 fn test_production_readiness_system_check() {
+    set_test_master_key();
     // Comprehensive system readiness check
     struct SystemState {
         database_ready: bool,
@@ -355,6 +392,7 @@ fn test_production_readiness_system_check() {
 // TEST_PRIORITY: normal
 #[test]
 fn test_production_ready_with_logging() {
+    set_test_master_key();
     // Test that production_ready works with logging context
     let ready = config::production_ready();
 
@@ -424,6 +462,7 @@ fn test_production_ready_must_use() {
 
 #[test]
 fn test_production_guard_pattern() {
+    set_test_master_key();
     fn protected_operation() -> Result<(), &'static str> {
         if !config::production_ready() {
             return Err("Not production ready");
@@ -443,6 +482,7 @@ fn test_production_guard_pattern() {
 
 #[test]
 fn test_production_assertion_pattern() {
+    set_test_master_key();
     // Common assertion pattern at startup
     assert!(
         config::production_ready(),
@@ -455,6 +495,7 @@ fn test_production_assertion_pattern() {
 
 #[test]
 fn test_production_validation_chain() {
+    set_test_master_key();
     fn validate_deployment() -> bool {
         let checks = [
             config::production_ready(),
@@ -477,6 +518,7 @@ fn test_production_validation_chain() {
 
 #[test]
 fn test_production_ready_with_feature_flags() {
+    set_test_master_key();
     // Simulate feature flag check
     let production_mode = config::production_ready();
     let feature_enabled = true;
@@ -490,6 +532,7 @@ fn test_production_ready_with_feature_flags() {
 
 #[test]
 fn test_production_ready_early_return() {
+    set_test_master_key();
     fn maybe_proceed() -> Option<()> {
         if !config::production_ready() {
             return None;
@@ -509,6 +552,7 @@ fn test_production_ready_early_return() {
 
 #[test]
 fn test_production_ready_rapid_fire() {
+    set_test_master_key();
     // Rapid consecutive calls
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
@@ -523,6 +567,7 @@ fn test_production_ready_rapid_fire() {
 // TEST_PRIORITY: normal
 #[test]
 fn test_production_ready_memory_stable() {
+    set_test_master_key();
     // Verify no memory leaks from repeated calls
     let initial_ready = config::production_ready();
 

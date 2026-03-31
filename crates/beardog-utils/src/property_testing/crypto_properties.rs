@@ -6,6 +6,10 @@ use super::{BearDogError, PropertyBasedTestFramework, TestCase, info};
 
 impl PropertyBasedTestFramework {
     /// Test cryptographic properties comprehensively
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from test case generation or nested cryptographic checks.
     pub fn test_cryptographic_properties(&mut self) -> Result<(), BearDogError> {
         info!("🔐 Testing Cryptographic Properties");
 
@@ -25,6 +29,10 @@ impl PropertyBasedTestFramework {
     }
 
     /// Seeds cryptographic [`TestCase`] entries with deterministic pseudo-random payloads.
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from [`PropertyBasedTestFramework::generate_random_bytes`].
     pub fn generate_crypto_test_cases(&mut self) -> Result<(), BearDogError> {
         info!("🎲 Generating cryptographic test cases");
 
@@ -46,6 +54,10 @@ impl PropertyBasedTestFramework {
     }
 
     /// Test hash function properties
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from mock hash operations.
     pub fn test_hash_properties(&mut self) -> Result<(), BearDogError> {
         info!("🔗 Testing hash properties");
 
@@ -62,6 +74,10 @@ impl PropertyBasedTestFramework {
     }
 
     /// Test encryption/decryption properties
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from mock encrypt/decrypt operations.
     pub fn test_encryption_properties(&mut self) -> Result<(), BearDogError> {
         info!("🔒 Testing encryption properties");
 
@@ -78,6 +94,10 @@ impl PropertyBasedTestFramework {
     }
 
     /// Test signature properties
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from mock signing or verification.
     pub fn test_signature_properties(&mut self) -> Result<(), BearDogError> {
         info!("✍️ Testing signature properties");
 
@@ -94,6 +114,10 @@ impl PropertyBasedTestFramework {
     }
 
     /// Test key derivation properties
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from mock key derivation.
     pub fn test_key_derivation_properties(&mut self) -> Result<(), BearDogError> {
         info!("🗝️ Testing key derivation properties");
 

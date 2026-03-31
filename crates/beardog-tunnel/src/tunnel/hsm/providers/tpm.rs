@@ -51,8 +51,9 @@ impl TpmUniversalProvider {
     pub async fn new() -> Result<Self, BearDogError> {
         #[cfg(not(feature = "tpm-provider"))]
         {
-            Err(BearDogError::not_implemented(
-                "TPM HSM provider: enable Cargo feature `tpm-provider` when platform TPM integration is wired",
+            Err(BearDogError::requires_capability(
+                "tpm-provider",
+                "TPM HSM provider requires the tpm-provider Cargo feature and platform TPM integration",
             ))
         }
         #[cfg(feature = "tpm-provider")]
@@ -422,7 +423,9 @@ mod tests_always {
             };
             let msg = err.to_string();
             assert!(
-                msg.contains("TPM") || msg.contains("not_implemented") || msg.contains("tpm"),
+                msg.contains("TPM")
+                    || msg.contains("tpm-provider")
+                    || msg.contains("Requires capability"),
                 "unexpected error message: {msg}"
             );
         }

@@ -27,7 +27,7 @@ impl SoftwareEntropyCollector {
     /// Returns an error if the system RNG fails
     pub fn collect_entropy(&self, num_bytes: usize) -> Result<Vec<u8>, BearDogError> {
         let mut entropy = vec![0u8; num_bytes];
-        rand::thread_rng()
+        rand::rng()
             .try_fill_bytes(&mut entropy)
             .map_err(|e| BearDogError::security(
                 format!("Failed to collect entropy: {e}"),

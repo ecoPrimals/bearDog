@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! Error types for BearDog client
+//! Error types for `BearDog` client
 
 use thiserror::Error;
 
-/// Result type for BearDog client operations
+/// Result type for `BearDog` client operations
 pub type ClientResult<T> = Result<T, BearDogClientError>;
 
-/// BearDog client errors
+/// `BearDog` client errors
 #[derive(Debug, Error)]
 pub enum BearDogClientError {
     /// Tower Atomic connection failed

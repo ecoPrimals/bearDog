@@ -93,6 +93,7 @@ pub async fn handle_daemon(args: DaemonArgs) -> Result<(), BearDogError> {
         r#abstract: false,
         port: None,
         listen: None,
+        audit_dir: None,
         family_id: args.family_id,
         orchestrator_id: args.orchestrator_id,
     };

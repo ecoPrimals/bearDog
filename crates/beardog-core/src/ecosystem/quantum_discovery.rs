@@ -9,10 +9,10 @@
 //! [`crate::primal_self_knowledge`]: [`PrimalDiscovery`] (mDNS when enabled, registry when
 //! configured, cached peers). Callers must supply [`PrimalDiscovery`] via
 //! [`QuantumDiscoveryEngine::with_primal_discovery`]; otherwise discovery returns
-//! [`BearDogError`] via [`not_implemented`](beardog_errors::not_implemented).
+//! [`BearDogError::requires_capability`](beardog_errors::BearDogError::requires_capability).
 
 use crate::primal_self_knowledge::{DiscoveredPrimal, Endpoint, PrimalDiscovery};
-use beardog_errors::{BearDogError, not_implemented};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{
     AuthConfig, AuthType, CapabilityType, CircuitBreakerConfig, EndpointConfig, HealthStatus,
     PerformanceMetrics, ProviderInfo, SecurityLevel, UniversalCapability,
@@ -330,8 +330,7 @@ pub struct QuantumMetrics {
 
 impl QuantumDiscoveryEngine {
     /// Create a new engine without [`PrimalDiscovery`]. [`Self::quantum_discover_capabilities`]
-    /// will return [`not_implemented`](beardog_errors::not_implemented) until
-    /// [`Self::with_primal_discovery`] is used.
+    /// will return `BearDogError::requires_capability` until [`Self::with_primal_discovery`] is used.
     #[must_use]
     pub fn new(config: QuantumDiscoveryConfig) -> Self {
         info!(
@@ -383,7 +382,8 @@ impl QuantumDiscoveryEngine {
         debug!("Requested capabilities: {:?}", request_capabilities);
 
         let Some(discovery) = self.primal_discovery.as_ref() else {
-            return Err(not_implemented(
+            return Err(BearDogError::requires_capability(
+                "primal-discovery",
                 "Quantum discovery orchestration requires PrimalDiscovery; use QuantumDiscoveryEngine::with_primal_discovery",
             ));
         };
@@ -438,34 +438,34 @@ impl QuantumDiscoveryEngine {
         Ok(out)
     }
 
-    /// **Phase 2**: quantum entanglement graph over capability relationships — not implemented.
+    /// Quantum entanglement graph over capability relationships — not implemented.
     ///
     /// # Errors
     ///
-    /// Always returns a not-implemented error (Phase 2).
+    /// Always returns a not-implemented error.
     pub fn create_quantum_entanglement(
         &mut self,
         _capability_a: CapabilityType,
         _capability_b: CapabilityType,
         _entanglement_type: EntanglementType,
     ) -> Result<QuantumEntanglement> {
-        Err(not_implemented(
-            "Phase 2: quantum entanglement graph (historical correlations / dependency analysis)",
+        Err(BearDogError::not_implemented(
+            "Quantum entanglement graph (historical correlations / dependency analysis)",
         ))
     }
 
-    /// **Phase 2**: quantum annealing over candidate capabilities — not implemented.
+    /// Quantum annealing over candidate capabilities — not implemented.
     ///
     /// # Errors
     ///
-    /// Always returns a not-implemented error (Phase 2).
+    /// Always returns a not-implemented error.
     pub fn quantum_anneal_selection(
         &self,
         _candidates: Vec<UniversalCapability>,
         _optimization_criteria: Vec<OptimizationCriterion>,
     ) -> Result<Vec<UniversalCapability>> {
-        Err(not_implemented(
-            "Phase 2: quantum annealing selection over discovered capabilities",
+        Err(BearDogError::not_implemented(
+            "Quantum annealing selection over discovered capabilities",
         ))
     }
 }
@@ -563,7 +563,9 @@ mod tests {
             .expect_err("expected not implemented");
         let msg = format!("{err}");
         assert!(
-            msg.contains("PrimalDiscovery") || msg.contains("not implemented"),
+            msg.contains("primal-discovery")
+                || msg.contains("PrimalDiscovery")
+                || msg.contains("Requires capability"),
             "{msg}"
         );
     }

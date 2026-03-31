@@ -264,14 +264,14 @@ pub fn handle_scrypt(params: &Value) -> Result<Value, BearDogError> {
         ));
     }
 
-    if key_length == 0 || key_length > 128 {
+    if !(10..=64).contains(&key_length) {
         return Err(BearDogError::business(
-            "key_length must be between 1 and 128".to_string(),
+            "key_length must be between 10 and 64".to_string(),
         ));
     }
 
     // Create scrypt params
-    let scrypt_params = Params::new(log_n, r, p)
+    let scrypt_params = Params::new(log_n, r, p, key_length)
         .map_err(|e| BearDogError::security(format!("Invalid scrypt params: {e}")))?;
 
     // Derive key
@@ -419,7 +419,7 @@ mod tests {
     fn test_scrypt_variable_key_length() -> Result<(), BearDogError> {
         let password = BASE64.encode(b"password");
         let salt = BASE64.encode(b"salt12345678");
-        for key_length in [16u64, 32, 64, 128] {
+        for key_length in [16u64, 32, 48, 64] {
             let params = json!({
                 "password": password,
                 "salt": salt,

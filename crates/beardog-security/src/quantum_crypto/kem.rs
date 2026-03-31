@@ -13,6 +13,7 @@ use super::types::{
     KemAlgorithm, QuantumKEM, QuantumKeyExchange, QuantumPrivateKey, SecurityLevel, kyber_sizes::*,
 };
 use beardog_errors::BearDogError;
+use rand::RngCore;
 
 /// Kyber KEM engine
 ///
@@ -39,8 +40,7 @@ impl KyberEngine {
     ///
     /// Currently infallible; reserved for production KEM integration errors.
     pub fn generate_keypair(&self) -> Result<QuantumKEM, BearDogError> {
-        use rand::RngCore;
-        let mut rng = rand::rngs::OsRng;
+        let mut rng = rand::rng();
 
         let (pk_size, sk_size, algorithm) = match self.security_level {
             SecurityLevel::Level1 | SecurityLevel::Level2 => {
@@ -83,8 +83,7 @@ impl KyberEngine {
     ///
     /// Currently infallible in this simulation; production may fail on invalid keys.
     pub fn encapsulate(&self, _peer_public_key: &[u8]) -> Result<QuantumKeyExchange, BearDogError> {
-        use rand::RngCore;
-        let mut rng = rand::rngs::OsRng;
+        let mut rng = rand::rng();
 
         let (ct_size, ss_size, algorithm) = match self.security_level {
             SecurityLevel::Level1 | SecurityLevel::Level2 => {
@@ -128,8 +127,7 @@ impl KyberEngine {
         _ciphertext: &[u8],
         _private_key: &[u8],
     ) -> Result<Vec<u8>, BearDogError> {
-        use rand::RngCore;
-        let mut rng = rand::rngs::OsRng;
+        let mut rng = rand::rng();
 
         let ss_size = match self.security_level {
             SecurityLevel::Level1 | SecurityLevel::Level2 => KYBER512_SS_SIZE,

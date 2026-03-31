@@ -33,7 +33,7 @@ use argon2::{
 use beardog_errors::BearDogError;
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use hmac::{Hmac, Mac};
-use rand::{thread_rng, RngCore, distributions::Alphanumeric, Rng};
+use rand::{distr::Alphanumeric, rng, Rng, RngCore};
 use pbkdf2;
 use sha2::{Digest, Sha256};
 use tracing::{debug, info, warn};
@@ -182,8 +182,8 @@ impl UnifiedBearDogCrypto {
         match rng.fill(&mut bytes) {
             Ok(()) => bytes,
             Err(_) => {
-                warn!("Ring RNG failed, falling back to thread_rng");
-                let mut rng = thread_rng();
+                warn!("Ring RNG failed, falling back to rng()");
+                let mut rng = rng();
                 rng.fill_bytes(&mut bytes);
                 bytes
             }
@@ -207,8 +207,8 @@ impl UnifiedBearDogCrypto {
     /// Generate secure password with specified length
     pub fn generate_password(length: usize) -> String {
         debug!("🔒 Generating secure password of length {}", length);
-        thread_rng()
-            .sample_iter(&Alphanumeric)
+        rng()
+            .sample_iter(Alphanumeric)
             .take(length)
             .map(char::from)
             .collect()

@@ -7,7 +7,7 @@ use chacha20poly1305::{
     aead::{Aead, KeyInit},
 };
 use chrono::Utc;
-use rand::{RngCore, rngs::OsRng};
+use rand::RngCore;
 use tracing::{debug, info};
 
 use beardog_errors::BearDogError;
@@ -68,7 +68,8 @@ impl BirdSongEncryption {
 
         // Generate random nonce (96 bits / 12 bytes for ChaCha20-Poly1305)
         let mut nonce_bytes = [0u8; 12];
-        OsRng.fill_bytes(&mut nonce_bytes);
+        let mut rng = rand::rng();
+        rng.fill_bytes(&mut nonce_bytes);
         let nonce = Nonce::from_slice(&nonce_bytes);
 
         // Prepare additional authenticated data (AAD)

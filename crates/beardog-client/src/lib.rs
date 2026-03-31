@@ -2,11 +2,11 @@
 #![forbid(unsafe_code)]
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
-//! # BearDog Client Library (Tower Atomic Edition)
+//! # `BearDog` Client Library (Tower Atomic Edition)
 //!
 //! **EVOLVED**: Now uses Tower Atomic (Unix sockets + JSON-RPC) instead of HTTP!
 //!
-//! Easy integration with BearDog's lineage API via **Pure Rust IPC**.
+//! Easy integration with `BearDog`'s lineage API via **Pure Rust IPC**.
 //!
 //! ## Evolution
 //!
@@ -39,7 +39,7 @@
 //!
 //! ```text
 //! ┌──────────────┐                          ┌─────────────┐
-//! │  Your App    │   Unix Socket JSON-RPC   │   BearDog   │
+//! │  Your App    │   Unix Socket JSON-RPC   │   `BearDog`   │
 //! │  (Client)    │ ──────────────────────>  │   (Server)  │
 //! └──────────────┘                          └─────────────┘
 //!                                                  ↓
@@ -56,7 +56,7 @@ pub use error::{BearDogClientError, ClientResult};
 
 use beardog_genetics::birdsong::{LineageProof, types::LineageMetadata};
 
-/// BearDog client for lineage API (Tower Atomic edition)
+/// `BearDog` client for lineage API (Tower Atomic edition)
 ///
 /// Uses Unix sockets + JSON-RPC instead of HTTP for 100% Pure Rust communication.
 pub struct BearDogClient {
@@ -65,9 +65,9 @@ pub struct BearDogClient {
 }
 
 impl BearDogClient {
-    /// Connect to BearDog via Tower Atomic (Unix socket discovery)
+    /// Connect to `BearDog` via Tower Atomic (Unix socket discovery)
     ///
-    /// Automatically discovers BearDog's Unix socket path.
+    /// Automatically discovers `BearDog`'s Unix socket path.
     ///
     /// # Example
     ///
@@ -79,6 +79,10 @@ impl BearDogClient {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogClientError::ConnectionFailed`] when the Unix socket cannot be opened or the handshake fails.
     pub async fn connect() -> ClientResult<Self> {
         info!("🔌 Connecting to BearDog via Tower Atomic");
 
@@ -109,6 +113,10 @@ impl BearDogClient {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogClientError::ApiError`] when the JSON-RPC call fails.
     pub async fn create_lineage(
         &mut self,
         service_type: &str,
@@ -148,6 +156,10 @@ impl BearDogClient {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogClientError::ApiError`] when the JSON-RPC call fails.
     pub async fn verify_lineage(&mut self, proof: &LineageProof) -> ClientResult<Value> {
         info!("🔍 Verifying lineage proof");
 
@@ -178,6 +190,10 @@ impl BearDogClient {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogClientError::ApiError`] when the JSON-RPC call fails.
     pub async fn extend_lineage(
         &mut self,
         lineage_id: &str,
@@ -203,6 +219,10 @@ impl BearDogClient {
     }
 
     /// Get lineage history
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogClientError::ApiError`] when the JSON-RPC call fails.
     pub async fn get_lineage(&mut self, lineage_id: &str) -> ClientResult<Value> {
         info!("📜 Getting lineage: {}", lineage_id);
 

@@ -65,6 +65,7 @@ use p384::ecdsa::{
 //     Signature as P521Signature, SigningKey as P521SigningKey, VerifyingKey as P521VerifyingKey,
 // };
 // use p521::elliptic_curve::sec1::ToEncodedPoint as P521ToEncodedPoint;
+use aes_gcm::aead::OsRng as CryptoOsRng;
 use tracing::{debug, info};
 use zeroize::Zeroizing;
 
@@ -132,7 +133,8 @@ pub async fn handle_sign_ecdsa_secp256r1(
 
     // Generate ephemeral signing key
     // In production, this could be HSM-backed or use a persistent key
-    let signing_key = P256SigningKey::random(&mut rand::rngs::OsRng);
+    let mut rng_crypto = CryptoOsRng;
+    let signing_key = P256SigningKey::random(&mut rng_crypto);
     let verifying_key = P256VerifyingKey::from(&signing_key);
 
     // Sign data (Pure Rust, constant-time)
@@ -335,7 +337,8 @@ pub async fn handle_sign_ecdsa_secp384r1(
     debug!("📝 Data to sign: {} bytes", data.len());
 
     // Generate ephemeral signing key
-    let signing_key = P384SigningKey::random(&mut rand::rngs::OsRng);
+    let mut rng_crypto = CryptoOsRng;
+    let signing_key = P384SigningKey::random(&mut rng_crypto);
     let verifying_key = P384VerifyingKey::from(&signing_key);
 
     // Sign data (Pure Rust, constant-time)

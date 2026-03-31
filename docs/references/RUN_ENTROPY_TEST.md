@@ -31,8 +31,8 @@
 # Interactive (will prompt for human entropy)
 ./target/release/examples/entropy_hardware_comparison
 
-# Or use quick script (auto-skips human entropy)
-./scripts/quick_entropy_test.sh
+# Or non-interactive baseline (auto-skips human entropy prompts)
+cargo run --release --example entropy_hardware_comparison
 ```
 
 ---
@@ -67,8 +67,8 @@ Choose:
 ### Option 2: Quick Auto-Test ⚡
 
 ```bash
-cd /home/eastgate/Development/ecoPrimals/phase1/beardog
-./scripts/quick_entropy_test.sh
+cd /path/to/beardog
+cargo run --release --example entropy_hardware_comparison
 ```
 
 **What happens**:
@@ -225,7 +225,7 @@ adb shell /data/local/tmp/entropy_hardware_comparison
 
 **Fastest**:
 ```bash
-./scripts/quick_entropy_test.sh
+cargo run --release --example entropy_hardware_comparison
 ```
 
 ---

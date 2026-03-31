@@ -49,6 +49,11 @@ impl DeploymentManager {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if architecture or OS detection fails, platform paths cannot be discovered,
+    /// or required installation directories cannot be created.
     pub async fn new(source_dir: std::path::PathBuf) -> Result<Self, DeploymentError> {
         let arch = Architecture::detect()?;
         let os = OperatingSystem::detect()?;
@@ -79,6 +84,10 @@ impl DeploymentManager {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// This method always returns `Ok`; per-primal failures are listed in the returned report.
     pub async fn deploy_all(&self) -> Result<DeploymentReport, DeploymentError> {
         let primals = PrimalName::well_known();
         self.deploy_primals(&primals).await
@@ -91,6 +100,10 @@ impl DeploymentManager {
     ///
     /// # Returns
     /// Deployment report with success/failure details
+    ///
+    /// # Errors
+    ///
+    /// This method always returns `Ok`; per-primal failures are listed in the returned report.
     pub async fn deploy_primals(
         &self,
         primals: &[PrimalName],

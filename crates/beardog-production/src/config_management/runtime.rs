@@ -17,6 +17,10 @@ use tracing::{debug, info, warn};
 
 impl ProductionConfigManager {
     /// Creates a new production configuration manager
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] if configuration sources or the secrets manager cannot be initialized.
     pub fn new(environment: Environment) -> Result<Self> {
         let config_sources = Self::determine_config_sources(&environment)?;
         let secrets_manager = SecretsManager::new(&environment)?;
@@ -30,6 +34,10 @@ impl ProductionConfigManager {
     }
 
     /// Loads complete production configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] if loading, merging, secret injection, or validation fails.
     pub fn load_configuration(&mut self) -> Result<ProductionConfig> {
         info!(
             "Loading production configuration for environment: {:?}",
@@ -348,6 +356,10 @@ impl ProductionConfigManager {
 
 impl SecretsManager {
     /// Creates a new secrets manager
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] if the provider list for the environment cannot be built.
     pub fn new(environment: &Environment) -> Result<Self> {
         let providers = Self::determine_providers(environment)?;
 
@@ -359,6 +371,10 @@ impl SecretsManager {
     }
 
     /// Gets a secret by key
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] if the secret is not found in any configured provider.
     pub fn get_secret(&mut self, key: &str) -> Result<SecretValue> {
         // Check cache first
         if let Some(cached_value) = self.cache.get(key)

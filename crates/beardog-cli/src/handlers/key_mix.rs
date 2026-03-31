@@ -190,7 +190,7 @@ fn mix_keys(key1: &[u8], key2: &[u8]) -> Result<Vec<u8>, BearDogError> {
     let mut salt = vec![0u8; 32];
     // Use pure Rust CSPRNG instead of OpenSSL
     use rand::RngCore;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     rng.fill_bytes(&mut salt);
 
     // Derive final key using HKDF

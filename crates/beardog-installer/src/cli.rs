@@ -6,6 +6,10 @@ use crate::PrimalName;
 use anyhow::Result;
 
 /// Parse primal names from a comma-separated string (used by install/validate/uninstall).
+///
+/// # Errors
+///
+/// Returns an error if any comma-separated token is not a known primal name.
 pub fn parse_primals(primals_str: Option<String>) -> Result<Vec<PrimalName>> {
     match primals_str {
         Some(s) => {

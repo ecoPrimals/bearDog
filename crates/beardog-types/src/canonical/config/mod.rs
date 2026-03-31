@@ -58,6 +58,9 @@ pub mod auth;
 /// distributed caching strategies.
 pub mod cache;
 
+/// Coordination configuration (symbiotic coordination models)
+pub mod coordination;
+
 /// Compliance and regulatory configuration
 ///
 /// Settings for GDPR, HIPAA, SOC 2, and other regulatory compliance

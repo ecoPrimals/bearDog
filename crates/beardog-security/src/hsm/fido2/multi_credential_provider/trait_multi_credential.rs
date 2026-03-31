@@ -4,9 +4,9 @@
 
 use super::Fido2MultiCredentialProvider;
 use beardog_errors::BearDogError;
-use beardog_traits::unified::{
-    CredentialHierarchy, CredentialInfo, CredentialNode, CredentialRequest, HsmProtocol,
-    MultiCredentialCapabilities, MultiCredentialHsmProvider,
+use beardog_traits::unified::hsm_multi_credential::{
+    CredentialHierarchy, CredentialInfo, CredentialNode, CredentialReplicationData,
+    CredentialRequest, HsmProtocol, MultiCredentialCapabilities, MultiCredentialHsmProvider,
 };
 use chrono::Utc;
 use std::collections::HashMap;
@@ -235,7 +235,7 @@ impl MultiCredentialHsmProvider for Fido2MultiCredentialProvider {
         &self,
         credential_id: &str,
         shared_entropy: &[u8],
-    ) -> Result<beardog_traits::unified::CredentialReplicationData, Self::Error> {
+    ) -> Result<CredentialReplicationData, Self::Error> {
         info!(
             "Preparing credential {} for replication using {} bytes of shared entropy",
             credential_id,
@@ -268,7 +268,7 @@ impl MultiCredentialHsmProvider for Fido2MultiCredentialProvider {
         };
 
         info!("✅ Prepared replication data for credential");
-        Ok(beardog_traits::unified::CredentialReplicationData {
+        Ok(CredentialReplicationData {
             source_credential: source_cred,
             derivation_path,
             entropy_hash,

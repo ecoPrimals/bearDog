@@ -1,6 +1,6 @@
 # BearDog Status
 
-**Last Updated**: March 30, 2026
+**Last Updated**: March 31, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -18,8 +18,8 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 15,320+ passing | Fully concurrent, zero sleeps in non-chaos, zero deadlocks |
-| **Coverage** | 89.57% line | llvm-cov workspace — target 90%, `beardog-production` (59%) dragging |
+| **Tests** | 14,610+ passing | Fully concurrent, zero sleeps in non-chaos, zero deadlocks |
+| **Coverage** | 90.16% line | llvm-cov workspace — target 90%, `beardog-production` (59%) dragging |
 | **Serial Tests** | 0 | `#[serial]` fully eliminated |
 | **cargo deny** | 4/4 pass | Advisories, bans, licenses, sources |
 | **License** | AGPL-3.0-only | SPDX headers on all .rs files |
@@ -31,8 +31,8 @@
 
 ## Codebase Metrics
 
-- **Crates**: 30 in workspace (beardog-integration re-integrated)
-- **Rust Files**: 2,000+
+- **Crates**: 29 in workspace (beardog-integration excluded — overstep)
+- **Rust Files**: 1,892
 - **Crypto Methods**: 93 JSON-RPC methods
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
 
@@ -122,7 +122,7 @@
 - **Dead orphan cleanup** — `songbird_client.rs` and `discovery_adapter.rs` removed (never in mod tree)
 - **Socket path centralization** — `DEFAULT_SOCKET_PATH`, `DEFAULT_IPC_PORT_FILE`, `DEFAULT_KEY_STORAGE_DIR` constants replace inline `/tmp/beardog*` strings
 - **Coverage** — 90.05% line (up from 90.03%), 89.22% region, 84.84% function
-- **15,100+ tests passing** — 0 failures
+- **14,610+ tests passing** — 0 failures
 - **All gates green** — fmt ✓, clippy `-D warnings` ✓, doc ✓, build ✓
 
 ### Wave 18: Deep Audit Execution, UniBin Identity Compliance, Stub Evolution & Debt Elimination

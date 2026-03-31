@@ -18,7 +18,7 @@ use tokio::time::{sleep, timeout};
 
 /// Spawn a task with explicit completion signal
 ///
-/// Returns a JoinHandle and a receiver that signals when the task completes.
+/// Returns a `JoinHandle` and a receiver that signals when the task completes.
 /// Use this instead of `sleep()` to wait for background tasks.
 ///
 /// # Example
@@ -143,6 +143,10 @@ where
 ///     ).await.unwrap();
 /// }
 /// ```
+///
+/// # Errors
+///
+/// Returns [`WaitError::Timeout`] if the condition is still false when the deadline elapses.
 pub async fn wait_for<F>(condition: F, timeout_duration: Duration) -> Result<(), WaitError>
 where
     F: Fn() -> bool + Send,
@@ -161,6 +165,10 @@ where
 /// Wait for a condition with a custom check interval
 ///
 /// Use when you need control over the polling frequency.
+///
+/// # Errors
+///
+/// Returns [`WaitError::Timeout`] if the condition is still false when the deadline elapses.
 pub async fn wait_for_with_interval<F>(
     condition: F,
     timeout_duration: Duration,
@@ -193,7 +201,7 @@ pub enum WaitError {
 /// Barrier for coordinating multiple tasks
 ///
 /// All tasks wait until N tasks have reached the barrier.
-/// Use this instead of sleep() for synchronization.
+/// Use this instead of `sleep()` for synchronization.
 ///
 /// # Example
 /// ```no_run
@@ -271,7 +279,7 @@ impl Barrier {
 
 /// Token bucket rate limiter using semaphore
 ///
-/// Use this instead of sleep() for rate limiting in tests.
+/// Use this instead of `sleep()` for rate limiting in tests.
 ///
 /// # Example
 /// ```no_run
@@ -408,6 +416,10 @@ where
 ///     }).await.unwrap();
 /// }
 /// ```
+///
+/// # Errors
+///
+/// Returns [`WaitError::Timeout`] if the inner future does not complete before the deadline.
 pub async fn with_timeout<F, T>(timeout_duration: Duration, future: F) -> Result<T, WaitError>
 where
     F: Future<Output = T>,

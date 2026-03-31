@@ -42,6 +42,10 @@ use beardog_hid::{HidDeviceInfo, discover, types::is_fido2_device};
 ///     }
 /// }
 /// ```
+///
+/// # Errors
+///
+/// Returns [`BearDogError`] when HID discovery or device probing fails (`fido2` feature).
 pub async fn discover_fido2_devices() -> Result<Vec<Fido2DeviceInfo>, BearDogError> {
     info!("🔍 Discovering FIDO2/CTAP2 security keys (Pure Rust)...");
 

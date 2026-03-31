@@ -235,8 +235,9 @@ pub async fn handle_ed25519_generate_keypair(params: Option<&Value>) -> Result<V
     use ed25519_dalek::{SigningKey, VerifyingKey};
 
     // Generate a random 32-byte seed
+    use rand::RngCore;
     let mut seed_bytes = [0u8; 32];
-    rand::Rng::fill(&mut rand::rngs::OsRng, &mut seed_bytes);
+    rand::rng().fill_bytes(&mut seed_bytes);
 
     // Create signing key from the seed
     let signing_key = SigningKey::from_bytes(&seed_bytes);
@@ -285,8 +286,9 @@ pub async fn handle_x25519_generate_ephemeral(params: Option<&Value>) -> Result<
     use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 
     // Generate a random 32-byte secret
+    use rand::RngCore;
     let mut secret_bytes = [0u8; 32];
-    rand::Rng::fill(&mut rand::rngs::OsRng, &mut secret_bytes);
+    rand::rng().fill_bytes(&mut secret_bytes);
 
     // Create keypair from the secret
     let secret = StaticSecret::from(secret_bytes);

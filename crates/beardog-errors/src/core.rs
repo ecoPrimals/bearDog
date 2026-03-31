@@ -559,6 +559,33 @@ impl BearDogError {
         }
     }
 
+    /// Operation is not available on this platform (e.g. mobile-only hardware API on desktop).
+    #[must_use]
+    pub fn unsupported_platform<S: Into<String>>(details: S) -> Self {
+        Self::System {
+            message: details.into(),
+            category: SystemErrorCategory::NotSupported,
+        }
+    }
+
+    /// Feature is expected on this platform/OS but is not wired or shipped yet.
+    #[must_use]
+    pub fn not_yet_available<S: Into<String>>(details: S) -> Self {
+        Self::System {
+            message: format!("Not yet available: {}", details.into()),
+            category: SystemErrorCategory::NotImplemented,
+        }
+    }
+
+    /// Missing optional capability (Cargo feature, hardware, OS service, etc.).
+    #[must_use]
+    pub fn requires_capability(capability: &str, details: &str) -> Self {
+        Self::System {
+            message: format!("Requires capability '{capability}': {details}"),
+            category: SystemErrorCategory::NotSupported,
+        }
+    }
+
     /// Create a not implemented error
     #[must_use]
     pub fn not_implemented(feature: &str) -> Self {

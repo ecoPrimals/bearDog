@@ -199,7 +199,7 @@ mod property_based_tests {
     #[tokio::test]
     async fn test_fuzz_random_config_values() -> Result<(), BearDogError> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         let mut discovery = UniversalHsmDiscovery::new()?;
         
@@ -207,10 +207,10 @@ mod property_based_tests {
         for _ in 0..10 {
             let config = DiscoveryConfig {
                 auto_discovery_enabled: rng.gen_bool(0.5),
-                discovery_interval: Duration::from_secs(rng.gen_range(1..1000)),
-                health_check_interval: Duration::from_secs(rng.gen_range(1..1000)),
-                capability_refresh_interval: Duration::from_secs(rng.gen_range(100..10000)),
-                timeout: Duration::from_secs(rng.gen_range(1..30)),
+                discovery_interval: Duration::from_secs(rng.random_range(1..1000)),
+                health_check_interval: Duration::from_secs(rng.random_range(1..1000)),
+                capability_refresh_interval: Duration::from_secs(rng.random_range(100..10000)),
+                timeout: Duration::from_secs(rng.random_range(1..30)),
                 tier_elevation_enabled: rng.gen_bool(0.5),
                 human_entropy_priority: rng.gen_bool(0.5),
             };
@@ -227,7 +227,7 @@ mod property_based_tests {
     #[tokio::test]
     async fn test_fuzz_random_status_sequences() -> Result<(), BearDogError> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         let mut discovery = UniversalHsmDiscovery::new()?;
         let discovered = discovery.discover_all_hsms()?;
@@ -235,7 +235,7 @@ mod property_based_tests {
         if let Some(hsm) = discovered.first() {
             // Fuzz with random status sequences
             for _ in 0..20 {
-                let status = match rng.gen_range(0..3) {
+                let status = match rng.random_range(0..3) {
                     0 => HsmHealthStatus::Healthy,
                     1 => HsmHealthStatus::Degraded,
                     _ => HsmHealthStatus::Unhealthy,

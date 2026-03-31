@@ -34,7 +34,7 @@ use aes_gcm::{
 use blake3; // Faster and more secure than SHA-256
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier};
 use hmac::{Hmac, Mac};
-use rand_core::{OsRng, RngCore};
+use rand::RngCore;
 use sha2::Sha256;
 
 type HmacSha256 = Hmac<Sha256>;
@@ -142,7 +142,7 @@ impl GeneticCryptoProvider {
     /// All implementations are Pure Rust syscall wrappers.
     pub fn generate_random_bytes(&self, count: usize) -> Result<Vec<u8>, BearDogError> {
         let mut bytes = vec![0u8; count];
-        OsRng.fill_bytes(&mut bytes);
+        rand::rng().fill_bytes(&mut bytes);
         Ok(bytes)
     }
 }
@@ -591,7 +591,7 @@ impl GeneticCryptoProvider {
             provided.to_vec()
         } else {
             let mut bytes = vec![0u8; 32];
-            OsRng.fill_bytes(&mut bytes);
+            rand::rng().fill_bytes(&mut bytes);
             bytes
         };
         hasher.update(&machine_entropy);

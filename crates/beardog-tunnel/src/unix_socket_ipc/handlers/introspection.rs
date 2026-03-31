@@ -13,6 +13,7 @@ use super::utils::{IdentityHints, get_primal_name_with};
 use super::{HandlerRegistry, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
+use beardog_types::constants::domains::network::ipc_discovery::BEARDOG_CAPABILITY_DOMAIN;
 use serde_json::{Value, json};
 use std::sync::Arc;
 
@@ -73,7 +74,7 @@ impl IntrospectionHandler {
             "version": env!("CARGO_PKG_VERSION"),
             "description": "Cryptographic heart of ecoPrimals - Pure Rust crypto service",
             "capabilities": [
-                "crypto",      // Cryptographic operations
+                BEARDOG_CAPABILITY_DOMAIN,      // Cryptographic operations
                 "security",    // Security/HSM operations
                 "genetic",     // Genetic lineage operations
                 "federation",  // Sub-federation key derivation
@@ -144,7 +145,7 @@ impl IntrospectionHandler {
 
         // Define capability mappings
         let capabilities = json!({
-            "crypto": {
+            (BEARDOG_CAPABILITY_DOMAIN): {
                 "description": "Core cryptographic operations",
                 "methods": all_methods.iter()
                     .filter(|m| m.starts_with("crypto."))

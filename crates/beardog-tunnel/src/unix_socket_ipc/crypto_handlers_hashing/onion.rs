@@ -72,7 +72,7 @@ pub async fn handle_generate_onion_identity(params: Option<&Value>) -> Result<Va
         .unwrap_or("hidden_service");
 
     let mut seed = [0u8; 32];
-    rand::thread_rng().fill_bytes(&mut seed);
+    rand::rng().fill_bytes(&mut seed);
     let signing_key = SigningKey::from_bytes(&seed);
     let verifying_key = signing_key.verifying_key();
 

@@ -364,9 +364,9 @@ async fn chaos_concurrent_crypto_operations() -> Result<(), BearDogError> {
             };
 
             // Generate random data and encrypt/decrypt it
-            let data_len = (rand::random::<usize>() % 1000) + 1;
+            let data_len = rand::rng().random_range(1..1001);
             let mut data = vec![0u8; data_len];
-            rand::thread_rng().fill(&mut data[..]);
+            rand::rng().fill(&mut data[..]);
 
             let key = match provider.generate_random_bytes(32) {
                 Ok(k) => k,

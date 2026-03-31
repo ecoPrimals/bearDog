@@ -160,7 +160,7 @@ impl SafeCryptoEngine {
     ///
     /// # Security
     /// Never reuse a nonce with the same key. For random nonce generation,
-    /// use `rand::thread_rng().fill_bytes(&mut nonce)`.
+    /// use `rand::rng().fill_bytes(&mut nonce)`.
     ///
     /// # Errors
     ///

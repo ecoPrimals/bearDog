@@ -444,8 +444,8 @@ async fn generate_master_key(
     tokio::time::sleep(Duration::from_millis(5)).await;
     
     // Generate a random 32-byte secret
-    let mut rng = rand::thread_rng();
-    let secret: Vec<u8> = (0..32).map(|_| rng.r#gen()).collect();
+    let mut rng = rand::rng();
+    let secret: Vec<u8> = (0..32).map(|_| rng.random()).collect();
     
     let key_id = format!("genetic-key-{}-{}", 
                          scenario.operation,

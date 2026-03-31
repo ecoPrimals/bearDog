@@ -22,9 +22,9 @@ use thiserror::Error;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Architecture {
-    /// x86_64 (AMD64, Intel 64-bit)
+    /// `x86_64` (AMD64, Intel 64-bit)
     X86_64,
-    /// ARM64 (AArch64, Apple Silicon, Android 64-bit)
+    /// ARM64 (`AArch64`, Apple Silicon, Android 64-bit)
     Aarch64,
     /// RISC-V 64-bit
     Riscv64,

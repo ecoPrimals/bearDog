@@ -115,6 +115,10 @@ pub enum PropertyValue {
 /// Property trait - defines what can be tested
 pub trait Property<T> {
     /// Test the property against the input
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BearDogError`] when the property check cannot be completed (e.g. invalid input).
     fn test(&self, input: &T) -> Result<bool, BearDogError>;
 
     /// Get the property name

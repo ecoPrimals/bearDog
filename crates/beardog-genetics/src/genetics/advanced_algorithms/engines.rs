@@ -137,10 +137,10 @@ impl MutationEngine {
         individual: &mut GeneticIndividual,
         rate: f64,
     ) -> Result<bool, BearDogError> {
-        let mut rng = rand::thread_rng();
-        if rng.gen_range(0.0..1.0) < rate {
+        let mut rng = rand::rng();
+        if rng.random_range(0.0..1.0) < rate {
             // Apply random mutation
-            individual.fitness_score *= rng.gen_range(0.0_f64..1.0).mul_add(0.2, 0.9);
+            individual.fitness_score *= rng.random_range(0.0_f64..1.0).mul_add(0.2, 0.9);
             individual.mutation_history.push(MutationRecord::default());
             Ok(true)
         } else {
@@ -260,13 +260,13 @@ impl SelectionEngine {
         let mut parents = Vec::with_capacity(num_parents);
         let tournament_size = 3;
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         for _ in 0..num_parents {
-            let mut best_idx = rng.gen_range(0..population.len());
+            let mut best_idx = rng.random_range(0..population.len());
             let mut best_fitness = population[best_idx].fitness_score;
 
             for _ in 1..tournament_size {
-                let idx = rng.gen_range(0..population.len());
+                let idx = rng.random_range(0..population.len());
                 if population[idx].fitness_score > best_fitness {
                     best_fitness = population[idx].fitness_score;
                     best_idx = idx;

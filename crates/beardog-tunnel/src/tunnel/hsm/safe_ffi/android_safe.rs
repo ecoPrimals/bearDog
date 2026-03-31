@@ -8,7 +8,7 @@
 use super::traits::PlatformSecurityProvider;
 use crate::tunnel::hsm::types::{HsmKey, KeyType};
 use beardog_errors::BearDogError;
-use tracing::{info, warn};
+use tracing::info;
 
 /// Safe Android security provider
 pub struct SafeAndroidProvider {
@@ -46,38 +46,71 @@ impl SafeAndroidProvider {
     }
 
     /// Safe key generation implementation
+    #[cfg(target_os = "android")]
     fn generate_key_safe(
         &self,
         _key_id: &str,
         _key_type: &KeyType,
     ) -> Result<HsmKey, BearDogError> {
-        warn!("Android StrongBox key generation not yet fully implemented - using placeholder");
+        tracing::warn!("Android StrongBox key generation requires JNI Keystore wiring");
 
-        Err(BearDogError::not_implemented(
-            "Android StrongBox key generation not yet implemented safely",
+        Err(BearDogError::not_yet_available(
+            "Android StrongBox key generation requires JNI Keystore integration (hardware-backed key operations)",
+        ))
+    }
+
+    #[cfg(not(target_os = "android"))]
+    fn generate_key_safe(
+        &self,
+        _key_id: &str,
+        _key_type: &KeyType,
+    ) -> Result<HsmKey, BearDogError> {
+        Err(BearDogError::unsupported_platform(
+            "Android StrongBox key generation not available on this platform",
         ))
     }
 
     /// Safe data signing implementation
+    #[cfg(target_os = "android")]
     fn sign_data_safe(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
-        warn!("Android StrongBox signing not yet fully implemented - using placeholder");
+        tracing::warn!("Android StrongBox signing requires JNI Keystore wiring");
 
-        Err(BearDogError::not_implemented(
-            "Android StrongBox signing not yet implemented safely",
+        Err(BearDogError::not_yet_available(
+            "Android StrongBox signing requires JNI Keystore integration",
+        ))
+    }
+
+    #[cfg(not(target_os = "android"))]
+    fn sign_data_safe(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        Err(BearDogError::unsupported_platform(
+            "Android StrongBox signing not available on this platform",
         ))
     }
 
     /// Safe signature verification implementation
+    #[cfg(target_os = "android")]
     fn verify_signature_safe(
         &self,
         _key_id: &str,
         _data: &[u8],
         _signature: &[u8],
     ) -> Result<bool, BearDogError> {
-        warn!("Android StrongBox verification not yet fully implemented - using placeholder");
+        tracing::warn!("Android StrongBox verification requires JNI Keystore wiring");
 
-        Err(BearDogError::not_implemented(
-            "Android StrongBox verification not yet implemented safely",
+        Err(BearDogError::not_yet_available(
+            "Android StrongBox verification requires JNI Keystore integration",
+        ))
+    }
+
+    #[cfg(not(target_os = "android"))]
+    fn verify_signature_safe(
+        &self,
+        _key_id: &str,
+        _data: &[u8],
+        _signature: &[u8],
+    ) -> Result<bool, BearDogError> {
+        Err(BearDogError::unsupported_platform(
+            "Android StrongBox verification not available on this platform",
         ))
     }
 }
@@ -127,8 +160,11 @@ mod tests {
         let err = provider
             .generate_key("kid", &KeyType::Ed25519)
             .expect_err("StrongBox placeholder");
+        let msg = err.to_string();
         assert!(
-            err.to_string().contains("Not yet implemented"),
+            msg.contains("Not yet available")
+                || msg.contains("Unsupported platform")
+                || msg.contains("Android StrongBox"),
             "unexpected: {err}"
         );
         Ok(())
@@ -140,8 +176,11 @@ mod tests {
         let err = provider
             .sign_data("kid", b"data")
             .expect_err("StrongBox placeholder");
+        let msg = err.to_string();
         assert!(
-            err.to_string().contains("Not yet implemented"),
+            msg.contains("Not yet available")
+                || msg.contains("Unsupported platform")
+                || msg.contains("Android StrongBox"),
             "unexpected: {err}"
         );
         Ok(())
@@ -153,8 +192,11 @@ mod tests {
         let err = provider
             .verify_signature("kid", b"data", b"sig")
             .expect_err("StrongBox placeholder");
+        let msg = err.to_string();
         assert!(
-            err.to_string().contains("Not yet implemented"),
+            msg.contains("Not yet available")
+                || msg.contains("Unsupported platform")
+                || msg.contains("Android StrongBox"),
             "unexpected: {err}"
         );
         Ok(())

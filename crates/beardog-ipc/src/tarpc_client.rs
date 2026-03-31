@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-//! # 🚀 tarpc Client for BearDog Crypto Operations
+//! # 🚀 tarpc Client for `BearDog` Crypto Operations
 //!
 //! **HIGH-PERFORMANCE CRYPTO RPC CLIENT** (v1.0.0)
 //!
-//! Connects to BearDog tarpc server for binary RPC cryptographic operations
+//! Connects to `BearDog` tarpc server for binary RPC cryptographic operations
 //! with ~10-20μs latency (vs ~100-500μs for JSON-RPC).
 //!
 //! ## Architecture
@@ -45,13 +45,23 @@ const DEFAULT_TARPC_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 /// Default RPC request deadline for [`TarpcCryptoClient::context`].
 const DEFAULT_TARPC_REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
 
+/// Default TLS 1.3 cipher suite string for [`TarpcCryptoClient::tls_derive_*`].
+const DEFAULT_TLS13_CIPHER_SUITE: &str = "TLS_AES_256_GCM_SHA384";
+
 /// High-performance tarpc crypto client
 ///
-/// Thread-safe, clonable client for BearDog crypto operations.
+/// Thread-safe, clonable client for `BearDog` crypto operations.
 /// Uses binary serialization for optimal performance.
-#[derive(Clone)]
 pub struct TarpcCryptoClient {
     inner: Arc<TarpcClientInner>,
+}
+
+impl Clone for TarpcCryptoClient {
+    fn clone(&self) -> Self {
+        Self {
+            inner: Arc::clone(&self.inner),
+        }
+    }
 }
 
 struct TarpcClientInner {
@@ -68,8 +78,9 @@ struct TarpcClientInner {
     request_timeout: Duration,
 }
 
+#[allow(clippy::missing_errors_doc)] // Thin tarpc RPC wrappers; errors are transport/RPC failures surfaced as `anyhow::Error`.
 impl TarpcCryptoClient {
-    /// Connect to a BearDog tarpc server
+    /// Connect to a `BearDog` tarpc server
     ///
     /// # Arguments
     /// * `addr` - Server address (e.g., "127.0.0.1:9901")
@@ -499,7 +510,7 @@ impl TarpcCryptoClient {
         let request = TlsSecretsRequest {
             shared_secret,
             transcript_hash,
-            cipher_suite: "TLS_AES_256_GCM_SHA384".to_string(), // Default TLS 1.3 suite
+            cipher_suite: DEFAULT_TLS13_CIPHER_SUITE.into(),
         };
         self.handle_error(
             client
@@ -524,7 +535,7 @@ impl TarpcCryptoClient {
         let request = TlsSecretsRequest {
             shared_secret,
             transcript_hash,
-            cipher_suite: "TLS_AES_256_GCM_SHA384".to_string(), // Default TLS 1.3 suite
+            cipher_suite: DEFAULT_TLS13_CIPHER_SUITE.into(),
         };
         self.handle_error(
             client
@@ -625,16 +636,12 @@ mod tests {
 
         let ed = client.generate_ed25519().await.expect("ed").expect("ed ok");
         let sig = client
-            .sign_ed25519(b"payload".to_vec(), ed.private_key.clone())
+            .sign_ed25519(b"payload".to_vec(), ed.private_key)
             .await
             .expect("sign")
             .expect("sign ok");
         let _ = client
-            .verify_ed25519(
-                b"payload".to_vec(),
-                sig.signature.clone(),
-                ed.public_key.clone(),
-            )
+            .verify_ed25519(b"payload".to_vec(), sig.signature, ed.public_key)
             .await
             .expect("verify")
             .expect("verify ok");
@@ -650,7 +657,7 @@ mod tests {
             .expect("xb")
             .expect("xb ok");
         let _ = client
-            .x25519_key_exchange(xa.private_key.clone(), xb.public_key.clone())
+            .x25519_key_exchange(xa.private_key, xb.public_key)
             .await
             .expect("kx")
             .expect("kx ok");
@@ -662,34 +669,25 @@ mod tests {
             .expect("enc")
             .expect("enc ok");
         let _ = client
-            .chacha20_poly1305_decrypt(
-                enc.ciphertext.clone(),
-                sym_key.clone(),
-                enc.nonce.clone(),
-                enc.tag.clone(),
-            )
+            .chacha20_poly1305_decrypt(enc.ciphertext, sym_key, enc.nonce, enc.tag)
             .await
             .expect("dec")
             .expect("dec ok");
 
         let _ = client
-            .hmac_sha256(b"data".to_vec(), sym_key.clone())
+            .hmac_sha256(b"data".to_vec(), vec![0xABu8; 32])
             .await
             .expect("hmac")
             .expect("hmac ok");
 
+        let aes_key = vec![0xABu8; 32];
         let aes_enc = client
-            .aes256_gcm_encrypt(b"a".to_vec(), sym_key.clone(), None)
+            .aes256_gcm_encrypt(b"a".to_vec(), aes_key.clone(), None)
             .await
             .expect("aenc")
             .expect("aenc ok");
         let _ = client
-            .aes256_gcm_decrypt(
-                aes_enc.ciphertext.clone(),
-                sym_key.clone(),
-                aes_enc.nonce.clone(),
-                aes_enc.tag.clone(),
-            )
+            .aes256_gcm_decrypt(aes_enc.ciphertext, aes_key, aes_enc.nonce, aes_enc.tag)
             .await
             .expect("adec")
             .expect("adec ok");
@@ -705,7 +703,7 @@ mod tests {
             .expect("pb")
             .expect("pb ok");
         let _ = client
-            .ecdh_p256_key_exchange(pa.private_key.clone(), pb.public_key.clone())
+            .ecdh_p256_key_exchange(pa.private_key, pb.public_key)
             .await
             .expect("p256kx")
             .expect("p256kx ok");
@@ -716,7 +714,7 @@ mod tests {
             .expect("ecdsa kp")
             .expect("ecdsa kp ok");
         let _ = client
-            .sign_ecdsa_p256(b"msg".to_vec(), ecdsa_kp.private_key.clone())
+            .sign_ecdsa_p256(b"msg".to_vec(), ecdsa_kp.private_key)
             .await
             .expect("ecdsa sign")
             .expect("ecdsa sign ok");

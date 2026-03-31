@@ -43,7 +43,7 @@
 // Pure safe Rust implementation (no hand-written intrinsics).
 // Modern Android system property access via std::env (100% safe)
 
-use beardog_errors::{BearDogError, phase2_not_implemented};
+use beardog_errors::BearDogError;
 use tracing::{debug, info};
 
 // ============================================================================
@@ -130,7 +130,7 @@ use system_properties as props;
 /// This implementation uses:
 /// - Direct C FFI to Android system libraries
 /// - NDK for native Android APIs
-/// - Binder IPC for keystore2 communication (Phase 2)
+/// - Binder IPC for keystore2 communication (planned native wiring)
 ///
 /// **Zero JNI overhead!**
 pub struct NativeStrongBox {
@@ -250,14 +250,13 @@ impl NativeStrongBox {
 }
 
 // ============================================================================
-// KEY GENERATION (Pure Native - Phase 2)
+// KEY GENERATION (Pure Native — keystore2 Binder IPC)
 // ============================================================================
 
 impl NativeStrongBox {
     /// Generate a hardware-backed key using **pure native APIs**
     ///
-    /// **Phase 2 Implementation**: This will use direct Binder IPC to keystore2
-    /// service, completely bypassing the Java framework.
+    /// Planned implementation: direct Binder IPC to the keystore2 service, bypassing the Java framework.
     ///
     /// # Architecture
     ///
@@ -268,7 +267,10 @@ impl NativeStrongBox {
     /// **No Java. No JNI. Pure performance.**
     ///
     /// # Errors
-    /// Returns a PHASE-2 not implemented error with detailed implementation notes.
+    /// Returns `BearDogError::unsupported_platform` until native keystore2 Binder IPC is wired in this build.
+    ///
+    /// Implementation notes: open Binder to `/dev/hwbinder`, call `keystore2.generateKey()` via
+    /// `android.system.keystore2.IKeystoreService`, set `SecurityLevel::STRONGBOX`, return public key bytes.
     pub fn generate_key_native(
         &self,
         alias: &str,
@@ -281,30 +283,17 @@ impl NativeStrongBox {
         );
         debug!("   Require user auth: {}", require_user_auth);
 
-        Err(phase2_not_implemented(
-            "Android StrongBox Native Key Generation",
-            "\
-1. Open Binder connection to /dev/hwbinder
-2. Call keystore2.generateKey() via AIDL protocol:
-   - android.system.keystore2.IKeystoreService
-3. Specify StrongBox backend explicitly via SecurityLevel::STRONGBOX
-4. Get public key bytes directly
-
-Implementation references:
-- Android source: system/security/keystore2/
-- AIDL: android.system.keystore2.IKeystoreService
-- Binder: Android IPC mechanism (see ndk-rs/binder)
-
-Estimated effort: 8-16 hours",
-            Some("Use Software HSM or FIDO2 provider for testing"),
-        )
-        .into())
+        Err(BearDogError::unsupported_platform(
+            "Platform 'non-android': Android StrongBox native key generation — use Software HSM or FIDO2 provider for testing",
+        ))
     }
 
     /// Sign data using hardware-backed key (pure native)
     ///
     /// # Errors
-    /// Returns a PHASE-2 not implemented error with detailed implementation notes.
+    /// Returns `BearDogError::unsupported_platform` until native keystore2 Binder IPC is wired in this build.
+    ///
+    /// Implementation notes: `keystore2.sign()` via Binder, hardware-backed key by alias, algorithm e.g. SHA256withECDSA.
     pub fn sign_native(
         &self,
         alias: &str,
@@ -318,20 +307,9 @@ Estimated effort: 8-16 hours",
         );
         debug!("   Algorithm: {}", algorithm);
 
-        Err(phase2_not_implemented(
-            "Android StrongBox Native Signing",
-            "\
-1. Call keystore2.sign() via Binder IPC
-2. Use hardware-backed key by alias
-3. Specify algorithm (e.g., SHA256withECDSA)
-4. Return signature bytes directly
-
-Implementation note: Uses same Binder connection as key generation.
-
-Estimated effort: 4-8 hours",
-            Some("Use Software HSM or FIDO2 provider for signing operations"),
-        )
-        .into())
+        Err(BearDogError::unsupported_platform(
+            "Platform 'non-android': Android StrongBox native signing — use Software HSM or FIDO2 provider for signing operations",
+        ))
     }
 
     /// Generate hardware entropy using native SecureRandom
@@ -348,7 +326,7 @@ Estimated effort: 4-8 hours",
         use rand::RngCore;
 
         let mut entropy = vec![0u8; size];
-        rand::thread_rng().fill_bytes(&mut entropy);
+        rand::rng().fill_bytes(&mut entropy);
 
         debug!("✅ Generated {} bytes from hardware RNG", entropy.len());
 

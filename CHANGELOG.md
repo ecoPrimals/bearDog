@@ -10,13 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### March 30, 2026 -- Wave 25: Full Audit — Lint Promotion, Cast Safety, Doc Completeness, Smart Refactoring
 
 - **Cast safety promoted to warn** — All 40 truncation/precision casts (`u128→u64`, `u64→u32`, `usize→f64`) fixed with `try_from`, const-assert, or per-site `#[expect]`; `cast_possible_truncation`, `cast_precision_loss`, `cast_sign_loss`, `cast_possible_wrap` promoted from allow to warn
-- **`doc_markdown` promoted to warn** — 1,010 bare identifiers in doc comments backticked across all 30 crates; lint promoted from allow to warn
+- **`doc_markdown` promoted to warn** — 1,010 bare identifiers in doc comments backticked across all 29 crates; lint promoted from allow to warn
 - **`missing_errors_doc` promoted to warn** — 780 public `Result`-returning functions now have `# Errors` sections; lint promoted from allow to warn
 - **Smart file refactoring** — 4 of top 5 largest files decomposed into domain-driven submodules: `key_export/` (types/crypto/export/import/tests), `capabilities/` (type/discovery/compliance/infrastructure), `providers/base/` (configuration/performance/schema/trait/defaults), `entropy/` (collect/helpers/hsm_selection/info/types/tests)
 - **Production mock evolution** — `quantum_discovery.rs` evolved from fake endpoints/providers to real `PrimalDiscovery` integration; Phase 2 stubs return `NotImplemented` instead of fabricated data
 - **Formatting fixed** — 4 files that drifted from `cargo fmt` corrected
 - **Licensing clarified** — `LICENSE-DOCS.md` updated with full scyBorg Provenance Trio table (AGPL-3.0-only / ORC / CC-BY-SA 4.0)
-- **Coverage** — 89.57% line (workspace), 15,320+ tests passing, 0 failures
+- **Coverage** — 90.16% line (workspace), 14,610+ tests passing, 0 failures
 - **Stale docs cleaned** — `specs/PROJECT_STATUS.md` archived to fossilRecord, `scripts/` debris removed, root docs updated to current metrics
 
 ### March 29, 2026 -- Wave 23: Concurrency Deep Debt — ABBA Deadlock Fix, Sleep Elimination, Async Evolution
@@ -52,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Self-knowledge** — `SongbirdClient` → `OrchestratorRegistryClient`, `BiomeOSPaths` → `PlatformPaths`, string literals genericized
 - **Dead code cleanup** — Removed orphan `songbird_client.rs` and `discovery_adapter.rs`
 - **Socket path centralization** — 3 new `DEFAULT_*` constants replacing inline `/tmp/beardog*` paths
-- **Coverage** — 90.05% line, 15,100+ tests passing
+- **Coverage** — 90.05% line, 14,610+ tests passing
 
 ### March 28, 2026 -- Wave 18-20: Deep Debt Evolution, 90% Coverage, Semantic Naming
 

@@ -105,9 +105,9 @@ pub(super) fn generate_system_entropy(size: usize) -> Result<Vec<u8>, BearDogErr
     let mut entropy_pool = Vec::new();
 
     // Source 1: OS-provided cryptographically secure randomness
-    let mut os_rng = rand::rngs::OsRng;
+    let mut rng = rand::rng();
     let mut os_bytes = vec![0u8; size];
-    os_rng.fill_bytes(&mut os_bytes);
+    rng.fill_bytes(&mut os_bytes);
     entropy_pool.extend_from_slice(&os_bytes);
 
     // Source 2: High-resolution timestamp (nanosecond precision)
@@ -134,7 +134,7 @@ pub(super) fn generate_system_entropy(size: usize) -> Result<Vec<u8>, BearDogErr
 
     // Source 6: Additional OS randomness to strengthen mix
     let mut additional_bytes = vec![0u8; 32];
-    os_rng.fill_bytes(&mut additional_bytes);
+    rng.fill_bytes(&mut additional_bytes);
     entropy_pool.extend_from_slice(&additional_bytes);
 
     // Cryptographically mix all entropy sources using SHA3-256

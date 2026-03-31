@@ -57,6 +57,11 @@ impl BinaryInstaller {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if no matching binary is found under the expected source paths for the
+    /// given architecture and OS.
     pub fn locate_binary(
         &self,
         primal: PrimalName,
@@ -160,6 +165,10 @@ impl BinaryInstaller {
     /// Uninstall binary
     ///
     /// Removes the primal's binary from the installation directory.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the installed binary exists but cannot be removed.
     pub async fn uninstall_binary(&self, primal: PrimalName) -> Result<(), InstallerError> {
         let binary_path = self.paths.bin_dir.join(primal.name());
 

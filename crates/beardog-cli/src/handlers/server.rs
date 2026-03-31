@@ -18,6 +18,7 @@ use beardog_tunnel::multi_transport_server::MultiTransportServer;
 use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 use beardog_tunnel::tunnel::hsm::software_hsm::RustSoftwareHsm;
 use beardog_tunnel::tunnel::hsm::{HsmTier, SoftwareHsmConfig};
+use beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_ipc_subdir_from_optional;
 use std::sync::Arc;
 use tracing::{info, warn};
 
@@ -25,7 +26,8 @@ use tracing::{info, warn};
 pub(crate) fn resolve_server_socket_path(args: &ServerArgs) -> String {
     if args.r#abstract {
         let family = args.family_id.as_deref().unwrap_or("default");
-        format!("@biomeos_beardog_{family}")
+        let ns = resolve_biomeos_ipc_subdir_from_optional(None);
+        format!("@{ns}_beardog_{family}")
     } else if let Some(ref family_id) = args.family_id {
         let family_sock = std::path::PathBuf::from(&args.socket);
         let parent = family_sock
@@ -49,12 +51,19 @@ pub(crate) fn resolve_server_socket_path(args: &ServerArgs) -> String {
 pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     info!("BearDog server starting");
 
+    if let Some(ref dir) = args.audit_dir {
+        info!(audit_dir = %dir.display(), "audit directory override");
+    }
+
     // Determine socket path - use abstract socket if --abstract flag is set,
     // or derive family-scoped socket if --family-id is provided
     let socket_path = resolve_server_socket_path(&args);
     if args.r#abstract {
-        info!(transport = "abstract", "transport selected");
-        info!(socket_path = %socket_path, "abstract socket path");
+        info!(
+            transport = "abstract-namespace",
+            "transport selected (no filesystem path)"
+        );
+        info!(abstract_name = %socket_path, "bound to abstract namespace (kernel-only, not on disk)");
     } else if args.family_id.is_some() {
         info!(socket_path = %socket_path, "multi-family socket");
     }

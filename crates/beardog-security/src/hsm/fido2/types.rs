@@ -85,7 +85,7 @@ pub struct Fido2DeviceInfo {
     /// Firmware version
     pub firmware_version: Option<String>,
 
-    /// Protocol version (e.g., "FIDO_2_0", "FIDO_2_1_PRE")
+    /// Protocol version (e.g., `FIDO_2_0`, `FIDO_2_1_PRE`)
     pub protocol_versions: Vec<String>,
 
     /// Extension strings

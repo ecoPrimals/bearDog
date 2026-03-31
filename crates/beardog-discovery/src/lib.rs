@@ -11,7 +11,7 @@
 //! 1. **Self-Knowledge Only**: `BearDog` only knows what IT provides
 //! 2. **Capability-Based**: Discover services by capability, not by name
 //! 3. **Zero Hardcoding**: No hardcoded service names or endpoints
-//! 4. **Runtime Discovery**: Find services at runtime via mDNS, DNS-SD, registries
+//! 4. **Runtime Discovery**: Find services at runtime via env, socket scanning, registries
 //!
 //! ## Example
 //!
@@ -37,8 +37,10 @@ pub mod announcement;
 pub mod capability_env;
 pub mod config;
 pub mod discovery;
+#[cfg(feature = "dns-sd")]
 pub mod dns_sd;
 pub mod error;
+#[cfg(feature = "mdns")]
 pub mod mdns;
 pub mod service_registry;
 pub mod types;

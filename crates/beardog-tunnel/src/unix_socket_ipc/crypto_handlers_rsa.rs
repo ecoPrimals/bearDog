@@ -51,9 +51,9 @@
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
-use rand::rngs::OsRng;
 use rsa::pkcs1v15::{SigningKey as Pkcs1SigningKey, VerifyingKey as Pkcs1VerifyingKey};
 use rsa::pss::{SigningKey as PssSigningKey, VerifyingKey as PssVerifyingKey};
+use rsa::rand_core::OsRng;
 use rsa::signature::{RandomizedSigner, SignatureEncoding, Verifier};
 use rsa::{RsaPrivateKey, RsaPublicKey};
 use sha2::Sha256;

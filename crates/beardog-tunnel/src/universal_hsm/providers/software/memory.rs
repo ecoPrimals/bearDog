@@ -55,7 +55,7 @@ impl SoftwareMemoryManager {
         
         // Allocate memory filled with random bytes (more secure than zeros)
         let mut memory = vec![0u8; size];
-        rand::thread_rng()
+        rand::rng()
             .try_fill_bytes(&mut memory)
             .map_err(|e| BearDogError::security(
                 format!("Failed to securely initialize memory: {e}"),

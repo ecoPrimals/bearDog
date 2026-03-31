@@ -54,7 +54,7 @@ impl MultiModalHumanEntropyCollector {
         // Source 1: System-provided cryptographic randomness
         // This is backed by OS entropy pools (/dev/urandom, BCryptGenRandom, etc.)
         use rand::RngCore;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         rng.fill_bytes(&mut entropy_bytes);
 
         // Source 2: High-resolution timing entropy

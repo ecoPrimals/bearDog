@@ -13,11 +13,11 @@ BearDog answers “who is this node?” and “perform this crypto operation saf
 - **Language:** 100% Rust (edition 2024), zero C dependencies in application code
 - **License:** AGPL-3.0-only (SPDX on sources)
 - **Version:** 0.9.0
-- **Workspace:** 30 crates (`Cargo.toml` workspace)
-- **Rust sources:** 2,000+ `.rs` files
+- **Workspace:** 29 crates (`Cargo.toml` workspace)
+- **Rust sources:** 1,892 `.rs` files
 - **MSRV:** 1.93.0 (`rust-toolchain.toml`)
-- **Tests:** 15,320+ passing (0 failed)
-- **Coverage:** 89.57% line (llvm-cov, workspace)
+- **Tests:** 14,610+ passing (0 failed; `cargo test --workspace`)
+- **Coverage:** 90.16% line (llvm-cov, workspace; see [STATUS.md](STATUS.md))
 - **Unsafe:** 0 production blocks (`forbid(unsafe_code)` workspace-wide)
 - **IPC:** JSON-RPC 2.0 over NDJSON via Unix sockets / TCP / named pipes (platform-dependent); tarpc optional behind feature gate
 

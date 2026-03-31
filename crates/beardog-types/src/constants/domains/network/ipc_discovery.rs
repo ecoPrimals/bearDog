@@ -13,7 +13,11 @@
 
 use std::path::PathBuf;
 
-/// Subdirectory under [`XDG_RUNTIME_DIR`](std::env::var_os) for primal Unix sockets.
+/// Default **ecosystem namespace** segment for biomeOS IPC paths (under XDG runtime, temp, etc.).
+///
+/// This names the biomeOS **ecosystem** layout, not an individual primal. Primals are discovered at
+/// runtime; this string is only the shared namespace prefix for sockets and related paths.
+/// Override at runtime with [`ENV_BIOMEOS_IPC_NAMESPACE`] (see [`resolve_biomeos_ipc_subdir_from_optional`]).
 pub const BIOMEOS_RUNTIME_SOCKET_SUBDIR: &str = "biomeos";
 
 /// Override the IPC subdirectory name (e.g. `biomeos`) without changing the full socket directory.
@@ -24,6 +28,11 @@ pub const ENV_BIOMEOS_TMP_ROOT: &str = "BIOMEOS_TMP_ROOT";
 
 /// Filename for TCP port discovery files under XDG, home, and [`biomeos_tmp_socket_root`] search paths.
 pub const BEARDOG_TCP_DISCOVERY_FILENAME: &str = "beardog-ipc-port";
+
+/// Capability-based discovery domain for `BearDog` (crypto / security primal).
+///
+/// Symlink `{domain}.sock` → primary socket (e.g. `beardog.sock`) under the biomeOS IPC dir.
+pub const BEARDOG_CAPABILITY_DOMAIN: &str = "crypto";
 
 /// Default UPA / service-registry listener socket (filename only, under the biomeOS dir).
 pub const DEFAULT_UPA_REGISTRY_SOCKET_NAME: &str = "registry.sock";
@@ -154,6 +163,7 @@ mod tests {
     #[test]
     fn constants_are_non_empty() {
         assert!(!BIOMEOS_RUNTIME_SOCKET_SUBDIR.is_empty());
+        assert!(!BEARDOG_CAPABILITY_DOMAIN.is_empty());
         assert!(!BEARDOG_TCP_DISCOVERY_FILENAME.is_empty());
         assert!(!DEFAULT_UPA_REGISTRY_SOCKET_NAME.is_empty());
     }

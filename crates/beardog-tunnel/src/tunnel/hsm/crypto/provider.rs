@@ -134,7 +134,7 @@ impl<T: UniversalCryptoProvider> NonceGenerator for T {
     fn generate_nonce(&self, size: usize) -> Vec<u8> {
         use rand::RngCore;
         let mut nonce = vec![0u8; size];
-        rand::thread_rng().fill_bytes(&mut nonce);
+        rand::rng().fill_bytes(&mut nonce);
         nonce
     }
 }

@@ -17,6 +17,7 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_core::crypto_service::algorithms::hashing;
 use beardog_errors::BearDogError;
+use rand::RngCore;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 
@@ -37,8 +38,9 @@ use serde_json::Value;
 ///
 /// # Security Note
 ///
-/// The master key is derived from the `BEARDOG_MASTER_KEY` environment variable.
-/// If not set, a default value is used (suitable for development only).
+/// The master key is read from the `BEARDOG_MASTER_KEY` environment variable.
+/// If unset, an ephemeral random key is generated per process lifetime.
+/// Ephemeral keys mean derived material does NOT survive restarts.
 /// In production, always set a strong, random `BEARDOG_MASTER_KEY`.
 ///
 /// # Example
@@ -57,9 +59,24 @@ pub(crate) fn derive_key_from_id_for_tests(
 }
 
 pub(super) fn derive_key_from_id(key_id: &str, purpose: &str) -> Result<[u8; 32], String> {
-    // Get master key from environment or generate deterministic key
-    let master_key = beardog_errors::process_env::var("BEARDOG_MASTER_KEY")
-        .unwrap_or_else(|_| "beardog_default_master_key_v1".to_string());
+    use std::sync::OnceLock;
+
+    static EPHEMERAL_KEY: OnceLock<String> = OnceLock::new();
+
+    let master_key = beardog_errors::process_env::var("BEARDOG_MASTER_KEY").unwrap_or_else(|_| {
+        EPHEMERAL_KEY
+            .get_or_init(|| {
+                let mut buf = [0u8; 32];
+                rand::rng().fill_bytes(&mut buf);
+                let hex = hex::encode(buf);
+                tracing::warn!(
+                    "BEARDOG_MASTER_KEY not set — using ephemeral random key. \
+                         Keys will not survive restarts. Set BEARDOG_MASTER_KEY for persistence."
+                );
+                hex
+            })
+            .clone()
+    });
 
     // Derive key using BLAKE3 KDF
     let context = format!("beardog_crypto_v1:{key_id}:{purpose}");

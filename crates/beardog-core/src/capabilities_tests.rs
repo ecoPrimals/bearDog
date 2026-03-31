@@ -485,13 +485,13 @@ mod capability_chaos_tests {
     #[test]
     fn test_chaos_random_capability_types() {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let caps = BearDogCapabilities::new(Some("nat0".to_string()), "tower1".to_string());
 
         // Test with random capability types
         for _ in 0..100 {
-            let random_type = rng.gen_range(0..7);
+            let random_type = rng.random_range(0..7);
             let capability = match random_type {
                 0 => Capability::Encryption {
                     algorithms: vec!["any".to_string()],

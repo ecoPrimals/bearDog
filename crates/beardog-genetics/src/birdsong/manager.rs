@@ -247,8 +247,9 @@ impl BirdSongManager {
     ) -> Result<Vec<u8>, BearDogError> {
         use chacha20poly1305::{
             ChaCha20Poly1305, Nonce,
-            aead::{Aead, KeyInit, OsRng, rand_core::RngCore},
+            aead::{Aead, KeyInit},
         };
+        use rand::RngCore;
         use sha3::{Digest, Sha3_256};
 
         // Derive 256-bit key from family_id using SHA3
@@ -263,7 +264,8 @@ impl BirdSongManager {
 
         // Generate random nonce (ChaCha20-Poly1305 uses 12 bytes)
         let mut nonce_bytes = [0u8; 12];
-        OsRng.fill_bytes(&mut nonce_bytes);
+        let mut rng = rand::rng();
+        rng.fill_bytes(&mut nonce_bytes);
         let nonce = Nonce::from_slice(&nonce_bytes);
 
         // Encrypt

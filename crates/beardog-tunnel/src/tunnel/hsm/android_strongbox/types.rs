@@ -371,8 +371,8 @@ impl AndroidAttestationService {
         // 3. Return signed certificate chain
 
         // For now, return placeholder attestation
-        Err(BearDogError::not_implemented(
-            "Device attestation - requires JNI implementation",
+        Err(BearDogError::not_yet_available(
+            "Device attestation requires Android Keystore JNI integration capability",
         ))
     }
 }
@@ -397,7 +397,7 @@ impl ChallengeGenerator {
         // Use secure random generation
         let mut challenge = vec![0u8; length];
         use rand::RngCore;
-        rand::thread_rng().fill_bytes(&mut challenge);
+        rand::rng().fill_bytes(&mut challenge);
         Ok(challenge)
     }
 }

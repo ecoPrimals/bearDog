@@ -159,55 +159,47 @@ impl ServiceRegistryDiscovery {
     async fn discover_registry_providers(&self) -> Result<()> {
         info!("🔍 Discovering service registry providers (capability-based)");
 
-        // Use mDNS/DNS-SD to find services with "service_registry" capability
-        let providers = self.discover_via_mdns("service_registry").await?;
-
-        if providers.is_empty() {
-            warn!("⚠️  No service registry providers discovered");
-            warn!("   Hint: Start a service registry (Consul, etcd, or ecosystem storage primal)");
-            warn!("   Or use mDNS/DNS-SD discovery instead");
-            return Err(DiscoveryError::BackendUnavailable {
-                provider: "service_registry".to_string(),
-                reason: "No providers discovered (try mDNS/DNS-SD)".to_string(),
-            });
+        #[cfg(feature = "mdns")]
+        {
+            let providers = self.discover_via_mdns("service_registry").await?;
+            if !providers.is_empty() {
+                *self.registry_providers.write().await = providers;
+                return Ok(());
+            }
         }
 
-        *self.registry_providers.write().await = providers;
-        Ok(())
+        warn!("No service registry providers discovered via biomeOS capability scan");
+        warn!("  Hint: ensure biomeOS Neural API is running or set capability env vars");
+        Err(DiscoveryError::BackendUnavailable {
+            provider: "service_registry".to_string(),
+            reason: "No providers discovered (biomeOS Neural API not reachable)".to_string(),
+        })
     }
 
-    /// Discover providers via mDNS (capability-based)
+    /// Discover providers via mDNS (capability-based).
     ///
-    /// Uses the `MdnsDiscovery` module to find services advertising the capability.
-    /// Returns providers that can be queried for services.
+    /// Gated behind `mdns` feature — biomeOS owns network discovery per
+    /// `PRIMAL_RESPONSIBILITY_MATRIX` V2.
+    #[cfg(feature = "mdns")]
     async fn discover_via_mdns(&self, capability: &str) -> Result<Vec<DiscoveredProvider>> {
-        debug!("🔍 mDNS discovery for capability: {}", capability);
+        debug!("mDNS discovery for capability: {}", capability);
 
-        // Initialize mDNS discovery (no hardcoding - runtime discovery!)
         let mdns = match crate::mdns::MdnsDiscovery::new() {
             Ok(m) => m,
             Err(e) => {
-                warn!(
-                    "⚠️ mDNS initialization failed: {} - using fallback discovery",
-                    e
-                );
+                warn!("mDNS initialization failed: {e} — using fallback discovery");
                 return Ok(Vec::new());
             }
         };
 
-        // Discover services advertising this capability
         let services = match mdns.discover(capability).await {
             Ok(s) => s,
             Err(e) => {
-                warn!(
-                    "⚠️ mDNS discovery failed: {} - continuing with empty results",
-                    e
-                );
+                warn!("mDNS discovery failed: {e} — continuing with empty results");
                 return Ok(Vec::new());
             }
         };
 
-        // Convert discovered services to providers
         let providers: Vec<DiscoveredProvider> = services
             .into_iter()
             .map(|service| DiscoveredProvider {
@@ -223,9 +215,8 @@ impl ServiceRegistryDiscovery {
             .collect();
 
         info!(
-            "✅ mDNS discovered {} providers for {}",
+            "mDNS discovered {} providers for {capability}",
             providers.len(),
-            capability
         );
         Ok(providers)
     }

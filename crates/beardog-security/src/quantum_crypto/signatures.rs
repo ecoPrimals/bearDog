@@ -14,6 +14,7 @@ use super::types::{
     dilithium_sizes::*,
 };
 use beardog_errors::BearDogError;
+use rand::RngCore;
 
 // ============================================================
 // Dilithium Engine
@@ -42,8 +43,7 @@ impl DilithiumEngine {
     ///
     /// Currently infallible in this simulation.
     pub fn generate_keypair(&self) -> Result<QuantumSignature, BearDogError> {
-        use rand::RngCore;
-        let mut rng = rand::rngs::OsRng;
+        let mut rng = rand::rng();
 
         let (pk_size, sk_size, algorithm) = match self.security_level {
             SecurityLevel::Level1 | SecurityLevel::Level2 => (
@@ -90,8 +90,7 @@ impl DilithiumEngine {
         _private_key: &[u8],
         _message: &[u8],
     ) -> Result<QuantumSignatureResult, BearDogError> {
-        use rand::RngCore;
-        let mut rng = rand::rngs::OsRng;
+        let mut rng = rand::rng();
 
         let (sig_size, algorithm) = match self.security_level {
             SecurityLevel::Level1 | SecurityLevel::Level2 => {
@@ -187,14 +186,13 @@ impl SphincsEngine {
     ///
     /// Currently infallible in this simulation.
     pub fn generate_keypair(&self) -> Result<QuantumSignature, BearDogError> {
-        use rand::RngCore;
-        let mut rng = rand::rngs::OsRng;
+        let mut rng = rand::rng();
 
         let mut public_key = vec![0u8; SPHINCS_PK_SIZE];
         let mut private_key_data = vec![0u8; SPHINCS_SK_SIZE];
 
-        rng.fill_bytes(&mut public_key);
-        rng.fill_bytes(&mut private_key_data);
+        rand_core::RngCore::fill_bytes(&mut rng, &mut public_key);
+        rand_core::RngCore::fill_bytes(&mut rng, &mut private_key_data);
 
         Ok(QuantumSignature {
             public_key,
@@ -214,11 +212,10 @@ impl SphincsEngine {
         _private_key: &[u8],
         _message: &[u8],
     ) -> Result<QuantumSignatureResult, BearDogError> {
-        use rand::RngCore;
-        let mut rng = rand::rngs::OsRng;
+        let mut rng = rand::rng();
 
         let mut signature = vec![0u8; SPHINCS_SIG_SIZE];
-        rng.fill_bytes(&mut signature);
+        rand_core::RngCore::fill_bytes(&mut rng, &mut signature);
 
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)

@@ -139,6 +139,10 @@ impl BinaryValidator {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if reading file metadata or the binary contents for checks fails.
     pub async fn validate_binary(
         &self,
         primal: PrimalName,

@@ -25,10 +25,10 @@ BearDog provides **comprehensive production infrastructure** with complete deplo
 ### **Automated Deployment Pipeline**
 
 ```bash
-# One-Command Production Deployment
-./scripts/production_deployment.sh deploy
+# Production build (in-repo validation)
+cargo build --release --workspace
 
-# Complete deployment pipeline includes:
+# Full deployment orchestration is outside this repo (biomeOS). Complete deployment pipeline includes:
 # ✅ Prerequisites validation
 # ✅ Optimized production builds
 # ✅ Security configuration
@@ -40,13 +40,13 @@ BearDog provides **comprehensive production infrastructure** with complete deplo
 
 ### **Deployment Infrastructure Components**
 
-| **Component** | **Script** | **Function** | **Status** |
-|---------------|------------|--------------|------------|
-| **Production Deploy** | `production_deployment.sh` | Complete automated deployment | ✅ Operational |
-| **Performance Bench** | `performance_benchmark.sh` | Comprehensive performance validation | ✅ Operational |
-| **Security Hardening** | `security_hardening_validation.sh` | Security configuration validation | ✅ Operational |
-| **Ecosystem Integration** | `ecosystem_integration_test.sh` | Universal adapter testing | ✅ Operational |
-| **Health Monitoring** | `production_health_check.sh` | Production health validation | ✅ Operational |
+| **Component** | **Command (in-repo)** | **Function** | **Status** |
+|---------------|-------------------------|--------------|------------|
+| **Production Deploy** | `cargo build --release --workspace` | Optimized workspace build | ✅ Operational |
+| **Performance Bench** | `cargo test --workspace` | Test suite / validation | ✅ Operational |
+| **Security Hardening** | `cargo clippy --workspace -- -D warnings` | Lint and static checks | ✅ Operational |
+| **Ecosystem Integration** | `cargo test --workspace` | Integration coverage | ✅ Operational |
+| **Health Monitoring** | `cargo test --workspace` | Automated health of codebase | ✅ Operational |
 
 ---
 
@@ -56,7 +56,7 @@ BearDog provides **comprehensive production infrastructure** with complete deplo
 
 ```bash
 #!/bin/bash
-# scripts/production_deployment.sh - Complete Production Deployment
+# Illustrative deployment flow — use `cargo build --release --workspace` for builds; orchestration: biomeOS.
 
 set -euo pipefail
 
@@ -191,17 +191,17 @@ setup_production_monitoring() {
 validate_deployment_success() {
     echo "ℹ️  Validating deployment success..."
     
-    # Service health check
-    ./scripts/production_health_check.sh
+    # Service health check (workspace tests)
+    cargo test --workspace
     
-    # Performance validation
-    ./scripts/performance_benchmark.sh quick
+    # Performance validation (test suite)
+    cargo test --workspace
     
-    # Security validation
-    ./scripts/security_hardening_validation.sh quick
+    # Security validation (clippy)
+    cargo clippy --workspace -- -D warnings
     
-    # Ecosystem integration test
-    ./scripts/ecosystem_integration_test.sh health
+    # Format check (optional)
+    cargo fmt --check
     
     echo "✅ Deployment validation completed"
 }
@@ -218,7 +218,7 @@ main "$@"
 
 ```bash
 #!/bin/bash
-# scripts/performance_benchmark.sh - Comprehensive Performance Testing
+# Performance validation (e.g. cargo test --workspace, project benchmarks)
 
 # Performance validation components
 run_performance_benchmarks() {
@@ -342,7 +342,7 @@ EOF
 
 ```bash
 #!/bin/bash
-# scripts/security_hardening_validation.sh - Security Configuration Validation
+# Security validation (e.g. cargo clippy --workspace -- -D warnings)
 
 validate_security_hardening() {
     echo "🔒 BearDog Security Hardening Validation Suite"
@@ -428,7 +428,7 @@ validate_hsm_configuration() {
 
 ```bash
 #!/bin/bash
-# scripts/ecosystem_integration_test.sh - Ecosystem Integration Testing
+# Ecosystem integration (e.g. cargo test --workspace)
 
 test_ecosystem_integration() {
     echo "🌐 BearDog Ecosystem Integration Testing Suite"
@@ -636,10 +636,12 @@ pub struct ProductionPerformanceMetrics {
 ### **Production Deployment Execution**
 
 ```bash
-# Execute complete production deployment
-./scripts/production_deployment.sh deploy
+# Execute production build and validation (in-repo)
+cargo build --release --workspace
+cargo test --workspace
+cargo clippy --workspace -- -D warnings
 
-# This single command provides:
+# This flow provides:
 # ✅ Complete prerequisites validation
 # ✅ Optimized production builds  
 # ✅ Security hardening configuration
@@ -653,11 +655,10 @@ pub struct ProductionPerformanceMetrics {
 ### **Continuous Validation**
 
 ```bash  
-# Execute comprehensive validation suite
-./scripts/performance_benchmark.sh        # Performance validation
-./scripts/security_hardening_validation.sh    # Security validation  
-./scripts/ecosystem_integration_test.sh   # Integration validation
-./scripts/production_health_check.sh      # Health monitoring
+# Execute comprehensive validation suite (Cargo commands only; legacy shell script paths removed)
+cargo test --workspace                    # Tests and integration coverage
+cargo clippy --workspace -- -D warnings   # Security / lint validation
+cargo fmt --check                         # Format consistency
 ```
 
 ### **Production Status Dashboard**

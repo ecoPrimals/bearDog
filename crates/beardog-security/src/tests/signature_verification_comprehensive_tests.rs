@@ -14,9 +14,8 @@ mod signature_tests {
 
     // Helper function to generate a signing key
     fn generate_signing_key() -> SigningKey {
-        let mut csprng = rand::rngs::OsRng;
         let mut seed = [0u8; 32];
-        csprng.fill_bytes(&mut seed);
+        rand::rng().fill_bytes(&mut seed);
         SigningKey::from_bytes(&seed)
     }
 

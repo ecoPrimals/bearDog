@@ -37,7 +37,7 @@ fn test_software_hsm() -> Result<(), Box<dyn std::error::Error>> {
 
     let start = Instant::now();
     let mut entropy = vec![0u8; 256];
-    rand::thread_rng().fill_bytes(&mut entropy);
+    rand::rng().fill_bytes(&mut entropy);
     let elapsed = start.elapsed();
 
     let shannon = calculate_shannon_entropy(&entropy);
@@ -97,7 +97,7 @@ fn test_titan_m() -> Result<(), Box<dyn std::error::Error>> {
 
             // On Android, getrandom() uses the hardware entropy source
             use rand::RngCore;
-            rand::thread_rng().fill_bytes(&mut entropy);
+            rand::rng().fill_bytes(&mut entropy);
 
             let elapsed = start.elapsed();
 

@@ -90,7 +90,9 @@ impl SafeIosProvider {
             key_id
         );
 
-        Err(BearDogError::not_implemented("iOS Secure Enclave: Phase 2"))
+        Err(BearDogError::not_yet_available(
+            "iOS Secure Enclave integration requires Secure Enclave device binding and native crypto wiring",
+        ))
     }
 
     #[cfg(not(target_os = "ios"))]
@@ -99,7 +101,9 @@ impl SafeIosProvider {
         _key_id: &str,
         _key_type: &KeyType,
     ) -> Result<HsmKey, BearDogError> {
-        Err(BearDogError::not_implemented("iOS Secure Enclave: Phase 2"))
+        Err(BearDogError::unsupported_platform(
+            "iOS Secure Enclave not available on this platform",
+        ))
     }
 
     /// Safe data signing implementation
@@ -136,7 +140,9 @@ impl SafeIosProvider {
             key_id
         );
 
-        Err(BearDogError::not_implemented("iOS Secure Enclave: Phase 2"))
+        Err(BearDogError::not_yet_available(
+            "iOS Secure Enclave integration requires Secure Enclave device binding and native crypto wiring",
+        ))
     }
 
     #[cfg(not(target_os = "ios"))]
@@ -145,7 +151,9 @@ impl SafeIosProvider {
         _key_id: &str,
         _data: &[u8],
     ) -> Result<Vec<u8>, BearDogError> {
-        Err(BearDogError::not_implemented("iOS Secure Enclave: Phase 2"))
+        Err(BearDogError::unsupported_platform(
+            "iOS Secure Enclave not available on this platform",
+        ))
     }
 
     /// Safe signature verification implementation
@@ -184,7 +192,9 @@ impl SafeIosProvider {
             key_id
         );
 
-        Err(BearDogError::not_implemented("iOS Secure Enclave: Phase 2"))
+        Err(BearDogError::not_yet_available(
+            "iOS Secure Enclave integration requires Secure Enclave device binding and native crypto wiring",
+        ))
     }
 
     #[cfg(not(target_os = "ios"))]
@@ -194,7 +204,9 @@ impl SafeIosProvider {
         _data: &[u8],
         _signature: &[u8],
     ) -> Result<bool, BearDogError> {
-        Err(BearDogError::not_implemented("iOS Secure Enclave: Phase 2"))
+        Err(BearDogError::unsupported_platform(
+            "iOS Secure Enclave not available on this platform",
+        ))
     }
 
     /// Get capabilities of this provider
@@ -237,16 +249,20 @@ mod tests {
     use beardog_errors::{BearDogError, SystemErrorCategory};
     use serial_test::serial;
 
-    fn assert_ios_se_phase2_not_implemented(err: BearDogError) {
+    fn assert_ios_secure_enclave_stub_err(err: BearDogError) {
         match err {
             BearDogError::System { category, message } => {
-                assert_eq!(category, SystemErrorCategory::NotImplemented);
                 assert!(
-                    message.contains("iOS Secure Enclave: Phase 2"),
+                    category == SystemErrorCategory::NotImplemented
+                        || category == SystemErrorCategory::NotSupported,
+                    "unexpected category: {category:?}"
+                );
+                assert!(
+                    message.contains("iOS Secure Enclave"),
                     "unexpected message: {message}"
                 );
             }
-            other => panic!("expected System NotImplemented, got {other:?}"),
+            other => panic!("expected System error, got {other:?}"),
         }
     }
 
@@ -337,8 +353,8 @@ mod tests {
         let provider = SafeIosProvider::new().expect("provider");
         let err = provider
             .generate_key("k-fallback", &KeyType::EllipticCurve)
-            .expect_err("keygen until Phase 2");
-        assert_ios_se_phase2_not_implemented(err);
+            .expect_err("keygen stub");
+        assert_ios_secure_enclave_stub_err(err);
         match prev {
             Some(v) => beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", v),
             None => beardog_errors::process_env::remove_var("IOS_SECURE_ENCLAVE_AVAILABLE"),
@@ -353,12 +369,12 @@ mod tests {
         let provider = SafeIosProvider::new().expect("provider");
         let err = provider
             .sign_data("sk1", b"hello-ios-safe")
-            .expect_err("sign until Phase 2");
-        assert_ios_se_phase2_not_implemented(err);
+            .expect_err("sign stub");
+        assert_ios_secure_enclave_stub_err(err);
         let err = provider
             .verify_signature("sk1", b"hello-ios-safe", &[0u8; 64])
-            .expect_err("verify until Phase 2");
-        assert_ios_se_phase2_not_implemented(err);
+            .expect_err("verify stub");
+        assert_ios_secure_enclave_stub_err(err);
         match prev {
             Some(v) => beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", v),
             None => beardog_errors::process_env::remove_var("IOS_SECURE_ENCLAVE_AVAILABLE"),
@@ -373,8 +389,8 @@ mod tests {
         let provider = SafeIosProvider::new().expect("provider");
         let err = provider
             .verify_signature("vk", b"data", &[0u8; 8])
-            .expect_err("verify until Phase 2");
-        assert_ios_se_phase2_not_implemented(err);
+            .expect_err("verify stub");
+        assert_ios_secure_enclave_stub_err(err);
         match prev {
             Some(v) => beardog_errors::process_env::set_var("IOS_SECURE_ENCLAVE_AVAILABLE", v),
             None => beardog_errors::process_env::remove_var("IOS_SECURE_ENCLAVE_AVAILABLE"),

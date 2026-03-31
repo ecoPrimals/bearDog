@@ -3,7 +3,7 @@
 //! Coverage: genesis types (GenesisWitness, GeneticLineage, PhysicalChannelProof).
 
 // ═══════════════════════════════════════════════════════════════════
-// birdsong/genesis_types.rs - GenesisWitness, GeneticLineage, PhysicalChannelProof
+// birdsong/genesis_types/ - GenesisWitness, GeneticLineage, PhysicalChannelProof
 // ═══════════════════════════════════════════════════════════════════
 
 mod genesis_types_tests {

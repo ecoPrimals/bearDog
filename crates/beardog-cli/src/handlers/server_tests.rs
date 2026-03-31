@@ -7,6 +7,7 @@ mod tests {
 
     use crate::ServerArgs;
     use crate::handlers::server::resolve_server_socket_path;
+    use beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_ipc_subdir_from_optional;
 
     #[test]
     fn test_server_args_creation() {
@@ -15,6 +16,7 @@ mod tests {
             r#abstract: false,
             port: None,
             listen: None,
+            audit_dir: None,
             family_id: Some("test_family".to_string()),
             orchestrator_id: Some("test_orch".to_string()),
         };
@@ -33,6 +35,7 @@ mod tests {
             r#abstract: false,
             port: None,
             listen: None,
+            audit_dir: None,
             family_id: None,
             orchestrator_id: None,
         };
@@ -50,6 +53,7 @@ mod tests {
             r#abstract: true,
             port: None,
             listen: None,
+            audit_dir: None,
             family_id: Some("stun_test".to_string()),
             orchestrator_id: None,
         };
@@ -65,12 +69,14 @@ mod tests {
             r#abstract: true,
             port: None,
             listen: None,
+            audit_dir: None,
             family_id: None,
             orchestrator_id: None,
         };
+        let ns = resolve_biomeos_ipc_subdir_from_optional(None);
         assert_eq!(
             resolve_server_socket_path(&args),
-            "@biomeos_beardog_default"
+            format!("@{ns}_beardog_default")
         );
     }
 
@@ -81,10 +87,15 @@ mod tests {
             r#abstract: true,
             port: None,
             listen: None,
+            audit_dir: None,
             family_id: Some("alpha".to_string()),
             orchestrator_id: None,
         };
-        assert_eq!(resolve_server_socket_path(&args), "@biomeos_beardog_alpha");
+        let ns = resolve_biomeos_ipc_subdir_from_optional(None);
+        assert_eq!(
+            resolve_server_socket_path(&args),
+            format!("@{ns}_beardog_alpha")
+        );
     }
 
     #[test]
@@ -94,6 +105,7 @@ mod tests {
             r#abstract: false,
             port: None,
             listen: None,
+            audit_dir: None,
             family_id: Some("fam99".to_string()),
             orchestrator_id: None,
         };
@@ -110,6 +122,7 @@ mod tests {
             r#abstract: false,
             port: None,
             listen: None,
+            audit_dir: None,
             family_id: None,
             orchestrator_id: None,
         };
@@ -123,6 +136,7 @@ mod tests {
             r#abstract: true,
             port: None,
             listen: None,
+            audit_dir: None,
             family_id: Some("family1".to_string()),
             orchestrator_id: Some("orch1".to_string()),
         };

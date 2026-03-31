@@ -23,18 +23,18 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "0.8"
 
-# mDNS discovery
-mdns-sd = "0.11"
+# mDNS discovery (biomeOS owns network discovery — feature-gated, off by default)
+mdns-sd = { version = "0.11", optional = true }
 
-# DNS-SD discovery (hickory-resolver is the maintained successor to trust-dns-resolver)
-hickory-resolver = "0.25"
+# DNS-SD discovery (biomeOS owns network discovery — feature-gated, off by default)
+hickory-resolver = { version = "0.25", optional = true }
 
 # REMOVED: HTTP client (not needed - Unix sockets + mDNS only!)
 # reqwest = { workspace = true }
 
 # Error handling
 anyhow = "1.0"
-thiserror = "1.0"
+thiserror = { workspace = true }
 beardog-errors = { path = "../beardog-errors" }
 
 # Logging
@@ -58,9 +58,10 @@ serde_json = "1.0"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 
 [features]
-default = ["mdns", "dns-sd", "service-registry"]
-mdns = []
-dns-sd = []
+default = ["service-registry"]
+# biomeOS owns network discovery — these are opt-in for standalone/legacy use
+mdns = ["dep:mdns-sd"]
+dns-sd = ["dep:hickory-resolver"]
 service-registry = []
 network-scan = []  # Opt-in only (slow)
 

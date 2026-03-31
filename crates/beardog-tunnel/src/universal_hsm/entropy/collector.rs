@@ -71,7 +71,7 @@ impl EntropyCollector {
 
         // Source 1: OS CSPRNG (primary source)
         let mut os_entropy = vec![0u8; num_bytes];
-        rand::rngs::OsRng.fill_bytes(&mut os_entropy);
+        rand::rng().fill_bytes(&mut os_entropy);
         entropy_pool.extend_from_slice(&os_entropy);
 
         // Source 2: System timing jitter

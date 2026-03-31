@@ -270,7 +270,7 @@ pub fn decrypt_chacha20_poly1305(
 fn generate_random_nonce() -> [u8; 12] {
     use rand::RngCore;
     let mut nonce = [0u8; 12];
-    rand::thread_rng().fill_bytes(&mut nonce);
+    rand::rng().fill_bytes(&mut nonce);
     nonce
 }
 

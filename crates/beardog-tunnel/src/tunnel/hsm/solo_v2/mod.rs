@@ -2,13 +2,13 @@
 
 //! Solo V2 USB Security Key HSM Provider
 //!
-//! Provides hardware-backed cryptographic operations using SoloKeys Solo V2
+//! Provides hardware-backed cryptographic operations using `SoloKeys` Solo V2
 //! USB security keys via the FIDO2/CTAP2 protocol.
 //!
 //! # Overview
 //!
 //! This module integrates Solo V2 hardware security keys as an HSM provider
-//! for BearDog. It uses the CTAP2 (Client to Authenticator Protocol 2) to
+//! for `BearDog`. It uses the CTAP2 (Client to Authenticator Protocol 2) to
 //! communicate with the device over USB HID.
 //!
 //! # Features
@@ -78,8 +78,21 @@
 //! - Limited key storage (device-dependent)
 //! - Platform-specific USB permissions
 
+pub mod ctap2_protocol;
 pub mod provider;
+pub mod transport;
 pub mod types;
 
+#[cfg(feature = "ctap2")]
+pub mod hid_transport;
+
+#[cfg(feature = "ctap2")]
+pub use hid_transport::HidCtap2Transport;
+
+pub use ctap2_protocol::{
+    GetAssertionResponse, MakeCredentialResponse, build_get_assertion, build_make_credential,
+    parse_get_assertion_response, parse_make_credential_response,
+};
 pub use provider::SoloV2Provider;
+pub use transport::Ctap2Transport;
 pub use types::*;

@@ -245,7 +245,7 @@ impl Kyber768 {
     fn keypair() -> Kyber768KeyPair {
         // Simulated key generation with realistic sizes
         // Real Kyber768: pk=1184 bytes, sk=2400 bytes
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         let mut public_key = vec![0u8; 1184];
         rng.fill_bytes(&mut public_key);
@@ -262,7 +262,7 @@ impl Kyber768 {
     fn encapsulate(public_key: &[u8]) -> Kyber768Ciphertext {
         // Simulated encapsulation
         // Real Kyber768: ciphertext=1088 bytes, shared_secret=32 bytes
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         let mut ciphertext = vec![0u8; 1088];
         rng.fill_bytes(&mut ciphertext);
@@ -296,7 +296,7 @@ impl Dilithium3 {
     fn keypair() -> Dilithium3KeyPair {
         // Simulated key generation with realistic sizes
         // Real Dilithium3: pk=1952 bytes, sk=4000 bytes
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         let mut public_key = vec![0u8; 1952];
         rng.fill_bytes(&mut public_key);
@@ -348,7 +348,7 @@ struct HybridKeyPair {
 impl HybridKeyPair {
     fn generate() -> Self {
         use rand::RngCore;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut bytes = [0u8; 32];
         rng.fill_bytes(&mut bytes);
         let classical_sign = SigningKey::from_bytes(&bytes);
@@ -400,7 +400,7 @@ struct HybridKEM {
 
 fn hybrid_kem_encapsulate(classical_pk: &X25519PublicKey, pqc_pk: &[u8]) -> (HybridKEM, Vec<u8>, Vec<u8>) {
     // Classical X25519 ECDH
-    let classical_secret = EphemeralSecret::random_from_rng(&mut rand::thread_rng());
+    let classical_secret = EphemeralSecret::random_from_rng(&mut rand::rng());
     let classical_public = X25519PublicKey::from(&classical_secret);
     let classical_shared = classical_secret.diffie_hellman(classical_pk).to_bytes().to_vec();
     
@@ -701,7 +701,7 @@ impl PostQuantumDemo {
             }
             "hybrid_kem" => {
                 // Test hybrid KEM
-                let classical_secret = EphemeralSecret::random_from_rng(&mut rand::thread_rng());
+                let classical_secret = EphemeralSecret::random_from_rng(&mut rand::rng());
                 let classical_public = X25519PublicKey::from(&classical_secret);
                 let kyber_kp = Kyber768::keypair();
                 

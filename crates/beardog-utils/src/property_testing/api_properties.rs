@@ -6,6 +6,10 @@ use super::{BearDogError, PropertyBasedTestFramework, TestCase, info};
 
 impl PropertyBasedTestFramework {
     /// Test API validation properties
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from test case generation or nested API validation checks.
     pub fn test_api_validation_properties(&mut self) -> Result<(), BearDogError> {
         info!("🌐 Testing API Validation Properties");
 
@@ -22,6 +26,10 @@ impl PropertyBasedTestFramework {
     }
 
     /// Synthesizes [`TestCase`] rows using [`PropertyBasedTestFramework::generate_api_input_data`].
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from [`PropertyBasedTestFramework::generate_api_input_data`].
     pub fn generate_api_test_cases(&mut self) -> Result<(), BearDogError> {
         info!("🎲 Generating API test cases");
 

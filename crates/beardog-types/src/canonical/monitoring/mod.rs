@@ -50,6 +50,9 @@ pub mod security;
 /// Tracing module
 pub mod tracing;
 
+/// Default Jaeger collector HTTP ingest port (HTTP `/api/traces`).
+pub const DEFAULT_JAEGER_COLLECTOR_PORT: u16 = 14268;
+
 // Re-export all configuration types for easy access
 // Note: Some type names are intentionally duplicated across modules for flexibility
 #[allow(ambiguous_glob_reexports)]
@@ -288,7 +291,10 @@ impl Default for JaegerExporterConfig {
             endpoint: std::env::var("BEARDOG_JAEGER_ENDPOINT")
                 .or_else(|_| std::env::var("JAEGER_ENDPOINT"))
                 .unwrap_or_else(|_| {
-                    format!("http://{}:14268/api/traces", network_config.default_host)
+                    format!(
+                        "http://{}:{}/api/traces",
+                        network_config.default_host, DEFAULT_JAEGER_COLLECTOR_PORT
+                    )
                 }),
             service_name: "beardog ".to_string(),
             sampling_rate: 0.1,

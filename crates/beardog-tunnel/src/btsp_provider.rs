@@ -667,9 +667,9 @@ impl BeardogBtspProvider {
         );
 
         // Generate random session key material
-        use rand::{RngCore, rngs::OsRng};
+        use rand::RngCore;
         let mut key_material = vec![0u8; 32];
-        OsRng.fill_bytes(&mut key_material);
+        rand::rng().fill_bytes(&mut key_material);
 
         // Create lineage hint for this peer
         // In production, this would be derived from peer's certificate or previous exchange

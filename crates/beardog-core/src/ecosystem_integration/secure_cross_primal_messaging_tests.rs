@@ -186,7 +186,8 @@ async fn send_to_network_primal_round_trip_updates_metrics() {
             payload: serde_json::Value,
         ) -> Result<serde_json::Value, BearDogError> {
             if payload.get("type").and_then(|v| v.as_str()) == Some("key_exchange_request") {
-                let peer_sk = x25519_dalek::EphemeralSecret::random_from_rng(rand::rngs::OsRng);
+                let peer_sk =
+                    x25519_dalek::EphemeralSecret::random_from_rng(chacha20poly1305::aead::OsRng);
                 let peer_pk = x25519_dalek::PublicKey::from(&peer_sk);
                 return Ok(serde_json::json!({
                     "peer_public_key": hex::encode(peer_pk.as_bytes()),
@@ -343,7 +344,7 @@ async fn establish_secure_session_errors_when_peer_key_wrong_length() {
 
 #[tokio::test]
 async fn establish_secure_session_succeeds_with_valid_peer_public_key() {
-    let peer_sk = x25519_dalek::EphemeralSecret::random_from_rng(rand::rngs::OsRng);
+    let peer_sk = x25519_dalek::EphemeralSecret::random_from_rng(chacha20poly1305::aead::OsRng);
     let peer_pk = x25519_dalek::PublicKey::from(&peer_sk);
 
     #[derive(Debug)]

@@ -6,10 +6,10 @@
 //!
 //! ## Supported Devices
 //!
-//! - **SoloKeys Solo 2**: Full support (FIDO 2.1, hmac-secret extension)
-//! - **YubiKey 5 Series** (FIDO2 mode): Full support
+//! - **`SoloKeys` Solo 2**: Full support (FIDO 2.1, hmac-secret extension)
+//! - **`YubiKey` 5 Series** (FIDO2 mode): Full support
 //! - **Titan Security Key**: Full support
-//! - **OnlyKey**: Compatible devices
+//! - **`OnlyKey`**: Compatible devices
 //! - **Any FIDO2-compliant security key**
 //!
 //! ## Features

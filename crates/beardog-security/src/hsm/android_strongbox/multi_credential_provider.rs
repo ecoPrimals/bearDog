@@ -25,8 +25,8 @@
 //! (SoloKeys) (Pixel 8a)
 //! ```
 
-use beardog_errors::{BearDogError, phase2_not_implemented};
-use beardog_traits::unified::{
+use beardog_errors::BearDogError;
+use beardog_traits::unified::hsm_multi_credential::{
     CredentialHierarchy, CredentialInfo, CredentialNode, CredentialReplicationData,
     CredentialRequest, HsmProtocol, MultiCredentialCapabilities, MultiCredentialHsmProvider,
 };
@@ -158,7 +158,11 @@ impl StrongBoxMultiCredentialProvider {
     /// Create Android KeyGenParameterSpec and generate key
     ///
     /// # Errors
-    /// Returns a PHASE-2 not implemented error with detailed implementation notes.
+    /// Returns `BearDogError::requires_capability` when the Android Keystore JNI/Binder bridge is not available in this build.
+    ///
+    /// Implementation notes (Binder IPC or JNI): call `keystore2.generateKey()` with `SecurityLevel::STRONGBOX`,
+    /// `KeyPurpose::SIGN | VERIFY`, `Digest::SHA_2_256`, and optional user authentication; or use
+    /// `KeyGenParameterSpec` + `KeyPairGenerator` against `AndroidKeyStore` with StrongBox-backed EC keys.
     async fn android_generate_key(
         &self,
         request: &CredentialRequest,
@@ -168,38 +172,19 @@ impl StrongBoxMultiCredentialProvider {
             request.role
         );
 
-        Err(phase2_not_implemented(
-            "Android Keystore Key Generation",
-            "\
-Using Binder IPC (recommended) or JNI bridge:
-
-Binder approach (Fast):
-1. Call keystore2.generateKey() via Binder IPC
-2. Set SecurityLevel::STRONGBOX
-3. Set KeyPurpose::SIGN | KeyPurpose::VERIFY
-4. Set Digest::SHA_2_256
-5. Set user authentication if required
-
-JNI approach (Fallback):
-1. KeyGenParameterSpec.Builder with:
-   - KeyProperties.PURPOSE_SIGN | KeyProperties.PURPOSE_VERIFY
-   - setIsStrongBoxBacked(true)
-   - setDigests(KeyProperties.DIGEST_SHA256)
-   - setUserAuthenticationRequired(request.require_user_verification)
-2. KeyPairGenerator.getInstance(\"EC\", \"AndroidKeyStore\")
-3. keyPairGenerator.initialize(spec)
-4. keyPairGenerator.generateKeyPair()
-
-Estimated effort: 12-20 hours",
-            Some("Use Software HSM with deterministic key derivation"),
-        )
-        .into())
+        Err(BearDogError::requires_capability(
+            "android-keystore",
+            "Android Keystore JNI bridge not available — use Software HSM with deterministic key derivation",
+        ))
     }
 
     /// Sign using Android Keystore key
     ///
     /// # Errors
-    /// Returns a PHASE-2 not implemented error with detailed implementation notes.
+    /// Returns `BearDogError::requires_capability` when the Android Keystore JNI/Binder bridge is not available in this build.
+    ///
+    /// Implementation notes: `keystore2.sign()` via Binder, or `KeyStore` + `Signature` (`SHA256withECDSA`) via JNI;
+    /// BiometricPrompt may be required when user auth is enforced.
     async fn android_sign(
         &self,
         alias: &str,
@@ -208,40 +193,20 @@ Estimated effort: 12-20 hours",
     ) -> Result<Vec<u8>, BearDogError> {
         debug!("Signing {} bytes with Android key: {}", data.len(), alias);
 
-        Err(phase2_not_implemented(
-            "Android Keystore Signing",
-            "\
-Binder approach (recommended):
-1. Call keystore2.sign() via Binder IPC
-2. Pass key alias and data
-3. If require_auth, trigger BiometricPrompt first
-
-JNI approach (fallback):
-1. KeyStore.getInstance(\"AndroidKeyStore\")
-2. keyStore.load(null)
-3. privateKey = keyStore.getKey(alias, null)
-4. Signature.getInstance(\"SHA256withECDSA\")
-5. signature.initSign(privateKey)
-6. signature.update(data)
-7. signature.sign()
-
-Note: BiometricPrompt integration requires UI context.
-
-Estimated effort: 8-12 hours",
-            Some("Use Software HSM signing"),
-        )
-        .into())
+        Err(BearDogError::requires_capability(
+            "android-keystore",
+            "Android Keystore JNI bridge not available — use Software HSM signing",
+        ))
     }
 
     /// List all keys in Android Keystore
     ///
     /// # Errors
-    /// Returns a PHASE-2 not implemented error. Currently returns in-memory cache as fallback.
+    /// Currently returns in-memory cache as fallback (no keystore query in this build).
     async fn android_list_keys(&self) -> Result<Vec<String>, BearDogError> {
         debug!("Listing keys from Android Keystore");
 
-        // NOTE: For now, return in-memory cache (safe fallback)
-        // PHASE-2 will query actual hardware keystore
+        // NOTE: For now, return in-memory cache (safe fallback); full keystore enumeration would use Binder/JNI.
         let creds = self.credentials.read().await;
         Ok(creds.keys().cloned().collect())
     }
@@ -249,25 +214,16 @@ Estimated effort: 8-12 hours",
     /// Delete key from Android Keystore
     ///
     /// # Errors
-    /// Returns a PHASE-2 not implemented error with detailed implementation notes.
+    /// Returns `BearDogError::requires_capability` when the Android Keystore JNI/Binder bridge is not available in this build.
+    ///
+    /// Implementation notes: `keystore2.deleteKey()` via Binder, or `KeyStore.deleteEntry` via JNI.
     async fn android_delete_key(&self, alias: &str) -> Result<(), BearDogError> {
         debug!("Deleting Android key: {}", alias);
 
-        Err(phase2_not_implemented(
-            "Android Keystore Key Deletion",
-            "\
-Binder approach (recommended):
-1. Call keystore2.deleteKey() via Binder IPC
-
-JNI approach (fallback):
-1. KeyStore.getInstance(\"AndroidKeyStore\")
-2. keyStore.load(null)
-3. keyStore.deleteEntry(alias)
-
-Estimated effort: 4-6 hours",
-            Some("Keys in Software HSM can be deleted via provider API"),
-        )
-        .into())
+        Err(BearDogError::requires_capability(
+            "android-keystore",
+            "Android Keystore JNI bridge not available — use Software HSM provider API for key deletion",
+        ))
     }
 
     /// Generate hardware entropy using Android SecureRandom
@@ -276,14 +232,14 @@ Estimated effort: 4-6 hours",
     /// This actually WORKS via Rust's `getrandom()` which uses the kernel's entropy pool,
     /// which on Android is seeded by hardware RNG (including Titan M2).
     ///
-    /// PHASE-2 could add direct SecureRandom access for additional entropy sources.
+    /// Future work: optional direct `SecureRandom` access for additional entropy sources.
     async fn android_hardware_entropy(&self, size: usize) -> Result<Vec<u8>, BearDogError> {
         debug!("Generating {} bytes of entropy from Android hardware", size);
 
         // ✅ THIS ACTUALLY WORKS! getrandom() uses hardware RNG on Android
         use rand::RngCore;
         let mut entropy = vec![0u8; size];
-        rand::thread_rng().fill_bytes(&mut entropy);
+        rand::rng().fill_bytes(&mut entropy);
 
         Ok(entropy)
     }

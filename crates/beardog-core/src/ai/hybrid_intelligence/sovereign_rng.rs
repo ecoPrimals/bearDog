@@ -336,7 +336,7 @@ impl SovereignRng {
             EntropyDistribution::Uniform { min, max } => {
                 for i in 0..rows {
                     for j in 0..cols {
-                        weights[i][j] = rng.gen_range(min..max);
+                        weights[i][j] = rng.random_range(min..max);
                     }
                 }
             }
@@ -344,7 +344,7 @@ impl SovereignRng {
                 let limit = (6.0_f64 / (rows + cols) as f64).sqrt();
                 for i in 0..rows {
                     for j in 0..cols {
-                        weights[i][j] = rng.gen_range(-limit..limit);
+                        weights[i][j] = rng.random_range(-limit..limit);
                     }
                 }
             }
@@ -363,8 +363,8 @@ impl SovereignRng {
 
     fn sample_normal(rng: &mut ChaCha20Rng, mean: f64, stddev: f64) -> f64 {
         // Box-Muller transform
-        let u1: f64 = rng.r#gen();
-        let u2: f64 = rng.r#gen();
+        let u1: f64 = rng.random();
+        let u2: f64 = rng.random();
         let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
         stddev.mul_add(z, mean)
     }

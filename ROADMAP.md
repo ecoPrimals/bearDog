@@ -1,6 +1,6 @@
 # BearDog Roadmap
 
-**Updated**: March 30, 2026
+**Updated**: March 31, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,8 +20,8 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 1000 lines of code (production)
-- 15,320+ tests passing (fully concurrent, zero sleeps in non-chaos)
-- 89.57% line coverage (llvm-cov workspace) — target 90%
+- 14,610+ tests passing (fully concurrent, zero sleeps in non-chaos)
+- 90.16% line coverage (llvm-cov workspace) — target 90%
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - Zero `#[serial_test::serial]` — all tests concurrent via unique isolated resources
 - `cargo deny` passes all 4 checks
@@ -35,7 +35,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - Android StrongBox integration (complete)
 - HSM abstraction (software, PKCS#11, StrongBox)
 - All production `unwrap()`/`expect()` eliminated (zero panic paths)
-- SPDX license headers on all 2,007 .rs files (100%)
+- SPDX license headers on all 1,892 .rs files (100%)
 - ecoBin C-dependency compliance (sysinfo removed, blake3 pure, pprof optional)
 - Smart refactoring of oversized files into submodule directories
 - All mocks isolated behind `cfg(test)` / `test-utils` feature
@@ -59,7 +59,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ### Test Coverage to 90% — DONE (Wave 20)
 
-Coverage reached **90.16% line** (89.32% region, 84.94% function). 15,100+ tests passing.
+Coverage reached **90.16% line** (89.32% region, 84.94% function). 14,610+ tests passing.
 
 ### primalSpring Composition Fixes — DONE (Wave 18c)
 
@@ -116,4 +116,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: March 30, 2026
+**Last Updated**: March 31, 2026

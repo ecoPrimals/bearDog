@@ -67,7 +67,7 @@ impl AndroidStrongBoxHsm {
 
         // Initialize with minimal synchronous setup
         let device_info = Arc::new(AndroidDeviceInfo::detect()?);
-        let keystore = Arc::new(AndroidKeystore::new(config.clone())?);
+        let keystore = Arc::new(AndroidKeystore::with_stub_transport(config.clone())?);
         let attestation_service = Arc::new(AndroidAttestationService::new(Default::default()));
         let health_monitor = Arc::new(AndroidHealthMonitor::new());
 
@@ -94,7 +94,7 @@ impl AndroidStrongBoxHsm {
             info!("📱 Detected Pixel device - excellent StrongBox support");
         }
 
-        let keystore = Arc::new(AndroidKeystore::new(config.clone())?);
+        let keystore = Arc::new(AndroidKeystore::with_stub_transport(config.clone())?);
 
         if !keystore.is_strongbox_available() {
             return Err(BearDogError::system(
@@ -111,7 +111,7 @@ impl AndroidStrongBoxHsm {
             config,
             keystore,
             attestation_service,
-            device_info: device_info.clone(),
+            device_info: Arc::clone(&device_info),
             key_cache: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             health_monitor,
         };
@@ -136,7 +136,9 @@ impl AndroidStrongBoxHsm {
         let key_params = self.configure_strongbox_parameters(spec)?;
 
         // Generate the key in hardware
-        self.keystore.generate_key(&spec.key_id, &key_params)?;
+        self.keystore
+            .generate_key(&spec.key_id, &key_params)
+            .await?;
 
         // Create KeyInfo with proper canonical types
         let key_info = KeyInfo {
@@ -795,7 +797,7 @@ impl HsmKeyProvider for AndroidStrongBoxHsm {
         key_params.set_key_size(key_size);
         key_params.set_strongbox_required(true);
 
-        self.keystore.generate_key(&key_id, &key_params)?;
+        self.keystore.generate_key(&key_id, &key_params).await?;
 
         Ok(KeyHandle {
             key_id,

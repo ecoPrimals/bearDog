@@ -123,7 +123,7 @@ pub async fn handle_sign_ed448(
     // Generate ephemeral Ed448 keypair
     // Note: ed448-goldilocks uses a different key generation approach
     let mut secret_bytes = [0u8; 57]; // Ed448 secret key size
-    rand::rngs::OsRng.fill_bytes(&mut secret_bytes);
+    rand::rng().fill_bytes(&mut secret_bytes);
     
     let secret = Zeroizing::new(secret_bytes);
     let secret_scalar = Ed448Scalar::from_bytes_mod_order_wide(&secret);

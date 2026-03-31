@@ -375,7 +375,7 @@ impl GeneticKeyExchange {
         use sha2::{Digest, Sha256};
 
         let mut key_material = vec![0u8; 32];
-        rand::thread_rng().fill_bytes(&mut key_material);
+        rand::rng().fill_bytes(&mut key_material);
 
         // Create genetic fingerprint
         let mut hasher = Sha256::new();

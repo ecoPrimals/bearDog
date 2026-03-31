@@ -43,8 +43,8 @@ Cryptographic specifications and security protocols.
 | Spec | Status | Description |
 |------|--------|-------------|
 | [TOR_CAPABILITY_SPECIFICATION](current/security/TOR_CAPABILITY_SPECIFICATION.md) | Current | Tor v3 onion crypto (8 RPC methods) |
-| [TOR_PHASE2_NTOR_HANDSHAKE](current/security/TOR_PHASE2_NTOR_HANDSHAKE.md) | Current | ntor handshake protocol |
-| [TOR_PHASE2_CELL_CRYPTO](current/security/TOR_PHASE2_CELL_CRYPTO.md) | Current | Relay cell encryption |
+| [TOR_PHASE2_NTOR_HANDSHAKE](current/security/TOR_PHASE2_NTOR_HANDSHAKE.md) | Planning | ntor handshake protocol |
+| [TOR_PHASE2_CELL_CRYPTO](current/security/TOR_PHASE2_CELL_CRYPTO.md) | Planning | Relay cell encryption |
 | [ENTROPY_SECURITY_SPECIFICATION](current/security/ENTROPY_SECURITY_SPECIFICATION.md) | Current | Entropy hierarchy |
 | [UNIVERSAL_HSM_SPECIFICATION](current/security/UNIVERSAL_HSM_SPECIFICATION.md) | Current | Hardware security modules |
 | [UNIVERSAL_CRYPTO_PROVIDER_ARCHITECTURE](current/security/UNIVERSAL_CRYPTO_PROVIDER_ARCHITECTURE.md) | Current | Crypto provider pattern |

@@ -6,8 +6,26 @@
 
 use serde::{Deserialize, Serialize};
 
-// Re-export from parent module for convenience
-pub use super::HsmCapabilities;
+/// HSM hardware capability detection results
+#[derive(Debug, Clone)]
+pub struct HsmCapabilities {
+    /// Whether the HSM supports key generation operations
+    pub supports_key_generation: bool,
+    /// Whether the HSM supports signing operations
+    pub supports_signing: bool,
+    /// Whether the HSM supports encryption operations
+    pub supports_encryption: bool,
+}
+
+impl Default for HsmCapabilities {
+    fn default() -> Self {
+        Self {
+            supports_key_generation: true,
+            supports_signing: true,
+            supports_encryption: true,
+        }
+    }
+}
 
 /// HSM capability enumeration
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

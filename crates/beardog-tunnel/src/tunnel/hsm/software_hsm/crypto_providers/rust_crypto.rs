@@ -51,7 +51,7 @@ impl CryptoProvider<KeyType> for RustCryptoProvider {
             reason = "key sizes from KeyType are positive byte lengths"
         )]
         let mut key_material = vec![0u8; key_length as usize];
-        rand::thread_rng().fill_bytes(&mut key_material);
+        rand::rng().fill_bytes(&mut key_material);
         debug!("Generated {} byte key", key_material.len());
         Ok(key_material)
     }

@@ -1,5 +1,7 @@
 # beardog-deploy
 
+**Note:** This crate is excluded from the workspace. Deployment orchestration is owned by biomeOS per PRIMAL_RESPONSIBILITY_MATRIX.
+
 Deployment automation and orchestration
 
 ## Overview

@@ -180,7 +180,7 @@ impl Prover {
     fn new(config: DemoConfig) -> Self {
         // Generate a random private key
         use rand::RngCore;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut bytes = [0u8; 32];
         rng.fill_bytes(&mut bytes);
         let private_key = Scalar::from_bytes_mod_order(bytes);
@@ -205,7 +205,7 @@ impl Prover {
     /// Generate commitment for Schnorr protocol
     fn generate_commitment(&self) -> (Scalar, RistrettoPoint) {
         use rand::RngCore;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut bytes = [0u8; 32];
         rng.fill_bytes(&mut bytes);
         let r = Scalar::from_bytes_mod_order(bytes);
@@ -555,7 +555,7 @@ impl ZkpDemo {
                 if test_case.tamper.as_ref().map(|s| s.as_str()) == Some("use_wrong_key") {
                     // Use a different key than the one in the proof
                     use rand::RngCore;
-                    let mut rng = rand::thread_rng();
+                    let mut rng = rand::rng();
                     let mut bytes = [0u8; 32];
                     rng.fill_bytes(&mut bytes);
                     let wrong_key = Scalar::from_bytes_mod_order(bytes);

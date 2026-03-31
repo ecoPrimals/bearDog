@@ -149,7 +149,7 @@ impl BStpKeyManager {
 
         use rand::RngCore;
         let mut key_material = vec![0u8; key_length];
-        rand::thread_rng().fill_bytes(&mut key_material);
+        rand::rng().fill_bytes(&mut key_material);
         debug!("🔐 Generated software-based key material");
         Ok(key_material)
     }
@@ -268,7 +268,7 @@ impl BStpKeyManager {
 
         let mut key_material = vec![0u8; length];
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         rng.fill_bytes(&mut key_material);
 
         let additional_entropy = self.gather_system_entropy()?;

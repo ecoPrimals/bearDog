@@ -6,6 +6,10 @@ use super::{BearDogError, PropertyBasedTestFramework, TestCase, info};
 
 impl PropertyBasedTestFramework {
     /// Test configuration properties
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from test case generation or nested configuration checks.
     pub fn test_configuration_properties(&mut self) -> Result<(), BearDogError> {
         info!("⚙️ Testing Configuration Properties");
 
@@ -22,6 +26,10 @@ impl PropertyBasedTestFramework {
     }
 
     /// Builds configuration [`TestCase`] rows from [`PropertyBasedTestFramework::generate_config_data`].
+    ///
+    /// # Errors
+    ///
+    /// Propagates errors from [`PropertyBasedTestFramework::generate_config_data`].
     pub fn generate_config_test_cases(&mut self) -> Result<(), BearDogError> {
         info!("🎲 Generating configuration test cases");
 

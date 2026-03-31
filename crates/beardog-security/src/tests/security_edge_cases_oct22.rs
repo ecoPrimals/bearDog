@@ -715,8 +715,8 @@ fn attempt_decryption(data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> 
 
 fn generate_test_key() -> Result<Vec<u8>, BearDogError> {
     use rand::Rng;
-    let mut rng = rand::thread_rng();
-    let key: Vec<u8> = (0..32).map(|_| rng.r#gen()).collect();
+    let mut rng = rand::rng();
+    let key: Vec<u8> = (0..32).map(|_| rng.random()).collect();
     Ok(key)
 }
 
@@ -814,8 +814,8 @@ fn verify_signature_with_data(
 
 fn generate_random_bytes(size: usize) -> Result<Vec<u8>, BearDogError> {
     use rand::Rng;
-    let mut rng = rand::thread_rng();
-    let bytes: Vec<u8> = (0..size).map(|_| rng.r#gen()).collect();
+    let mut rng = rand::rng();
+    let bytes: Vec<u8> = (0..size).map(|_| rng.random()).collect();
     Ok(bytes)
 }
 

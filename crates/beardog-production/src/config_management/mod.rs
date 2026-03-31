@@ -64,7 +64,7 @@ pub enum ConfigSource {
     UniversalContainerSecrets {
         /// Kubernetes or orchestrator namespace.
         namespace: String,
-        /// Container platform (e.g. kubernetes, docker_swarm).
+        /// Container platform (e.g. kubernetes, `docker_swarm`).
         provider_type: String,
     },
 }
@@ -98,10 +98,10 @@ pub struct ProductionConfig {
 /// composes multiple concerns for runtime deployment.
 ///
 /// **EVALUATION**: This struct is comprehensive and production-specific. It combines:
-/// - Application identity (name, version, environment, instance_id)
-/// - Network settings (bind_address, port)
-/// - Runtime settings (worker_threads, max_connections)
-/// - Timeout policies (request_timeout, graceful_shutdown_timeout)
+/// - Application identity (name, version, environment, `instance_id`)
+/// - Network settings (`bind_address`, port)
+/// - Runtime settings (`worker_threads`, `max_connections`)
+/// - Timeout policies (`request_timeout`, `graceful_shutdown_timeout`)
 ///
 /// **Recommendation**: Keep in `beardog-production` as it's a production deployment
 /// composition. Individual concerns already have canonical types in:
@@ -228,9 +228,9 @@ pub enum LogOutput {
         /// Syslog server host or socket path.
         endpoint: String,
     },
-    /// ElasticSearch endpoint
+    /// `ElasticSearch` endpoint
     ElasticSearch {
-        /// ElasticSearch cluster URL.
+        /// `ElasticSearch` cluster URL.
         endpoint: String,
         /// Index name for log documents.
         index: String,
@@ -409,11 +409,11 @@ pub struct SecretsManager {
 /// Secrets provider types
 ///
 /// **NOTE**: This is a **production-specific runtime enum** defining secret backend types.
-/// `Vault` refers to BearDog's local encrypted file store (not HashiCorp Vault).
+/// `Vault` refers to `BearDog`'s local encrypted file store (not `HashiCorp` Vault).
 /// This is production infrastructure logic and belongs in `beardog-production`.
 #[derive(Debug, Clone)]
 pub enum SecretsProvider {
-    /// BearDog local encrypted file vault (legacy env `VAULT_*` names).
+    /// `BearDog` local encrypted file vault (legacy env `VAULT_*` names).
     Vault {
         /// Vault root path or endpoint string.
         endpoint: String,

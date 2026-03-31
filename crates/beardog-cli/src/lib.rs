@@ -70,6 +70,13 @@ pub struct ServerArgs {
     #[arg(long, conflicts_with = "port")]
     pub listen: Option<String>,
 
+    /// Directory for audit logs (also `BEARDOG_AUDIT_DIR` env var).
+    ///
+    /// Defaults to `$TMPDIR/beardog` when unset.  Required on mobile
+    /// / container substrates where CWD may be read-only.
+    #[arg(long, env = "BEARDOG_AUDIT_DIR")]
+    pub audit_dir: Option<std::path::PathBuf>,
+
     /// Family ID for `BirdSong`
     #[arg(long)]
     pub family_id: Option<String>,

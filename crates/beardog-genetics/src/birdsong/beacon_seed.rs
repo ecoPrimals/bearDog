@@ -42,7 +42,7 @@ use chacha20poly1305::{
     aead::{Aead, KeyInit},
 };
 use hkdf::Hkdf;
-use rand::{RngCore, rngs::OsRng};
+use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use zeroize::Zeroizing;
@@ -104,7 +104,8 @@ impl BeaconSeed {
     #[must_use]
     pub fn generate() -> Self {
         let mut seed = [0u8; 32];
-        OsRng.fill_bytes(&mut seed);
+        let mut rng = rand::rng();
+        rng.fill_bytes(&mut seed);
 
         let beacon_id = Self::derive_beacon_id(&seed);
 
@@ -174,7 +175,8 @@ impl BeaconSeed {
 
         // Generate random nonce (12 bytes for ChaCha20-Poly1305)
         let mut nonce_bytes = [0u8; 12];
-        OsRng.fill_bytes(&mut nonce_bytes);
+        let mut rng = rand::rng();
+        rng.fill_bytes(&mut nonce_bytes);
         let nonce = Nonce::from_slice(&nonce_bytes);
 
         // Encrypt with AEAD (authenticated encryption)

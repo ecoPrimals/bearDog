@@ -136,9 +136,10 @@ async fn test_hardware_entropy_uniqueness() {
         .await
         .unwrap()
         .with_hardware_entropy(Arc::new(|| {
-            use rand::{RngCore, rngs::OsRng};
+            use rand::RngCore;
             let mut entropy = vec![0u8; 32];
-            OsRng.fill_bytes(&mut entropy);
+            let mut rng = rand::rng();
+            rng.fill_bytes(&mut entropy);
             Ok(entropy)
         }));
 

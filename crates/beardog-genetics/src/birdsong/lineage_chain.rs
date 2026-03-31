@@ -12,6 +12,7 @@ use tracing::{info, warn};
 use uuid::Uuid;
 
 use beardog_errors::BearDogError;
+use rand::RngCore;
 
 use super::types::{LineageChain, LineageMetadata, LineageNode, LineageRelationship};
 
@@ -53,7 +54,8 @@ impl LineageChainManager {
 
         // Generate Ed25519 keypair for root node
         let mut secret_bytes = [0u8; 32];
-        rand::RngCore::fill_bytes(&mut rand::rngs::OsRng, &mut secret_bytes);
+        let mut rng = rand::rng();
+        rng.fill_bytes(&mut secret_bytes);
         let signing_key = SigningKey::from_bytes(&secret_bytes);
         let public_key = signing_key.verifying_key().to_bytes().to_vec();
 
@@ -122,7 +124,8 @@ impl LineageChainManager {
 
         // Generate keypair for child
         let mut secret_bytes = [0u8; 32];
-        rand::RngCore::fill_bytes(&mut rand::rngs::OsRng, &mut secret_bytes);
+        let mut rng = rand::rng();
+        rng.fill_bytes(&mut secret_bytes);
         let signing_key = SigningKey::from_bytes(&secret_bytes);
         let public_key = signing_key.verifying_key().to_bytes().to_vec();
 

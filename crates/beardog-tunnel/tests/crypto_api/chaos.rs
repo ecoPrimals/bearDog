@@ -25,8 +25,8 @@ async fn test_chaos_invalid_base64() {
 
 #[tokio::test]
 async fn test_chaos_random_binary_data() {
-    let mut rng = rand::thread_rng();
-    let random_data: Vec<u8> = (0..1024).map(|_| rng.r#gen()).collect();
+    let mut rng = rand::rng();
+    let random_data: Vec<u8> = (0..1024).map(|_| rng.random()).collect();
     let random_b64 = base64::engine::general_purpose::STANDARD.encode(&random_data);
 
     // Should succeed with random data
@@ -157,13 +157,13 @@ async fn test_chaos_array_instead_of_object() {
 #[tokio::test]
 async fn test_chaos_concurrent_random_operations() {
     // Fire off 100 random crypto operations concurrently
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     let handles: Vec<_> = (0..100)
         .map(|_| {
-            let op: u8 = rng.gen_range(0..5);
+            let op: u8 = rng.random_range(0..5);
             tokio::spawn(async move {
-                let random_data: Vec<u8> = (0..256).map(|_| rand::thread_rng().r#gen()).collect();
+                let random_data: Vec<u8> = (0..256).map(|_| rand::rng().random()).collect();
                 let data_b64 = base64::engine::general_purpose::STANDARD.encode(&random_data);
 
                 match op {
