@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 2, 2026 -- Wave 26: Deep Debt Evolution — Stubs → Implementations, Dependency Alignment, Dead Code Cleanup
+
+- **Workspace dep alignment** — `beardog-ipc`, `beardog-hid`, `serial_test`, `beardog-adapters`, `beardog-capabilities`, `beardog-genetics`, `tempfile` → `workspace = true`
+- **`handle_key_info` evolved** — Stub replaced with real key store load + `_with_home` DI variant
+- **Client JSON-RPC dispatch** — Real Unix socket `dispatch_rpc()` replaces placeholder
+- **Orphaned entropy modules compiled** — `collector.rs` / `live_feed_validator.rs` wired into `universal_hsm` module tree; 22 API-drift clippy errors fixed
+- **Dead code cleanup** — 3 unused `QuantumDiscoveryEngine` fields removed; 3 test-only `BearDogCore` methods gated `#[cfg(test)]`; redundant `#[allow(dead_code)]` removed from `merge()`
+- **`deny.toml` skip-list** — 30 → 15 entries (12 resolved transitive splits)
+- **Flaky test stabilization** — `beardog-production` `#[serial]` (35 tests); `beardog-tunnel` HSM tests refactored to `HsmAutoInitConfig`
+- **AI tree feature-gated** — `beardog-core/src/ai/` (11.9K LOC) behind `ai` feature per responsibility matrix
+- **Root docs updated** — STATUS.md and CHANGELOG.md reflect accurate state
+- **Debris cleaned** — `audit.log` removed; duplicate `env.example` consolidated; empty dirs removed
+- **14,366+ tests passing** — 0 failures, all gates green
+
 ### March 30, 2026 -- Wave 25: Full Audit — Lint Promotion, Cast Safety, Doc Completeness, Smart Refactoring
 
 - **Cast safety promoted to warn** — All 40 truncation/precision casts (`u128→u64`, `u64→u32`, `usize→f64`) fixed with `try_from`, const-assert, or per-site `#[expect]`; `cast_possible_truncation`, `cast_precision_loss`, `cast_sign_loss`, `cast_possible_wrap` promoted from allow to warn

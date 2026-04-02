@@ -37,28 +37,16 @@ allow-git = []
 multiple-versions = "deny"
 wildcards = "allow"
 skip = [
-    # Transitive version splits from RustCrypto ecosystem migration (0.10 vs 0.11 families).
-    # Will resolve as upstream deps align to the same major versions.
-    { crate = "base64" },
-    { crate = "block-buffer" },
-    { crate = "cipher" },
-    { crate = "crypto-common" },
-    { crate = "digest" },
+    # Transitive version splits — will resolve as upstream deps align.
+    # Last audited: 2026-04-02 — removed 12 resolved skips.
     { crate = "getrandom" },
     { crate = "hashbrown" },
-    { crate = "hickory-proto" },
-    { crate = "hickory-resolver" },
-    { crate = "hmac" },
-    { crate = "hostname" },
-    { crate = "inout" },
     { crate = "linux-raw-sys" },
     { crate = "mio" },
-    { crate = "pbkdf2" },
     { crate = "rand" },
     { crate = "rand_chacha" },
     { crate = "rand_core" },
     { crate = "rustix" },
-    { crate = "sha2" },
     { crate = "socket2" },
     { crate = "syn" },
     { crate = "thiserror" },

@@ -71,6 +71,10 @@ pub fn ready_signal() -> (watch::Sender<bool>, ReadySignal) {
 /// # Ok(())
 /// # }
 /// ```
+/// # Errors
+///
+/// Returns [`BearDogError`](beardog_errors::BearDogError) if the condition is
+/// not met within `max_duration`.
 pub async fn wait_for_condition<F>(
     mut condition: F,
     max_duration: Duration,

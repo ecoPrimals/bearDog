@@ -409,31 +409,32 @@ async fn test_auto_initialize_case_insensitive() {
 
 #[tokio::test]
 async fn test_auto_initialize_hardware_mode_fallback() {
-    let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
+    // Use config directly instead of process env to avoid parallel-test env races.
+    // See test_auto_initialize_default_software_mode comment for rationale.
+    let config = HsmAutoInitConfig {
+        mode: "hardware".to_string(),
+        auto_init: true,
+    };
 
-    beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "hardware");
-
-    // Should fallback to software (hardware not yet implemented)
-    let manager = HsmManager::auto_initialize().await;
+    let manager = HsmManager::auto_initialize_with_config(config).await;
     assert!(
         manager.is_ok(),
         "Should fallback to software when hardware not available"
     );
 
     let manager = manager.unwrap();
-    // Verify it works
     let key = manager.generate_key("test_key", &KeyType::Aes).await;
     assert!(key.is_ok(), "Fallback software HSM should work");
 }
 
 #[tokio::test]
 async fn test_auto_initialize_android_mode_fallback() {
-    let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
+    let config = HsmAutoInitConfig {
+        mode: "android_strongbox".to_string(),
+        auto_init: true,
+    };
 
-    beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "android_strongbox");
-
-    // Should fallback to software (android not yet implemented)
-    let manager = HsmManager::auto_initialize().await;
+    let manager = HsmManager::auto_initialize_with_config(config).await;
     assert!(
         manager.is_ok(),
         "Should fallback to software when Android not available"
@@ -442,12 +443,12 @@ async fn test_auto_initialize_android_mode_fallback() {
 
 #[tokio::test]
 async fn test_auto_initialize_ios_mode_fallback() {
-    let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
+    let config = HsmAutoInitConfig {
+        mode: "ios_secure_enclave".to_string(),
+        auto_init: true,
+    };
 
-    beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "ios_secure_enclave");
-
-    // Should fallback to software (iOS not yet implemented)
-    let manager = HsmManager::auto_initialize().await;
+    let manager = HsmManager::auto_initialize_with_config(config).await;
     assert!(
         manager.is_ok(),
         "Should fallback to software when iOS not available"
@@ -474,17 +475,15 @@ async fn test_auto_initialize_invalid_mode() {
 
 #[tokio::test]
 async fn test_auto_initialize_disabled() {
-    let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
+    let config = HsmAutoInitConfig {
+        mode: "software".to_string(),
+        auto_init: false,
+    };
 
-    // Clear env vars first
-    beardog_errors::process_env::remove_var("BEARDOG_HSM_MODE");
-    beardog_errors::process_env::set_var("BEARDOG_HSM_AUTO_INIT", "false");
-
-    let manager = HsmManager::auto_initialize().await;
+    let manager = HsmManager::auto_initialize_with_config(config).await;
     assert!(manager.is_ok(), "Should succeed even when disabled");
 
     let manager = manager.unwrap();
-    // Should have NO providers registered
     let key_result = manager.generate_key("test_key", &KeyType::Ed25519).await;
     assert!(
         key_result.is_err(),
@@ -500,11 +499,14 @@ async fn test_auto_initialize_disabled() {
 
 #[tokio::test]
 async fn test_auto_initialize_multiple_key_operations() {
-    let _cleanup = EnvCleanup::new(&["BEARDOG_HSM_MODE", "BEARDOG_HSM_AUTO_INIT"]);
+    let config = HsmAutoInitConfig {
+        mode: "software".to_string(),
+        auto_init: true,
+    };
 
-    beardog_errors::process_env::set_var("BEARDOG_HSM_MODE", "software");
-
-    let manager = HsmManager::auto_initialize().await.unwrap();
+    let manager = HsmManager::auto_initialize_with_config(config)
+        .await
+        .unwrap();
 
     // Generate multiple keys
     let key1 = manager.generate_key("key1", &KeyType::Ed25519).await;

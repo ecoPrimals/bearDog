@@ -22,7 +22,6 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
-use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
@@ -30,16 +29,6 @@ type Result<T> = std::result::Result<T, BearDogError>;
 
 /// Quantum-inspired capability discovery engine (orchestration shell over [`PrimalDiscovery`]).
 pub struct QuantumDiscoveryEngine {
-    #[allow(dead_code)]
-    quantum_space: Arc<RwLock<QuantumCapabilitySpace>>,
-
-    #[allow(dead_code)]
-    superposition_states: Arc<RwLock<Vec<SuperpositionState>>>,
-
-    /// Entanglement relationships between capabilities (Phase 2; not populated in production yet).
-    #[allow(dead_code)]
-    entanglements: Arc<RwLock<HashMap<String, Vec<QuantumEntanglement>>>>,
-
     /// Engine configuration
     config: QuantumDiscoveryConfig,
 
@@ -338,9 +327,6 @@ impl QuantumDiscoveryEngine {
         );
 
         Self {
-            quantum_space: Arc::new(RwLock::new(QuantumCapabilitySpace::new())),
-            superposition_states: Arc::new(RwLock::new(Vec::new())),
-            entanglements: Arc::new(RwLock::new(HashMap::new())),
             config,
             metrics: QuantumMetrics::default(),
             primal_discovery: None,
@@ -355,9 +341,6 @@ impl QuantumDiscoveryEngine {
     ) -> Self {
         info!("Quantum-inspired discovery orchestration bound to PrimalDiscovery");
         Self {
-            quantum_space: Arc::new(RwLock::new(QuantumCapabilitySpace::new())),
-            superposition_states: Arc::new(RwLock::new(Vec::new())),
-            entanglements: Arc::new(RwLock::new(HashMap::new())),
             config,
             metrics: QuantumMetrics::default(),
             primal_discovery: Some(primal_discovery),

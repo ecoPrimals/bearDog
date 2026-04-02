@@ -117,3 +117,6 @@ features = [ "serde",]
 default = []
 hsm-integration = []
 mdns = ["dep:mdns-sd"]
+# AI hybrid intelligence tree — outside crypto domain per PRIMAL_RESPONSIBILITY_MATRIX.
+# Feature-gated for boundary enforcement; long-term may relocate to Squirrel via biomeOS.
+ai = []

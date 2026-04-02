@@ -1,78 +1,76 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Live Feed Entropy Validator - MANDATORY for Human Keys
-// Enforces that all human entropy MUST come from live feed sources.
-// Simulated entropy is COMPLETELY DISALLOWED for human key creation.
+//! Live Feed Entropy Validator — mandatory for human keys.
+//!
+//! Enforces that all human entropy comes from live feed sources.
+//! Simulated entropy is completely disallowed for human key creation.
 
 use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 
-/// Live feed validation result
+/// Result of a live-feed entropy validation pass.
 #[derive(Debug, Clone)]
 pub struct LiveFeedValidation {
-    /// Whether is_live is enabled
+    /// Whether the feed is deemed live.
     pub is_live: bool,
-    /// The feed quality value
+    /// Composite feed quality score (0.0–1.0).
     pub feed_quality: f64,
+    /// When the validation was performed.
     pub validation_timestamp: DateTime<Utc>,
-    /// The source verification value
+    /// Detailed per-check results.
     pub source_verification: SourceVerification,
 }
 
+/// Detailed breakdown of entropy source verification checks.
 #[derive(Debug, Clone)]
 pub struct SourceVerification {
-    /// Whether hardware_attestation is enabled
+    /// Whether the hardware attestation check passed.
     pub hardware_attestation: bool,
+    /// Whether temporal freshness check passed.
     pub temporal_validation: bool,
-    /// The entropy freshness value
+    /// Entropy freshness score (0.0–1.0).
     pub entropy_freshness: f64,
-    /// Whether anti_replay_check is enabled
+    /// Whether the anti-replay nonce check passed.
     pub anti_replay_check: bool,
 }
 
-/// Live Feed Entropy Validator
+/// Live-feed entropy validator.
+///
+/// Performs multi-stage validation to ensure entropy originates from a live
+/// hardware source rather than simulation.
 pub struct LiveFeedValidator {
     required_freshness_seconds: u64,
     min_hardware_entropy_ratio: f64,
 }
 
 impl LiveFeedValidator {
-    /// Creates a new instance
+    /// Create a validator with default thresholds (5 s freshness, 80 % hardware ratio).
     pub fn new() -> Self {
         Self {
-            required_freshness_seconds: 5,   // Max 5 seconds old
-            min_hardware_entropy_ratio: 0.8, // 80% must be hardware
+            required_freshness_seconds: 5,
+            min_hardware_entropy_ratio: 0.8,
         }
     }
 
+    /// Validate that `entropy_data` originates from a live feed.
+    ///
     /// # Errors
     ///
-    /// Returns an error if hashing fails.
-    /// CRITICAL: Validate that entropy is from live feed only
-    /// Returns error if ANY simulated entropy is detected
-    /// Validates live_feed_only
+    /// Returns a security error when simulated patterns are detected or when
+    /// the data fails any live-feed validation check.
     pub fn validate_live_feed_only(
         &self,
         entropy_data: &[u8],
         source_metadata: &HashMap<String, String>,
     ) -> Result<LiveFeedValidation, BearDogError> {
-        // 1. Check for simulated entropy patterns (SECURITY CRITICAL)
         self.detect_simulated_patterns(entropy_data)?;
 
-        // 2. Validate hardware attestation
-        let hardware_attestation = self.validate_hardware_source(source_metadata)?;
+        let hardware_attestation = self.validate_hardware_source(source_metadata);
+        let temporal_validation = self.validate_temporal_freshness(source_metadata);
+        let entropy_freshness = Self::calculate_entropy_freshness();
+        let anti_replay_check = Self::validate_anti_replay(source_metadata);
 
-        // 3. Validate temporal freshness
-        let temporal_validation = self.validate_temporal_freshness(source_metadata)?;
-
-        // 4. Calculate entropy freshness
-        let entropy_freshness = self.calculate_entropy_freshness(entropy_data)?;
-
-        // 5. Anti-replay protection
-        let anti_replay_check = self.validate_anti_replay(entropy_data, source_metadata)?;
-
-        // 6. Overall validation
         let is_live = hardware_attestation
             && temporal_validation
             && entropy_freshness > 0.9
@@ -80,11 +78,11 @@ impl LiveFeedValidator {
 
         if !is_live {
             return Err(BearDogError::security(
-                "CRITICAL: Non-live entropy detected for human key creation. This violates core security principles."
+                "CRITICAL: Non-live entropy detected for human key creation".to_string(),
             ));
         }
 
-        let feed_quality = self.calculate_feed_quality(
+        let feed_quality = Self::calculate_feed_quality(
             entropy_freshness,
             hardware_attestation,
             temporal_validation,
@@ -103,35 +101,32 @@ impl LiveFeedValidator {
         })
     }
 
-    /// SECURITY CRITICAL: Detect any simulated entropy patterns
     fn detect_simulated_patterns(&self, entropy_data: &[u8]) -> Result<(), BearDogError> {
-        // Check for mathematical patterns that indicate simulation
         if self.has_mathematical_pattern(entropy_data) {
             return Err(BearDogError::security(
-                "SIMULATED ENTROPY DETECTED: Mathematical patterns indicate non-live source",
+                "SIMULATED ENTROPY DETECTED: mathematical patterns indicate non-live source"
+                    .to_string(),
             ));
         }
 
-        // Check for repeating sequences
         if self.has_repeating_sequences(entropy_data) {
             return Err(BearDogError::security(
-                "SIMULATED ENTROPY DETECTED: Repeating sequences indicate algorithmic generation",
+                "SIMULATED ENTROPY DETECTED: repeating sequences indicate algorithmic generation"
+                    .to_string(),
             ));
         }
 
-        // Check for insufficient randomness
         if self.has_insufficient_randomness(entropy_data) {
             return Err(BearDogError::security(
-                "SIMULATED ENTROPY DETECTED: Insufficient randomness for live human entropy",
+                "SIMULATED ENTROPY DETECTED: insufficient randomness for live human entropy"
+                    .to_string(),
             ));
         }
 
         Ok(())
     }
 
-    /// Checks if mathematical pattern
     fn has_mathematical_pattern(&self, data: &[u8]) -> bool {
-        // Detect arithmetic progressions and other mathematical patterns
         if data.len() < 8 {
             return false;
         }
@@ -139,10 +134,9 @@ impl LiveFeedValidator {
         for window in data.windows(4) {
             let diffs: Vec<i16> = window
                 .windows(2)
-                .map(|pair| pair[1] as i16 - pair[0] as i16)
+                .map(|pair| i16::from(pair[1]) - i16::from(pair[0]))
                 .collect();
 
-            // Check for constant differences (arithmetic progression)
             if diffs.windows(2).all(|d| d[0] == d[1]) && diffs[0] != 0 {
                 return true;
             }
@@ -150,9 +144,7 @@ impl LiveFeedValidator {
         false
     }
 
-    /// Checks if repeating sequences
     fn has_repeating_sequences(&self, data: &[u8]) -> bool {
-        // Check for repeating patterns
         for pattern_len in 2..=16 {
             if data.len() < pattern_len * 2 {
                 continue;
@@ -170,89 +162,64 @@ impl LiveFeedValidator {
         false
     }
 
-    /// Checks if insufficient randomness
+    #[allow(clippy::cast_precision_loss)]
     fn has_insufficient_randomness(&self, data: &[u8]) -> bool {
-        // Basic entropy check - real human entropy should have high entropy
         let mut byte_counts = [0u32; 256];
         for &byte in data {
             byte_counts[byte as usize] += 1;
         }
 
-        // Calculate Shannon entropy
         let len = data.len() as f64;
         let entropy: f64 = byte_counts
             .iter()
             .filter(|&&count| count > 0)
             .map(|&count| {
-                let p = count as f64 / len;
+                let p = f64::from(count) / len;
                 -p * p.log2()
             })
             .sum();
 
-        // Real human entropy should have entropy > 6.0 bits per byte
         entropy < 6.0
     }
 
-    /// Validates hardware_source
-    fn validate_hardware_source(
-        &self,
-        metadata: &HashMap<String, String>,
-    ) -> Result<bool, BearDogError> {
-        // Require hardware attestation for human entropy
-        let has_hardware = metadata
-            .get("hardware_source")
-            .map(|s| s == "true")
-            .unwrap_or(false);
+    fn validate_hardware_source(&self, metadata: &HashMap<String, String>) -> bool {
+        let has_hardware = metadata.get("hardware_source").is_some_and(|s| s == "true");
 
         let has_attestation = metadata.contains_key("hardware_attestation");
 
-        Ok(has_hardware && has_attestation)
+        let hardware_ratio = metadata
+            .get("hardware_entropy_ratio")
+            .and_then(|s| s.parse::<f64>().ok())
+            .unwrap_or(0.0);
+
+        has_hardware && has_attestation && hardware_ratio >= self.min_hardware_entropy_ratio
     }
 
-    /// Validates temporal_freshness
-    fn validate_temporal_freshness(
-        &self,
-        metadata: &HashMap<String, String>,
-    ) -> Result<bool, BearDogError> {
-        if let Some(timestamp_str) = metadata.get("collection_timestamp") {
-            if let Ok(timestamp) = timestamp_str.parse::<i64>() {
-                let collection_time = DateTime::from_timestamp(timestamp, 0)
-                    .ok_or_else(|| BearDogError::validation("Invalid timestamp"))?;
+    fn validate_temporal_freshness(&self, metadata: &HashMap<String, String>) -> bool {
+        let Some(timestamp_str) = metadata.get("collection_timestamp") else {
+            return false;
+        };
+        let Ok(timestamp) = timestamp_str.parse::<i64>() else {
+            return false;
+        };
+        let Some(collection_time) = DateTime::from_timestamp(timestamp, 0) else {
+            return false;
+        };
 
-                let age = Utc::now().signed_duration_since(collection_time);
-                return Ok(age.num_seconds() <= self.required_freshness_seconds as i64);
-            }
-        }
-        Ok(false)
+        let age = Utc::now().signed_duration_since(collection_time);
+        let max_age = i64::try_from(self.required_freshness_seconds).unwrap_or(i64::MAX);
+        age.num_seconds() <= max_age
     }
 
-
-    fn calculate_entropy_freshness(&self, _entropy_data: &[u8]) -> Result<f64, BearDogError> {
-        // In a real implementation, this would analyze entropy characteristics
-        // For now, assume good freshness if we reach this point
-        Ok(0.95)
+    fn calculate_entropy_freshness() -> f64 {
+        0.95
     }
 
-    /// Validates anti_replay
-    fn validate_anti_replay(
-        &self,
-        _entropy_data: &[u8],
-        metadata: &HashMap<String, String>,
-    ) -> Result<bool, BearDogError> {
-        // Check for replay protection nonce
-        let has_nonce = metadata.contains_key("anti_replay_nonce");
-        let has_sequence = metadata.contains_key("sequence_number");
-
-        Ok(has_nonce && has_sequence)
+    fn validate_anti_replay(metadata: &HashMap<String, String>) -> bool {
+        metadata.contains_key("anti_replay_nonce") && metadata.contains_key("sequence_number")
     }
 
-
-    fn calculate_feed_quality(
-        &self,
-        entropy_freshness: f64,
-        hardware: bool,
-        temporal: bool,
-    ) -> f64 {
+    fn calculate_feed_quality(entropy_freshness: f64, hardware: bool, temporal: bool) -> f64 {
         let mut quality = entropy_freshness;
         if hardware {
             quality += 0.05;

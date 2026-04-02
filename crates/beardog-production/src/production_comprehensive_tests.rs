@@ -12,6 +12,8 @@
 //! - Performance validation
 //! - Deployment readiness
 
+use serial_test::serial;
+
 use super::*;
 
 fn set_test_master_key() {
@@ -27,6 +29,7 @@ fn clear_test_master_key() {
 // ============================================================================
 
 #[test]
+#[serial]
 fn test_production_ready_returns_true_with_key() {
     set_test_master_key();
     assert!(config::production_ready());
@@ -34,6 +37,7 @@ fn test_production_ready_returns_true_with_key() {
 }
 
 #[test]
+#[serial]
 fn test_production_ready_returns_false_without_key() {
     config::set_test_production_ready(false);
     let result = config::production_ready();
@@ -42,6 +46,7 @@ fn test_production_ready_returns_false_without_key() {
 }
 
 #[test]
+#[serial]
 fn test_production_ready_is_consistent() {
     set_test_master_key();
     // Should return same value on multiple calls
@@ -51,6 +56,7 @@ fn test_production_ready_is_consistent() {
 }
 
 #[test]
+#[serial]
 fn test_production_ready_multiple_calls() {
     set_test_master_key();
     for _ in 0..100 {
@@ -59,6 +65,7 @@ fn test_production_ready_multiple_calls() {
 }
 
 #[test]
+#[serial]
 fn test_production_ready_const() {
     set_test_master_key();
     // production_ready() is a runtime check (env); not const-evaluable.
@@ -71,6 +78,7 @@ fn test_production_ready_const() {
 // ============================================================================
 
 #[test]
+#[serial]
 fn test_config_module_exists() {
     set_test_master_key();
     // Verify the config module is accessible
@@ -79,6 +87,7 @@ fn test_config_module_exists() {
 }
 
 #[test]
+#[serial]
 fn test_production_ready_is_public() {
     set_test_master_key();
     // Verify function is exported and accessible
@@ -91,6 +100,7 @@ fn test_production_ready_is_public() {
 // ============================================================================
 
 #[test]
+#[serial]
 fn test_production_readiness_check_succeeds() {
     set_test_master_key();
     // Simulate a production readiness check
@@ -100,6 +110,7 @@ fn test_production_readiness_check_succeeds() {
 }
 
 #[test]
+#[serial]
 fn test_production_check_in_loop() {
     set_test_master_key();
     // Test production check in various scenarios
@@ -116,6 +127,7 @@ fn test_production_check_in_loop() {
 }
 
 #[test]
+#[serial]
 fn test_production_ready_with_assertion() {
     set_test_master_key();
     // Direct assertion pattern
@@ -126,6 +138,7 @@ fn test_production_ready_with_assertion() {
 }
 
 #[test]
+#[serial]
 fn test_production_ready_returns_bool() {
     set_test_master_key();
     let result = config::production_ready();
@@ -139,6 +152,7 @@ fn test_production_ready_returns_bool() {
 // ============================================================================
 
 #[test]
+#[serial]
 fn test_production_ready_thread_safe() {
     set_test_master_key();
     use std::thread;
@@ -169,6 +183,7 @@ fn test_production_ready_thread_safe() {
 }
 
 #[test]
+#[serial]
 fn test_production_ready_concurrent_calls() {
     set_test_master_key();
     use std::sync::Arc;
@@ -212,6 +227,7 @@ fn test_production_ready_concurrent_calls() {
 // ============================================================================
 
 #[test]
+#[serial]
 fn test_production_ready_assignment() {
     set_test_master_key();
     let ready = config::production_ready();
@@ -223,6 +239,7 @@ fn test_production_ready_assignment() {
 // TEST_DOMAIN: core
 // TEST_PRIORITY: normal
 #[test]
+#[serial]
 fn test_production_ready_in_conditional() {
     set_test_master_key();
     let is_ready = config::production_ready();
@@ -238,6 +255,7 @@ fn test_production_ready_in_conditional() {
 }
 
 #[test]
+#[serial]
 fn test_production_ready_as_expression() {
     set_test_master_key();
     let message = if config::production_ready() {
@@ -253,6 +271,7 @@ fn test_production_ready_as_expression() {
 }
 
 #[test]
+#[serial]
 fn test_production_ready_boolean_ops() {
     set_test_master_key();
     let ready = config::production_ready();
@@ -265,6 +284,7 @@ fn test_production_ready_boolean_ops() {
 }
 
 #[test]
+#[serial]
 fn test_production_ready_match() {
     set_test_master_key();
     let result = config::production_ready();
@@ -280,6 +300,7 @@ fn test_production_ready_match() {
 // ============================================================================
 
 #[test]
+#[serial]
 fn test_doc_example_basic() {
     set_test_master_key();
     // From doc comment example
@@ -288,6 +309,7 @@ fn test_doc_example_basic() {
 }
 
 #[test]
+#[serial]
 fn test_doc_example_in_application() {
     set_test_master_key();
     // Simulating production startup
@@ -315,6 +337,7 @@ fn test_doc_example_in_application() {
 // TEST_DOMAIN: core
 // TEST_PRIORITY: normal
 #[test]
+#[serial]
 fn test_production_ready_performance() {
     use std::time::Instant;
 
@@ -340,6 +363,7 @@ fn test_production_ready_performance() {
 // TEST_PRIORITY: normal
 
 #[test]
+#[serial]
 fn test_production_ready_no_side_effects() {
     set_test_master_key();
     // Calling production_ready should have no side effects
@@ -362,6 +386,7 @@ fn test_production_ready_no_side_effects() {
 // ============================================================================
 
 #[test]
+#[serial]
 fn test_production_readiness_system_check() {
     set_test_master_key();
     // Comprehensive system readiness check
@@ -391,6 +416,7 @@ fn test_production_readiness_system_check() {
 // TEST_DOMAIN: core
 // TEST_PRIORITY: normal
 #[test]
+#[serial]
 fn test_production_ready_with_logging() {
     set_test_master_key();
     // Test that production_ready works with logging context
@@ -412,6 +438,7 @@ fn test_production_ready_with_logging() {
 // ============================================================================
 
 #[test]
+#[serial]
 fn test_production_ready_never_panics() {
     // Ensure the function never panics
     let result = std::panic::catch_unwind(config::production_ready);
@@ -420,6 +447,7 @@ fn test_production_ready_never_panics() {
 }
 
 #[test]
+#[serial]
 fn test_production_ready_deterministic() {
     // Function should be deterministic
     let results: Vec<bool> = (0..50).map(|_| config::production_ready()).collect();
@@ -437,6 +465,7 @@ fn test_production_ready_deterministic() {
 // ============================================================================
 
 #[test]
+#[serial]
 fn test_production_ready_return_type() {
     // Verify return type is exactly bool
     fn check_bool(_b: bool) {}
@@ -447,6 +476,7 @@ fn test_production_ready_return_type() {
 }
 
 #[test]
+#[serial]
 fn test_production_ready_must_use() {
     // The function is marked #[must_use]
     // This test verifies it compiles (would warn if result ignored)
@@ -461,6 +491,7 @@ fn test_production_ready_must_use() {
 // ============================================================================
 
 #[test]
+#[serial]
 fn test_production_guard_pattern() {
     set_test_master_key();
     fn protected_operation() -> Result<(), &'static str> {
@@ -481,6 +512,7 @@ fn test_production_guard_pattern() {
 }
 
 #[test]
+#[serial]
 fn test_production_assertion_pattern() {
     set_test_master_key();
     // Common assertion pattern at startup
@@ -494,6 +526,7 @@ fn test_production_assertion_pattern() {
 }
 
 #[test]
+#[serial]
 fn test_production_validation_chain() {
     set_test_master_key();
     fn validate_deployment() -> bool {
@@ -517,6 +550,7 @@ fn test_production_validation_chain() {
 }
 
 #[test]
+#[serial]
 fn test_production_ready_with_feature_flags() {
     set_test_master_key();
     // Simulate feature flag check
@@ -531,6 +565,7 @@ fn test_production_ready_with_feature_flags() {
 // TEST_PRIORITY: normal
 
 #[test]
+#[serial]
 fn test_production_ready_early_return() {
     set_test_master_key();
     fn maybe_proceed() -> Option<()> {
@@ -551,6 +586,7 @@ fn test_production_ready_early_return() {
 // ============================================================================
 
 #[test]
+#[serial]
 fn test_production_ready_rapid_fire() {
     set_test_master_key();
     // Rapid consecutive calls
@@ -566,6 +602,7 @@ fn test_production_ready_rapid_fire() {
 // TEST_DOMAIN: core
 // TEST_PRIORITY: normal
 #[test]
+#[serial]
 fn test_production_ready_memory_stable() {
     set_test_master_key();
     // Verify no memory leaks from repeated calls

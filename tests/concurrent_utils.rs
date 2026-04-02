@@ -94,6 +94,10 @@ pub fn completion_signal() -> (CompletionSignal, oneshot::Receiver<()>) {
 ///     Duration::from_secs(5)
 /// ).await.expect("Condition met");
 /// ```
+/// # Errors
+///
+/// Returns [`BearDogError`] if the condition is not met before `timeout`
+/// elapses or if the watch channel closes.
 pub async fn wait_for_condition<F>(mut condition: F, timeout: Duration) -> Result<(), BearDogError>
 where
     F: FnMut() -> bool + Send + 'static,
@@ -121,9 +125,13 @@ where
     }
 }
 
-/// Wait for multiple conditions concurrently
+/// Wait for multiple conditions concurrently.
 ///
 /// All conditions must be true before returning.
+///
+/// # Errors
+///
+/// Returns [`BearDogError`] if any condition times out or its channel closes.
 pub async fn wait_for_all_conditions<F>(
     conditions: Vec<F>,
     timeout: Duration,
@@ -225,7 +233,12 @@ pub fn observable_state<T: Clone>(initial: T) -> (ObservableState<T>, watch::Rec
     (ObservableState { tx }, rx)
 }
 
-/// Wait for observable state to match predicate
+/// Wait for observable state to match predicate.
+///
+/// # Errors
+///
+/// Returns [`BearDogError`] if the predicate is not satisfied before `timeout`
+/// elapses or if the state channel closes.
 pub async fn wait_for_state<T, F>(
     mut rx: watch::Receiver<T>,
     mut predicate: F,
@@ -250,9 +263,13 @@ where
     .map_err(|_| BearDogError::internal("Timeout waiting for state".to_string()))?
 }
 
-/// Run multiple async tasks concurrently
+/// Run multiple async tasks concurrently.
 ///
 /// Returns results in order.
+///
+/// # Errors
+///
+/// Returns [`BearDogError`] if any spawned task panics or returns an error.
 pub async fn run_concurrent<F, T>(tasks: Vec<F>) -> Result<Vec<T>, BearDogError>
 where
     F: std::future::Future<Output = Result<T, BearDogError>> + Send + 'static,

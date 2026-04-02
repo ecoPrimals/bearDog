@@ -185,11 +185,7 @@ impl RevocationList {
         Ok(list)
     }
 
-    /// Merge another revocation list into this one
-    #[allow(
-        dead_code,
-        reason = "Used by revocation import handlers and future CLI wiring."
-    )]
+    /// Merge another revocation list into this one.
     pub fn merge(&mut self, other: &Self) {
         for (key_id, entry) in &other.revoked_keys {
             // Only add if not already present or if other entry is newer

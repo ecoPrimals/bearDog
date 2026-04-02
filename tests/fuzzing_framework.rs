@@ -63,7 +63,11 @@ pub trait FuzzTarget {
     /// Target name
     fn name(&self) -> &str;
 
-    /// Process input and return whether it was valid
+    /// Process input and return whether it was valid.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` if the input causes an unrecoverable parsing failure.
     fn process(&mut self, input: &[u8]) -> Result<bool, String>;
 
     /// Reset state between iterations

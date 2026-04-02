@@ -75,3 +75,6 @@ workspace = true
 
 [dev-dependencies.tempfile]
 workspace = true
+
+[dev-dependencies.serial_test]
+workspace = true

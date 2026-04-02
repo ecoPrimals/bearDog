@@ -166,13 +166,13 @@ mod modes_client_test {
     use crate::modes::client::run;
 
     #[tokio::test]
-    async fn client_run_with_command_prints_not_implemented() {
+    async fn client_run_with_command_returns_err_when_server_absent() {
         let result = run(
-            Some("unix:///tmp/beardog-wave10-cov.sock".to_string()),
+            Some("/tmp/beardog-wave10-cov-absent.sock".to_string()),
             Some("health".to_string()),
         )
         .await;
-        assert!(result.is_ok(), "client run with command should return Ok");
+        assert!(result.is_err(), "should error when server is not running");
     }
 
     #[tokio::test]

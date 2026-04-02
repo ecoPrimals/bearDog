@@ -246,6 +246,7 @@ beardog-capabilities = { path = "crates/beardog-capabilities" }
 beardog-deploy = { path = "crates/beardog-deploy" }
 beardog-production = { path = "crates/beardog-production" }
 beardog-node-registry = { path = "crates/beardog-node-registry" }
+beardog-hid = { path = "crates/beardog-hid" }
 
 [package]
 name = "beardog"
@@ -277,7 +278,7 @@ beardog-tunnel = { workspace = true }
 beardog-auth = { workspace = true }
 beardog-genetics = { workspace = true }
 beardog-monitoring = { workspace = true }
-beardog-ipc = { path = "crates/beardog-ipc" }
+beardog-ipc = { workspace = true }
 hostname = { workspace = true }
 beardog-security = { workspace = true }
 beardog-traits = { workspace = true }
@@ -292,7 +293,7 @@ thiserror = { workspace = true }
 
 # Optional dependencies for examples
 # hidapi = { workspace = true, optional = true }  # ❌ REMOVED - C library
-beardog-hid = { path = "crates/beardog-hid", optional = true }
+beardog-hid = { workspace = true, optional = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }
@@ -303,14 +304,14 @@ async-trait = { workspace = true }
 serde_json = { workspace = true }
 hex = { workspace = true }
 chrono = { workspace = true }
-serial_test = "3.2"
-beardog-adapters = { path = "crates/beardog-adapters" }
-beardog-capabilities = { path = "crates/beardog-capabilities" }
+serial_test = { workspace = true }
+beardog-adapters = { workspace = true }
+beardog-capabilities = { workspace = true }
 futures = { workspace = true }
-beardog-genetics = { path = "crates/beardog-genetics" }
+beardog-genetics = { workspace = true }
 ed25519-dalek = { workspace = true }
-base64 = { workspace = true }  # For E2E tests
-tempfile = "3.8"  # For creating temporary Unix sockets in tests
+base64 = { workspace = true }
+tempfile = { workspace = true }
 uuid = { workspace = true }  # For chaos tests
 
 [[test]]

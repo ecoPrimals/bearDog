@@ -63,13 +63,25 @@ pub trait E2EScenario {
     /// Scenario name
     fn name(&self) -> &str;
 
-    /// Setup scenario
+    /// Setup scenario.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` if environment preparation fails.
     fn setup(&mut self, config: &E2ETestConfig) -> Result<(), BearDogError>;
 
-    /// Run scenario
+    /// Run scenario.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` if the scenario encounters a fatal failure.
     fn run(&mut self) -> Result<E2ETestResult, BearDogError>;
 
-    /// Cleanup scenario
+    /// Cleanup scenario.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` if cleanup resources cannot be released.
     fn cleanup(&mut self) -> Result<(), BearDogError>;
 }
 

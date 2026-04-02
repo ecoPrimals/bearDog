@@ -178,7 +178,12 @@ impl FaultInjector {
         rng.random::<f64>() < self.config.injection_rate
     }
 
-    /// Inject a fault at a specific point
+    /// Inject a fault at a specific point.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` from `error_generator` when the fault injector decides to
+    /// trigger the given `fault_type`.
     pub async fn inject_fault<T, E>(
         &self,
         fault_type: FaultType,
@@ -285,7 +290,12 @@ impl NetworkFaultInjector {
         Self { base_injector }
     }
 
-    /// Maybe inject a network timeout
+    /// Maybe inject a network timeout.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` with a timeout message when the fault injector triggers a
+    /// `NetworkTimeout` fault.
     pub async fn maybe_timeout(&self, duration: Duration) -> Result<(), String> {
         if self
             .base_injector
@@ -300,7 +310,12 @@ impl NetworkFaultInjector {
         }
     }
 
-    /// Maybe inject connection refused
+    /// Maybe inject connection refused.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` when the fault injector triggers a `NetworkConnectionRefused`
+    /// fault.
     pub fn maybe_connection_refused(&self) -> Result<(), String> {
         if self
             .base_injector
@@ -337,7 +352,11 @@ impl HsmFaultInjector {
         Self { base_injector }
     }
 
-    /// Maybe inject HSM failure
+    /// Maybe inject HSM failure.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` when the fault injector triggers an `HsmFailure` fault.
     pub fn maybe_fail(&self) -> Result<(), String> {
         if self
             .base_injector
@@ -349,7 +368,11 @@ impl HsmFaultInjector {
         }
     }
 
-    /// Maybe inject HSM timeout
+    /// Maybe inject HSM timeout.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` when the fault injector triggers an `HsmTimeout` fault.
     pub async fn maybe_timeout(&self, duration: Duration) -> Result<(), String> {
         if self
             .base_injector
@@ -364,7 +387,12 @@ impl HsmFaultInjector {
         }
     }
 
-    /// Maybe return invalid HSM response
+    /// Maybe return invalid HSM response.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` when the fault injector triggers an `HsmInvalidResponse`
+    /// fault, discarding the valid response.
     pub fn maybe_invalid_response<T>(&self, valid_response: T) -> Result<T, String> {
         if self
             .base_injector
@@ -388,7 +416,12 @@ impl ResourceFaultInjector {
         Self { base_injector }
     }
 
-    /// Maybe inject memory allocation failure
+    /// Maybe inject memory allocation failure.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` when the fault injector triggers a
+    /// `MemoryAllocationFailure` fault.
     pub fn maybe_allocation_failure<T>(&self, value: T) -> Result<T, String> {
         if self
             .base_injector
@@ -400,7 +433,11 @@ impl ResourceFaultInjector {
         }
     }
 
-    /// Maybe inject disk full error
+    /// Maybe inject disk full error.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` when the fault injector triggers a `DiskFull` fault.
     pub fn maybe_disk_full(&self) -> Result<(), String> {
         if self.base_injector.should_inject_fault(FaultType::DiskFull) {
             Err("Disk full".to_string())
@@ -409,7 +446,12 @@ impl ResourceFaultInjector {
         }
     }
 
-    /// Maybe inject resource exhausted
+    /// Maybe inject resource exhaustion.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` when the fault injector triggers a `ResourceExhausted`
+    /// fault.
     pub fn maybe_resource_exhausted(&self) -> Result<(), String> {
         if self
             .base_injector

@@ -11,7 +11,7 @@
 //! Concurrent Test Helpers - Zero Sleep, Maximum Robustness
 //!
 //! This module provides utilities for truly concurrent testing without
-//! arbitrary sleep() calls or serial test execution.
+//! arbitrary `sleep()` calls or serial test execution.
 //!
 //! Philosophy: "Test issues ARE production issues"
 
@@ -66,7 +66,7 @@ pub fn ephemeral_tcp_listener() -> std::io::Result<(TcpListener, u16)> {
 
 /// Health-based readiness waiter
 ///
-/// Replaces arbitrary sleep() with actual health checking.
+/// Replaces arbitrary `sleep()` with actual health checking.
 ///
 /// # Example
 /// ```no_run
@@ -187,7 +187,7 @@ impl Drop for CompletionSignal {
 
 /// Barrier for coordinating multiple concurrent tasks
 ///
-/// Like std::sync::Barrier but async-aware.
+/// Like `std::sync::Barrier` but async-aware.
 pub struct AsyncBarrier {
     count: Arc<AtomicUsize>,
     target: usize,

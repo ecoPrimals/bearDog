@@ -1,6 +1,6 @@
 # BearDog Status
 
-**Last Updated**: March 31, 2026
+**Last Updated**: April 2, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -18,10 +18,10 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 14,610+ passing | Fully concurrent, zero sleeps in non-chaos, zero deadlocks |
-| **Coverage** | 90.16% line | llvm-cov workspace — target 90%, `beardog-production` (59%) dragging |
-| **Serial Tests** | 0 | `#[serial]` fully eliminated |
-| **cargo deny** | 4/4 pass | Advisories, bans, licenses, sources |
+| **Tests** | 14,366+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Coverage** | 90.16% line | llvm-cov workspace — target 90% met |
+| **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
+| **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
 | **License** | AGPL-3.0-only | SPDX headers on all .rs files |
 | **Architecture** | DI-based | Pure `Default`, `from_env()` at boundaries |
 | **Toolchain** | Pinned | `rust-toolchain.toml` at 1.93.0 |
@@ -32,7 +32,7 @@
 ## Codebase Metrics
 
 - **Crates**: 29 in workspace (beardog-integration excluded — overstep)
-- **Rust Files**: 1,892
+- **Rust Files**: 1,888
 - **Crypto Methods**: 93 JSON-RPC methods
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
 
@@ -77,14 +77,29 @@
 | All Public Items Documented | 0 missing_docs warnings |
 | File Size | 0 production files > 1000 LOC |
 | Zero Sleeps (non-chaos) | All test synchronization via barriers/channels/notifications |
-| Zero `#[serial]` | All tests fully concurrent via unique resources |
-| Production Mocks | All mocks isolated to `#[cfg(test)]`; production code uses complete implementations |
+| `#[serial]` Minimized | 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent |
+| Production Mocks | Mocks in `#[cfg(test)]`; FIDO2/iOS Phase 2 stubs return proper errors, not fake data |
 | Commented-Out Code | 0 — all legacy stubs cleaned per wateringHole standard |
 | Typed Errors | `Box<dyn Error>` eliminated from public APIs; `BearDogError` throughout |
 
 ---
 
-## Recent Improvements (March 28, 2026)
+## Recent Improvements
+
+### Wave 26: Deep Debt Evolution — Stubs → Implementations, Dependency Alignment, Dead Code Cleanup (April 2, 2026)
+
+- **Workspace dependency alignment** — `beardog-ipc`, `beardog-hid`, `serial_test`, `beardog-adapters`, `beardog-capabilities`, `beardog-genetics`, `tempfile` all converted from explicit `path =` / version strings to `workspace = true`
+- **`handle_key_info` stub evolved** — Replaced "Coming soon!" stub with real implementation loading key metadata from `~/.beardog/keys/`; added `handle_key_info_with_home` for DI testability
+- **Client mode JSON-RPC** — Replaced placeholder `println!` with actual `dispatch_rpc()` over Unix socket (JSON-RPC 2.0 with NDJSON framing)
+- **Orphaned `universal_hsm/entropy` modules wired** — `collector.rs` and `live_feed_validator.rs` compiled for the first time; 22 clippy errors fixed (API drift from `BearDogError`, cast safety, doc backticks)
+- **Production `collector_production_tests.rs`** — Updated to match current `EntropyCollector` API (removed nonexistent `EntropyConfig` reference)
+- **Dead code cleanup** — Removed 3 unused `Arc<RwLock<…>>` fields from `QuantumDiscoveryEngine`; moved 3 test-only `BearDogCore` API hooks behind `#[cfg(test)]`; removed redundant `#[allow(dead_code)]` from `key_revoke::merge()`; wired `min_hardware_entropy_ratio` field in entropy validator
+- **tarpc docs** — Hardcoded `127.0.0.1:9901` references replaced with capability-based port discovery docs
+- **`deny.toml` skip-list** — Reduced from 30 to 15 entries (12 resolved transitive splits cleaned)
+- **`beardog-production` flaky test** — `test_production_ready_thread_safe` stabilized with `#[serial]` (35 tests)
+- **HSM manager test flakiness** — 5 tests in `beardog-tunnel` refactored from `process_env::set_var` to `HsmAutoInitConfig` structs
+- **AI tree feature-gated** — `beardog-core/src/ai/` (11.9K LOC) gated behind `ai` Cargo feature per `PRIMAL_RESPONSIBILITY_MATRIX`
+- **All gates green** — fmt ✓, clippy `-D warnings` ✓, build ✓, test (14,366+) ✓, deny ✓
 
 ### Wave 23: Massive Orphan Purge, Doc Dedup, Lint Tightening & Self-Knowledge Constants
 

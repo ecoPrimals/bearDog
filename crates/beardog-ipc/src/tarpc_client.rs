@@ -8,7 +8,7 @@
 //! with ~10-20μs latency (vs ~100-500μs for JSON-RPC).
 //!
 //! ## Architecture
-//! - Connects to TCP port (default 9901)
+//! - Connects to a TCP port resolved at runtime via capability-based discovery
 //! - Automatic reconnection with exponential backoff
 //! - Thread-safe (Clone + Send + Sync)
 //! - Fully memory-safe
@@ -80,10 +80,11 @@ struct TarpcClientInner {
 
 #[allow(clippy::missing_errors_doc)] // Thin tarpc RPC wrappers; errors are transport/RPC failures surfaced as `anyhow::Error`.
 impl TarpcCryptoClient {
-    /// Connect to a `BearDog` tarpc server
+    /// Connect to a `BearDog` tarpc server.
     ///
     /// # Arguments
-    /// * `addr` - Server address (e.g., "127.0.0.1:9901")
+    /// * `addr` - Server address discovered at runtime via capability-based
+    ///   port discovery (see `beardog-config::domains::port_discovery`)
     ///
     /// # Errors
     /// Returns error if initial connection fails

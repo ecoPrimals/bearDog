@@ -26,10 +26,14 @@
 use beardog_errors::BearDogError;
 use tracing::info;
 
-/// Discover any available HSM for testing
+/// Discover any available HSM for testing.
 ///
 /// This function is hardware-agnostic - it discovers and returns
 /// success if any HSM hardware is available on the system.
+///
+/// # Errors
+///
+/// Returns [`BearDogError`] if no HSM hardware is detected on the host.
 pub async fn discover_any_available_hsm() -> Result<String, BearDogError> {
     info!("Discovering available HSM hardware...");
 
@@ -68,7 +72,7 @@ pub async fn discover_any_available_hsm() -> Result<String, BearDogError> {
 /// Scan `/dev/hidraw*` devices for a FIDO2/U2F security key.
 ///
 /// Uses `udevadm` to inspect each HID device's USB vendor/product ID.
-/// Known FIDO2 vendor IDs: `1209` (SoloKeys), `1050` (Yubico).
+/// Known FIDO2 vendor IDs: `1209` (`SoloKeys`), `1050` (Yubico).
 fn detect_fido2_hid_device() -> bool {
     const FIDO2_VENDOR_IDS: &[&str] = &["1209", "1050"];
 
@@ -100,10 +104,15 @@ fn detect_fido2_hid_device() -> bool {
     false
 }
 
-/// Run universal test suite on any HSM
+/// Run universal test suite on any HSM.
 ///
 /// This test suite works with ANY HSM that `BearDog` discovers.
 /// The tests adapt to the hardware's capabilities.
+///
+/// # Errors
+///
+/// Returns [`BearDogError`] if any hardware-level HSM operation fails during
+/// the test sequence.
 pub async fn run_universal_hsm_test_suite(hsm_type: &str) -> Result<(), BearDogError> {
     info!("🧪 Running universal HSM test suite on {}", hsm_type);
 

@@ -59,7 +59,8 @@ pub use core::{
 };
 pub use genetics::{BiomeGenetics, EntropyQualityAssessor, EvolutionEngine, LineageTracker};
 pub use hsm_multi_credential::{
-    CredentialIdConverter, MultiCredentialHsmProvider, PermissionMapper,
+    CredentialIdConverter, CredentialNode, CredentialRequest, MultiCredentialHsmProvider,
+    PermissionMapper,
 };
 pub use security::{AuditProvider, PolicyEngine};
 

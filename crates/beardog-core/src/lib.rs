@@ -70,10 +70,14 @@ pub mod core;
 /// Shared types used across the Beardog system
 pub mod types;
 
-/// AI-powered hybrid intelligence system
+/// AI-powered hybrid intelligence system (feature-gated).
 ///
 /// Combines human decision-making with AI assistance for sovereign operations.
 /// Includes neural network integration, learning systems, and performance optimization.
+///
+/// Gated behind the `ai` feature — outside crypto domain per
+/// `PRIMAL_RESPONSIBILITY_MATRIX`.
+#[cfg(feature = "ai")]
 pub mod ai;
 
 /// Biome sovereignty and human-centric key management
@@ -176,6 +180,9 @@ pub mod socket_config;
 ///
 /// Comprehensive migration framework for transitioning from traditional
 /// machine randomness to human-owned entropy across the entire ecosystem.
+///
+/// Requires the `ai` feature (depends on sovereign RNG from the AI module).
+#[cfg(feature = "ai")]
 pub mod migration;
 
 /// Protocol-agnostic crypto service
@@ -232,12 +239,14 @@ mod tests {
 
     #[test]
     fn test_module_structure() {
-        // Verify all key modules are accessible
-        // AI module
+        // Zero-knowledge bootstrap module is accessible
+    }
+
+    #[cfg(feature = "ai")]
+    #[test]
+    fn test_ai_module_structure() {
         use ai::hybrid_intelligence::HybridIntelligenceConfig;
         let _config = HybridIntelligenceConfig::default();
-
-        // Zero-knowledge bootstrap module is accessible
     }
 
     #[test]

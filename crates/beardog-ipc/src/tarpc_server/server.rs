@@ -62,10 +62,11 @@ impl BearDogCryptoServer {
         }
     }
 
-    /// Start the tarpc server on the specified address
+    /// Start the tarpc server on the specified address.
     ///
     /// # Arguments
-    /// * `addr` - Socket address to bind to (e.g., "127.0.0.1:9901")
+    /// * `addr` - Socket address resolved at runtime via capability-based
+    ///   port discovery (see `beardog-config::domains::port_discovery`)
     ///
     /// # Errors
     /// Returns error if binding fails

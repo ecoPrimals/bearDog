@@ -415,14 +415,17 @@ mod main_coverage_deep_tests {
     }
 
     #[tokio::test]
-    async fn dispatch_key_info_succeeds() {
+    async fn dispatch_key_info_missing_key_returns_err() {
         let r = crate::dispatch(Commands::Key {
             action: KeyAction::Info {
-                key_id: "coverage-key-id".to_string(),
+                key_id: "nonexistent-coverage-key".to_string(),
             },
         })
         .await;
-        assert!(r.is_ok());
+        assert!(
+            r.is_err(),
+            "key info for a nonexistent key should return Err"
+        );
     }
 
     #[tokio::test]

@@ -94,13 +94,25 @@ pub trait ChaosScenario {
     /// Chaos type
     fn chaos_type(&self) -> ChaosType;
 
-    /// Inject chaos
+    /// Inject chaos.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` if the chaos injection itself fails.
     fn inject_chaos(&mut self, config: &ChaosTestConfig) -> Result<(), BearDogError>;
 
-    /// Validate system behavior under chaos
+    /// Validate system behavior under chaos.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` if stability validation cannot be performed.
     fn validate_stability(&self) -> Result<bool, BearDogError>;
 
-    /// Recover from chaos
+    /// Recover from chaos.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` if recovery fails or is incomplete.
     fn recover(&mut self) -> Result<Duration, BearDogError>;
 }
 

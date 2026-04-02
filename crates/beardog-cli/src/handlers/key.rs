@@ -283,20 +283,48 @@ pub async fn handle_key_list_with_home(
     Ok(())
 }
 
-/// Handle key info command
+/// Handle key info command — load and display key metadata from the local key
+/// store.
 ///
 /// # Errors
 ///
-/// This handler is currently a stub and does not return errors; the signature is reserved for
-/// future key metadata loading.
+/// Returns an error if the key cannot be found or read from the store.
 pub async fn handle_key_info(key_id: &str) -> Result<(), BearDogError> {
+    let home = key_store::home_dir_for_keys()?;
+    handle_key_info_with_home(key_id, home).await
+}
+
+/// Same as [`handle_key_info`] but with an explicit home directory (tests / DI).
+///
+/// # Errors
+///
+/// Returns an error if the key cannot be found or read from the store.
+pub async fn handle_key_info_with_home(
+    key_id: &str,
+    home: impl AsRef<Path>,
+) -> Result<(), BearDogError> {
+    let stored = key_store::load_key_from_home(key_id, home)?;
+
     println!("🔍 Key Information");
     println!("=================");
     println!();
-    println!("Key ID: {key_id}");
-    println!();
-    println!("🔨 Coming soon in next iteration!");
+    println!("  Key ID:      {}", stored.key_id);
+    println!("  Algorithm:   {}", stored.algorithm);
+    println!("  HSM:         {}", stored.hsm_name);
+    println!("  Created:     {}", stored.created_at);
+    println!("  Generation:  {}", stored.generation);
 
+    if let Some(ref parent) = stored.parent_key_id {
+        println!("  Parent key:  {parent}");
+    }
+    if let Some(ref purpose) = stored.derivation_purpose {
+        println!("  Derived for: {purpose}");
+    }
+    if !stored.children.is_empty() {
+        println!("  Children:    {}", stored.children.join(", "));
+    }
+
+    println!();
     Ok(())
 }
 
@@ -681,10 +709,37 @@ mod key_handler_tests {
     }
 
     #[tokio::test]
-    async fn test_handle_key_info() {
-        handle_key_info("any-id")
-            .await
-            .expect("handle_key_info placeholder");
+    async fn test_handle_key_info_missing_key() {
+        let result = handle_key_info("nonexistent-key").await;
+        assert!(
+            result.is_err(),
+            "key info for a nonexistent key should return Err"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_handle_key_info_existing_key() {
+        let dir = TempDir::new().expect("create temp directory");
+        let home = dir.path();
+
+        let stored = key_store::StoredKey {
+            key_id: "info-test-key".to_string(),
+            algorithm: "ed25519".to_string(),
+            hsm_name: "software".to_string(),
+            created_at: "2026-01-01T00:00:00Z".to_string(),
+            key_material_b64: "dGVzdA==".to_string(),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: None,
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        };
+        key_store::save_key_to_home(&stored, home).expect("save test key");
+        let result = handle_key_info_with_home("info-test-key", home).await;
+        assert!(result.is_ok(), "key info for existing key should succeed");
     }
 
     #[tokio::test]
