@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 2, 2026 -- Wave 28: Deep Debt Evolution — Self-Knowledge, Error Typing, Hardcoding
+
+- **Self-knowledge** — Removed deprecated `SongbirdClient` type alias; genericized Songbird/biomeOS references in tower-atomic, discovery, installer docs
+- **`Box<dyn Error>` → `BearDogError`** — AI hybrid intelligence public APIs return canonical typed errors
+- **Hardcoded addresses** — tarpc/node-registry/BTSP docs annotated with capability-based discovery notes
+- **Feature flag** — `advanced-nestgate` → `advanced-registry` (no cross-primal names)
+- **Stub documentation** — PKCS#11/TPM Phase 2 comments reference target pure Rust crates
+- **14,366+ tests passing**, all gates green
+
 ### April 2, 2026 -- Wave 27: primalSpring License Audit — AGPL-3.0-or-later, Lint Migration, Deprecation
 
 - **License** — `AGPL-3.0-only` → `AGPL-3.0-or-later` across 58 `Cargo.toml`, `deny.toml`, 2,075 SPDX headers, all `.md` docs per `STANDARDS_AND_EXPECTATIONS.md`

@@ -68,10 +68,6 @@ pub mod multi_transport;
 pub mod protocol_router;
 
 pub use client::OrchestratorRegistryClient;
-
-/// Deprecated alias for [`OrchestratorRegistryClient`].
-#[deprecated(since = "0.9.0", note = "use `OrchestratorRegistryClient` instead")]
-pub type SongbirdClient = OrchestratorRegistryClient;
 pub use dispatch::{DispatchOutcome, IpcErrorPhase};
 pub use error::{IpcError, IpcResult};
 pub use method_names::normalize_method;

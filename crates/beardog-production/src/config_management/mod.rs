@@ -201,11 +201,11 @@ pub type LogFormat = beardog_types::canonical::config::domains::system::LogForma
 /// Log level (canonical)
 pub type LogLevel = beardog_types::canonical::config::domains::system::LogLevel;
 
-/// Production security section placeholder (extend with canonical fields as needed).
+/// Production security section (extend with canonical fields as needed).
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SecurityConfig {}
 
-/// Production monitoring section placeholder (extend with canonical fields as needed).
+/// Production monitoring section (extend with canonical fields as needed).
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MonitoringConfig {}
 

@@ -19,6 +19,7 @@
 //! use beardog_node_registry::registry::{NodeRegistry, NodeInfo, NodeStatus};
 //!
 //! let mut registry = NodeRegistry::new();
+//! // Address is illustrative; production uses capability discovery.
 //! let node = NodeInfo {
 //!     node_id: "node-1".to_string(),
 //!     endpoint: "http://localhost:8080".to_string(),

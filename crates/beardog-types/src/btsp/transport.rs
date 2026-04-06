@@ -60,12 +60,15 @@ pub enum Transport {
         /// Can be a domain name (e.g., "api.anthropic.com"),
         /// IPv4 address (e.g., "192.168.1.1"),
         /// or IPv6 address (e.g., "`::1`").
+        /// Host and port in examples are illustrative; production resolves endpoints via
+        /// configuration and capability discovery.
         host: String,
 
         /// Port number
         ///
-        /// Valid range: 1-65535
-        /// Common ports: 443 (HTTPS), 80 (HTTP), 8080 (alternate HTTP)
+        /// Valid range: 1-65535.
+        /// Well-known examples include 443 (HTTPS), 80 (HTTP), and 8080 (alternate HTTP); the
+        /// actual port is chosen at runtime (config / discovery), not fixed by this type.
         port: u16,
     },
 }

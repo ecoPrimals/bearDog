@@ -11,13 +11,12 @@ This crate provides BearDog's implementation of the ecoPrimals Primal IPC Protoc
 - JSON-RPC 2.0 communication over Unix sockets
 - Runtime primal discovery (zero hardcoded knowledge)
 
-The primary client type is **`OrchestratorRegistryClient`**. The name **`SongbirdClient`** remains as a deprecated type alias for the same type.
+The primary client type is **`OrchestratorRegistryClient`**.
 
 ## Usage
 
 ```rust
 use beardog_ipc::{OrchestratorRegistryClient, Capability};
-// `SongbirdClient` is a deprecated alias for `OrchestratorRegistryClient`.
 
 // Register with orchestrator on startup
 let client = OrchestratorRegistryClient::connect().await?;

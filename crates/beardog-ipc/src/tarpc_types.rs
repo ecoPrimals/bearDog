@@ -397,7 +397,7 @@ pub struct HealthStatus {
 pub struct ProtocolInfo {
     /// Transport or RPC protocol label (`tarpc`, `jsonrpc`, `http`, ...).
     pub name: String,
-    /// Listening TCP/UDP port when applicable.
+    /// Listening TCP/UDP port when applicable (from discovery or config; values in docs/tests are illustrative).
     pub port: u16,
     /// Whether this protocol endpoint is currently accepting work.
     pub enabled: bool,

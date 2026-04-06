@@ -15,6 +15,7 @@
 //!
 //! ## Usage Pattern: Protocol Graduation
 //! ```ignore
+//! // `addr` / ports are discovered at runtime (capability-based discovery), not fixed literals.
 //! // 1. Start with JSON-RPC (flexible, human-readable)
 //! let json_client = JsonRpcClient::connect(addr).await?;
 //! let result = json_client.call("crypto.sign", params).await?;

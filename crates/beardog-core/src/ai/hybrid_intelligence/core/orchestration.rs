@@ -11,6 +11,7 @@ use super::super::core_types::{IntelligenceCapability, MachineLearningConfig, Mo
 use super::super::learning::{LearningAlgorithmType, PredictionHorizon};
 use super::super::neural_networks::TrainingParams;
 use super::super::types::*;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -165,7 +166,7 @@ impl HybridIntelligenceSystem {
     }
     
     /// Initialize the system
-    pub async fn initialize(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn initialize(&mut self) -> Result<(), BearDogError> {
         let mut state = self.state.write().await;
         state.status = SystemStatus::Ready;
         state.last_activity = std::time::SystemTime::now();
@@ -177,7 +178,7 @@ impl HybridIntelligenceSystem {
     }
     
     /// Update system state based on decision result
-    pub async fn update_state(&mut self, decision: &super::decision_making::DecisionResult) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn update_state(&mut self, decision: &super::decision_making::DecisionResult) -> Result<(), BearDogError> {
         let mut state = self.state.write().await;
         let mut metrics = self.metrics.write().await;
         
@@ -195,19 +196,19 @@ impl HybridIntelligenceSystem {
     }
     
     /// Get current system metrics
-    pub async fn get_metrics(&self) -> Result<OrchestrationMetrics, Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn get_metrics(&self) -> Result<OrchestrationMetrics, BearDogError> {
         let metrics = self.metrics.read().await;
         Ok(metrics.clone())
     }
     
     /// Get current system state
-    pub async fn get_state(&self) -> Result<SystemState, Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn get_state(&self) -> Result<SystemState, BearDogError> {
         let state = self.state.read().await;
         Ok(state.clone())
     }
     
     /// Set processing mode
-    pub async fn set_processing_mode(&mut self, mode: ProcessingMode) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn set_processing_mode(&mut self, mode: ProcessingMode) -> Result<(), BearDogError> {
         self.processing_mode = mode;
         
         let mut state = self.state.write().await;
@@ -223,7 +224,7 @@ impl HybridIntelligenceSystem {
     }
     
     /// Shutdown the system gracefully
-    pub async fn shutdown(&mut self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn shutdown(&mut self) -> Result<(), BearDogError> {
         let mut state = self.state.write().await;
         state.status = SystemStatus::Shutdown;
         state.active_tasks = 0;
@@ -232,7 +233,7 @@ impl HybridIntelligenceSystem {
     }
     
     /// Initialize system capabilities based on configuration
-    async fn initialize_capabilities(&self) -> Result<Vec<IntelligenceCapability>, Box<dyn std::error::Error + Send + Sync>> {
+    async fn initialize_capabilities(&self) -> Result<Vec<IntelligenceCapability>, BearDogError> {
         let mut capabilities = Vec::new();
         
         // Add basic intelligence capabilities
@@ -253,7 +254,7 @@ impl HybridIntelligenceSystem {
     }
     
     /// Update resource utilization metrics
-    pub async fn update_resource_metrics(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn update_resource_metrics(&self) -> Result<(), BearDogError> {
         let mut metrics = self.metrics.write().await;
         
         // In a real implementation, these would be actual system metrics

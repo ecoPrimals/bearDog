@@ -19,7 +19,7 @@ use thiserror::Error;
 
 /// Supported operating systems
 ///
-/// Represents all operating systems supported by biomeOS genomeBins.
+/// Represents all operating systems supported by ecosystem genomeBins.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum OperatingSystem {

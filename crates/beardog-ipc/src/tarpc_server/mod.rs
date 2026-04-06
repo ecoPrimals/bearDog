@@ -8,7 +8,7 @@
 //! for cryptographic operations with ~10-20μs latency.
 //!
 //! ## Architecture
-//! - tarpc server binds to TCP port (default 9901)
+//! - tarpc server binds to a TCP address supplied at runtime (capability-based port discovery)
 //! - Delegates to existing crypto implementations (same as JSON-RPC handlers)
 //! - Fully memory-safe
 //! - Modern async/await

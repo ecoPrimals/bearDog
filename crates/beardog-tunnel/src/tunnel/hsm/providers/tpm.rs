@@ -63,7 +63,7 @@ impl TpmUniversalProvider {
                 tpm_version: TpmVersion::V2_0,
                 metadata: HashMap::with_capacity(16),
             };
-            // Note: Full TPM 2.0 crypto still requires tss2 / platform integration beyond this stub.
+            // Phase 2: full TPM 2.0 crypto requires tss2 / platform integration (pure Rust tss-esapi).
             Ok(provider)
         }
     }

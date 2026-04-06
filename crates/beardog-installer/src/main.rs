@@ -11,7 +11,7 @@
 //! beardog-installer install
 //!
 //! # Install specific primals
-//! beardog-installer install --primals beardog,songbird
+//! beardog-installer install --primals beardog,other-primal
 //!
 //! # Validate installation
 //! beardog-installer validate
@@ -34,7 +34,7 @@ use tracing_subscriber::FmtSubscriber;
 
 #[derive(Parser)]
 #[command(name = "beardog-installer")]
-#[command(about = "Universal genomeBin Installer for biomeOS NUCLEUS", long_about = None)]
+#[command(about = "Universal genomeBin Installer for ecosystem NUCLEUS", long_about = None)]
 #[command(version)]
 struct Cli {
     /// Source directory containing compiled binaries

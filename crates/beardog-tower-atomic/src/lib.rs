@@ -9,12 +9,12 @@
 //! ## Purpose
 //!
 //! `BearDog` is a **Pure Rust crypto primal** with ZERO network dependencies.
-//! When `BearDog` needs HTTP/TLS, it delegates to Songbird via Tower Atomic.
+//! When `BearDog` needs HTTP/TLS, it delegates to the network transport primal via Tower Atomic.
 //!
 //! ## Philosophy
 //!
 //! - **`BearDog`**: Crypto only (ed25519, x25519, chacha20, blake3)
-//! - **Songbird**: TLS/HTTP gateway (Pure Rust, 95% complete)
+//! - **Network transport primal**: TLS/HTTP gateway (discovered at runtime)
 //! - **Tower Atomic**: Inter-primal glue (Unix sockets, JSON-RPC)
 //!
 //! ## Example

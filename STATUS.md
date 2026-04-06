@@ -86,6 +86,15 @@
 
 ## Recent Improvements
 
+### Wave 28: Deep Debt Evolution — Self-Knowledge, Box\<dyn Error\>, Hardcoding, Stubs (April 2, 2026)
+
+- **Self-knowledge cleanup** — Removed `SongbirdClient` deprecated type alias; genericized "Songbird" → "network transport primal" in tower-atomic docs; replaced "biomeOS Neural API" → "ecosystem service registry" in discovery warnings; cleaned installer docs
+- **`Box<dyn Error>` → `BearDogError`** — AI hybrid intelligence public APIs (`orchestration.rs`, `integration.rs`) now return `BearDogError` instead of `Box<dyn Error + Send + Sync>`
+- **Hardcoded address cleanup** — tarpc client/server/types docs now reference capability-based discovery; node-registry examples annotated; BTSP transport docs clarified
+- **Feature flag naming** — `advanced-nestgate` → `advanced-registry` in beardog-adapters (no cross-primal names in feature gates)
+- **Stub language cleanup** — PKCS#11/TPM comments now reference Phase 2 pure Rust crates; config_management "placeholder" → clean doc
+- **All gates green** — fmt ✓, clippy `-D warnings` ✓, test (14,366+) ✓, deny ✓
+
 ### Wave 27: primalSpring License Audit — AGPL-3.0-or-later, #[expect(reason)], Method Deprecation, Binary Docs (April 2, 2026)
 
 - **License migrated to AGPL-3.0-or-later** — 58 `Cargo.toml` files, `deny.toml`, 2,075 SPDX headers, all `.md` docs updated per `STANDARDS_AND_EXPECTATIONS.md`

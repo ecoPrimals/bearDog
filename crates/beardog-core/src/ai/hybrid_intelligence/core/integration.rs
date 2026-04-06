@@ -6,6 +6,7 @@
 //! and system connectivity for the hybrid intelligence system.
 
 use super::super::config::HybridIntelligenceConfig;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -143,7 +144,7 @@ impl IntegrationManager {
     }
     
     /// Get integration metrics
-    pub async fn get_metrics(&self) -> Result<IntegrationMetrics, Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn get_metrics(&self) -> Result<IntegrationMetrics, BearDogError> {
         Ok(self.external_systems.metrics.clone())
     }
 }

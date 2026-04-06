@@ -59,7 +59,7 @@ impl Pkcs11UniversalProvider {
                 slot_id,
                 metadata: HashMap::with_capacity(16),
             };
-            // Note: Session and crypto operations require PKCS#11 bindings beyond this stub.
+            // Phase 2: session and crypto operations require PKCS#11 bindings (pure Rust pkcs11 crate).
             Ok(provider)
         }
     }

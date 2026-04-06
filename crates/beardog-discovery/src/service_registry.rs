@@ -168,17 +168,20 @@ impl ServiceRegistryDiscovery {
             }
         }
 
-        warn!("No service registry providers discovered via biomeOS capability scan");
-        warn!("  Hint: ensure biomeOS Neural API is running or set capability env vars");
+        warn!("No service registry providers discovered via ecosystem capability scan");
+        warn!(
+            "  Hint: ensure the ecosystem service registry is reachable or set capability env vars"
+        );
         Err(DiscoveryError::BackendUnavailable {
             provider: "service_registry".to_string(),
-            reason: "No providers discovered (biomeOS Neural API not reachable)".to_string(),
+            reason: "No providers discovered (ecosystem service registry not reachable)"
+                .to_string(),
         })
     }
 
     /// Discover providers via mDNS (capability-based).
     ///
-    /// Gated behind `mdns` feature — biomeOS owns network discovery per
+    /// Gated behind `mdns` feature — the ecosystem owns network discovery per
     /// `PRIMAL_RESPONSIBILITY_MATRIX` V2.
     #[cfg(feature = "mdns")]
     async fn discover_via_mdns(&self, capability: &str) -> Result<Vec<DiscoveredProvider>> {

@@ -17,7 +17,7 @@ use thiserror::Error;
 
 /// Supported CPU architectures
 ///
-/// Represents all architectures supported by biomeOS genomeBins.
+/// Represents all architectures supported by ecosystem genomeBins.
 /// Detection happens at compile time using `env::consts::ARCH`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
