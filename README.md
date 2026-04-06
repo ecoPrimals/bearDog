@@ -4,11 +4,11 @@
 [![Clippy](https://img.shields.io/badge/clippy-0_warnings-brightgreen.svg)](STATUS.md)
 [![Pure Rust](https://img.shields.io/badge/rust-100%25_pure-orange.svg)](STATUS.md)
 [![Edition](https://img.shields.io/badge/edition-2024-blue.svg)](Cargo.toml)
-[![License](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue.svg)](LICENSE)
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 29 | **Tests**: 14,610+ | **Coverage**: 90.16%
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 29 | **Tests**: 14,366+ | **Coverage**: 90.16%
 
 ---
 
@@ -171,9 +171,9 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
 | **Files > 1000 LOC** | 0 (production code) |
-| **Tests** | 14,610+ (fully concurrent, zero sleeps in non-chaos) |
+| **Tests** | 14,366+ (concurrent; 35 `#[serial]` in `beardog-production`) |
 | **Coverage** | 90.16% line (llvm-cov workspace, target 90%) |
-| **Serial Tests** | 0 (`#[serial]` fully eliminated) |
+| **Serial Tests** | 35 (`beardog-production` shared `AtomicBool` state) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |
 | **License** | AGPL-3.0-or-later (SPDX headers on all .rs files) |
 
@@ -184,7 +184,7 @@ Key material is derived from the family seed. A BearDog instance serving family 
 - **Dependency Injection** — Config flows through parameters, `Default` is pure (no I/O), `from_env()` at boundaries only
 - **Zero Hardcoding** — Environment variables and capability-based discovery
 - **Result<T, E>** — Zero `.unwrap()` in production; `#[expect(clippy::expect_used, reason = "...")]` for justified invariants; `unwrap_used`/`expect_used` warn at workspace level
-- **Fully Concurrent Tests** — Zero `#[serial]`, zero sleeps in non-chaos tests
+- **Concurrent Tests** — 35 `#[serial]` isolated to `beardog-production` (shared `AtomicBool`); all others concurrent, zero sleeps in non-chaos tests
 - **< 1000 LOC** — File size discipline across all production .rs files
 - **Workspace Lints** — Centralized clippy pedantic + nursery + all cast lints + `doc_markdown` + `missing_errors_doc` at warn
 - **SPDX headers** — Every `.rs` file has `// SPDX-License-Identifier: AGPL-3.0-or-later`

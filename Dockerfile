@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: AGPL-3.0-only
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # BearDog Production Dockerfile — multi-stage, pure Rust
 
 FROM rust:1.93-slim AS builder
@@ -35,4 +35,4 @@ CMD ["server"]
 LABEL maintainer="ecoPrimals"
 LABEL version="0.9.0"
 LABEL description="BearDog — Pure Rust Cryptographic Service Provider"
-LABEL org.opencontainers.image.licenses="AGPL-3.0-only"
+LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later"

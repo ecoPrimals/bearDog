@@ -1,8 +1,8 @@
 # BearDog Architecture
 
-**Last Updated**: March 31, 2026
+**Last Updated**: April 2, 2026
 **Status**: Production Ready
-**Crates**: 29 | **Tests**: 14,610+ | **Coverage**: 90.16% | **MSRV**: 1.93.0
+**Crates**: 29 | **Tests**: 14,366+ | **Coverage**: 90.16% | **MSRV**: 1.93.0
 
 ---
 
@@ -238,10 +238,10 @@ Key material derived from family seed. Family A never shares keys with Family B.
 | File size | < 1000 LOC per file (exceptions justified) |
 | std preferred | `std::sync::LazyLock` over `once_cell`, etc. |
 | Mock isolation | All mocks behind `#[cfg(test)]` or `test-utils` feature |
-| Zero `#[serial]` | All tests concurrent via unique isolated resources |
+| `#[serial]` minimized | 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent |
 | Zero test sleeps | Barriers, channels, notifications — no timing dependencies |
 | Toolchain pinned | `rust-toolchain.toml` at 1.93.0 with cross-compile targets |
 
 ---
 
-**Last Updated**: March 31, 2026
+**Last Updated**: April 2, 2026

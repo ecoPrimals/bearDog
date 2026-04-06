@@ -154,7 +154,7 @@
 - **Dead orphan cleanup** — `songbird_client.rs` and `discovery_adapter.rs` removed (never in mod tree)
 - **Socket path centralization** — `DEFAULT_SOCKET_PATH`, `DEFAULT_IPC_PORT_FILE`, `DEFAULT_KEY_STORAGE_DIR` constants replace inline `/tmp/beardog*` strings
 - **Coverage** — 90.05% line (up from 90.03%), 89.22% region, 84.84% function
-- **14,610+ tests passing** — 0 failures
+- **14,366+ tests passing** — 0 failures
 - **All gates green** — fmt ✓, clippy `-D warnings` ✓, doc ✓, build ✓
 
 ### Wave 18: Deep Audit Execution, UniBin Identity Compliance, Stub Evolution & Debt Elimination

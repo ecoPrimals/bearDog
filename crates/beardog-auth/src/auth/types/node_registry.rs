@@ -342,8 +342,6 @@ mod comprehensive_tests {
         );
     }
 
-    // Test removed due to struct field mismatches - needs proper mock setup
-
     #[test]
     fn test_cross_node_auth_engine_default() {
         let engine = CrossNodeAuthEngine::default();
@@ -412,8 +410,6 @@ mod comprehensive_tests {
                 .contains(&NodeCapability::CryptographicAuditing)
         );
     }
-
-    // Test removed due to struct field mismatches - needs proper mock setup
 
     #[test]
     fn test_node_registry_overwrite_existing_node() {

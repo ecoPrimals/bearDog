@@ -14,9 +14,9 @@ BearDog answers “who is this node?” and “perform this crypto operation saf
 - **License:** AGPL-3.0-or-later (SPDX on sources)
 - **Version:** 0.9.0
 - **Workspace:** 29 crates (`Cargo.toml` workspace)
-- **Rust sources:** 1,892 `.rs` files
+- **Rust sources:** 1,888 `.rs` files
 - **MSRV:** 1.93.0 (`rust-toolchain.toml`)
-- **Tests:** 14,610+ passing (0 failed; `cargo test --workspace`)
+- **Tests:** 14,366+ passing (0 failed; `cargo test --workspace`)
 - **Coverage:** 90.16% line (llvm-cov, workspace; see [STATUS.md](STATUS.md))
 - **Unsafe:** 0 production blocks (`forbid(unsafe_code)` workspace-wide)
 - **IPC:** JSON-RPC 2.0 over NDJSON via Unix sockets / TCP / named pipes (platform-dependent); tarpc optional behind feature gate

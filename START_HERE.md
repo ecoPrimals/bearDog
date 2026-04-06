@@ -87,7 +87,7 @@ Each family gets its own BearDog instance with independently derived key materia
 
 ### JSON-RPC Methods
 
-BearDog exposes 91+ methods organized by domain:
+BearDog exposes 93 methods organized by domain:
 
 | Namespace | Examples |
 |-----------|----------|
@@ -112,7 +112,7 @@ Introspection: `discover_capabilities`, `primal.info`, `rpc.methods`
 - **Dependency Injection** — Pure `Default` (no I/O), `from_env()` at boundaries, `from_env_provider()` in tests
 - **Zero Hardcoding** — Config flows through parameters, capability-based discovery
 - **Result<T, E>** — Zero `unwrap()` in production; `expect()` only on documented invariants
-- **Fully Concurrent Tests** — Zero `#[serial]`, zero sleeps in non-chaos tests
+- **Concurrent Tests** — 35 `#[serial]` isolated to `beardog-production`; all others concurrent, zero sleeps in non-chaos tests
 - **< 1000 LOC** — File size discipline (production code)
 - **Constant-Time** — Use `subtle` crate for secret comparisons
 
@@ -146,9 +146,9 @@ cargo build --release                # Build
 | Missing Docs | 0 |
 | Unsafe | `forbid(unsafe_code)` workspace-wide |
 | Pure Rust | 100% |
-| Tests | 15,100+ (fully concurrent) |
-| Coverage | 90.05% line (llvm-cov) |
-| `#[serial]` | 0 |
+| Tests | 14,366+ (concurrent; 35 `#[serial]` in `beardog-production`) |
+| Coverage | 90.16% line (llvm-cov) |
+| `#[serial]` | 35 (`beardog-production` shared `AtomicBool`) |
 | Files > 1000 LOC | 0 (production) |
 
 ---
@@ -165,4 +165,4 @@ cargo build --release                # Build
 
 ---
 
-**Last Updated**: March 28, 2026
+**Last Updated**: April 2, 2026

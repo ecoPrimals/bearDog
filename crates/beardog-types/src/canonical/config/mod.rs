@@ -140,8 +140,7 @@ pub mod workflow;
 // Domain configuration submodules (consolidated types)
 /// Domains module containing consolidated configuration types
 ///
-/// NOTE: bootstrap.rs exists but needs proper module system integration
-/// For now, domains/ uses simple directory structure
+/// Consolidated domain configuration types (bootstrap, discovery, HSM, TLS, etc.)
 pub mod domains;
 
 // UNIFIED CONFIGURATION SYSTEM - Single source of truth

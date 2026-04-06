@@ -37,24 +37,17 @@
 //! ## Example
 //!
 //! ```rust,ignore
-//! // NOTE: This example uses an outdated API and needs updating
-//! use beardog_genetics::birdsong::BirdSongManager;
+//! use beardog_genetics::birdsong::{BirdSongManager, BirdSongConfig};
 //!
 //! # async fn example() -> Result<(), beardog_errors::BearDogError> {
-//! // Initialize BirdSong manager
-//! let manager = BirdSongManager::new().await?;
+//! let secret = b"family-master-secret".to_vec();
+//! let manager = BirdSongManager::new(secret, None).await?;
 //!
-//! // Generate lineage for new node
-//! let lineage = manager.generate_lineage("parent-id", "child-id").await?;
+//! // Encrypt a broadcast payload
+//! let ciphertext = manager.encrypt(b"Hello family!").await?;
 //!
-//! // Encrypt broadcast for this lineage
-//! let ciphertext = manager.encrypt_for_lineage(
-//!     b"Hello family!",
-//!     &lineage.lineage_hint
-//! ).await?;
-//!
-//! // Verify and decrypt (if in lineage)
-//! let plaintext = manager.decrypt_birdsong(&ciphertext, &lineage.proof).await?;
+//! // Decrypt (if in lineage)
+//! let plaintext = manager.decrypt(&ciphertext).await?;
 //! # Ok(())
 //! # }
 //! ```

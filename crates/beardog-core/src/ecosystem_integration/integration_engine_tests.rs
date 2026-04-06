@@ -50,9 +50,6 @@ mod tests {
         assert_eq!(engine.ecosystem_integrated, cloned.ecosystem_integrated);
     }
 
-    // Removed: test_discover_ecosystem_services_returns_vec
-    // Tests private method - needs to be internal test
-
     #[test]
     fn test_integrate_without_hsm_fails() {
         let config = UnifiedBearDogConfig::default();
@@ -135,9 +132,6 @@ mod integration_scenarios {
     use super::super::integration_engine::*;
     use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 
-    // Removed: test_discovery_empty_ecosystem
-    // Tests private method - needs to be internal test
-
     #[test]
     fn test_engine_lifecycle() {
         // Create engine
@@ -165,9 +159,6 @@ mod integration_scenarios {
         // State should be preserved
         assert_eq!(original_integrated, cloned.ecosystem_integrated);
     }
-
-    // Removed: test_multiple_discovery_calls
-    // Tests private method - needs to be internal test
 
     #[test]
     fn test_default_constructor() {
@@ -201,9 +192,6 @@ mod error_handling_tests {
             "Should not mark as integrated on error"
         );
     }
-
-    // Removed: test_discovery_resilience
-    // Tests private method - needs to be internal test
 
     #[test]
     fn test_error_messages_meaningful() {

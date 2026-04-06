@@ -316,7 +316,7 @@ impl PrimalDiscovery {
                 Ok(Vec::new())
             }
             _ => {
-                // Other methods not yet implemented for testing
+                // Unimplemented discovery methods return empty results
                 Ok(Vec::new())
             }
         }
