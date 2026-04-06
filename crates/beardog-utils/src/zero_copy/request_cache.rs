@@ -161,7 +161,9 @@ mod tests {
     #[test]
     fn test_cache_expiration() {
         let cache = RequestCache::new(Duration::from_secs(60));
-        let past = Instant::now() - Duration::from_secs(3600);
+        let past = Instant::now()
+            .checked_sub(Duration::from_secs(3600))
+            .unwrap();
         cache.insert_at(
             "key1".to_string(),
             "value1".to_string(),
@@ -176,7 +178,9 @@ mod tests {
     #[test]
     fn test_cache_cleanup_expired() {
         let cache = RequestCache::new(Duration::from_secs(60));
-        let past = Instant::now() - Duration::from_secs(3600);
+        let past = Instant::now()
+            .checked_sub(Duration::from_secs(3600))
+            .unwrap();
 
         cache.insert_at(
             "key1".to_string(),
@@ -300,7 +304,9 @@ mod tests {
     fn test_cache_mixed_expiration() {
         let cache = RequestCache::new(Duration::from_secs(60));
         let ttl = Duration::from_millis(50);
-        let old = Instant::now() - Duration::from_millis(100);
+        let old = Instant::now()
+            .checked_sub(Duration::from_millis(100))
+            .unwrap();
 
         cache.insert_at("short1".to_string(), "value1".to_string(), ttl, old);
         cache.insert_at("short2".to_string(), "value2".to_string(), ttl, old);

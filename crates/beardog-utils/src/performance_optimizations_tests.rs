@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive tests for performance_optimizations module
+//! Comprehensive tests for `performance_optimizations` module
 //! Goal: Boost coverage from 28% to 90%+
 
 #![allow(unused_imports, unused_variables, dead_code, clippy::all)]

@@ -170,6 +170,10 @@ pub struct DelegateParams<'a> {
 }
 
 /// Same as [`handle_key_delegate`] but keys and receipts live under `home` (tests / DI).
+///
+/// # Errors
+///
+/// Returns a [`BearDogError`] if key delegation fails.
 #[cfg(test)]
 pub async fn handle_key_delegate_with_home(
     params: &DelegateParams<'_>,

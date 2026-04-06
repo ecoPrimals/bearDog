@@ -3,7 +3,7 @@
 //! Chaos Testing for Network Partitions and Failures
 //!
 //! This test suite simulates real-world failure scenarios to verify
-//! BearDog's resilience under adverse conditions.
+//! `BearDog`'s resilience under adverse conditions.
 //!
 //! ## Chaos Scenarios:
 //!

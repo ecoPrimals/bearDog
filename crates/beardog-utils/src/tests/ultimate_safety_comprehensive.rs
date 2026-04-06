@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive tests for ultimate_safety module
+//! Comprehensive tests for `ultimate_safety` module
 //! Focus: Safety guarantees, edge cases, boundary conditions
 
 use crate::ultimate_safety::*;

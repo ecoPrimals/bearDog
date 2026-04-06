@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive Unit Tests for BearDog Compliance/Audit
+//! Comprehensive Unit Tests for `BearDog` Compliance/Audit
 //!
 //! Created: October 27, 2025
 //! Purpose: Expand test coverage for beardog-compliance audit functionality
 //!
 //! Tests cover:
-//! - AuditSeverity enum
-//! - AuditEventType enum
-//! - AuditEvent creation and builder pattern
-//! - AuditEngine event management
+//! - `AuditSeverity` enum
+//! - `AuditEventType` enum
+//! - `AuditEvent` creation and builder pattern
+//! - `AuditEngine` event management
 //! - Event filtering and querying
 //! - Compliance reporting
 //! - Event rotation and cleanup

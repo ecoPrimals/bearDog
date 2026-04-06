@@ -314,6 +314,11 @@ fn test_provider_health_recovery() {
 }
 
 #[test]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss
+)]
 fn test_periodic_health_checks() {
     // Periodic health checks should work correctly
     // Tests monitoring intervals

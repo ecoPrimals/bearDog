@@ -24,7 +24,7 @@ use std::time::Duration;
 // Application Configuration Tests
 // ============================================================================
 
-/// Test ApplicationConfig::with_defaults()
+/// Test `ApplicationConfig::with_defaults`()
 #[test]
 fn test_application_config_with_defaults() {
     let config = system::ApplicationConfig::with_defaults();
@@ -42,7 +42,7 @@ fn test_application_config_with_defaults() {
     assert!(config.features.is_empty());
 }
 
-/// Test ApplicationConfig::from_env()
+/// Test `ApplicationConfig::from_env`()
 #[test]
 fn test_application_config_from_env() {
     let config = system::ApplicationConfig::from_env_provider(|k| match k {
@@ -62,7 +62,7 @@ fn test_application_config_from_env() {
 // Storage & Resource Configuration Tests
 // ============================================================================
 
-/// Test StorageResourceConfig::with_defaults()
+/// Test `StorageResourceConfig::with_defaults`()
 #[test]
 fn test_storage_resource_config_with_defaults() {
     let config = StorageResourceConfig::with_defaults();
@@ -84,7 +84,7 @@ fn test_storage_resource_config_with_defaults() {
     );
 }
 
-/// Test StorageResourceConfig::from_env()
+/// Test `StorageResourceConfig::from_env`()
 #[test]
 fn test_storage_resource_config_from_env() {
     let config = StorageResourceConfig::from_env_provider(|k| match k {
@@ -100,7 +100,7 @@ fn test_storage_resource_config_from_env() {
     assert_eq!(config.log_retention_days, 60);
 }
 
-/// Test ConnectionConfig::with_defaults()
+/// Test `ConnectionConfig::with_defaults`()
 #[test]
 fn test_connection_config_with_defaults() {
     let config = ConnectionConfig::with_defaults();
@@ -119,7 +119,7 @@ fn test_connection_config_with_defaults() {
     );
 }
 
-/// Test ConnectionConfig::from_env()
+/// Test `ConnectionConfig::from_env`()
 #[test]
 fn test_connection_config_from_env() {
     let config = ConnectionConfig::from_env_provider(|k| match k {
@@ -139,7 +139,7 @@ fn test_connection_config_from_env() {
 // Operations Configuration Tests
 // ============================================================================
 
-/// Test MaintenanceConfig::with_defaults()
+/// Test `MaintenanceConfig::with_defaults`()
 #[test]
 fn test_maintenance_config_with_defaults() {
     let config = MaintenanceConfig::with_defaults();
@@ -150,7 +150,7 @@ fn test_maintenance_config_with_defaults() {
     );
 }
 
-/// Test MaintenanceConfig::from_env()
+/// Test `MaintenanceConfig::from_env`()
 #[test]
 fn test_maintenance_config_from_env() {
     let config = MaintenanceConfig::from_env_provider(|k| match k {
@@ -161,7 +161,7 @@ fn test_maintenance_config_from_env() {
     assert_eq!(config.window_duration, Duration::from_secs(7200));
 }
 
-/// Test BackupConfig::with_defaults()
+/// Test `BackupConfig::with_defaults`()
 #[test]
 fn test_backup_config_with_defaults() {
     let config = BackupConfig::with_defaults();
@@ -172,7 +172,7 @@ fn test_backup_config_with_defaults() {
     );
 }
 
-/// Test BackupConfig::from_env()
+/// Test `BackupConfig::from_env`()
 #[test]
 fn test_backup_config_from_env() {
     let config = BackupConfig::from_env_provider(|k| match k {
@@ -183,7 +183,7 @@ fn test_backup_config_from_env() {
     assert_eq!(config.interval, Duration::from_secs(43200));
 }
 
-/// Test DisasterRecoveryConfig::with_defaults()
+/// Test `DisasterRecoveryConfig::with_defaults`()
 #[test]
 fn test_disaster_recovery_config_with_defaults() {
     let config = DisasterRecoveryConfig::with_defaults();
@@ -194,7 +194,7 @@ fn test_disaster_recovery_config_with_defaults() {
     );
 }
 
-/// Test DisasterRecoveryConfig::from_env()
+/// Test `DisasterRecoveryConfig::from_env`()
 #[test]
 fn test_disaster_recovery_config_from_env() {
     let config = DisasterRecoveryConfig::from_env_provider(|k| match k {
@@ -209,7 +209,7 @@ fn test_disaster_recovery_config_from_env() {
 // Environment & Observability Configuration Tests
 // ============================================================================
 
-/// Test EnvironmentValidation::with_defaults()
+/// Test `EnvironmentValidation::with_defaults`()
 #[test]
 fn test_environment_validation_with_defaults() {
     let config = EnvironmentValidation::with_defaults();
@@ -229,7 +229,7 @@ fn test_environment_validation_with_defaults() {
     );
 }
 
-/// Test EnvironmentValidation::from_env()
+/// Test `EnvironmentValidation::from_env`()
 #[test]
 fn test_environment_validation_from_env() {
     let config = EnvironmentValidation::from_env_provider(|k| match k {
@@ -239,7 +239,7 @@ fn test_environment_validation_from_env() {
     assert_eq!(config.validation_interval, Duration::from_secs(600));
 }
 
-/// Test ProductionMetricsConfig::with_defaults()
+/// Test `ProductionMetricsConfig::with_defaults`()
 #[test]
 fn test_production_metrics_config_with_defaults() {
     let config = ProductionMetricsConfig::with_defaults();
@@ -247,7 +247,7 @@ fn test_production_metrics_config_with_defaults() {
     assert_eq!(config.endpoint, ProductionMetricsConfig::DEFAULT_ENDPOINT);
 }
 
-/// Test ProductionMetricsConfig::from_env()
+/// Test `ProductionMetricsConfig::from_env`()
 #[test]
 fn test_production_metrics_config_from_env() {
     let config = ProductionMetricsConfig::from_env_provider(|k| match k {
@@ -257,7 +257,7 @@ fn test_production_metrics_config_from_env() {
     assert_eq!(config.endpoint, "/custom-metrics");
 }
 
-/// Test ProductionLoggingConfig::with_defaults()
+/// Test `ProductionLoggingConfig::with_defaults`()
 #[test]
 fn test_production_logging_config_with_defaults() {
     let config = ProductionLoggingConfig::with_defaults();
@@ -265,7 +265,7 @@ fn test_production_logging_config_with_defaults() {
     assert_eq!(config.format, ProductionLoggingConfig::DEFAULT_FORMAT);
 }
 
-/// Test ProductionLoggingConfig::from_env()
+/// Test `ProductionLoggingConfig::from_env`()
 #[test]
 fn test_production_logging_config_from_env() {
     let config = ProductionLoggingConfig::from_env_provider(|k| match k {
@@ -277,7 +277,7 @@ fn test_production_logging_config_from_env() {
     assert_eq!(config.format, "text");
 }
 
-/// Test ProductionTracingConfig::with_defaults()
+/// Test `ProductionTracingConfig::with_defaults`()
 #[test]
 fn test_production_tracing_config_with_defaults() {
     let config = ProductionTracingConfig::with_defaults();
@@ -285,7 +285,7 @@ fn test_production_tracing_config_with_defaults() {
     assert_eq!(config.endpoint, ProductionTracingConfig::DEFAULT_ENDPOINT);
 }
 
-/// Test ProductionTracingConfig::from_env()
+/// Test `ProductionTracingConfig::from_env`()
 #[test]
 fn test_production_tracing_config_from_env() {
     let config = ProductionTracingConfig::from_env_provider(|k| match k {
@@ -295,7 +295,7 @@ fn test_production_tracing_config_from_env() {
     assert_eq!(config.endpoint, "/custom-traces");
 }
 
-/// Test DashboardConfig::with_defaults()
+/// Test `DashboardConfig::with_defaults`()
 #[test]
 fn test_dashboard_config_with_defaults() {
     let config = DashboardConfig::with_defaults();
@@ -303,7 +303,7 @@ fn test_dashboard_config_with_defaults() {
     assert_eq!(config.endpoint, DashboardConfig::DEFAULT_ENDPOINT);
 }
 
-/// Test DashboardConfig::from_env()
+/// Test `DashboardConfig::from_env`()
 #[test]
 fn test_dashboard_config_from_env() {
     let config = DashboardConfig::from_env_provider(|k| match k {
@@ -317,14 +317,14 @@ fn test_dashboard_config_from_env() {
 // Deployment Configuration Tests
 // ============================================================================
 
-/// Test RolloutConfig::with_defaults()
+/// Test `RolloutConfig::with_defaults`()
 #[test]
 fn test_rollout_config_with_defaults() {
     let config = RolloutConfig::with_defaults();
     assert_eq!(config.percentage, RolloutConfig::DEFAULT_PERCENTAGE);
 }
 
-/// Test RolloutConfig::from_env()
+/// Test `RolloutConfig::from_env`()
 #[test]
 fn test_rollout_config_from_env() {
     let config = RolloutConfig::from_env_provider(|k| match k {
@@ -334,14 +334,14 @@ fn test_rollout_config_from_env() {
     assert_eq!(config.percentage, 50.0);
 }
 
-/// Test CanaryConfig::with_defaults()
+/// Test `CanaryConfig::with_defaults`()
 #[test]
 fn test_canary_config_with_defaults() {
     let config = CanaryConfig::with_defaults();
     assert_eq!(config.percentage, CanaryConfig::DEFAULT_PERCENTAGE);
 }
 
-/// Test CanaryConfig::from_env()
+/// Test `CanaryConfig::from_env`()
 #[test]
 fn test_canary_config_from_env() {
     let config = CanaryConfig::from_env_provider(|k| match k {
@@ -355,7 +355,7 @@ fn test_canary_config_from_env() {
 // Core & Feature Flags Configuration Tests
 // ============================================================================
 
-/// Test ProductionFeatureFlags::with_defaults()
+/// Test `ProductionFeatureFlags::with_defaults`()
 #[test]
 fn test_production_feature_flags_with_defaults() {
     let config = ProductionFeatureFlags::with_defaults();
@@ -365,7 +365,7 @@ fn test_production_feature_flags_with_defaults() {
     assert!(config.enable_security_auditing);
 }
 
-/// Test ProductionFeatureFlags::from_env()
+/// Test `ProductionFeatureFlags::from_env`()
 #[test]
 fn test_production_feature_flags_from_env() {
     let config = ProductionFeatureFlags::from_env_provider(|k| match k {
@@ -377,7 +377,7 @@ fn test_production_feature_flags_from_env() {
     assert!(config.enable_auto_scaling);
 }
 
-/// Test GcTuningConfig::with_defaults()
+/// Test `GcTuningConfig::with_defaults`()
 #[test]
 fn test_gc_tuning_config_with_defaults() {
     let config = GcTuningConfig::with_defaults();
@@ -385,7 +385,7 @@ fn test_gc_tuning_config_with_defaults() {
     assert!(config.throughput_target_percent.is_none());
 }
 
-/// Test GcTuningConfig::from_env()
+/// Test `GcTuningConfig::from_env`()
 #[test]
 fn test_gc_tuning_config_from_env() {
     let config = GcTuningConfig::from_env_provider(|k| match k {

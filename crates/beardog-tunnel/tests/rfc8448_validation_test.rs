@@ -2,11 +2,11 @@
 #![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 //! RFC 8448 Validation Test
 //!
-//! This test validates BearDog's TLS 1.3 key derivation against known values
+//! This test validates `BearDog`'s TLS 1.3 key derivation against known values
 //! from RFC 8448 Section 3 (Simple 1-RTT Handshake).
 //!
 //! RFC 8448: "Example Handshake Traces for TLS 1.3"
-//! https://www.rfc-editor.org/rfc/rfc8448.html
+//! <https://www.rfc-editor.org/rfc/rfc8448.html>
 //!
 //! This provides a reference implementation test to ensure our HKDF-based
 //! key derivation exactly matches the RFC specification.
@@ -20,6 +20,11 @@ use serde_json::json;
 ///
 /// This test uses the exact values from RFC 8448 to validate our implementation.
 #[tokio::test]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss
+)]
 async fn test_rfc8448_handshake_key_derivation() {
     // ========================================================================
     // RFC 8448 Known Values

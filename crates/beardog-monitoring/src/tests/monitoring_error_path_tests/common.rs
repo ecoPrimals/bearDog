@@ -154,6 +154,11 @@ impl AlertManager {
         }
     }
 
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        clippy::cast_precision_loss
+    )]
     pub fn send_alert(&self, severity: &str, recipients: Vec<&str>) -> Result<(), BearDogError> {
         if recipients.is_empty() {
             return Err(BearDogError::Business {
@@ -210,6 +215,7 @@ impl MetricsAggregator {
         Self {}
     }
 
+    #[allow(clippy::cast_precision_loss)]
     pub fn aggregate(&self, metrics: Vec<Metric>) -> Result<f64, BearDogError> {
         if metrics.is_empty() {
             return Err(BearDogError::Business {
@@ -231,6 +237,11 @@ impl MetricsAggregator {
         Ok(sum / metrics.len() as f64)
     }
 
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        clippy::cast_precision_loss
+    )]
     pub fn percentile(&self, mut metrics: Vec<Metric>, p: f64) -> Result<f64, BearDogError> {
         if metrics.is_empty() {
             return Err(BearDogError::Business {
@@ -369,6 +380,7 @@ impl CircularMetricBuffer {
         }
     }
 
+    #[allow(clippy::cast_precision_loss)]
     pub fn average(&self) -> Option<f64> {
         if self.values.is_empty() {
             None
@@ -444,6 +456,7 @@ impl MetricSampler {
         }
     }
 
+    #[allow(clippy::cast_precision_loss)]
     pub fn should_sample(&self) -> bool {
         let count = self.counter.fetch_add(1, Ordering::SeqCst);
         (count as f64 * self.rate) % 1.0 < self.rate

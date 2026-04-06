@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Coverage gap tests Part 3: Low-coverage major files
-//! Targets: config/trait, config/utils, discovery/service_discovery,
-//!          providers_unified/resilience, capabilities, monitoring/core,
+//! Targets: config/trait, config/utils, `discovery/service_discovery`,
+//!          `providers_unified/resilience`, capabilities, monitoring/core,
 //!          config/security/*, config/unified/simplified, config/hsm/*
 
 // ===========================================================================

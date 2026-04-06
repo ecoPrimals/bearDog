@@ -292,6 +292,10 @@ impl PrimalDiscovery {
     ///
     /// This method allows tests to provide explicit environment variables without
     /// modifying global state, enabling concurrent-safe testing.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if discovery fails.
     #[cfg(test)]
     pub async fn discover_with_env(
         &mut self,

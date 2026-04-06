@@ -2,7 +2,7 @@
 
 //! Comprehensive Adapter Operations Tests
 //!
-//! Tests for UniversalAdapter operations including:
+//! Tests for `UniversalAdapter` operations including:
 //! - Request/response handling
 //! - Caching mechanisms
 //! - Timeout behavior

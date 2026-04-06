@@ -381,6 +381,7 @@ async fn test_tunnel_operation_retry_after_failure() -> Result<()> {
 }
 
 #[tokio::test]
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 async fn test_tunnel_exponential_backoff_simulation() -> Result<()> {
     // Simulate exponential backoff retry pattern
     let tunnel = MockTunnelConnection::new("test_tunnel");

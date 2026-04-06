@@ -2,7 +2,7 @@
 #![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 //! RFC 5116 AES-GCM Test Vectors Validation
 //!
-//! This test validates BearDog's AES-GCM implementation against known test vectors
+//! This test validates `BearDog`'s AES-GCM implementation against known test vectors
 //! from RFC 5116: "An Interface and Algorithms for Authenticated Encryption".
 //!
 //! These tests ensure our implementation is cryptographically correct and

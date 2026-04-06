@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive tests for EncryptionService
+//! Comprehensive tests for `EncryptionService`
 //!
 //! Coverage boost: Tests encryption/decryption operations, algorithms, error paths
 

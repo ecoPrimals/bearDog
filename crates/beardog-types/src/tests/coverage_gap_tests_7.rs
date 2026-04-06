@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Coverage gap tests Part 7: Discovery unified, production, security, testing, adapter certs,
-//! ai_config, receipt, workflow engine
+//! `ai_config`, receipt, workflow engine
 
 // ===========================================================================
 // canonical/config/domains/discovery_unified.rs - 97 uncov

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive tests for LimitsConfig
+//! Comprehensive tests for `LimitsConfig`
 //!
 //! Added December 8, 2025 to increase coverage toward 90% target
 //! Targets: Validation, builder patterns, configuration scenarios

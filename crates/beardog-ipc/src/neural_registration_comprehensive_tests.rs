@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive tests for neural_registration module
+//! Comprehensive tests for `neural_registration` module
 
 use super::*;
 use std::path::Path;

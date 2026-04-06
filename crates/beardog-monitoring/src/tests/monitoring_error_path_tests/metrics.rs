@@ -262,6 +262,7 @@ fn test_metrics_aggregation_percentiles() {
 }
 
 #[test]
+#[allow(clippy::cast_precision_loss)]
 fn test_monitoring_memory_limit() {
     let service = MonitoringServiceWrapper::with_memory_limit(1024);
 

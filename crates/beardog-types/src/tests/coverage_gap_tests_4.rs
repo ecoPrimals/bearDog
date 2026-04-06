@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Coverage gap tests Part 4: Remaining gaps in partially-covered files
-//! Targets: config/monitoring_migration, hsm_unified/migration,
-//!          config/domains/testing, discovery/key_management_capability,
-//!          monitoring/health, config/production/resources, bootstrap,
-//!          config/domains/discovery, config/domains/database, threat,
-//!          monitoring/alerting, config/network, config/domains/network/client,
-//!          config/hsm/mobile, discovery_unified, workflow/escalation
+//! Targets: `config/monitoring_migration`, `hsm_unified/migration`,
+//!          `config/domains/testing`, `discovery/key_management_capability`,
+//!          `monitoring/health`, `config/production/resources`, `bootstrap`,
+//!          `config/domains/discovery`, `config/domains/database`, `threat`,
+//!          `monitoring/alerting`, `config/network`, `config/domains/network/client`,
+//!          `config/hsm/mobile`, `discovery_unified`, `workflow/escalation`
 
 // ===========================================================================
 // canonical/config/monitoring_migration.rs (43%) - 170 uncov

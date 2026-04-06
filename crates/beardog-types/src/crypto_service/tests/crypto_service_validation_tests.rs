@@ -346,6 +346,11 @@ fn test_all_algorithm_variants_serde() {
 }
 
 #[test]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss
+)]
 fn test_encrypted_data_with_each_algorithm() {
     let algorithms = vec![
         CryptoAlgorithm::Aes256Gcm,

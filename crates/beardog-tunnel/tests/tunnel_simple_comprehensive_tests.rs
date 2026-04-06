@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
-//! Simplified Comprehensive Tests for BearDog Tunnel
+//! Simplified Comprehensive Tests for `BearDog` Tunnel
 //!
 //! Coverage expansion for beardog-tunnel crate - Phase 2
-//! Focuses on SessionManager which is the primary public API
+//! Focuses on `SessionManager` which is the primary public API
 
 use beardog_tunnel::SessionManager;
 

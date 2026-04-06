@@ -139,6 +139,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::cast_precision_loss)]
     fn test_error_rate_calculation() {
         let errors = 5u64;
         let total = 100u64;

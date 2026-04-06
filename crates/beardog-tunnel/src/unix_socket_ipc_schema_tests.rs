@@ -4,7 +4,7 @@
 //!
 //! These tests verify the January 7, 2026 schema fix that added:
 //! 1. `decision` field to trust evaluation responses
-//! 2. Environment variable fallback support (FAMILY_ID / BEARDOG_FAMILY_ID)
+//! 2. Environment variable fallback support (`FAMILY_ID` / `BEARDOG_FAMILY_ID`)
 
 #[cfg(test)]
 mod tests {

@@ -14,7 +14,7 @@
 //!
 //! NOTE: These tests use self-contained type definitions since the orchestration module
 //! has a structure conflict (both .rs and /mod.rs exist). Once the module structure is
-//! resolved, these tests can import from crate::orchestration.
+//! resolved, these tests can import from `crate::orchestration`.
 
 use chrono::Utc;
 

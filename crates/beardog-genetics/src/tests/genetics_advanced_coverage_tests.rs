@@ -42,6 +42,11 @@ fn test_biometric_hash_minimal() {
 }
 
 #[test]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss
+)]
 fn test_biometric_hash_large() {
     let large_hash: Vec<u8> = (0..1024).map(|i| (i % 256) as u8).collect();
     let large_proof: Vec<u8> = (0..512).map(|i| (i % 256) as u8).collect();
@@ -439,6 +444,11 @@ fn test_entropy_class_ordering() {
 // ============================================================================
 
 #[test]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss
+)]
 fn test_concurrent_biometric_hash_creation() {
     use std::thread;
 
@@ -459,6 +469,11 @@ fn test_concurrent_biometric_hash_creation() {
 }
 
 #[test]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss
+)]
 fn test_concurrent_ownership_proof_creation() {
     use std::thread;
 

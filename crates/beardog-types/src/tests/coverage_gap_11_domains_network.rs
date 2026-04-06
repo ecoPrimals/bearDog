@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Split from coverage_gap_tests_11: monitoring metrics/alerting, HSM status/android, prod/network/adapter/canonical defaults.
+//! Split from `coverage_gap_tests_11`: monitoring metrics/alerting, HSM status/android, prod/network/adapter/canonical defaults.
 
 mod monitoring_metrics_defaults {
     use crate::canonical::monitoring::metrics::*;

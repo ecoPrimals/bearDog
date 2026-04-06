@@ -2,7 +2,7 @@
 
 //! Additional coverage tests for beardog-adapters lib.rs
 //!
-//! Focus on testing UniversalAdapter, AdapterConfig, and related types that may
+//! Focus on testing `UniversalAdapter`, `AdapterConfig`, and related types that may
 //! have gaps in test coverage.
 
 use crate::{AdapterConfig, CapabilityResponse, UniversalAdapter};

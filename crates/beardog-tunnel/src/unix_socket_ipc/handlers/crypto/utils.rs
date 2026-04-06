@@ -30,7 +30,7 @@ use serde_json::Value;
 /// # Parameters
 ///
 /// - `key_id`: The key identifier (e.g., "default", "prod", "test")
-/// - `purpose`: The purpose of the key (e.g., "signature", "encryption", "tls_handshake")
+/// - `purpose`: The purpose of the key (e.g., "signature", "encryption", `tls_handshake`)
 ///
 /// # Returns
 ///

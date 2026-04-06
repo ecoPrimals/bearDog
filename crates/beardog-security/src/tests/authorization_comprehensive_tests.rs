@@ -337,7 +337,7 @@ impl Permission {
     }
 }
 
-/// PermissionSet is a collection of permissions
+/// `PermissionSet` is a collection of permissions
 #[derive(Debug, Clone, PartialEq)]
 pub struct PermissionSet {
     permissions: HashSet<Permission>,

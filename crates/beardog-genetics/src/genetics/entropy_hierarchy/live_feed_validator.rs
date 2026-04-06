@@ -411,6 +411,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     fn test_detect_lcg_pattern() {
         let validator = LiveFeedValidator::new();
 

@@ -242,6 +242,7 @@ fn test_error_propagation() {
 
 /// Test retry strategy for transient failures
 #[test]
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 fn test_transient_failure_retry() {
     // When: Transient network error occurs
     // TEST_CATEGORY: integration

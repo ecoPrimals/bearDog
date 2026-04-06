@@ -476,6 +476,7 @@ fn test_license_selection_based_on_indicator() {
 }
 
 #[test]
+#[allow(clippy::cast_precision_loss)]
 fn test_pricing_calculation_integration() {
     let indicator = EnterpriseIndicator {
         organization_size: 500,

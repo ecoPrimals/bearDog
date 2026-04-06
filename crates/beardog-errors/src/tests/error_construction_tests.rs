@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive tests for BearDogError construction and handling
+//! Comprehensive tests for `BearDogError` construction and handling
 //!
 //! Tests all error constructor methods and basic error handling.
 

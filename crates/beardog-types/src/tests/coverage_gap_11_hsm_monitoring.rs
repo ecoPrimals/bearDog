@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Split from coverage_gap_tests_11: HSM config defaults, keys, capabilities, monitoring core/health.
+//! Split from `coverage_gap_tests_11`: HSM config defaults, keys, capabilities, monitoring core/health.
 
 // ===========================================================================
 // canonical/config/hsm/mod.rs - 159 uncov (12 Default impls)

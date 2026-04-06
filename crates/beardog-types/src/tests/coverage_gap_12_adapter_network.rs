@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Split from coverage_gap_tests_12: adapter certs, discovery, network, simplified config.
+//! Split from `coverage_gap_tests_12`: adapter certs, discovery, network, simplified config.
 
 #[cfg(test)]
 mod adapter_certificate_tests {

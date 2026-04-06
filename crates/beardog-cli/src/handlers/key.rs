@@ -73,10 +73,7 @@ fn generate_aes_key_with_seed(seed_data: Option<&[u8]>) -> Result<Vec<u8>, BearD
 }
 
 /// Generate AES-256 key using only system entropy (no human seed)
-#[expect(
-    dead_code,
-    reason = "Legacy helper kept for callers not using human seed path"
-)]
+#[allow(dead_code)]
 fn generate_aes_key() -> Result<Vec<u8>, BearDogError> {
     generate_aes_key_with_seed(None)
 }

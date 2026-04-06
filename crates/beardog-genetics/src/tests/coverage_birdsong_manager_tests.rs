@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Coverage: BirdSong manager — discovery encryption and lineage APIs.
+//! Coverage: `BirdSong` manager — discovery encryption and lineage APIs.
 
 use beardog_errors::BearDogError;
 

@@ -164,7 +164,7 @@ mod auth_tests {
         Ok(token)
     }
 
-    /// Creates session_data
+    /// Creates `session_data`
     fn create_session_data(
         user_id: &str,
         session_id: &str,
@@ -195,7 +195,7 @@ mod auth_tests {
         /// Collection of roles
         #[allow(dead_code)]
         pub roles: Vec<String>,
-        /// Whether is_active is enabled
+        /// Whether `is_active` is enabled
         #[allow(dead_code)]
         pub is_active: bool,
     }
@@ -208,7 +208,7 @@ mod auth_tests {
         pub session_token: Option<String>,
     }
 
-    /// Creates test_user
+    /// Creates `test_user`
     fn create_test_user(
         username: &str,
         password: &str,

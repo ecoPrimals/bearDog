@@ -3,7 +3,7 @@
 //! HSM Provider Selection Tests
 //!
 //! Tests for HSM provider selection, tier management, and fallback behavior.
-//! Updated November 21, 2025 to match UnifiedHsmProvider API.
+//! Updated November 21, 2025 to match `UnifiedHsmProvider` API.
 
 use crate::tunnel::hsm::software_hsm::RustSoftwareHsm;
 use crate::tunnel::hsm::types::SoftwareHsmConfig;

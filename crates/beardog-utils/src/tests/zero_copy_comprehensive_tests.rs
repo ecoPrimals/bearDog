@@ -258,7 +258,9 @@ fn test_request_cache_overwrite() {
 #[test]
 fn test_request_cache_expiration() {
     let cache = RequestCache::new(Duration::from_secs(60));
-    let past = Instant::now() - Duration::from_secs(3600);
+    let past = Instant::now()
+        .checked_sub(Duration::from_secs(3600))
+        .unwrap();
     cache.insert_at(
         "temp_key".to_string(),
         "temp_value".to_string(),
@@ -276,7 +278,9 @@ fn test_request_cache_expiration() {
 #[test]
 fn test_request_cache_cleanup_expired() {
     let cache = RequestCache::new(Duration::from_secs(60));
-    let past = Instant::now() - Duration::from_secs(3600);
+    let past = Instant::now()
+        .checked_sub(Duration::from_secs(3600))
+        .unwrap();
 
     cache.insert_at(
         "key1".to_string(),

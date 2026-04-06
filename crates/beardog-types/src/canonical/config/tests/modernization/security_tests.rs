@@ -15,7 +15,7 @@ use std::time::Duration;
 // Failover Configuration Tests
 // ============================================================================
 
-/// Test FailoverConfiguration::with_defaults()
+/// Test `FailoverConfiguration::with_defaults`()
 #[test]
 fn test_failover_configuration_with_defaults() {
     let config = network::connection::FailoverConfiguration::with_defaults();
@@ -30,7 +30,7 @@ fn test_failover_configuration_with_defaults() {
     );
 }
 
-/// Test FailoverConfiguration::from_env()
+/// Test `FailoverConfiguration::from_env`()
 #[test]
 fn test_failover_configuration_from_env() {
     let config = network::connection::FailoverConfiguration::from_env_provider(|k| match k {
@@ -46,7 +46,7 @@ fn test_failover_configuration_from_env() {
 // Rate Limiting Configuration Tests
 // ============================================================================
 
-/// Test RateLimitingConfig::with_defaults()
+/// Test `RateLimitingConfig::with_defaults`()
 #[test]
 fn test_rate_limiting_config_with_defaults() {
     let config = RateLimitingConfig::with_defaults();
@@ -65,7 +65,7 @@ fn test_rate_limiting_config_with_defaults() {
     );
 }
 
-/// Test RateLimitingConfig::from_env()
+/// Test `RateLimitingConfig::from_env`()
 #[test]
 fn test_rate_limiting_config_from_env() {
     let config = RateLimitingConfig::from_env_provider(|k| match k {
@@ -83,7 +83,7 @@ fn test_rate_limiting_config_from_env() {
 // Threading Configuration Tests
 // ============================================================================
 
-/// Test ThreadingConfig::with_defaults()
+/// Test `ThreadingConfig::with_defaults`()
 #[test]
 fn test_threading_config_with_defaults() {
     let config = system::ThreadingConfig::with_defaults();
@@ -99,7 +99,7 @@ fn test_threading_config_with_defaults() {
     assert!(config.enable_tls_optimization);
 }
 
-/// Test ThreadingConfig::from_env()
+/// Test `ThreadingConfig::from_env`()
 #[test]
 fn test_threading_config_from_env() {
     let config = system::ThreadingConfig::from_env_provider(|k| match k {
@@ -115,7 +115,7 @@ fn test_threading_config_from_env() {
 // Network Resource Configuration Tests
 // ============================================================================
 
-/// Test NetworkResourceConfig::with_defaults()
+/// Test `NetworkResourceConfig::with_defaults`()
 #[test]
 fn test_network_resource_config_with_defaults() {
     let config = NetworkResourceConfig::with_defaults();
@@ -139,7 +139,7 @@ fn test_network_resource_config_with_defaults() {
     assert!(config.tcp_nodelay);
 }
 
-/// Test NetworkResourceConfig::from_env()
+/// Test `NetworkResourceConfig::from_env`()
 #[test]
 fn test_network_resource_config_from_env() {
     let config = NetworkResourceConfig::from_env_provider(|k| match k {
@@ -159,7 +159,7 @@ fn test_network_resource_config_from_env() {
 // Authentication Configuration Tests
 // ============================================================================
 
-/// Test CanonicalAuthenticationConfig::with_defaults()
+/// Test `CanonicalAuthenticationConfig::with_defaults`()
 #[test]
 fn test_authentication_config_with_defaults() {
     let config = CanonicalAuthenticationConfig::with_defaults();
@@ -190,7 +190,7 @@ fn test_authentication_config_with_defaults() {
     );
 }
 
-/// Test CanonicalAuthenticationConfig::from_env()
+/// Test `CanonicalAuthenticationConfig::from_env`()
 #[test]
 fn test_authentication_config_from_env() {
     let config = CanonicalAuthenticationConfig::from_env_provider(|k| match k {

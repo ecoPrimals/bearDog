@@ -253,6 +253,11 @@ fn test_process_mouse_event_moves_clicks_and_scroll() {
 }
 
 #[test]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss
+)]
 fn test_calculate_metrics_multi_interval_std_dev() {
     let events: Vec<InteractionEvent> = (0..5)
         .map(|i| InteractionEvent {
@@ -341,6 +346,11 @@ fn test_shannon_entropy_single_bucket_max_entropy_zero_branch() {
 }
 
 #[test]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss
+)]
 fn test_calculate_movement_entropy_high_variance_caps_at_one() {
     let events: Vec<InteractionEvent> = (0..20)
         .map(|i| InteractionEvent {
@@ -400,6 +410,11 @@ fn test_derive_entropy_bytes_includes_scroll_deltas() {
 }
 
 #[test]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss
+)]
 fn test_calculate_metrics_all_keyboard_no_mouse_events() {
     let events: Vec<InteractionEvent> = (0..4)
         .map(|i| InteractionEvent {

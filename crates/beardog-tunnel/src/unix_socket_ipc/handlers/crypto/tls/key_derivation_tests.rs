@@ -4,6 +4,11 @@ use super::*;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss
+)]
 fn rand32() -> Vec<u8> {
     (0..32).map(|i| (i * 7 + 13) as u8).collect()
 }

@@ -167,7 +167,6 @@ mod tests {
     // Migration tests
     mod migration_tests {
         use super::super::migration::*;
-        use super::*;
         use beardog_errors::BearDogError;
         use serde::{Deserialize, Serialize};
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive Unit Tests for BearDog Traits
+//! Comprehensive Unit Tests for `BearDog` Traits
 //!
 //! Created: October 27, 2025
 //! Purpose: Expand test coverage for beardog-traits core functionality

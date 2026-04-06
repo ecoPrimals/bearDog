@@ -91,7 +91,7 @@ mod health_monitor_tests {
         assert!(status.is_some());
     }
 
-    /// Test is_healthy check
+    /// Test `is_healthy` check
     #[tokio::test]
     async fn test_is_healthy() {
         let monitor = HealthMonitor::new(Duration::from_secs(1));

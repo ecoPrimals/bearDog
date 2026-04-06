@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Edge Case Tests for BearDog Errors - November 6, 2025
+//! Edge Case Tests for `BearDog` Errors - November 6, 2025
 //!
 //! Comprehensive edge case and boundary condition tests to improve code coverage.
 
@@ -509,6 +509,10 @@ mod error_edge_cases {
     // ========================================================================
 
     #[test]
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_possible_wrap
+    )]
     fn test_max_error_nesting() {
         // Test deeply nested error propagation
         fn nest(depth: u32) -> Result<i32, BearDogError> {

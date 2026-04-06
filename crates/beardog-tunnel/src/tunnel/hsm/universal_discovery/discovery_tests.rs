@@ -148,14 +148,14 @@ mod discovery_tests {
         Ok(())
     }
 
-    /// Test SmartCard discoverer creation
+    /// Test `SmartCard` discoverer creation
     #[test]
     fn test_smartcard_discoverer_creation() -> Result<(), BearDogError> {
         let _discoverer = SmartCardDiscoverer::new()?;
         Ok(())
     }
 
-    /// Test SmartCard discovery
+    /// Test `SmartCard` discovery
     #[test]
     fn test_smartcard_discovery() -> Result<(), BearDogError> {
         let discoverer = SmartCardDiscoverer::new()?;
@@ -297,7 +297,7 @@ mod discovery_tests {
         assert_eq!(implementations.len(), 2);
     }
 
-    /// Test HsmHealthStatus enum variants
+    /// Test `HsmHealthStatus` enum variants
     #[test]
     fn test_hsm_health_status_variants() {
         let statuses = [
@@ -311,7 +311,7 @@ mod discovery_tests {
         assert_eq!(statuses.len(), 5);
     }
 
-    /// Test HumanEntropyMethod enum variants
+    /// Test `HumanEntropyMethod` enum variants
     #[test]
     fn test_human_entropy_method_variants() {
         let methods = [

@@ -453,6 +453,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::cast_possible_truncation)]
     fn test_development_config() {
         let config = ConsolidatedSecurityConfiguration::development();
         // TEST_CATEGORY: unit

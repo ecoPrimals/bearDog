@@ -3,7 +3,7 @@
 //! Coverage extension tests for Network Configuration
 //!
 //! Added December 8, 2025 to increase coverage from 72.41% to 90%+
-//! Targets: validation paths, from_env(), builders, edge cases
+//! Targets: validation paths, `from_env()`, builders, edge cases
 
 #[cfg(test)]
 mod network_coverage_extension_tests {

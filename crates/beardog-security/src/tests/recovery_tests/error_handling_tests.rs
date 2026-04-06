@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Recovery Error_handling Tests
+//! Recovery error handling tests
 
 use super::types::*;
 

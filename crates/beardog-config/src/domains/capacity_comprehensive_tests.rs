@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive tests for CapacityConfig
+//! Comprehensive tests for `CapacityConfig`
 //!
 //! Added December 8, 2025 to increase coverage toward 90% target
-//! Targets: from_env_provider, all environment variables, validation, edge cases
+//! Targets: `from_env_provider`, all environment variables, validation, edge cases
 
 #[cfg(test)]
 mod tests {

@@ -51,6 +51,7 @@ impl AdaptiveDetector {
         self.true_positive_count += 1;
     }
 
+    #[allow(clippy::cast_precision_loss)]
     pub fn adjust_threshold(&mut self) {
         let total = self.false_positive_count + self.true_positive_count;
         if total > 0 {

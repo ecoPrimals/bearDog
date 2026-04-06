@@ -259,6 +259,7 @@ mod validation_tests {
         }
     }
 
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     fn make_valid_human_entropy() -> EntropyClass {
         let mut biometric_hash = vec![0u8; 32];
         for (i, byte) in biometric_hash.iter_mut().enumerate() {

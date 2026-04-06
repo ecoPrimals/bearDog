@@ -49,8 +49,8 @@ fn test_initialization_rollback_on_failure() {
 }
 
 #[test]
+#[allow(clippy::needless_collect)]
 fn test_concurrent_initialization_attempts() {
-    // Test handling of concurrent initialization attempts
     let initialized = Arc::new(AtomicBool::new(false));
     let handles: Vec<_> = (0..5)
         .map(|_| {

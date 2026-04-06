@@ -3,12 +3,12 @@
 //! Comprehensive SIMD Crypto Tests
 //!
 //! `TEST_CATEGORY`: unit
-//! `TEST_DOMAIN`: security/simd_crypto
+//! `TEST_DOMAIN`: `security/simd_crypto`
 //! `TEST_PRIORITY`: high
 //!
 //! Comprehensive test coverage for Safe SIMD cryptographic operations including:
 //! - Hash operations (SHA-256)
-//! - ChaCha20 operations
+//! - `ChaCha20` operations
 //! - Configuration and stats tracking
 //! - Performance and safety guarantees
 //! - Edge cases and error handling
@@ -110,7 +110,7 @@ mod tests {
         assert_eq!(stats.get("bytes_processed").unwrap(), "10000");
     }
 
-    /// Test 8: ChaCha20 basic operation
+    /// Test 8: `ChaCha20` basic operation
     #[test]
     fn test_safe_chacha20_basic() {
         let config = SafeCryptoConfig::default();
@@ -124,7 +124,7 @@ mod tests {
         assert_ne!(encrypted, data.to_vec());
     }
 
-    /// Test 9: ChaCha20 reversibility (encrypt then decrypt returns original)
+    /// Test 9: `ChaCha20` reversibility (encrypt then decrypt returns original)
     #[test]
     fn test_safe_chacha20_reversibility() {
         let config = SafeCryptoConfig::default();
@@ -140,7 +140,7 @@ mod tests {
         assert_eq!(decrypted, original.to_vec());
     }
 
-    /// Test 10: ChaCha20 empty data
+    /// Test 10: `ChaCha20` empty data
     #[test]
     fn test_safe_chacha20_empty() {
         let config = SafeCryptoConfig::default();
@@ -153,7 +153,7 @@ mod tests {
         assert!(result.is_empty());
     }
 
-    /// Test 11: ChaCha20 large data
+    /// Test 11: `ChaCha20` large data
     #[test]
     fn test_safe_chacha20_large_data() {
         let config = SafeCryptoConfig::default();
@@ -187,7 +187,7 @@ mod tests {
         assert_eq!(bytes_processed, 5 + 5 + 4); // test1 + test2 + data
     }
 
-    /// Test: ChaCha20 rejects invalid key length
+    /// Test: `ChaCha20` rejects invalid key length
     #[test]
     fn test_safe_chacha20_invalid_key_length() {
         let config = SafeCryptoConfig::default();
@@ -257,7 +257,7 @@ mod tests {
         assert_eq!(hash.len(), 32);
     }
 
-    /// Test 17: ChaCha20 with binary data
+    /// Test 17: `ChaCha20` with binary data
     #[test]
     fn test_safe_chacha20_binary_data() {
         let config = SafeCryptoConfig::default();

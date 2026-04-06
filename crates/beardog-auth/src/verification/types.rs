@@ -206,6 +206,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::cast_precision_loss)]
     fn test_verification_metrics_calculations() {
         let metrics = VerificationMetrics {
             total_verifications: 100,

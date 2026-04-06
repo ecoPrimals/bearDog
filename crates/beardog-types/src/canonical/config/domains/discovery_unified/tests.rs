@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Tests for UnifiedDiscoveryConfig
+//! Tests for `UnifiedDiscoveryConfig`
 //!
 //! Comprehensive test suite for discovery configuration including validation,
 //! environment variables, builder patterns, and merge operations.

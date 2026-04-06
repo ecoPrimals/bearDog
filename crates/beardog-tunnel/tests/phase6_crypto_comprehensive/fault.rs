@@ -251,6 +251,7 @@ fn test_fault_aes_decrypt_with_wrong_key() {
 }
 
 #[test]
+#[allow(clippy::cast_precision_loss)]
 fn test_fault_password_timing_attack_resistance() {
     // This is a basic test - true timing attack resistance requires more sophisticated testing
     // We just verify that verification completes regardless of correctness

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive tests for CapabilityType enum
+//! Comprehensive tests for `CapabilityType` enum
 //!
-//! Tests the core CapabilityType enum and its methods.
+//! Tests the core `CapabilityType` enum and its methods.
 
 use crate::canonical::capabilities::CapabilityType;
 use std::collections::{HashMap, HashSet};

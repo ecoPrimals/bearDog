@@ -44,7 +44,7 @@ pub mod config {
     pub fn production_ready() -> bool {
         #[cfg(test)]
         {
-            return TEST_OVERRIDE_READY.load(Ordering::Relaxed);
+            TEST_OVERRIDE_READY.load(Ordering::Relaxed)
         }
         #[cfg(not(test))]
         {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive tests for ultimate_safety and ultimate_performance modules
+//! Comprehensive tests for `ultimate_safety` and `ultimate_performance` modules
 //!
 //! This test suite provides extensive coverage of the safety and performance
 //! optimization modules to increase test coverage from 0% to ~70-80%.

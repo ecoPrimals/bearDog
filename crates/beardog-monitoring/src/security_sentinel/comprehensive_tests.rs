@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive tests for SecuritySentinel
+//! Comprehensive tests for `SecuritySentinel`
 //!
 //! These tests cover security monitoring lifecycle, configuration,
 //! and state management.

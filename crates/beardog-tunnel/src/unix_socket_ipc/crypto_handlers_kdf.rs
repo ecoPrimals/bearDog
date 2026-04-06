@@ -416,6 +416,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::cast_possible_truncation)]
     fn test_scrypt_variable_key_length() -> Result<(), BearDogError> {
         let password = BASE64.encode(b"password");
         let salt = BASE64.encode(b"salt12345678");

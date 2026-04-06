@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![allow(clippy::expect_used, clippy::unwrap_used)]
 
-//! Comprehensive Tests for BearDog Error Types
+//! Comprehensive Tests for `BearDog` Error Types
 //!
 //! Coverage expansion for beardog-errors crate
 

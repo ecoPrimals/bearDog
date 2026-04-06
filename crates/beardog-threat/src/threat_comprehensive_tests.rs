@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive Unit Tests for BearDog Threat Detection
+//! Comprehensive Unit Tests for `BearDog` Threat Detection
 //!
 //! Created: October 27, 2025
 //! Purpose: Expand test coverage for beardog-threat core functionality

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Coverage extension tests for ComplianceHandler
+//! Coverage extension tests for `ComplianceHandler`
 //!
 //! Added December 8, 2025 to increase coverage from 65.91% to 90%+
-//! Targets: generate_recommendations, edge cases, all compliance standards
+//! Targets: `generate_recommendations`, edge cases, all compliance standards
 
 #[cfg(test)]
 mod handlers_coverage_extension_tests {

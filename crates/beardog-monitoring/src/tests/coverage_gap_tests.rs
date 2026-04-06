@@ -3,15 +3,15 @@
 //! Coverage gap tests for beardog-monitoring
 //!
 //! Targets uncovered lines in:
-//! - advanced_metrics/analysis.rs (0% → covered)
-//! - monitoring/metrics.rs (57% → covered)
-//! - monitoring/types.rs (53% → covered)
-//! - advanced_metrics/storage.rs (32% → covered)
-//! - advanced_metrics/performance.rs (25% → covered)
-//! - advanced_metrics/ecosystem.rs (21% → covered)
-//! - advanced_metrics/security.rs (62% → covered)
-//! - monitoring/health/aggregator.rs (61% → covered)
-//! - security_sentinel_example.rs (39% → covered)
+//! - `advanced_metrics/analysis.rs` (0% → covered)
+//! - `monitoring/metrics.rs` (57% → covered)
+//! - `monitoring/types.rs` (53% → covered)
+//! - `advanced_metrics/storage.rs` (32% → covered)
+//! - `advanced_metrics/performance.rs` (25% → covered)
+//! - `advanced_metrics/ecosystem.rs` (21% → covered)
+//! - `advanced_metrics/security.rs` (62% → covered)
+//! - `monitoring/health/aggregator.rs` (61% → covered)
+//! - `security_sentinel_example.rs` (39% → covered)
 
 use crate::advanced_metrics::analysis::{AnomalyDetector, TrendAnalyzer, TrendDirection};
 use crate::advanced_metrics::config::{AnomalyConfig, TrendConfig};

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Targeted coverage tests for low-coverage tunnel modules:
-//! aliases_and_beardog router, TCP client, and modes/client.
+//! `aliases_and_beardog` router, TCP client, and modes/client.
 
 use serde_json::json;
 

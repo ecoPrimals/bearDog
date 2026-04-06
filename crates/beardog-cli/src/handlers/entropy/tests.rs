@@ -97,6 +97,7 @@ fn test_calculate_entropy_quality_empty() {
 }
 
 #[test]
+#[allow(clippy::cast_possible_truncation)]
 fn test_calculate_entropy_quality_near_uniform() {
     let v: Vec<u8> = (0u16..256).map(|i| i as u8).collect();
     let q = calculate_entropy_quality(&v);
@@ -309,6 +310,7 @@ fn test_select_hsm_by_preference_hardware_not_found() {
 }
 
 #[test]
+#[allow(clippy::cast_possible_truncation)]
 fn test_calculate_entropy_quality_moderate_distribution() {
     let mut v = vec![0u8; 256];
     for (i, slot) in v.iter_mut().enumerate() {

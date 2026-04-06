@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Split from coverage_gap_tests_12: HSM capabilities, config, status.
+//! Split from `coverage_gap_tests_12`: HSM capabilities, config, status.
 
 #[cfg(test)]
 mod hsm_capabilities_methods_tests {

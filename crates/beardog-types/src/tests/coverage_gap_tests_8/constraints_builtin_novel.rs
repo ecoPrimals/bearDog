@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Coverage gap tests Part 8: Constraints (novel+builtin), zero_cost, genetics_constraints,
+//! Coverage gap tests Part 8: Constraints (novel+builtin), `zero_cost`, `genetics_constraints`,
 //! canonical/capabilities, canonical/network, constants
 
 // ===========================================================================

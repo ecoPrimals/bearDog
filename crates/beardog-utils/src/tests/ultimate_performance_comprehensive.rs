@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive tests for ultimate_performance module
+//! Comprehensive tests for `ultimate_performance` module
 //! Focus: Performance optimizations, SIMD operations, statistics
 
 use crate::float_eq;
@@ -185,6 +185,7 @@ fn test_simd_capabilities_detection() {
 }
 
 #[test]
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 fn test_process_sequential_data() {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: core

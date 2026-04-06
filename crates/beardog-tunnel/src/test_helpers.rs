@@ -19,7 +19,7 @@ pub mod mocks {
 
     /// Mock BTSP provider for testing
     ///
-    /// This mock implements SecureTunnelProvider without requiring HSM hardware,
+    /// This mock implements `SecureTunnelProvider` without requiring `HSM` hardware,
     /// making it suitable for unit and integration testing.
     pub struct MockBtspProvider {
         /// Track established tunnels
@@ -173,16 +173,16 @@ pub mod mocks {
         Arc::new(MockBtspProvider::new_failing())
     }
 
-    /// Create a minimal safe BeardogBtspProvider for testing
+    /// Create a minimal safe `BeardogBtspProvider` for testing
     ///
     /// This provides a safe alternative to [`std::mem::zeroed`] for types that allow it
-    /// for tests that need to pass a BeardogBtspProvider but don't actually use it.
+    /// for tests that need to pass a `BeardogBtspProvider` but don't actually use it.
     ///
-    /// Uses `new_for_testing()` which bypasses HSM initialization, making it suitable
+    /// Uses `new_for_testing()` which bypasses `HSM` initialization, making it suitable
     /// for handler tests that don't actually invoke BTSP functionality.
     ///
     /// # Returns
-    /// A properly initialized but minimal BeardogBtspProvider (suitable for tests only)
+    /// A properly initialized but minimal `BeardogBtspProvider` (suitable for tests only)
     pub async fn create_minimal_beardog_provider() -> Arc<crate::btsp_provider::BeardogBtspProvider>
     {
         use crate::tunnel::hsm::HsmManager;

@@ -2,7 +2,7 @@
 
 //! BTSP Provider Tests
 //!
-//! Comprehensive test suite for BearDog Tunnel Security Protocol provider.
+//! Comprehensive test suite for `BearDog` Tunnel Security Protocol provider.
 //! Tests cover peer info serialization, tunnel lifecycle, and basic operations.
 
 use super::*;

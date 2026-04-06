@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Coverage gap tests Part 2: 0%-coverage config domain types
-//! Targets: adapter/*, compliance, workflow/*, ai_config/*, performance,
+//! Targets: adapter/*, compliance, workflow/*, `ai_config/*`, performance,
 //!          migration, production/mod, constants/config, discovery/universal
 
 // ===========================================================================

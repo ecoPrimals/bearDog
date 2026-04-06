@@ -3,10 +3,10 @@
 //! Canonical Capabilities Tests
 //!
 //! Comprehensive testing of capability-based architecture including:
-//! - CapabilityType variants and methods
-//! - SecurityLevel enum
-//! - CircuitBreakerConfig
-//! - AuthType and AuthConfig
+//! - `CapabilityType` variants and methods
+//! - `SecurityLevel` enum
+//! - `CircuitBreakerConfig`
+//! - `AuthType` and `AuthConfig`
 //! - Serialization/deserialization
 //! - String conversions and identifiers
 

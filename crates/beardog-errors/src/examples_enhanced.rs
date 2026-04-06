@@ -112,6 +112,10 @@ pub fn example_crypto_with_details() -> Result<(), BearDogError> {
 ///
 /// This shows how an API endpoint might use enhanced errors to provide
 /// better user experience when authentication or authorization fails.
+///
+/// # Errors
+///
+/// Returns a `BearDogError` if the operation fails.
 pub fn api_endpoint_example(token: &str, resource_id: &str) -> Result<String, BearDogError> {
     // 1. Authenticate user
     if token.is_empty() {
@@ -145,6 +149,10 @@ pub fn api_endpoint_example(token: &str, resource_id: &str) -> Result<String, Be
 ///
 /// This shows how configuration loading might use enhanced errors to guide
 /// users to documentation when configuration is invalid.
+///
+/// # Errors
+///
+/// Returns a `BearDogError` if the operation fails.
 pub fn load_hsm_config(config_path: &str) -> Result<String, BearDogError> {
     // Simulate configuration parsing
     if config_path.contains("invalid") {
@@ -162,6 +170,10 @@ pub fn load_hsm_config(config_path: &str) -> Result<String, BearDogError> {
 ///
 /// This shows how network operations might use enhanced errors to provide
 /// full context for debugging connection issues.
+///
+/// # Errors
+///
+/// Returns a `BearDogError` if the operation fails.
 pub fn discover_service(service_name: &str, consul_addr: &str) -> Result<String, BearDogError> {
     // Simulate service discovery
     if consul_addr.contains("unreachable") {
@@ -179,6 +191,10 @@ pub fn discover_service(service_name: &str, consul_addr: &str) -> Result<String,
 ///
 /// This shows how crypto operations might use enhanced errors to provide
 /// detailed information about what went wrong.
+///
+/// # Errors
+///
+/// Returns a `BearDogError` if the operation fails.
 pub fn encrypt_data(data: &[u8], key_size: usize) -> Result<Vec<u8>, BearDogError> {
     // Simulate key size validation
     if key_size != 256 {
@@ -196,6 +212,10 @@ pub fn encrypt_data(data: &[u8], key_size: usize) -> Result<Vec<u8>, BearDogErro
 ///
 /// This shows how input validation might use enhanced errors to provide
 /// helpful suggestions for fixing invalid input.
+///
+/// # Errors
+///
+/// Returns a `BearDogError` if the operation fails.
 pub fn validate_email(email: &str) -> Result<(), BearDogError> {
     // Simulate email validation
     if !email.contains('@') {

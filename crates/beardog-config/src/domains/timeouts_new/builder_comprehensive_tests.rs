@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive tests for TimeoutConfigBuilder
+//! Comprehensive tests for `TimeoutConfigBuilder`
 //!
 //! Added December 8, 2025 to increase coverage from 42.57% to 90%+
 

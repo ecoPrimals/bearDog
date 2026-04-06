@@ -63,6 +63,7 @@ pub struct Shard {
     pub data: Vec<u8>,
 }
 
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 pub fn create_shards(secret: &[u8], config: &ShardConfig) -> Result<Vec<Shard>, BearDogError> {
     // Simple XOR-based secret sharing for testing
     let mut shards = Vec::new();
@@ -78,6 +79,7 @@ pub fn create_shards(secret: &[u8], config: &ShardConfig) -> Result<Vec<Shard>, 
     Ok(shards)
 }
 
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 pub fn reconstruct_from_shards(shards: &[Shard]) -> Result<Vec<u8>, BearDogError> {
     if shards.is_empty() {
         return Err(BearDogError::security(
@@ -189,6 +191,7 @@ pub struct EphemeralKey {
 }
 
 impl EphemeralKey {
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     pub fn generate(expires_after: Duration) -> Self {
         // Generate 32-byte random key (simplified for testing)
         // Use a combination of timing and current instant to ensure uniqueness
@@ -233,6 +236,7 @@ impl EphemeralKey {
         !self.is_expired()
     }
 
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     pub fn rotate(&self) -> Self {
         // Create a new key with different seed
         use std::sync::atomic::{AtomicU64, Ordering};
@@ -452,6 +456,7 @@ pub struct RecoveryChallenge {
 }
 
 impl RecoveryChallenge {
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     pub fn generate(user_id: &str) -> Self {
         let challenge_data: Vec<u8> = (0..32).map(|i| i as u8).collect();
         Self {
@@ -464,6 +469,7 @@ impl RecoveryChallenge {
         }
     }
 
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     pub fn with_expiration(user_id: &str, expires_after: Duration) -> Self {
         let challenge_data: Vec<u8> = (0..32).map(|i| i as u8).collect();
         Self {

@@ -807,7 +807,7 @@ mod tests {
     fn test_const_tables_fast_sin_wraparound() {
         let sin_360 = ConstTables::fast_sin(360);
         let sin_0 = ConstTables::fast_sin(0);
-        assert!((sin_360 - sin_0).abs() < f64::EPSILON as f32);
+        assert!((sin_360 - sin_0).abs() < f32::EPSILON);
     }
 
     #[test]

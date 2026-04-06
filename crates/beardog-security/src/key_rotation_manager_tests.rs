@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive tests for KeyRotationManager
+//! Comprehensive tests for `KeyRotationManager`
 //!
 //! Coverage boost: Tests key rotation lifecycle, edge cases, and error paths
 

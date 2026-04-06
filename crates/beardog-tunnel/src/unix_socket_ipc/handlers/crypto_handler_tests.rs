@@ -2,7 +2,7 @@
 
 //! Crypto Handler Tests
 //!
-//! Tests for the CryptoHandler method registration and routing.
+//! Tests for the `CryptoHandler` method registration and routing.
 
 use super::*;
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! JSON-RPC types, PrimalInfo, registry client, socket discovery.
+//! JSON-RPC types, `PrimalInfo`, registry client, socket discovery.
 
 use crate::protocol::JSONRPC_VERSION;
 use crate::registry_client::{

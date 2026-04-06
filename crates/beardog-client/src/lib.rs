@@ -260,7 +260,7 @@ mod tests {
     use tokio::net::UnixListener;
     use tokio::sync::{Mutex, Notify};
 
-    /// Tests in this module share the global `process_env` overlay (BEARDOG_SOCKET).
+    /// Tests in this module share the global `process_env` overlay (`BEARDOG_SOCKET`).
     /// Async mutex so we can `.await` while holding the lock (no `await_holding_lock` on std mutex).
     static ENV_LOCK: Mutex<()> = Mutex::const_new(());
 

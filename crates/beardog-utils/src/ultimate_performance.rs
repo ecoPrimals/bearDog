@@ -497,6 +497,11 @@ mod tests {
     }
 
     #[test]
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        clippy::cast_precision_loss
+    )]
     fn test_large_data_processing() {
         let processor = UltimatePerformanceProcessor::new();
         let test_data: Vec<u8> = (0..1024).map(|i| (i % 256) as u8).collect();

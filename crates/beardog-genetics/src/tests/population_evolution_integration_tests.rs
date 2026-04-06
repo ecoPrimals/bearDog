@@ -246,6 +246,7 @@ mod population_evolution_tests {
     }
 
     #[test]
+    #[allow(clippy::cast_precision_loss)]
     fn test_convergence_detection() {
         let mut pop = Population::new(30, 5);
         let mut fitness_history = Vec::new();

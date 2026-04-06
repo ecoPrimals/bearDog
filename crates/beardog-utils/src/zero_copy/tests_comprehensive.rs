@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive tests for zero_copy module
+//! Comprehensive tests for `zero_copy` module
 //! Focus: Caching, shared references, capability validation
 
 #![allow(

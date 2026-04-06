@@ -2,7 +2,7 @@
 
 //! Comprehensive Error Tests
 //!
-//! Tests for BearDogError construction, conversion, and handling
+//! Tests for `BearDogError` construction, conversion, and handling
 
 use crate::*;
 

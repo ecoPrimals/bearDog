@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Split from coverage_gap_tests_11: HSM/monitoring migration, providers, genetics, crypto/AI/compliance, workflow/production.
+//! Split from `coverage_gap_tests_11`: HSM/monitoring migration, providers, genetics, crypto/AI/compliance, workflow/production.
 
 mod hsm_unified_migration_methods {
     use crate::canonical::hsm_unified::migration::*;

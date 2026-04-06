@@ -25,6 +25,7 @@ impl AnomalyDetector {
         self.samples.push(value);
     }
 
+    #[allow(clippy::cast_precision_loss)]
     pub fn establish_baseline(&mut self) {
         if self.samples.is_empty() {
             return;

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive tests for PathConfig
+//! Comprehensive tests for `PathConfig`
 //!
 //! Added December 8, 2025 to increase coverage toward 90% target
 //! Targets: Platform-aware paths, PKCS#11 discovery, validation, cross-platform

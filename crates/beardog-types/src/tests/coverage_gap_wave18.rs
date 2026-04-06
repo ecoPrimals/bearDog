@@ -229,6 +229,7 @@ async fn kubernetes_discovery_try_create_succeeds_or_reports_unavailable() {
 // --- workflow retry (domains/workflow/retry.rs) ---
 
 #[test]
+#[allow(clippy::cast_possible_truncation)]
 fn workflow_retry_config_default_trait_and_serde() {
     let c = WorkflowRetryConfig::default();
     assert_serde_json_roundtrip(&c);

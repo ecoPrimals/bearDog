@@ -27,6 +27,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::cast_precision_loss)]
     fn test_entropy_distribution() {
         // Test that entropy is well-distributed
         let mut values = Vec::new();

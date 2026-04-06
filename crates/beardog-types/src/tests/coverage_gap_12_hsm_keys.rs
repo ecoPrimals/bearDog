@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Split from coverage_gap_tests_12: HSM keys method coverage.
+//! Split from `coverage_gap_tests_12`: HSM keys method coverage.
 
 #[cfg(test)]
 mod hsm_keys_methods_tests {

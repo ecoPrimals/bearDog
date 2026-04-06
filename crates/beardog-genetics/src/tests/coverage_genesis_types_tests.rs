@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Coverage: genesis types (GenesisWitness, GeneticLineage, PhysicalChannelProof).
+//! Coverage: genesis types (`GenesisWitness`, `GeneticLineage`, `PhysicalChannelProof`).
 
 // ═══════════════════════════════════════════════════════════════════
 // birdsong/genesis_types/ - GenesisWitness, GeneticLineage, PhysicalChannelProof

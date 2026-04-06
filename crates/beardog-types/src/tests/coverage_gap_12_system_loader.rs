@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Split from coverage_gap_tests_12: migrations, system/env config, crypto, loaders, tunnel.
+//! Split from `coverage_gap_tests_12`: migrations, system/env config, crypto, loaders, tunnel.
 
 #[cfg(test)]
 mod monitoring_migration_tests {

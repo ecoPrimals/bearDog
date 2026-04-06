@@ -59,26 +59,11 @@ pub mod capability_registry;
 /// Listens for announcements from other primals in the ecosystem,
 /// implementing the "infant learning" pattern of observation and discovery.
 pub mod ecosystem_listener;
-#[expect(
-    unused_imports,
-    clippy::float_cmp,
-    clippy::useless_vec,
-    clippy::needless_range_loop,
-    clippy::uninlined_format_args,
-    dead_code
-)]
 #[cfg(test)]
 #[path = "ecosystem_listener_tests.rs"]
 mod ecosystem_listener_tests;
 
-#[expect(
-    unused_imports,
-    clippy::float_cmp,
-    clippy::useless_vec,
-    clippy::needless_range_loop,
-    clippy::uninlined_format_args,
-    dead_code
-)]
+#[expect(clippy::useless_vec)]
 #[cfg(test)]
 #[path = "bootstrap_tests.rs"]
 mod bootstrap_tests;
@@ -744,14 +729,7 @@ pub struct EcosystemState {
     pub ecosystem_health: f64,
 }
 
-#[expect(
-    unused_imports,
-    clippy::float_cmp,
-    clippy::useless_vec,
-    clippy::needless_range_loop,
-    clippy::uninlined_format_args,
-    dead_code
-)]
+#[expect(clippy::uninlined_format_args)]
 #[cfg(test)]
 mod tests {
     use super::*;

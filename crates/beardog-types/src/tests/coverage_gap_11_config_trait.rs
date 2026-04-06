@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Split from coverage_gap_tests_11: config trait validation/loaders/types, unified & system/security domains, config utils.
+//! Split from `coverage_gap_tests_11`: config trait validation/loaders/types, unified & system/security domains, config utils.
 
 mod config_trait_validation {
     use crate::canonical::config::r#trait::validation;

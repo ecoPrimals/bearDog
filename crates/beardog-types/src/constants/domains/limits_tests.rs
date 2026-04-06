@@ -177,6 +177,7 @@ mod limit_tests {
     }
 
     #[test]
+    #[allow(clippy::cast_possible_truncation)]
     fn test_memory_limit_progression() {
         // Cache < Log < Temp
         assert!(MAX_CACHE_SIZE < MAX_LOG_FILE_SIZE as usize);

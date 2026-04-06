@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! BearDog Threat Tests Module
+//! `BearDog` Threat Tests Module
 //!
 //! Comprehensive test coverage for threat detection functionality
 

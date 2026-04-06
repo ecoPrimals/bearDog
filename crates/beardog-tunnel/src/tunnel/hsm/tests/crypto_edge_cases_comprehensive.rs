@@ -5,9 +5,9 @@
 //! Deep testing of edge cases and error paths for cryptographic operations.
 //! Targets coverage gaps in beardog-tunnel (70% → 90%).
 //!
-//! TEST_CATEGORY: edge_case
-//! TEST_DOMAIN: crypto
-//! TEST_PRIORITY: high
+//! `TEST_CATEGORY`: `edge_case`
+//! `TEST_DOMAIN`: `crypto`
+//! `TEST_PRIORITY`: `high`
 
 use crate::tunnel::hsm::GenerateKeyRequest;
 use crate::tunnel::hsm::manager::HsmProvider;

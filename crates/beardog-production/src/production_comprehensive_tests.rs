@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive Unit Tests for BearDog Production
+//! Comprehensive Unit Tests for `BearDog` Production
 //!
 //! Created: October 27, 2025
 //! Purpose: Expand test coverage for beardog-production core functionality

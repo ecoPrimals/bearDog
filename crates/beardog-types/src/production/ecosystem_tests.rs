@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Comprehensive tests for Production Ecosystem core functionality
-//! Tests cover: ProductionEcosystem, ProductionConfig, ProductionState, builders, lifecycle
+//! Tests cover: `ProductionEcosystem`, `ProductionConfig`, `ProductionState`, builders, lifecycle
 
 use super::*;
 

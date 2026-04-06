@@ -2,7 +2,7 @@
 #![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 //! SHA-384 Cipher Suite Test (0x1302)
 //!
-//! Smoke test to verify TLS 1.3 cipher suite 0x1302 (TLS_AES_256_GCM_SHA384)
+//! Smoke test to verify TLS 1.3 cipher suite 0x1302 (`TLS_AES_256_GCM_SHA384`)
 //! works correctly with SHA-384 HKDF.
 //!
 //! This test validates the SHA-384 evolution that enables 100% TLS validation.
@@ -15,7 +15,7 @@ use beardog_tunnel::unix_socket_ipc::handlers::crypto::{
 };
 use serde_json::json;
 
-/// Test crypto.hash_for_cipher with all 3 TLS 1.3 cipher suites
+/// Test `crypto.hash_for_cipher` with all 3 TLS 1.3 cipher suites
 #[tokio::test]
 async fn test_hash_for_cipher_all_suites() {
     let test_data = b"Hello, TLS 1.3!";

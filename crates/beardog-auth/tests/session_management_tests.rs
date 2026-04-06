@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![allow(clippy::expect_used, clippy::unwrap_used)]
-//! Session management and security tests for BearDog authentication
+//! Session management and security tests for `BearDog` authentication
 //!
 //! These tests verify session lifecycle, rate limiting, and security features.
 

@@ -40,6 +40,7 @@ impl PatternRefiner {
             .push(context.to_string());
     }
 
+    #[allow(clippy::cast_precision_loss)]
     pub fn false_positive_rate(&self, pattern_id: &str) -> f64 {
         if let Some(records) = self.false_positive_records.get(pattern_id) {
             // Simple heuristic: more records = higher rate

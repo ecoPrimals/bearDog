@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Split from coverage_gap_tests_12: config trait, genetics constraints, HSM migration.
+//! Split from `coverage_gap_tests_12`: config trait, genetics constraints, HSM migration.
 
 #[cfg(test)]
 mod config_trait_methods_tests {

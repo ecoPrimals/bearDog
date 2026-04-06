@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Comprehensive tests for PrimalRegistryClient
+//! Comprehensive tests for `PrimalRegistryClient`
 //!
 //! Tests: Unit, E2E, and validation of zero-hardcoding principle
 
