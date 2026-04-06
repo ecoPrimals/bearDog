@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Async-safe pinned buffers and Tokio [`Mutex`] pools sized from canonical constants.
 //!

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Native Device Detection
 //!
@@ -25,7 +25,7 @@ pub struct DeviceInfo {
 
 /// Smartphone platform
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[allow(non_camel_case_types, reason = "iOS is the platform name")]
+#[expect(non_camel_case_types, reason = "iOS is the platform name")]
 pub enum SmartphonePlatform {
     /// Android (Google)
     Android,

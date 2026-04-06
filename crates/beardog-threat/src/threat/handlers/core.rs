@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Primary async [`ThreatDetectionEngine`](crate::threat::handlers::core::ThreatDetectionEngine) with feeds, rules, ML hooks, and incident tracking.
 

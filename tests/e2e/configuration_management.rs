@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! Configuration Management E2E Tests
 //!
 //! End-to-end tests for configuration loading, validation, and hot-reloading

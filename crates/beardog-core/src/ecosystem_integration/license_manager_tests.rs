@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Comprehensive Tests for License Manager
 //
 // Tests the context-aware licensing system that manages capability access,

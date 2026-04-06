@@ -1,10 +1,13 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Environment-driven configuration for [`super::EcosystemListener`].
 
 /// Injected configuration for [`super::EcosystemListener`] (poll intervals and HTTP discovery targets).
 #[derive(Debug, Clone)]
-#[allow(missing_docs)]
+#[expect(
+    missing_docs,
+    reason = "fields are self-describing configuration knobs"
+)]
 pub struct EcosystemListenerEnvInputs {
     pub mdns_poll_interval_secs: u64,
     pub http_discovery_poll_interval_secs: u64,

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Password-based encryption of exported key material (Argon2 + ChaCha20-Poly1305).
 

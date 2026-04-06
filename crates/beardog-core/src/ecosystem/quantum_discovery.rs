@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: AGPL-3.0-only
-#![allow(missing_docs)] // Phase 2 quantum vocabulary types mirror domain concepts; module docs cover intent.
+// SPDX-License-Identifier: AGPL-3.0-or-later
+#![expect(missing_docs)] // Phase 2 quantum vocabulary types mirror domain concepts; module docs cover intent.
 
 //! Quantum-inspired capability orchestration (experimental).
 //!

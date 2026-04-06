@@ -8,7 +8,7 @@ documentation = "https://docs.rs/beardog"
 keywords = [ "workflow", "orchestration", "beardog", "automation", "tasks",]
 categories = [ "development-tools", "automation", "orchestration",]
 readme = "README.md"
-license = "AGPL-3.0-only"
+license = "AGPL-3.0-or-later"
 
 [dependencies]
 async-trait = "0.1"

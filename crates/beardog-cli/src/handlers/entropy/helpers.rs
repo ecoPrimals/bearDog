@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Encoding, Shannon quality, file I/O hooks, and multi-source system entropy.
 
@@ -61,7 +61,7 @@ pub fn calculate_entropy_quality(bytes: &[u8]) -> f64 {
 /// Returns an error if the file cannot be written.
 #[allow(
     dead_code,
-    reason = "public hook; not referenced by all CLI entrypoints"
+    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
 )]
 pub fn save_entropy_file(data: &[u8], path: &str) -> Result<(), BearDogError> {
     std::fs::write(path, data)
@@ -75,7 +75,7 @@ pub fn save_entropy_file(data: &[u8], path: &str) -> Result<(), BearDogError> {
 /// Returns an error if the file cannot be read.
 #[allow(
     dead_code,
-    reason = "public hook; not referenced by all CLI entrypoints"
+    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
 )]
 pub fn load_entropy_file(path: &str) -> Result<Vec<u8>, BearDogError> {
     std::fs::read(path)

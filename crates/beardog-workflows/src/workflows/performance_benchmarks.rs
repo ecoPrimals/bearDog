@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Synthetic zero-cost workflow performance benchmarks (timing loops for regression visibility).
 

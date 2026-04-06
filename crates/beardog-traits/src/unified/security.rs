@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Security-facing traits: sessions, crypto, HSM, audit, policy, and shared DTOs.
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::genetics::entropy_hierarchy::{EntropyClass, EntropyHierarchyConfig};
 use beardog_errors::BearDogError;

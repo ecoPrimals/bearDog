@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Pure CTAP2 CBOR encode/decode — no HID, no async, unit-testable.
 

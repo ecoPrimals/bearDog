@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Status, version, and capability summary for the CLI.
 
@@ -125,7 +125,7 @@ pub async fn handle_status(verbose: bool) -> Result<(), BearDogError> {
 /// This handler currently only prints the version and always returns `Ok(())`.
 #[allow(
     dead_code,
-    reason = "Exposed for tests and future version subcommand wiring."
+    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
 )]
 pub async fn handle_version() -> Result<(), BearDogError> {
     let build_info = get_build_info();

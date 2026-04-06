@@ -29,5 +29,5 @@ if is_fido2_compatible(vendor_id, product_id) {
 
 ## License
 
-AGPL-3.0-only
+AGPL-3.0-or-later
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Targeted coverage for receipt validation, adapter certificate helpers, and constraint builtins.
 

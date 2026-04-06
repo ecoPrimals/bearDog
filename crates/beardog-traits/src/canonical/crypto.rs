@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Symmetric, signature, and asymmetric algorithm enums plus the legacy [`CryptoProvider`] API.
 

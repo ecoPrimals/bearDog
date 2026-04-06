@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Advanced tests for production module
 //! Focus: Builder pattern, lifecycle, edge cases

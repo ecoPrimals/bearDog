@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
 //! Lineage, entropy, challenge, and device-enrollment genetic crypto routing.

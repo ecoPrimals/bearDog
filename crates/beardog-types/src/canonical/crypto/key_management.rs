@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::constants::{ROTATION_30_DAYS_SECS, ROTATION_90_DAYS_SECS, SECONDS_PER_HOUR_U32};
 use serde::{Deserialize, Serialize};

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Clone interning, pooled [`bytes::BytesMut`], zero-copy [`bytes::Bytes`] views, and a tiny SIMD-style hasher.
 //!

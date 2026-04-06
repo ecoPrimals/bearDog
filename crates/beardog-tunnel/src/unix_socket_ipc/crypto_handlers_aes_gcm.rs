@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! AES-GCM Handlers (Phase 6 - CRITICAL! 90%+ of HTTPS!)
 //!

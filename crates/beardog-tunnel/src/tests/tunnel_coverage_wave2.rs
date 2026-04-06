@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! Pure unit tests for tunnel exports, graph security types, and doctor helpers (coverage wave 2).
 
 #![allow(clippy::expect_used, clippy::unwrap_used)]

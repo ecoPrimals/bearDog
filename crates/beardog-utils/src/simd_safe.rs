@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Portable “SIMD-style” hashing and comparison in safe Rust only (LLVM may still vectorize).
 

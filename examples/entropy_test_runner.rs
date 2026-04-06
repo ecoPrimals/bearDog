@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! Modern Rust Entropy Test Runner
 //!
 //! Replaces bash script with proper Rust implementation.

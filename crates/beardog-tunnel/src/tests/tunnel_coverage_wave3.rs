@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! Focused tests for graph security types and doctor helpers (coverage wave 3).
 
 #![allow(clippy::expect_used, clippy::unwrap_used)]

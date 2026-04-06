@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Comprehensive core tests (split by domain: core lifecycle, messaging, identity, coordination, storage).
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 // ============================================================================
 // types/mod.rs - 63 uncovered lines, 65.19% coverage

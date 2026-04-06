@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 #![allow(clippy::expect_used, clippy::unwrap_used, missing_docs)]
 
 //! Phase 6 Crypto — comprehensive integration tests for TLS 1.3–style primitives.

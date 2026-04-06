@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! mDNS Discovery Demo
 //!
 //! Demonstrates runtime primal discovery using mDNS/DNS-SD.

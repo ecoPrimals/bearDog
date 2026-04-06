@@ -84,6 +84,33 @@ BearDog provides **crypto atoms** to the ecoPrimals ecosystem. Every primal dele
 
 ---
 
+## Binary Targets
+
+### Primary UniBin
+
+| Binary | Source | Purpose |
+|--------|--------|---------|
+| `beardog` | `src/main.rs` | Primary UniBin — server, client, key ops, doctor, capabilities |
+
+All user-facing functionality ships through the single `beardog` binary via
+subcommands, per the ecoPrimals UniBin architecture.
+
+### Tooling Exceptions (not part of the UniBin)
+
+| Binary | Crate | Purpose | Justification |
+|--------|-------|---------|---------------|
+| `beardog-installer` | `beardog-installer` | Deployment tooling: installs, validates, and manages BearDog on target devices | Runs on the host, not on the deployed device; different compilation target and dependency surface |
+| `deploy-pixel8` | `beardog-deploy` | Android Pixel 8 adb-based deployment script | Android-specific cross-compilation helper; not shipped to end users |
+
+### Showcase Demos (not part of the workspace)
+
+The `showcase/` directory contains 22+ standalone demo binaries illustrating
+BearDog features. They are **not workspace members** and are excluded from
+`cargo build`/`cargo test`. They exist as working examples and reference
+implementations, not as shipped artifacts.
+
+---
+
 ## Trait Hierarchy
 
 ### Unified Provider Architecture

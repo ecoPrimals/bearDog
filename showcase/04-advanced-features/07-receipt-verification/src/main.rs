@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 use anyhow::{Context, Result};
 use blake3::Hash as Blake3Hash;

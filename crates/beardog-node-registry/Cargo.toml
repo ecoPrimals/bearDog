@@ -7,7 +7,7 @@ homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = ["security", "distributed", "registry", "p2p", "coordination"]
 categories = ["cryptography", "network-programming", "web-programming"]
-license = "AGPL-3.0-only"
+license = "AGPL-3.0-or-later"
 
 [package.version]
 workspace = true

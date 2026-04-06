@@ -22,7 +22,7 @@
 | **Coverage** | 90.16% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
-| **License** | AGPL-3.0-only | SPDX headers on all .rs files |
+| **License** | AGPL-3.0-or-later | SPDX headers on all .rs files |
 | **Architecture** | DI-based | Pure `Default`, `from_env()` at boundaries |
 | **Toolchain** | Pinned | `rust-toolchain.toml` at 1.93.0 |
 | **Production** | READY | Universal deployment |
@@ -71,7 +71,7 @@
 | Zero Hardcoding | 20+ named constants extracted; capability-based discovery everywhere |
 | Self-Knowledge | Primals discover peers at runtime via capability registry |
 | JSON-RPC | Primary IPC protocol with NDJSON framing and batch support; tarpc optional behind feature gate in `beardog-ipc` |
-| AGPL-3.0-only | License verified; SPDX headers on all .rs files |
+| AGPL-3.0-or-later | License verified; SPDX headers on all .rs files |
 | `forbid(unsafe_code)` | Workspace level + every crate `lib.rs` (beardog-errors platform FFI documented per wateringHole) |
 | Workspace Lints | Centralized clippy pedantic + nursery + all cast lints warn + `doc_markdown` + `missing_errors_doc` + unwrap/expect warn |
 | All Public Items Documented | 0 missing_docs warnings |
@@ -85,6 +85,14 @@
 ---
 
 ## Recent Improvements
+
+### Wave 27: primalSpring License Audit — AGPL-3.0-or-later, #[expect(reason)], Method Deprecation, Binary Docs (April 2, 2026)
+
+- **License migrated to AGPL-3.0-or-later** — 58 `Cargo.toml` files, `deny.toml`, 2,075 SPDX headers, all `.md` docs updated per `STANDARDS_AND_EXPECTATIONS.md`
+- **`#[allow()]` → `#[expect(reason)]`** — 49 non-test `#[allow]` attributes migrated in `beardog-cli`, `beardog-core`, `beardog-tunnel`; all now carry contextual `reason` strings. `dead_code` on pub items in lib+bin crates kept as `#[allow]` (documented: `#[expect]` incompatible with dual-target lint evaluation)
+- **Legacy flat method aliases deprecated** — `capabilities`, `get_capabilities`, `ping`, `health`, `status`, `check`, `identity`, `whoami`, `get_identity` documented as deprecated in handler doc comments; canonical `domain.operation` names (`capabilities.list`, `health.liveness`, `health.check`, `health.readiness`) marked as primary
+- **Extra binaries documented** — `ARCHITECTURE.md` Binary Targets section: `beardog-installer` and `deploy-pixel8` documented as tooling exceptions; showcase demos documented as non-workspace examples
+- **All gates green** — fmt ✓, clippy `-D warnings` ✓, test (14,366+) ✓, deny ✓
 
 ### Wave 26: Deep Debt Evolution — Stubs → Implementations, Dependency Alignment, Dead Code Cleanup (April 2, 2026)
 
@@ -265,7 +273,7 @@
 - **Full ecosystem audit** — Reviewed all wateringHole standards, 8 springs (primalSpring, neuralSpring, airSpring, wetSpring, hotSpring, healthSpring, groundSpring, ludoSpring), and all phase1/phase2 primals for absorption opportunities
 - **Clippy lint tightening** — `unwrap_used`/`expect_used` evolved from `allow` to `warn` at workspace level; all 6 production sites annotated with `#[expect(clippy::expect_used, reason = "...")]`; unused `AsyncReadExt` import removed
 - **Typed error evolution** — `Box<dyn Error>` eliminated from `receipt.rs`, `adapter_certificates.rs`, `hyperoptimized_zero_copy.rs`; `Result<(), String>` evolved to `BearDogError` in SIMD and genetics public APIs
-- **SPDX compliance** — All 29 showcase `main.rs` files now have `// SPDX-License-Identifier: AGPL-3.0-only` headers (was 1,997/2,026; now 2,026/2,026)
+- **SPDX compliance** — All 29 showcase `main.rs` files now have `// SPDX-License-Identifier: AGPL-3.0-or-later` headers (was 1,997/2,026; now 2,026/2,026)
 - **Commented-out code cleanup** — Removed legacy stubs from ~10 production files per wateringHole standard (tunnel/lib.rs, security/lib.rs, integration/api_server.rs, btsp_provider.rs, graph_security, primal_discovery, biome_sovereignty, providers_unified)
 - **Smart file refactoring** — 4 files near 1000 LOC split by domain: `monitoring_error_path_tests` (3 files), `hsm_provider_selection_tests` (2 files), `crypto_handlers_hashing` (4 files), `comprehensive_core_tests` (5 files)
 - **Dead code evolution** — `#[allow(dead_code)]` removed from `api_server.rs` (fields now logged), `ultimate_safety.rs`, `compliance_validation_tests.rs`; unused fields renamed with `_` prefix
@@ -329,7 +337,7 @@
 - **Dead code cleanup** — Removed non-compiling orphan files (`alerts.rs`, `health.rs` in monitoring); cleaned `#[allow(dead_code)]` with leading underscores or removal
 - **Mock isolation** — `testing` and `property_testing` modules gated behind `#[cfg(any(test, feature = "test-utils"))]`
 - **Coverage push** — `beardog-traits` 39% → 99.4%; `beardog-deploy` and `beardog-discovery` coverage boosted with comprehensive integration tests
-- **License normalization** — All 13 crate `Cargo.toml` files standardized to `license = "AGPL-3.0-only"` in `[package]`
+- **License normalization** — All 13 crate `Cargo.toml` files standardized to `license = "AGPL-3.0-or-later"` in `[package]`
 
 ### Wave 6: Cast Lint Tightening, Coverage Push & Capability-Based Discovery
 

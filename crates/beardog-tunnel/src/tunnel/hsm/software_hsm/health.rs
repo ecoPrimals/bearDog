@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::tunnel::hsm::types::canonical::PerformanceMetrics as CanonicalPerformanceMetrics;
 use crate::tunnel::hsm::types::*;

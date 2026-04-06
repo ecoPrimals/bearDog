@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! Coverage extension tests for root lib.rs
 //!
 //! Added December 8, 2025 to increase coverage from 75.17% to 90%+

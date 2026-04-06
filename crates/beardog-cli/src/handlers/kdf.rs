@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Key-derivation helpers for CLI key generation (PBKDF2, Argon2, HKDF).
 
@@ -148,7 +148,7 @@ impl KdfConfig {
     /// Get KDF metadata for storage
     #[allow(
         dead_code,
-        reason = "Public metadata helper for future persisted key records"
+        reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
     )]
     pub fn to_metadata(&self) -> serde_json::Value {
         serde_json::json!({

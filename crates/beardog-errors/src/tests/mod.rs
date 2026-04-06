@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod comprehensive_error_tests;
 mod edge_cases_nov_6_2025;

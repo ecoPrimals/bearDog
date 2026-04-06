@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 // Comprehensive Config Validation Tests
 // December 7, 2025 - Test Coverage Expansion

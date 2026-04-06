@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! HID-backed CTAP2 transport using `beardog-hid` (pure Rust).
 //!

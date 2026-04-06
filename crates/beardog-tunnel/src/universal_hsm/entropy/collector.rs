@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Entropy collection implementation.
 //!
@@ -84,9 +84,7 @@ impl EntropyCollector {
                     .duration_since(UNIX_EPOCH)
                     .map(|d| d.subsec_nanos())
                     .unwrap_or(0);
-                #[allow(clippy::cast_possible_truncation)]
-                let byte = (nanos & 0xFF) as u8;
-                byte
+                (nanos & 0xFF) as u8
             })
             .collect()
     }
@@ -113,7 +111,6 @@ impl EntropyCollector {
 
         for i in 0..iterations {
             hasher.update(entropy_pool);
-            #[allow(clippy::cast_possible_truncation)]
             let counter = (i as u64).to_le_bytes();
             hasher.update(counter);
 
@@ -126,7 +123,10 @@ impl EntropyCollector {
     }
 
     /// Shannon entropy normalised to 0.0–1.0.
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "byte counts fit f64 without meaningful loss"
+    )]
     fn assess_entropy_quality(data: &[u8]) -> f64 {
         if data.is_empty() {
             return 0.0;
@@ -170,7 +170,10 @@ impl EntropyCollector {
         }
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "byte counts fit f64 without meaningful loss"
+    )]
     fn chi_square_test(data: &[u8]) -> f64 {
         if data.is_empty() {
             return 0.0;

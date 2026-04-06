@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 // Split from coverage_gap_tests_11: production types, constants, HSM/monitoring/security defaults, tail modules.
 

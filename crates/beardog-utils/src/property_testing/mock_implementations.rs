@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 #![cfg(any(test, feature = "test-utils"))]
 
 //! Non-cryptographic test fixtures for property-based testing

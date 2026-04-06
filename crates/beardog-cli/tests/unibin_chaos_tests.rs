@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 #![allow(clippy::expect_used, clippy::unwrap_used, clippy::float_cmp)]
 
 //! Chaos tests for `UniBin` commands - error conditions and edge cases

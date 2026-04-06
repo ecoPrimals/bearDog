@@ -1,10 +1,10 @@
-<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <!-- Creative content: CC-BY-SA 4.0 (scyBorg provenance trio) -->
 
 # Contributing to BearDog
 
 BearDog is the cryptographic service provider for the ecoPrimals ecosystem,
-licensed under **AGPL-3.0-only** (code) with **CC-BY-SA 4.0** for creative
+licensed under **AGPL-3.0-or-later** (code) with **CC-BY-SA 4.0** for creative
 content (docs, specs) per the scyBorg provenance trio.
 
 ---
@@ -39,7 +39,7 @@ cargo deny check                   # Advisories, bans, licenses, sources
 
 - Atomic commits with clear, descriptive messages
 - Reference relevant specs or wateringHole standards when applicable
-- SPDX license headers (`// SPDX-License-Identifier: AGPL-3.0-only`) on all `.rs` files
+- SPDX license headers (`// SPDX-License-Identifier: AGPL-3.0-or-later`) on all `.rs` files
 
 ## Architecture Principles
 
@@ -68,4 +68,4 @@ cargo deny check                   # Advisories, bans, licenses, sources
 
 ---
 
-**License**: AGPL-3.0-only (code) | CC-BY-SA 4.0 (creative content)
+**License**: AGPL-3.0-or-later (code) | CC-BY-SA 4.0 (creative content)

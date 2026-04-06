@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Enumerations and records for workflow lifecycle, audit trails, approvals, and execution metrics.
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 // ============================================================================
 // types/engine/ml_models.rs - 37 uncovered lines, 83.41% coverage

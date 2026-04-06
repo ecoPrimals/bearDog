@@ -175,7 +175,7 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | **Coverage** | 90.16% line (llvm-cov workspace, target 90%) |
 | **Serial Tests** | 0 (`#[serial]` fully eliminated) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |
-| **License** | AGPL-3.0-only (SPDX headers on all .rs files) |
+| **License** | AGPL-3.0-or-later (SPDX headers on all .rs files) |
 
 ### Standards
 
@@ -187,7 +187,7 @@ Key material is derived from the family seed. A BearDog instance serving family 
 - **Fully Concurrent Tests** — Zero `#[serial]`, zero sleeps in non-chaos tests
 - **< 1000 LOC** — File size discipline across all production .rs files
 - **Workspace Lints** — Centralized clippy pedantic + nursery + all cast lints + `doc_markdown` + `missing_errors_doc` at warn
-- **SPDX headers** — Every `.rs` file has `// SPDX-License-Identifier: AGPL-3.0-only`
+- **SPDX headers** — Every `.rs` file has `// SPDX-License-Identifier: AGPL-3.0-or-later`
 - **`rust-toolchain.toml`** — Pinned toolchain with cross-compile targets
 
 ---
@@ -206,7 +206,7 @@ Key material is derived from the family seed. A BearDog instance serving family 
 
 ## License
 
-AGPL-3.0-only — See [LICENSE](LICENSE) file.
+AGPL-3.0-or-later — See [LICENSE](LICENSE) file.
 
 ---
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Shared workflow configuration, API DTOs, and taxonomy enums for orchestration.
 //!

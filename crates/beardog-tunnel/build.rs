@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! Build script for the `beardog-tunnel` crate.
 //!
 //! Configures platform-specific native linking for tunnel and StrongBox-related code paths.

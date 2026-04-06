@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! Comprehensive Concurrency Stress Tests
 //!
 //! Tests that truly stress the concurrent behavior of BearDog systems.

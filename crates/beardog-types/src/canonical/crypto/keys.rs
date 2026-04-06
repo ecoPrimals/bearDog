@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::algorithms::{CryptoAlgorithm, KeyDerivationFunction};
 use super::constants::ROTATION_30_DAYS_SECS;

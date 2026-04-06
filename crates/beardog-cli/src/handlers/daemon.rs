@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Daemon mode handler - background service
 //!
@@ -111,7 +111,7 @@ pub async fn handle_daemon(args: DaemonArgs) -> Result<(), BearDogError> {
 
 #[cfg(test)]
 mod tests {
-    // SPDX-License-Identifier: AGPL-3.0-only
+    // SPDX-License-Identifier: AGPL-3.0-or-later
 
     use super::prepare_daemon_pid_file;
 

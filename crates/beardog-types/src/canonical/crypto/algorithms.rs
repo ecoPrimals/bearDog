@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::constants::domains::security::crypto as security_crypto;
 use serde::{Deserialize, Serialize};

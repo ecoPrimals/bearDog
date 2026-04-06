@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! Coverage wave 18: cloud HSM, service discovery, workflow/security/monitoring config, constants, HSM config, performance.
 
 #![cfg(test)]

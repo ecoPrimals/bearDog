@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! PKCS#11 HSM Provider
 //!
@@ -12,13 +12,13 @@ pub struct Pkcs11UniversalProvider {
     /// HSM capabilities
     capabilities: Option<Pkcs11Capabilities>,
     /// PKCS#11 library path (stored for Phase 2 session wiring; read in tests)
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "reserved for Phase 2 PKCS#11 session wiring")]
     library_path: String,
     /// Slot ID (stored for Phase 2 session wiring; read in tests)
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "reserved for Phase 2 PKCS#11 session wiring")]
     slot_id: u64,
     /// Provider metadata (stored for Phase 2 provider context; read in tests)
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "reserved for Phase 2 PKCS#11 provider context")]
     metadata: HashMap<String, String>,
 }
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Workflow Orchestration Tests - Week 2 Day 5 (October 26, 2025)
 //!

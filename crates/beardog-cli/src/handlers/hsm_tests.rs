@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 // Comprehensive tests for HSM handler
 // Following BearDog standards: concurrent, robust, idiomatic

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::software_hsm_provider::SoftwareHsmProvider;
 use super::types::{KeyManagementCapability, KmsError};

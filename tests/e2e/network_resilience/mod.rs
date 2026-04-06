@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! Network Resilience E2E Test Suite
 //!
 //! Modular test organization for network failure handling, retries, and recovery.

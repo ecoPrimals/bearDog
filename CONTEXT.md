@@ -11,7 +11,7 @@ BearDog answers “who is this node?” and “perform this crypto operation saf
 ## Technical Facts
 
 - **Language:** 100% Rust (edition 2024), zero C dependencies in application code
-- **License:** AGPL-3.0-only (SPDX on sources)
+- **License:** AGPL-3.0-or-later (SPDX on sources)
 - **Version:** 0.9.0
 - **Workspace:** 29 crates (`Cargo.toml` workspace)
 - **Rust sources:** 1,892 `.rs` files

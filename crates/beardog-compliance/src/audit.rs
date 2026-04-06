@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 // Audit trail and compliance tracking for BearDog
 // Provides comprehensive audit logging and compliance reporting

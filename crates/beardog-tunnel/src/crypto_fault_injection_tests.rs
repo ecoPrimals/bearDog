@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Crypto fault injection tests: adversarial inputs, key corruption, and edge cases.
 //!

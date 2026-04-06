@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! Disaster Recovery E2E Test Suite
 //!
 //! **Architecture**: Domain-driven test organization

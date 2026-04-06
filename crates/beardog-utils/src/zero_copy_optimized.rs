@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Higher-level zero-copy manager with [`std::sync::Weak`]-backed string cache and [`OptimizedString`](crate::zero_copy_optimized::OptimizedString)/[`OptimizedBytes`](crate::zero_copy_optimized::OptimizedBytes) views.
 

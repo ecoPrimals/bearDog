@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! [`crate::tunnel::hsm::manager::HsmProvider`] implementation: crypto and key lifecycle.
 

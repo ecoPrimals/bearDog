@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 /// Default retry delay for network operations
 pub const DEFAULT_RETRY_DELAY: Duration = Duration::from_millis(1000); 

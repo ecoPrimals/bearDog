@@ -7,7 +7,7 @@ homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "monitoring", "observability", "metrics", "beardog", "health",]
 categories = [ "development-tools", "monitoring", "observability",]
-license = "AGPL-3.0-only"
+license = "AGPL-3.0-or-later"
 
 [package.version]
 workspace = true

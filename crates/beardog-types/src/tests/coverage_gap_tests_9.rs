@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Coverage gap tests Part 9: HSM config, HSM keys, HSM capabilities, monitoring core/health/metrics,
 //! crypto, config/domains/system, config/hsm/mod, config/unified/simplified

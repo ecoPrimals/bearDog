@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 2, 2026 -- Wave 27: primalSpring License Audit — AGPL-3.0-or-later, Lint Migration, Deprecation
+
+- **License** — `AGPL-3.0-only` → `AGPL-3.0-or-later` across 58 `Cargo.toml`, `deny.toml`, 2,075 SPDX headers, all `.md` docs per `STANDARDS_AND_EXPECTATIONS.md`
+- **`#[allow]` → `#[expect(reason)]`** — 49 non-test attributes migrated; `dead_code` on pub items in lib+bin crates kept as `#[allow]` (documented limitation)
+- **Flat method aliases deprecated** — `capabilities`, `ping`, `health`, `status`, `identity`, etc. marked deprecated in favor of `domain.operation` names
+- **Binary targets documented** — `ARCHITECTURE.md` now has Binary Targets section documenting UniBin, tooling exceptions, and showcase demos
+- **14,366+ tests passing**, all gates green
+
 ### April 2, 2026 -- Wave 26: Deep Debt Evolution — Stubs → Implementations, Dependency Alignment, Dead Code Cleanup
 
 - **Workspace dep alignment** — `beardog-ipc`, `beardog-hid`, `serial_test`, `beardog-adapters`, `beardog-capabilities`, `beardog-genetics`, `tempfile` → `workspace = true`
@@ -29,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Smart file refactoring** — 4 of top 5 largest files decomposed into domain-driven submodules: `key_export/` (types/crypto/export/import/tests), `capabilities/` (type/discovery/compliance/infrastructure), `providers/base/` (configuration/performance/schema/trait/defaults), `entropy/` (collect/helpers/hsm_selection/info/types/tests)
 - **Production mock evolution** — `quantum_discovery.rs` evolved from fake endpoints/providers to real `PrimalDiscovery` integration; Phase 2 stubs return `NotImplemented` instead of fabricated data
 - **Formatting fixed** — 4 files that drifted from `cargo fmt` corrected
-- **Licensing clarified** — `LICENSE-DOCS.md` updated with full scyBorg Provenance Trio table (AGPL-3.0-only / ORC / CC-BY-SA 4.0)
+- **Licensing clarified** — `LICENSE-DOCS.md` updated with full scyBorg Provenance Trio table (AGPL-3.0-or-later / ORC / CC-BY-SA 4.0)
 - **Coverage** — 90.16% line (workspace), 14,610+ tests passing, 0 failures
 - **Stale docs cleaned** — `specs/PROJECT_STATUS.md` archived to fossilRecord, `scripts/` debris removed, root docs updated to current metrics
 
@@ -237,7 +245,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Coverage push** — `beardog-traits` 39% → 99.4%, `beardog-deploy` and `beardog-discovery`
   boosted with comprehensive integration tests. Overall: 85.1% line (102,969/121,020).
 - **License normalization** — All 13 crate `Cargo.toml` files standardized to
-  `license = "AGPL-3.0-only"` in `[package]` section.
+  `license = "AGPL-3.0-or-later"` in `[package]` section.
 - **Clippy cleanup** — Fixed cast lints, `mul_add` ambiguity, redundant closures, `#[derive(Default)]`
   opportunities, format string interpolation, let-binding returns.
 
@@ -279,7 +287,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`cargo deny` passes all 4 checks** (advisories, bans, licenses, sources):
   - RSA Marvin Attack documented as accepted risk (no upstream fix)
   - 27 transitive duplicate crates skipped (RustCrypto ecosystem version split)
-  - `deny.toml` simplified: AGPL-3.0-only in global allow, per-crate exceptions removed
+  - `deny.toml` simplified: AGPL-3.0-or-later in global allow, per-crate exceptions removed
 - **Hanging tests eliminated**: `beardog-deploy` refactored with `CommandRunner` trait +
   `MockAdbCommandRunner`. `show_logs` follow mode has bounded timeout. No more zombie
   `adb` processes.
@@ -311,7 +319,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### March 19, 2026 -- Deep Compliance & Coverage Wave 2
 
-- SPDX license headers (`AGPL-3.0-only`) added to 1,634 .rs files
+- SPDX license headers (`AGPL-3.0-or-later`) added to 1,634 .rs files
 - Removed ~130 production `#[allow(dead_code)]` — idiomatic underscore prefixes
 - Removed redundant `#[allow]` from beardog-types (workspace config handles them)
 - Removed `sysinfo` C dependency (ecoBin violation) — was unused in beardog-deploy
@@ -327,7 +335,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### March 19, 2026 -- Deep Compliance & Coverage Wave 1
 
 - Fixed 46 clippy errors in beardog-core (struct_excessive_bools, items_after_statements, etc.)
-- Standardized AGPL-3.0-only license across all 29 Cargo.toml files
+- Standardized AGPL-3.0-or-later license across all 29 Cargo.toml files
 - Workspace lint inheritance (`[lints] workspace = true`) applied to all crates
 - Refactored `ProductionConfig` (5 bools → enum) and `SecurityConfig` (4 bools → Option sub-configs)
 - Removed `async` from 14 functions that had no `.await`

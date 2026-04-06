@@ -7,7 +7,7 @@ homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "genetics", "evolution", "algorithms", "beardog", "computation",]
 categories = [ "algorithms", "science", "development-tools",]
-license = "AGPL-3.0-only"
+license = "AGPL-3.0-or-later"
 
 [lints]
 workspace = true

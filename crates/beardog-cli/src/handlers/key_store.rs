@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Local JSON key store under `~/.beardog/keys` (CLI testing and development).
 
@@ -176,7 +176,7 @@ pub fn load_key(key_id: &str) -> Result<StoredKey, BearDogError> {
 // Public API for callers using default HOME; CLI handlers use `list_keys_from_home` for DI.
 #[allow(
     dead_code,
-    reason = "Stable HOME-based API; handlers use list_keys_from_home for DI."
+    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
 )]
 pub fn list_keys() -> Result<Vec<StoredKey>, BearDogError> {
     let keys_dir = get_keys_dir()?;
@@ -225,7 +225,7 @@ fn list_keys_in_dir(keys_dir: &std::path::Path) -> Result<Vec<StoredKey>, BearDo
 // Public API for callers using default HOME; CLI handlers use `delete_key_from_home` for DI.
 #[allow(
     dead_code,
-    reason = "Stable HOME-based API; handlers use delete_key_from_home for DI."
+    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
 )]
 pub fn delete_key(key_id: &str) -> Result<(), BearDogError> {
     let keys_dir = get_keys_dir()?;

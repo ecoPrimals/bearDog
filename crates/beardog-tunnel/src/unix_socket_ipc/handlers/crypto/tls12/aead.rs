@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! TLS 1.2 AES-GCM AEAD (128-bit and 256-bit keys).
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::helpers::{entropy_quality_assessment_label, generate_system_entropy};
 use super::*;

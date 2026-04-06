@@ -5,7 +5,7 @@
 **Date**: March 24, 2026  
 **Audience**: Integrators, educators, and prospective partners  
 **Document license**: CC-BY-SA 4.0 (this file)  
-**Default software license**: AGPL-3.0-only for BearDog code (see `LICENSE`)  
+**Default software license**: AGPL-3.0-or-later for BearDog code (see `LICENSE`)  
 **Status**: Active — local policy under the ecosystem scyBorg framework
 
 ---
@@ -28,14 +28,14 @@ Summary text also appears in `wateringHole/LICENSE`.
 
 **No exceptions** are granted for **core cryptographic code** — including key
 derivation, tunnel crypto, HSM integration, and security-sensitive IPC. That
-material remains **AGPL-3.0-only** without carve-outs.
+material remains **AGPL-3.0-or-later** without carve-outs.
 
 ---
 
 ## 3. Showcase and Example Code
 
 **Showcase** and **example** code (e.g. under `showcase/`) **may** be offered
-under a **dual license**: **AGPL-3.0-only** plus **MIT** for clearly marked
+under a **dual license**: **AGPL-3.0-or-later** plus **MIT** for clearly marked
 educational or demonstration snippets, where files explicitly state both
 licenses. Core libraries and production paths are not dual-licensed by default.
 

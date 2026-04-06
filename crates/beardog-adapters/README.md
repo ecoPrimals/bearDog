@@ -31,7 +31,7 @@ cargo doc --open
 
 ## License
 
-This project is licensed under AGPL-3.0-only.
+This project is licensed under AGPL-3.0-or-later.
 
 ## Contributing
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::*;
 use crate::hsm::fido2::types::{Fido2Capabilities, Fido2DeviceInfo, Fido2Transport};

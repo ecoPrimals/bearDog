@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Generic relational-style [`DatabaseProvider`] with stringly-typed rows and transactions.
 

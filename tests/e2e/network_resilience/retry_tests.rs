@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! Retry and Exponential Backoff Tests
 //!
 //! Tests for network retry logic with exponential backoff strategies.

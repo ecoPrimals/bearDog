@@ -8,7 +8,7 @@ documentation = "https://docs.rs/beardog"
 keywords = [ "threat", "detection", "analysis", "security", "beardog",]
 categories = [ "security", "development-tools", "analysis",]
 readme = "README.md"
-license = "AGPL-3.0-only"
+license = "AGPL-3.0-or-later"
 
 [package.version]
 workspace = true

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Encrypt plaintext files (or stdin) using a stored key and the software HSM tunnel.
 

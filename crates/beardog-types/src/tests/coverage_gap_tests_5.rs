@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Coverage gap tests Part 5: BearDogConfig trait impls + remaining high-uncov files
 //! Targets: All BearDogConfig implementors (validate/merge/from_env/to_toml),

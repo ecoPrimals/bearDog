@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! TLS 1.2 ECDHE with NIST P-256 and P-384 (secp256r1 / secp384r1).
 

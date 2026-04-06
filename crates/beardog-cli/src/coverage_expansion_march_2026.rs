@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! Additional unit tests for CLI argument structs and discovery URL parsing (coverage expansion).
 
 #![allow(clippy::expect_used, clippy::unwrap_used)]

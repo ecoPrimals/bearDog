@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! ECDH Key Exchange Handlers (Phase 6 - Critical TLS 1.3 Gap)
 //!

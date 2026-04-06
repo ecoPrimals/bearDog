@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Solo V2 HSM Provider Implementation
 
@@ -482,7 +482,10 @@ struct Ctap2MakeCredentialResult {
     credential_id: Vec<u8>,
     public_key: Vec<u8>,
     /// CBOR-encoded `attStmt`; reserved for attestation chain verification.
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "reserved for Phase 2 attestation chain verification"
+    )]
     attestation_statement: Vec<u8>,
 }
 

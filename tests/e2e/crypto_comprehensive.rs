@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 #![allow(clippy::all)]
 //! Comprehensive Cryptographic Operations E2E Tests
 //! Implements scenarios E2E-CRYPTO-001 through E2E-CRYPTO-005

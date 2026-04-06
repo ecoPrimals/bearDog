@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Capabilities handler
 //!
@@ -13,11 +13,22 @@ use beardog_types::primal_identity::PrimalIdentity;
 use std::sync::Arc;
 use tracing::info;
 
-/// Handler for capabilities and identity methods
+/// Handler for capabilities and identity methods.
 ///
-/// Supports:
-/// - `capabilities` / `get_capabilities` - Lists all provided capabilities
-/// - `identity` / `whoami` / `get_identity` - Returns primal identity
+/// ## Canonical Methods (use these)
+///
+/// - `capabilities.list` — list all provided capabilities
+/// - `capability.list` — alias of `capabilities.list`
+/// - `primal.capabilities` — alias of `capabilities.list`
+/// - `discover_capabilities` — detailed capability discovery with metadata
+///
+/// ## Deprecated Flat Aliases (will be removed in v1.0)
+///
+/// - `capabilities` — use `capabilities.list`
+/// - `get_capabilities` — use `capabilities.list`
+/// - `identity` — use a canonical `identity.*` method when available
+/// - `whoami` — use a canonical `identity.*` method when available
+/// - `get_identity` — use a canonical `identity.*` method when available
 ///
 /// All responses include genetic lineage (`family_id`, `node_id`) discovered
 /// from environment variables at runtime (no hardcoding).
@@ -49,12 +60,14 @@ impl MethodHandler for CapabilitiesHandler {
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
         match method {
-            "capabilities"
-            | "get_capabilities"
-            | "capabilities.list"
-            | "capability.list"
-            | "primal.capabilities" => self.handle_capabilities().await,
+            // Canonical
+            "capabilities.list" | "capability.list" | "primal.capabilities" => {
+                self.handle_capabilities().await
+            }
+            // Deprecated flat aliases — remove in v1.0
+            "capabilities" | "get_capabilities" => self.handle_capabilities().await,
             "discover_capabilities" => self.handle_discover_capabilities().await,
+            // Deprecated flat aliases — remove in v1.0
             "identity" | "whoami" | "get_identity" => self.handle_identity().await,
             _ => Err(format!("Method not found: {method}")),
         }

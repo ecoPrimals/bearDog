@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Engine-level types: composable rule conditions, ML artifacts, executable rules, and engine stats.
 

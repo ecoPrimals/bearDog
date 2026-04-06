@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Universal HSM discovery via `beardog-tunnel` (no hardcoded vendor paths).
 
@@ -143,7 +143,7 @@ pub async fn discover_all_hsms() -> Result<Vec<CliHsmInfo>, BearDogError> {
 /// Returns an error if no HSMs are available or no HSM matches the preference.
 #[allow(
     dead_code,
-    reason = "Exposed for tests and future interactive HSM selection."
+    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
 )]
 pub fn select_hsm<'a>(
     hsms: &'a [CliHsmInfo],

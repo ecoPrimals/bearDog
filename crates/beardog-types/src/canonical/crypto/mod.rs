@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 // Cryptographic types and configurations for BearDog
 // Provides structured definitions for cryptographic algorithms, keys, and security settings

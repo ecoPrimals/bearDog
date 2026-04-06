@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! TPM (Trusted Platform Module) Provider
 //!
@@ -8,7 +8,7 @@ use beardog_errors::BearDogError;
 use std::collections::HashMap;
 
 /// TPM Universal HSM Provider
-#[allow(
+#[expect(
     dead_code,
     reason = "pub struct for TPM provider surface; fields used as impl lands"
 )]

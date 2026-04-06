@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Mix two existing keys into a new derived key (XOR + hash) for shared-access workflows.
 

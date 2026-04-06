@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Server Mode - Primary `BearDog` operational mode
 //!
@@ -304,7 +304,10 @@ async fn register_with_discovery_service(
     }
 
     // PHASE 2: Fallback to legacy registry transport (deprecated path)
-    #[allow(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "legacy registry fallback kept for backward compat during migration"
+    )]
     match register_with_legacy_ipc_registry().await {
         Ok(()) => {
             info!(

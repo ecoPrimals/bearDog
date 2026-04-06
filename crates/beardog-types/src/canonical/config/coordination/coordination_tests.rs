@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::{
     CoordinationConfig, CoordinationModel, assess_coordination_health, migrate_from_primary_replica,

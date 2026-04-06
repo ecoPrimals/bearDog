@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 // Compliance Handler Tests
 // Focus: Policy validation, enforcement, audit logging, standards evaluation

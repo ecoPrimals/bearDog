@@ -2,7 +2,7 @@
 name = "beardog-nestgate-demo"
 version = "0.1.0"
 edition = "2024"
-license = "AGPL-3.0-only"
+license = "AGPL-3.0-or-later"
 
 # Standalone package (not part of parent workspace)
 [workspace]

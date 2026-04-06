@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Serializable threat-domain types: events, sources, rules, intelligence feeds, and response payloads.
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{compute_sha256_hash, compute_sha512_hash, generate_secure_random_bytes};
 

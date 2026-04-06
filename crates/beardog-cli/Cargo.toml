@@ -7,7 +7,7 @@ homepage = "https://beardog.dev"
 documentation = "https://docs.rs/beardog"
 keywords = [ "cli", "command-line", "beardog", "management", "tools",]
 categories = [ "command-line-utilities", "development-tools",]
-license = "AGPL-3.0-only"
+license = "AGPL-3.0-or-later"
 
 [package.version]
 workspace = true

@@ -5,7 +5,7 @@
 **Date**: March 24, 2026  
 **Audience**: ecoPrimals primals, springs, and derivative works  
 **Document license**: CC-BY-SA 4.0 (this file)  
-**Software license**: BearDog source code is **AGPL-3.0-only** (see `LICENSE`)  
+**Software license**: BearDog source code is **AGPL-3.0-or-later** (see `LICENSE`)  
 **Status**: Active — companion to ecosystem scyBorg / wateringHole licensing
 
 ---
@@ -25,10 +25,10 @@ space.
 
 ---
 
-## 2. BearDog Software: AGPL-3.0-only
+## 2. BearDog Software: AGPL-3.0-or-later
 
 All BearDog **software** in this repository is licensed under **GNU Affero
-General Public License v3.0 only** (`AGPL-3.0-only`). Under the AGPL, **use of
+General Public License v3.0 only** (`AGPL-3.0-or-later`). Under the AGPL, **use of
 the software to provide a network service counts as distribution**: modified
 versions used to run services must be made available to users as **corresponding
 source**. That closes the “SaaS loophole” and keeps server-side deployments
@@ -73,5 +73,5 @@ under CC-BY-SA 4.0. The triple-copyleft **wateringHole** summary is in
 
 - `wateringHole/SCYBORG_PROVENANCE_TRIO_GUIDANCE.md` — scyBorg standard  
 - `wateringHole/LICENSE` — triple-copyleft wateringHole companion  
-- `LICENSE` — BearDog software (AGPL-3.0-only)  
+- `LICENSE` — BearDog software (AGPL-3.0-or-later)  
 - `LICENSE-DOCS.md` — documentation layer (CC-BY-SA 4.0)

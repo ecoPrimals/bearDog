@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Key lifecycle handlers: generate, list, info, delete (wired to local key store).
 
@@ -73,7 +73,7 @@ fn generate_aes_key_with_seed(seed_data: Option<&[u8]>) -> Result<Vec<u8>, BearD
 }
 
 /// Generate AES-256 key using only system entropy (no human seed)
-#[allow(
+#[expect(
     dead_code,
     reason = "Legacy helper kept for callers not using human seed path"
 )]
@@ -89,7 +89,7 @@ fn generate_aes_key() -> Result<Vec<u8>, BearDogError> {
 /// material generation fails, the key or receipt cannot be saved, or I/O fails.
 #[allow(
     dead_code,
-    reason = "Legacy public handler kept for API stability; main uses handle_key_generate_v2"
+    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
 )]
 pub async fn handle_key_generate(
     key_id: &str,

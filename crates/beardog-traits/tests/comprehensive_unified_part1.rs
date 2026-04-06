@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 #![allow(clippy::expect_used, clippy::unwrap_used, clippy::manual_async_fn)]
 
 //! Integration tests (part 1): unified `mod`, core, identity, monitoring, genetics.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Delegated keys with optional time, weekday, CPU, and memory constraints.
 
@@ -42,7 +42,7 @@ impl DelegationConstraints {
     /// using the universal constraint system.
     #[allow(
         dead_code,
-        reason = "public delegation helpers; not referenced by all CLI entrypoints"
+        reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
     )]
     pub fn to_constraints(&self) -> Vec<Box<dyn Constraint>> {
         let mut constraints: Vec<Box<dyn Constraint>> = Vec::new();
@@ -89,7 +89,7 @@ impl DelegationConstraints {
     /// Returns an error if a constraint cannot be evaluated.
     #[allow(
         dead_code,
-        reason = "public delegation helpers; not referenced by all CLI entrypoints"
+        reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
     )]
     pub fn is_satisfied(&self) -> Result<bool, BearDogError> {
         let constraints = self.to_constraints();
@@ -108,7 +108,7 @@ impl DelegationConstraints {
     /// Get composite constraint (all constraints with AND logic)
     #[allow(
         dead_code,
-        reason = "public delegation helpers; not referenced by all CLI entrypoints"
+        reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
     )]
     pub fn as_composite(&self) -> CompositeConstraint {
         CompositeConstraint::and(self.to_constraints())

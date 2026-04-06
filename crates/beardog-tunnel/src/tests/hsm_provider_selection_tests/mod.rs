@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! HSM provider selection tests: pure selection logic vs integration with `HsmManager` and mocks.
 

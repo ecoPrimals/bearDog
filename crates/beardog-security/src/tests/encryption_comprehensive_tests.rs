@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::encryption::{EncryptionConfig, EncryptionService};
 use beardog_errors::BearDogError;

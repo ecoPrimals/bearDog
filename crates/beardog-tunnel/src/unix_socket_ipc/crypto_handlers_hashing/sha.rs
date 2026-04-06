@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! SHA-2 / SHA-1 / SHA3-256 hash handlers for Unix socket crypto IPC.
 

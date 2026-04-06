@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Genetics Advanced Test Coverage
 //! December 6, 2025 - Phase 2 Coverage Expansion

@@ -243,7 +243,7 @@ This crate represents **WORLD-CLASS SOFTWARE ENGINEERING** with:
 
 ## 📄 **License**
 
-Licensed under AGPL-3.0-only. See [LICENSE](LICENSE) for details.
+Licensed under AGPL-3.0-or-later. See [LICENSE](LICENSE) for details.
 
 ## 🤝 **Contributing**
 

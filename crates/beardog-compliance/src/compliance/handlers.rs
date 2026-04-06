@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Evaluates [`ComplianceEvent`](crate::compliance::types::ComplianceEvent)s against enabled
 //! [`ComplianceStandard`](crate::compliance::types::ComplianceStandard)s, appends [`AuditEntry`](crate::compliance::types::AuditEntry)

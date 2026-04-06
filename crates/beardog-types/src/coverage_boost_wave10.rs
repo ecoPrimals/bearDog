@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Targeted coverage tests for low-coverage beardog-types modules:
 //! kubernetes discovery, factory, production config, and universal types.

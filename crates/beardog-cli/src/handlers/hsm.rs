@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! HSM discovery, capability display, and smoke tests (`beardog hsm`).
 
@@ -79,7 +79,7 @@ pub async fn handle_hsm_discover(verbose: bool) -> Result<(), BearDogError> {
 /// Returns an error if HSM discovery fails.
 #[allow(
     dead_code,
-    reason = "Exposed for tests and future hsm list subcommand wiring."
+    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
 )]
 pub async fn handle_hsm_list() -> Result<(), BearDogError> {
     println!("BearDog HSM Discovery");

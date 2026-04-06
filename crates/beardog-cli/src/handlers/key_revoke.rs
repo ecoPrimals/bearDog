@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Sovereign key revocation: local revocation list in `~/.beardog/revocation_list.json`.
 
@@ -55,7 +55,7 @@ impl RevocationList {
     /// Returns an error if `HOME` is unset, or the file exists but cannot be read or parsed.
     #[allow(
         dead_code,
-        reason = "Stable public API using HOME; in-crate paths use load_from_home."
+        reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
     )]
     pub fn load() -> Result<Self, BearDogError> {
         let home = std::env::var("HOME")
@@ -92,7 +92,7 @@ impl RevocationList {
     /// Returns an error if `HOME` is unset, or serialization or I/O fails.
     #[allow(
         dead_code,
-        reason = "Stable public API using HOME; in-crate paths use save_to_home."
+        reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
     )]
     pub fn save(&self) -> Result<(), BearDogError> {
         let home = std::env::var("HOME")
@@ -158,7 +158,7 @@ impl RevocationList {
     /// Returns an error if serialization fails or the file cannot be written.
     #[allow(
         dead_code,
-        reason = "Used by revocation export handlers and future CLI wiring."
+        reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
     )]
     pub fn export(&self, path: &str) -> Result<(), BearDogError> {
         let json = serde_json::to_string_pretty(self).map_err(|e| {
@@ -175,7 +175,7 @@ impl RevocationList {
     /// Returns an error if the file cannot be read or parsed as JSON.
     #[allow(
         dead_code,
-        reason = "Used by revocation import handlers and future CLI wiring."
+        reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
     )]
     pub fn import(path: &str) -> Result<Self, BearDogError> {
         let json = fs::read_to_string(path)?;
@@ -203,7 +203,10 @@ impl RevocationList {
     }
 
     /// Unrevoke a key (for testing or if revocation was mistake)
-    #[allow(dead_code, reason = "Administrative and test-only recovery API.")]
+    #[allow(
+        dead_code,
+        reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
+    )]
     pub fn unrevoke(&mut self, key_id: &str) -> bool {
         let removed = self.revoked_keys.remove(key_id).is_some();
         if removed {
@@ -356,7 +359,7 @@ fn get_child_keys_in_home(parent_key_id: &str, home: &Path) -> Result<Vec<String
 /// Returns an error if `HOME` is unset, the list cannot be loaded, or export I/O fails.
 #[allow(
     dead_code,
-    reason = "Planned for beardog key revoke --export; use *_with_home for tests."
+    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
 )]
 pub async fn handle_revocation_export(output_path: &str) -> Result<(), BearDogError> {
     let home = revocation_home_from_env()?;
@@ -370,7 +373,7 @@ pub async fn handle_revocation_export(output_path: &str) -> Result<(), BearDogEr
 /// Returns an error if the list cannot be loaded or written to `output_path`.
 #[allow(
     dead_code,
-    reason = "Test and DI entry point; primary export may call the HOME-based wrapper."
+    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
 )]
 pub async fn handle_revocation_export_with_home(
     output_path: &str,
@@ -401,7 +404,7 @@ pub async fn handle_revocation_export_with_home(
 /// list cannot be saved.
 #[allow(
     dead_code,
-    reason = "Planned for beardog key revoke --import; use *_with_home for tests."
+    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
 )]
 pub async fn handle_revocation_import(input_path: &str) -> Result<(), BearDogError> {
     let home = revocation_home_from_env()?;
@@ -415,7 +418,7 @@ pub async fn handle_revocation_import(input_path: &str) -> Result<(), BearDogErr
 /// Returns an error if the import file cannot be read or parsed, or the merged list cannot be saved.
 #[allow(
     dead_code,
-    reason = "Test and DI entry point; primary import may call the HOME-based wrapper."
+    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
 )]
 pub async fn handle_revocation_import_with_home(
     input_path: &str,

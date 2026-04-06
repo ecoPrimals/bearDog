@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Targeted coverage tests for installer, validator, platform, arch, and types uncovered paths.
 

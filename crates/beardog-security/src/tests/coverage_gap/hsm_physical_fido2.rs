@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 // ========================================================================
 // entropy_orchestrator: HumanEntropyInput with all fields (mix_with_human_input)

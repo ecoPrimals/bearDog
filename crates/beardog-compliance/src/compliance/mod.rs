@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Runtime compliance evaluation: the `handlers` submodule orchestrates checks; the `types` submodule defines events and results.
 

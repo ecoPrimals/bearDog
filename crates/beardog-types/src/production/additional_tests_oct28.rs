@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Additional unit tests to boost coverage from 33.77% to 35%+
 //! Added October 28, 2025 - Part of audit improvement plan

@@ -8,7 +8,7 @@ documentation = "https://docs.rs/beardog"
 keywords = [ "compliance", "audit", "gdpr", "sox", "beardog",]
 categories = [ "development-tools", "compliance", "auditing",]
 readme = "README.md"
-license = "AGPL-3.0-only"
+license = "AGPL-3.0-or-later"
 
 [package.version]
 workspace = true

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Live Feed Entropy Validator — mandatory for human keys.
 //!
@@ -162,7 +162,10 @@ impl LiveFeedValidator {
         false
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "byte counts fit f64 without meaningful loss"
+    )]
     fn has_insufficient_randomness(&self, data: &[u8]) -> bool {
         let mut byte_counts = [0u32; 256];
         for &byte in data {

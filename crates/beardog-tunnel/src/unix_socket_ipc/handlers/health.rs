@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Health check handler
 //!
@@ -13,21 +13,22 @@ use chrono::Utc;
 use std::sync::Arc;
 use tracing::info;
 
-/// Handler for health check methods
+/// Handler for health check methods.
 ///
-/// Supports multiple method names for compatibility:
-/// - `ping` - Simple connectivity test
-/// - `health` - Health status
-/// - `status` - Service status
-/// - `check` - Generic check
-/// - `health.liveness` - Ecosystem standard liveness probe
-/// - `health.readiness` - Ecosystem standard readiness probe
-/// - `health.check` - Ecosystem standard health check
+/// ## Canonical Methods (use these)
 ///
 /// Per Semantic Method Naming Standard v2.1.0:
-/// - Liveness (`ping`, `health`, `health.liveness`) → minimal `{"status":"alive"}` response
-/// - Readiness (`health.readiness`) → includes protocol and capabilities count
-/// - Deep check (`status`, `check`, `health.check`) → full health with timestamp
+///
+/// - `health.liveness` — minimal liveness probe → `{"status":"alive"}`
+/// - `health.readiness` — readiness probe → includes protocol and capabilities count
+/// - `health.check` — deep health check → full health with timestamp
+///
+/// ## Deprecated Flat Aliases (will be removed in v1.0)
+///
+/// - `ping` — use `health.liveness`
+/// - `health` — use `health.liveness`
+/// - `status` — use `health.check`
+/// - `check` — use `health.check`
 pub struct HealthHandler {
     identity: IdentityHints,
     capabilities_count: usize,
@@ -92,6 +93,7 @@ impl MethodHandler for HealthHandler {
 
         match method {
             // Liveness: minimal, fast — "am I alive?"
+            // "ping" and "health" are deprecated flat aliases — remove in v1.0
             "ping" | "health" | "health.liveness" => {
                 info!(probe = "liveness", "Health handler");
                 Ok(serde_json::json!({

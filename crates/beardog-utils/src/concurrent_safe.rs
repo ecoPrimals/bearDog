@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! [`DashMap`](dashmap::DashMap) hash maps and LRU-ish caches with `parking_lot` backing locks.
 

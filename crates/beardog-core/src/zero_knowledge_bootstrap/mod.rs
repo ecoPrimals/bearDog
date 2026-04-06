@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Zero-Knowledge Bootstrap System
 //!
@@ -59,7 +59,7 @@ pub mod capability_registry;
 /// Listens for announcements from other primals in the ecosystem,
 /// implementing the "infant learning" pattern of observation and discovery.
 pub mod ecosystem_listener;
-#[allow(
+#[expect(
     unused_imports,
     clippy::float_cmp,
     clippy::useless_vec,
@@ -71,7 +71,7 @@ pub mod ecosystem_listener;
 #[path = "ecosystem_listener_tests.rs"]
 mod ecosystem_listener_tests;
 
-#[allow(
+#[expect(
     unused_imports,
     clippy::float_cmp,
     clippy::useless_vec,
@@ -252,7 +252,10 @@ pub struct BootstrapMetrics {
 }
 
 // ecoPrimals: Migration plan - BootstrapConfig → UnifiedBootstrapConfig. Remove when callers migrate.
-#[allow(deprecated)]
+#[expect(
+    deprecated,
+    reason = "migration shim kept until callers adopt UnifiedBootstrapConfig"
+)]
 impl Default for BootstrapConfig {
     fn default() -> Self {
         use beardog_config::global::BEARDOG_CONFIG;
@@ -271,7 +274,10 @@ impl Default for BootstrapConfig {
     }
 }
 
-#[allow(deprecated)]
+#[expect(
+    deprecated,
+    reason = "migration shim kept until callers adopt UnifiedBootstrapConfig"
+)]
 impl BootstrapConfig {
     /// Load bootstrap tuning from `BEARDOG_ZK_*` / `BEARDOG_LISTEN_INTERFACE` via `std::env::var`.
     #[must_use]
@@ -300,7 +306,10 @@ impl BootstrapConfig {
 }
 
 // ecoPrimals: Migration helper - remove when all callers use UnifiedBootstrapConfig directly.
-#[allow(deprecated)]
+#[expect(
+    deprecated,
+    reason = "migration shim for From conversion; remove with BootstrapConfig"
+)]
 impl From<BootstrapConfig> for UnifiedBootstrapConfig {
     fn from(old: BootstrapConfig) -> Self {
         use beardog_types::canonical::config::domains::bootstrap::{
@@ -735,7 +744,7 @@ pub struct EcosystemState {
     pub ecosystem_health: f64,
 }
 
-#[allow(
+#[expect(
     unused_imports,
     clippy::float_cmp,
     clippy::useless_vec,

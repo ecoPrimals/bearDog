@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 // ============================================================================
 // ThreatAPI (mod.rs) - 8 uncovered lines, 0% coverage

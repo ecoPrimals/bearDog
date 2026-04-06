@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! `handle_tls_derive_handshake_secrets` — TLS 1.3 handshake traffic keys.
 

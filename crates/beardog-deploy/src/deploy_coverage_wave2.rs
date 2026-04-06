@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! Additional coverage tests: mock ADB runner branches, deployment config, optimization flags.
 
 #![allow(clippy::expect_used, clippy::unwrap_used)]

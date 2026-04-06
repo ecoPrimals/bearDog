@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! Deep coverage for `main.rs`: CLI parsing edge cases, `init_tracing`, and `dispatch` branches.
 
 #[cfg(test)]

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 //! BearDog Integration Demo
 //!
 //! Demonstrates the Phase 3 integration API server with all 17 endpoints.
