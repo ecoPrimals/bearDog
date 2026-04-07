@@ -509,10 +509,7 @@ mod error_edge_cases {
     // ========================================================================
 
     #[test]
-    #[allow(
-        clippy::cast_possible_truncation,
-        clippy::cast_possible_wrap
-    )]
+    #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
     fn test_max_error_nesting() {
         // Test deeply nested error propagation
         fn nest(depth: u32) -> Result<i32, BearDogError> {
