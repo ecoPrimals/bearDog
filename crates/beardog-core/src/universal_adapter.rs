@@ -49,7 +49,7 @@
 //!     .find_primal_by_capability(SimpleCapability::Discovery)
 //!     .await?;
 //!
-//! println!("Using AI primal: {}", ai_primal.name);
+//! tracing::info!("Using AI primal: {}", ai_primal.name);
 //! // Could be: "Squirrel", "FutureAIPrimal", or any AI provider
 //! // BearDog discovered it automatically!
 //! # Ok(())
@@ -134,7 +134,7 @@ impl CachedPrimal {
 ///     .discover_capability(SimpleCapability::Discovery)
 ///     .await?;
 ///
-/// println!("Found {} AI providers", ai_primals.len());
+/// tracing::info!("Found {} AI providers", ai_primals.len());
 /// // BearDog discovered Squirrel (or whoever) automatically!
 ///
 /// // 3. Get best provider (by trust, load, latency)
@@ -142,7 +142,7 @@ impl CachedPrimal {
 ///     .find_primal_by_capability(SimpleCapability::Discovery)
 ///     .await?;
 ///
-/// println!("Using: {} at {:?}", best_ai.name, best_ai.endpoints);
+/// tracing::info!("Using: {} at {:?}", best_ai.name, best_ai.endpoints);
 /// # Ok(())
 /// # }
 /// ```
@@ -279,7 +279,7 @@ impl UniversalAdapter {
     ///     .await?;
     ///
     /// for primal in ai_primals {
-    ///     println!("AI provider: {} at {:?}", primal.name, primal.endpoints);
+    ///     tracing::info!("AI provider: {} at {:?}", primal.name, primal.endpoints);
     ///     // Could be Squirrel, future AI primals, or anyone!
     /// }
     /// # Ok(())
@@ -335,7 +335,7 @@ impl UniversalAdapter {
     ///     .find_primal_by_capability(SimpleCapability::Discovery)
     ///     .await?;
     ///
-    /// println!("Best AI: {} (reason: highest trust)", best_ai.name);
+    /// tracing::info!("Best AI: {} (reason: highest trust)", best_ai.name);
     /// # Ok(())
     /// # }
     /// ```

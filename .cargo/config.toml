@@ -8,16 +8,9 @@ jobs = 24
 # Enable pipelined compilation (faster for large workspaces)
 pipelining = true
 
+# Fast linker (install `mold` and `clang` for 30-50% faster linking):
+#   sudo apt install mold clang
 # [target.x86_64-unknown-linux-gnu]
-# Uncomment and install fast linker for 30-50% faster linking:
-# 
-# Option 1: lld (recommended)
-# sudo apt install lld clang
-# linker = "clang"
-# rustflags = ["-C", "link-arg=-fuse-ld=lld"]
-#
-# Option 2: mold (fastest, but newer)
-# sudo apt install mold
 # linker = "clang"
 # rustflags = ["-C", "link-arg=-fuse-ld=mold"]
 

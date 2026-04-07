@@ -346,14 +346,14 @@ async fn test_graph_capabilities_advertised() {
 }
 
 // ============================================================================
-// petalTongue Integration Tests (User Interface)
+// UI peer integration tests (User Interface)
 // ============================================================================
 
 #[tokio::test]
-async fn test_petaltongue_user_modifies_graph() {
-    // Simulate petalTongue sending user modification request
+async fn test_ui_peer_user_modifies_graph() {
+    // Simulate a UI peer sending user modification request
     let btsp = create_test_btsp_provider().await;
-    let socket_path = "/tmp/beardog-test-petaltongue-modify.sock";
+    let socket_path = "/tmp/beardog-test-ui-peer-modify.sock";
 
     let _ = std::fs::remove_file(socket_path);
 
@@ -380,7 +380,7 @@ async fn test_petaltongue_user_modifies_graph() {
     .await;
     assert!(ready);
 
-    // User wants to add a node via petalTongue UI
+    // User wants to add a node via the UI peer
     let params = json!({
         "user_id": "alice",
         "graph": {
@@ -394,7 +394,7 @@ async fn test_petaltongue_user_modifies_graph() {
             }],
             "edges": [],
             "metadata": {
-                "created_by": "petalTongue",
+                "created_by": "ui-peer",
                 "version": "1.0"
             }
         },
@@ -403,7 +403,7 @@ async fn test_petaltongue_user_modifies_graph() {
             "node": {
                 "id": "new-ai-node",
                 "type": "ai",
-                "primal": "Squirrel",
+                "primal": "compute-peer",
                 "config": {
                     "model": "gpt-4",
                     "temperature": 0.7
@@ -423,10 +423,10 @@ async fn test_petaltongue_user_modifies_graph() {
 }
 
 #[tokio::test]
-async fn test_petaltongue_live_graph_visualization() {
-    // petalTongue requests validation of template being edited
+async fn test_ui_peer_live_graph_visualization() {
+    // UI peer requests validation of template being edited
     let btsp = create_test_btsp_provider().await;
-    let socket_path = "/tmp/beardog-test-petaltongue-viz.sock";
+    let socket_path = "/tmp/beardog-test-ui-peer-viz.sock";
 
     let _ = std::fs::remove_file(socket_path);
 
@@ -463,7 +463,7 @@ async fn test_petaltongue_live_graph_visualization() {
                 {
                     "id": "input-node",
                     "type": "data",
-                    "primal": "Squirrel",
+                    "primal": "compute-peer",
                     "config": {}
                 },
                 {
@@ -496,10 +496,10 @@ async fn test_petaltongue_live_graph_visualization() {
 }
 
 #[tokio::test]
-async fn test_petaltongue_template_browser() {
-    // User browses community templates, petalTongue checks trust
+async fn test_ui_peer_template_browser() {
+    // User browses community templates; UI peer checks trust
     let btsp = create_test_btsp_provider().await;
-    let socket_path = "/tmp/beardog-test-petaltongue-browse.sock";
+    let socket_path = "/tmp/beardog-test-ui-peer-browse.sock";
 
     let _ = std::fs::remove_file(socket_path);
 
@@ -543,14 +543,14 @@ async fn test_petaltongue_template_browser() {
 }
 
 // ============================================================================
-// NestGate Integration Tests (Storage/Persistence)
+// Storage peer integration tests (Storage/Persistence)
 // ============================================================================
 
 #[tokio::test]
-async fn test_nestgate_template_storage() {
-    // NestGate validates template before storing
+async fn test_storage_peer_template_storage() {
+    // Storage peer validates template before storing
     let btsp = create_test_btsp_provider().await;
-    let socket_path = "/tmp/beardog-test-nestgate-store.sock";
+    let socket_path = "/tmp/beardog-test-storage-peer-store.sock";
 
     let _ = std::fs::remove_file(socket_path);
 
@@ -586,7 +586,7 @@ async fn test_nestgate_template_storage() {
             "nodes": [{
                 "id": "node-1",
                 "type": "storage",
-                "primal": "NestGate",
+                "primal": "storage-peer",
                 "config": {
                     "capacity": "100GB"
                 }
@@ -611,10 +611,10 @@ async fn test_nestgate_template_storage() {
 }
 
 #[tokio::test]
-async fn test_nestgate_template_retrieval() {
-    // NestGate provides trust info when retrieving template
+async fn test_storage_peer_template_retrieval() {
+    // Storage peer provides trust info when retrieving template
     let btsp = create_test_btsp_provider().await;
-    let socket_path = "/tmp/beardog-test-nestgate-retrieve.sock";
+    let socket_path = "/tmp/beardog-test-storage-peer-retrieve.sock";
 
     let _ = std::fs::remove_file(socket_path);
 
@@ -657,10 +657,10 @@ async fn test_nestgate_template_retrieval() {
 }
 
 #[tokio::test]
-async fn test_nestgate_version_control() {
-    // NestGate validates template modifications for version control
+async fn test_storage_peer_version_control() {
+    // Storage peer validates template modifications for version control
     let btsp = create_test_btsp_provider().await;
-    let socket_path = "/tmp/beardog-test-nestgate-version.sock";
+    let socket_path = "/tmp/beardog-test-storage-peer-version.sock";
 
     let _ = std::fs::remove_file(socket_path);
 
@@ -726,14 +726,14 @@ async fn test_nestgate_version_control() {
 }
 
 // ============================================================================
-// Squirrel Integration Tests (AI/Intelligence)
+// Compute peer integration tests (AI/Intelligence)
 // ============================================================================
 
 #[tokio::test]
-async fn test_squirrel_ai_suggests_modification() {
-    // Squirrel (AI) suggests graph modification, BearDog authorizes
+async fn test_compute_peer_ai_suggests_modification() {
+    // Compute peer (AI) suggests graph modification; BearDog authorizes
     let btsp = create_test_btsp_provider().await;
-    let socket_path = "/tmp/beardog-test-squirrel-suggest.sock";
+    let socket_path = "/tmp/beardog-test-compute-peer-suggest.sock";
 
     let _ = std::fs::remove_file(socket_path);
 
@@ -762,7 +762,7 @@ async fn test_squirrel_ai_suggests_modification() {
 
     // AI suggests adding optimization node
     let params = json!({
-        "user_id": "ai-agent-squirrel",
+        "user_id": "ai-agent-compute",
         "graph": {
             "id": "ai-optimized-graph",
             "owner": "alice",
@@ -782,7 +782,7 @@ async fn test_squirrel_ai_suggests_modification() {
             "node": {
                 "id": "cache-node",
                 "type": "cache",
-                "primal": "Squirrel",
+                "primal": "compute-peer",
                 "config": {
                     "strategy": "lru",
                     "suggested_by": "ai"
@@ -804,10 +804,10 @@ async fn test_squirrel_ai_suggests_modification() {
 }
 
 #[tokio::test]
-async fn test_squirrel_learns_from_patterns() {
-    // Squirrel analyzes successful templates for patterns
+async fn test_compute_peer_learns_from_patterns() {
+    // Compute peer analyzes successful templates for patterns
     let btsp = create_test_btsp_provider().await;
-    let socket_path = "/tmp/beardog-test-squirrel-learn.sock";
+    let socket_path = "/tmp/beardog-test-compute-peer-learn.sock";
 
     let _ = std::fs::remove_file(socket_path);
 

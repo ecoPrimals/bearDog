@@ -224,7 +224,7 @@ impl PrimalDiscovery {
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] when [`Self::detect_discovery_method`] rejects the configured method.
+    /// Returns [`beardog_errors::BearDogError`] when `detect_discovery_method` rejects the configured method.
     pub fn from_env() -> Result<Self, BearDogError> {
         info!("🔍 Initializing primal discovery from environment...");
 
@@ -719,7 +719,7 @@ impl PrimalDiscovery {
                 "DNS-SD discovery via ecosystem relay IPC not yet complete - beardog-discovery crate pending"
             );
             warn!("Returning empty discovery results until integration is complete");
-            warn!("See: specs/IMPLEMENTATION_GAPS_NOV_2025.md for beardog-discovery timeline");
+            warn!("See: ROADMAP.md (repository root) for project direction and future work");
 
             // Return empty - honest about current state
             // Tests that depend on discovery should use explicit test-only mocks

@@ -315,10 +315,10 @@ impl BtspHandler {
     ///
     /// # Architectural Note
     ///
-    /// External mode (HTTPS) is implemented by **Songbird**, not `BearDog`.
-    /// `BearDog` provides the crypto primitives, Songbird implements the TLS/HTTP layer.
+    /// External mode (HTTPS) is implemented by the **HTTP/TLS-capable peer**, not `BearDog`.
+    /// `BearDog` provides the crypto primitives; the transport peer implements TLS/HTTP.
     ///
-    /// This follows the **Tower Atomic pattern**: Songbird + `BearDog` = Secure HTTPS
+    /// This follows the **Tower Atomic pattern**: transport peer + `BearDog` = Secure HTTPS
     async fn handle_tunnel_establish_external(
         &self,
         params: beardog_types::btsp::TunnelEstablishParams,
@@ -530,8 +530,8 @@ impl BtspHandler {
     ///
     /// # Architectural Note
     ///
-    /// TLS configuration is part of external mode, which is handled by **Songbird**.
-    /// Use Songbird's BTSP external mode API for TLS configuration.
+    /// TLS configuration is part of external mode, handled by the transport peer.
+    /// Use the transport peer's BTSP external mode API for TLS configuration.
     async fn handle_configure_tls(
         &self,
         params: Option<&serde_json::Value>,
@@ -562,9 +562,9 @@ impl BtspHandler {
     /// # Architectural Note
     ///
     /// - **Genetic lineage verification**: Handled by `BearDog` (use existing trust evaluation)
-    /// - **Certificate verification**: Handled by Songbird (external mode)
+    /// - **Certificate verification**: Handled by the transport peer (external mode)
     ///
-    /// For certificate trust, use Songbird's BTSP external mode API.
+    /// For certificate trust, use the transport peer's BTSP external mode API.
     async fn handle_verify_peer(
         &self,
         params: Option<&serde_json::Value>,
@@ -638,8 +638,8 @@ impl BtspHandler {
     ///
     /// # Architectural Note
     ///
-    /// HTTP operations are part of external mode, which is handled by **Songbird**.
-    /// Songbird implements HTTP/2 client and uses `BearDog` for TLS crypto.
+    /// HTTP operations are part of external mode, handled by the transport peer.
+    /// The transport peer implements the HTTP/2 client and uses `BearDog` for TLS crypto.
     async fn handle_tunnel_send_http(
         &self,
         params: Option<&serde_json::Value>,

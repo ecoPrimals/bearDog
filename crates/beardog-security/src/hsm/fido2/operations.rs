@@ -57,7 +57,7 @@ pub async fn send_ctap2_command(
     // 5. Return CBOR payload or error
 
     Err(BearDogError::system(
-        "CTAP2 command sending not yet implemented (Phase 1 in progress)".to_string(),
+        "CTAP2 command sending not yet implemented (Phase 2 in progress)".to_string(),
     ))
 }
 
@@ -74,7 +74,7 @@ pub async fn get_device_info(
 ) -> Result<super::types::Fido2DeviceInfo, BearDogError> {
     // PHASE-2(CTAP2): Send GetInfo command and parse response
     Err(BearDogError::system(
-        "CTAP2 GetInfo not yet implemented (Phase 1 in progress)".to_string(),
+        "CTAP2 GetInfo not yet implemented (Phase 2 in progress)".to_string(),
     ))
 }
 
@@ -100,7 +100,7 @@ pub async fn generate_entropy_via_hmac_secret(
     // 4. Optionally hash/expand to requested size
 
     Err(BearDogError::system(
-        "hmac-secret entropy generation not yet implemented (Phase 1 in progress)".to_string(),
+        "hmac-secret entropy generation not yet implemented (Phase 2 in progress)".to_string(),
     ))
 }
 

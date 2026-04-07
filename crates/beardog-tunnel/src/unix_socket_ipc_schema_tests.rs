@@ -304,7 +304,7 @@ mod tests {
 
     #[test]
     fn test_backward_compatibility_string_trust_level_name() {
-        // Ensure string trust_level_name is still present (Songbird compat)
+        // Ensure string trust_level_name is still present (peer compat)
         let response = json!({
             "decision": "auto_accept",
             "trust_level": 1,
@@ -319,9 +319,9 @@ mod tests {
     fn test_triple_representation() {
         // Test that all three representations are present and consistent
         let response = json!({
-            "decision": "auto_accept",         // NEW: For Songbird
+            "decision": "auto_accept",         // NEW: For peer
             "trust_level": 1,                  // Old: Integer (backward compat)
-            "trust_level_name": "limited"      // Old: String (Songbird compat)
+            "trust_level_name": "limited"      // Old: String (peer compat)
         });
 
         // All three present

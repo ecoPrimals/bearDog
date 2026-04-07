@@ -483,7 +483,7 @@ mod adapter_cert_tests {
         AdapterUnlockCertificate {
             cert_id: "test-cert-id-1234567890".to_string(),
             issuer_key_id: "issuer-key-1".to_string(),
-            adapter_id: "beardog-adapters::songbird::network".to_string(),
+            adapter_id: "beardog-adapters::peer-alpha::network".to_string(),
             classification: AdapterClassification::Human,
             constraints: None,
             issued_at: chrono::Utc::now() - chrono::Duration::days(1),
@@ -497,7 +497,7 @@ mod adapter_cert_tests {
         AdapterUnlockCertificate {
             cert_id: "expired-cert-id-1234567890".to_string(),
             issuer_key_id: "issuer-key-1".to_string(),
-            adapter_id: "beardog-adapters::songbird::network".to_string(),
+            adapter_id: "beardog-adapters::peer-alpha::network".to_string(),
             classification: AdapterClassification::Commercial,
             constraints: None,
             issued_at: chrono::Utc::now() - chrono::Duration::days(10),
@@ -549,7 +549,7 @@ mod adapter_cert_tests {
         let cert = make_valid_cert();
         let meta = cert.metadata_string();
         assert!(!meta.is_empty());
-        assert!(meta.contains("songbird"));
+        assert!(meta.contains("peer-alpha"));
     }
 
     #[test]

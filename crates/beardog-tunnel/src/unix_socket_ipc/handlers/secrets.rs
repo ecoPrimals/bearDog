@@ -29,7 +29,7 @@
 //!
 //! # Storage Backend
 //!
-//! Uses capability-based discovery to find a storage provider (e.g., `NestGate`)
+//! Uses capability-based discovery to find a `storage.store`-capable provider
 //! at runtime. Falls back to local in-memory storage when no external provider
 //! is available. This follows the TRUE PRIMAL principle: `BearDog` discovers
 //! storage capabilities at runtime, never hardcodes another primal's name.
@@ -79,7 +79,7 @@ pub struct SecretsHandler {
     /// Primal identity for family-scoped key derivation
     identity: Arc<PrimalIdentity>,
     /// In-memory encrypted secret store (name -> encrypted entry)
-    /// Production evolution: replace with `NestGate` storage.store capability
+    /// Production evolution: replace with discovered `storage.store` capability
     store: Arc<RwLock<HashMap<String, EncryptedSecret>>>,
 }
 

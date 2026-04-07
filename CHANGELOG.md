@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 7, 2026 -- Wave 29: primalSpring Audit Execution — BD-01 Encoding, Sovereignty Sweep, Smart Refactoring
+
+- **BD-01 resolved** — `crypto.verify_ed25519` now accepts optional `encoding` hint per `ATTESTATION_ENCODING_STANDARD.md` v2.0 (supports base64, hex, base64url, utf8, none); backwards-compatible default; 7 new encoding tests
+- **Sovereignty sweep** — Removed 50+ hardcoded primal names (Songbird, NestGate, ToadStool, Squirrel) from production doc comments, test fixtures, and e2e tests; replaced with capability-based, primal-agnostic language
+- **Smart refactoring** — 3 production files >800 LOC decomposed: `threat/types/mod.rs` (862L → 33L hub + 9 submodules), `capability_router.rs` (861L → 5-module directory), `handlers/key.rs` (875L → 3-module directory)
+- **Zero-copy consolidation** — Deleted dead orphan `zero_copy/optimized.rs` (830L, never compiled)
+- **Dependency cleanup** — Removed unused `serde_yaml` from `beardog-core` and `beardog-adapters`
+- **Production stub hardening** — FIDO2 phase wording aligned; discovery announcement upgraded to `warn!`; AI `initialize_capability` documented as no-op; factory doc corrected
+- **Root docs updated** — CONTEXT.md, START_HERE.md, specs/README.md sovereignty cleanup and metrics refresh; stale `otherTeams/` and `experiments/` phantom directory references removed
+- **Stale references removed** — `specs/IMPLEMENTATION_GAPS_NOV_2025.md` pointer updated to `ROADMAP.md`
+- **14,372+ tests passing** — 0 failures, all gates green
+
 ### April 2, 2026 -- Wave 28: Deep Debt Evolution — Self-Knowledge, Error Typing, Hardcoding
 
 - **Self-knowledge** — Removed deprecated `SongbirdClient` type alias; genericized Songbird/biomeOS references in tower-atomic, discovery, installer docs

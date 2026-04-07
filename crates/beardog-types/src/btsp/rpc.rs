@@ -287,8 +287,8 @@ mod tests {
     #[test]
     fn test_tunnel_establish_params_defaults() {
         let params = TunnelEstablishParams {
-            peer_id: "songbird-nat0".into(),
-            peer_endpoint: "unix:///tmp/songbird.sock".into(),
+            peer_id: "peer-nat0".into(),
+            peer_endpoint: "unix:///tmp/peer.sock".into(),
             trust_mode: None,
             protocol: None,
         };
@@ -425,8 +425,8 @@ mod tests {
     fn test_backward_compatibility() {
         // Old-style BTSP call (no trust_mode or protocol specified)
         let json = r#"{
-            "peer_id": "songbird-nat0",
-            "peer_endpoint": "unix:///tmp/songbird.sock"
+            "peer_id": "peer-nat0",
+            "peer_endpoint": "unix:///tmp/peer.sock"
         }"#;
 
         let params: TunnelEstablishParams =

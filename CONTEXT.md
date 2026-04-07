@@ -6,7 +6,7 @@ BearDog is the **sovereign genetic cryptography primal** for the ecoPrimals ecos
 
 ## Role in the Ecosystem
 
-BearDog answers “who is this node?” and “perform this crypto operation safely” for Songbird, NestGate, biomeOS, and the rest of the primals. It does not own mesh routing, persistent vault storage, or general compute orchestration; it supplies **crypto atoms, secrets, HSM access, and genetic/lineage semantics** that those components consume at runtime through capability discovery.
+BearDog answers "who is this node?" and "perform this crypto operation safely" for all ecosystem primals via capability discovery. It does not own mesh routing, persistent vault storage, or general compute orchestration; it supplies **crypto atoms, secrets, HSM access, and genetic/lineage semantics** that peer primals consume at runtime through the Tower Atomic pattern.
 
 ## Technical Facts
 
@@ -14,10 +14,9 @@ BearDog answers “who is this node?” and “perform this crypto operation saf
 - **License:** AGPL-3.0-or-later (SPDX on sources)
 - **Version:** 0.9.0
 - **Workspace:** 29 crates (`Cargo.toml` workspace)
-- **Rust sources:** 1,888 `.rs` files
 - **MSRV:** 1.93.0 (`rust-toolchain.toml`)
-- **Tests:** 14,366+ passing (0 failed; `cargo test --workspace`)
-- **Coverage:** 90.16% line (llvm-cov, workspace; see [STATUS.md](STATUS.md))
+- **Tests:** 15,000+ passing (0 failed; `cargo test --workspace`)
+- **Coverage:** 90%+ line (llvm-cov, workspace; see [STATUS.md](STATUS.md))
 - **Unsafe:** 0 production blocks (`forbid(unsafe_code)` workspace-wide)
 - **IPC:** JSON-RPC 2.0 over NDJSON via Unix sockets / TCP / named pipes (platform-dependent); tarpc optional behind feature gate
 
@@ -26,12 +25,13 @@ BearDog answers “who is this node?” and “perform this crypto operation saf
 - **Protocols:** JSON-RPC 2.0 over NDJSON (93 methods); tarpc optional behind feature gate
 - **Cryptography:** Ed25519, X25519, ChaCha20-Poly1305, BLAKE3 (plus TLS, Tor, post-quantum, and broader RustCrypto suite as exposed by handlers)
 - **Hardware / identity:** HSM abstraction (software, PKCS#11, StrongBox, etc.), **FIDO2** / HID device discovery (`beardog-hid`)
+- **Witness encoding:** `crypto.verify_ed25519` accepts encoding hints (`base64`, `hex`, `base64url`, `utf8`, `none`) per `ATTESTATION_ENCODING_STANDARD.md` v2.0
 
 Method domains include `crypto.*`, `tls.*`, `tor.*`, `genetic.*`, `secrets.*`, `beacon.*`, `relay.*`, `btsp.*`, `quantum.*`, and introspection (`discover_capabilities`, `primal.info`, `rpc.methods`). See [README.md](README.md) and [STATUS.md](STATUS.md) for detail.
 
 ## What This Does NOT Do
 
-BearDog is not a network mesh (that is Songbird), not durable encrypted storage (NestGate), not a GPU or host orchestrator (ToadStool/coralReef), and not an AI runtime (Squirrel). It exposes crypto and identity services over IPC; it does not replace those domains.
+BearDog is not a network mesh, not durable encrypted storage, not a GPU or host orchestrator, and not an AI runtime. It exposes crypto and identity services over IPC; peer primals that need those capabilities discover BearDog at runtime via the ecosystem registry.
 
 ## Build and Test
 

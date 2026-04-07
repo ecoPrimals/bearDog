@@ -725,7 +725,7 @@ pub struct AndroidHealthMonitor {
 }
 
 impl AndroidHealthMonitor {
-    /// Create a monitor using stub metrics (non-Android) or [`AndroidJniHealthMetricsTransport`] on Android.
+    /// Create a monitor using stub metrics (non-Android) or `AndroidJniHealthMetricsTransport` on Android.
     pub fn new() -> Self {
         #[cfg(target_os = "android")]
         {

@@ -114,7 +114,8 @@ pub mod primal_discovery_mdns;
 pub mod primal_self_knowledge;
 
 /// Routes inbound work to registered capability handlers across the core stack.
-pub mod capability_router;
+pub mod capability_routing;
+pub use capability_routing as capability_router;
 /// Adapter unlock certificates (classification, issuance, renewal, store).
 pub mod certificates;
 /// Peer and service discovery for primals (registry, network, and config-driven paths).

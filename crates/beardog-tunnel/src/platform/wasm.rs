@@ -62,7 +62,7 @@
 //!
 //! - WASM IPC patterns: Limited by sandbox, use message passing
 //! - wasm-bindgen: https://rustwasm.github.io/wasm-bindgen/
-//! - Songbird reference: songbird-universal-ipc/src/platform/wasm.rs
+//! - biomeOS IPC standard: cross-platform socket layout
 
 use super::{PlatformSocket, SocketEndpoint};
 use tokio::net::UnixListener;

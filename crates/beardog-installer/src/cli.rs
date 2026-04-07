@@ -55,10 +55,10 @@ mod tests {
 
     #[test]
     fn parse_primals_comma_separated_trims_whitespace() {
-        let list = parse_primals(Some(" beardog , songbird ".to_string())).expect("parse");
+        let list = parse_primals(Some(" beardog , peer-alpha ".to_string())).expect("parse");
         assert_eq!(list.len(), 2);
         assert_eq!(list[0].name(), "beardog");
-        assert_eq!(list[1].name(), "songbird");
+        assert_eq!(list[1].name(), "peer-alpha");
     }
 
     #[test]

@@ -8,6 +8,7 @@
 mod suite {
     use super::super::*;
     use crate::protocol::JSONRPC_VERSION;
+    use std::borrow::Cow;
     use std::path::PathBuf;
 
     // ============================================================================
@@ -66,7 +67,7 @@ mod suite {
     #[test]
     fn test_json_rpc_request_serialization() {
         let request = JsonRpcRequest {
-            jsonrpc: JSONRPC_VERSION.to_string(),
+            jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             method: "primal.ping".to_string(),
             params: None,
             id: 1,
@@ -247,7 +248,7 @@ mod suite {
     fn test_no_vendor_references_in_types() {
         // Verify our types have no vendor hardcoding
         let request = JsonRpcRequest {
-            jsonrpc: JSONRPC_VERSION.to_string(),
+            jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             method: "primal.register".to_string(),
             params: None,
             id: 1,
@@ -266,7 +267,7 @@ mod suite {
     fn test_universal_adapter_protocol() {
         // Verify we use standard JSON-RPC 2.0
         let request = JsonRpcRequest {
-            jsonrpc: JSONRPC_VERSION.to_string(),
+            jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             method: "primal.ping".to_string(),
             params: None,
             id: 1,
@@ -296,7 +297,7 @@ mod suite {
     fn test_chaos_random_request_ids() {
         for id in 0..1000 {
             let request = JsonRpcRequest {
-                jsonrpc: JSONRPC_VERSION.to_string(),
+                jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
                 method: "primal.test".to_string(),
                 params: None,
                 id,
@@ -350,7 +351,7 @@ mod suite {
     #[test]
     fn test_json_rpc_request_with_params_roundtrip() {
         let request = JsonRpcRequest {
-            jsonrpc: JSONRPC_VERSION.to_string(),
+            jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             method: "primal.register".into(),
             params: Some(serde_json::json!({"k": 1})),
             id: 42,

@@ -19,7 +19,7 @@
 //! ## How It Works
 //!
 //! 1. Query for "`service_registry`" capability via mDNS/DNS-SD
-//! 2. Connect to discovered provider (any: Consul, etcd, `NestGate`, etc.)
+//! 2. Connect to discovered provider (any JSON-RPC 2.0 registry)
 //! 3. Query via standard capability interface
 //! 4. Cache results
 //!
@@ -36,7 +36,7 @@ use tracing::{debug, info, warn};
 /// Capability-based service registry discovery
 ///
 /// Discovers service registries at runtime via capability query.
-/// Works with ANY provider: Consul, etcd, `NestGate`, custom registries, etc.
+/// Works with ANY provider that exposes a `service_registry` capability.
 #[derive(Clone)]
 pub struct ServiceRegistryDiscovery {
     /// Discovered service registry providers (capability-based)
@@ -154,8 +154,7 @@ impl ServiceRegistryDiscovery {
     /// Finds ANY service that provides "`service_registry`" capability:
     /// - Consul (if available)
     /// - etcd (if available)
-    /// - `NestGate` (if available)
-    /// - Custom registries (if available)
+    /// - Any primal exposing `service_registry` capability (if available)
     async fn discover_registry_providers(&self) -> Result<()> {
         info!("🔍 Discovering service registry providers (capability-based)");
 

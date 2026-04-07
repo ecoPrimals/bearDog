@@ -224,7 +224,7 @@ impl CapabilityRegistry {
     ///
     /// # Errors
     ///
-    /// Returns [`crate::Error`] when HTTP or mDNS advertisement setup fails.
+    /// Returns [`beardog_errors::BearDogError`] when HTTP or mDNS advertisement setup fails.
     pub async fn advertise(&self) -> crate::Result<()> {
         let advertisement = self.build_advertisement();
 

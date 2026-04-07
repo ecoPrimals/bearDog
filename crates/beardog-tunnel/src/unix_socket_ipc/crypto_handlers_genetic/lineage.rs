@@ -299,7 +299,7 @@ mod tests {
         let lineage_seed = BASE64.encode(b"test_lineage_seed_32bytes_long!!");
         let params = json!({
             "our_family_id": "beardog-family",
-            "peer_family_id": "songbird-family",
+            "peer_family_id": "peer-family-alpha",
             "context": "test-session",
             "lineage_seed": lineage_seed,
         });
@@ -365,7 +365,7 @@ mod tests {
 
         let gen_params = json!({
             "our_family_id": "beardog-family",
-            "peer_family_id": "songbird-family",
+            "peer_family_id": "peer-family-alpha",
             "lineage_seed": lineage_seed.clone(),
         });
 
@@ -374,7 +374,7 @@ mod tests {
 
         let verify_params = json!({
             "our_family_id": "beardog-family",
-            "peer_family_id": "songbird-family",
+            "peer_family_id": "peer-family-alpha",
             "lineage_proof": gen_response.proof,
             "lineage_seed": lineage_seed,
         });
@@ -395,7 +395,7 @@ mod tests {
 
         let params = json!({
             "our_family_id": "beardog-family",
-            "peer_family_id": "songbird-family",
+            "peer_family_id": "peer-family-alpha",
             "lineage_proof": invalid_proof,
             "lineage_seed": lineage_seed,
         });
@@ -413,7 +413,7 @@ mod tests {
     async fn test_derive_lineage_key_invalid_base64() {
         let params = json!({
             "our_family_id": "beardog-family",
-            "peer_family_id": "songbird-family",
+            "peer_family_id": "peer-family-alpha",
             "context": "test",
             "lineage_seed": "not-valid-base64!!!",
         });

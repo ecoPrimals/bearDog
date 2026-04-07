@@ -15,8 +15,8 @@ fn discovery_env_lock() -> std::sync::MutexGuard<'static, ()> {
 
 #[test]
 fn test_discovery_query_by_name() {
-    let query = DiscoveryQuery::by_name("Songbird");
-    assert_eq!(query.name.as_deref(), Some("Songbird"));
+    let query = DiscoveryQuery::by_name("PeerAlpha");
+    assert_eq!(query.name.as_deref(), Some("PeerAlpha"));
     assert!(query.capabilities.is_empty());
 }
 
@@ -29,11 +29,11 @@ fn test_discovery_query_by_capability() {
 
 #[test]
 fn test_discovery_query_builder() {
-    let query = DiscoveryQuery::by_name("Songbird")
+    let query = DiscoveryQuery::by_name("PeerAlpha")
         .with_capability(SimpleCapability::Cryptography)
         .with_timeout(Duration::from_secs(10));
 
-    assert_eq!(query.name.as_deref(), Some("Songbird"));
+    assert_eq!(query.name.as_deref(), Some("PeerAlpha"));
     assert_eq!(query.capabilities.len(), 1);
     assert_eq!(query.timeout, Duration::from_secs(10));
 }
@@ -44,14 +44,14 @@ async fn test_discover_from_env_specific_primal() {
 
     let mut env_vars = HashMap::new();
     let dir = tempfile::tempdir().unwrap();
-    let sock = dir.path().join("songbird.sock");
+    let sock = dir.path().join("peer_alpha.sock");
     std::fs::File::create(&sock).unwrap();
     env_vars.insert(
-        "PRIMAL_SONGBIRD_ADDR".to_string(),
+        "PRIMAL_PEERALPHA_ADDR".to_string(),
         format!("unix://{}", sock.display()),
     );
 
-    let query = DiscoveryQuery::by_name("Songbird");
+    let query = DiscoveryQuery::by_name("PeerAlpha");
     let primals = discovery.discover_with_env(query, env_vars).await.unwrap();
 
     assert_eq!(
@@ -61,7 +61,7 @@ async fn test_discover_from_env_specific_primal() {
         primals.len(),
         primals
     );
-    assert_eq!(primals[0].name, "Songbird");
+    assert_eq!(primals[0].name, "PeerAlpha");
     assert_eq!(primals[0].endpoints.len(), 1);
 }
 
@@ -71,13 +71,13 @@ async fn test_discover_from_env_scan_all() {
 
     let mut env_vars = HashMap::new();
     let dir = tempfile::tempdir().unwrap();
-    let songbird_sock = dir.path().join("songbird.sock");
+    let peer_alpha_sock = dir.path().join("peer_alpha.sock");
     let beardog_sock = dir.path().join("beardog.sock");
-    std::fs::File::create(&songbird_sock).unwrap();
+    std::fs::File::create(&peer_alpha_sock).unwrap();
     std::fs::File::create(&beardog_sock).unwrap();
     env_vars.insert(
-        "PRIMAL_SONGBIRD_ADDR".to_string(),
-        format!("unix://{}", songbird_sock.display()),
+        "PRIMAL_PEERALPHA_ADDR".to_string(),
+        format!("unix://{}", peer_alpha_sock.display()),
     );
     env_vars.insert(
         "PRIMAL_BEARDOG_ADDR".to_string(),

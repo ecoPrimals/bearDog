@@ -305,12 +305,12 @@ async fn test_e2e_all_methods_use_env_fallback() {
 }
 
 // ========================================================================
-// E2E Test: Songbird Integration
+// E2E Test: External client integration
 // ========================================================================
 
 #[tokio::test]
-async fn test_e2e_songbird_can_parse_decision() {
-    // Test that Songbird can parse the decision field
+async fn test_e2e_external_client_can_parse_decision() {
+    // Test that an external client can parse the decision field
     let response_str = r#"{
         "jsonrpc": "2.0",
         "result": {

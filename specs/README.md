@@ -56,7 +56,7 @@ Cross-primal coordination and ecosystem patterns.
 | Spec | Status | Description |
 |------|--------|-------------|
 | [BEARDOG_ECOSYSTEM_SECURITY_INTEGRATION](current/integration/BEARDOG_ECOSYSTEM_SECURITY_INTEGRATION.md) | Current | BearDog as security primal |
-| [SONGBIRD_INTEGRATION_SPECIFICATION](current/integration/SONGBIRD_INTEGRATION_SPECIFICATION.md) | Current | Songbird mesh integration |
+| [SONGBIRD_INTEGRATION_SPECIFICATION](current/integration/SONGBIRD_INTEGRATION_SPECIFICATION.md) | Current | Mesh/transport primal integration |
 | [UNIVERSAL_ADAPTER_SPECIFICATION](current/integration/UNIVERSAL_ADAPTER_SPECIFICATION.md) | Current | Multi-provider adapter pattern |
 | [SONGBIRD_BEARDOG_VPN_FREE_ARCHITECTURE](current/integration/SONGBIRD_BEARDOG_VPN_FREE_ARCHITECTURE.md) | Current | VPN-free P2P via genetic lineage |
 
@@ -87,13 +87,11 @@ Deployment, monitoring, and operational specifications.
 
 ---
 
-## Cross-Team Specs (`otherTeams/`)
+## Cross-primal and cross-team documentation
 
-| Spec | Status | Description |
-|------|--------|-------------|
-| [SONGBIRD_INTEGRATION](otherTeams/SONGBIRD_INTEGRATION.md) | Reference | Toadstool↔Songbird integration |
-| [ECOSYSTEM_COMMUNICATION](otherTeams/ECOSYSTEM_COMMUNICATION.md) | Reference | Inter-primal messaging |
-| [UNIVERSAL_COMPUTE_ORCHESTRATOR](otherTeams/UNIVERSAL_COMPUTE_ORCHESTRATOR.md) | Reference | Compute orchestration |
+Cross-team and ecosystem-wide specifications do **not** live under this primal repository. Per [primal sovereignty](current/architecture/PRIMAL_SOVEREIGNTY_ARCHITECTURE.md), shared standards and coordination docs belong in **wateringHole**, not in BearDog.
+
+Older cross-team drafts that previously appeared under paths like `otherTeams/` were **archived to `ecoPrimals/fossilRecord`** when boundaries were clarified. Use wateringHole for current shared specs; use fossilRecord only for historical traceability.
 
 ---
 
@@ -108,8 +106,8 @@ Deployment, monitoring, and operational specifications.
 
 ### BearDog IS NOT:
 
-- Network transport (Songbird)
-- Persistent storage (NestGate)
+- Network transport (mesh / transport primal)
+- Persistent storage (storage primal)
 - Compute orchestration (ToadStool)
 - AI execution (Squirrel)
 - OS/container management (biomeOS)
@@ -148,15 +146,15 @@ Deployment, monitoring, and operational specifications.
 TOR_CAPABILITY_SPECIFICATION → ENTROPY_SECURITY → UNIVERSAL_HSM → UNIVERSAL_CRYPTO_PROVIDER
 
 **Integration partner** (1 hour):
-BEARDOG_ECOSYSTEM_SECURITY_INTEGRATION → SONGBIRD_INTEGRATION → UNIVERSAL_ADAPTER
+BEARDOG_ECOSYSTEM_SECURITY_INTEGRATION → [SONGBIRD_INTEGRATION_SPECIFICATION](current/integration/SONGBIRD_INTEGRATION_SPECIFICATION.md) → UNIVERSAL_ADAPTER
 
 ---
 
 ## Historical Notes
 
-Specs from 2025 (October-December) are preserved for historical reference. Many metrics from that era (4% coverage, 22 crates, 435 tests) are now vastly outdated. Current metrics are in [STATUS.md](../STATUS.md) (15,100+ tests, 90.05% line coverage as of March 28, 2026).
+Specs from 2025 (October-December) are preserved for historical reference. Many metrics from that era (4% coverage, 22 crates, 435 tests) are now vastly outdated. Current metrics are in [STATUS.md](../STATUS.md): **15,000+ tests** and **90%+ line coverage** (15,100+ tests, 90.05% llvm-cov as of March 28, 2026).
 
-The `experiments/` directory contains live experimental validation from the cryptographic foundation phase.
+Historical experiment write-ups from the cryptographic foundation phase are **not** kept in this repo; they are preserved under **`ecoPrimals/fossilRecord`** for archival reference.
 
 ---
 

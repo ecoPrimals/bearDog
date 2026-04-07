@@ -3,7 +3,7 @@
 //! Relay Authorization Handler
 //!
 //! Provides lineage-gated relay authorization for the relay-assisted coordinated
-//! punch protocol. Songbird's relay server calls `relay.authorize` before allowing
+//! punch protocol. The relay coordinator calls `relay.authorize` before allowing
 //! a peer to use `BearDog`'s family relay infrastructure.
 //!
 //! # Methods
@@ -13,11 +13,11 @@
 //! # Architecture
 //!
 //! ```text
-//! Songbird relay server receives AllocateRequest from peer
-//!   → Songbird calls capability.call("relay", "authorize") → BearDog
+//! Relay coordinator receives AllocateRequest from peer
+//!   → coordinator calls capability.call("relay", "authorize") → BearDog
 //!   → BearDog verifies requester shares family lineage
 //!   → Returns { authorized, masking_level, ttl_seconds }
-//!   → Songbird allows or denies relay session
+//!   → coordinator allows or denies relay session
 //! ```
 //!
 //! # Security Model
@@ -27,12 +27,12 @@
 //! - **Unknown peers** (no proof or different family): Denied with blocked masking
 //!
 //! `BearDog` NEVER touches sockets — it only answers "is this peer authorized?"
-//! Songbird owns all UDP/TCP transport and relay packet forwarding.
+//! The relay coordinator owns all UDP/TCP transport and relay packet forwarding.
 //!
 //! # Deep Debt Alignment
 //!
 //! - **Principle #1**: Pure Rust (Blake3 lineage verification)
-//! - **Principle #2**: Separation of concerns (`BearDog` = identity, Songbird = transport)
+//! - **Principle #2**: Separation of concerns (`BearDog` = identity, coordinator = transport)
 //! - **Principle #3**: No hardcoding (`family_id` from `PrimalIdentity`)
 //! - **Principle #6**: Production crypto (real lineage verification, no mocks)
 

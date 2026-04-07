@@ -39,7 +39,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{RwLock, broadcast, mpsc};
 use tokio::time::interval;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 /// Hybrid intelligence system orchestrator
@@ -397,8 +397,10 @@ impl HybridIntelligenceSystem {
         *self.health.read().await
     }
 
-    /// Initializes a capability
-    /// Initializes `componentialize_capability`
+    /// Initializes a capability.
+    ///
+    /// Per-capability initialization is not implemented yet; this path is a no-op placeholder
+    /// until each [`IntelligenceCapability`] has its own setup.
     #[expect(
         clippy::unnecessary_wraps,
         reason = "Result type reserved for capability-specific init errors"
@@ -411,6 +413,10 @@ impl HybridIntelligenceSystem {
         &self,
         capability: IntelligenceCapability,
     ) -> Result<(), BearDogError> {
+        warn!(
+            ?capability,
+            "Capability-specific intelligence initialization is a no-op placeholder (pending per-capability implementation)"
+        );
         debug!("Initializing intelligence capability: {:?}", capability);
 
         // All capabilities are initialized with the same placeholder logic

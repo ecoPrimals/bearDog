@@ -123,6 +123,7 @@ pub mod production;
 /// ports, and other deployment-specific values.
 pub mod runtime_config;
 pub mod source;
+#[cfg(any(test, feature = "test-utils"))]
 pub mod test_fixtures;
 
 /// Security configuration

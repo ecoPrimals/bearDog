@@ -34,8 +34,7 @@
 //!
 //! ## Reference
 //!
-//! Based on Songbird's production-tested implementation:
-//! `songbird/crates/songbird-universal-ipc/src/platform/`
+//! Follows the biomeOS cross-platform IPC layout for primal-agnostic sockets.
 
 pub mod android;
 pub mod unix;

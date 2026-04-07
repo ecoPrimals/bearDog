@@ -5,7 +5,7 @@
 pub use crate::config::AnnouncementConfig;
 use crate::error::Result;
 use crate::types::PrimalInfo;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 /// Service announcer
 pub struct Announcer {
@@ -37,7 +37,7 @@ impl Announcer {
     ///
     /// # Errors
     ///
-    /// Returns [`crate::error::Error`] when announcement transport setup fails.
+    /// Returns [`crate::error::DiscoveryError`] when announcement transport setup fails.
     pub async fn start(&self) -> Result<()> {
         if !self.config.enabled {
             debug!("Announcement disabled");
@@ -133,7 +133,7 @@ impl Announcer {
     /// - Deregistration on shutdown
     async fn announce_via_service_registry(&self) -> Result<()> {
         if let Some(registry_url) = self.service_registry_url.as_ref() {
-            info!(
+            warn!(
                 "Service registry configured at {}, registration for {} pending full implementation",
                 registry_url, self.primal_info.primal_id
             );

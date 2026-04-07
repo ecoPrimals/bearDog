@@ -11,7 +11,7 @@ mod adapter_certificate_tests {
         AdapterUnlockCertificate {
             cert_id: "cert-12345678".to_string(),
             issuer_key_id: "key-1".to_string(),
-            adapter_id: "beardog-adapters::songbird::network".to_string(),
+            adapter_id: "beardog-adapters::peer-alpha::network".to_string(),
             classification: AdapterClassification::Human,
             constraints: None,
             issued_at: Utc::now() + Duration::seconds(issued_offset_secs),
@@ -87,7 +87,7 @@ mod adapter_certificate_tests {
         let cert = make_cert(-100, 3600);
         let meta = cert.metadata_string();
         assert!(meta.contains("cert-123"));
-        assert!(meta.contains("songbird"));
+        assert!(meta.contains("peer-alpha"));
         assert!(meta.contains("Human"));
     }
 

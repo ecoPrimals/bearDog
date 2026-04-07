@@ -136,7 +136,7 @@ pub mod modes;
 // NOTE: Tunnel module stabilized - proceeding with Phase 2 implementations
 pub mod universal_hsm;
 
-// BTSP Provider - Songbird integration for internet deployment
+// BTSP Provider - internet deployment via discovered transport peer
 pub mod btsp_provider;
 
 // Generic IPC server - capability-based, primal-agnostic
@@ -174,7 +174,7 @@ mod test_helpers;
 // Re-export key types
 pub use tunnel::{BStpConfig, SecureSession, SecurityLevel, SessionManager};
 
-// Re-export BTSP types for Songbird integration
+// Re-export BTSP types for internet deployment interop
 pub use btsp_provider::{
     BeardogBtspProvider, Direction, PeerInfo, SecurityContext, TunnelHandle, TunnelStatus,
 };

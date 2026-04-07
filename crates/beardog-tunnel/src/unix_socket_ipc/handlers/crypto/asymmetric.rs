@@ -137,68 +137,94 @@ pub async fn handle_sign_ed25519(params: Option<&Value>) -> Result<Value, String
     }))
 }
 
-/// # Errors
-///
-/// Returns an error if key generation fails in the underlying HSM provider.
+/// Decode an evidence/payload string according to the `ATTESTATION_ENCODING_STANDARD.md`
+/// encoding values: `base64` (default), `hex`, `base64url`, `utf8`, `none`.
+fn decode_with_encoding(
+    encoded: &str,
+    encoding: &str,
+    field_name: &str,
+) -> Result<Vec<u8>, String> {
+    match encoding {
+        "base64" => base64::engine::general_purpose::STANDARD
+            .decode(encoded)
+            .map_err(|e| format!("Invalid base64 {field_name}: {e}")),
+        "base64url" => base64::engine::general_purpose::URL_SAFE
+            .decode(encoded)
+            .map_err(|e| format!("Invalid base64url {field_name}: {e}")),
+        "hex" => {
+            let hex_str = encoded.strip_prefix("0x").unwrap_or(encoded);
+            hex::decode(hex_str).map_err(|e| format!("Invalid hex {field_name}: {e}"))
+        }
+        "utf8" => Ok(encoded.as_bytes().to_vec()),
+        "none" => Ok(Vec::new()),
+        other => Err(format!(
+            "Unsupported encoding '{other}' for {field_name} \
+             (expected: base64, base64url, hex, utf8, none)"
+        )),
+    }
+}
+
 /// Handle `crypto.verify_ed25519` method
 ///
-/// Verifies an Ed25519 signature.
+/// Verifies an Ed25519 signature. Accepts an optional `encoding` hint per
+/// the `ATTESTATION_ENCODING_STANDARD.md` `WireWitnessRef` wire type,
+/// so callers do not need to normalize witness evidence before verification.
 ///
 /// # Parameters
 ///
-/// - `message`: Base64-encoded message that was signed
-/// - `signature`: Base64-encoded Ed25519 signature
-/// - `public_key`: Base64-encoded Ed25519 public key (32 bytes)
+/// - `message`: Encoded message that was signed
+/// - `signature`: Encoded Ed25519 signature (64 bytes decoded)
+/// - `public_key`: Encoded Ed25519 public key (32 bytes decoded)
+/// - `encoding` *(optional)*: How the above fields are encoded.
+///   One of `base64` (default), `hex`, `base64url`, `utf8`, `none`.
 ///
 /// # Returns
 ///
 /// - `valid`: Boolean indicating if signature is valid
+/// - `algorithm`: `"Ed25519"`
+///
+/// # Errors
+///
+/// Returns an error if decoding or verification fails.
 pub async fn handle_verify_ed25519(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.verify_ed25519")?;
 
-    // Extract parameters
-    let message_b64 = params
+    let encoding = params
+        .get("encoding")
+        .and_then(|v| v.as_str())
+        .unwrap_or("base64");
+
+    let message_enc = params
         .get("message")
         .and_then(|v| v.as_str())
         .ok_or("Missing required parameter: message")?;
 
-    let signature_b64 = params
+    let signature_enc = params
         .get("signature")
         .and_then(|v| v.as_str())
         .ok_or("Missing required parameter: signature")?;
 
-    let public_key_b64 = params
+    let public_key_enc = params
         .get("public_key")
         .and_then(|v| v.as_str())
         .ok_or("Missing required parameter: public_key")?;
 
-    // Decode parameters
-    let message = base64::engine::general_purpose::STANDARD
-        .decode(message_b64)
-        .map_err(|e| format!("Invalid base64 message: {e}"))?;
-
-    let signature = base64::engine::general_purpose::STANDARD
-        .decode(signature_b64)
-        .map_err(|e| format!("Invalid base64 signature: {e}"))?;
-
-    let public_key = base64::engine::general_purpose::STANDARD
-        .decode(public_key_b64)
-        .map_err(|e| format!("Invalid base64 public_key: {e}"))?;
+    let message = decode_with_encoding(message_enc, encoding, "message")?;
+    let signature = decode_with_encoding(signature_enc, encoding, "signature")?;
+    let public_key = decode_with_encoding(public_key_enc, encoding, "public_key")?;
 
     debug!(
-        "🔍 Verifying Ed25519 signature ({} bytes message, {} bytes signature)",
+        "Verifying Ed25519 signature ({} bytes message, {} bytes signature, encoding: {encoding})",
         message.len(),
         signature.len()
     );
 
-    // Use BearDog's crypto service
     use beardog_core::crypto_service::algorithms::asymmetric;
 
-    // Verify signature
     let valid = asymmetric::verify_ed25519(&message, &signature, &public_key)
         .map_err(|e| format!("Ed25519 verification failed: {e}"))?;
 
-    info!("✅ Ed25519 signature verification: {}", valid);
+    info!("Ed25519 signature verification: {valid}");
 
     Ok(serde_json::json!({
         "valid": valid,
@@ -686,5 +712,139 @@ mod tests {
             .await
             .expect("verify");
         assert_eq!(v["valid"], true);
+    }
+
+    // ========================================================================
+    // BD-01: ENCODING HINT TESTS (WireWitnessRef compatibility)
+    // ========================================================================
+
+    fn to_hex(bytes: &[u8]) -> String {
+        hex::encode(bytes)
+    }
+
+    #[tokio::test]
+    async fn test_verify_ed25519_encoding_default_is_base64() {
+        use beardog_core::crypto_service::algorithms::asymmetric;
+        let msg_bytes = b"default encoding";
+        let seed = super::super::utils::derive_key_from_id("enc-default", "t").expect("seed");
+        let (sk, pk) = asymmetric::generate_ed25519_from_seed(&seed).expect("kp");
+        let sig = asymmetric::sign_ed25519(msg_bytes, &sk).expect("sign");
+
+        let params = json!({
+            "message": BASE64.encode(msg_bytes),
+            "signature": BASE64.encode(&sig),
+            "public_key": BASE64.encode(pk),
+        });
+        let v = handle_verify_ed25519(Some(&params)).await.expect("verify");
+        assert_eq!(v["valid"], true);
+    }
+
+    #[tokio::test]
+    async fn test_verify_ed25519_encoding_hex() {
+        use beardog_core::crypto_service::algorithms::asymmetric;
+        let msg_bytes = b"hex witness evidence";
+        let seed = super::super::utils::derive_key_from_id("enc-hex", "t").expect("seed");
+        let (sk, pk) = asymmetric::generate_ed25519_from_seed(&seed).expect("kp");
+        let sig = asymmetric::sign_ed25519(msg_bytes, &sk).expect("sign");
+
+        let params = json!({
+            "message": to_hex(msg_bytes),
+            "signature": to_hex(&sig),
+            "public_key": to_hex(&pk),
+            "encoding": "hex",
+        });
+        let v = handle_verify_ed25519(Some(&params))
+            .await
+            .expect("verify with hex");
+        assert_eq!(v["valid"], true);
+    }
+
+    #[tokio::test]
+    async fn test_verify_ed25519_encoding_hex_0x_prefix() {
+        use beardog_core::crypto_service::algorithms::asymmetric;
+        let msg_bytes = b"0x prefix";
+        let seed = super::super::utils::derive_key_from_id("enc-hex-0x", "t").expect("seed");
+        let (sk, pk) = asymmetric::generate_ed25519_from_seed(&seed).expect("kp");
+        let sig = asymmetric::sign_ed25519(msg_bytes, &sk).expect("sign");
+
+        let params = json!({
+            "message": format!("0x{}", to_hex(msg_bytes)),
+            "signature": format!("0x{}", to_hex(&sig)),
+            "public_key": format!("0x{}", to_hex(&pk)),
+            "encoding": "hex",
+        });
+        let v = handle_verify_ed25519(Some(&params))
+            .await
+            .expect("verify with 0x hex");
+        assert_eq!(v["valid"], true);
+    }
+
+    #[tokio::test]
+    async fn test_verify_ed25519_encoding_base64url() {
+        use base64::engine::general_purpose::URL_SAFE;
+        use beardog_core::crypto_service::algorithms::asymmetric;
+        let msg_bytes = b"base64url witness";
+        let seed = super::super::utils::derive_key_from_id("enc-b64url", "t").expect("seed");
+        let (sk, pk) = asymmetric::generate_ed25519_from_seed(&seed).expect("kp");
+        let sig = asymmetric::sign_ed25519(msg_bytes, &sk).expect("sign");
+
+        let params = json!({
+            "message": URL_SAFE.encode(msg_bytes),
+            "signature": URL_SAFE.encode(&sig),
+            "public_key": URL_SAFE.encode(pk),
+            "encoding": "base64url",
+        });
+        let v = handle_verify_ed25519(Some(&params))
+            .await
+            .expect("verify with base64url");
+        assert_eq!(v["valid"], true);
+    }
+
+    #[tokio::test]
+    async fn test_verify_ed25519_encoding_unsupported() {
+        let params = json!({
+            "message": "whatever",
+            "signature": "whatever",
+            "public_key": "whatever",
+            "encoding": "brotli",
+        });
+        let r = handle_verify_ed25519(Some(&params)).await;
+        assert!(r.is_err());
+        assert!(r.unwrap_err().contains("Unsupported encoding"));
+    }
+
+    #[tokio::test]
+    async fn test_verify_ed25519_encoding_invalid_hex() {
+        let params = json!({
+            "message": "zzzz",
+            "signature": BASE64.encode(&[0u8; 64]),
+            "public_key": BASE64.encode(&[0u8; 32]),
+            "encoding": "hex",
+        });
+        let r = handle_verify_ed25519(Some(&params)).await;
+        assert!(r.is_err());
+        assert!(r.unwrap_err().contains("hex"));
+    }
+
+    #[tokio::test]
+    async fn test_verify_ed25519_backwards_compat_no_encoding_field() {
+        use beardog_core::crypto_service::algorithms::asymmetric;
+        let msg_bytes = b"no encoding field";
+        let seed = super::super::utils::derive_key_from_id("compat", "t").expect("seed");
+        let (sk, pk) = asymmetric::generate_ed25519_from_seed(&seed).expect("kp");
+        let sig = asymmetric::sign_ed25519(msg_bytes, &sk).expect("sign");
+
+        let params = json!({
+            "message": BASE64.encode(msg_bytes),
+            "signature": BASE64.encode(&sig),
+            "public_key": BASE64.encode(pk),
+        });
+        let v = handle_verify_ed25519(Some(&params))
+            .await
+            .expect("verify without encoding");
+        assert_eq!(
+            v["valid"], true,
+            "must stay backwards-compatible with base64-only callers"
+        );
     }
 }

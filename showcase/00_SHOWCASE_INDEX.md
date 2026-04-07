@@ -1,67 +1,48 @@
-# 🐻 BearDog Showcase Index
+# BearDog Showcase Index
 
-**Last Updated:** March 24, 2026  
-**Status:** Active expansion — 29 runnable demos (`main.rs` under `showcase/`), roadmap target 38  
+**Last Updated:** April 7, 2026
+**Status:** Active — 29 runnable demos, roadmap target 38
 **Grade:** World-Class Quality (A+), showcase depth varies by directory
 
 ---
 
-## 🎯 What is BearDog?
+## What is BearDog?
 
 **BearDog** is a sovereign cryptographic key management and security platform that provides:
 
-- 🔐 **Hardware HSM Integration** - YubiKey, TPM, Android StrongBox, iOS Secure Enclave
-- 🧬 **Genetic Key Constraints** - Self-enforcing, non-fungible keys with lineage
-- 🌊 **Entropy Hierarchy** - Mixed human + machine entropy (never simulated!)
-- 🔒 **BTSP Protocol** - Encrypted Secure Tunnel with perfect forward secrecy
-- 🌐 **Zero-Knowledge Bootstrap** - No hardcoded config, self-discovering
-- 🎯 **Sovereignty First** - Your keys, your control, zero vendor lock-in
+- Hardware HSM Integration — YubiKey, TPM, Android StrongBox, iOS Secure Enclave
+- Genetic Key Constraints — Self-enforcing, non-fungible keys with lineage
+- Entropy Hierarchy — Mixed human + machine entropy (never simulated)
+- BTSP Protocol — Encrypted Secure Tunnel with perfect forward secrecy
+- Zero-Knowledge Bootstrap — No hardcoded config, self-discovering via capability registry
+- Sovereignty First — Your keys, your control, zero vendor lock-in
 
-**Security Grade**: 🏆 **0 unsafe** — `#![forbid(unsafe_code)]` workspace-wide
+**Security Grade**: **0 unsafe** — `#![forbid(unsafe_code)]` workspace-wide
 
 ---
 
-## 📚 Available Showcases
+## Available Showcases
 
-### 00. **Local Primal - BearDog Basics** (`00-local-primal/`)
-**Status:** **6/6** runnable skeletons (`01`–`06` each have `src/main.rs`)  
+### 00. **Local Primal — BearDog Basics** (`00-local-primal/`)
+**Status:** **6/6** runnable (`01`–`06` each have `src/main.rs`)
 **Purpose:** Understand what BearDog can do standalone
 
 **Demos**:
-1. `01-hello-beardog/` - Your first key generation
-2. `02-hsm-discovery/` - Auto-detect hardware security modules
-3. `03-key-constraints/` - Self-enforcing genetic keys
-4. `04-entropy-mixing/` - Human + machine entropy
-5. `05-key-lineage/` - Track key ancestry and evolution
-6. `06-btsp-tunnel/` - Secure encrypted connections
+1. `01-hello-beardog/` — Your first key generation
+2. `02-hsm-discovery/` — Auto-detect hardware security modules
+3. `03-key-constraints/` — Self-enforcing genetic keys
+4. `04-entropy-mixing/` — Human + machine entropy
+5. `05-key-lineage/` — Track key ancestry and evolution
+6. `06-btsp-tunnel/` — Secure encrypted connections
 
-**Time**: 45 minutes  
+**Time**: 45 minutes
 **Level**: Beginner
 
 ---
 
-### 01. **Hardware Integration** (`01-hardware-integration/`)
-**Status:** ⚠️ **Needs expansion** (directory may be sparse or merged with other showcase areas)  
-**Related:** Mixed entropy entrypoint also lives at top-level [`05-mixed-entropy/`](05-mixed-entropy/README.md)  
-**Purpose:** Show BearDog's hardware HSM capabilities
-
-**Planned Demos**:
-1. `01-yubikey-basics/` - YubiKey PKCS#11 integration
-2. `02-tpm-integration/` - Linux TPM 2.0 usage
-3. `03-android-strongbox/` - Mobile HSM (Android)
-4. `04-ios-secure-enclave/` - Mobile HSM (iOS)
-5. Top-level [`05-mixed-entropy/`](05-mixed-entropy/README.md) — mixed entropy (placeholder binary)
-6. `06-hsm-comparison/` - Performance benchmarks
-7. `07-failover/` - Software HSM fallback
-
-**Time**: 1 hour  
-**Level**: Intermediate
-
----
-
 ### 02. **Ecosystem Integration** (`02-ecosystem-integration/`)
-**Status:** **5** runnable demos present (`01`–`05` with `main.rs`)  
-**Purpose:** BearDog working with other primals
+**Status:** **5** runnable demos (`01`–`05` with `main.rs`)
+**Purpose:** BearDog working with peer primals via capability discovery
 
 **Present (runnable)**:
 1. `01-songbird-btsp/`
@@ -70,36 +51,19 @@
 4. `04-squirrel-routing/`
 5. `05-cross-primal-lineage/`
 
-**Time**: 1.5 hours  
+**Time**: 1.5 hours
 **Level**: Advanced
 
 ---
 
-### **Production features** (`03-production-features/`)
-**Status:** **7** runnable demos (`01`–`07` with `main.rs`)  
+### 03. **Production Features** (`03-production-features/`)
+**Status:** **7** runnable demos (`01`–`07` with `main.rs`)
 Examples: key rotation, policy enforcement, audit logging, monitoring, profiling, error recovery, dynamic configuration.
 
 ---
 
-### 03. **Network & Federation** (`03-network-federation/`)
-**Status:** See **`04-advanced-features/`** for federation/registry-style demos (e.g. `09-cross-tower-federation`, `06-distributed-key-registry`)  
-**Purpose:** Distributed BearDog operations
-
-**Planned Demos**:
-1. `01-key-registry/` - Distributed key registry
-2. `02-multi-node-witness/` - Multi-party key ceremonies
-3. `03-threshold-keys/` - Distributed key shares (Shamir)
-4. `04-remote-attestation/` - Verify remote HSM security
-5. `05-federation-sync/` - Sync key metadata across nodes
-6. `06-cross-tower-btsp/` - BTSP tunnels across federation
-
-**Time**: 1 hour  
-**Level**: Advanced
-
----
-
 ### 04. **Advanced Features** (`04-advanced-features/`)
-**Status:** **10** runnable demos (`01`–`10` with `main.rs`)  
+**Status:** **10** runnable demos (`01`–`10` with `main.rs`)
 **Purpose:** Advanced cryptographic operations
 
 **Present (runnable)**:
@@ -114,83 +78,33 @@ Examples: key rotation, policy enforcement, audit logging, monitoring, profiling
 9. `09-cross-tower-federation/`
 10. `10-benchmarking-performance/`
 
-**Time**: 1.5 hours  
+**Time**: 1.5 hours
 **Level**: Expert
 
 ---
 
-### 05. **Production Patterns** (`05-production-patterns/`)
-**Status:** Overlaps **`03-production-features/`** (7 runnable demos there); this band of the original index is still filling in  
-**Purpose:** Real-world deployment scenarios
-
-**Planned Demos**:
-1. `01-api-key-management/` - Manage application API keys
-2. `02-certificate-authority/` - Internal CA with HSM
-3. `03-secret-rotation/` - Automated secret rotation
-4. `04-disaster-recovery/` - Key backup and recovery
-5. `05-compliance-audit/` - Audit trail and compliance
-6. `06-multi-tenant/` - Multi-tenant key isolation
-
-**Time**: 2 hours  
-**Level**: Expert
+### 05. Mixed Entropy (`05-mixed-entropy/`)
+**Status:** **1** runnable demo
+**Purpose:** Demonstrate entropy hierarchy and mixing
 
 ---
 
-## 🚀 Quick Start (5 Minutes)
+## Roadmap — Not Yet Implemented
 
-### Prerequisites
-```bash
-# Check if BearDog is installed
-beardog-cli --version
+The following showcase areas are planned but not yet built:
 
-# If not, build it (from repository root):
-cd /path/to/beardog
-cargo build --release
-
-# Binary at: target/release/beardog-cli
-```
-
-### Your First Demo
-
-**Currently Available**: Mixed Entropy Demo
-```bash
-cd showcase/05-mixed-entropy
-cargo run
-```
-
-**Coming Soon**: Full showcase suite
+| Area | Status | Notes |
+|------|--------|-------|
+| `01-hardware-integration/` | Planned | Hardware HSM demos (YubiKey, TPM, StrongBox, Secure Enclave) |
+| `03-network-federation/` | Planned | Distributed BearDog operations, threshold keys, cross-tower BTSP |
+| `05-production-patterns/` | Planned | API key management, internal CA, secret rotation, disaster recovery |
 
 ---
 
-## 🎓 Learning Path
+## Showcase Maturity
 
-### 🟢 **New to BearDog?** → Start Here (45 min)
-1. Read [../README.md](../README.md) - Understand the vision
-2. Read [../START_HERE.md](../START_HERE.md) - Get oriented
-3. Try `05-mixed-entropy/` demo - See it working
-4. Read [../ENTROPY_HIERARCHY_PRINCIPLE.md](../ENTROPY_HIERARCHY_PRINCIPLE.md) - Understand sovereignty
-
-### 🔵 **Know Crypto, Want HSM?** → Hardware Integration (1 hour)
-1. `01-hardware-integration/01-yubikey-basics/` - Physical HSM
-2. `01-hardware-integration/05-mixed-entropy/` - Entropy mixing
-3. `01-hardware-integration/06-hsm-comparison/` - Performance
-
-### 🟣 **Building Ecosystem Apps?** → Ecosystem Integration (1.5 hours)
-1. `02-ecosystem-integration/01-songbird-btsp/` - Secure tunnels
-2. `02-ecosystem-integration/03-birdsong-encryption/` - Cross-primal
-3. `02-ecosystem-integration/05-nestgate-encrypted-storage/` - Data security
-
-### 🔴 **Production Deployment?** → Production Patterns (2 hours)
-1. `05-production-patterns/01-api-key-management/` - API keys
-2. `05-production-patterns/02-certificate-authority/` - Internal CA
-3. `05-production-patterns/04-disaster-recovery/` - Backups
-
----
-
-## 📊 Showcase maturity
-
-**Runnable today:** **29** demos (`find showcase -name main.rs | wc -l`).  
-**Roadmap target:** **38** comprehensive demos (original index bands).
+**Runnable today:** **29** demos (`find showcase -name main.rs | wc -l`).
+**Roadmap target:** **38** comprehensive demos.
 
 | Area | Runnable `main.rs` count |
 |------|-------------------------|
@@ -201,154 +115,55 @@ cargo run
 | `05-mixed-entropy/` | 1 |
 | **Total** | **29** |
 
-Hardware-focused demos under `01-hardware-integration/` and some ecosystem slots from the original plan are still open.
+---
+
+## Quick Start
+
+```bash
+# Build from repository root
+cargo build --release
+
+# Run a demo
+cd showcase/00-local-primal/01-hello-beardog
+cargo run --release
+```
 
 ---
 
-## 🎯 Showcase Principles
+## Ecosystem Integration Points
 
-### What Makes a Good BearDog Demo?
+BearDog integrates with peer primals via the Tower Atomic pattern — all discovery happens at runtime through the capability registry, never through hardcoded peer addresses.
 
-1. **Sovereignty First**: Demonstrate user control and zero vendor lock-in
-2. **Hardware-Aware**: Show real HSM integration, not mocks
-3. **Entropy Honest**: Never simulate human entropy
-4. **Lineage Tracked**: Every key has a story
-5. **Zero-Knowledge**: No hardcoded configuration
-6. **Cross-Primal**: Show ecosystem integration
+- **Secure Tunnels** — BTSP encrypted connections with any transport-capable peer
+- **Service Discovery** — mDNS + capability registration for zero-config peer finding
+- **Key Federation** — Distributed key registry sync across tower boundaries
+- **Encrypted Storage** — Encrypt-before-store delegation to storage-capable peers
+- **Compute Attestation** — Verify remote compute environments via HSM attestation
+- **Intelligent Routing** — Capability-based routing for key operations
 
-### Demo Structure (Template)
+---
+
+## Demo Structure (Template)
+
 ```
 XX-demo-name/
 ├── README.md           # What, why, how
 ├── Cargo.toml          # Dependencies
 ├── run.sh              # One-command execution
-├── verify.sh           # Verify it worked
 └── src/
     └── main.rs         # Implementation
 ```
 
 ---
 
-## 🔗 Ecosystem Integration Points
+## References
 
-### With Songbird
-- **BTSP Tunnels**: Secure encrypted connections
-- **Service Discovery**: mDNS + capability registration
-- **Key Federation**: Distributed key registry sync
-- **Lineage Tracking**: Cross-tower key ancestry
-
-### With NestGate
-- **Encrypted Storage**: Encrypt before storing
-- **Key-Value Store**: Encrypted metadata storage
-- **Backup/Recovery**: Encrypted key backups
-- **Audit Trails**: Cryptographic operation logs
-
-### With ToadStool
-- **Encrypted Workloads**: Decrypt, compute, re-encrypt
-- **HSM as Service**: Remote HSM operations
-- **Key Derivation**: Compute-derived keys
-- **Attestation**: Verify compute environments
-
-### With Squirrel
-- **Key Routing**: Intelligent key operation routing
-- **Privacy-Preserving**: Route without exposing keys
-- **Cost Optimization**: Choose cheapest HSM
-- **Capability Matching**: Route based on HSM features
+- [README.md](../README.md) — Project overview
+- [START_HERE.md](../START_HERE.md) — Getting started
+- [ARCHITECTURE.md](../ARCHITECTURE.md) — System design
+- [specs/](../specs/) — Technical specifications
 
 ---
 
-## 🏆 BearDog Showcase Goals
-
-### Short-Term (This Week)
-1. ✅ Create showcase index (this file)
-2. 🚧 Build `00-local-primal/` (6 demos)
-3. 🚧 Expand `01-hardware-integration/` (6 more demos)
-4. 📋 Document patterns and best practices
-
-### Medium-Term (This Month)
-1. 🚧 Build `02-ecosystem-integration/` (7 demos)
-2. 🚧 Build `03-network-federation/` (6 demos)
-3. 📋 Create video walkthroughs
-4. 📋 Write tutorial documentation
-
-### Long-Term (Next Quarter)
-1. 🚧 Build `04-advanced-features/` (6 demos)
-2. 🚧 Build `05-production-patterns/` (6 demos)
-3. 📋 Real-world case studies
-4. 📋 Performance benchmarks
-
-**Target**: 38 comprehensive demos by Q1 2026
-
----
-
-## 📚 References
-
-### BearDog Documentation
-- [README.md](../README.md) - Project overview
-- [START_HERE.md](../START_HERE.md) - Getting started
-- [ARCHITECTURE.md](../ARCHITECTURE.md) - System design
-- [ENTROPY_HIERARCHY_PRINCIPLE.md](../ENTROPY_HIERARCHY_PRINCIPLE.md) - Core principle
-- [COMPREHENSIVE_AUDIT_REPORT_DEC_24_2025.md](../COMPREHENSIVE_AUDIT_REPORT_DEC_24_2025.md) - Quality audit
-
-### Ecosystem Showcases
-- [Songbird Showcase](../../songbird/showcase/) - Federation patterns
-- [NestGate Showcase](../../nestgate/showcase/) - Storage patterns
-- [ToadStool Showcase](../../toadstool/showcase/) - Compute patterns
-- [Squirrel Showcase](../../squirrel/showcase/) - AI routing patterns
-
-### Specifications
-- [specs/](../specs/) - Technical specifications (85 files)
-- [docs/](../docs/) - Comprehensive documentation (166 files)
-
----
-
-## 🤝 Contributing
-
-Want to add a showcase demo?
-
-1. **Choose a category** (00-05 above)
-2. **Create directory**: `showcase/XX-category/NN-demo-name/`
-3. **Use template**: Copy structure from `05-mixed-entropy/`
-4. **Implement**: Write `main.rs` with comments
-5. **Document**: Create `README.md` explaining what it does
-6. **Test**: Ensure `cargo run` works
-7. **Script**: Add `run.sh` for one-command execution
-8. **Verify**: Add `verify.sh` to check success
-
----
-
-## 📞 Questions?
-
-- **Main README**: [../README.md](../README.md)
-- **Getting Started**: [../START_HERE.md](../START_HERE.md)
-- **Audit Report**: [../COMPREHENSIVE_AUDIT_REPORT_DEC_24_2025.md](../COMPREHENSIVE_AUDIT_REPORT_DEC_24_2025.md)
-- **Examples**: [../examples/](../examples/)
-
----
-
-## ✅ Next Steps
-
-### Immediate (Today)
-1. ✅ Create this index
-2. 🚧 Build `00-local-primal/01-hello-beardog/`
-3. 🚧 Build `00-local-primal/02-hsm-discovery/`
-
-### This Week
-1. Complete `00-local-primal/` (6 demos)
-2. Expand `01-hardware-integration/` (add 6 demos)
-3. Start `02-ecosystem-integration/` (first 3 demos)
-
-### This Month
-1. Complete all 38 demos
-2. Add video walkthroughs
-3. Write comprehensive tutorials
-4. Create ecosystem integration guide
-
----
-
-**Last Updated**: March 24, 2026  
-**Maintainer**: BearDog Team  
+**Last Updated**: April 7, 2026
 **Status**: Active expansion
-
-🐻 **BearDog Showcase - Learn Sovereign Cryptography by Example** 🎬
-

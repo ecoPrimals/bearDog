@@ -267,7 +267,7 @@ impl ComplianceHandler {
     /// Check privacy-policy compliance beyond per-standard evaluation.
     ///
     /// `BearDog` processes cryptographic material, not PII. Privacy violations
-    /// are assessed by primals that handle user-facing data (e.g. Squirrel).
+    /// are assessed by primals that handle user-facing data.
     ///
     /// # Errors
     ///

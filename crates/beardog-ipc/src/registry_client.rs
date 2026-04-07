@@ -7,7 +7,7 @@
 //! # Design Principle: Zero Vendor Hardcoding
 //!
 //! This client does NOT know:
-//! - Which registry it's talking to (could be Songbird, Consul, etcd, custom, etc.)
+//! - Which registry it's talking to (any JSON-RPC 2.0 registry implementation)
 //! - What other primals exist
 //! - What the registry implementation is
 //!
@@ -24,6 +24,7 @@ use crate::protocol::JSONRPC_VERSION;
 use beardog_core::capabilities::{BearDogCapabilities, Capability};
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::path::PathBuf;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
@@ -47,7 +48,7 @@ fn fallback_registry_unix_socket_path() -> String {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcRequest {
     /// Protocol version; must be `"2.0"` for compliant servers.
-    pub jsonrpc: String,
+    pub jsonrpc: Cow<'static, str>,
     /// Method name (e.g. `primal.register`, `primal.get_provider`).
     pub method: String,
     /// Positional or object parameters; omitted when empty.
@@ -61,7 +62,7 @@ pub struct JsonRpcRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcResponse {
     /// Protocol version; must be `"2.0"`.
-    pub jsonrpc: String,
+    pub jsonrpc: Cow<'static, str>,
     /// Successful result payload; mutually exclusive with [`JsonRpcResponse::error`].
     #[serde(skip_serializing_if = "Option::is_none")]
     pub result: Option<serde_json::Value>,
@@ -340,7 +341,7 @@ impl PrimalRegistryClient {
 
         self.request_id += 1;
         let request = JsonRpcRequest {
-            jsonrpc: JSONRPC_VERSION.to_string(),
+            jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             method: method.to_string(),
             params,
             id: self.request_id,
@@ -406,7 +407,7 @@ mod tests {
     #[test]
     fn test_json_rpc_request_serialization() -> Result<(), serde_json::Error> {
         let request = JsonRpcRequest {
-            jsonrpc: JSONRPC_VERSION.to_string(),
+            jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             method: "primal.ping".to_string(),
             params: None,
             id: 1,

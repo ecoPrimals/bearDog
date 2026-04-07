@@ -88,13 +88,13 @@ async fn test_e2e_http_is_worst_option() {
 
 #[tokio::test]
 async fn test_e2e_recommend_tarpc_for_known_primals() {
-    // For known primals (Songbird, ToadStool), recommend tarpc
-    let primal = "Songbird";
+    // For known primals (e.g. PeerAlpha), recommend tarpc
+    let primal = "PeerAlpha";
     let recommended_protocol = "tarpc";
 
     assert_eq!(recommended_protocol, "tarpc");
     assert_ne!(recommended_protocol, "http");
-    assert_eq!(primal, "Songbird"); // Known primal
+    assert_eq!(primal, "PeerAlpha"); // Known primal
 }
 
 #[tokio::test]
@@ -247,14 +247,14 @@ async fn test_e2e_final_state_tarpc_primary() {
 // ============================================================================
 
 #[tokio::test]
-async fn test_e2e_beardog_to_songbird_tarpc() {
-    // BearDog ↔ Songbird should use tarpc
+async fn test_e2e_beardog_to_peer_alpha_tarpc() {
+    // BearDog ↔ peer should use tarpc
     let sender = "BearDog";
-    let receiver = "Songbird";
+    let receiver = "PeerAlpha";
     let protocol = "tarpc";
 
-    assert!(sender == "BearDog" || sender == "Songbird");
-    assert!(receiver == "BearDog" || receiver == "Songbird");
+    assert!(sender == "BearDog" || sender == "PeerAlpha");
+    assert!(receiver == "BearDog" || receiver == "PeerAlpha");
     assert_eq!(protocol, "tarpc");
 }
 

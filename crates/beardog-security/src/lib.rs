@@ -28,7 +28,7 @@
 //!
 //! let data = b"Hello, BearDog!";
 //! let hash = compute_sha256_hash(data)?;
-//! println!("SHA-256: {:?}", hash);
+//! tracing::info!("SHA-256: {:?}", hash);
 //! # Ok::<(), beardog_errors::BearDogError>(())
 //! ```
 //!
@@ -338,9 +338,9 @@ pub fn generate_secure_random_bytes(size: usize) -> Result<Vec<u8>, BearDogError
 ///
 /// // Use constant-time comparison to prevent timing attacks
 /// if constant_time_compare(&stored_key, &login_key) {
-///     println!("✅ Password correct");
+///     tracing::info!("✅ Password correct");
 /// } else {
-///     println!("❌ Password incorrect");
+///     tracing::info!("❌ Password incorrect");
 /// }
 /// # Ok(())
 /// # }
@@ -442,9 +442,9 @@ pub fn derive_key_from_password(
 ///
 /// // ✅ Secure: Constant-time comparison
 /// if constant_time_compare(expected_token, provided_token) {
-///     println!("✅ Token valid");
+///     tracing::info!("✅ Token valid");
 /// } else {
-///     println!("❌ Token invalid");
+///     tracing::info!("❌ Token invalid");
 /// }
 ///
 /// // ❌ INSECURE: Don't use == for secrets!
@@ -466,9 +466,9 @@ pub fn derive_key_from_password(
 /// // Verify received HMAC (constant-time to prevent timing attacks)
 /// let received_hmac = vec![0u8; 32]; // From client
 /// if constant_time_compare(&expected_hmac, &received_hmac) {
-///     println!("✅ Signature valid");
+///     tracing::info!("✅ Signature valid");
 /// } else {
-///     println!("❌ Signature invalid");
+///     tracing::info!("❌ Signature invalid");
 /// }
 /// # Ok(())
 /// # }
@@ -491,9 +491,9 @@ pub fn derive_key_from_password(
 ///
 /// // ✅ Secure: Constant-time prevents timing attack on password guessing
 /// if constant_time_compare(&stored_hash, &login_hash) {
-///     println!("✅ Login successful");
+///     tracing::info!("✅ Login successful");
 /// } else {
-///     println!("❌ Login failed");
+///     tracing::info!("❌ Login failed");
 /// }
 /// # Ok(())
 /// # }

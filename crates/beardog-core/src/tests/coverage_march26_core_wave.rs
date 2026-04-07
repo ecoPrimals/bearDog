@@ -38,7 +38,7 @@ fn socket_config_description_orchestrator_tier_mentions_biomeos() {
 fn socket_config_description_primal_namespace_tier3() {
     let cfg = SocketConfig::from_inputs(&SocketPathInputs {
         primal_namespace_root_exists: true,
-        primal_name: Some("songbird".to_string()),
+        primal_name: Some("peer-alpha".to_string()),
         ..Default::default()
     });
     assert_eq!(cfg.source(), SocketPathSource::PrimalNamespace);

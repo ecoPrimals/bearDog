@@ -249,7 +249,7 @@ mod tests {
                 "action": "add_node",
                 "node": {
                     "id": "node-1",
-                    "primal": "ToadStool",
+                    "primal": "compute-peer",
                     "type": "compute",
                     "config": {}
                 }

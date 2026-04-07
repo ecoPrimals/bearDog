@@ -46,7 +46,7 @@ pub async fn discover_primal_socket_with(
     primal_name: &str,
     env: &DiscoverSocketEnv,
 ) -> Result<PathBuf> {
-    // Tier 1: primal-specific env var (e.g. BEARDOG_SOCKET, SONGBIRD_SOCKET)
+    // Tier 1: primal-specific env var (e.g. BEARDOG_SOCKET, {PRIMAL}_SOCKET)
     let env_key = format!("{}_SOCKET", primal_name.to_uppercase().replace('-', "_"));
     if let Ok(val) = beardog_errors::process_env::var(&env_key)
         && !val.is_empty()

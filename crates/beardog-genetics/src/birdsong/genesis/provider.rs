@@ -36,7 +36,7 @@ impl GenesisLineageProvider {
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] if [`Self::with_config`] fails.
+    /// Returns [`beardog_errors::BearDogError`] if [`Self::with_config`] fails.
     pub async fn new() -> Result<Self, BearDogError> {
         Self::with_config(TrustLevel::Medium).await
     }
@@ -89,7 +89,7 @@ impl GenesisLineageProvider {
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] when witness authority checks fail, the witness signature is invalid,
+    /// Returns [`beardog_errors::BearDogError`] when witness authority checks fail, the witness signature is invalid,
     /// trust is below [`Self::min_trust_level`], genetic ID or lineage construction fails, or
     /// [`GeneticLineage::verify`] reports an integrity failure.
     pub async fn establish_genesis_lineage(
@@ -166,7 +166,7 @@ impl GenesisLineageProvider {
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] when [`PhysicalChannelProof::verify_from_env`] fails (propagates the
+    /// Returns [`beardog_errors::BearDogError`] when [`PhysicalChannelProof::verify_from_env`] fails (propagates the
     /// underlying verification error). Ceremony failures from [`Self::establish_genesis_lineage`] are
     /// captured in the result’s `error` field, not returned as `Err`.
     pub async fn conduct_genesis_ceremony(
@@ -340,7 +340,7 @@ impl GenesisLineageProvider {
     ///
     /// # Errors
     ///
-    /// Same as [`Self::verify_witness_authority`]: invalid witness keys, missing signature, or
+    /// Same as `verify_witness_authority`: invalid witness keys, missing signature, or
     /// permissioned-mode witness not trusted.
     pub fn verify_witness_authority_from_env(
         &self,

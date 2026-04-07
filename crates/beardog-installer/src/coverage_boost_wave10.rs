@@ -190,13 +190,13 @@ fn genome_bundle_defaults_with_env_override() {
     let _guard = crate::test_env_lock::ECOPRIMALS_GENOME_TARGETS_LOCK
         .lock()
         .expect("ECOPRIMALS_GENOME_TARGETS test lock poisoned");
-    beardog_errors::process_env::set_var("ECOPRIMALS_GENOME_TARGETS", "beardog,songbird");
+    beardog_errors::process_env::set_var("ECOPRIMALS_GENOME_TARGETS", "beardog,peer-alpha");
     let defaults = PrimalName::genome_bundle_defaults();
     beardog_errors::process_env::remove_var("ECOPRIMALS_GENOME_TARGETS");
 
     assert_eq!(defaults.len(), 2);
     assert_eq!(defaults[0].name(), "beardog");
-    assert_eq!(defaults[1].name(), "songbird");
+    assert_eq!(defaults[1].name(), "peer-alpha");
 }
 
 #[test]
@@ -249,7 +249,10 @@ fn deployment_report_display_with_failures() {
         total: 3,
         successes: 1,
         failures: vec![
-            (PrimalName::new("songbird"), "binary not found".to_string()),
+            (
+                PrimalName::new("peer-alpha"),
+                "binary not found".to_string(),
+            ),
             (PrimalName::new("nestgate"), "checksum mismatch".to_string()),
         ],
         arch: Architecture::X86_64,
@@ -258,7 +261,7 @@ fn deployment_report_display_with_failures() {
 
     let text = format!("{report}");
     assert!(text.contains("Failures:"));
-    assert!(text.contains("Songbird: binary not found"));
+    assert!(text.contains("Peer Alpha: binary not found"));
     assert!(text.contains("Nestgate: checksum mismatch"));
     assert!(text.contains("33.3%"));
     assert!(!report.is_success());

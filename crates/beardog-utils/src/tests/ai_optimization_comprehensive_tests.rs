@@ -38,15 +38,13 @@ fn test_ai_engine_creation_with_long_interval() {
     assert!(engine.is_ok());
 }
 
-#[test]
-fn test_ai_engine_get_stats() {
+#[tokio::test]
+async fn test_ai_engine_get_stats() {
     let engine = AIOptimizationEngine::new(Duration::from_secs(60)).unwrap();
-    let stats = engine.get_stats();
+    let stats = engine.get_stats().await;
     assert!(stats.is_ok());
 
     let stats = stats.unwrap();
-    // Note: total_optimizations and successful_optimizations are unsigned,
-    // so >= 0 is always true (enforced by type system)
     assert!(stats.learning_accuracy >= 0.0);
     assert!(stats.prediction_accuracy >= 0.0);
 }

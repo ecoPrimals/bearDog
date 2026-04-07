@@ -24,7 +24,7 @@ impl GenesisWitness {
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] when the public key length is wrong, the key material is invalid,
+    /// Returns [`beardog_errors::BearDogError`] when the public key length is wrong, the key material is invalid,
     /// or the signature buffer cannot be parsed as Ed25519.
     pub fn verify_signature(
         &self,

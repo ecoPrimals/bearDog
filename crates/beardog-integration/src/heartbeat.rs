@@ -2,7 +2,7 @@
 
 //! # Heartbeat Service
 //!
-//! Continuous health monitoring and status reporting to Songbird UPA.
+//! Continuous health monitoring and status reporting to the configured UPA endpoint.
 //!
 //! ## Modern Concurrency
 //! - Non-blocking interval-based execution

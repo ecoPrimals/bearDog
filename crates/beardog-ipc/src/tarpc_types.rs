@@ -5,7 +5,7 @@
 //! **HIGH-PERFORMANCE CRYPTO RPC** (v1.0.0)
 //!
 //! Provides shared types and service trait for tarpc-based cryptographic operations.
-//! This mirrors Songbird's `tarpc_types.rs` pattern for protocol-agnostic architecture.
+//! Protocol-agnostic tarpc envelope following the ecoPrimals shared RPC pattern.
 //!
 //! ## Performance
 //! - ~10-20 μs latency (vs 50-100 μs for JSON-RPC)

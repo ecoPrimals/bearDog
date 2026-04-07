@@ -222,10 +222,10 @@ async fn test_derive_lineage_key_deterministic() -> Result<(), BearDogError> {
     // Note: Keys will be different each time due to fresh entropy mixing
     // But the lineage component is deterministic
     let key1 = provider
-        .derive_lineage_key("beardog-family", "songbird-family", b"session-123")
+        .derive_lineage_key("beardog-family", "peer-family-alpha", b"session-123")
         .await?;
     let key2 = provider
-        .derive_lineage_key("beardog-family", "songbird-family", b"session-123")
+        .derive_lineage_key("beardog-family", "peer-family-alpha", b"session-123")
         .await?;
 
     // Keys are different due to entropy, but both are 32 bytes
@@ -245,10 +245,10 @@ async fn test_derive_lineage_key_symmetric() -> Result<(), BearDogError> {
 
     // Keys should be independent of order (symmetric)
     let key1 = provider
-        .derive_lineage_key("beardog-family", "songbird-family", b"test")
+        .derive_lineage_key("beardog-family", "peer-family-alpha", b"test")
         .await?;
     let key2 = provider
-        .derive_lineage_key("songbird-family", "beardog-family", b"test")
+        .derive_lineage_key("peer-family-alpha", "beardog-family", b"test")
         .await?;
 
     // Both are valid 32-byte keys (order doesn't matter)
@@ -263,7 +263,7 @@ async fn test_derive_lineage_key_without_seed_fails() -> Result<(), BearDogError
     let provider = GeneticCryptoProvider::new()?;
 
     let result = provider
-        .derive_lineage_key("beardog-family", "songbird-family", b"session")
+        .derive_lineage_key("beardog-family", "peer-family-alpha", b"session")
         .await;
 
     assert!(
@@ -354,12 +354,16 @@ async fn test_verify_lineage_valid() -> Result<(), BearDogError> {
     let mut hasher = blake3::Hasher::new();
     hasher.update(&lineage_seed);
     hasher.update(b"beardog-family");
-    hasher.update(b"songbird-family");
+    hasher.update(b"peer-family-alpha");
     hasher.update(b"GENETIC_LINEAGE_PROOF_V1");
     let valid_proof = hasher.finalize();
 
     let is_valid = provider
-        .verify_lineage("beardog-family", "songbird-family", valid_proof.as_bytes())
+        .verify_lineage(
+            "beardog-family",
+            "peer-family-alpha",
+            valid_proof.as_bytes(),
+        )
         .await?;
 
     assert!(is_valid, "Valid lineage proof should verify");
@@ -375,7 +379,7 @@ async fn test_verify_lineage_invalid() -> Result<(), BearDogError> {
     let invalid_proof = b"this_is_not_a_valid_lineage_proof_just_random_bytes!".to_vec();
 
     let is_valid = provider
-        .verify_lineage("beardog-family", "songbird-family", &invalid_proof)
+        .verify_lineage("beardog-family", "peer-family-alpha", &invalid_proof)
         .await?;
 
     assert!(!is_valid, "Invalid lineage proof should not verify");
@@ -389,7 +393,7 @@ async fn test_verify_lineage_without_seed_fails() -> Result<(), BearDogError> {
 
     let proof = b"some_proof_bytes_here".to_vec();
     let result = provider
-        .verify_lineage("beardog-family", "songbird-family", &proof)
+        .verify_lineage("beardog-family", "peer-family-alpha", &proof)
         .await;
 
     assert!(

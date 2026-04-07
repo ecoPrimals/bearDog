@@ -120,6 +120,10 @@ mod fido2_hid_tests {
             64
         }
 
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "inner_len is masked to 8 bits"
+        )]
         fn fill_ctap_ok_cbor(&self, buf: &mut [u8], cid: u32, cbor_body: &[u8]) -> usize {
             let inner_len = 1 + cbor_body.len();
             buf[0..4].copy_from_slice(&cid.to_be_bytes());

@@ -11,14 +11,23 @@ use std::collections::HashMap;
 pub struct Pkcs11UniversalProvider {
     /// HSM capabilities
     capabilities: Option<Pkcs11Capabilities>,
-    /// PKCS#11 library path (stored for Phase 2 session wiring; read in tests)
-    #[expect(dead_code, reason = "reserved for Phase 2 PKCS#11 session wiring")]
+    /// PKCS#11 library path
+    #[allow(
+        dead_code,
+        reason = "Phase 2 stub: populated at construction, read when session wiring lands"
+    )]
     library_path: String,
-    /// Slot ID (stored for Phase 2 session wiring; read in tests)
-    #[expect(dead_code, reason = "reserved for Phase 2 PKCS#11 session wiring")]
+    /// Slot ID
+    #[allow(
+        dead_code,
+        reason = "Phase 2 stub: populated at construction, read when session wiring lands"
+    )]
     slot_id: u64,
-    /// Provider metadata (stored for Phase 2 provider context; read in tests)
-    #[expect(dead_code, reason = "reserved for Phase 2 PKCS#11 provider context")]
+    /// Provider metadata
+    #[allow(
+        dead_code,
+        reason = "Phase 2 stub: populated at construction, read when provider context lands"
+    )]
     metadata: HashMap<String, String>,
 }
 

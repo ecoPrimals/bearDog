@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Key lifecycle handlers: generate, list, info, delete (wired to local key store).
+//! Key generation: HSM discovery, AES material derivation, and enhanced KDF-based generation.
 
-use super::hsm_agnostic;
-use super::key_store::{self, StoredKey};
+use crate::handlers::hsm_agnostic;
+use crate::handlers::kdf;
+use crate::handlers::key_derive;
+use crate::handlers::key_store::{self, StoredKey};
 use beardog_errors::BearDogError;
 use chrono::Utc;
 use std::fs;
-use std::path::Path;
-
-// ALL OLD PLACEHOLDER CODE REMOVED
-// Now using hsm_agnostic module for universal discovery
 
 async fn discover_hsms_agnostic() -> Result<Vec<hsm_agnostic::CliHsmInfo>, BearDogError> {
     hsm_agnostic::discover_all_hsms().await
@@ -46,8 +44,6 @@ pub(crate) fn select_cli_hsm_for_preference<'a>(
         }
     }
 }
-
-// ALL OLD PLACEHOLDER CODE REMOVED - was hardcoded and vendor-specific
 
 /// Generate AES-256 key optionally mixed with human entropy seed
 fn generate_aes_key_with_seed(seed_data: Option<&[u8]>) -> Result<Vec<u8>, BearDogError> {
@@ -222,147 +218,6 @@ pub async fn handle_key_generate(
     Ok(())
 }
 
-/// Handle key list command
-///
-/// # Errors
-///
-/// Returns an error if the key home directory cannot be resolved or keys cannot be listed.
-pub async fn handle_key_list(hsm_filter: Option<&str>, _verbose: bool) -> Result<(), BearDogError> {
-    let home = key_store::home_dir_for_keys()?;
-    handle_key_list_with_home(hsm_filter, _verbose, &home).await
-}
-
-/// Same as [`handle_key_list`] but with an explicit home directory for the key store (tests / DI).
-///
-/// # Errors
-///
-/// Returns an error if keys cannot be listed from the given home.
-pub async fn handle_key_list_with_home(
-    hsm_filter: Option<&str>,
-    _verbose: bool,
-    home: impl AsRef<Path>,
-) -> Result<(), BearDogError> {
-    println!("🔑 Available Keys");
-    println!("================");
-    println!();
-
-    let keys = key_store::list_keys_from_home(home)?;
-
-    let filtered_keys: Vec<_> = if let Some(filter) = hsm_filter {
-        println!("📌 Filtering by HSM: {filter}");
-        println!();
-        keys.into_iter()
-            .filter(|k| k.hsm_name.to_lowercase().contains(&filter.to_lowercase()))
-            .collect()
-    } else {
-        keys
-    };
-
-    if filtered_keys.is_empty() {
-        println!("No keys found.");
-        println!();
-        println!("💡 Generate a key:");
-        println!("   beardog key generate --key-id my-key --algorithm aes256-gcm");
-        return Ok(());
-    }
-
-    println!("Found {} key(s):", filtered_keys.len());
-    println!();
-
-    for key in filtered_keys {
-        println!("📋 Key: {}", key.key_id);
-        println!("   Algorithm: {}", key.algorithm);
-        println!("   HSM: {}", key.hsm_name);
-        println!("   Created: {}", key.created_at);
-        println!();
-    }
-
-    Ok(())
-}
-
-/// Handle key info command — load and display key metadata from the local key
-/// store.
-///
-/// # Errors
-///
-/// Returns an error if the key cannot be found or read from the store.
-pub async fn handle_key_info(key_id: &str) -> Result<(), BearDogError> {
-    let home = key_store::home_dir_for_keys()?;
-    handle_key_info_with_home(key_id, home).await
-}
-
-/// Same as [`handle_key_info`] but with an explicit home directory (tests / DI).
-///
-/// # Errors
-///
-/// Returns an error if the key cannot be found or read from the store.
-pub async fn handle_key_info_with_home(
-    key_id: &str,
-    home: impl AsRef<Path>,
-) -> Result<(), BearDogError> {
-    let stored = key_store::load_key_from_home(key_id, home)?;
-
-    println!("🔍 Key Information");
-    println!("=================");
-    println!();
-    println!("  Key ID:      {}", stored.key_id);
-    println!("  Algorithm:   {}", stored.algorithm);
-    println!("  HSM:         {}", stored.hsm_name);
-    println!("  Created:     {}", stored.created_at);
-    println!("  Generation:  {}", stored.generation);
-
-    if let Some(ref parent) = stored.parent_key_id {
-        println!("  Parent key:  {parent}");
-    }
-    if let Some(ref purpose) = stored.derivation_purpose {
-        println!("  Derived for: {purpose}");
-    }
-    if !stored.children.is_empty() {
-        println!("  Children:    {}", stored.children.join(", "));
-    }
-
-    println!();
-    Ok(())
-}
-
-/// Handle key delete command
-///
-/// # Errors
-///
-/// Returns an error if the key home directory cannot be resolved or deletion fails.
-pub async fn handle_key_delete(key_id: &str, skip_confirm: bool) -> Result<(), BearDogError> {
-    let home = key_store::home_dir_for_keys()?;
-    handle_key_delete_with_home(key_id, skip_confirm, &home).await
-}
-
-/// Same as [`handle_key_delete`] but with an explicit home directory for the key store (tests / DI).
-///
-/// # Errors
-///
-/// Returns an error if the key cannot be deleted from storage.
-pub async fn handle_key_delete_with_home(
-    key_id: &str,
-    skip_confirm: bool,
-    home: impl AsRef<Path>,
-) -> Result<(), BearDogError> {
-    println!("🗑️  Delete Key");
-    println!("=============");
-    println!();
-
-    if !skip_confirm {
-        println!("⚠️  Are you sure you want to delete key '{key_id}'?");
-        println!("   This action CANNOT be undone!");
-        println!();
-        println!("   Run with --yes to skip this prompt.");
-        return Ok(());
-    }
-
-    key_store::delete_key_from_home(key_id, home)?;
-    println!("✅ Key '{key_id}' deleted successfully");
-
-    Ok(())
-}
-
 /// Handle key generate with KDF and restrictions (v2)
 ///
 /// # Errors
@@ -447,7 +302,7 @@ pub async fn handle_key_generate_v2(
 
     // Create KDF config
     let kdf_config =
-        super::kdf::KdfConfig::new(kdf_type.to_string(), kdf_iterations, kdf_memory, kdf_time);
+        kdf::KdfConfig::new(kdf_type.to_string(), kdf_iterations, kdf_memory, kdf_time);
 
     // Generate key material
     let key_len = 32; // AES-256 = 32 bytes
@@ -461,7 +316,7 @@ pub async fn handle_key_generate_v2(
 
     // Calculate expiry if specified
     let expires_at_str = if let Some(duration_str) = expires_in {
-        let expiry = super::key_derive::parse_duration(duration_str)?;
+        let expiry = key_derive::parse_duration(duration_str)?;
         Some(expiry.to_rfc3339())
     } else {
         None
@@ -561,12 +416,9 @@ pub async fn handle_key_generate_v2(
 }
 
 #[cfg(test)]
-mod key_handler_tests {
+mod generate_tests {
     use super::*;
     use crate::handlers::hsm_agnostic::CliHsmInfo;
-    use crate::handlers::key_store;
-    use chrono::Utc;
-    use tempfile::TempDir;
 
     fn sample_cli_hsm(tier: &str, name: &str) -> CliHsmInfo {
         CliHsmInfo {
@@ -659,181 +511,6 @@ mod key_handler_tests {
     fn test_generate_aes_key_legacy_alias() {
         let k = generate_aes_key().expect("generate_aes_key legacy alias");
         assert_eq!(k.len(), 32);
-    }
-
-    #[tokio::test]
-    async fn test_handle_key_list_empty_store() {
-        let dir = TempDir::new().expect("create temp directory for empty key list test");
-        handle_key_list_with_home(None, false, dir.path())
-            .await
-            .expect("list keys in empty store");
-    }
-
-    #[tokio::test]
-    async fn test_handle_key_list_with_filter_and_keys() {
-        let dir = TempDir::new().expect("create temp directory for filtered key list test");
-        let home = dir.path();
-
-        let alpha = key_store::StoredKey {
-            key_id: "alpha".to_string(),
-            algorithm: "aes256-gcm".to_string(),
-            hsm_name: "AlphaHSM-software".to_string(),
-            created_at: Utc::now().to_rfc3339(),
-            key_material_b64: key_store::base64_encode(&[1u8; 32]),
-            generation: 0,
-            parent_key_id: None,
-            derivation_purpose: None,
-            children: vec![],
-            lineage: None,
-            expires_at: None,
-            usage: None,
-            purpose: None,
-        };
-        let beta = key_store::StoredKey {
-            hsm_name: "BetaHSM-hardware".to_string(),
-            key_id: "beta".to_string(),
-            ..alpha.clone()
-        };
-        key_store::save_key_to_home(&alpha, home).expect("save alpha key");
-        key_store::save_key_to_home(&beta, home).expect("save beta key");
-
-        handle_key_list_with_home(Some("alpha"), false, home)
-            .await
-            .expect("list keys filtered by alpha");
-        handle_key_list_with_home(None, true, home)
-            .await
-            .expect("list all keys verbose");
-    }
-
-    #[tokio::test]
-    async fn test_handle_key_info_missing_key() {
-        let result = handle_key_info("nonexistent-key").await;
-        assert!(
-            result.is_err(),
-            "key info for a nonexistent key should return Err"
-        );
-    }
-
-    #[tokio::test]
-    async fn test_handle_key_info_existing_key() {
-        let dir = TempDir::new().expect("create temp directory");
-        let home = dir.path();
-
-        let stored = key_store::StoredKey {
-            key_id: "info-test-key".to_string(),
-            algorithm: "ed25519".to_string(),
-            hsm_name: "software".to_string(),
-            created_at: "2026-01-01T00:00:00Z".to_string(),
-            key_material_b64: "dGVzdA==".to_string(),
-            generation: 0,
-            parent_key_id: None,
-            derivation_purpose: None,
-            children: vec![],
-            lineage: None,
-            expires_at: None,
-            usage: None,
-            purpose: None,
-        };
-        key_store::save_key_to_home(&stored, home).expect("save test key");
-        let result = handle_key_info_with_home("info-test-key", home).await;
-        assert!(result.is_ok(), "key info for existing key should succeed");
-    }
-
-    #[tokio::test]
-    async fn test_handle_key_delete_skip_confirm_removes_file() {
-        let dir = TempDir::new().expect("create temp directory for key delete test");
-        let home = dir.path();
-
-        let k = key_store::StoredKey {
-            key_id: "to-delete".to_string(),
-            algorithm: "aes256-gcm".to_string(),
-            hsm_name: "h".to_string(),
-            created_at: Utc::now().to_rfc3339(),
-            key_material_b64: key_store::base64_encode(&[2u8; 32]),
-            generation: 0,
-            parent_key_id: None,
-            derivation_purpose: None,
-            children: vec![],
-            lineage: None,
-            expires_at: None,
-            usage: None,
-            purpose: None,
-        };
-        key_store::save_key_to_home(&k, home).expect("save to-delete key");
-
-        handle_key_delete_with_home("to-delete", true, home)
-            .await
-            .expect("delete key with skip_confirm");
-        assert!(key_store::load_key_from_home("to-delete", home).is_err());
-    }
-
-    #[tokio::test]
-    async fn test_handle_key_delete_without_confirm_returns_early() {
-        let dir = TempDir::new().expect("create temp directory for delete without confirm test");
-        handle_key_delete_with_home("some-key", false, dir.path())
-            .await
-            .expect("delete without confirm returns early");
-    }
-
-    #[tokio::test]
-    async fn test_handle_key_list_filter_matches_nothing() {
-        let dir = TempDir::new().expect("create temp directory for filter matches nothing test");
-        let home = dir.path();
-
-        let k = key_store::StoredKey {
-            key_id: "only-key".to_string(),
-            algorithm: "aes256-gcm".to_string(),
-            hsm_name: "LocalSoft".to_string(),
-            created_at: Utc::now().to_rfc3339(),
-            key_material_b64: key_store::base64_encode(&[1u8; 32]),
-            generation: 0,
-            parent_key_id: None,
-            derivation_purpose: None,
-            children: vec![],
-            lineage: None,
-            expires_at: None,
-            usage: None,
-            purpose: None,
-        };
-        key_store::save_key_to_home(&k, home).expect("save only-key");
-
-        handle_key_list_with_home(Some("nomatch-xyz"), false, home)
-            .await
-            .expect("list with filter matching nothing");
-    }
-
-    #[tokio::test]
-    async fn test_handle_key_list_hsm_filter_is_case_insensitive() {
-        let dir = TempDir::new().expect("create temp directory for case-insensitive filter test");
-        let home = dir.path();
-        let k = key_store::StoredKey {
-            key_id: "k1".to_string(),
-            algorithm: "aes256-gcm".to_string(),
-            hsm_name: "MySoftHsm".to_string(),
-            created_at: Utc::now().to_rfc3339(),
-            key_material_b64: key_store::base64_encode(&[1u8; 32]),
-            generation: 0,
-            parent_key_id: None,
-            derivation_purpose: None,
-            children: vec![],
-            lineage: None,
-            expires_at: None,
-            usage: None,
-            purpose: None,
-        };
-        key_store::save_key_to_home(&k, home).expect("save k1 for case test");
-        handle_key_list_with_home(Some("soft"), false, home)
-            .await
-            .expect("list with lowercase soft filter");
-    }
-
-    #[tokio::test]
-    async fn test_handle_key_delete_missing_key_errors() {
-        let dir = TempDir::new().expect("create temp directory for missing key delete test");
-        let err = handle_key_delete_with_home("missing-id", true, dir.path())
-            .await
-            .unwrap_err();
-        assert!(format!("{err}").contains("missing-id") || format!("{err}").contains("not found"));
     }
 
     #[test]

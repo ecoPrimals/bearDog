@@ -265,7 +265,7 @@ mod tests {
     #[test]
     fn test_primal_name() {
         assert_eq!(PrimalName::new("beardog").name(), "beardog");
-        assert_eq!(PrimalName::new("songbird").name(), "songbird");
+        assert_eq!(PrimalName::new("peer-alpha").name(), "peer-alpha");
         assert_eq!(PrimalName::new("squirrel").name(), "squirrel");
         assert_eq!(PrimalName::new("toadstool").name(), "toadstool");
         assert_eq!(PrimalName::new("nestgate").name(), "nestgate");
@@ -299,8 +299,8 @@ mod tests {
             Some(PrimalName::new("beardog"))
         );
         assert_eq!(
-            PrimalName::parse_name("songbird"),
-            Some(PrimalName::new("songbird"))
+            PrimalName::parse_name("peer-alpha"),
+            Some(PrimalName::new("peer-alpha"))
         );
         assert_eq!(PrimalName::parse_name(""), None);
         assert_eq!(PrimalName::parse_name("bad name"), None);
@@ -309,7 +309,7 @@ mod tests {
     #[test]
     fn test_primal_display() {
         assert_eq!(PrimalName::new("beardog").to_string(), "Beardog");
-        assert_eq!(PrimalName::new("songbird").to_string(), "Songbird");
+        assert_eq!(PrimalName::new("peer-alpha").to_string(), "Peer Alpha");
     }
 
     #[test]

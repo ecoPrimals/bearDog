@@ -278,12 +278,12 @@ fn test_metrics_store_security() {
 #[test]
 fn test_metrics_store_ecosystem() {
     let mut store = MetricsStore::new();
-    let metric = make_ecosystem_metric("songbird", 5.0);
+    let metric = make_ecosystem_metric("peer-alpha", 5.0);
 
     store.store_ecosystem_metric(metric);
     assert_eq!(store.total_metrics(), 1);
 
-    let retrieved = store.get_ecosystem_metric("songbird");
+    let retrieved = store.get_ecosystem_metric("peer-alpha");
     assert!(retrieved.is_some());
     assert_eq!(retrieved.unwrap().success_rate, 0.99);
 

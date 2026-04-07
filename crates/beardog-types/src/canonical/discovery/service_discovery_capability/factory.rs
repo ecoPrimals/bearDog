@@ -18,8 +18,8 @@ use super::providers::{ConsulDiscovery, DnsHttpDiscovery, EtcdDiscovery};
 ///
 /// # Returns
 ///
-/// * `Ok(Arc<dyn ServiceDiscoveryCapability>)` - Best available discovery
-/// * `Err(DiscoveryError)` - If all providers fail (unlikely)
+/// * `Ok(Arc<dyn ServiceDiscoveryCapability>)` — Kubernetes discovery when the cluster is
+///   detected, otherwise the DNS/HTTP fallback (this function does not return `Err` today).
 ///
 /// # Examples
 ///
@@ -34,7 +34,8 @@ use super::providers::{ConsulDiscovery, DnsHttpDiscovery, EtcdDiscovery};
 ///
 /// # Errors
 ///
-/// This function currently always returns `Ok`, selecting Kubernetes when available or the DNS/HTTP fallback.
+/// This factory does not currently return `Err`: it tries Kubernetes first, and if that is
+/// unavailable it falls back to DNS/HTTP. Consul/etcd are not selected here (see module comments).
 pub async fn create_service_discovery()
 -> Result<Arc<dyn ServiceDiscoveryCapability>, DiscoveryError> {
     // Try Kubernetes first (environment detection implemented)

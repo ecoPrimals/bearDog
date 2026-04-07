@@ -47,7 +47,7 @@ impl PhysicalChannelProof {
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] when hardware attestation verification fails internally for the
+    /// Returns [`beardog_errors::BearDogError`] when hardware attestation verification fails internally for the
     /// current platform and mode (e.g. malformed attestation parsing).
     pub fn verify_with_attestation_mode(
         &self,

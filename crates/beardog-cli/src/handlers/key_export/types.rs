@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! JSON [`ExportedKey`] wire format for inter-primal key exchange.
+//! JSON [`ExportedKey`](crate::handlers::key_export::ExportedKey) wire format for inter-primal key exchange.
 
 use serde::{Deserialize, Serialize};
 
 /// Exported key format for inter-primal sharing
-/// This format is designed to be compatible with `ToadStool` and other primals
+/// Wire format compatible with any ecoPrimals peer implementing the published key exchange spec
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExportedKey {
     /// Key identifier

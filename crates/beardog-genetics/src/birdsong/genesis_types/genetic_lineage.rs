@@ -11,7 +11,7 @@ impl GeneticLineage {
     ///
     /// # Errors
     ///
-    /// Returns [`BearDogError`] when the lineage chain has no child node or witness signature
+    /// Returns [`beardog_errors::BearDogError`] when the lineage chain has no child node or witness signature
     /// verification fails with a cryptographic error.
     pub fn verify(&self) -> Result<bool, beardog_errors::BearDogError> {
         // 1. Verify witness signature

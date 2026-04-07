@@ -51,7 +51,7 @@
 //! - Apple XPC: https://developer.apple.com/documentation/xpc
 //! - iOS IPC: https://developer.apple.com/documentation/foundation/url_loading_system
 //! - Unix sockets on iOS: Limited by sandbox, but possible with entitlements
-//! - Songbird reference: songbird-universal-ipc/src/platform/ios.rs
+//! - biomeOS IPC standard: cross-platform socket layout
 
 use super::{PlatformSocket, SocketEndpoint};
 use tokio::net::UnixListener;

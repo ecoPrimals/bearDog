@@ -31,10 +31,9 @@
 //! ```
 
 use beardog_errors::BearDogError;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tokio::sync::RwLock;
-// use tracing::debug; // Commented out unused import
+use tokio::sync::{Mutex, RwLock};
 
 use super::history::OptimizationHistory;
 use super::neural_network::SimpleNeuralNetwork;
@@ -122,7 +121,7 @@ impl AIOptimizationEngine {
                 let sample = self.collect_performance_sample().await?;
                 self.update_models(&sample).await?;
                 let recommendations = self.generate_recommendations()?;
-                self.apply_optimizations(&recommendations)?;
+                self.apply_optimizations(&recommendations).await?;
                 self.learn_from_results()?;
             }
         }
@@ -141,14 +140,13 @@ impl AIOptimizationEngine {
             .map_err(|e| BearDogError::system(e.to_string()))?
             .as_secs();
 
-        // Collect real system performance data
-        let cpu_usage = self.get_cpu_usage()?;
-        let memory_usage = self.get_memory_usage()?;
+        let cpu_usage = self.get_cpu_usage().await?;
+        let memory_usage = self.get_memory_usage().await?;
         let network_latency = self.measure_network_latency().await?;
         let crypto_throughput = self.measure_crypto_throughput()?;
         let response_time = self.measure_response_time().await?;
         let error_rate = self.calculate_error_rate()?;
-        let system_load = self.get_system_load()?;
+        let system_load = self.get_system_load().await?;
 
         Ok(PerformanceSample {
             timestamp,
@@ -170,14 +168,10 @@ impl AIOptimizationEngine {
     /// # Errors
     /// Returns error if model updates fail or locks cannot be acquired
     async fn update_models(&self, sample: &PerformanceSample) -> Result<(), BearDogError> {
-        // Update performance model
         let mut model = self.performance_model.write().await;
         model.update_weights(sample)?;
 
-        // Update resource predictor
-        let mut predictor = self.resource_predictor.lock().map_err(|e| {
-            BearDogError::internal(format!("Failed to lock resource predictor: {e}"))
-        })?;
+        let mut predictor = self.resource_predictor.lock().await;
         predictor.add_sample(
             sample.cpu_usage,
             sample.memory_usage,
@@ -216,18 +210,18 @@ impl AIOptimizationEngine {
     ///
     /// # Errors
     /// Returns error if optimization actions cannot be recorded in history
-    fn apply_optimizations(
+    async fn apply_optimizations(
         &self,
         recommendations: &[OptimizationRecommendation],
     ) -> Result<(), BearDogError> {
         for recommendation in recommendations {
-            self.execute_optimization(recommendation)?;
+            self.execute_optimization(recommendation).await?;
         }
         Ok(())
     }
 
     /// Executes optimization
-    fn execute_optimization(
+    async fn execute_optimization(
         &self,
         recommendation: &OptimizationRecommendation,
     ) -> Result<(), BearDogError> {
@@ -245,12 +239,9 @@ impl AIOptimizationEngine {
             success: None,
         };
 
-        let mut history = self.optimization_history.lock().map_err(|e| {
-            BearDogError::internal(format!("Failed to lock optimization history: {e}"))
-        })?;
+        let mut history = self.optimization_history.lock().await;
         history.add_action(action);
 
-        // Execute the optimization
         match recommendation.optimization_type {
             OptimizationType::ThreadPool => {
                 tracing::info!("AI: Optimizing thread pool size to improve CPU utilization");
@@ -274,15 +265,13 @@ impl AIOptimizationEngine {
         Ok(())
     }
 
-    /// Gets stats
+    /// Returns current optimization statistics.
     ///
     /// # Errors
     ///
-    /// Returns an error if the optimization history mutex is poisoned.
-    pub fn get_stats(&self) -> Result<AIOptimizationStats, BearDogError> {
-        let history = self.optimization_history.lock().map_err(|e| {
-            BearDogError::internal(format!("Failed to lock optimization history: {e}"))
-        })?;
+    /// Returns an error if underlying history data is inconsistent.
+    pub async fn get_stats(&self) -> Result<AIOptimizationStats, BearDogError> {
+        let history = self.optimization_history.lock().await;
 
         Ok(AIOptimizationStats {
             total_optimizations: history.get_total_actions() as u64,
@@ -295,13 +284,11 @@ impl AIOptimizationEngine {
         })
     }
 
-    /// Get current CPU usage percentage
-    /// Gets `cpu_usage`
-    fn get_cpu_usage(&self) -> Result<f64, BearDogError> {
-        // Basic CPU usage estimation using load average
-        // In production, this would use proper system monitoring libraries
-        let load =
-            std::fs::read_to_string("/proc/loadavg").unwrap_or_else(|_| "0.5 0.4 0.3".to_string());
+    /// Get current CPU usage percentage from `/proc/loadavg` (non-blocking).
+    async fn get_cpu_usage(&self) -> Result<f64, BearDogError> {
+        let load = tokio::fs::read_to_string("/proc/loadavg")
+            .await
+            .unwrap_or_else(|_| "0.5 0.4 0.3".to_string());
 
         let load_avg = load
             .split_whitespace()
@@ -309,16 +296,12 @@ impl AIOptimizationEngine {
             .and_then(|s| s.parse::<f64>().ok())
             .unwrap_or(0.5);
 
-        // Convert load average to approximate CPU usage percentage
         Ok((load_avg * 100.0).min(100.0))
     }
 
-    /// Get current memory usage percentage
-    /// Gets `memory_usage`
-    fn get_memory_usage(&self) -> Result<f64, BearDogError> {
-        // Basic memory usage calculation
-        // In production, this would use proper system monitoring
-        if let Ok(meminfo) = std::fs::read_to_string("/proc/meminfo") {
+    /// Get current memory usage percentage from `/proc/meminfo` (non-blocking).
+    async fn get_memory_usage(&self) -> Result<f64, BearDogError> {
+        if let Ok(meminfo) = tokio::fs::read_to_string("/proc/meminfo").await {
             let mut total = 0u64;
             let mut available = 0u64;
 
@@ -354,7 +337,6 @@ impl AIOptimizationEngine {
             }
         }
 
-        // Fallback estimate
         Ok(32.0)
     }
 
@@ -416,11 +398,11 @@ impl AIOptimizationEngine {
         Ok(0.001) // 0.1% error rate
     }
 
-    /// Get system load average
-    /// Gets `system_load`
-    fn get_system_load(&self) -> Result<f64, BearDogError> {
-        let load =
-            std::fs::read_to_string("/proc/loadavg").unwrap_or_else(|_| "0.6 0.5 0.4".to_string());
+    /// Get system load average from `/proc/loadavg` (non-blocking).
+    async fn get_system_load(&self) -> Result<f64, BearDogError> {
+        let load = tokio::fs::read_to_string("/proc/loadavg")
+            .await
+            .unwrap_or_else(|_| "0.6 0.5 0.4".to_string());
 
         let load_avg = load
             .split_whitespace()
@@ -451,10 +433,10 @@ mod tests {
         assert_eq!(engine.optimization_interval, Duration::from_secs(60));
     }
 
-    #[test]
-    fn test_get_stats_initial() {
+    #[tokio::test]
+    async fn test_get_stats_initial() {
         let engine = make_engine();
-        let stats = engine.get_stats().expect("get_stats should succeed");
+        let stats = engine.get_stats().await.expect("get_stats should succeed");
         assert_eq!(stats.total_optimizations, 0);
         assert_eq!(stats.successful_optimizations, 0);
         assert_eq!(stats.anomalies_detected, 0);
@@ -462,19 +444,20 @@ mod tests {
 
     // ── Private metric collectors ────────────────────────────────────
 
-    #[test]
-    fn test_get_cpu_usage_returns_valid_range() {
+    #[tokio::test]
+    async fn test_get_cpu_usage_returns_valid_range() {
         let engine = make_engine();
-        let cpu = engine.get_cpu_usage().expect("cpu usage should succeed");
+        let cpu = engine.get_cpu_usage().await.expect("cpu usage should succeed");
         assert!(cpu >= 0.0, "CPU usage should be non-negative");
         assert!(cpu <= 100.0, "CPU usage should be at most 100");
     }
 
-    #[test]
-    fn test_get_memory_usage_returns_valid_range() {
+    #[tokio::test]
+    async fn test_get_memory_usage_returns_valid_range() {
         let engine = make_engine();
         let mem = engine
             .get_memory_usage()
+            .await
             .expect("memory usage should succeed");
         assert!(mem >= 0.0, "Memory usage should be non-negative");
         assert!(mem <= 100.0, "Memory usage should be at most 100");
@@ -518,11 +501,12 @@ mod tests {
         assert!((rate - 0.001).abs() < f64::EPSILON);
     }
 
-    #[test]
-    fn test_get_system_load_returns_non_negative() {
+    #[tokio::test]
+    async fn test_get_system_load_returns_non_negative() {
         let engine = make_engine();
         let load = engine
             .get_system_load()
+            .await
             .expect("system load should succeed");
         assert!(load >= 0.0, "System load should be non-negative");
     }
@@ -600,30 +584,32 @@ mod tests {
         assert!(matches!(recs[0].priority, RecommendationPriority::Medium));
     }
 
-    #[test]
-    fn test_apply_optimizations_empty() {
+    #[tokio::test]
+    async fn test_apply_optimizations_empty() {
         let engine = make_engine();
         engine
             .apply_optimizations(&[])
+            .await
             .expect("empty optimizations should succeed");
     }
 
-    #[test]
-    fn test_apply_optimizations_with_recommendations() {
+    #[tokio::test]
+    async fn test_apply_optimizations_with_recommendations() {
         let engine = make_engine();
         let recs = engine
             .generate_recommendations()
             .expect("recommendations should succeed");
         engine
             .apply_optimizations(&recs)
+            .await
             .expect("apply_optimizations should succeed");
 
-        let stats = engine.get_stats().expect("stats should succeed");
+        let stats = engine.get_stats().await.expect("stats should succeed");
         assert_eq!(stats.total_optimizations, 1);
     }
 
-    #[test]
-    fn test_execute_optimization_thread_pool() {
+    #[tokio::test]
+    async fn test_execute_optimization_thread_pool() {
         let engine = make_engine();
         let rec = OptimizationRecommendation {
             optimization_type: OptimizationType::ThreadPool,
@@ -635,11 +621,12 @@ mod tests {
         };
         engine
             .execute_optimization(&rec)
+            .await
             .expect("execute ThreadPool should succeed");
     }
 
-    #[test]
-    fn test_execute_optimization_simd() {
+    #[tokio::test]
+    async fn test_execute_optimization_simd() {
         let engine = make_engine();
         let rec = OptimizationRecommendation {
             optimization_type: OptimizationType::Simd,
@@ -651,11 +638,12 @@ mod tests {
         };
         engine
             .execute_optimization(&rec)
+            .await
             .expect("execute Simd should succeed");
     }
 
-    #[test]
-    fn test_execute_optimization_memory() {
+    #[tokio::test]
+    async fn test_execute_optimization_memory() {
         let engine = make_engine();
         let rec = OptimizationRecommendation {
             optimization_type: OptimizationType::Memory,
@@ -667,11 +655,12 @@ mod tests {
         };
         engine
             .execute_optimization(&rec)
+            .await
             .expect("execute Memory should succeed");
     }
 
-    #[test]
-    fn test_execute_optimization_other_variants() {
+    #[tokio::test]
+    async fn test_execute_optimization_other_variants() {
         let engine = make_engine();
         for opt_type in [
             OptimizationType::Network,
@@ -690,6 +679,7 @@ mod tests {
             };
             engine
                 .execute_optimization(&rec)
+                .await
                 .expect("execute other type should succeed");
         }
     }
@@ -728,23 +718,23 @@ mod tests {
         assert_eq!(stats.total_optimizations, 1);
     }
 
-    #[test]
-    fn test_stats_after_multiple_optimizations() {
+    #[tokio::test]
+    async fn test_stats_after_multiple_optimizations() {
         let engine = make_engine();
         let recs = engine.generate_recommendations().expect("recs");
 
         for _ in 0..5 {
-            engine.apply_optimizations(&recs).expect("apply");
+            engine.apply_optimizations(&recs).await.expect("apply");
         }
 
-        let stats = engine.get_stats().expect("stats");
+        let stats = engine.get_stats().await.expect("stats");
         assert_eq!(stats.total_optimizations, 5);
     }
 
-    #[test]
-    fn get_stats_initial_counts_zero() {
+    #[tokio::test]
+    async fn get_stats_initial_counts_zero() {
         let engine = make_engine();
-        let stats = engine.get_stats().expect("stats");
+        let stats = engine.get_stats().await.expect("stats");
         assert_eq!(stats.total_optimizations, 0);
         assert_eq!(stats.successful_optimizations, 0);
         assert!(stats.learning_accuracy > 0.0);

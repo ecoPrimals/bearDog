@@ -31,8 +31,7 @@
 //!
 //! ## Reference Implementation
 //!
-//! Based on Songbird's production-tested Windows implementation:
-//! `songbird/crates/songbird-universal-ipc/src/platform/windows.rs`
+//! Follows the biomeOS cross-platform IPC layout for Windows named pipes.
 //!
 //! ## Validation
 //!

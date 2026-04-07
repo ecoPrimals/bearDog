@@ -220,7 +220,7 @@ mod capability_unit_tests {
     #[test]
     fn test_capability_request_serialization() {
         let request = CapabilityRequest {
-            from_primal: "toadstool".to_string(),
+            from_primal: "peer-beta".to_string(),
             capability: Capability::Encryption {
                 algorithms: vec!["any".to_string()],
                 key_types: vec!["any".to_string()],
@@ -230,11 +230,11 @@ mod capability_unit_tests {
         };
 
         let json = serde_json::to_string(&request).unwrap();
-        assert!(json.contains("toadstool"));
+        assert!(json.contains("peer-beta"));
         assert!(json.contains("req_123"));
 
         let deserialized: CapabilityRequest = serde_json::from_str(&json).unwrap();
-        assert_eq!(deserialized.from_primal, "toadstool");
+        assert_eq!(deserialized.from_primal, "peer-beta");
         assert_eq!(deserialized.request_id, "req_123");
     }
 
@@ -403,11 +403,11 @@ mod capability_e2e_tests {
 
     #[test]
     fn test_e2e_capability_request_encryption() {
-        // Simulate ToadStool requesting encryption from BearDog
+        // Simulate Peer-beta requesting encryption from BearDog
         let beardog_caps = BearDogCapabilities::new(Some("nat0".to_string()), "tower1".to_string());
 
         let request = CapabilityRequest {
-            from_primal: "toadstool".to_string(),
+            from_primal: "peer-beta".to_string(),
             capability: Capability::Encryption {
                 algorithms: vec!["ChaCha20Poly1305".to_string()],
                 key_types: vec!["X25519".to_string()],
@@ -425,11 +425,11 @@ mod capability_e2e_tests {
 
     #[test]
     fn test_e2e_capability_request_trust_evaluation() {
-        // Simulate Songbird requesting trust evaluation from BearDog
+        // Simulate peer-alpha requesting trust evaluation from BearDog
         let beardog_caps = BearDogCapabilities::new(Some("nat0".to_string()), "tower1".to_string());
 
         let request = CapabilityRequest {
-            from_primal: "songbird".to_string(),
+            from_primal: "peer-alpha".to_string(),
             capability: Capability::TrustEvaluation {
                 trust_models: vec!["family_based".to_string()],
             },

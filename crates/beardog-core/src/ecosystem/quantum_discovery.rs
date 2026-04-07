@@ -5,10 +5,10 @@
 //!
 //! **Important**: The “quantum” pipeline (superposition, annealing, entanglement graph) is
 //! **Phase 2 research** and is not wired to real hardware or to heuristic optimization yet.
-//! Capability **resolution** uses the same runtime discovery path as the rest of
-//! [`crate::primal_self_knowledge`]: [`PrimalDiscovery`] (mDNS when enabled, registry when
-//! configured, cached peers). Callers must supply [`PrimalDiscovery`] via
-//! [`QuantumDiscoveryEngine::with_primal_discovery`]; otherwise discovery returns
+//! Capability **resolution** uses the same runtime discovery path as [`crate::primal_self_knowledge`]
+//! and [`crate::primal_self_knowledge::PrimalDiscovery`] (mDNS when enabled, registry when
+//! configured, cached peers). Callers must supply [`crate::primal_self_knowledge::PrimalDiscovery`] via
+//! [`crate::ecosystem::quantum_discovery::QuantumDiscoveryEngine::with_primal_discovery`]; otherwise discovery returns
 //! [`BearDogError::requires_capability`](beardog_errors::BearDogError::requires_capability).
 
 use crate::primal_self_knowledge::{DiscoveredPrimal, Endpoint, PrimalDiscovery};
@@ -27,7 +27,7 @@ use uuid::Uuid;
 
 type Result<T> = std::result::Result<T, BearDogError>;
 
-/// Quantum-inspired capability discovery engine (orchestration shell over [`PrimalDiscovery`]).
+/// Quantum-inspired capability discovery engine (orchestration shell over [`crate::primal_self_knowledge::PrimalDiscovery`]).
 pub struct QuantumDiscoveryEngine {
     /// Engine configuration
     config: QuantumDiscoveryConfig,
@@ -318,7 +318,7 @@ pub struct QuantumMetrics {
 }
 
 impl QuantumDiscoveryEngine {
-    /// Create a new engine without [`PrimalDiscovery`]. [`Self::quantum_discover_capabilities`]
+    /// Create a new engine without [`crate::primal_self_knowledge::PrimalDiscovery`]. [`Self::quantum_discover_capabilities`]
     /// will return `BearDogError::requires_capability` until [`Self::with_primal_discovery`] is used.
     #[must_use]
     pub fn new(config: QuantumDiscoveryConfig) -> Self {
@@ -333,7 +333,7 @@ impl QuantumDiscoveryEngine {
         }
     }
 
-    /// Attach runtime [`PrimalDiscovery`] (same pattern as [`crate::primal_self_knowledge::PrimalSelfKnowledge`]).
+    /// Attach runtime [`crate::primal_self_knowledge::PrimalDiscovery`] (same pattern as [`crate::primal_self_knowledge::PrimalSelfKnowledge`]).
     #[must_use]
     pub fn with_primal_discovery(
         config: QuantumDiscoveryConfig,
@@ -347,7 +347,7 @@ impl QuantumDiscoveryEngine {
         }
     }
 
-    /// Resolve requested capabilities using [`PrimalDiscovery`] (mDNS / registry / cache).
+    /// Resolve requested capabilities using [`crate::primal_self_knowledge::PrimalDiscovery`] (mDNS / registry / cache).
     ///
     /// Does not fabricate endpoints or provider identities. Phase 2 quantum heuristics
     /// (superposition collapse, annealing) are not applied to the result set yet.

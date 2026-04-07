@@ -7,7 +7,7 @@
 //! - Cell encryption/decryption
 //! - Tor-specific KDF operations
 //!
-//! **Architecture**: `BearDog` provides crypto primitives, Songbird implements protocol
+//! **Architecture**: `BearDog` provides crypto primitives, the protocol peer implements transport
 //!
 //! **Reference**: <https://spec.torproject.org/tor-spec>
 //!

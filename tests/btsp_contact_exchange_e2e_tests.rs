@@ -350,13 +350,13 @@ async fn test_e2e_nat_traversal_contact_discovery() {
 }
 
 // ========================================================================
-// E2E Test: Songbird Integration
+// E2E Test: Orchestration client integration
 // ========================================================================
 
 #[tokio::test]
-async fn test_e2e_songbird_contact_exchange_integration() {
-    // Songbird client will call POST /btsp/contact/exchange
-    let _songbird_request = json!({
+async fn test_e2e_orchestration_client_contact_exchange_integration() {
+    // Orchestration client will call POST /btsp/contact/exchange
+    let _orchestration_request = json!({
         "target_peer_id": "tower2",
         "requester_lineage": "tower1-lineage",
         "max_hops": 3
@@ -377,13 +377,13 @@ async fn test_e2e_songbird_contact_exchange_integration() {
         }
     });
 
-    // Songbird can parse and use the response
+    // Orchestration client can parse and use the response
     assert!(beardog_response["success"].as_bool().unwrap());
     let contact = &beardog_response["data"]["contact"];
     assert_eq!(contact["peer_id"], "tower2");
     assert!(!contact["addresses"].as_array().unwrap().is_empty());
 
-    // Songbird extracts first address for connection
+    // Peer extracts first address for connection
     let peer_address = contact["addresses"][0].as_str().unwrap();
     assert!(!peer_address.is_empty());
 }

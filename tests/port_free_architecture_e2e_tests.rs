@@ -154,7 +154,7 @@ async fn test_e2e_multiple_socket_paths_no_conflict() {
 async fn test_e2e_birdsong_encrypt_request() {
     use base64::Engine;
 
-    let plaintext = b"Hello, Songbird!";
+    let plaintext = b"Hello, peer!";
     let plaintext_b64 = base64::engine::general_purpose::STANDARD.encode(plaintext);
 
     let _request = serde_json::json!({
@@ -341,9 +341,9 @@ async fn test_e2e_json_rpc_invalid_params() {
 #[tokio::test]
 async fn test_e2e_architecture_zero_vendor_hardcoding() {
     let registry_sockets = vec![
-        "/tmp/songbird-nat0.sock",
-        "/tmp/consul-nat0.sock",
-        "/tmp/etcd-nat0.sock",
+        "/tmp/registry-a.sock",
+        "/tmp/registry-b.sock",
+        "/tmp/registry-c.sock",
         "/tmp/custom-registry.sock",
     ];
 

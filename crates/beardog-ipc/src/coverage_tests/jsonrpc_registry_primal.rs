@@ -6,6 +6,7 @@ use crate::protocol::JSONRPC_VERSION;
 use crate::registry_client::{
     JsonRpcError, JsonRpcRequest, JsonRpcResponse, PrimalInfo, PrimalRegistryClient,
 };
+use std::borrow::Cow;
 use std::path::PathBuf;
 
 // ============================================================================
@@ -30,7 +31,7 @@ fn test_songbird_client_default_creates_instance() {
 #[test]
 fn test_json_rpc_request_with_params() {
     let req = JsonRpcRequest {
-        jsonrpc: JSONRPC_VERSION.to_string(),
+        jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
         method: "primal.register".to_string(),
         params: Some(serde_json::json!({"name": "beardog"})),
         id: 1,
@@ -45,7 +46,7 @@ fn test_json_rpc_request_with_params() {
 #[test]
 fn test_json_rpc_request_without_params() {
     let req = JsonRpcRequest {
-        jsonrpc: JSONRPC_VERSION.to_string(),
+        jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
         method: "primal.ping".to_string(),
         params: None,
         id: 42,
@@ -58,7 +59,7 @@ fn test_json_rpc_request_without_params() {
 #[test]
 fn test_json_rpc_request_roundtrip() {
     let req = JsonRpcRequest {
-        jsonrpc: JSONRPC_VERSION.to_string(),
+        jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
         method: "test.method".to_string(),
         params: Some(serde_json::json!({"key": "value"})),
         id: 7,
@@ -72,7 +73,7 @@ fn test_json_rpc_request_roundtrip() {
 #[test]
 fn test_json_rpc_request_debug_and_clone() {
     let req = JsonRpcRequest {
-        jsonrpc: JSONRPC_VERSION.to_string(),
+        jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
         method: "primal.ping".to_string(),
         params: None,
         id: 1,
@@ -105,7 +106,7 @@ fn test_json_rpc_response_with_error() {
 #[test]
 fn test_json_rpc_response_roundtrip() {
     let resp = JsonRpcResponse {
-        jsonrpc: JSONRPC_VERSION.to_string(),
+        jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
         result: Some(serde_json::json!({"ok": true})),
         error: None,
         id: 99,
@@ -227,9 +228,9 @@ fn test_registry_client_new() {
 fn test_registry_client_zero_vendor_hardcoding() {
     // Client works with any path — no hardcoded vendor info
     for path in [
-        "/tmp/songbird.sock",
-        "/tmp/consul.sock",
-        "/tmp/etcd.sock",
+        "/tmp/peer-alpha.sock",
+        "/tmp/peer-beta.sock",
+        "/tmp/peer-gamma.sock",
         "/tmp/custom-registry.sock",
     ] {
         let _client = PrimalRegistryClient::new(PathBuf::from(path));

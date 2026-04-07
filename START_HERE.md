@@ -91,7 +91,7 @@ BearDog exposes 93 methods organized by domain:
 
 | Namespace | Examples |
 |-----------|----------|
-| `crypto.*` | `crypto.sign_ed25519`, `crypto.chacha20_poly1305_encrypt`, `crypto.blake3_hash` |
+| `crypto.*` | `crypto.sign_ed25519`, `crypto.verify_ed25519`, `crypto.chacha20_poly1305_encrypt`, `crypto.blake3_hash` |
 | `tls.*` | `tls.derive_handshake_secrets`, `tls.sign_handshake` |
 | `tor.*` | `tor_ntor_client_init`, `tor_cell_encrypt`, `derive_onion_address` |
 | `genetic.*` | `genetic.derive_lineage_key`, `genetic.mix_entropy` |
@@ -111,6 +111,7 @@ Introspection: `discover_capabilities`, `primal.info`, `rpc.methods`
 - **Pure Rust** — No C dependencies
 - **Dependency Injection** — Pure `Default` (no I/O), `from_env()` at boundaries, `from_env_provider()` in tests
 - **Zero Hardcoding** — Config flows through parameters, capability-based discovery
+- **Self-Knowledge Only** — Primals discover peers at runtime, never hardcode other primal names
 - **Result<T, E>** — Zero `unwrap()` in production; `expect()` only on documented invariants
 - **Concurrent Tests** — 35 `#[serial]` isolated to `beardog-production`; all others concurrent, zero sleeps in non-chaos tests
 - **< 1000 LOC** — File size discipline (production code)
@@ -146,8 +147,8 @@ cargo build --release                # Build
 | Missing Docs | 0 |
 | Unsafe | `forbid(unsafe_code)` workspace-wide |
 | Pure Rust | 100% |
-| Tests | 14,366+ (concurrent; 35 `#[serial]` in `beardog-production`) |
-| Coverage | 90.16% line (llvm-cov) |
+| Tests | 14,372+ (concurrent; 35 `#[serial]` in `beardog-production`) |
+| Coverage | 90%+ line (llvm-cov) |
 | `#[serial]` | 35 (`beardog-production` shared `AtomicBool`) |
 | Files > 1000 LOC | 0 (production) |
 
@@ -165,4 +166,4 @@ cargo build --release                # Build
 
 ---
 
-**Last Updated**: April 2, 2026
+**Last Updated**: April 7, 2026

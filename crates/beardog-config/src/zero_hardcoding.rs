@@ -191,8 +191,8 @@ impl Default for EndpointConfig {
 /// //     .timeout(config.request)
 /// //     .build()?;
 ///
-/// println!("Connect timeout: {:?}", config.connect);
-/// println!("Request timeout: {:?}", config.request);
+/// tracing::debug!("Connect timeout: {:?}", config.connect);
+/// tracing::debug!("Request timeout: {:?}", config.request);
 /// ```
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ZeroHardcodingTimeouts {
@@ -397,12 +397,12 @@ impl Default for RetryConfig {
 /// let http_addr = config.endpoints.http_socket_addr();
 /// let rpc_addr = config.endpoints.rpc_socket_addr();
 ///
-/// println!("HTTP will bind to: {}", http_addr);
-/// println!("RPC will bind to: {}", rpc_addr);
+/// tracing::info!("HTTP will bind to: {}", http_addr);
+/// tracing::info!("RPC will bind to: {}", rpc_addr);
 ///
 /// // Timeouts are configurable via environment
-/// println!("Connect timeout: {:?}", config.timeouts.connect);
-/// println!("Request timeout: {:?}", config.timeouts.request);
+/// tracing::debug!("Connect timeout: {:?}", config.timeouts.connect);
+/// tracing::debug!("Request timeout: {:?}", config.timeouts.request);
 /// ```
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ZeroHardcodingConfig {

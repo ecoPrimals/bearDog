@@ -271,8 +271,8 @@ mod capability_integration_tests {
         // Simulate capability registry
         let mut registry = HashMap::new();
         registry.insert(CapabilityType::Security, "beardog");
-        registry.insert(CapabilityType::DataStorage, "nestgate");
-        registry.insert(CapabilityType::DistributedIntelligence, "squirrel");
+        registry.insert(CapabilityType::DataStorage, "storage-provider");
+        registry.insert(CapabilityType::DistributedIntelligence, "compute-provider");
 
         // Look up who provides security
         let security_provider = registry.get(&CapabilityType::Security);

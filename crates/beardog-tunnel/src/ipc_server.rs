@@ -5,7 +5,7 @@
 //! **Design Principle**: Primal-agnostic IPC
 //! - Provides: Unix socket server
 //! - Handles: Capability-based requests
-//! - Does NOT know: Who the clients are (Songbird, `ToadStool`, etc.)
+//! - Does NOT know: Who the clients are (any peer primal)
 //! - biomeOS routes capability requests to appropriate endpoints
 
 use beardog_core::capabilities::{CapabilityRequest, CapabilityResponse};

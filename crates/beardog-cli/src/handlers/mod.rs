@@ -26,7 +26,7 @@ pub mod hsm;
 pub mod hsm_agnostic;
 /// Key derivation function configuration
 pub mod kdf;
-/// Key generation, list, info, delete
+/// Key generation, list, info, delete (`handlers/key/` submodules)
 pub mod key;
 /// Key delegation with constraints
 pub mod key_delegate;

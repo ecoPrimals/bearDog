@@ -94,7 +94,7 @@ impl From<toml::de::Error> for DiscoveryError {
     }
 }
 
-// Tower Atomic Evolution: HTTP removed, all external calls via Songbird
+// Tower Atomic Evolution: HTTP removed, all external calls via transport peer
 // impl From<reqwest::Error> for DiscoveryError {
 //     fn from(err: reqwest::Error) -> Self {
 //         DiscoveryError::Network(err.to_string())

@@ -27,7 +27,7 @@
 //!
 //! if let Some(service) = orchestrators.first() {
 //!     println!("Found orchestrator at: {}", service.endpoint.primary_url);
-//!     // Connect to service.endpoint (could be Songbird, or anything else!)
+//!     // Connect to service.endpoint (discovered at runtime via capability)
 //! }
 //! # Ok(())
 //! # }

@@ -7,6 +7,7 @@
 use beardog_core::capabilities::BearDogCapabilities;
 use beardog_ipc::protocol::JSONRPC_VERSION;
 use beardog_ipc::{JsonRpcRequest, PrimalRegistryClient};
+use std::borrow::Cow;
 use std::path::PathBuf;
 
 #[tokio::test]
@@ -14,20 +15,20 @@ async fn test_e2e_zero_vendor_hardcoding() {
     // This test documents that BearDog has ZERO vendor hardcoding
     // It can work with ANY registry that speaks JSON-RPC 2.0
 
-    // Test 1: Works with Songbird socket path
-    let songbird_path = PathBuf::from("/tmp/songbird-nat0.sock");
-    let _client = PrimalRegistryClient::new(songbird_path);
-    // Client creation succeeds - can adapt to Songbird
+    // Test 1: Works with registry A socket path
+    let registry_a_path = PathBuf::from("/tmp/registry-a.sock");
+    let _client = PrimalRegistryClient::new(registry_a_path);
+    // Client creation succeeds - can adapt to registry implementation A
 
-    // Test 2: Works with Consul socket path
-    let consul_path = PathBuf::from("/tmp/consul-nat0.sock");
-    let _client = PrimalRegistryClient::new(consul_path);
-    // Client creation succeeds - can adapt to Consul
+    // Test 2: Works with registry B socket path
+    let registry_b_path = PathBuf::from("/tmp/registry-b.sock");
+    let _client = PrimalRegistryClient::new(registry_b_path);
+    // Client creation succeeds - can adapt to registry implementation B
 
-    // Test 3: Works with etcd socket path
-    let etcd_path = PathBuf::from("/tmp/etcd-nat0.sock");
-    let _client = PrimalRegistryClient::new(etcd_path);
-    // Client creation succeeds - can adapt to etcd
+    // Test 3: Works with registry C socket path
+    let registry_c_path = PathBuf::from("/tmp/registry-c.sock");
+    let _client = PrimalRegistryClient::new(registry_c_path);
+    // Client creation succeeds - can adapt to registry implementation C
 
     // Test 4: Works with custom registry
     let custom_path = PathBuf::from("/tmp/my-custom-registry.sock");
@@ -89,7 +90,7 @@ fn test_e2e_json_rpc_universal_protocol() {
     // Verify we use standard JSON-RPC 2.0, not vendor-specific protocols
 
     let request = JsonRpcRequest {
-        jsonrpc: JSONRPC_VERSION.to_string(),
+        jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
         method: "primal.register".to_string(),
         params: Some(serde_json::json!({
             "primal_id": "beardog",
@@ -138,17 +139,16 @@ fn test_e2e_environment_driven_discovery() {
 fn test_e2e_multi_vendor_compatibility() {
     // Test that same client works with multiple vendor implementations
 
-    let vendors = vec![
-        "songbird",  // ecoPrimals orchestrator
-        "consul",    // HashiCorp service mesh
-        "etcd",      // Kubernetes registry
-        "zookeeper", // Apache coordination service
-        "custom",    // Future/custom implementation
+    let socket_paths = vec![
+        "/tmp/registry-a.sock",
+        "/tmp/registry-b.sock",
+        "/tmp/registry-c.sock",
+        "/tmp/zookeeper-nat0.sock",
+        "/tmp/custom-nat0.sock",
     ];
 
-    for vendor in vendors {
-        let socket_path = format!("/tmp/{vendor}-nat0.sock");
-        let _client = PrimalRegistryClient::new(PathBuf::from(&socket_path));
+    for socket_path in socket_paths {
+        let _client = PrimalRegistryClient::new(PathBuf::from(socket_path));
 
         // Same client code works with all vendors
         // No vendor-specific initialization

@@ -1,6 +1,6 @@
 # BearDog Status
 
-**Last Updated**: April 2, 2026
+**Last Updated**: April 7, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -85,6 +85,20 @@
 ---
 
 ## Recent Improvements
+
+### Wave 29: primalSpring Audit Execution — BD-01 Encoding Hint, Sovereignty Sweep, Smart Refactoring & Debt Cleanup (April 7, 2026)
+
+- **BD-01 resolved** — `crypto.verify_ed25519` now accepts optional `encoding` hint per `ATTESTATION_ENCODING_STANDARD.md` v2.0 (supports base64, hex, base64url, utf8, none); backwards-compatible (default: base64); 7 new encoding tests
+- **Sovereignty sweep** — Removed 50+ hardcoded primal names (Songbird, NestGate, ToadStool, Squirrel) from production doc comments, test fixtures, and e2e tests; all replaced with capability-based, primal-agnostic language
+- **Smart refactoring** — 3 production files over 800 LOC decomposed by domain:
+  - `threat/types/mod.rs` (862L → 33L hub + 9 domain submodules)
+  - `capability_router.rs` (861L → `capability_routing/` with 5 focused modules)
+  - `handlers/key.rs` (875L → `key/` with generate, list, storage)
+- **Zero-copy consolidation** — Deleted dead orphan `zero_copy/optimized.rs` (830L, never compiled); identified remaining duplication for future consolidation
+- **Dependency cleanup** — Removed unused `serde_yaml` from beardog-core and beardog-adapters; documented TOML-only migration path
+- **Production stub hardening** — FIDO2 Phase 1/2 wording aligned; discovery announcement upgraded to `warn!`; AI `initialize_capability` documented as no-op; factory doc comment corrected
+- **Root docs updated** — CONTEXT.md sovereignty cleanup (removed primal names, updated metrics); specs/README.md cleaned (removed references to non-existent directories)
+- **All gates green** — fmt ✓, clippy `-D warnings` ✓, doc ✓, test ✓, 0 failures
 
 ### Wave 28: Deep Debt Evolution — Self-Knowledge, Box\<dyn Error\>, Hardcoding, Stubs (April 2, 2026)
 

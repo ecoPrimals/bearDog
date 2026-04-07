@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Export and import keys for inter-primal sharing (JSON [`ExportedKey`] format).
+//! Export and import keys for inter-primal sharing (JSON [`ExportedKey`](crate::handlers::key_export::ExportedKey) format).
 
 mod crypto;
 mod export;

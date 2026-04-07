@@ -20,7 +20,7 @@ use beardog_discovery::types::{
 };
 use std::collections::HashMap;
 use std::env::VarError;
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 
 fn sample_endpoint() -> ServiceEndpoint {
     ServiceEndpoint {

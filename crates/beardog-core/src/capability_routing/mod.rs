@@ -45,93 +45,22 @@
 //! # }
 //! ```
 
+mod filters;
+mod scoring;
+pub mod strategy;
+mod types;
+
+pub use strategy::{RequestContext, SelectionStrategy};
+pub use types::RoutingDecision;
+
 use crate::primal_discovery::{DiscoveredPrimal, DiscoveryQuery, PrimalDiscovery};
 use crate::self_knowledge::SimpleCapability;
 use beardog_errors::BearDogError;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::{Duration, Instant};
-use tracing::{info, warn};
+use std::time::Instant;
+use tracing::info;
 
-// =============================================================================
-// CORE TYPES
-// =============================================================================
-
-/// Selection strategy for capability routing
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum SelectionStrategy {
-    /// Choose primal with highest trust score
-    HighestTrust,
-
-    /// Choose primal with lowest current load
-    LeastLoaded,
-
-    /// Choose primal with lowest latency
-    LowestLatency,
-
-    /// Round-robin selection
-    RoundRobin,
-
-    /// Random selection
-    Random,
-
-    /// First available (discovery order)
-    FirstAvailable,
-}
-
-/// Request context for routing decisions
-#[derive(Debug, Clone)]
-pub struct RequestContext {
-    /// Required capability
-    pub capability: SimpleCapability,
-
-    /// Selection strategy
-    pub strategy: SelectionStrategy,
-
-    /// Maximum acceptable latency (ms)
-    pub max_latency_ms: Option<u64>,
-
-    /// Minimum required trust score (0.0 - 1.0)
-    pub min_trust_score: Option<f64>,
-
-    /// Exclude specific primals by name
-    pub exclude_primals: Vec<String>,
-
-    /// Request timeout
-    pub timeout: Duration,
-}
-
-/// Routing decision result
-#[derive(Debug, Clone)]
-pub struct RoutingDecision {
-    /// Selected primal
-    pub primal: DiscoveredPrimal,
-
-    /// Selection reason
-    pub reason: String,
-
-    /// Alternative primals (for failover)
-    pub alternatives: Vec<DiscoveredPrimal>,
-
-    /// Decision timestamp
-    pub decided_at: Instant,
-}
-
-/// Load tracking for primals
-#[derive(Debug, Clone)]
-struct PrimalLoad {
-    /// Current active requests
-    active_requests: usize,
-
-    /// Total requests served
-    total_requests: usize,
-
-    /// Last request timestamp
-    last_request: Option<Instant>,
-
-    /// Average latency (ms)
-    avg_latency_ms: Option<f64>,
-}
+use scoring::PrimalLoad;
 
 /// Capability-based router
 pub struct CapabilityRouter {
@@ -144,77 +73,6 @@ pub struct CapabilityRouter {
     /// Round-robin counters by capability
     rr_counters: HashMap<SimpleCapability, usize>,
 }
-
-// =============================================================================
-// REQUEST CONTEXT BUILDERS
-// =============================================================================
-
-impl RequestContext {
-    /// Create a new request context
-    #[must_use]
-    pub const fn new(capability: SimpleCapability) -> Self {
-        Self {
-            capability,
-            strategy: SelectionStrategy::HighestTrust,
-            max_latency_ms: None,
-            min_trust_score: None,
-            exclude_primals: Vec::new(),
-            timeout: Duration::from_secs(5),
-        }
-    }
-
-    /// Set selection strategy
-    #[must_use]
-    pub const fn with_strategy(mut self, strategy: SelectionStrategy) -> Self {
-        self.strategy = strategy;
-        self
-    }
-
-    /// Set maximum acceptable latency
-    #[must_use]
-    pub const fn with_max_latency(mut self, latency_ms: u64) -> Self {
-        self.max_latency_ms = Some(latency_ms);
-        self
-    }
-
-    /// Set minimum required trust score
-    #[must_use]
-    pub const fn with_min_trust(mut self, trust_score: f64) -> Self {
-        self.min_trust_score = Some(trust_score);
-        self
-    }
-
-    /// Exclude a specific primal
-    #[must_use]
-    pub fn excluding(mut self, primal_name: impl Into<String>) -> Self {
-        self.exclude_primals.push(primal_name.into());
-        self
-    }
-
-    /// Set request timeout
-    #[must_use]
-    pub const fn with_timeout(mut self, timeout: Duration) -> Self {
-        self.timeout = timeout;
-        self
-    }
-}
-
-impl Default for RequestContext {
-    fn default() -> Self {
-        Self {
-            capability: SimpleCapability::SecureTunneling,
-            strategy: SelectionStrategy::HighestTrust,
-            max_latency_ms: None,
-            min_trust_score: None,
-            exclude_primals: Vec::new(),
-            timeout: Duration::from_secs(5),
-        }
-    }
-}
-
-// =============================================================================
-// CAPABILITY ROUTER IMPLEMENTATION
-// =============================================================================
 
 impl CapabilityRouter {
     /// Create a router with an explicit [`PrimalDiscovery`] (no environment reads here).
@@ -251,7 +109,6 @@ impl CapabilityRouter {
     ) -> Result<RoutingDecision, BearDogError> {
         info!("🧭 Routing request for capability: {:?}", capability);
 
-        // Discover primals providing this capability
         let query = DiscoveryQuery::by_capability(capability.clone()).with_timeout(context.timeout);
 
         let mut primals = self.discovery.discover(query).await?;
@@ -262,8 +119,7 @@ impl CapabilityRouter {
             )));
         }
 
-        // Apply filters
-        primals = self.apply_filters(primals, &context);
+        primals = filters::apply_filters(&self.load_tracker, primals, &context);
 
         if primals.is_empty() {
             return Err(BearDogError::not_found(
@@ -271,7 +127,6 @@ impl CapabilityRouter {
             ));
         }
 
-        // Select best primal using strategy
         let (selected, reason) = self.select_primal(&mut primals, &context)?;
 
         info!("✅ Routed to {} (reason: {})", selected.name, reason);
@@ -284,182 +139,24 @@ impl CapabilityRouter {
         })
     }
 
-    /// Apply filters to candidate primals
-    #[expect(
-        clippy::cast_possible_truncation,
-        reason = "Rounded latency ms compared to u64 budget; practical ms ranges"
-    )]
-    #[expect(
-        clippy::cast_sign_loss,
-        reason = "Latency milliseconds are non-negative before integer comparison"
-    )]
-    fn apply_filters(
-        &self,
-        mut primals: Vec<DiscoveredPrimal>,
-        context: &RequestContext,
-    ) -> Vec<DiscoveredPrimal> {
-        // Filter by excluded primals
-        if !context.exclude_primals.is_empty() {
-            primals.retain(|p| !context.exclude_primals.contains(&p.name));
-        }
-
-        // Filter by minimum trust score
-        if let Some(min_trust) = context.min_trust_score {
-            primals.retain(|p| p.trust_score.is_some_and(|score| score >= min_trust));
-        }
-
-        // Filter by maximum latency (if we have latency data)
-        if let Some(max_latency) = context.max_latency_ms {
-            primals.retain(|p| {
-                self.load_tracker
-                    .get(&p.name)
-                    .and_then(|load| load.avg_latency_ms)
-                    .is_none_or(|latency| {
-                        // Truncate f64 latency to u64 for integer comparison
-                        // Safe: latency values are practical millisecond ranges
-                        (latency.round() as u64) <= max_latency
-                    })
-            });
-        }
-
-        primals
-    }
-
-    /// Select the best primal using the given strategy
     fn select_primal(
         &mut self,
         primals: &mut [DiscoveredPrimal],
         context: &RequestContext,
     ) -> Result<(DiscoveredPrimal, String), BearDogError> {
-        if primals.is_empty() {
-            return Err(BearDogError::not_found("No primals available".to_string()));
-        }
-
-        let (index, reason) = match context.strategy {
-            SelectionStrategy::HighestTrust => {
-                let idx = primals
-                    .iter()
-                    .enumerate()
-                    .max_by(|(_, a), (_, b)| {
-                        let a_trust = a.trust_score.unwrap_or(0.0);
-                        let b_trust = b.trust_score.unwrap_or(0.0);
-                        a_trust
-                            .partial_cmp(&b_trust)
-                            .unwrap_or(std::cmp::Ordering::Equal)
-                    })
-                    .map_or(0, |(i, _)| i);
-
-                let trust = primals[idx].trust_score.unwrap_or(0.0);
-                (idx, format!("highest trust score: {trust:.2}"))
-            }
-
-            SelectionStrategy::LeastLoaded => {
-                let idx = primals
-                    .iter()
-                    .enumerate()
-                    .min_by_key(|(_, p)| {
-                        self.load_tracker
-                            .get(&p.name)
-                            .map_or(0, |load| load.active_requests)
-                    })
-                    .map_or(0, |(i, _)| i);
-
-                let load = self
-                    .load_tracker
-                    .get(&primals[idx].name)
-                    .map_or(0, |l| l.active_requests);
-                (idx, format!("least loaded: {load} active requests"))
-            }
-
-            SelectionStrategy::LowestLatency => {
-                let idx = primals
-                    .iter()
-                    .enumerate()
-                    .min_by(|(_, a), (_, b)| {
-                        let a_latency = self
-                            .load_tracker
-                            .get(&a.name)
-                            .and_then(|load| load.avg_latency_ms)
-                            .unwrap_or(f64::MAX);
-                        let b_latency = self
-                            .load_tracker
-                            .get(&b.name)
-                            .and_then(|load| load.avg_latency_ms)
-                            .unwrap_or(f64::MAX);
-                        a_latency
-                            .partial_cmp(&b_latency)
-                            .unwrap_or(std::cmp::Ordering::Equal)
-                    })
-                    .map_or(0, |(i, _)| i);
-
-                let latency = self
-                    .load_tracker
-                    .get(&primals[idx].name)
-                    .and_then(|l| l.avg_latency_ms)
-                    .map_or_else(|| "unknown".to_string(), |lat| format!("{lat:.1}ms"));
-                (idx, format!("lowest latency: {latency}"))
-            }
-
-            SelectionStrategy::RoundRobin => {
-                let counter = self
-                    .rr_counters
-                    .entry(context.capability.clone())
-                    .or_insert(0);
-                let idx = *counter % primals.len();
-                *counter = (*counter + 1) % primals.len();
-                (idx, format!("round-robin (counter: {counter})"))
-            }
-
-            SelectionStrategy::Random => {
-                use std::collections::hash_map::RandomState;
-                use std::hash::BuildHasher;
-
-                let s = RandomState::new();
-                let hash = s.hash_one(Instant::now());
-                // Truncation is fine: we only need a uniform index into a small slice
-                let idx = usize::try_from(hash % primals.len() as u64).unwrap_or(0);
-                (idx, "random selection".to_string())
-            }
-
-            SelectionStrategy::FirstAvailable => (0, "first available".to_string()),
-        };
-
-        let selected = primals[index].clone();
-        Ok((selected, reason))
+        strategy::select_primal(primals, context, &self.load_tracker, &mut self.rr_counters)
     }
 
     /// Record successful request completion (for load tracking)
     pub fn record_success(&mut self, primal_name: &str, latency_ms: f64) {
-        let load = self
-            .load_tracker
-            .entry(primal_name.to_string())
-            .or_insert_with(|| PrimalLoad {
-                active_requests: 0,
-                total_requests: 0,
-                last_request: None,
-                avg_latency_ms: None,
-            });
-
-        load.total_requests += 1;
-        load.last_request = Some(Instant::now());
-
-        // Update rolling average latency
-        load.avg_latency_ms = Some(match load.avg_latency_ms {
-            Some(avg) => avg.mul_add(0.9, latency_ms * 0.1), // Exponential moving average
-            None => latency_ms,
-        });
+        scoring::record_success(&mut self.load_tracker, primal_name, latency_ms);
     }
 
     /// Record request failure (for load tracking)
     pub fn record_failure(&mut self, primal_name: &str) {
-        warn!("Request failed for primal: {}", primal_name);
-        // Could implement backoff/circuit breaker logic here
+        scoring::record_failure(primal_name);
     }
 }
-
-// =============================================================================
-// TESTS
-// =============================================================================
 
 #[cfg(test)]
 mod tests {
@@ -474,14 +171,14 @@ mod tests {
             .with_max_latency(100)
             .with_min_trust(0.8)
             .excluding("untrusted-primal")
-            .with_timeout(Duration::from_secs(10));
+            .with_timeout(std::time::Duration::from_secs(10));
 
         assert_eq!(ctx.capability, SimpleCapability::Cryptography);
         assert_eq!(ctx.strategy, SelectionStrategy::LeastLoaded);
         assert_eq!(ctx.max_latency_ms, Some(100));
         assert_eq!(ctx.min_trust_score, Some(0.8));
         assert_eq!(ctx.exclude_primals, vec!["untrusted-primal"]);
-        assert_eq!(ctx.timeout, Duration::from_secs(10));
+        assert_eq!(ctx.timeout, std::time::Duration::from_secs(10));
     }
 
     #[tokio::test]

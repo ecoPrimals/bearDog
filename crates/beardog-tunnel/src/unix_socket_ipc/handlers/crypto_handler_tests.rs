@@ -24,7 +24,7 @@ fn test_crypto_handler_methods() {
     //   - 9 TLS 1.2 semantic (ecdhe x4, aead x4, tls12_prf)
     //   - 10 genetic (derive_lineage_key, mix_entropy, verify_lineage, generate_lineage_proof, challenge x3, device x3)
     //   - 8 semantic aliases (hash, hmac, sign, verify, encrypt, decrypt, generate_keypair, derive_secret)
-    //   - 10 beardog.crypto.* (Songbird Onion Service)
+    //   - 10 beardog.crypto.* (onion service namespace)
     //   - 2 Tor v3 Phase 1 (crypto.derive_onion_address semantic + beardog.crypto.* alias; generate_onion_identity)
     //   - 6 Tor Phase 2 (ntor_client_init, ntor_client_finish, ntor_server_respond, cell_encrypt, cell_decrypt, tor_kdf)
     assert_eq!(methods.len(), 93);
@@ -82,7 +82,7 @@ fn test_crypto_handler_methods() {
     assert!(methods.contains(&"crypto.generate_keypair"));
     assert!(methods.contains(&"crypto.derive_secret"));
 
-    // Verify beardog.crypto.* namespace (Feb 6, 2026 - Songbird Onion Service)
+    // Verify beardog.crypto.* namespace (onion service methods)
     assert!(methods.contains(&"beardog.crypto.sha3_256"));
     assert!(methods.contains(&"beardog.crypto.ed25519_generate_keypair"));
     assert!(methods.contains(&"beardog.crypto.sign_ed25519"));

@@ -131,7 +131,7 @@ pub fn log_chacha20_poly1305_encrypt(
 /// Diagnostic log for ChaCha20-Poly1305 decryption
 ///
 /// **Origin**: `handlers/crypto/symmetric.rs` lines 213-222
-/// **Purpose**: Cross-verify decryption params with Songbird
+/// **Purpose**: Cross-verify decryption params with the consuming peer
 #[cfg(feature = "diagnostics")]
 pub fn log_chacha20_poly1305_decrypt(
     key: &[u8],

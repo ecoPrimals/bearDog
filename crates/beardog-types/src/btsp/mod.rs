@@ -125,8 +125,8 @@ mod tests {
     fn test_internal_mode_workflow() {
         // Simulate internal mode (primal-to-primal)
         let params = TunnelEstablishParams {
-            peer_id: "songbird-nat0".into(),
-            peer_endpoint: "unix:///tmp/songbird.sock".into(),
+            peer_id: "peer-nat0".into(),
+            peer_endpoint: "unix:///tmp/peer.sock".into(),
             trust_mode: None, // Defaults to genetic lineage
             protocol: None,   // Defaults to btsp_native
         };

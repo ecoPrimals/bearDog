@@ -66,7 +66,7 @@ pub struct UnixSocketIpcServer {
 
     /// Atomic readiness flag for lock-free checks
     /// This allows other components to wait for readiness without filesystem polling
-    /// (Learned from Songbird's implementation - much better than sleep loops!)
+    /// Avoids filesystem polling (readiness flag is a common IPC pattern)
     is_ready: Arc<std::sync::atomic::AtomicBool>,
 }
 
@@ -186,9 +186,10 @@ impl UnixSocketIpcServer {
         #[cfg(unix)]
         remove_capability_domain_symlink_best_effort(&self.socket_path);
 
-        // Remove socket file
         if self.socket_path.exists() {
-            std::fs::remove_file(&self.socket_path).context("Failed to remove socket file")?;
+            tokio::fs::remove_file(&self.socket_path)
+                .await
+                .context("Failed to remove socket file")?;
             info!(path = %self.socket_path.display(), "Removed socket");
         }
 
@@ -239,7 +240,7 @@ impl UnixSocketIpcServer {
         #[cfg(unix)]
         {
             if let Some(symlink_path) = capability_domain_symlink_path(&self.socket_path) {
-                let _ = std::fs::remove_file(&symlink_path);
+                let _ = tokio::fs::remove_file(&symlink_path).await;
                 if let Some(target_name) = self.socket_path.file_name() {
                     if let Err(e) = std::os::unix::fs::symlink(target_name, &symlink_path) {
                         warn!(
