@@ -257,11 +257,9 @@ impl EcosystemIntegrator {
         
         let mut migration_adapters: HashMap<String, Box<dyn MigrationAdapter>> = HashMap::new();
         
-        // Register built-in migration adapters
+        // Register built-in migration adapters (BearDog-owned domains only;
+        // security/storage/network migration belongs to the primals that own those domains).
         migration_adapters.insert("hsm".to_string(), Box::new(HsmMigrationAdapter::new()));
-        migration_adapters.insert("security".to_string(), Box::new(SecurityMigrationAdapter::new()));
-        migration_adapters.insert("storage".to_string(), Box::new(StorageMigrationAdapter::new()));
-        migration_adapters.insert("network".to_string(), Box::new(NetworkMigrationAdapter::new()));
         
         Ok(Self {
             registry,
@@ -574,95 +572,10 @@ impl MigrationAdapter for HsmMigrationAdapter {
     }
 }
 
-/// Security provider migration adapter (placeholder until ecosystem security delegation is wired)
-pub struct SecurityMigrationAdapter;
-
-impl SecurityMigrationAdapter {
-    /// Creates a new security migration adapter.
-    pub fn new() -> Self {
-        Self
-    }
-}
-
-impl MigrationAdapter for SecurityMigrationAdapter {
-    fn discover_providers(&self) -> Result<Vec<DiscoveredProvider>> {
-        Ok(vec![])
-    }
-
-    fn migrate_provider(&self, _discovered: &DiscoveredProvider) -> Result<Arc<dyn ConsolidatedProvider>> {
-        Err(BearDogError::unsupported_operation(
-            "SecurityMigrationAdapter is a placeholder for ecosystem security delegation capability",
-        ))
-    }
-
-    fn adapter_name(&self) -> &str {
-        "Security Migration Adapter"
-    }
-
-    fn supported_types(&self) -> Vec<String> {
-        vec!["security".to_string()]
-    }
-}
-
-/// Storage provider migration adapter (placeholder until consolidated storage migration is wired)
-pub struct StorageMigrationAdapter;
-
-impl StorageMigrationAdapter {
-    /// Creates a new storage migration adapter.
-    pub fn new() -> Self {
-        Self
-    }
-}
-
-impl MigrationAdapter for StorageMigrationAdapter {
-    fn discover_providers(&self) -> Result<Vec<DiscoveredProvider>> {
-        Ok(vec![])
-    }
-
-    fn migrate_provider(&self, _discovered: &DiscoveredProvider) -> Result<Arc<dyn ConsolidatedProvider>> {
-        Err(BearDogError::unsupported_operation(
-            "StorageMigrationAdapter is a placeholder for consolidated storage provider migration capability",
-        ))
-    }
-
-    fn adapter_name(&self) -> &str {
-        "Storage Migration Adapter"
-    }
-
-    fn supported_types(&self) -> Vec<String> {
-        vec!["storage".to_string()]
-    }
-}
-
-/// Network provider migration adapter (placeholder until consolidated network migration is wired)
-pub struct NetworkMigrationAdapter;
-
-impl NetworkMigrationAdapter {
-    /// Creates a new network migration adapter.
-    pub fn new() -> Self {
-        Self
-    }
-}
-
-impl MigrationAdapter for NetworkMigrationAdapter {
-    fn discover_providers(&self) -> Result<Vec<DiscoveredProvider>> {
-        Ok(vec![])
-    }
-
-    fn migrate_provider(&self, _discovered: &DiscoveredProvider) -> Result<Arc<dyn ConsolidatedProvider>> {
-        Err(BearDogError::unsupported_operation(
-            "NetworkMigrationAdapter is a placeholder for consolidated network provider migration capability",
-        ))
-    }
-
-    fn adapter_name(&self) -> &str {
-        "Network Migration Adapter"
-    }
-
-    fn supported_types(&self) -> Vec<String> {
-        vec!["network".to_string()]
-    }
-}
+// Security, storage, and network migration adapters removed — those domains belong
+// to other primals per PRIMAL_RESPONSIBILITY_MATRIX.md v3.0.  BearDog only migrates
+// HSM providers (its own domain).  Cross-primal migration is handled by the primals
+// that own those capabilities, discovered at runtime via capability-based routing.
 
 // All legacy providers have been migrated to the ConsolidatedProvider system
 // Use ConsolidatedProviderRegistry directly for all provider operations

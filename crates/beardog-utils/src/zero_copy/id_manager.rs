@@ -57,7 +57,6 @@ pub fn generate_id() -> String {
     global_id_manager().next_id()
 }
 
-#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;

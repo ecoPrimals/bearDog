@@ -16,7 +16,7 @@ The **scyBorg Provenance Trio** is defined in `wateringHole/SCYBORG_PROVENANCE_T
 
 | Layer | License | Role |
 |-------|---------|------|
-| Software | **AGPL-3.0** (ecosystem often uses `-or-later`; BearDog is **`-only`**) | Code, tools, tests |
+| Software | **AGPL-3.0-or-later** | Code, tools, tests |
 | Game mechanics | **ORC** | Rules, stats, progression where applicable |
 | Docs & creative | **CC-BY-SA 4.0** | Specifications, narrative, guides |
 

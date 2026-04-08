@@ -45,18 +45,16 @@ pub(crate) fn select_cli_hsm_for_preference<'a>(
     }
 }
 
-/// Generate AES-256 key optionally mixed with human entropy seed
+/// Generate AES-256 key optionally mixed with human entropy seed (test-only after v1 removal).
+#[cfg(test)]
 fn generate_aes_key_with_seed(seed_data: Option<&[u8]>) -> Result<Vec<u8>, BearDogError> {
     use aes_gcm::aead::OsRng;
     use aes_gcm::{Aes256Gcm, KeyInit};
     use sha3::{Digest, Sha3_256};
 
-    // Generate system entropy key
     let system_key = Aes256Gcm::generate_key(OsRng);
 
     if let Some(seed) = seed_data {
-        // Mix human entropy with system entropy using SHA3-256
-        // Derived = SHA3-256(system_key || seed || context)
         let mut hasher = Sha3_256::new();
         hasher.update(system_key);
         hasher.update(seed);
@@ -66,156 +64,6 @@ fn generate_aes_key_with_seed(seed_data: Option<&[u8]>) -> Result<Vec<u8>, BearD
     } else {
         Ok(system_key.to_vec())
     }
-}
-
-/// Generate AES-256 key using only system entropy (no human seed)
-#[allow(dead_code)]
-fn generate_aes_key() -> Result<Vec<u8>, BearDogError> {
-    generate_aes_key_with_seed(None)
-}
-
-/// Handle key generation command
-///
-/// # Errors
-///
-/// Returns an error if HSM discovery or selection fails, the entropy seed cannot be read, key
-/// material generation fails, the key or receipt cannot be saved, or I/O fails.
-#[allow(
-    dead_code,
-    reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
-)]
-pub async fn handle_key_generate(
-    key_id: &str,
-    algorithm: &str,
-    hsm_preference: &str,
-    seed_path: Option<&str>,
-) -> Result<(), BearDogError> {
-    println!("🔑 BearDog Key Generation");
-    println!("========================");
-    println!();
-
-    // Parse algorithm (vendor-agnostic algorithm names)
-    println!("📋 Configuration:");
-    println!("   Key ID: {key_id}");
-    println!("   Algorithm: {algorithm}");
-    println!("   HSM Preference: {hsm_preference}");
-    if let Some(seed) = seed_path {
-        println!("   Entropy Seed: {seed}");
-    }
-    println!();
-
-    // Discover and select HSM (vendor-agnostic)
-    println!("🔍 Discovering HSMs...");
-    let hsms = discover_hsms_agnostic().await?;
-
-    if hsms.is_empty() {
-        return Err(BearDogError::not_found(
-            "No HSMs found. Please connect hardware or install a PKCS#11 provider.".to_string(),
-        ));
-    }
-
-    let selected_hsm = select_cli_hsm_for_preference(&hsms, hsm_preference)?;
-
-    println!("✅ Selected HSM: {}", selected_hsm.name);
-    println!("   Tier: {}", selected_hsm.tier);
-    println!();
-
-    // Load entropy seed if provided
-    let seed_data = if let Some(seed_path) = seed_path {
-        println!("🌱 Loading entropy seed...");
-        let seed_content = fs::read_to_string(seed_path)?;
-        println!("✅ Entropy seed loaded ({} bytes)", seed_content.len());
-        println!("   Seed will be mixed with system entropy for key derivation");
-        println!();
-        Some(seed_content.into_bytes())
-    } else {
-        None
-    };
-
-    // Generate key (implementation-agnostic)
-    println!("🔐 Generating {algorithm} key...");
-
-    // For now, use simplified key generation
-    // Will wire to HsmManager in next iteration
-    println!("⚙️  Creating key with selected HSM...");
-
-    // Generate AES-256-GCM key material, optionally mixed with human entropy
-    // NOTE: In production, this should be generated/stored in the HSM
-    let key_material = generate_aes_key_with_seed(seed_data.as_deref())?;
-
-    // Save key to storage
-    let stored_key = StoredKey {
-        key_id: key_id.to_string(),
-        algorithm: algorithm.to_string(),
-        hsm_name: selected_hsm.name.clone(),
-        created_at: Utc::now().to_rfc3339(),
-        key_material_b64: key_store::base64_encode(&key_material),
-        generation: 0, // Root key
-        parent_key_id: None,
-        derivation_purpose: None,
-        children: Vec::new(),
-        lineage: Some(key_store::KeyLineageInfo {
-            parent_key_id: None,
-            depth: 0,
-        }),
-        expires_at: None,
-        usage: None,
-        purpose: None,
-    };
-
-    key_store::save_key(&stored_key)?;
-
-    // Generate operation receipt
-    use beardog_types::receipt::{HsmInfo, KeyInfo, OperationReceipt, generate_receipt_filename};
-    use serde_json::json;
-
-    let receipt = OperationReceipt::new("key-generate")
-        .with_key_info(KeyInfo {
-            key_id: key_id.to_string(),
-            algorithm: algorithm.to_string(),
-            generation: 0,
-            parent_key_id: None,
-            expires_at: None,
-            usage: None,
-            purpose: None,
-        })
-        .with_hsm_info(HsmInfo {
-            name: selected_hsm.name.clone(),
-            vendor: Some(selected_hsm.vendor.clone()),
-            model: Some(selected_hsm.model.clone()),
-            hsm_type: Some(selected_hsm.hsm_type.clone()),
-        })
-        .with_metadata(
-            "entropy_source",
-            json!(if seed_data.is_some() {
-                "human"
-            } else {
-                "system"
-            }),
-        );
-
-    // Save receipt to receipts directory
-    let receipt_dir = std::path::Path::new("receipts");
-    std::fs::create_dir_all(receipt_dir)?;
-    let receipt_path = receipt_dir.join(generate_receipt_filename("key-generate"));
-    receipt.save_to_file(&receipt_path)?;
-
-    println!("✅ Key generated successfully!");
-    println!();
-    println!("📋 Key Details:");
-    println!("   ID: {key_id}");
-    println!("   Algorithm: {algorithm}");
-    println!("   HSM: {}", selected_hsm.name);
-    println!("   Status: Active");
-    println!();
-    println!("📜 Receipt: {}", receipt_path.display());
-    println!("   Receipt ID: {}", receipt.receipt_id);
-    println!();
-    println!("💡 Next steps:");
-    println!("   • List keys: beardog key list");
-    println!("   • Encrypt: beardog encrypt --key {key_id} --input data.txt --output data.enc");
-
-    Ok(())
 }
 
 /// Handle key generate with KDF and restrictions (v2)
@@ -505,12 +353,6 @@ mod generate_tests {
         assert_eq!(a.len(), 32);
         assert_eq!(b.len(), 32);
         assert_ne!(a, b);
-    }
-
-    #[test]
-    fn test_generate_aes_key_legacy_alias() {
-        let k = generate_aes_key().expect("generate_aes_key legacy alias");
-        assert_eq!(k.len(), 32);
     }
 
     #[test]

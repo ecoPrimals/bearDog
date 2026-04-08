@@ -4,9 +4,13 @@
 //!
 //! Provides self-description and identity endpoints for service discovery.
 //! Every primal should expose these methods to enable capability-based discovery.
+//!
+//! Implements Wire Standard Level 2 per `CAPABILITY_WIRE_STANDARD.md`:
+//! - `capabilities.list` returns `{primal, version, methods, provided_capabilities}`
+//! - `identity.get` returns `{primal, version, domain, license}`
 
-use super::MethodHandler;
 use super::utils::{IdentityHints, get_primal_name_with};
+use super::{HandlerRegistry, MethodHandler};
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
 use beardog_types::primal_identity::PrimalIdentity;
@@ -17,24 +21,26 @@ use tracing::info;
 ///
 /// ## Canonical Methods (use these)
 ///
-/// - `capabilities.list` — list all provided capabilities
+/// - `capabilities.list` — list all provided capabilities (Wire Standard L2)
 /// - `capability.list` — alias of `capabilities.list`
-/// - `primal.capabilities` — alias of `capabilities.list`
+/// - `identity.get` — primal self-identification (Wire Standard L2)
 /// - `discover_capabilities` — detailed capability discovery with metadata
 ///
 /// ## Deprecated Flat Aliases (will be removed in v1.0)
 ///
 /// - `capabilities` — use `capabilities.list`
 /// - `get_capabilities` — use `capabilities.list`
-/// - `identity` — use a canonical `identity.*` method when available
-/// - `whoami` — use a canonical `identity.*` method when available
-/// - `get_identity` — use a canonical `identity.*` method when available
+/// - `primal.capabilities` — use `capabilities.list`
+/// - `identity` — use `identity.get`
+/// - `whoami` — use `identity.get`
+/// - `get_identity` — use `identity.get`
 ///
 /// All responses include genetic lineage (`family_id`, `node_id`) discovered
 /// from environment variables at runtime (no hardcoding).
 pub struct CapabilitiesHandler {
     identity: Arc<PrimalIdentity>,
     primal_hints: IdentityHints,
+    registry: Arc<HandlerRegistry>,
 }
 
 #[async_trait]
@@ -48,6 +54,7 @@ impl MethodHandler for CapabilitiesHandler {
             "capability.list",
             "primal.capabilities",
             "identity",
+            "identity.get",
             "whoami",
             "get_identity",
         ]
@@ -60,13 +67,14 @@ impl MethodHandler for CapabilitiesHandler {
         _btsp_provider: &Arc<BeardogBtspProvider>,
     ) -> Result<serde_json::Value, String> {
         match method {
-            // Canonical
             "capabilities.list" | "capability.list" | "primal.capabilities" => {
                 self.handle_capabilities().await
             }
             // Deprecated flat aliases — remove in v1.0
             "capabilities" | "get_capabilities" => self.handle_capabilities().await,
             "discover_capabilities" => self.handle_discover_capabilities().await,
+            // Wire Standard L2: canonical identity endpoint
+            "identity.get" => self.handle_identity_get().await,
             // Deprecated flat aliases — remove in v1.0
             "identity" | "whoami" | "get_identity" => self.handle_identity().await,
             _ => Err(format!("Method not found: {method}")),
@@ -75,35 +83,68 @@ impl MethodHandler for CapabilitiesHandler {
 }
 
 impl CapabilitiesHandler {
-    /// Create a new `CapabilitiesHandler` with explicit identity injection
-    pub fn new(identity: Arc<PrimalIdentity>) -> Self {
+    /// Create a new `CapabilitiesHandler` with registry access for method enumeration.
+    ///
+    /// The registry reference enables the flat `methods` array in `capabilities.list`
+    /// responses per `CAPABILITY_WIRE_STANDARD.md` Level 2.
+    pub fn new(identity: Arc<PrimalIdentity>, registry: Arc<HandlerRegistry>) -> Self {
         Self {
             identity,
             primal_hints: IdentityHints::from_env(),
+            registry,
         }
     }
 
     /// Tests / DI: explicit primal name hints (no `PRIMAL_NAME` env mutation).
-    pub fn with_hints(identity: Arc<PrimalIdentity>, primal_hints: IdentityHints) -> Self {
+    pub fn with_hints(
+        identity: Arc<PrimalIdentity>,
+        primal_hints: IdentityHints,
+        registry: Arc<HandlerRegistry>,
+    ) -> Self {
         Self {
             identity,
             primal_hints,
+            registry,
         }
     }
 
-    /// Handle capabilities request
+    /// Collect the flat, fully-qualified method list from the handler registry.
     ///
-    /// Returns a comprehensive list of all capabilities provided by `BearDog`,
-    /// including crypto, security, BTSP, graph security, and JWT generation.
+    /// Filters to `domain.operation` dotted names only (excludes deprecated flat
+    /// aliases like `"capabilities"` or `"get_identity"`). This is the primary
+    /// routing signal for biomeOS per `CAPABILITY_WIRE_STANDARD.md`.
+    async fn wire_standard_methods(&self) -> Vec<String> {
+        self.registry
+            .all_methods()
+            .await
+            .into_iter()
+            .filter(|m| m.contains('.'))
+            .collect()
+    }
+
+    /// Handle `capabilities.list` — Wire Standard Level 2 response.
+    ///
+    /// Returns `{primal, version, methods, provided_capabilities, ...}`.
+    /// The `methods` flat array is the primary routing signal for biomeOS.
+    /// The `provided_capabilities` grouping is retained for structured routing.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error string if method enumeration fails.
     async fn handle_capabilities(&self) -> Result<serde_json::Value, String> {
-        // Use injected identity (no environment variables!)
         let family_id = self.identity.family_id();
         let node_id = self.identity.node_id();
+        let methods = self.wire_standard_methods().await;
 
-        info!("🎯 Capabilities requested - exposing our capabilities");
+        info!(
+            "Capabilities requested — {} methods advertised",
+            methods.len()
+        );
 
         Ok(serde_json::json!({
             "primal": get_primal_name_with(&self.primal_hints),
+            "version": env!("CARGO_PKG_VERSION"),
+            "methods": methods,
             "family_id": family_id,
             "node_id": node_id,
             "provided_capabilities": [
@@ -173,7 +214,6 @@ impl CapabilitiesHandler {
                     "description": "Relay authorization - lineage-gated access control for relay-assisted coordinated punch"
                 }
             ],
-            "version": env!("CARGO_PKG_VERSION"),
             "protocols": ["tarpc", "json-rpc", "http"],
             "wire_format": "ndjson",
             "btsp_enabled": true,
@@ -207,20 +247,31 @@ impl CapabilitiesHandler {
         }))
     }
 
-    /// Handle identity request
+    /// Handle `identity.get` — Wire Standard Level 2 identity endpoint.
+    ///
+    /// Returns `{primal, version, domain, license}` per `CAPABILITY_WIRE_STANDARD.md` §4.
+    async fn handle_identity_get(&self) -> Result<serde_json::Value, String> {
+        info!("identity.get requested (Wire Standard L2)");
+
+        Ok(serde_json::json!({
+            "primal": get_primal_name_with(&self.primal_hints),
+            "version": env!("CARGO_PKG_VERSION"),
+            "domain": "crypto",
+            "license": "AGPL-3.0-or-later",
+        }))
+    }
+
+    /// Handle legacy identity request (deprecated — use `identity.get`).
     ///
     /// Returns the primal's identity including family and node IDs,
     /// plus an encryption tag for discovery/federation.
     async fn handle_identity(&self) -> Result<serde_json::Value, String> {
-        // Use injected identity (no environment variables!)
         let family_id = self.identity.family_id();
         let node_id = self.identity.node_id();
-
-        // Generate encryption tag using identity helper
         let encryption_tag = self.identity.encryption_tag();
 
         info!(
-            "🆔 Identity requested - family: {}, node: {}, encryption_tag: {}",
+            "Identity requested (legacy) — family: {}, node: {}, encryption_tag: {}",
             family_id, node_id, encryption_tag
         );
 
@@ -246,13 +297,18 @@ mod tests {
         }
     }
 
+    fn test_handler() -> CapabilitiesHandler {
+        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
+        let registry = HandlerRegistry::default();
+        CapabilitiesHandler::with_hints(identity, test_hints(), registry)
+    }
+
     #[tokio::test]
     async fn test_capabilities_handler_methods() {
-        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
-        let handler = CapabilitiesHandler::with_hints(identity, test_hints());
+        let handler = test_handler();
         let methods = handler.methods();
 
-        assert_eq!(methods.len(), 9);
+        assert_eq!(methods.len(), 10);
         assert!(methods.contains(&"capabilities"));
         assert!(methods.contains(&"get_capabilities"));
         assert!(methods.contains(&"discover_capabilities"));
@@ -260,22 +316,25 @@ mod tests {
         assert!(methods.contains(&"capability.list"));
         assert!(methods.contains(&"primal.capabilities"));
         assert!(methods.contains(&"identity"));
+        assert!(methods.contains(&"identity.get"));
         assert!(methods.contains(&"whoami"));
         assert!(methods.contains(&"get_identity"));
     }
 
     #[tokio::test]
-    async fn test_capabilities_response() {
-        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
-        let handler = CapabilitiesHandler::with_hints(identity, test_hints());
+    async fn test_capabilities_response_has_methods_array() {
+        let handler = test_handler();
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
-        let result = handler.handle("capabilities", None, &btsp_provider).await;
+        let result = handler
+            .handle("capabilities.list", None, &btsp_provider)
+            .await;
 
         assert!(result.is_ok());
         let response = result.expect("capabilities handler in test");
 
         assert_eq!(response["primal"], "beardog");
+        assert!(response["version"].is_string());
         assert!(response["provided_capabilities"].is_array());
         assert!(response["family_id"].is_string());
         assert!(response["node_id"].is_string());
@@ -284,12 +343,47 @@ mod tests {
                 .as_bool()
                 .expect("btsp_enabled should be bool in test")
         );
+
+        let methods = response["methods"]
+            .as_array()
+            .expect("Wire Standard L2: capabilities.list must include flat methods array");
+        assert!(!methods.is_empty(), "methods array must not be empty");
+
+        let method_strs: Vec<&str> = methods
+            .iter()
+            .map(|v| v.as_str().expect("method entry should be string in test"))
+            .collect();
+
+        assert!(
+            method_strs.iter().all(|m| m.contains('.')),
+            "all methods must be fully-qualified dotted names"
+        );
+        assert!(method_strs.contains(&"crypto.blake3_hash"));
+        assert!(method_strs.contains(&"crypto.sign_ed25519"));
+        assert!(method_strs.contains(&"health.liveness"));
+        assert!(method_strs.contains(&"capabilities.list"));
+        assert!(method_strs.contains(&"identity.get"));
     }
 
     #[tokio::test]
-    async fn test_identity_response() {
-        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
-        let handler = CapabilitiesHandler::with_hints(identity, test_hints());
+    async fn test_identity_get_wire_standard() {
+        let handler = test_handler();
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        let result = handler.handle("identity.get", None, &btsp_provider).await;
+
+        assert!(result.is_ok());
+        let response = result.expect("identity.get handler in test");
+
+        assert_eq!(response["primal"], "beardog");
+        assert!(response["version"].is_string());
+        assert_eq!(response["domain"], "crypto");
+        assert_eq!(response["license"], "AGPL-3.0-or-later");
+    }
+
+    #[tokio::test]
+    async fn test_legacy_identity_response() {
+        let handler = test_handler();
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         let result = handler.handle("identity", None, &btsp_provider).await;
@@ -305,8 +399,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_discover_capabilities_response() {
-        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
-        let handler = CapabilitiesHandler::with_hints(identity, test_hints());
+        let handler = test_handler();
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         let result = handler
@@ -316,13 +409,11 @@ mod tests {
         assert!(result.is_ok());
         let response = result.expect("capabilities handler in test");
 
-        // Must have flat capabilities array
         let caps = response["capabilities"]
             .as_array()
             .expect("capabilities should be array in test");
         assert!(caps.len() >= 12, "Expected at least 12 capabilities");
 
-        // Verify required capabilities per ecoBin v2.0
         let cap_strs: Vec<&str> = caps
             .iter()
             .map(|v| {
@@ -344,8 +435,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_all_capability_aliases() {
-        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
-        let handler = CapabilitiesHandler::with_hints(identity, test_hints());
+        let handler = test_handler();
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         for method in &[
@@ -362,11 +452,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_all_identity_aliases() {
-        let identity = Arc::new(PrimalIdentity::for_test("test-family", "test-node"));
-        let handler = CapabilitiesHandler::with_hints(identity, test_hints());
+        let handler = test_handler();
         let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
-        for method in &["identity", "whoami", "get_identity"] {
+        for method in &["identity", "identity.get", "whoami", "get_identity"] {
             let result = handler.handle(method, None, &btsp_provider).await;
             assert!(result.is_ok(), "Method {} should succeed", method);
         }

@@ -188,7 +188,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     }
 
     // Best-effort orchestrator registry registration (non-fatal per PRIMAL IPC Protocol v3.1)
-    attempt_registry_registration(&socket_path, tcp_addr.as_deref()).await;
+    attempt_orchestrator_registration(&socket_path, tcp_addr.as_deref()).await;
 
     // Start all transports (runs until Ctrl+C)
     server.start_all().await?;
@@ -196,13 +196,15 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     Ok(())
 }
 
-/// Best-effort registration with the ecosystem IPC registry (non-fatal).
+/// Best-effort registration with the ecosystem's IPC registry (non-fatal).
 ///
-/// Attempts to connect to whatever orchestrator registry is discoverable
-/// and register `BearDog`'s capabilities. Failure is logged and swallowed
-/// per PRIMAL IPC Protocol v3.1: registration SHOULD be attempted but
-/// MUST NOT prevent standalone operation.
-async fn attempt_registry_registration(_socket_path: &str, _tcp_addr: Option<&str>) {
+/// Attempts to connect to whatever orchestrator provides the registry capability
+/// and register `BearDog`'s capabilities. The caller never knows which primal
+/// provides the registry — capability-based discovery handles routing.
+///
+/// Failure is logged and swallowed per PRIMAL IPC Protocol v3.1:
+/// registration SHOULD be attempted but MUST NOT prevent standalone operation.
+async fn attempt_orchestrator_registration(_socket_path: &str, _tcp_addr: Option<&str>) {
     use beardog_ipc::{Capability, OrchestratorRegistryClient};
 
     let Ok(client) = OrchestratorRegistryClient::connect().await else {

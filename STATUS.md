@@ -1,6 +1,6 @@
 # BearDog Status
 
-**Last Updated**: April 7, 2026
+**Last Updated**: April 8, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -86,7 +86,23 @@
 
 ## Recent Improvements
 
-### Wave 29: primalSpring Audit Execution — BD-01 Encoding Hint, Sovereignty Sweep, Smart Refactoring & Debt Cleanup (April 7, 2026)
+### Wave 30: Deep Debt Sweep — Production Stub Removal, Self-Knowledge, Lint Cleanup (April 8, 2026)
+
+- **Self-knowledge violations fixed** — `attempt_songbird_registration` → `attempt_orchestrator_registration`; `ToadStool` reference removed from key_export docs
+- **Dead code removed** — `DatabaseStorageBackend` (all-error stub), `handle_key_generate` v1 (dead code), Security/Storage/Network `MigrationAdapter`s (domain overstep)
+- **Stub evolution** — `PerformanceOptimizer` in types: no-op methods removed, documented as config holder; `effectiveness_score` hardcoded floats → named constants with rationale
+- **Discovery honesty** — 6 HSM discoverer stubs: `warn!` → `info!` with accurate messages
+- **Lint cleanup** — 35 blanket `#[allow(unused_imports, dead_code)]` removed from beardog-utils test modules
+- **Wire Standard L2 handoff** — `CAPABILITY_WIRE_STANDARD.md` updated: BearDog L2 → ✓
+
+### Wave 29b: Wire Standard Level 2 — `methods` Array, `identity.get` (April 7, 2026)
+
+- **`capabilities.list` upgraded** — Flat `methods` array alongside `provided_capabilities`; dynamically from `HandlerRegistry::all_methods()`
+- **`identity.get` implemented** — Returns `{primal: "beardog", version, domain: "crypto", license: "AGPL-3.0-or-later"}`
+- **Two-phase registry** — `CapabilitiesHandler` moved to Phase 2 for `Arc<HandlerRegistry>` access
+- **License fix** — `SCYBORG_EXCEPTION_PROTOCOL.md` AGPL-3.0-only → -or-later
+
+### Wave 29a: primalSpring Audit Execution — BD-01 Encoding Hint, Sovereignty Sweep, Smart Refactoring & Debt Cleanup (April 7, 2026)
 
 - **BD-01 resolved** — `crypto.verify_ed25519` now accepts optional `encoding` hint per `ATTESTATION_ENCODING_STANDARD.md` v2.0 (supports base64, hex, base64url, utf8, none); backwards-compatible (default: base64); 7 new encoding tests
 - **Sovereignty sweep** — Removed 50+ hardcoded primal names (Songbird, NestGate, ToadStool, Squirrel) from production doc comments, test fixtures, and e2e tests; all replaced with capability-based, primal-agnostic language

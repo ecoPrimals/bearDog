@@ -232,9 +232,6 @@ impl ProductionEcosystem {
         // Start health checks
         self.health_checker.start_health_monitoring()?;
 
-        // Initialize performance optimization
-        self.optimizer.initialize_optimizations()?;
-
         // Start metrics collection
         self.metrics_collector.start_collection()?;
 
@@ -310,11 +307,6 @@ impl ProductionEcosystem {
 
         // Update state
         self.state.cpu_usage_percent = current_metrics.cpu_usage_percent;
-
-        // Trigger optimization if enabled
-        if self.config.core.flags.enable_auto_scaling {
-            self.optimizer.evaluate_scaling_needs(&self.state)?;
-        }
 
         Ok(())
     }

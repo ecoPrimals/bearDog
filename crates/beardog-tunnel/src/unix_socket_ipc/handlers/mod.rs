@@ -151,52 +151,42 @@ impl HandlerRegistry {
     /// would be if lock acquisition fails during construction, which should never
     /// happen since we hold the only reference at that point.
     pub fn new(identity: Arc<beardog_types::primal_identity::PrimalIdentity>) -> Arc<Self> {
-        // DEEP DEBT FIX (Feb 4, 2026): Two-phase construction for IntrospectionHandler
-        //
-        // IntrospectionHandler needs a reference to the registry to list available methods.
-        // We solve this with two phases:
-        // 1. Create registry with all handlers except introspection
-        // 2. Create introspection handler with registry reference, then add it
+        // Two-phase construction: handlers that need a back-reference to the
+        // registry (CapabilitiesHandler, IntrospectionHandler) are added in Phase 2.
 
-        // Phase 1: Create registry with initial handlers
+        // Phase 1: handlers that do NOT need registry access
         let registry = Arc::new(Self {
             handlers: tokio::sync::RwLock::new(vec![
                 Arc::new(health::HealthHandler::new()),
-                Arc::new(capabilities::CapabilitiesHandler::new(identity.clone())),
                 Arc::new(security::SecurityHandler::new(identity.clone())),
                 Arc::new(btsp::BtspHandler),
                 Arc::new(crypto_handler::CryptoHandler),
                 Arc::new(federation::FederationHandler::new(identity.clone())),
                 Arc::new(encryption::EncryptionHandler),
                 Arc::new(graph_security::GraphSecurityHandler),
-                // Dark Forest Beacon Genetics (Phase 1 - Feb 2026)
                 Arc::new(beacon::BeaconHandler::new()),
-                // Secret Storage (Feb 2026 - Evolution)
                 Arc::new(secrets::SecretsHandler::new(identity.clone())),
-                // Relay Authorization (Feb 2026 - Coordinated Punch)
-                Arc::new(relay::RelayHandler::new(identity)),
+                Arc::new(relay::RelayHandler::new(identity.clone())),
             ]),
         });
 
-        // Phase 2: Add introspection handler that references registry
-        // Note: This creates an Arc cycle (registry -> introspection -> Arc<registry>)
-        // which is intentional - introspection needs to list all methods including itself
+        // Phase 2: handlers that need registry access for method enumeration.
+        // Creates intentional Arc cycles — these handlers call registry.all_methods().
+        let capabilities_handler = Arc::new(capabilities::CapabilitiesHandler::new(
+            identity,
+            registry.clone(),
+        ));
         let introspection = Arc::new(introspection::IntrospectionHandler::new(registry.clone()));
 
-        // PANIC SAFETY: try_write() with graceful fallback
-        // This should always succeed since we just created the registry and
-        // the only other reference (introspection) hasn't escaped this function yet.
-        // If it somehow fails, we log an error but don't panic.
         match registry.handlers.try_write() {
             Ok(mut handlers) => {
+                handlers.push(capabilities_handler);
                 handlers.push(introspection);
             }
             Err(_) => {
-                // This should never happen, but if it does, log and continue
-                // The registry will work but introspection methods won't be available
                 tracing::error!(
                     "UNEXPECTED: Failed to acquire write lock during HandlerRegistry initialization. \
-                     Introspection handler will not be available. This is a bug."
+                     Capabilities and introspection handlers will not be available. This is a bug."
                 );
             }
         }

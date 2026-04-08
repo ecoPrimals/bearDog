@@ -21,44 +21,31 @@ pub struct OptimizationConfig {
     pub optimization_interval_seconds: u64,
 }
 
-/// Placeholder optimizer handle; hooks accept [`OptimizationConfig`] for future engines.
+/// Configuration holder for the `beardog-types` production ecosystem struct.
+///
+/// This is a structural component in the types layer. Real optimization
+/// behaviour lives in `beardog-core::zero_knowledge_bootstrap::PerformanceOptimizer`
+/// and `beardog-core::ecosystem_integration::EcosystemPerformanceOptimizer`.
 #[derive(Debug)]
 pub struct PerformanceOptimizer {
-    _config: OptimizationConfig,
+    config: OptimizationConfig,
 }
 
 impl PerformanceOptimizer {
-    /// New
-    /// Creates a new instance
+    /// Wrap an [`OptimizationConfig`] for the production ecosystem struct.
     ///
     /// # Errors
     ///
-    /// This function currently always returns `Ok`.
+    /// Reserved for future config validation; currently infallible.
     pub fn new(config: &OptimizationConfig) -> Result<Self, BearDogError> {
         Ok(Self {
-            _config: config.clone(),
+            config: config.clone(),
         })
     }
 
-    /// Initialize Optimizations
-    /// Initializes `componentialize_optimizations`
-    ///
-    /// # Errors
-    ///
-    /// This function currently always returns `Ok`.
-    pub fn initialize_optimizations(&mut self) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    /// Evaluate Scaling Needs
-    ///
-    /// # Errors
-    ///
-    /// Never returns an error; reserved for future scaling analysis.
-    pub const fn evaluate_scaling_needs(
-        &self,
-        _state: &super::ProductionState,
-    ) -> Result<(), BearDogError> {
-        Ok(())
+    /// Access the underlying optimization config.
+    #[must_use]
+    pub const fn config(&self) -> &OptimizationConfig {
+        &self.config
     }
 }

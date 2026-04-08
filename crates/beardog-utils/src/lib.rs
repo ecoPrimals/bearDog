@@ -121,26 +121,20 @@ pub use utils::*;
 pub use zero_copy_safe::*;
 
 // Test modules
-#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests;
 
-#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 #[path = "tests/ultimate_safety_comprehensive.rs"]
 mod ultimate_safety_comprehensive_tests;
 
-#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod performance_optimizations_tests;
-#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 #[path = "tests/ultimate_performance_comprehensive.rs"]
 mod ultimate_performance_comprehensive_tests;
-#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod ultimate_performance_tests;
-#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod ultimate_safety_tests;
 

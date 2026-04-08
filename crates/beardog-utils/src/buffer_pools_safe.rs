@@ -112,7 +112,6 @@ impl Default for SafeBufferPool {
     }
 }
 
-#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 #[allow(clippy::unwrap_used)] // Tests are allowed to use unwrap for assertions
 mod tests {

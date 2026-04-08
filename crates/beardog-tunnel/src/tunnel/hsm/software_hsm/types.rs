@@ -467,64 +467,6 @@ impl StorageBackendTrait for FileStorageBackend {
     }
 }
 
-/// Database storage backend (placeholder)
-pub struct DatabaseStorageBackend;
-
-impl DatabaseStorageBackend {
-    /// # Errors
-    ///
-    /// Returns an error if encryption fails.
-    /// Create new database storage backend
-    pub async fn new(_config: &KeyStoreConfig) -> Result<Self, BearDogError> {
-        Ok(Self)
-    }
-}
-
-#[async_trait::async_trait]
-impl StorageBackendTrait for DatabaseStorageBackend {
-    async fn initialize(&self) -> Result<(), BearDogError> {
-        Err(BearDogError::unsupported_operation(
-            "DatabaseStorageBackend not yet implemented".to_string(),
-        ))
-    }
-
-    async fn store(&self, _key_id: &str, _encrypted_key: &[u8]) -> Result<(), BearDogError> {
-        Err(BearDogError::unsupported_operation(
-            "DatabaseStorageBackend not yet implemented".to_string(),
-        ))
-    }
-
-    async fn retrieve(&self, _key_id: &str) -> Result<Vec<u8>, BearDogError> {
-        Err(BearDogError::unsupported_operation(
-            "DatabaseStorageBackend not yet implemented".to_string(),
-        ))
-    }
-
-    async fn delete(&self, _key_id: &str) -> Result<(), BearDogError> {
-        Err(BearDogError::unsupported_operation(
-            "DatabaseStorageBackend not yet implemented".to_string(),
-        ))
-    }
-
-    async fn list_keys(&self) -> Result<Vec<String>, BearDogError> {
-        Err(BearDogError::unsupported_operation(
-            "DatabaseStorageBackend not yet implemented".to_string(),
-        ))
-    }
-
-    async fn backup(&self) -> Result<Vec<u8>, BearDogError> {
-        Err(BearDogError::unsupported_operation(
-            "DatabaseStorageBackend not yet implemented".to_string(),
-        ))
-    }
-
-    async fn restore(&self, _backup_data: &[u8]) -> Result<(), BearDogError> {
-        Err(BearDogError::unsupported_operation(
-            "DatabaseStorageBackend not yet implemented".to_string(),
-        ))
-    }
-}
-
 /// [`beardog_types::hsm::InMemoryStorageBackend`] is a zero-sized marker; this trait
 /// implementation intentionally does not retain keys: `store` is a no-op and `retrieve`
 /// always reports not-found, matching the type’s ephemeral semantics used where persistence

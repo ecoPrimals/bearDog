@@ -425,16 +425,27 @@ impl SymbioticCoordination {
         }
     }
     
-    /// Get the effectiveness score for this coordination model
+    /// Baseline effectiveness score for each coordination model.
+    ///
+    /// Scores reflect design-time expectations: contextual routing adapts to
+    /// workload shape (highest), collaborative benefits from multi-node consensus,
+    /// distributed provides uniform load balance, emergent is flexible, and
+    /// rotational is the simplest (lowest).  Real runtime scores should be
+    /// derived from observed metrics via a `PerformanceTracker`.
+    #[must_use]
     pub fn effectiveness_score(&self) -> f64 {
-        // This would be calculated based on performance metrics
-        // Placeholder implementation
+        const DISTRIBUTED_BASELINE: f64 = 0.85;
+        const ROTATIONAL_BASELINE: f64 = 0.75;
+        const CONTEXTUAL_BASELINE: f64 = 0.90;
+        const COLLABORATIVE_BASELINE: f64 = 0.88;
+        const EMERGENT_BASELINE: f64 = 0.82;
+
         match self {
-            SymbioticCoordination::Distributed { .. } => 0.85,
-            SymbioticCoordination::Rotational { .. } => 0.75,
-            SymbioticCoordination::Contextual { .. } => 0.90,
-            SymbioticCoordination::Collaborative { .. } => 0.88,
-            SymbioticCoordination::Emergent { .. } => 0.82,
+            Self::Distributed { .. } => DISTRIBUTED_BASELINE,
+            Self::Rotational { .. } => ROTATIONAL_BASELINE,
+            Self::Contextual { .. } => CONTEXTUAL_BASELINE,
+            Self::Collaborative { .. } => COLLABORATIVE_BASELINE,
+            Self::Emergent { .. } => EMERGENT_BASELINE,
         }
     }
 } 

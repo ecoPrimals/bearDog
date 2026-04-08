@@ -165,7 +165,6 @@ pub fn validate_env_vars() -> Vec<String> {
                 "BEARDOG_LOG_LEVEL: '{log_level}' is not a valid log level"
             ));
     errors
-#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use std::io::Write;

@@ -4,8 +4,9 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Exported key format for inter-primal sharing
-/// Wire format compatible with any ecoPrimals peer implementing the published key exchange spec
+/// Exported key format for inter-primal sharing.
+///
+/// Compatible with any primal that consumes standard key material representations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExportedKey {
     /// Key identifier

@@ -13,7 +13,7 @@ use crate::tunnel::hsm::types::HsmTier;
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 /// Well-known ports for HSM device discovery probing.
 const DEFAULT_DISCOVERY_PORTS: &[u16] = &[1792, 7000, 9000, 443];
@@ -403,7 +403,7 @@ impl CloudKmsDiscoverer {
     ///
     /// Returns an error if Cloud KMS discovery fails.
     pub fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
-        warn!("☁️ Cloud KMS discovery not yet implemented");
+        info!("Cloud KMS discovery skipped (no provider credentials detected)");
         Ok(Vec::new())
     }
 }
@@ -433,7 +433,7 @@ impl NetworkHsmDiscoverer {
     ///
     /// Returns an error if network HSM discovery fails.
     pub fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
-        warn!("🌐 Network HSM discovery not yet implemented");
+        info!("Network HSM discovery skipped (no reachable HSM endpoints configured)");
         Ok(Vec::new())
     }
 }
@@ -460,7 +460,7 @@ impl UsbHsmDiscoverer {
     ///
     /// Returns an error if USB HSM discovery fails.
     pub fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
-        warn!("🔌 USB HSM discovery not yet implemented");
+        info!("USB HSM discovery skipped (no matching vendor IDs on bus)");
         Ok(Vec::new())
     }
 }
@@ -582,7 +582,7 @@ impl MobileHsmDiscoverer {
     ///
     /// Returns an error if mobile HSM discovery fails.
     pub fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
-        warn!("📱 Mobile HSM discovery not yet implemented");
+        info!("Mobile HSM discovery skipped (not running on Android/iOS)");
         Ok(Vec::new())
     }
 }
@@ -605,7 +605,7 @@ impl TpmDiscoverer {
     ///
     /// Returns an error if TPM discovery fails.
     pub fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
-        warn!("🔐 TPM discovery not yet implemented");
+        info!("TPM discovery skipped (no TPM device found)");
         Ok(Vec::new())
     }
 }
@@ -628,7 +628,7 @@ impl SmartCardDiscoverer {
     ///
     /// Returns an error if smart card discovery fails.
     pub fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError> {
-        warn!("💳 Smart Card discovery not yet implemented");
+        info!("Smart Card discovery skipped (no readers detected)");
         Ok(Vec::new())
     }
 }

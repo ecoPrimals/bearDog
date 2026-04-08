@@ -17,7 +17,6 @@ mod optimizer;
 pub mod safe_utils;
 mod advanced;
 
-#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests;
 

@@ -62,7 +62,6 @@ pub mod predictor;
 /// Shared structs and enums for the AI optimization pipeline.
 pub mod types;
 
-#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests_comprehensive;
 

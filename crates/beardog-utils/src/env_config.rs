@@ -209,7 +209,6 @@ impl HsmConfig {
     }
 }
 
-#[allow(unused_imports, clippy::nonminimal_bool, dead_code, missing_docs)]
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -7,7 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### April 7, 2026 -- Wave 29: primalSpring Audit Execution — BD-01 Encoding, Sovereignty Sweep, Smart Refactoring
+### April 8, 2026 -- Wave 30: Deep Debt Sweep — Production Stub Removal, Self-Knowledge, Lint Cleanup
+
+- **Self-knowledge violations fixed** — `attempt_songbird_registration` → `attempt_orchestrator_registration` (capability-based, never names another primal); `ToadStool` reference removed from key_export doc comments
+- **Dead code removed** — `DatabaseStorageBackend` (all methods returned `unsupported_operation`), `handle_key_generate` v1 (superseded by v2, was `#[allow(dead_code)]`), `generate_aes_key_with_seed` gated `#[cfg(test)]`
+- **Overstep cleanup** — Security/Storage/Network `MigrationAdapter`s removed from `ecosystem_integration.rs` (those domains belong to other primals per PRIMAL_RESPONSIBILITY_MATRIX)
+- **Stub evolution** — `PerformanceOptimizer` in beardog-types: removed no-op `initialize_optimizations()` / `evaluate_scaling_needs()`, documented as config holder (real optimization in beardog-core); `effectiveness_score` hardcoded floats replaced with named constants + rationale
+- **Discovery engine honesty** — 6 HSM discoverer stubs changed from misleading `warn!("not yet implemented")` to honest `info!` messages (Cloud: no credentials, USB: no devices, TPM: no hardware, etc.)
+- **Lint cleanup** — Blanket `#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]` removed from 35 test modules in beardog-utils (clippy confirms they suppressed nothing)
+- **Wire Standard handoff** — `CAPABILITY_WIRE_STANDARD.md` updated: BearDog L2 → ✓
+- **All gates green** — fmt, clippy, test, doc
+
+### April 7, 2026 -- Wave 29b: Wire Standard Level 2 — `methods` Array, `identity.get`
+
+- **`capabilities.list` upgraded** — Flat `methods` array added alongside `provided_capabilities` (Wire Standard L2 Tier 1 migration); dynamically populated from `HandlerRegistry::all_methods()` filtered to `domain.operation` naming
+- **`identity.get` implemented** — New JSON-RPC method returns `{primal: "beardog", version, domain: "crypto", license: "AGPL-3.0-or-later"}`
+- **Two-phase registry construction** — `CapabilitiesHandler` moved to Phase 2 of `HandlerRegistry::new()` to receive `Arc<HandlerRegistry>` for dynamic method enumeration
+- **`SCYBORG_EXCEPTION_PROTOCOL.md` license fix** — `AGPL-3.0-only` → `AGPL-3.0-or-later` for software (consistency fix from primalSpring audit)
+- **`cargo fmt` regression fixed** — `edge_cases_nov_6_2025.rs` formatting corrected
+- **All gates green** — fmt, clippy, test, doc
+
+### April 7, 2026 -- Wave 29a: primalSpring Audit Execution — BD-01 Encoding, Sovereignty Sweep, Smart Refactoring
 
 - **BD-01 resolved** — `crypto.verify_ed25519` now accepts optional `encoding` hint per `ATTESTATION_ENCODING_STANDARD.md` v2.0 (supports base64, hex, base64url, utf8, none); backwards-compatible default; 7 new encoding tests
 - **Sovereignty sweep** — Removed 50+ hardcoded primal names (Songbird, NestGate, ToadStool, Squirrel) from production doc comments, test fixtures, and e2e tests; replaced with capability-based, primal-agnostic language

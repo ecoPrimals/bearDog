@@ -301,9 +301,21 @@ async fn dispatch(command: Commands) -> Result<()> {
                 algorithm,
                 hsm,
                 seed,
-            } => key::handle_key_generate(&key_id, &algorithm, &hsm, seed.as_deref())
-                .await
-                .map_err(err),
+            } => key::handle_key_generate_v2(
+                &key_id,
+                &algorithm,
+                &hsm,
+                seed.as_deref(),
+                "argon2",
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .map_err(err),
             KeyAction::List { hsm, verbose } => key::handle_key_list(hsm.as_deref(), verbose)
                 .await
                 .map_err(err),

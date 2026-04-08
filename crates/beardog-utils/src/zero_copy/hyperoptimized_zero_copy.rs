@@ -464,7 +464,6 @@ pub fn global_hyperoptimized_manager() -> &'static HyperZeroCopyManager {
     GLOBAL_MANAGER.get_or_init(HyperZeroCopyManager::new)
 }
 
-#[allow(unused_imports, clippy::nonminimal_bool, dead_code)]
 #[cfg(test)]
 mod tests {
     use super::*;
