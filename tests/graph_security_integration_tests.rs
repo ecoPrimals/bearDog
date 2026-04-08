@@ -4,6 +4,7 @@
 //!
 //! Tests the complete flow from JSON-RPC request → Unix socket → graph security → response
 
+use beardog_tunnel::btsp_handshake::BtspSecurityMode;
 use beardog_types::primal_identity::PrimalIdentity;
 use serde_json::json;
 use std::sync::Arc;
@@ -73,6 +74,7 @@ async fn test_graph_authorize_modification_via_unix_socket() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),
@@ -155,6 +157,7 @@ async fn test_graph_validate_template_via_unix_socket() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),
@@ -236,6 +239,7 @@ async fn test_graph_audit_origin_via_unix_socket() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),
@@ -296,6 +300,7 @@ async fn test_graph_capabilities_advertised() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),
@@ -362,6 +367,7 @@ async fn test_ui_peer_user_modifies_graph() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),
@@ -435,6 +441,7 @@ async fn test_ui_peer_live_graph_visualization() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),
@@ -508,6 +515,7 @@ async fn test_ui_peer_template_browser() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),
@@ -559,6 +567,7 @@ async fn test_storage_peer_template_storage() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),
@@ -623,6 +632,7 @@ async fn test_storage_peer_template_retrieval() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),
@@ -669,6 +679,7 @@ async fn test_storage_peer_version_control() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),
@@ -742,6 +753,7 @@ async fn test_compute_peer_ai_suggests_modification() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),
@@ -816,6 +828,7 @@ async fn test_compute_peer_learns_from_patterns() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),

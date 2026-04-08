@@ -19,6 +19,7 @@ use tempfile::TempDir;
 use tokio::net::UnixStream;
 
 use beardog_genetics::EcosystemGeneticEngine;
+use beardog_tunnel::btsp_handshake::BtspSecurityMode;
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
 use beardog_tunnel::tunnel::hsm::HsmManager;
 use beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer;
@@ -55,6 +56,7 @@ async fn start_server_ready(
             socket_path,
             btsp_provider,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .unwrap(),
@@ -288,6 +290,7 @@ async fn fault_test_readiness_check_before_start() {
             socket_path,
             btsp_provider,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .unwrap(),

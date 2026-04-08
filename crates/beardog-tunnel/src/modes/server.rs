@@ -170,6 +170,7 @@ pub async fn run(
             socket_config.socket_path_string(),
             btsp_provider.clone(),
             identity,
+            crate::btsp_handshake::BtspSecurityMode::Development,
         )
         .await
         .map_err(|e| {

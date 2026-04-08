@@ -403,7 +403,6 @@ Success Rate:      100%
 ## 📚 References
 
 ### Related Documentation:
-- **Test Migration Guide**: `../TEST_MIGRATION_GUIDE.md`
 - **Coding Standards**: `../BEARDOG_CODING_STANDARDS.md`
 - **Architecture**: `../ARCHITECTURE.md`
 

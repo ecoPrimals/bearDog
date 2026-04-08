@@ -32,6 +32,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 
 use beardog_genetics::EcosystemGeneticEngine;
+use beardog_tunnel::btsp_handshake::BtspSecurityMode;
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
 use beardog_tunnel::tunnel::hsm::HsmManager;
 use beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer;
@@ -67,9 +68,14 @@ async fn start_server_ready(
     let btsp_provider = create_test_btsp_provider().await;
     let identity = Arc::new(PrimalIdentity::for_test("chaos-test", "node1"));
     let server = Arc::new(
-        UnixSocketIpcServer::new(socket_path, btsp_provider, identity)
-            .await
-            .unwrap(),
+        UnixSocketIpcServer::new(
+            socket_path,
+            btsp_provider,
+            identity,
+            BtspSecurityMode::Development,
+        )
+        .await
+        .unwrap(),
     );
     let ready_flag = server.readiness_flag();
     let server_clone = Arc::clone(&server);
@@ -189,9 +195,14 @@ async fn chaos_test_readiness_race_condition() {
     let btsp_provider = create_test_btsp_provider().await;
     let primal_identity = Arc::new(PrimalIdentity::for_test("BearDog", "test-instance"));
     let server = Arc::new(
-        UnixSocketIpcServer::new(socket_path, btsp_provider, primal_identity)
-            .await
-            .unwrap(),
+        UnixSocketIpcServer::new(
+            socket_path,
+            btsp_provider,
+            primal_identity,
+            BtspSecurityMode::Development,
+        )
+        .await
+        .unwrap(),
     );
 
     let ready_flag = server.readiness_flag();
@@ -351,9 +362,14 @@ async fn chaos_test_atomic_readiness_under_load() {
     let btsp_provider = create_test_btsp_provider().await;
     let primal_identity = Arc::new(PrimalIdentity::for_test("BearDog", "test-instance"));
     let server = Arc::new(
-        UnixSocketIpcServer::new(socket_path.clone(), btsp_provider, primal_identity)
-            .await
-            .unwrap(),
+        UnixSocketIpcServer::new(
+            socket_path.clone(),
+            btsp_provider,
+            primal_identity,
+            BtspSecurityMode::Development,
+        )
+        .await
+        .unwrap(),
     );
 
     let ready_flag = server.readiness_flag();

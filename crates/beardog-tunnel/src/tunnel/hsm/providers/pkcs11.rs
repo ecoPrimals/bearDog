@@ -12,22 +12,10 @@ pub struct Pkcs11UniversalProvider {
     /// HSM capabilities
     capabilities: Option<Pkcs11Capabilities>,
     /// PKCS#11 library path
-    #[allow(
-        dead_code,
-        reason = "Phase 2 stub: populated at construction, read when session wiring lands"
-    )]
     library_path: String,
     /// Slot ID
-    #[allow(
-        dead_code,
-        reason = "Phase 2 stub: populated at construction, read when session wiring lands"
-    )]
     slot_id: u64,
     /// Provider metadata
-    #[allow(
-        dead_code,
-        reason = "Phase 2 stub: populated at construction, read when provider context lands"
-    )]
     metadata: HashMap<String, String>,
 }
 
@@ -81,6 +69,21 @@ impl Pkcs11UniversalProvider {
     /// Get capabilities
     pub const fn capabilities(&self) -> Option<&Pkcs11Capabilities> {
         self.capabilities.as_ref()
+    }
+
+    /// Get the configured PKCS#11 library path
+    pub fn library_path(&self) -> &str {
+        &self.library_path
+    }
+
+    /// Get the configured slot ID
+    pub const fn slot_id(&self) -> u64 {
+        self.slot_id
+    }
+
+    /// Get provider metadata
+    pub fn metadata(&self) -> &HashMap<String, String> {
+        &self.metadata
     }
 }
 

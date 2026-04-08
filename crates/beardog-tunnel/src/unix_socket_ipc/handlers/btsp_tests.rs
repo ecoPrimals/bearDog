@@ -7,11 +7,11 @@ async fn test_btsp_handler_methods() {
     let handler = BtspHandler;
     let methods = handler.methods();
 
-    // Should have:
-    // - 6 core operations × 4 aliases each (semantic dot + beardog path + underscore + slash) = 24
-    // - 3 new unified methods = 3 methods
-    // Total = 27 methods
-    assert_eq!(methods.len(), 27);
+    // - 6 core operations × 4 aliases each = 24
+    // - 3 unified methods (configure_tls, verify_peer, tunnel_send_http) = 3
+    // - 3 session methods (session.create, session.verify, session.negotiate) = 3
+    // Total = 30 methods
+    assert_eq!(methods.len(), 30);
 
     // Semantic domain.operation names (primary in registry)
     assert!(methods.contains(&"btsp.contact.exchange"));
@@ -33,6 +33,11 @@ async fn test_btsp_handler_methods() {
     assert!(methods.contains(&"btsp.configure_tls"));
     assert!(methods.contains(&"btsp.verify_peer"));
     assert!(methods.contains(&"btsp.tunnel_send_http"));
+
+    // Check BTSP session methods (handshake-as-a-service)
+    assert!(methods.contains(&"btsp.session.create"));
+    assert!(methods.contains(&"btsp.session.verify"));
+    assert!(methods.contains(&"btsp.session.negotiate"));
 }
 
 // Note: Full integration tests require a working BTSP provider

@@ -40,24 +40,18 @@ pub enum Ctap2Command {
 ///
 /// Note: Phase 2 implementation pending
 #[cfg(feature = "fido2")]
-#[allow(
+#[expect(
     dead_code,
-    reason = "pub CTAP2 API reserved for Phase-2 HID integration"
+    reason = "Phase-2 CTAP2 HID integration: remove when first caller lands"
 )]
 pub async fn send_ctap2_command(
     _device: &mut Box<dyn beardog_hid::HidDevice>,
     _command: Ctap2Command,
     _payload: &[u8],
 ) -> Result<Vec<u8>, BearDogError> {
-    // PHASE-2(CTAP2): Implement CTAP2 protocol operations
-    // 1. Format command packet (command byte + CBOR payload)
-    // 2. Send via HID
-    // 3. Receive response
-    // 4. Parse CTAP2 status code
-    // 5. Return CBOR payload or error
-
-    Err(BearDogError::system(
-        "CTAP2 command sending not yet implemented (Phase 2 in progress)".to_string(),
+    Err(BearDogError::requires_capability(
+        "fido2-ctap2",
+        "CTAP2 command protocol requires Phase-2 HID transport integration",
     ))
 }
 
@@ -65,16 +59,16 @@ pub async fn send_ctap2_command(
 ///
 /// Note: Phase 2 implementation pending
 #[cfg(feature = "fido2")]
-#[allow(
+#[expect(
     dead_code,
-    reason = "pub CTAP2 API reserved for Phase-2 HID integration"
+    reason = "Phase-2 CTAP2 HID integration: remove when first caller lands"
 )]
 pub async fn get_device_info(
     _device: &mut Box<dyn beardog_hid::HidDevice>,
 ) -> Result<super::types::Fido2DeviceInfo, BearDogError> {
-    // PHASE-2(CTAP2): Send GetInfo command and parse response
-    Err(BearDogError::system(
-        "CTAP2 GetInfo not yet implemented (Phase 2 in progress)".to_string(),
+    Err(BearDogError::requires_capability(
+        "fido2-ctap2",
+        "CTAP2 GetInfo requires Phase-2 HID transport integration",
     ))
 }
 
@@ -85,22 +79,17 @@ pub async fn get_device_info(
 ///
 /// Note: Phase 2 implementation pending
 #[cfg(feature = "fido2")]
-#[allow(
+#[expect(
     dead_code,
-    reason = "pub CTAP2 API reserved for Phase-2 HID integration"
+    reason = "Phase-2 CTAP2 HID integration: remove when first caller lands"
 )]
 pub async fn generate_entropy_via_hmac_secret(
     _device: &mut Box<dyn beardog_hid::HidDevice>,
     _size: usize,
 ) -> Result<Vec<u8>, BearDogError> {
-    // PHASE-2(CTAP2): Implement hmac-secret entropy generation
-    // 1. Create a credential with hmac-secret extension
-    // 2. Get assertion with salt to derive key material
-    // 3. Use derived material as entropy
-    // 4. Optionally hash/expand to requested size
-
-    Err(BearDogError::system(
-        "hmac-secret entropy generation not yet implemented (Phase 2 in progress)".to_string(),
+    Err(BearDogError::requires_capability(
+        "fido2-ctap2",
+        "hmac-secret entropy generation requires Phase-2 HID transport integration",
     ))
 }
 

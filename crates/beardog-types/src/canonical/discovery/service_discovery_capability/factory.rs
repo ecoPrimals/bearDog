@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use super::core::{DiscoveryError, ServiceDiscoveryCapability};
 use super::kubernetes::KubernetesDiscovery;
-use super::providers::{ConsulDiscovery, DnsHttpDiscovery, EtcdDiscovery};
+use super::providers::DnsHttpDiscovery;
 
 /// Auto-detect and create the best available service discovery implementation
 ///
@@ -58,73 +58,6 @@ pub async fn create_service_discovery()
     Ok(Arc::new(DnsHttpDiscovery::new()))
 }
 
-// ============================================================================
-// Detection functions - Phase 2 Implementation Stubs
-// ============================================================================
-// These functions will auto-detect available discovery backends.
-// Currently stubbed out; implementation tracking:
-// - Kubernetes: Check KUBERNETES_SERVICE_HOST, service account token
-// - Consul: Check CONSUL_HTTP_ADDR, local agent at 127.0.0.1:8500
-// - etcd: Check ETCD_ENDPOINTS, standard locations
-// ============================================================================
-
-/// Auto-detect Kubernetes availability
-///
-/// # Phase 2 Implementation
-///
-/// Will check for:
-/// - `KUBERNETES_SERVICE_HOST` environment variable
-/// - Service account token at /var/run/secrets/kubernetes.io/
-/// - Accessible API server endpoint
-#[deprecated(
-    since = "0.1.0",
-    note = "Phase 2 stub: Implement Kubernetes auto-detection. Use KubernetesDiscovery::try_create() instead."
-)]
-async fn _detect_kubernetes() -> Result<KubernetesDiscovery, DiscoveryError> {
-    Err(DiscoveryError::BackendUnavailable {
-        provider: "kubernetes".to_string(),
-        reason: "Kubernetes auto-detection not yet implemented (Phase 2)".to_string(),
-    })
-}
-
-/// Auto-detect Consul availability
-///
-/// # Phase 2 Implementation
-///
-/// Will check for:
-/// - `CONSUL_HTTP_ADDR` environment variable
-/// - Local agent at 127.0.0.1:8500
-/// - DNS-based agent discovery
-#[deprecated(
-    since = "0.1.0",
-    note = "Phase 2 stub: Implement Consul auto-detection. Implement ConsulDiscovery::try_create() first."
-)]
-async fn _detect_consul() -> Result<ConsulDiscovery, DiscoveryError> {
-    Err(DiscoveryError::BackendUnavailable {
-        provider: "consul".to_string(),
-        reason: "Consul auto-detection not yet implemented (Phase 2)".to_string(),
-    })
-}
-
-/// Auto-detect etcd availability
-///
-/// # Phase 2 Implementation
-///
-/// Will check for:
-/// - `ETCD_ENDPOINTS` environment variable
-/// - Standard etcd ports (2379, 4001)
-/// - Cluster member discovery
-#[deprecated(
-    since = "0.1.0",
-    note = "Phase 2 stub: Implement etcd auto-detection. Implement EtcdDiscovery::try_create() first."
-)]
-async fn _detect_etcd() -> Result<EtcdDiscovery, DiscoveryError> {
-    Err(DiscoveryError::BackendUnavailable {
-        provider: "etcd".to_string(),
-        reason: "etcd auto-detection not yet implemented (Phase 2)".to_string(),
-    })
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -139,33 +72,5 @@ mod tests {
             name.contains("kubernetes") || name.contains("dns"),
             "unexpected provider: {name}"
         );
-    }
-
-    #[tokio::test]
-    #[allow(deprecated)]
-    async fn phase2_detect_stubs_return_backend_unavailable() {
-        let e = _detect_kubernetes()
-            .await
-            .expect_err("kubernetes stub should err");
-        match e {
-            DiscoveryError::BackendUnavailable { provider, .. } => {
-                assert_eq!(provider, "kubernetes");
-            }
-            other => panic!("unexpected error: {other:?}"),
-        }
-        let e = _detect_consul().await.expect_err("consul stub");
-        match e {
-            DiscoveryError::BackendUnavailable { provider, .. } => {
-                assert_eq!(provider, "consul");
-            }
-            other => panic!("unexpected error: {other:?}"),
-        }
-        let e = _detect_etcd().await.expect_err("etcd stub");
-        match e {
-            DiscoveryError::BackendUnavailable { provider, .. } => {
-                assert_eq!(provider, "etcd");
-            }
-            other => panic!("unexpected error: {other:?}"),
-        }
     }
 }

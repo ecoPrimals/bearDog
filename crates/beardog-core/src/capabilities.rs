@@ -6,7 +6,7 @@
 //!
 //! **Design Principle**: BearDog has self-knowledge only
 //! - Advertises: "I provide encryption, trust evaluation, security"
-//! - Does NOT know: "I connect to Songbird" or "ToadStool needs me"
+//! - Does NOT know which specific primals exist or depend on it
 //! - biomeOS handles routing based on capabilities
 
 use serde::{Deserialize, Serialize};

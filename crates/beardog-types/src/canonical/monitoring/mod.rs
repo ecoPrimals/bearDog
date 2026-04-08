@@ -53,28 +53,25 @@ pub mod tracing;
 /// Default Jaeger collector HTTP ingest port (HTTP `/api/traces`).
 pub const DEFAULT_JAEGER_COLLECTOR_PORT: u16 = 14268;
 
-// Re-export all configuration types for easy access
-// Note: Some type names are intentionally duplicated across modules for flexibility
-#[allow(ambiguous_glob_reexports)]
-pub use alerting::*;
-#[allow(ambiguous_glob_reexports)]
-pub use analytics::*;
-#[allow(ambiguous_glob_reexports)]
-pub use core::*;
-#[allow(ambiguous_glob_reexports)]
-pub use health::*;
-#[allow(ambiguous_glob_reexports)]
-pub use integration::*;
-#[allow(ambiguous_glob_reexports)]
-pub use logging::*;
-#[allow(ambiguous_glob_reexports)]
-pub use metrics::*;
-#[allow(ambiguous_glob_reexports)]
-pub use performance::*;
-#[allow(ambiguous_glob_reexports)]
-pub use security::*;
-#[allow(ambiguous_glob_reexports)]
-pub use tracing::*;
+// Flat re-export: monitoring types share a single namespace for ergonomic imports.
+// Some names intentionally shadow across sub-modules (e.g. `Config` variants).
+#[allow(
+    ambiguous_glob_reexports,
+    reason = "intentional flat namespace for canonical monitoring"
+)]
+mod _reexports {
+    pub use super::alerting::*;
+    pub use super::analytics::*;
+    pub use super::core::*;
+    pub use super::health::*;
+    pub use super::integration::*;
+    pub use super::logging::*;
+    pub use super::metrics::*;
+    pub use super::performance::*;
+    pub use super::security::*;
+    pub use super::tracing::*;
+}
+pub use _reexports::*;
 
 /// Canonical Monitoring Configuration
 ///

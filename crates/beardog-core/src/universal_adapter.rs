@@ -30,7 +30,7 @@
 //!   "Who am I?"       "Who provides?"  "How to reach?"
 //!         ↓                ↓               ↓
 //!   [BearDog]        [Capability]     [HighestTrust]
-//!   [v0.9.0]         [AI: Squirrel]   [LeastLoaded]
+//!   [v0.9.0]         [AI: <any>]      [LeastLoaded]
 //!   [8900]           [Storage: ...]   [LowestLatency]
 //! ```
 //!
@@ -50,8 +50,7 @@
 //!     .await?;
 //!
 //! tracing::info!("Using AI primal: {}", ai_primal.name);
-//! // Could be: "Squirrel", "FutureAIPrimal", or any AI provider
-//! // BearDog discovered it automatically!
+//! // Could be any primal providing AI capability — BearDog discovers at runtime!
 //! # Ok(())
 //! # }
 //! ```
@@ -135,7 +134,7 @@ impl CachedPrimal {
 ///     .await?;
 ///
 /// tracing::info!("Found {} AI providers", ai_primals.len());
-/// // BearDog discovered Squirrel (or whoever) automatically!
+/// // BearDog discovered the provider automatically via capability matching!
 ///
 /// // 3. Get best provider (by trust, load, latency)
 /// let best_ai = adapter
@@ -280,7 +279,7 @@ impl UniversalAdapter {
     ///
     /// for primal in ai_primals {
     ///     tracing::info!("AI provider: {} at {:?}", primal.name, primal.endpoints);
-    ///     // Could be Squirrel, future AI primals, or anyone!
+    ///     // Could be any primal — BearDog only knows capabilities, not names!
     /// }
     /// # Ok(())
     /// # }

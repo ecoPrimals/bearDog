@@ -8,10 +8,6 @@ use beardog_errors::BearDogError;
 use std::collections::HashMap;
 
 /// TPM Universal HSM Provider
-#[allow(
-    dead_code,
-    reason = "Phase 2 stub: fields populated at construction, read when impl lands"
-)]
 pub struct TpmUniversalProvider {
     /// HSM capabilities
     capabilities: Option<TpmCapabilities>,
@@ -84,6 +80,11 @@ impl TpmUniversalProvider {
     /// Get capabilities
     pub const fn capabilities(&self) -> Option<&TpmCapabilities> {
         self.capabilities.as_ref()
+    }
+
+    /// Get provider metadata
+    pub fn metadata(&self) -> &HashMap<String, String> {
+        &self.metadata
     }
 }
 

@@ -1,6 +1,6 @@
 # BearDog Status
 
-**Last Updated**: April 8, 2026
+**Last Updated**: April 9, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -33,7 +33,7 @@
 
 - **Crates**: 29 in workspace (beardog-integration excluded — overstep)
 - **Rust Files**: 1,888
-- **Crypto Methods**: 93 JSON-RPC methods
+- **Crypto Methods**: 96 JSON-RPC methods
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
 
 ---
@@ -85,6 +85,23 @@
 ---
 
 ## Recent Improvements
+
+### Wave 32: Deep Debt Sweep II — Stub Evolution, Large File Dedup, Clippy Zero (April 8, 2026)
+
+- **AES-GCM 64% dedup** — Generic core; 4 handlers → thin wrappers over `gcm_encrypt<C>`/`gcm_decrypt<C>`
+- **Doc hardcoding removed** — Zero primal-name references in production code
+- **TPM/PKCS11/FIDO2 stubs evolved** — Honest `requires_capability` errors, public accessors, `#[expect]` for compiler notifications
+- **Discovery cleanup** — Dead Phase-2 stubs removed; Consul/etcd delegated via capability architecture
+- **Clippy 0 warnings** — Collapsible-if, map_or, redundant closure all resolved
+
+### Wave 31: BTSP Handshake Enforcement — Live-Encrypted Socket Listener (April 8, 2026)
+
+- **BTSP handshake enforcement** — New `btsp_handshake/` module: 4-step cryptographic handshake (X25519 + HMAC-SHA256) on every production connection
+- **Security mode resolution** — `BtspSecurityMode::Production` / `Development` from `FAMILY_ID` + `BIOMEOS_INSECURE` env, with conflict guard
+- **Encrypted frames** — Post-handshake ChaCha20-Poly1305 AEAD over length-prefixed frames; HMAC-plain and null negotiable
+- **Session methods** — `btsp.session.create/.verify/.negotiate` JSON-RPC (handshake-as-a-service for other primals)
+- **TCP parity** — Same enforcement in `TcpIpcServer`
+- **28 new tests** — Handshake roundtrip, rejection, env resolution, 100-message nonce progression
 
 ### Wave 30: Deep Debt Sweep — Production Stub Removal, Self-Knowledge, Lint Cleanup (April 8, 2026)
 

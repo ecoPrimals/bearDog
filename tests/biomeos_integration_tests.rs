@@ -17,6 +17,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::UnixStream;
 
 use beardog_genetics::EcosystemGeneticEngine;
+use beardog_tunnel::btsp_handshake::BtspSecurityMode;
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
 use beardog_tunnel::tunnel::hsm::manager::{HsmAutoInitConfig, HsmManager};
 use beardog_tunnel::unix_socket_ipc::UnixSocketIpcServer;
@@ -61,6 +62,7 @@ async fn start_server_ready(
             socket_path,
             btsp_provider,
             Arc::new(PrimalIdentity::for_test("nat0", "node-alpha")),
+            BtspSecurityMode::Development,
         )
         .await
         .unwrap(),

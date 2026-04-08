@@ -15,6 +15,7 @@ use super::{
     handlers::HandlerRegistry,
     types::{JsonRpcError, JsonRpcRequest, JsonRpcResponse, Protocol},
 };
+use crate::btsp_handshake::{self, BtspSecurityMode, BtspSession};
 use crate::btsp_provider::BeardogBtspProvider;
 use crate::platform::{PlatformSocket, PlatformStream, Socket, SocketEndpoint};
 use anyhow::{Context, Result};
@@ -61,6 +62,9 @@ pub struct UnixSocketIpcServer {
     /// Modular handler registry for JSON-RPC methods
     handler_registry: Arc<HandlerRegistry>,
 
+    /// BTSP security mode (resolved at startup, checked per connection).
+    security_mode: BtspSecurityMode,
+
     /// Server running state (using `RwLock` for compatibility)
     is_running: Arc<tokio::sync::RwLock<bool>>,
 
@@ -77,6 +81,7 @@ impl UnixSocketIpcServer {
     /// * `socket_path` - Path to the Unix socket file
     /// * `btsp_provider` - BTSP provider for handling requests
     /// * `identity` - Primal identity (family and node)
+    /// * `security_mode` - BTSP security posture (production vs development)
     ///
     /// # Errors
     /// Returns error if unable to remove existing socket file
@@ -84,6 +89,7 @@ impl UnixSocketIpcServer {
         socket_path: impl AsRef<Path>,
         btsp_provider: Arc<BeardogBtspProvider>,
         identity: Arc<beardog_types::primal_identity::PrimalIdentity>,
+        security_mode: BtspSecurityMode,
     ) -> Result<Self> {
         let socket_path = socket_path.as_ref().to_path_buf();
 
@@ -95,10 +101,17 @@ impl UnixSocketIpcServer {
                 .context("Failed to remove existing socket")?;
         }
 
+        if security_mode.is_production() {
+            info!("BTSP handshake enforcement ENABLED (production mode)");
+        } else {
+            info!("BTSP handshake enforcement disabled (development mode)");
+        }
+
         Ok(Self {
             socket_path,
             btsp_provider,
             handler_registry: HandlerRegistry::new(identity),
+            security_mode,
             is_running: Arc::new(tokio::sync::RwLock::new(false)),
             is_ready: Arc::new(std::sync::atomic::AtomicBool::new(false)),
         })
@@ -289,26 +302,40 @@ impl UnixSocketIpcServer {
 
     /// Handle a single client connection with protocol detection
     ///
-    /// Reads the first line to detect the protocol (tarpc, JSON-RPC, or HTTP),
-    /// then routes to the appropriate handler.
-    /// For JSON-RPC, continues handling requests until connection closes.
+    /// In production mode (`FAMILY_ID` set), runs the BTSP 4-step handshake
+    /// before accepting any JSON-RPC traffic. On successful handshake,
+    /// communication switches to length-prefixed encrypted frames.
+    ///
+    /// In development mode, falls through to the existing NDJSON path.
     ///
     /// # Errors
     /// Returns error if unable to read from stream or handle request
     async fn handle_connection(&self, stream: Box<dyn PlatformStream>) -> Result<()> {
         debug!("New IPC connection (universal platform)");
 
-        // Phase 3 plan: Full universal stream refactoring. Handlers will be refactored to use
-        // AsyncRead/AsyncWrite traits directly, eliminating platform-specific downcasting.
-        // Until then, we use platform-specific handling on Unix.
-
         #[cfg(unix)]
         {
-            // On Unix platforms, downcast the stream
-            // This is safe because we know the platform at compile time
+            // ── BTSP production mode: handshake before anything else ───
+            if let BtspSecurityMode::Production { ref family_seed } = self.security_mode {
+                debug!("BTSP production: initiating handshake");
+                let mut stream = stream;
+                match btsp_handshake::perform_server_handshake(&mut stream, family_seed).await {
+                    Ok(session) => {
+                        info!(
+                            session_id = %session.session_id,
+                            cipher = %session.cipher.wire_name(),
+                            "BTSP handshake succeeded — switching to encrypted frames"
+                        );
+                        return self.handle_jsonrpc_btsp(stream, session).await;
+                    }
+                    Err(e) => {
+                        warn!(error = %e, "BTSP handshake failed — refusing connection");
+                        return Ok(());
+                    }
+                }
+            }
 
-            // SAFETY: We can't directly downcast Box<dyn PlatformStream>,
-            // so we need a different approach. Let's use AsyncRead/AsyncWrite directly!
+            // ── Development mode: plain NDJSON (existing path) ─────────
 
             let mut buf_stream = BufReader::new(stream);
             let mut buffer = Vec::with_capacity(1024);
@@ -344,10 +371,8 @@ impl UnixSocketIpcServer {
                 return Ok(());
             }
 
-            // Detect protocol
             let protocol = Protocol::detect_from_bytes(first_line.as_bytes());
 
-            // Log security level
             match protocol {
                 Protocol::JsonRpc => {
                     info!(
@@ -366,7 +391,6 @@ impl UnixSocketIpcServer {
                 }
             }
 
-            // Route to universal handler (using AsyncRead/AsyncWrite traits!)
             match protocol {
                 Protocol::JsonRpc => {
                     self.handle_jsonrpc_universal(&first_line, stream).await?;
@@ -379,7 +403,6 @@ impl UnixSocketIpcServer {
 
         #[cfg(not(unix))]
         {
-            // For non-Unix platforms, implement similar logic
             warn!("Non-Unix platform handler not yet fully implemented");
             return Err(anyhow::anyhow!(
                 "Platform not yet supported in this handler"
@@ -473,6 +496,54 @@ impl UnixSocketIpcServer {
         let response = b"HTTP/1.1 501 Not Implemented\r\nContent-Length: 50\r\n\r\nHTTP deprecated - use JSON-RPC over Unix sockets\n";
         stream.write_all(response).await?;
         Ok(())
+    }
+
+    /// Handle JSON-RPC over BTSP encrypted frames (production mode).
+    ///
+    /// Each frame is decrypted → parsed as JSON-RPC → processed → encrypted → sent.
+    async fn handle_jsonrpc_btsp(
+        &self,
+        mut stream: Box<dyn PlatformStream>,
+        mut session: BtspSession,
+    ) -> Result<()> {
+        loop {
+            let frame = match btsp_handshake::read_frame(&mut stream).await {
+                Ok(f) => f,
+                Err(e) => {
+                    debug!(error = %e, "BTSP frame read ended");
+                    return Ok(());
+                }
+            };
+
+            let plaintext = match session.decrypt_frame(&frame) {
+                Ok(p) => p,
+                Err(e) => {
+                    warn!(error = %e, "BTSP frame decrypt failed — dropping connection");
+                    return Ok(());
+                }
+            };
+
+            let line = match String::from_utf8(plaintext) {
+                Ok(s) => s,
+                Err(e) => {
+                    warn!(error = %e, "BTSP frame not valid UTF-8");
+                    continue;
+                }
+            };
+
+            if line.trim().is_empty() {
+                continue;
+            }
+
+            let response_str = self.handle_one_jsonrpc_request_universal(&line).await?;
+            let encrypted = session
+                .encrypt_frame(response_str.as_bytes())
+                .map_err(|e| anyhow::anyhow!("BTSP encrypt failed: {e}"))?;
+
+            btsp_handshake::write_frame(&mut stream, &encrypted)
+                .await
+                .map_err(|e| anyhow::anyhow!("BTSP frame write failed: {e}"))?;
+        }
     }
 
     /// Process one JSON-RPC request and return response string
@@ -655,6 +726,7 @@ impl Drop for UnixSocketIpcServer {
 #[cfg(test)]
 mod handle_jsonrpc_unit_tests {
     use super::{JsonRpcError, JsonRpcResponse, UnixSocketIpcServer};
+    use crate::btsp_handshake::BtspSecurityMode;
     use crate::test_helpers::mocks::create_minimal_beardog_provider;
     use beardog_types::primal_identity::PrimalIdentity;
     use std::sync::Arc;
@@ -682,7 +754,7 @@ mod handle_jsonrpc_unit_tests {
         let sock = dir.path().join("bd.sock");
         let prov = create_minimal_beardog_provider().await;
         let id = Arc::new(PrimalIdentity::for_test("fam", "node"));
-        let server = UnixSocketIpcServer::new(&sock, prov, id)
+        let server = UnixSocketIpcServer::new(&sock, prov, id, BtspSecurityMode::Development)
             .await
             .expect("server");
         let resp: JsonRpcResponse = server
@@ -699,7 +771,7 @@ mod handle_jsonrpc_unit_tests {
         let sock = dir.path().join("bd2.sock");
         let prov = create_minimal_beardog_provider().await;
         let id = Arc::new(PrimalIdentity::for_test("fam", "node"));
-        let server = UnixSocketIpcServer::new(&sock, prov, id)
+        let server = UnixSocketIpcServer::new(&sock, prov, id, BtspSecurityMode::Development)
             .await
             .expect("server");
         let resp = server
@@ -716,7 +788,7 @@ mod handle_jsonrpc_unit_tests {
         let sock = dir.path().join("bd3.sock");
         let prov = create_minimal_beardog_provider().await;
         let id = Arc::new(PrimalIdentity::for_test("fam", "node"));
-        let server = UnixSocketIpcServer::new(&sock, prov, id)
+        let server = UnixSocketIpcServer::new(&sock, prov, id, BtspSecurityMode::Development)
             .await
             .expect("server");
         let resp = server
@@ -736,7 +808,7 @@ mod handle_jsonrpc_unit_tests {
         let sock = dir.path().join("bd4.sock");
         let prov = create_minimal_beardog_provider().await;
         let id = Arc::new(PrimalIdentity::for_test("fam", "node"));
-        let server = UnixSocketIpcServer::new(&sock, prov, id)
+        let server = UnixSocketIpcServer::new(&sock, prov, id, BtspSecurityMode::Development)
             .await
             .expect("server");
         let resp = server

@@ -21,6 +21,7 @@ use std::time::{Duration, Instant};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 
+use beardog_tunnel::btsp_handshake::BtspSecurityMode;
 use beardog_types::primal_identity::PrimalIdentity;
 
 /// Test helper: Create a test BTSP provider
@@ -85,6 +86,7 @@ async fn test_authorization_throughput() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),
@@ -170,6 +172,7 @@ async fn test_validation_throughput() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),
@@ -253,6 +256,7 @@ async fn test_authorization_latency_p95() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),
@@ -336,6 +340,7 @@ async fn test_concurrent_authorization_requests() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),
@@ -434,6 +439,7 @@ async fn test_sustained_load() {
             socket_path,
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Server creation"),

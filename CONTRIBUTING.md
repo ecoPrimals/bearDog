@@ -23,7 +23,7 @@ All contributions must comply with the wateringHole standards:
 - **Result-based error handling** — Zero `.unwrap()` in production; `.expect("invariant")` only
 - **Zero hardcoding** — Capability-based discovery; `from_env()` at boundaries
 - **Self-knowledge only** — Primals discover peers at runtime, never hardcode other primal names
-- **Fully concurrent tests** — Zero `#[serial]`, zero sleeps in non-chaos tests
+- **Fully concurrent tests** — 35 `#[serial]` in `beardog-production` (shared `AtomicBool` config state), zero sleeps in non-chaos tests; all others concurrent
 
 ## Workflow
 

@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 8, 2026 -- Wave 32: Deep Debt Sweep II — Stub Evolution, Large File Dedup, Clippy Zero
+
+- **AES-GCM deduplication** — `crypto_handlers_aes_gcm.rs` production code reduced 64% (485 → 175 lines) via generic `gcm_encrypt<C>`/`gcm_decrypt<C>` core over `Aes128Gcm`/`Aes256Gcm`; extracted shared param helpers (`decode_b64_param`, `extract_key`, `extract_or_generate_nonce`)
+- **BTSP handler DRY** — `resolve_tunnel_handle()` extracted from duplicated tunnel-id resolution in `handle_tunnel_status` and `handle_tunnel_close`
+- **Doc hardcoding removed** — Primal name references ("Squirrel", "Songbird", "ToadStool") replaced with capability-agnostic phrasing in `universal_adapter.rs`, `capabilities.rs`, `genetics_impl.rs`
+- **TPM/PKCS11 stubs evolved** — `#[allow(dead_code)]` removed from provider structs; new public accessors (`metadata()`, `library_path()`, `slot_id()`) make fields live
+- **FIDO2 operations evolved** — `BearDogError::system(...)` → `BearDogError::requires_capability(...)` with honest feature-gate messaging; `#[allow(dead_code)]` → `#[expect(dead_code)]` for compiler notification when callers land
+- **Service discovery cleanup** — Removed 3 deprecated dead detection stubs (`_detect_kubernetes`, `_detect_consul`, `_detect_etcd`) from factory; Consul/etcd properly delegated to capability-based discovery per architectural decision
+- **Monitoring glob consolidation** — 10 per-line `#[allow(ambiguous_glob_reexports)]` consolidated into single inner module with documented reason
+- **BTSP handshake docs** — Added missing field docs on `ClientHello`, `ServerHello`, `HandshakeError`, `SessionKeys`, `FamilySeed`, `BtspSecurityMode`; fixed clippy doc backtick warnings
+- **Clippy zero** — Resolved all remaining warnings: collapsible-if (`let` chains), `map_or` → `is_some_and`, `format!`-in-iterator → `write!`, `match` → `if let`, redundant closure
+- **All gates green** — fmt, clippy (0 warnings), 1179 tests passing, doc
+
+### April 8, 2026 -- Wave 31: BTSP Handshake Enforcement — Live-Encrypted Socket Listener
+
+- **BTSP handshake enforcement** — New `btsp_handshake/` module (6 files, ~750 LOC) implements Phase 2 of `BTSP_PROTOCOL_STANDARD.md`: when `FAMILY_ID` is set, every incoming connection must complete a 4-step cryptographic handshake (X25519 ephemeral + HMAC-SHA256 challenge-response) before any JSON-RPC is processed
+- **`BtspSecurityMode` enum** — Resolved at startup from `FAMILY_ID` / `BIOMEOS_INSECURE` env vars; flows through `MultiTransportServer` to Unix and TCP server instances
+- **`BIOMEOS_INSECURE` guard** — Server refuses to start when both `FAMILY_ID` and `BIOMEOS_INSECURE=1` are set (per BTSP standard)
+- **Encrypted frame codec** — Post-handshake communication switches to length-prefixed (4-byte BE) frames with ChaCha20-Poly1305 AEAD encryption; supports HMAC-plain and null cipher negotiation
+- **Session key derivation** — HKDF-SHA256 from X25519 shared secret with directional keys (server→client, client→server) and monotonic nonce counters
+- **`btsp.session.create`/`.verify`/`.negotiate`** — 3 new JSON-RPC methods expose handshake-as-a-service for other primals to implement their own BTSP listeners using BearDog's crypto
+- **TCP transport parity** — Same handshake enforcement and encrypted framing applied to `TcpIpcServer`
+- **28 new tests** — Unit tests for crypto, framing, session encryption; integration tests for full handshake roundtrip, wrong-seed rejection, wrong-version rejection, env-based security mode resolution, BIOMEOS_INSECURE conflict, 100-message nonce progression
+- **All gates green** — fmt, clippy, test, doc
+
 ### April 8, 2026 -- Wave 30: Deep Debt Sweep — Production Stub Removal, Self-Knowledge, Lint Cleanup
 
 - **Self-knowledge violations fixed** — `attempt_songbird_registration` → `attempt_orchestrator_registration` (capability-based, never names another primal); `ToadStool` reference removed from key_export doc comments

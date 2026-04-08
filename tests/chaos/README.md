@@ -339,8 +339,7 @@ Recommendations:
 
 - [Chaos Engineering Principles](https://principlesofchaos.org/)
 - [BearDog Architecture](../../ARCHITECTURE.md)
-- [Test Migration Guide](../../TEST_MIGRATION_GUIDE.md)
-- [Test Restoration Plan](../../TEST_RESTORATION_PLAN_OCT_7_2025.md)
+- [BearDog Contributing Guide](../../CONTRIBUTING.md)
 
 ## 🤝 Contributing
 

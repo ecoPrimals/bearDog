@@ -214,7 +214,7 @@
 // };
 // ```
 //
-// For complete migration instructions, see [`MIGRATION_GUIDE.md`](https://github.com/ecoPrimals/beardog/blob/main/MIGRATION_GUIDE.md).
+// For migration instructions, see the deprecation notes on individual types below.
 //
 // ## ⚡ **Performance**
 //

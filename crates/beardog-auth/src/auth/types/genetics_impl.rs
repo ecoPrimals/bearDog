@@ -200,7 +200,7 @@ impl BearDogGenetics {
     /// use beardog_types::adapter_certificates::AdapterClassification;
     /// use chrono::Duration;
     ///
-    /// // Issue certificate for Songbird network adapter
+    /// // Issue certificate for a discovered network adapter
     /// let certificate = key.issue_adapter_certificate(
     ///     "beardog-adapters::{discovered_adapter}::network",
     ///     AdapterClassification::Human,

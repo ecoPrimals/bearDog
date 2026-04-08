@@ -13,6 +13,7 @@ use crate::ServerArgs;
 use beardog_errors::BearDogError;
 use beardog_genetics::EcosystemGeneticEngine;
 use beardog_ipc::{discover_neural_api_socket, register_with_neural_api};
+use beardog_tunnel::btsp_handshake;
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
 use beardog_tunnel::multi_transport_server::MultiTransportServer;
 use beardog_tunnel::tunnel::hsm::manager::HsmManager;
@@ -150,17 +151,31 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     let tcp_addr = effective_listen;
 
     // ================================================================
+    // BTSP SECURITY MODE (per BTSP_PROTOCOL_STANDARD.md)
+    // ================================================================
+
+    let security_mode = btsp_handshake::resolve_security_mode()?;
+    match &security_mode {
+        btsp_handshake::BtspSecurityMode::Production { .. } => {
+            info!(mode = "production", "BTSP handshake enforcement ACTIVE");
+        }
+        btsp_handshake::BtspSecurityMode::Development => {
+            info!(mode = "development", "BTSP handshake enforcement disabled");
+        }
+    }
+
+    // ================================================================
     // PHASE 3: MULTI-TRANSPORT SERVER (Deep Debt Evolution)
     // ================================================================
 
     info!(platform = "universal", "creating multi-transport server");
 
-    // Create multi-transport server (binds all available)
     let server = MultiTransportServer::bind_all_available(
         btsp_provider,
         identity,
         &socket_path,
         tcp_addr.as_deref(),
+        security_mode,
     )
     .await?;
 

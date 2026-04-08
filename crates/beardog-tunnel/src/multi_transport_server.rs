@@ -27,6 +27,7 @@
 //! 3. **Unified Handling**: Same JSON-RPC handler for all transports
 //! 4. **Graceful Degradation**: If one transport fails, others still work
 
+use crate::btsp_handshake::BtspSecurityMode;
 use crate::btsp_provider::BeardogBtspProvider;
 use crate::tcp_ipc::TcpIpcServer;
 use crate::unix_socket_ipc::UnixSocketIpcServer;
@@ -83,6 +84,7 @@ impl MultiTransportServer {
         identity: Arc<PrimalIdentity>,
         socket_path: &str,
         tcp_addr: Option<&str>,
+        security_mode: BtspSecurityMode,
     ) -> Result<Self, BearDogError> {
         let mut transports = Vec::new();
 
@@ -93,7 +95,14 @@ impl MultiTransportServer {
         // ================================================================
 
         // Try native socket (Unix or Abstract)
-        match UnixSocketIpcServer::new(socket_path, btsp_provider.clone(), identity.clone()).await {
+        match UnixSocketIpcServer::new(
+            socket_path,
+            btsp_provider.clone(),
+            identity.clone(),
+            security_mode.clone(),
+        )
+        .await
+        {
             Ok(server) => {
                 let transport_type = if socket_path.starts_with('@') {
                     "Abstract socket"
@@ -128,7 +137,8 @@ impl MultiTransportServer {
 
         match tcp_address.parse::<SocketAddr>() {
             Ok(addr) => {
-                let tcp_server = TcpIpcServer::new(addr, btsp_provider, identity);
+                let tcp_server =
+                    TcpIpcServer::new(addr, btsp_provider, identity, security_mode.clone());
                 info!("   ✅ Tier 2 (TCP): bound: {}", tcp_address);
                 transports.push(BoundTransport::Tcp(Arc::new(tcp_server)));
             }
@@ -302,6 +312,7 @@ mod tests {
             identity,
             sock.to_string_lossy().as_ref(),
             Some("127.0.0.1:0"),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("at least one transport");
@@ -320,6 +331,7 @@ mod tests {
             identity,
             dir.path().to_str().expect("utf8"),
             Some("not-a-valid-socket-address:xyz"),
+            BtspSecurityMode::Development,
         )
         .await;
 
@@ -348,6 +360,7 @@ mod tests {
             identity,
             sock.to_string_lossy().as_ref(),
             Some(":::not-a-tcp-addr:::bad"),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("Unix transport should still bind");
@@ -367,6 +380,7 @@ mod tests {
             identity,
             sock.to_string_lossy().as_ref(),
             Some("127.0.0.1:0"),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("bind unix and tcp");
@@ -389,6 +403,7 @@ mod tests {
             identity,
             sock.to_string_lossy().as_ref(),
             None,
+            BtspSecurityMode::Development,
         )
         .await
         .expect("default tcp port from config");
@@ -408,6 +423,7 @@ mod tests {
             identity,
             sock.to_string_lossy().as_ref(),
             Some("127.0.0.1:0"),
+            BtspSecurityMode::Development,
         )
         .await
         .expect("bind");

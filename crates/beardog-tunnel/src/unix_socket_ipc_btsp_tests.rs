@@ -13,6 +13,7 @@ use beardog_types::primal_identity::PrimalIdentity;
 #[cfg(test)]
 mod btsp_jsonrpc_unit_tests {
     use super::*;
+    use crate::btsp_handshake::BtspSecurityMode;
     use crate::btsp_provider::BeardogBtspProvider;
     use crate::tunnel::hsm::HsmManager;
     use crate::unix_socket_ipc::UnixSocketIpcServer;
@@ -49,6 +50,7 @@ mod btsp_jsonrpc_unit_tests {
             &socket_path,
             provider,
             Arc::new(PrimalIdentity::for_test("test", "node1")),
+            BtspSecurityMode::Development,
         )
         .await
         .unwrap();

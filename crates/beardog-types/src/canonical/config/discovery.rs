@@ -15,7 +15,7 @@
 //! use beardog_types::canonical::config::domains::discovery_unified::UnifiedDiscoveryConfig;
 //! ```
 //!
-//! See `DISCOVERY_CONFIG_MIGRATION_GUIDE.md` for migration instructions.
+//! See deprecation notes on individual types for migration paths.
 //!
 //! ## Original Purpose
 //! This module consolidated service discovery configuration types from across the codebase.
@@ -34,10 +34,10 @@ use std::time::Duration;
 /// ⚠️ **DEPRECATED**: Use `discovery_unified::UnifiedDiscoveryConfig` instead.
 ///
 /// This type is deprecated and will be removed in a future version.
-/// See `DISCOVERY_CONFIG_MIGRATION_GUIDE.md` for migration instructions.
+/// See deprecation note below for the replacement type.
 #[deprecated(
     since = "3.1.0",
-    note = "Use discovery_unified::UnifiedDiscoveryConfig instead. See DISCOVERY_CONFIG_MIGRATION_GUIDE.md"
+    note = "Use discovery_unified::UnifiedDiscoveryConfig instead"
 )]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsolidatedDiscoveryConfig {
@@ -317,10 +317,10 @@ pub struct CircuitBreakerConfig {
 ///
 /// ⚠️ **DEPRECATED**: Use `domains::retry::CanonicalRetryConfig` instead.
 ///
-/// This type is deprecated. See `RETRY_CONFIG_MIGRATION_GUIDE.md` for migration instructions.
+/// This type is deprecated.
 #[deprecated(
     since = "3.1.0",
-    note = "Use domains::retry::CanonicalRetryConfig instead. See RETRY_CONFIG_MIGRATION_GUIDE.md"
+    note = "Use domains::retry::CanonicalRetryConfig instead"
 )]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RetryConfig {

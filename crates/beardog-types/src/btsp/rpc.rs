@@ -272,6 +272,86 @@ pub struct TunnelSendHttpResponse {
     pub body: String,
 }
 
+// ── BTSP Session Methods (handshake-as-a-service for other primals) ────
+
+/// Parameters for `btsp.session.create`
+///
+/// Creates a server-side BTSP session context: generates an ephemeral keypair,
+/// derives the handshake key from the provided family seed, and returns the
+/// server's public key + a random challenge for the client to prove membership.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionCreateParams {
+    /// Base64-encoded family seed (caller supplies their family's seed).
+    pub family_seed: String,
+}
+
+/// Response from `btsp.session.create`
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionCreateResponse {
+    /// Base64-encoded server ephemeral X25519 public key.
+    pub server_ephemeral_pub: String,
+    /// Base64-encoded random challenge (32 bytes).
+    pub challenge: String,
+    /// Opaque session token referencing the server-side state.
+    pub session_token: String,
+}
+
+/// Parameters for `btsp.session.verify`
+///
+/// Verifies a client's challenge response and, if valid, derives session keys.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionVerifyParams {
+    /// Session token from `btsp.session.create`.
+    pub session_token: String,
+    /// Base64-encoded client ephemeral X25519 public key.
+    pub client_ephemeral_pub: String,
+    /// Base64-encoded HMAC response from the client.
+    pub response: String,
+    /// Preferred cipher suite name (e.g. `"chacha20_poly1305"`).
+    #[serde(default = "default_cipher")]
+    pub preferred_cipher: String,
+}
+
+/// Response from `btsp.session.verify`
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionVerifyResponse {
+    /// Whether verification succeeded.
+    pub verified: bool,
+    /// Hex-encoded session ID (set only when `verified` is true).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub session_id: Option<String>,
+    /// Negotiated cipher suite name.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cipher: Option<String>,
+    /// Error detail (set only on failure).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+/// Parameters for `btsp.session.negotiate`
+///
+/// Negotiate (or re-negotiate) the cipher suite for an existing session.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionNegotiateParams {
+    /// Session token or session ID.
+    pub session_token: String,
+    /// Requested cipher suite name.
+    pub cipher: String,
+}
+
+/// Response from `btsp.session.negotiate`
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionNegotiateResponse {
+    /// Whether the negotiation succeeded.
+    pub accepted: bool,
+    /// Negotiated cipher suite name (may differ from request).
+    pub cipher: String,
+}
+
+fn default_cipher() -> String {
+    "chacha20_poly1305".into()
+}
+
 const fn default_true() -> bool {
     true
 }

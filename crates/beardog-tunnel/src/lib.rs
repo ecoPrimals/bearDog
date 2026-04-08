@@ -136,6 +136,9 @@ pub mod modes;
 // NOTE: Tunnel module stabilized - proceeding with Phase 2 implementations
 pub mod universal_hsm;
 
+// BTSP handshake enforcement for socket listeners (Phase 2, BTSP_PROTOCOL_STANDARD.md)
+pub mod btsp_handshake;
+
 // BTSP Provider - internet deployment via discovered transport peer
 pub mod btsp_provider;
 
@@ -161,6 +164,8 @@ pub mod graph_security;
 // Binds ALL available transports simultaneously for universal deployment
 pub mod multi_transport_server;
 
+#[cfg(test)]
+mod btsp_handshake_tests;
 #[cfg(test)]
 mod unix_socket_ipc_btsp_tests;
 #[cfg(test)]
