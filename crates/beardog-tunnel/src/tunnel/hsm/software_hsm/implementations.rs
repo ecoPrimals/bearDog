@@ -3,15 +3,6 @@
 
 
 use beardog_errors::BearDogError;
-// NOTE: Commenting out canonical imports - types don't exist yet
-// use beardog_types::canonical::hsm::config::SoftwareHsmConfig;
-// use beardog_types::canonical::hsm::{HsmKey, KeyHealth, KeyMaterial};
-// use beardog_types::canonical::{KeyMetadata, KeyOperation, KeyType, KeyUsagePolicy};
-// use beardog_types::providers::{
-//     BaseProvider, HsmHardwareStatus, HsmInfo, HsmKeyInfo, HsmProvider, ProviderConfig,
-//     ProviderHealthStatus,
-// };
-// Using local types instead
 use crate::tunnel::hsm::types::{HsmKey, KeyMetadata, KeyType};
 use crate::tunnel::hsm::types::config::SoftwareHsmConfig;
 use std::sync::Arc;
@@ -22,9 +13,9 @@ use super::keys::SoftwareKeyStore;
 // See: crates/beardog-tunnel/src/tunnel/hsm/software_hsm/crypto_providers/
 // Real implementations with actual cryptography are in that module
 
-    /// RustSoftwareHsm configuration and state.
-    ///
-    /// Provides comprehensive functionality for the beardog ecosystem.
+/// RustSoftwareHsm configuration and state.
+///
+/// Provides comprehensive functionality for the beardog ecosystem.
 pub struct RustSoftwareHsm {
 
     pub config: SoftwareHsmConfig,

@@ -476,7 +476,10 @@ fn test_license_selection_based_on_indicator() {
 }
 
 #[test]
-#[allow(clippy::cast_precision_loss)]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "usage_volume as f64 for synthetic pricing integration estimate"
+)]
 fn test_pricing_calculation_integration() {
     let indicator = EnterpriseIndicator {
         organization_size: 500,

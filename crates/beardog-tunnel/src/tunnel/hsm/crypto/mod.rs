@@ -19,9 +19,16 @@ pub mod requirements;
 mod algorithms_tests;
 
 // Re-exports for convenience
-pub use algorithms::*;
-pub use capabilities::*;
+pub use algorithms::{
+    AesMode, AlgorithmCategory, AlgorithmSpec, Argon2Variant, AsymmetricAlgorithm, CryptoAlgorithm,
+    CryptoOperation, DecryptionOptions, EncryptedData, EncryptionOptions, HashAlgorithm,
+    KdfAlgorithm, Signature, SignatureAlgorithm, SigningOptions, SymmetricAlgorithm,
+    VerificationOptions,
+};
+pub use capabilities::{
+    CryptoCapabilities, HardwareFeature, PerformanceProfile, Platform, SideChannelResistance,
+};
 pub use manager::CryptoProviderManager;
 pub use provider::UniversalCryptoProvider;
-pub use providers::*;
-pub use requirements::*;
+pub use providers::RustCryptoProvider;
+pub use requirements::CryptoRequirements;

@@ -19,7 +19,10 @@ enum WorkflowState {
 
 /// Mock workflow for state testing
 struct MockWorkflow {
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "workflow state test scaffolding and reserved variants"
+    )]
     id: String,
     state: WorkflowState,
     progress: u8,

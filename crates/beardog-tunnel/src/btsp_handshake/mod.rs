@@ -160,4 +160,20 @@ mod tests {
         };
         assert!(prod.is_production());
     }
+
+    #[test]
+    #[serial_test::serial]
+    fn resolve_security_mode_production_uses_family_seed_env() {
+        beardog_errors::process_env::remove_var("BIOMEOS_INSECURE");
+        beardog_errors::process_env::remove_var("BEARDOG_FAMILY_ID");
+        beardog_errors::process_env::set_var("FAMILY_ID", "not-default-prod");
+        beardog_errors::process_env::set_var("FAMILY_SEED", "exactly-thirty-two-byte-seed!!!!");
+
+        let mode = resolve_security_mode().expect("resolve production");
+
+        beardog_errors::process_env::remove_var("FAMILY_ID");
+        beardog_errors::process_env::remove_var("FAMILY_SEED");
+
+        assert!(mode.is_production());
+    }
 }

@@ -59,12 +59,7 @@ use p384::ecdsa::{
     Signature as P384Signature, SigningKey as P384SigningKey, VerifyingKey as P384VerifyingKey,
 };
 // Removed unused: Verifier trait, ToEncodedPoint
-// Note: P-521 imports commented out due to rand_core version conflict
-// use p521::ecdsa::{
-//     signature::{Signer as P521Signer, Verifier as P521Verifier},
-//     Signature as P521Signature, SigningKey as P521SigningKey, VerifyingKey as P521VerifyingKey,
-// };
-// use p521::elliptic_curve::sec1::ToEncodedPoint as P521ToEncodedPoint;
+// P-521: add p521 ECDSA imports when p521 aligns with workspace `rand_core`.
 use aes_gcm::aead::OsRng as CryptoOsRng;
 use tracing::{debug, info};
 use zeroize::Zeroizing;
@@ -678,12 +673,5 @@ mod tests {
         assert_eq!(verify_result["valid"], false);
     }
 
-    // ========================================================================
-    // ECDSA P-521 Tests - FUTURE (commented out due to implementation delay)
-    // ========================================================================
-    //
-    // Note: P-521 tests commented out until implementation is complete
-    // (waiting for p521 crate stable release with compatible rand_core)
-
-    /* P-521 tests will go here when implemented */
+    // P-521 signing tests: deferred until p521 + rand_core are compatible (see module docs).
 }

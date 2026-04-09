@@ -90,7 +90,8 @@ impl Default for AnalyticsConfig {
     clippy::float_cmp,
     clippy::absurd_extreme_comparisons,
     unused_comparisons,
-    clippy::nonminimal_bool
+    clippy::nonminimal_bool,
+    reason = "analytics metrics tests: float thresholds and exhaustive coverage (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 #[path = "analytics_tests.rs"]

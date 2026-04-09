@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Unit tests for server handler
+//! Unit tests for [`ServerArgs`] and server handler wiring.
+//!
+//! Resolution helpers are covered in `handlers/server.rs` (`server_handler_tests`).
 
 #[cfg(test)]
+#[expect(clippy::unwrap_used, reason = "test assertions")]
 mod tests {
 
     use crate::ServerArgs;
-    use crate::handlers::server::resolve_server_socket_path;
-    use beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_ipc_subdir_from_optional;
 
     #[test]
     fn test_server_args_creation() {
@@ -60,73 +61,6 @@ mod tests {
 
         assert!(args.r#abstract);
         assert_eq!(args.family_id, Some("stun_test".to_string()));
-    }
-
-    #[test]
-    fn test_resolve_server_socket_path_abstract_default_family() {
-        let args = ServerArgs {
-            socket: "/tmp/ignored.sock".to_string(),
-            r#abstract: true,
-            port: None,
-            listen: None,
-            audit_dir: None,
-            family_id: None,
-            orchestrator_id: None,
-        };
-        let ns = resolve_biomeos_ipc_subdir_from_optional(None);
-        assert_eq!(
-            resolve_server_socket_path(&args),
-            format!("@{ns}_beardog_default")
-        );
-    }
-
-    #[test]
-    fn test_resolve_server_socket_path_abstract_named_family() {
-        let args = ServerArgs {
-            socket: "/tmp/ignored.sock".to_string(),
-            r#abstract: true,
-            port: None,
-            listen: None,
-            audit_dir: None,
-            family_id: Some("alpha".to_string()),
-            orchestrator_id: None,
-        };
-        let ns = resolve_biomeos_ipc_subdir_from_optional(None);
-        assert_eq!(
-            resolve_server_socket_path(&args),
-            format!("@{ns}_beardog_alpha")
-        );
-    }
-
-    #[test]
-    fn test_resolve_server_socket_path_family_scoped_file() {
-        let args = ServerArgs {
-            socket: "/var/run/beardog.sock".to_string(),
-            r#abstract: false,
-            port: None,
-            listen: None,
-            audit_dir: None,
-            family_id: Some("fam99".to_string()),
-            orchestrator_id: None,
-        };
-        assert_eq!(
-            resolve_server_socket_path(&args),
-            "/var/run/beardog-fam99.sock"
-        );
-    }
-
-    #[test]
-    fn test_resolve_server_socket_path_explicit_when_no_family() {
-        let args = ServerArgs {
-            socket: "/tmp/custom.sock".to_string(),
-            r#abstract: false,
-            port: None,
-            listen: None,
-            audit_dir: None,
-            family_id: None,
-            orchestrator_id: None,
-        };
-        assert_eq!(resolve_server_socket_path(&args), "/tmp/custom.sock");
     }
 
     #[test]

@@ -2,51 +2,50 @@
 
 //! # Unix Socket Configuration
 //!
-//! This module provides a robust, Primal IPC Protocol compliant socket path configuration
-//! with a 5-tier fallback system (TRUE PRIMAL architecture):
+//! Robust, BTSP-compliant socket path resolution with a 5-tier fallback system:
 //!
 //! 1. **Primal-Specific** (highest priority): `BEARDOG_SOCKET`
 //! 2. **Generic Orchestrator**: `BIOMEOS_SOCKET_PATH` or `BIOMEOS_SOCKET_DIR`
 //! 3. **Primal IPC Protocol Standard**: `/primal/{PRIMAL_NAME}` (discovery-based)
-//! 4. **XDG Runtime Directory**: `/run/user/<uid>/biomeos/{PRIMAL_NAME}.sock` (biomeOS standard)
-//! 5. **Temp Directory** (last resort): `{temp}/{PRIMAL_NAME}-<family>-<node>.sock` (override root with `BEARDOG_SOCKET_TMP_DIR`)
+//! 4. **XDG Runtime Directory**: `/run/user/<uid>/biomeos/{socket_filename}` (biomeOS standard)
+//! 5. **Temp Directory** (last resort): `{temp}/{PRIMAL_NAME}-<family>-<node>.sock`
 //!
-//! ## Self-Knowledge via PRIMAL_NAME
+//! ## Family-Scoped Sockets (BTSP Production Mode)
 //!
-//! The primal name is discovered via the `PRIMAL_NAME` environment variable (defaults to "beardog").
-//! This follows the TRUE PRIMAL principle: primals only know themselves and discover others at runtime.
+//! When `FAMILY_ID` is set (and not `"default"`), tiers 2-4 produce family-scoped
+//! socket filenames (`beardog-{family_id}.sock`) per `BTSP_PROTOCOL_STANDARD.md`.
+//! This is the BTSP activation signal: all incoming connections MUST authenticate
+//! via the BTSP handshake before any JSON-RPC methods are exposed.
 //!
-//! ## Primal IPC Protocol Compliance
+//! When `FAMILY_ID` is unset or `"default"`, tiers produce `beardog.sock` (development mode).
 //!
-//! Per `/wateringHole/PRIMAL_IPC_PROTOCOL.md`:
-//! - Standard namespace: `/primal/{primal-name}`
-//! - Path is constructed from PRIMAL_NAME (capability-based, not hardcoded)
+//! ## Security Guards
 //!
-//! ## Security & Standards
-//!
-//! - ✅ Primal IPC Protocol compliant
-//! - ✅ XDG Base Directory Specification compliant
-//! - ✅ Per-user runtime directories (`/run/user/<uid>/`)
-//! - ✅ Automatic directory creation with proper permissions
-//! - ✅ Old socket cleanup (prevents "address already in use")
-//! - ✅ Multi-instance support via family/node IDs
-//! - ✅ Neural API orchestration support (BIOMEOS_SOCKET_PATH)
+//! Setting both `FAMILY_ID` (non-default) and `BIOMEOS_INSECURE=1` is a fatal
+//! configuration conflict — you cannot claim a family AND skip authentication.
+//! `SocketConfig::from_inputs` returns `Err(SocketConfigError::InsecureWithFamily)`.
 //!
 //! ## Usage
 //!
-//! ```rust
+//! ```rust,no_run
 //! use beardog_core::socket_config::SocketConfig;
 //!
-//! // Get socket path using environment-driven configuration
-//! let config = SocketConfig::from_env();
+//! let config = SocketConfig::from_env().expect("socket config conflict");
 //! let socket_path = config.socket_path();
-//!
-//! println!("Socket: {}", socket_path.display());
-//! // Output: {platform temp}/beardog-default-default.sock (or as set by Neural API)
+//! println!("Socket: {} (production={})", socket_path.display(), config.production_mode());
 //! ```
 
+use std::collections::HashSet;
+use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
+
+use crate::self_knowledge::SimpleCapability;
+use beardog_types::primal_identity::resolve_node_id_from_env_or_ephemeral;
+use tracing::warn;
+
+/// Default primal identifier when `PRIMAL_NAME` is unset — used for tier 3–5 socket path resolution.
+pub const DEFAULT_PRIMAL_NAME: &str = "beardog";
 
 /// All inputs needed to resolve a [`SocketConfig`] without reading the process environment.
 ///
@@ -58,18 +57,22 @@ pub struct SocketPathInputs {
     pub beardog_socket: Option<String>,
     /// Tier 2: `BIOMEOS_SOCKET_PATH`
     pub biomeos_socket_path: Option<String>,
-    /// Tier 2: `BIOMEOS_SOCKET_DIR` (joins `beardog.sock`)
+    /// Tier 2: `BIOMEOS_SOCKET_DIR` (joined with the resolved socket filename)
     pub biomeos_socket_dir: Option<String>,
-    /// Used for tier 3–5 path construction; defaults to `"beardog"` in resolution.
+    /// Used for tier 3–5 path construction; defaults to [`DEFAULT_PRIMAL_NAME`] in resolution.
     pub primal_name: Option<String>,
     /// Resolved family id (`BEARDOG_FAMILY_ID` / `FAMILY_ID`); default `"default"`.
     pub family_id: Option<String>,
-    /// Resolved node id (`BEARDOG_NODE_ID` / `NODE_ID`); default `"default"`.
+    /// Resolved node id (`BEARDOG_NODE_ID` / `NODE_ID`); if unset or empty, [`SocketConfig::from_inputs`]
+    /// uses the same ephemeral `standalone-{uuid}` as [`beardog_types::primal_identity::PrimalIdentity`].
     pub node_id: Option<String>,
     /// User id for tier 4 (`/run/user/<uid>/...`); defaults to `1000` in [`Default`].
     pub uid: u32,
     /// When `true`, tier 3 uses `/primal/<primal_name>` if tier 1–2 do not apply.
     pub primal_namespace_root_exists: bool,
+    /// `BIOMEOS_INSECURE` env var; when `true` AND `family_id` is set (non-default),
+    /// the primal MUST refuse to start per `BTSP_PROTOCOL_STANDARD.md`.
+    pub biomeos_insecure: bool,
 }
 
 impl Default for SocketPathInputs {
@@ -83,6 +86,7 @@ impl Default for SocketPathInputs {
             node_id: None,
             uid: 1000,
             primal_namespace_root_exists: false,
+            biomeos_insecure: false,
         }
     }
 }
@@ -101,6 +105,9 @@ impl SocketPathInputs {
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(1000);
+        let biomeos_insecure = std::env::var("BIOMEOS_INSECURE")
+            .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+            .unwrap_or(false);
 
         Self {
             beardog_socket: std::env::var("BEARDOG_SOCKET").ok(),
@@ -111,9 +118,43 @@ impl SocketPathInputs {
             node_id,
             uid,
             primal_namespace_root_exists: Path::new("/primal").exists(),
+            biomeos_insecure,
+        }
+    }
+
+    /// Returns `true` when `FAMILY_ID` is set to a non-default value,
+    /// indicating production mode (BTSP handshake required on all connections).
+    #[must_use]
+    pub fn is_production_mode(&self) -> bool {
+        matches!(self.family_id.as_deref(), Some(fid) if !fid.is_empty() && fid != "default")
+    }
+}
+
+/// Fatal configuration conflicts detected during socket resolution.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SocketConfigError {
+    /// `FAMILY_ID` (non-default) and `BIOMEOS_INSECURE=1` are both set.
+    /// Per `BTSP_PROTOCOL_STANDARD.md`: you cannot claim a family AND skip authentication.
+    InsecureWithFamily {
+        /// The non-default family id that was set.
+        family_id: String,
+    },
+}
+
+impl std::fmt::Display for SocketConfigError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InsecureWithFamily { family_id } => write!(
+                f,
+                "FATAL: FAMILY_ID={family_id} and BIOMEOS_INSECURE are both set. \
+                 Cannot claim a family AND skip BTSP authentication. \
+                 Unset BIOMEOS_INSECURE for production or unset FAMILY_ID for development."
+            ),
         }
     }
 }
+
+impl std::error::Error for SocketConfigError {}
 
 /// Socket configuration with 5-tier fallback logic
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -126,6 +167,8 @@ pub struct SocketConfig {
     node_id: String,
     /// Which tier was used (for diagnostics)
     source: SocketPathSource,
+    /// `true` when `FAMILY_ID` is set to a non-default value (BTSP handshake required)
+    production_mode: bool,
 }
 
 /// Indicates which tier of fallback logic was used
@@ -146,79 +189,100 @@ pub enum SocketPathSource {
 impl SocketConfig {
     /// Resolve socket configuration from explicit inputs (no environment reads).
     ///
-    /// Implements 5-tier fallback (Primal IPC Protocol compliant):
+    /// Implements 5-tier fallback (Primal IPC Protocol + BTSP compliant):
     /// 1. `beardog_socket` (primal-specific, highest priority)
     /// 2. `biomeos_socket_path` or `biomeos_socket_dir` (generic orchestrator)
     /// 3. `/primal/{primal-name}` when `primal_namespace_root_exists`
-    /// 4. `/run/user/<uid>/biomeos/beardog.sock` when the XDG runtime dir exists
+    /// 4. `/run/user/<uid>/biomeos/{socket_filename}` when the XDG runtime dir exists
     /// 5. Platform temp dir + `{primal-name}-{family}-{node}.sock` (fallback; root from `BEARDOG_SOCKET_TMP_DIR`)
-    #[must_use]
-    pub fn from_inputs(inputs: &SocketPathInputs) -> Self {
+    ///
+    /// When `FAMILY_ID` is set (production mode), tiers 2-4 produce family-scoped
+    /// filenames (`beardog-{family_id}.sock`) per `BTSP_PROTOCOL_STANDARD.md`.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` when both `FAMILY_ID` (non-default) and `BIOMEOS_INSECURE` are set —
+    /// this is a fatal configuration conflict per BTSP spec.
+    pub fn from_inputs(inputs: &SocketPathInputs) -> Result<Self, SocketConfigError> {
         let family_id = inputs
             .family_id
             .clone()
             .unwrap_or_else(|| "default".to_string());
-        let node_id = inputs
-            .node_id
-            .clone()
-            .unwrap_or_else(|| "default".to_string());
+        let node_id = resolve_node_id_from_env_or_ephemeral(inputs.node_id.as_deref());
 
-        // Tier 1: primal-specific BEARDOG_SOCKET
-        if let Some(ref socket_path) = inputs.beardog_socket
-            && !socket_path.is_empty()
-        {
-            return Self {
-                socket_path: PathBuf::from(socket_path),
-                family_id,
-                node_id,
-                source: SocketPathSource::PrimalEnvVar,
-            };
-        }
+        let production_mode = inputs.is_production_mode();
 
-        // Tier 2: BIOMEOS_SOCKET_PATH or BIOMEOS_SOCKET_DIR
-        if let Some(ref socket_path) = inputs.biomeos_socket_path {
-            if !socket_path.is_empty() {
-                return Self {
-                    socket_path: PathBuf::from(socket_path),
-                    family_id,
-                    node_id,
-                    source: SocketPathSource::OrchestratorEnvVar,
-                };
-            }
-        } else if let Some(ref socket_dir) = inputs.biomeos_socket_dir
-            && !socket_dir.is_empty()
-        {
-            return Self {
-                socket_path: PathBuf::from(socket_dir).join("beardog.sock"),
-                family_id,
-                node_id,
-                source: SocketPathSource::OrchestratorEnvVar,
-            };
+        if production_mode && inputs.biomeos_insecure {
+            return Err(SocketConfigError::InsecureWithFamily { family_id });
         }
 
         let primal_name = inputs
             .primal_name
             .clone()
-            .unwrap_or_else(|| "beardog".to_string());
+            .unwrap_or_else(|| DEFAULT_PRIMAL_NAME.to_string());
+
+        let socket_filename = if production_mode {
+            format!("{primal_name}-{family_id}.sock")
+        } else {
+            format!("{primal_name}.sock")
+        };
+
+        // Tier 1: primal-specific BEARDOG_SOCKET
+        if let Some(ref socket_path) = inputs.beardog_socket
+            && !socket_path.is_empty()
+        {
+            return Ok(Self {
+                socket_path: PathBuf::from(socket_path),
+                family_id,
+                node_id,
+                source: SocketPathSource::PrimalEnvVar,
+                production_mode,
+            });
+        }
+
+        // Tier 2: BIOMEOS_SOCKET_PATH or BIOMEOS_SOCKET_DIR
+        if let Some(ref socket_path) = inputs.biomeos_socket_path {
+            if !socket_path.is_empty() {
+                return Ok(Self {
+                    socket_path: PathBuf::from(socket_path),
+                    family_id,
+                    node_id,
+                    source: SocketPathSource::OrchestratorEnvVar,
+                    production_mode,
+                });
+            }
+        } else if let Some(ref socket_dir) = inputs.biomeos_socket_dir
+            && !socket_dir.is_empty()
+        {
+            return Ok(Self {
+                socket_path: PathBuf::from(socket_dir).join(&socket_filename),
+                family_id,
+                node_id,
+                source: SocketPathSource::OrchestratorEnvVar,
+                production_mode,
+            });
+        }
 
         // Tier 3: Primal IPC Protocol standard namespace
         if inputs.primal_namespace_root_exists {
-            return Self {
+            return Ok(Self {
                 socket_path: PathBuf::from(format!("/primal/{primal_name}")),
                 family_id,
                 node_id,
                 source: SocketPathSource::PrimalNamespace,
-            };
+                production_mode,
+            });
         }
 
         // Tier 4: XDG Runtime Directory
-        if let Some(xdg_path) = Self::try_xdg_runtime(inputs.uid) {
-            return Self {
+        if let Some(xdg_path) = Self::try_xdg_runtime(inputs.uid, &socket_filename) {
+            return Ok(Self {
                 socket_path: xdg_path,
                 family_id,
                 node_id,
                 source: SocketPathSource::XdgRuntime,
-            };
+                production_mode,
+            });
         }
 
         // Tier 5: platform temp dir fallback (`BEARDOG_SOCKET_TMP_DIR` overrides root)
@@ -228,35 +292,38 @@ impl SocketConfig {
             .join(format!("{primal_name}-{family_id}-{node_id}.sock"))
             .display()
             .to_string();
-        Self {
+        Ok(Self {
             socket_path: PathBuf::from(tmp_path),
             family_id,
             node_id,
             source: SocketPathSource::TempDir,
-        }
+            production_mode,
+        })
     }
 
     /// Create socket configuration from environment variables.
     ///
-    /// Thin wrapper: [`SocketPathInputs::from_env`] then [`SocketConfig::from_inputs`].
-    #[must_use]
-    pub fn from_env() -> Self {
+    /// Thin wrapper: [`SocketPathInputs::from_env`] then [`Self::from_inputs`].
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` when `FAMILY_ID` and `BIOMEOS_INSECURE` are both set.
+    pub fn from_env() -> Result<Self, SocketConfigError> {
         Self::from_inputs(&SocketPathInputs::from_env())
     }
 
-    /// Try to use XDG Runtime Directory
+    /// Try to use XDG Runtime Directory.
     ///
-    /// Returns `Some(path)` if `/run/user/<uid>/` exists, otherwise `None`
-    ///
-    /// Creates socket at `/run/user/<uid>/biomeos/beardog.sock` for biomeOS integration.
-    /// The `/biomeos/` subdirectory groups all biomeOS primal sockets together for
-    /// easy discovery and management.
-    fn try_xdg_runtime(uid: u32) -> Option<PathBuf> {
+    /// Returns `Some(path)` if `/run/user/<uid>/` exists, otherwise `None`.
+    /// The socket filename is caller-determined and already family-scoped when applicable.
+    fn try_xdg_runtime(uid: u32, socket_filename: &str) -> Option<PathBuf> {
         let xdg_runtime_dir = format!("/run/user/{uid}");
         if Path::new(&xdg_runtime_dir).exists() {
-            Some(PathBuf::from(format!(
-                "{xdg_runtime_dir}/biomeos/beardog.sock"
-            )))
+            Some(
+                PathBuf::from(&xdg_runtime_dir)
+                    .join("biomeos")
+                    .join(socket_filename),
+            )
         } else {
             None
         }
@@ -290,6 +357,12 @@ impl SocketConfig {
     #[must_use]
     pub const fn source(&self) -> SocketPathSource {
         self.source
+    }
+
+    /// Returns `true` when `FAMILY_ID` is non-default, indicating BTSP production mode.
+    #[must_use]
+    pub const fn production_mode(&self) -> bool {
+        self.production_mode
     }
 
     /// Prepare the socket path for binding
@@ -332,6 +405,46 @@ impl SocketConfig {
         Ok(())
     }
 
+    /// Filename suffix for wateringHole IPC v3.1 capability symlinks (`{stem}{suffix}`), aligned with
+    /// the primary socket name (`beardog.sock` vs `beardog-{family}.sock`).
+    #[must_use]
+    pub fn ipc_symlink_filename_suffix(&self) -> String {
+        if self.production_mode {
+            format!("-{}.sock", self.family_id)
+        } else {
+            ".sock".to_string()
+        }
+    }
+
+    /// Install capability-domain symlinks next to the bound primal socket.
+    ///
+    /// Per `PRIMAL_IPC_PROTOCOL.md` v3.1, each discovered capability domain gets
+    /// `{domain}{suffix} -> <primal-socket-basename>` (e.g. `crypto.sock -> beardog.sock`).
+    ///
+    /// Call after `prepare()` and a successful `bind()`. On failure for a single domain, logs a
+    /// warning and continues. Returns paths successfully created (for diagnostics).
+    #[must_use]
+    pub fn install_ipc_capability_symlinks(&self, domain_stems: &[String]) -> Vec<PathBuf> {
+        let Some(basename) = self.socket_path.file_name() else {
+            return Vec::new();
+        };
+        install_ipc_symlinks_at(
+            &self.socket_path,
+            basename,
+            &self.ipc_symlink_filename_suffix(),
+            domain_stems,
+        )
+    }
+
+    /// Remove symlinks for the given domain stems (same suffix as [`Self::ipc_symlink_filename_suffix`].
+    pub fn remove_ipc_capability_symlinks(&self, domain_stems: &[String]) {
+        remove_ipc_symlinks_at(
+            &self.socket_path,
+            &self.ipc_symlink_filename_suffix(),
+            domain_stems,
+        );
+    }
+
     /// Get a descriptive string for logging
     #[must_use]
     pub fn description(&self) -> String {
@@ -371,11 +484,13 @@ impl SocketConfig {
 
     /// Create a custom socket configuration (for testing)
     pub fn custom(socket_path: impl Into<PathBuf>, family_id: String, node_id: String) -> Self {
+        let production_mode = !family_id.is_empty() && family_id != "default";
         Self {
             socket_path: socket_path.into(),
             family_id,
             node_id,
             source: SocketPathSource::PrimalEnvVar,
+            production_mode,
         }
     }
 }
@@ -386,249 +501,168 @@ impl std::fmt::Display for SocketConfig {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+/// Configuration for wateringHole IPC v3.1 capability-domain symlinks next to the primal socket.
+#[derive(Debug, Clone)]
+pub struct IpcCapabilitySymlinksConfig {
+    /// Symlink filename suffix (e.g. `.sock`, or `-<family>.sock` in production).
+    pub symlink_suffix: String,
+    /// Capability domain stems (e.g. `crypto`, `security`, `btsp`) — symlink `{stem}{symlink_suffix}` → primal basename.
+    pub domain_stems: Vec<String>,
+}
 
-    #[test]
-    fn test_env_var_override_takes_priority() {
-        let config = SocketConfig::from_inputs(&SocketPathInputs {
-            beardog_socket: Some("/tmp/custom-override.sock".to_string()),
-            family_id: Some("test0".to_string()),
-            ..Default::default()
-        });
-
-        assert_eq!(
-            config.socket_path_string(),
-            "/tmp/custom-override.sock",
-            "BEARDOG_SOCKET env var must take highest priority (Tier 1)"
-        );
-        assert_eq!(
-            config.source(),
-            SocketPathSource::PrimalEnvVar,
-            "Source should be PrimalEnvVar when BEARDOG_SOCKET is set"
-        );
-        assert_eq!(config.family_id(), "test0");
-    }
-
-    #[test]
-    fn test_empty_socket_path_rejected() {
-        let config = SocketConfig::from_inputs(&SocketPathInputs {
-            beardog_socket: Some(String::new()),
-            family_id: Some("test".to_string()),
-            primal_namespace_root_exists: false,
-            ..Default::default()
-        });
-
-        assert_ne!(config.socket_path_string(), "");
-        assert_ne!(config.source(), SocketPathSource::PrimalEnvVar);
-
-        assert!(
-            config.source() == SocketPathSource::XdgRuntime
-                || config.source() == SocketPathSource::TempDir
-        );
-    }
-
-    #[test]
-    fn test_empty_biomeos_socket_rejected() {
-        let config = SocketConfig::from_inputs(&SocketPathInputs {
-            biomeos_socket_path: Some(String::new()),
-            family_id: Some("test".to_string()),
-            primal_namespace_root_exists: false,
-            ..Default::default()
-        });
-
-        assert_ne!(config.socket_path_string(), "");
-        assert_ne!(config.source(), SocketPathSource::OrchestratorEnvVar);
-
-        assert!(
-            config.source() == SocketPathSource::XdgRuntime
-                || config.source() == SocketPathSource::TempDir
-        );
-    }
-
-    #[test]
-    fn test_biomeos_socket_path_tier2() {
-        let config = SocketConfig::from_inputs(&SocketPathInputs {
-            biomeos_socket_path: Some("/tmp/beardog-default-default.sock".to_string()),
-            family_id: Some("nat0".to_string()),
-            primal_namespace_root_exists: false,
-            ..Default::default()
-        });
-
-        assert_eq!(
-            config.socket_path_string(),
-            "/tmp/beardog-default-default.sock",
-            "BIOMEOS_SOCKET_PATH should be honored (Tier 2)"
-        );
-        assert_eq!(
-            config.source(),
-            SocketPathSource::OrchestratorEnvVar,
-            "Source should be OrchestratorEnvVar when BIOMEOS_SOCKET_PATH is set"
-        );
-    }
-
-    #[test]
-    fn test_beardog_socket_overrides_biomeos_socket_path() {
-        let config = SocketConfig::from_inputs(&SocketPathInputs {
-            beardog_socket: Some("/custom/beardog-specific.sock".to_string()),
-            biomeos_socket_path: Some("/tmp/biomeos-generic.sock".to_string()),
-            ..Default::default()
-        });
-
-        assert_eq!(
-            config.socket_path_string(),
-            "/custom/beardog-specific.sock",
-            "BEARDOG_SOCKET (Tier 1) should override BIOMEOS_SOCKET_PATH (Tier 2)"
-        );
-        assert_eq!(
-            config.source(),
-            SocketPathSource::PrimalEnvVar,
-            "Source should be PrimalEnvVar when BEARDOG_SOCKET is set"
-        );
-    }
-
-    #[test]
-    fn test_xdg_runtime_preferred_over_tmp() {
-        let config = SocketConfig::from_inputs(&SocketPathInputs {
-            family_id: Some("xdg-test".to_string()),
-            primal_namespace_root_exists: false,
-            ..Default::default()
-        });
-
-        match config.source() {
-            SocketPathSource::XdgRuntime => {
-                assert!(config.socket_path_string().contains("/run/user/"));
-                assert!(config.socket_path_string().contains("biomeos/beardog.sock"));
-            }
-            SocketPathSource::TempDir => {
-                let expect = std::env::temp_dir().join("beardog-");
-                assert!(
-                    config
-                        .socket_path_string()
-                        .starts_with(expect.to_string_lossy().as_ref())
-                );
-            }
-            _ => panic!("Unexpected source: {:?}", config.source()),
+impl Default for IpcCapabilitySymlinksConfig {
+    fn default() -> Self {
+        Self {
+            symlink_suffix: ".sock".to_string(),
+            domain_stems: Vec::new(),
         }
-    }
-
-    #[test]
-    fn test_fallback_to_tmp_with_node_id() {
-        let config = SocketConfig::from_inputs(&SocketPathInputs {
-            family_id: Some("fallback".to_string()),
-            node_id: Some("node123".to_string()),
-            primal_namespace_root_exists: false,
-            ..Default::default()
-        });
-
-        if config.source() == SocketPathSource::TempDir {
-            let p = std::env::temp_dir().join("beardog-fallback-node123.sock");
-            assert_eq!(config.socket_path_string(), p.display().to_string());
-        } else if config.source() == SocketPathSource::XdgRuntime {
-            // XDG path when /run/user/<uid> exists
-            assert!(config.socket_path_string().contains("/run/user/"));
-        }
-    }
-
-    #[test]
-    fn test_default_family_and_node_ids() {
-        let config = SocketConfig::from_inputs(&SocketPathInputs {
-            primal_namespace_root_exists: false,
-            ..Default::default()
-        });
-
-        assert_eq!(config.family_id(), "default");
-        assert_eq!(config.node_id(), "default");
-
-        if config.source() == SocketPathSource::TempDir {
-            let p = std::env::temp_dir().join("beardog-default-default.sock");
-            assert_eq!(config.socket_path_string(), p.display().to_string());
-        }
-    }
-
-    #[test]
-    fn test_primal_namespace_tier3_when_root_exists() {
-        let config = SocketConfig::from_inputs(&SocketPathInputs {
-            primal_namespace_root_exists: true,
-            primal_name: None,
-            ..Default::default()
-        });
-        assert_eq!(config.source(), SocketPathSource::PrimalNamespace);
-        assert_eq!(config.socket_path_string(), "/primal/beardog");
-    }
-
-    #[test]
-    fn test_description_format() {
-        let config = SocketConfig::from_inputs(&SocketPathInputs {
-            beardog_socket: Some("/custom/socket.sock".to_string()),
-            ..Default::default()
-        });
-
-        let desc = config.description();
-        assert!(desc.contains("/custom/socket.sock"));
-        assert!(desc.contains("BEARDOG_SOCKET"));
-    }
-
-    #[test]
-    fn test_custom_config() {
-        let config = SocketConfig::custom(
-            "/test/custom.sock",
-            "family1".to_string(),
-            "node1".to_string(),
-        );
-
-        assert_eq!(config.socket_path_string(), "/test/custom.sock");
-        assert_eq!(config.family_id(), "family1");
-        assert_eq!(config.node_id(), "node1");
-    }
-
-    #[test]
-    fn test_prepare_removes_old_socket() {
-        // Create a temporary directory for testing
-        let test_dir = std::env::temp_dir().join("beardog-socket-test");
-        fs::create_dir_all(&test_dir).expect("Failed to create test directory");
-
-        let socket_path = test_dir.join("test-socket.sock");
-
-        // Create an old socket file
-        fs::write(&socket_path, b"old socket").expect("Failed to write test socket file");
-        assert!(socket_path.exists());
-
-        let config =
-            SocketConfig::custom(socket_path.clone(), "test".to_string(), "test".to_string());
-
-        // Prepare should remove the old socket
-        config.prepare().expect("prepare() should succeed for test");
-        assert!(!socket_path.exists());
-
-        // Cleanup
-        let _ = fs::remove_dir_all(&test_dir);
-    }
-
-    #[test]
-    fn test_prepare_creates_parent_directory() {
-        let test_dir = std::env::temp_dir().join("beardog-socket-test-nested");
-        let socket_path = test_dir.join("subdir").join("test.sock");
-
-        // Ensure the directory doesn't exist
-        let _ = fs::remove_dir_all(&test_dir);
-
-        let config =
-            SocketConfig::custom(socket_path.clone(), "test".to_string(), "test".to_string());
-
-        // Prepare should create parent directory
-        config
-            .prepare()
-            .expect("prepare() should succeed for nested test");
-        assert!(
-            socket_path
-                .parent()
-                .expect("socket path should have parent")
-                .exists()
-        );
-
-        // Cleanup
-        let _ = fs::remove_dir_all(&test_dir);
     }
 }
+
+impl IpcCapabilitySymlinksConfig {
+    /// Build from a resolved [`SocketConfig`] and discovered [`SimpleCapability`] set.
+    #[must_use]
+    pub fn from_socket_config_and_capabilities(
+        socket_config: &SocketConfig,
+        caps: &[SimpleCapability],
+    ) -> Self {
+        Self {
+            symlink_suffix: socket_config.ipc_symlink_filename_suffix(),
+            domain_stems: ipc_capability_domain_stems_resolved(caps),
+        }
+    }
+}
+
+/// Map [`SimpleCapability`] to wateringHole IPC domain symlink stems (unordered).
+///
+/// Security umbrella covers both `SimpleCapability::Cryptography` and `SimpleCapability::HsmIntegration` (operator
+/// may enable either or both). `ed25519` / `x25519` stems are included when lineage / tunneling caps are present.
+fn capability_stems_for_ipc(caps: &[SimpleCapability]) -> HashSet<String> {
+    let mut stems = HashSet::new();
+    for cap in caps {
+        match cap {
+            SimpleCapability::Cryptography => {
+                stems.insert("crypto".into());
+                stems.insert("ed25519".into());
+                stems.insert("x25519".into());
+                stems.insert("security".into());
+            }
+            SimpleCapability::SecureTunneling => {
+                stems.insert("btsp".into());
+                stems.insert("security".into());
+            }
+            SimpleCapability::GeneticLineage => {
+                stems.insert("ed25519".into());
+                stems.insert("x25519".into());
+                stems.insert("crypto".into());
+            }
+            SimpleCapability::HsmIntegration => {
+                stems.insert("security".into());
+            }
+            SimpleCapability::Discovery => {}
+        }
+    }
+    stems
+}
+
+/// Preferred sort order for capability domain stems (stable ordering for tests and deterministic layout).
+fn sort_ipc_capability_stems(stems: &mut [String]) {
+    const PREFERRED: &[&str] = &["crypto", "btsp", "ed25519", "x25519", "security"];
+    stems.sort_by_key(|s| {
+        PREFERRED
+            .iter()
+            .position(|&p| p == s.as_str())
+            .unwrap_or(100 + s.len())
+    });
+}
+
+/// Resolve capability domain stems for symlink creation: env override first, else derived from `caps`.
+#[must_use]
+pub fn ipc_capability_domain_stems_resolved(caps: &[SimpleCapability]) -> Vec<String> {
+    if let Ok(raw) = std::env::var("BEARDOG_IPC_CAPABILITY_STEMS") {
+        let mut stems: Vec<String> = raw
+            .split(',')
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(String::from)
+            .collect();
+        if !stems.is_empty() {
+            sort_ipc_capability_stems(&mut stems);
+            return stems;
+        }
+    }
+    let mut stems: Vec<String> = capability_stems_for_ipc(caps).into_iter().collect();
+    sort_ipc_capability_stems(&mut stems);
+    stems
+}
+
+/// Derive symlink stems from [`SimpleCapability`] set (no env override).
+#[must_use]
+pub fn ipc_capability_domain_stems_from_capabilities(caps: &[SimpleCapability]) -> Vec<String> {
+    let mut stems: Vec<String> = capability_stems_for_ipc(caps).into_iter().collect();
+    sort_ipc_capability_stems(&mut stems);
+    stems
+}
+
+/// Install wateringHole capability-domain symlinks beside `primal_socket_path` (e.g. `crypto.sock` → `beardog.sock`).
+///
+/// `target_basename` is the filename of the primal socket (e.g. `OsStr` of `beardog.sock`).
+/// Symlink names are `{stem}{symlink_suffix}` (e.g. `crypto` + `.sock` → `crypto.sock`).
+///
+/// # Errors
+///
+/// Returns I/O errors from symlink creation; caller should treat partial success as acceptable (warn-only).
+#[must_use]
+pub fn install_ipc_symlinks_at(
+    primal_socket_path: &Path,
+    target_basename: &OsStr,
+    symlink_suffix: &str,
+    domain_stems: &[String],
+) -> Vec<PathBuf> {
+    let mut created = Vec::new();
+    let Some(parent) = primal_socket_path.parent() else {
+        return created;
+    };
+    for stem in domain_stems {
+        let name = format!("{stem}{symlink_suffix}");
+        let link_path = parent.join(&name);
+        #[cfg(unix)]
+        {
+            if link_path.exists() {
+                let _ = fs::remove_file(&link_path);
+            }
+            if let Err(e) = std::os::unix::fs::symlink(target_basename, &link_path) {
+                warn!(
+                    target = %target_basename.to_string_lossy(),
+                    link = %link_path.display(),
+                    err = %e,
+                    "failed to create wateringHole capability symlink"
+                );
+            } else {
+                created.push(link_path);
+            }
+        }
+    }
+    created
+}
+
+/// Remove wateringHole capability symlinks beside `primal_socket_path` for `domain_stems`.
+pub fn remove_ipc_symlinks_at(
+    primal_socket_path: &Path,
+    symlink_suffix: &str,
+    domain_stems: &[String],
+) {
+    let Some(parent) = primal_socket_path.parent() else {
+        return;
+    };
+    for stem in domain_stems {
+        let path = parent.join(format!("{stem}{symlink_suffix}"));
+        if path.exists() {
+            let _ = fs::remove_file(&path);
+        }
+    }
+}
+
+#[cfg(test)]
+#[path = "socket_config_tests.rs"]
+mod tests;

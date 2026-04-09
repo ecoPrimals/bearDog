@@ -31,7 +31,10 @@ use uuid::Uuid;
 // ============================================================================
 
 #[test]
-#[allow(clippy::float_cmp)] // Testing exact float values set in constructor
+#[expect(
+    clippy::float_cmp,
+    reason = "test assertions: exact required_confidence from constructor"
+)]
 fn test_decision_context_creation() {
     let context = DecisionContext {
         context_id: "ctx-123".to_string(),
@@ -119,7 +122,10 @@ fn test_decision_context_time_limits() {
 }
 
 #[test]
-#[allow(clippy::float_cmp)] // Testing exact float values in clone operation
+#[expect(
+    clippy::float_cmp,
+    reason = "test assertions: exact float fields preserved across clone"
+)]
 fn test_decision_context_clone() {
     let original = DecisionContext {
         context_id: "original".to_string(),
@@ -190,7 +196,10 @@ fn test_prediction_result_with_uncertainty() {
     assert!(result.uncertainty.is_some());
     let unc = result.uncertainty.unwrap();
     assert_eq!(unc.len(), 1);
-    #[allow(clippy::float_cmp)] // Testing exact uncertainty value from constructor
+    #[expect(
+        clippy::float_cmp,
+        reason = "test assertions: exact literal from test fixture vector"
+    )]
     {
         assert_eq!(unc[0], 5.0);
     }
@@ -319,7 +328,10 @@ fn test_intelligence_event_serialization() {
 // ============================================================================
 
 #[test]
-#[allow(clippy::float_cmp)] // Testing exact default float values
+#[expect(
+    clippy::float_cmp,
+    reason = "test assertions: default metric floats are exact zeros"
+)]
 fn test_intelligence_metrics_default() {
     let metrics = IntelligenceMetrics::default();
 

@@ -127,7 +127,8 @@ impl ThreatDetectionEngine {
     clippy::assertions_on_constants,
     clippy::useless_vec,
     clippy::absurd_extreme_comparisons,
-    unused_comparisons
+    unused_comparisons,
+    reason = "ML integration tests: exhaustive patterns (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 #[path = "ml_integration_tests.rs"]

@@ -37,12 +37,11 @@ pub mod security;
 pub use core::{MetricsCore, MetricsCoreConfig};
 
 // Re-export key types
-pub use analytics::*;
-// Removed unused import: pub use core::*;
-pub use ecosystem::*;
-pub use export::*;
-pub use performance::*;
-pub use security::*;
+pub use analytics::{AnalyticsConfig, AnalyticsEngine, AnalyticsSummary};
+pub use ecosystem::{EcosystemConfig, EcosystemMetrics, EcosystemMonitor};
+pub use export::{ExportConfig, ExportEngine};
+pub use performance::{PerformanceConfig, PerformanceEngine, PerformanceMetrics};
+pub use security::{SecurityMetrics, SecurityMetricsConfig, SecurityMetricsEngine};
 
 /// **UNIFIED ADVANCED METRICS SYSTEM**
 ///

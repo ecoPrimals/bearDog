@@ -36,9 +36,10 @@
 //! ## Performance
 //!
 //! When the `diagnostics` feature is **disabled** (default):
-//! - All diagnostic functions compile to **zero-cost no-ops**
-//! - Completely inlined and optimized away
-//! - **Zero performance impact**
+//! - Most diagnostic functions compile to **zero-cost no-ops** (inlined empty bodies)
+//! - [`crypto::log_hkdf_derivation`](crate::diagnostics::crypto::log_hkdf_derivation) is an
+//!   exception: it emits **structured `trace!` logs** (lengths and HKDF `info` label only) so TLS
+//!   KDF steps stay observable without stderr noise or secret material
 //!
 //! When the `diagnostics` feature is **enabled**:
 //! - Full verbose logging to stderr

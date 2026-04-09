@@ -12,36 +12,30 @@ use crate::BearDogError;
 fn test_security_error_construction() {
     let error = BearDogError::security("Authentication failed".to_string());
 
-    match error {
-        BearDogError::Security { message, .. } => {
-            assert_eq!(message, "Authentication failed");
-        }
-        _ => panic!("Expected Security error variant"),
-    }
+    let BearDogError::Security { message, .. } = error else {
+        panic!("Expected Security error variant");
+    };
+    assert_eq!(message, "Authentication failed");
 }
 
 #[test]
 fn test_system_error_construction() {
     let error = BearDogError::system("Database connection lost".to_string());
 
-    match error {
-        BearDogError::System { message, .. } => {
-            assert_eq!(message, "Database connection lost");
-        }
-        _ => panic!("Expected System error variant"),
-    }
+    let BearDogError::System { message, .. } = error else {
+        panic!("Expected System error variant");
+    };
+    assert_eq!(message, "Database connection lost");
 }
 
 #[test]
 fn test_business_error_construction() {
     let error = BearDogError::business("Invalid email format".to_string());
 
-    match error {
-        BearDogError::Business { message, .. } => {
-            assert_eq!(message, "Invalid email format");
-        }
-        _ => panic!("Expected Business error variant"),
-    }
+    let BearDogError::Business { message, .. } = error else {
+        panic!("Expected Business error variant");
+    };
+    assert_eq!(message, "Invalid email format");
 }
 
 #[test]
@@ -49,12 +43,10 @@ fn test_network_error_construction() {
     let error = BearDogError::network("Connection timeout".to_string());
 
     // network() returns System variant
-    match error {
-        BearDogError::System { message, .. } => {
-            assert_eq!(message, "Connection timeout");
-        }
-        _ => panic!("Expected System error variant from network constructor"),
-    }
+    let BearDogError::System { message, .. } = error else {
+        panic!("Expected System error variant from network constructor");
+    };
+    assert_eq!(message, "Connection timeout");
 }
 
 #[test]
@@ -62,24 +54,20 @@ fn test_configuration_error_construction() {
     let error = BearDogError::configuration("Invalid port number");
 
     // configuration() returns System variant
-    match error {
-        BearDogError::System { message, .. } => {
-            assert_eq!(message, "Invalid port number");
-        }
-        _ => panic!("Expected System error variant from configuration constructor"),
-    }
+    let BearDogError::System { message, .. } = error else {
+        panic!("Expected System error variant from configuration constructor");
+    };
+    assert_eq!(message, "Invalid port number");
 }
 
 #[test]
 fn test_api_error_construction() {
     let error = BearDogError::api("Rate limit exceeded".to_string());
 
-    match error {
-        BearDogError::Api { message, .. } => {
-            assert_eq!(message, "Rate limit exceeded");
-        }
-        _ => panic!("Expected Api error variant"),
-    }
+    let BearDogError::Api { message, .. } = error else {
+        panic!("Expected Api error variant");
+    };
+    assert_eq!(message, "Rate limit exceeded");
 }
 
 #[test]
@@ -89,12 +77,10 @@ fn test_hsm_error_construction() {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: errors
     // TEST_PRIORITY: important
-    match error {
-        BearDogError::Cryptographic { message, .. } => {
-            assert_eq!(message, "HSM not available");
-        }
-        _ => panic!("Expected Cryptographic error variant"),
-    }
+    let BearDogError::Cryptographic { message, .. } = error else {
+        panic!("Expected Cryptographic error variant");
+    };
+    assert_eq!(message, "HSM not available");
 }
 
 #[test]
@@ -104,12 +90,10 @@ fn test_hsm_error_construction() {
 fn test_workflow_error_construction() {
     let error = BearDogError::workflow("Step execution failed".to_string());
 
-    match error {
-        BearDogError::Workflow { message, .. } => {
-            assert_eq!(message, "Step execution failed");
-        }
-        _ => panic!("Expected Workflow error variant"),
-    }
+    let BearDogError::Workflow { message, .. } = error else {
+        panic!("Expected Workflow error variant");
+    };
+    assert_eq!(message, "Step execution failed");
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: errors
     // TEST_PRIORITY: important
@@ -119,15 +103,13 @@ fn test_workflow_error_construction() {
 fn test_genetics_error_construction() {
     let error = BearDogError::genetics("Entropy generation failed".to_string());
 
-    match error {
-        BearDogError::Genetics { message } => {
-            assert_eq!(message, "Entropy generation failed");
-            // TEST_CATEGORY: integration
-            // TEST_DOMAIN: errors
-            // TEST_PRIORITY: important
-        }
-        _ => panic!("Expected Genetics error variant"),
-    }
+    let BearDogError::Genetics { message } = error else {
+        panic!("Expected Genetics error variant");
+    };
+    assert_eq!(message, "Entropy generation failed");
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
 }
 
 #[test]
@@ -138,12 +120,10 @@ fn test_initialization_error_construction() {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: errors
     // TEST_PRIORITY: important
-    match error {
-        BearDogError::System { message, .. } => {
-            assert_eq!(message, "Core initialization failed");
-        }
-        _ => panic!("Expected System error variant from initialization constructor"),
-    }
+    let BearDogError::System { message, .. } = error else {
+        panic!("Expected System error variant from initialization constructor");
+    };
+    assert_eq!(message, "Core initialization failed");
 }
 
 #[test]
@@ -265,16 +245,19 @@ fn test_multiple_error_types() {
 
     // Verify error types (note: network() returns System variant)
     for (i, error) in errors.iter().enumerate() {
-        match (i, error) {
-            (0, BearDogError::Security { .. }) => {}
-            // TEST_CATEGORY: integration
-            // TEST_DOMAIN: errors
-            // TEST_PRIORITY: important
-            (1, BearDogError::System { .. }) => {}
-            (2, BearDogError::System { .. }) => {} // network() returns System
-            (3, BearDogError::Business { .. }) => {}
-            _ => panic!("Unexpected error variant at index {i}"),
-        }
+        assert!(
+            matches!(
+                (i, error),
+                (0, BearDogError::Security { .. })
+                    | (1, BearDogError::System { .. })
+                    | (2, BearDogError::System { .. })
+                    | (3, BearDogError::Business { .. })
+            ),
+            "Unexpected error variant at index {i}",
+        );
+        // TEST_CATEGORY: integration
+        // TEST_DOMAIN: errors
+        // TEST_PRIORITY: important
     }
 }
 
@@ -295,12 +278,10 @@ fn test_error_equality() {
 fn test_error_with_empty_message() {
     let error = BearDogError::security(String::new());
 
-    match error {
-        BearDogError::Security { message, .. } => {
-            assert_eq!(message, "");
-        }
-        _ => panic!("Expected Security error variant"),
-    }
+    let BearDogError::Security { message, .. } = error else {
+        panic!("Expected Security error variant");
+    };
+    assert_eq!(message, "");
 }
 
 #[test]
@@ -311,16 +292,14 @@ fn test_error_with_long_message() {
     let long_message = "a".repeat(1000);
     let error = BearDogError::security(long_message.clone());
 
-    match error {
-        BearDogError::Security { message, .. } => {
-            assert_eq!(message.len(), 1000);
-            assert_eq!(message, long_message);
-            // TEST_CATEGORY: integration
-            // TEST_DOMAIN: errors
-            // TEST_PRIORITY: important
-        }
-        _ => panic!("Expected Security error variant"),
-    }
+    let BearDogError::Security { message, .. } = error else {
+        panic!("Expected Security error variant");
+    };
+    assert_eq!(message.len(), 1000);
+    assert_eq!(message, long_message);
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: errors
+    // TEST_PRIORITY: important
 }
 
 #[test]
@@ -331,12 +310,10 @@ fn test_error_with_unicode() {
     // TEST_DOMAIN: errors
     // TEST_PRIORITY: important
 
-    match error {
-        BearDogError::Security { message, .. } => {
-            assert_eq!(message, unicode_message);
-        }
-        _ => panic!("Expected Security error variant"),
-    }
+    let BearDogError::Security { message, .. } = error else {
+        panic!("Expected Security error variant");
+    };
+    assert_eq!(message, unicode_message);
 }
 
 #[test]
@@ -426,12 +403,10 @@ fn test_error_message_content_preservation() {
     let original_message = "Critical: Database connection lost at 127.0.0.1:5432";
     let error = BearDogError::system(original_message.to_string());
 
-    match error {
-        BearDogError::System { message, .. } => {
-            assert_eq!(message, original_message);
-            // Ensure exact preservation, not truncation or modification
-            assert!(message.contains("127.0.0.1:5432"));
-        }
-        _ => panic!("Expected System error variant"),
-    }
+    let BearDogError::System { message, .. } = error else {
+        panic!("Expected System error variant");
+    };
+    assert_eq!(message, original_message);
+    // Ensure exact preservation, not truncation or modification
+    assert!(message.contains("127.0.0.1:5432"));
 }

@@ -15,7 +15,7 @@ pub async fn discover_hsms_agnostic() -> Result<Vec<hsm_agnostic::CliHsmInfo>, B
 }
 
 /// Resolve `hsm_id` against a discovery list (id equality or name substring), shared by discover/capabilities/test.
-pub(crate) fn find_hsm_for_cli<'a>(
+pub fn find_hsm_for_cli<'a>(
     hsms: &'a [hsm_agnostic::CliHsmInfo],
     hsm_id: &str,
 ) -> Option<&'a hsm_agnostic::CliHsmInfo> {
@@ -246,7 +246,10 @@ pub async fn handle_hsm_test(hsm_id: &str, iterations: usize) -> Result<(), Bear
 
 #[cfg(test)]
 mod hsm_handler_tests {
-    use super::*;
+    use super::{
+        find_hsm_for_cli, handle_hsm_capabilities, handle_hsm_discover, handle_hsm_list,
+        handle_hsm_test, hsm_agnostic,
+    };
 
     fn sample_hsms() -> Vec<hsm_agnostic::CliHsmInfo> {
         vec![

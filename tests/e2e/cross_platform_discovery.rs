@@ -125,9 +125,7 @@ pub async fn run_cross_platform_discovery_test(
 async fn initialize_discovery_engine() -> Result<(), BearDogError> {
     debug!("Initializing HSM discovery engine with all providers");
 
-    // In real implementation, this would:
-    // use beardog_tunnel::universal_hsm_discovery::discovery::DiscoveryEngine;
-    // let engine = DiscoveryEngine::new()?;
+    // Full engine wiring: `DiscoveryEngine::new()` from universal_hsm_discovery (when this E2E exercises discovery).
 
     // For E2E test, we verify the module is accessible
     Ok(())

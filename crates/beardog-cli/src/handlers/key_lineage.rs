@@ -223,7 +223,10 @@ fn build_lineage_tree(key: &StoredKey, home: &Path) -> Result<LineageNode, BearD
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        StoredKey, build_lineage_tree, count_lineage, find_root, handle_key_lineage_for_home,
+        key_store,
+    };
     use chrono::Utc;
     use tempfile::TempDir;
 

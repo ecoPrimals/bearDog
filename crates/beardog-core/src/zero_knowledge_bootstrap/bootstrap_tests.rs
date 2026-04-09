@@ -4,7 +4,10 @@
 // Focus: Bootstrap process, discovery, configuration, metrics
 
 #[cfg(test)]
-#[allow(deprecated)]
+#[expect(
+    deprecated,
+    reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
+)]
 mod tests {
     use super::super::{BootstrapConfig, BootstrapMetrics, DiscoveryProtocol};
     use beardog_types::canonical::config::domains::bootstrap::UnifiedBootstrapConfig;
@@ -269,7 +272,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
+    )]
     fn test_legacy_bootstrap_config_maps_into_unified() {
         let old = BootstrapConfig::default();
         let expected_timeout = old.discovery_timeout_ms;

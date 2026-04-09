@@ -5,7 +5,10 @@
 //! Comprehensive edge case and boundary condition tests to improve code coverage.
 
 #[cfg(test)]
-#[allow(clippy::disallowed_methods)] // unwrap() is acceptable in test code
+#[expect(
+    clippy::disallowed_methods,
+    reason = "test assertions use unwrap for failure paths"
+)]
 mod error_edge_cases {
     use crate::*;
 
@@ -509,7 +512,11 @@ mod error_edge_cases {
     // ========================================================================
 
     #[test]
-    #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
+    #[expect(
+        clippy::cast_possible_truncation,
+        clippy::cast_possible_wrap,
+        reason = "edge-case integer widths exercised intentionally for error construction tests"
+    )]
     fn test_max_error_nesting() {
         // Test deeply nested error propagation
         fn nest(depth: u32) -> Result<i32, BearDogError> {

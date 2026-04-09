@@ -40,6 +40,8 @@ pub async fn handle_key_import_with_home(
     allow_overwrite: bool,
     home: &Path,
 ) -> Result<(), BearDogError> {
+    use std::io::{self, Write};
+
     println!("📥 BearDog Key Import");
     println!("====================");
     println!();
@@ -110,7 +112,6 @@ pub async fn handle_key_import_with_home(
             println!();
 
             print!("Continue? [y/N]: ");
-            use std::io::{self, Write};
             io::stdout().flush()?;
 
             let mut input = String::new();

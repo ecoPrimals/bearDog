@@ -242,7 +242,11 @@ fn test_error_propagation() {
 
 /// Test retry strategy for transient failures
 #[test]
-#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+#[expect(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "synthetic recovery metrics: indices and signed deltas stay within test ranges"
+)]
 fn test_transient_failure_retry() {
     // When: Transient network error occurs
     // TEST_CATEGORY: integration
@@ -400,9 +404,7 @@ fn test_no_panic_on_errors() {
     ];
 
     for operation in &operations {
-        // In real code:
-        // let result = perform_operation(operation);
-        // assert!(result.is_err());
+        // Production would `perform_operation` and expect `Err` for these inputs.
         assert!(!operation.is_empty(), "Operation should be defined");
     }
 

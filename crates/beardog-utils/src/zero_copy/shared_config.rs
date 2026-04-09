@@ -357,4 +357,39 @@ mod tests {
         // Factory should only be called once
         assert_eq!(call_count.load(std::sync::atomic::Ordering::SeqCst), 1);
     }
+
+    #[test]
+    fn read_lock_poison_recover_on_get_or_create() {
+        let manager = SharedConfigManager::new();
+        let _ = std::panic::catch_unwind(|| {
+            let _g = manager.configs.write().expect("write configs");
+            panic!("poison configs");
+        });
+        let v = manager.get_or_create("after_poison", || 7i32);
+        assert_eq!(*v, 7);
+    }
+
+    #[test]
+    fn write_lock_poison_recover_on_double_check_path() {
+        let manager = SharedConfigManager::new();
+        let _ = manager.get_or_create("k", || 1u32);
+        let _ = std::panic::catch_unwind(|| {
+            let _g = manager.configs.write().expect("write configs");
+            panic!("poison before second get");
+        });
+        let v = manager.get_or_create("k", || 2u32);
+        assert_eq!(*v, 1);
+    }
+
+    #[test]
+    fn len_and_is_empty_after_poisoned_read_lock() {
+        let manager = SharedConfigManager::new();
+        let _ = manager.get_or_create("x", || "v".to_string());
+        let _ = std::panic::catch_unwind(|| {
+            let _g = manager.configs.read().expect("read");
+            panic!("poison read");
+        });
+        assert_eq!(manager.len(), 1);
+        assert!(!manager.is_empty());
+    }
 }

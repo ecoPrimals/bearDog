@@ -402,3 +402,129 @@ impl Default for ResponseTimeMetrics {
 // Re-export canonical metrics types when available
 // Note: Using unified canonical monitoring for metrics functionality
 pub use crate::canonical::monitoring_unified::{AlertingConfig, MetricsConfig};
+
+#[cfg(test)]
+mod tests {
+    // SPDX-License-Identifier: AGPL-3.0-or-later
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+
+    use super::*;
+    use chrono::Utc;
+
+    #[test]
+    fn system_metrics_default_hostname_and_nested_defaults() {
+        let m = SystemMetrics::default();
+        assert_eq!(m.hostname, "unknown");
+        assert_eq!(m.cpu.usage_percent, 0.0);
+        assert_eq!(m.memory.total_bytes, 0);
+        assert_eq!(m.disk.total_bytes, 1_073_741_824);
+        assert_eq!(m.network.bytes_sent_per_sec, 0);
+        assert_eq!(m.process.pid, 0);
+        assert!(m.custom.is_empty());
+    }
+
+    #[test]
+    fn cpu_disk_process_load_defaults_are_consistent() {
+        let cpu = CpuMetrics::default();
+        assert_eq!(cpu.per_core_usage, vec![0.0]);
+        assert!(cpu.temperature_celsius.is_none());
+        assert!(cpu.frequency_mhz.is_none());
+
+        let disk = DiskMetrics::default();
+        assert_eq!(disk.free_bytes, disk.total_bytes);
+        assert_eq!(disk.avg_response_time_ms, 0.0);
+
+        let proc = ProcessMetrics::default();
+        assert_eq!(proc.thread_count, 1);
+
+        let la = LoadAverage::default();
+        assert_eq!(la.one_minute, 0.0);
+    }
+
+    #[test]
+    fn application_and_response_time_defaults() {
+        let app = ApplicationMetrics::default();
+        assert_eq!(app.service_name, "unknown");
+        let rt = ResponseTimeMetrics::default();
+        assert_eq!(rt.p99, 0.0);
+        assert_eq!(app.response_time_ms.p50, rt.p50);
+    }
+
+    #[test]
+    fn serde_roundtrip_system_metrics_minimal() {
+        let m = SystemMetrics {
+            hostname: "h1".to_string(),
+            cpu: CpuMetrics::default(),
+            memory: MemoryMetrics::default(),
+            disk: DiskMetrics::default(),
+            network: NetworkMetrics::default(),
+            process: ProcessMetrics::default(),
+            custom: [("q".to_string(), 1.5)].into_iter().collect(),
+        };
+        let json = serde_json::to_string(&m).expect("serialize");
+        let back: SystemMetrics = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.hostname, "h1");
+        assert_eq!(back.custom.get("q"), Some(&1.5));
+    }
+
+    #[test]
+    fn serde_roundtrip_security_and_resource_metrics() {
+        let sec = SecurityMetrics {
+            timestamp: Utc::now(),
+            authentication_attempts: 1,
+            authentication_failures: 0,
+            authorization_failures: 0,
+            suspicious_activities: 0,
+            blocked_requests: 0,
+            threat_detections: 0,
+            security_events: 2,
+        };
+        let json = serde_json::to_string(&sec).expect("serialize sec");
+        let sec2: SecurityMetrics = serde_json::from_str(&json).expect("deserialize sec");
+        assert_eq!(sec2.security_events, 2);
+
+        let cap = CapacityMetrics {
+            projected_growth_percent: 10.0,
+            time_to_capacity_days: Some(30),
+            recommended_scaling_factor: 1.2,
+            resource_pressure_score: 0.4,
+        };
+        let res = ResourceMetrics {
+            timestamp: Utc::now(),
+            cpu_utilization: 0.5,
+            memory_utilization: 0.6,
+            disk_utilization: 0.7,
+            network_utilization: 0.2,
+            resource_efficiency: 0.85,
+            capacity_planning: cap,
+        };
+        let json = serde_json::to_string(&res).expect("serialize res");
+        let res2: ResourceMetrics = serde_json::from_str(&json).expect("deserialize res");
+        assert_eq!(res2.capacity_planning.time_to_capacity_days, Some(30));
+    }
+
+    #[test]
+    fn service_metrics_roundtrip_with_response_percentiles() {
+        let sm = ServiceMetrics {
+            timestamp: Utc::now(),
+            service_name: "api".to_string(),
+            requests_per_second: 10.0,
+            response_time_ms: ResponseTimeMetrics {
+                average: 1.0,
+                p50: 1.0,
+                p95: 2.0,
+                p99: 3.0,
+                max: 4.0,
+                min: 0.5,
+            },
+            error_rate_percent: 0.01,
+            active_connections: 3,
+            queue_length: 0,
+            cache_hit_ratio: 0.9,
+        };
+        let json = serde_json::to_string(&sm).expect("serialize");
+        let sm2: ServiceMetrics = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(sm2.service_name, "api");
+        assert_eq!(sm2.response_time_ms.p95, 2.0);
+    }
+}

@@ -5,6 +5,7 @@
 use beardog_errors::BearDogError;
 use beardog_tunnel::tunnel::hsm::types::HsmTier;
 use beardog_tunnel::{DiscoveredHsm, DiscoveryEngine};
+use sha3::{Digest, Sha3_256};
 
 /// Convert discovered HSM to CLI-friendly format
 #[derive(Debug, Clone)]
@@ -34,7 +35,7 @@ impl From<DiscoveredHsm> for CliHsmInfo {
             HsmTier::Software => "Software",
             HsmTier::Cloud => "Cloud",
             HsmTier::Mobile => "Mobile",
-            _ => "Unknown",
+            HsmTier::SecureEnclave => "SecureEnclave",
         };
 
         let (hsm_type, path) = match hsm.interface_type {
@@ -64,8 +65,6 @@ impl From<DiscoveredHsm> for CliHsmInfo {
 
         // Generate deterministic unique ID based on HSM properties
         // This ensures discovery is reproducible and testable
-        use sha3::{Digest, Sha3_256};
-
         let mut hasher = Sha3_256::new();
         hasher.update(hsm.vendor.as_bytes());
         hasher.update(hsm.model.as_bytes());
@@ -217,7 +216,7 @@ pub fn select_hsm<'a>(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{CliHsmInfo, discover_all_hsms, select_hsm};
 
     #[tokio::test]
     async fn test_discover_finds_hsms() {
@@ -354,7 +353,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cli_hsm_info_from_secure_enclave_tier_maps_to_unknown_label() {
+    fn test_cli_hsm_info_from_secure_enclave_tier_maps_to_secure_enclave_label() {
         use std::collections::HashMap;
 
         use beardog_tunnel::tunnel::hsm::types::HsmTier;
@@ -385,7 +384,7 @@ mod tests {
         };
 
         let info = CliHsmInfo::from(hsm);
-        assert_eq!(info.tier, "Unknown");
+        assert_eq!(info.tier, "SecureEnclave");
         assert!(info.interface_detail.contains("Software"));
     }
 }

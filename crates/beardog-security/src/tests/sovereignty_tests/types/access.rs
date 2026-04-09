@@ -10,7 +10,10 @@ use std::time::{Duration, Instant};
 
 /// Identity levels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "sovereignty test type stubs for scenario scaffolding"
+)]
 pub enum IdentityLevel {
     Low,
     Medium,
@@ -20,7 +23,10 @@ pub enum IdentityLevel {
 
 /// Identity
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "sovereignty test type stubs for scenario scaffolding"
+)]
 pub struct Identity {
     user_id: String,
     level: IdentityLevel,
@@ -121,7 +127,10 @@ impl SovereignAccessPolicy {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "sovereignty test type stubs for scenario scaffolding"
+)]
 pub struct AccessRequest {
     user_id: String,
     region: String,
@@ -205,7 +214,10 @@ impl ABACPolicy {
 
 /// Delegation
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "sovereignty test type stubs for scenario scaffolding"
+)]
 pub struct Delegation {
     delegator_region: String,
     delegatee_region: String,

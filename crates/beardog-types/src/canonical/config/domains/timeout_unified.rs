@@ -73,7 +73,10 @@ mod unification_migration_tests {
     use std::time::Duration;
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
+    )]
     fn test_unified_timeout_config_alias_works() {
         // Old code using UnifiedTimeoutConfig should still compile
         let _config: UnifiedTimeoutConfig = UnifiedTimeoutConfig::default();

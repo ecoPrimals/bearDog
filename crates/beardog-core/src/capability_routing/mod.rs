@@ -127,7 +127,7 @@ impl CapabilityRouter {
             ));
         }
 
-        let (selected, reason) = self.select_primal(&mut primals, &context)?;
+        let (selected, reason) = self.select_primal(&primals, &context)?;
 
         info!("✅ Routed to {} (reason: {})", selected.name, reason);
 
@@ -141,7 +141,7 @@ impl CapabilityRouter {
 
     fn select_primal(
         &mut self,
-        primals: &mut [DiscoveredPrimal],
+        primals: &[DiscoveredPrimal],
         context: &RequestContext,
     ) -> Result<(DiscoveredPrimal, String), BearDogError> {
         strategy::select_primal(primals, context, &self.load_tracker, &mut self.rr_counters)
@@ -223,7 +223,7 @@ mod tests {
             .with_strategy(SelectionStrategy::HighestTrust);
 
         let (selected, reason) = router
-            .select_primal(&mut primals, &context)
+            .select_primal(&primals, &context)
             .expect("select_primal highest trust");
 
         assert_eq!(selected.name, "high-trust");
@@ -279,10 +279,10 @@ mod tests {
         let context = RequestContext::new(SimpleCapability::Cryptography)
             .with_strategy(SelectionStrategy::RoundRobin);
         let (selected1, _) = router
-            .select_primal(&mut primals, &context)
+            .select_primal(&primals, &context)
             .expect("round robin first");
         let (selected2, _) = router
-            .select_primal(&mut primals, &context)
+            .select_primal(&primals, &context)
             .expect("round robin second");
         assert_eq!(selected1.name, "first");
         assert_eq!(selected2.name, "second");
@@ -318,7 +318,7 @@ mod tests {
         let context = RequestContext::new(SimpleCapability::Cryptography)
             .with_strategy(SelectionStrategy::FirstAvailable);
         let (selected, _) = router
-            .select_primal(&mut primals, &context)
+            .select_primal(&primals, &context)
             .expect("first available selection");
         assert_eq!(selected.name, "first");
     }
@@ -346,9 +346,7 @@ mod tests {
         let mut router = CapabilityRouter::new(PrimalDiscovery::new(DiscoveryMethod::Environment));
         let mut empty: Vec<crate::primal_discovery::DiscoveredPrimal> = vec![];
         let ctx = RequestContext::new(SimpleCapability::Cryptography);
-        let err = router
-            .select_primal(&mut empty, &ctx)
-            .expect_err("empty slice");
+        let err = router.select_primal(&empty, &ctx).expect_err("empty slice");
         assert!(err.to_string().contains("No primals available"));
     }
 
@@ -381,7 +379,7 @@ mod tests {
         let ctx_ll = RequestContext::new(SimpleCapability::Cryptography)
             .with_strategy(SelectionStrategy::LeastLoaded);
         let (picked_ll, reason_ll) = router
-            .select_primal(&mut primals, &ctx_ll)
+            .select_primal(&primals, &ctx_ll)
             .expect("least loaded selection");
         assert_eq!(picked_ll.name, "a");
         assert!(reason_ll.contains("least loaded"));
@@ -389,7 +387,7 @@ mod tests {
         let ctx_lat = RequestContext::new(SimpleCapability::Cryptography)
             .with_strategy(SelectionStrategy::LowestLatency);
         let (picked_lat, reason_lat) = router
-            .select_primal(&mut primals, &ctx_lat)
+            .select_primal(&primals, &ctx_lat)
             .expect("lowest latency selection");
         assert_eq!(picked_lat.name, "b");
         assert!(reason_lat.contains("lowest latency"));
@@ -420,7 +418,7 @@ mod tests {
         let ctx = RequestContext::new(SimpleCapability::Cryptography)
             .with_strategy(SelectionStrategy::Random);
         let (sel, reason) = router
-            .select_primal(&mut primals, &ctx)
+            .select_primal(&primals, &ctx)
             .expect("random selection");
         assert!(["x", "y"].contains(&sel.name.as_str()));
         assert_eq!(reason, "random selection");

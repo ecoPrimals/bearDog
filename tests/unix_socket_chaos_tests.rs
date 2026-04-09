@@ -31,6 +31,7 @@ use tempfile::TempDir;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 
+use beardog_core::socket_config::IpcCapabilitySymlinksConfig;
 use beardog_genetics::EcosystemGeneticEngine;
 use beardog_tunnel::btsp_handshake::BtspSecurityMode;
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
@@ -73,6 +74,7 @@ async fn start_server_ready(
             btsp_provider,
             identity,
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .unwrap(),
@@ -200,6 +202,7 @@ async fn chaos_test_readiness_race_condition() {
             btsp_provider,
             primal_identity,
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .unwrap(),
@@ -367,6 +370,7 @@ async fn chaos_test_atomic_readiness_under_load() {
             btsp_provider,
             primal_identity,
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .unwrap(),

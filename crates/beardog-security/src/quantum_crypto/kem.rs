@@ -10,7 +10,12 @@
 //! requires integration with actual PQC libraries when stable.
 
 use super::types::{
-    KemAlgorithm, QuantumKEM, QuantumKeyExchange, QuantumPrivateKey, SecurityLevel, kyber_sizes::*,
+    KemAlgorithm, QuantumKEM, QuantumKeyExchange, QuantumPrivateKey, SecurityLevel,
+    kyber_sizes::{
+        KYBER512_CT_SIZE, KYBER512_PK_SIZE, KYBER512_SK_SIZE, KYBER512_SS_SIZE, KYBER768_CT_SIZE,
+        KYBER768_PK_SIZE, KYBER768_SK_SIZE, KYBER768_SS_SIZE, KYBER1024_CT_SIZE, KYBER1024_PK_SIZE,
+        KYBER1024_SK_SIZE, KYBER1024_SS_SIZE,
+    },
 };
 use beardog_errors::BearDogError;
 use rand::RngCore;

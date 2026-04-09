@@ -19,7 +19,10 @@
 use chrono::Utc;
 
 #[cfg(test)]
-#[allow(clippy::module_inception)]
+#[expect(
+    clippy::module_inception,
+    reason = "nested test module mirrors orchestration crate layout for focused coverage"
+)]
 mod orchestration_comprehensive_tests {
     use super::*;
 
@@ -221,7 +224,10 @@ mod orchestration_comprehensive_tests {
         // Test error recovery mechanisms in orchestration
 
         #[derive(Debug)]
-        #[allow(dead_code)]
+        #[expect(
+            dead_code,
+            reason = "orchestration scenario struct for error-recovery test scaffolding"
+        )]
         struct OrchestrationState {
             workflow_id: String,
             status: SecurityWorkflowStatus,

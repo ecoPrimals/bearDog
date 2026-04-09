@@ -111,7 +111,7 @@ pub async fn handle_key_info_with_home(
 
 #[cfg(test)]
 mod list_tests {
-    use super::*;
+    use super::{handle_key_info, handle_key_info_with_home, handle_key_list_with_home};
     use crate::handlers::key_store;
     use chrono::Utc;
     use tempfile::TempDir;

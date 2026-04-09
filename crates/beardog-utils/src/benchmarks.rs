@@ -481,6 +481,12 @@ macro_rules! benchmark {
 
 #[cfg(test)]
 mod tests {
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: performance
+    // TEST_PRIORITY: normal
+
     use super::*;
 
     #[test]
@@ -713,5 +719,139 @@ mod tests {
         assert!(report.suite_stats.total_benchmarks > 0);
         assert!(!report.benchmarks.is_empty());
         Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: performance
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_generate_report_empty_suite() {
+        let suite = BenchmarkSuite::new(BenchmarkConfig::default());
+        let report = suite.generate_report();
+        assert_eq!(report.suite_stats.total_benchmarks, 0);
+        assert_eq!(report.avg_ops_per_second, 0.0);
+        assert_eq!(report.total_ops_per_second, 0.0);
+        assert!(report.benchmarks.is_empty());
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: performance
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_benchmark_throughput_and_latency_helpers() -> Result<(), Box<dyn std::error::Error>> {
+        let mut suite = BenchmarkSuite::new(BenchmarkConfig {
+            warmup_iterations: 2,
+            measurement_iterations: 20,
+            ..BenchmarkConfig::default()
+        });
+
+        let ops = suite.benchmark_throughput("tp", || std::hint::black_box(0u8))?;
+        assert!(ops > 0.0);
+
+        let mut suite2 = BenchmarkSuite::new(BenchmarkConfig {
+            warmup_iterations: 2,
+            measurement_iterations: 20,
+            ..BenchmarkConfig::default()
+        });
+        let lat = suite2.benchmark_latency("lat", || std::hint::black_box(0u8))?;
+        assert!(!lat.is_zero());
+
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: performance
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_benchmark_measurement_stops_on_max_time() -> Result<(), Box<dyn std::error::Error>> {
+        let mut suite = BenchmarkSuite::new(BenchmarkConfig {
+            warmup_iterations: 0,
+            measurement_iterations: 1_000_000,
+            max_time: Duration::from_millis(1),
+            ..BenchmarkConfig::default()
+        });
+
+        suite.benchmark("timeout_branch", || {
+            std::thread::sleep(Duration::from_millis(5));
+        })?;
+
+        let result = suite.get_result("timeout_branch").expect("result");
+        assert!(
+            result.iterations < 1_000_000,
+            "expected early exit from max_time"
+        );
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: performance
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_critical_grade_and_failed_suite_counter() -> Result<(), Box<dyn std::error::Error>> {
+        let mut suite = BenchmarkSuite::new(BenchmarkConfig {
+            warmup_iterations: 0,
+            measurement_iterations: 5,
+            max_time: Duration::from_secs(30),
+            ..BenchmarkConfig::default()
+        });
+
+        suite.benchmark("deliberately_slow", || {
+            std::thread::sleep(Duration::from_millis(5));
+        })?;
+
+        let result = suite.get_result("deliberately_slow").expect("result");
+        assert_eq!(result.performance_grade, PerformanceGrade::Critical);
+        assert!(suite.suite_stats.failed_benchmarks >= 1);
+        Ok(())
+    }
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: performance
+    // TEST_PRIORITY: normal
+    #[test]
+    fn test_benchmark_macro_expands() -> Result<(), Box<dyn std::error::Error>> {
+        let mut suite = BenchmarkSuite::new(BenchmarkConfig {
+            warmup_iterations: 0,
+            measurement_iterations: 3,
+            ..BenchmarkConfig::default()
+        });
+        crate::benchmark! {
+            suite,
+            "macro_named",
+            {
+                std::hint::black_box(7u8.wrapping_mul(3));
+            }
+        };
+        assert!(suite.get_result("macro_named").is_some());
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod print_summary_smoke_tests {
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: performance
+    // TEST_PRIORITY: normal
+
+    use super::{BenchmarkConfig, BenchmarkSuite, PerformanceGrade};
+
+    #[test]
+    fn print_summary_smoke_runs() {
+        let mut suite = BenchmarkSuite::new(BenchmarkConfig {
+            warmup_iterations: 0,
+            measurement_iterations: 2,
+            ..BenchmarkConfig::default()
+        });
+        suite.benchmark("smoke", || {}).expect("benchmark");
+        suite
+            .benchmark("crit", || {
+                std::thread::sleep(std::time::Duration::from_millis(4));
+            })
+            .expect("slow bench");
+        suite.print_summary();
+        let r = suite.get_result("crit").expect("crit");
+        assert_eq!(r.performance_grade, PerformanceGrade::Critical);
     }
 }

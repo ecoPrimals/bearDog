@@ -20,12 +20,13 @@ pub mod health;
 /// Metrics module
 pub mod metrics;
 
-pub use core::*;
+pub use core::{AlertingConfig, MetricsConfig, MonitoringCoreConfig, MonitoringHealthCheckConfig};
 
 /// Canonical monitoring configuration
 ///
 /// ⚠️  DEPRECATED: Use `beardog_types::canonical::monitoring::MonitoringConfig` instead
 #[allow(deprecated)]
+// Deprecated type definition; rustc does not emit deprecated on this line — expect would be unfulfilled
 #[deprecated(
     since = "3.1.0",
     note = "Use beardog_types::canonical::monitoring::MonitoringConfig instead"

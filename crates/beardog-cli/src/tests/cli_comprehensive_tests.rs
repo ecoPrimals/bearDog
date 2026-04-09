@@ -267,7 +267,10 @@ mod cli_comprehensive_tests {
     }
 
     #[test]
-    #[allow(clippy::nonminimal_bool)]
+    #[expect(
+        clippy::nonminimal_bool,
+        reason = "intentional tautology to assert debug vs release is always defined"
+    )]
     fn test_debug_build_detection() {
         let is_debug = cfg!(debug_assertions);
         // Build type is always detectable (either debug or release)

@@ -14,6 +14,8 @@ use sha3::Sha3_256;
 /// Returns an error if hashing fails.
 /// Handle `beardog.crypto.derive_onion_address` - Tor v3 onion address derivation
 pub fn handle_derive_onion_address(params: &Value) -> Result<Value, BearDogError> {
+    const TOR_V3_VERSION: u8 = 0x03;
+
     let pubkey_b64 = params
         .get("public_key")
         .and_then(|v| v.as_str())
@@ -29,8 +31,6 @@ pub fn handle_derive_onion_address(params: &Value) -> Result<Value, BearDogError
             public_key.len()
         )));
     }
-
-    const TOR_V3_VERSION: u8 = 0x03;
 
     let mut hasher = Sha3_256::new();
     hasher.update(b".onion checksum");

@@ -177,7 +177,10 @@ mod limit_tests {
     }
 
     #[test]
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "constants compared as usize; values are small MB/GB limits on all targets"
+    )]
     fn test_memory_limit_progression() {
         // Cache < Log < Temp
         assert!(MAX_CACHE_SIZE < MAX_LOG_FILE_SIZE as usize);
@@ -304,7 +307,10 @@ mod limit_tests {
     // ============================================================================
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
+    )]
     fn test_deprecated_aliases_match() {
         assert_eq!(DEFAULT_MAX_CONNECTIONS, MAX_CONNECTIONS);
         assert_eq!(DEFAULT_MAX_RETRIES, MAX_RETRIES);

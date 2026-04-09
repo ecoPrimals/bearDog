@@ -329,7 +329,10 @@ pub fn cleanup_test_environment() -> Result<(), BearDogError> {
 }
 
 /// Print E2E test report
-#[allow(clippy::cast_precision_loss)]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "success percentage from usize counts converted to f64 for report formatting"
+)]
 pub fn print_e2e_report(results: &[E2ETestResult]) {
     println!("\n╔════════════════════════════════════════════════╗");
     println!("║        E2E TESTING REPORT                      ║");

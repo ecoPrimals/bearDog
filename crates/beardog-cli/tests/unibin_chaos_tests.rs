@@ -4,7 +4,7 @@
 //! Chaos tests for `UniBin` commands - error conditions and edge cases
 
 use assert_cmd::Command;
-use predicates::prelude::*;
+use predicates::prelude::predicate;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use tempfile::TempDir;

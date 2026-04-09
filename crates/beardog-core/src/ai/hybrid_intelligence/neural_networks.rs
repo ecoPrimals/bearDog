@@ -6,12 +6,8 @@
 //
 // **New Location**: `beardog_types::canonical::config::domains::ai_config`
 //
-// These types will be removed in v3.3.0 (Q1 2026). Please update your imports to:
-// ```rust
-// use beardog_types::canonical::config::domains::ai_config::{
-//     DetailedNetworkArchitecture, LayerConfig, InputLayerConfig, ...
-// };
-// ```
+// These types will be removed in v3.3.0 (Q1 2026). Import neural architecture types from
+// `beardog_types::canonical::config::domains::ai_config`.
 //
 // Migration Status: Phase 1 Complete (October 2025)
 // - All neural network config types now available in canonical location

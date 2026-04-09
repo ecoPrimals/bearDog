@@ -8,12 +8,13 @@ use crate::btsp_provider::BeardogBtspProvider;
 use crate::tunnel::hsm::HsmManager;
 use crate::tunnel::hsm::manager::HsmAutoInitConfig;
 use crate::unix_socket_ipc::UnixSocketIpcServer;
-use beardog_core::self_knowledge::PrimalSelfKnowledge;
-use beardog_core::socket_config::SocketConfig;
+use beardog_core::self_knowledge::{PrimalSelfKnowledge, ipc_registry_capability_strings};
+use beardog_core::socket_config::{IpcCapabilitySymlinksConfig, SocketConfig};
 use beardog_errors::BearDogError;
 use beardog_genetics::EcosystemGeneticEngine;
 use std::sync::Arc;
 use tokio::signal;
+use tokio::time::Duration;
 use tracing::{debug, error, info, warn};
 
 /// Neural API registration fields (inject in tests; use [`Self::from_env`] at process startup).
@@ -137,7 +138,10 @@ pub async fn run(
 
     // Step 5: Configure Unix Socket
     info!("🔌 Configuring Unix Socket IPC...");
-    let socket_config = SocketConfig::from_env();
+    let socket_config = SocketConfig::from_env().map_err(|e| {
+        error!("{e}");
+        BearDogError::configuration(&e.to_string())
+    })?;
 
     info!("   Socket: {}", socket_config.socket_path().display());
     info!("   Source: {}", socket_config.description());
@@ -150,6 +154,22 @@ pub async fn run(
         error!("Failed to prepare socket: {}", e);
         BearDogError::configuration(&e)
     })?;
+
+    // wateringHole v3.1: capability-domain symlinks are installed after bind in [`UnixSocketIpcServer::start`].
+    let ipc_symlinks = IpcCapabilitySymlinksConfig::from_socket_config_and_capabilities(
+        &socket_config,
+        self_knowledge.my_capabilities(),
+    );
+    let ipc_symlink_stems = ipc_symlinks.domain_stems.clone();
+
+    info!(
+        "   Production mode: {}",
+        if socket_config.production_mode() {
+            "yes (BTSP handshake required)"
+        } else {
+            "no (development, cleartext JSON-RPC)"
+        }
+    );
 
     // Step 6: Create Unix Socket IPC Server
     info!("\n🔌 Creating Unix Socket IPC Server...");
@@ -171,6 +191,7 @@ pub async fn run(
             btsp_provider.clone(),
             identity,
             crate::btsp_handshake::BtspSecurityMode::Development,
+            ipc_symlinks,
         )
         .await
         .map_err(|e| {
@@ -205,7 +226,13 @@ pub async fn run(
     info!("✅ Unix Socket Server started and ready");
     info!("   ✨ Lock-free concurrent readiness verified!\n");
 
-    // Step 7.5: Register with discovery (Neural API first, then legacy capability registry client)
+    // Step 7.4: IPC registry (`ipc.register` / `ipc.heartbeat`) — non-blocking, retries with backoff
+    spawn_ipc_registry_registration_task(
+        self_knowledge.clone(),
+        socket_config.socket_path_string(),
+    );
+
+    // Step 7.5: Register with discovery (Neural API — capability-oriented routing)
     info!("🌐 Registering with discovery service...");
     let neural_registration = NeuralRegistrationParams::from_env();
     match register_with_discovery_service(&socket_config, &neural_registration).await {
@@ -254,7 +281,8 @@ pub async fn run(
 
     info!("\n🛑 Shutdown signal received, cleaning up...");
 
-    // Cleanup (drop handles, servers shutdown automatically)
+    socket_config.remove_ipc_capability_symlinks(&ipc_symlink_stems);
+
     drop(unix_task);
     drop(unix_server);
 
@@ -264,15 +292,14 @@ pub async fn run(
     Ok(())
 }
 
-/// Register `BearDog` with a runtime-discovered discovery/registry endpoint
+/// Register `BearDog` with a runtime-discovered discovery endpoint (Neural API).
 ///
-/// 1. **Primary**: Neural API (`capability.call` semantics via `neural_registration`).
-/// 2. **Fallback**: Legacy JSON-RPC registry client (`OrchestratorRegistryClient`) for deployments
-///    that have not migrated — still capability-oriented at the protocol level.
+/// JSON-RPC `ipc.register` for the ecosystem IPC registry is started separately in
+/// [`spawn_ipc_registry_registration_task`] (background, exponential backoff).
 ///
 /// # Returns
 ///
-/// Ok(()) if registered successfully with any service, Err if all methods fail.
+/// Ok(()) if the neural registration succeeds, Err if it fails (non-fatal for standalone).
 /// Non-fatal - `BearDog` can operate standalone without discovery.
 async fn register_with_discovery_service(
     socket_config: &SocketConfig,
@@ -297,71 +324,69 @@ async fn register_with_discovery_service(
             }
             Err(e) => {
                 warn!("⚠️  Neural API registration failed: {}", e);
-                // Fall through to legacy registration
             }
         }
     } else {
-        debug!("ℹ️  Neural API socket not detected; trying legacy registry client...");
+        debug!("ℹ️  Neural API socket not detected; skipping neural registration");
     }
 
-    // PHASE 2: Fallback to legacy registry transport (deprecated path)
-    #[expect(
-        deprecated,
-        reason = "legacy registry fallback kept for backward compat during migration"
-    )]
-    match register_with_legacy_ipc_registry().await {
-        Ok(()) => {
-            info!(
-                "✅ Registered with legacy discovery registry (migrate to Neural API when available)"
-            );
-            Ok(())
-        }
-        Err(e) => {
-            warn!(
-                "⚠️  No discovery endpoint available (Neural API or legacy registry): {}",
-                e
-            );
-            Err(e)
-        }
-    }
+    warn!(
+        "⚠️  Neural API registration did not complete; continuing (IPC registry may still be active)"
+    );
+    Err(anyhow::anyhow!(
+        "Neural API registration unavailable or failed"
+    ))
 }
 
-/// Legacy registry registration (deprecated transport; capability list is unchanged)
+/// Background task: connect to the IPC registry (env-discovered socket), `ipc.register`, then `ipc.heartbeat`.
 ///
-/// Prefer `register_with_neural_api` for semantic routing without a fixed registry implementation.
-#[deprecated(
-    since = "0.9.1",
-    note = "Use Neural API registration for TRUE PRIMAL pattern"
-)]
-async fn register_with_legacy_ipc_registry() -> anyhow::Result<()> {
-    use beardog_ipc::{Capability, OrchestratorRegistryClient};
+/// If the registry is unreachable, logs and retries with exponential backoff — standalone mode.
+fn spawn_ipc_registry_registration_task(
+    self_knowledge: PrimalSelfKnowledge,
+    ipc_socket_path: String,
+) {
+    let capability_tags = ipc_registry_capability_strings(self_knowledge.my_capabilities());
+    let primal_name = self_knowledge.my_name().to_string();
+    let version = env!("CARGO_PKG_VERSION").to_string();
 
-    // Connects via `beardog-ipc` discovery (env + fallbacks — no hardcoded peer host)
-    let client = OrchestratorRegistryClient::connect().await?;
-
-    // Register BearDog with its capabilities
-    // These should match what PrimalSelfKnowledge reports
-    let capabilities = vec![
-        Capability::Crypto,
-        Capability::BTSP,
-        Capability::Ed25519,
-        Capability::X25519,
-        Capability::AesGcm,
-        Capability::ChaCha20Poly1305,
-    ];
-
-    let primal_name = crate::unix_socket_ipc::handlers::utils::get_primal_name();
-    client.register(&primal_name, capabilities).await?;
-
-    let heartbeat_interval = beardog_ipc::DEFAULT_HEARTBEAT_INTERVAL;
     tokio::spawn(async move {
-        let _heartbeat = client.start_heartbeat(heartbeat_interval);
-        // Heartbeat task runs until client is dropped
-        // This keeps BearDog registered with the IPC registry
-        std::future::pending::<()>().await;
-    });
+        use beardog_ipc::{DEFAULT_HEARTBEAT_INTERVAL, OrchestratorRegistryClient};
 
-    Ok(())
+        const MAX_BACKOFF: Duration = Duration::from_secs(60);
+        let mut backoff = Duration::from_millis(500);
+
+        loop {
+            let attempt = async {
+                let client = OrchestratorRegistryClient::connect().await?;
+                client
+                    .register_ipc(&primal_name, &ipc_socket_path, &capability_tags, &version)
+                    .await?;
+                Ok::<_, beardog_ipc::IpcError>(client)
+            }
+            .await;
+
+            match attempt {
+                Ok(client) => {
+                    info!(
+                        primal = %primal_name,
+                        endpoint = %ipc_socket_path,
+                        "Registered with IPC registry; starting heartbeats"
+                    );
+                    let _heartbeat = client.start_heartbeat(DEFAULT_HEARTBEAT_INTERVAL);
+                    std::future::pending::<()>().await;
+                }
+                Err(e) => {
+                    warn!(
+                        error = %e,
+                        retry_in_secs = backoff.as_secs_f32(),
+                        "IPC registry unreachable; continuing standalone (retrying)"
+                    );
+                    tokio::time::sleep(backoff).await;
+                    backoff = (backoff * 2).min(MAX_BACKOFF);
+                }
+            }
+        }
+    });
 }
 
 /// First alphanumeric characters of a family seed (for logging only).
@@ -580,7 +605,8 @@ mod tests {
         let cfg = SocketConfig::from_inputs(&SocketPathInputs {
             beardog_socket: Some("/tmp/beardog-mock-resolved.sock".to_string()),
             ..Default::default()
-        });
+        })
+        .expect("test inputs should resolve");
         assert_eq!(cfg.socket_path_string(), "/tmp/beardog-mock-resolved.sock");
     }
 
@@ -592,7 +618,8 @@ mod tests {
             family_id: Some("fam-a".to_string()),
             node_id: Some("node-b".to_string()),
             ..Default::default()
-        });
+        })
+        .expect("test inputs should resolve");
         assert_eq!(cfg.family_id(), "fam-a");
         assert_eq!(cfg.node_id(), "node-b");
     }
@@ -608,7 +635,8 @@ mod tests {
         let socket_config = SocketConfig::from_inputs(&SocketPathInputs {
             beardog_socket: Some("/tmp/beardog-discovery-mock.sock".to_string()),
             ..Default::default()
-        });
+        })
+        .expect("test inputs should resolve");
         let neural_registration = NeuralRegistrationParams::default();
         let outcome =
             super::register_with_discovery_service(&socket_config, &neural_registration).await;
@@ -637,7 +665,8 @@ mod tests {
         let socket_config = SocketConfig::from_inputs(&SocketPathInputs {
             beardog_socket: Some("/tmp/beardog-reg-id.sock".to_string()),
             ..Default::default()
-        });
+        })
+        .expect("test inputs should resolve");
         let neural_registration = NeuralRegistrationParams {
             instance_override: Some("custom-reg-instance".to_string()),
             primal_type: None,

@@ -18,10 +18,13 @@
 use super::key_management::{KeyStorage, KeyStore, KeyUsage};
 use beardog_errors::BearDogError;
 use beardog_types::canonical::config::unified::UnifiedBearDogConfig as BearDogConfig;
-use beardog_types::canonical::providers_unified::traits::{
+use beardog_types::canonical::providers_unified::traits::base_traits::{
+    CapabilityParameter, ProviderCapability, ProviderConfiguration, ProviderHealth,
+    ProviderMetrics, SystemMetrics, UnifiedProvider,
+};
+use beardog_types::canonical::providers_unified::traits::security_traits::{
     AuthenticationRequest, AuthenticationResponse, AuthorizationRequest, AuthorizationResponse,
-    ProviderCapability, ProviderConfiguration, ProviderHealth, ProviderMetrics, SecurityContext,
-    UnifiedProvider, UnifiedSecurityProvider,
+    SecurityContext, UnifiedSecurityProvider,
 };
 use std::collections::HashMap;
 use std::sync::OnceLock;
@@ -199,7 +202,7 @@ impl UnifiedProvider for CoreSecurityProvider {
                 perf
             },
             custom_metrics: Vec::new(),
-            system_metrics: beardog_types::canonical::providers_unified::traits::SystemMetrics {
+            system_metrics: SystemMetrics {
                 uptime_seconds: 0,
                 total_requests: 0,
                 successful_requests: 0,
@@ -216,29 +219,25 @@ impl UnifiedProvider for CoreSecurityProvider {
             ProviderCapability {
                 name: "Authentication".to_string(),
                 description: "User authentication capability".to_string(),
-                parameters: vec![
-                    beardog_types::canonical::providers_unified::traits::CapabilityParameter {
-                        name: "auth_method".to_string(),
-                        param_type: "string".to_string(),
-                        description: "Authentication method".to_string(),
-                        required: true,
-                        default_value: Some(serde_json::Value::String("bearer".to_string())),
-                    },
-                ],
+                parameters: vec![CapabilityParameter {
+                    name: "auth_method".to_string(),
+                    param_type: "string".to_string(),
+                    description: "Authentication method".to_string(),
+                    required: true,
+                    default_value: Some(serde_json::Value::String("bearer".to_string())),
+                }],
                 enabled: true,
             },
             ProviderCapability {
                 name: "Authorization".to_string(),
                 description: "User authorization capability".to_string(),
-                parameters: vec![
-                    beardog_types::canonical::providers_unified::traits::CapabilityParameter {
-                        name: "auth_scope".to_string(),
-                        param_type: "string".to_string(),
-                        description: "Authorization scope".to_string(),
-                        required: false,
-                        default_value: Some(serde_json::Value::String("default".to_string())),
-                    },
-                ],
+                parameters: vec![CapabilityParameter {
+                    name: "auth_scope".to_string(),
+                    param_type: "string".to_string(),
+                    description: "Authorization scope".to_string(),
+                    required: false,
+                    default_value: Some(serde_json::Value::String("default".to_string())),
+                }],
                 enabled: true,
             },
         ]
@@ -262,7 +261,7 @@ impl UnifiedSecurityProvider for CoreSecurityProvider {
         // Simple authentication (no HTTP client needed!)
         // For production, use Unix socket communication to auth service
 
-        use base64::prelude::*;
+        use base64::prelude::{BASE64_URL_SAFE_NO_PAD, Engine};
 
         let mut user_info = HashMap::new();
         user_info.insert("user_id".to_string(), request.user_id.clone());
@@ -429,13 +428,14 @@ impl UnifiedSecurityProvider for CoreSecurityProvider {
     }
 }
 
-#[allow(
+#[expect(
     unused_imports,
     clippy::float_cmp,
     clippy::useless_vec,
     clippy::needless_range_loop,
     clippy::uninlined_format_args,
-    dead_code
+    dead_code,
+    reason = "large integration test modules: noisy style lints and synthetic helpers"
 )]
 #[cfg(test)]
 #[path = "security_tests.rs"]

@@ -7,7 +7,8 @@
     clippy::float_cmp,
     clippy::absurd_extreme_comparisons,
     unused_comparisons,
-    clippy::nonminimal_bool
+    clippy::nonminimal_bool,
+    reason = "monitoring test modules: float thresholds and exhaustive coverage (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 mod comprehensive_monitoring_tests;
@@ -18,7 +19,8 @@ mod comprehensive_monitoring_tests;
     clippy::float_cmp,
     clippy::absurd_extreme_comparisons,
     unused_comparisons,
-    clippy::nonminimal_bool
+    clippy::nonminimal_bool,
+    reason = "monitoring test modules: float thresholds and exhaustive coverage (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 mod monitoring_error_path_tests;
@@ -29,7 +31,8 @@ mod monitoring_error_path_tests;
     clippy::float_cmp,
     clippy::absurd_extreme_comparisons,
     unused_comparisons,
-    clippy::nonminimal_bool
+    clippy::nonminimal_bool,
+    reason = "monitoring test modules: float thresholds and exhaustive coverage (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 mod monitoring_comprehensive_tests;
@@ -40,7 +43,8 @@ mod monitoring_comprehensive_tests;
     clippy::float_cmp,
     clippy::absurd_extreme_comparisons,
     unused_comparisons,
-    clippy::nonminimal_bool
+    clippy::nonminimal_bool,
+    reason = "monitoring test modules: float thresholds and exhaustive coverage (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 mod monitoring_error_path_comprehensive_tests;
@@ -51,7 +55,8 @@ mod monitoring_error_path_comprehensive_tests;
     clippy::float_cmp,
     clippy::absurd_extreme_comparisons,
     unused_comparisons,
-    clippy::nonminimal_bool
+    clippy::nonminimal_bool,
+    reason = "monitoring test modules: float thresholds and exhaustive coverage (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 mod health_checker_comprehensive_tests;
@@ -62,7 +67,8 @@ mod health_checker_comprehensive_tests;
     clippy::float_cmp,
     clippy::absurd_extreme_comparisons,
     unused_comparisons,
-    clippy::nonminimal_bool
+    clippy::nonminimal_bool,
+    reason = "monitoring test modules: float thresholds and exhaustive coverage (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 mod coverage_gap_tests;

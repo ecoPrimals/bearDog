@@ -8,7 +8,7 @@
 
 **BearDog** is the cryptographic service provider for the ecoPrimals ecosystem — a **100% Pure Rust** security platform with zero C dependencies.
 
-**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 29 | **Tests**: 14,366+ | **Coverage**: 90.16%
+**Status**: Production Ready | **Edition**: 2024 | **MSRV**: 1.93.0 | **Crates**: 29 | **Tests**: 14,593+ | **Coverage**: 90.51%
 
 ---
 
@@ -29,7 +29,7 @@ BearDog provides secure cryptographic operations for all primals through the **T
 - **100% Pure Rust** — Zero C dependencies (RustCrypto suite, postcard, hickory-dns)
 - **Rust 2024 Edition** — Modern idioms, MSRV 1.93.0
 - **Fully Concurrent** — Dependency injection architecture, no global mutable state
-- **96 Crypto Methods** — Complete JSON-RPC API (including BTSP session handshake-as-a-service)
+- **95 Crypto Methods** — Complete JSON-RPC API (including BTSP session handshake-as-a-service)
 - **Tor v3 Support** — Onion address derivation + ntor handshake + cell crypto
 - **Multi-Family Support** — `--family-id` flag for per-family instances
 - **Secret Storage** — Encrypted secrets with family-scoped keys
@@ -54,7 +54,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 ```bash
 git clone <repository>
-cd beardog
+cd bearDog
 cargo build --release
 cargo test --workspace
 ```
@@ -171,8 +171,9 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
 | **Files > 1000 LOC** | 0 (production code) |
-| **Tests** | 14,366+ (concurrent; 35 `#[serial]` in `beardog-production`) |
-| **Coverage** | 90.16% line (llvm-cov workspace, target 90%) |
+| **Rust files** | 1,939 |
+| **Tests** | 14,593+ (concurrent; 35 `#[serial]` in `beardog-production`) |
+| **Coverage** | 90.51% line (llvm-cov workspace, target 90% met) |
 | **Serial Tests** | 35 (`beardog-production` shared `AtomicBool` state) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |
 | **License** | AGPL-3.0-or-later (SPDX headers on all .rs files) |
@@ -201,6 +202,9 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | [ROADMAP.md](ROADMAP.md) | Current priorities and roadmap |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture |
 | [SECURITY.md](SECURITY.md) | Security model |
+| [CHANGELOG.md](CHANGELOG.md) | Release and wave notes |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guidelines |
+| [CONTEXT.md](CONTEXT.md) | Ecosystem and project context |
 
 ---
 

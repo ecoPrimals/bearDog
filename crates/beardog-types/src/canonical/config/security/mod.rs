@@ -34,12 +34,12 @@ pub mod mfa;
 pub mod session;
 
 // Re-export canonical types
-pub use audit::*;
-pub use authentication::*;
-pub use authorization::*;
-pub use encryption::*;
-pub use mfa::*;
-pub use session::*;
+pub use audit::CanonicalAuditConfig;
+pub use authentication::CanonicalAuthenticationConfig;
+pub use authorization::CanonicalAuthorizationConfig;
+pub use encryption::{CanonicalEncryptionConfig, HsmEncryptionConfig, KeyDerivationConfig};
+pub use mfa::{BackupCodesConfig, CanonicalMfaConfig, SmsConfig, TotpConfig};
+pub use session::CanonicalSessionConfig;
 
 /// **CANONICAL SECURITY CONFIGURATION** - Single source of truth
 ///

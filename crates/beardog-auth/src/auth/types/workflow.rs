@@ -149,16 +149,15 @@ mod tests {
             encryption_required: true,
         };
 
-        match workflow_type {
-            BearDogWorkflowType::DataReplication {
-                backup_nodes,
-                encryption_required,
-            } => {
-                assert_eq!(backup_nodes.len(), 2);
-                assert!(encryption_required);
-            }
-            _ => panic!("Expected DataReplication variant"),
-        }
+        let BearDogWorkflowType::DataReplication {
+            backup_nodes,
+            encryption_required,
+        } = workflow_type
+        else {
+            panic!("Expected DataReplication variant");
+        };
+        assert_eq!(backup_nodes.len(), 2);
+        assert!(encryption_required);
     }
 
     #[test]
@@ -169,12 +168,10 @@ mod tests {
             automated_remediation: true,
         };
 
-        match workflow_type {
-            BearDogWorkflowType::ComplianceAudit { standards, .. } => {
-                assert_eq!(standards.len(), 2);
-            }
-            _ => panic!("Expected ComplianceAudit variant"),
-        }
+        let BearDogWorkflowType::ComplianceAudit { standards, .. } = workflow_type else {
+            panic!("Expected ComplianceAudit variant");
+        };
+        assert_eq!(standards.len(), 2);
     }
 
     #[test]
@@ -185,12 +182,11 @@ mod tests {
             response_team: vec!["security-team".to_string()],
         };
 
-        match workflow_type {
-            BearDogWorkflowType::SecurityIncidentResponse { threat_level, .. } => {
-                assert_eq!(threat_level, 8);
-            }
-            _ => panic!("Expected SecurityIncidentResponse variant"),
-        }
+        let BearDogWorkflowType::SecurityIncidentResponse { threat_level, .. } = workflow_type
+        else {
+            panic!("Expected SecurityIncidentResponse variant");
+        };
+        assert_eq!(threat_level, 8);
     }
 
     #[test]
@@ -201,14 +197,13 @@ mod tests {
             target_capabilities: vec![NodeCapability::BasicOperations],
         };
 
-        match workflow_type {
-            BearDogWorkflowType::GeneticSpawning {
-                parent_genetics, ..
-            } => {
-                assert!(!parent_genetics.is_empty());
-            }
-            _ => panic!("Expected GeneticSpawning variant"),
-        }
+        let BearDogWorkflowType::GeneticSpawning {
+            parent_genetics, ..
+        } = workflow_type
+        else {
+            panic!("Expected GeneticSpawning variant");
+        };
+        assert!(!parent_genetics.is_empty());
     }
 
     #[test]
@@ -258,12 +253,10 @@ mod tests {
     #[test]
     fn test_workflow_status_failed() {
         let status = WorkflowStatus::Failed("Network timeout".to_string());
-        match status {
-            WorkflowStatus::Failed(msg) => {
-                assert_eq!(msg, "Network timeout");
-            }
-            _ => panic!("Expected Failed variant"),
-        }
+        let WorkflowStatus::Failed(msg) = status else {
+            panic!("Expected Failed variant");
+        };
+        assert_eq!(msg, "Network timeout");
     }
 
     #[test]

@@ -262,7 +262,10 @@ fn test_metrics_aggregation_percentiles() {
 }
 
 #[test]
-#[allow(clippy::cast_precision_loss)]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "metric rollup averages usize sample counts as f64"
+)]
 fn test_monitoring_memory_limit() {
     let service = MonitoringServiceWrapper::with_memory_limit(1024);
 

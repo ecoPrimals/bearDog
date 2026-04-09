@@ -79,7 +79,7 @@ pub fn get_keys_dir_for_home(home: impl AsRef<std::path::Path>) -> Result<PathBu
 ///
 /// Returns an error if the `HOME` environment variable is not set.
 pub fn home_dir_for_keys() -> Result<PathBuf, BearDogError> {
-    std::env::var("HOME")
+    beardog_errors::process_env::var("HOME")
         .map_err(|_| BearDogError::system("HOME environment variable not set".to_string()))
         .map(PathBuf::from)
 }

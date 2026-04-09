@@ -21,117 +21,131 @@ mod coverage_gap_11_constants_tail;
 mod coverage_gap_11_domains_network;
 mod coverage_gap_11_hsm_monitoring;
 mod coverage_gap_11_migration_providers;
-#[allow(
+#[expect(
     unused_imports,
     clippy::module_inception,
     dead_code,
     deprecated,
-    clippy::float_cmp
+    clippy::float_cmp,
+    reason = "coverage-gap harness: nested modules, legacy aliases, and float asserts in tests"
 )]
 mod coverage_gap_12_adapter_network;
-#[allow(
+#[expect(
     unused_imports,
     clippy::module_inception,
     dead_code,
     deprecated,
-    clippy::float_cmp
+    clippy::float_cmp,
+    reason = "coverage-gap harness: nested modules, legacy aliases, and float asserts in tests"
 )]
 mod coverage_gap_12_config_genetics;
-#[allow(
+#[expect(
     unused_imports,
     clippy::module_inception,
     dead_code,
     deprecated,
-    clippy::float_cmp
+    clippy::float_cmp,
+    reason = "coverage-gap harness: nested modules, legacy aliases, and float asserts in tests"
 )]
 mod coverage_gap_12_hsm_config_status;
-#[allow(
+#[expect(
     unused_imports,
     clippy::module_inception,
     dead_code,
     deprecated,
-    clippy::float_cmp
+    clippy::float_cmp,
+    reason = "coverage-gap harness: nested modules, legacy aliases, and float asserts in tests"
 )]
 mod coverage_gap_12_hsm_keys;
-#[allow(
+#[expect(
     unused_imports,
     clippy::module_inception,
     dead_code,
     deprecated,
-    clippy::float_cmp
+    clippy::float_cmp,
+    reason = "coverage-gap harness: nested modules, legacy aliases, and float asserts in tests"
 )]
 mod coverage_gap_12_resilience_monitoring;
-#[allow(
+#[expect(
     unused_imports,
     clippy::module_inception,
     dead_code,
     deprecated,
-    clippy::float_cmp
+    clippy::float_cmp,
+    reason = "coverage-gap harness: nested modules, legacy aliases, and float asserts in tests"
 )]
 mod coverage_gap_12_system_loader;
-#[allow(
+#[expect(
     unused_imports,
     clippy::module_inception,
     dead_code,
     deprecated,
-    clippy::float_cmp
+    clippy::float_cmp,
+    reason = "coverage-gap harness: nested modules, legacy aliases, and float asserts in tests"
 )]
 mod coverage_gap_tests_1;
 mod coverage_gap_tests_10;
-#[allow(
+#[expect(
     unused_imports,
     clippy::module_inception,
     dead_code,
     deprecated,
-    clippy::float_cmp
+    clippy::float_cmp,
+    reason = "coverage-gap harness: nested modules, legacy aliases, and float asserts in tests"
 )]
 mod coverage_gap_tests_2;
-#[allow(
+#[expect(
     unused_imports,
     clippy::module_inception,
     dead_code,
     deprecated,
-    clippy::float_cmp
+    clippy::float_cmp,
+    reason = "coverage-gap harness: nested modules, legacy aliases, and float asserts in tests"
 )]
 mod coverage_gap_tests_3;
-#[allow(
+#[expect(
     unused_imports,
     clippy::module_inception,
     dead_code,
     deprecated,
-    clippy::float_cmp
+    clippy::float_cmp,
+    reason = "coverage-gap harness: nested modules, legacy aliases, and float asserts in tests"
 )]
 mod coverage_gap_tests_4;
-#[allow(
+#[expect(
     unused_imports,
     clippy::module_inception,
     dead_code,
     deprecated,
-    clippy::float_cmp
+    clippy::float_cmp,
+    reason = "coverage-gap harness: nested modules, legacy aliases, and float asserts in tests"
 )]
 mod coverage_gap_tests_5;
-#[allow(
+#[expect(
     unused_imports,
     clippy::module_inception,
     dead_code,
     deprecated,
-    clippy::float_cmp
+    clippy::float_cmp,
+    reason = "coverage-gap harness: nested modules, legacy aliases, and float asserts in tests"
 )]
 mod coverage_gap_tests_6;
-#[allow(
+#[expect(
     unused_imports,
     clippy::module_inception,
     dead_code,
     deprecated,
-    clippy::float_cmp
+    clippy::float_cmp,
+    reason = "coverage-gap harness: nested modules, legacy aliases, and float asserts in tests"
 )]
 mod coverage_gap_tests_7;
-#[allow(
+#[expect(
     unused_imports,
     clippy::module_inception,
     dead_code,
     deprecated,
-    clippy::float_cmp
+    clippy::float_cmp,
+    reason = "coverage-gap harness: nested modules, legacy aliases, and float asserts in tests"
 )]
 mod coverage_gap_tests_8;
 mod coverage_gap_tests_9;
@@ -140,11 +154,15 @@ mod coverage_gap_tests_9;
 mod coverage_march26_types_wave;
 
 // March 2026: wave 18 — cloud HSM, discovery, workflow/security, constants, HSM config, performance
-#[allow(
+#[expect(
     unused_imports,
     clippy::module_inception,
     dead_code,
     deprecated,
-    clippy::float_cmp
+    clippy::float_cmp,
+    reason = "coverage-gap harness: nested modules, legacy aliases, and float asserts in tests"
 )]
 mod coverage_gap_wave18;
+
+/// Tokio-backed harness checks; `ecosystem_integration.rs` is not yet linked under `providers_unified`.
+mod ecosystem_integration_tokio_tests;

@@ -5,7 +5,6 @@
 // This module provides ID generation and management using safe Rust patterns.
 
 use std::sync::atomic::{AtomicU64, Ordering};
-// use std::sync::Arc; // Currently unused but kept for future shared ID management
 
 /// Thread-safe ID generator
 #[derive(Debug)]

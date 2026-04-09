@@ -41,7 +41,7 @@ impl DiscoverSocketEnv {
 /// 2. `BIOMEOS_SOCKET_DIR/{primal}.sock` (orchestrator-managed directory)
 /// 3. `XDG_RUNTIME_DIR/biomeos/{primal}.sock`
 /// 4. `/run/user/{uid}/biomeos/{primal}.sock`
-/// 5. `/tmp/biomeos/{primal}.sock` (fallback)
+/// 5. `{std::env::temp_dir()}/biomeos/{primal}.sock` (last-resort fallback; not a hardcoded `/tmp`)
 pub async fn discover_primal_socket_with(
     primal_name: &str,
     env: &DiscoverSocketEnv,
@@ -90,16 +90,22 @@ pub async fn discover_primal_socket_with(
         return Ok(run_path);
     }
 
-    // Tier 5: /tmp/biomeos/ fallback
-    let tmp_path = PathBuf::from(format!("/tmp/biomeos/{primal_name}.sock"));
+    // Tier 5: OS temp directory + biomeos/ (last resort; avoids hardcoding `/tmp`)
+    let tmp_path = std::env::temp_dir()
+        .join("biomeos")
+        .join(format!("{primal_name}.sock"));
     if tmp_path.exists() {
-        debug!("✅ Found {} via /tmp/biomeos (Tier 5)", primal_name);
+        debug!(
+            "✅ Found {} via {} (Tier 5)",
+            primal_name,
+            tmp_path.display()
+        );
         return Ok(tmp_path);
     }
 
     warn!("❌ Primal not found: {}", primal_name);
     Err(Error::PrimalNotFound(format!(
-        "{primal_name} (searched 5-tier: env, BIOMEOS_SOCKET_DIR, XDG/biomeos, /run/user/biomeos, /tmp/biomeos)"
+        "{primal_name} (searched 5-tier: env, BIOMEOS_SOCKET_DIR, XDG/biomeos, /run/user/biomeos, temp_dir/biomeos)"
     )))
 }
 

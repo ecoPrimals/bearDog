@@ -281,7 +281,10 @@ mod hsm_config_tests_extra {
     use crate::canonical::hsm::config::*;
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
+    )]
     fn test_legacy_hsm_provider_type_default() {
         let t = LegacyHsmProviderType::default();
         let _ = format!("{t:?}");

@@ -130,7 +130,10 @@ pub struct ChaosMetrics {
 impl ChaosMetrics {
     /// Calculate success rate
     #[must_use]
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "success ratio from u64 counters as f64 for percentage display"
+    )]
     pub fn success_rate(&self) -> f64 {
         if self.operations_attempted == 0 {
             return 0.0;

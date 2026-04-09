@@ -2,7 +2,7 @@
 
 //! Authorization verification implementation
 
-use super::types::*;
+use super::types::{AuthorizationProof, BearDogGenetics, CrossNodeAuthEngine};
 use beardog_errors::BearDogError;
 use beardog_types::genetics_constraints::KeyOperation;
 use chrono::Utc;
@@ -108,6 +108,8 @@ impl CrossNodeAuthEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::auth::types::CrossNodeAuthorization;
+    use crate::auth::{CrossNodeOperation, ResourcePermission};
     use chrono::Duration;
 
     #[test]

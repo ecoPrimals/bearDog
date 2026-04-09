@@ -213,8 +213,8 @@ mod tests {
     #[test]
     fn test_ecosystem_registration_with_endpoints() {
         let mut endpoints = HashMap::new();
-        endpoints.insert("http".to_string(), "http://localhost:8080".to_string());
-        endpoints.insert("grpc".to_string(), "grpc://localhost:9090".to_string());
+        endpoints.insert("http".to_string(), "http://example.test:8080".to_string());
+        endpoints.insert("grpc".to_string(), "grpc://example.test:9090".to_string());
 
         let registration = EcosystemRegistration {
             service_id: "test-service".to_string(),

@@ -13,7 +13,11 @@
 //! - `handle_verify_lineage` - Verify genetic family relationships
 //! - `handle_generate_lineage_proof` - Generate lineage proof (Blake3 + HMAC)
 
-use super::*;
+use super::{
+    DeriveLineageKeyRequest, DeriveLineageKeyResponse, GenerateLineageProofRequest,
+    GenerateLineageProofResponse, MixEntropyRequest, MixEntropyResponse, VerifyLineageRequest,
+    VerifyLineageResponse,
+};
 use crate::tunnel::hsm::software_hsm::crypto_providers::genetic_crypto::GeneticCryptoProvider;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;

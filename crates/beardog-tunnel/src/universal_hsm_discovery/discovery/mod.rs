@@ -146,16 +146,7 @@ impl DiscoveryEngine {
     }
 }
 
-// Note: Default implementation removed - use DiscoveryEngine::new() instead
-// Default trait cannot be implemented safely since new() returns Result
-// If you need a fallback, handle the Result explicitly:
-//   let engine = DiscoveryEngine::new().unwrap_or_else(|e| { /* handle error */ });
-//
-// impl Default for DiscoveryEngine {
-//     fn default() -> Self {
-//         Self::new()?
-//     }
-// }
+// No `Default` for `DiscoveryEngine`: `new()` returns `Result` — call sites must handle errors explicitly.
 
 #[cfg(test)]
 mod tests {

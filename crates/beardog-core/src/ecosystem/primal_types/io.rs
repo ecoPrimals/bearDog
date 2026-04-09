@@ -197,7 +197,7 @@ STEP 2: Use discovered capabilities instead of hardcoded names
 
 STEP 3: Remove hardcoded endpoint assumptions
 ❌ OLD (VIOLATES SOVEREIGNTY):
-    let endpoint = "http://hardcoded-service:8081";
+    let endpoint = "http://static-peer.example.invalid:8081";
 
 ✅ NEW (ACHIEVES SOVEREIGNTY):
     let endpoint = provider.endpoint.url; // Discovered dynamically

@@ -140,6 +140,8 @@ impl Default for WorkflowEngineConfig {
 
 #[cfg(test)]
 mod tests {
+    // SPDX-License-Identifier: AGPL-3.0-or-later
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
     use super::*;
     use crate::zero_cost::types::WorkflowStep;
 
@@ -219,5 +221,88 @@ mod tests {
         assert_eq!(result.status, "completed ");
         assert_eq!(result.workflow_id, "test-workflow");
         Ok(())
+    }
+
+    struct FailingWorkflowProcessor;
+
+    impl WorkflowProcessorTrait for FailingWorkflowProcessor {
+        type SupportedWorkflows = MockWorkflowTypes;
+        type Error = std::io::Error;
+
+        async fn process_workflow(
+            &self,
+            _workflow: Workflow,
+        ) -> Result<WorkflowResult, Self::Error> {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "process rejected",
+            ))
+        }
+
+        fn supported_types(&self) -> &Self::SupportedWorkflows {
+            &MockWorkflowTypes
+        }
+
+        fn validate_workflow(&self, _workflow: &Workflow) -> Result<(), Self::Error> {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "validation failed",
+            ))
+        }
+    }
+
+    #[test]
+    fn engine_accessors_reflect_config_and_supported_types() {
+        let processor = MockWorkflowProcessor;
+        let config = WorkflowEngineConfig {
+            max_concurrent: 42,
+            timeout_ms: 99,
+            retry_attempts: 7,
+        };
+        let engine = ZeroCostWorkflowEngine::new(processor, config.clone());
+
+        assert_eq!(engine.max_concurrent(), 42);
+        assert_eq!(engine.timeout_ms(), 99);
+        assert_eq!(engine.retry_attempts(), 7);
+        assert_eq!(engine.config().max_concurrent, config.max_concurrent);
+        assert!(
+            MockWorkflowTypes::SECURITY_WORKFLOWS
+                && MockWorkflowTypes::KEY_MANAGEMENT
+                && !MockWorkflowTypes::USER_MANAGEMENT
+        );
+    }
+
+    #[tokio::test]
+    async fn validate_propagates_processor_error() {
+        let engine =
+            ZeroCostWorkflowEngine::new(FailingWorkflowProcessor, WorkflowEngineConfig::default());
+        let workflow = Workflow {
+            id: "w".to_string(),
+            workflow_type: "security".to_string(),
+            steps: vec![],
+            metadata: std::collections::HashMap::new(),
+        };
+        let res = engine.validate(&workflow);
+        assert!(matches!(
+            &res,
+            Err(e) if e.kind() == std::io::ErrorKind::InvalidData
+        ));
+    }
+
+    #[tokio::test]
+    async fn process_propagates_processor_error() {
+        let engine =
+            ZeroCostWorkflowEngine::new(FailingWorkflowProcessor, WorkflowEngineConfig::default());
+        let workflow = Workflow {
+            id: "w2".to_string(),
+            workflow_type: "security".to_string(),
+            steps: vec![],
+            metadata: std::collections::HashMap::new(),
+        };
+        let res = engine.process(workflow).await;
+        assert!(matches!(
+            &res,
+            Err(e) if e.kind() == std::io::ErrorKind::InvalidInput
+        ));
     }
 }

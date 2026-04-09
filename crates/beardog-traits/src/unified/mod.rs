@@ -44,6 +44,7 @@ pub mod monitoring;
 /// Transport-agnostic networking abstractions.
 pub mod network;
 /// Root [`BearDogProvider`] hierarchy and specialized provider roles.
+///
 pub mod providers;
 /// Policy, trust, and risk interfaces used by security services.
 pub mod security;

@@ -44,7 +44,7 @@ impl EcosystemDiscoveryAdapter {
     }
 
     /// Create default bootstrap configuration for CLI usage
-    pub(crate) fn default_config() -> UnifiedBootstrapConfig {
+    pub fn default_config() -> UnifiedBootstrapConfig {
         UnifiedBootstrapConfig {
             discovery: BootstrapDiscoveryConfig {
                 enabled_protocols: vec![
@@ -52,15 +52,15 @@ impl EcosystemDiscoveryAdapter {
                     DiscoveryProtocol::HttpDiscovery,
                     DiscoveryProtocol::EnvironmentDiscovery,
                 ],
-                ..Default::default()
+                ..BootstrapDiscoveryConfig::default()
             },
-            ..Default::default()
+            ..UnifiedBootstrapConfig::default()
         }
     }
 
     /// Test-only: seed discovered primals without network (unit tests).
     #[cfg(test)]
-    pub(crate) async fn insert_primal_for_test(&self, primal: DiscoveredPrimal) {
+    pub async fn insert_primal_for_test(&self, primal: DiscoveredPrimal) {
         self.discovered_primals
             .write()
             .await

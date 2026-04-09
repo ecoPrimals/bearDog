@@ -18,11 +18,16 @@
 //! - RFC 2104: HMAC
 
 use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
+use beardog_core::crypto_service::algorithms::asymmetric;
 use hkdf::Hkdf;
 use hmac::{Hmac, Mac};
 use serde_json::Value;
 use sha2::{Sha256, Sha384};
 use tracing::{debug, info};
+
+type HmacSha256 = Hmac<Sha256>;
+type HmacSha384 = Hmac<Sha384>;
 
 // Import shared utility for key derivation
 use super::super::utils::derive_key_from_id;
@@ -117,9 +122,6 @@ pub async fn handle_tls_sign_handshake(params: Option<&Value>) -> Result<Value, 
         return Err(format!("Unsupported algorithm: {algorithm}"));
     }
 
-    // Use BearDog's crypto service for Ed25519 signing
-    use beardog_core::crypto_service::algorithms::asymmetric;
-
     // Derive TLS-specific signing key (includes "tls_handshake" in context)
     let seed = derive_key_from_id(key_id, purpose)?;
     let (secret_key, _public_key) = asymmetric::generate_ed25519_from_seed(&seed)
@@ -208,8 +210,6 @@ pub async fn handle_tls_sign_handshake(params: Option<&Value>) -> Result<Value, 
 pub async fn handle_tls_compute_finished_verify_data(
     params: Option<&Value>,
 ) -> Result<Value, String> {
-    use base64::prelude::*;
-
     let params = params.ok_or("Missing params for tls.compute_finished_verify_data")?;
 
     // Extract parameters
@@ -304,7 +304,6 @@ pub async fn handle_tls_compute_finished_verify_data(
             );
 
             // Compute verify_data = HMAC-SHA256(finished_key, transcript_hash)
-            type HmacSha256 = Hmac<Sha256>;
             let mut mac = HmacSha256::new_from_slice(&finished_key)
                 .map_err(|e| format!("HMAC key error: {e}"))?;
             mac.update(&transcript_hash);
@@ -343,7 +342,6 @@ pub async fn handle_tls_compute_finished_verify_data(
             );
 
             // Compute verify_data = HMAC-SHA384(finished_key, transcript_hash)
-            type HmacSha384 = Hmac<Sha384>;
             let mut mac = HmacSha384::new_from_slice(&finished_key)
                 .map_err(|e| format!("HMAC key error: {e}"))?;
             mac.update(&transcript_hash);

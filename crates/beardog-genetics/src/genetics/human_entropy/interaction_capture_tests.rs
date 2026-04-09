@@ -253,10 +253,11 @@ fn test_process_mouse_event_moves_clicks_and_scroll() {
 }
 
 #[test]
-#[allow(
+#[expect(
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
-    clippy::cast_precision_loss
+    clippy::cast_precision_loss,
+    reason = "synthetic event timestamps and indices for interaction entropy metrics"
 )]
 fn test_calculate_metrics_multi_interval_std_dev() {
     let events: Vec<InteractionEvent> = (0..5)
@@ -346,10 +347,11 @@ fn test_shannon_entropy_single_bucket_max_entropy_zero_branch() {
 }
 
 #[test]
-#[allow(
+#[expect(
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
-    clippy::cast_precision_loss
+    clippy::cast_precision_loss,
+    reason = "mouse delta synthesis: small i16 ranges from bounded loop indices"
 )]
 fn test_calculate_movement_entropy_high_variance_caps_at_one() {
     let events: Vec<InteractionEvent> = (0..20)
@@ -410,10 +412,11 @@ fn test_derive_entropy_bytes_includes_scroll_deltas() {
 }
 
 #[test]
-#[allow(
+#[expect(
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
-    clippy::cast_precision_loss
+    clippy::cast_precision_loss,
+    reason = "keyboard-only event stream uses small index set for nanosecond spacing"
 )]
 fn test_calculate_metrics_all_keyboard_no_mouse_events() {
     let events: Vec<InteractionEvent> = (0..4)

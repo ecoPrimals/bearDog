@@ -47,7 +47,7 @@ beardog-config = { path = "../beardog-config" }
 beardog-errors = { path = "../beardog-errors" }
 
 # Optional: mDNS discovery
-mdns-sd = { version = "0.11", optional = true }  # Standardized to 0.11
+mdns-sd = { version = "0.19", optional = true }
 
 [dev-dependencies]
 tokio-test = "0.4"

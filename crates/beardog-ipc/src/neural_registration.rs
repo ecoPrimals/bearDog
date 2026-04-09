@@ -337,7 +337,10 @@ pub fn discover_neural_api_socket() -> Option<String> {
 
 /// Test helper: same as [`discover_neural_api_socket_with`] using a string map.
 #[cfg(test)]
-#[allow(clippy::implicit_hasher)]
+#[expect(
+    clippy::implicit_hasher,
+    reason = "API matches external registration map shape; concrete hasher not required at boundary"
+)]
 pub fn discover_neural_api_socket_with_env(
     env_vars: &std::collections::HashMap<String, String>,
 ) -> Option<String> {

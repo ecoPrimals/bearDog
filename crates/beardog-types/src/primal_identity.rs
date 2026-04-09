@@ -27,14 +27,62 @@
 //! - **Explicit**: Dependencies visible in signatures
 //! - **Zero-Cost**: Arc provides cheap cloning
 
+use std::sync::OnceLock;
+
+use tracing::warn;
+
 /// Default family identifier used when no environment variable is set.
 ///
 /// Per `UniBin` v1.1 / PRIMAL IPC Protocol v3.1: primals MUST NOT hard-fail
 /// on missing identity env vars; they default to standalone mode.
 pub const DEFAULT_STANDALONE_FAMILY: &str = "standalone";
 
-/// Default node identifier used when no environment variable is set.
+/// Placeholder node id for tests and manual struct construction.
+///
+/// At runtime, missing `NODE_ID` / `BEARDOG_NODE_ID` resolve to a stable
+/// per-process ephemeral id via [`resolve_process_node_id`].
 pub const DEFAULT_STANDALONE_NODE: &str = "default";
+
+/// Read optional non-empty env (empty string treated as unset).
+fn env_nonempty(primary: &str, secondary: &str) -> Option<String> {
+    std::env::var(primary)
+        .ok()
+        .or_else(|| std::env::var(secondary).ok())
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+}
+
+/// Stable per-process node id when `NODE_ID` / `BEARDOG_NODE_ID` are absent or blank.
+///
+/// First call generates `standalone-{uuid}` and emits a [`tracing::warn`]. Later calls
+/// return the same value so socket resolution and [`PrimalIdentity`] agree.
+#[must_use]
+pub fn resolve_process_node_id() -> String {
+    static EPHEMERAL: OnceLock<String> = OnceLock::new();
+    EPHEMERAL
+        .get_or_init(|| {
+            let id = format!("standalone-{}", uuid::Uuid::new_v4());
+            warn!(
+                node_id = %id,
+                "NODE_ID and BEARDOG_NODE_ID unset or empty; using ephemeral standalone node id (PRIMAL IPC Protocol v3.1 degraded / standalone mode)"
+            );
+            id
+        })
+        .clone()
+}
+
+/// Resolve node id from explicit inputs (for example `SocketPathInputs` in `beardog-core`)
+/// or fall back to [`resolve_process_node_id`].
+#[must_use]
+pub fn resolve_node_id_from_env_or_ephemeral(explicit: Option<&str>) -> String {
+    if let Some(s) = explicit {
+        let t = s.trim();
+        if !t.is_empty() {
+            return t.to_string();
+        }
+    }
+    resolve_process_node_id()
+}
 
 /// Primal identity configuration
 ///
@@ -61,7 +109,7 @@ pub struct PrimalIdentity {
 
     /// Node identifier within the family
     ///
-    /// Example: "tower1", "node-alpha", "default"
+    /// Example: `tower1`, or an ephemeral `standalone-<uuid>` when env is unset (see [`Self::from_env`]).
     pub node_id: String,
 
     /// Whether this identity was resolved from environment or defaulted
@@ -72,8 +120,8 @@ impl PrimalIdentity {
     /// Create identity from environment variables with standalone fallback.
     ///
     /// Reads from:
-    /// 1. `FAMILY_ID` or `BEARDOG_FAMILY_ID` (defaults to `"standalone"`)
-    /// 2. `NODE_ID` or `BEARDOG_NODE_ID` (defaults to `"default"`)
+    /// 1. `FAMILY_ID` or `BEARDOG_FAMILY_ID` (defaults to `"standalone"`; empty = unset)
+    /// 2. `NODE_ID` or `BEARDOG_NODE_ID` (if unset or empty: stable per-process `standalone-{uuid}`; see [`resolve_process_node_id`])
     ///
     /// Per `UniBin` v1.1 / PRIMAL IPC Protocol v3.1, primals MUST NOT
     /// hard-fail when identity env vars are absent. Standalone mode
@@ -91,19 +139,17 @@ impl PrimalIdentity {
     /// ```
     #[must_use]
     pub fn from_env() -> Self {
-        let family_id = std::env::var("FAMILY_ID")
-            .or_else(|_| std::env::var("BEARDOG_FAMILY_ID"))
-            .ok();
-
-        let node_id = std::env::var("NODE_ID")
-            .or_else(|_| std::env::var("BEARDOG_NODE_ID"))
-            .ok();
+        let family_id = env_nonempty("FAMILY_ID", "BEARDOG_FAMILY_ID");
+        let node_id = env_nonempty("NODE_ID", "BEARDOG_NODE_ID");
 
         let is_standalone = family_id.is_none() && node_id.is_none();
 
         Self {
             family_id: family_id.unwrap_or_else(|| DEFAULT_STANDALONE_FAMILY.to_owned()),
-            node_id: node_id.unwrap_or_else(|| DEFAULT_STANDALONE_NODE.to_owned()),
+            node_id: match node_id {
+                Some(n) => n,
+                None => resolve_process_node_id(),
+            },
             is_standalone,
         }
     }
@@ -159,6 +205,9 @@ impl PrimalIdentity {
 
 #[cfg(test)]
 mod tests {
+    // SPDX-License-Identifier: AGPL-3.0-or-later
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+
     use super::*;
 
     #[test]
@@ -240,5 +289,30 @@ mod tests {
             is_standalone: true,
         };
         assert!(i.is_standalone());
+    }
+
+    #[test]
+    fn resolve_node_id_from_env_or_ephemeral_trims_and_skips_empty() {
+        assert_eq!(
+            resolve_node_id_from_env_or_ephemeral(Some("tower1")),
+            "tower1"
+        );
+        assert_eq!(resolve_node_id_from_env_or_ephemeral(Some("  z  ")), "z");
+        assert_eq!(
+            resolve_node_id_from_env_or_ephemeral(Some("")),
+            resolve_process_node_id()
+        );
+        assert_eq!(
+            resolve_node_id_from_env_or_ephemeral(Some("   ")),
+            resolve_process_node_id()
+        );
+    }
+
+    #[test]
+    fn resolve_process_node_id_is_stable_within_process() {
+        let a = resolve_process_node_id();
+        let b = resolve_process_node_id();
+        assert_eq!(a, b);
+        assert!(a.starts_with("standalone-"));
     }
 }

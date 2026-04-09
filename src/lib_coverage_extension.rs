@@ -204,7 +204,7 @@ mod root_lib_coverage_extension_tests {
 
     #[tokio::test]
     async fn test_framework_new() {
-        let framework = BearDogFramework::new().await;
+        let framework = BearDogFramework::new();
 
         assert!(framework.is_ok());
         let framework = framework.unwrap();
@@ -222,7 +222,7 @@ mod root_lib_coverage_extension_tests {
             storage_endpoint: None,
         };
 
-        let framework = BearDogFramework::with_config(config.clone()).await;
+        let framework = BearDogFramework::with_config(config.clone());
 
         assert!(framework.is_ok());
         let framework = framework.unwrap();
@@ -240,8 +240,8 @@ mod root_lib_coverage_extension_tests {
             storage_endpoint: Some("http://storage:8081".to_string()),
         };
 
-        let mut framework = BearDogFramework::with_config(config).await.unwrap();
-        let result = framework.discover_services().await;
+        let mut framework = BearDogFramework::with_config(config).unwrap();
+        let result = framework.discover_services();
 
         assert!(result.is_err());
         match result {
@@ -262,8 +262,8 @@ mod root_lib_coverage_extension_tests {
             storage_endpoint: None, // Missing!
         };
 
-        let mut framework = BearDogFramework::with_config(config).await.unwrap();
-        let result = framework.discover_services().await;
+        let mut framework = BearDogFramework::with_config(config).unwrap();
+        let result = framework.discover_services();
 
         // Should error due to missing storage endpoint
         assert!(result.is_err());
@@ -284,8 +284,8 @@ mod root_lib_coverage_extension_tests {
             storage_endpoint: Some("http://storage-test:8081".to_string()),
         };
 
-        let mut framework = BearDogFramework::with_config(config).await.unwrap();
-        let result = framework.discover_services().await;
+        let mut framework = BearDogFramework::with_config(config).unwrap();
+        let result = framework.discover_services();
 
         assert!(result.is_ok());
         let services = result.unwrap();
@@ -315,13 +315,13 @@ mod root_lib_coverage_extension_tests {
 
     #[tokio::test]
     async fn test_demonstrate_zero_copy_performance() {
-        let mut framework = BearDogFramework::new().await.unwrap();
+        let mut framework = BearDogFramework::new().unwrap();
 
         assert_eq!(framework.stats.zero_copy_operations, 0);
         assert_eq!(framework.stats.memory_ops_avoided, 0);
         assert_f64_approx_eq(framework.stats.cache_hit_ratio, 0.0);
 
-        let result = framework.demonstrate_zero_copy_performance().await;
+        let result = framework.demonstrate_zero_copy_performance();
 
         assert!(result.is_ok());
         assert_eq!(framework.stats.zero_copy_operations, 1000);
@@ -331,7 +331,7 @@ mod root_lib_coverage_extension_tests {
 
     #[tokio::test]
     async fn test_get_stats() {
-        let mut framework = BearDogFramework::new().await.unwrap();
+        let mut framework = BearDogFramework::new().unwrap();
 
         let stats = framework.get_stats();
         assert_eq!(stats.services_discovered, 0);
@@ -343,7 +343,7 @@ mod root_lib_coverage_extension_tests {
 
     #[tokio::test]
     async fn test_config_accessor() {
-        let framework = BearDogFramework::new().await.unwrap();
+        let framework = BearDogFramework::new().unwrap();
 
         let config = framework.config();
         assert_f64_approx_eq(config.confidence_level, 0.95);
@@ -352,7 +352,7 @@ mod root_lib_coverage_extension_tests {
 
     #[tokio::test]
     async fn test_reset_stats() {
-        let mut framework = BearDogFramework::new().await.unwrap();
+        let mut framework = BearDogFramework::new().unwrap();
 
         // Set some stats
         framework.stats.services_discovered = 10;
@@ -380,15 +380,15 @@ mod root_lib_coverage_extension_tests {
             storage_endpoint: Some("http://test2:8081".to_string()),
         };
 
-        let mut framework = BearDogFramework::with_config(config).await.unwrap();
+        let mut framework = BearDogFramework::with_config(config).unwrap();
 
         // Discover services
-        let services = framework.discover_services().await.unwrap();
+        let services = framework.discover_services().unwrap();
         assert_eq!(services.len(), 2);
         assert_eq!(framework.stats.services_discovered, 2);
 
         // Demonstrate performance
-        framework.demonstrate_zero_copy_performance().await.unwrap();
+        framework.demonstrate_zero_copy_performance().unwrap();
         assert_eq!(framework.stats.zero_copy_operations, 1000);
 
         // Check combined stats
@@ -407,7 +407,7 @@ mod root_lib_coverage_extension_tests {
             storage_endpoint: None,
         };
 
-        let framework = BearDogFramework::with_config(config).await.unwrap();
+        let framework = BearDogFramework::with_config(config).unwrap();
 
         assert_f64_approx_eq(framework.config.confidence_level, 0.999);
         assert_eq!(framework.config.sample_size, 10000);
@@ -424,7 +424,7 @@ mod root_lib_coverage_extension_tests {
             storage_endpoint: None,
         };
 
-        let framework = BearDogFramework::with_config(config).await.unwrap();
+        let framework = BearDogFramework::with_config(config).unwrap();
 
         assert_f64_approx_eq(framework.config.confidence_level, 0.5);
         assert_eq!(framework.config.sample_size, 100);
@@ -441,8 +441,8 @@ mod root_lib_coverage_extension_tests {
             storage_endpoint: Some("http://storage:9091".to_string()),
         };
 
-        let mut framework = BearDogFramework::with_config(config).await.unwrap();
-        let services = framework.discover_services().await.unwrap();
+        let mut framework = BearDogFramework::with_config(config).unwrap();
+        let services = framework.discover_services().unwrap();
 
         // Check compute service metadata
         assert_eq!(
@@ -459,16 +459,16 @@ mod root_lib_coverage_extension_tests {
 
     #[tokio::test]
     async fn test_cumulative_zero_copy_operations() {
-        let mut framework = BearDogFramework::new().await.unwrap();
+        let mut framework = BearDogFramework::new().unwrap();
 
         // Perform operations multiple times
-        framework.demonstrate_zero_copy_performance().await.unwrap();
+        framework.demonstrate_zero_copy_performance().unwrap();
         assert_eq!(framework.stats.zero_copy_operations, 1000);
 
-        framework.demonstrate_zero_copy_performance().await.unwrap();
+        framework.demonstrate_zero_copy_performance().unwrap();
         assert_eq!(framework.stats.zero_copy_operations, 2000);
 
-        framework.demonstrate_zero_copy_performance().await.unwrap();
+        framework.demonstrate_zero_copy_performance().unwrap();
         assert_eq!(framework.stats.zero_copy_operations, 3000);
     }
 
@@ -482,11 +482,11 @@ mod root_lib_coverage_extension_tests {
             storage_endpoint: Some("http://test:8081".to_string()),
         };
 
-        let mut framework = BearDogFramework::with_config(config).await.unwrap();
+        let mut framework = BearDogFramework::with_config(config).unwrap();
 
         // Perform operations
-        framework.discover_services().await.unwrap();
-        framework.demonstrate_zero_copy_performance().await.unwrap();
+        framework.discover_services().unwrap();
+        framework.demonstrate_zero_copy_performance().unwrap();
 
         assert!(framework.stats.services_discovered > 0);
         assert!(framework.stats.zero_copy_operations > 0);

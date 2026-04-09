@@ -5,7 +5,10 @@
 //! Interactive client for connecting to BearDog server.
 
 use crate::ClientArgs;
-use beardog_errors::BearDogError;
+use beardog_errors::{
+    ApiErrorCategory, BearDogError, BusinessErrorCategory, NetworkErrorCategory,
+    SystemErrorCategory,
+};
 use serde_json::json;
 use std::path::Path;
 use std::sync::OnceLock;
@@ -64,7 +67,7 @@ pub async fn handle_client(args: ClientArgs) -> Result<(), BearDogError> {
         .await
         .map_err(|e| BearDogError::Network {
             message: format!("Failed to connect to server: {e}"),
-            category: Default::default(),
+            category: NetworkErrorCategory::default(),
         })?;
 
     info!("✅ Connected to BearDog server");
@@ -154,7 +157,7 @@ async fn execute_command_on_socket(
         .await
         .map_err(|e| BearDogError::Network {
             message: format!("Failed to connect for command: {e}"),
-            category: Default::default(),
+            category: NetworkErrorCategory::default(),
         })?;
 
     let (reader, mut writer) = new_stream.into_split();
@@ -174,7 +177,7 @@ fn build_jsonrpc_request(command: &str) -> Result<serde_json::Value, BearDogErro
     if parts.is_empty() {
         return Err(BearDogError::Business {
             message: "Empty command".to_string(),
-            category: Default::default(),
+            category: BusinessErrorCategory::default(),
         });
     }
 
@@ -203,7 +206,7 @@ async fn send_command(
     // Send request
     let request_str = serde_json::to_string(&request).map_err(|e| BearDogError::System {
         message: format!("Failed to serialize request: {e}"),
-        category: Default::default(),
+        category: SystemErrorCategory::default(),
     })?;
 
     writer
@@ -211,14 +214,14 @@ async fn send_command(
         .await
         .map_err(|e| BearDogError::Network {
             message: format!("Failed to write request: {e}"),
-            category: Default::default(),
+            category: NetworkErrorCategory::default(),
         })?;
     writer
         .write_all(b"\n")
         .await
         .map_err(|e| BearDogError::Network {
             message: format!("Failed to write newline: {e}"),
-            category: Default::default(),
+            category: NetworkErrorCategory::default(),
         })?;
 
     // Read response
@@ -228,19 +231,19 @@ async fn send_command(
         .await
         .map_err(|e| BearDogError::Network {
             message: format!("Failed to read response: {e}"),
-            category: Default::default(),
+            category: NetworkErrorCategory::default(),
         })?;
 
     let response: serde_json::Value =
         serde_json::from_str(&response_line).map_err(|e| BearDogError::System {
             message: format!("Failed to parse response: {e}"),
-            category: Default::default(),
+            category: SystemErrorCategory::default(),
         })?;
 
     if let Some(error) = response.get("error") {
         return Err(BearDogError::Api {
             message: format!("Server error: {error}"),
-            category: Default::default(),
+            category: ApiErrorCategory::default(),
             status_code: None,
             endpoint: None,
         });
@@ -272,12 +275,15 @@ fn print_help() {
 }
 
 #[cfg(test)]
+#[expect(clippy::unwrap_used, reason = "test assertions")]
 mod client_handler_tests {
-    use super::*;
+    use super::{build_jsonrpc_request, discover_socket_path_with, print_help, send_command};
+    use serde_json::json;
     use std::collections::HashMap;
     use std::sync::Mutex;
 
     static CLIENT_ENV_LOCK: Mutex<()> = Mutex::new(());
+    static HANDLE_CLIENT_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn test_build_jsonrpc_request_method_only() {
@@ -312,6 +318,21 @@ mod client_handler_tests {
         );
         let get = |k: &str| map.get(k).cloned();
         assert_eq!(discover_socket_path_with(get), "/custom/beardog.sock");
+    }
+
+    #[test]
+    fn test_discover_socket_path_defaults_primal_name_to_beardog() {
+        let _guard = CLIENT_ENV_LOCK
+            .lock()
+            .expect("client env test lock poisoned");
+        beardog_errors::process_env::remove_var("BEARDOG_LOCAL_SOCKET_DIR");
+        let map: HashMap<String, String> = HashMap::new();
+        let get = |k: &str| map.get(k).cloned();
+        let expected = std::env::temp_dir()
+            .join("beardog.sock")
+            .display()
+            .to_string();
+        assert_eq!(discover_socket_path_with(get), expected);
     }
 
     #[test]
@@ -460,6 +481,8 @@ mod client_handler_tests {
     #[cfg(unix)]
     #[tokio::test]
     async fn test_execute_command_on_socket_roundtrip() {
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
         let dir = tempfile::tempdir().expect("tempdir for unix socket test");
         let sock_path = dir.path().join("beardog-client-test.sock");
         let _ = std::fs::remove_file(&sock_path);
@@ -470,7 +493,6 @@ mod client_handler_tests {
                 .accept()
                 .await
                 .expect("listener accept in test server");
-            use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
             let mut reader = BufReader::new(&mut stream);
             let mut line = String::new();
             reader
@@ -488,5 +510,69 @@ mod client_handler_tests {
         super::execute_command_on_socket(&sock_path, "discovery.capabilities arg1")
             .await
             .expect("execute_command_on_socket roundtrip");
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn test_handle_client_runs_one_shot_command() {
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+        let _guard = HANDLE_CLIENT_LOCK
+            .lock()
+            .expect("handle_client test lock poisoned");
+
+        let dir = tempfile::tempdir().expect("tempdir for handle_client test");
+        let sock_path = dir.path().join("handle_client.sock");
+        let _ = std::fs::remove_file(&sock_path);
+        let listener = tokio::net::UnixListener::bind(&sock_path)
+            .expect("bind unix listener for handle_client test");
+
+        tokio::spawn(async move {
+            for _ in 0..2u32 {
+                let (mut stream, _) = listener.accept().await.expect("accept client connection");
+                tokio::spawn(async move {
+                    let mut reader = BufReader::new(&mut stream);
+                    let mut line = String::new();
+                    let _ = reader.read_line(&mut line).await;
+                    let response = r#"{"jsonrpc":"2.0","result":{"handled":true},"id":1}"#;
+                    let _ = stream.write_all(response.as_bytes()).await;
+                    let _ = stream.write_all(b"\n").await;
+                });
+            }
+        });
+
+        tokio::task::yield_now().await;
+
+        let args = crate::ClientArgs {
+            socket: sock_path.display().to_string(),
+            command: Some("crypto.blake3_hash".to_string()),
+        };
+
+        super::handle_client(args)
+            .await
+            .expect("handle_client one-shot command mode");
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn test_execute_command_on_socket_fails_when_socket_missing() {
+        let err = super::execute_command_on_socket(
+            "/tmp/beardog-cli-nonexistent-socket-9f3a.sock",
+            "crypto.blake3_hash",
+        )
+        .await
+        .expect_err("connect to missing socket must fail");
+        assert!(
+            err.to_string().contains("connect") || err.to_string().contains("Failed"),
+            "{err}"
+        );
+    }
+
+    #[test]
+    fn test_build_jsonrpc_request_whitespace_only_parts() {
+        let v = build_jsonrpc_request("  method_name  ")
+            .expect("single token with surrounding whitespace");
+        assert_eq!(v["method"], "method_name");
+        assert_eq!(v["params"], json!({}));
     }
 }

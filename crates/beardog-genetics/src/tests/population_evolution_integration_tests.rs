@@ -246,7 +246,10 @@ mod population_evolution_tests {
     }
 
     #[test]
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "population metrics as f64 for fitness ratio comparisons in integration test"
+    )]
     fn test_convergence_detection() {
         let mut pop = Population::new(30, 5);
         let mut fitness_history = Vec::new();

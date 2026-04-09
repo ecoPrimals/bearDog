@@ -22,12 +22,13 @@ use tracing::info;
 pub async fn run(endpoint: Option<String>, command: Option<String>) -> anyhow::Result<()> {
     info!("🐻 BearDog Client v{}", env!("CARGO_PKG_VERSION"));
 
-    let socket_path = endpoint.unwrap_or_else(|| {
-        let config = SocketConfig::from_env();
-        let path = config.socket_path_string();
+    let socket_path = if let Some(ep) = endpoint {
+        ep
+    } else {
+        let config = SocketConfig::from_env().map_err(|e| anyhow::anyhow!("{e}"))?;
         info!("Auto-discovered endpoint: {}", config.description());
-        path
-    });
+        config.socket_path_string()
+    };
 
     info!("Endpoint: {socket_path}");
 

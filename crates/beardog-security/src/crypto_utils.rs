@@ -402,8 +402,7 @@ impl BearDogCrypto {
 #[cfg(test)]
 mod tests {
 
-    // Tests moved to crates/beardog-security/src/tests/crypto_primitives_tests.rs
-    // for better organization and comprehensive coverage
+    // Tests live in `tests/crypto_primitives_tests.rs`.
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: security

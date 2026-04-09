@@ -13,6 +13,7 @@ use beardog_genetics::birdsong::{
         LineageProof, LineageRelationship,
     },
 };
+use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
@@ -383,8 +384,6 @@ async fn get_lineage_proof_for_key_with_home(
     // Generate cryptographic proofs for lineage verification
     // Uses SHA-256 hashing to create verifiable proof chain
 
-    use sha2::{Digest, Sha256};
-
     // Build proof chain: Create LineageRelationship for each parent-child link
     let mut proof_chain = Vec::new();
     let mut merkle_leaves = Vec::new();
@@ -484,8 +483,33 @@ fn compute_merkle_root(leaves: &[Vec<u8>]) -> Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        handle_birdsong_decrypt, handle_birdsong_decrypt_with_home,
+        handle_birdsong_encrypt_with_home, parse_lineage_hint,
+    };
+    use crate::handlers::key_store;
     use tempfile::TempDir;
+
+    fn sample_stored_key(id: &str, material: &[u8]) -> key_store::StoredKey {
+        key_store::StoredKey {
+            key_id: id.to_string(),
+            algorithm: "aes256-gcm".to_string(),
+            hsm_name: "test-hsm".to_string(),
+            created_at: chrono::Utc::now().to_rfc3339(),
+            key_material_b64: key_store::base64_encode(material),
+            generation: 0,
+            parent_key_id: None,
+            derivation_purpose: None,
+            children: vec![],
+            lineage: Some(key_store::KeyLineageInfo {
+                parent_key_id: None,
+                depth: 0,
+            }),
+            expires_at: None,
+            usage: None,
+            purpose: None,
+        }
+    }
 
     #[test]
     fn test_parse_lineage_hint_direct_ancestors() {
@@ -563,27 +587,6 @@ mod tests {
         let leaves: Vec<Vec<u8>> = (0u8..3).map(|i| vec![i; 32]).collect();
         let root = super::compute_merkle_root(&leaves);
         assert_eq!(root.len(), 32);
-    }
-
-    fn sample_stored_key(id: &str, material: &[u8]) -> key_store::StoredKey {
-        key_store::StoredKey {
-            key_id: id.to_string(),
-            algorithm: "aes256-gcm".to_string(),
-            hsm_name: "test-hsm".to_string(),
-            created_at: chrono::Utc::now().to_rfc3339(),
-            key_material_b64: key_store::base64_encode(material),
-            generation: 0,
-            parent_key_id: None,
-            derivation_purpose: None,
-            children: vec![],
-            lineage: Some(key_store::KeyLineageInfo {
-                parent_key_id: None,
-                depth: 0,
-            }),
-            expires_at: None,
-            usage: None,
-            purpose: None,
-        }
     }
 
     #[tokio::test]

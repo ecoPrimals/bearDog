@@ -22,7 +22,7 @@
 //! 6. Default Constant   (Last resort fallback)
 //! ```
 
-use beardog_errors::BearDogError;
+use beardog_errors::{BearDogError, process_env};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::net::{IpAddr, SocketAddr, TcpListener};
@@ -53,7 +53,7 @@ pub const FALLBACK_EXCLUDED_DEV_PORTS: &[u16] = &[8000, 8888];
 pub const FALLBACK_PORT_DISCOVERY_TIMEOUT_MS: u64 = 2000;
 
 fn parse_u16_env(key: &str, fallback: u16) -> u16 {
-    std::env::var(key)
+    process_env::var(key)
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(fallback)
@@ -97,11 +97,11 @@ impl PortDiscoveryConfig {
         let mut base = Self::default();
         base.min_port = parse_u16_env("BEARDOG_PORT_DISCOVERY_MIN", FALLBACK_PORT_SCAN_MIN);
         base.max_port = parse_u16_env("BEARDOG_PORT_DISCOVERY_MAX", FALLBACK_PORT_SCAN_MAX);
-        base.discovery_timeout_ms = std::env::var("BEARDOG_PORT_DISCOVERY_TIMEOUT_MS")
+        base.discovery_timeout_ms = process_env::var("BEARDOG_PORT_DISCOVERY_TIMEOUT_MS")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(FALLBACK_PORT_DISCOVERY_TIMEOUT_MS);
-        base.excluded_ports = if let Ok(s) = std::env::var("BEARDOG_PORT_DISCOVERY_EXCLUDE") {
+        base.excluded_ports = if let Ok(s) = process_env::var("BEARDOG_PORT_DISCOVERY_EXCLUDE") {
             s.split(',').filter_map(|p| p.trim().parse().ok()).collect()
         } else {
             default_excluded_ports()
@@ -382,7 +382,7 @@ impl PortDiscoverer {
     /// without extra dependencies.
     async fn query_mdns_primal_ports(&self) -> Result<HashSet<u16>, BearDogError> {
         let mut ports = HashSet::new();
-        if let Ok(s) = std::env::var("BEARDOG_DISCOVERED_PRIMAL_PORTS") {
+        if let Ok(s) = process_env::var("BEARDOG_DISCOVERED_PRIMAL_PORTS") {
             for part in s.split(',') {
                 let p = part.trim();
                 if p.is_empty() {
@@ -430,7 +430,7 @@ impl PortDiscoverer {
     /// Bind address is **configuration-driven**: `BEARDOG_PORT_PROBE_BIND` (IP), else documented
     /// loopback from [`NetworkAddressesConfig`](crate::domains::network_addresses::NetworkAddressesConfig) (same as `BEARDOG_LOCALHOST_IPV4`).
     fn is_port_available(&self, port: u16) -> bool {
-        let ip: IpAddr = std::env::var("BEARDOG_PORT_PROBE_BIND")
+        let ip: IpAddr = process_env::var("BEARDOG_PORT_PROBE_BIND")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or_else(|| {
@@ -484,7 +484,7 @@ pub async fn discover_port_hierarchical(
     }
 
     // 2. Environment variable (human configuration)
-    if let Ok(port_str) = std::env::var(env_var)
+    if let Ok(port_str) = process_env::var(env_var)
         && let Ok(port) = port_str.parse::<u16>()
     {
         tracing::debug!("Using environment variable {} = {}", env_var, port);
@@ -520,8 +520,20 @@ pub async fn discover_port_hierarchical(
 }
 
 #[cfg(test)]
+#[expect(clippy::unwrap_used, reason = "test assertions")]
 mod tests {
     use super::*;
+    use beardog_errors::process_env;
+    use std::sync::{Mutex, MutexGuard, OnceLock};
+
+    static PORT_DISCOVERY_ENV_MUTEX: OnceLock<Mutex<()>> = OnceLock::new();
+
+    fn port_discovery_env_lock() -> MutexGuard<'static, ()> {
+        PORT_DISCOVERY_ENV_MUTEX
+            .get_or_init(|| Mutex::new(()))
+            .lock()
+            .expect("port discovery env test mutex poisoned")
+    }
 
     #[test]
     fn test_port_discoverer_creation() {
@@ -762,5 +774,167 @@ mod tests {
         let discoverer = PortDiscoverer::new(config);
         let err = discoverer.discover().await.unwrap_err();
         assert!(err.to_string().contains("No available ports"));
+    }
+
+    #[test]
+    fn from_env_reads_process_env_overlay() {
+        let _guard = port_discovery_env_lock();
+        process_env::set_var("BEARDOG_PORT_DISCOVERY_MIN", "9100");
+        process_env::set_var("BEARDOG_PORT_DISCOVERY_MAX", "9200");
+        process_env::set_var("BEARDOG_PORT_DISCOVERY_TIMEOUT_MS", "1500");
+        process_env::set_var("BEARDOG_PORT_DISCOVERY_EXCLUDE", "9101, 9102");
+
+        let c = PortDiscoveryConfig::from_env();
+        assert_eq!(c.min_port, 9100);
+        assert_eq!(c.max_port, 9200);
+        assert_eq!(c.discovery_timeout_ms, 1500);
+        assert_eq!(c.excluded_ports, vec![9101u16, 9102]);
+
+        process_env::remove_var("BEARDOG_PORT_DISCOVERY_MIN");
+        process_env::remove_var("BEARDOG_PORT_DISCOVERY_MAX");
+        process_env::remove_var("BEARDOG_PORT_DISCOVERY_TIMEOUT_MS");
+        process_env::remove_var("BEARDOG_PORT_DISCOVERY_EXCLUDE");
+    }
+
+    #[test]
+    fn parse_u16_env_invalid_falls_back_to_fallback() {
+        let _guard = port_discovery_env_lock();
+        process_env::set_var("BEARDOG_PORT_DISCOVERY_MIN", "not-a-number");
+        let c = PortDiscoveryConfig::from_env();
+        assert_eq!(c.min_port, FALLBACK_PORT_SCAN_MIN);
+        process_env::remove_var("BEARDOG_PORT_DISCOVERY_MIN");
+    }
+
+    #[tokio::test]
+    async fn hierarchical_falls_back_to_default_when_discovery_range_invalid() {
+        let port = discover_port_hierarchical(
+            "HIER_INVALID_RANGE_PORT",
+            None,
+            None,
+            7777,
+            PortDiscoveryConfig {
+                strategy: DiscoveryStrategy::SystemQuery,
+                min_port: 65500,
+                max_port: 65400,
+                excluded_ports: vec![],
+                discovery_timeout_ms: 50,
+            },
+        )
+        .await
+        .expect("default when system discovery cannot find a port");
+        assert_eq!(port, 7777);
+    }
+
+    #[tokio::test]
+    async fn discovered_primal_ports_env_merges_valid_and_ignores_invalid() {
+        let _guard = port_discovery_env_lock();
+        process_env::set_var("BEARDOG_DISCOVERED_PRIMAL_PORTS", "8443,not-a-port,9001");
+
+        let config = PortDiscoveryConfig {
+            strategy: DiscoveryStrategy::PrimalQuery,
+            min_port: 58400,
+            max_port: 58500,
+            excluded_ports: vec![],
+            discovery_timeout_ms: 100,
+        };
+        let discoverer = PortDiscoverer::new(config);
+        let res = discoverer.discover().await;
+        assert!(res.is_ok());
+
+        process_env::remove_var("BEARDOG_DISCOVERED_PRIMAL_PORTS");
+    }
+
+    #[tokio::test]
+    async fn hierarchical_prefers_env_overlay_over_config() {
+        let _guard = port_discovery_env_lock();
+        process_env::set_var("HIER_PORT_ENV_OVERLAY", "4411");
+
+        let port = discover_port_hierarchical(
+            "HIER_PORT_ENV_OVERLAY",
+            None,
+            Some(9911),
+            8822,
+            PortDiscoveryConfig::default(),
+        )
+        .await
+        .expect("env should win over config");
+
+        assert_eq!(port, 4411);
+
+        process_env::remove_var("HIER_PORT_ENV_OVERLAY");
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn parse_proc_net_line_requires_address_column() {
+        assert!(PortDiscoverer::parse_proc_net_line("incomplete").is_none());
+        assert!(PortDiscoverer::parse_proc_net_line("0 0100007F:1F90").is_some());
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn parse_proc_net_line_rejects_invalid_hex_port() {
+        assert!(PortDiscoverer::parse_proc_net_line("0: 0100007F:GGGG 00000000:0000 0A").is_none());
+    }
+
+    #[tokio::test]
+    async fn primal_query_errors_when_no_candidate_in_tiny_excluded_range() {
+        let config = PortDiscoveryConfig {
+            strategy: DiscoveryStrategy::PrimalQuery,
+            min_port: 60100,
+            max_port: 60100,
+            excluded_ports: vec![60100],
+            discovery_timeout_ms: 100,
+        };
+        let discoverer = PortDiscoverer::new(config);
+        let err = discoverer.discover().await.expect_err("no port available");
+        assert!(err.to_string().contains("No available ports"));
+        assert!(err.to_string().contains("primal"));
+    }
+
+    #[test]
+    fn from_env_invalid_timeout_ms_falls_back_to_fallback() {
+        let _guard = port_discovery_env_lock();
+        process_env::set_var("BEARDOG_PORT_DISCOVERY_TIMEOUT_MS", "not-a-number");
+        let c = PortDiscoveryConfig::from_env();
+        assert_eq!(c.discovery_timeout_ms, FALLBACK_PORT_DISCOVERY_TIMEOUT_MS);
+        process_env::remove_var("BEARDOG_PORT_DISCOVERY_TIMEOUT_MS");
+    }
+
+    #[test]
+    fn from_env_invalid_max_port_falls_back() {
+        let _guard = port_discovery_env_lock();
+        process_env::set_var("BEARDOG_PORT_DISCOVERY_MAX", "bogus");
+        let c = PortDiscoveryConfig::from_env();
+        assert_eq!(c.max_port, FALLBACK_PORT_SCAN_MAX);
+        process_env::remove_var("BEARDOG_PORT_DISCOVERY_MAX");
+    }
+
+    #[test]
+    fn is_port_available_respects_beardog_port_probe_bind_env() {
+        let _guard = port_discovery_env_lock();
+        process_env::set_var("BEARDOG_PORT_PROBE_BIND", "127.0.0.1");
+        let discoverer = PortDiscoverer::with_defaults();
+        let high = 59123u16;
+        let _ = discoverer.is_port_available(high);
+        process_env::remove_var("BEARDOG_PORT_PROBE_BIND");
+    }
+
+    #[tokio::test]
+    async fn discovered_primal_ports_skips_empty_csv_segments() {
+        let _guard = port_discovery_env_lock();
+        process_env::set_var("BEARDOG_DISCOVERED_PRIMAL_PORTS", "8443,,,9001");
+
+        let config = PortDiscoveryConfig {
+            strategy: DiscoveryStrategy::PrimalQuery,
+            min_port: 58600,
+            max_port: 58700,
+            excluded_ports: vec![],
+            discovery_timeout_ms: 100,
+        };
+        let discoverer = PortDiscoverer::new(config);
+        assert!(discoverer.discover().await.is_ok());
+
+        process_env::remove_var("BEARDOG_DISCOVERED_PRIMAL_PORTS");
     }
 }

@@ -11,7 +11,11 @@
 
 use super::types::{
     QuantumPrivateKey, QuantumSignature, QuantumSignatureResult, SecurityLevel, SignatureAlgorithm,
-    dilithium_sizes::*,
+    dilithium_sizes::{
+        DILITHIUM2_PK_SIZE, DILITHIUM2_SIG_SIZE, DILITHIUM2_SK_SIZE, DILITHIUM3_PK_SIZE,
+        DILITHIUM3_SIG_SIZE, DILITHIUM3_SK_SIZE, DILITHIUM5_PK_SIZE, DILITHIUM5_SIG_SIZE,
+        DILITHIUM5_SK_SIZE,
+    },
 };
 use beardog_errors::BearDogError;
 use rand::RngCore;

@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::helpers::{entropy_quality_assessment_label, generate_system_entropy};
-use super::*;
+use super::hsm_selection::{format_hsm_interface_type_label, select_hsm_by_preference};
+use super::info::handle_entropy_info;
+use super::types::{EntropySeedMetadata, HsmInfo};
+use super::{
+    base64_decode, base64_encode, calculate_entropy_quality, load_entropy_file, save_entropy_file,
+};
 use beardog_types::constants::network::HTTPS_PORT;
 use tempfile::TempDir;
 
@@ -97,7 +102,10 @@ fn test_calculate_entropy_quality_empty() {
 }
 
 #[test]
-#[allow(clippy::cast_possible_truncation)]
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "u16 0..256 maps to u8 for full byte alphabet; range is exact"
+)]
 fn test_calculate_entropy_quality_near_uniform() {
     let v: Vec<u8> = (0u16..256).map(|i| i as u8).collect();
     let q = calculate_entropy_quality(&v);
@@ -310,7 +318,10 @@ fn test_select_hsm_by_preference_hardware_not_found() {
 }
 
 #[test]
-#[allow(clippy::cast_possible_truncation)]
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "enumerate index fits u8 for 256-slot histogram (i % 17)"
+)]
 fn test_calculate_entropy_quality_moderate_distribution() {
     let mut v = vec![0u8; 256];
     for (i, slot) in v.iter_mut().enumerate() {

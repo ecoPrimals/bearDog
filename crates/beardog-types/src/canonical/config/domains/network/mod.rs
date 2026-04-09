@@ -36,13 +36,20 @@ pub mod security;
 pub mod server;
 
 // Re-export all types for backward compatibility
-pub use client::*;
-pub use connection::*;
-pub use endpoints::*;
-pub use monitoring::*;
-pub use performance::*;
-pub use security::*;
-pub use server::*;
+pub use client::ClientConfiguration;
+pub use connection::{ConnectionPoolConfig, LoadBalancerConfiguration, TimeoutConfiguration};
+pub use endpoints::EndpointsConfiguration;
+pub use monitoring::{
+    HealthCheckConfiguration, NetworkMonitoringConfiguration, ServiceDiscoveryConfiguration,
+};
+pub use performance::{
+    CacheConfiguration, NetworkPerformanceConfiguration, NetworkRateLimitConfiguration,
+};
+pub use security::{
+    EndpointSecurityConfiguration, NetworkSecurityConfiguration, TlsConfiguration,
+    TlsVerificationMode,
+};
+pub use server::ServerConfiguration;
 
 /// **CONSOLIDATED NETWORK CONFIGURATION** - Single source of truth for all network settings
 ///

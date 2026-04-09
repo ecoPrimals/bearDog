@@ -45,6 +45,7 @@ zeroize = { version = "1.7", features = ["derive"] }  # Memory zeroing for keys
 postcard = { workspace = true }  # Binary serialization for constraint hashing
 
 [dev-dependencies]
+tokio = { version = "1.0", features = ["rt", "rt-multi-thread", "macros", "sync"] }
 tokio-test = "0.4"
 criterion = { version = "0.5", features = ["html_reports"] }
 serial_test = { workspace = true }

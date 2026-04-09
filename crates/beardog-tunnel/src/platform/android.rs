@@ -133,7 +133,7 @@ impl PlatformSocket for AndroidSocket {
                     name: name.clone(),
                 }))
             }
-            _ => Err(std::io::Error::new(
+            SocketEndpoint::Filesystem(_) => Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 "AndroidSocket requires Abstract endpoint",
             )),

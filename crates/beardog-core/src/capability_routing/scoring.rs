@@ -8,21 +8,21 @@ use tracing::warn;
 
 /// Load tracking for primals
 #[derive(Debug, Clone)]
-pub(crate) struct PrimalLoad {
+pub(super) struct PrimalLoad {
     /// Current active requests
-    pub(crate) active_requests: usize,
+    pub(super) active_requests: usize,
 
     /// Total requests served
-    pub(crate) total_requests: usize,
+    pub(super) total_requests: usize,
 
     /// Last request timestamp
-    pub(crate) last_request: Option<Instant>,
+    pub(super) last_request: Option<Instant>,
 
     /// Average latency (ms)
-    pub(crate) avg_latency_ms: Option<f64>,
+    pub(super) avg_latency_ms: Option<f64>,
 }
 
-pub(crate) fn record_success(
+pub(super) fn record_success(
     load_tracker: &mut HashMap<String, PrimalLoad>,
     primal_name: &str,
     latency_ms: f64,
@@ -45,6 +45,6 @@ pub(crate) fn record_success(
     });
 }
 
-pub(crate) fn record_failure(primal_name: &str) {
+pub(super) fn record_failure(primal_name: &str) {
     warn!("Request failed for primal: {}", primal_name);
 }

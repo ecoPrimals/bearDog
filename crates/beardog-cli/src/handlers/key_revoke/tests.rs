@@ -1,6 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::*;
+#![expect(clippy::unwrap_used, reason = "test assertions")]
+
+use super::{
+    RevocationEntry, RevocationList, handle_key_check_revocation,
+    handle_key_check_revocation_with_home, handle_key_list_revocations,
+    handle_key_list_revocations_with_home, handle_key_revoke, handle_key_revoke_with_home,
+    handle_revocation_export, handle_revocation_export_with_home, handle_revocation_import,
+    handle_revocation_import_with_home,
+};
+use crate::handlers::key_store;
+use beardog_errors::process_env;
 use chrono::Utc;
 use tempfile::TempDir;
 
@@ -183,8 +193,6 @@ async fn test_handle_key_revoke_idempotent() {
 async fn test_handle_key_revoke_with_cascade() {
     let dir = TempDir::new().expect("create temp directory for cascade revoke test");
 
-    use crate::handlers::key_store;
-
     let parent = key_store::StoredKey {
         key_id: "parent-k".to_string(),
         algorithm: "aes256-gcm".to_string(),
@@ -326,4 +334,366 @@ fn test_merge_keeps_existing_when_other_is_older() {
             .as_deref(),
         Some("current")
     );
+}
+
+#[test]
+fn test_revocation_list_save_and_load_via_home_env() {
+    let _guard = crate::__cli_test_env::HOME
+        .lock()
+        .expect("key revoke HOME test lock poisoned");
+    let dir = TempDir::new().expect("temp home for HOME env revocation test");
+    let old_home = std::env::var_os("HOME");
+    process_env::set_var("HOME", dir.path().as_os_str());
+
+    let mut list = RevocationList::new();
+    list.revoke(
+        "env-key".to_string(),
+        Some("via HOME".to_string()),
+        None,
+        false,
+    );
+    list.save().expect("RevocationList::save with HOME set");
+    let loaded = RevocationList::load().expect("RevocationList::load with HOME set");
+    assert!(loaded.is_revoked("env-key"));
+    assert_eq!(
+        loaded.revoked_keys["env-key"].reason.as_deref(),
+        Some("via HOME")
+    );
+
+    match old_home {
+        Some(h) => process_env::set_var("HOME", h.as_os_str()),
+        None => process_env::remove_var("HOME"),
+    }
+}
+
+#[tokio::test]
+async fn test_handle_key_revoke_errors_when_home_unset() {
+    let _guard = crate::__cli_test_env::HOME
+        .lock()
+        .expect("key revoke HOME test lock poisoned");
+    let old_home = std::env::var_os("HOME");
+    process_env::remove_var("HOME");
+
+    let err = handle_key_revoke("any-key", None, None, false)
+        .await
+        .expect_err("handle_key_revoke without HOME must fail");
+    assert!(
+        err.to_string().contains("HOME") || err.to_string().contains("home"),
+        "{err}"
+    );
+
+    match old_home {
+        Some(h) => process_env::set_var("HOME", h.as_os_str()),
+        None => process_env::remove_var("HOME"),
+    }
+}
+
+#[tokio::test]
+async fn test_handle_key_revoke_cascade_empty_children() {
+    let dir = TempDir::new().expect("temp dir for cascade empty children test");
+    let parent = key_store::StoredKey {
+        key_id: "solo-parent".to_string(),
+        algorithm: "aes256-gcm".to_string(),
+        hsm_name: "h".to_string(),
+        created_at: Utc::now().to_rfc3339(),
+        key_material_b64: key_store::base64_encode(&[2u8; 32]),
+        generation: 0,
+        parent_key_id: None,
+        derivation_purpose: None,
+        children: vec![],
+        lineage: None,
+        expires_at: None,
+        usage: None,
+        purpose: None,
+    };
+    key_store::save_key_to_home(&parent, dir.path()).expect("save parent for empty cascade test");
+
+    handle_key_revoke_with_home(
+        "solo-parent",
+        None,
+        Some("2030-01-01T00:00:00Z"),
+        true,
+        dir.path(),
+    )
+    .await
+    .expect("revoke with cascade and no child keys");
+
+    let list = RevocationList::load_from_home(dir.path()).expect("load revocation list");
+    assert!(list.is_revoked("solo-parent"));
+    assert_eq!(list.revoked_keys.len(), 1);
+}
+
+#[tokio::test]
+async fn test_handle_key_revoke_cascade_fails_when_parent_key_missing_from_store() {
+    let dir = TempDir::new().expect("temp dir for missing parent key cascade test");
+    let r = handle_key_revoke_with_home("not-in-store", None, None, true, dir.path()).await;
+    assert!(r.is_err());
+}
+
+#[test]
+fn test_revocation_list_import_invalid_json_errors() {
+    let dir = TempDir::new().expect("temp dir for bad import file");
+    let path = dir.path().join("bad.json");
+    std::fs::write(&path, "{").expect("write truncated json");
+    assert!(RevocationList::import(path.to_str().expect("utf8 path")).is_err());
+}
+
+#[tokio::test]
+async fn test_handle_revocation_import_with_home_invalid_input_fails() {
+    let dir = TempDir::new().expect("temp home for import failure test");
+    let r = handle_revocation_import_with_home("/nonexistent/revocations.json", dir.path()).await;
+    assert!(r.is_err());
+}
+
+#[tokio::test]
+async fn test_handle_key_check_revocation_errors_when_home_unset() {
+    let _guard = crate::__cli_test_env::HOME
+        .lock()
+        .expect("key revoke HOME test lock poisoned");
+    let old_home = std::env::var_os("HOME");
+    process_env::remove_var("HOME");
+
+    let err = handle_key_check_revocation("kid")
+        .await
+        .expect_err("check revocation without HOME");
+    assert!(
+        err.to_string().contains("HOME") || err.to_string().contains("home"),
+        "{err}"
+    );
+
+    match old_home {
+        Some(h) => process_env::set_var("HOME", h.as_os_str()),
+        None => process_env::remove_var("HOME"),
+    }
+}
+
+#[tokio::test]
+async fn test_handle_key_revoke_success_uses_home_env() {
+    let _guard = crate::__cli_test_env::HOME
+        .lock()
+        .expect("key revoke HOME test lock poisoned");
+    let dir = TempDir::new().expect("temp home for handle_key_revoke env test");
+    let old_home = std::env::var_os("HOME");
+    process_env::set_var("HOME", dir.path().as_os_str());
+
+    handle_key_revoke(
+        "env-revoke-key",
+        Some("lost device"),
+        Some("2031-01-01T00:00:00Z"),
+        false,
+    )
+    .await
+    .expect("handle_key_revoke with HOME set");
+
+    let list = RevocationList::load_from_home(dir.path()).expect("load after env revoke");
+    assert!(list.is_revoked("env-revoke-key"));
+
+    match old_home {
+        Some(h) => process_env::set_var("HOME", h.as_os_str()),
+        None => process_env::remove_var("HOME"),
+    }
+}
+
+#[tokio::test]
+async fn test_handle_key_list_revocations_uses_home_env() {
+    let _guard = crate::__cli_test_env::HOME
+        .lock()
+        .expect("key revoke HOME test lock poisoned");
+    let dir = TempDir::new().expect("temp home for list revocations env test");
+    let old_home = std::env::var_os("HOME");
+    process_env::set_var("HOME", dir.path().as_os_str());
+
+    handle_key_list_revocations()
+        .await
+        .expect("handle_key_list_revocations with HOME set");
+
+    let mut list = RevocationList::new();
+    list.revoke("listed-via-env".to_string(), None, None, false);
+    list.save_to_home(dir.path())
+        .expect("save list for nonempty env test");
+
+    handle_key_list_revocations()
+        .await
+        .expect("handle_key_list_revocations nonempty with HOME set");
+
+    match old_home {
+        Some(h) => process_env::set_var("HOME", h.as_os_str()),
+        None => process_env::remove_var("HOME"),
+    }
+}
+
+#[tokio::test]
+async fn test_handle_revocation_export_and_import_via_home_env() {
+    let _guard = crate::__cli_test_env::HOME
+        .lock()
+        .expect("key revoke HOME test lock poisoned");
+    let dir = TempDir::new().expect("temp home for export/import env test");
+    let home2 = TempDir::new().expect("second temp home for import merge env test");
+    let old_home = std::env::var_os("HOME");
+    process_env::set_var("HOME", dir.path().as_os_str());
+
+    let mut list = RevocationList::new();
+    list.revoke(
+        "env-export-key".to_string(),
+        Some("rotate".to_string()),
+        None,
+        false,
+    );
+    list.save_to_home(dir.path()).expect("save before export");
+
+    let export_path = dir.path().join("rev-env.json");
+    handle_revocation_export(
+        export_path
+            .to_str()
+            .expect("export path must be valid UTF-8"),
+    )
+    .await
+    .expect("handle_revocation_export with HOME set");
+
+    process_env::set_var("HOME", home2.path().as_os_str());
+    handle_revocation_import(
+        export_path
+            .to_str()
+            .expect("export path must be valid UTF-8"),
+    )
+    .await
+    .expect("handle_revocation_import with HOME set");
+
+    let merged = RevocationList::load_from_home(home2.path()).expect("load merged via env import");
+    assert!(merged.is_revoked("env-export-key"));
+
+    match old_home {
+        Some(h) => process_env::set_var("HOME", h.as_os_str()),
+        None => process_env::remove_var("HOME"),
+    }
+}
+
+#[tokio::test]
+async fn test_handle_revocation_export_errors_when_home_unset() {
+    let _guard = crate::__cli_test_env::HOME
+        .lock()
+        .expect("key revoke HOME test lock poisoned");
+    let old_home = std::env::var_os("HOME");
+    process_env::remove_var("HOME");
+
+    let err = handle_revocation_export("/tmp/should-not-run.json")
+        .await
+        .expect_err("export without HOME");
+    assert!(
+        err.to_string().contains("HOME") || err.to_string().contains("home"),
+        "{err}"
+    );
+
+    match old_home {
+        Some(h) => process_env::set_var("HOME", h.as_os_str()),
+        None => process_env::remove_var("HOME"),
+    }
+}
+
+#[tokio::test]
+async fn test_handle_revocation_import_errors_when_home_unset() {
+    let _guard = crate::__cli_test_env::HOME
+        .lock()
+        .expect("key revoke HOME test lock poisoned");
+    let old_home = std::env::var_os("HOME");
+    process_env::remove_var("HOME");
+
+    let err = handle_revocation_import("/tmp/should-not-run.json")
+        .await
+        .expect_err("import without HOME");
+    assert!(
+        err.to_string().contains("HOME") || err.to_string().contains("home"),
+        "{err}"
+    );
+
+    match old_home {
+        Some(h) => process_env::set_var("HOME", h.as_os_str()),
+        None => process_env::remove_var("HOME"),
+    }
+}
+
+#[tokio::test]
+async fn test_handle_key_list_revocations_errors_when_home_unset() {
+    let _guard = crate::__cli_test_env::HOME
+        .lock()
+        .expect("cli HOME env test lock poisoned");
+    let old_home = std::env::var_os("HOME");
+    process_env::remove_var("HOME");
+
+    let err = handle_key_list_revocations()
+        .await
+        .expect_err("list revocations without HOME");
+    assert!(
+        err.to_string().contains("HOME") || err.to_string().contains("home"),
+        "{err}"
+    );
+
+    match old_home {
+        Some(h) => process_env::set_var("HOME", h.as_os_str()),
+        None => process_env::remove_var("HOME"),
+    }
+}
+
+#[test]
+fn test_merge_revocation_equal_timestamps_keeps_existing() {
+    let mut current = RevocationList::new();
+    current.revoked_keys.insert(
+        "same-ts".to_string(),
+        RevocationEntry {
+            key_id: "same-ts".to_string(),
+            revoked_at: "2024-06-01T12:00:00Z".to_string(),
+            effective_at: None,
+            reason: Some("first".to_string()),
+            revoked_by: "a".to_string(),
+            cascade: false,
+        },
+    );
+
+    let mut other = RevocationList::new();
+    other.revoked_keys.insert(
+        "same-ts".to_string(),
+        RevocationEntry {
+            key_id: "same-ts".to_string(),
+            revoked_at: "2024-06-01T12:00:00Z".to_string(),
+            effective_at: None,
+            reason: Some("would-not-win".to_string()),
+            revoked_by: "b".to_string(),
+            cascade: false,
+        },
+    );
+
+    current.merge(&other);
+    assert_eq!(
+        current
+            .revoked_keys
+            .get("same-ts")
+            .expect("key same-ts present")
+            .reason
+            .as_deref(),
+        Some("first")
+    );
+}
+
+#[tokio::test]
+async fn test_handle_key_revoke_already_revoked_prints_reason_branch() {
+    let dir = TempDir::new().expect("temp dir for already-revoked reason print test");
+    let mut list = RevocationList::new();
+    list.revoke(
+        "reason-branch-key".to_string(),
+        Some("prior compromise".to_string()),
+        None,
+        false,
+    );
+    list.save_to_home(dir.path())
+        .expect("save revocation list with reason");
+
+    handle_key_revoke_with_home(
+        "reason-branch-key",
+        Some("ignored"),
+        None,
+        false,
+        dir.path(),
+    )
+    .await
+    .expect("idempotent revoke with existing reason");
 }

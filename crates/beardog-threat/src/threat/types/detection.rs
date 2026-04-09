@@ -384,7 +384,10 @@ impl ThreatEvidence {
 }
 
 impl NetworkPacketData {
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "detection event builder mirrors wire schema fields; kept explicit for clarity"
+    )]
     /// New operation.
     /// Creates a new instance
     pub fn new(&str,

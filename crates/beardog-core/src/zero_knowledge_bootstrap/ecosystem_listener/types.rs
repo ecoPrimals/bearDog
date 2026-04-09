@@ -7,7 +7,7 @@ use beardog_types::canonical::capabilities::{ServiceCapabilityType, UniversalCap
 use serde::{Deserialize, Serialize};
 
 /// Placeholder URL for primals with no announced endpoints
-pub(crate) const UNKNOWN_ENDPOINT_URL: &str = "unknown";
+pub(super) const UNKNOWN_ENDPOINT_URL: &str = "unknown";
 
 /// Metrics for ecosystem listening operations
 #[derive(Clone, Copy, Debug, Default)]

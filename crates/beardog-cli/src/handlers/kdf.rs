@@ -162,7 +162,7 @@ impl KdfConfig {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::KdfConfig;
 
     #[test]
     fn test_pbkdf2_derivation() {

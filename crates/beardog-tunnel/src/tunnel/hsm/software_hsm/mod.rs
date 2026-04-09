@@ -139,7 +139,12 @@ pub mod storage;
 /// Software HSM type definitions
 pub mod types;
 
-pub use types::*;
+pub use types::{
+    AuditLogger, CryptoProvider, DefaultEncryptionKey, DefaultMemoryProtector, EncryptionKey,
+    EncryptionKeyTrait, FileStorageBackend, InMemoryStorageBackend, MemoryProtector,
+    MemoryProtectorTrait, MemoryStorageBackend, ProtectedMemory, SoftwareHealthMonitor,
+    SoftwareKey, SoftwareKeyStore, StorageBackend, StorageBackendTrait,
+};
 
 #[cfg(test)]
 mod tests;
@@ -161,10 +166,7 @@ pub use self::crypto_providers::{
 // OpenSslCryptoProvider removed - evolved to pure Rust alternatives
 pub use self::health::SimpleHealthSummary;
 pub use self::keystore::KeyStoreStatistics;
-// Note: These memory types don't exist yet - commented out
-// pub use self::memory::{create_memory_protection_stats, MemoryProtectionStats, SecureMemoryRegion};
-// Note: MemoryStorageStatistics doesn't exist yet - commented out
-// pub use self::storage::MemoryStorageStatistics;
+// MemoryProtectionStats / SecureMemoryRegion / MemoryStorageStatistics: re-export when implemented in memory/storage.
 
 use beardog_types::constants::domains::ecosystem::version::SOFTWARE_HSM_VERSION;
 

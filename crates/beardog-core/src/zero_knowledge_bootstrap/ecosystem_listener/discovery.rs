@@ -16,7 +16,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
-pub(crate) async fn listen_mdns_announcements(
+pub(super) async fn listen_mdns_announcements(
     env: &EcosystemListenerEnvInputs,
 ) -> Result<Vec<PrimalAnnouncement>, BearDogError> {
     debug!("Listening for mDNS primal announcements");
@@ -49,7 +49,7 @@ pub(crate) async fn listen_mdns_announcements(
 }
 
 /// Poll HTTP discovery endpoints
-pub(crate) async fn poll_http_discovery(
+pub(super) async fn poll_http_discovery(
     env: &EcosystemListenerEnvInputs,
 ) -> Result<Vec<PrimalAnnouncement>, BearDogError> {
     debug!("Polling HTTP discovery endpoints");
@@ -83,12 +83,12 @@ pub(crate) async fn poll_http_discovery(
     Ok(announcements)
 }
 
-pub(crate) fn check_environment_announcements() -> Result<Vec<PrimalAnnouncement>, BearDogError> {
+pub(super) fn check_environment_announcements() -> Result<Vec<PrimalAnnouncement>, BearDogError> {
     check_environment_announcements_with_lookup(|key| std::env::var(key))
 }
 
 /// Tests and injected maps: lookup function instead of reading global environment.
-pub(crate) fn check_environment_announcements_with_lookup<G>(
+pub(super) fn check_environment_announcements_with_lookup<G>(
     mut get_var: G,
 ) -> Result<Vec<PrimalAnnouncement>, BearDogError>
 where
@@ -154,7 +154,7 @@ where
 }
 
 #[cfg(test)]
-pub(crate) fn check_environment_announcements_for_test(
+pub(super) fn check_environment_announcements_for_test(
     vars: &HashMap<String, String>,
 ) -> Result<Vec<PrimalAnnouncement>, BearDogError> {
     check_environment_announcements_with_lookup(|k| {
@@ -163,7 +163,7 @@ pub(crate) fn check_environment_announcements_for_test(
 }
 
 /// Discover primals via service mesh
-pub(crate) fn discover_service_mesh_primals() -> Vec<PrimalAnnouncement> {
+pub(super) fn discover_service_mesh_primals() -> Vec<PrimalAnnouncement> {
     debug!("Discovering primals via service mesh");
 
     // Minimal implementation - production deployments should integrate with service mesh
@@ -172,7 +172,7 @@ pub(crate) fn discover_service_mesh_primals() -> Vec<PrimalAnnouncement> {
 }
 
 /// Process primal announcement
-pub(crate) async fn process_primal_announcement(
+pub(super) async fn process_primal_announcement(
     announcement: PrimalAnnouncement,
     discovered_primals: &Arc<RwLock<HashMap<String, DiscoveredPrimal>>>,
     discovered_capabilities: &Arc<RwLock<HashMap<ServiceCapabilityType, Vec<UniversalCapability>>>>,
@@ -300,7 +300,7 @@ pub(crate) async fn process_primal_announcement(
 }
 
 /// Make HTTP discovery request to endpoint
-pub(crate) fn make_discovery_request(
+pub(super) fn make_discovery_request(
     endpoint: &str,
 ) -> Result<Vec<PrimalAnnouncement>, BearDogError> {
     debug!("Making discovery request to: {}", endpoint);

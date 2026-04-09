@@ -20,10 +20,11 @@ use serde_json::json;
 ///
 /// This test uses the exact values from RFC 8448 to validate our implementation.
 #[tokio::test]
-#[allow(
+#[expect(
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
-    clippy::cast_precision_loss
+    clippy::cast_precision_loss,
+    reason = "RFC 8448 fixture bytes parsed from spec tables; casts match reference vectors"
 )]
 async fn test_rfc8448_handshake_key_derivation() {
     // ========================================================================
@@ -163,7 +164,7 @@ async fn test_rfc8448_handshake_key_derivation() {
     // ========================================================================
     //
     // NOTE: RFC 8448 provides the handshake traffic secrets, but our API
-    // returns the derived keys (HKDF-Expand-Label(secret, "key", "", 32)).
+    // surfaces derived keys (HKDF-Expand-Label(secret, "key", "", 32)).
     //
     // To validate, we need to derive the keys from the expected secrets
     // and compare them with our output.

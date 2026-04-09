@@ -214,7 +214,28 @@ impl CapabilitiesHandler {
                     "description": "Relay authorization - lineage-gated access control for relay-assisted coordinated punch"
                 }
             ],
+            "consumed_capabilities": [],
+            "cost_estimates": {
+                "crypto.sign_ed25519":             { "cpu": "low",    "latency_ms": 1 },
+                "crypto.verify_ed25519":           { "cpu": "low",    "latency_ms": 1 },
+                "crypto.blake3_hash":              { "cpu": "low",    "latency_ms": 1 },
+                "crypto.hmac_sha256":              { "cpu": "low",    "latency_ms": 1 },
+                "crypto.chacha20_poly1305_encrypt": { "cpu": "low",   "latency_ms": 1 },
+                "crypto.chacha20_poly1305_decrypt": { "cpu": "low",   "latency_ms": 1 },
+                "crypto.x25519_generate_ephemeral": { "cpu": "low",   "latency_ms": 1 },
+                "crypto.x25519_derive_secret":      { "cpu": "low",   "latency_ms": 1 },
+                "btsp.session.create":             { "cpu": "medium", "latency_ms": 2 },
+                "btsp.session.verify":             { "cpu": "medium", "latency_ms": 2 },
+                "security.evaluate":               { "cpu": "medium", "latency_ms": 5 },
+                "graph.authorize_modification":    { "cpu": "medium", "latency_ms": 5 },
+                "tls.derive_secrets":              { "cpu": "medium", "latency_ms": 2 },
+            },
+            "operation_dependencies": {
+                "btsp.session.verify": ["btsp.session.create"],
+                "btsp.negotiate":      ["btsp.session.verify"],
+            },
             "protocols": ["tarpc", "json-rpc", "http"],
+            "transport": ["uds", "tcp"],
             "wire_format": "ndjson",
             "btsp_enabled": true,
             "collaborative_intelligence": true,

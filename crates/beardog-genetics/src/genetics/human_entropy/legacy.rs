@@ -45,6 +45,7 @@ impl MultiModalHumanEntropyCollector {
     /// # Errors
     /// Returns error if entropy collection fails or quality is below threshold
     pub fn collect_entropy(&self) -> Result<Vec<u8>, BearDogError> {
+        use rand::RngCore;
         use std::time::{SystemTime, UNIX_EPOCH};
 
         // Collect 32 bytes (256 bits) of entropy
@@ -53,7 +54,6 @@ impl MultiModalHumanEntropyCollector {
 
         // Source 1: System-provided cryptographic randomness
         // This is backed by OS entropy pools (/dev/urandom, BCryptGenRandom, etc.)
-        use rand::RngCore;
         let mut rng = rand::rng();
         rng.fill_bytes(&mut entropy_bytes);
 

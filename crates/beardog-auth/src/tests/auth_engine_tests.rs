@@ -4,9 +4,6 @@ use crate::auth::node_registry::InMemoryNodeRegistry;
 use crate::auth::proof_verifier::DefaultProofVerifier;
 use crate::auth::types::*;
 use beardog_errors::BearDogError;
-// use beardog_security::{
-//     Action, ActionType, Resource, ResourceClassification, Subject, SubjectType,
-// };
 use chrono::Utc;
 use std::collections::HashMap;
 

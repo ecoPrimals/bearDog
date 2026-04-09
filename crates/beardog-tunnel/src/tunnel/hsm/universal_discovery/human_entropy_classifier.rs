@@ -456,7 +456,7 @@ impl HumanEntropyMethodEvaluator {
 
 /// Policy presets for tier elevation
 pub mod policies {
-    use super::*;
+    use super::TierElevationCriteria;
 
     /// High security policy
     pub const fn high_security_policy() -> TierElevationCriteria {

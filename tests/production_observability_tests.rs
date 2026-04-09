@@ -285,7 +285,10 @@ fn test_time_series_data_concept() {
     use std::collections::VecDeque;
     use std::time::Instant;
 
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "observability fixture struct for time-series concept test"
+    )]
     #[derive(Debug)]
     struct DataPoint {
         timestamp: Instant,

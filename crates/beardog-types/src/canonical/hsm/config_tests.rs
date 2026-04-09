@@ -20,7 +20,10 @@ where
 }
 
 #[test]
-#[allow(deprecated)]
+#[expect(
+    deprecated,
+    reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
+)]
 fn legacy_hsm_provider_type_default_display_serde() {
     let d = LegacyHsmProviderType::default();
     assert_eq!(format!("{d}"), "Software");

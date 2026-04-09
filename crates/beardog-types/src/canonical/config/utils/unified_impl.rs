@@ -160,10 +160,7 @@ impl UnifiedConfigUtils {
         paths.push(PathBuf::from(format!("./config/{app_name}.toml")));
         paths.push(PathBuf::from("./configs/config.toml"));
 
-        // User config directory (commented out - dirs crate not available)
-        // if let Some(config_dir) = dirs::config_dir() {
-        //     paths.push(config_dir.join(app_name).join("config.toml"));
-        // }
+        // Skip `dirs::config_dir()` to avoid extra deps; HOME-based path below covers common cases.
         // Fallback: use HOME env var
         if let Ok(home) = std::env::var("HOME") {
             paths.push(

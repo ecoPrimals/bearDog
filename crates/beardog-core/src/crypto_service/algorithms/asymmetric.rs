@@ -279,6 +279,7 @@ pub fn sign_rsa_pss(data: &[u8], private_key_der: &[u8]) -> Result<Vec<u8>> {
     use rsa::RsaPrivateKey;
     use rsa::pkcs8::DecodePrivateKey;
     use rsa::pss::{BlindedSigningKey, Signature};
+    use rsa::rand_core::OsRng;
     use rsa::signature::{RandomizedSigner, SignatureEncoding};
     use sha2::Sha256;
 
@@ -290,7 +291,6 @@ pub fn sign_rsa_pss(data: &[u8], private_key_der: &[u8]) -> Result<Vec<u8>> {
     let signing_key = BlindedSigningKey::<Sha256>::new(private_key);
 
     // Sign with randomness (RNG must match `rsa`'s `rand_core` 0.6)
-    use rsa::rand_core::OsRng;
     let mut rng = OsRng;
     let signature: Signature = signing_key.sign_with_rng(&mut rng, data);
 

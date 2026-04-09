@@ -12,7 +12,10 @@ async fn test_permission_creation() -> Result<(), BearDogError> {
     Ok(())
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "reserved placeholder for future permission validation integration"
+)]
 fn test_permission_validation() -> Result<(), BearDogError> {
     let validation_result = true; // Placeholder for actual permission validation
     assert!(validation_result, "Permission validation should succeed");

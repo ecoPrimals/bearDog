@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::tunnel::hsm::types::canonical::PerformanceMetrics as CanonicalPerformanceMetrics;
-use crate::tunnel::hsm::types::*;
+use crate::tunnel::hsm::types::{HsmHealthStatus, PerformanceMetrics};
 use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tokio::sync::RwLock;

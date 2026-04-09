@@ -287,4 +287,62 @@ mod tests {
         assert_eq!(config.network.api.port, deserialized.network.api.port);
         assert_eq!(config.limits.max_retries, deserialized.limits.max_retries);
     }
+
+    #[test]
+    fn from_env_returns_struct_with_valid_defaults() {
+        let cfg = BearDogConfig::from_env();
+        assert!(cfg.validate().is_ok());
+    }
+
+    #[test]
+    fn load_applies_hierarchy_without_panicking() {
+        let cfg =
+            BearDogConfig::load().expect("load should succeed when no mandatory file is missing");
+        assert!(cfg.validate().is_ok());
+    }
+
+    #[test]
+    fn from_file_toml_roundtrip() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("beardog.toml");
+        let original = BearDogConfig::default();
+        let toml_str = toml::to_string(&original).expect("serialize default config");
+        std::fs::write(&path, toml_str).expect("write temp toml");
+
+        let loaded = BearDogConfig::from_file(&path).expect("from_file");
+        assert_eq!(loaded.network.api.port, original.network.api.port);
+        assert!(loaded.validate().is_ok());
+    }
+
+    #[test]
+    fn generate_example_writes_valid_toml() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("example.toml");
+        BearDogConfig::generate_example(&path).expect("generate_example");
+        let contents = std::fs::read_to_string(&path).expect("read example");
+        assert!(!contents.is_empty());
+        let parsed: BearDogConfig = toml::from_str(&contents).expect("parse generated TOML");
+        assert!(parsed.validate().is_ok());
+    }
+
+    #[test]
+    fn generate_example_propagates_io_errors() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("nope/example.toml");
+        let err = BearDogConfig::generate_example(&path).expect_err("write to missing parent");
+        match err {
+            ConfigError::Io(_) => {}
+            other => panic!("expected Io error, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn validate_propagates_timeout_validation_errors() {
+        let mut cfg = BearDogConfig::default();
+        cfg.timeouts.health_check_secs = 0;
+        let err = cfg
+            .validate()
+            .expect_err("invalid timeouts should fail validate");
+        assert!(matches!(err, ConfigError::Validation(_)));
+    }
 }

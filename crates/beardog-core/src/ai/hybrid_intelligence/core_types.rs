@@ -15,7 +15,7 @@ use crate::ai::hybrid_intelligence::neural_networks::{
 };
 
 /// AI intelligence capabilities available in the hybrid system
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum IntelligenceCapability {
     /// Predictive analytics
     PredictiveAnalytics,

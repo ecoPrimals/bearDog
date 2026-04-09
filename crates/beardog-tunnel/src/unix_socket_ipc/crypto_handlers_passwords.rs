@@ -442,7 +442,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "PBKDF2 output lengths 16–64 fit usize on test platforms"
+    )]
     fn test_pbkdf2_sha256_custom_output_length() -> Result<(), BearDogError> {
         for output_length in [16u64, 32, 48, 64] {
             let params = json!({

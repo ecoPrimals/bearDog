@@ -614,7 +614,10 @@ mod key_rotation_tests {
 
 // Helper functions (stubs - implement based on actual crypto_utils API)
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn generate_ed25519_keypair() -> Result<Ed25519Keypair, BearDogError> {
     use ed25519_dalek::SigningKey;
     use rand::RngCore;
@@ -630,7 +633,10 @@ fn generate_ed25519_keypair() -> Result<Ed25519Keypair, BearDogError> {
     })
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn sign_ed25519(secret: &[u8], message: &[u8]) -> Result<Vec<u8>, BearDogError> {
     use ed25519_dalek::{Signer, SigningKey};
 
@@ -650,7 +656,10 @@ fn sign_ed25519(secret: &[u8], message: &[u8]) -> Result<Vec<u8>, BearDogError> 
     Ok(signature.to_bytes().to_vec())
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn verify_ed25519_signature(
     public: &[u8],
     message: &[u8],
@@ -686,7 +695,10 @@ fn verify_ed25519_signature(
     Ok(verifying_key.verify(message, &sig).is_ok())
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn generate_aes_256_key() -> Result<Vec<u8>, BearDogError> {
     use rand::RngCore;
     let mut key = vec![0u8; 32];
@@ -694,7 +706,10 @@ fn generate_aes_256_key() -> Result<Vec<u8>, BearDogError> {
     Ok(key)
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn generate_aes_nonce() -> Result<Vec<u8>, BearDogError> {
     use rand::RngCore;
     let mut nonce = vec![0u8; 12];
@@ -702,7 +717,10 @@ fn generate_aes_nonce() -> Result<Vec<u8>, BearDogError> {
     Ok(nonce)
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn encrypt_aes_256_gcm(
     key: &[u8],
     nonce: &[u8],
@@ -718,7 +736,10 @@ fn encrypt_aes_256_gcm(
         .map_err(|e| BearDogError::security(format!("AES-GCM encryption failed: {e}")))
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn decrypt_aes_256_gcm(
     key: &[u8],
     nonce: &[u8],
@@ -734,7 +755,10 @@ fn decrypt_aes_256_gcm(
         .map_err(|e| BearDogError::security(format!("AES-GCM decryption failed: {e}")))
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn generate_chacha20_key() -> Result<Vec<u8>, BearDogError> {
     use rand::RngCore;
     let mut key = vec![0u8; 32];
@@ -742,7 +766,10 @@ fn generate_chacha20_key() -> Result<Vec<u8>, BearDogError> {
     Ok(key)
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn generate_chacha20_nonce() -> Result<Vec<u8>, BearDogError> {
     use rand::RngCore;
     let mut nonce = vec![0u8; 12];
@@ -750,7 +777,10 @@ fn generate_chacha20_nonce() -> Result<Vec<u8>, BearDogError> {
     Ok(nonce)
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn encrypt_chacha20_poly1305(
     key: &[u8],
     nonce: &[u8],
@@ -766,7 +796,10 @@ fn encrypt_chacha20_poly1305(
         .map_err(|e| BearDogError::security(format!("ChaCha20-Poly1305 encryption failed: {e}")))
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn decrypt_chacha20_poly1305(
     key: &[u8],
     nonce: &[u8],
@@ -782,7 +815,10 @@ fn decrypt_chacha20_poly1305(
         .map_err(|e| BearDogError::security(format!("ChaCha20-Poly1305 decryption failed: {e}")))
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn encrypt_chacha20_poly1305_with_aad(
     key: &[u8],
     nonce: &[u8],
@@ -803,7 +839,10 @@ fn encrypt_chacha20_poly1305_with_aad(
     })
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn decrypt_chacha20_poly1305_with_aad(
     key: &[u8],
     nonce: &[u8],
@@ -824,13 +863,19 @@ fn decrypt_chacha20_poly1305_with_aad(
     })
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn blake3_hash(data: &[u8]) -> Result<Vec<u8>, BearDogError> {
     let hash = blake3::hash(data);
     Ok(hash.as_bytes().to_vec())
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn blake3_keyed_hash(key: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
     if key.len() != 32 {
         return Err(BearDogError::validation("BLAKE3 key must be 32 bytes"));
@@ -842,7 +887,10 @@ fn blake3_keyed_hash(key: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
     Ok(hash.as_bytes().to_vec())
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn derive_key_pbkdf2(
     password: &[u8],
     salt: &[u8],
@@ -855,7 +903,10 @@ fn derive_key_pbkdf2(
     Ok(key.to_vec())
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 fn derive_key_argon2(password: &[u8], salt: &[u8]) -> Result<Vec<u8>, BearDogError> {
     use argon2::password_hash::SaltString;
     use argon2::{Argon2, PasswordHasher};
@@ -877,7 +928,10 @@ fn derive_key_argon2(password: &[u8], salt: &[u8]) -> Result<Vec<u8>, BearDogErr
     Ok(hash_bytes.as_bytes().to_vec())
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "crypto scenario test helpers and reserved branches"
+)]
 struct Ed25519Keypair {
     public: Vec<u8>,
     secret: Vec<u8>,

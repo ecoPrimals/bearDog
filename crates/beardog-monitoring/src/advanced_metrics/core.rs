@@ -121,6 +121,8 @@ impl AdvancedMetricsSystem {
     ///
     /// Currently always succeeds; the `Result` type is reserved for future persistence failures.
     pub async fn record_security_event(&self, event: SecurityEvent) -> Result<(), BearDogError> {
+        use super::types::{SecurityMetric, ThreatLevel};
+
         {
             let mut security = self.security_metrics.write().await;
             security.record_event(event.clone());
@@ -132,7 +134,6 @@ impl AdvancedMetricsSystem {
             let key = format!("{:?}", event.event_type);
 
             // Create or update security metric
-            use super::types::{SecurityMetric, ThreatLevel};
             let mut severity_dist = std::collections::HashMap::new();
             severity_dist.insert(event.severity.clone(), 1);
 
@@ -192,7 +193,8 @@ impl AdvancedMetricsSystem {
     clippy::float_cmp,
     clippy::absurd_extreme_comparisons,
     unused_comparisons,
-    clippy::nonminimal_bool
+    clippy::nonminimal_bool,
+    reason = "advanced metrics tests: float thresholds and exhaustive coverage (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 mod tests {

@@ -49,7 +49,10 @@ fn test_initialization_rollback_on_failure() {
 }
 
 #[test]
-#[allow(clippy::needless_collect)]
+#[expect(
+    clippy::needless_collect,
+    reason = "collect handles then join; iterator chain kept explicit for thread spawn"
+)]
 fn test_concurrent_initialization_attempts() {
     let initialized = Arc::new(AtomicBool::new(false));
     let handles: Vec<_> = (0..5)

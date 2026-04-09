@@ -58,7 +58,7 @@ impl RevocationList {
         reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
     )]
     pub fn load() -> Result<Self, BearDogError> {
-        let home = std::env::var("HOME")
+        let home = beardog_errors::process_env::var("HOME")
             .map_err(|_| BearDogError::system("HOME environment variable not set".to_string()))?;
         Self::load_from_home(home)
     }
@@ -95,7 +95,7 @@ impl RevocationList {
         reason = "pub API not called from bin target; #[expect] incompatible with lib+bin crates"
     )]
     pub fn save(&self) -> Result<(), BearDogError> {
-        let home = std::env::var("HOME")
+        let home = beardog_errors::process_env::var("HOME")
             .map_err(|_| BearDogError::system("HOME environment variable not set".to_string()))?;
         self.save_to_home(home)
     }
@@ -229,7 +229,7 @@ impl Default for RevocationList {
 }
 
 fn revocation_home_from_env() -> Result<PathBuf, BearDogError> {
-    std::env::var("HOME")
+    beardog_errors::process_env::var("HOME")
         .map(PathBuf::from)
         .map_err(|_| BearDogError::system("HOME environment variable not set".to_string()))
 }

@@ -150,7 +150,10 @@ fn test_error_rate_metrics_default() {
 }
 
 #[test]
-#[allow(deprecated)]
+#[expect(
+    deprecated,
+    reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
+)]
 fn test_primal_type_migration_helper() {
     let guidance = PrimalTypeMigrationHelper::get_migration_guidance();
     assert!(guidance.contains("SOVEREIGNTY"));

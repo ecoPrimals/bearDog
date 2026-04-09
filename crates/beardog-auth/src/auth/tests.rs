@@ -193,10 +193,16 @@ mod auth_tests {
         /// The password hash value
         pub password_hash: String,
         /// Collection of roles
-        #[allow(dead_code)]
+        #[expect(
+            dead_code,
+            reason = "mock user fields for future role/active test scenarios"
+        )]
         pub roles: Vec<String>,
         /// Whether `is_active` is enabled
-        #[allow(dead_code)]
+        #[expect(
+            dead_code,
+            reason = "mock user fields for future role/active test scenarios"
+        )]
         pub is_active: bool,
     }
 

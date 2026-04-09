@@ -10,7 +10,10 @@
 #![allow(unused_imports, unused_variables, dead_code, clippy::all)]
 
 #[cfg(test)]
-#[allow(clippy::module_inception)]
+#[expect(
+    clippy::module_inception,
+    reason = "nested threat tests mirror production module layout"
+)]
 mod tests {
     use crate::float_assert::near_f64;
     use crate::threat::handlers::core::ThreatDetectionEngine;

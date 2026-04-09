@@ -205,16 +205,21 @@ mod coverage_march26_core_wave;
 mod core_edge_cases_oct22;
 
 // Re-export key components
-pub use core::*;
+pub use core::{
+    AlertHandler, AlertSeverity, AlertType, BearDogCore, ComponentHealth, CoreSecurityProvider,
+    CoreState, GeneticOptimizer, GeneticOptimizerConfig, OptimizationState, PerformanceMetric,
+    SystemAlert, SystemMetrics, SystemMonitor, SystemMonitorConfig, UniversalAdapter,
+};
 pub use types::BearDogConfig;
 
-#[allow(
+#[expect(
     unused_imports,
     clippy::float_cmp,
     clippy::useless_vec,
     clippy::needless_range_loop,
     clippy::uninlined_format_args,
-    dead_code
+    dead_code,
+    reason = "large integration test modules: noisy style lints and synthetic helpers"
 )]
 #[cfg(test)]
 mod tests {
@@ -229,7 +234,10 @@ mod tests {
     #[test]
     fn test_beardog_config_import() {
         // Verify BearDogConfig is exported correctly
-        #[allow(clippy::no_effect_underscore_binding)]
+        #[expect(
+            clippy::no_effect_underscore_binding,
+            reason = "PhantomData only to mention BearDogConfig in type position"
+        )]
         let _type_marker = std::marker::PhantomData::<BearDogConfig>;
     }
 

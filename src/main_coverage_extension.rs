@@ -561,4 +561,175 @@ mod main_coverage_deep_tests {
             _ => panic!("expected StreamDecrypt"),
         }
     }
+
+    // TEST_CATEGORY: integration
+    // TEST_DOMAIN: cli
+    // TEST_PRIORITY: normal
+
+    #[tokio::test]
+    async fn dispatch_encrypt_missing_key_fails_before_file_io() {
+        let r = crate::dispatch(Commands::Encrypt {
+            key: "___coverage_missing_encrypt_key___".to_string(),
+            input: "/nonexistent/beardog-plain.txt".to_string(),
+            output: "/nonexistent/beardog-cipher.bin".to_string(),
+            genetic: false,
+        })
+        .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn dispatch_encrypt_genetic_flag_missing_key_fails() {
+        let r = crate::dispatch(Commands::Encrypt {
+            key: "___coverage_missing_encrypt_key___".to_string(),
+            input: "/nonexistent/in.txt".to_string(),
+            output: "/nonexistent/out.bin".to_string(),
+            genetic: true,
+        })
+        .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn dispatch_decrypt_missing_key_fails() {
+        let r = crate::dispatch(Commands::Decrypt {
+            key: "___coverage_missing_decrypt_key___".to_string(),
+            input: "/nonexistent/cipher.bin".to_string(),
+            output: "/nonexistent/plain.txt".to_string(),
+        })
+        .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn dispatch_stream_encrypt_missing_input_fails() {
+        let r = crate::dispatch(Commands::StreamEncrypt {
+            key: "k".to_string(),
+            input: "/nonexistent/beardog-stream-plain.bin".to_string(),
+            output: "/nonexistent/beardog-stream-cipher.bin".to_string(),
+        })
+        .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn dispatch_key_delete_unknown_key_returns_err() {
+        let r = crate::dispatch(Commands::Key {
+            action: KeyAction::Delete {
+                key_id: "___coverage_delete_missing___".to_string(),
+                yes: true,
+            },
+        })
+        .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn dispatch_entropy_info_missing_seed_returns_err() {
+        let r = crate::dispatch(Commands::Entropy {
+            action: EntropyAction::Info {
+                seed: "/nonexistent/beardog-seed.json".to_string(),
+            },
+        })
+        .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn dispatch_birdsong_encrypt_invalid_hint_returns_err() {
+        let r = crate::dispatch(Commands::Birdsong {
+            action: BirdsongAction::Encrypt {
+                message: "hello".to_string(),
+                hint: "NotAValidHintVariant".to_string(),
+                root_id: "root-1".to_string(),
+                output: None,
+            },
+        })
+        .await;
+        assert!(r.is_err(), "unknown lineage hint must fail before I/O");
+    }
+
+    #[tokio::test]
+    async fn dispatch_key_derive_unknown_master_returns_err() {
+        let r = crate::dispatch(Commands::Key {
+            action: KeyAction::Derive {
+                master_key: "___coverage_no_such_master___".to_string(),
+                purpose: "purpose".to_string(),
+                output: "child-out".to_string(),
+                expires_in: None,
+            },
+        })
+        .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn dispatch_key_mix_unknown_first_key_returns_err() {
+        let r = crate::dispatch(Commands::Key {
+            action: KeyAction::Mix {
+                key1: "___coverage_mix_missing_a___".to_string(),
+                key2: "___coverage_mix_missing_b___".to_string(),
+                output: "mixed-out".to_string(),
+                threshold: "2-of-2".to_string(),
+                expires_in: None,
+            },
+        })
+        .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn dispatch_key_lineage_unknown_key_returns_err() {
+        let r = crate::dispatch(Commands::Key {
+            action: KeyAction::Lineage {
+                key_id: "___coverage_no_lineage_key___".to_string(),
+                json: false,
+            },
+        })
+        .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn dispatch_key_export_unknown_key_returns_err() {
+        let r = crate::dispatch(Commands::Key {
+            action: KeyAction::Export {
+                key_id: "___coverage_export_missing___".to_string(),
+                output: "/tmp/beardog-export-coverage.pem".to_string(),
+                encrypt: false,
+            },
+        })
+        .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn dispatch_key_import_missing_input_file_returns_err() {
+        let r = crate::dispatch(Commands::Key {
+            action: KeyAction::Import {
+                input: "/nonexistent/beardog-import.pem".to_string(),
+                key_id: None,
+                decrypt: false,
+            },
+        })
+        .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn dispatch_key_generate_invalid_hsm_preference_returns_err() {
+        let r = crate::dispatch(Commands::Key {
+            action: KeyAction::Generate {
+                key_id: "coverage-gen-key".to_string(),
+                algorithm: "aes256-gcm".to_string(),
+                hsm: "___not_a_valid_hsm_preference___".to_string(),
+                seed: None,
+            },
+        })
+        .await;
+        assert!(
+            r.is_err(),
+            "unknown HSM preference must error after discovery (when any HSM exists)"
+        );
+    }
 }

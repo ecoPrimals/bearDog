@@ -4,7 +4,9 @@
 // Following BearDog standards: concurrent, robust, idiomatic
 // NO sleeps, NO serial tests - only truly concurrent tests
 
-use super::entropy::*;
+use super::entropy::{
+    base64_decode, base64_encode, calculate_entropy_quality, load_entropy_file, save_entropy_file,
+};
 use super::hsm_agnostic;
 use tempfile::TempDir;
 

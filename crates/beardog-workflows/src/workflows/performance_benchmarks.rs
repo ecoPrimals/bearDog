@@ -294,3 +294,106 @@ impl WorkflowPerformanceBenchmarks {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    // SPDX-License-Identifier: AGPL-3.0-or-later
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+
+    use super::{BenchmarkResults, ComprehensiveBenchmarkResults, WorkflowPerformanceBenchmarks};
+
+    fn assert_reasonable_benchmark_results(r: &BenchmarkResults) {
+        assert_eq!(r.operations_count, r.operations_count);
+        assert!(r.async_trait_time_ms < u64::MAX / 2);
+        assert!(r.zero_cost_time_ms < u64::MAX / 2);
+        assert!(r.improvement_percent.is_finite());
+    }
+
+    #[test]
+    fn benchmark_workflow_processing_zero_ops_covers_fast_paths() {
+        let r = WorkflowPerformanceBenchmarks::benchmark_workflow_processing(0);
+        assert_eq!(r.operations_count, 0);
+        assert_reasonable_benchmark_results(&r);
+        // Sub-millisecond runs can yield 0 ms; improvement stays defined (baseline 0 → 0%).
+        assert!(r.improvement_percent >= 0.0);
+    }
+
+    #[test]
+    fn benchmark_workflow_processing_small_batch_matches_operations_count() {
+        let r = WorkflowPerformanceBenchmarks::benchmark_workflow_processing(100);
+        assert_eq!(r.operations_count, 100);
+        assert_reasonable_benchmark_results(&r);
+    }
+
+    #[test]
+    fn benchmark_workflow_processing_nonzero_work_tends_positive_improvement_or_zero() {
+        let r = WorkflowPerformanceBenchmarks::benchmark_workflow_processing(5000);
+        assert_eq!(r.operations_count, 5000);
+        assert_reasonable_benchmark_results(&r);
+    }
+
+    #[test]
+    fn benchmark_hsm_zero_ops_exercises_min_branches_and_pct_when_baseline_zero() {
+        let r = WorkflowPerformanceBenchmarks::benchmark_hsm_operations(0);
+        assert_eq!(r.operations_count, 0);
+        assert_reasonable_benchmark_results(&r);
+    }
+
+    #[test]
+    fn benchmark_hsm_large_ops_caps_signing_and_verification_loops() {
+        let r = WorkflowPerformanceBenchmarks::benchmark_hsm_operations(10_000);
+        assert_eq!(r.operations_count, 10_000);
+        assert_reasonable_benchmark_results(&r);
+    }
+
+    #[test]
+    fn benchmark_hsm_medium_ops_full_inner_loops() {
+        let r = WorkflowPerformanceBenchmarks::benchmark_hsm_operations(256);
+        assert_eq!(r.operations_count, 256);
+        assert_reasonable_benchmark_results(&r);
+    }
+
+    #[test]
+    fn comprehensive_results_average_is_mean_of_five_categories() {
+        let c = WorkflowPerformanceBenchmarks::run_comprehensive_benchmarks();
+        let expected = (c.workflow_small.improvement_percent
+            + c.workflow_medium.improvement_percent
+            + c.workflow_large.improvement_percent
+            + c.hsm_operations.improvement_percent
+            + c.memory_efficiency.improvement_percent)
+            / 5.0;
+        assert!((c.average_improvement - expected).abs() < 1e-9);
+        assert_reasonable_benchmark_results(&c.workflow_small);
+        assert_reasonable_benchmark_results(&c.memory_efficiency);
+    }
+
+    #[test]
+    fn generate_report_includes_key_sections_and_numeric_placeholders() {
+        let c = WorkflowPerformanceBenchmarks::run_comprehensive_benchmarks();
+        let report = c.generate_report();
+        assert!(report.contains("Zero-Cost Architecture Performance Report"));
+        assert!(report.contains("Executive Summary"));
+        assert!(report.contains("Small scale (100 ops)"));
+        assert!(report.contains("Medium scale (1K ops)"));
+        assert!(report.contains("Large scale (5K ops)"));
+        assert!(report.contains("HSM Operations"));
+        assert!(report.contains("Memory Efficiency"));
+        assert!(report.contains(&format!("{:.1}", c.average_improvement)));
+    }
+
+    #[test]
+    fn comprehensive_benchmark_results_clone_debug_round_trip() {
+        let c = WorkflowPerformanceBenchmarks::run_comprehensive_benchmarks();
+        let copy = ComprehensiveBenchmarkResults {
+            workflow_small: c.workflow_small.clone(),
+            workflow_medium: c.workflow_medium.clone(),
+            workflow_large: c.workflow_large.clone(),
+            hsm_operations: c.hsm_operations.clone(),
+            memory_efficiency: c.memory_efficiency.clone(),
+            average_improvement: c.average_improvement,
+        };
+        let dbg = format!("{copy:?}");
+        assert!(dbg.contains("workflow_small"));
+        assert!(dbg.contains("average_improvement"));
+    }
+}

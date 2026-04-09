@@ -63,7 +63,8 @@ pub async fn demonstrate_security_sentinel() -> Result<(), BearDogError> {
     clippy::float_cmp,
     clippy::absurd_extreme_comparisons,
     unused_comparisons,
-    clippy::nonminimal_bool
+    clippy::nonminimal_bool,
+    reason = "sentinel example tests: float thresholds and exhaustive coverage (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 mod tests {

@@ -15,7 +15,17 @@ pub use handlers::AuthenticationHandler;
 pub use types::ConsensusResult as HandlerConsensusResult;
 pub use types::ConsensusResult as TypesConsensusResult;
 
-pub use types::{authorization::*, genetics::*, node_registry::*, spawning::*, workflow::*};
+pub use types::{
+    AccessCondition, AlgorithmFamily, ApprovalMode, AuthMethod, AuthProof, AuthorizationProof,
+    AutomatedCheck, BearDogGenetics, BearDogWorkflowType, CapabilityMutation, ConsensusConfig,
+    ConsensusNodeHealth, ConsensusNodeRecord, ConsensusResult, CrossNodeAuthConfig,
+    CrossNodeAuthEngine, CrossNodeAuthorization, CrossNodeOperation, CrossNodeWorkflowRequest,
+    CryptoChromosome, EscalationCondition, MutationTrigger, NodeCapability, NodeInfo, NodeRegistry,
+    NodeSpecialization, OperationType, ProofVerifier, ResourceLimits, ResourcePermission,
+    SecurityClearance, SecurityTraits, SpawnPurpose, SpawnRequest, SpawnRestriction, SpawnStatus,
+    SpawnedBearDog, SpawningMode, TaskType, VerificationMode, WorkflowEngine, WorkflowStatus,
+    default_consensus_registry,
+};
 
 mod consensus;
 mod core; // CrossNodeAuthEngine implementation

@@ -123,11 +123,16 @@ fn test_invalid_signature_fails() {
     );
 
     assert!(result.is_err(), "Should fail with wrong key");
-    match result {
-        Err(ConstraintViolationError::SignatureVerificationFailed { .. }) => (),
-        Err(e) => panic!("Expected SignatureVerificationFailed, got: {e:?}"),
-        Ok(()) => panic!("Expected error, got Ok"),
-    }
+    let Err(e) = result else {
+        panic!("Expected error, got Ok");
+    };
+    assert!(
+        matches!(
+            e,
+            ConstraintViolationError::SignatureVerificationFailed { .. }
+        ),
+        "Expected SignatureVerificationFailed, got: {e:?}"
+    );
 }
 
 #[test]
@@ -152,16 +157,15 @@ fn test_use_count_exceeded_fails() {
     );
 
     assert!(result.is_err());
-    match result {
-        Err(ConstraintViolationError::UseCountExceeded {
-            max_uses,
-            current_uses,
-        }) => {
-            assert_eq!(max_uses, 10);
-            assert_eq!(current_uses, 10);
-        }
-        _ => panic!("Expected UseCountExceeded"),
-    }
+    let Err(ConstraintViolationError::UseCountExceeded {
+        max_uses,
+        current_uses,
+    }) = result
+    else {
+        panic!("Expected UseCountExceeded");
+    };
+    assert_eq!(max_uses, 10);
+    assert_eq!(current_uses, 10);
 }
 
 #[test]
@@ -188,10 +192,13 @@ fn test_forbidden_operation_fails() {
     );
 
     assert!(result.is_err());
-    match result {
-        Err(ConstraintViolationError::OperationNotAllowed { .. }) => (),
-        _ => panic!("Expected OperationNotAllowed"),
-    }
+    assert!(
+        matches!(
+            result,
+            Err(ConstraintViolationError::OperationNotAllowed { .. })
+        ),
+        "Expected OperationNotAllowed"
+    );
 }
 
 #[test]
@@ -239,13 +246,13 @@ fn test_cannot_delete_path_fails() {
     );
 
     assert!(result.is_err(), "Should fail to delete protected path");
-    match result {
-        Err(ConstraintViolationError::DataAccessDenied { operation: op, .. }) => {
-            assert_eq!(op, "delete");
-        }
-        Err(e) => panic!("Expected DataAccessDenied, got: {e:?}"),
-        Ok(()) => panic!("Expected error, got Ok"),
-    }
+    let Err(e) = result else {
+        panic!("Expected error, got Ok");
+    };
+    let ConstraintViolationError::DataAccessDenied { operation: op, .. } = e else {
+        panic!("Expected DataAccessDenied, got: {e:?}");
+    };
+    assert_eq!(op, "delete");
 }
 
 #[test]
@@ -267,12 +274,10 @@ fn test_short_public_key_fails() {
     );
 
     assert!(result.is_err());
-    match result {
-        Err(ConstraintViolationError::SignatureVerificationFailed { reason }) => {
-            assert!(reason.contains("32 bytes"));
-        }
-        _ => panic!("Expected SignatureVerificationFailed"),
-    }
+    let Err(ConstraintViolationError::SignatureVerificationFailed { reason }) = result else {
+        panic!("Expected SignatureVerificationFailed");
+    };
+    assert!(reason.contains("32 bytes"));
 }
 
 #[test]
@@ -294,10 +299,13 @@ fn test_tampered_constraints_fail() {
     );
 
     assert!(result.is_err());
-    match result {
-        Err(ConstraintViolationError::SignatureVerificationFailed { .. }) => (),
-        _ => panic!("Expected SignatureVerificationFailed due to tampering"),
-    }
+    assert!(
+        matches!(
+            result,
+            Err(ConstraintViolationError::SignatureVerificationFailed { .. })
+        ),
+        "Expected SignatureVerificationFailed due to tampering"
+    );
 }
 
 #[test]
@@ -529,10 +537,10 @@ fn test_expires_at_constraint() {
 
     // Should fail - key has expired
     assert!(result.is_err());
-    match result {
-        Err(ConstraintViolationError::KeyExpired { .. }) => (),
-        _ => panic!("Expected KeyExpired"),
-    }
+    assert!(
+        matches!(result, Err(ConstraintViolationError::KeyExpired { .. })),
+        "Expected KeyExpired"
+    );
 }
 
 #[test]

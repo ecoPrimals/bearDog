@@ -9,7 +9,7 @@ use hkdf::Hkdf;
 use sha2::{Digest, Sha256, Sha384};
 
 /// RFC 8446 HKDF-Expand-Label length-prefixed prefix (`length || label_len || label || ctx_len || ctx`).
-pub(crate) fn append_tls13_hkdf_label(
+pub fn append_tls13_hkdf_label(
     hkdf_label: &mut Vec<u8>,
     label: &str,
     context: &[u8],

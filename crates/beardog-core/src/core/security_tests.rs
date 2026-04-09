@@ -18,9 +18,12 @@ mod tests {
 
     use crate::core::security::CoreSecurityProvider;
     use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
-    use beardog_types::canonical::providers_unified::traits::{
-        AuthenticationContext, AuthenticationRequest, AuthorizationRequest, ProviderConfiguration,
-        UnifiedProvider, UnifiedSecurityProvider,
+    use beardog_types::canonical::providers_unified::traits::base_traits::{
+        ConnectionConfiguration, PerformanceConfiguration, ProviderConfiguration,
+        SecurityConfiguration, UnifiedProvider,
+    };
+    use beardog_types::canonical::providers_unified::traits::security_traits::{
+        AuthenticationContext, AuthenticationRequest, AuthorizationRequest, UnifiedSecurityProvider,
     };
     use std::collections::HashMap;
 
@@ -136,23 +139,21 @@ mod tests {
         let mut provider = create_test_provider();
         let config = ProviderConfiguration {
             parameters: std::collections::HashMap::new(),
-            connection:
-                beardog_types::canonical::providers_unified::traits::ConnectionConfiguration {
-                    timeout_seconds: 5,
-                    max_retries: 3,
-                    pool_size: 10,
-                },
-            security: beardog_types::canonical::providers_unified::traits::SecurityConfiguration {
+            connection: ConnectionConfiguration {
+                timeout_seconds: 5,
+                max_retries: 3,
+                pool_size: 10,
+            },
+            security: SecurityConfiguration {
                 tls_enabled: true,
                 cert_path: None,
                 key_path: None,
             },
-            performance:
-                beardog_types::canonical::providers_unified::traits::PerformanceConfiguration {
-                    monitoring_enabled: true,
-                    metrics_interval_seconds: 60,
-                    optimization_level: "standard".to_string(),
-                },
+            performance: PerformanceConfiguration {
+                monitoring_enabled: true,
+                metrics_interval_seconds: 60,
+                optimization_level: "standard".to_string(),
+            },
         };
 
         let result = provider.initialize(config).await;

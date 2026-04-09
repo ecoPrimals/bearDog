@@ -443,7 +443,7 @@ impl DeviceManager {
     ///
     /// # Errors
     /// Returns an error if adb is not available or device detection fails.
-    #[allow(
+    #[expect(
         dead_code,
         reason = "Public Android adb discovery API for tooling; not yet wired into default deploy flows."
     )]
@@ -578,7 +578,7 @@ impl DeviceManager {
     ///
     /// # Errors
     /// Returns an error if deployment fails.
-    #[allow(
+    #[expect(
         dead_code,
         reason = "Public APK install hook for Android workflows; callers integrate explicitly."
     )]

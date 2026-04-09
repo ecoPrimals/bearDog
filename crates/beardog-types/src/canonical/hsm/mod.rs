@@ -26,7 +26,7 @@ pub use capabilities::{
     KeyGenerationCapabilities, KeyManagementCapabilities, SecurityCapabilities,
 };
 pub use config::*;
-pub use keys::*;
+pub use keys::{HsmKey, KeyMetadata};
 pub use platform_types::{
     AndroidKeyAlgorithm, EntropyCollectionMethod, EntropyQualityRating, HsmType, KeyStorageType,
     MemoryProtectionLevel, PerformanceMetrics, SecureEnclaveType, SmartphoneType, SoftwareHsmType,

@@ -3,15 +3,15 @@
 //! Runtime Configuration Management
 //!
 //! This module contains the runtime logic for loading and managing production configurations.
+//! Secret retrieval lives in [`super::secrets`]; defaults for config structs in [`super::defaults`].
 
-use super::secrets_backend::FileVaultBackend;
-use super::*;
+use super::{
+    ConfigSource, Environment, LogLevel, ProductionConfig, ProductionConfigManager, Result,
+    SecretsManager,
+};
 use beardog_errors::BearDogError;
-use beardog_types::constants::domains::config::system::DEFAULT_SYSTEM_NAME;
-use beardog_types::constants::network::{HTTP_DEV_PORT, POSTGRESQL_PORT};
 use std::collections::HashMap;
 use std::fs;
-use std::num::NonZeroUsize;
 use std::path::Path;
 use tracing::{debug, info, warn};
 
@@ -54,7 +54,7 @@ impl ProductionConfigManager {
     }
 
     /// Loads base configuration from sources
-    fn load_base_config(&mut self) -> Result<ProductionConfig> {
+    fn load_base_config(&self) -> Result<ProductionConfig> {
         let mut config = ProductionConfig::default();
 
         for source in self.config_sources.clone() {
@@ -94,7 +94,7 @@ impl ProductionConfigManager {
     }
 
     /// Loads configuration from file
-    fn load_from_file(&mut self, config: &mut ProductionConfig, path: &str) -> Result<()> {
+    fn load_from_file(&self, config: &mut ProductionConfig, path: &str) -> Result<()> {
         debug!("Loading configuration from file: {}", path);
 
         if !Path::new(path).exists() {
@@ -354,231 +354,10 @@ impl ProductionConfigManager {
     // can be added when needed by implementing custom merge logic in load_from_file().
 }
 
-impl SecretsManager {
-    /// Creates a new secrets manager
-    ///
-    /// # Errors
-    ///
-    /// Returns [`BearDogError`] if the provider list for the environment cannot be built.
-    pub fn new(environment: &Environment) -> Result<Self> {
-        let providers = Self::determine_providers(environment)?;
+#[cfg(test)]
+mod tests {
+    #![expect(clippy::unwrap_used, reason = "test assertions")]
+    #![expect(clippy::expect_used, reason = "test assertions")]
 
-        Ok(Self {
-            providers,
-            cache: HashMap::with_capacity(16),
-            _cache_ttl: 300, // 5 minutes
-        })
-    }
-
-    /// Gets a secret by key
-    ///
-    /// # Errors
-    ///
-    /// Returns [`BearDogError`] if the secret is not found in any configured provider.
-    pub fn get_secret(&mut self, key: &str) -> Result<SecretValue> {
-        // Check cache first
-        if let Some(cached_value) = self.cache.get(key)
-            && let Some(expires_at) = cached_value.expires_at
-            && std::time::SystemTime::now() < expires_at
-        {
-            return Ok(cached_value.clone());
-        }
-
-        // Try each provider
-        for provider in &self.providers {
-            if let Ok(value) = self.get_secret_from_provider(provider, key) {
-                self.cache.insert(key.to_string(), value.clone());
-                return Ok(value);
-            }
-        }
-
-        Err(BearDogError::system(format!("Secret not found: {key}")))
-    }
-
-    /// Gets secret from specific provider
-    fn get_secret_from_provider(
-        &self,
-        provider: &SecretsProvider,
-        key: &str,
-    ) -> Result<SecretValue> {
-        match provider {
-            SecretsProvider::EnvironmentVariables => {
-                let env_key = format!("BEARDOG_SECRET_{}", key.replace('/', "_").to_uppercase());
-                if let Ok(value) = beardog_errors::process_env::var(&env_key) {
-                    Ok(SecretValue {
-                        value,
-                        expires_at: None,
-                        metadata: HashMap::new(),
-                    })
-                } else {
-                    Err(BearDogError::system(
-                        "Secret not found in environment".to_string(),
-                    ))
-                }
-            }
-            SecretsProvider::Vault {
-                endpoint,
-                token,
-                mount_path,
-            } => {
-                debug!(
-                    target: "beardog_production",
-                    endpoint = %endpoint,
-                    mount_path = %mount_path,
-                    "retrieving secret from BearDog local vault"
-                );
-                let backend =
-                    FileVaultBackend::open_for_vault_provider(endpoint, token, mount_path)?;
-                let value = backend.retrieve(key)?;
-                Ok(SecretValue {
-                    value,
-                    expires_at: None,
-                    metadata: HashMap::new(),
-                })
-            }
-            SecretsProvider::UniversalSecretsManagement {
-                endpoint,
-                provider_type,
-                auth_config,
-            } => {
-                debug!(
-                    target: "beardog_production",
-                    endpoint = %endpoint,
-                    provider_type = %provider_type,
-                    "retrieving secret from USM (file vault backend)"
-                );
-                let backend = FileVaultBackend::open_for_usm(endpoint, auth_config)?;
-                let value = backend.retrieve(key)?;
-                Ok(SecretValue {
-                    value,
-                    expires_at: None,
-                    metadata: HashMap::new(),
-                })
-            }
-        }
-    }
-
-    /// Determines secrets providers based on environment
-    fn determine_providers(environment: &Environment) -> Result<Vec<SecretsProvider>> {
-        let mut providers = vec![];
-
-        // Always add environment variables as fallback
-        providers.push(SecretsProvider::EnvironmentVariables);
-
-        if matches!(environment, Environment::Production) {
-            // Add production secrets providers
-            if let Ok(vault_endpoint) = beardog_errors::process_env::var("VAULT_ENDPOINT")
-                && let Ok(vault_token) = beardog_errors::process_env::var("VAULT_TOKEN")
-            {
-                providers.insert(
-                    0,
-                    SecretsProvider::Vault {
-                        endpoint: vault_endpoint,
-                        token: vault_token,
-                        mount_path: beardog_errors::process_env::var("VAULT_MOUNT_PATH")
-                            .unwrap_or_else(|_| "secret".to_string()),
-                    },
-                );
-            }
-        }
-
-        Ok(providers)
-    }
-}
-
-impl Default for ApplicationConfig {
-    fn default() -> Self {
-        Self {
-            name: DEFAULT_SYSTEM_NAME.to_string(),
-            version: env!("CARGO_PKG_VERSION").to_string(),
-            environment: "development".to_string(),
-            instance_id: uuid::Uuid::new_v4().to_string(),
-            bind_address: beardog_errors::process_env::var("BEARDOG_BIND_ADDRESS").unwrap_or_else(
-                |_| {
-                    use beardog_types::constants::domains::network::config;
-                    config::default_service_host()
-                },
-            ),
-            port: HTTP_DEV_PORT,
-            worker_threads: std::thread::available_parallelism()
-                .map(NonZeroUsize::get)
-                .unwrap_or(4),
-            max_connections: 1000,
-            request_timeout: 30,
-            graceful_shutdown_timeout: 30,
-        }
-    }
-}
-
-impl Default for DatabaseConnection {
-    fn default() -> Self {
-        use beardog_types::canonical::config::network::NetworkConfig;
-        let network_config = NetworkConfig::default();
-
-        Self {
-            host: beardog_errors::process_env::var("BEARDOG_DB_HOST")
-                .unwrap_or_else(|_| network_config.default_host.clone()),
-            port: beardog_errors::process_env::var("BEARDOG_DB_PORT")
-                .ok()
-                .and_then(|p| p.parse().ok())
-                .unwrap_or(POSTGRESQL_PORT),
-            database: beardog_errors::process_env::var("BEARDOG_DB_NAME")
-                .unwrap_or_else(|_| DEFAULT_SYSTEM_NAME.to_string()),
-            username: beardog_errors::process_env::var("BEARDOG_DB_USER")
-                .unwrap_or_else(|_| DEFAULT_SYSTEM_NAME.to_string()),
-            password: String::new(),
-            ssl_mode: "require".to_string(),
-            connection_timeout: 5,
-        }
-    }
-}
-
-impl Default for TlsConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            cert_path: String::new(),
-            key_path: String::new(),
-            ca_path: None,
-            min_version: "1.2".to_string(),
-            cipher_suites: vec![],
-        }
-    }
-}
-
-impl Default for AutoScalingConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            min_replicas: 2,
-            max_replicas: 10,
-            target_cpu_utilization: 70.0,
-            target_memory_utilization: 80.0,
-            scale_up_cooldown: 300,
-            scale_down_cooldown: 600,
-        }
-    }
-}
-
-impl Default for ComplianceConfig {
-    fn default() -> Self {
-        Self {
-            data_retention: DataRetentionConfig::default(),
-            encryption_at_rest: false,
-            encryption_in_transit: false,
-            access_logging: true,
-            compliance_standards: vec![],
-        }
-    }
-}
-
-impl Default for DataRetentionConfig {
-    fn default() -> Self {
-        Self {
-            logs: 30,
-            metrics: 90,
-            audit_trails: 2555, // 7 years
-            user_data: 365,
-        }
-    }
+    include!("runtime_tests.rs");
 }

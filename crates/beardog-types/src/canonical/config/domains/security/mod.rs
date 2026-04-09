@@ -37,12 +37,28 @@ pub mod monitoring;
 pub mod threat;
 
 // Re-export all public types for convenience
-pub use advanced::*;
-pub use auth::*;
-pub use compliance::*;
-pub use crypto::*;
-pub use monitoring::*;
-pub use threat::*;
+pub use advanced::{
+    EcosystemMembershipConfiguration, EvaluationConfiguration, GeneticSecurityConfiguration,
+    GeneticsIntegrationConfiguration, TrustComputationConfiguration, TrustDecayConfiguration,
+};
+pub use auth::{
+    AccessControlConfiguration, AuthenticationConfiguration, AuthorizationConfiguration,
+    AutoEvolutionConfiguration, ConsensusConfiguration, HealthMonitoringConfiguration,
+    LegacyIntegrationConfiguration,
+};
+pub use compliance::{
+    ComplianceReportingConfiguration, ComplianceValidationConfiguration,
+    DataSovereigntyConfiguration, SecurityComplianceConfiguration,
+    SovereigntyValidationConfiguration,
+};
+pub use crypto::{
+    CryptoProviderConfiguration, EncryptionConfiguration, GeneticRenewalConfiguration,
+    KeyManagementConfiguration,
+};
+pub use monitoring::{
+    AuditConfiguration, SecurityAlertConfiguration, SecurityMonitoringConfiguration,
+};
+pub use threat::ThreatResponseConfiguration;
 
 // Import canonical threat detection config
 use super::threat::CanonicalThreatDetectionConfig;
@@ -453,7 +469,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "DEFAULT_POOL_SIZE fits u32; matches development preset assertion"
+    )]
     fn test_development_config() {
         let config = ConsolidatedSecurityConfiguration::development();
         // TEST_CATEGORY: unit

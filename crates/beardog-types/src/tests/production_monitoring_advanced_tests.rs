@@ -386,7 +386,10 @@ fn test_metrics_collection_over_time() {
 
     // Simulate multiple collection cycles
     for i in 0..10_u32 {
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "synthetic u32 loop index to f64 for staged metric simulation"
+        )]
         let metrics = CurrentMetrics {
             timestamp: chrono::Utc::now(),
             cpu_usage_percent: (f64::from(i)).mul_add(2.0, 50.0),
@@ -469,7 +472,10 @@ fn test_concurrent_metric_collection_simulation() {
 
     // Simulate rapid concurrent additions
     for i in 0..100_u32 {
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "synthetic u32 loop index to f64 for concurrent metric simulation"
+        )]
         let metrics = CurrentMetrics {
             timestamp: chrono::Utc::now(),
             cpu_usage_percent: f64::from(i % 100),

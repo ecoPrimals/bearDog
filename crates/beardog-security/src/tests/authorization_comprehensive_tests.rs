@@ -14,7 +14,10 @@
 //! - Error handling
 
 #[cfg(test)]
-#[allow(clippy::module_inception)]
+#[expect(
+    clippy::module_inception,
+    reason = "nested test module mirrors authorization surface for scenario tests"
+)]
 mod authorization_comprehensive_tests {
     use super::*;
     use beardog_errors::BearDogError;

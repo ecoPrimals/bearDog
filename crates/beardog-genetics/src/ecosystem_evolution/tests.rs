@@ -48,17 +48,16 @@ fn test_evolve_access_pattern_allowlist() {
     assert!(result.is_ok());
 
     let membership = result.unwrap();
-    match membership {
-        EcosystemMembership::ActiveContributor {
-            trust_level,
-            contribution_types,
-            ..
-        } => {
-            assert_eq!(trust_level, 0.7);
-            assert!(!contribution_types.is_empty());
-        }
-        _ => panic!("Expected ActiveContributor membership"),
-    }
+    let EcosystemMembership::ActiveContributor {
+        trust_level,
+        contribution_types,
+        ..
+    } = membership
+    else {
+        panic!("Expected ActiveContributor membership");
+    };
+    assert_eq!(trust_level, 0.7);
+    assert!(!contribution_types.is_empty());
 }
 
 #[test]
@@ -78,17 +77,16 @@ fn test_evolve_access_pattern_blocklist() {
     assert!(result.is_ok());
 
     let membership = result.unwrap();
-    match membership {
-        EcosystemMembership::EcosystemProtection {
-            trust_level,
-            restoration_path,
-            ..
-        } => {
-            assert_eq!(trust_level, 0.1);
-            assert!(restoration_path.is_some());
-        }
-        _ => panic!("Expected EcosystemProtection membership"),
-    }
+    let EcosystemMembership::EcosystemProtection {
+        trust_level,
+        restoration_path,
+        ..
+    } = membership
+    else {
+        panic!("Expected EcosystemProtection membership");
+    };
+    assert_eq!(trust_level, 0.1);
+    assert!(restoration_path.is_some());
 }
 
 #[test]
@@ -106,12 +104,10 @@ fn test_evolve_access_pattern_simple_allowed() {
     assert!(result.is_ok());
 
     let membership = result.unwrap();
-    match membership {
-        EcosystemMembership::LearningParticipant { trust_level, .. } => {
-            assert_eq!(trust_level, 0.5);
-        }
-        _ => panic!("Expected LearningParticipant membership"),
-    }
+    let EcosystemMembership::LearningParticipant { trust_level, .. } = membership else {
+        panic!("Expected LearningParticipant membership");
+    };
+    assert_eq!(trust_level, 0.5);
 }
 
 #[test]
@@ -129,12 +125,10 @@ fn test_evolve_access_pattern_simple_denied() {
     assert!(result.is_ok());
 
     let membership = result.unwrap();
-    match membership {
-        EcosystemMembership::CautiousInteraction { trust_level, .. } => {
-            assert_eq!(trust_level, 0.3);
-        }
-        _ => panic!("Expected CautiousInteraction membership"),
-    }
+    let EcosystemMembership::CautiousInteraction { trust_level, .. } = membership else {
+        panic!("Expected CautiousInteraction membership");
+    };
+    assert_eq!(trust_level, 0.3);
 }
 
 #[test]
@@ -157,14 +151,13 @@ fn test_evolve_trust_pattern_trusted() {
     assert!(result.is_ok());
 
     let evolution = result.unwrap();
-    match evolution {
-        TrustEvolution::Flourishing {
-            stability_metrics, ..
-        } => {
-            assert_eq!(stability_metrics, "high");
-        }
-        _ => panic!("Expected Flourishing trust evolution"),
-    }
+    let TrustEvolution::Flourishing {
+        stability_metrics, ..
+    } = evolution
+    else {
+        panic!("Expected Flourishing trust evolution");
+    };
+    assert_eq!(stability_metrics, "high");
 }
 
 #[test]
@@ -187,12 +180,10 @@ fn test_evolve_trust_pattern_untrusted() {
     assert!(result.is_ok());
 
     let evolution = result.unwrap();
-    match evolution {
-        TrustEvolution::Building { progress_rate, .. } => {
-            assert_eq!(progress_rate, 0.1);
-        }
-        _ => panic!("Expected Building trust evolution"),
-    }
+    let TrustEvolution::Building { progress_rate, .. } = evolution else {
+        panic!("Expected Building trust evolution");
+    };
+    assert_eq!(progress_rate, 0.1);
 }
 
 #[test]
@@ -207,15 +198,14 @@ fn test_evolve_coordination_pattern_primary_replica() {
     assert!(result.is_ok());
 
     let model = result.unwrap();
-    match model {
-        CoordinationModel::Collaborative {
-            decision_protocol, ..
-        } => {
-            assert!(decision_protocol.contains("collaborative"));
-            assert!(decision_protocol.contains("node1"));
-        }
-        _ => panic!("Expected Collaborative coordination model"),
-    }
+    let CoordinationModel::Collaborative {
+        decision_protocol, ..
+    } = model
+    else {
+        panic!("Expected Collaborative coordination model");
+    };
+    assert!(decision_protocol.contains("collaborative"));
+    assert!(decision_protocol.contains("node1"));
 }
 
 #[test]
@@ -230,18 +220,17 @@ fn test_evolve_coordination_pattern_client_server() {
     assert!(result.is_ok());
 
     let model = result.unwrap();
-    match model {
-        CoordinationModel::Distributed {
-            consensus_type,
-            participation_weights,
-            ..
-        } => {
-            assert_eq!(consensus_type, "weighted_voting");
-            assert!(!participation_weights.is_empty());
-            assert!(participation_weights.contains_key("server1"));
-        }
-        _ => panic!("Expected Distributed coordination model"),
-    }
+    let CoordinationModel::Distributed {
+        consensus_type,
+        participation_weights,
+        ..
+    } = model
+    else {
+        panic!("Expected Distributed coordination model");
+    };
+    assert_eq!(consensus_type, "weighted_voting");
+    assert!(!participation_weights.is_empty());
+    assert!(participation_weights.contains_key("server1"));
 }
 
 #[test]
@@ -256,12 +245,10 @@ fn test_evolve_coordination_pattern_primary_secondary() {
     assert!(result.is_ok());
 
     let model = result.unwrap();
-    match model {
-        CoordinationModel::Rotational { current_leader, .. } => {
-            assert_eq!(current_leader, Some("primary1".to_string()));
-        }
-        _ => panic!("Expected Rotational coordination model"),
-    }
+    let CoordinationModel::Rotational { current_leader, .. } = model else {
+        panic!("Expected Rotational coordination model");
+    };
+    assert_eq!(current_leader, Some("primary1".to_string()));
 }
 
 #[test]
@@ -311,12 +298,10 @@ fn test_migrate_allowlist_only() {
     assert_eq!(memberships.len(), 2);
 
     for membership in memberships {
-        match membership {
-            EcosystemMembership::ActiveContributor { trust_level, .. } => {
-                assert_eq!(trust_level, 0.7);
-            }
-            _ => panic!("Expected ActiveContributor membership"),
-        }
+        let EcosystemMembership::ActiveContributor { trust_level, .. } = membership else {
+            panic!("Expected ActiveContributor membership");
+        };
+        assert_eq!(trust_level, 0.7);
     }
 }
 
@@ -329,17 +314,16 @@ fn test_migrate_blocklist_only() {
     let memberships = result.unwrap();
     assert_eq!(memberships.len(), 1);
 
-    match &memberships[0] {
-        EcosystemMembership::EcosystemProtection {
-            trust_level,
-            restoration_path,
-            ..
-        } => {
-            assert_eq!(*trust_level, 0.1);
-            assert!(restoration_path.is_some());
-        }
-        _ => panic!("Expected EcosystemProtection membership"),
-    }
+    let EcosystemMembership::EcosystemProtection {
+        trust_level,
+        restoration_path,
+        ..
+    } = &memberships[0]
+    else {
+        panic!("Expected EcosystemProtection membership");
+    };
+    assert_eq!(*trust_level, 0.1);
+    assert!(restoration_path.is_some());
 }
 
 #[test]

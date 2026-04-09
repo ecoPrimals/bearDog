@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+#![expect(clippy::unwrap_used, reason = "test assertions")]
+
 use crate::handlers::key_store;
 use crate::handlers::key_store::StoredKey;
 
 use super::crypto::{decrypt_key_material, encrypt_key_material};
-use super::export::handle_key_export_with_home;
-use super::import::handle_key_import_with_home;
+use super::export::{handle_key_export, handle_key_export_with_home};
+use super::import::{handle_key_import, handle_key_import_with_home};
 use super::types::ExportedKey;
 
+use beardog_errors::process_env;
 use chrono::Utc;
 use tempfile::TempDir;
 
@@ -229,6 +232,43 @@ fn test_decrypt_key_material_invalid_json() {
 fn test_decrypt_key_material_missing_fields() {
     let r = decrypt_key_material(r#"{"salt":"x"}"#, "pw");
     assert!(r.is_err());
+}
+
+#[test]
+fn test_decrypt_key_material_missing_salt_key() {
+    let enc = encrypt_key_material("e30=", "pw").expect("encrypt fixture for missing-salt test");
+    let v: serde_json::Value =
+        serde_json::from_str(&enc).expect("parse encrypted package JSON in test");
+    let bad = serde_json::json!({
+        "nonce": v["nonce"],
+        "ciphertext": v["ciphertext"],
+    });
+    assert!(decrypt_key_material(&bad.to_string(), "pw").is_err());
+}
+
+#[test]
+fn test_decrypt_key_material_missing_nonce_key() {
+    let enc = encrypt_key_material("e30=", "pw").expect("encrypt fixture for missing-nonce test");
+    let v: serde_json::Value =
+        serde_json::from_str(&enc).expect("parse encrypted package JSON in test");
+    let bad = serde_json::json!({
+        "salt": v["salt"],
+        "ciphertext": v["ciphertext"],
+    });
+    assert!(decrypt_key_material(&bad.to_string(), "pw").is_err());
+}
+
+#[test]
+fn test_decrypt_key_material_missing_ciphertext_key() {
+    let enc =
+        encrypt_key_material("e30=", "pw").expect("encrypt fixture for missing-ciphertext test");
+    let v: serde_json::Value =
+        serde_json::from_str(&enc).expect("parse encrypted package JSON in test");
+    let bad = serde_json::json!({
+        "salt": v["salt"],
+        "nonce": v["nonce"],
+    });
+    assert!(decrypt_key_material(&bad.to_string(), "pw").is_err());
 }
 
 #[test]
@@ -456,4 +496,257 @@ async fn test_import_with_home_missing_input_file() {
         handle_key_import_with_home("/nonexistent/path/key.json", None, false, false, dir.path())
             .await;
     assert!(r.is_err());
+}
+
+#[tokio::test]
+async fn test_import_with_home_includes_expires_in_details() {
+    let dir = TempDir::new().expect("temp dir for expires import test");
+    let p = dir.path().join("with-expires.json");
+    let exported = ExportedKey {
+        key_id: "exp-k".to_string(),
+        algorithm: "aes-256-gcm".to_string(),
+        parent: None,
+        generation: 0,
+        created_at: Utc::now().to_rfc3339(),
+        context: None,
+        expires_at: Some("2035-12-31T23:59:59Z".to_string()),
+        usage: None,
+        purpose: None,
+        metadata: std::collections::HashMap::new(),
+        key_material: key_store::base64_encode(b"01234567890123456789012345678901"),
+        encrypted: false,
+        version: "1.0".to_string(),
+    };
+    std::fs::write(
+        &p,
+        serde_json::to_string_pretty(&exported).expect("serialize export with expires"),
+    )
+    .expect("write export file");
+
+    handle_key_import_with_home(
+        p.to_str().expect("with-expires path utf8"),
+        None,
+        false,
+        false,
+        dir.path(),
+    )
+    .await
+    .expect("import key with expires_at");
+
+    let loaded = key_store::load_key_from_home("exp-k", dir.path()).expect("load exp-k");
+    assert_eq!(loaded.expires_at.as_deref(), Some("2035-12-31T23:59:59Z"));
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn test_export_with_home_fails_when_output_dir_unwritable() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let dir = TempDir::new().expect("temp dir for unwritable export test");
+    let key = StoredKey {
+        key_id: "ro-test".to_string(),
+        algorithm: "aes-256-gcm".to_string(),
+        hsm_name: "soft".to_string(),
+        key_material_b64: key_store::base64_encode(b"01234567890123456789012345678901"),
+        created_at: Utc::now().to_rfc3339(),
+        generation: 0,
+        parent_key_id: None,
+        derivation_purpose: None,
+        children: vec![],
+        lineage: None,
+        expires_at: None,
+        usage: None,
+        purpose: None,
+    };
+    key_store::save_key_to_home(&key, dir.path()).expect("save ro-test key");
+
+    let blocked = dir.path().join("blocked");
+    std::fs::create_dir(&blocked).expect("create blocked export dir");
+    std::fs::set_permissions(&blocked, std::fs::Permissions::from_mode(0o500))
+        .expect("chmod blocked dir read+execute only");
+
+    let out = blocked.join("out.json");
+    let r = handle_key_export_with_home(
+        "ro-test",
+        out.to_str().expect("out path utf8"),
+        false,
+        dir.path(),
+    )
+    .await;
+
+    assert!(
+        r.is_err(),
+        "expected fs::write to fail under unwritable parent: {r:?}"
+    );
+}
+
+#[tokio::test]
+async fn test_handle_key_export_errors_when_home_unset() {
+    let _guard = crate::__cli_test_env::HOME
+        .lock()
+        .expect("cli HOME env test lock poisoned");
+    let old_home = std::env::var_os("HOME");
+    process_env::remove_var("HOME");
+
+    let err = handle_key_export("any-key", "/tmp/out.json", false)
+        .await
+        .expect_err("handle_key_export without HOME");
+    assert!(
+        err.to_string().contains("HOME") || err.to_string().contains("home"),
+        "{err}"
+    );
+
+    match old_home {
+        Some(h) => process_env::set_var("HOME", h.as_os_str()),
+        None => process_env::remove_var("HOME"),
+    }
+}
+
+#[tokio::test]
+async fn test_handle_key_import_errors_when_home_unset() {
+    let _guard = crate::__cli_test_env::HOME
+        .lock()
+        .expect("cli HOME env test lock poisoned");
+    let old_home = std::env::var_os("HOME");
+    process_env::remove_var("HOME");
+
+    let err = handle_key_import("/tmp/in.json", None, false)
+        .await
+        .expect_err("handle_key_import without HOME");
+    assert!(
+        err.to_string().contains("HOME") || err.to_string().contains("home"),
+        "{err}"
+    );
+
+    match old_home {
+        Some(h) => process_env::set_var("HOME", h.as_os_str()),
+        None => process_env::remove_var("HOME"),
+    }
+}
+
+#[tokio::test]
+async fn test_handle_key_export_roundtrip_uses_default_home_env() {
+    let _guard = crate::__cli_test_env::HOME
+        .lock()
+        .expect("cli HOME env test lock poisoned");
+    let dir = TempDir::new().expect("temp home for handle_key_export env test");
+    let dst = TempDir::new().expect("temp home for handle_key_import env test");
+    let old_home = std::env::var_os("HOME");
+    process_env::set_var("HOME", dir.path().as_os_str());
+
+    let key = StoredKey {
+        key_id: "env-roundtrip".to_string(),
+        algorithm: "aes-256-gcm".to_string(),
+        hsm_name: "soft".to_string(),
+        key_material_b64: key_store::base64_encode(b"01234567890123456789012345678901"),
+        created_at: Utc::now().to_rfc3339(),
+        generation: 0,
+        parent_key_id: None,
+        derivation_purpose: None,
+        children: vec![],
+        lineage: None,
+        expires_at: None,
+        usage: None,
+        purpose: None,
+    };
+    key_store::save_key_to_home(&key, dir.path()).expect("save key under HOME");
+
+    let out = dir.path().join("exported-env.json");
+    handle_key_export("env-roundtrip", out.to_str().expect("utf8"), false)
+        .await
+        .expect("handle_key_export with HOME");
+
+    process_env::set_var("HOME", dst.path().as_os_str());
+    handle_key_import(out.to_str().expect("utf8"), None, false)
+        .await
+        .expect("handle_key_import with HOME");
+
+    let loaded = key_store::load_key_from_home("env-roundtrip", dst.path()).expect("load imported");
+    assert_eq!(loaded.key_material_b64, key.key_material_b64);
+
+    match old_home {
+        Some(h) => process_env::set_var("HOME", h.as_os_str()),
+        None => process_env::remove_var("HOME"),
+    }
+}
+
+#[tokio::test]
+async fn test_export_with_home_errors_when_output_path_is_directory() {
+    let dir = TempDir::new().expect("temp dir for directory-as-output test");
+    let key = StoredKey {
+        key_id: "dir-out-key".to_string(),
+        algorithm: "aes-256-gcm".to_string(),
+        hsm_name: "soft".to_string(),
+        key_material_b64: key_store::base64_encode(b"01234567890123456789012345678901"),
+        created_at: Utc::now().to_rfc3339(),
+        generation: 0,
+        parent_key_id: None,
+        derivation_purpose: None,
+        children: vec![],
+        lineage: None,
+        expires_at: None,
+        usage: None,
+        purpose: None,
+    };
+    key_store::save_key_to_home(&key, dir.path()).expect("save key");
+
+    let r = handle_key_export_with_home(
+        "dir-out-key",
+        dir.path().to_str().expect("utf8"),
+        false,
+        dir.path(),
+    )
+    .await;
+    assert!(r.is_err(), "fs::write to a directory path must fail: {r:?}");
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn test_import_with_home_errors_when_input_path_is_directory() {
+    let dir = TempDir::new().expect("temp dir for directory-as-input test");
+    let dst = TempDir::new().expect("dest home");
+    let r = handle_key_import_with_home(
+        dir.path().to_str().expect("utf8"),
+        None,
+        false,
+        false,
+        dst.path(),
+    )
+    .await;
+    assert!(
+        r.is_err(),
+        "reading a directory as a key file must fail: {r:?}"
+    );
+}
+
+#[test]
+fn test_decrypt_key_material_salt_must_be_string() {
+    let enc = encrypt_key_material("e30=", "pw").expect("encrypt fixture");
+    let mut v: serde_json::Value = serde_json::from_str(&enc).expect("parse package");
+    v["salt"] = serde_json::json!(["not", "a", "string"]);
+    assert!(decrypt_key_material(&v.to_string(), "pw").is_err());
+}
+
+#[test]
+fn test_decrypt_key_material_nonce_must_be_string() {
+    let enc = encrypt_key_material("e30=", "pw").expect("encrypt fixture");
+    let mut v: serde_json::Value = serde_json::from_str(&enc).expect("parse package");
+    v["nonce"] = serde_json::json!(42);
+    assert!(decrypt_key_material(&v.to_string(), "pw").is_err());
+}
+
+#[test]
+fn test_decrypt_key_material_ciphertext_must_be_string() {
+    let enc = encrypt_key_material("e30=", "pw").expect("encrypt fixture");
+    let mut v: serde_json::Value = serde_json::from_str(&enc).expect("parse package");
+    v["ciphertext"] = serde_json::json!({});
+    assert!(decrypt_key_material(&v.to_string(), "pw").is_err());
+}
+
+#[test]
+fn test_decrypt_key_material_salt_empty_string_errors() {
+    let enc = encrypt_key_material("e30=", "pw").expect("encrypt fixture");
+    let mut v: serde_json::Value = serde_json::from_str(&enc).expect("parse package");
+    v["salt"] = serde_json::Value::String(String::new());
+    assert!(decrypt_key_material(&v.to_string(), "pw").is_err());
 }

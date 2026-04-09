@@ -93,21 +93,50 @@ impl OrchestratorRegistryClient {
         primal_name: &str,
         capabilities: Vec<Capability>,
     ) -> IpcResult<()> {
+        let cap_strings: Vec<String> = capabilities
+            .iter()
+            .map(|c| super::types::Capability::as_str(c).to_string())
+            .collect();
+        self.register_ipc(
+            primal_name,
+            &format!("/primal/{primal_name}"),
+            &cap_strings,
+            env!("CARGO_PKG_VERSION"),
+        )
+        .await
+    }
+
+    /// JSON-RPC `ipc.register` with explicit endpoint, capability strings, and version (wateringHole v3.1).
+    ///
+    /// Use this when the endpoint is the primal’s Unix socket path (from [`SocketConfig`]) rather than
+    /// the `/primal/<name>` logical path only.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`IpcError`] when the JSON-RPC call fails or registration is rejected.
+    pub async fn register_ipc(
+        &self,
+        primal_name: &str,
+        endpoint: &str,
+        capabilities: &[String],
+        version: &str,
+    ) -> IpcResult<()> {
         info!(
             primal_name,
-            ?capabilities,
-            "Registering primal with IPC registry"
+            endpoint,
+            cap_count = capabilities.len(),
+            "Registering primal with IPC registry (ipc.register)"
         );
 
         let request = JsonRpcRequest::new(
             "ipc.register",
             json!({
                 "name": primal_name,
-                "endpoint": format!("/primal/{}", primal_name),
-                "capabilities": capabilities.iter().map(super::types::Capability::as_str).collect::<Vec<_>>(),
-                "version": env!("CARGO_PKG_VERSION"),
+                "endpoint": endpoint,
+                "capabilities": capabilities,
+                "version": version,
                 "metadata": {
-                    "description": "BearDog - Cryptographic Security Primal"
+                    "description": format!("IPC service ({primal_name})")
                 }
             }),
             self.next_request_id(),

@@ -139,7 +139,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "monitoring aggregates counts as f64 for percentile-style assertions"
+    )]
     fn test_error_rate_calculation() {
         let errors = 5u64;
         let total = 100u64;

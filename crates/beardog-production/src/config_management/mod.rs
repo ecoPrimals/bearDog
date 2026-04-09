@@ -16,7 +16,6 @@ use beardog_errors::BearDogError;
 use beardog_types::canonical::config::type_aliases::Environment;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::env;
 
 /// Result type for configuration and secrets operations in this module.
 pub type Result<T> = std::result::Result<T, BearDogError>;
@@ -561,6 +560,9 @@ pub struct VerticalScalingConfig {
 }
 
 pub mod secrets_backend;
+
+mod defaults;
+mod secrets;
 
 pub mod runtime;
 

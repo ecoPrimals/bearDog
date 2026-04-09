@@ -4,7 +4,9 @@
 
 /// Lightweight analysis engine and coarse metrics used in standalone pipelines.
 pub mod analysis;
-/// Primary async [`ThreatDetectionEngine`](crate::threat::handlers::core::ThreatDetectionEngine) with feeds, rules, ML hooks, and incident tracking.
+/// Primary async threat detection engine.
+///
+/// See [`ThreatDetectionEngine`](crate::threat::handlers::core::ThreatDetectionEngine): feeds, rules, ML hooks, and incident tracking.
 pub mod core;
 /// Enrichment against external or cached intelligence context.
 pub mod enrichment;
@@ -19,8 +21,8 @@ pub mod response;
 /// Ingestion of external threat feeds (STIX/TAXII-style; stubs allowed).
 pub mod threat_feeds;
 
-pub use self::enrichment::*;
-pub use self::management::*;
+pub use self::enrichment::{ExternalIntelligence, NetworkContextInfo, ThreatEnrichmentHandler};
+pub use self::management::{SystemHealth, SystemStatus, ThreatStats};
 
 #[allow(
     unused_imports,
@@ -29,7 +31,8 @@ pub use self::management::*;
     clippy::assertions_on_constants,
     clippy::useless_vec,
     clippy::absurd_extreme_comparisons,
-    unused_comparisons
+    unused_comparisons,
+    reason = "threat handler tests: exhaustive patterns (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 mod existing_tests {
@@ -128,7 +131,8 @@ mod existing_tests {
     clippy::assertions_on_constants,
     clippy::useless_vec,
     clippy::absurd_extreme_comparisons,
-    unused_comparisons
+    unused_comparisons,
+    reason = "threat handler tests: exhaustive patterns (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 mod tests;

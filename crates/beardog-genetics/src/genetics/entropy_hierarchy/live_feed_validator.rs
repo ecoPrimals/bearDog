@@ -411,7 +411,11 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    #[expect(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        reason = "live feed byte rates scaled for threshold checks; values bounded by parser inputs"
+    )]
     fn test_detect_lcg_pattern() {
         let validator = LiveFeedValidator::new();
 

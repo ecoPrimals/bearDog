@@ -259,7 +259,10 @@ async fn test_load_balancing_distribution() {
 async fn test_event_sourcing_replay() {
     // Test event sourcing with replay
     #[derive(Clone)]
-    #[allow(dead_code)] // Deleted variant for completeness in event sourcing pattern
+    #[expect(
+        dead_code,
+        reason = "Deleted variant kept for completeness in event sourcing pattern"
+    )]
     enum Event {
         Created,
         Updated(u32),

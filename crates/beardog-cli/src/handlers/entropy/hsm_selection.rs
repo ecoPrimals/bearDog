@@ -8,7 +8,7 @@ use beardog_tunnel::tunnel::hsm::universal_discovery::HsmInterfaceType;
 use super::types::HsmInfo;
 
 /// Maps a discovered HSM interface to a short CLI label (used by `handle_entropy_collect`).
-pub(crate) fn format_hsm_interface_type_label(interface_type: &HsmInterfaceType) -> String {
+pub fn format_hsm_interface_type_label(interface_type: &HsmInterfaceType) -> String {
     match interface_type {
         HsmInterfaceType::Tpm { version } => format!("TPM {version}"),
         HsmInterfaceType::SoftwareHsm { implementation } => {
@@ -24,7 +24,11 @@ pub(crate) fn format_hsm_interface_type_label(interface_type: &HsmInterfaceType)
 }
 
 /// Pick an HSM from a discovered list according to CLI preference (`auto`, `software`, …).
-pub(crate) fn select_hsm_by_preference<'a>(
+///
+/// # Errors
+///
+/// Returns [`BearDogError::not_found`] when no device matches the preference.
+pub fn select_hsm_by_preference<'a>(
     available_hsms: &'a [HsmInfo],
     device_preference: &str,
 ) -> Result<&'a HsmInfo, BearDogError> {

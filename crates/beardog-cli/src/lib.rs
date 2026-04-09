@@ -25,6 +25,15 @@ use clap::Parser;
 pub mod ecosystem_discovery_adapter;
 pub mod handlers;
 
+#[cfg(test)]
+#[doc(hidden)]
+pub mod __cli_test_env {
+    use std::sync::Mutex;
+
+    /// Serialize tests that mutate `HOME` or other process environment variables.
+    pub static HOME: Mutex<()> = Mutex::new(());
+}
+
 // ============================================================================
 // UNIBIN OPERATIONAL MODE ARGUMENTS
 // ============================================================================
@@ -97,10 +106,13 @@ pub struct ServerArgs {
 /// 4. XDG Runtime Directory
 /// 5. Temp directory (platform-specific fallback)
 fn default_socket_path() -> String {
-    SocketConfig::from_env()
-        .socket_path()
-        .to_string_lossy()
-        .to_string()
+    match SocketConfig::from_env() {
+        Ok(config) => config.socket_path().to_string_lossy().to_string(),
+        Err(e) => {
+            eprintln!("FATAL: {e}");
+            std::process::exit(1);
+        }
+    }
 }
 
 /// Get platform-native PID file path

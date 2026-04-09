@@ -7,7 +7,10 @@ use super::pattern::ThreatSeverity;
 use std::time::Instant;
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "alerting scenario fixtures and reserved enum-like stubs; expect unfulfilled when variants are referenced"
+)]
 pub struct ThreatEvent {
     pub threat_type: ThreatType,
     pub severity: ThreatSeverity,
@@ -16,7 +19,10 @@ pub struct ThreatEvent {
     pub is_threat: bool,
 }
 
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "alerting scenario fixtures and reserved enum-like stubs; expect unfulfilled when variants are referenced"
+)]
 impl ThreatEvent {
     pub fn new(
         threat_type: ThreatType,
@@ -38,18 +44,27 @@ impl ThreatEvent {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "alerting scenario fixtures and reserved enum-like stubs; expect unfulfilled when variants are referenced"
+)]
 pub struct ThreatAlert {
     pub event: ThreatEvent,
     pub notified: bool,
 }
 
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "alerting scenario fixtures and reserved enum-like stubs; expect unfulfilled when variants are referenced"
+)]
 pub struct AlertHandler {
     alerts: Vec<ThreatAlert>,
 }
 
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "alerting scenario fixtures and reserved enum-like stubs; expect unfulfilled when variants are referenced"
+)]
 impl AlertHandler {
     pub fn new() -> Self {
         Self { alerts: Vec::new() }

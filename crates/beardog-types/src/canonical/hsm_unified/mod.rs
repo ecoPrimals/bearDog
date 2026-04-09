@@ -34,16 +34,16 @@ pub mod security;
 
 // Re-export all types
 pub use cloud::*;
-pub use connection::*;
-pub use core::*;
+pub use connection::HsmConnectionConfig;
+pub use core::HsmCoreConfig;
 pub use key_management::*;
 pub use migration::*;
-pub use mobile::*;
-pub use monitoring::*;
-pub use performance::*;
+pub use mobile::MobileHsmConfig;
+pub use monitoring::HsmMonitoringConfig;
+pub use performance::HsmPerformanceConfig;
 pub use platform::*;
-pub use providers::*;
-pub use security::*;
+pub use providers::HsmProviderConfig;
+pub use security::HsmSecurityConfig;
 
 /// Unified canonical HSM configuration - Single source of truth
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

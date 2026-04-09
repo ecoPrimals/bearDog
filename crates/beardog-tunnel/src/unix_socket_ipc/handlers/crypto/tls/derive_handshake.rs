@@ -38,6 +38,8 @@ use super::helpers::{derive_handshake_secrets_sha256, derive_handshake_secrets_s
 ///
 /// Both follow RFC 8446, but at different stages of the key schedule.
 pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Result<Value, String> {
+    const IV_LEN: usize = 12; // AEAD nonce size (same for all cipher suites)
+
     let params = params.ok_or("Missing params for tls.derive_handshake_secrets")?;
 
     // Extract parameters
@@ -151,9 +153,6 @@ pub async fn handle_tls_derive_handshake_secrets(params: Option<&Value>) -> Resu
         "  → cipher_suite: 0x{:04x} → hash: {}, key_len: {} bytes",
         cipher_suite, hash_algo, key_len
     );
-
-    // Constants
-    const IV_LEN: usize = 12; // AEAD nonce size (same for all cipher suites)
 
     // Dispatch to hash-specific derivation based on cipher suite
     let (

@@ -34,6 +34,7 @@ impl BearDogCryptoService {
     /// storage fails.
     pub fn generate_rsa_key(&self, key_id: &str, bits: usize) -> Result<Vec<u8>> {
         use rsa::pkcs8::{EncodePrivateKey, EncodePublicKey};
+        use rsa::rand_core::OsRng;
         use rsa::{RsaPrivateKey, RsaPublicKey};
 
         // Validate key size
@@ -44,7 +45,6 @@ impl BearDogCryptoService {
         }
 
         // Generate RSA key pair (`rsa` uses `rand_core` 0.6; use OS RNG from that family)
-        use rsa::rand_core::OsRng;
         let mut rng = OsRng;
         let private_key = RsaPrivateKey::new(&mut rng, bits)
             .map_err(|e| BearDogError::hsm(format!("RSA key generation failed: {e}")))?;

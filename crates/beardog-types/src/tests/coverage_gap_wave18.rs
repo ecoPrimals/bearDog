@@ -229,7 +229,10 @@ async fn kubernetes_discovery_try_create_succeeds_or_reports_unavailable() {
 // --- workflow retry (domains/workflow/retry.rs) ---
 
 #[test]
-#[allow(clippy::cast_possible_truncation)]
+#[expect(
+    clippy::cast_possible_truncation,
+    reason = "max_attempts fits u32 for RetryStrategy::max_attempts contract in test"
+)]
 fn workflow_retry_config_default_trait_and_serde() {
     let c = WorkflowRetryConfig::default();
     assert_serde_json_roundtrip(&c);
@@ -655,7 +658,10 @@ fn hsm_config_builder_and_auth_methods() {
 }
 
 #[test]
-#[allow(deprecated)]
+#[expect(
+    deprecated,
+    reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
+)]
 fn legacy_hsm_provider_type_display_and_default() {
     use crate::canonical::hsm::config::LegacyHsmProviderType;
     let c = LegacyHsmProviderType::Custom {
@@ -845,7 +851,10 @@ fn service_discovery_capability_object_safe() {
 
 #[test]
 fn addresses_deprecated_aliases_resolve() {
-    #[allow(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
+    )]
     {
         assert_eq!(addresses::DEFAULT_BIND_ADDRESS, addresses::WILDCARD_IPV4);
         assert!(addresses::DEFAULT_METRICS_BIND.contains(':'));

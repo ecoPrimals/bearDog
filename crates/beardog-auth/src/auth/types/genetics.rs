@@ -480,19 +480,15 @@ mod tests {
         let cap256 = NodeCapability::EncryptionStrength(256);
         let cap512 = NodeCapability::EncryptionStrength(512);
 
-        match cap256 {
-            NodeCapability::EncryptionStrength(strength) => {
-                assert_eq!(strength, 256);
-            }
-            _ => panic!("Expected EncryptionStrength variant"),
-        }
+        let NodeCapability::EncryptionStrength(strength) = cap256 else {
+            panic!("Expected EncryptionStrength variant");
+        };
+        assert_eq!(strength, 256);
 
-        match cap512 {
-            NodeCapability::EncryptionStrength(strength) => {
-                assert_eq!(strength, 512);
-            }
-            _ => panic!("Expected EncryptionStrength variant"),
-        }
+        let NodeCapability::EncryptionStrength(strength) = cap512 else {
+            panic!("Expected EncryptionStrength variant");
+        };
+        assert_eq!(strength, 512);
     }
 
     #[test]
@@ -553,24 +549,20 @@ mod tests {
     fn test_spawn_restriction_max_concurrent() {
         let restriction = SpawnRestriction::MaxConcurrentSpawns(10);
 
-        match restriction {
-            SpawnRestriction::MaxConcurrentSpawns(limit) => {
-                assert_eq!(limit, 10);
-            }
-            _ => panic!("Expected MaxConcurrentSpawns variant"),
-        }
+        let SpawnRestriction::MaxConcurrentSpawns(limit) = restriction else {
+            panic!("Expected MaxConcurrentSpawns variant");
+        };
+        assert_eq!(limit, 10);
     }
 
     #[test]
     fn test_spawn_restriction_min_trust() {
         let restriction = SpawnRestriction::MinimumTrustLevel(0.75);
 
-        match restriction {
-            SpawnRestriction::MinimumTrustLevel(level) => {
-                assert_eq!(level, 0.75);
-            }
-            _ => panic!("Expected MinimumTrustLevel variant"),
-        }
+        let SpawnRestriction::MinimumTrustLevel(level) = restriction else {
+            panic!("Expected MinimumTrustLevel variant");
+        };
+        assert_eq!(level, 0.75);
     }
 
     // MutationTrigger tests

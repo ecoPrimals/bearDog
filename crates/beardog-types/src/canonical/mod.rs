@@ -122,7 +122,10 @@ pub use monitoring::MonitoringConfig;
 
 // Backward compatibility aliases
 // ecoPrimals: Migration plan - use canonical::monitoring::MonitoringConfig directly. Remove in v4.
-#[allow(deprecated)]
+#[expect(
+    deprecated,
+    reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
+)]
 pub use monitoring_unified::CanonicalMonitoringConfig;
 
 pub use network_unified::{
@@ -169,7 +172,7 @@ pub use capabilities::{
 // - BearDogConfig: use beardog_types::canonical::config::unified::BearDogConfig
 // Use config::unified_simple::WorkingUnifiedConfig for configuration
 // Constants
-pub use constants::*;
+pub use constants::genetics;
 
 // Crypto - specific exports to avoid conflicts
 pub use crypto::{

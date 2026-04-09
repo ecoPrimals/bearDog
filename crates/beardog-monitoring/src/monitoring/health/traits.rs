@@ -11,7 +11,10 @@ use beardog_errors::BearDogError;
 ///
 /// Implement this trait for any component that needs health monitoring.
 /// The async design allows for I/O operations during health checks.
-#[allow(async_fn_in_trait)]
+#[expect(
+    async_fn_in_trait,
+    reason = "health checks perform async I/O; lint retained until async traits stabilize"
+)]
 pub trait HealthChecker: Send + Sync {
     /// Check the health of this component
     ///

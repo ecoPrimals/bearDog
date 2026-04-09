@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Domain capability vectors: network, storage, compute, performance, environment, system, entropy.
+#![allow(dead_code)]
+// Types are part of the public serde surface; this crate does not instantiate every snapshot in tests.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

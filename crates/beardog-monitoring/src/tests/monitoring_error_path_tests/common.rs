@@ -98,7 +98,10 @@ impl HealthCheckService {
 }
 
 #[derive(Debug)]
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "error-path test fixture fields for scenario completeness"
+)]
 pub struct HealthStatus {
     pub healthy: bool,
     pub message: String,
@@ -154,10 +157,11 @@ impl AlertManager {
         }
     }
 
-    #[allow(
+    #[expect(
         clippy::cast_possible_truncation,
         clippy::cast_sign_loss,
-        clippy::cast_precision_loss
+        clippy::cast_precision_loss,
+        reason = "alert counters vs limits: usize/u64 mixing in synthetic rate-limit tests"
     )]
     pub fn send_alert(&self, severity: &str, recipients: Vec<&str>) -> Result<(), BearDogError> {
         if recipients.is_empty() {
@@ -215,7 +219,10 @@ impl MetricsAggregator {
         Self {}
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "mean divides by usize len converted to f64 for average metric value"
+    )]
     pub fn aggregate(&self, metrics: Vec<Metric>) -> Result<f64, BearDogError> {
         if metrics.is_empty() {
             return Err(BearDogError::Business {
@@ -237,10 +244,11 @@ impl MetricsAggregator {
         Ok(sum / metrics.len() as f64)
     }
 
-    #[allow(
+    #[expect(
         clippy::cast_possible_truncation,
         clippy::cast_sign_loss,
-        clippy::cast_precision_loss
+        clippy::cast_precision_loss,
+        reason = "percentile index from f64 fraction of len; bounds clamped to slice length"
     )]
     pub fn percentile(&self, mut metrics: Vec<Metric>, p: f64) -> Result<f64, BearDogError> {
         if metrics.is_empty() {
@@ -380,7 +388,10 @@ impl CircularMetricBuffer {
         }
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "rolling window mean divides by usize capacity as f64"
+    )]
     pub fn average(&self) -> Option<f64> {
         if self.values.is_empty() {
             None
@@ -456,7 +467,10 @@ impl MetricSampler {
         }
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "sampling uses f64 modulo on counter for deterministic test harness"
+    )]
     pub fn should_sample(&self) -> bool {
         let count = self.counter.fetch_add(1, Ordering::SeqCst);
         (count as f64 * self.rate) % 1.0 < self.rate

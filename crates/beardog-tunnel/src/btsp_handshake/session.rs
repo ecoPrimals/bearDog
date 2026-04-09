@@ -138,6 +138,8 @@ impl BtspSession {
     pub fn decrypt_frame(&mut self, frame: &[u8]) -> Result<Vec<u8>, BearDogError> {
         match self.cipher {
             BtspCipher::ChaCha20Poly1305 => {
+                use chacha20poly1305::KeyInit;
+
                 if frame.len() < 12 + 16 {
                     return Err(BearDogError::system(
                         "BTSP encrypted frame too short (need nonce + tag)".to_string(),
@@ -153,8 +155,6 @@ impl BtspSession {
                     ));
                 }
                 self.decrypt_counter += 1;
-
-                use chacha20poly1305::KeyInit;
 
                 let cipher = ChaCha20Poly1305::new_from_slice(&self.decrypt_key)
                     .map_err(|e| BearDogError::system(format!("BTSP cipher init: {e}")))?;
@@ -296,5 +296,23 @@ mod tests {
             "chacha20_poly1305"
         );
         assert!(BtspCipher::from_wire_name("unknown").is_err());
+    }
+
+    #[test]
+    fn chacha20_decrypt_rejects_short_frame() {
+        let key_s2c = [0x11; 32];
+        let key_c2s = [0x22; 32];
+        let mut server =
+            BtspSession::new_server("sid".into(), BtspCipher::ChaCha20Poly1305, key_s2c, key_c2s);
+        assert!(server.decrypt_frame(&[0u8; 8]).is_err());
+    }
+
+    #[test]
+    fn hmac_plain_decrypt_rejects_short_frame() {
+        let key_s2c = [0x11; 32];
+        let key_c2s = [0x22; 32];
+        let mut server =
+            BtspSession::new_server("sid".into(), BtspCipher::HmacPlain, key_s2c, key_c2s);
+        assert!(server.decrypt_frame(&[1, 2, 3]).is_err());
     }
 }

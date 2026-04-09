@@ -299,7 +299,10 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    #[allow(clippy::overly_complex_bool_expr)]
+    #[expect(
+        clippy::overly_complex_bool_expr,
+        reason = "boolean tautology documents adb may or may not be installed on host"
+    )]
     async fn test_adb_check() {
         // This test should pass whether or not adb is installed
         let available = check_adb_available().await;

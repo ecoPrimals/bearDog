@@ -511,7 +511,7 @@ mod error_path_tests {
         })
     }
 
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "mock connection helpers reserved for extended error-path scenarios")]
     fn connect_with_timeout(_config: &ConnectionConfig) -> Result<(), BearDogError> {
         Err(BearDogError::Network {
             message: "Connection timeout".to_string(),
@@ -519,7 +519,7 @@ mod error_path_tests {
         })
     }
 
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "mock connection helpers reserved for extended error-path scenarios")]
     fn connect_with_retries(_config: &ConnectionConfig) -> Result<(), BearDogError> {
         Err(BearDogError::Network {
             message: "All retries exhausted".to_string(),

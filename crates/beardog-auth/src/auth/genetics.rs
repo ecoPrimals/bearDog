@@ -7,7 +7,10 @@
 //! `beardog-genetics`; the genetics crate cannot be linked here because it depends on `beardog-auth`
 //! (`beardog-genetics` ↔ `beardog-auth` would form a dependency cycle).
 
-use super::types::*;
+use super::types::{
+    BearDogGenetics, CrossNodeAuthEngine, CryptoChromosome, SecurityClearance, SecurityTraits,
+    SpawnStatus,
+};
 use beardog_errors::BearDogError;
 use blake3::Hasher;
 use uuid::Uuid;
@@ -172,6 +175,7 @@ impl CrossNodeAuthEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::auth::{ResourceLimits, SpawnPurpose, SpawnedBearDog};
     use chrono::Utc;
     use std::collections::HashMap;
 

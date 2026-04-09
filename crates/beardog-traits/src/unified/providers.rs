@@ -1,68 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// # Unified Provider Traits - The Foundation of BearDog Architecture
-//
-// This module defines the core provider traits that form the foundation of the BearDog
-// ecosystem. These traits establish a unified interface for all system components,
-// enabling seamless integration, testing, and extensibility.
-//
-// ## 🏗️ **Architectural Principles**
-//
-// - **Unified Interface**: All providers implement `BearDogProvider` as the base trait
-// - **Native Async**: All operations are async-first for maximum performance
-// - **Type Safety**: Strong typing with associated types for compile-time guarantees
-// - **Error Handling**: Consistent error propagation with rich error context
-// - **Configuration**: Unified configuration system with validation
-// - **Observability**: Built-in metrics, health checks, and monitoring
-//
-// ## 🎯 **Provider Hierarchy**
-//
-// ```text
-// BearDogProvider (base trait)
-// ├── SecurityProvider (authentication, authorization)
-// ├── CryptoProvider (encryption, signing, verification)
-// ├── HsmProvider (hardware security modules)
-// ├── GeneticsProvider (AI/ML genetics and optimization)
-// ├── MonitoringProvider (metrics, alerting, observability)
-// ├── AdapterProvider (external system integration)
-// └── WorkflowProvider (process orchestration)
-// ```
-//
-// ## 🚀 **Usage Examples**
-//
-// ```rust,no_run
-// use beardog_traits::unified::providers::*;
-// use beardog_errors::BearDogError;
-//
-// // Implementing a custom security provider
-// struct MySecurityProvider {
-//     config: MyConfig,
-// }
-//
-// impl BearDogProvider for MySecurityProvider {
-//     type Error = BearDogError;
-//     type Config = MyConfig;
-//
-//     fn provider_info(&self) -> ProviderInfo {
-//         ProviderInfo {
-//             provider_id: "my_security".to_string(),
-//             name: "My Security Provider".to_string(),
-//             version: "1.0.0".to_string(),
-//             provider_type: ProviderType::Security,
-//             description: Some("Custom security implementation".to_string()),
-//             vendor: Some("My Company".to_string()),
-//             tags: vec!["security".to_string(), "custom".to_string()],
-//         }
-//     }
-//
-//     fn health_check(&self) -> impl std::future::Future<Output = Result<ProviderHealth, Self::Error>> + Send {
-//         // Implementation
-//         Ok(ProviderHealth { /* ... */ })
-//     }
-//
-//     // ... other required methods
-// }
-// ```
+//! Unified provider traits: [`BearDogProvider`] plus Security, Crypto, HSM, Genetics, Monitoring,
+//! Adapter, and Workflow specializations. Implementations compose async health checks and metrics;
+//! see `beardog_types::canonical::providers_unified::traits` for shared value types.
 
 use beardog_types::canonical::{
     providers_unified::traits::{ProviderCapability, ProviderHealth, ProviderMetrics},
@@ -530,9 +470,3 @@ pub trait WorkflowProvider: BearDogProvider {
         workflow_id: &str,
     ) -> impl std::future::Future<Output = Result<Vec<serde_json::Value>, Self::Error>> + Send;
 }
-
-// Re-export commonly used types for convenience
-// Note: These are already imported at the top, so we don't need to re-export them
-// pub use beardog_types::canonical::providers_unified::traits::{
-//     ProviderInfo, ProviderHealth, ProviderMetrics, ProviderCapability, ProviderType
-// };

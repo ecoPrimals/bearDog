@@ -22,9 +22,11 @@ pub mod training;
 
 // Re-export all public types for compatibility
 pub use learning::*;
-pub use management::*;
-pub use neural_networks::*;
-pub use training::*;
+pub use management::{
+    AiPerformanceConfig, AiSecurityConfig, DecisionEngineConfig, ModelManagementConfig,
+};
+pub use neural_networks::NeuralNetworkConfig;
+pub use training::TrainingConfig;
 
 /// **CONSOLIDATED AI CONFIGURATION** - Unifies all AI/ML related configs
 ///

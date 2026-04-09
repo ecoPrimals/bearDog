@@ -26,7 +26,7 @@ pub struct CapabilityMetadata {
     /// Endpoint URL for this capability
     pub endpoint: String,
 
-    /// Supported protocols (e.g., ["http", "grpc", "native"])
+    /// Supported protocols (e.g. `["http", "grpc", "native"]`)
     pub protocols: Vec<String>,
 
     /// Optional rate limit (requests per second)

@@ -284,24 +284,52 @@ fn init_tracing() {
     let _ = fmt().with_env_filter(filter).with_target(false).try_init();
 }
 
-async fn dispatch(command: Commands) -> Result<()> {
-    let err = |e: beardog_errors::BearDogError| eyre!(e);
+/// Maps [`beardog_errors::BearDogError`] from CLI handler crates into [`eyre::Report`]
+/// so the binary's top-level error type stays uniform.
+fn map_cli_error<T>(result: Result<T, beardog_errors::BearDogError>) -> Result<T> {
+    result.map_err(|e| eyre!(e))
+}
 
-    match command {
-        Commands::Server(args) => server::handle_server(args).await.map_err(err),
-        Commands::Daemon(args) => daemon::handle_daemon(args).await.map_err(err),
-        Commands::Client(args) => client::handle_client(args).await.map_err(err),
-        Commands::Doctor(args) => doctor::handle_doctor(args).await.map_err(err),
-        Commands::Version => status::handle_version().await.map_err(err),
-        Commands::Capabilities => status::handle_status(false).await.map_err(err),
+/// Long-running IPC / multi-transport service entrypoint.
+async fn handle_server_command(args: ServerArgs) -> Result<()> {
+    map_cli_error(server::handle_server(args).await)
+}
 
-        Commands::Key { action } => match action {
-            KeyAction::Generate {
-                key_id,
-                algorithm,
-                hsm,
-                seed,
-            } => key::handle_key_generate_v2(
+/// Background daemon (PID file, logging).
+async fn handle_daemon_command(args: DaemonArgs) -> Result<()> {
+    map_cli_error(daemon::handle_daemon(args).await)
+}
+
+/// Interactive JSON-RPC client over the Unix socket.
+async fn handle_client_command(args: ClientArgs) -> Result<()> {
+    map_cli_error(client::handle_client(args).await)
+}
+
+/// Health diagnostics and environment checks.
+async fn handle_doctor_command(args: DoctorArgs) -> Result<()> {
+    map_cli_error(doctor::handle_doctor(args).await)
+}
+
+/// Prints the build/version string.
+async fn handle_version_command() -> Result<()> {
+    map_cli_error(status::handle_version().await)
+}
+
+/// Prints security and capability summary (same pathway as `status` without verbose detail).
+async fn handle_capabilities_command() -> Result<()> {
+    map_cli_error(status::handle_status(false).await)
+}
+
+/// Key lifecycle: generate, list, derive, mix, export, import, revoke, etc.
+async fn handle_key_command(action: KeyAction) -> Result<()> {
+    match action {
+        KeyAction::Generate {
+            key_id,
+            algorithm,
+            hsm,
+            seed,
+        } => map_cli_error(
+            key::handle_key_generate_v2(
                 &key_id,
                 &algorithm,
                 &hsm,
@@ -314,132 +342,175 @@ async fn dispatch(command: Commands) -> Result<()> {
                 None,
                 None,
             )
-            .await
-            .map_err(err),
-            KeyAction::List { hsm, verbose } => key::handle_key_list(hsm.as_deref(), verbose)
-                .await
-                .map_err(err),
-            KeyAction::Info { key_id } => key::handle_key_info(&key_id).await.map_err(err),
-            KeyAction::Delete { key_id, yes } => {
-                key::handle_key_delete(&key_id, yes).await.map_err(err)
-            }
-            KeyAction::Derive {
-                master_key,
-                purpose,
-                output,
-                expires_in,
-            } => {
-                key_derive::handle_key_derive(&master_key, &purpose, &output, expires_in.as_deref())
-                    .await
-                    .map_err(err)
-            }
-            KeyAction::Mix {
-                key1,
-                key2,
-                output,
-                threshold,
-                expires_in,
-            } => key_mix::handle_key_mix(&key1, &key2, &output, &threshold, expires_in.as_deref())
-                .await
-                .map_err(err),
-            KeyAction::Lineage { key_id, json } => key_lineage::handle_key_lineage(&key_id, json)
-                .await
-                .map_err(err),
-            KeyAction::Export {
-                key_id,
-                output,
-                encrypt,
-            } => key_export::handle_key_export(&key_id, &output, encrypt)
-                .await
-                .map_err(err),
-            KeyAction::Import {
-                input,
-                key_id,
-                decrypt,
-            } => key_export::handle_key_import(&input, key_id.as_deref(), decrypt)
-                .await
-                .map_err(err),
-            KeyAction::Revoke {
-                key_id,
-                reason,
-                effective_at,
-                cascade,
-            } => key_revoke::handle_key_revoke(
+            .await,
+        ),
+        KeyAction::List { hsm, verbose } => {
+            map_cli_error(key::handle_key_list(hsm.as_deref(), verbose).await)
+        }
+        KeyAction::Info { key_id } => map_cli_error(key::handle_key_info(&key_id).await),
+        KeyAction::Delete { key_id, yes } => {
+            map_cli_error(key::handle_key_delete(&key_id, yes).await)
+        }
+        KeyAction::Derive {
+            master_key,
+            purpose,
+            output,
+            expires_in,
+        } => map_cli_error(
+            key_derive::handle_key_derive(&master_key, &purpose, &output, expires_in.as_deref())
+                .await,
+        ),
+        KeyAction::Mix {
+            key1,
+            key2,
+            output,
+            threshold,
+            expires_in,
+        } => map_cli_error(
+            key_mix::handle_key_mix(&key1, &key2, &output, &threshold, expires_in.as_deref()).await,
+        ),
+        KeyAction::Lineage { key_id, json } => {
+            map_cli_error(key_lineage::handle_key_lineage(&key_id, json).await)
+        }
+        KeyAction::Export {
+            key_id,
+            output,
+            encrypt,
+        } => map_cli_error(key_export::handle_key_export(&key_id, &output, encrypt).await),
+        KeyAction::Import {
+            input,
+            key_id,
+            decrypt,
+        } => map_cli_error(key_export::handle_key_import(&input, key_id.as_deref(), decrypt).await),
+        KeyAction::Revoke {
+            key_id,
+            reason,
+            effective_at,
+            cascade,
+        } => map_cli_error(
+            key_revoke::handle_key_revoke(
                 &key_id,
                 reason.as_deref(),
                 effective_at.as_deref(),
                 cascade,
             )
-            .await
-            .map_err(err),
-        },
+            .await,
+        ),
+    }
+}
 
-        Commands::Entropy { action } => match action {
-            EntropyAction::Collect {
-                human_input,
-                device,
-                quality_tier,
-                output,
-                identity,
-            } => entropy::handle_entropy_collect(
+/// Entropy collection and seed introspection.
+async fn handle_entropy_command(action: EntropyAction) -> Result<()> {
+    match action {
+        EntropyAction::Collect {
+            human_input,
+            device,
+            quality_tier,
+            output,
+            identity,
+        } => map_cli_error(
+            entropy::handle_entropy_collect(
                 human_input,
                 &device,
                 quality_tier,
                 &output,
                 identity.as_deref(),
             )
-            .await
-            .map_err(err),
-            EntropyAction::Info { seed } => entropy::handle_entropy_info(&seed).await.map_err(err),
-        },
+            .await,
+        ),
+        EntropyAction::Info { seed } => map_cli_error(entropy::handle_entropy_info(&seed).await),
+    }
+}
 
-        Commands::Hsm { action } => match action {
-            HsmAction::Discover { verbose } => hsm::handle_hsm_discover(verbose).await.map_err(err),
-            HsmAction::List => hsm::handle_hsm_list().await.map_err(err),
-            HsmAction::Capabilities { hsm_id } => {
-                hsm::handle_hsm_capabilities(&hsm_id).await.map_err(err)
-            }
-            HsmAction::Test { hsm_id, iterations } => {
-                hsm::handle_hsm_test(&hsm_id, iterations).await.map_err(err)
-            }
-        },
+/// HSM discovery, listing, capability probes, and smoke tests.
+async fn handle_hsm_command(action: HsmAction) -> Result<()> {
+    match action {
+        HsmAction::Discover { verbose } => map_cli_error(hsm::handle_hsm_discover(verbose).await),
+        HsmAction::List => map_cli_error(hsm::handle_hsm_list().await),
+        HsmAction::Capabilities { hsm_id } => {
+            map_cli_error(hsm::handle_hsm_capabilities(&hsm_id).await)
+        }
+        HsmAction::Test { hsm_id, iterations } => {
+            map_cli_error(hsm::handle_hsm_test(&hsm_id, iterations).await)
+        }
+    }
+}
 
+/// One-shot file encryption (optionally genetic).
+async fn handle_encrypt_command(
+    key: String,
+    input: String,
+    output: String,
+    genetic: bool,
+) -> Result<()> {
+    map_cli_error(encrypt::handle_encrypt(&key, &input, &output, genetic).await)
+}
+
+/// One-shot file decryption.
+async fn handle_decrypt_command(key: String, input: String, output: String) -> Result<()> {
+    map_cli_error(decrypt::handle_decrypt(&key, &input, &output).await)
+}
+
+/// Lineage-based `BirdSong` encrypt/decrypt.
+async fn handle_birdsong_command(action: BirdsongAction) -> Result<()> {
+    match action {
+        BirdsongAction::Encrypt {
+            message,
+            hint,
+            root_id,
+            output,
+        } => map_cli_error(
+            birdsong::handle_birdsong_encrypt(&message, &hint, &root_id, output.as_deref()).await,
+        ),
+        BirdsongAction::Decrypt { input, key_id } => {
+            map_cli_error(birdsong::handle_birdsong_decrypt(&input, &key_id).await)
+        }
+    }
+}
+
+/// Cross-primal secure messaging (capability-based discovery).
+async fn handle_cross_primal_command(cmd: CrossPrimalCommand) -> Result<()> {
+    map_cli_error(cross_primal::handle_cross_primal(cmd).await)
+}
+
+/// Streaming encryption for large files.
+async fn handle_stream_encrypt_command(key: String, input: String, output: String) -> Result<()> {
+    map_cli_error(streaming::handle_streaming_encrypt(&key, &input, &output).await)
+}
+
+/// Streaming decryption for large files.
+async fn handle_stream_decrypt_command(input: String, output: String) -> Result<()> {
+    map_cli_error(streaming::handle_streaming_decrypt(&input, &output).await)
+}
+
+/// Top-level CLI router: delegates each [`Commands`] variant to a focused handler.
+async fn dispatch(command: Commands) -> Result<()> {
+    match command {
+        Commands::Server(args) => handle_server_command(args).await,
+        Commands::Daemon(args) => handle_daemon_command(args).await,
+        Commands::Client(args) => handle_client_command(args).await,
+        Commands::Doctor(args) => handle_doctor_command(args).await,
+        Commands::Version => handle_version_command().await,
+        Commands::Capabilities => handle_capabilities_command().await,
+        Commands::Key { action } => handle_key_command(action).await,
+        Commands::Entropy { action } => handle_entropy_command(action).await,
+        Commands::Hsm { action } => handle_hsm_command(action).await,
         Commands::Encrypt {
             key,
             input,
             output,
             genetic,
-        } => encrypt::handle_encrypt(&key, &input, &output, genetic)
-            .await
-            .map_err(err),
-        Commands::Decrypt { key, input, output } => decrypt::handle_decrypt(&key, &input, &output)
-            .await
-            .map_err(err),
-        Commands::Birdsong { action } => match action {
-            BirdsongAction::Encrypt {
-                message,
-                hint,
-                root_id,
-                output,
-            } => birdsong::handle_birdsong_encrypt(&message, &hint, &root_id, output.as_deref())
-                .await
-                .map_err(err),
-            BirdsongAction::Decrypt { input, key_id } => {
-                birdsong::handle_birdsong_decrypt(&input, &key_id)
-                    .await
-                    .map_err(err)
-            }
-        },
-        Commands::CrossPrimal(cmd) => cross_primal::handle_cross_primal(cmd).await.map_err(err),
+        } => handle_encrypt_command(key, input, output, genetic).await,
+        Commands::Decrypt { key, input, output } => {
+            handle_decrypt_command(key, input, output).await
+        }
+        Commands::Birdsong { action } => handle_birdsong_command(action).await,
+        Commands::CrossPrimal(cmd) => handle_cross_primal_command(cmd).await,
         Commands::StreamEncrypt { key, input, output } => {
-            streaming::handle_streaming_encrypt(&key, &input, &output)
-                .await
-                .map_err(err)
+            handle_stream_encrypt_command(key, input, output).await
         }
         Commands::StreamDecrypt { input, output } => {
-            streaming::handle_streaming_decrypt(&input, &output)
-                .await
-                .map_err(err)
+            handle_stream_decrypt_command(input, output).await
         }
     }
 }
@@ -456,7 +527,7 @@ async fn main() -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::expect_used, clippy::unwrap_used)]
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
     use super::*;
     use clap::Parser;

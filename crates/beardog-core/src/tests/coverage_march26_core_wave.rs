@@ -19,7 +19,8 @@ fn socket_config_biomeos_socket_dir_tier2_joins_beardog_sock() {
         biomeos_socket_dir: Some("/var/run/biomeos".to_string()),
         primal_namespace_root_exists: false,
         ..Default::default()
-    });
+    })
+    .expect("resolve");
     assert_eq!(cfg.source(), SocketPathSource::OrchestratorEnvVar);
     assert_eq!(cfg.socket_path_string(), "/var/run/biomeos/beardog.sock");
 }
@@ -29,7 +30,8 @@ fn socket_config_description_orchestrator_tier_mentions_biomeos() {
     let cfg = SocketConfig::from_inputs(&SocketPathInputs {
         biomeos_socket_path: Some("/tmp/orch.sock".to_string()),
         ..Default::default()
-    });
+    })
+    .expect("resolve");
     let d = cfg.description();
     assert!(d.contains("BIOMEOS_SOCKET_PATH") || d.contains("orch"));
 }
@@ -40,7 +42,8 @@ fn socket_config_description_primal_namespace_tier3() {
         primal_namespace_root_exists: true,
         primal_name: Some("peer-alpha".to_string()),
         ..Default::default()
-    });
+    })
+    .expect("resolve");
     assert_eq!(cfg.source(), SocketPathSource::PrimalNamespace);
     let d = cfg.description();
     assert!(d.contains("Tier 3") || d.contains("Primal IPC"));
@@ -54,7 +57,8 @@ fn socket_config_custom_primal_name_in_temp_fallback() {
         node_id: Some("n1".to_string()),
         primal_namespace_root_exists: false,
         ..Default::default()
-    });
+    })
+    .expect("resolve");
     if cfg.source() == SocketPathSource::TempDir {
         assert!(cfg.socket_path_string().contains("nestgate-fam-n1"));
     }
@@ -65,7 +69,8 @@ fn socket_config_display_delegates_to_description() {
     let cfg = SocketConfig::from_inputs(&SocketPathInputs {
         beardog_socket: Some("/x.sock".to_string()),
         ..Default::default()
-    });
+    })
+    .expect("resolve");
     let a = format!("{cfg}");
     let b = cfg.description();
     assert_eq!(a, b);
@@ -294,6 +299,7 @@ fn socket_config_primal_name_override_in_namespace_tier() {
         primal_namespace_root_exists: true,
         primal_name: Some("custom-primal".to_string()),
         ..Default::default()
-    });
+    })
+    .expect("resolve");
     assert_eq!(cfg.socket_path_string(), "/primal/custom-primal");
 }

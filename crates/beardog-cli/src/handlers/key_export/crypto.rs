@@ -5,7 +5,7 @@
 use beardog_errors::BearDogError;
 
 /// Encrypt key material using Argon2 + ChaCha20-Poly1305
-pub(crate) fn encrypt_key_material(
+pub fn encrypt_key_material(
     key_material_b64: &str,
     password: &str,
 ) -> Result<String, BearDogError> {
@@ -18,6 +18,7 @@ pub(crate) fn encrypt_key_material(
         ChaCha20Poly1305, Nonce,
         aead::{Aead, KeyInit},
     };
+    use rand::RngCore;
 
     // Generate salt for Argon2
     let salt = SaltString::generate(&mut OsRng);
@@ -48,7 +49,6 @@ pub(crate) fn encrypt_key_material(
     let cipher = ChaCha20Poly1305::new(&key_bytes.into());
 
     // Generate random nonce
-    use rand::RngCore;
     let mut nonce_bytes = [0u8; 12];
     rand::rng().fill_bytes(&mut nonce_bytes);
     let nonce = Nonce::from(nonce_bytes);
@@ -76,7 +76,7 @@ pub(crate) fn encrypt_key_material(
 }
 
 /// Decrypt key material using Argon2 + ChaCha20-Poly1305
-pub(crate) fn decrypt_key_material(
+pub fn decrypt_key_material(
     encrypted_package: &str,
     password: &str,
 ) -> Result<String, BearDogError> {

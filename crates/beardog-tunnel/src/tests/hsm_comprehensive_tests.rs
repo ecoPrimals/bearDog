@@ -12,7 +12,10 @@ use crate::tunnel::hsm::types::{Algorithm, HsmCapabilities, KeyType};
 use std::time::Duration;
 
 #[cfg(test)]
-#[allow(clippy::module_inception)]
+#[expect(
+    clippy::module_inception,
+    reason = "nested test module groups HSM integration tests under tunnel::hsm"
+)]
 mod hsm_comprehensive_tests {
     use super::*;
 

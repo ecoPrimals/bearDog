@@ -30,7 +30,7 @@ mod hsm_provider_edge_cases {
     fn test_provider_selection_with_all_providers_failing() -> Result<(), Box<dyn std::error::Error>>
     {
         // Test when all available providers fail health checks
-        #[allow(dead_code)]
+        #[expect(dead_code, reason = "test-only struct; fields document provider shape")]
         struct FailingProvider {
             name: String,
             healthy: bool,
@@ -299,7 +299,10 @@ mod hsm_provider_edge_cases {
     #[test]
     fn test_provider_authentication_failure() -> Result<(), Box<dyn std::error::Error>> {
         // Test handling of authentication failures
-        #[allow(dead_code)]
+        #[expect(
+            dead_code,
+            reason = "test-only struct; fields document auth attempt shape"
+        )]
         struct AuthAttempt {
             username: String,
             password: String,
@@ -334,7 +337,10 @@ mod hsm_provider_edge_cases {
     #[test]
     fn test_provider_network_partition() -> Result<(), Box<dyn std::error::Error>> {
         // Test handling of network partition scenarios
-        #[allow(dead_code)]
+        #[expect(
+            dead_code,
+            reason = "test-only struct; fields document partition scenario"
+        )]
         struct NetworkStatus {
             connected: bool,
             partition_detected: bool,

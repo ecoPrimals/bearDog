@@ -31,10 +31,15 @@ use crate::btsp_handshake::BtspSecurityMode;
 use crate::btsp_provider::BeardogBtspProvider;
 use crate::tcp_ipc::TcpIpcServer;
 use crate::unix_socket_ipc::UnixSocketIpcServer;
+use beardog_core::self_knowledge::discovered_simple_capabilities;
+use beardog_core::socket_config::{
+    IpcCapabilitySymlinksConfig, ipc_capability_domain_stems_resolved,
+};
 use beardog_errors::BearDogError;
 use beardog_types::primal_identity::PrimalIdentity;
 use std::net::SocketAddr;
 use std::sync::Arc;
+use tokio::task::JoinSet;
 use tracing::{debug, error, info, warn};
 
 /// Bound transport types
@@ -90,6 +95,11 @@ impl MultiTransportServer {
 
         info!("🔌 Binding all available transports...");
 
+        let ipc_symlinks = IpcCapabilitySymlinksConfig {
+            symlink_suffix: ".sock".to_string(),
+            domain_stems: ipc_capability_domain_stems_resolved(&discovered_simple_capabilities()),
+        };
+
         // ================================================================
         // TIER 1: Platform-Native Socket
         // ================================================================
@@ -100,6 +110,7 @@ impl MultiTransportServer {
             btsp_provider.clone(),
             identity.clone(),
             security_mode.clone(),
+            ipc_symlinks,
         )
         .await
         {
@@ -180,8 +191,6 @@ impl MultiTransportServer {
     /// Returns an error if starting a transport task fails before tasks are spawned.
     pub async fn start_all(self) -> Result<(), BearDogError> {
         info!("🚀 Starting all transports...");
-
-        use tokio::task::JoinSet;
 
         let mut join_set = JoinSet::new();
         for transport in self.transports {

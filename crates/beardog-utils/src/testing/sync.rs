@@ -285,6 +285,12 @@ impl Default for TestLatch {
 
 #[cfg(test)]
 mod tests {
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: testing
+    // TEST_PRIORITY: normal
+
     use super::*;
     use std::time::Duration;
 
@@ -388,5 +394,58 @@ mod tests {
         for handle in handles {
             handle.await.unwrap();
         }
+    }
+
+    #[tokio::test]
+    async fn test_event_wait_indefinite() {
+        let (waiter, trigger) = EventWaiter::new();
+        tokio::spawn(async move {
+            trigger.notify("indef".to_string()).await;
+        });
+        assert_eq!(waiter.wait_indefinite().await, "indef");
+    }
+
+    #[test]
+    fn test_event_wait_error_display() {
+        let msg = format!("{}", EventWaitError::Timeout);
+        assert!(msg.contains("timed out"));
+    }
+
+    #[tokio::test]
+    async fn test_event_trigger_notify_blocking() {
+        let (waiter, trigger) = EventWaiter::new();
+        tokio::task::spawn_blocking(move || {
+            trigger.notify_blocking("blocking".to_string());
+        });
+        let v = waiter.wait(Duration::from_secs(2)).await.expect("value");
+        assert_eq!(v, "blocking");
+    }
+
+    #[test]
+    fn test_latch_default_matches_new() {
+        let a = TestLatch::default();
+        let b = TestLatch::new();
+        assert_eq!(a.is_triggered(), b.is_triggered());
+    }
+
+    #[test]
+    fn event_wait_error_implements_error_source() {
+        let e = EventWaitError::Timeout;
+        assert!(std::error::Error::source(&e).is_none());
+    }
+
+    #[test]
+    fn notify_blocking_without_tokio_handle_still_wakes_waiter() {
+        let (waiter, trigger) = EventWaiter::<u32>::new();
+        let th = std::thread::spawn(move || {
+            trigger.notify_blocking(99);
+        });
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("runtime");
+        let got = rt.block_on(waiter.wait(Duration::from_secs(2)));
+        th.join().expect("thread");
+        assert_eq!(got.expect("value"), 99);
     }
 }

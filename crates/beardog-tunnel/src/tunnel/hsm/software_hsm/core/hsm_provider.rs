@@ -3,16 +3,15 @@
 //! [`crate::tunnel::hsm::manager::HsmProvider`] implementation: crypto and key lifecycle.
 
 use super::super::super::types::KeyType;
-use super::super::types::ProtectedMemory;
-use super::super::types::*;
+use super::super::types::{AuditLogEntry, AuditLogger, ProtectedMemory, SoftwareKey};
 use super::RustSoftwareHsm;
 use crate::tunnel::hsm::GenerateKeyRequest;
 use crate::tunnel::hsm::crypto::{
-    CryptoRequirements, DecryptionOptions, EncryptionOptions, SigningOptions, VerificationOptions,
+    CryptoRequirements, DecryptionOptions, EncryptedData, EncryptionOptions, Signature,
+    SigningOptions, VerificationOptions,
 };
 use crate::tunnel::hsm::manager::HsmProvider;
-use crate::tunnel::hsm::types::HsmKey;
-use crate::tunnel::hsm::types::*;
+use crate::tunnel::hsm::types::{HsmKey, KeyHealthStatus, KeyMaterial, KeyMetadata};
 use beardog_errors::BearDogError;
 use beardog_types::hsm::AuditEvent;
 use bytes::Bytes;
@@ -163,7 +162,6 @@ impl HsmProvider for RustSoftwareHsm {
             .as_symmetric()
             .map_err(|e| BearDogError::crypto_error(&e))?;
 
-        use crate::tunnel::hsm::crypto::EncryptedData;
         let (nonce, actual_ciphertext) = if ciphertext.len() >= 12 {
             let (nonce_bytes, ct_bytes) = ciphertext.split_at(12);
             (Some(nonce_bytes.to_vec()), ct_bytes.to_vec())
@@ -256,7 +254,6 @@ impl HsmProvider for RustSoftwareHsm {
             .as_signature()
             .map_err(|e| BearDogError::crypto_error(&e))?;
 
-        use crate::tunnel::hsm::crypto::Signature;
         let sig = Signature {
             algorithm: algorithm.to_string(),
             signature: signature.to_vec(),

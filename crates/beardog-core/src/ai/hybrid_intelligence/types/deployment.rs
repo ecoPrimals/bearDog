@@ -163,7 +163,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
+    )]
     fn deprecated_health_check_alias_matches_target() {
         let h: HealthCheckConfig = HealthCheckConfiguration::default();
         assert!(h.enabled);

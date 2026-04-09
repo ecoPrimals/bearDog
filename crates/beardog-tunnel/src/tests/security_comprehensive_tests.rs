@@ -10,7 +10,10 @@ use crate::tunnel::hsm::types::config::{
 };
 
 #[cfg(test)]
-#[allow(clippy::module_inception)]
+#[expect(
+    clippy::module_inception,
+    reason = "nested test module groups tunnel security tests for filtering"
+)]
 mod security_comprehensive_tests {
     use super::*;
 

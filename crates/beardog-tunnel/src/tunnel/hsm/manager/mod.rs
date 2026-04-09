@@ -46,10 +46,7 @@ use beardog_types::hsm::SelectionPreference;
 pub use capability::DefaultHsmCapabilityDetector;
 pub use config::{HsmManagerConfig, SimpleHsmTier};
 pub use failover::{CircuitBreaker, CircuitBreakerState};
-// Note: DefaultHsmFailoverManager doesn't exist in failover module - commented out
-// pub use failover::DefaultHsmFailoverManager;
-// Note: DefaultHsmHealthMonitor doesn't exist in health module - commented out
-// pub use health::DefaultHsmHealthMonitor;
+// Failover/health monitors: use `beardog_types::hsm::{DefaultHsmFailoverManager, DefaultHsmHealthMonitor}` (imported below for this module).
 pub use implementation::{DefaultHsmManager, HealthStatus, HsmProvider, KeyInfo, ProviderInfo};
 pub use operation_router::{
     HsmOperationRouter, HsmSelectionResult, OperationRoutingRules, OperationType,

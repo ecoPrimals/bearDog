@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 9, 2026 -- Wave 33: Deep Debt Cleanup & Evolution — Coverage 90.51%, allow→expect Migration, Standalone Startup, Capability Registration
+
+- **`#[allow()]` → `#[expect(reason)]` migration** — 193 → 75 `#[allow(` remaining (62% reduction); 361 → 476 `#[expect(` with contextual `reason` strings. Where `expect` caused `unfulfilled_lint_expectations`, kept `allow` with documented `reason`.
+- **Standalone startup (T10)** — `NODE_ID` / `BEARDOG_NODE_ID` no longer required; missing values use ephemeral `standalone-{uuid}` via `OnceLock`, logged once with `tracing::warn!`; PRIMAL IPC Protocol v3.1 degraded mode.
+- **Dynamic `ipc.register` with Songbird (T4)** — Non-blocking registration at server startup: registry socket discovery, `ipc.register` with self-knowledge capability tags, heartbeats; exponential backoff on failure (standalone continues).
+- **BD-01 per-field encoding hints** — `crypto.verify_ed25519` accepts `message_encoding`, `signature_encoding`, `public_key_encoding`; semantic aliases `crypto.ed25519.sign` / `crypto.ed25519.verify` registered.
+- **Commented-out code cleaned (T1)** — 313-line orphan block in beardog-types + smaller blocks across 15+ files removed.
+- **PII cleaned (T8)** — `/home/user/...` → `$HOME/...` in tests and builder.
+- **Coverage** — 90.16% → 90.51% line; new tests across beardog-production, beardog-cli, beardog-compliance, beardog-config, beardog-core.
+- **Smart refactoring** — `runtime.rs` (1244→360) split into `secrets.rs`, `defaults.rs`, `runtime_tests.rs`; `socket_config.rs` (1111→668) test extraction.
+- **Metrics** — 95 crypto methods (`methods()` handler; prior 96 was a count error); 1,939 Rust files; 14,593+ tests passing, 0 failures.
+
 ### April 8, 2026 -- Wave 32: Deep Debt Sweep II — Stub Evolution, Large File Dedup, Clippy Zero
 
 - **AES-GCM deduplication** — `crypto_handlers_aes_gcm.rs` production code reduced 64% (485 → 175 lines) via generic `gcm_encrypt<C>`/`gcm_decrypt<C>` core over `Aes128Gcm`/`Aes256Gcm`; extracted shared param helpers (`decode_b64_param`, `extract_key`, `extract_or_generate_nonce`)
@@ -18,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Monitoring glob consolidation** — 10 per-line `#[allow(ambiguous_glob_reexports)]` consolidated into single inner module with documented reason
 - **BTSP handshake docs** — Added missing field docs on `ClientHello`, `ServerHello`, `HandshakeError`, `SessionKeys`, `FamilySeed`, `BtspSecurityMode`; fixed clippy doc backtick warnings
 - **Clippy zero** — Resolved all remaining warnings: collapsible-if (`let` chains), `map_or` → `is_some_and`, `format!`-in-iterator → `write!`, `match` → `if let`, redundant closure
-- **All gates green** — fmt, clippy (0 warnings), 1179 tests passing, doc
+- **All gates green** — fmt, clippy (0 warnings), 14,593+ tests passing, doc
 
 ### April 8, 2026 -- Wave 31: BTSP Handshake Enforcement — Live-Encrypted Socket Listener
 

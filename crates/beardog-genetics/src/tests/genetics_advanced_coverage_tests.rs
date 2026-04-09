@@ -42,10 +42,11 @@ fn test_biometric_hash_minimal() {
 }
 
 #[test]
-#[allow(
+#[expect(
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
-    clippy::cast_precision_loss
+    clippy::cast_precision_loss,
+    reason = "synthetic biometric vectors: i % 256 maps to u8 for large fixed patterns"
 )]
 fn test_biometric_hash_large() {
     let large_hash: Vec<u8> = (0..1024).map(|i| (i % 256) as u8).collect();
@@ -444,10 +445,11 @@ fn test_entropy_class_ordering() {
 // ============================================================================
 
 #[test]
-#[allow(
+#[expect(
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
-    clippy::cast_precision_loss
+    clippy::cast_precision_loss,
+    reason = "thread indices 0..10 fit u8 for small seeded hash buffers"
 )]
 fn test_concurrent_biometric_hash_creation() {
     use std::thread;
@@ -469,10 +471,11 @@ fn test_concurrent_biometric_hash_creation() {
 }
 
 #[test]
-#[allow(
+#[expect(
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
-    clippy::cast_precision_loss
+    clippy::cast_precision_loss,
+    reason = "thread indices 0..10 fit u8 for small seeded proof buffers"
 )]
 fn test_concurrent_ownership_proof_creation() {
     use std::thread;

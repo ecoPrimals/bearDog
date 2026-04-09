@@ -6,7 +6,7 @@ use crate::constants::time;
     clippy::cast_possible_truncation,
     reason = "compile-time assert guarantees value fits u32"
 )]
-pub(crate) const ROTATION_30_DAYS_SECS: u32 = {
+pub const ROTATION_30_DAYS_SECS: u32 = {
     assert!(30 * time::SECONDS_PER_DAY <= u32::MAX as u64);
     (30 * time::SECONDS_PER_DAY) as u32
 };
@@ -15,7 +15,7 @@ pub(crate) const ROTATION_30_DAYS_SECS: u32 = {
     clippy::cast_possible_truncation,
     reason = "compile-time assert guarantees value fits u32"
 )]
-pub(crate) const ROTATION_90_DAYS_SECS: u32 = {
+pub const ROTATION_90_DAYS_SECS: u32 = {
     assert!(90 * time::SECONDS_PER_DAY <= u32::MAX as u64);
     (90 * time::SECONDS_PER_DAY) as u32
 };
@@ -24,7 +24,7 @@ pub(crate) const ROTATION_90_DAYS_SECS: u32 = {
     clippy::cast_possible_truncation,
     reason = "compile-time assert guarantees value fits u32"
 )]
-pub(crate) const SECONDS_PER_HOUR_U32: u32 = {
+pub const SECONDS_PER_HOUR_U32: u32 = {
     assert!(time::SECONDS_PER_HOUR <= u32::MAX as u64);
     time::SECONDS_PER_HOUR as u32
 };

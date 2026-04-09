@@ -11,7 +11,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-use super::support::*;
+use super::support::{
+    CollaborationScope, CollaborationTerms, ConcernFactor, ContributionType, GeneticMarker,
+    HealingProtocol, InteractionSummary, LearningPath, MentorConnection, MonitoringLevel,
+    ProtectionLevel, ProtectionReason, RestorationPath, ReviewSchedule, StewardshipArea,
+};
 
 /// Ecosystem membership spectrum - replaces binary allowlist/blocklist patterns
 ///

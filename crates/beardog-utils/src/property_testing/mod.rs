@@ -16,7 +16,7 @@
 //! All property testing functionality is now centralized here.
 
 // Names imported for `super::...` in submodules (submodules do not repeat these `use` lines).
-#[allow(
+#[expect(
     unused_imports,
     reason = "Parent import surface for property_testing submodules."
 )]

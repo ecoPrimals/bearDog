@@ -46,7 +46,7 @@ pub async fn handle_key_delete_with_home(
 
 #[cfg(test)]
 mod storage_tests {
-    use super::*;
+    use super::handle_key_delete_with_home;
     use crate::handlers::key_store;
     use chrono::Utc;
     use tempfile::TempDir;

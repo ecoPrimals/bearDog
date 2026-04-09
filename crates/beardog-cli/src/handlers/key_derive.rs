@@ -4,7 +4,9 @@
 
 use super::key_store::{self, StoredKey};
 use beardog_errors::BearDogError;
+use beardog_types::receipt::{KeyInfo, OperationReceipt, generate_receipt_filename};
 use chrono::{Duration, Utc};
+use serde_json::json;
 use std::path::Path;
 
 /// Handle key derivation command
@@ -113,9 +115,6 @@ pub async fn handle_key_derive_with_home(
     key_store::save_key_to_home(&updated_master, home)?;
 
     // Generate operation receipt
-    use beardog_types::receipt::{KeyInfo, OperationReceipt, generate_receipt_filename};
-    use serde_json::json;
-
     let receipt = OperationReceipt::new("key-derive")
         .with_key_info(KeyInfo {
             key_id: output_key_id.to_string(),
@@ -227,8 +226,9 @@ pub fn parse_duration(duration_str: &str) -> Result<chrono::DateTime<Utc>, BearD
 
 #[cfg(test)]
 mod tests {
-    use super::key_store;
-    use super::*;
+    use super::{
+        StoredKey, derive_key_hkdf, handle_key_derive_with_home, key_store, parse_duration,
+    };
     use chrono::Utc;
     use tempfile::TempDir;
 

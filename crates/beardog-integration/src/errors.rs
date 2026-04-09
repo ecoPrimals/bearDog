@@ -65,9 +65,4 @@ mod tests {
     }
 }
 
-// Fossil Record: reqwest::Error conversion removed (Tower Atomic evolution)
-// impl From<reqwest::Error> for IntegrationError {
-//     fn from(e: reqwest::Error) -> Self {
-//         IntegrationError::Network(e.to_string())
-//     }
-// }
+// `reqwest::Error` conversion removed in Tower Atomic evolution; see git history if needed.

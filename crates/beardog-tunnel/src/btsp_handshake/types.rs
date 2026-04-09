@@ -63,3 +63,54 @@ pub struct HandshakeError {
     /// Human-readable explanation.
     pub reason: String,
 }
+
+#[cfg(test)]
+mod tests {
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+
+    use super::*;
+
+    #[test]
+    fn wire_messages_roundtrip_json() {
+        let hello = ClientHello {
+            version: BTSP_HANDSHAKE_VERSION,
+            client_ephemeral_pub: "AAA".into(),
+        };
+        let j = serde_json::to_string(&hello).expect("ser");
+        let back: ClientHello = serde_json::from_str(&j).expect("de");
+        assert_eq!(back.version, hello.version);
+
+        let sh = ServerHello {
+            version: 1,
+            server_ephemeral_pub: "BBB".into(),
+            challenge: "CCC".into(),
+        };
+        let j2 = serde_json::to_string(&sh).expect("ser");
+        let back2: ServerHello = serde_json::from_str(&j2).expect("de");
+        assert_eq!(back2.challenge, sh.challenge);
+
+        let cr = ChallengeResponse {
+            response: "DDD".into(),
+            preferred_cipher: "chacha20_poly1305".into(),
+        };
+        let j3 = serde_json::to_string(&cr).expect("ser");
+        let back3: ChallengeResponse = serde_json::from_str(&j3).expect("de");
+        assert_eq!(back3.preferred_cipher, cr.preferred_cipher);
+
+        let hc = HandshakeComplete {
+            cipher: "chacha20_poly1305".into(),
+            session_id: "aabb".into(),
+        };
+        let j4 = serde_json::to_string(&hc).expect("ser");
+        let back4: HandshakeComplete = serde_json::from_str(&j4).expect("de");
+        assert_eq!(back4.session_id, hc.session_id);
+
+        let he = HandshakeError {
+            error: "e".into(),
+            reason: "r".into(),
+        };
+        let j5 = serde_json::to_string(&he).expect("ser");
+        let back5: HandshakeError = serde_json::from_str(&j5).expect("de");
+        assert_eq!(back5.reason, he.reason);
+    }
+}

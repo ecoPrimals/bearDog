@@ -43,8 +43,12 @@ use tracing::{debug, info, warn};
 use crate::tunnel::hsm::manager::HsmManager;
 use beardog_capabilities::traits::PeerEndpoint;
 use beardog_errors::BearDogError;
+use beardog_genetics::birdsong::types::BirdSongEncryptRequest;
 use beardog_genetics::birdsong::{BirdSongManager, LineageHint};
 use beardog_genetics::ecosystem_evolution::EcosystemGeneticEngine;
+use rand::RngCore;
+
+use crate::tunnel::hsm::{KeyMaterial, KeyType};
 
 // Sub-modules
 mod contact;
@@ -184,7 +188,6 @@ impl BeardogBtspProvider {
         info!("🐻 Initializing BearDog BTSP Provider with BirdSong genetics");
 
         // Generate master secret from HSM for BirdSong (label from `beardog_config::domains::btsp`)
-        use crate::tunnel::hsm::KeyType;
         let birdsong_key_label = beardog_config::domains::btsp::resolve_btsp_birdsong_key_label();
         let birdsong_key = hsm
             .generate_key(&birdsong_key_label, &KeyType::ChaCha20)
@@ -194,7 +197,6 @@ impl BeardogBtspProvider {
             })?;
 
         // Extract key material for BirdSong initialization
-        use crate::tunnel::hsm::KeyMaterial;
         let master_secret = match &birdsong_key.key_material {
             KeyMaterial::Encrypted { encrypted_data, .. } => encrypted_data.clone(),
             KeyMaterial::Reference { key_reference, .. } => {
@@ -667,7 +669,6 @@ impl BeardogBtspProvider {
         );
 
         // Generate random session key material
-        use rand::RngCore;
         let mut key_material = vec![0u8; 32];
         rand::rng().fill_bytes(&mut key_material);
 
@@ -684,7 +685,6 @@ impl BeardogBtspProvider {
         };
 
         // Encrypt session key using BirdSong
-        use beardog_genetics::birdsong::types::BirdSongEncryptRequest;
         let encrypt_request = BirdSongEncryptRequest {
             plaintext: key_material.clone(),
             lineage_hint: lineage_hint.clone(),

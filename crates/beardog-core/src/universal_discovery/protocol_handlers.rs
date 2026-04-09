@@ -3,7 +3,7 @@
 //! Protocol handler trait, concrete handlers, and factory for universal discovery.
 
 use beardog_errors::BearDogError;
-use beardog_types::canonical::providers_unified::traits::ServiceInfo;
+use beardog_types::canonical::providers_unified::traits::other_traits::ServiceInfo;
 use chrono::Utc;
 use uuid::Uuid;
 

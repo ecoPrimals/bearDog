@@ -3,7 +3,9 @@
 // Comprehensive tests for status handler
 // Following BearDog testing standards: isolated, thorough, idiomatic
 
-use super::status::*;
+use super::status::{
+    format_version, get_build_info, get_system_info, handle_status, handle_version,
+};
 
 // ============================================================================
 // FORMAT VERSION TESTS

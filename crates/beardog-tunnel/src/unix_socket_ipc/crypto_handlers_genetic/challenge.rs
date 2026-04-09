@@ -11,14 +11,24 @@
 //! - `handle_respond_to_challenge` - Respond with HMAC proof using family seed
 //! - `handle_verify_challenge_response` - Verify challenge response (constant-time)
 
-use super::*;
+use super::{
+    GenerateChallengeRequest, GenerateChallengeResponse, RespondToChallengeRequest,
+    RespondToChallengeResponse, VerifyChallengeResponseRequest, VerifyChallengeResponseResponse,
+};
 use crate::tunnel::hsm::software_hsm::crypto_providers::genetic_crypto::GeneticCryptoProvider;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
+use hmac::{Hmac, Mac};
+use rand::RngCore;
 use serde::Deserialize;
 use serde_json::{Value, json};
+use sha2::Sha512;
+use subtle::ConstantTimeEq;
 use tracing::{debug, info, warn};
+use uuid::Uuid;
+
+type HmacSha512 = Hmac<Sha512>;
 
 /// # Errors
 ///
@@ -38,11 +48,9 @@ pub async fn handle_generate_challenge(params: &Value) -> Result<Value, BearDogE
         })?;
 
     let mut nonce = [0u8; 32];
-    use rand::RngCore;
     rand::rng().fill_bytes(&mut nonce);
     let nonce_hex = hex::encode(nonce);
 
-    use uuid::Uuid;
     let challenge_id = Uuid::new_v4().to_string();
 
     info!(
@@ -90,10 +98,6 @@ pub async fn handle_respond_to_challenge(params: &Value) -> Result<Value, BearDo
 
     let nonce_bytes = hex::decode(&request.nonce)
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid nonce (not hex): {e}")))?;
-
-    use hmac::{Hmac, Mac};
-    use sha2::Sha512;
-    type HmacSha512 = Hmac<Sha512>;
 
     let mut mac = HmacSha512::new_from_slice(&lineage_key)
         .map_err(|e| BearDogError::system(format!("Failed to create HMAC: {e}")))?;
@@ -161,16 +165,11 @@ pub async fn handle_verify_challenge_response(params: &Value) -> Result<Value, B
     let response_bytes = hex::decode(&request.response)
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid response (not hex): {e}")))?;
 
-    use hmac::{Hmac, Mac};
-    use sha2::Sha512;
-    type HmacSha512 = Hmac<Sha512>;
-
     let mut mac = HmacSha512::new_from_slice(&lineage_key)
         .map_err(|e| BearDogError::system(format!("Failed to create HMAC: {e}")))?;
     mac.update(&nonce_bytes);
     let expected_bytes = mac.finalize().into_bytes();
 
-    use subtle::ConstantTimeEq;
     let response_valid = response_bytes.ct_eq(&expected_bytes[..]).into();
 
     let lineage_proof = BASE64.decode(&request.lineage_proof).map_err(|e| {

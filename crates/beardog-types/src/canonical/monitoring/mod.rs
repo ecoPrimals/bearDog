@@ -60,18 +60,23 @@ pub const DEFAULT_JAEGER_COLLECTOR_PORT: u16 = 14268;
     reason = "intentional flat namespace for canonical monitoring"
 )]
 mod _reexports {
-    pub use super::alerting::*;
-    pub use super::analytics::*;
-    pub use super::core::*;
-    pub use super::health::*;
-    pub use super::integration::*;
-    pub use super::logging::*;
-    pub use super::metrics::*;
-    pub use super::performance::*;
-    pub use super::security::*;
-    pub use super::tracing::*;
+    pub use super::alerting::UnifiedAlertingConfig;
+    pub use super::analytics::UnifiedAnalyticsConfig;
+    pub use super::core::{BatchConfig, RetentionPolicy, StorageBackend};
+    pub use super::health::UnifiedHealthConfig;
+    pub use super::integration::UnifiedIntegrationMonitoringConfig;
+    pub use super::logging::UnifiedLoggingConfig;
+    pub use super::metrics::UnifiedMetricsConfig;
+    pub use super::performance::UnifiedPerformanceMonitoringConfig;
+    pub use super::security::UnifiedSecurityMonitoringConfig;
+    pub use super::tracing::UnifiedTracingConfig;
 }
-pub use _reexports::*;
+pub use _reexports::{
+    BatchConfig, RetentionPolicy, StorageBackend, UnifiedAlertingConfig, UnifiedAnalyticsConfig,
+    UnifiedHealthConfig, UnifiedIntegrationMonitoringConfig, UnifiedLoggingConfig,
+    UnifiedMetricsConfig, UnifiedPerformanceMonitoringConfig, UnifiedSecurityMonitoringConfig,
+    UnifiedTracingConfig,
+};
 
 /// Canonical Monitoring Configuration
 ///

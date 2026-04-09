@@ -474,7 +474,7 @@ mod workflow_config_tests {
             "/var/lib/workflows",
             "/mnt/storage/workflows",
             "/tmp/test_workflows",
-            "/home/user/.beardog/workflows",
+            "$HOME/.beardog/workflows",
         ];
 
         for path in paths {

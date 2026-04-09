@@ -11,8 +11,8 @@ pub mod config;
 /// Metrics module for key manager operations
 pub mod metrics;
 
-pub use config::*;
-pub use metrics::*;
+pub use config::{KeyManagerConfig, KeyStorageConfig, MemoryKeyConfig};
+pub use metrics::{ExtendedMetrics, KeyManagerMetrics, OperationMetrics};
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};

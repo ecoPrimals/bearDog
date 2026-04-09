@@ -438,8 +438,10 @@ impl PrimalDiscovery {
 
         #[cfg(not(feature = "mdns"))]
         {
-            tracing::debug!("mDNS feature not enabled, skipping mDNS discovery");
-            let _ = capability; // Silence unused warning
+            tracing::debug!(
+                capability = %capability,
+                "mDNS feature not enabled, skipping mDNS discovery for capability"
+            );
             Ok(Vec::new())
         }
     }
@@ -704,117 +706,6 @@ impl Default for PrimalSelfKnowledge {
     }
 }
 
-// =============================================================================
-// Tests
-// =============================================================================
-
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_primal_identity_self_knowledge_only() {
-        let inputs = PrimalIdentityEnvInputs {
-            beardog_primal_name: Some("test-primal".to_string()),
-            beardog_primal_type: Some("beardog".to_string()),
-            ..Default::default()
-        };
-        let identity =
-            PrimalIdentity::from_inputs(&inputs).expect("PrimalIdentity::from_inputs in test");
-
-        assert_eq!(identity.name, "test-primal");
-        assert_eq!(identity.primal_type, "beardog");
-        assert!(!identity.capabilities.is_empty());
-
-        // Verify NO hardcoded information about other primals
-        // (identity contains only self-knowledge)
-    }
-
-    #[tokio::test]
-    async fn test_discovery_no_hardcoded_addresses() {
-        let identity = PrimalIdentity::from_inputs(&PrimalIdentityEnvInputs::default())
-            .expect("default PrimalIdentityEnvInputs");
-        let discovery = PrimalDiscovery::new(identity);
-
-        // Discovery should work WITHOUT hardcoded addresses
-        let hsm_primals = discovery
-            .discover_by_capability("hsm")
-            .await
-            .expect("discover_by_capability hsm in test");
-
-        // May be empty if no HSM primals discovered (correct behavior)
-        // Should NOT fall back to hardcoded addresses
-        tracing::info!("Discovered {} HSM primals", hsm_primals.len());
-    }
-
-    #[test]
-    fn test_no_hardcoded_endpoints_in_identity() {
-        let inputs = PrimalIdentityEnvInputs {
-            beardog_api_host: Some("127.0.0.1".to_string()),
-            beardog_api_port: Some(9090),
-            ..Default::default()
-        };
-        let identity =
-            PrimalIdentity::from_inputs(&inputs).expect("PrimalIdentity::from_inputs in test");
-
-        // Endpoints should come from config/env, not hardcoded
-        for endpoint in &identity.endpoints {
-            // Verify endpoints are from environment, not literals
-            assert!(!endpoint.host.is_empty());
-        }
-    }
-
-    #[test]
-    fn test_endpoint_url() {
-        let endpoint = Endpoint {
-            protocol: Protocol::Http,
-            host: "localhost".to_string(),
-            port: 8080,
-            path: Some("/api".to_string()),
-        };
-        assert_eq!(endpoint.url(), "http://localhost:8080/api");
-    }
-
-    #[test]
-    fn test_endpoint_url_no_path() {
-        let endpoint = Endpoint {
-            protocol: Protocol::Https,
-            host: "example.com".to_string(),
-            port: 443,
-            path: None,
-        };
-        assert_eq!(endpoint.url(), "https://example.com:443");
-    }
-
-    #[test]
-    fn test_primal_self_knowledge_new() {
-        let psk = PrimalSelfKnowledge::new();
-        let identity = psk
-            .get_self_identity()
-            .expect("get_self_identity for new PrimalSelfKnowledge");
-        assert!(!identity.is_empty());
-        assert_eq!(psk.get_known_primal_count(), 1);
-    }
-
-    #[test]
-    fn test_primal_self_knowledge_default() {
-        let psk = PrimalSelfKnowledge::default();
-        let _ = psk.get_discovery();
-    }
-
-    #[test]
-    fn test_capability_has_capability() {
-        let mut caps = HashSet::new();
-        caps.insert(Capability::Hsm);
-        caps.insert(Capability::Encryption);
-        let identity = PrimalIdentity {
-            name: "test".to_string(),
-            primal_type: "beardog".to_string(),
-            capabilities: caps,
-            endpoints: vec![],
-            metadata: HashMap::new(),
-        };
-        assert!(identity.has_capability(&Capability::Hsm));
-        assert!(!identity.has_capability(&Capability::Networking));
-    }
-}
+#[path = "primal_self_knowledge_tests.rs"]
+mod tests;

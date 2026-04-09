@@ -87,7 +87,10 @@ pub trait E2EScenario {
 
 /// Full stack authentication E2E test
 pub struct FullStackAuthScenario {
-    #[allow(dead_code)] // Kept for future configuration needs
+    #[expect(
+        dead_code,
+        reason = "E2E scenario config retained for future full-stack configuration wiring"
+    )]
     config: E2ETestConfig,
 }
 
@@ -133,7 +136,10 @@ impl E2EScenario for FullStackAuthScenario {
 
 /// Multi-node consensus E2E test
 pub struct MultiNodeConsensusScenario {
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "scenario config field held for future multi-node setup expansion"
+    )]
     config: E2ETestConfig,
     node_count: usize,
 }

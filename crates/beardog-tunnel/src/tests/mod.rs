@@ -22,8 +22,7 @@ mod hsm_provider_edge_cases_tests;
 #[cfg(test)]
 mod security_comprehensive_tests;
 
-// #[cfg(test)]
-// mod hsm_error_paths; // Disabled - tests outdated HsmConfig API
+// hsm_error_paths removed (outdated HsmConfig API).
 
 // November 19, 2025: Comprehensive tunnel recovery tests (modern concurrent patterns)
 #[cfg(test)]

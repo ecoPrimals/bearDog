@@ -292,7 +292,10 @@ fn test_multiple_concurrent_workflows() -> Result<(), BearDogError> {
 }
 
 #[test]
-#[allow(clippy::cast_precision_loss)]
+#[expect(
+    clippy::cast_precision_loss,
+    reason = "workflow timing metrics as f64 for transition probability assertions"
+)]
 fn test_workflow_completion_percentage() -> Result<(), BearDogError> {
     let test_cases = vec![(0, 10, 0.0), (5, 10, 50.0), (10, 10, 100.0), (3, 4, 75.0)];
 

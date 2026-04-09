@@ -286,8 +286,7 @@ fn test_error_from_various_sources() {
     // From String
     let _err: BearDogError = "string error".to_string().into();
 
-    // From &str (if implemented)
-    // let _err: BearDogError = "str error".into();
+    // From `&str` is not implemented for BearDogError.
 }
 
 #[test]

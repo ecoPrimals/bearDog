@@ -4,8 +4,16 @@
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
+use p256::PublicKey as P256PublicKey;
+use p256::ecdh::diffie_hellman as p256_diffie_hellman;
+use p256::elliptic_curve::SecretKey as P256SecretKey;
+use p384::PublicKey as P384PublicKey;
+use p384::ecdh::diffie_hellman as p384_diffie_hellman;
+use p384::elliptic_curve::SecretKey as P384SecretKey;
+use rand::RngCore;
 use serde_json::Value;
 use tracing::{debug, info};
+use zeroize::Zeroizing;
 
 // =============================================================================
 // ECDHE with NIST P-256 (secp256r1)
@@ -38,17 +46,14 @@ pub async fn handle_ecdhe_p256_generate(params: Option<&Value>) -> Result<Value,
         purpose
     );
 
-    use p256::elliptic_curve::SecretKey;
-    use rand::RngCore;
-    use zeroize::Zeroizing;
-
     // Generate a random 32-byte secret
     let mut private_key_bytes = Zeroizing::new([0u8; 32]);
     rand::rng().fill_bytes(&mut *private_key_bytes);
 
     // Create secret key from bytes
-    let secret_key: SecretKey<p256::NistP256> = SecretKey::from_slice(&private_key_bytes[..])
-        .map_err(|e| format!("Failed to create P-256 secret key: {e}"))?;
+    let secret_key: P256SecretKey<p256::NistP256> =
+        P256SecretKey::from_slice(&private_key_bytes[..])
+            .map_err(|e| format!("Failed to create P-256 secret key: {e}"))?;
 
     // Derive public key from secret
     let public_key = secret_key.public_key();
@@ -112,18 +117,15 @@ pub async fn handle_ecdhe_p256_compute_shared(params: Option<&Value>) -> Result<
         .map_err(|e| format!("Invalid their_public base64: {e}"))?;
 
     // Parse keys
-    use p256::PublicKey;
-    use p256::elliptic_curve::SecretKey;
-
-    let secret_key: SecretKey<p256::NistP256> = SecretKey::from_slice(&our_secret_bytes)
+    let secret_key: P256SecretKey<p256::NistP256> = P256SecretKey::from_slice(&our_secret_bytes)
         .map_err(|e| format!("Invalid P-256 secret key: {e}"))?;
 
-    let peer_public_key = PublicKey::from_sec1_bytes(&their_public_bytes)
+    let peer_public_key = P256PublicKey::from_sec1_bytes(&their_public_bytes)
         .map_err(|e| format!("Invalid P-256 public key: {e}"))?;
 
     // Perform ECDH
-    use p256::ecdh::diffie_hellman;
-    let shared_secret = diffie_hellman(secret_key.to_nonzero_scalar(), peer_public_key.as_affine());
+    let shared_secret =
+        p256_diffie_hellman(secret_key.to_nonzero_scalar(), peer_public_key.as_affine());
 
     // Encode shared secret
     let shared_secret_b64 = BASE64.encode(shared_secret.raw_secret_bytes());
@@ -167,17 +169,14 @@ pub async fn handle_ecdhe_p384_generate(params: Option<&Value>) -> Result<Value,
         purpose
     );
 
-    use p384::elliptic_curve::SecretKey;
-    use rand::RngCore;
-    use zeroize::Zeroizing;
-
     // Generate a random 48-byte secret (P-384)
     let mut private_key_bytes = Zeroizing::new([0u8; 48]);
     rand::rng().fill_bytes(&mut *private_key_bytes);
 
     // Create secret key from bytes
-    let secret_key: SecretKey<p384::NistP384> = SecretKey::from_slice(&private_key_bytes[..])
-        .map_err(|e| format!("Failed to create P-384 secret key: {e}"))?;
+    let secret_key: P384SecretKey<p384::NistP384> =
+        P384SecretKey::from_slice(&private_key_bytes[..])
+            .map_err(|e| format!("Failed to create P-384 secret key: {e}"))?;
 
     // Derive public key from secret
     let public_key = secret_key.public_key();
@@ -241,18 +240,15 @@ pub async fn handle_ecdhe_p384_compute_shared(params: Option<&Value>) -> Result<
         .map_err(|e| format!("Invalid their_public base64: {e}"))?;
 
     // Parse keys
-    use p384::PublicKey;
-    use p384::elliptic_curve::SecretKey;
-
-    let secret_key: SecretKey<p384::NistP384> = SecretKey::from_slice(&our_secret_bytes)
+    let secret_key: P384SecretKey<p384::NistP384> = P384SecretKey::from_slice(&our_secret_bytes)
         .map_err(|e| format!("Invalid P-384 secret key: {e}"))?;
 
-    let peer_public_key = PublicKey::from_sec1_bytes(&their_public_bytes)
+    let peer_public_key = P384PublicKey::from_sec1_bytes(&their_public_bytes)
         .map_err(|e| format!("Invalid P-384 public key: {e}"))?;
 
     // Perform ECDH
-    use p384::ecdh::diffie_hellman;
-    let shared_secret = diffie_hellman(secret_key.to_nonzero_scalar(), peer_public_key.as_affine());
+    let shared_secret =
+        p384_diffie_hellman(secret_key.to_nonzero_scalar(), peer_public_key.as_affine());
 
     // Encode shared secret
     let shared_secret_b64 = BASE64.encode(shared_secret.raw_secret_bytes());

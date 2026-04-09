@@ -357,7 +357,7 @@ impl PrimalDiscovery {
     ///
     /// Reads via [`beardog_errors::process_env::vars`] (OS env merged with the test overlay).
     fn discover_from_env(
-        &mut self,
+        &self,
         query: &DiscoveryQuery,
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
         let vars: HashMap<String, String> = match &self.env_override {
@@ -579,7 +579,7 @@ impl PrimalDiscovery {
 
     /// Discover from UPA registry (COMPLETE IMPLEMENTATION)
     async fn discover_from_upa(
-        &mut self,
+        &self,
         query: &DiscoveryQuery,
         registry_addr: &str,
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
@@ -672,7 +672,7 @@ impl PrimalDiscovery {
     /// Production deployments should use Unix socket discovery (via beardog-ipc)
     /// or HTTP-based service registries until mDNS integration is complete.
     fn discover_from_mdns(
-        &mut self,
+        &self,
         _query: &DiscoveryQuery,
         service_type: &str,
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
@@ -699,7 +699,7 @@ impl PrimalDiscovery {
 
     /// Discover from DNS-SD (COMPLETE IMPLEMENTATION)
     fn discover_from_dns_sd(
-        &mut self,
+        &self,
         _query: &DiscoveryQuery, // Planned: Use for capability filtering in discovery results
         domain: &str,
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {
@@ -735,7 +735,7 @@ impl PrimalDiscovery {
 
     /// Try multiple discovery methods
     async fn discover_multi(
-        &mut self,
+        &self,
         query: &DiscoveryQuery,
         methods: &[DiscoveryMethod],
     ) -> Result<Vec<DiscoveredPrimal>, BearDogError> {

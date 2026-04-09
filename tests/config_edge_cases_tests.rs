@@ -37,10 +37,10 @@ fn test_config_empty_string_values() {
 #[test]
 fn test_config_unicode_paths() {
     let unicode_paths = vec![
-        "/home/用户/config",
-        "/home/пользователь/data",
-        "/home/المستخدم/files",
-        "/home/사용자/settings",
+        "$HOME/用户/config",
+        "$HOME/пользователь/data",
+        "$HOME/المستخدم/files",
+        "$HOME/사용자/settings",
     ];
 
     for path in unicode_paths {

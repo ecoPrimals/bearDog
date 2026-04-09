@@ -1,6 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Bind addresses, DNS, and multicast defaults.
+//!
+//! # Metrics and health bind discovery (tier hierarchy)
+//!
+//! Runtime resolution should follow this order (higher tiers override lower):
+//!
+//! 1. **Explicit bind env** — `BEARDOG_METRICS_BIND` / `BEARDOG_HEALTH_BIND` when set.
+//! 2. **Constructed from address + port** — `BEARDOG_BIND_ADDRESS` (or equivalent) combined with
+//!    ports from the configuration hierarchy (see [`super::defaults`] and `beardog-config`).
+//! 3. **Config file / merged config** — `BEARDOG_CONFIG` and layered config sources.
+//! 4. **Platform / compiled config defaults** — defaults shipped with the config crate.
+//! 5. **Compile-time string fallbacks** — deprecated constants such as [`DEFAULT_METRICS_BIND`] and
+//!    [`DEFAULT_HEALTH_BIND`] are *tier-5* last resorts for legacy call sites only. They must not be
+//!    treated as primary sources; prefer env vars and config. Use [`default_metrics_bind_from_env`],
+//!    [`default_health_bind_from_env`], or the config APIs first; reference these constants only when
+//!    every other tier is unavailable (e.g. static data in old binaries).
 
 /// **Fallback** IPv4 loopback literal (IANA); prefer env/config (`BEARDOG_LOCALHOST_IPV4`, etc.).
 pub const DEFAULT_LOCALHOST_IPV4_STR: &str = "127.0.0.1";
@@ -134,12 +149,18 @@ pub const DEFAULT_BIND_ADDRESS: &str = WILDCARD_IPV4;
     note = "Use default_metrics_bind() for environment-aware configuration"
 )]
 /// Deprecated: use [`default_metrics_bind`].
+///
+/// **Tier-5 fallback only** — literal `0.0.0.0:9090` when no env, config, or higher tier applies.
+/// Primary sources: `BEARDOG_METRICS_BIND`, then address/port from env and [`super::defaults`].
 pub const DEFAULT_METRICS_BIND: &str = "0.0.0.0:9090";
 #[deprecated(
     since = "3.1.0",
     note = "Use default_health_bind() for environment-aware configuration"
 )]
 /// Deprecated: use [`default_health_bind`].
+///
+/// **Tier-5 fallback only** — literal `0.0.0.0:8081` when no env, config, or higher tier applies.
+/// Primary sources: `BEARDOG_HEALTH_BIND`, then address/port from env and [`super::defaults`].
 pub const DEFAULT_HEALTH_BIND: &str = "0.0.0.0:8081";
 #[deprecated(
     since = "3.1.0",
@@ -200,7 +221,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
+    )]
     fn deprecated_bind_and_metrics_constants_exist() {
         assert_eq!(DEFAULT_BIND_ADDRESS, WILDCARD_IPV4);
         assert!(DEFAULT_METRICS_BIND.contains(':'));

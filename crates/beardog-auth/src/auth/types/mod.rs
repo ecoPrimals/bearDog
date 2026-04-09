@@ -17,8 +17,23 @@ pub mod spawning;
 /// Declarative multi-node workflow requests and execution status.
 pub mod workflow;
 
-pub use authorization::*;
-pub use genetics::*;
-pub use node_registry::*;
-pub use spawning::*;
-pub use workflow::*;
+pub use authorization::{
+    AccessCondition, ApprovalMode, AuthMethod, AuthProof, AuthorizationProof, ConsensusConfig,
+    ConsensusResult, CrossNodeAuthConfig, CrossNodeAuthorization, CrossNodeOperation,
+    OperationType, ResourcePermission, SpawningMode, VerificationMode,
+};
+pub use genetics::{
+    AlgorithmFamily, BearDogGenetics, CapabilityMutation, CryptoChromosome, MutationTrigger,
+    NodeCapability, NodeSpecialization, SecurityClearance, SecurityTraits, SpawnRestriction,
+};
+pub use node_registry::{
+    ConsensusNodeHealth, ConsensusNodeRecord, CrossNodeAuthEngine, NodeInfo, NodeRegistry,
+    ProofVerifier, WorkflowEngine, default_consensus_registry,
+};
+pub use spawning::{
+    ResourceLimits, SpawnPurpose, SpawnRequest, SpawnStatus, SpawnedBearDog, TaskType,
+};
+pub use workflow::{
+    AutomatedCheck, BearDogWorkflowType, CrossNodeWorkflowRequest, EscalationCondition,
+    WorkflowStatus,
+};

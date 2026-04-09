@@ -44,7 +44,7 @@
 //! - Graceful degradation on failures
 
 use beardog_types::canonical::HealthStatus;
-use beardog_types::canonical::providers_unified::traits::ServiceInfo;
+use beardog_types::canonical::providers_unified::traits::other_traits::ServiceInfo;
 use chrono::{DateTime, Utc};
 
 mod protocol_handlers;
@@ -60,13 +60,14 @@ pub mod load_balancing;
 pub mod network;
 /// Protocol support and negotiation
 pub mod protocols;
-#[allow(
+#[expect(
     unused_imports,
     clippy::float_cmp,
     clippy::useless_vec,
     clippy::needless_range_loop,
     clippy::uninlined_format_args,
-    dead_code
+    dead_code,
+    reason = "large integration test modules: noisy style lints and synthetic helpers"
 )]
 #[cfg(test)]
 #[path = "protocols_tests.rs"]
@@ -74,13 +75,14 @@ mod protocols_tests;
 /// Service registry
 pub mod registry;
 
-#[allow(
+#[expect(
     unused_imports,
     clippy::float_cmp,
     clippy::useless_vec,
     clippy::needless_range_loop,
     clippy::uninlined_format_args,
-    dead_code
+    dead_code,
+    reason = "large integration test modules: noisy style lints and synthetic helpers"
 )]
 #[cfg(test)]
 mod tests;

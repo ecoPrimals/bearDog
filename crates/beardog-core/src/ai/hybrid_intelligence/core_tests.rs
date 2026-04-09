@@ -572,6 +572,18 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_decision_plain_approve_branch_confidence_above_point_nine() {
+        let config = create_test_config();
+        let system = HybridIntelligenceSystem::new(config).expect("Should create system");
+        let mut context = HashMap::new();
+        context.insert("risk_level".to_string(), serde_json::json!(0.05));
+        context.insert("data_quality".to_string(), serde_json::json!(0.99));
+        context.insert("system_confidence".to_string(), serde_json::json!(0.99));
+        let decision = system.make_decision(context).await.expect("decision");
+        assert_eq!(decision.decision, "approve");
+    }
+
+    #[tokio::test]
     async fn test_make_decision_confidence_branch_with_non_finite_json_number() {
         let config = create_test_config();
         let system = HybridIntelligenceSystem::new(config).expect("Should create system");

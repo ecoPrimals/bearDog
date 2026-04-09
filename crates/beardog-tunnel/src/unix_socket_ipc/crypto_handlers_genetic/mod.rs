@@ -18,7 +18,16 @@
 //! compatibility - all handler functions are accessible from `crypto_handlers_genetic::*`.
 
 // Re-export types from the types module for backward compatibility
-pub use super::crypto_handlers_genetic_types::*;
+pub use super::crypto_handlers_genetic_types::{
+    CertificateVerificationDetails, DeriveDeviceSeedRequest, DeriveDeviceSeedResponse,
+    DeriveLineageBeaconKeyRequest, DeriveLineageBeaconKeyResponse, DeriveLineageKeyRequest,
+    DeriveLineageKeyResponse, GenerateChallengeRequest, GenerateChallengeResponse,
+    GenerateLineageProofRequest, GenerateLineageProofResponse, LineageCertificate,
+    MixEntropyRequest, MixEntropyResponse, RespondToChallengeRequest, RespondToChallengeResponse,
+    SignLineageCertificateRequest, SignLineageCertificateResponse, VerifyChallengeResponseRequest,
+    VerifyChallengeResponseResponse, VerifyLineageCertificateRequest,
+    VerifyLineageCertificateResponse, VerifyLineageRequest, VerifyLineageResponse,
+};
 
 pub mod challenge;
 pub mod enrollment;

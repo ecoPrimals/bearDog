@@ -10,9 +10,9 @@ use ctr::Ctr128BE;
 use sha2::{Digest, Sha256};
 
 /// Iterations for micro-benchmark helpers in accelerator modules.
-pub(crate) const CRYPTO_BENCHMARK_ITERATIONS: u64 = 1000;
+pub const CRYPTO_BENCHMARK_ITERATIONS: u64 = 1000;
 
-pub(crate) fn safe_sha256_digest(input: &[u8]) -> Result<[u8; 32], BearDogError> {
+pub fn safe_sha256_digest(input: &[u8]) -> Result<[u8; 32], BearDogError> {
     if input.is_empty() {
         return Err(BearDogError::validation("Input data cannot be empty"));
     }
@@ -36,7 +36,7 @@ fn derive_aes128_key(key_material: &[u8]) -> [u8; 16] {
 ///
 /// Uses an all-zero nonce so this helper stays deterministic for tests and benchmarks.
 /// Callers must not rely on this alone for message secrecy across multiple messages.
-pub(crate) fn aes128_ctr_apply(plaintext: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
+pub fn aes128_ctr_apply(plaintext: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError> {
     if plaintext.is_empty() {
         return Err(BearDogError::validation("Plaintext cannot be empty"));
     }

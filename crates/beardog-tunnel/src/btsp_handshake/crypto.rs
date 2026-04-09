@@ -206,4 +206,15 @@ mod tests {
         let keys = derive_session_keys(&shared, sid).expect("keys");
         assert_ne!(keys.server_to_client, keys.client_to_server);
     }
+
+    #[test]
+    fn verify_challenge_rejects_non_32_byte_response() {
+        let hk = [0x55; 32];
+        let challenge = b"chal";
+        let cp = [0u8; 32];
+        let sp = [0u8; 32];
+        let short = [0u8; 31];
+        let err = verify_challenge_response(&hk, challenge, &cp, &sp, &short).expect_err("short");
+        assert!(err.to_string().contains("family") || err.to_string().contains("verification"));
+    }
 }

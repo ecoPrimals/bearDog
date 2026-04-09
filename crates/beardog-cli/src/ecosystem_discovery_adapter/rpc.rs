@@ -9,14 +9,13 @@ use beardog_types::canonical::capabilities::CapabilityType;
 use beardog_types::canonical::discovery::UniversalCapabilityType;
 
 impl EcosystemDiscoveryAdapter {
-    pub(crate) fn tower_atomic_error(err: beardog_tower_atomic::Error) -> BearDogError {
+    /// Convert a Tower Atomic transport error into a [`BearDogError`] via [`BearDogError::network`].
+    pub fn tower_atomic_error(err: beardog_tower_atomic::Error) -> BearDogError {
         BearDogError::network(err.to_string())
     }
 
     /// Derive JSON-RPC method and params from the payload (explicit `method`/`params` or default).
-    pub(crate) fn jsonrpc_method_and_params(
-        payload: &serde_json::Value,
-    ) -> (String, serde_json::Value) {
+    pub fn jsonrpc_method_and_params(payload: &serde_json::Value) -> (String, serde_json::Value) {
         if let Some(obj) = payload.as_object() {
             if let Some(m) = obj.get("method").and_then(|v| v.as_str()) {
                 let params = obj
@@ -52,7 +51,7 @@ impl EcosystemDiscoveryAdapter {
     /// Maps between `UniversalCapabilityType` (higher-level, domain-focused) and
     /// `ServiceCapabilityType` (lower-level, operation-focused) to enable flexible
     /// capability matching across different abstraction levels.
-    pub(crate) fn primal_has_capability(
+    pub fn primal_has_capability(
         primal: &DiscoveredPrimal,
         requested: &UniversalCapabilityType,
     ) -> bool {

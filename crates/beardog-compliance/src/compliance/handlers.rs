@@ -15,6 +15,17 @@ use std::collections::HashMap;
 use tracing::{error, info};
 use uuid::Uuid;
 
+/// Optional flags under `event.metadata["compliance_simulation"]` drive **simulation/dry-run**
+/// paths for integration tests and operator drills (e.g. `{ "missing_consent": true }`).
+fn compliance_simulation_flag(event: &ComplianceEvent, flag: &str) -> bool {
+    event
+        .metadata
+        .get("compliance_simulation")
+        .and_then(|m| m.get(flag))
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false)
+}
+
 /// Orchestrates framework-specific checks, scoring, and audit logging for a single runtime.
 #[derive(Debug, Clone)]
 pub struct ComplianceHandler {
@@ -122,6 +133,12 @@ impl ComplianceHandler {
         event: &ComplianceEvent,
         standard: &ComplianceStandard,
     ) -> Result<Vec<ComplianceViolation>, BearDogError> {
+        if compliance_simulation_flag(event, "standard_evaluation_failure") {
+            return Err(BearDogError::internal(
+                "simulated compliance standard evaluation failure".to_string(),
+            ));
+        }
+
         let mut violations = Vec::new();
 
         match standard {
@@ -280,20 +297,30 @@ impl ComplianceHandler {
     }
 
     /// Checks if consent required missing
-    const fn is_consent_required_missing(&self, _event: &ComplianceEvent) -> bool {
-        false
+    fn is_consent_required_missing(&self, event: &ComplianceEvent) -> bool {
+        compliance_simulation_flag(event, "missing_consent")
     }
 
-    const fn check_data_minimization(&self, _event: &ComplianceEvent) -> Vec<ComplianceViolation> {
-        Vec::new()
+    fn check_data_minimization(&self, event: &ComplianceEvent) -> Vec<ComplianceViolation> {
+        if compliance_simulation_flag(event, "data_minimization_violation") {
+            vec![self.create_violation(
+                "Data Minimization",
+                "Data collection should be limited to the minimum necessary",
+                ComplianceSeverity::Medium,
+                "Review fields collected and remove unnecessary attributes",
+                None,
+            )]
+        } else {
+            Vec::new()
+        }
     }
 
-    const fn involves_payment_data(&self, _event: &ComplianceEvent) -> bool {
-        false
+    fn involves_payment_data(&self, event: &ComplianceEvent) -> bool {
+        compliance_simulation_flag(event, "payment_data")
     }
 
-    const fn violates_minimum_necessary(&self, _event: &ComplianceEvent) -> bool {
-        false
+    fn violates_minimum_necessary(&self, event: &ComplianceEvent) -> bool {
+        compliance_simulation_flag(event, "minimum_necessary_violation")
     }
 
     /// Helper function to create a `ComplianceViolation` with proper structure

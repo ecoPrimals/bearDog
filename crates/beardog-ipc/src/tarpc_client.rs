@@ -79,7 +79,10 @@ struct TarpcClientInner {
     request_timeout: Duration,
 }
 
-#[allow(clippy::missing_errors_doc)] // Thin tarpc RPC wrappers; errors are transport/RPC failures surfaced as `anyhow::Error`.
+#[expect(
+    clippy::missing_errors_doc,
+    reason = "thin tarpc RPC wrappers; errors are transport/RPC failures surfaced as anyhow::Error"
+)]
 impl TarpcCryptoClient {
     /// Connect to a `BearDog` tarpc server.
     ///

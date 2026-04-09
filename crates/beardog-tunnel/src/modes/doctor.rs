@@ -8,13 +8,19 @@ use std::path::Path;
 use tracing::info;
 
 /// Resolve doctor socket path from explicit CLI value or [`SocketConfig::from_env`].
-pub(crate) fn doctor_resolve_socket_path(socket: Option<String>) -> String {
-    socket.unwrap_or_else(|| {
-        beardog_core::socket_config::SocketConfig::from_env()
-            .socket_path()
-            .to_string_lossy()
-            .into_owned()
-    })
+///
+/// # Errors
+///
+/// Returns `Err` when `FAMILY_ID` and `BIOMEOS_INSECURE` are both set (BTSP config conflict).
+pub(crate) fn doctor_resolve_socket_path(
+    socket: Option<String>,
+) -> Result<String, beardog_core::socket_config::SocketConfigError> {
+    if let Some(s) = socket {
+        Ok(s)
+    } else {
+        let config = beardog_core::socket_config::SocketConfig::from_env()?;
+        Ok(config.socket_path().to_string_lossy().into_owned())
+    }
 }
 
 /// Single-line JSON status for `format == "json"` (testable without capturing stdout).
@@ -38,7 +44,7 @@ pub async fn run(
     socket: Option<String>,
     format: String,
 ) -> anyhow::Result<()> {
-    let socket_path = doctor_resolve_socket_path(socket);
+    let socket_path = doctor_resolve_socket_path(socket)?;
 
     if format == "json" {
         println!("{}", doctor_json_status_line(comprehensive));
@@ -186,7 +192,10 @@ mod doctor_tests {
     #[test]
     fn doctor_resolve_socket_path_uses_explicit_value() {
         let p = "/tmp/explicit-doctor.sock".to_string();
-        assert_eq!(doctor_resolve_socket_path(Some(p.clone())), p);
+        assert_eq!(
+            doctor_resolve_socket_path(Some(p.clone())).expect("should resolve"),
+            p
+        );
     }
 
     #[tokio::test]

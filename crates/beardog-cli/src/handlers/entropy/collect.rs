@@ -234,3 +234,202 @@ pub async fn handle_entropy_collect(
 
     Ok(())
 }
+
+#[cfg(test)]
+#[expect(clippy::unwrap_used, reason = "test assertions")]
+mod collect_handler_tests {
+    use beardog_errors::BearDogError;
+    use tempfile::TempDir;
+
+    use super::super::types::EntropySeedMetadata;
+    use super::handle_entropy_collect;
+
+    #[tokio::test]
+    async fn handle_entropy_collect_unknown_device_preference_errors_when_hsms_discovered() {
+        let dir = TempDir::new().expect("temp dir for entropy collect");
+        let out = dir.path().join("seed.json");
+        let out_str = out.to_str().expect("utf-8 temp path");
+        let res = handle_entropy_collect(
+            false,
+            "not_a_valid_device_preference_zz99",
+            2,
+            out_str,
+            None,
+        )
+        .await;
+        let Err(err) = res else {
+            panic!("expected error for invalid device preference or missing HSM");
+        };
+        match err {
+            BearDogError::Business { message, .. } => {
+                assert!(
+                    message.contains("Unknown device preference")
+                        || message.contains("No HSMs found"),
+                    "unexpected message: {message}"
+                );
+            }
+            other => panic!("unexpected error variant: {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn handle_entropy_collect_mobile_preference_errors_if_no_mobile_hsm() {
+        let dir = TempDir::new().expect("temp dir");
+        let out = dir.path().join("seed.json");
+        let res =
+            handle_entropy_collect(false, "mobile", 1, out.to_str().expect("utf-8 path"), None)
+                .await;
+        match res {
+            Err(BearDogError::Business { message, .. }) => {
+                assert!(
+                    message.contains("No mobile HSM") || message.contains("No HSMs"),
+                    "unexpected message: {message}"
+                );
+            }
+            Ok(()) => panic!("expected error when mobile HSM unavailable"),
+            Err(other) => panic!("unexpected error: {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn handle_entropy_collect_hardware_preference_errors_if_no_hardware_hsm() {
+        let dir = TempDir::new().expect("temp dir");
+        let out = dir.path().join("usb_seed.json");
+        let res =
+            handle_entropy_collect(false, "usb", 1, out.to_str().expect("utf-8 path"), None).await;
+        match res {
+            Err(BearDogError::Business { message, .. }) => {
+                assert!(
+                    message.contains("No hardware HSM") || message.contains("No HSMs"),
+                    "unexpected message: {message}"
+                );
+            }
+            Ok(()) => panic!("expected error when hardware HSM unavailable"),
+            Err(other) => panic!("unexpected error: {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn handle_entropy_collect_hardware_alias_matches_usb_preference() {
+        let dir = TempDir::new().expect("temp dir");
+        let out = dir.path().join("hw_seed.json");
+        let res = handle_entropy_collect(
+            false,
+            "hardware",
+            1,
+            out.to_str().expect("utf-8 path"),
+            None,
+        )
+        .await;
+        match res {
+            Err(BearDogError::Business { message, .. }) => {
+                assert!(
+                    message.contains("No hardware HSM") || message.contains("No HSMs"),
+                    "unexpected message: {message}"
+                );
+            }
+            Ok(()) => panic!("expected error when hardware HSM unavailable"),
+            Err(other) => panic!("unexpected error: {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn handle_entropy_collect_writes_valid_seed_json_on_success() {
+        let dir = TempDir::new().expect("temp dir");
+        let out = dir.path().join("entropy_seed.json");
+        let out_str = out.to_str().expect("utf-8 path");
+
+        let res =
+            handle_entropy_collect(false, "auto", 3, out_str, Some("test-identity-unit")).await;
+
+        if let Err(e) = &res {
+            let BearDogError::Business { message, .. } = e else {
+                panic!("unexpected error: {e:?}");
+            };
+            if message.contains("No HSMs") {
+                return;
+            }
+            panic!("unexpected collect failure: {e:?}");
+        }
+
+        let raw = std::fs::read_to_string(out_str).expect("seed file written");
+        let meta: EntropySeedMetadata = serde_json::from_str(&raw).expect("valid seed JSON");
+        assert_eq!(meta.quality_tier, 3);
+        assert!(!meta.seed_id.is_empty());
+        assert_eq!(meta.identity.as_deref(), Some("test-identity-unit"));
+        assert!(!meta.entropy_bytes_b64.is_empty());
+        assert!((0.0..=1.0).contains(&meta.quality_score));
+        assert!(!meta.human_input);
+    }
+
+    #[tokio::test]
+    async fn handle_entropy_collect_software_preference_writes_seed_when_software_hsm_present() {
+        let dir = TempDir::new().expect("temp dir");
+        let out = dir.path().join("software_seed.json");
+        let out_str = out.to_str().expect("utf-8 path");
+
+        let res = handle_entropy_collect(false, "software", 2, out_str, None).await;
+
+        if let Err(e) = &res {
+            let BearDogError::Business { message, .. } = e else {
+                panic!("unexpected error: {e:?}");
+            };
+            if message.contains("No software HSM") || message.contains("No HSMs") {
+                return;
+            }
+            panic!("unexpected collect failure: {e:?}");
+        }
+
+        let raw = std::fs::read_to_string(out_str).expect("seed file written");
+        let meta: EntropySeedMetadata = serde_json::from_str(&raw).expect("valid seed JSON");
+        assert_eq!(meta.quality_tier, 2);
+        assert!(!meta.entropy_bytes_b64.is_empty());
+    }
+
+    #[tokio::test]
+    async fn handle_entropy_collect_fails_writing_when_output_path_is_directory() {
+        let dir = TempDir::new().expect("temp dir");
+        let out_str = dir.path().to_str().expect("utf-8 path");
+
+        let res = handle_entropy_collect(false, "auto", 1, out_str, None).await;
+
+        match res {
+            Err(BearDogError::Business { message, .. }) if message.contains("No HSMs") => {
+                return;
+            }
+            Err(BearDogError::System { message, .. }) => {
+                assert!(
+                    message.contains("IO error") || message.contains("Is a directory"),
+                    "unexpected system error: {message}"
+                );
+            }
+            Err(other) => {
+                panic!("unexpected error writing directory path: {other:?}");
+            }
+            Ok(()) => panic!("writing a directory path should not succeed"),
+        }
+    }
+
+    #[tokio::test]
+    async fn handle_entropy_collect_high_quality_tier_preserved_in_json() {
+        let dir = TempDir::new().expect("temp dir");
+        let out = dir.path().join("tier.json");
+        let out_str = out.to_str().expect("utf-8 path");
+
+        let res = handle_entropy_collect(false, "auto", 255, out_str, None).await;
+
+        if let Err(e) = &res {
+            let BearDogError::Business { message, .. } = e else {
+                panic!("unexpected error: {e:?}");
+            };
+            if message.contains("No HSMs") {
+                return;
+            }
+            panic!("unexpected collect failure: {e:?}");
+        }
+
+        let raw = std::fs::read_to_string(out_str).expect("seed file written");
+        let meta: EntropySeedMetadata = serde_json::from_str(&raw).expect("valid seed JSON");
+        assert_eq!(meta.quality_tier, 255);
+    }
+}

@@ -22,12 +22,15 @@ mod source_target;
 mod taxonomy;
 mod threat_event;
 
-pub use detection_rules::*;
-pub use incident_response::*;
-pub use intel::*;
-pub use mitigation::*;
-pub use ml_model::*;
-pub use security_telemetry::*;
-pub use source_target::*;
-pub use taxonomy::*;
-pub use threat_event::*;
+pub use detection_rules::{DetectionRule, RuleCondition};
+pub use incident_response::{IncidentResponse, ResponseAction, ResponseStatus};
+pub use intel::{ThreatIndicator, ThreatIntelligenceFeed};
+pub use mitigation::MitigationStep;
+pub use ml_model::{MlModel, MlModelType};
+pub use security_telemetry::SecurityEvent;
+pub use source_target::{ThreatSource, ThreatTarget};
+pub use taxonomy::{
+    AssetCriticality, DetectionMethod, IndicatorType, ProtectionLevel, SourceClassification,
+    ThreatAction, ThreatRuleType, ThreatSeverity, ThreatStatus, ThreatType,
+};
+pub use threat_event::ThreatEvent;

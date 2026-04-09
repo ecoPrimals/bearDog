@@ -4,7 +4,7 @@ pub mod logger;
 pub mod storage;
 pub mod types;
 
-pub use storage::*;
-pub use types::*;
+pub use storage::PersistentAuditStorage;
+pub use types::{AuditLogEntry, AuditLogFilter, OperationResult};
 
 pub use logger::DefaultAuditLogger;

@@ -42,7 +42,12 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use beardog_errors::BearDogError;
 use p256::PublicKey as P256PublicKey;
+use p256::ecdh::diffie_hellman as p256_diffie_hellman;
+use p256::elliptic_curve::{FieldBytes as P256FieldBytes, SecretKey as P256SecretKey};
 use p384::PublicKey as P384PublicKey;
+use p384::ecdh::diffie_hellman as p384_diffie_hellman;
+use p384::elliptic_curve::{FieldBytes as P384FieldBytes, SecretKey as P384SecretKey};
+use rand::RngCore;
 use serde_json::{Value, json};
 use zeroize::Zeroizing;
 
@@ -73,14 +78,13 @@ use zeroize::Zeroizing;
 /// **Performance**: < 500μs (fast scalar multiplication)
 pub fn handle_ecdh_p256_generate(_params: &Value) -> Result<Value, BearDogError> {
     // Generate a random 32-byte secret (256 bits / 8)
-    use rand::RngCore;
     let mut private_key_bytes = Zeroizing::new([0u8; 32]);
     rand::rng().fill_bytes(&mut *private_key_bytes);
 
     // Create secret from bytes
-    use p256::elliptic_curve::SecretKey;
-    let secret_key: SecretKey<p256::NistP256> = SecretKey::from_slice(&private_key_bytes[..])
-        .map_err(|e| BearDogError::system(format!("Failed to create P-256 secret key: {e}")))?;
+    let secret_key: P256SecretKey<p256::NistP256> =
+        P256SecretKey::from_slice(&private_key_bytes[..])
+            .map_err(|e| BearDogError::system(format!("Failed to create P-256 secret key: {e}")))?;
 
     // Derive public key from secret using scalar multiplication
     let public_key = secret_key.public_key();
@@ -149,22 +153,21 @@ pub fn handle_ecdh_p256_derive(params: &Value) -> Result<Value, BearDogError> {
     })?;
 
     // Parse private key (convert Vec to slice, which works with from_slice)
-    use p256::elliptic_curve::SecretKey;
-    let secret_key: SecretKey<p256::NistP256> = SecretKey::from_slice(&private_key_bytes)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid P-256 private key: {e}")))?;
+    let secret_key: P256SecretKey<p256::NistP256> =
+        P256SecretKey::from_slice(&private_key_bytes)
+            .map_err(|e| BearDogError::invalid_input(&format!("Invalid P-256 private key: {e}")))?;
 
     // Parse peer public key
     let peer_public_key = P256PublicKey::from_sec1_bytes(&peer_public_key_bytes)
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid P-256 public key: {e}")))?;
 
     // Perform ECDH
-    use p256::ecdh::diffie_hellman;
-    let shared_secret = diffie_hellman(secret_key.to_nonzero_scalar(), peer_public_key.as_affine());
+    let shared_secret =
+        p256_diffie_hellman(secret_key.to_nonzero_scalar(), peer_public_key.as_affine());
 
     // Extract raw shared secret bytes (P-256 produces 32-byte shared secrets)
     // FieldBytes<C> is a GenericArray that implements AsRef<[u8]>
-    use p256::elliptic_curve::FieldBytes;
-    let shared_secret_bytes: &FieldBytes<p256::NistP256> = shared_secret.raw_secret_bytes();
+    let shared_secret_bytes: &P256FieldBytes<p256::NistP256> = shared_secret.raw_secret_bytes();
 
     // Encode as base64 (GenericArray implements AsRef<[u8]>)
     let shared_secret_b64 = BASE64.encode(shared_secret_bytes);
@@ -203,14 +206,13 @@ pub fn handle_ecdh_p256_derive(params: &Value) -> Result<Value, BearDogError> {
 /// **Performance**: < 800μs (larger curve, slower than P-256)
 pub fn handle_ecdh_p384_generate(_params: &Value) -> Result<Value, BearDogError> {
     // Generate random 48-byte secret (384 bits / 8)
-    use rand::RngCore;
     let mut private_key_bytes = Zeroizing::new([0u8; 48]);
     rand::rng().fill_bytes(&mut *private_key_bytes);
 
     // Create secret from bytes
-    use p384::elliptic_curve::SecretKey;
-    let secret_key: SecretKey<p384::NistP384> = SecretKey::from_slice(&private_key_bytes[..])
-        .map_err(|e| BearDogError::system(format!("Failed to create P-384 secret key: {e}")))?;
+    let secret_key: P384SecretKey<p384::NistP384> =
+        P384SecretKey::from_slice(&private_key_bytes[..])
+            .map_err(|e| BearDogError::system(format!("Failed to create P-384 secret key: {e}")))?;
 
     // Derive public key from secret using scalar multiplication
     let public_key = secret_key.public_key();
@@ -278,22 +280,21 @@ pub fn handle_ecdh_p384_derive(params: &Value) -> Result<Value, BearDogError> {
     })?;
 
     // Parse private key (convert Vec to slice)
-    use p384::elliptic_curve::SecretKey;
-    let secret_key: SecretKey<p384::NistP384> = SecretKey::from_slice(&private_key_bytes)
-        .map_err(|e| BearDogError::invalid_input(&format!("Invalid P-384 private key: {e}")))?;
+    let secret_key: P384SecretKey<p384::NistP384> =
+        P384SecretKey::from_slice(&private_key_bytes)
+            .map_err(|e| BearDogError::invalid_input(&format!("Invalid P-384 private key: {e}")))?;
 
     // Parse peer public key
     let peer_public_key = P384PublicKey::from_sec1_bytes(&peer_public_key_bytes)
         .map_err(|e| BearDogError::invalid_input(&format!("Invalid P-384 public key: {e}")))?;
 
     // Perform ECDH
-    use p384::ecdh::diffie_hellman;
-    let shared_secret = diffie_hellman(secret_key.to_nonzero_scalar(), peer_public_key.as_affine());
+    let shared_secret =
+        p384_diffie_hellman(secret_key.to_nonzero_scalar(), peer_public_key.as_affine());
 
     // Extract raw shared secret bytes (P-384 produces 48-byte shared secrets)
     // FieldBytes<C> is a GenericArray that implements AsRef<[u8]>
-    use p384::elliptic_curve::FieldBytes;
-    let shared_secret_bytes: &FieldBytes<p384::NistP384> = shared_secret.raw_secret_bytes();
+    let shared_secret_bytes: &P384FieldBytes<p384::NistP384> = shared_secret.raw_secret_bytes();
 
     // Encode as base64 (GenericArray implements AsRef<[u8]>)
     let shared_secret_b64 = BASE64.encode(shared_secret_bytes);

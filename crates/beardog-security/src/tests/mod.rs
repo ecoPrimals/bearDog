@@ -83,10 +83,7 @@ mod authentication_comprehensive_tests;
 #[cfg(test)]
 mod signature_verification_comprehensive_tests;
 
-// October 19, 2025: Crypto Error Path Tests (Coverage Expansion)
-// DISABLED: Outdated - references non-existent functions (hash_data, verify_hash)
-// #[cfg(test)]
-// mod crypto_error_paths_tests;
+// crypto_error_paths_tests dropped (obsolete hash_data / verify_hash API).
 
 // October 19, 2025 Evening: Key Rotation Tests (Critical Security Paths)
 #[cfg(test)]
@@ -138,10 +135,7 @@ mod security_edge_cases_oct22;
 #[cfg(test)]
 mod authorization_comprehensive_tests;
 
-// October 31, 2025 - Week 1 Test Expansion: Quantum Crypto Tests
-// NOTE: Disabled until quantum_crypto module is properly implemented and exported
-// #[cfg(test)]
-// mod quantum_crypto_comprehensive_tests;
+// quantum_crypto_comprehensive_tests not wired until quantum_crypto module is exported.
 
 // October 31, 2025 - Week 1 Test Expansion: Orchestration Tests
 #[cfg(test)]

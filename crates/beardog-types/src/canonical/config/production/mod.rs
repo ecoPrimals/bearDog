@@ -40,16 +40,17 @@ pub mod operations;
 pub mod resources;
 
 // Re-export all configuration types for API compatibility
-pub use core::*;
-pub use deployment::*;
-pub use environment::*;
-pub use observability::*;
-pub use operations::*;
-pub use resources::*;
+pub use core::ProductionCoreConfig;
+pub use deployment::DeploymentConfig;
+pub use environment::EnvironmentConfig;
+pub use observability::ObservabilityConfig;
+pub use operations::OperationalConfig;
+pub use resources::ResourceManagementConfig;
 
 // Explicit re-exports for backward compatibility
 pub use core::{EnvironmentLevel, ProductionFeatureFlags};
 #[allow(deprecated)]
+// Re-export of deprecated aliases; rustc does not emit deprecated on this line — expect would be unfulfilled
 pub use environment::{EnvironmentType, EnvironmentValidation, ModernSecretsConfig};
 
 ///

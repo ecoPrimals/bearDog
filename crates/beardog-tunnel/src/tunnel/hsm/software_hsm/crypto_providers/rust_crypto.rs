@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::tunnel::hsm::types::*;
+use crate::tunnel::hsm::types::KeyType;
 use beardog_errors::BearDogError;
 use beardog_types::hsm::CryptoProvider; // Import the canonical trait
 use chacha20poly1305::{

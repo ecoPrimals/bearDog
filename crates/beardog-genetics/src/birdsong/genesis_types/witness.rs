@@ -30,10 +30,10 @@ impl GenesisWitness {
         &self,
         new_node_id: &str,
     ) -> Result<bool, beardog_errors::BearDogError> {
-        let message = Self::create_signing_message(new_node_id, self.timestamp, &self.public_key);
-
         // Use Ed25519 to verify (ed25519-dalek 2.x uses VerifyingKey)
         use ed25519_dalek::{Signature, Verifier, VerifyingKey};
+
+        let message = Self::create_signing_message(new_node_id, self.timestamp, &self.public_key);
 
         let pubkey =
             VerifyingKey::from_bytes(&self.public_key.as_slice().try_into().map_err(|_| {

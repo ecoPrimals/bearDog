@@ -102,7 +102,9 @@ pub mod simd_optimizations;
 pub mod utils;
 /// Zero-copy buffer strategies and ID management (see module docs for invariants).
 pub mod zero_copy;
-/// Experimental zero-copy layouts layered on the stable `zero_copy` APIs.
+/// Experimental zero-copy layouts.
+///
+/// Layered on the stable `zero_copy` APIs.
 pub mod zero_copy_optimized;
 
 // Testing frameworks - canonical location (includes mock crypto/config fixtures)
@@ -133,8 +135,6 @@ mod performance_optimizations_tests;
 #[cfg(test)]
 #[path = "tests/ultimate_performance_comprehensive.rs"]
 mod ultimate_performance_comprehensive_tests;
-#[cfg(test)]
-mod ultimate_performance_tests;
 #[cfg(test)]
 mod ultimate_safety_tests;
 

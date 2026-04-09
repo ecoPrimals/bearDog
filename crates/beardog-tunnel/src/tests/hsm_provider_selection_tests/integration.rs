@@ -335,7 +335,10 @@ impl MockCloudHsm {
         }
     }
 
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "reserved for failure-injection scenarios in extended tests"
+    )]
     fn with_failures() -> Self {
         Self {
             available: true,

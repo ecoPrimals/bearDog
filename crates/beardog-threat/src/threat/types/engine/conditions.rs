@@ -349,7 +349,8 @@ impl ConditionBuilder {
     clippy::assertions_on_constants,
     clippy::useless_vec,
     clippy::absurd_extreme_comparisons,
-    unused_comparisons
+    unused_comparisons,
+    reason = "rule condition tests: exhaustive patterns (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 mod tests {

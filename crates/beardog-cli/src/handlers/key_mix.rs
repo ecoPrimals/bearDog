@@ -4,7 +4,9 @@
 
 use super::key_store::{self, StoredKey};
 use beardog_errors::BearDogError;
+use beardog_types::receipt::{KeyInfo, OperationReceipt, generate_receipt_filename};
 use chrono::Utc;
+use serde_json::json;
 use std::path::Path;
 
 /// Handle key mixing command
@@ -109,9 +111,6 @@ pub async fn handle_key_mix_with_home(
     key_store::save_key_to_home(&updated_key2, home)?;
 
     // Generate operation receipt
-    use beardog_types::receipt::{KeyInfo, OperationReceipt, generate_receipt_filename};
-    use serde_json::json;
-
     let receipt = OperationReceipt::new("key-mix")
         .with_key_info(KeyInfo {
             key_id: output_key_id.to_string(),
@@ -181,6 +180,7 @@ fn validate_same_key_material_len(len_a: usize, len_b: usize) -> Result<(), Bear
 /// 2. Use HKDF to derive final key material (prevents XOR weaknesses)
 fn mix_keys(key1: &[u8], key2: &[u8]) -> Result<Vec<u8>, BearDogError> {
     use hkdf::Hkdf;
+    use rand::RngCore;
     use sha2::Sha256;
 
     // XOR the keys
@@ -189,7 +189,6 @@ fn mix_keys(key1: &[u8], key2: &[u8]) -> Result<Vec<u8>, BearDogError> {
     // Generate salt for HKDF
     let mut salt = vec![0u8; 32];
     // Use pure Rust CSPRNG instead of OpenSSL
-    use rand::RngCore;
     let mut rng = rand::rng();
     rng.fill_bytes(&mut salt);
 
@@ -204,7 +203,7 @@ fn mix_keys(key1: &[u8], key2: &[u8]) -> Result<Vec<u8>, BearDogError> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{handle_key_mix_with_home, mix_keys, validate_same_key_material_len};
     use crate::handlers::key_store;
     use chrono::Utc;
     use tempfile::TempDir;

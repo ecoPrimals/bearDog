@@ -19,8 +19,10 @@ use crate::btsp_handshake::{self, BtspSecurityMode, BtspSession};
 use crate::btsp_provider::BeardogBtspProvider;
 use crate::platform::{PlatformSocket, PlatformStream, Socket, SocketEndpoint};
 use anyhow::{Context, Result};
+use beardog_core::socket_config::{
+    IpcCapabilitySymlinksConfig, install_ipc_symlinks_at, remove_ipc_symlinks_at,
+};
 use beardog_ipc::protocol::JSONRPC_VERSION;
-use beardog_types::constants::domains::network::ipc_discovery::BEARDOG_CAPABILITY_DOMAIN;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -34,27 +36,13 @@ use tracing::{debug, error, info, warn};
 /// connection is closed and the task freed.
 const IPC_READ_TIMEOUT: Duration = Duration::from_secs(30);
 
-/// Filesystem path for the capability-domain symlink (`{domain}.sock`), or `None` for abstract sockets.
-#[cfg(unix)]
-fn capability_domain_symlink_path(socket_path: &Path) -> Option<PathBuf> {
-    if socket_path.to_string_lossy().starts_with('@') {
-        return None;
-    }
-    let socket_dir = socket_path.parent().unwrap_or_else(|| Path::new("."));
-    Some(socket_dir.join(format!("{BEARDOG_CAPABILITY_DOMAIN}.sock")))
-}
-
-#[cfg(unix)]
-fn remove_capability_domain_symlink_best_effort(socket_path: &Path) {
-    if let Some(p) = capability_domain_symlink_path(socket_path) {
-        let _ = std::fs::remove_file(&p);
-    }
-}
-
 /// Unix socket IPC server for inter-primal communication
 pub struct UnixSocketIpcServer {
     /// Path to the Unix socket
     socket_path: PathBuf,
+
+    /// wateringHole v3.1 capability-domain symlinks beside [`Self::socket_path`].
+    ipc_symlinks: IpcCapabilitySymlinksConfig,
 
     /// BTSP provider (provides all capabilities)
     btsp_provider: Arc<BeardogBtspProvider>,
@@ -82,6 +70,7 @@ impl UnixSocketIpcServer {
     /// * `btsp_provider` - BTSP provider for handling requests
     /// * `identity` - Primal identity (family and node)
     /// * `security_mode` - BTSP security posture (production vs development)
+    /// * `ipc_symlinks` - Capability-domain symlink config (wateringHole v3.1)
     ///
     /// # Errors
     /// Returns error if unable to remove existing socket file
@@ -90,6 +79,7 @@ impl UnixSocketIpcServer {
         btsp_provider: Arc<BeardogBtspProvider>,
         identity: Arc<beardog_types::primal_identity::PrimalIdentity>,
         security_mode: BtspSecurityMode,
+        ipc_symlinks: IpcCapabilitySymlinksConfig,
     ) -> Result<Self> {
         let socket_path = socket_path.as_ref().to_path_buf();
 
@@ -109,6 +99,7 @@ impl UnixSocketIpcServer {
 
         Ok(Self {
             socket_path,
+            ipc_symlinks,
             btsp_provider,
             handler_registry: HandlerRegistry::new(identity),
             security_mode,
@@ -197,7 +188,13 @@ impl UnixSocketIpcServer {
         }
 
         #[cfg(unix)]
-        remove_capability_domain_symlink_best_effort(&self.socket_path);
+        {
+            remove_ipc_symlinks_at(
+                &self.socket_path,
+                &self.ipc_symlinks.symlink_suffix,
+                &self.ipc_symlinks.domain_stems,
+            );
+        }
 
         if self.socket_path.exists() {
             tokio::fs::remove_file(&self.socket_path)
@@ -252,18 +249,18 @@ impl UnixSocketIpcServer {
 
         #[cfg(unix)]
         {
-            if let Some(symlink_path) = capability_domain_symlink_path(&self.socket_path) {
-                let _ = tokio::fs::remove_file(&symlink_path).await;
-                if let Some(target_name) = self.socket_path.file_name() {
-                    if let Err(e) = std::os::unix::fs::symlink(target_name, &symlink_path) {
-                        warn!(
-                            path = %symlink_path.display(),
-                            "failed to create domain symlink: {e}"
-                        );
-                    } else {
-                        info!(path = %symlink_path.display(), "domain symlink created");
-                    }
-                }
+            if let Some(name) = self.socket_path.file_name() {
+                let _created = install_ipc_symlinks_at(
+                    &self.socket_path,
+                    name,
+                    &self.ipc_symlinks.symlink_suffix,
+                    &self.ipc_symlinks.domain_stems,
+                );
+            } else {
+                warn!(
+                    path = %self.socket_path.display(),
+                    "socket path has no filename; skipping wateringHole capability symlinks"
+                );
             }
         }
 
@@ -363,7 +360,9 @@ impl UnixSocketIpcServer {
                 }
             }
 
-            let first_line = String::from_utf8_lossy(&buffer).to_string();
+            // `from_utf8_lossy` returns `Cow`; avoid `.to_string()` so valid UTF-8 borrows `buffer`
+            // instead of allocating a second copy on the hot path.
+            let first_line = String::from_utf8_lossy(&buffer);
             let stream = buf_stream.into_inner();
 
             if first_line.trim().is_empty() {
@@ -393,10 +392,12 @@ impl UnixSocketIpcServer {
 
             match protocol {
                 Protocol::JsonRpc => {
-                    self.handle_jsonrpc_universal(&first_line, stream).await?;
+                    self.handle_jsonrpc_universal(first_line.as_ref(), stream)
+                        .await?;
                 }
                 Protocol::Http => {
-                    self.handle_http_universal(&first_line, stream).await?;
+                    self.handle_http_universal(first_line.as_ref(), stream)
+                        .await?;
                 }
             }
         }
@@ -711,7 +712,11 @@ impl Drop for UnixSocketIpcServer {
     fn drop(&mut self) {
         #[cfg(unix)]
         {
-            remove_capability_domain_symlink_best_effort(&self.socket_path);
+            remove_ipc_symlinks_at(
+                &self.socket_path,
+                &self.ipc_symlinks.symlink_suffix,
+                &self.ipc_symlinks.domain_stems,
+            );
             if self.socket_path.exists() {
                 let _ = std::fs::remove_file(&self.socket_path);
             }
@@ -724,98 +729,5 @@ impl Drop for UnixSocketIpcServer {
 }
 
 #[cfg(test)]
-mod handle_jsonrpc_unit_tests {
-    use super::{JsonRpcError, JsonRpcResponse, UnixSocketIpcServer};
-    use crate::btsp_handshake::BtspSecurityMode;
-    use crate::test_helpers::mocks::create_minimal_beardog_provider;
-    use beardog_types::primal_identity::PrimalIdentity;
-    use std::sync::Arc;
-    use tempfile::tempdir;
-
-    #[tokio::test]
-    async fn wait_ready_flag_times_out_when_never_set() {
-        let flag = Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let ok =
-            UnixSocketIpcServer::wait_ready_flag(&flag, std::time::Duration::from_millis(1)).await;
-        assert!(!ok);
-    }
-
-    #[tokio::test]
-    async fn wait_ready_flag_succeeds_when_already_true() {
-        let flag = Arc::new(std::sync::atomic::AtomicBool::new(true));
-        let ok =
-            UnixSocketIpcServer::wait_ready_flag(&flag, std::time::Duration::from_millis(1)).await;
-        assert!(ok);
-    }
-
-    #[tokio::test]
-    async fn handle_jsonrpc_rejects_non_2_0_version() {
-        let dir = tempdir().expect("tempdir");
-        let sock = dir.path().join("bd.sock");
-        let prov = create_minimal_beardog_provider().await;
-        let id = Arc::new(PrimalIdentity::for_test("fam", "node"));
-        let server = UnixSocketIpcServer::new(&sock, prov, id, BtspSecurityMode::Development)
-            .await
-            .expect("server");
-        let resp: JsonRpcResponse = server
-            .handle_jsonrpc_request(r#"{"jsonrpc":"1.0","method":"health","id":1}"#)
-            .await
-            .expect("parse ok");
-        assert!(resp.error.is_some());
-        assert_eq!(resp.error.as_ref().expect("e").code, -32600);
-    }
-
-    #[tokio::test]
-    async fn handle_jsonrpc_method_not_found_uses_reserved_code() {
-        let dir = tempdir().expect("tempdir");
-        let sock = dir.path().join("bd2.sock");
-        let prov = create_minimal_beardog_provider().await;
-        let id = Arc::new(PrimalIdentity::for_test("fam", "node"));
-        let server = UnixSocketIpcServer::new(&sock, prov, id, BtspSecurityMode::Development)
-            .await
-            .expect("server");
-        let resp = server
-            .handle_jsonrpc_request(r#"{"jsonrpc":"2.0","method":"no.such.method","id":2}"#)
-            .await
-            .expect("parse ok");
-        let e = resp.error.expect("err");
-        assert_eq!(e.code, JsonRpcError::METHOD_NOT_FOUND);
-    }
-
-    #[tokio::test]
-    async fn handle_jsonrpc_invalid_params_branch() {
-        let dir = tempdir().expect("tempdir");
-        let sock = dir.path().join("bd3.sock");
-        let prov = create_minimal_beardog_provider().await;
-        let id = Arc::new(PrimalIdentity::for_test("fam", "node"));
-        let server = UnixSocketIpcServer::new(&sock, prov, id, BtspSecurityMode::Development)
-            .await
-            .expect("server");
-        let resp = server
-            .handle_jsonrpc_request(
-                r#"{"jsonrpc":"2.0","method":"crypto.hash_for_cipher","params":{},"id":3}"#,
-            )
-            .await
-            .expect("parse ok");
-        let e = resp.error.expect("err");
-        assert_eq!(e.code, JsonRpcError::INVALID_PARAMS);
-        assert!(e.message.contains("Missing") || e.message.contains("required"));
-    }
-
-    #[tokio::test]
-    async fn handle_jsonrpc_health_success() {
-        let dir = tempdir().expect("tempdir");
-        let sock = dir.path().join("bd4.sock");
-        let prov = create_minimal_beardog_provider().await;
-        let id = Arc::new(PrimalIdentity::for_test("fam", "node"));
-        let server = UnixSocketIpcServer::new(&sock, prov, id, BtspSecurityMode::Development)
-            .await
-            .expect("server");
-        let resp = server
-            .handle_jsonrpc_request(r#"{"jsonrpc":"2.0","method":"health","id":4}"#)
-            .await
-            .expect("parse ok");
-        assert!(resp.error.is_none());
-        assert!(resp.result.is_some());
-    }
-}
+#[path = "server_tests.rs"]
+mod tests;

@@ -138,7 +138,7 @@ impl HsmEntropyOrchestrator {
             None
         };
 
-        #[allow(
+        #[expect(
             unused_mut,
             reason = "Mutated only when target/feature cfgs enable providers"
         )]
@@ -423,7 +423,7 @@ impl HsmEntropyOrchestrator {
 
             #[allow(
                 unreachable_patterns,
-                reason = "Fallback when optional HsmSource variants are cfg-disabled"
+                reason = "Fallback when optional HsmSource variants are cfg-disabled; expect unfulfilled when all arms active"
             )]
             _ => 1,
         }
@@ -453,7 +453,7 @@ impl HsmEntropyOrchestrator {
 
             #[allow(
                 unreachable_patterns,
-                reason = "Fallback when optional HsmSource variants are cfg-disabled"
+                reason = "Fallback when optional HsmSource variants are cfg-disabled; expect unfulfilled when all arms active"
             )]
             _ => "Unknown Device".to_string(),
         }

@@ -62,13 +62,14 @@ pub fn create_registry_with_config(
     ExternalFunctionRegistry::new(config)
 }
 
-#[allow(
+#[expect(
     unused_imports,
     clippy::float_cmp,
     clippy::useless_vec,
     clippy::needless_range_loop,
     clippy::uninlined_format_args,
-    dead_code
+    dead_code,
+    reason = "large integration test modules: noisy style lints and synthetic helpers"
 )]
 #[cfg(test)]
 mod tests {
@@ -98,8 +99,6 @@ mod tests {
     async fn test_safety_checker() {
         use super::safety::{SafetyChecker, SafetyPolicy};
         use super::types::SecurityClearance;
-        // Note: PolicyEngine may need alternative implementation
-        // use beardog_types::canonical::providers_unified::traits::PolicyEngine;
 
         let mut checker = SafetyChecker::new(SecurityClearance::Internal);
 

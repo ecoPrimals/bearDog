@@ -141,10 +141,11 @@ mod key_lifecycle_tests {
     }
 
     #[tokio::test]
-    #[allow(
+    #[expect(
         clippy::cast_possible_truncation,
         clippy::cast_sign_loss,
-        clippy::cast_precision_loss
+        clippy::cast_precision_loss,
+        reason = "synthetic 1MB plaintext uses i % 256 as u8; indices bounded by buffer size"
     )]
     async fn test_large_data_encryption() -> Result<(), BearDogError> {
         let config = SoftwareHsmConfig::default();

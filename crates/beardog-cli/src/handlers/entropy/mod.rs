@@ -28,12 +28,12 @@ pub use types::EntropySeedMetadata;
     unused_imports,
     reason = "used by crate-internal tests; unused only from bin target"
 )]
-pub(crate) use hsm_selection::{format_hsm_interface_type_label, select_hsm_by_preference};
+pub use hsm_selection::{format_hsm_interface_type_label, select_hsm_by_preference};
 #[allow(
     unused_imports,
     reason = "used by crate-internal tests; unused only from bin target"
 )]
-pub(crate) use types::HsmInfo;
+pub use types::HsmInfo;
 
 #[cfg(test)]
 mod tests;

@@ -58,6 +58,9 @@ pub mod sovereign_rng;
 /// Shared type definitions
 pub mod types;
 
+#[cfg(test)]
+mod learning_tests;
+
 // Selective re-exports to avoid ambiguity
 pub use config::{HybridIntelligenceConfig, IntelligenceMode, LearningAlgorithm};
 pub use core_types::{IntelligenceCapability, MachineLearningConfig, ModelType};

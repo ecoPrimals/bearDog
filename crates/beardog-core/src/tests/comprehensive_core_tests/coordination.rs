@@ -10,7 +10,7 @@ struct Node {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[allow(dead_code)]
+#[expect(dead_code, reason = "NodeStatus variants reserved for coordination graph expansion")]
 enum NodeStatus {
     Active,
     Inactive,

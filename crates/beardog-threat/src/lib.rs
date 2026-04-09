@@ -52,7 +52,8 @@
     clippy::assertions_on_constants,
     clippy::useless_vec,
     clippy::absurd_extreme_comparisons,
-    unused_comparisons
+    unused_comparisons,
+    reason = "crate-level threat test modules: exhaustive coverage (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 mod threat_comprehensive_tests;
@@ -65,7 +66,8 @@ mod threat_comprehensive_tests;
     clippy::assertions_on_constants,
     clippy::useless_vec,
     clippy::absurd_extreme_comparisons,
-    unused_comparisons
+    unused_comparisons,
+    reason = "crate-level threat test modules: exhaustive coverage (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 mod tests;
@@ -78,7 +80,8 @@ mod tests;
     clippy::useless_vec,
     clippy::absurd_extreme_comparisons,
     unused_comparisons,
-    clippy::float_cmp
+    clippy::float_cmp,
+    reason = "coverage_gap tests: float comparisons and exhaustive patterns (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 mod coverage_gap;

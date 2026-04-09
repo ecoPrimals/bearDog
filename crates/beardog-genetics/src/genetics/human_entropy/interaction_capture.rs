@@ -287,7 +287,7 @@ impl InteractionEntropyCollector {
             interaction_type: match key_event.kind {
                 crossterm::event::KeyEventKind::Press => InteractionType::KeyPress,
                 crossterm::event::KeyEventKind::Release => InteractionType::KeyRelease,
-                _ => InteractionType::KeyPress, // Treat repeat as press
+                crossterm::event::KeyEventKind::Repeat => InteractionType::KeyPress, // Treat repeat as press
             },
             timestamp_nanos,
             data: InteractionData::Keyboard {
@@ -437,12 +437,13 @@ impl InteractionEntropyCollector {
         reason = "intervals are non-negative before usize indexing"
     )]
     fn calculate_shannon_entropy(intervals: &[f64]) -> f64 {
+        // Bin intervals into buckets (10ms buckets)
+        const BUCKET_SIZE: f64 = 10.0;
+
         if intervals.is_empty() {
             return 0.0;
         }
 
-        // Bin intervals into buckets (10ms buckets)
-        const BUCKET_SIZE: f64 = 10.0;
         let max_interval = intervals.iter().copied().fold(f64::NEG_INFINITY, f64::max);
         let num_buckets = ((max_interval / BUCKET_SIZE).ceil() as usize).max(1);
 

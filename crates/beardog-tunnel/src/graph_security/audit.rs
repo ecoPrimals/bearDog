@@ -9,6 +9,7 @@ use crate::graph_security::types::{
     TemplateId,
 };
 use beardog_errors::BearDogError;
+use ed25519_dalek::{Signature as DalekSignature, Verifier, VerifyingKey};
 use uuid::Uuid;
 
 /// Audit the origin and provenance of a template
@@ -205,8 +206,6 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
                 }
 
                 // Perform Ed25519 signature verification
-                use ed25519_dalek::{Signature, Verifier, VerifyingKey};
-
                 let verifying_key = VerifyingKey::from_bytes(
                     public_key_bytes.as_slice().try_into().map_err(|_| {
                         BearDogError::validation(&format!(
@@ -222,12 +221,13 @@ async fn verify_chain_of_custody(lineage: &[LineageVersion]) -> Result<bool, Bea
                     ))
                 })?;
 
-                let sig = Signature::from_bytes(signature.as_slice().try_into().map_err(|_| {
-                    BearDogError::validation(&format!(
-                        "Invalid signature format for lineage version {}",
-                        version.version
-                    ))
-                })?);
+                let sig =
+                    DalekSignature::from_bytes(signature.as_slice().try_into().map_err(|_| {
+                        BearDogError::validation(&format!(
+                            "Invalid signature format for lineage version {}",
+                            version.version
+                        ))
+                    })?);
 
                 // Verify the signature
                 if let Err(e) = verifying_key.verify(&canonical_json, &sig) {

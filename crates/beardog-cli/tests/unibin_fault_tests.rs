@@ -4,7 +4,7 @@
 //! Fault injection tests for `UniBin` commands - resilience testing
 
 use assert_cmd::Command;
-use predicates::prelude::*;
+use predicates::prelude::predicate;
 use std::fs;
 use tempfile::TempDir;
 

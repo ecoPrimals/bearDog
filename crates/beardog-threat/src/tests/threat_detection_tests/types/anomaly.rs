@@ -25,7 +25,10 @@ impl AnomalyDetector {
         self.samples.push(value);
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "anomaly scores normalized as f64 for statistical assertions"
+    )]
     pub fn establish_baseline(&mut self) {
         if self.samples.is_empty() {
             return;

@@ -3,12 +3,10 @@
 //! Key generation, derivation, storage, and metadata helpers for [`super::RustSoftwareHsm`].
 
 use super::super::super::types::KeyType;
-use super::super::types::ProtectedMemory;
-use super::super::types::*;
+use super::super::types::{AuditLogEntry, AuditLogger, ProtectedMemory, SoftwareKey};
 use super::RustSoftwareHsm;
 use crate::tunnel::hsm::GenerateKeyRequest;
-use crate::tunnel::hsm::types::HsmKey;
-use crate::tunnel::hsm::types::*;
+use crate::tunnel::hsm::types::{HsmKey, KeyHealthStatus, KeyMaterial, KeyMetadata};
 use beardog_errors::BearDogError;
 use beardog_types::hsm::HsmAlgorithm;
 use bytes::Bytes;

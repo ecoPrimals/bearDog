@@ -85,3 +85,50 @@ impl Default for GeneticOptimization {
 
 // Re-export canonical genetics types
 pub use crate::canonical::genetics::*;
+
+#[cfg(test)]
+mod tests {
+    // SPDX-License-Identifier: AGPL-3.0-or-later
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+
+    use super::*;
+
+    #[test]
+    fn genetic_config_default_values() {
+        let g = GeneticConfig::default();
+        assert_eq!(g.population_size, 100);
+        assert_eq!(g.mutation_rate, 0.01);
+        assert_eq!(g.crossover_rate, 0.8);
+        assert_eq!(g.elite_percentage, 0.1);
+        assert_eq!(g.max_generations, 1000);
+    }
+
+    #[test]
+    fn genetic_optimization_default_values() {
+        let o = GeneticOptimization::default();
+        assert_eq!(o.target_fitness, 0.95);
+        assert!(o.adaptive_parameters);
+    }
+
+    #[test]
+    fn genetic_result_roundtrip_serde() {
+        let r = GeneticResult {
+            best_fitness: 0.99,
+            generation: 42,
+            converged: true,
+            execution_time_ms: 123,
+        };
+        let json = serde_json::to_string(&r).expect("serialize");
+        let r2: GeneticResult = serde_json::from_str(&json).expect("deserialize");
+        assert!(r2.converged);
+        assert_eq!(r2.generation, 42);
+    }
+
+    #[test]
+    fn genetic_config_roundtrip_serde() {
+        let g = GeneticConfig::default();
+        let json = serde_json::to_string(&g).expect("serialize");
+        let g2: GeneticConfig = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(g2.population_size, g.population_size);
+    }
+}

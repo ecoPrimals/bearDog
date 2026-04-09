@@ -23,6 +23,10 @@
 //! - ✅ **Pure Rust**: Zero external dependencies
 
 use anyhow::{Context, Result};
+use beardog_core::self_knowledge::{
+    IdentityInputs, PrimalIdentity, discovered_simple_capabilities,
+};
+use beardog_core::socket_config::ipc_capability_domain_stems_resolved;
 use beardog_types::constants::domains::network::ipc_discovery as ipc_layout;
 use beardog_types::constants::domains::system::defaults::{
     DEFAULT_IPC_PORT_FILE, DEFAULT_SOCKET_PATH,
@@ -141,7 +145,7 @@ pub struct UnixSocketPathHints {
     pub xdg_runtime_dir: Option<String>,
     /// `BIOMEOS_IPC_NAMESPACE` override (directory under runtime dir).
     pub ipc_namespace: Option<String>,
-    /// Socket filename stem (e.g. `PRIMAL_NAME`); default `beardog`.
+    /// Socket filename stem (e.g. `PRIMAL_NAME`); default matches [`PrimalIdentity`] resolution.
     pub primal_socket_stem: Option<String>,
 }
 
@@ -159,7 +163,7 @@ pub fn get_unix_socket_paths_with(hints: &UnixSocketPathHints) -> Vec<PathBuf> {
         .clone()
         .or_else(|| beardog_errors::process_env::var("PRIMAL_NAME").ok())
         .or_else(|| beardog_errors::process_env::var("BEARDOG_PRIMAL_NAME").ok())
-        .unwrap_or_else(|| "beardog".to_string());
+        .unwrap_or_else(|| PrimalIdentity::from_inputs(&IdentityInputs::from_env()).name);
 
     let subdir =
         ipc_layout::resolve_biomeos_ipc_subdir_from_optional(hints.ipc_namespace.as_deref());
@@ -169,6 +173,14 @@ pub fn get_unix_socket_paths_with(hints: &UnixSocketPathHints) -> Vec<PathBuf> {
         p.push(&subdir);
         p.push(format!("{stem}.sock"));
         paths.push(p);
+
+        // wateringHole IPC v3.1: try capability-domain symlinks (e.g. crypto.sock → beardog.sock)
+        for cap_stem in ipc_capability_domain_stems_resolved(&discovered_simple_capabilities()) {
+            let mut q = PathBuf::from(runtime_dir);
+            q.push(&subdir);
+            q.push(format!("{cap_stem}.sock"));
+            paths.push(q);
+        }
     }
 
     paths.push(PathBuf::from(DEFAULT_SOCKET_PATH));

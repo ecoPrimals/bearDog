@@ -182,9 +182,7 @@ mod test_helpers {
         // For test infrastructure validation, immediate return
         let _ = max_wait; // Suppress warning
 
-        // Real implementation would be:
-        // let (tx, mut rx) = watch::channel(false);
-        // timeout(max_wait, async { rx.changed().await }).await.is_ok()
+        // Production: `tokio::sync::watch` + `timeout(max_wait, rx.changed())` (see git history).
 
         true // Simulate successful recovery for test infra validation
     }

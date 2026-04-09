@@ -4,7 +4,6 @@
 //
 // This module provides string optimizations using safe Rust patterns.
 
-// use std::borrow::Cow; // Currently unused but kept for future zero-copy string operations
 use std::sync::Arc;
 
 /// Zero-copy string implementation

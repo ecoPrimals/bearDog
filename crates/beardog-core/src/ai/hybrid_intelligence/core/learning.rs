@@ -11,8 +11,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 use beardog_errors::BearDogError;
 
-// CLEANED: Duplicate OnlineLearningConfig removed - use canonical version:
-// use beardog_types::canonical::config::domains::ai_config::OnlineLearningConfig;
+// OnlineLearningConfig: use `beardog_types::canonical::config::domains::ai_config`.
 
 /// Learning rate adaptation strategies
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]

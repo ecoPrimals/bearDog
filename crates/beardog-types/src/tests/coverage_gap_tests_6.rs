@@ -111,7 +111,7 @@ mod config_utils_tests {
     fn test_unified_config_utils_get_shared_config_stats() {
         let stats = UnifiedConfigUtils::get_shared_config_stats();
         // Global state is shared across concurrent tests — assert the stats
-        // struct is well-formed rather than pinning a specific count.
+        // Shape is well-formed rather than pinning a specific count.
         let _ = stats.memory_usage_estimate_kb;
     }
 

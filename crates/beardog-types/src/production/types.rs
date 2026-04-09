@@ -502,4 +502,55 @@ mod tests {
         assert_eq!(metrics.daily_request_volume(), 8_640_000.0);
         assert_eq!(metrics.monthly_request_volume(), 259_200_000.0);
     }
+
+    #[test]
+    fn environment_level_allows_debugging_and_display() {
+        assert!(EnvironmentLevel::Development.allows_debugging());
+        assert!(EnvironmentLevel::Staging.allows_debugging());
+        assert!(EnvironmentLevel::PreProduction.allows_debugging());
+        assert!(!EnvironmentLevel::Production.allows_debugging());
+        assert!(!EnvironmentLevel::Critical.allows_debugging());
+
+        assert_eq!(
+            format!("{}", EnvironmentLevel::PreProduction),
+            "Pre-Production"
+        );
+        assert_eq!(format!("{}", EnvironmentLevel::Staging), "Staging");
+    }
+
+    #[test]
+    fn environment_level_staging_and_preprod_log_level_info() {
+        assert_eq!(EnvironmentLevel::Staging.log_level(), "info");
+        assert_eq!(EnvironmentLevel::PreProduction.log_level(), "info");
+    }
+
+    #[test]
+    fn operational_status_alive_intervention_and_alert_severity() {
+        assert!(OperationalStatus::Healthy.is_alive());
+        assert!(!OperationalStatus::Critical.is_alive());
+        assert!(!OperationalStatus::Shutdown.is_alive());
+        assert!(OperationalStatus::Initializing.is_alive());
+
+        assert_eq!(OperationalStatus::Healthy.alert_severity(), "none");
+        assert_eq!(OperationalStatus::Critical.alert_severity(), "critical");
+        assert_eq!(OperationalStatus::Shutdown.alert_severity(), "info");
+    }
+
+    #[test]
+    fn performance_metrics_success_rate_complements_error_rate() {
+        let m = PerformanceMetrics {
+            error_rate_percent: 0.5,
+            ..Default::default()
+        };
+        assert_eq!(m.success_rate(), 99.5);
+    }
+
+    #[test]
+    fn serde_environment_level_preproduction_rename() {
+        let j = r#""pre-production""#;
+        let e: EnvironmentLevel = serde_json::from_str(j).expect("deserialize");
+        assert!(matches!(e, EnvironmentLevel::PreProduction));
+        let out = serde_json::to_string(&e).expect("serialize");
+        assert_eq!(out, j);
+    }
 }

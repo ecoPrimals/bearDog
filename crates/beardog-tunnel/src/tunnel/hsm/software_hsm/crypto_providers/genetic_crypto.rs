@@ -239,12 +239,12 @@ impl CryptoProvider<KeyType> for GeneticCryptoProvider {
         key_material: &[u8],
         ciphertext: &[u8],
     ) -> Result<Vec<u8>, BearDogError> {
+        const NONCE_LEN: usize = 12;
+
         debug!(
             "🔓 Decrypting {} bytes with AES-256-GCM (Pure Rust, AES-NI)",
             ciphertext.len()
         );
-
-        const NONCE_LEN: usize = 12;
 
         if ciphertext.len() < NONCE_LEN {
             return Err(BearDogError::crypto_error(format!(
@@ -357,6 +357,8 @@ impl CryptoProvider<KeyType> for GeneticCryptoProvider {
         root_key: &[u8],
         derivation_data: &[u8],
     ) -> Result<Vec<u8>, BearDogError> {
+        use hmac::Mac as _; // Import Mac trait for update/finalize
+
         debug!("🔑 Deriving key with HMAC-SHA256 (Pure Rust)");
 
         if root_key.is_empty() {
@@ -366,8 +368,6 @@ impl CryptoProvider<KeyType> for GeneticCryptoProvider {
         }
 
         // Use HMAC-SHA256 for key derivation (Pure Rust)
-        use hmac::Mac as _; // Import Mac trait for update/finalize
-
         let mut mac = <HmacSha256 as Mac>::new_from_slice(root_key)
             .map_err(|e| BearDogError::crypto_error(format!("Failed to create HMAC: {e}")))?;
 

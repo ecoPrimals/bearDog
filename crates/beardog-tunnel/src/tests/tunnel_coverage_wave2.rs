@@ -73,7 +73,7 @@ fn doctor_json_status_line_comprehensive_true_and_false() {
 #[test]
 fn doctor_resolve_socket_path_explicit_wins() {
     assert_eq!(
-        doctor_resolve_socket_path(Some("/explicit.sock".into())),
+        doctor_resolve_socket_path(Some("/explicit.sock".into())).expect("should resolve"),
         "/explicit.sock"
     );
 }

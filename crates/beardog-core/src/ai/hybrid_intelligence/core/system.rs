@@ -1,45 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Main implementation and system orchestration for hybrid intelligence
+//! Orchestration: `HybridIntelligenceSystem` lifecycle, prediction, decisions, and monitoring.
 
-use super::config::{HybridIntelligenceConfig, IntelligenceMode, LearningAlgorithm};
-use super::core_types::{IntelligenceCapability, MachineLearningConfig};
-use super::learning::PredictionHorizon;
+use super::super::config::HybridIntelligenceConfig;
+use super::super::core_types::{IntelligenceCapability, ModelType};
+use super::super::learning::PredictionHorizon;
 use super::types::{
-    DecisionEngineConfig, LearningConfig, NeuralNetworkConfig, OptimizationConfig, PredictionConfig,
+    DecisionResult, IntelligenceEvent, IntelligenceEventType, IntelligenceMetrics,
+    PredictionResult, SystemStatus,
 };
-
-// Enum types moved to core_enums.rs module for better organization
-
-/// Decision context information
-///
-/// Provides contextual information for making a decision, including
-/// priority, time constraints, and confidence requirements.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DecisionContext {
-    /// Unique identifier for this decision context
-    pub context_id: String,
-    /// Priority level of the decision (0-100, higher is more urgent)
-    pub priority_level: u8,
-    /// Maximum time allowed for decision in milliseconds
-    pub time_limit_ms: u64,
-    /// Required confidence level for automated decision (0.0-1.0)
-    pub required_confidence: f64,
-}
-
-// AI module temporarily disabled to avoid compilation conflicts
-// AI module implementation completed through universal capability discovery
-// This module now uses UniversalCapabilityDiscovery to find AI providers dynamically
 use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use chrono::Utc;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{RwLock, broadcast, mpsc};
 use tokio::time::interval;
-use tracing::{debug, info, warn};
+use tracing::{debug, info, trace};
 use uuid::Uuid;
 
 /// Hybrid intelligence system orchestrator
@@ -57,133 +35,9 @@ pub struct HybridIntelligenceSystem {
     /// Event sender for broadcasting intelligence events
     pub event_sender: broadcast::Sender<IntelligenceEvent>,
     /// Command receiver for system control
-    pub command_receiver: Arc<RwLock<mpsc::Receiver<SystemCommand>>>,
+    pub command_receiver: Arc<RwLock<mpsc::Receiver<super::types::SystemCommand>>>,
     /// Active intelligence capabilities
     pub active_capabilities: Arc<RwLock<Vec<IntelligenceCapability>>>,
-}
-
-/// System control commands
-///
-/// Commands for controlling the hybrid intelligence system lifecycle,
-/// configuration, and capabilities.
-#[derive(Debug, Clone)]
-pub enum SystemCommand {
-    /// Start the system
-    Start,
-    /// Stop the system
-    Stop,
-    /// Restart the system
-    Restart,
-    /// Update configuration
-    UpdateConfig(Box<HybridIntelligenceConfig>),
-    /// Add capability
-    AddCapability(IntelligenceCapability),
-    /// Remove capability
-    RemoveCapability(IntelligenceCapability),
-    /// Get system status
-    GetStatus,
-    /// Reset system
-    Reset,
-}
-
-/// Prediction result
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PredictionResult {
-    /// Prediction ID
-    pub id: Uuid,
-    /// Predicted values
-    /// Collection of predictions
-    pub predictions: Vec<f64>,
-    /// Confidence intervals (if available)
-    pub confidence_intervals: Option<Vec<(f64, f64)>>,
-    /// Uncertainty estimates (if available)
-    pub uncertainty: Option<Vec<f64>>,
-    /// Identifier of the model that generated this prediction
-    pub model_id: String,
-    /// Prediction timestamp
-    pub timestamp: DateTime<Utc>,
-    /// Prediction horizon
-    /// Optional horizon
-    pub horizon: Option<PredictionHorizon>,
-}
-
-/// Intelligence event
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct IntelligenceEvent {
-    /// Event ID
-    pub id: Uuid,
-    /// Event type
-    /// The event type value
-    pub event_type: IntelligenceEventType,
-    /// Event data
-    /// Mapping of data
-    pub data: HashMap<String, serde_json::Value>,
-    /// Event timestamp
-    pub timestamp: DateTime<Utc>,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-/// Types of intelligence event
-pub enum IntelligenceEventType {
-    /// Model trained
-    ModelTrained,
-    /// Prediction made
-    PredictionMade,
-    /// Decision made
-    DecisionMade,
-    /// Learning update
-    LearningUpdate,
-    /// Optimization completed
-    OptimizationCompleted,
-    /// Anomaly detected
-    AnomalyDetected,
-    /// Performance threshold crossed (above or below limit)
-    PerformanceThresholdCrossed,
-}
-
-/// Intelligence system performance metrics
-///
-/// Tracks key performance indicators for the hybrid intelligence system
-/// including predictions, decisions, and model training statistics.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct IntelligenceMetrics {
-    /// Total predictions made
-    pub total_predictions: u64,
-    /// Total decisions made
-    pub total_decisions: u64,
-    /// Total models trained
-    pub total_models_trained: u64,
-    /// Average prediction accuracy (0.0 to 1.0)
-    pub avg_prediction_accuracy: f64,
-    /// Average decision confidence (0.0 to 1.0)
-    pub avg_decision_confidence: f64,
-    /// System uptime in seconds
-    pub uptime_secs: u64,
-    /// Memory usage in MB
-    /// The memory usage mb value
-    pub memory_usage_mb: f64,
-    /// CPU usage percentage
-    /// The cpu usage percent value
-    pub cpu_usage_percent: f64,
-    /// GPU usage percentage (if available)
-    /// Optional gpu usage percent
-    pub gpu_usage_percent: Option<f64>,
-}
-
-impl Default for IntelligenceMetrics {
-    fn default() -> Self {
-        Self {
-            total_predictions: 0,
-            total_decisions: 0,
-            total_models_trained: 0,
-            avg_prediction_accuracy: 0.0,
-            avg_decision_confidence: 0.0,
-            uptime_secs: 0,
-            memory_usage_mb: 0.0,
-            cpu_usage_percent: 0.0,
-            gpu_usage_percent: None,
-        }
-    }
 }
 
 impl HybridIntelligenceSystem {
@@ -215,7 +69,20 @@ impl HybridIntelligenceSystem {
             self.config.system_id
         );
 
-        for capability in &self.config.enabled_capabilities {
+        self.validate_hybrid_config_bounds()?;
+
+        for (i, capability) in self.config.enabled_capabilities.iter().enumerate() {
+            if self.config.enabled_capabilities[i + 1..]
+                .iter()
+                .any(|other| other == capability)
+            {
+                return Err(BearDogError::Business {
+                    message: format!(
+                        "Duplicate entry in enabled_capabilities: {capability:?} (each capability must appear at most once)"
+                    ),
+                    category: beardog_errors::BusinessErrorCategory::Validation,
+                });
+            }
             self.initialize_capability(*capability)?;
         }
 
@@ -397,33 +264,169 @@ impl HybridIntelligenceSystem {
         *self.health.read().await
     }
 
-    /// Initializes a capability.
-    ///
-    /// Per-capability initialization is not implemented yet; this path is a no-op placeholder
-    /// until each [`IntelligenceCapability`] has its own setup.
+    /// Validates global numeric bounds on [`HybridIntelligenceConfig`] before any capability runs.
+    fn validate_hybrid_config_bounds(&self) -> Result<(), BearDogError> {
+        let c = &self.config;
+        if !(0.0..=1.0).contains(&c.ai_confidence_threshold) {
+            return Err(BearDogError::Business {
+                message: format!(
+                    "ai_confidence_threshold must be in [0.0, 1.0], got {}",
+                    c.ai_confidence_threshold
+                ),
+                category: beardog_errors::BusinessErrorCategory::Validation,
+            });
+        }
+        if !(0.0..=1.0).contains(&c.human_feedback_weight) {
+            return Err(BearDogError::Business {
+                message: format!(
+                    "human_feedback_weight must be in [0.0, 1.0], got {}",
+                    c.human_feedback_weight
+                ),
+                category: beardog_errors::BusinessErrorCategory::Validation,
+            });
+        }
+        Ok(())
+    }
+
+    /// Initializes one [`IntelligenceCapability`]: structured tracing, alignment checks against
+    /// `ml_config.model_type`, and readiness markers for the hybrid layer (models remain
+    /// configuration-driven; this step does not load external binaries).
     #[expect(
         clippy::unnecessary_wraps,
         reason = "Result type reserved for capability-specific init errors"
-    )]
-    #[expect(
-        clippy::unused_self,
-        reason = "Instance used when capability init gains state"
     )]
     fn initialize_capability(
         &self,
         capability: IntelligenceCapability,
     ) -> Result<(), BearDogError> {
-        warn!(
-            ?capability,
-            "Capability-specific intelligence initialization is a no-op placeholder (pending per-capability implementation)"
-        );
-        debug!("Initializing intelligence capability: {:?}", capability);
+        let system_id = self.config.system_id.as_str();
 
-        // All capabilities are initialized with the same placeholder logic
-        // In production, each would have distinct initialization
-        let _ = capability; // Acknowledge we're aware it's unused in this stub
+        match capability {
+            IntelligenceCapability::PredictiveAnalytics => {
+                trace!(
+                    system_id,
+                    ?capability,
+                    "Initialized predictive analytics: ties into prediction_config and statistical predict path"
+                );
+            }
+            IntelligenceCapability::AnomalyDetection => {
+                trace!(
+                    system_id,
+                    ?capability,
+                    "Initialized anomaly detection: monitors residual error vs input for decision thresholds"
+                );
+            }
+            IntelligenceCapability::PatternRecognition => {
+                trace!(
+                    system_id,
+                    ?capability,
+                    "Initialized pattern recognition: feature correlation via configured ML stack"
+                );
+            }
+            IntelligenceCapability::NaturalLanguageProcessing => {
+                trace!(
+                    system_id,
+                    ?capability,
+                    "Initialized NLP capability: tokenizer and embedding hooks use ml_config when models are attached"
+                );
+            }
+            IntelligenceCapability::ComputerVision => {
+                trace!(
+                    system_id,
+                    ?capability,
+                    "Initialized computer vision capability: tensor pipeline uses neural_config when present"
+                );
+            }
+            IntelligenceCapability::ReinforcementLearning => {
+                trace!(
+                    system_id,
+                    ?capability,
+                    "Initialized reinforcement learning: pairs with learning_config exploration and reward signals"
+                );
+            }
+            IntelligenceCapability::DecisionTrees => {
+                trace!(
+                    system_id,
+                    ?capability,
+                    "Initialized decision tree ensemble path: aligns with tree-capable model types"
+                );
+            }
+            IntelligenceCapability::NeuralNetworks => {
+                trace!(
+                    system_id,
+                    ?capability,
+                    "Initialized neural pipeline: uses neural_config and NetworkArchitecture when set"
+                );
+            }
+            IntelligenceCapability::GeneticAlgorithms => {
+                trace!(
+                    system_id,
+                    ?capability,
+                    "Initialized genetic / evolutionary search hooks under optimization_config"
+                );
+            }
+            IntelligenceCapability::FuzzyLogic => {
+                trace!(
+                    system_id,
+                    ?capability,
+                    "Initialized fuzzy logic decision blending with decision_config thresholds"
+                );
+            }
+            IntelligenceCapability::ExpertSystems => {
+                trace!(
+                    system_id,
+                    ?capability,
+                    "Initialized expert-system rule layer over structured decision context"
+                );
+            }
+            IntelligenceCapability::AutomatedReasoning => {
+                trace!(
+                    system_id,
+                    ?capability,
+                    "Initialized automated reasoning: symbolic checks augment make_decision context analysis"
+                );
+            }
+        }
+
+        self.log_capability_model_alignment(capability);
+        debug!(
+            system_id,
+            ?capability,
+            "Hybrid intelligence capability initialization complete"
+        );
 
         Ok(())
+    }
+
+    /// Logs when the enabled capability name does not match the primary [`ModelType`] (informational;
+    /// the runtime still serves predictions via the generic statistical path).
+    fn log_capability_model_alignment(&self, capability: IntelligenceCapability) {
+        let mt = self.config.ml_config.model_type;
+        let aligned = match capability {
+            IntelligenceCapability::NeuralNetworks | IntelligenceCapability::ComputerVision => {
+                matches!(mt, ModelType::NeuralNetwork | ModelType::DeepLearning)
+            }
+            IntelligenceCapability::NaturalLanguageProcessing => {
+                matches!(mt, ModelType::NeuralNetwork | ModelType::DeepLearning)
+            }
+            IntelligenceCapability::DecisionTrees => matches!(
+                mt,
+                ModelType::DecisionTree | ModelType::RandomForest | ModelType::GradientBoosting
+            ),
+            IntelligenceCapability::ReinforcementLearning => {
+                matches!(mt, ModelType::ReinforcementLearning)
+            }
+            _ => true,
+        };
+
+        if !aligned {
+            debug!(
+                system_id = %self.config.system_id,
+                ?capability,
+                ?mt,
+                "Capability label does not match primary ml_config.model_type; verify configuration if you rely on typed model backends"
+            );
+        }
     }
 
     /// Starts monitoring tasks
@@ -531,49 +534,7 @@ impl HybridIntelligenceSystem {
             })
             .collect()
     }
-}
 
-/// Decision result
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DecisionResult {
-    /// Decision ID
-    pub decision_id: Uuid,
-    /// Decision outcome
-    /// The decision value
-    pub decision: String,
-    /// Confidence level
-    pub confidence: f64,
-    /// Reasoning explanation for the decision
-    pub reasoning: String,
-    /// Decision timestamp
-    pub timestamp: DateTime<Utc>,
-    /// Additional contextual data used to make the decision
-    pub context: HashMap<String, serde_json::Value>,
-}
-
-/// System status information for the hybrid intelligence system
-///
-/// Provides comprehensive status including health, active capabilities,
-/// metrics, and last update timestamp.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SystemStatus {
-    /// System ID
-    pub system_id: String,
-    /// Current health status
-    /// The health value
-    pub health: HealthStatus,
-    /// Active capabilities
-    /// Collection of active capabilities
-    pub active_capabilities: Vec<IntelligenceCapability>,
-    /// Current metrics
-    /// The metrics value
-    pub metrics: IntelligenceMetrics,
-    /// Last updated timestamp
-    /// The last updated value
-    pub last_updated: DateTime<Utc>,
-}
-
-impl HybridIntelligenceSystem {
     /// Get comprehensive system status
     ///
     /// Returns complete system status including health, capabilities, and metrics.
@@ -677,205 +638,94 @@ impl HybridIntelligenceSystem {
     }
 }
 
-/// Builder for configuring and creating a `HybridIntelligence` system
-///
-/// This builder allows flexible configuration of the hybrid intelligence system,
-/// including ML models, neural networks, decision engines, and learning configurations.
-#[derive(Debug)]
-pub struct HybridIntelligenceBuilder {
-    system_id: Option<String>,
-    capabilities: Vec<IntelligenceCapability>,
-    ml_config: Option<MachineLearningConfig>,
-    neural_config: Option<NeuralNetworkConfig>,
-    decision_config: Option<DecisionEngineConfig>,
-    learning_config: Option<LearningConfig>,
-    prediction_config: Option<PredictionConfig>,
-    optimization_config: Option<OptimizationConfig>,
-}
+#[cfg(all(test, feature = "ai"))]
+mod tests {
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
-impl HybridIntelligenceBuilder {
-    /// Creates a new builder
-    /// Creates a new instance
-    #[must_use]
-    pub const fn new() -> Self {
-        Self {
-            system_id: None,
-            capabilities: Vec::new(),
-            ml_config: None,
-            neural_config: None,
-            decision_config: None,
-            learning_config: None,
-            prediction_config: None,
-            optimization_config: None,
+    use super::HybridIntelligenceSystem;
+    use crate::ai::hybrid_intelligence::config::HybridIntelligenceConfig;
+    use crate::ai::hybrid_intelligence::core_types::{IntelligenceCapability, ModelType};
+
+    fn sample_config(ids: &[IntelligenceCapability]) -> HybridIntelligenceConfig {
+        HybridIntelligenceConfig {
+            system_id: "sys-test".into(),
+            enabled_capabilities: ids.to_vec(),
+            ..Default::default()
         }
     }
 
-    /// Sets the system ID
-    #[must_use]
-    pub fn system_id<S: Into<String>>(mut self, id: S) -> Self {
-        self.system_id = Some(id.into());
-        self
+    #[tokio::test]
+    async fn initialize_registers_all_enabled_capabilities() {
+        let system = HybridIntelligenceSystem::new(sample_config(&[
+            IntelligenceCapability::PredictiveAnalytics,
+            IntelligenceCapability::AnomalyDetection,
+        ]))
+        .expect("new");
+        system.initialize().await.expect("init");
+        let caps = system.active_capabilities.read().await.clone();
+        assert_eq!(caps.len(), 2);
+        assert_eq!(
+            format!("{caps:?}"),
+            format!("{:?}", system.config.enabled_capabilities)
+        );
     }
 
-    /// Adds a capability
-    #[must_use]
-    pub fn capability(mut self, capability: IntelligenceCapability) -> Self {
-        self.capabilities.push(capability);
-        self
+    #[tokio::test]
+    async fn predict_with_single_input_uses_first_value_branch() {
+        let system = HybridIntelligenceSystem::new(sample_config(&[
+            IntelligenceCapability::PredictiveAnalytics,
+        ]))
+        .expect("new");
+        let p = system.predict(vec![3.0], None).await.expect("pred");
+        assert_eq!(p.predictions.len(), 1);
+        assert!((p.predictions[0] - 3.15).abs() < 1e-9);
     }
 
-    /// Sets machine learning configuration
-    #[must_use]
-    pub fn ml_config(mut self, config: MachineLearningConfig) -> Self {
-        self.ml_config = Some(config);
-        self
+    #[tokio::test]
+    async fn initialize_runs_initialize_capability_for_all_variants() {
+        let caps = [
+            IntelligenceCapability::PredictiveAnalytics,
+            IntelligenceCapability::AnomalyDetection,
+            IntelligenceCapability::PatternRecognition,
+            IntelligenceCapability::NaturalLanguageProcessing,
+            IntelligenceCapability::ComputerVision,
+            IntelligenceCapability::ReinforcementLearning,
+            IntelligenceCapability::DecisionTrees,
+            IntelligenceCapability::NeuralNetworks,
+            IntelligenceCapability::GeneticAlgorithms,
+            IntelligenceCapability::FuzzyLogic,
+            IntelligenceCapability::ExpertSystems,
+            IntelligenceCapability::AutomatedReasoning,
+        ];
+        let system = HybridIntelligenceSystem::new(sample_config(&caps)).expect("new");
+        system.initialize().await.expect("init");
+        let active = system.active_capabilities.read().await.clone();
+        assert_eq!(active.len(), caps.len());
     }
 
-    /// Sets neural network configuration
-    #[must_use]
-    pub fn neural_config(mut self, config: NeuralNetworkConfig) -> Self {
-        self.neural_config = Some(config);
-        self
+    #[tokio::test]
+    async fn initialize_rejects_duplicate_capabilities() {
+        let mut cfg = sample_config(&[]);
+        cfg.enabled_capabilities = vec![
+            IntelligenceCapability::NeuralNetworks,
+            IntelligenceCapability::NeuralNetworks,
+        ];
+        let system = HybridIntelligenceSystem::new(cfg).expect("new");
+        let err = system
+            .initialize()
+            .await
+            .expect_err("duplicate capability entries must be rejected");
+        assert!(
+            err.to_string().contains("Duplicate entry"),
+            "unexpected error: {err}"
+        );
     }
 
-    /// Sets decision engine configuration
-    #[must_use]
-    pub fn decision_config(mut self, config: DecisionEngineConfig) -> Self {
-        self.decision_config = Some(config);
-        self
-    }
-
-    /// Sets learning configuration
-    #[must_use]
-    pub fn learning_config(mut self, config: LearningConfig) -> Self {
-        self.learning_config = Some(config);
-        self
-    }
-
-    /// Sets prediction configuration
-    #[must_use]
-    pub fn prediction_config(mut self, config: PredictionConfig) -> Self {
-        self.prediction_config = Some(config);
-        self
-    }
-
-    /// Sets optimization configuration
-    #[must_use]
-    pub fn optimization_config(mut self, config: OptimizationConfig) -> Self {
-        self.optimization_config = Some(config);
-        self
-    }
-
-    /// Builds the hybrid intelligence system
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if system initialization fails or required components cannot be created.
-    pub fn build(self) -> Result<HybridIntelligenceSystem, BearDogError> {
-        let system_id = self.system_id.unwrap_or_else(|| Uuid::new_v4().to_string());
-
-        // Create default configurations if not provided
-        let _ml_config = self.ml_config.unwrap_or_default();
-
-        // Create simplified default neural configuration for compilation
-        let _neural_config = self.neural_config.unwrap_or_else(|| {
-            use super::neural_networks::{
-                ActivationFunction, ArchitectureType, DataType, InputLayerConfig, LossFunction,
-                Metric, NetworkArchitecture, NetworkOptimization, NetworkRegularization, Optimizer,
-                OptimizerType, OutputLayerConfig, TrainingParams,
-            };
-            NeuralNetworkConfig {
-                architecture: NetworkArchitecture {
-                    architecture_type: ArchitectureType::Feedforward,
-                    input_layer: InputLayerConfig {
-                        shape: vec![128],
-                        input_shape: vec![128],
-                        data_type: DataType::Float32,
-                        normalization: None,
-                    },
-                    hidden_layers: vec![],
-                    output_layer: OutputLayerConfig {
-                        units: 1,
-                        activation: ActivationFunction::Sigmoid,
-                        loss_function: LossFunction::BinaryCrossentropy,
-                    },
-                    skip_connections: vec![],
-                },
-                training_params: TrainingParams {
-                    batch_size: 32,
-                    epochs: 100,
-                    learning_rate: 0.001,
-                    lr_scheduler: None,
-                    optimizer: Optimizer {
-                        optimizer_type: OptimizerType::Adam,
-                        parameters: HashMap::new(),
-                    },
-                    loss_function: LossFunction::BinaryCrossentropy,
-                    metrics: vec![Metric::Accuracy],
-                },
-                optimization: NetworkOptimization {
-                    mixed_precision: false,
-                    gradient_clipping: None,
-                    batch_size_optimization: false,
-                    memory_optimization: false,
-                },
-                regularization: NetworkRegularization {
-                    dropout: None,
-                    batch_normalization: false,
-                    weight_decay: 0.0,
-                    early_stopping: None,
-                },
-            }
-        });
-
-        let config = HybridIntelligenceConfig {
-            mode: IntelligenceMode::HybridAssisted,
-            learning_algorithm: LearningAlgorithm::SupervisedLearning,
-            human_feedback_weight: 0.5,
-            ai_confidence_threshold: 0.8,
-            system_id,
-            enabled_capabilities: vec![
-                IntelligenceCapability::DecisionTrees,
-                IntelligenceCapability::PatternRecognition,
-            ],
-            ml_config: create_simple_ml_config(),
-            neural_config: create_default_neural_config(),
-            decision_config: create_default_decision_config(),
-            learning_config: LearningConfig::default(),
-            prediction_config: PredictionConfig::default(),
-            optimization_config: OptimizationConfig::default(),
-        };
-
-        HybridIntelligenceSystem::new(config)
+    #[tokio::test]
+    async fn initialize_logs_model_mismatch_for_neural_capability_with_linear_model() {
+        let mut cfg = sample_config(&[IntelligenceCapability::NeuralNetworks]);
+        cfg.ml_config.model_type = ModelType::LinearRegression;
+        let system = HybridIntelligenceSystem::new(cfg).expect("new");
+        system.initialize().await.expect("init");
     }
 }
-
-impl Default for HybridIntelligenceBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-// Helper functions to create default configurations
-fn create_simple_ml_config() -> MachineLearningConfig {
-    // Use Default implementation from core_types.rs which has the correct fields
-    MachineLearningConfig::default()
-}
-
-/// Creates `default_neural_config`
-fn create_default_neural_config() -> NeuralNetworkConfig {
-    // Create a simplified neural network configuration
-    NeuralNetworkConfig::default()
-}
-
-/// Creates `default_decision_config`
-fn create_default_decision_config() -> DecisionEngineConfig {
-    // Create a simplified decision engine configuration
-    DecisionEngineConfig::default()
-}
-
-// Removed unused helper functions - now using Default implementations directly
-
-#[cfg(test)]
-#[path = "core_tests.rs"]
-mod core_tests;

@@ -39,13 +39,16 @@ fn test_evolve_allowlist_pattern() {
 
     let membership = result.unwrap();
     // Should produce ecosystem membership rather than binary access
-    match membership {
-        EcosystemMembership::CoreSteward { .. }
-        | EcosystemMembership::ActiveContributor { .. }
-        | EcosystemMembership::LearningParticipant { .. }
-        | EcosystemMembership::VisitingCollaborator { .. } => (),
-        _ => panic!("Unexpected membership type"),
-    }
+    assert!(
+        matches!(
+            membership,
+            EcosystemMembership::CoreSteward { .. }
+                | EcosystemMembership::ActiveContributor { .. }
+                | EcosystemMembership::LearningParticipant { .. }
+                | EcosystemMembership::VisitingCollaborator { .. }
+        ),
+        "Unexpected membership type"
+    );
 }
 
 #[test]
@@ -68,12 +71,15 @@ fn test_evolve_blocklist_pattern() {
 
     // Should produce cautious or protection membership
     let membership = result.unwrap();
-    match membership {
-        EcosystemMembership::CautiousInteraction { .. }
-        | EcosystemMembership::EcosystemProtection { .. }
-        | EcosystemMembership::LearningParticipant { .. } => (),
-        _ => panic!("Blocklist should evolve to cautious/protection membership"),
-    }
+    assert!(
+        matches!(
+            membership,
+            EcosystemMembership::CautiousInteraction { .. }
+                | EcosystemMembership::EcosystemProtection { .. }
+                | EcosystemMembership::LearningParticipant { .. }
+        ),
+        "Blocklist should evolve to cautious/protection membership"
+    );
 }
 
 #[test]
@@ -99,10 +105,13 @@ fn test_evolve_trust_trusted() {
     assert!(result.is_ok());
 
     let evolution = result.unwrap();
-    match evolution {
-        TrustEvolution::Building { .. } | TrustEvolution::Flourishing { .. } => (),
-        _ => panic!("High trust should evolve to Building or Flourishing"),
-    }
+    assert!(
+        matches!(
+            evolution,
+            TrustEvolution::Building { .. } | TrustEvolution::Flourishing { .. }
+        ),
+        "High trust should evolve to Building or Flourishing"
+    );
 }
 
 #[test]
@@ -129,13 +138,16 @@ fn test_evolve_trust_untrusted() {
 
     let evolution = result.unwrap();
     // Accept various evolution states - the engine determines appropriate state based on context
-    match evolution {
-        TrustEvolution::Questioning { .. }
-        | TrustEvolution::Healing { .. }
-        | TrustEvolution::Building { .. }
-        | TrustEvolution::Transforming { .. } => (),
-        _ => panic!("Untrusted should evolve to an appropriate trust state"),
-    }
+    assert!(
+        matches!(
+            evolution,
+            TrustEvolution::Questioning { .. }
+                | TrustEvolution::Healing { .. }
+                | TrustEvolution::Building { .. }
+                | TrustEvolution::Transforming { .. }
+        ),
+        "Untrusted should evolve to an appropriate trust state"
+    );
 }
 
 #[test]
@@ -180,10 +192,13 @@ fn test_evolve_client_server_hierarchy() {
     assert!(result.is_ok());
 
     let coordination = result.unwrap();
-    match coordination {
-        CoordinationModel::Distributed { .. } | CoordinationModel::Emergent { .. } => (),
-        _ => panic!("ClientServer should evolve to distributed/emergent coordination"),
-    }
+    assert!(
+        matches!(
+            coordination,
+            CoordinationModel::Distributed { .. } | CoordinationModel::Emergent { .. }
+        ),
+        "ClientServer should evolve to distributed/emergent coordination"
+    );
 }
 
 #[test]
@@ -315,12 +330,10 @@ fn test_binary_access_pattern_allowlist() {
         allowed_entities: vec!["entity1".to_string()],
     };
 
-    match pattern {
-        BinaryAccessPattern::Allowlist { allowed_entities } => {
-            assert_eq!(allowed_entities.len(), 1);
-        }
-        _ => panic!("Expected Allowlist"),
-    }
+    let BinaryAccessPattern::Allowlist { allowed_entities } = pattern else {
+        panic!("Expected Allowlist");
+    };
+    assert_eq!(allowed_entities.len(), 1);
 }
 
 #[test]
@@ -329,12 +342,10 @@ fn test_binary_access_pattern_blocklist() {
         blocked_entities: vec!["bad_entity".to_string()],
     };
 
-    match pattern {
-        BinaryAccessPattern::Blocklist { blocked_entities } => {
-            assert_eq!(blocked_entities.len(), 1);
-        }
-        _ => panic!("Expected Blocklist"),
-    }
+    let BinaryAccessPattern::Blocklist { blocked_entities } = pattern else {
+        panic!("Expected Blocklist");
+    };
+    assert_eq!(blocked_entities.len(), 1);
 }
 
 #[test]
@@ -353,12 +364,10 @@ fn test_hierarchical_pattern_primary_replica() {
         replicas: vec!["replica1".to_string()],
     };
 
-    match pattern {
-        HierarchicalPattern::PrimaryReplica { primary, .. } => {
-            assert_eq!(primary, "coordinator");
-        }
-        _ => panic!("Expected PrimaryReplica"),
-    }
+    let HierarchicalPattern::PrimaryReplica { primary, .. } = pattern else {
+        panic!("Expected PrimaryReplica");
+    };
+    assert_eq!(primary, "coordinator");
 }
 
 #[test]
@@ -368,12 +377,10 @@ fn test_hierarchical_pattern_client_server() {
         clients: vec!["client1".to_string()],
     };
 
-    match pattern {
-        HierarchicalPattern::ClientServer { server, .. } => {
-            assert_eq!(server, "server_node");
-        }
-        _ => panic!("Expected ClientServer"),
-    }
+    let HierarchicalPattern::ClientServer { server, .. } = pattern else {
+        panic!("Expected ClientServer");
+    };
+    assert_eq!(server, "server_node");
 }
 
 #[test]
@@ -399,12 +406,10 @@ fn test_ecosystem_membership_variants() {
         genetic_markers: vec![],
     };
 
-    match steward {
-        EcosystemMembership::CoreSteward { trust_level, .. } => {
-            assert_eq!(trust_level, 0.9);
-        }
-        _ => panic!("Expected CoreSteward"),
-    }
+    let EcosystemMembership::CoreSteward { trust_level, .. } = steward else {
+        panic!("Expected CoreSteward");
+    };
+    assert_eq!(trust_level, 0.9);
 }
 
 #[test]
@@ -416,12 +421,10 @@ fn test_trust_evolution_variants() {
         genetic_compatibility: 0.8,
     };
 
-    match building {
-        TrustEvolution::Building { progress_rate, .. } => {
-            assert_eq!(progress_rate, 0.5);
-        }
-        _ => panic!("Expected Building"),
-    }
+    let TrustEvolution::Building { progress_rate, .. } = building else {
+        panic!("Expected Building");
+    };
+    assert_eq!(progress_rate, 0.5);
 }
 
 #[test]
@@ -432,12 +435,10 @@ fn test_coordination_model_distributed() {
         decision_thresholds: "majority".to_string(),
     };
 
-    match model {
-        CoordinationModel::Distributed { consensus_type, .. } => {
-            assert_eq!(consensus_type, "raft");
-        }
-        _ => panic!("Expected Distributed"),
-    }
+    let CoordinationModel::Distributed { consensus_type, .. } = model else {
+        panic!("Expected Distributed");
+    };
+    assert_eq!(consensus_type, "raft");
 }
 
 #[test]
@@ -448,14 +449,13 @@ fn test_symbiosis_type_mutualistic() {
         sustainability_metrics: "sustainable".to_string(),
     };
 
-    match symbiosis {
-        SymbiosisType::Mutualistic {
-            benefit_balance, ..
-        } => {
-            assert_eq!(benefit_balance, 0.8);
-        }
-        _ => panic!("Expected Mutualistic"),
-    }
+    let SymbiosisType::Mutualistic {
+        benefit_balance, ..
+    } = symbiosis
+    else {
+        panic!("Expected Mutualistic");
+    };
+    assert_eq!(benefit_balance, 0.8);
 }
 
 #[test]
@@ -466,12 +466,10 @@ fn test_symbiosis_type_commensal() {
         impact_assessment: "neutral".to_string(),
     };
 
-    match symbiosis {
-        SymbiosisType::Commensal { beneficiary, .. } => {
-            assert_eq!(beneficiary, "node1");
-        }
-        _ => panic!("Expected Commensal"),
-    }
+    let SymbiosisType::Commensal { beneficiary, .. } = symbiosis else {
+        panic!("Expected Commensal");
+    };
+    assert_eq!(beneficiary, "node1");
 }
 
 #[test]
@@ -482,12 +480,10 @@ fn test_symbiosis_type_facilitative() {
         facilitation_methods: vec!["resource_sharing".to_string()],
     };
 
-    match symbiosis {
-        SymbiosisType::Facilitative { facilitator, .. } => {
-            assert_eq!(facilitator, "node1");
-        }
-        _ => panic!("Expected Facilitative"),
-    }
+    let SymbiosisType::Facilitative { facilitator, .. } = symbiosis else {
+        panic!("Expected Facilitative");
+    };
+    assert_eq!(facilitator, "node1");
 }
 
 #[test]

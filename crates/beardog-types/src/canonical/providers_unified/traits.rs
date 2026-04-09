@@ -10,6 +10,14 @@ pub mod other_traits;
 pub mod security_traits;
 
 // Re-export all traits and types for backward compatibility
-pub use base_traits::*;
-pub use other_traits::*;
-pub use security_traits::*;
+pub use base_traits::{
+    CustomMetric, HealthStatus, NetworkIoMetrics, ProviderCapability, ProviderHealth, ProviderInfo,
+    ProviderMetrics, ProviderType, ResourceUsage, SystemMetrics, UnifiedProvider,
+};
+pub use other_traits::{
+    UnifiedAiProvider, UnifiedMonitoringProvider, UnifiedNetworkProvider, UnifiedStorageProvider,
+};
+pub use security_traits::{
+    AuthenticationRequest, AuthenticationResponse, AuthorizationResponse, KeyType,
+    UnifiedHsmProvider, UnifiedSecurityProvider,
+};

@@ -4,7 +4,10 @@
 
 //! Certificate issuance by `BearDog` daemon
 
-use super::types::*;
+use super::types::{
+    AdapterOperation, AdapterUnlockCertificate, CertificateExpiry, CertificateScope,
+    CommercialClassification, LicenseInfo, LicenseType, RiskLevel,
+};
 use beardog_errors::BearDogError;
 use chrono::{Duration, Utc};
 use ed25519_dalek::{Signer, SigningKey};
@@ -263,6 +266,7 @@ impl CertificateIssuer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::certificates::types::{CommercialIndicator, LicenseInfo, LicenseType};
 
     fn create_test_issuer() -> CertificateIssuer {
         let secret_bytes: [u8; 32] = rand::random();

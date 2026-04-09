@@ -169,7 +169,10 @@ fn test_workflow_system_version_is_set() {
         WORKFLOW_SYSTEM_VERSION, "3.1.0",
         "Workflow system version should be 3.1.0"
     );
-    #[allow(clippy::const_is_empty)]
+    #[expect(
+        clippy::const_is_empty,
+        reason = "workflow step id const str checked for empty in orchestration tests"
+    )]
     {
         assert!(
             !WORKFLOW_SYSTEM_VERSION.is_empty(),

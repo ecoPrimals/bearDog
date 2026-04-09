@@ -4,7 +4,9 @@
 
 //! Constraint evolution - constraints adapt based on key behavior
 
-use super::types::*;
+use super::types::{
+    KeyConstraints, KeyOperation, LifetimeConstraint, OperationType, ScopeConstraint,
+};
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 

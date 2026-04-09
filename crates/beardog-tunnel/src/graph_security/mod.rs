@@ -36,5 +36,10 @@ mod tests;
 
 pub use audit::audit_origin;
 pub use authorize::authorize_modification;
-pub use types::*;
+pub use types::{
+    AuthorizationResult, CommunityUsage, CreatorInfo, Graph, GraphEdge, GraphId, GraphModification,
+    GraphNode, GraphTemplate, IssueSeverity, LineageVersion, ModificationAction, NodeId,
+    OriginAudit, RiskLevel, SecurityAssessment, TemplateId, TemplateMetadata, ThreatCategory,
+    ThreatDetails, UserId, ValidationIssue, ValidationReport,
+};
 pub use validate::validate_template;

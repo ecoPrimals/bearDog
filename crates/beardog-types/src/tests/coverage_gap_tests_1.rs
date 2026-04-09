@@ -118,11 +118,17 @@ mod monitoring_config_tests {
 // canonical/hsm/config.rs (205 lines, 0%)
 // ===========================================================================
 mod hsm_config_tests {
-    #[allow(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
+    )]
     use crate::canonical::hsm::config::*;
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
+    )]
     fn test_legacy_hsm_provider_type() {
         let p = LegacyHsmProviderType::Software;
         let _ = format!("{p:?}");
@@ -189,7 +195,10 @@ mod hsm_config_tests {
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(
+        deprecated,
+        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
+    )]
     fn test_legacy_provider_type_display() {
         let variants = vec![
             LegacyHsmProviderType::Software,

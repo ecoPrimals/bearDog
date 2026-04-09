@@ -6,7 +6,7 @@
 //! policy from [`CrossNodeAuthConfig`]. Discovery heuristics stay aligned with
 //! [`beardog_capabilities::CapabilityMetadata`] ids used for runtime advertisement.
 
-use super::types::*;
+use super::types::{CrossNodeAuthEngine, NodeCapability, SpawningMode, VerificationMode};
 use beardog_capabilities::CapabilityMetadata;
 use beardog_errors::BearDogError;
 
@@ -135,6 +135,7 @@ mod tests {
     use crate::auth::proof_verifier::DefaultProofVerifier;
     use crate::auth::types::NodeInfo;
     use crate::auth::types::authorization::{CrossNodeAuthConfig, SpawningMode, VerificationMode};
+    use crate::auth::types::node_registry::NodeRegistry;
     use chrono::Utc;
 
     #[test]

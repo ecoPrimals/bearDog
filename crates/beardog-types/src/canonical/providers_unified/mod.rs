@@ -32,15 +32,15 @@ pub mod service_discovery;
 pub mod traits; // NEW: Unified provider trait system // Provider migration utilities
 
 // Re-export all types for easy access (avoiding ambiguous re-exports)
-pub use connection::*;
-pub use discovery::*;
-pub use health::*;
-pub use load_balancing::*;
+pub use connection::ConnectionConfig;
+pub use discovery::DiscoveryConfig;
+pub use health::HealthConfig;
+pub use load_balancing::LoadBalancingConfig;
 pub use migration::*;
-pub use monitoring::*;
-pub use performance::*;
-pub use resilience::*;
-pub use security::*;
+pub use monitoring::ProviderMonitoringConfig;
+pub use performance::PerformanceConfig;
+pub use resilience::ResilienceConfig;
+pub use security::ProviderSecurityConfig;
 
 // Core types - explicit re-exports to avoid ambiguity
 pub use core::{CoreProviderSettings, ProviderRegistryEntry, ProviderStatus};

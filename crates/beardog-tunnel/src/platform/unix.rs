@@ -204,7 +204,7 @@ impl PlatformSocket for UnixSocket {
                     path: path_str,
                 }))
             }
-            _ => Err(std::io::Error::new(
+            SocketEndpoint::Abstract(_) => Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 "UnixSocket requires Filesystem endpoint",
             )),

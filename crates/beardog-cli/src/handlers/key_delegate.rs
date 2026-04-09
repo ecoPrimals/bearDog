@@ -11,8 +11,10 @@ use beardog_types::constraints::{
         TimeRangeConstraint, WeekdayConstraint,
     },
 };
+use beardog_types::receipt::{KeyInfo, OperationReceipt, generate_receipt_filename};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::path::Path;
 
 /// Delegation constraints (simplified for storage)
@@ -306,9 +308,6 @@ async fn handle_key_delegate_impl(
     key_store::save_key_to_home(&updated_master, keys_home)?;
 
     // Generate operation receipt
-    use beardog_types::receipt::{KeyInfo, OperationReceipt, generate_receipt_filename};
-    use serde_json::json;
-
     let mut receipt = OperationReceipt::new("key-delegate")
         .with_key_info(KeyInfo {
             key_id: output_key_id.to_string(),
@@ -445,7 +444,7 @@ fn parse_weekdays(weekdays: &str) -> Result<Vec<String>, BearDogError> {
     Ok(days)
 }
 
-/// Expand weekday range (e.g., "mon-fri" -> ["mon", "tue", "wed", "thu", "fri"])
+/// Expand a weekday range such as `mon-fri` into the inclusive list of weekday tokens.
 fn expand_weekday_range(start: &str, end: &str) -> Result<Vec<String>, BearDogError> {
     let days_order = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
@@ -541,7 +540,11 @@ fn format_bytes(bytes: u64) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        DelegateParams, DelegationConstraints, derive_delegated_key, expand_weekday_range,
+        format_bytes, handle_key_delegate_with_home, is_valid_weekday, parse_memory_quota,
+        parse_time_range, parse_weekdays,
+    };
     use crate::handlers::key_store;
     use chrono::Utc;
     use tempfile::TempDir;

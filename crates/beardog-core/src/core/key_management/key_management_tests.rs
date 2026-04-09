@@ -1,8 +1,38 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+#![expect(clippy::unwrap_used, reason = "test assertions")]
+
 use super::*;
 use ed25519_dalek::{PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SigningKey};
 use tempfile::TempDir;
+
+/// Exercises `types.rs` display, default, and serde paths for coverage (re-exported from `super`).
+#[test]
+fn key_management_types_defaults_and_displays() {
+    assert_eq!(format!("{}", KeyType::default()), "Ed25519");
+    assert_eq!(format!("{}", KeyUsage::default()), "sign");
+    assert_eq!(format!("{}", KeyStorage::default()), "ephemeral");
+
+    assert_eq!(format!("{}", KeyType::Rsa2048), "RSA-2048");
+    assert_eq!(format!("{}", KeyType::Rsa4096), "RSA-4096");
+    assert_eq!(format!("{}", KeyUsage::KeyAgreement), "key_agreement");
+
+    let h = KeyStorage::Hsm("tok".to_string());
+    assert_eq!(format!("{h}"), "hsm:tok");
+
+    let meta = KeyMetadata {
+        key_id: "cover".to_string(),
+        key_type: KeyType::X25519,
+        usage: vec![KeyUsage::Verify, KeyUsage::Decrypt],
+        storage: KeyStorage::Ephemeral,
+        created_at: chrono::Utc::now(),
+        expires_at: None,
+        description: None,
+    };
+    let json = serde_json::to_string(&meta).expect("serde");
+    let back: KeyMetadata = serde_json::from_str(&json).expect("de");
+    assert_eq!(back.key_type, KeyType::X25519);
+}
 
 #[tokio::test]
 async fn test_generate_signing_key() {

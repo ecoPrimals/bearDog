@@ -10,7 +10,9 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use beardog_errors::BearDogError;
-use beardog_types::canonical::providers_unified::traits::{KeyInfo, KeyType, KeyUsage};
+use beardog_types::canonical::providers_unified::traits::security_traits::{
+    KeyInfo, KeyType, KeyUsage,
+};
 use parking_lot::Mutex;
 use sha2::{Digest, Sha256};
 
@@ -594,12 +596,13 @@ impl AndroidKeystore {
     /// # Errors
     /// Returns an error if RNG fails
     pub async fn generate_random_bytes(&self, count: usize) -> Result<Vec<u8>, BearDogError> {
+        use rand::RngCore;
+
         tracing::debug!(
             "Generating {} random bytes using Android hardware RNG",
             count
         );
 
-        use rand::RngCore;
         let mut bytes = vec![0u8; count];
         rand::rng().fill_bytes(&mut bytes);
 
@@ -794,42 +797,5 @@ impl Default for AndroidHealthMonitor {
 }
 
 #[cfg(test)]
-mod android_keystore_logic_tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn rejects_empty_key_id_on_generate() {
-        let ks = AndroidKeystore::with_stub_transport(AndroidHsmConfig::default()).expect("ks");
-        let mut p = AndroidKeyParams::new();
-        p.set_key_size(256);
-        let err = ks.generate_key("", &p).await.expect_err("empty id");
-        let msg = err.to_string();
-        assert!(
-            msg.contains("empty") || msg.contains("Empty"),
-            "unexpected message: {msg}"
-        );
-    }
-
-    #[tokio::test]
-    async fn stub_roundtrip_sign_verify_list() {
-        let ks = AndroidKeystore::with_stub_transport(AndroidHsmConfig::default()).expect("ks");
-        let mut p = AndroidKeyParams::new();
-        p.set_purposes(vec![AndroidKeyPurpose::Sign, AndroidKeyPurpose::Verify]);
-        ks.generate_key("my-key", &p).await.expect("gen");
-        let sig = ks.sign("my-key", b"hello").await.expect("sign");
-        assert!(ks.verify("my-key", b"hello", &sig).await.expect("verify"));
-        assert!(!ks.verify("my-key", b"other", &sig).await.expect("verify2"));
-        let keys = ks.list_keys().await.expect("list");
-        assert_eq!(keys.len(), 1);
-        assert!(ks.key_exists("my-key").await.expect("exists"));
-    }
-
-    #[tokio::test]
-    async fn stub_health_uses_deterministic_metrics() {
-        let m =
-            AndroidHealthMonitor::with_transport(Arc::new(StubHealthMetricsTransport::default()));
-        let s = m.get_health_status().await.expect("health");
-        assert!(s.is_healthy);
-        assert_eq!(s.performance_metrics.operations_per_second, 42.0);
-    }
-}
+#[path = "android_tests.rs"]
+mod tests;

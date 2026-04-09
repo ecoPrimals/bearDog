@@ -13,6 +13,14 @@ use beardog_cli::{ClientArgs, DaemonArgs, DoctorArgs, ServerArgs};
 use beardog_errors::BearDogError;
 use clap::{Parser, Subcommand};
 
+#[cfg(test)]
+#[doc(hidden)]
+mod __cli_test_env {
+    use std::sync::Mutex;
+
+    pub static HOME: Mutex<()> = Mutex::new(());
+}
+
 mod ecosystem_discovery_adapter;
 mod handlers;
 

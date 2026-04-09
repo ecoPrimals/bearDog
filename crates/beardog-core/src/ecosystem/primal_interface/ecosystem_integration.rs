@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::core::BearDogCore;
+use crate::self_knowledge::{IdentityInputs, PrimalIdentity};
 use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;
 use beardog_types::canonical::capabilities::CapabilityType;
@@ -73,7 +74,7 @@ impl BearDogCore {
             );
             context.insert(
                 "coordinator".to_string(),
-                Value::String("beardog".to_string()),
+                Value::String(PrimalIdentity::from_inputs(&IdentityInputs::from_env()).name),
             );
             context.insert("services".to_string(), Value::Object(services));
             context.insert(

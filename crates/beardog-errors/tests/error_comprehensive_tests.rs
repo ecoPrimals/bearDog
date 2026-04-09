@@ -15,104 +15,88 @@ type Result<T> = std::result::Result<T, BearDogError>;
 fn test_error_not_found() {
     let err = BearDogError::not_found("Resource not found".to_string());
 
-    match err {
-        BearDogError::Business { message, category } => {
-            assert!(message.contains("Resource not found"));
-            assert_eq!(category, BusinessErrorCategory::General);
-        }
-        _ => panic!("Expected Business error"),
-    }
+    let BearDogError::Business { message, category } = err else {
+        panic!("Expected Business error");
+    };
+    assert!(message.contains("Resource not found"));
+    assert_eq!(category, BusinessErrorCategory::General);
 }
 
 #[test]
 fn test_error_invalid_input() {
     let err = BearDogError::invalid_input("Bad input");
 
-    match err {
-        BearDogError::Business { message, category } => {
-            assert!(message.contains("Bad input"));
-            assert_eq!(category, BusinessErrorCategory::Validation);
-        }
-        _ => panic!("Expected Business error"),
-    }
+    let BearDogError::Business { message, category } = err else {
+        panic!("Expected Business error");
+    };
+    assert!(message.contains("Bad input"));
+    assert_eq!(category, BusinessErrorCategory::Validation);
 }
 
 #[test]
 fn test_error_unauthorized() {
     let err = BearDogError::unauthorized("Access denied".to_string());
 
-    match err {
-        BearDogError::Security { message, category } => {
-            assert!(message.contains("Access denied"));
-            assert_eq!(category, SecurityErrorCategory::Authorization);
-        }
-        _ => panic!("Expected Security error"),
-    }
+    let BearDogError::Security { message, category } = err else {
+        panic!("Expected Security error");
+    };
+    assert!(message.contains("Access denied"));
+    assert_eq!(category, SecurityErrorCategory::Authorization);
 }
 
 #[test]
 fn test_error_configuration() {
     let err = BearDogError::configuration("Config missing");
 
-    match err {
-        BearDogError::System { message, category } => {
-            assert!(message.contains("Config missing"));
-            assert_eq!(category, SystemErrorCategory::General);
-        }
-        _ => panic!("Expected System error"),
-    }
+    let BearDogError::System { message, category } = err else {
+        panic!("Expected System error");
+    };
+    assert!(message.contains("Config missing"));
+    assert_eq!(category, SystemErrorCategory::General);
 }
 
 #[test]
 fn test_error_serialization() {
     let err = BearDogError::serialization("JSON error");
 
-    match err {
-        BearDogError::System { message, category } => {
-            assert!(message.contains("JSON error"));
-            assert_eq!(category, SystemErrorCategory::General);
-        }
-        _ => panic!("Expected System error"),
-    }
+    let BearDogError::System { message, category } = err else {
+        panic!("Expected System error");
+    };
+    assert!(message.contains("JSON error"));
+    assert_eq!(category, SystemErrorCategory::General);
 }
 
 #[test]
 fn test_error_io_error() {
     let err = BearDogError::io_error("File not accessible");
 
-    match err {
-        BearDogError::System { message, category } => {
-            assert!(message.contains("File not accessible"));
-            assert_eq!(category, SystemErrorCategory::FileSystem);
-        }
-        _ => panic!("Expected System error"),
-    }
+    let BearDogError::System { message, category } = err else {
+        panic!("Expected System error");
+    };
+    assert!(message.contains("File not accessible"));
+    assert_eq!(category, SystemErrorCategory::FileSystem);
 }
 
 #[test]
 fn test_error_network() {
     let err = BearDogError::network("Connection failed".to_string());
 
-    match err {
-        BearDogError::System { message, category } => {
-            assert!(message.contains("Connection failed"));
-            assert_eq!(category, SystemErrorCategory::General);
-        }
-        _ => panic!("Expected System error"),
-    }
+    let BearDogError::System { message, category } = err else {
+        panic!("Expected System error");
+    };
+    assert!(message.contains("Connection failed"));
+    assert_eq!(category, SystemErrorCategory::General);
 }
 
 #[test]
 fn test_error_system() {
     let err = BearDogError::system("System failure".to_string());
 
-    match err {
-        BearDogError::System { message, category } => {
-            assert!(message.contains("System failure"));
-            assert_eq!(category, SystemErrorCategory::General);
-        }
-        _ => panic!("Expected System error"),
-    }
+    let BearDogError::System { message, category } = err else {
+        panic!("Expected System error");
+    };
+    assert!(message.contains("System failure"));
+    assert_eq!(category, SystemErrorCategory::General);
 }
 
 #[test]
@@ -201,12 +185,10 @@ fn test_error_propagation() {
 fn test_error_with_context() {
     let err = BearDogError::not_found("User not found: user_id=123".to_string());
 
-    match err {
-        BearDogError::Business { message, .. } => {
-            assert!(message.contains("user_id=123"));
-        }
-        _ => panic!("Expected Business error"),
-    }
+    let BearDogError::Business { message, .. } = err else {
+        panic!("Expected Business error");
+    };
+    assert!(message.contains("user_id=123"));
 }
 
 #[test]
@@ -232,12 +214,10 @@ fn test_error_chaining() {
 fn test_error_message_formatting() {
     let err = BearDogError::configuration(&format!("Port {} is invalid", 65536));
 
-    match err {
-        BearDogError::System { message, .. } => {
-            assert!(message.contains("65536"));
-        }
-        _ => panic!("Expected System error"),
-    }
+    let BearDogError::System { message, .. } = err else {
+        panic!("Expected System error");
+    };
+    assert!(message.contains("65536"));
 }
 
 #[test]
@@ -272,36 +252,30 @@ fn test_error_category_serialization() {
 fn test_error_with_empty_message() {
     let err = BearDogError::not_found(String::new());
 
-    match err {
-        BearDogError::Business { message, .. } => {
-            assert_eq!(message, "");
-        }
-        _ => panic!("Expected Business error"),
-    }
+    let BearDogError::Business { message, .. } = err else {
+        panic!("Expected Business error");
+    };
+    assert_eq!(message, "");
 }
 
 #[test]
 fn test_error_with_special_characters() {
     let err = BearDogError::invalid_input("Error: <>&\"'");
 
-    match err {
-        BearDogError::Business { message, .. } => {
-            assert!(message.contains("<>&\"'"));
-        }
-        _ => panic!("Expected Business error"),
-    }
+    let BearDogError::Business { message, .. } = err else {
+        panic!("Expected Business error");
+    };
+    assert!(message.contains("<>&\"'"));
 }
 
 #[test]
 fn test_error_with_unicode() {
     let err = BearDogError::not_found("用户未找到".to_string());
 
-    match err {
-        BearDogError::Business { message, .. } => {
-            assert!(message.contains("用户未找到"));
-        }
-        _ => panic!("Expected Business error"),
-    }
+    let BearDogError::Business { message, .. } = err else {
+        panic!("Expected Business error");
+    };
+    assert!(message.contains("用户未找到"));
 }
 
 #[test]
@@ -309,10 +283,8 @@ fn test_error_long_message() {
     let long_msg = "Error: ".to_string() + &"x".repeat(1000);
     let err = BearDogError::system(long_msg.clone());
 
-    match err {
-        BearDogError::System { message, .. } => {
-            assert_eq!(message.len(), long_msg.len());
-        }
-        _ => panic!("Expected System error"),
-    }
+    let BearDogError::System { message, .. } = err else {
+        panic!("Expected System error");
+    };
+    assert_eq!(message.len(), long_msg.len());
 }

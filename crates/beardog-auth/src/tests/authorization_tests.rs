@@ -12,7 +12,10 @@ async fn test_authorization_creation() -> Result<(), BearDogError> {
     Ok(())
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "reserved placeholder for future authorization integration"
+)]
 fn test_authorization_verification() -> Result<(), BearDogError> {
     let verification_result = true; // Placeholder for actual authorization verification
     assert!(

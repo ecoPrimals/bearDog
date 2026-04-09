@@ -145,59 +145,39 @@ mod migration_examples {
 
     // Example 1: Migrating Port Constants
     // -----------------------------------
+    // ❌ BEFORE: hardcoded API port constant. ✅ AFTER:
 
-    // ❌ BEFORE:
-    // const API_PORT: u16 = 8080;
-    // let port = API_PORT;
-
-    // ✅ AFTER:
     pub fn get_api_port() -> u16 {
         BEARDOG_CONFIG.network.api.port
     }
 
     // Example 2: Migrating Timeout Constants
     // --------------------------------------
+    // ❌ BEFORE: fixed Duration constant. ✅ AFTER:
 
-    // ❌ BEFORE:
-    // const TIMEOUT: Duration = Duration::from_secs(30);
-    // let timeout = TIMEOUT;
-
-    // ✅ AFTER:
     pub fn get_connection_timeout() -> u64 {
         BEARDOG_CONFIG.limits.operation_timeout_secs
     }
 
     // Example 3: Migrating Limit Constants
     // ------------------------------------
-
-    // ❌ BEFORE:
-    // const MAX_CONNECTIONS: usize = 100;
-    // if connections > MAX_CONNECTIONS { ... }
-
-    // ✅ AFTER:
+    // ❌ BEFORE: hardcoded max connections check. ✅ AFTER:
     pub fn check_connection_limit(connections: usize) -> bool {
         connections <= BEARDOG_CONFIG.network.api.max_connections
     }
 
     // Example 4: Migrating Path Constants
     // -----------------------------------
+    // ❌ BEFORE: string path constant. ✅ AFTER:
 
-    // ❌ BEFORE:
-    // const CONFIG_DIR: &str = "/etc/beardog";
-    // let path = Path::new(CONFIG_DIR);
-
-    // ✅ AFTER:
     pub fn get_config_dir() -> std::path::PathBuf {
         BEARDOG_CONFIG.paths.config_dir.clone()
     }
 
     // Example 5: Migrating Protocol/Endpoint Constants
     // -----------------------------------------------
+    // ❌ BEFORE: hardcoded service URL. ✅ AFTER:
 
-    // ❌ BEFORE:
-    // const SERVICE_URL: &str = "https://api.primal.io:8080";
-
-    // ✅ AFTER:
     pub fn get_service_url() -> String {
         let config = &BEARDOG_CONFIG.network.api;
         let protocol = if config.tls_enabled { "https" } else { "http" };

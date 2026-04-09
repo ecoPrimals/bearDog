@@ -8,7 +8,10 @@ use std::time::Duration;
 use std::sync::Arc;
 
 #[cfg(test)]
-#[allow(clippy::module_inception)]
+#[expect(
+    clippy::module_inception,
+    reason = "nested test module colocated with health monitor sources"
+)]
 mod health_monitor_tests {
     use super::*;
 

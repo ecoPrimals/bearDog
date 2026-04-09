@@ -7,6 +7,10 @@
 
 use base64::Engine; // For base64 decoding
 use beardog_errors::BearDogError;
+use chacha20poly1305::{
+    ChaCha20Poly1305, Nonce,
+    aead::{Aead, KeyInit},
+};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -287,12 +291,6 @@ async fn encrypt_chunk_with_home(
     let mut nonce = [0u8; 12];
     nonce[..8].copy_from_slice(&chunk_index.to_le_bytes());
 
-    // Use ChaCha20-Poly1305 for streaming (better for large data)
-    use chacha20poly1305::{
-        ChaCha20Poly1305, Nonce,
-        aead::{Aead, KeyInit},
-    };
-
     // Decode key material
     let key_bytes = base64::engine::general_purpose::STANDARD
         .decode(&key.key_material_b64)
@@ -342,12 +340,6 @@ async fn decrypt_chunk_with_home(
     let nonce = &encrypted[..12];
     let ciphertext = &encrypted[12..];
 
-    // Use ChaCha20-Poly1305
-    use chacha20poly1305::{
-        ChaCha20Poly1305, Nonce,
-        aead::{Aead, KeyInit},
-    };
-
     // Decode key material
     let key_bytes = base64::engine::general_purpose::STANDARD
         .decode(&key.key_material_b64)
@@ -374,7 +366,10 @@ async fn decrypt_chunk_with_home(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        CHUNK_SIZE, handle_streaming_decrypt, handle_streaming_decrypt_with_home,
+        handle_streaming_encrypt, handle_streaming_encrypt_with_home,
+    };
     use crate::handlers::key_store::{self, StoredKey};
     use chrono::Utc;
     use tempfile::TempDir;

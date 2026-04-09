@@ -391,34 +391,9 @@ mod usage_examples {
 // MIGRATION GUIDE
 // ============================================================================
 
-// ❌ OLD PATTERN:
+// ❌ OLD: `Default` that reads env implicitly (non-deterministic).
+// ✅ NEW: named `DEFAULT_*`, `with_defaults()`, `from_env()`, builder; `Default` delegates to `with_defaults()`.
 //
-// impl Default for ResourceLimits {
-//     fn default() -> Self {
-//         Self {
-//             memory_mb: beardog_errors::process_env::var("...").unwrap_or(1024),
-//             // Implicit env reading, non-deterministic
-//         }
-//     }
-// }
-//
-// let limits = ResourceLimits::default(); // Where do values come from?
-
-// ✅ NEW PATTERN:
-//
-// impl ResourceLimits {
-//     pub const DEFAULT_MEMORY_MB: u64 = 1024;
-//     pub fn with_defaults() -> Self { ... }
-//     pub fn from_env() -> Self { ... }
-//     pub fn builder() -> Builder { ... }
-// }
-//
-// impl Default for ResourceLimits {
-//     fn default() -> Self { Self::with_defaults() }
-// }
-//
-// let limits = ResourceLimits::from_env(); // Explicit intent!
-
 // MIGRATION STEPS:
 // 1. Add const DEFAULT_* fields
 // 2. Add with_defaults() method

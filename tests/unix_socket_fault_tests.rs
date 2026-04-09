@@ -18,6 +18,7 @@ use std::time::Duration;
 use tempfile::TempDir;
 use tokio::net::UnixStream;
 
+use beardog_core::socket_config::IpcCapabilitySymlinksConfig;
 use beardog_genetics::EcosystemGeneticEngine;
 use beardog_tunnel::btsp_handshake::BtspSecurityMode;
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
@@ -57,6 +58,7 @@ async fn start_server_ready(
             btsp_provider,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .unwrap(),
@@ -291,6 +293,7 @@ async fn fault_test_readiness_check_before_start() {
             btsp_provider,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .unwrap(),

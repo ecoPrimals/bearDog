@@ -104,3 +104,73 @@ pub struct KeyMetadata {
     /// Optional human-readable description of key purpose
     pub description: Option<String>,
 }
+
+#[cfg(test)]
+mod types_tests {
+    #![expect(clippy::unwrap_used, reason = "test assertions")]
+
+    use super::*;
+
+    #[test]
+    fn key_type_display_covers_variants() {
+        assert_eq!(format!("{}", KeyType::Ed25519), "Ed25519");
+        assert_eq!(format!("{}", KeyType::Aes256Gcm), "AES-256-GCM");
+        assert_eq!(format!("{}", KeyType::X25519), "X25519");
+        assert_eq!(format!("{}", KeyType::Rsa2048), "RSA-2048");
+        assert_eq!(format!("{}", KeyType::Rsa4096), "RSA-4096");
+    }
+
+    #[test]
+    fn key_usage_display_covers_variants() {
+        assert_eq!(format!("{}", KeyUsage::Sign), "sign");
+        assert_eq!(format!("{}", KeyUsage::Verify), "verify");
+        assert_eq!(format!("{}", KeyUsage::Encrypt), "encrypt");
+        assert_eq!(format!("{}", KeyUsage::Decrypt), "decrypt");
+        assert_eq!(format!("{}", KeyUsage::KeyAgreement), "key_agreement");
+    }
+
+    #[test]
+    fn key_storage_display_covers_variants() {
+        assert_eq!(format!("{}", KeyStorage::Ephemeral), "ephemeral");
+        let p = std::path::PathBuf::from("/tmp/keys");
+        assert_eq!(
+            format!("{}", KeyStorage::File(p.clone())),
+            format!("file:{}", p.display())
+        );
+        assert_eq!(
+            format!("{}", KeyStorage::Hsm("slot7".to_string())),
+            "hsm:slot7"
+        );
+    }
+
+    #[test]
+    fn key_metadata_serde_roundtrip() {
+        let created = chrono::DateTime::parse_from_rfc3339("2024-01-15T12:00:00Z")
+            .unwrap()
+            .with_timezone(&chrono::Utc);
+        let expires = chrono::DateTime::parse_from_rfc3339("2025-01-15T12:00:00Z")
+            .unwrap()
+            .with_timezone(&chrono::Utc);
+        let meta = KeyMetadata {
+            key_id: "k1".to_string(),
+            key_type: KeyType::Aes256Gcm,
+            usage: vec![KeyUsage::Encrypt, KeyUsage::Decrypt],
+            storage: KeyStorage::File(std::path::PathBuf::from("/var/bd/keys")),
+            created_at: created,
+            expires_at: Some(expires),
+            description: Some("unit".to_string()),
+        };
+        let json = serde_json::to_string(&meta).unwrap();
+        let back: KeyMetadata = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.key_id, meta.key_id);
+        assert_eq!(back.key_type, meta.key_type);
+        assert_eq!(back.usage, meta.usage);
+        assert_eq!(back.description, meta.description);
+        assert_eq!(back.created_at, meta.created_at);
+        assert_eq!(back.expires_at, meta.expires_at);
+        match &back.storage {
+            KeyStorage::File(pb) => assert!(pb.ends_with("keys")),
+            _ => panic!("expected file storage"),
+        }
+    }
+}

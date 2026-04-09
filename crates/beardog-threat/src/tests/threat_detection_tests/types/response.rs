@@ -266,7 +266,10 @@ impl ResponseTracker {
         }
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "threat scoring metrics as f64 for threshold comparisons in tests"
+    )]
     pub fn success_rate(&self, incident_id: &str) -> f64 {
         let incident_responses: Vec<_> = self
             .responses
@@ -308,7 +311,10 @@ impl ResponseTracker {
             })
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "threat scoring metrics as f64 for threshold comparisons in tests"
+    )]
     pub fn get_metrics(&self) -> ResponseMetrics {
         let overall_success_rate = if self.responses.is_empty() {
             0.0

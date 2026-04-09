@@ -196,10 +196,7 @@ impl SafeBiometricAuthenticator {
     ) -> Result<BiometricAuthResult, BearDogError> {
         info!("🍎 Authenticating with iOS biometric: {:?}", policy);
 
-        // In production, this would use LocalAuthentication framework:
-        // let context = LAContext()
-        // context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics,
-        //                       localizedReason: reason)
+        // Production: LocalAuthentication (`LAContext.evaluatePolicy`).
 
         // For now, simulate successful authentication
         let biometric_type = match policy {

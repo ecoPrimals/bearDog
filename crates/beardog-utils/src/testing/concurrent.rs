@@ -236,7 +236,10 @@ pub struct Barrier {
     count: Arc<AtomicBool>,
     remaining: Arc<tokio::sync::RwLock<usize>>,
     notify: Arc<Notify>,
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "test harness helpers reserved for expanded stress scenarios"
+    )]
     total: usize,
 }
 
@@ -305,9 +308,15 @@ impl Barrier {
 /// ```
 pub struct RateLimiter {
     semaphore: Arc<Semaphore>,
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "test harness helpers reserved for expanded stress scenarios"
+    )]
     refill_interval: Duration,
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "test harness helpers reserved for expanded stress scenarios"
+    )]
     permits_per_interval: usize,
 }
 
@@ -435,6 +444,12 @@ where
 
 #[cfg(test)]
 mod tests {
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: testing
+    // TEST_PRIORITY: normal
+
     use super::*;
     use std::sync::atomic::AtomicUsize;
 
@@ -535,5 +550,90 @@ mod tests {
             "Flag should be set",
         )
         .await;
+    }
+
+    #[tokio::test]
+    async fn test_spawn_many_with_completion() {
+        let task = |out: i32| async move {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+            out
+        };
+        let (handles, mut completion) = spawn_many_with_completion(vec![task(10), task(20)]);
+
+        completion.recv().await.expect("first done");
+        completion.recv().await.expect("second done");
+
+        let sum: i32 = futures::future::join_all(handles)
+            .await
+            .into_iter()
+            .map(|h| h.expect("join task"))
+            .sum();
+        assert_eq!(sum, 30);
+    }
+
+    #[tokio::test]
+    async fn test_wait_for_with_interval_success() {
+        let flag = Arc::new(AtomicBool::new(false));
+        let flag_clone = flag.clone();
+        tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_millis(30)).await;
+            flag_clone.store(true, Ordering::SeqCst);
+        });
+
+        wait_for_with_interval(
+            || flag.load(Ordering::SeqCst),
+            Duration::from_secs(1),
+            Duration::from_millis(2),
+        )
+        .await
+        .expect("condition met");
+    }
+
+    #[tokio::test]
+    async fn test_wait_for_with_interval_timeout() {
+        let err = wait_for_with_interval(
+            || false,
+            Duration::from_millis(40),
+            Duration::from_millis(5),
+        )
+        .await
+        .expect_err("should time out");
+        assert!(matches!(err, WaitError::Timeout(_)));
+    }
+
+    #[tokio::test]
+    async fn test_with_timeout_success() {
+        let v = with_timeout(Duration::from_secs(1), async { 7usize })
+            .await
+            .expect("completes");
+        assert_eq!(v, 7);
+    }
+
+    #[tokio::test]
+    async fn test_with_timeout_elapsed() {
+        let r = with_timeout(Duration::from_millis(25), async {
+            tokio::time::sleep(Duration::from_secs(5)).await;
+        })
+        .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    #[should_panic(expected = "never becomes true")]
+    async fn assert_eventually_panics_on_timeout() {
+        assert_eventually(|| false, Duration::from_millis(80), "never becomes true").await;
+    }
+
+    #[tokio::test]
+    async fn barrier_single_participant_proceeds_immediately() {
+        let barrier = Arc::new(Barrier::new(1));
+        barrier.wait().await;
+    }
+
+    #[tokio::test]
+    async fn rate_limiter_available_reflects_acquire() {
+        let limiter = Arc::new(RateLimiter::new(3, Duration::from_millis(200)));
+        limiter.acquire().await;
+        assert!(limiter.available() <= 2);
     }
 }

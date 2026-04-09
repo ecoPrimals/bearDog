@@ -331,7 +331,7 @@ use super::*;
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated, reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE")]
     fn test_bootstrap_config_default() {
         let config = BootstrapConfig::default();
 
@@ -344,7 +344,7 @@ use super::*;
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated, reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE")]
     fn test_bootstrap_config_explicit_overrides() {
         let config = BootstrapConfig {
             discovery_timeout_ms: 60000,
@@ -357,7 +357,7 @@ use super::*;
     }
 
     #[test]
-    #[allow(deprecated)]
+    #[expect(deprecated, reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE")]
     fn test_bootstrap_config_to_unified_config() {
         let old_config = BootstrapConfig {
             discovery_timeout_ms: 15000,

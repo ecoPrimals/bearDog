@@ -73,6 +73,7 @@
 //! - FIPS 180-4 (SHA-256): <https://csrc.nist.gov/publications/detail/fips/180/4/final>
 
 use base64::Engine;
+use beardog_core::crypto_service::algorithms::hashing;
 use serde_json::Value;
 use sha2::{Digest, Sha256, Sha384};
 use tracing::{debug, info};
@@ -208,9 +209,6 @@ pub async fn handle_blake3_hash(params: Option<&Value>) -> Result<Value, String>
 
     debug!("🔨 Hashing {} bytes with BLAKE3", data.len());
 
-    // Use BearDog's crypto service
-    use beardog_core::crypto_service::algorithms::hashing;
-
     let hash = hashing::hash_blake3(&data);
 
     // Encode hash
@@ -263,9 +261,6 @@ pub async fn handle_hmac_sha256(params: Option<&Value>) -> Result<Value, String>
         .map_err(|e| format!("Invalid base64 data: {e}"))?;
 
     debug!("🔐 Computing HMAC-SHA256 for {} bytes", data.len());
-
-    // Use BearDog's crypto service
-    use beardog_core::crypto_service::algorithms::hashing;
 
     let mac = hashing::hmac_sha256(&key, &data)
         .map_err(|e| format!("HMAC-SHA256 computation failed: {e}"))?;

@@ -185,7 +185,11 @@ fn test_simd_capabilities_detection() {
 }
 
 #[test]
-#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+#[expect(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "benchmark indices widened for synthetic load; in-range for test vectors"
+)]
 fn test_process_sequential_data() {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: core

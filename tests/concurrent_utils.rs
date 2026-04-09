@@ -377,7 +377,7 @@ mod tests {
         enum Status {
             Starting,
             Running,
-            #[allow(dead_code)] // Reserved for future graceful shutdown patterns
+            #[expect(dead_code, reason = "Reserved for future graceful shutdown patterns")]
             Stopped,
         }
 

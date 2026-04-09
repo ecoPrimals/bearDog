@@ -12,7 +12,10 @@ async fn test_node_registry_creation() -> Result<(), BearDogError> {
     Ok(())
 }
 
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "reserved placeholder for future node registry integration"
+)]
 fn test_node_registration() -> Result<(), BearDogError> {
     let registration_result = true; // Placeholder for actual node registration
     assert!(registration_result, "Node registration should succeed");

@@ -4,6 +4,7 @@
 //!
 //! Tests the complete flow from JSON-RPC request → Unix socket → graph security → response
 
+use beardog_core::socket_config::IpcCapabilitySymlinksConfig;
 use beardog_tunnel::btsp_handshake::BtspSecurityMode;
 use beardog_types::primal_identity::PrimalIdentity;
 use serde_json::json;
@@ -75,6 +76,7 @@ async fn test_graph_authorize_modification_via_unix_socket() {
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .expect("Server creation"),
@@ -112,7 +114,7 @@ async fn test_graph_authorize_modification_via_unix_socket() {
             "node": {
                 "id": "node-1",
                 "type": "compute",
-                "primal": "ToadStool",
+                "primal": "compute.general",
                 "config": {}
             }
         }
@@ -127,10 +129,11 @@ async fn test_graph_authorize_modification_via_unix_socket() {
     );
     assert_eq!(response["jsonrpc"], "2.0");
 
-    if response["error"].is_object() {
-        eprintln!("Error: {}", response["error"]);
-        panic!("Got error response");
-    }
+    assert!(
+        !response["error"].is_object(),
+        "Expected success but got error: {}",
+        response["error"]
+    );
 
     assert!(response["result"].is_object(), "Should have result");
     assert!(
@@ -158,6 +161,7 @@ async fn test_graph_validate_template_via_unix_socket() {
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .expect("Server creation"),
@@ -189,7 +193,7 @@ async fn test_graph_validate_template_via_unix_socket() {
             "nodes": [{
                 "id": "node-1",
                 "type": "compute",
-                "primal": "ToadStool",
+                "primal": "compute.general",
                 "config": {}
             }],
             "edges": [],
@@ -209,10 +213,11 @@ async fn test_graph_validate_template_via_unix_socket() {
     );
     assert_eq!(response["jsonrpc"], "2.0");
 
-    if response["error"].is_object() {
-        eprintln!("Error: {}", response["error"]);
-        panic!("Got error response");
-    }
+    assert!(
+        !response["error"].is_object(),
+        "Expected success but got error: {}",
+        response["error"]
+    );
 
     assert!(response["result"].is_object(), "Should have result");
     assert!(
@@ -240,6 +245,7 @@ async fn test_graph_audit_origin_via_unix_socket() {
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .expect("Server creation"),
@@ -301,6 +307,7 @@ async fn test_graph_capabilities_advertised() {
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .expect("Server creation"),
@@ -368,6 +375,7 @@ async fn test_ui_peer_user_modifies_graph() {
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .expect("Server creation"),
@@ -395,7 +403,7 @@ async fn test_ui_peer_user_modifies_graph() {
             "nodes": [{
                 "id": "existing-node",
                 "type": "compute",
-                "primal": "ToadStool",
+                "primal": "compute.general",
                 "config": {}
             }],
             "edges": [],
@@ -442,6 +450,7 @@ async fn test_ui_peer_live_graph_visualization() {
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .expect("Server creation"),
@@ -476,7 +485,7 @@ async fn test_ui_peer_live_graph_visualization() {
                 {
                     "id": "process-node",
                     "type": "compute",
-                    "primal": "ToadStool",
+                    "primal": "compute.general",
                     "config": {}
                 }
             ],
@@ -516,6 +525,7 @@ async fn test_ui_peer_template_browser() {
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .expect("Server creation"),
@@ -568,6 +578,7 @@ async fn test_storage_peer_template_storage() {
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .expect("Server creation"),
@@ -633,6 +644,7 @@ async fn test_storage_peer_template_retrieval() {
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .expect("Server creation"),
@@ -680,6 +692,7 @@ async fn test_storage_peer_version_control() {
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .expect("Server creation"),
@@ -707,7 +720,7 @@ async fn test_storage_peer_version_control() {
             "nodes": [{
                 "id": "v1-node",
                 "type": "compute",
-                "primal": "ToadStool",
+                "primal": "compute.general",
                 "config": {"version": "1.0"}
             }],
             "edges": [],
@@ -720,7 +733,7 @@ async fn test_storage_peer_version_control() {
             "node": {
                 "id": "v2-node",
                 "type": "compute",
-                "primal": "ToadStool",
+                "primal": "compute.general",
                 "config": {"version": "2.0"}
             }
         }
@@ -754,6 +767,7 @@ async fn test_compute_peer_ai_suggests_modification() {
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .expect("Server creation"),
@@ -781,7 +795,7 @@ async fn test_compute_peer_ai_suggests_modification() {
             "nodes": [{
                 "id": "slow-node",
                 "type": "compute",
-                "primal": "ToadStool",
+                "primal": "compute.general",
                 "config": {"cpu": "1"}
             }],
             "edges": [],
@@ -829,6 +843,7 @@ async fn test_compute_peer_learns_from_patterns() {
             btsp,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .expect("Server creation"),

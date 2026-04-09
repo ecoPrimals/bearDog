@@ -2,6 +2,8 @@
 
 //! TLS 1.2 AES-GCM AEAD (128-bit and 256-bit keys).
 
+use aes_gcm::aead::Aead;
+use aes_gcm::{Aes128Gcm, Aes256Gcm, KeyInit, Nonce};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use serde_json::Value;
@@ -92,8 +94,6 @@ pub async fn handle_aes_128_gcm_encrypt(params: Option<&Value>) -> Result<Value,
     };
 
     // Perform encryption
-    use aes_gcm::{Aes128Gcm, KeyInit, Nonce, aead::Aead};
-
     let key = aes_gcm::Key::<Aes128Gcm>::from_slice(&key_bytes);
     let cipher = Aes128Gcm::new(key);
     let nonce = Nonce::from_slice(&nonce_bytes);
@@ -206,8 +206,6 @@ pub async fn handle_aes_128_gcm_decrypt(params: Option<&Value>) -> Result<Value,
     ciphertext_with_tag.extend_from_slice(&tag_bytes);
 
     // Perform decryption
-    use aes_gcm::{Aes128Gcm, KeyInit, Nonce, aead::Aead};
-
     let key = aes_gcm::Key::<Aes128Gcm>::from_slice(&key_bytes);
     let cipher = Aes128Gcm::new(key);
     let nonce = Nonce::from_slice(&nonce_bytes);
@@ -308,8 +306,6 @@ pub async fn handle_aes_256_gcm_encrypt(params: Option<&Value>) -> Result<Value,
     };
 
     // Perform encryption
-    use aes_gcm::{Aes256Gcm, KeyInit, Nonce, aead::Aead};
-
     let key = aes_gcm::Key::<Aes256Gcm>::from_slice(&key_bytes);
     let cipher = Aes256Gcm::new(key);
     let nonce = Nonce::from_slice(&nonce_bytes);
@@ -416,8 +412,6 @@ pub async fn handle_aes_256_gcm_decrypt(params: Option<&Value>) -> Result<Value,
     ciphertext_with_tag.extend_from_slice(&tag_bytes);
 
     // Perform decryption
-    use aes_gcm::{Aes256Gcm, KeyInit, Nonce, aead::Aead};
-
     let key = aes_gcm::Key::<Aes256Gcm>::from_slice(&key_bytes);
     let cipher = Aes256Gcm::new(key);
     let nonce = Nonce::from_slice(&nonce_bytes);

@@ -10,7 +10,10 @@ use std::time::Instant;
 
 /// Audit event types
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "sovereignty test type stubs for scenario scaffolding"
+)]
 pub enum EventType {
     DataAccess,
     KeyOperation,
@@ -20,7 +23,10 @@ pub enum EventType {
 
 /// Event outcome
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "sovereignty test type stubs for scenario scaffolding"
+)]
 pub enum Outcome {
     Success,
     Failure,
@@ -28,7 +34,10 @@ pub enum Outcome {
 
 /// Audit event
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "sovereignty test type stubs for scenario scaffolding"
+)]
 pub struct AuditEvent {
     event_type: EventType,
     user: String,
@@ -94,7 +103,10 @@ impl AuditEvent {
 
 /// Audit trail
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "sovereignty test type stubs for scenario scaffolding"
+)]
 pub struct AuditTrail {
     name: String,
     events: Vec<AuditEvent>,

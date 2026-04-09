@@ -63,10 +63,10 @@ pub use threat::{
     CanonicalThreatDetectionConfig, SensitivityLevel, ThreatConfig, ThreatDetectionConfig,
     ThreatResponseConfig, UnifiedThreatConfig,
 };
+// Workflow rate limits: use `network::RateLimitConfig`, not this re-export list.
 pub use workflow::{
     ArchiveConfig, ConnectionConfig, ConsolidatedWorkflowConfig, EscalationRule,
-    NotificationConfig, PersistenceConfig, QueueConfig,
-    /* RateLimitConfig - use network::RateLimitConfig */ RetentionConfig,
+    NotificationConfig, PersistenceConfig, QueueConfig, RetentionConfig,
     RetryConfig as WorkflowRetryConfig, SchedulingConfig, TimeoutConfig, WorkflowEngineConfig,
     WorkflowEscalationConfig,
 };

@@ -109,6 +109,7 @@ impl ZeroCopyManager {
         {
             let cache = self.string_cache.read().unwrap_or_else(|poisoned| {
                 tracing::warn!("String cache lock poisoned on read, recovering");
+                self.string_cache.clear_poison();
                 poisoned.into_inner()
             });
             if let Some(weak_str) = cache.get(s_ref)
@@ -127,6 +128,7 @@ impl ZeroCopyManager {
         {
             let mut cache = self.string_cache.write().unwrap_or_else(|poisoned| {
                 tracing::warn!("String cache lock poisoned on write, recovering");
+                self.string_cache.clear_poison();
                 poisoned.into_inner()
             });
             cache.insert(s_ref.to_string(), Arc::downgrade(&arc_str));
@@ -151,6 +153,7 @@ impl ZeroCopyManager {
         {
             let cache = self.config_cache.read().unwrap_or_else(|poisoned| {
                 tracing::warn!("Config cache lock poisoned on read, recovering");
+                self.config_cache.clear_poison();
                 poisoned.into_inner()
             });
             if let Some(any_config) = cache.get(&type_key)
@@ -169,6 +172,7 @@ impl ZeroCopyManager {
         {
             let mut cache = self.config_cache.write().unwrap_or_else(|poisoned| {
                 tracing::warn!("Config cache lock poisoned on write, recovering");
+                self.config_cache.clear_poison();
                 poisoned.into_inner()
             });
             cache.insert(type_key, config.clone());
@@ -185,6 +189,7 @@ impl ZeroCopyManager {
     pub fn cleanup_expired(&self) {
         let mut last_cleanup = self.last_cleanup.write().unwrap_or_else(|poisoned| {
             tracing::warn!("Last cleanup lock poisoned on write, recovering");
+            self.last_cleanup.clear_poison();
             poisoned.into_inner()
         });
         let now = Instant::now();
@@ -198,6 +203,7 @@ impl ZeroCopyManager {
         {
             let mut cache = self.string_cache.write().unwrap_or_else(|poisoned| {
                 tracing::warn!("String cache lock poisoned on cleanup, recovering");
+                self.string_cache.clear_poison();
                 poisoned.into_inner()
             });
             cache.retain(|_k, weak_str| {
@@ -219,6 +225,20 @@ impl ZeroCopyManager {
     /// Shared pointer to the live statistics bundle.
     pub fn get_stats(&self) -> Arc<ZeroCopyStats> {
         self.stats.clone()
+    }
+
+    /// Advances the internal cleanup clock so [`Self::cleanup_expired`] can run in unit tests
+    /// without waiting 60 seconds (test-only).
+    #[cfg(test)]
+    pub fn advance_cleanup_clock_for_test(&self, ago: Duration) {
+        let mut last = self.last_cleanup.write().unwrap_or_else(|poisoned| {
+            tracing::warn!("Last cleanup lock poisoned on test advance, recovering");
+            self.last_cleanup.clear_poison();
+            poisoned.into_inner()
+        });
+        if let Some(t) = Instant::now().checked_sub(ago) {
+            *last = t;
+        }
     }
 }
 
@@ -649,5 +669,84 @@ mod tests {
         let b = b.optimize();
         assert!(b.is_optimized());
         assert_eq!(b.build(), 42);
+    }
+
+    #[test]
+    fn cleanup_expired_removes_dead_weak_refs_after_interval() {
+        let manager = ZeroCopyManager::new();
+        {
+            let _a = manager.get_shared_string("ephemeral_key");
+        }
+        manager.advance_cleanup_clock_for_test(Duration::from_secs(61));
+        manager.cleanup_expired();
+        // Second cleanup immediately after should no-op due to rate limit
+        manager.cleanup_expired();
+    }
+
+    #[test]
+    fn string_cache_recovers_from_poisoned_lock() {
+        let manager = ZeroCopyManager::new();
+        let _ = std::panic::catch_unwind(|| {
+            let _g = manager.string_cache.write().expect("lock string cache");
+            panic!("poison string cache");
+        });
+        let s = manager.get_shared_string("after_poison");
+        assert_eq!(s.as_ref(), "after_poison");
+    }
+
+    #[test]
+    fn config_cache_recovers_from_poisoned_lock() {
+        let manager = ZeroCopyManager::new();
+        let _ = std::panic::catch_unwind(|| {
+            let _g = manager.config_cache.write().expect("lock config cache");
+            panic!("poison config cache");
+        });
+        #[derive(Debug)]
+        struct C {
+            v: u32,
+        }
+        let c = manager.get_shared_config("k", || C { v: 1 });
+        assert_eq!(c.v, 1);
+    }
+
+    #[test]
+    fn last_cleanup_recovers_from_poisoned_lock() {
+        let manager = ZeroCopyManager::new();
+        let _ = std::panic::catch_unwind(|| {
+            let _g = manager.last_cleanup.write().expect("last cleanup");
+            panic!("poison last_cleanup");
+        });
+        manager.cleanup_expired();
+    }
+
+    #[test]
+    fn advance_cleanup_clock_no_op_when_underflow() {
+        let manager = ZeroCopyManager::new();
+        manager.advance_cleanup_clock_for_test(Duration::from_secs(u64::MAX));
+        manager.cleanup_expired();
+    }
+
+    #[test]
+    fn cleanup_expired_debug_branch_when_weak_entries_removed() {
+        let manager = ZeroCopyManager::new();
+        manager.get_shared_string("to_remove");
+        drop(manager.get_shared_string("to_remove"));
+        manager.advance_cleanup_clock_for_test(Duration::from_secs(61));
+        manager.cleanup_expired();
+    }
+
+    #[test]
+    fn config_cache_poison_on_read_recover_get_shared_config() {
+        let manager = ZeroCopyManager::new();
+        let _ = std::panic::catch_unwind(|| {
+            let _g = manager.config_cache.write().expect("lock");
+            panic!("poison config cache");
+        });
+        #[derive(Debug)]
+        struct C {
+            n: i16,
+        }
+        let c = manager.get_shared_config("pk", || C { n: -3 });
+        assert_eq!(c.n, -3);
     }
 }

@@ -8,12 +8,10 @@ use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use std::collections::VecDeque;
 use std::fmt::Write as _;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tracing::debug;
-// NOTE: beardog_security::handlers doesn't exist yet - commented out
-// use beardog_security::handlers::audit_management::AuditStatistics;
 use std::sync::Arc;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::sync::Mutex;
+use tracing::debug;
 
 /// Capacity for the in-memory ring buffer of raw [`beardog_types::hsm::AuditEvent`] records.
 const MEMORY_AUDIT_EVENT_CAP: usize = 10_000;
@@ -381,7 +379,7 @@ impl DefaultAuditLogger {
             let success = matches!(entry.result, OperationResult::Success);
             let error = match entry.result {
                 OperationResult::Failure(ref msg) => msg.as_str(),
-                _ => "",
+                OperationResult::Success => "",
             };
             writeln!(
                 csv,

@@ -113,7 +113,7 @@ impl Default for SafeBufferPool {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)] // Tests are allowed to use unwrap for assertions
+#[expect(clippy::unwrap_used, reason = "test assertions")]
 mod tests {
     use super::*;
 

@@ -40,7 +40,7 @@ pub mod validator;
 pub use arch::{ArchError, Architecture};
 pub use deployment::{DeploymentError, DeploymentManager};
 pub use installer::{BinaryInstaller, InstallerError};
-#[allow(deprecated)]
+#[expect(deprecated, reason = "canonical migration in progress")]
 pub use platform::BiomeOSPaths;
 pub use platform::{OperatingSystem, PlatformError, PlatformPaths};
 pub use types::{DeploymentProgress, DeploymentReport, DeploymentStatus, PrimalName};

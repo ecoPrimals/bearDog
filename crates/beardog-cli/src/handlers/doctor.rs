@@ -5,7 +5,7 @@
 //! Comprehensive health checks for BearDog system.
 
 use crate::DoctorArgs;
-use beardog_errors::BearDogError;
+use beardog_errors::{BearDogError, SystemErrorCategory};
 use beardog_types::constants::domains::network::ipc_discovery;
 use beardog_types::constants::domains::system::defaults::DEFAULT_KEY_STORAGE_DIR;
 use serde_json::json;
@@ -120,7 +120,7 @@ pub async fn handle_doctor(args: DoctorArgs) -> Result<(), BearDogError> {
     if !all_healthy {
         return Err(BearDogError::System {
             message: "One or more health checks failed".to_string(),
-            category: Default::default(),
+            category: SystemErrorCategory::default(),
         });
     }
 
@@ -283,7 +283,10 @@ async fn check_component(component: &str) -> HealthCheck {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        HealthCheck, check_component, check_crypto_operations, check_entropy, check_hsm,
+        check_key_storage, check_server_connectivity, check_version,
+    };
 
     #[test]
     fn test_health_check_serialization() {

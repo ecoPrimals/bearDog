@@ -488,6 +488,47 @@ fn discover_capabilities() -> Vec<SimpleCapability> {
     capabilities
 }
 
+/// Same capability list as used by [`PrimalSelfKnowledge::discover_from_inputs`], exposed for IPC
+/// helpers (e.g. wateringHole v3.1 capability-domain symlinks) without duplicating discovery logic.
+#[must_use]
+pub fn discovered_simple_capabilities() -> Vec<SimpleCapability> {
+    discover_capabilities()
+}
+
+/// Wire-format capability tags for JSON-RPC `ipc.register` (Primal IPC Protocol / discovery registry).
+///
+/// Derived from [`SimpleCapability`] only — no fixed primal-specific lists. Cryptography expands to
+/// algorithm tags aligned with BearDog’s exposed primitives when that capability is present.
+#[must_use]
+pub fn ipc_registry_capability_strings(caps: &[SimpleCapability]) -> Vec<String> {
+    use std::collections::BTreeSet;
+    let mut set: BTreeSet<String> = BTreeSet::new();
+    for cap in caps {
+        match cap {
+            SimpleCapability::SecureTunneling => {
+                set.insert("btsp".to_string());
+            }
+            SimpleCapability::GeneticLineage => {
+                set.insert("genetics".to_string());
+            }
+            SimpleCapability::Cryptography => {
+                set.insert("crypto".to_string());
+                set.insert("ed25519".to_string());
+                set.insert("x25519".to_string());
+                set.insert("chacha20poly1305".to_string());
+                set.insert("aesgcm".to_string());
+            }
+            SimpleCapability::HsmIntegration => {
+                set.insert("hsm".to_string());
+            }
+            SimpleCapability::Discovery => {
+                set.insert("discovery".to_string());
+            }
+        }
+    }
+    set.into_iter().collect()
+}
+
 /// Discover endpoints where this primal listens
 ///
 /// Priority order:
@@ -642,6 +683,21 @@ mod tests {
         assert!(caps.contains(&SimpleCapability::SecureTunneling));
         assert!(caps.contains(&SimpleCapability::GeneticLineage));
         assert!(caps.contains(&SimpleCapability::Cryptography));
+    }
+
+    #[test]
+    fn ipc_registry_capability_strings_maps_and_sorts() {
+        let tags = ipc_registry_capability_strings(&[
+            SimpleCapability::Cryptography,
+            SimpleCapability::SecureTunneling,
+        ]);
+        assert!(tags.iter().any(|s| s == "crypto"));
+        assert!(tags.iter().any(|s| s == "btsp"));
+        assert!(tags.iter().any(|s| s == "ed25519"));
+        let sorted = tags.clone();
+        let mut cmp = sorted.clone();
+        cmp.sort();
+        assert_eq!(tags, cmp, "tags should be sorted (BTreeSet order)");
     }
 
     #[test]

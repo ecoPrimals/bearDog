@@ -471,7 +471,10 @@ mod tests {
     fn test_zero_hardcoding_config() {
         let config = ZeroHardcodingConfig::auto();
         let http_addr = config.endpoints.http_socket_addr();
-        #[allow(clippy::double_comparisons)]
+        #[expect(
+            clippy::double_comparisons,
+            reason = "explicit chained comparisons document inclusive numeric bounds"
+        )]
         {
             assert!(http_addr.port() == 0 || http_addr.port() > 0);
         }
@@ -509,7 +512,10 @@ mod tests {
         let config = EndpointConfig::from_env();
         // Without env vars set, should use defaults (port 0)
         // The bind_addr defaults to 0.0.0.0
-        #[allow(clippy::double_comparisons)]
+        #[expect(
+            clippy::double_comparisons,
+            reason = "explicit chained comparisons document inclusive numeric bounds"
+        )]
         {
             assert!(config.http_port == 0 || config.http_port > 0); // may have env set
         }

@@ -19,7 +19,10 @@
 use base64::Engine;
 use serde_json::Value;
 use tracing::{debug, info};
-use x509_parser::prelude::*;
+use x509_parser::certificate::X509Certificate;
+use x509_parser::extensions::{GeneralName, ParsedExtension};
+use x509_parser::oid_registry;
+use x509_parser::prelude::FromDer;
 
 /// Verify X.509 certificate chain for TLS
 ///

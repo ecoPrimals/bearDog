@@ -3,7 +3,9 @@
 
 //! Certificate verification
 
-use super::types::*;
+use super::types::{
+    AdapterOperation, AdapterUnlockCertificate, CommercialClassification, RiskLevel,
+};
 use chrono::Utc;
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use std::fmt;
@@ -237,6 +239,7 @@ impl std::error::Error for VerificationError {}
 mod tests {
     use super::*;
     use crate::certificates::issuance::CertificateIssuer;
+    use crate::certificates::types::{CommercialIndicator, LicenseInfo, LicenseType};
     use chrono::Duration;
     use ed25519_dalek::SigningKey;
 

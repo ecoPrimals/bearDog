@@ -5,7 +5,10 @@
 //! Constraint enforcement - verify operations against key constraints
 
 use super::errors::ConstraintViolationError;
-use crate::constraints::types::*;
+use crate::constraints::types::{
+    BehavioralConstraint, DataAccessConstraint, KeyOperation, LifetimeConstraint, ScopeConstraint,
+    SignedConstraints,
+};
 use chrono::Utc;
 
 /// Multisig and behavioral enforcement policy (configuration or [`Self::from_env`]).

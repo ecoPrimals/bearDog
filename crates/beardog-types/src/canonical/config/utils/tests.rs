@@ -320,20 +320,7 @@ fn test_performance_metrics() {
     assert!(metrics.config_operations_per_second > 0.0);
 }
 
-// TEST_CATEGORY: unit
-// TEST_DOMAIN: types
-// TEST_PRIORITY: normal
-// Commented out: legacy module no longer exists
-// #[test]
-// fn test_legacy_compatibility() {
-//     // Test that legacy functions still work
-//     let paths = legacy::get_config_paths();
-//     assert!(!paths.is_empty());
-//
-//     // Test find config file (should not find anything in test environment)
-//     let _result = legacy::find_config_file();
-//     // Don't assert on result as no config file exists in test
-// }
+// test_legacy_compatibility removed with legacy config module (see git history).
 
 #[test]
 fn test_arc_str_serialization() {

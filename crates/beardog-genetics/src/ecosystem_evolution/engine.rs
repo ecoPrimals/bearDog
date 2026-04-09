@@ -6,8 +6,17 @@
 //! ecosystem evolution, integrating all genetics modules to evolve binary
 //! patterns into rich spectrum-based relationships.
 
-use super::genetics::*;
-use super::support::*;
+use super::genetics::{
+    AdaptiveRelationshipGenetics, ContextualDecisionGenetics, EcosystemIntelligenceGenetics,
+    EcosystemMembershipGenetics, RelationshipEvolutionGenetics, SymbioticCoordinationGenetics,
+    TrustEvolutionGenetics,
+};
+use super::support::{
+    BinaryAccessPattern, BinaryTrust, ConcernFactor, ContributionType, EcosystemContext,
+    EcosystemHealthReport, EmergentBehavior, HierarchicalPattern, InteractionSummary,
+    InteractionTrend, LearningPath, MonitoringLevel, ProtectionLevel, ProtectionReason,
+    RelationshipHistory, RestorationPath, ReviewSchedule,
+};
 use super::types::{CoordinationModel, EcosystemMembership, SymbiosisType, TrustEvolution};
 use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;

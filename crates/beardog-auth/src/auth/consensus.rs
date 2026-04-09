@@ -2,7 +2,7 @@
 
 //! Consensus authorization implementation
 
-use super::types::*;
+use super::types::{ConsensusNodeHealth, ConsensusNodeRecord, CrossNodeAuthEngine};
 use beardog_errors::BearDogError;
 use chrono::Utc;
 

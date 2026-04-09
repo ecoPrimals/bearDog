@@ -16,7 +16,10 @@ use std::collections::HashMap;
 
 // Define test-specific types for workflow testing
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "processing pipeline test helpers reserved for extended scenarios"
+)]
 struct Workflow {
     id: String,
     workflow_type: WorkflowType,

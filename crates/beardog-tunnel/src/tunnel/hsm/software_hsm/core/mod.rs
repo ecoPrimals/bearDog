@@ -17,7 +17,7 @@ mod tests;
 use super::super::types::KeyType;
 use super::audit::logger::DefaultAuditLogger;
 use super::memory::{DefaultMemoryProtector, MemoryProtectionConfig};
-use super::types::*;
+use super::types::{CryptoProvider, SoftwareHealthMonitor, SoftwareKeyStore};
 use crate::tunnel::hsm::crypto::{CryptoProviderManager, RustCryptoProvider};
 use crate::tunnel::hsm::software_hsm::crypto_providers::{
     GeneticCryptoProvider, RustCryptoProvider as SoftwareRustCryptoProvider,

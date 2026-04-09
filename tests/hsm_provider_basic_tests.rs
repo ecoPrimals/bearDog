@@ -172,7 +172,10 @@ async fn test_key_storage_concepts() -> Result<(), BearDogError> {
 
     // Define stored key structure
     #[derive(Debug, Clone)]
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "conceptual key record fields for storage scenario test"
+    )]
     struct StoredKey {
         key_id: String,
         key_data: Vec<u8>,
@@ -361,7 +364,7 @@ async fn test_hsm_error_handling() -> Result<(), BearDogError> {
 fn test_key_rotation_concepts() {
     // Define key version structure
     #[derive(Debug)]
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "key version metadata for rotation concept test")]
     struct KeyVersion {
         version: u32,
         created_at: std::time::SystemTime,

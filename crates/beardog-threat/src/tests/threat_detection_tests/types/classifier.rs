@@ -51,7 +51,10 @@ impl ThreatClassifier {
         }
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "classifier probability outputs compared as f64 in tests"
+    )]
     pub fn calculate_composite_score(&self, composite: &super::composite::CompositeThreat) -> f64 {
         if composite.indicators.is_empty() {
             return 0.0;

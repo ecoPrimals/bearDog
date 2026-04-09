@@ -15,6 +15,7 @@ use async_trait::async_trait;
 use base64::Engine;
 use beardog_types::primal_identity::PrimalIdentity;
 use chrono::Utc;
+use rand::RngCore;
 use std::sync::Arc;
 use tracing::{debug, info};
 
@@ -403,7 +404,6 @@ impl SecurityHandler {
         };
 
         // Generate cryptographically secure random bytes
-        use rand::RngCore;
         let mut secret_bytes = vec![0u8; byte_length];
         rand::rng().fill_bytes(&mut secret_bytes);
 

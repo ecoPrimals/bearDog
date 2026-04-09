@@ -17,6 +17,7 @@ mod btsp_jsonrpc_unit_tests {
     use crate::btsp_provider::BeardogBtspProvider;
     use crate::tunnel::hsm::HsmManager;
     use crate::unix_socket_ipc::UnixSocketIpcServer;
+    use beardog_core::socket_config::IpcCapabilitySymlinksConfig;
     use beardog_genetics::EcosystemGeneticEngine;
 
     use std::path::PathBuf;
@@ -51,6 +52,7 @@ mod btsp_jsonrpc_unit_tests {
             provider,
             Arc::new(PrimalIdentity::for_test("test", "node1")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .unwrap();

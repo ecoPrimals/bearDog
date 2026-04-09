@@ -316,7 +316,10 @@ fn test_json_validation() {
 #[test]
 fn test_enum_value_validation() {
     #[derive(Debug, PartialEq)]
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "enum variants listed for validation scenarios beyond this test"
+    )]
     enum Algorithm {
         Ed25519,
         Aes256,

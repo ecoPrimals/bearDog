@@ -18,8 +18,8 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 14,366+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
-| **Coverage** | 90.16% line | llvm-cov workspace — target 90% met |
+| **Tests** | 14,593+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
 | **License** | AGPL-3.0-or-later | SPDX headers on all .rs files |
@@ -32,13 +32,15 @@
 ## Codebase Metrics
 
 - **Crates**: 29 in workspace (beardog-integration excluded — overstep)
-- **Rust Files**: 1,888
-- **Crypto Methods**: 96 JSON-RPC methods
+- **Rust Files**: 1,939
+- **Crypto Methods**: 95 JSON-RPC methods (`methods()` handler count; prior 96 was a count error)
+- **`#[allow(`**: 75 (was 193)
+- **`#[expect(`**: 476 (was 361)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
 
 ---
 
-## Per-Crate Coverage (March 28, 2026, llvm-cov)
+## Per-Crate Coverage (April 9, 2026, llvm-cov)
 
 | Crate | Line Coverage | Notes |
 |-------|---------------|-------|
@@ -424,7 +426,7 @@ cargo check --workspace --all-features        # Compile — clean
 cargo test --workspace                        # Tests — 0 failures
 cargo doc --workspace --no-deps               # Docs — clean
 cargo deny check                              # Advisories, bans, licenses, sources
-cargo llvm-cov --workspace --summary-only     # Coverage — 90.16%
+cargo llvm-cov --workspace --summary-only     # Coverage — 90.51%
 ```
 
 ---

@@ -65,46 +65,50 @@ pub use integration_engine::*;
 pub use license_manager::*;
 
 // Tests
-#[allow(
+#[expect(
     unused_imports,
     clippy::float_cmp,
     clippy::useless_vec,
     clippy::needless_range_loop,
     clippy::uninlined_format_args,
-    dead_code
+    dead_code,
+    reason = "large integration test modules: noisy style lints and synthetic helpers"
 )]
 #[cfg(test)]
 mod integration_engine_tests;
 
-#[allow(
+#[expect(
     unused_imports,
     clippy::float_cmp,
     clippy::useless_vec,
     clippy::needless_range_loop,
     clippy::uninlined_format_args,
-    dead_code
+    dead_code,
+    reason = "large integration test modules: noisy style lints and synthetic helpers"
 )]
 #[cfg(test)]
 mod license_manager_tests;
 
-#[allow(
+#[expect(
     unused_imports,
     clippy::float_cmp,
     clippy::useless_vec,
     clippy::needless_range_loop,
     clippy::uninlined_format_args,
-    dead_code
+    dead_code,
+    reason = "large integration test modules: noisy style lints and synthetic helpers"
 )]
 #[cfg(test)]
 mod performance_optimizer_tests;
 
-#[allow(
+#[expect(
     unused_imports,
     clippy::float_cmp,
     clippy::useless_vec,
     clippy::needless_range_loop,
     clippy::uninlined_format_args,
-    dead_code
+    dead_code,
+    reason = "large integration test modules: noisy style lints and synthetic helpers"
 )]
 #[cfg(test)]
 #[path = "event_system_comprehensive_tests.rs"]
@@ -119,7 +123,20 @@ pub use performance_optimizer::{
     EcosystemPerformanceOptimizer, PoolConfig as PerformancePoolConfig,
 };
 
-pub use secure_cross_primal_messaging::*;
-pub use types::*;
-pub use universal_adapter::*;
-pub use universal_compute_client::*;
+pub use secure_cross_primal_messaging::{
+    MessengerMetrics, PrimalDiscoveryService, SecureCrossPrimalMessenger, SecurePrimalMessage,
+    SecurePrimalResponse, SecureSession,
+};
+pub use types::{EcosystemEvent, EcosystemNode, EventPriority, EventStatus, NodeType};
+pub use universal_adapter::{
+    AdapterEvent, AdapterMetrics, AdapterOperation, AdapterRequest, AdapterResponse,
+    ConnectionInfo, ConnectionMetrics, ConnectionPool, ConnectionPoolConfig, ConnectionStatus,
+    EventSubscriber, ProductionConfig, ProductionFeature, ProductionUniversalAdapter, ProtocolType,
+    ServiceEndpoint, UniversalAdapter, UniversalAdapterConfig,
+};
+pub use universal_compute_client::{
+    ComputeArchitecture, ComputeDiscoveryConfig, ComputeMetrics, ComputePriority,
+    ComputeProviderInfo, OptimizationType, ProcessingCapability, ResourceUsageStats,
+    UniversalComputeClient, UniversalComputeConfig, UniversalComputeRequest,
+    UniversalComputeResponse,
+};

@@ -373,3 +373,93 @@ impl Default for AdvancedSIMDOptimizer {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: simd
+    // TEST_PRIORITY: normal
+
+    use super::{AdvancedSIMDOptimizer, SIMDOperation};
+
+    #[test]
+    fn simd_copy_and_mismatch_length() {
+        let mut opt = AdvancedSIMDOptimizer::new();
+        let src = [1u8, 2, 3, 4];
+        let mut dst = [0u8; 4];
+        opt.simd_memory_copy(&src, &mut dst).expect("copy");
+        assert_eq!(dst, src);
+
+        let mut short = [0u8; 2];
+        let err = opt.simd_memory_copy(&src, &mut short).unwrap_err();
+        assert!(err.to_string().contains("same length") || err.to_string().contains("length"));
+    }
+
+    #[test]
+    fn simd_process_all_operations() {
+        let mut opt = AdvancedSIMDOptimizer::new();
+
+        let mut xor_data = vec![0xFFu8; 64];
+        opt.simd_process_data(&mut xor_data, SIMDOperation::XorWithPattern(0x0F))
+            .expect("xor");
+
+        let mut and_data = vec![0xABu8; 64];
+        opt.simd_process_data(&mut and_data, SIMDOperation::BitwiseAnd(0x0F))
+            .expect("and");
+
+        let mut swap_data = vec![1u8, 2, 3, 4];
+        opt.simd_process_data(&mut swap_data, SIMDOperation::ByteSwap)
+            .expect("swap");
+        assert_eq!(swap_data, vec![2, 1, 4, 3]);
+
+        let mut chk = vec![9u8; 8];
+        opt.simd_process_data(&mut chk, SIMDOperation::Checksum)
+            .expect("checksum");
+
+        let mut odd = vec![1u8, 2, 3];
+        let err = opt
+            .simd_process_data(&mut odd, SIMDOperation::ByteSwap)
+            .unwrap_err();
+        assert!(err.to_string().contains("even"));
+    }
+
+    #[test]
+    fn aligned_buffer_pool_and_release() {
+        let mut opt = AdvancedSIMDOptimizer::new();
+        assert!(opt.get_aligned_buffer(100).is_some());
+        opt.release_aligned_buffer(0);
+        assert!(opt.get_aligned_buffer(50).is_some());
+    }
+
+    #[test]
+    fn fast_buffer_paths_and_optimize_pools() {
+        let mut opt = AdvancedSIMDOptimizer::new();
+        let mut v = opt.get_fast_buffer(128);
+        v[0] = 1;
+        opt.return_fast_buffer(v);
+
+        let v2 = opt.get_fast_buffer(256);
+        assert_eq!(v2.len(), 256);
+
+        for _ in 0..40 {
+            opt.return_fast_buffer(vec![0u8; 2048]);
+        }
+        opt.optimize_pools();
+
+        let report = opt.performance_report();
+        assert!(report.contains_key("operations_count"));
+        assert_eq!(opt.cache_hit_rate(), 0.0);
+    }
+
+    #[test]
+    fn default_optimizer_matches_new() {
+        let a = AdvancedSIMDOptimizer::default();
+        let b = AdvancedSIMDOptimizer::new();
+        assert_eq!(
+            a.get_metrics().operations_count,
+            b.get_metrics().operations_count
+        );
+    }
+}

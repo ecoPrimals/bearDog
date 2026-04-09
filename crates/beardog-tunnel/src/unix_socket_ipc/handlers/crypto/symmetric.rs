@@ -59,6 +59,7 @@
 //! - RFC 7539 (ChaCha20): <https://www.rfc-editor.org/rfc/rfc7539.html>
 
 use base64::Engine;
+use beardog_core::crypto_service::algorithms::symmetric;
 use serde_json::Value;
 use tracing::{debug, info};
 /// Handle ChaCha20-Poly1305 encryption operations via JSON-RPC
@@ -110,9 +111,6 @@ pub async fn handle_chacha20_poly1305_encrypt(params: Option<&Value>) -> Result<
         "🔒 Encrypting {} bytes with ChaCha20-Poly1305",
         plaintext.len()
     );
-
-    // Use BearDog's crypto service
-    use beardog_core::crypto_service::algorithms::symmetric;
 
     let (ciphertext, nonce, tag) =
         symmetric::encrypt_chacha20_poly1305(&plaintext, &key, aad.as_deref())
@@ -228,9 +226,6 @@ pub async fn handle_chacha20_poly1305_decrypt(params: Option<&Value>) -> Result<
         &tag,
         aad.as_deref(),
     );
-
-    // Use BearDog's crypto service
-    use beardog_core::crypto_service::algorithms::symmetric;
 
     let plaintext =
         symmetric::decrypt_chacha20_poly1305(&ciphertext, &nonce, &tag, &key, aad.as_deref())

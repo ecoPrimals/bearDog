@@ -119,8 +119,8 @@ impl Default for RequestContext {
 }
 
 /// Select the best primal using the given strategy
-pub(crate) fn select_primal(
-    primals: &mut [DiscoveredPrimal],
+pub(super) fn select_primal(
+    primals: &[DiscoveredPrimal],
     context: &RequestContext,
     load_tracker: &HashMap<String, PrimalLoad>,
     rr_counters: &mut HashMap<SimpleCapability, usize>,

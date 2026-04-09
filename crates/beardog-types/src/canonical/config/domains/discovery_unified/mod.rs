@@ -59,7 +59,11 @@
 
 pub mod types;
 
-pub use types::*;
+pub use types::{
+    CircuitBreakerConfig, DiscoveryCacheConfig, DiscoveryProtocol, DiscoverySecurityConfig,
+    LoadBalancingAlgorithm, LoadBalancingConfig, NetworkDiscoveryConfig, QuantumDiscoveryConfig,
+    ServiceRegistryConfig, UnifiedDiscoveryConfig,
+};
 
 mod builder;
 mod config_impls;

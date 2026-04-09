@@ -6,8 +6,13 @@
 //! aspects of ecosystem evolution: relationships, membership, coordination, trust,
 //! intelligence, adaptive relationships, and contextual decision-making.
 
-use super::support::*;
-use crate::ecosystem_evolution::support::HealingProtocol;
+use super::support::{
+    CollectiveDecisionMaking, ConflictResolution, ContextAwareness, ContextEvaluationEngine,
+    CoordinationEvolution, DecisionAdaptation, EcosystemMemory, EmergentBehaviorDetection,
+    HealingProtocol, LeadershipEmergence, MembershipEvolution, MembershipTransitions,
+    PredictiveCapabilities, RelationshipOptimization, RelationshipRepair, TrustComputation,
+    TrustMeasurement,
+};
 
 // ============================================================================
 // Genetics Structs

@@ -7,7 +7,9 @@ use crate::handlers::kdf;
 use crate::handlers::key_derive;
 use crate::handlers::key_store::{self, StoredKey};
 use beardog_errors::BearDogError;
+use beardog_types::receipt::{HsmInfo, KeyInfo, OperationReceipt, generate_receipt_filename};
 use chrono::Utc;
+use serde_json::json;
 use std::fs;
 
 async fn discover_hsms_agnostic() -> Result<Vec<hsm_agnostic::CliHsmInfo>, BearDogError> {
@@ -15,7 +17,12 @@ async fn discover_hsms_agnostic() -> Result<Vec<hsm_agnostic::CliHsmInfo>, BearD
 }
 
 /// Select an HSM for key generation (`auto` prefers Mobile → Hardware → Software).
-pub(crate) fn select_cli_hsm_for_preference<'a>(
+///
+/// # Errors
+///
+/// Returns [`BearDogError::not_found`] when no HSM matches the requested tier, or
+/// [`BearDogError::invalid_input`] for an unknown preference string.
+pub fn select_cli_hsm_for_preference<'a>(
     hsms: &'a [hsm_agnostic::CliHsmInfo],
     hsm_preference: &str,
 ) -> Result<&'a hsm_agnostic::CliHsmInfo, BearDogError> {
@@ -193,9 +200,6 @@ pub async fn handle_key_generate_v2(
     key_store::save_key(&stored_key)?;
 
     // Generate operation receipt
-    use beardog_types::receipt::{HsmInfo, KeyInfo, OperationReceipt, generate_receipt_filename};
-    use serde_json::json;
-
     let receipt = OperationReceipt::new("key-generate")
         .with_key_info(KeyInfo {
             key_id: key_id.to_string(),
@@ -265,7 +269,7 @@ pub async fn handle_key_generate_v2(
 
 #[cfg(test)]
 mod generate_tests {
-    use super::*;
+    use super::{generate_aes_key_with_seed, select_cli_hsm_for_preference};
     use crate::handlers::hsm_agnostic::CliHsmInfo;
 
     fn sample_cli_hsm(tier: &str, name: &str) -> CliHsmInfo {

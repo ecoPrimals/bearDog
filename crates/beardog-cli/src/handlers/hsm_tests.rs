@@ -4,7 +4,7 @@
 // Following BearDog standards: concurrent, robust, idiomatic
 // NO sleeps, NO serial tests - only truly concurrent tests
 
-use super::hsm::*;
+use super::hsm::{discover_hsms_agnostic, handle_hsm_discover, handle_hsm_list};
 
 // ============================================================================
 // AGNOSTIC HSM DISCOVERY TESTS (Concurrent, No Sleeps)

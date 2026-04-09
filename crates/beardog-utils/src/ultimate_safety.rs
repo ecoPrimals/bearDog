@@ -59,7 +59,7 @@ pub struct SafetyStatistics {
 ///
 /// Provides high-performance memory pooling with complete safety guarantees
 /// and automatic cleanup to prevent memory leaks.
-#[allow(
+#[expect(
     dead_code,
     reason = "Public pool API for future safe pooling wiring in consumers."
 )]
@@ -97,7 +97,7 @@ pub struct PoolStatistics {
 ///
 /// This wrapper provides compile-time guarantees that references remain valid
 /// for their entire lifetime, eliminating common memory safety issues.
-#[allow(
+#[expect(
     dead_code,
     reason = "Public reference wrapper for documented safe-memory patterns."
 )]
@@ -114,7 +114,7 @@ pub struct SafeReference<T> {
 
 /// Safety token for compile-time verification of safe operations
 #[derive(Debug, Clone)]
-#[allow(
+#[expect(
     dead_code,
     reason = "Token type for future compile-time safety verification hooks."
 )]
@@ -141,7 +141,7 @@ pub enum SafetyLevel {
 /// RwLock-backed “atomic” with validity flag and token for extra defensive checks.
 ///
 /// Prefer real atomics for numeric types; this trades throughput for auditability.
-#[allow(
+#[expect(
     dead_code,
     reason = "Public defensive atomic wrapper for auditability-oriented call sites."
 )]

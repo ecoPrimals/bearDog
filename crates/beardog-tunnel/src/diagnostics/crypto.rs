@@ -13,6 +13,10 @@
 //! - Tag verification failures
 //!
 //! **PRESERVED**: Not deleted, available via `--features diagnostics`
+//!
+//! HKDF diagnostics: when the `diagnostics` feature is off, [`log_hkdf_derivation`] still emits
+//! structured [`tracing::trace!`] events (filterable) so key-derivation steps remain visible without
+//! the verbose stderr banners.
 
 /// Diagnostic log for AES-128-GCM encryption
 ///
@@ -175,8 +179,18 @@ pub fn log_chacha20_poly1305_decrypt(
 }
 
 /// Diagnostic log for HKDF key derivation
+///
+/// With `diagnostics` enabled: stderr banner plus [`tracing::debug!`] for log aggregation.
+/// With `diagnostics` disabled: [`tracing::trace!`] only (no secrets are logged).
 #[cfg(feature = "diagnostics")]
 pub fn log_hkdf_derivation(input_len: usize, salt_len: usize, info: &str, output_len: usize) {
+    tracing::debug!(
+        input_len,
+        salt_len,
+        info = %info,
+        output_len,
+        "hkdf_key_derivation_diagnostic"
+    );
     eprintln!("════════════════════════════════════════════════════════");
     eprintln!("🔑 HKDF KEY DERIVATION DIAGNOSTIC:");
     eprintln!("   Input: {input_len} bytes");
@@ -186,10 +200,19 @@ pub fn log_hkdf_derivation(input_len: usize, salt_len: usize, info: &str, output
     eprintln!("════════════════════════════════════════════════════════");
 }
 
-/// No-op diagnostic log for HKDF key derivation (diagnostics feature disabled)
+/// Structured trace for HKDF parameters when the verbose `diagnostics` feature is disabled.
+///
+/// Logs lengths and the HKDF `info` label only—never keying material.
 #[cfg(not(feature = "diagnostics"))]
-#[inline(always)]
-pub fn log_hkdf_derivation(_input_len: usize, _salt_len: usize, _info: &str, _output_len: usize) {}
+pub fn log_hkdf_derivation(input_len: usize, salt_len: usize, info: &str, output_len: usize) {
+    tracing::trace!(
+        input_len,
+        salt_len,
+        info = %info,
+        output_len,
+        "HKDF key derivation step (enable `diagnostics` for full stderr banner)"
+    );
+}
 
 #[cfg(test)]
 mod tests {
@@ -203,6 +226,12 @@ mod tests {
         log_chacha20_poly1305_decrypt(&[1u8; 32], &[2; 12], &[3; 8], &[4; 16], Some(b"aad"));
         log_chacha20_poly1305_decrypt(&[1u8; 32], &[2; 12], &[3; 8], &[4; 16], None);
         log_hkdf_derivation(48, 32, "info", 64);
+    }
+
+    #[test]
+    fn log_hkdf_derivation_accepts_zero_lengths_and_empty_info() {
+        log_hkdf_derivation(0, 0, "", 32);
+        log_hkdf_derivation(8192, 16, "tls traffic key", 0);
     }
 }
 

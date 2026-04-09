@@ -35,7 +35,17 @@ mod compliance_discovery;
 mod discovery;
 mod infrastructure;
 
-pub use capability_type::*;
-pub use compliance_discovery::*;
-pub use discovery::*;
-pub use infrastructure::*;
+pub use capability_type::{CapabilityType, ServiceCapabilityType};
+pub use compliance_discovery::{
+    CapabilityDiscoveryRequest, CapabilityDiscoveryResponse, ComplianceCapabilities,
+    ComplianceLevel, DiscoveryMetadata, EncryptionRequirements,
+};
+pub use discovery::{
+    AuthConfig, AuthType, CircuitBreakerConfig, EndpointConfig, HealthStatus, PerformanceMetrics,
+    ProviderInfo, SecurityCapabilities, SecurityLevel, UniversalCapability,
+};
+pub use infrastructure::{
+    CapabilityRequirements, ComputeCapabilities, EnvironmentalCapabilities,
+    HumanEntropyCapabilities, NetworkCapabilities, PerformanceCapabilities, StorageCapabilities,
+    SystemCapabilities,
+};

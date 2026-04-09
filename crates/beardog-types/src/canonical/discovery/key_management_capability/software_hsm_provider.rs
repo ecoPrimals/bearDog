@@ -40,12 +40,9 @@ impl SoftwareHsmProvider {
     ///
     /// # Errors
     /// Returns an error if HSM initialization fails
-    #[allow(
-        dead_code,
-        reason = "Public API hook for tunable software HSM; not referenced internally yet"
-    )]
+    #[allow(dead_code)] // Public API hook; not referenced in this crate — dead_code lint not always emitted; expect would be unfulfilled
     pub async fn with_config(
-        #[allow(
+        #[expect(
             unused_variables,
             reason = "Parameter reserved for future SecureSoftwareHsm options"
         )]

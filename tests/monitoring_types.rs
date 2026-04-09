@@ -16,8 +16,8 @@
 // Tests for monitoring enums and configuration types
 
 use beardog_types::canonical::monitoring::{
-    CustomMetricType, FilterOperator, MetricExporter, MonitoringEnvironment,
-    NotificationChannelType,
+    FilterOperator, MonitoringEnvironment, NotificationChannelType,
+    metrics::{CustomMetricType, MetricExporter},
 };
 use std::collections::HashMap;
 

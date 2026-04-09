@@ -6,7 +6,7 @@ use crate::universal_discovery::{
     DiscoveryEvent, DiscoveryProtocol, MinimalProtocolHandler, ProtocolHandler,
     UniversalDiscoveryConfig, UniversalServiceDiscovery,
 };
-use beardog_types::canonical::providers_unified::traits::ServiceInfo;
+use beardog_types::canonical::providers_unified::traits::other_traits::ServiceInfo;
 use std::collections::{HashMap, hash_map::DefaultHasher};
 use std::hash::{Hash, Hasher};
 use uuid::Uuid;

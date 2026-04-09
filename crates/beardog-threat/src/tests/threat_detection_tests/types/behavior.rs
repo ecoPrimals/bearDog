@@ -7,7 +7,10 @@ use std::collections::HashMap;
 use std::time::Instant;
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "behavioral threat test stubs; expect unfulfilled when fields are read in tests"
+)]
 pub enum BehaviorEvent {
     Login {
         timestamp: Instant,
@@ -32,7 +35,10 @@ pub enum BehaviorEvent {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "behavioral threat test stubs; expect unfulfilled when fields are read in tests"
+)]
 pub enum ThreatType {
     BruteForce,
     Dos,
@@ -48,7 +54,10 @@ pub enum ThreatType {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "behavioral threat test stubs; expect unfulfilled when fields are read in tests"
+)]
 pub struct Threat {
     threat_type: ThreatType,
     timestamp: Instant,

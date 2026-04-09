@@ -390,7 +390,10 @@ fn test_decision_fallback_strategy() {
     );
 
     // Verify system supports all modes for fallback
-    #[allow(clippy::no_effect_underscore_binding)]
+    #[expect(
+        clippy::no_effect_underscore_binding,
+        reason = "underscore bindings document available modes without unused-variable noise"
+    )]
     {
         let _hybrid_mode = IntelligenceMode::HybridAssisted;
         let _human_mode = IntelligenceMode::Human;
@@ -413,7 +416,10 @@ fn test_learning_config_defaults() {
     let config = HybridIntelligenceConfig::default();
 
     // Verify learning config is accessible
-    #[allow(clippy::no_effect_underscore_binding)]
+    #[expect(
+        clippy::no_effect_underscore_binding,
+        reason = "underscore bindings probe nested config without unused-variable noise"
+    )]
     {
         let _learning = &config.learning_config;
 

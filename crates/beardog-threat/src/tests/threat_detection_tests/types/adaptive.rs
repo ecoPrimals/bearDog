@@ -4,7 +4,10 @@
 
 use super::pattern::ThreatPattern;
 
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "adaptive detection test scaffolding; expect unfulfilled when branches are covered"
+)]
 pub struct AdaptiveDetector {
     patterns: Vec<ThreatPattern>,
     learning_enabled: bool,
@@ -13,7 +16,10 @@ pub struct AdaptiveDetector {
     threshold: f64,
 }
 
-#[allow(dead_code)]
+#[allow(
+    dead_code,
+    reason = "adaptive detection test scaffolding; expect unfulfilled when branches are covered"
+)]
 impl AdaptiveDetector {
     pub fn new() -> Self {
         Self {
@@ -51,7 +57,10 @@ impl AdaptiveDetector {
         self.true_positive_count += 1;
     }
 
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "adaptive model metrics aggregated as f64 for ratio checks"
+    )]
     pub fn adjust_threshold(&mut self) {
         let total = self.false_positive_count + self.true_positive_count;
         if total > 0 {

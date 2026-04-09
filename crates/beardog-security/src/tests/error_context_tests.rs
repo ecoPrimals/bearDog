@@ -163,7 +163,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::unnecessary_lazy_evaluations)]
+    #[expect(
+        clippy::unnecessary_lazy_evaluations,
+        reason = "explicit or_else branches exercised for Result error-context coverage"
+    )]
     fn test_result_or_else() {
         // TEST_CATEGORY: integration
         // TEST_DOMAIN: security
@@ -180,9 +183,12 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::unwrap_or_default)]
-    #[allow(clippy::manual_unwrap_or_default)]
-    #[allow(clippy::unnecessary_literal_unwrap)]
+    #[expect(
+        clippy::unwrap_or_default,
+        clippy::manual_unwrap_or_default,
+        clippy::unnecessary_literal_unwrap,
+        reason = "intentionally uses unwrap_or idioms under test for API surface coverage"
+    )]
     fn test_result_unwrap_or() {
         // Test Result::unwrap_or with default
         // TEST_CATEGORY: integration
@@ -195,10 +201,13 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::unnecessary_lazy_evaluations)]
-    #[allow(clippy::unwrap_or_default)]
-    #[allow(clippy::manual_unwrap_or_default)]
-    #[allow(clippy::unnecessary_literal_unwrap)]
+    #[expect(
+        clippy::unnecessary_lazy_evaluations,
+        clippy::unwrap_or_default,
+        clippy::manual_unwrap_or_default,
+        clippy::unnecessary_literal_unwrap,
+        reason = "intentionally uses unwrap_or_else paths for Result combinator coverage"
+    )]
     fn test_result_unwrap_or_else() {
         // Test Result::unwrap_or_else with closure
         let result: Result<i32, beardog_errors::BearDogError> = Ok(42);

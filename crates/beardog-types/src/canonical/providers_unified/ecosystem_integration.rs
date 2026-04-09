@@ -579,60 +579,7 @@ impl MigrationAdapter for HsmMigrationAdapter {
 
 // All legacy providers have been migrated to the ConsolidatedProvider system
 // Use ConsolidatedProviderRegistry directly for all provider operations
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // #[tokio::test] // Temporarily disabled - tokio not available in no-default-features
-    async fn test_ecosystem_integrator_creation() {
-        let integrator = EcosystemIntegrator::new().await?;
-        let state = integrator.get_migration_state().await;
-        assert_eq!(state.phase, MigrationPhase::Discovery);
-    }
- // TEST_CATEGORY: unit
- // TEST_DOMAIN: types
- // TEST_PRIORITY: normal
-
-    // #[tokio::test] // Temporarily disabled - tokio not available in no-default-features
-    async fn test_hsm_provider_discovery() {
-        let adapter = HsmMigrationAdapter::new();
-        // TEST_CATEGORY: unit
-        // TEST_DOMAIN: types
-        // TEST_PRIORITY: normal
-        let discovered = adapter.discover_providers()?;
-        
-        assert!(!discovered.is_empty());
-        assert!(discovered.iter().any(|p| p.name == "AndroidUniversalProvider"));
-        assert!(discovered.iter().any(|p| p.name == "IosUniversalProvider"));
-    }
-
-    // TEST_CATEGORY: unit
-    // TEST_DOMAIN: types
-    // TEST_PRIORITY: normal
-    // #[tokio::test] // Temporarily disabled - tokio not available in no-default-features
-    async fn test_migration_plan_creation() {
-        let integrator = EcosystemIntegrator::new().await?;
-        let discovered = vec![
-            DiscoveredProvider {
-                name: "TestProvider".to_string(),
-                provider_type: "test".to_string(),
-                location: ProviderLocation {
-                    crate_name: "test".to_string(),
-                    module_path: "test".to_string(),
-                    struct_name: "TestProvider".to_string(),
-                    file_path: "test.rs".to_string(),
-                },
-                config_data: HashMap::new(),
-                priority: 5,
-                complexity: MigrationComplexity::Simple,
-            },
-        ];
-
-        let plan = integrator.create_migration_plan(discovered).await?;
-        assert_eq!(plan.providers.len(), 1);
-        assert_eq!(plan.risk_level, RiskLevel::Low);
-    }
-
-    // All legacy provider migrations are complete - use ConsolidatedProviderRegistry directly
-} 
+//
+// Async/unit coverage for this module lives in `src/tests/ecosystem_integration_tokio_tests.rs`
+// (Tokio is a dev-dependency). This file is not yet `mod`’d under `providers_unified::mod`;
+// wire it there before calling `EcosystemIntegrator` from crate tests.

@@ -490,7 +490,11 @@ mod tests {
     // TEST_DOMAIN: genetics
     // TEST_PRIORITY: high
     #[test]
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    #[expect(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        reason = "validation counters from usize indices; test inputs keep ranges narrow"
+    )]
     fn test_validate_entropy_full_pass() -> Result<(), BearDogError> {
         use crate::genetics::entropy_hierarchy::{BiometricHash, OwnershipProof};
         let config = EntropyHierarchyConfig {

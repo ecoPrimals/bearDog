@@ -6,7 +6,7 @@
 
 use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;
-use beardog_types::canonical::providers_unified::traits::ServiceInfo;
+use beardog_types::canonical::providers_unified::traits::other_traits::ServiceInfo;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -199,7 +199,7 @@ impl ServiceRegistry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use beardog_types::canonical::providers_unified::traits::ServiceInfo;
+    use beardog_types::canonical::providers_unified::traits::other_traits::ServiceInfo;
     use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
     fn make_extended_service_info(name: &str) -> ExtendedServiceInfo {

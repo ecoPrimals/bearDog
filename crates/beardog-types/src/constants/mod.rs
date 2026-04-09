@@ -301,7 +301,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::assertions_on_constants)] // Documents compliance with standards
+    #[expect(
+        clippy::assertions_on_constants,
+        reason = "documents NIST/FIPS minimums as compliance documentation, not runtime logic"
+    )]
     fn test_crypto_constants_meet_nist_requirements() {
         assert!(crypto::RSA_KEY_SIZE_BITS >= 2048, "NIST SP 800-57");
         assert!(crypto::AES_KEY_SIZE_BITS >= 256, "FIPS 197");

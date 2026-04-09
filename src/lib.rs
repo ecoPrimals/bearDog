@@ -19,12 +19,11 @@
 //! ```no_run
 //! use beardog::BearDogFramework;
 //!
-//! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let mut framework = BearDogFramework::new().await?;
-//!     let services = framework.discover_services().await?;
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let mut framework = BearDogFramework::new()?;
+//!     let services = framework.discover_services()?;
 //!     println!("Discovered {} services", services.len());
-//!     framework.demonstrate_zero_copy_performance().await?;
+//!     framework.demonstrate_zero_copy_performance()?;
 //!     Ok(())
 //! }
 //! ```
@@ -57,7 +56,7 @@ pub struct FrameworkConfig {
 }
 
 /// Performance statistics for the framework
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct FrameworkStats {
     /// Number of services discovered
     pub services_discovered: usize,
@@ -67,6 +66,25 @@ pub struct FrameworkStats {
     pub memory_ops_avoided: u64,
     /// Cache hit ratio (0.0 to 1.0)
     pub cache_hit_ratio: f64,
+}
+
+impl Default for FrameworkStats {
+    fn default() -> Self {
+        Self::default_const()
+    }
+}
+
+impl FrameworkStats {
+    /// Default statistics (same as [`Default::default`], usable in `const` contexts).
+    #[must_use]
+    pub const fn default_const() -> Self {
+        Self {
+            services_discovered: 0,
+            zero_copy_operations: 0,
+            memory_ops_avoided: 0,
+            cache_hit_ratio: 0.0,
+        }
+    }
 }
 
 /// Service information discovered by the framework
@@ -101,6 +119,14 @@ pub enum BearDogError {
 
 impl Default for FrameworkConfig {
     fn default() -> Self {
+        Self::default_const()
+    }
+}
+
+impl FrameworkConfig {
+    /// Default framework configuration (same as [`Default::default`], usable in `const` contexts).
+    #[must_use]
+    pub const fn default_const() -> Self {
         Self {
             confidence_level: 0.95,
             sample_size: 1000,
@@ -117,12 +143,12 @@ impl BearDogFramework {
     /// # Errors
     ///
     /// Currently always succeeds; the `Result` type is reserved for future initialization failures.
-    pub async fn new() -> Result<Self, BearDogError> {
+    pub fn new() -> Result<Self, BearDogError> {
         info!("🐻 Initializing BearDog Sovereign Computing Platform");
 
         Ok(Self {
-            config: FrameworkConfig::default(),
-            stats: FrameworkStats::default(),
+            config: FrameworkConfig::default_const(),
+            stats: FrameworkStats::default_const(),
         })
     }
 
@@ -131,7 +157,7 @@ impl BearDogFramework {
     /// # Errors
     ///
     /// Currently always succeeds; the `Result` type is reserved for future initialization failures.
-    pub async fn with_config(config: FrameworkConfig) -> Result<Self, BearDogError> {
+    pub fn with_config(config: FrameworkConfig) -> Result<Self, BearDogError> {
         info!("🐻 Initializing BearDog with custom configuration");
         debug!(
             "Config: confidence_level={}, sample_size={}, timeout={:?}",
@@ -140,7 +166,7 @@ impl BearDogFramework {
 
         Ok(Self {
             config,
-            stats: FrameworkStats::default(),
+            stats: FrameworkStats::default_const(),
         })
     }
 
@@ -150,7 +176,7 @@ impl BearDogFramework {
     ///
     /// Returns [`BearDogError::Configuration`] when compute or storage endpoints are missing from
     /// config and environment.
-    pub async fn discover_services(&mut self) -> Result<Vec<ServiceInfo>, BearDogError> {
+    pub fn discover_services(&mut self) -> Result<Vec<ServiceInfo>, BearDogError> {
         info!("🔍 Discovering services with universal capability-based discovery");
 
         // Modern concurrent-safe approach: config takes precedence over env vars
@@ -224,7 +250,7 @@ impl BearDogFramework {
     /// # Errors
     ///
     /// Currently always succeeds; the `Result` type is reserved for future benchmark failures.
-    pub async fn demonstrate_zero_copy_performance(&mut self) -> Result<(), BearDogError> {
+    pub fn demonstrate_zero_copy_performance(&mut self) -> Result<(), BearDogError> {
         info!("⚡ Demonstrating hyperoptimized zero-copy performance");
 
         // Simulate zero-copy operations
@@ -260,11 +286,11 @@ impl BearDogFramework {
     ///
     /// ```no_run
     /// # use beardog::BearDogFramework;
-    /// # #[tokio::main]
-    /// # async fn main() {
-    /// let framework = BearDogFramework::new().await.unwrap();
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let framework = BearDogFramework::new()?;
     /// let config = framework.config();
     /// println!("Confidence level: {}", config.confidence_level);
+    /// # Ok(())
     /// # }
     /// ```
     #[must_use]
@@ -274,7 +300,7 @@ impl BearDogFramework {
 
     /// Reset performance statistics
     pub fn reset_stats(&mut self) {
-        self.stats = FrameworkStats::default();
+        self.stats = FrameworkStats::default_const();
         debug!("📊 Performance statistics reset");
     }
 }
@@ -298,6 +324,8 @@ mod lib_coverage_extension;
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used)]
+
     use super::*;
 
     fn assert_f64_approx_eq(a: f64, b: f64) {
@@ -307,7 +335,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_framework_initialization() {
-        let framework = BearDogFramework::new().await.unwrap();
+        let framework = BearDogFramework::new().unwrap();
         assert_f64_approx_eq(framework.config.confidence_level, 0.95);
         assert_eq!(framework.config.sample_size, 1000);
     }
@@ -322,8 +350,8 @@ mod tests {
             storage_endpoint: Some("http://test-storage:8081".to_string()),
         };
 
-        let mut framework = BearDogFramework::with_config(config).await.unwrap();
-        let services = framework.discover_services().await.unwrap();
+        let mut framework = BearDogFramework::with_config(config).unwrap();
+        let services = framework.discover_services().unwrap();
 
         assert!(!services.is_empty());
         assert_eq!(framework.stats.services_discovered, services.len());
@@ -331,8 +359,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_zero_copy_performance() {
-        let mut framework = BearDogFramework::new().await.unwrap();
-        framework.demonstrate_zero_copy_performance().await.unwrap();
+        let mut framework = BearDogFramework::new().unwrap();
+        framework.demonstrate_zero_copy_performance().unwrap();
 
         assert!(framework.stats.zero_copy_operations > 0);
         assert!(framework.stats.memory_ops_avoided > 0);
@@ -356,7 +384,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_zero_copy_config_access() {
-        let framework = BearDogFramework::new().await.unwrap();
+        let framework = BearDogFramework::new().unwrap();
 
         // Zero-copy config access - no clones!
         let config_ref1 = framework.config();

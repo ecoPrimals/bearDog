@@ -29,8 +29,11 @@ pub struct EntropySeedMetadata {
 
 /// HSM information for CLI display
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct HsmInfo {
-    pub(crate) name: String,
-    pub(crate) tier: String,
-    pub(crate) hsm_type: String,
+pub struct HsmInfo {
+    /// Display name (vendor/model) for the device.
+    pub name: String,
+    /// Security tier label (e.g. Hardware, Software).
+    pub tier: String,
+    /// Interface or product kind string for diagnostics.
+    pub hsm_type: String,
 }

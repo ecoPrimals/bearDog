@@ -45,9 +45,12 @@ pub mod hsm;
 /// Secure session management
 pub mod session;
 
-pub use config::*;
-pub use events::*;
-pub use session::*;
+pub use config::{
+    AlertThresholds, GamingConfig, PerformanceConfig, ResilienceConfig, SecurityConfig,
+    TunnelConfig, TunnelMonitoringConfig, UnifiedProcessorConfig,
+};
+pub use events::{capabilities, compliance, network, security, threat, types};
+pub use session::{GamingSecurityProfile, SecureSession, SecurityGenetics, SessionManager};
 
 #[cfg(test)]
 mod config_tests;
@@ -192,5 +195,3 @@ impl BStpConfig {
         }
     }
 }
-
-pub use session::{SecureSession, SessionManager};

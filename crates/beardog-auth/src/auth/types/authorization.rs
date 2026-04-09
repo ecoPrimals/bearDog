@@ -362,12 +362,10 @@ mod tests {
             end: now + chrono::Duration::hours(24),
         };
 
-        match condition {
-            AccessCondition::TimeWindow { start, end } => {
-                assert!(end > start);
-            }
-            _ => panic!("Expected TimeWindow variant"),
-        }
+        let AccessCondition::TimeWindow { start, end } = condition else {
+            panic!("Expected TimeWindow variant");
+        };
+        assert!(end > start);
     }
 
     #[test]
@@ -377,16 +375,15 @@ mod tests {
             window_seconds: 3600,
         };
 
-        match condition {
-            AccessCondition::IpAddress {
-                address,
-                window_seconds,
-            } => {
-                assert_eq!(address, u32::from(std::net::Ipv4Addr::LOCALHOST));
-                assert_eq!(window_seconds, 3600);
-            }
-            _ => panic!("Expected IpAddress variant"),
-        }
+        let AccessCondition::IpAddress {
+            address,
+            window_seconds,
+        } = condition
+        else {
+            panic!("Expected IpAddress variant");
+        };
+        assert_eq!(address, u32::from(std::net::Ipv4Addr::LOCALHOST));
+        assert_eq!(window_seconds, 3600);
     }
 
     #[test]
@@ -396,13 +393,11 @@ mod tests {
             nodes: vec!["node1".to_string(), "node2".to_string()],
         };
 
-        match condition {
-            AccessCondition::RequireConsensus { threshold, nodes } => {
-                assert_eq!(threshold, 0.75);
-                assert_eq!(nodes.len(), 2);
-            }
-            _ => panic!("Expected RequireConsensus variant"),
-        }
+        let AccessCondition::RequireConsensus { threshold, nodes } = condition else {
+            panic!("Expected RequireConsensus variant");
+        };
+        assert_eq!(threshold, 0.75);
+        assert_eq!(nodes.len(), 2);
     }
 
     // AuthMethod tests

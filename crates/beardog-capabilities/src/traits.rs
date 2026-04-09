@@ -321,7 +321,7 @@ pub trait BroadcastEncryptionProvider: Send + Sync {
 /// Key derivation path
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DerivationPath {
-    /// Path components (e.g., ["m", "44'", "0'", "0'"])
+    /// Path components (e.g. `["m", "44'", "0'", "0'"]`)
     pub components: Vec<String>,
     /// Additional context info
     pub context: Vec<u8>,

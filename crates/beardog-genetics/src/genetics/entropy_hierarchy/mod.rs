@@ -16,11 +16,18 @@ pub mod types;
 pub mod validation;
 
 // Re-export all types
-pub use engine::*;
+pub use engine::EntropyHierarchyManager;
 pub use live_feed_validator::{LiveFeedConfig, LiveFeedValidationResult, LiveFeedValidator};
-pub use monitoring::*;
-pub use sources::*;
-pub use types::*;
+pub use monitoring::{
+    EntropyAnalytics, EntropyHealthStatus, EntropyHierarchyStats, EntropyMonitor,
+    EntropyMonitoringConfig, PerformanceMetrics,
+};
+pub use sources::{EntropyMixingEngine, EntropySourceManager};
+pub use types::{
+    BiometricHash, EntropyClass, EntropyHierarchyConfig, EntropySeed, FusionAlgorithm,
+    HumanEntropySource, HumanEntropyType, HumanIdentity, MachineEntropySource, MachineSourceType,
+    MixingStrategy, OwnershipProof, SeedMetadata, VerificationLevel,
+};
 pub use validation::EntropyValidator;
 
 // Note: BearDogError, Deserialize, and Serialize imports removed as they are unused in this module
@@ -78,11 +85,10 @@ mod tests {
             ownership_proof: OwnershipProof::new(vec![7, 8, 9], vec![10, 11, 12]),
         };
 
-        if let EntropyClass::HumanLivedExperience { quality_score, .. } = entropy {
-            assert_eq!(quality_score, 0.95);
-        } else {
+        let EntropyClass::HumanLivedExperience { quality_score, .. } = entropy else {
             panic!("Expected HumanLivedExperience variant");
-        }
+        };
+        assert_eq!(quality_score, 0.95);
     }
 
     #[test]
@@ -111,11 +117,10 @@ mod tests {
             validation_timestamp: Utc::now(),
         };
 
-        if let EntropyClass::HumanSupervisedMachine { quality_score, .. } = entropy {
-            assert_eq!(quality_score, 0.85);
-        } else {
+        let EntropyClass::HumanSupervisedMachine { quality_score, .. } = entropy else {
             panic!("Expected HumanSupervisedMachine variant");
-        }
+        };
+        assert_eq!(quality_score, 0.85);
     }
 
     #[test]
@@ -137,17 +142,16 @@ mod tests {
             reproducibility_index: 0.3,
         };
 
-        if let EntropyClass::StoreBoughtMachine {
+        let EntropyClass::StoreBoughtMachine {
             quality_score,
             reproducibility_index,
             ..
         } = entropy
-        {
-            assert_eq!(quality_score, 0.65);
-            assert_eq!(reproducibility_index, 0.3);
-        } else {
+        else {
             panic!("Expected StoreBoughtMachine variant");
-        }
+        };
+        assert_eq!(quality_score, 0.65);
+        assert_eq!(reproducibility_index, 0.3);
     }
 
     // ========================================================================
@@ -323,16 +327,15 @@ mod tests {
             seed_source: "hardware".to_string(),
         };
 
-        if let MachineSourceType::CSPRNG {
+        let MachineSourceType::CSPRNG {
             algorithm,
             seed_source,
         } = source
-        {
-            assert_eq!(algorithm, "ChaCha20");
-            assert_eq!(seed_source, "hardware");
-        } else {
+        else {
             panic!("Expected CSPRNG variant");
-        }
+        };
+        assert_eq!(algorithm, "ChaCha20");
+        assert_eq!(seed_source, "hardware");
     }
 
     #[test]
@@ -342,16 +345,15 @@ mod tests {
             entropy_rate: 0.95,
         };
 
-        if let MachineSourceType::HRNG {
+        let MachineSourceType::HRNG {
             device_type,
             entropy_rate,
         } = source
-        {
-            assert_eq!(device_type, "TPM2.0");
-            assert_eq!(entropy_rate, 0.95);
-        } else {
+        else {
             panic!("Expected HRNG variant");
-        }
+        };
+        assert_eq!(device_type, "TPM2.0");
+        assert_eq!(entropy_rate, 0.95);
     }
 
     #[test]
@@ -361,16 +363,15 @@ mod tests {
             randomness_tests: vec!["diehard".to_string(), "nist".to_string()],
         };
 
-        if let MachineSourceType::TRNG {
+        let MachineSourceType::TRNG {
             source_type,
             randomness_tests,
         } = source
-        {
-            assert_eq!(source_type, "quantum");
-            assert_eq!(randomness_tests.len(), 2);
-        } else {
+        else {
             panic!("Expected TRNG variant");
-        }
+        };
+        assert_eq!(source_type, "quantum");
+        assert_eq!(randomness_tests.len(), 2);
     }
 
     // ========================================================================
@@ -384,16 +385,15 @@ mod tests {
             quality_score: 0.92,
         };
 
-        if let HumanEntropyType::Biometric {
+        let HumanEntropyType::Biometric {
             biometric_type,
             quality_score,
         } = entropy
-        {
-            assert_eq!(biometric_type, "fingerprint");
-            assert_eq!(quality_score, 0.92);
-        } else {
+        else {
             panic!("Expected Biometric variant");
-        }
+        };
+        assert_eq!(biometric_type, "fingerprint");
+        assert_eq!(quality_score, 0.92);
     }
 
     #[test]
@@ -403,16 +403,15 @@ mod tests {
             complexity_score: 0.88,
         };
 
-        if let HumanEntropyType::Behavioral {
+        let HumanEntropyType::Behavioral {
             pattern_type,
             complexity_score,
         } = entropy
-        {
-            assert_eq!(pattern_type, "typing_rhythm");
-            assert_eq!(complexity_score, 0.88);
-        } else {
+        else {
             panic!("Expected Behavioral variant");
-        }
+        };
+        assert_eq!(pattern_type, "typing_rhythm");
+        assert_eq!(complexity_score, 0.88);
     }
 
     #[test]
@@ -422,16 +421,15 @@ mod tests {
             uniqueness_score: 0.94,
         };
 
-        if let HumanEntropyType::Creative {
+        let HumanEntropyType::Creative {
             expression_type,
             uniqueness_score,
         } = entropy
-        {
-            assert_eq!(expression_type, "drawing");
-            assert_eq!(uniqueness_score, 0.94);
-        } else {
+        else {
             panic!("Expected Creative variant");
-        }
+        };
+        assert_eq!(expression_type, "drawing");
+        assert_eq!(uniqueness_score, 0.94);
     }
 
     // ========================================================================
@@ -442,12 +440,7 @@ mod tests {
     fn test_mixing_strategy_xor() {
         let strategy = MixingStrategy::XorMix;
 
-        match strategy {
-            MixingStrategy::XorMix => {
-                // XorMix strategy correctly identified
-            }
-            _ => panic!("Expected XorMix variant"),
-        }
+        assert!(matches!(strategy, MixingStrategy::XorMix));
     }
 
     #[test]
@@ -456,11 +449,10 @@ mod tests {
             hash_algorithm: "SHA3-512".to_string(),
         };
 
-        if let MixingStrategy::HashMix { hash_algorithm } = strategy {
-            assert_eq!(hash_algorithm, "SHA3-512");
-        } else {
+        let MixingStrategy::HashMix { hash_algorithm } = strategy else {
             panic!("Expected HashMix variant");
-        }
+        };
+        assert_eq!(hash_algorithm, "SHA3-512");
     }
 
     #[test]
@@ -469,11 +461,10 @@ mod tests {
             cipher: "AES-256-GCM".to_string(),
         };
 
-        if let MixingStrategy::CryptoMix { cipher } = strategy {
-            assert_eq!(cipher, "AES-256-GCM");
-        } else {
+        let MixingStrategy::CryptoMix { cipher } = strategy else {
             panic!("Expected CryptoMix variant");
-        }
+        };
+        assert_eq!(cipher, "AES-256-GCM");
     }
 
     // ========================================================================

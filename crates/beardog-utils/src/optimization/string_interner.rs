@@ -221,7 +221,14 @@ pub fn intern_string(s: &str) -> Result<Arc<str>, BearDogError> {
 
 #[cfg(test)]
 mod tests {
+    #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+
+    // TEST_CATEGORY: unit
+    // TEST_DOMAIN: core
+    // TEST_PRIORITY: normal
+
     use super::*;
+    use crate::float_eq;
 
     #[test]
     fn test_string_interner_basic() -> Result<(), BearDogError> {
@@ -332,6 +339,31 @@ mod tests {
         let efficiency = interner.memory_efficiency()?;
         assert!((0.0..=1.0).contains(&efficiency));
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_hit_ratio_zero_without_requests() -> Result<(), BearDogError> {
+        let interner = StringInterner::new();
+        float_eq::f64(interner.hit_ratio()?, 0.0);
+        Ok(())
+    }
+
+    #[test]
+    fn test_default_same_as_new() -> Result<(), BearDogError> {
+        let a = StringInterner::default();
+        let b = StringInterner::new();
+        assert_eq!(a.len()?, b.len()?);
+        assert!(a.is_empty()?);
+        assert!(b.is_empty()?);
+        Ok(())
+    }
+
+    #[test]
+    fn test_memory_efficiency_empty_table() -> Result<(), BearDogError> {
+        let interner = StringInterner::new();
+        let eff = interner.memory_efficiency()?;
+        float_eq::f64(eff, 1.0);
         Ok(())
     }
 }

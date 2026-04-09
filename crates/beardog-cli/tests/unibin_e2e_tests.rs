@@ -4,7 +4,7 @@
 //! E2E tests for `UniBin` commands
 
 use assert_cmd::Command;
-use predicates::prelude::*;
+use predicates::prelude::predicate;
 use std::time::Duration;
 use tempfile::TempDir;
 

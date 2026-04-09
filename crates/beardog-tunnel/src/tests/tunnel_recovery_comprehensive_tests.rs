@@ -26,7 +26,10 @@ type Result<T> = std::result::Result<T, BearDogError>;
 // ============================================================================
 
 /// Mock tunnel connection that can simulate various failure modes
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "fixture fields used selectively across recovery scenarios"
+)]
 #[derive(Clone)]
 struct MockTunnelConnection {
     connection_id: String,
@@ -126,7 +129,10 @@ impl MockTunnelConnection {
         self.packets_sent.load(Ordering::SeqCst)
     }
 
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "retained for symmetry with get_packets_sent in future tests"
+    )]
     fn get_packets_received(&self) -> u64 {
         self.packets_received.load(Ordering::SeqCst)
     }
@@ -381,7 +387,11 @@ async fn test_tunnel_operation_retry_after_failure() -> Result<()> {
 }
 
 #[tokio::test]
-#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+#[expect(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "retry counter and simulated delay ticks are small bounded integers in test"
+)]
 async fn test_tunnel_exponential_backoff_simulation() -> Result<()> {
     // Simulate exponential backoff retry pattern
     let tunnel = MockTunnelConnection::new("test_tunnel");

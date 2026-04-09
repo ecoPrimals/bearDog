@@ -13,8 +13,11 @@ use super::*;
 use crate::canonical::config::domains::testing::CanonicalTestConfig;
 
 #[cfg(test)]
-#[allow(clippy::no_effect_underscore_binding)] // Test code readability
-#[allow(clippy::assertions_on_constants)] // Test structure patterns
+#[expect(
+    clippy::no_effect_underscore_binding,
+    clippy::assertions_on_constants,
+    reason = "unified config tests: underscore field probes and const policy assertions"
+)]
 mod unified_config_tests {
     use super::*;
     use serde_json;

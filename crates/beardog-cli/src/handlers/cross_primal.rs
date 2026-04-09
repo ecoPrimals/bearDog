@@ -305,7 +305,10 @@ async fn handle_discover_primals(capability: &str) -> Result<(), beardog_errors:
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        CrossPrimalAction, CrossPrimalCommand, handle_cross_primal, handle_discover_primals,
+        handle_key_ceremony, handle_send_secure,
+    };
     use tempfile::TempDir;
 
     #[tokio::test]

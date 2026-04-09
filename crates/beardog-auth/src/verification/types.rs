@@ -8,8 +8,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// Note: BearDogGenetics and ResourcePermission types to be defined when needed
-// use crate::auth::{BearDogGenetics, ResourcePermission};
+// String stand-ins below; replace with `crate::auth` types when unified.
 
 /// Stand-in for rich genetics payloads while verification stays decoupled from `auth::genetics`.
 pub type BearDogGenetics = String;
@@ -206,7 +205,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "integer verification counts converted to f64 for ratio-style test assertions"
+    )]
     fn test_verification_metrics_calculations() {
         let metrics = VerificationMetrics {
             total_verifications: 100,

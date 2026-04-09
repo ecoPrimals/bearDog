@@ -186,7 +186,7 @@ pub struct ServiceRegistryConfig {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default)]
 pub struct NetworkDiscoveryConfig {
-    /// Discovery protocols to use for service location (e.g., ["mdns", "http", "grpc"])
+    /// Discovery protocols to use for service location (e.g., `["mdns", "http", "grpc"]`)
     pub protocols: Vec<String>,
 
     /// Ports to scan during network discovery
@@ -223,7 +223,7 @@ pub struct QuantumDiscoveryConfig {
     /// Enable or disable quantum discovery features
     pub enabled: bool,
 
-    /// Quantum algorithms to use (e.g., ["grover", "qaoa", "shor"])
+    /// Quantum algorithms to use (e.g., `["grover", "qaoa", "shor"]`)
     pub algorithms: Vec<String>,
 
     /// Quantum coherence time before decoherence occurs

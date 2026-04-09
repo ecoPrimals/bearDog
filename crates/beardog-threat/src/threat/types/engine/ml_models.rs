@@ -458,7 +458,8 @@ impl std::fmt::Display for MlModelType {
     clippy::assertions_on_constants,
     clippy::useless_vec,
     clippy::absurd_extreme_comparisons,
-    unused_comparisons
+    unused_comparisons,
+    reason = "ML model unit tests: exhaustive patterns (multi-lint expect causes unfulfilled_lint_expectations)"
 )]
 #[cfg(test)]
 mod tests {

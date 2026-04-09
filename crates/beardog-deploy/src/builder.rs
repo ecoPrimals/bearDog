@@ -37,7 +37,7 @@ impl RustBuilder {
 
     /// Test-only hook to exercise [`RustBuilder::get_host_architecture`] from crate-level tests.
     #[cfg(test)]
-    #[allow(
+    #[expect(
         dead_code,
         reason = "Called from `coverage_boost_tests`; not every test target links that module."
     )]
@@ -325,7 +325,7 @@ mod tests {
 
     #[test]
     fn test_rust_builder_new_various_paths() {
-        for p in ["/tmp", ".", "/home/user/project", "/opt/beardog"] {
+        for p in ["/tmp", ".", "$HOME/project", "/opt/beardog"] {
             let b = RustBuilder::new(std::path::Path::new(p));
             assert!(format!("{b:?}").contains("RustBuilder"));
         }

@@ -23,8 +23,21 @@ use beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_i
 use std::sync::Arc;
 use tracing::{info, warn};
 
+/// Resolve TCP listen address from [`ServerArgs::port`] / [`ServerArgs::listen`] (`UniBin` v1.1).
+///
+/// Returns [`None`] when neither is set, or when both are set (normally prevented by `clap`
+/// `conflicts_with`, but callers may construct [`ServerArgs`] programmatically).
+#[must_use]
+pub fn resolve_effective_tcp_listen(port: Option<u16>, listen: Option<&str>) -> Option<String> {
+    match (port, listen) {
+        (Some(p), None) => Some(format!("0.0.0.0:{p}")),
+        (None, Some(addr)) => Some(addr.to_string()),
+        _ => None,
+    }
+}
+
 /// Resolve the effective socket path for server startup (abstract, multi-family, or explicit).
-pub(crate) fn resolve_server_socket_path(args: &ServerArgs) -> String {
+pub fn resolve_server_socket_path(args: &ServerArgs) -> String {
     if args.r#abstract {
         let family = args.family_id.as_deref().unwrap_or("default");
         let ns = resolve_biomeos_ipc_subdir_from_optional(None);
@@ -41,6 +54,15 @@ pub(crate) fn resolve_server_socket_path(args: &ServerArgs) -> String {
     } else {
         args.socket.clone()
     }
+}
+
+/// Address string advertised to the Neural API for registration (`TCP` vs Unix path).
+#[must_use]
+pub(super) fn neural_registration_address<'a>(
+    tcp_listen: Option<&'a str>,
+    unix_socket_path: &'a str,
+) -> &'a str {
+    tcp_listen.unwrap_or(unix_socket_path)
 }
 
 /// Handle server command - start long-running service
@@ -70,11 +92,7 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     }
 
     // Resolve --port into --listen (UniBin v1.1: `server --port <PORT>`)
-    let effective_listen = match (args.port, &args.listen) {
-        (Some(port), None) => Some(format!("0.0.0.0:{port}")),
-        (None, Some(addr)) => Some(addr.clone()),
-        _ => None,
-    };
+    let effective_listen = resolve_effective_tcp_listen(args.port, args.listen.as_deref());
 
     // Determine transport mode
     if let Some(ref addr) = effective_listen {
@@ -188,11 +206,8 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
     if let Some(neural_socket) = discover_neural_api_socket() {
         info!(neural_socket = %neural_socket, "Neural API detected");
 
-        let registration_addr = if let Some(ref tcp) = tcp_addr {
-            tcp.as_str()
-        } else {
-            &socket_path
-        };
+        let registration_addr =
+            neural_registration_address(tcp_addr.as_deref(), socket_path.as_str());
 
         match register_with_neural_api(&neural_socket, &primal_name, registration_addr).await {
             Ok(()) => info!("registered with Neural API"),
@@ -233,5 +248,157 @@ async fn attempt_orchestrator_registration(_socket_path: &str, _tcp_addr: Option
         warn!(error = %e, "IPC registry registration failed (non-fatal)");
     } else {
         info!("registered with ecosystem IPC registry");
+    }
+}
+
+#[cfg(test)]
+#[expect(clippy::unwrap_used, reason = "test assertions")]
+mod server_handler_tests {
+    use crate::ServerArgs;
+    use beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_ipc_subdir_from_optional;
+
+    use super::{
+        attempt_orchestrator_registration, neural_registration_address,
+        resolve_effective_tcp_listen, resolve_server_socket_path,
+    };
+
+    #[test]
+    fn neural_registration_address_prefers_tcp_when_present() {
+        assert_eq!(
+            neural_registration_address(Some("0.0.0.0:9000"), "/tmp/x.sock"),
+            "0.0.0.0:9000"
+        );
+    }
+
+    #[test]
+    fn neural_registration_address_falls_back_to_unix_path() {
+        assert_eq!(
+            neural_registration_address(None, "@abstract_sock"),
+            "@abstract_sock"
+        );
+    }
+
+    #[test]
+    fn resolve_effective_tcp_listen_from_port_only() {
+        assert_eq!(
+            resolve_effective_tcp_listen(Some(9900), None).as_deref(),
+            Some("0.0.0.0:9900")
+        );
+    }
+
+    #[test]
+    fn resolve_effective_tcp_listen_from_listen_only() {
+        assert_eq!(
+            resolve_effective_tcp_listen(None, Some("127.0.0.1:7777")).as_deref(),
+            Some("127.0.0.1:7777")
+        );
+    }
+
+    #[test]
+    fn resolve_effective_tcp_listen_none_when_neither_set() {
+        assert_eq!(resolve_effective_tcp_listen(None, None), None);
+    }
+
+    #[test]
+    fn resolve_effective_tcp_listen_none_when_both_set_like_invalid_cli_state() {
+        assert_eq!(
+            resolve_effective_tcp_listen(Some(8080), Some("127.0.0.1:1")),
+            None
+        );
+    }
+
+    #[test]
+    fn resolve_server_socket_path_abstract_default_family() {
+        let args = ServerArgs {
+            socket: "/tmp/ignored.sock".to_string(),
+            r#abstract: true,
+            port: None,
+            listen: None,
+            audit_dir: None,
+            family_id: None,
+            orchestrator_id: None,
+        };
+        let ns = resolve_biomeos_ipc_subdir_from_optional(None);
+        assert_eq!(
+            resolve_server_socket_path(&args),
+            format!("@{ns}_beardog_default")
+        );
+    }
+
+    #[test]
+    fn resolve_server_socket_path_abstract_named_family() {
+        let args = ServerArgs {
+            socket: "/tmp/ignored.sock".to_string(),
+            r#abstract: true,
+            port: None,
+            listen: None,
+            audit_dir: None,
+            family_id: Some("alpha".to_string()),
+            orchestrator_id: None,
+        };
+        let ns = resolve_biomeos_ipc_subdir_from_optional(None);
+        assert_eq!(
+            resolve_server_socket_path(&args),
+            format!("@{ns}_beardog_alpha")
+        );
+    }
+
+    #[test]
+    fn resolve_server_socket_path_family_scoped_file() {
+        let args = ServerArgs {
+            socket: "/var/run/beardog.sock".to_string(),
+            r#abstract: false,
+            port: None,
+            listen: None,
+            audit_dir: None,
+            family_id: Some("fam99".to_string()),
+            orchestrator_id: None,
+        };
+        assert_eq!(
+            resolve_server_socket_path(&args),
+            "/var/run/beardog-fam99.sock"
+        );
+    }
+
+    #[test]
+    fn resolve_server_socket_path_family_with_socket_filename_only_uses_parent_join() {
+        let args = ServerArgs {
+            socket: "beardog.sock".to_string(),
+            r#abstract: false,
+            port: None,
+            listen: None,
+            audit_dir: None,
+            family_id: Some("rel".to_string()),
+            orchestrator_id: None,
+        };
+        let resolved = resolve_server_socket_path(&args);
+        assert!(
+            resolved.ends_with("beardog-rel.sock"),
+            "unexpected path: {resolved}"
+        );
+    }
+
+    #[test]
+    fn resolve_server_socket_path_explicit_when_no_family() {
+        let args = ServerArgs {
+            socket: "/tmp/custom.sock".to_string(),
+            r#abstract: false,
+            port: None,
+            listen: None,
+            audit_dir: None,
+            family_id: None,
+            orchestrator_id: None,
+        };
+        assert_eq!(resolve_server_socket_path(&args), "/tmp/custom.sock");
+    }
+
+    #[tokio::test]
+    async fn attempt_orchestrator_registration_completes_without_panic() {
+        attempt_orchestrator_registration("/tmp/beardog_unit_test_orchestrator.sock", None).await;
+    }
+
+    #[tokio::test]
+    async fn attempt_orchestrator_registration_with_tcp_addr_completes_without_panic() {
+        attempt_orchestrator_registration("/tmp/beardog.sock", Some("127.0.0.1:9900")).await;
     }
 }

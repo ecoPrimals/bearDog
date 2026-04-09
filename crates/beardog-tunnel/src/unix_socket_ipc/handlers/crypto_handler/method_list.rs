@@ -92,6 +92,9 @@ pub fn crypto_method_names() -> Vec<&'static str> {
         "crypto.decrypt",
         "crypto.generate_keypair",
         "crypto.derive_secret",
+        // Dot-separated semantic names (SEMANTIC_METHOD_NAMING_STANDARD v2.0)
+        "crypto.ed25519.sign",
+        "crypto.ed25519.verify",
         // Cross-Primal namespace (beardog.crypto.*)
         "beardog.crypto.sha3_256",
         "beardog.crypto.ed25519_generate_keypair",
@@ -138,5 +141,18 @@ mod tests {
         assert!(names.contains(&"beardog.crypto.derive_onion_address"));
         assert!(names.contains(&"crypto.hash"));
         assert!(names.contains(&"beardog.crypto.blake3_hash"));
+    }
+
+    #[test]
+    fn dot_separated_semantic_ed25519_methods_registered() {
+        let names = crypto_method_names();
+        assert!(
+            names.contains(&"crypto.ed25519.sign"),
+            "dot-separated crypto.ed25519.sign per SEMANTIC_METHOD_NAMING_STANDARD v2.0"
+        );
+        assert!(
+            names.contains(&"crypto.ed25519.verify"),
+            "dot-separated crypto.ed25519.verify per SEMANTIC_METHOD_NAMING_STANDARD v2.0"
+        );
     }
 }

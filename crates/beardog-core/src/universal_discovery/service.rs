@@ -4,7 +4,7 @@
 
 use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;
-use beardog_types::canonical::providers_unified::traits::ServiceInfo;
+use beardog_types::canonical::providers_unified::traits::other_traits::ServiceInfo;
 use chrono::Utc;
 use std::collections::HashMap;
 use std::time::Duration;

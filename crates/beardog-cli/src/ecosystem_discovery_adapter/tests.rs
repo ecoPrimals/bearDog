@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::*;
+use super::EcosystemDiscoveryAdapter;
 use beardog_config::global::BEARDOG_CONFIG;
 use beardog_core::ecosystem::primal_types::{
     AuthRequirements, DiscoveredPrimal, EndpointSecurityConfig, ErrorRateMetrics, LoadMetrics,
@@ -132,6 +132,66 @@ fn test_primal_has_capability_security_positive() {
 }
 
 #[test]
+fn jsonrpc_method_and_params_prefers_explicit_method_key() {
+    let payload = json!({"method": "ecosystem.ping", "params": {"k": 1}});
+    let (method, params) = EcosystemDiscoveryAdapter::jsonrpc_method_and_params(&payload);
+    assert_eq!(method, "ecosystem.ping");
+    assert_eq!(params, json!({"k": 1}));
+}
+
+#[test]
+fn jsonrpc_method_and_params_method_without_params_is_null() {
+    let payload = json!({"method": "only.method"});
+    let (method, params) = EcosystemDiscoveryAdapter::jsonrpc_method_and_params(&payload);
+    assert_eq!(method, "only.method");
+    assert!(params.is_null());
+}
+
+#[test]
+fn jsonrpc_method_and_params_jsonrpc_method_alias_uses_full_payload_when_params_absent() {
+    let payload = json!({"jsonrpc_method": "alias.rpc"});
+    let (method, params) = EcosystemDiscoveryAdapter::jsonrpc_method_and_params(&payload);
+    assert_eq!(method, "alias.rpc");
+    assert_eq!(params, payload);
+}
+
+#[test]
+fn jsonrpc_method_and_params_jsonrpc_method_with_explicit_params() {
+    let payload = json!({"jsonrpc_method": "x", "params": [1, 2]});
+    let (method, params) = EcosystemDiscoveryAdapter::jsonrpc_method_and_params(&payload);
+    assert_eq!(method, "x");
+    assert_eq!(params, json!([1, 2]));
+}
+
+#[test]
+fn jsonrpc_method_and_params_non_object_falls_back_to_default_method() {
+    let payload = json!("raw-string");
+    let (method, params) = EcosystemDiscoveryAdapter::jsonrpc_method_and_params(&payload);
+    assert_eq!(method, "ecosystem.rpc");
+    assert_eq!(params, payload);
+}
+
+#[test]
+fn jsonrpc_method_and_params_object_without_string_method_falls_back() {
+    let payload = json!({"method": 42, "note": "not a string method"});
+    let (method, params) = EcosystemDiscoveryAdapter::jsonrpc_method_and_params(&payload);
+    assert_eq!(method, "ecosystem.rpc");
+    assert_eq!(params, payload);
+}
+
+#[test]
+fn tower_atomic_error_maps_to_bear_dog_network_error() {
+    let err = EcosystemDiscoveryAdapter::tower_atomic_error(
+        beardog_tower_atomic::Error::ConnectionFailed("peer unreachable".into()),
+    );
+    let s = err.to_string();
+    assert!(
+        s.contains("peer unreachable"),
+        "expected tower error text in BearDogError, got {s}"
+    );
+}
+
+#[test]
 fn test_primal_has_capability_security_negative() {
     let p = minimal_discovered_primal(
         "p-store",
@@ -242,6 +302,62 @@ async fn test_send_request_rejects_http_endpoint() {
     assert!(
         err.to_string().contains("IPC-first"),
         "expected IPC refusal, got {err}"
+    );
+}
+
+#[tokio::test]
+async fn test_send_request_rejects_tcp_ipc_endpoint() {
+    let adapter = EcosystemDiscoveryAdapter::new().expect("creation failed");
+    let svc = UniversalServiceDescriptor {
+        service_id: "tcp-peer".to_string(),
+        capabilities: vec![],
+        endpoint: ServiceEndpoint {
+            protocol: "tcp-ipc".to_string(),
+            host: "127.0.0.1".to_string(),
+            port: 9000,
+            path: None,
+            parameters: HashMap::new(),
+        },
+        auth_method: AuthenticationMethod::None,
+        performance_profile: PerformanceProfile::default(),
+        trust_score: 0.5,
+    };
+    let err = adapter
+        .send_request(&svc, json!({}))
+        .await
+        .expect_err("TCP IPC must be rejected");
+    let msg = err.to_string();
+    assert!(
+        msg.contains("TCP IPC") && msg.contains("not supported"),
+        "expected TCP rejection message, got {msg}"
+    );
+}
+
+#[tokio::test]
+async fn test_send_request_ipc_requires_absolute_socket_path() {
+    let adapter = EcosystemDiscoveryAdapter::new().expect("creation failed");
+    let svc = UniversalServiceDescriptor {
+        service_id: "rel-sock".to_string(),
+        capabilities: vec![],
+        endpoint: ServiceEndpoint {
+            protocol: "ipc".to_string(),
+            host: String::new(),
+            port: 0,
+            path: Some("relative.sock".to_string()),
+            parameters: HashMap::new(),
+        },
+        auth_method: AuthenticationMethod::None,
+        performance_profile: PerformanceProfile::default(),
+        trust_score: 0.5,
+    };
+    let err = adapter
+        .send_request(&svc, json!({}))
+        .await
+        .expect_err("relative socket path must be rejected");
+    let msg = err.to_string();
+    assert!(
+        msg.contains("absolute") && msg.contains("socket path"),
+        "expected absolute path error, got {msg}"
     );
 }
 

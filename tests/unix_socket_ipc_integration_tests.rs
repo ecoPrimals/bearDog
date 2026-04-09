@@ -25,6 +25,7 @@ use tempfile::TempDir;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 
+use beardog_core::socket_config::IpcCapabilitySymlinksConfig;
 use beardog_genetics::EcosystemGeneticEngine;
 use beardog_tunnel::btsp_handshake::BtspSecurityMode;
 use beardog_tunnel::btsp_provider::BeardogBtspProvider;
@@ -76,6 +77,7 @@ async fn start_server_ready(
             btsp_provider,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .unwrap(),
@@ -129,6 +131,7 @@ async fn test_socket_creation() {
         btsp_provider,
         Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
         BtspSecurityMode::Development,
+        IpcCapabilitySymlinksConfig::default(),
     )
     .await
     .unwrap();
@@ -148,6 +151,7 @@ async fn test_readiness_flag() {
             btsp_provider,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .unwrap(),
@@ -340,6 +344,7 @@ async fn test_socket_cleanup_on_crash() {
             btsp_provider,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .unwrap(),
@@ -370,6 +375,7 @@ async fn test_wait_ready_timeout() {
             btsp_provider,
             Arc::new(PrimalIdentity::for_test("test-family", "test-node")),
             BtspSecurityMode::Development,
+            IpcCapabilitySymlinksConfig::default(),
         )
         .await
         .unwrap(),

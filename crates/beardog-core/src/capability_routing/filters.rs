@@ -16,7 +16,7 @@ use super::strategy::RequestContext;
     clippy::cast_sign_loss,
     reason = "Latency milliseconds are non-negative before integer comparison"
 )]
-pub(crate) fn apply_filters(
+pub(super) fn apply_filters(
     load_tracker: &HashMap<String, PrimalLoad>,
     mut primals: Vec<DiscoveredPrimal>,
     context: &RequestContext,

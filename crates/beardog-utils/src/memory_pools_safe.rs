@@ -416,4 +416,22 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn new_clamps_zero_max_size_to_one() {
+        let pool = SafeMemoryPool::<TestStruct>::new(0);
+        assert_eq!(pool.max_size, 1);
+    }
+
+    #[test]
+    fn release_when_pool_full_drops_extra_element_without_panicking()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let pool = SafeMemoryPool::<TestStruct>::new(1);
+        let a = pool.acquire()?;
+        let b = pool.acquire()?;
+        pool.release(a)?;
+        pool.release(b)?;
+        assert_eq!(pool.pool_size()?, 1);
+        Ok(())
+    }
 }

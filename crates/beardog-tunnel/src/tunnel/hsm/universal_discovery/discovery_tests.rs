@@ -13,7 +13,10 @@ use super::discovery_engine::*;
 use super::*;
 
 #[cfg(test)]
-#[allow(clippy::module_inception)]
+#[expect(
+    clippy::module_inception,
+    reason = "nested test module keeps discovery tests colocated with discovery_engine"
+)]
 mod discovery_tests {
     use super::*;
 

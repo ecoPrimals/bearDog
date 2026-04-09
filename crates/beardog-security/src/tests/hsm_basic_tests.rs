@@ -314,10 +314,11 @@ fn test_provider_health_recovery() {
 }
 
 #[test]
-#[allow(
+#[expect(
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
-    clippy::cast_precision_loss
+    clippy::cast_precision_loss,
+    reason = "Duration millis and jitter math in health-interval simulation; inputs are bounded"
 )]
 fn test_periodic_health_checks() {
     // Periodic health checks should work correctly

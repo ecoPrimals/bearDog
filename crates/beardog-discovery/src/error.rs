@@ -94,12 +94,7 @@ impl From<toml::de::Error> for DiscoveryError {
     }
 }
 
-// Tower Atomic Evolution: HTTP removed, all external calls via transport peer
-// impl From<reqwest::Error> for DiscoveryError {
-//     fn from(err: reqwest::Error) -> Self {
-//         DiscoveryError::Network(err.to_string())
-//     }
-// }
+// `reqwest::Error` → `DiscoveryError` removed with Tower Atomic (HTTP client dropped); use transport peer paths.
 
 impl From<url::ParseError> for DiscoveryError {
     fn from(err: url::ParseError) -> Self {

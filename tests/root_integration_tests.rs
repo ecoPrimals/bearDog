@@ -73,7 +73,7 @@ fn test_config_missing_storage() -> FrameworkConfig {
 
 #[tokio::test]
 async fn test_framework_new_success() {
-    let result = BearDogFramework::new().await;
+    let result = BearDogFramework::new();
     assert!(result.is_ok(), "Framework creation should succeed");
 
     let framework = result.unwrap();
@@ -92,7 +92,7 @@ async fn test_framework_with_custom_config() {
         storage_endpoint: Some("http://test:8081".to_string()),
     };
 
-    let result = BearDogFramework::with_config(config.clone()).await;
+    let result = BearDogFramework::with_config(config.clone());
     assert!(result.is_ok());
 
     let framework = result.unwrap();
@@ -127,8 +127,8 @@ async fn test_framework_config_cloning() {
 async fn test_discover_services_with_valid_config() {
     // ✅ Concurrent-safe: config passed explicitly, no env vars
     let config = test_config_with_endpoints("http://localhost:8080", "http://localhost:8081");
-    let mut framework = BearDogFramework::with_config(config).await.unwrap();
-    let result = framework.discover_services().await;
+    let mut framework = BearDogFramework::with_config(config).unwrap();
+    let result = framework.discover_services();
 
     // Either discovers services or gracefully handles when services aren't available
     assert!(
@@ -148,8 +148,8 @@ async fn test_discover_services_with_valid_config() {
 async fn test_discover_services_missing_compute_endpoint() {
     // ✅ Concurrent-safe: config passed explicitly, no env vars
     let config = test_config_missing_compute();
-    let mut framework = BearDogFramework::with_config(config).await.unwrap();
-    let result = framework.discover_services().await;
+    let mut framework = BearDogFramework::with_config(config).unwrap();
+    let result = framework.discover_services();
 
     assert!(
         result.is_err(),
@@ -169,10 +169,10 @@ async fn test_discover_services_missing_compute_endpoint() {
 async fn test_discover_services_missing_storage_endpoint() {
     // ✅ Concurrent-safe: config passed explicitly, no env vars
     let config = test_config_missing_storage();
-    let mut framework = BearDogFramework::with_config(config).await.unwrap();
+    let mut framework = BearDogFramework::with_config(config).unwrap();
 
     // This should now fail with storage endpoint error during discovery
-    let result = framework.discover_services().await;
+    let result = framework.discover_services();
 
     // The test expects either an error OR graceful degradation
     // Modern BearDog may handle missing endpoints gracefully
@@ -193,8 +193,8 @@ async fn test_discover_services_missing_storage_endpoint() {
 async fn test_service_info_structure() {
     // ✅ Concurrent-safe: config passed explicitly, no env vars
     let config = test_config_with_endpoints("http://test:8080", "http://test:8081");
-    let mut framework = BearDogFramework::with_config(config).await.unwrap();
-    let services = framework.discover_services().await.unwrap();
+    let mut framework = BearDogFramework::with_config(config).unwrap();
+    let services = framework.discover_services().unwrap();
 
     for service in &services {
         assert!(!service.name.is_empty());
@@ -207,8 +207,8 @@ async fn test_service_info_structure() {
 async fn test_service_capabilities() {
     // ✅ Concurrent-safe: config passed explicitly, no env vars
     let config = test_config_with_endpoints("http://test:8080", "http://test:8081");
-    let mut framework = BearDogFramework::with_config(config).await.unwrap();
-    let services = framework.discover_services().await.unwrap();
+    let mut framework = BearDogFramework::with_config(config).unwrap();
+    let services = framework.discover_services().unwrap();
 
     let compute = services.iter().find(|s| s.name == "compute-service");
     assert!(compute.is_some());
@@ -223,20 +223,20 @@ async fn test_service_capabilities() {
 
 #[tokio::test]
 async fn test_zero_copy_performance_execution() {
-    let mut framework = BearDogFramework::new().await.unwrap();
-    let result = framework.demonstrate_zero_copy_performance().await;
+    let mut framework = BearDogFramework::new().unwrap();
+    let result = framework.demonstrate_zero_copy_performance();
 
     assert!(result.is_ok());
 }
 
 #[tokio::test]
 async fn test_zero_copy_updates_stats() {
-    let mut framework = BearDogFramework::new().await.unwrap();
+    let mut framework = BearDogFramework::new().unwrap();
 
     let before_ops = framework.stats.zero_copy_operations;
     let before_avoided = framework.stats.memory_ops_avoided;
 
-    framework.demonstrate_zero_copy_performance().await.unwrap();
+    framework.demonstrate_zero_copy_performance().unwrap();
 
     assert!(framework.stats.zero_copy_operations > before_ops);
     assert!(framework.stats.memory_ops_avoided > before_avoided);
@@ -245,8 +245,8 @@ async fn test_zero_copy_updates_stats() {
 
 #[tokio::test]
 async fn test_zero_copy_cache_hit_ratio() {
-    let mut framework = BearDogFramework::new().await.unwrap();
-    framework.demonstrate_zero_copy_performance().await.unwrap();
+    let mut framework = BearDogFramework::new().unwrap();
+    framework.demonstrate_zero_copy_performance().unwrap();
 
     assert!(framework.stats.cache_hit_ratio >= 0.9);
     assert!(framework.stats.cache_hit_ratio <= 1.0);
@@ -254,12 +254,12 @@ async fn test_zero_copy_cache_hit_ratio() {
 
 #[tokio::test]
 async fn test_multiple_zero_copy_operations() {
-    let mut framework = BearDogFramework::new().await.unwrap();
+    let mut framework = BearDogFramework::new().unwrap();
 
-    framework.demonstrate_zero_copy_performance().await.unwrap();
+    framework.demonstrate_zero_copy_performance().unwrap();
     let first_ops = framework.stats.zero_copy_operations;
 
-    framework.demonstrate_zero_copy_performance().await.unwrap();
+    framework.demonstrate_zero_copy_performance().unwrap();
     let second_ops = framework.stats.zero_copy_operations;
 
     assert!(second_ops > first_ops);
@@ -271,7 +271,7 @@ async fn test_multiple_zero_copy_operations() {
 
 #[tokio::test]
 async fn test_get_stats() {
-    let framework = BearDogFramework::new().await.unwrap();
+    let framework = BearDogFramework::new().unwrap();
     let stats = framework.get_stats();
 
     assert_eq!(stats.services_discovered, 0);
@@ -284,10 +284,10 @@ async fn test_get_stats() {
 async fn test_reset_stats() {
     // ✅ Concurrent-safe: config passed explicitly, no env vars
     let config = test_config_with_endpoints("http://test:8080", "http://test:8081");
-    let mut framework = BearDogFramework::with_config(config).await.unwrap();
+    let mut framework = BearDogFramework::with_config(config).unwrap();
 
-    framework.discover_services().await.unwrap();
-    framework.demonstrate_zero_copy_performance().await.unwrap();
+    framework.discover_services().unwrap();
+    framework.demonstrate_zero_copy_performance().unwrap();
 
     assert!(framework.stats.services_discovered > 0);
     assert!(framework.stats.zero_copy_operations > 0);
@@ -304,12 +304,12 @@ async fn test_reset_stats() {
 async fn test_stats_persistence_across_operations() {
     // ✅ Concurrent-safe: config passed explicitly, no env vars
     let config = test_config_with_endpoints("http://test:8080", "http://test:8081");
-    let mut framework = BearDogFramework::with_config(config).await.unwrap();
+    let mut framework = BearDogFramework::with_config(config).unwrap();
 
-    framework.discover_services().await.unwrap();
+    framework.discover_services().unwrap();
     let services_count = framework.stats.services_discovered;
 
-    framework.demonstrate_zero_copy_performance().await.unwrap();
+    framework.demonstrate_zero_copy_performance().unwrap();
 
     // Stats from discovery should persist
     assert_eq!(framework.stats.services_discovered, services_count);
@@ -440,15 +440,15 @@ async fn test_full_workflow_success() {
     let config = test_config_with_endpoints("http://test:8080", "http://test:8081");
 
     // Create framework
-    let mut framework = BearDogFramework::with_config(config).await.unwrap();
+    let mut framework = BearDogFramework::with_config(config).unwrap();
     assert_eq!(framework.stats.services_discovered, 0);
 
     // Discover services
-    let services = framework.discover_services().await.unwrap();
+    let services = framework.discover_services().unwrap();
     assert!(!services.is_empty());
 
     // Demonstrate performance
-    framework.demonstrate_zero_copy_performance().await.unwrap();
+    framework.demonstrate_zero_copy_performance().unwrap();
 
     // Verify stats updated
     assert!(framework.stats.services_discovered > 0);
@@ -459,15 +459,15 @@ async fn test_full_workflow_success() {
 async fn test_framework_reusability() {
     // ✅ Concurrent-safe: config passed explicitly, no env vars
     let config = test_config_with_endpoints("http://test:8080", "http://test:8081");
-    let mut framework = BearDogFramework::with_config(config).await.unwrap();
+    let mut framework = BearDogFramework::with_config(config).unwrap();
 
     // Multiple discoveries
-    framework.discover_services().await.unwrap();
-    framework.discover_services().await.unwrap();
+    framework.discover_services().unwrap();
+    framework.discover_services().unwrap();
 
     // Multiple performance demos
-    framework.demonstrate_zero_copy_performance().await.unwrap();
-    framework.demonstrate_zero_copy_performance().await.unwrap();
+    framework.demonstrate_zero_copy_performance().unwrap();
+    framework.demonstrate_zero_copy_performance().unwrap();
 
     assert!(framework.stats.zero_copy_operations >= 2000); // 2 * 1000
 }
@@ -476,9 +476,9 @@ async fn test_framework_reusability() {
 async fn test_stats_after_reset() {
     // ✅ Concurrent-safe: config passed explicitly, no env vars
     let config = test_config_with_endpoints("http://test:8080", "http://test:8081");
-    let mut framework = BearDogFramework::with_config(config).await.unwrap();
+    let mut framework = BearDogFramework::with_config(config).unwrap();
 
-    framework.discover_services().await.unwrap();
+    framework.discover_services().unwrap();
     framework.reset_stats();
 
     let stats = framework.get_stats();

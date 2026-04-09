@@ -460,10 +460,10 @@ impl SelfDiscoveryEngine {
 
     /// Discover local endpoint
     fn discover_local_endpoint(inputs: &SelfDiscoveryEnvInputs) -> UniversalEndpoint {
+        use beardog_types::constants::domains::network::config;
+
         let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
         let port = network_config.service_ports.api_port;
-
-        use beardog_types::constants::domains::network::config;
 
         let host = inputs
             .localhost_override
@@ -624,13 +624,14 @@ impl SelfDiscoveryEngine {
     }
 }
 
-#[allow(
+#[expect(
     unused_imports,
     clippy::float_cmp,
     clippy::useless_vec,
     clippy::needless_range_loop,
     clippy::uninlined_format_args,
-    dead_code
+    dead_code,
+    reason = "large integration test modules: noisy style lints and synthetic helpers"
 )]
 #[cfg(test)]
 #[path = "self_discovery_tests.rs"]

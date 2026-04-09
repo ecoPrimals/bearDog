@@ -12,7 +12,10 @@ use std::collections::HashSet;
 
 /// Key storage types
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "sovereignty test type stubs for scenario scaffolding"
+)]
 pub enum KeyStorage {
     LocalOnly,
     CloudManaged,

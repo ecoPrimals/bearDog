@@ -4,6 +4,23 @@
 //!
 //! Generic client for registering with ANY primal registry that speaks JSON-RPC 2.0
 //!
+//! # Registry endpoint discovery (tier hierarchy)
+//!
+//! The transport address is **never** hardcoded in production logic:
+//!
+//! 1. **Constructor** — [`PrimalRegistryClient::new`] receives the registry Unix socket path from
+//!    the caller (orchestrator, manifest, or discovery layer).
+//! 2. **Capability manifest** — [`PrimalRegistryClient::register`] advertises the primal’s IPC
+//!    path from the first [`beardog_core::capabilities::IpcEndpoint::UnixSocket`] in
+//!    [`beardog_core::capabilities::BearDogCapabilities::endpoints`], when present.
+//! 3. **Environment override** — `BEARDOG_REGISTRY_SOCKET_FALLBACK` supplies a Unix path when the
+//!    manifest has no Unix endpoint (misconfiguration / HTTP-only endpoints).
+//! 4. **Last-resort file path** — if tier 3 is unset, `{std::env::temp_dir()}/beardog-registry-default.sock`
+//!    (see [`fallback_registry_unix_socket_path`]).
+//!
+//! There are no default HTTP(S) URLs or TCP ports in this module; use Unix sockets and explicit
+//! configuration at the call site.
+//!
 //! # Design Principle: Zero Vendor Hardcoding
 //!
 //! This client does NOT know:
@@ -30,10 +47,10 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 use tracing::{debug, error, info, warn};
 
-/// Last-resort registry UDS when the capability manifest has no Unix endpoint (misconfiguration).
+/// Tier-3/4 fallback: registry UDS when the capability manifest has no Unix endpoint.
 ///
-/// Override with `BEARDOG_REGISTRY_SOCKET_FALLBACK`; otherwise uses
-/// `{std::env::temp_dir()}/beardog-registry-default.sock`.
+/// **Tier 3:** `BEARDOG_REGISTRY_SOCKET_FALLBACK` when set. **Tier 4:** otherwise
+/// `{std::env::temp_dir()}/beardog-registry-default.sock` (platform temp dir, not a hardcoded `/tmp`).
 #[must_use]
 fn fallback_registry_unix_socket_path() -> String {
     std::env::var("BEARDOG_REGISTRY_SOCKET_FALLBACK").unwrap_or_else(|_| {
@@ -185,8 +202,8 @@ impl PrimalRegistryClient {
         info!("   Node ID: {}", capabilities.node_id);
         info!("   Capabilities: {}", capabilities.provides.len());
 
-        // Extract capability names for registration
-        let capability_names: Vec<String> = capabilities
+        // Extract capability names for registration (borrow static / manifest strings — no per-cap clone)
+        let capability_names: Vec<&str> = capabilities
             .provides
             .iter()
             .map(|cap| match cap {
@@ -199,7 +216,6 @@ impl PrimalRegistryClient {
                 Capability::Compute { .. } => "compute",
                 Capability::Custom { name, .. } => name.as_str(),
             })
-            .map(String::from)
             .collect();
 
         let params = serde_json::json!({
@@ -433,15 +449,17 @@ mod tests {
 
     #[test]
     fn test_primal_info_deserialization() -> Result<(), serde_json::Error> {
-        let json = r#"{
+        let sock = std::env::temp_dir().join("beardog-nat0.sock");
+        let json = serde_json::json!({
             "primal_id": "beardog",
             "family_id": "nat0",
             "node_id": "tower1",
             "capabilities": ["encryption", "trust"],
-            "socket_path": "/tmp/beardog-nat0.sock"
-        }"#;
+            "socket_path": sock.to_string_lossy(),
+        })
+        .to_string();
 
-        let info: PrimalInfo = serde_json::from_str(json)?;
+        let info: PrimalInfo = serde_json::from_str(&json)?;
         assert_eq!(info.primal_id, "beardog");
         assert_eq!(info.family_id, Some("nat0".to_string()));
         assert_eq!(info.capabilities.len(), 2);
@@ -451,16 +469,18 @@ mod tests {
     #[test]
     fn test_zero_vendor_hardcoding() {
         // This test documents that we have ZERO vendor hardcoding
-        let client = PrimalRegistryClient::new(PathBuf::from("/tmp/any-registry.sock"));
+        let path = std::env::temp_dir().join("any-registry.sock");
+        let client = PrimalRegistryClient::new(path.clone());
 
         // Client doesn't know or care what's on the other end
         // Could be any JSON-RPC registry — client is vendor-agnostic
-        assert_eq!(client.socket_path, PathBuf::from("/tmp/any-registry.sock"));
+        assert_eq!(client.socket_path, path);
     }
 
     #[tokio::test]
     async fn test_not_connected_errors() {
-        let mut client = PrimalRegistryClient::new(PathBuf::from("/tmp/unused-nonexistent.sock"));
+        let mut client =
+            PrimalRegistryClient::new(std::env::temp_dir().join("unused-nonexistent.sock"));
         let caps = beardog_core::capabilities::BearDogCapabilities::new(
             Some("fam".to_string()),
             "node".to_string(),
@@ -491,6 +511,10 @@ mod tests {
                 };
                 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
                 tokio::spawn(async move {
+                    let p1_sock_display = std::env::temp_dir()
+                        .join("p1.sock")
+                        .to_string_lossy()
+                        .into_owned();
                     let mut reader = BufReader::new(stream);
                     loop {
                         let mut line = String::new();
@@ -526,7 +550,7 @@ mod tests {
                                     "family_id": null,
                                     "node_id": "n1",
                                     "capabilities": ["encryption"],
-                                    "socket_path": "/tmp/p1.sock"
+                                    "socket_path": p1_sock_display.as_str(),
                                 },
                                 "id": id
                             }),
@@ -537,7 +561,7 @@ mod tests {
                                     "family_id": null,
                                     "node_id": "n1",
                                     "capabilities": [],
-                                    "socket_path": "/tmp/p1.sock"
+                                    "socket_path": p1_sock_display.as_str(),
                                 }],
                                 "id": id
                             }),

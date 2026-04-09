@@ -10,7 +10,6 @@
 
 #[cfg(test)]
 mod tests {
-    use super::super::encrypt::*;
     use beardog_errors::BearDogError;
     use std::fs;
     use std::path::PathBuf;
@@ -19,6 +18,81 @@ mod tests {
     // Helper to create temp directory for tests
     fn setup_test_env() -> TempDir {
         TempDir::new().expect("Failed to create temp dir")
+    }
+
+    fn validate_input_path(path: &PathBuf) -> Result<(), BearDogError> {
+        if !path.exists() {
+            return Err(BearDogError::validation(format!(
+                "Input file not found: {}",
+                path.display()
+            )));
+        }
+
+        let metadata = fs::metadata(path)?;
+        if metadata.len() == 0 {
+            return Err(BearDogError::validation("Input file is empty"));
+        }
+
+        Ok(())
+    }
+
+    fn validate_output_path(path: &PathBuf, overwrite: bool) -> Result<(), BearDogError> {
+        if path.exists() && !overwrite {
+            return Err(BearDogError::validation(format!(
+                "Output file already exists: {}. Use --force to overwrite.",
+                path.display()
+            )));
+        }
+
+        Ok(())
+    }
+
+    fn validate_key_id(key_id: &str) -> Result<(), BearDogError> {
+        if key_id.is_empty() {
+            return Err(BearDogError::validation("Key ID cannot be empty"));
+        }
+
+        if key_id.len() > 255 {
+            return Err(BearDogError::validation("Key ID too long (max 255 characters)"));
+        }
+
+        // Check for invalid characters
+        let valid_chars = |c: char| c.is_alphanumeric() || c == '-' || c == '_' || c == '.';
+        if !key_id.chars().all(valid_chars) {
+            return Err(BearDogError::validation(
+                "Key ID contains invalid characters. Use only alphanumeric, hyphen, underscore, or dot."
+            ));
+        }
+
+        Ok(())
+    }
+
+    fn validate_file_size(size: u64, max_size: u64) -> Result<(), BearDogError> {
+        if size > max_size {
+            return Err(BearDogError::validation(format!(
+                "File size ({} bytes) exceeds maximum allowed size ({} bytes)",
+                size, max_size
+            )));
+        }
+        Ok(())
+    }
+
+    fn encrypt_file_with_key(
+        _input: &PathBuf,
+        _output: &PathBuf,
+        _key_id: &str,
+    ) -> Result<(), BearDogError> {
+        // Placeholder for actual encryption logic
+        Err(BearDogError::validation("Key not found in keystore"))
+    }
+
+    fn prepare_encryption_metadata(key_id: &str, algorithm: &str) -> String {
+        format!(
+            r#"{{"version":"1.0","algorithm":"{}","key_id":"{}","timestamp":"{}"}}"#,
+            algorithm,
+            key_id,
+            chrono::Utc::now().to_rfc3339()
+        )
     }
 
     #[test]
@@ -195,78 +269,6 @@ mod tests {
 
         let result = validate_file_size(file_size, max_size);
         assert!(result.is_ok());
-    }
-
-    // Helper functions that would be used by the encrypt handler
-    fn validate_input_path(path: &PathBuf) -> Result<(), BearDogError> {
-        if !path.exists() {
-            return Err(BearDogError::validation(format!(
-                "Input file not found: {}",
-                path.display()
-            )));
-        }
-
-        let metadata = fs::metadata(path)?;
-        if metadata.len() == 0 {
-            return Err(BearDogError::validation("Input file is empty"));
-        }
-
-        Ok(())
-    }
-
-    fn validate_output_path(path: &PathBuf, overwrite: bool) -> Result<(), BearDogError> {
-        if path.exists() && !overwrite {
-            return Err(BearDogError::validation(format!(
-                "Output file already exists: {}. Use --force to overwrite.",
-                path.display()
-            )));
-        }
-
-        Ok(())
-    }
-
-    fn validate_key_id(key_id: &str) -> Result<(), BearDogError> {
-        if key_id.is_empty() {
-            return Err(BearDogError::validation("Key ID cannot be empty"));
-        }
-
-        if key_id.len() > 255 {
-            return Err(BearDogError::validation("Key ID too long (max 255 characters)"));
-        }
-
-        // Check for invalid characters
-        let valid_chars = |c: char| c.is_alphanumeric() || c == '-' || c == '_' || c == '.';
-        if !key_id.chars().all(valid_chars) {
-            return Err(BearDogError::validation(
-                "Key ID contains invalid characters. Use only alphanumeric, hyphen, underscore, or dot."
-            ));
-        }
-
-        Ok(())
-    }
-
-    fn validate_file_size(size: u64, max_size: u64) -> Result<(), BearDogError> {
-        if size > max_size {
-            return Err(BearDogError::validation(format!(
-                "File size ({} bytes) exceeds maximum allowed size ({} bytes)",
-                size, max_size
-            )));
-        }
-        Ok(())
-    }
-
-    fn encrypt_file_with_key(_input: &PathBuf, _output: &PathBuf, _key_id: &str) -> Result<(), BearDogError> {
-        // Placeholder for actual encryption logic
-        Err(BearDogError::validation("Key not found in keystore"))
-    }
-
-    fn prepare_encryption_metadata(key_id: &str, algorithm: &str) -> String {
-        format!(
-            r#"{{"version":"1.0","algorithm":"{}","key_id":"{}","timestamp":"{}"}}"#,
-            algorithm,
-            key_id,
-            chrono::Utc::now().to_rfc3339()
-        )
     }
 }
 

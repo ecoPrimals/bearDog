@@ -9,9 +9,10 @@ use super::learning::*;
 use approx::assert_relative_eq;
 
 #[cfg(test)]
-#[allow(clippy::disallowed_methods)]
-// unwrap() is acceptable in test code
-
+#[expect(
+    clippy::disallowed_methods,
+    reason = "learning tests use approx macros and intentional unwraps for fixtures"
+)]
 // ═══════════════════════════════════════════════════════════════════
 // LearningAlgorithmType Tests
 // ═══════════════════════════════════════════════════════════════════
@@ -381,4 +382,86 @@ fn test_serde_roundtrip_all_types() {
         let _deserialized: LearningRateAdaptation =
             serde_json::from_str(&serialized).expect("Should deserialize");
     }
+}
+
+// ── learning_optimization-heavy serde coverage ───────────────────────────────
+
+use std::collections::HashMap;
+use std::time::Duration;
+
+#[test]
+fn prediction_horizon_and_update_frequency_json_roundtrip() {
+    let h = PredictionHorizon::Custom(Duration::from_millis(500));
+    let s = serde_json::to_string(&h).expect("ser");
+    let back: PredictionHorizon = serde_json::from_str(&s).expect("de");
+    assert_eq!(back, h);
+
+    for uf in [
+        UpdateFrequency::PerSample,
+        UpdateFrequency::PerBatch,
+        UpdateFrequency::TimeInterval(Duration::from_secs(3)),
+        UpdateFrequency::PerformanceThreshold(0.88),
+    ] {
+        let js = serde_json::to_string(&uf).expect("ser");
+        let back: UpdateFrequency = serde_json::from_str(&js).expect("de");
+        assert_eq!(
+            serde_json::to_string(&back).expect("re-ser"),
+            serde_json::to_string(&uf).expect("orig-ser")
+        );
+    }
+}
+
+#[test]
+fn ensemble_and_hyperparameter_config_json_roundtrip() {
+    let cfg = EnsembleConfig {
+        base_models: vec![BaseModel {
+            id: "bm".into(),
+            model_type: ModelType::NeuralNetwork,
+            configuration: HashMap::from([("layers".into(), serde_json::json!(4))]),
+            weight: 1.0,
+        }],
+        ensemble_method: EnsembleMethod::Stacking,
+        model_weights: None,
+        diversity_measures: vec![DiversityMeasure::KohaviWolpert],
+    };
+    let json = serde_json::to_string(&cfg).expect("ser");
+    let back: EnsembleConfig = serde_json::from_str(&json).expect("de");
+    assert_eq!(back.ensemble_method, cfg.ensemble_method);
+
+    let ho = HyperparameterOptimization {
+        method: HyperparameterOptimizationMethod::Hyperband,
+        max_trials: 12,
+        timeout_secs: 120,
+        objective_metric: "accuracy".into(),
+        optimization_direction: OptimizationDirection::Maximize,
+    };
+    let j2 = serde_json::to_string(&ho).expect("ser");
+    let back_ho: HyperparameterOptimization = serde_json::from_str(&j2).expect("de");
+    assert_eq!(back_ho.method, ho.method);
+}
+
+#[test]
+fn neural_architecture_search_json_roundtrip() {
+    let nas = NeuralArchitectureSearch {
+        search_space: SearchSpace {
+            layer_types: vec![LayerType::Convolutional],
+            depth_range: (1, 4),
+            width_range: (8, 128),
+            activation_functions: vec![ActivationFunction::Swish],
+        },
+        search_strategy: NasSearchStrategy::RandomSearch,
+        performance_estimation: PerformanceEstimation {
+            method: PerformanceEstimationMethod::LearningCurveExtrapolation,
+            early_stopping: None,
+            resource_constraints: ResourceConstraints {
+                max_training_time: Duration::from_secs(300),
+                max_memory_gb: 4.0,
+                max_gpu_count: 0,
+                max_cpu_cores: 8,
+            },
+        },
+    };
+    let j = serde_json::to_string(&nas).expect("ser");
+    let back: NeuralArchitectureSearch = serde_json::from_str(&j).expect("de");
+    assert_eq!(back.search_strategy, nas.search_strategy);
 }

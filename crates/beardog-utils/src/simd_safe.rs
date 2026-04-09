@@ -58,6 +58,12 @@ impl SafeSimdProcessor {
         }
     }
 
+    /// Build a processor with explicit capability bits (for tests and deterministic paths).
+    #[cfg(test)]
+    pub fn from_capabilities(capabilities: SimdCapabilities) -> Self {
+        Self { capabilities }
+    }
+
     /// Safe SIMD hash computation using stable Rust features
     ///
     /// # Errors
@@ -628,5 +634,112 @@ mod tests {
         let da = format!("{a:?}");
         let db = format!("{b:?}");
         assert_eq!(da, db);
+    }
+
+    #[test]
+    fn performance_metrics_branches_avx2() {
+        let p = SafeSimdProcessor::from_capabilities(SimdCapabilities {
+            avx2_available: true,
+            sse42_available: true,
+            vector_width: 32,
+        });
+        let m = p.get_performance_metrics();
+        assert_eq!(
+            m.get("simd_type").map(String::as_str),
+            Some("Vectorized-32 (safe)")
+        );
+    }
+
+    #[test]
+    fn performance_metrics_branches_sse_only() {
+        let p = SafeSimdProcessor::from_capabilities(SimdCapabilities {
+            avx2_available: false,
+            sse42_available: true,
+            vector_width: 16,
+        });
+        let m = p.get_performance_metrics();
+        assert_eq!(
+            m.get("simd_type").map(String::as_str),
+            Some("Vectorized-16 (safe)")
+        );
+    }
+
+    #[test]
+    fn performance_metrics_branches_scalar() {
+        let p = SafeSimdProcessor::from_capabilities(SimdCapabilities {
+            avx2_available: false,
+            sse42_available: false,
+            vector_width: 16,
+        });
+        let m = p.get_performance_metrics();
+        assert_eq!(
+            m.get("simd_type").map(String::as_str),
+            Some("Scalar (safe)")
+        );
+    }
+
+    #[test]
+    fn forced_avx2_hash_and_compare_cover_vectorized_paths()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let p = SafeSimdProcessor::from_capabilities(SimdCapabilities {
+            avx2_available: true,
+            sse42_available: false,
+            vector_width: 32,
+        });
+        let data = [0x5Au8; 64];
+        let h = p.safe_simd_hash(&data)?;
+        assert_eq!(h.len(), 32);
+        let h2 = p.safe_simd_hash(&data)?;
+        assert_eq!(h, h2);
+
+        assert!(p.safe_compare_arrays(&data, &data));
+        let mut other = data;
+        other[40] ^= 1;
+        assert!(!p.safe_compare_arrays(&data, &other));
+        Ok(())
+    }
+
+    #[test]
+    fn forced_sse_hash_and_compare_cover_16byte_paths() -> Result<(), Box<dyn std::error::Error>> {
+        let p = SafeSimdProcessor::from_capabilities(SimdCapabilities {
+            avx2_available: false,
+            sse42_available: true,
+            vector_width: 16,
+        });
+        let data = [0x3Cu8; 48];
+        let h = p.safe_simd_hash(&data)?;
+        assert_eq!(h.len(), 32);
+
+        assert!(p.safe_compare_arrays(&data, &data));
+        let mut other = data;
+        other[20] ^= 1;
+        assert!(!p.safe_compare_arrays(&data, &other));
+        Ok(())
+    }
+
+    #[test]
+    fn vectorized_compare_32_covers_remainder_branch() {
+        let p = SafeSimdProcessor::from_capabilities(SimdCapabilities {
+            avx2_available: true,
+            sse42_available: false,
+            vector_width: 32,
+        });
+        let a = [1u8; 35];
+        let mut b = a;
+        b[34] = 2;
+        assert!(!p.safe_compare_arrays(&a, &b));
+    }
+
+    #[test]
+    fn vectorized_compare_16_covers_remainder_branch() {
+        let p = SafeSimdProcessor::from_capabilities(SimdCapabilities {
+            avx2_available: false,
+            sse42_available: true,
+            vector_width: 16,
+        });
+        let a = [2u8; 20];
+        let mut b = a;
+        b[19] = 3;
+        assert!(!p.safe_compare_arrays(&a, &b));
     }
 }

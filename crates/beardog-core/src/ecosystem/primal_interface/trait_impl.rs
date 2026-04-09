@@ -162,7 +162,7 @@ impl PrimalTrait for BearDogCore {
         }
     }
 
-    #[allow(deprecated)]
+    #[allow(deprecated)] // Trait impl surface; no deprecated-use lint in body — expect would be unfulfilled
     /// Initializes componentialize
     async fn initialize(&self, config: &UniversalIntegrationConfig) -> Result<(), PrimalError> {
         info!("🚀 Initializing BearDog primal with ecosystem integration");

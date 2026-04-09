@@ -346,10 +346,11 @@ fn test_all_algorithm_variants_serde() {
 }
 
 #[test]
-#[allow(
+#[expect(
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
-    clippy::cast_precision_loss
+    clippy::cast_precision_loss,
+    reason = "enumerate() index as u8 for small fixed algorithm fixture vectors"
 )]
 fn test_encrypted_data_with_each_algorithm() {
     let algorithms = vec![

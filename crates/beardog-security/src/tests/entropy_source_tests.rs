@@ -27,7 +27,10 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::cast_precision_loss)]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "entropy quality score aggregated as f64 for threshold comparisons"
+    )]
     fn test_entropy_distribution() {
         // Test that entropy is well-distributed
         let mut values = Vec::new();
