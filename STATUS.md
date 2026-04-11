@@ -18,7 +18,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 14,756+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,761+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
@@ -32,7 +32,7 @@
 ## Codebase Metrics
 
 - **Crates**: 29 in workspace (beardog-integration excluded — overstep)
-- **Rust Files**: 2,128
+- **Rust Files**: 1,941
 - **Crypto Methods**: 95 JSON-RPC methods (`methods()` handler count)
 - **`#[allow(`**: 75 (was 193)
 - **`#[expect(`**: 476 (was 361)
@@ -87,6 +87,15 @@
 ---
 
 ## Recent Improvements
+
+### Wave 35: Deep Debt Cleanup III — Placeholder Elimination, Real Entropy, Auth Test Evolution (April 11, 2026)
+
+- **Production placeholders eliminated** — `SystemStatus` now reads real host metrics from `/proc/uptime`, `/proc/meminfo`, `/proc/stat` (Linux) with safe fallbacks; sovereign RNG seeded from real `rand::rng()` entropy instead of zero vectors; batch validation delegates to per-config `BearDogConfig::validate()` instead of emitting "not implemented" warnings
+- **Dead placeholder code removed** — `placeholder_test()` in `crypto_utils.rs`, `signature_placeholder` in `evolution.rs`, stale module placeholder comments
+- **Auth tests evolved** — Permission, node registry, and authorization tests replaced from `let result = true; assert!(result)` stubs to real struct construction, field validation, and trait behavior tests using `ResourcePermission::implies()`, `CrossNodeAuthorization::is_valid()`, and `AuthorizationProof`
+- **Documentation cleaned** — `supporting.rs` module doc evolved from "Placeholder" to descriptive; `beardog_core.rs` universal_adapter field documented for capability discovery
+- **Tests adapted** — SystemStatus serde tests, batch validation tests updated for real behavior; 14,761+ tests passing
+- **All gates green** — fmt, clippy `-D warnings`, doc `-D warnings`, test all clean
 
 ### Wave 34: Deep Debt Evolution — Hardcoding Elimination, Mock→Real, Smart Refactoring (April 11, 2026)
 

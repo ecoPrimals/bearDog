@@ -26,10 +26,14 @@ use tracing::{info, warn};
 
 /// In-memory ionic bond state manager.
 ///
-/// Proposals and active bonds are stored in concurrent maps. In a
-/// production NUCLEUS deployment, bond state would be persisted via
-/// `NestGate` or an append-only ledger (`loamSpine`), but the in-process
-/// store is sufficient for the JSON-RPC surface contract.
+/// Proposals and active bonds are stored in concurrent maps keyed by UUID.
+/// This is architecturally correct for `BearDog` as the crypto primal:
+/// `BearDog`'s responsibility is cryptographic operations (signing, verifying,
+/// sealing bonds), not durable storage. For production NUCLEUS deployments,
+/// bond persistence should be delegated to `NestGate` (storage primal) via
+/// `storage.store`/`storage.retrieve` capability discovery, or to an
+/// append-only ledger via `loamSpine`. The in-process store is sufficient
+/// for the JSON-RPC surface contract and single-process lifetimes.
 pub struct IonicBondHandler {
     proposals: Arc<RwLock<HashMap<String, PendingProposal>>>,
     bonds: Arc<RwLock<HashMap<String, IonicBond>>>,
@@ -38,12 +42,9 @@ pub struct IonicBondHandler {
 struct PendingProposal {
     params: IonicBondProposeParams,
     /// SHA-256 of the bond terms, verified during acceptance.
-    #[expect(
-        dead_code,
-        reason = "stored for future signature verification against terms"
-    )]
     terms_hash: String,
     proposer_signature: String,
+    proposer_public_key: String,
     created_at: String,
     expires_at: Option<String>,
 }
@@ -66,14 +67,19 @@ impl IonicBondHandler {
 
     /// Sign the terms hash with the primal's Ed25519 identity key.
     ///
-    /// The key seed is derived deterministically from the primal's runtime
-    /// identity (`PRIMAL_NAME` + node-id) via SHA-256. The BTSP provider reference
-    /// is accepted for future HSM-backed signing; the seed derivation ensures
-    /// a stable per-instance identity without a separate key ceremony.
+    /// Returns `(signature_hex, public_key_hex)`. The key seed is derived
+    /// deterministically from the primal's runtime identity (`PRIMAL_NAME` +
+    /// node-id) via SHA-256.
+    ///
+    /// **BTSP Phase 3 (HSM path):** The `_btsp_provider` parameter is
+    /// reserved for HSM-backed signing via `HsmKeyProvider::sign()`. When
+    /// an HSM is available, the signing key should be generated/stored in
+    /// hardware rather than derived from environment. The current software
+    /// derivation path is production-safe but not sovereign-grade.
     fn sign_terms_ed25519(
         _btsp_provider: &Arc<BeardogBtspProvider>,
         terms_hash: &str,
-    ) -> Result<String, String> {
+    ) -> Result<(String, String), String> {
         use ed25519_dalek::{Signer, SigningKey};
         use sha2::{Digest, Sha256};
 
@@ -89,8 +95,45 @@ impl IonicBondHandler {
         seed.copy_from_slice(&h.finalize());
 
         let signing_key = SigningKey::from_bytes(&seed);
+        let verifying_key = signing_key.verifying_key();
         let signature = signing_key.sign(terms_hash.as_bytes());
-        Ok(hex::encode(signature.to_bytes()))
+        Ok((
+            hex::encode(signature.to_bytes()),
+            hex::encode(verifying_key.as_bytes()),
+        ))
+    }
+
+    /// Verify an Ed25519 signature over the terms hash using the provided
+    /// hex-encoded public key and signature.
+    fn verify_ed25519_signature(
+        terms_hash: &str,
+        signature_hex: &str,
+        public_key_hex: &str,
+    ) -> Result<(), String> {
+        use ed25519_dalek::{Signature, Verifier, VerifyingKey};
+
+        let pub_bytes: [u8; 32] = hex::decode(public_key_hex)
+            .map_err(|e| format!("Invalid acceptor public key hex: {e}"))?
+            .try_into()
+            .map_err(|v: Vec<u8>| {
+                format!("Acceptor public key must be 32 bytes, got {}", v.len())
+            })?;
+
+        let sig_bytes: [u8; 64] = hex::decode(signature_hex)
+            .map_err(|e| format!("Invalid acceptor signature hex: {e}"))?
+            .try_into()
+            .map_err(|v: Vec<u8>| {
+                format!("Acceptor signature must be 64 bytes, got {}", v.len())
+            })?;
+
+        let verifying_key = VerifyingKey::from_bytes(&pub_bytes)
+            .map_err(|e| format!("Invalid Ed25519 public key: {e}"))?;
+
+        let signature = Signature::from_bytes(&sig_bytes);
+
+        verifying_key
+            .verify(terms_hash.as_bytes(), &signature)
+            .map_err(|e| format!("Acceptor signature verification failed: {e}"))
     }
 
     fn compute_terms_hash(params: &IonicBondProposeParams) -> String {
@@ -157,7 +200,8 @@ impl IonicBondHandler {
         let proposal_id = uuid::Uuid::new_v4().to_string();
         let terms_hash = Self::compute_terms_hash(&propose_params);
 
-        let proposer_signature = Self::sign_terms_ed25519(btsp_provider, &terms_hash)?;
+        let (proposer_signature, proposer_public_key) =
+            Self::sign_terms_ed25519(btsp_provider, &terms_hash)?;
 
         let now = Utc::now().to_rfc3339();
         let expires_at = propose_params.ttl_seconds.map(|ttl| {
@@ -179,6 +223,7 @@ impl IonicBondHandler {
                 params: propose_params,
                 terms_hash: terms_hash.clone(),
                 proposer_signature: proposer_signature.clone(),
+                proposer_public_key,
                 created_at: now,
                 expires_at,
             },
@@ -212,6 +257,12 @@ impl IonicBondHandler {
                 )
             })?;
 
+        Self::verify_ed25519_signature(
+            &proposal.terms_hash,
+            &accept_params.acceptor_signature,
+            &accept_params.acceptor_public_key,
+        )?;
+
         let bond_id = uuid::Uuid::new_v4().to_string();
 
         let bond = IonicBond {
@@ -224,7 +275,9 @@ impl IonicBondHandler {
             state: BondState::Active,
             allowed_capabilities: proposal.params.allowed_capabilities,
             proposer_signature: Some(proposal.proposer_signature),
+            proposer_public_key: Some(proposal.proposer_public_key),
             acceptor_signature: Some(accept_params.acceptor_signature),
+            acceptor_public_key: Some(accept_params.acceptor_public_key),
             created_at: proposal.created_at,
             expires_at: proposal.expires_at,
         };
@@ -233,7 +286,7 @@ impl IonicBondHandler {
             bond_id = %bond_id,
             proposer = %bond.proposer,
             acceptor = %bond.acceptor,
-            "Ionic bond sealed"
+            "Ionic bond sealed (signatures verified)"
         );
 
         self.bonds.write().await.insert(bond_id, bond.clone());
@@ -359,6 +412,58 @@ impl IonicBondHandler {
 mod tests {
     use super::*;
 
+    /// Generate a real Ed25519 signature over `terms_hash` and return
+    /// `(signature_hex, public_key_hex)` for use in accept params.
+    fn sign_as_acceptor(terms_hash: &str) -> (String, String) {
+        use ed25519_dalek::{Signer, SigningKey};
+        let key = SigningKey::from_bytes(&[0x42; 32]);
+        let sig = key.sign(terms_hash.as_bytes());
+        (
+            hex::encode(sig.to_bytes()),
+            hex::encode(key.verifying_key().as_bytes()),
+        )
+    }
+
+    /// Helper: propose a bond -> return (proposal_id, terms_hash).
+    async fn propose_bond(
+        handler: &IonicBondHandler,
+        provider: &Arc<BeardogBtspProvider>,
+        proposer: &str,
+        target: &str,
+    ) -> (String, String) {
+        let params = serde_json::json!({ "proposer": proposer, "target": target });
+        let result = handler
+            .handle("crypto.ionic_bond.propose", Some(&params), provider)
+            .await
+            .expect("propose");
+        (
+            result["proposal_id"].as_str().unwrap().to_string(),
+            result["terms_hash"].as_str().unwrap().to_string(),
+        )
+    }
+
+    /// Helper: accept a bond with real Ed25519 signature -> return bond_id.
+    async fn accept_bond(
+        handler: &IonicBondHandler,
+        provider: &Arc<BeardogBtspProvider>,
+        proposal_id: &str,
+        terms_hash: &str,
+        acceptor: &str,
+    ) -> String {
+        let (sig, pubkey) = sign_as_acceptor(terms_hash);
+        let params = serde_json::json!({
+            "proposal_id": proposal_id,
+            "acceptor": acceptor,
+            "acceptor_signature": sig,
+            "acceptor_public_key": pubkey,
+        });
+        let result = handler
+            .handle("crypto.ionic_bond.accept", Some(&params), provider)
+            .await
+            .expect("accept");
+        result["bond"]["bond_id"].as_str().unwrap().to_string()
+    }
+
     #[tokio::test]
     async fn propose_accept_verify_lifecycle() {
         let handler = IonicBondHandler::new();
@@ -387,22 +492,7 @@ mod tests {
         assert!(!proposal_id.is_empty());
         assert!(!terms_hash.is_empty());
 
-        let accept_params = serde_json::json!({
-            "proposal_id": proposal_id,
-            "acceptor": "tower_b",
-            "acceptor_signature": "deadbeef"
-        });
-
-        let accept_result = handler
-            .handle("crypto.ionic_bond.accept", Some(&accept_params), &provider)
-            .await
-            .expect("accept");
-
-        let bond_id = accept_result["bond"]["bond_id"]
-            .as_str()
-            .unwrap()
-            .to_string();
-        assert_eq!(accept_result["bond"]["state"], "active");
+        let bond_id = accept_bond(&handler, &provider, &proposal_id, &terms_hash, "tower_b").await;
 
         let verify_params = serde_json::json!({ "bond_id": bond_id });
         let verify_result = handler
@@ -412,6 +502,38 @@ mod tests {
 
         assert_eq!(verify_result["valid"], true);
         assert_eq!(verify_result["state"], "active");
+        assert!(verify_result["bond"]["proposer_public_key"].is_string());
+        assert!(verify_result["bond"]["acceptor_public_key"].is_string());
+    }
+
+    #[tokio::test]
+    async fn accept_rejects_invalid_signature() {
+        let handler = IonicBondHandler::new();
+        let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        let (proposal_id, _terms_hash) = propose_bond(&handler, &provider, "a", "b").await;
+
+        use ed25519_dalek::SigningKey;
+        let key = SigningKey::from_bytes(&[0x42; 32]);
+        let wrong_sig = hex::encode([0xAA; 64]);
+        let pubkey = hex::encode(key.verifying_key().as_bytes());
+
+        let params = serde_json::json!({
+            "proposal_id": proposal_id,
+            "acceptor": "b",
+            "acceptor_signature": wrong_sig,
+            "acceptor_public_key": pubkey,
+        });
+
+        let result = handler
+            .handle("crypto.ionic_bond.accept", Some(&params), &provider)
+            .await;
+
+        assert!(result.is_err(), "should reject invalid signature");
+        assert!(
+            result.unwrap_err().contains("verification failed"),
+            "error should mention verification"
+        );
     }
 
     #[tokio::test]
@@ -419,30 +541,8 @@ mod tests {
         let handler = IonicBondHandler::new();
         let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
-        let propose_params = serde_json::json!({
-            "proposer": "a",
-            "target": "b"
-        });
-        let propose_result = handler
-            .handle(
-                "crypto.ionic_bond.propose",
-                Some(&propose_params),
-                &provider,
-            )
-            .await
-            .expect("propose");
-        let proposal_id = propose_result["proposal_id"].as_str().unwrap();
-
-        let accept_params = serde_json::json!({
-            "proposal_id": proposal_id,
-            "acceptor": "b",
-            "acceptor_signature": "sig"
-        });
-        let accept_result = handler
-            .handle("crypto.ionic_bond.accept", Some(&accept_params), &provider)
-            .await
-            .expect("accept");
-        let bond_id = accept_result["bond"]["bond_id"].as_str().unwrap();
+        let (proposal_id, terms_hash) = propose_bond(&handler, &provider, "a", "b").await;
+        let bond_id = accept_bond(&handler, &provider, &proposal_id, &terms_hash, "b").await;
 
         let revoke_params = serde_json::json!({
             "bond_id": bond_id,
@@ -469,19 +569,8 @@ mod tests {
         let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
 
         for (proposer, target) in [("x", "y"), ("a", "b")] {
-            let propose = serde_json::json!({ "proposer": proposer, "target": target });
-            let result = handler
-                .handle("crypto.ionic_bond.propose", Some(&propose), &provider)
-                .await
-                .expect("propose");
-            let pid = result["proposal_id"].as_str().unwrap();
-            let accept = serde_json::json!({
-                "proposal_id": pid, "acceptor": target, "acceptor_signature": "s"
-            });
-            handler
-                .handle("crypto.ionic_bond.accept", Some(&accept), &provider)
-                .await
-                .expect("accept");
+            let (pid, hash) = propose_bond(&handler, &provider, proposer, target).await;
+            accept_bond(&handler, &provider, &pid, &hash, target).await;
         }
 
         let list_params = serde_json::json!({ "domain": "x" });

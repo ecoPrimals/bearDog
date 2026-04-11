@@ -286,9 +286,8 @@ impl SovereignRng {
             }
         };
 
-        // Use entropy manager to generate seed
-        // Placeholder entropy generation since the method doesn't exist yet
-        let entropy_seed = vec![0u8; 256]; // 256 bytes for neural network seeding
+        let mut entropy_seed = vec![0u8; 256];
+        rand::RngCore::fill_bytes(&mut rand::rng(), &mut entropy_seed);
 
         Ok(entropy_seed)
     }
@@ -414,12 +413,8 @@ impl SovereignRng {
         _tier: u8,
         size_bytes: usize,
     ) -> Result<Vec<u8>, BearDogError> {
-        // Generate entropy based on tier and size - placeholder implementation
-        let entropy_seed = vec![0u8; 256]; // Generate based on tier
-
-        // Extend or truncate to requested size
-        let mut result = entropy_seed;
-        result.resize(size_bytes, 0u8);
+        let mut result = vec![0u8; size_bytes];
+        rand::RngCore::fill_bytes(&mut rand::rng(), &mut result);
 
         Ok(result)
     }

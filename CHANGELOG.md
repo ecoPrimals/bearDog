@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 11, 2026 -- Wave 35: Deep Debt Cleanup III — Placeholder Elimination, Real Entropy, Auth Test Evolution
+
+- **Production placeholders eliminated** — `SystemStatus` reads real `/proc` metrics; sovereign RNG uses real entropy; batch validation delegates per-config
+- **Dead code removed** — `placeholder_test()`, `signature_placeholder`, stale module comments
+- **Auth tests evolved** — Permission/authorization/node-registry stubs replaced with real struct validation tests
+- **14,761+ tests passing**, all quality gates clean
+
 ### April 11, 2026 -- Wave 34: Deep Debt Evolution — Hardcoding Elimination, Mock→Real, Smart Refactoring
 
 - **Hardcoding eliminated (4 sites)** — `system.rs` filesystem paths resolved via XDG Base Directory Specification (`resolve_config_dir`, `resolve_data_dir`, `resolve_cache_dir`, `resolve_runtime_dir`); UID 1000 default replaced with safe `/proc/self/status` resolution (no `unsafe`, no FFI) in `socket_config.rs` and `tower-atomic/discovery.rs`; UPA fallback URL dynamically constructed from `BEARDOG_UPA_URL`/`BEARDOG_EXTERNAL_HOST`/`BEARDOG_API_PORT` env vars in `network_ports.rs`.

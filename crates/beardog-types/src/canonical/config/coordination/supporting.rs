@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #![allow(missing_docs)]
 
-//! Placeholder and supporting structures for coordination configuration.
+//! Supporting structures for coordination configuration (thresholds, events, feedback).
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

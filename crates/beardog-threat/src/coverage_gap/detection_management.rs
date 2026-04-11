@@ -289,9 +289,9 @@ mod management_tests {
     fn test_get_system_status() {
         let engine = make_engine();
         let status = engine.get_system_status();
-        assert_eq!(status.system_uptime, "N/A");
-        assert_eq!(status.memory_usage, "N/A");
-        assert_eq!(status.cpu_usage, "N/A");
+        assert!(!status.system_uptime.is_empty());
+        assert!(!status.memory_usage.is_empty());
+        assert!(!status.cpu_usage.is_empty());
     }
 
     #[test]
@@ -317,7 +317,7 @@ mod management_tests {
         let serialized = serde_json::to_string(&status).expect("SystemStatus should serialize");
         let deserialized: SystemStatus =
             serde_json::from_str(&serialized).expect("SystemStatus round-trip JSON");
-        assert_eq!(deserialized.system_uptime, "N/A");
+        assert_eq!(deserialized.system_uptime, status.system_uptime);
     }
 
     #[test]

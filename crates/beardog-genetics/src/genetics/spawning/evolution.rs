@@ -84,8 +84,6 @@ pub async fn apply_directed_evolution(&GeneticSpawningEngine,
     let evolution_data = format!("{:?}-{}-{}", purpose, genetics.id, genetics.generation);
     let _evolution_hash = Sha3_256::digest(evolution_data.as_bytes());
 
-    let _evolution_signature = "signature_placeholder"; // engine.hsm_manager.sign_data(
-
     genetics
         .mutations
         .push(beardog_auth::auth::CapabilityMutation {

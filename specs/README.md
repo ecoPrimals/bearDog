@@ -1,9 +1,9 @@
 # BearDog Specifications
 
-**Last Updated**: March 28, 2026
+**Last Updated**: April 11, 2026
 **Version**: 0.9.0
 **Status**: Production Ready
-**Crates**: 30 | **Tests**: 15,100+ passing | **Coverage**: 90.05% (llvm-cov line coverage)
+**Crates**: 29 | **Tests**: 14,761+ passing | **Coverage**: 90.51% (llvm-cov line coverage)
 
 ---
 
@@ -12,8 +12,8 @@
 | Metric | Status | Details |
 |--------|--------|---------|
 | Build | Clean | Zero errors, minimal warnings |
-| Tests | 15,100+ passing | 30 crates, 100% pass rate |
-| Coverage | 90.05% (llvm-cov) | 9 crates above 90% target |
+| Tests | 14,761+ passing | 29 crates, 100% pass rate |
+| Coverage | 90.51% (llvm-cov) | 9 crates above 90% target |
 | Memory Safety | ZERO unsafe | 100% safe Rust |
 | Pure Rust | 100% | Zero C dependencies (RustCrypto suite) |
 | Production panics | 0 | All production paths use `Result<T, E>` |
@@ -152,7 +152,7 @@ BEARDOG_ECOSYSTEM_SECURITY_INTEGRATION → [SONGBIRD_INTEGRATION_SPECIFICATION](
 
 ## Historical Notes
 
-Specs from 2025 (October-December) are preserved for historical reference. Many metrics from that era (4% coverage, 22 crates, 435 tests) are now vastly outdated. Current metrics are in [STATUS.md](../STATUS.md): **14,756+ tests** and **90.51% line coverage** (llvm-cov workspace, April 2026).
+Specs from 2025 (October-December) are preserved for historical reference. Many metrics from that era (4% coverage, 22 crates, 435 tests) are now vastly outdated. Current metrics are in [STATUS.md](../STATUS.md): **14,761+ tests** and **90.51% line coverage** (llvm-cov workspace, April 2026).
 
 Historical experiment write-ups from the cryptographic foundation phase are **not** kept in this repo; they are preserved under **`ecoPrimals/fossilRecord`** for archival reference.
 

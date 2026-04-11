@@ -87,8 +87,14 @@ pub struct IonicBond {
     pub allowed_capabilities: Vec<String>,
     /// Ed25519 signature over the bond terms (from proposer).
     pub proposer_signature: Option<String>,
+    /// Proposer's Ed25519 public key (hex-encoded).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub proposer_public_key: Option<String>,
     /// Ed25519 signature over the bond terms (from acceptor).
     pub acceptor_signature: Option<String>,
+    /// Acceptor's Ed25519 public key (hex-encoded).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub acceptor_public_key: Option<String>,
     /// When the bond was created (RFC 3339).
     pub created_at: String,
     /// When the bond expires (RFC 3339), if time-bounded.
@@ -137,8 +143,11 @@ pub struct IonicBondAcceptParams {
     pub proposal_id: String,
     /// Acceptor's domain identifier.
     pub acceptor: String,
-    /// Acceptor's Ed25519 signature over the terms hash.
+    /// Acceptor's Ed25519 signature over the terms hash (hex-encoded, 128 hex chars).
     pub acceptor_signature: String,
+    /// Acceptor's Ed25519 public key (hex-encoded, 64 hex chars).
+    /// Used to verify `acceptor_signature` against the proposal terms hash.
+    pub acceptor_public_key: String,
 }
 
 /// Response from `crypto.ionic_bond.accept`.

@@ -200,27 +200,96 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
-    /// Get system status
-    /// Gets `system_status`
+    /// Get system status by reading host metrics from `/proc` (Linux).
     #[must_use]
     pub fn get_system_status(&self) -> SystemStatus {
-        SystemStatus {
-            system_uptime: "N/A".to_string(), // Would be calculated from start time
-            memory_usage: "N/A".to_string(),  // Would be calculated from system metrics
-            cpu_usage: "N/A".to_string(),     // Would be calculated from system metrics
-        }
+        SystemStatus::from_proc()
     }
 }
 
-/// Placeholder host metrics until real telemetry is wired into management.
+/// Host metrics read from `/proc` on Linux, with safe fallbacks on other platforms.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemStatus {
-    /// Best-effort uptime string; placeholders until host metrics are wired in.
+    /// System uptime from `/proc/uptime`.
     pub system_uptime: String,
-    /// The memory usage value
+    /// Memory usage summary from `/proc/meminfo`.
     pub memory_usage: String,
-    /// The cpu usage value
+    /// CPU usage summary from `/proc/stat` (idle percentage).
     pub cpu_usage: String,
+}
+
+impl SystemStatus {
+    /// Read host metrics from `/proc` (Linux) or return "unavailable" on other platforms.
+    #[must_use]
+    fn from_proc() -> Self {
+        Self {
+            system_uptime: Self::read_uptime(),
+            memory_usage: Self::read_memory(),
+            cpu_usage: Self::read_cpu(),
+        }
+    }
+
+    fn read_uptime() -> String {
+        std::fs::read_to_string("/proc/uptime")
+            .ok()
+            .and_then(|s| s.split_whitespace().next().map(String::from))
+            .map_or_else(|| "unavailable".to_string(), |secs| format!("{secs}s"))
+    }
+
+    fn read_memory() -> String {
+        std::fs::read_to_string("/proc/meminfo")
+            .ok()
+            .and_then(|content| {
+                let mut total_kb = 0u64;
+                let mut avail_kb = 0u64;
+                for line in content.lines() {
+                    if let Some(rest) = line.strip_prefix("MemTotal:") {
+                        total_kb = rest
+                            .split_whitespace()
+                            .next()
+                            .and_then(|v| v.parse().ok())
+                            .unwrap_or(0);
+                    } else if let Some(rest) = line.strip_prefix("MemAvailable:") {
+                        avail_kb = rest
+                            .split_whitespace()
+                            .next()
+                            .and_then(|v| v.parse().ok())
+                            .unwrap_or(0);
+                    }
+                }
+                if total_kb > 0 {
+                    let used_mb = (total_kb.saturating_sub(avail_kb)) / 1024;
+                    let total_mb = total_kb / 1024;
+                    Some(format!("{used_mb}/{total_mb} MB"))
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_else(|| "unavailable".to_string())
+    }
+
+    fn read_cpu() -> String {
+        std::fs::read_to_string("/proc/stat")
+            .ok()
+            .and_then(|content| {
+                let cpu_line = content.lines().next()?;
+                let vals: Vec<u64> = cpu_line
+                    .split_whitespace()
+                    .skip(1)
+                    .filter_map(|v| v.parse().ok())
+                    .collect();
+                if vals.len() >= 4 {
+                    let total: u64 = vals.iter().sum();
+                    let idle = vals[3];
+                    if total > 0 {
+                        let usage = 100u64.saturating_sub(idle * 100 / total);
+                        return Some(format!("{usage}%"));
+                    }
+                }
+                None
+            })
+            .unwrap_or_else(|| "unavailable".to_string())
+    }
 }
 
 /// Point-in-time counts surfaced by management dashboards.

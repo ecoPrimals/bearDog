@@ -401,14 +401,5 @@ impl BearDogCrypto {
 
 #[cfg(test)]
 mod tests {
-
     // Tests live in `tests/crypto_primitives_tests.rs`.
-
-    // TEST_CATEGORY: unit
-    // TEST_DOMAIN: security
-    // TEST_PRIORITY: normal
-    #[test]
-    fn placeholder_test() {
-        // Tests now in crypto_primitives_tests.rs
-    }
 }

@@ -130,11 +130,11 @@ pub trait Validatable: Identifiable {
                 warnings: Vec::new(),
             };
 
-            for _config in configs {
-                // Placeholder validation logic
-                result
-                    .warnings
-                    .push("Batch validation not fully implemented".to_string());
+            for (i, config) in configs.iter().enumerate() {
+                if let Err(e) = config.validate() {
+                    result.valid = false;
+                    result.errors.push(format!("[config {i}] {e}"));
+                }
             }
 
             Ok(result)

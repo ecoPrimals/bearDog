@@ -23,8 +23,8 @@ pub struct BearDogCore {
     components: Arc<RwLock<HashMap<String, ComponentStatus>>>,
     /// System state management
     pub state: Arc<RwLock<HashMap<String, ComponentStatus>>>,
-    /// Universal adapter for ecosystem integration
-    pub universal_adapter: Option<String>, // Placeholder for universal adapter
+    /// Universal adapter identifier, resolved at startup via capability discovery.
+    pub universal_adapter: Option<String>,
     /// System started flag
     started: bool,
 }

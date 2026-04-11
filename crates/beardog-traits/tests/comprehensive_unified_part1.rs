@@ -391,7 +391,7 @@ impl Validatable for CfgEnt {
 }
 
 #[tokio::test]
-async fn validatable_batch_validate_default_warns() {
+async fn validatable_batch_validate_validates_each_config() {
     let e = CfgEnt {
         id: "c".into(),
         ety: "t".into(),
@@ -400,12 +400,13 @@ async fn validatable_batch_validate_default_warns() {
     let r = CfgEnt::batch_validate(vec![e.get_config().clone(), e.get_config().clone()])
         .await
         .unwrap();
-    assert!(r.valid);
-    assert_eq!(r.warnings.len(), 2);
     assert!(
-        r.warnings
-            .iter()
-            .all(|w| w.contains("Batch validation not fully implemented"))
+        r.valid,
+        "two valid configs should produce a valid batch result"
+    );
+    assert!(
+        r.errors.is_empty(),
+        "valid default configs should produce no errors"
     );
 }
 
