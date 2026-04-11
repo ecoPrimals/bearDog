@@ -80,7 +80,7 @@ pub use beardog_errors::BearDogError;
 /// - [`canonical::config`] - Unified configuration system
 /// - [`canonical::providers_unified`] - Unified provider trait system  
 /// - [`canonical::monitoring`] - Advanced monitoring and metrics
-/// - [`canonical::security`] - Security types and operations
+/// - [`canonical::security_unified`] - Security types and operations
 /// - [`canonical::hsm`] - Hardware Security Module integration
 /// - [`canonical::network`] - Network communication types
 /// - [`canonical::crypto`] - Cryptographic operations
@@ -149,6 +149,9 @@ pub mod capabilities;
 /// Unified secure protocol provider for both internal (primal-to-primal)
 /// and external (HTTPS API) communication. Single API, different trust modes!
 pub mod btsp;
+
+/// Ionic bond types for cross-atomic-boundary trust negotiation.
+pub mod ionic_bond;
 
 /// 📈 **METRICS** - Metrics and monitoring types
 ///

@@ -191,7 +191,7 @@ pub enum VerificationError {
     OperationNotAllowed {
         /// Requested [`AdapterOperation`] that was denied.
         operation: String,
-        /// Operations present in the certificate [`CertificateScope`].
+        /// Operations present in the certificate `CertificateScope`.
         allowed: Vec<String>,
     },
 

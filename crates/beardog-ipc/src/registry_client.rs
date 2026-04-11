@@ -16,7 +16,7 @@
 //! 3. **Environment override** — `BEARDOG_REGISTRY_SOCKET_FALLBACK` supplies a Unix path when the
 //!    manifest has no Unix endpoint (misconfiguration / HTTP-only endpoints).
 //! 4. **Last-resort file path** — if tier 3 is unset, `{std::env::temp_dir()}/beardog-registry-default.sock`
-//!    (see [`fallback_registry_unix_socket_path`]).
+//!    (see `fallback_registry_unix_socket_path`).
 //!
 //! There are no default HTTP(S) URLs or TCP ports in this module; use Unix sockets and explicit
 //! configuration at the call site.

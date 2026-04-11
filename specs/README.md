@@ -152,10 +152,10 @@ BEARDOG_ECOSYSTEM_SECURITY_INTEGRATION → [SONGBIRD_INTEGRATION_SPECIFICATION](
 
 ## Historical Notes
 
-Specs from 2025 (October-December) are preserved for historical reference. Many metrics from that era (4% coverage, 22 crates, 435 tests) are now vastly outdated. Current metrics are in [STATUS.md](../STATUS.md): **15,000+ tests** and **90%+ line coverage** (15,100+ tests, 90.05% llvm-cov as of March 28, 2026).
+Specs from 2025 (October-December) are preserved for historical reference. Many metrics from that era (4% coverage, 22 crates, 435 tests) are now vastly outdated. Current metrics are in [STATUS.md](../STATUS.md): **14,756+ tests** and **90.51% line coverage** (llvm-cov workspace, April 2026).
 
 Historical experiment write-ups from the cryptographic foundation phase are **not** kept in this repo; they are preserved under **`ecoPrimals/fossilRecord`** for archival reference.
 
 ---
 
-**Last Updated**: March 28, 2026
+**Last Updated**: April 11, 2026

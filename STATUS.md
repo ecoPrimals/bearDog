@@ -1,6 +1,6 @@
 # BearDog Status
 
-**Last Updated**: April 9, 2026
+**Last Updated**: April 11, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -18,7 +18,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 14,593+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,756+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
@@ -32,15 +32,15 @@
 ## Codebase Metrics
 
 - **Crates**: 29 in workspace (beardog-integration excluded — overstep)
-- **Rust Files**: 1,939
-- **Crypto Methods**: 95 JSON-RPC methods (`methods()` handler count; prior 96 was a count error)
+- **Rust Files**: 2,128
+- **Crypto Methods**: 95 JSON-RPC methods (`methods()` handler count)
 - **`#[allow(`**: 75 (was 193)
 - **`#[expect(`**: 476 (was 361)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
 
 ---
 
-## Per-Crate Coverage (April 9, 2026, llvm-cov)
+## Per-Crate Coverage (April 11, 2026, llvm-cov)
 
 | Crate | Line Coverage | Notes |
 |-------|---------------|-------|
@@ -58,7 +58,7 @@
 | beardog-tunnel | ~83% | NDJSON framing, structured tracing, IPC, BTSP |
 | beardog-deploy | ~82% | command runner, android, builder, device coverage |
 | beardog-integration | new | Tower Atomic UPA client, heartbeat, connection tracking |
-| **Overall** | **90.16%** | llvm-cov workspace — 90% target met |
+| **Overall** | **90.51%** | llvm-cov workspace — 90% target met |
 
 ---
 
@@ -87,6 +87,16 @@
 ---
 
 ## Recent Improvements
+
+### Wave 34: Deep Debt Evolution — Hardcoding Elimination, Mock→Real, Smart Refactoring (April 11, 2026)
+
+- **Hardcoding eliminated** — `system.rs` paths resolved via XDG/env (`resolve_config_dir`, `resolve_data_dir`, etc.); UID 1000 default replaced with `/proc/self/status` resolution in `socket_config.rs` and `discovery.rs`; UPA fallback URL dynamically constructed from env vars in `network_ports.rs`
+- **Production mocks evolved to real implementations** — Ionic bond proposals now Ed25519-signed from primal identity; capability announcements Ed25519-signed; compliance metrics dynamically computed from audit trail; HSM returns proper errors for unimplemented ops; ML threat analysis returns honest empty results when no models loaded; health checks only report subsystems with actual probes
+- **Dead code removed** — `grafana.rs` and `prometheus.rs` simulated external function stubs deleted (never wired into module tree)
+- **Config placeholders deprecated** — `with_secrets_rotation` and `recommended_backup` marked `#[deprecated]` with migration notes to `ModernSecretsConfig` and capability-based discovery
+- **Smart refactoring** — `monitoring.rs` (978 LOC) → `monitoring/mod.rs` + `alerts.rs` + `metrics.rs`; `self_knowledge.rs` (832 LOC) → `self_knowledge/mod.rs` + `identity.rs` + `endpoints.rs` + `capabilities.rs`
+- **Tests adapted** — ML integration tests and compliance tests updated to assert new dynamic behavior; 14,756+ tests passing
+- **All gates green** — fmt, clippy `-D warnings`, doc `-D warnings`, test all clean
 
 ### Wave 32: Deep Debt Sweep II — Stub Evolution, Large File Dedup, Clippy Zero (April 8, 2026)
 

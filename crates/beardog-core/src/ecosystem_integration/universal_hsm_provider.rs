@@ -218,13 +218,22 @@ impl UniversalHsmManager {
                     .collect(),
                 })
             }
-            _ => {
-                metrics.successful_operations += 1;
+            other => {
+                metrics.failed_operations += 1;
+                let op_name = format!("{other:?}");
                 Ok(HsmResult {
-                    success: true,
-                    data: Some(vec![]),
-                    error: None,
-                    metadata: HashMap::new(),
+                    success: false,
+                    data: None,
+                    error: Some(format!(
+                        "HSM operation not implemented in software provider: {op_name}. \
+                         Use a hardware HSM provider or request specific operation support."
+                    )),
+                    metadata: {
+                        let mut m = HashMap::new();
+                        m.insert("operation".to_string(), op_name);
+                        m.insert("provider".to_string(), "universal_software".to_string());
+                        m
+                    },
                 })
             }
         }

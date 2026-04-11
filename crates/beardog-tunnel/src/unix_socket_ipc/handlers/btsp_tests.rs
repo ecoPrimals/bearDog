@@ -4,14 +4,15 @@ use super::*;
 
 #[tokio::test]
 async fn test_btsp_handler_methods() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let methods = handler.methods();
 
-    // - 6 core operations × 4 aliases each = 24
+    // - 6 core operations x 4 aliases each = 24
     // - 3 unified methods (configure_tls, verify_peer, tunnel_send_http) = 3
-    // - 3 session methods (session.create, session.verify, session.negotiate) = 3
-    // Total = 30 methods
-    assert_eq!(methods.len(), 30);
+    // - 4 server methods (server.create_session, server.verify, server.negotiate, server.status) = 4
+    // - 3 legacy session aliases (session.create, session.verify, session.negotiate) = 3
+    // Total = 34 methods
+    assert_eq!(methods.len(), 34);
 
     // Semantic domain.operation names (primary in registry)
     assert!(methods.contains(&"btsp.contact.exchange"));
@@ -45,7 +46,7 @@ async fn test_btsp_handler_methods() {
 
 #[tokio::test]
 async fn btsp_handle_unknown_method() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let err = handler
         .handle("btsp.no_such_method", None, &provider)
@@ -56,7 +57,7 @@ async fn btsp_handle_unknown_method() {
 
 #[tokio::test]
 async fn btsp_contact_exchange_missing_params() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let err = handler
         .handle("btsp.contact_exchange", None, &provider)
@@ -67,7 +68,7 @@ async fn btsp_contact_exchange_missing_params() {
 
 #[tokio::test]
 async fn btsp_tunnel_establish_missing_params() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let err = handler
         .handle("btsp.tunnel_establish", None, &provider)
@@ -78,7 +79,7 @@ async fn btsp_tunnel_establish_missing_params() {
 
 #[tokio::test]
 async fn btsp_configure_tls_returns_external_mode_guidance() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
         "tunnel_id": "t1",
@@ -93,7 +94,7 @@ async fn btsp_configure_tls_returns_external_mode_guidance() {
 
 #[tokio::test]
 async fn btsp_routes_namespaced_contact_exchange_alias() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
         "target_peer_id": "peer-1",
@@ -111,7 +112,7 @@ async fn btsp_routes_namespaced_contact_exchange_alias() {
 
 #[tokio::test]
 async fn btsp_semantic_dot_contact_exchange_routes_same_as_underscore() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let err_dot = handler
         .handle("btsp.contact.exchange", None, &provider)
@@ -126,7 +127,7 @@ async fn btsp_semantic_dot_contact_exchange_routes_same_as_underscore() {
 
 #[tokio::test]
 async fn btsp_tunnel_encrypt_invalid_base64() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let tunnel = serde_json::json!({
         "id": "t1",
@@ -146,7 +147,7 @@ async fn btsp_tunnel_encrypt_invalid_base64() {
 
 #[tokio::test]
 async fn btsp_tunnel_establish_external_routes_to_external_mode_message() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
         "peer_id": "api.example.com",
@@ -174,7 +175,7 @@ async fn btsp_tunnel_establish_external_routes_to_external_mode_message() {
 
 #[tokio::test]
 async fn btsp_tunnel_establish_mixed_mode_rejected() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
         "peer_id": "p",
@@ -199,7 +200,7 @@ async fn btsp_tunnel_establish_mixed_mode_rejected() {
 
 #[tokio::test]
 async fn btsp_verify_peer_tunnel_not_found() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
         "tunnel_id": "no-such-tunnel",
@@ -214,7 +215,7 @@ async fn btsp_verify_peer_tunnel_not_found() {
 
 #[tokio::test]
 async fn btsp_verify_peer_certificate_mode_returns_external_mode_guidance() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
         "tunnel_id": "t1",
@@ -229,7 +230,7 @@ async fn btsp_verify_peer_certificate_mode_returns_external_mode_guidance() {
 
 #[tokio::test]
 async fn btsp_verify_peer_unknown_trust_mode() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
         "tunnel_id": "t1",
@@ -244,7 +245,7 @@ async fn btsp_verify_peer_unknown_trust_mode() {
 
 #[tokio::test]
 async fn btsp_tunnel_status_by_tunnel_id_only() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
         "tunnel_id": "ghost-tunnel",
@@ -291,7 +292,7 @@ async fn btsp_verify_peer_genetic_lineage_uses_tunnel_and_trust_db() {
         .await
         .expect("establish");
 
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let params = serde_json::json!({
         "tunnel_id": handle.id,
         "trust_mode": "genetic_lineage",
@@ -309,7 +310,7 @@ async fn btsp_verify_peer_genetic_lineage_uses_tunnel_and_trust_db() {
 
 #[tokio::test]
 async fn btsp_contact_exchange_uses_peer_id_alias() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
         "peer_id": "peer-alias",
@@ -324,7 +325,7 @@ async fn btsp_contact_exchange_uses_peer_id_alias() {
 
 #[tokio::test]
 async fn btsp_tunnel_decrypt_missing_tunnel() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
         "data": base64::engine::general_purpose::STANDARD.encode(b"x"),
@@ -338,7 +339,7 @@ async fn btsp_tunnel_decrypt_missing_tunnel() {
 
 #[tokio::test]
 async fn btsp_tunnel_close_missing_params() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let err = handler
         .handle("btsp.tunnel_close", None, &provider)
@@ -349,7 +350,7 @@ async fn btsp_tunnel_close_missing_params() {
 
 #[tokio::test]
 async fn btsp_configure_tls_invalid_json() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let err = handler
         .handle(
@@ -364,7 +365,7 @@ async fn btsp_configure_tls_invalid_json() {
 
 #[tokio::test]
 async fn btsp_tunnel_send_http_valid_shape_returns_external_mode_guidance() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
         "tunnel_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -381,7 +382,7 @@ async fn btsp_tunnel_send_http_valid_shape_returns_external_mode_guidance() {
 
 #[tokio::test]
 async fn btsp_routes_namespaced_tunnel_encrypt_contains_path() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let tunnel = serde_json::json!({
         "id": "t1",
@@ -405,7 +406,7 @@ async fn btsp_routes_namespaced_tunnel_encrypt_contains_path() {
 
 #[tokio::test]
 async fn btsp_contact_exchange_missing_target_peer() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
         "requester_lineage": "L1",
@@ -419,7 +420,7 @@ async fn btsp_contact_exchange_missing_target_peer() {
 
 #[tokio::test]
 async fn btsp_contact_exchange_missing_lineage() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
         "target_peer_id": "p1",
@@ -433,7 +434,7 @@ async fn btsp_contact_exchange_missing_lineage() {
 
 #[tokio::test]
 async fn btsp_tunnel_encrypt_missing_data() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let tunnel = serde_json::json!({
         "id": "t1",
@@ -450,7 +451,7 @@ async fn btsp_tunnel_encrypt_missing_data() {
 
 #[tokio::test]
 async fn btsp_tunnel_status_missing_tunnel_and_id() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let err = handler
         .handle(
@@ -465,7 +466,7 @@ async fn btsp_tunnel_status_missing_tunnel_and_id() {
 
 #[tokio::test]
 async fn btsp_tunnel_close_invalid_tunnel_json() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
         "tunnel": "not-an-object",
@@ -479,7 +480,7 @@ async fn btsp_tunnel_close_invalid_tunnel_json() {
 
 #[tokio::test]
 async fn btsp_configure_tls_missing_params() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let err = handler
         .handle("btsp.configure_tls", None, &provider)
@@ -490,7 +491,7 @@ async fn btsp_configure_tls_missing_params() {
 
 #[tokio::test]
 async fn btsp_verify_peer_missing_params() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let err = handler
         .handle("btsp.verify_peer", None, &provider)
@@ -501,7 +502,7 @@ async fn btsp_verify_peer_missing_params() {
 
 #[tokio::test]
 async fn btsp_tunnel_send_http_missing_params() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let err = handler
         .handle("btsp.tunnel_send_http", None, &provider)
@@ -512,7 +513,7 @@ async fn btsp_tunnel_send_http_missing_params() {
 
 #[tokio::test]
 async fn btsp_tunnel_decrypt_invalid_tunnel_handle() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
         "tunnel": { "bad": "shape" },
@@ -527,7 +528,7 @@ async fn btsp_tunnel_decrypt_invalid_tunnel_handle() {
 
 #[tokio::test]
 async fn btsp_routes_tunnel_establish_legacy_namespaced() {
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
     let params = serde_json::json!({
         "id": "peer-x",
@@ -567,7 +568,7 @@ async fn btsp_tunnel_establish_unified_internal_returns_response_shape() {
             .expect("provider"),
     );
 
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let params = serde_json::json!({
         "peer_id": "peer-unified-internal",
         "peer_endpoint": "unix:///tmp/btsp-unified-internal.sock",
@@ -621,7 +622,7 @@ async fn btsp_tunnel_encrypt_decrypt_status_close_roundtrip() {
         .await
         .expect("establish");
 
-    let handler = BtspHandler;
+    let handler = BtspHandler::new();
     let tunnel_json = serde_json::to_value(&handle).expect("tunnel json");
     let plain_b64 = base64::engine::general_purpose::STANDARD.encode(b"hello-tunnel");
     let enc_params = serde_json::json!({

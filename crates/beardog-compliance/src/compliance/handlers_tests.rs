@@ -217,14 +217,14 @@ mod compliance_handler_tests {
         let metrics = handler.generate_metrics();
 
         assert!(
-            (metrics.overall_score - 95.0).abs() < f64::EPSILON,
-            "expected overall_score ≈ 95.0, got {}",
+            (metrics.overall_score - 100.0).abs() < f64::EPSILON,
+            "no evaluations → optimistic 100.0, got {}",
             metrics.overall_score
         );
         assert_eq!(metrics.standards_compliance.len(), 3);
         assert_eq!(metrics.audit_trail_size, 0);
-        assert!(metrics.last_assessment_date.is_some());
-        assert!(metrics.next_assessment_due.is_some());
+        assert!(metrics.last_assessment_date.is_none());
+        assert!(metrics.next_assessment_due.is_none());
     }
 
     #[test]
@@ -681,8 +681,8 @@ mod compliance_handler_tests {
                 .contains_key(&ComplianceStandard::Hipaa)
         );
         assert!(
-            (metrics.overall_score - 95.0).abs() < f64::EPSILON,
-            "expected overall_score ≈ 95.0, got {}",
+            (metrics.overall_score - 100.0).abs() < f64::EPSILON,
+            "no evaluations → optimistic 100.0, got {}",
             metrics.overall_score
         );
     }

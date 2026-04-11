@@ -3,7 +3,7 @@
 //! Runtime Configuration Management
 //!
 //! This module contains the runtime logic for loading and managing production configurations.
-//! Secret retrieval lives in [`super::secrets`]; defaults for config structs in [`super::defaults`].
+//! Secret retrieval lives in the `secrets` submodule; defaults for config structs in `defaults`.
 
 use super::{
     ConfigSource, Environment, LogLevel, ProductionConfig, ProductionConfigManager, Result,

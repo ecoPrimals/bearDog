@@ -166,9 +166,21 @@ impl CapabilitiesHandler {
                 },
                 {
                     "type": "btsp",
-                    "version": "1.0",
+                    "version": "2.0",
                     "methods": ["contact_exchange", "tunnel_establish", "tunnel_encrypt", "tunnel_decrypt", "tunnel_status", "tunnel_close"],
                     "description": "BearDog Tunnel Security Protocol - VPN-free P2P mesh via genetic lineage"
+                },
+                {
+                    "type": "btsp_server",
+                    "version": "1.0",
+                    "methods": ["server.create_session", "server.verify", "server.negotiate", "server.status"],
+                    "description": "BTSP handshake-as-a-service — other primals call these to establish authenticated sessions"
+                },
+                {
+                    "type": "ionic_bond",
+                    "version": "1.0",
+                    "methods": ["propose", "accept", "verify", "revoke", "list"],
+                    "description": "Cross-atomic-boundary trust negotiation (ionic bonds for dual-tower enclave, GPU lease, data egress fence)"
                 },
                 {
                     "type": "graph",
@@ -224,26 +236,68 @@ impl CapabilitiesHandler {
                 "crypto.chacha20_poly1305_decrypt": { "cpu": "low",   "latency_ms": 1 },
                 "crypto.x25519_generate_ephemeral": { "cpu": "low",   "latency_ms": 1 },
                 "crypto.x25519_derive_secret":      { "cpu": "low",   "latency_ms": 1 },
-                "btsp.session.create":             { "cpu": "medium", "latency_ms": 2 },
-                "btsp.session.verify":             { "cpu": "medium", "latency_ms": 2 },
+                "btsp.server.create_session":      { "cpu": "medium", "latency_ms": 2 },
+                "btsp.server.verify":              { "cpu": "medium", "latency_ms": 2 },
+                "crypto.ionic_bond.propose":       { "cpu": "low",    "latency_ms": 1 },
+                "crypto.ionic_bond.accept":        { "cpu": "low",    "latency_ms": 1 },
+                "crypto.ionic_bond.verify":        { "cpu": "low",    "latency_ms": 1 },
                 "security.evaluate":               { "cpu": "medium", "latency_ms": 5 },
                 "graph.authorize_modification":    { "cpu": "medium", "latency_ms": 5 },
                 "tls.derive_secrets":              { "cpu": "medium", "latency_ms": 2 },
             },
             "operation_dependencies": {
-                "btsp.session.verify": ["btsp.session.create"],
-                "btsp.negotiate":      ["btsp.session.verify"],
+                "btsp.server.verify":              ["btsp.server.create_session"],
+                "btsp.server.negotiate":           ["btsp.server.verify"],
+                "crypto.ionic_bond.accept":        ["crypto.ionic_bond.propose"],
+                "crypto.ionic_bond.verify":        ["crypto.ionic_bond.accept"],
+                "crypto.ionic_bond.revoke":        ["crypto.ionic_bond.accept"],
             },
             "protocols": ["tarpc", "json-rpc", "http"],
             "transport": ["uds", "tcp"],
             "wire_format": "ndjson",
             "btsp_enabled": true,
+            "btsp_server_available": true,
+            "ionic_bond_available": true,
             "collaborative_intelligence": true,
+            "signed_announcement": self.sign_capability_announcement(&methods),
         }))
     }
 
-    /// Handle `discover_capabilities` request
-    ///
+    /// Produce a signed capability announcement (Ed25519 over the primal
+    /// name + version + sorted method list). Verifiers can reconstruct the
+    /// message and check the signature against the announced public key.
+    fn sign_capability_announcement(&self, methods: &[String]) -> serde_json::Value {
+        use ed25519_dalek::{Signer, SigningKey};
+        use sha2::{Digest, Sha256};
+
+        let primal_name = get_primal_name_with(&self.primal_hints);
+        let node_id = beardog_types::primal_identity::resolve_node_id_from_env_or_ephemeral(None);
+
+        let mut seed = [0u8; 32];
+        let mut h = Sha256::new();
+        h.update(b"capability-announcement-key:");
+        h.update(primal_name.as_bytes());
+        h.update(b":");
+        h.update(node_id.as_bytes());
+        seed.copy_from_slice(&h.finalize());
+        let signing_key = SigningKey::from_bytes(&seed);
+
+        let mut message = Vec::new();
+        message.extend_from_slice(primal_name.as_bytes());
+        message.extend_from_slice(env!("CARGO_PKG_VERSION").as_bytes());
+        for m in methods {
+            message.extend_from_slice(m.as_bytes());
+        }
+        let signature = signing_key.sign(&message);
+        let verifying_key = signing_key.verifying_key();
+
+        serde_json::json!({
+            "algorithm": "ed25519",
+            "public_key": hex::encode(verifying_key.as_bytes()),
+            "signature": hex::encode(signature.to_bytes()),
+        })
+    }
+
     /// Returns a flat list of capability strings for ecosystem consistency.
     /// This mirrors the conventional `discover_capabilities` format, enabling
     /// uniform capability discovery across all primals.

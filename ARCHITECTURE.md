@@ -1,8 +1,8 @@
 # BearDog Architecture
 
-**Last Updated**: April 2, 2026
+**Last Updated**: April 11, 2026
 **Status**: Production Ready
-**Crates**: 29 | **Tests**: 14,366+ | **Coverage**: 90.16% | **MSRV**: 1.93.0
+**Crates**: 29 | **Tests**: 14,756+ | **Coverage**: 90.51% | **MSRV**: 1.93.0
 
 ---
 
@@ -15,7 +15,7 @@ BearDog provides **crypto atoms** to the ecoPrimals ecosystem. Every primal dele
 │  Any Primal │ ←─ JSON-RPC ────→ │  BearDog    │
 │ (Protocol)  │    Unix Socket     │  (Crypto)   │
 └─────────────┘                    └─────────────┘
-     Zero crypto code                 96 crypto methods
+     Zero crypto code                 95 crypto methods
 ```
 
 **Principles**:
@@ -244,4 +244,4 @@ Key material derived from family seed. Family A never shares keys with Family B.
 
 ---
 
-**Last Updated**: April 2, 2026
+**Last Updated**: April 11, 2026

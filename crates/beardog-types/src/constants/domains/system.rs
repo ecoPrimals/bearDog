@@ -105,21 +105,112 @@ pub mod defaults {
     /// Configuration constant: default max backoff
     pub const DEFAULT_MAX_BACKOFF: Duration = Duration::from_secs(30);
 
-    /// File system defaults
+    /// Resolve the config directory from XDG / env / FHS fallback.
+    ///
+    /// Tier order: `BEARDOG_CONFIG_DIR` env → `XDG_CONFIG_HOME/beardog` → `/etc/beardog`.
+    #[must_use]
+    pub fn resolve_config_dir() -> String {
+        std::env::var("BEARDOG_CONFIG_DIR")
+            .ok()
+            .or_else(|| {
+                std::env::var("XDG_CONFIG_HOME")
+                    .ok()
+                    .map(|xdg| format!("{xdg}/beardog"))
+            })
+            .unwrap_or_else(|| "/etc/beardog".to_string())
+    }
+
+    /// Resolve the data directory from XDG / env / FHS fallback.
+    #[must_use]
+    pub fn resolve_data_dir() -> String {
+        std::env::var("BEARDOG_DATA_DIR")
+            .ok()
+            .or_else(|| {
+                std::env::var("XDG_DATA_HOME")
+                    .ok()
+                    .map(|xdg| format!("{xdg}/beardog"))
+            })
+            .unwrap_or_else(|| "/var/lib/beardog".to_string())
+    }
+
+    /// Resolve the log directory from env / FHS fallback.
+    #[must_use]
+    pub fn resolve_log_dir() -> String {
+        std::env::var("BEARDOG_LOG_DIR").unwrap_or_else(|_| "/var/log/beardog".to_string())
+    }
+
+    /// Resolve the cache directory from XDG / env / FHS fallback.
+    #[must_use]
+    pub fn resolve_cache_dir() -> String {
+        std::env::var("BEARDOG_CACHE_DIR")
+            .ok()
+            .or_else(|| {
+                std::env::var("XDG_CACHE_HOME")
+                    .ok()
+                    .map(|xdg| format!("{xdg}/beardog"))
+            })
+            .unwrap_or_else(|| "/var/cache/beardog".to_string())
+    }
+
+    /// Resolve the temp directory from env / XDG runtime / system fallback.
+    #[must_use]
+    pub fn resolve_temp_dir() -> String {
+        std::env::var("BEARDOG_TEMP_DIR").unwrap_or_else(|_| {
+            let base = std::env::temp_dir();
+            format!("{}/beardog", base.display())
+        })
+    }
+
+    /// Resolve the IPC socket path from env / XDG runtime / temp fallback.
+    #[must_use]
+    pub fn resolve_socket_path() -> String {
+        std::env::var("BEARDOG_SOCKET").unwrap_or_else(|_| {
+            let base = std::env::temp_dir();
+            format!("{}/beardog.sock", base.display())
+        })
+    }
+
+    /// Resolve the IPC port file path from env / temp fallback.
+    #[must_use]
+    pub fn resolve_ipc_port_file() -> String {
+        std::env::var("BEARDOG_IPC_PORT_FILE").unwrap_or_else(|_| {
+            let base = std::env::temp_dir();
+            format!("{}/beardog-ipc-port", base.display())
+        })
+    }
+
+    /// Resolve the software key storage directory from env / XDG / temp fallback.
+    #[must_use]
+    pub fn resolve_key_storage_dir() -> String {
+        std::env::var("BEARDOG_KEY_STORAGE_DIR")
+            .ok()
+            .or_else(|| {
+                std::env::var("XDG_DATA_HOME")
+                    .ok()
+                    .map(|xdg| format!("{xdg}/beardog/keys"))
+            })
+            .unwrap_or_else(|| {
+                let base = std::env::temp_dir();
+                format!("{}/beardog/keys", base.display())
+            })
+    }
+
+    /// Backward-compatible constants for code that still needs compile-time strings.
+    /// These are **Tier-5 last-resort fallbacks** — prefer the `resolve_*` functions.
     pub const DEFAULT_CONFIG_DIR: &str = "/etc/beardog";
-    /// Configuration constant: default data dir
+    /// Tier-5 fallback data directory.
     pub const DEFAULT_DATA_DIR: &str = "/var/lib/beardog";
-    /// Configuration constant: default log dir
+    /// Tier-5 fallback log directory.
     pub const DEFAULT_LOG_DIR: &str = "/var/log/beardog";
-    /// Configuration constant: default cache dir
+    /// Tier-5 fallback cache directory.
     pub const DEFAULT_CACHE_DIR: &str = "/var/cache/beardog";
-    /// Configuration constant: default temp dir
+    /// Tier-5 fallback temp directory.
     pub const DEFAULT_TEMP_DIR: &str = "/tmp/beardog";
-    /// Default Unix socket path for IPC (last-resort fallback).
+    /// Tier-5 fallback IPC socket path.
     pub const DEFAULT_SOCKET_PATH: &str = "/tmp/beardog.sock";
-    /// Default TCP discovery file path (filename under `/tmp` search order).
+    /// Tier-5 fallback IPC port file.
     pub const DEFAULT_IPC_PORT_FILE: &str = "/tmp/beardog-ipc-port";
-    /// Default software key storage directory when env and XDG paths are unset.
+    /// Tier-5 fallback key storage directory.
     pub const DEFAULT_KEY_STORAGE_DIR: &str = "/tmp/beardog/keys";
 
     /// Environment defaults

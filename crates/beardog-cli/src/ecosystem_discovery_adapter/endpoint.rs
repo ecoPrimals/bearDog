@@ -40,7 +40,7 @@ impl EcosystemDiscoveryAdapter {
 
     /// Parse endpoint URL into (protocol, host, port, path)
     ///
-    /// Default TCP port when omitted comes from [`BEARDOG_CONFIG.network.ports`]. IPC (`unix` /
+    /// Default TCP port when omitted comes from `BEARDOG_CONFIG.network.ports`. IPC (`unix` /
     /// `ipc`) uses port `0` and stores the socket path in `path`.
     pub fn parse_endpoint_url(url: &str) -> (String, String, u16, Option<String>) {
         let default_port = BEARDOG_CONFIG.network.ports.api_port;

@@ -108,7 +108,7 @@ impl OrchestratorRegistryClient {
 
     /// JSON-RPC `ipc.register` with explicit endpoint, capability strings, and version (wateringHole v3.1).
     ///
-    /// Use this when the endpoint is the primal’s Unix socket path (from [`SocketConfig`]) rather than
+    /// Use this when the endpoint is the primal's Unix socket path (from `SocketConfig`) rather than
     /// the `/primal/<name>` logical path only.
     ///
     /// # Errors

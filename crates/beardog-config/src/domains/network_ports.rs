@@ -103,11 +103,23 @@ pub const DEFAULT_API_PORT: u16 = 8080;
 /// Must parse to the same value as [`DEFAULT_API_PORT`]; used to avoid embedding port literals in strings.
 pub const DEFAULT_API_PORT_STR: &str = "8080";
 
-/// Default UPA-style HTTPS base URL when `BEARDOG_UPA_URL` / related env vars are unset.
+/// Resolve the UPA base URL from environment or construct from discovered host/port.
 ///
-/// Semantically `https://{DEFAULT_EXTERNAL_HOST}:{DEFAULT_API_PORT}`.
-/// Built with `concat!` (string literals only); unit tests assert it matches
-/// `https://{DEFAULT_EXTERNAL_HOST}:{DEFAULT_API_PORT}`.
+/// Tier order: `BEARDOG_UPA_URL` → `BEARDOG_EXTERNAL_HOST`+`BEARDOG_API_PORT` → compile-time fallback.
+#[must_use]
+pub fn resolve_upa_fallback_base_url() -> String {
+    if let Ok(url) = std::env::var("BEARDOG_UPA_URL") {
+        return url;
+    }
+    let host = std::env::var("BEARDOG_EXTERNAL_HOST").unwrap_or_else(|_| "localhost".to_string());
+    let port = std::env::var("BEARDOG_API_PORT")
+        .ok()
+        .and_then(|s| s.parse::<u16>().ok())
+        .unwrap_or(DEFAULT_API_PORT);
+    format!("https://{host}:{port}")
+}
+
+/// Compile-time fallback constant for code that cannot call [`resolve_upa_fallback_base_url`].
 pub const DEFAULT_UPA_FALLBACK_BASE_URL: &str = concat!("https://", "localhost", ":", "8080");
 
 /// Default discovery service port (9090)

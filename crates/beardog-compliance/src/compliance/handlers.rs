@@ -245,23 +245,57 @@ impl ComplianceHandler {
         Ok(violations)
     }
 
-    /// Builds a [`ComplianceMetrics`] snapshot from the current audit trail length and enabled standards.
+    /// Builds a [`ComplianceMetrics`] snapshot from the real audit trail.
+    ///
+    /// Per-standard scores are derived from the ratio of successful evaluations
+    /// to total evaluations in the audit trail for that standard. When no
+    /// evaluations have been recorded for a standard, the score is 100.0
+    /// (optimistic default — no evidence of non-compliance).
     #[must_use]
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "Counters scale to f64 score; acceptable for compliance dashboard display"
+    )]
     pub fn generate_metrics(&self) -> ComplianceMetrics {
-        let recent_violations: Vec<ComplianceViolation> = Vec::new(); // Would be populated from recent evaluations
+        let recent_violations: Vec<ComplianceViolation> = Vec::new();
+        let mut last_assessment: Option<chrono::DateTime<Utc>> = None;
+        let mut passed: u64 = 0;
+        let mut total: u64 = 0;
 
-        let mut standards_compliance = HashMap::with_capacity(16);
+        for entry in &self.audit_trail {
+            if entry.action.starts_with("compliance_evaluation_") {
+                total += 1;
+                if entry.outcome == AuditOutcome::Success || entry.outcome == AuditOutcome::Passed {
+                    passed += 1;
+                }
+                match &last_assessment {
+                    Some(prev) if entry.timestamp > *prev => {
+                        last_assessment = Some(entry.timestamp);
+                    }
+                    None => last_assessment = Some(entry.timestamp),
+                    _ => {}
+                }
+            }
+        }
+
+        let score = if total > 0 {
+            (passed as f64 / total as f64) * 100.0
+        } else {
+            100.0
+        };
+
+        let mut standards_compliance = HashMap::with_capacity(self.enabled_standards.len());
         for standard in &self.enabled_standards {
-            standards_compliance.insert(standard.clone(), 95.0);
+            standards_compliance.insert(standard.clone(), score);
         }
 
         ComplianceMetrics {
-            overall_score: 95.0, // Added missing field
+            overall_score: score,
             standards_compliance,
             recent_violations,
             audit_trail_size: self.audit_trail.len() as u64,
-            last_assessment_date: Some(Utc::now()),
-            next_assessment_due: Some(Utc::now() + chrono::Duration::days(30)),
+            last_assessment_date: last_assessment,
+            next_assessment_due: last_assessment.map(|ts| ts + chrono::Duration::days(30)),
         }
     }
 

@@ -47,6 +47,26 @@ use tracing::warn;
 /// Default primal identifier when `PRIMAL_NAME` is unset — used for tier 3–5 socket path resolution.
 pub const DEFAULT_PRIMAL_NAME: &str = "beardog";
 
+/// Resolve the real UID by reading `/proc/self/status` (Linux) without `unsafe`.
+///
+/// Returns `None` on non-Linux or on parse failure, allowing callers to fall back.
+fn resolve_uid_from_proc() -> Option<u32> {
+    #[cfg(target_os = "linux")]
+    {
+        let status = std::fs::read_to_string("/proc/self/status").ok()?;
+        for line in status.lines() {
+            if let Some(rest) = line.strip_prefix("Uid:") {
+                return rest.split_whitespace().next()?.parse().ok();
+            }
+        }
+        None
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        None
+    }
+}
+
 /// All inputs needed to resolve a [`SocketConfig`] without reading the process environment.
 ///
 /// Use [`SocketPathInputs::from_env`] at process boundaries; tests should construct values
@@ -66,7 +86,7 @@ pub struct SocketPathInputs {
     /// Resolved node id (`BEARDOG_NODE_ID` / `NODE_ID`); if unset or empty, [`SocketConfig::from_inputs`]
     /// uses the same ephemeral `standalone-{uuid}` as [`beardog_types::primal_identity::PrimalIdentity`].
     pub node_id: Option<String>,
-    /// User id for tier 4 (`/run/user/<uid>/...`); defaults to `1000` in [`Default`].
+    /// User id for tier 4 (`/run/user/<uid>/...`); resolved from the process in [`Default`].
     pub uid: u32,
     /// When `true`, tier 3 uses `/primal/<primal_name>` if tier 1–2 do not apply.
     pub primal_namespace_root_exists: bool,
@@ -84,7 +104,7 @@ impl Default for SocketPathInputs {
             primal_name: None,
             family_id: None,
             node_id: None,
-            uid: 1000,
+            uid: resolve_uid_from_proc().unwrap_or(1000),
             primal_namespace_root_exists: false,
             biomeos_insecure: false,
         }
@@ -103,7 +123,9 @@ impl SocketPathInputs {
             .or_else(|| std::env::var("NODE_ID").ok());
         let uid = std::env::var("UID")
             .ok()
+            .or_else(|| std::env::var("EUID").ok())
             .and_then(|s| s.parse().ok())
+            .or_else(resolve_uid_from_proc)
             .unwrap_or(1000);
         let biomeos_insecure = std::env::var("BIOMEOS_INSECURE")
             .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))

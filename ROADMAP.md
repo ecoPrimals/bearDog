@@ -1,6 +1,6 @@
 # BearDog Roadmap
 
-**Updated**: April 2, 2026
+**Updated**: April 11, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -14,14 +14,14 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 - Rust edition 2024 (MSRV 1.93.0, `rust-toolchain.toml` pinned)
 - 100% Pure Rust (zero C dependencies, RustCrypto suite)
-- 96 JSON-RPC crypto methods (semantic naming)
+- 95 JSON-RPC crypto methods (semantic naming; prior 96 was a count error)
 - 0 clippy warnings (pedantic + nursery + all cast lints warn + `doc_markdown` warn + `missing_errors_doc` warn + unwrap/expect warn, workspace-centralized)
 - 0 missing documentation warnings (all public items documented, all `# Errors` sections present)
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 1000 lines of code (production)
-- 14,366+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
-- 90.16% line coverage (llvm-cov workspace) — target 90%
+- 14,756+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
+- 90.51% line coverage (llvm-cov workspace) — target 90% met
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - `#[serial]` minimized — 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent
 - `cargo deny` passes all 4 checks
@@ -35,7 +35,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 - Android StrongBox integration (complete)
 - HSM abstraction (software, PKCS#11, StrongBox)
 - All production `unwrap()`/`expect()` eliminated (zero panic paths)
-- SPDX license headers on all 1,888 .rs files (100%)
+- SPDX license headers on all .rs files (100%)
 - ecoBin C-dependency compliance (sysinfo removed, blake3 pure, pprof optional)
 - Smart refactoring of oversized files into submodule directories
 - All mocks isolated behind `cfg(test)` / `test-utils` feature
@@ -59,7 +59,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ### Test Coverage to 90% — DONE (Wave 20)
 
-Coverage reached **90.16% line** (89.32% region, 84.94% function). 14,366+ tests passing.
+Coverage reached **90.51% line** (14,756+ tests passing).
 
 ### primalSpring Composition Fixes — DONE (Wave 18c)
 
@@ -116,4 +116,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: April 2, 2026
+**Last Updated**: April 11, 2026

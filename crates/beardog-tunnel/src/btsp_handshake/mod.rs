@@ -10,11 +10,13 @@ pub mod crypto;
 pub(crate) mod framing;
 mod handshake;
 pub(crate) mod session;
+pub mod session_store;
 pub(crate) mod types;
 
 pub use framing::{read_frame, write_frame};
 pub use handshake::perform_server_handshake;
 pub use session::{BtspCipher, BtspSession};
+pub use session_store::BtspSessionStore;
 pub use types::{ChallengeResponse, ClientHello, HandshakeComplete, HandshakeError, ServerHello};
 
 use beardog_errors::BearDogError;

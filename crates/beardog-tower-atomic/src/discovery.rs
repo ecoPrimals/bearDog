@@ -34,6 +34,24 @@ impl DiscoverSocketEnv {
     }
 }
 
+/// Resolve the real UID by reading `/proc/self/status` (Linux) without `unsafe`.
+fn resolve_uid_from_proc() -> Option<u32> {
+    #[cfg(target_os = "linux")]
+    {
+        let status = std::fs::read_to_string("/proc/self/status").ok()?;
+        for line in status.lines() {
+            if let Some(rest) = line.strip_prefix("Uid:") {
+                return rest.split_whitespace().next()?.parse().ok();
+            }
+        }
+        None
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        None
+    }
+}
+
 /// Discover primal's Unix socket path using the 5-tier biomeos standard (testable).
 ///
 /// Search order (aligned with `beardog-core/socket_config.rs`):
@@ -80,7 +98,9 @@ pub async fn discover_primal_socket_with(
     }
 
     // Tier 4: /run/user/{uid}/biomeos/
-    let uid = env.uid.unwrap_or(1000);
+    let uid = env
+        .uid
+        .unwrap_or_else(|| resolve_uid_from_proc().unwrap_or(1000));
     let run_path = PathBuf::from(format!("/run/user/{uid}/biomeos/{primal_name}.sock"));
     if run_path.exists() {
         debug!(

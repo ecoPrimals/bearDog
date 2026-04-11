@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 11, 2026 -- Wave 34: Deep Debt Evolution — Hardcoding Elimination, Mock→Real, Smart Refactoring
+
+- **Hardcoding eliminated (4 sites)** — `system.rs` filesystem paths resolved via XDG Base Directory Specification (`resolve_config_dir`, `resolve_data_dir`, `resolve_cache_dir`, `resolve_runtime_dir`); UID 1000 default replaced with safe `/proc/self/status` resolution (no `unsafe`, no FFI) in `socket_config.rs` and `tower-atomic/discovery.rs`; UPA fallback URL dynamically constructed from `BEARDOG_UPA_URL`/`BEARDOG_EXTERNAL_HOST`/`BEARDOG_API_PORT` env vars in `network_ports.rs`.
+- **Production mocks evolved to real implementations (8 items)** — Ionic bond proposals now Ed25519-signed (deterministic key from primal name + node ID via HKDF-SHA256); capability announcements Ed25519-signed with verifiable public key; compliance metrics dynamically computed from audit trail pass/fail ratio; HSM provider returns `success: false` with descriptive error for unimplemented operations; ML threat analysis returns honest empty results when no models loaded, dynamic events when models present; health checks only report subsystems with actual probes (no more blanket "unknown" for external services).
+- **Dead code removed** — `grafana.rs` and `prometheus.rs` simulated external function stubs deleted (never wired into `external_functions/mod.rs`).
+- **Config placeholders deprecated** — `with_secrets_rotation` and `recommended_backup` on `ProductionEnvironmentConfig` marked `#[deprecated]` with migration notes to `ModernSecretsConfig` and capability-based discovery.
+- **Smart refactoring (2 large files)** — `monitoring.rs` (978 LOC) → `monitoring/mod.rs` + `alerts.rs` + `metrics.rs`; `self_knowledge.rs` (832 LOC) → `self_knowledge/mod.rs` + `identity.rs` + `endpoints.rs` + `capabilities.rs`. All re-exports preserved for API compatibility.
+- **Test adaptation** — ML integration tests updated for dynamic event generation; compliance tests updated for audit-trail-based scoring; 14,756+ tests passing, 0 failures.
+- **Metrics** — 95 crypto methods; 2,128 Rust files; 90.51% line coverage (llvm-cov).
+
 ### April 9, 2026 -- Wave 33: Deep Debt Cleanup & Evolution — Coverage 90.51%, allow→expect Migration, Standalone Startup, Capability Registration
 
 - **`#[allow()]` → `#[expect(reason)]` migration** — 193 → 75 `#[allow(` remaining (62% reduction); 361 → 476 `#[expect(` with contextual `reason` strings. Where `expect` caused `unfulfilled_lint_expectations`, kept `allow` with documented `reason`.

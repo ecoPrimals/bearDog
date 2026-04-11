@@ -54,6 +54,7 @@ pub mod federation;
 pub mod graph_security;
 pub mod health;
 pub mod introspection; // Primal introspection (primal.info, rpc.methods)
+pub mod ionic_bond;
 pub mod relay; // Relay authorization (lineage-gated, for coordinated punch)
 pub mod secrets; // Encrypted secret storage (family-scoped, ChaCha20-Poly1305)
 pub mod security;
@@ -159,7 +160,8 @@ impl HandlerRegistry {
             handlers: tokio::sync::RwLock::new(vec![
                 Arc::new(health::HealthHandler::new()),
                 Arc::new(security::SecurityHandler::new(identity.clone())),
-                Arc::new(btsp::BtspHandler),
+                Arc::new(btsp::BtspHandler::new()),
+                Arc::new(ionic_bond::IonicBondHandler::new()),
                 Arc::new(crypto_handler::CryptoHandler),
                 Arc::new(federation::FederationHandler::new(identity.clone())),
                 Arc::new(encryption::EncryptionHandler),

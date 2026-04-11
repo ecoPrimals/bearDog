@@ -34,17 +34,21 @@ use tracing::{info, warn};
 /// - `btsp.tunnel.status` / `btsp.tunnel_status` — Get tunnel status
 /// - `btsp.tunnel.close` / `btsp.tunnel_close` — Close tunnel gracefully
 ///
-/// # Unified Operations (3 new methods, Phase 2+)
+/// # Server Surface (4 methods, handshake-as-a-service for other primals)
 ///
-/// - `btsp.configure_tls` - Configure TLS for external mode tunnel (Phase 3)
-/// - `btsp.verify_peer` - Unified trust verification (lineage or certificate) (Phase 3)
-/// - `btsp.tunnel_send_http` - Send HTTP request through external tunnel (Phase 3)
+/// - `btsp.server.create_session` — Generate ephemeral keys + challenge for a calling primal
+/// - `btsp.server.verify` — Verify a client's challenge response, derive session keys
+/// - `btsp.server.negotiate` — Re-negotiate cipher suite for an active session
+/// - `btsp.server.status` — Report session store health and active session count
 ///
 /// # Backward Compatibility
 ///
-/// All existing BTSP calls work unchanged! Old-style calls automatically default
-/// to internal mode (genetic lineage + `btsp_native`).
-pub struct BtspHandler;
+/// All existing BTSP calls work unchanged. Legacy `btsp.session.*` aliases
+/// are preserved and route to the new `btsp.server.*` implementations.
+pub struct BtspHandler {
+    /// Persistent server-side session store for handshake-as-a-service.
+    session_store: crate::btsp_handshake::BtspSessionStore,
+}
 
 #[async_trait]
 impl MethodHandler for BtspHandler {
@@ -80,11 +84,17 @@ impl MethodHandler for BtspHandler {
             "beardog./btsp/tunnel/close",
             "btsp.tunnel_close",
             "btsp.tunnel/close",
-            // NEW: Unified BTSP methods (Phase 2+)
-            "btsp.configure_tls",    // TLS-specific config (external mode)
-            "btsp.verify_peer",      // Unified trust verification
-            "btsp.tunnel_send_http", // HTTP request wrapper (external mode)
-            // BTSP session methods (handshake-as-a-service for other primals)
+            // Unified BTSP methods (Phase 2+)
+            "btsp.configure_tls",
+            "btsp.verify_peer",
+            "btsp.tunnel_send_http",
+            // Server surface: handshake-as-a-service for other primals
+            // (canonical `btsp.server.*` namespace per primalSpring gap synthesis)
+            "btsp.server.create_session",
+            "btsp.server.verify",
+            "btsp.server.negotiate",
+            "btsp.server.status",
+            // Legacy aliases (backward compat with pre-server-surface callers)
             "btsp.session.create",
             "btsp.session.verify",
             "btsp.session.negotiate",
@@ -134,19 +144,35 @@ impl MethodHandler for BtspHandler {
             self.handle_verify_peer(params, btsp_provider).await
         } else if method == "btsp.tunnel_send_http" {
             self.handle_tunnel_send_http(params, btsp_provider).await
-        } else if method == "btsp.session.create" {
-            self.handle_session_create(params).await
-        } else if method == "btsp.session.verify" {
-            self.handle_session_verify(params).await
-        } else if method == "btsp.session.negotiate" {
-            self.handle_session_negotiate(params).await
+        } else if method == "btsp.server.create_session" || method == "btsp.session.create" {
+            self.handle_server_create_session(params).await
+        } else if method == "btsp.server.verify" || method == "btsp.session.verify" {
+            self.handle_server_verify(params).await
+        } else if method == "btsp.server.negotiate" || method == "btsp.session.negotiate" {
+            self.handle_server_negotiate(params).await
+        } else if method == "btsp.server.status" {
+            self.handle_server_status().await
         } else {
             Err(format!("Unknown BTSP method: {method}"))
         }
     }
 }
 
+impl Default for BtspHandler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl BtspHandler {
+    /// Create a new handler with a fresh session store.
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            session_store: crate::btsp_handshake::BtspSessionStore::new(),
+        }
+    }
+
     /// Handle BTSP contact exchange request
     ///
     /// Exchanges contact information with a peer using genetic lineage for routing.
@@ -664,75 +690,73 @@ impl BtspHandler {
         )
     }
 
-    // ── BTSP Session Methods (handshake-as-a-service) ──────────────────
+    // ── BTSP Server Methods (handshake-as-a-service) ───────────────────
+    //
+    // These implement the `btsp.server.*` RPC surface that downstream
+    // springs call to establish authenticated sessions. The session store
+    // persists server-side ephemeral keys between `create_session` and
+    // `verify`, then holds active session state for the connection lifetime.
 
-    /// Create a BTSP session context for another primal.
+    /// Create a server-side BTSP session for a calling primal.
     ///
-    /// Generates server ephemeral keys, derives the handshake key from the
-    /// caller's family seed, and returns a challenge for the client to prove
-    /// family membership.
-    async fn handle_session_create(
+    /// Generates ephemeral X25519 keys, derives the handshake key from the
+    /// caller's family seed, stores state, and returns the server public key
+    /// plus a challenge for the client to prove family membership.
+    async fn handle_server_create_session(
         &self,
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, String> {
-        use crate::btsp_handshake::crypto::{derive_handshake_key, generate_ephemeral_keypair};
-        use rand::RngCore;
-
-        let params_value = params.ok_or("Missing params for btsp.session.create")?;
+        let params_value = params.ok_or("Missing params for btsp.server.create_session")?;
         let create_params = beardog_types::btsp::SessionCreateParams::deserialize(params_value)
-            .map_err(|e| format!("Invalid session.create params: {e}"))?;
+            .map_err(|e| format!("Invalid create_session params: {e}"))?;
 
         let family_seed = base64::engine::general_purpose::STANDARD
             .decode(&create_params.family_seed)
             .map_err(|e| format!("Invalid family_seed base64: {e}"))?;
 
-        let handshake_key = derive_handshake_key(&family_seed)
-            .map_err(|e| format!("Key derivation failed: {e}"))?;
-
-        let (_secret, public) = generate_ephemeral_keypair();
-        let mut challenge = [0u8; 32];
-        rand::rng().fill_bytes(&mut challenge);
-
-        let session_token = uuid::Uuid::new_v4().to_string();
+        let (session_token, server_pub, challenge) = self
+            .session_store
+            .create_session(&family_seed)
+            .await
+            .map_err(|e| format!("Session creation failed: {e}"))?;
 
         info!(
             session_token = %session_token,
-            "BTSP session created (handshake-as-a-service)"
+            "BTSP server session created"
         );
 
-        // For a production implementation the server_secret and handshake_key
-        // would be stored keyed by session_token. This RPC exposes the
-        // cryptographic primitives; callers orchestrate the full flow.
-        let _ = handshake_key;
-
         let resp = beardog_types::btsp::SessionCreateResponse {
-            server_ephemeral_pub: base64::engine::general_purpose::STANDARD
-                .encode(public.as_bytes()),
+            server_ephemeral_pub: base64::engine::general_purpose::STANDARD.encode(server_pub),
             challenge: base64::engine::general_purpose::STANDARD.encode(challenge),
             session_token,
         };
         serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
     }
 
-    /// Verify a client's challenge response for an existing session.
-    async fn handle_session_verify(
+    /// Verify a client's challenge response and derive session keys.
+    ///
+    /// Consumes the pending handshake (single-use token). On success, the
+    /// session is promoted to active with derived `ChaCha20-Poly1305` keys.
+    async fn handle_server_verify(
         &self,
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, String> {
-        let params_value = params.ok_or("Missing params for btsp.session.verify")?;
+        let params_value = params.ok_or("Missing params for btsp.server.verify")?;
         let verify_params = beardog_types::btsp::SessionVerifyParams::deserialize(params_value)
-            .map_err(|e| format!("Invalid session.verify params: {e}"))?;
+            .map_err(|e| format!("Invalid server.verify params: {e}"))?;
 
         info!(
             session_token = %verify_params.session_token,
-            "BTSP session.verify requested"
+            "BTSP server.verify requested"
         );
 
-        // Validate that all required fields are present and decodable
-        let _client_pub = base64::engine::general_purpose::STANDARD
+        let client_pub_bytes: [u8; 32] = base64::engine::general_purpose::STANDARD
             .decode(&verify_params.client_ephemeral_pub)
-            .map_err(|e| format!("Invalid client_ephemeral_pub: {e}"))?;
-        let _response = base64::engine::general_purpose::STANDARD
+            .map_err(|e| format!("Invalid client_ephemeral_pub: {e}"))?
+            .try_into()
+            .map_err(|_| "client_ephemeral_pub must be exactly 32 bytes".to_string())?;
+
+        let response_bytes = base64::engine::general_purpose::STANDARD
             .decode(&verify_params.response)
             .map_err(|e| format!("Invalid response: {e}"))?;
 
@@ -740,46 +764,89 @@ impl BtspHandler {
             crate::btsp_handshake::BtspCipher::from_wire_name(&verify_params.preferred_cipher)
                 .map_err(|e| format!("Invalid cipher: {e}"))?;
 
-        let mut session_id_bytes = [0u8; 16];
-        rand::RngCore::fill_bytes(&mut rand::rng(), &mut session_id_bytes);
-        let mut session_id = String::with_capacity(32);
-        for b in &session_id_bytes {
-            use std::fmt::Write;
-            let _ = write!(session_id, "{b:02x}");
+        match self
+            .session_store
+            .verify_session(
+                &verify_params.session_token,
+                &client_pub_bytes,
+                &response_bytes,
+                cipher,
+            )
+            .await
+        {
+            Ok((session_id, negotiated_cipher)) => {
+                info!(session_id = %session_id, "BTSP server session verified");
+                let resp = beardog_types::btsp::SessionVerifyResponse {
+                    verified: true,
+                    session_id: Some(session_id),
+                    cipher: Some(negotiated_cipher.wire_name().to_string()),
+                    error: None,
+                };
+                serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+            }
+            Err(e) => {
+                warn!(error = %e, "BTSP server session verification failed");
+                let resp = beardog_types::btsp::SessionVerifyResponse {
+                    verified: false,
+                    session_id: None,
+                    cipher: None,
+                    error: Some(e.to_string()),
+                };
+                serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+            }
         }
-
-        let resp = beardog_types::btsp::SessionVerifyResponse {
-            verified: true,
-            session_id: Some(session_id),
-            cipher: Some(cipher.wire_name().to_string()),
-            error: None,
-        };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
     }
 
-    /// Negotiate cipher suite for an existing session.
-    async fn handle_session_negotiate(
+    /// Re-negotiate cipher suite for an active session.
+    async fn handle_server_negotiate(
         &self,
         params: Option<&serde_json::Value>,
     ) -> Result<serde_json::Value, String> {
-        let params_value = params.ok_or("Missing params for btsp.session.negotiate")?;
+        let params_value = params.ok_or("Missing params for btsp.server.negotiate")?;
         let neg_params = beardog_types::btsp::SessionNegotiateParams::deserialize(params_value)
-            .map_err(|e| format!("Invalid session.negotiate params: {e}"))?;
+            .map_err(|e| format!("Invalid server.negotiate params: {e}"))?;
 
         info!(
             session_token = %neg_params.session_token,
             requested_cipher = %neg_params.cipher,
-            "BTSP session.negotiate requested"
+            "BTSP server.negotiate requested"
         );
 
         let cipher = crate::btsp_handshake::BtspCipher::from_wire_name(&neg_params.cipher)
             .unwrap_or(crate::btsp_handshake::BtspCipher::ChaCha20Poly1305);
 
-        let resp = beardog_types::btsp::SessionNegotiateResponse {
-            accepted: true,
-            cipher: cipher.wire_name().to_string(),
-        };
-        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+        match self
+            .session_store
+            .negotiate_cipher(&neg_params.session_token, cipher)
+            .await
+        {
+            Ok(negotiated) => {
+                let resp = beardog_types::btsp::SessionNegotiateResponse {
+                    accepted: true,
+                    cipher: negotiated.wire_name().to_string(),
+                };
+                serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+            }
+            Err(e) => {
+                warn!(error = %e, "BTSP server negotiate failed");
+                let resp = beardog_types::btsp::SessionNegotiateResponse {
+                    accepted: false,
+                    cipher: neg_params.cipher,
+                };
+                serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+            }
+        }
+    }
+
+    /// Report session store health and active session count.
+    async fn handle_server_status(&self) -> Result<serde_json::Value, String> {
+        let status = self.session_store.status().await;
+        info!(
+            pending = status.pending_sessions,
+            active = status.active_sessions,
+            "BTSP server status"
+        );
+        serde_json::to_value(status).map_err(|e| format!("Serialize: {e}"))
     }
 }
 

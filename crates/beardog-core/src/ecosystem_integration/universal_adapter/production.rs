@@ -127,20 +127,10 @@ impl ProductionUniversalAdapter {
             }),
         );
 
-        // Subsystems without dedicated probes - marked unknown until implemented
-        systems.insert("hsm".to_string(), Value::String("unknown".to_string()));
-        systems.insert(
-            "service_mesh".to_string(),
-            Value::String("unknown".to_string()),
-        );
-        systems.insert(
-            "api_gateway".to_string(),
-            Value::String("unknown".to_string()),
-        );
-        systems.insert(
-            "service_registry".to_string(),
-            Value::String("unknown".to_string()),
-        );
+        // Subsystem health is discovered at runtime via capability probing.
+        // Only report subsystems that BearDog can self-check; external subsystems
+        // (service_mesh, api_gateway, service_registry) are the responsibility
+        // of the primals that provide those capabilities.
 
         let overall_status = if is_initialized {
             "healthy"

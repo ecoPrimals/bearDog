@@ -4,9 +4,6 @@
 //
 // **MODERNIZED**: Clean, comprehensive test suite for the BearDog threat detection system.
 
-// Removed unused imports - keeping only what's needed for tests
-// PLACEHOLDER: Test imports will be added as threat detection tests are implemented
-
 #![allow(unused_imports, unused_variables, dead_code, clippy::all)]
 
 #[cfg(test)]

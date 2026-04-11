@@ -135,14 +135,13 @@ impl EnvironmentConfig {
         self
     }
 
-    /// Set secrets rotation settings
+    /// Secrets rotation is managed by `ModernSecretsConfig::required_capabilities`.
+    #[deprecated(
+        since = "3.1.0",
+        note = "Secrets rotation is configured via ModernSecretsConfig; this builder method is a no-op"
+    )]
     #[must_use]
-    /// Creates instance with secrets rotation
     pub const fn with_secrets_rotation(self, _enabled: bool, _interval: Duration) -> Self {
-        // This functionality is now handled by the ModernSecretsConfig struct
-        // and its required_capabilities.
-        // For now, we'll keep it as a placeholder or remove if not directly applicable.
-        // The ModernSecretsConfig struct manages rotation via required_capabilities.
         self
     }
 
@@ -364,13 +363,13 @@ impl ModernSecretsConfig {
             .contains(&CapabilityType::SecretsManagement)
     }
 
-    #[deprecated(note = "Use universal adapter to discover backup capabilities")]
-    /// Legacy hook for backup-oriented secrets profiles; always returns `None` in modern flows.
+    #[deprecated(
+        since = "3.1.0",
+        note = "Backup capabilities are discovered via the universal adapter; this always returns None"
+    )]
+    /// Legacy hook superseded by capability-based backup discovery.
     #[must_use]
     pub const fn recommended_backup(&self) -> Option<Self> {
-        // This logic is now handled by required_capabilities and preferred_capabilities
-        // For now, we'll return a placeholder or remove if not directly applicable.
-        // The ModernSecretsConfig struct manages fallback_config.
         None
     }
 
