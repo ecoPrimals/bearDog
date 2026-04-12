@@ -122,4 +122,3 @@ serde_json = { workspace = true }
 [features]
 default = ["pure-rust"]
 pure-rust = ["adb_client", "nusb"]  # Use pure Rust implementations
-system-commands = []  # Fallback to system commands (current temporary implementation)

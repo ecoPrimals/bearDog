@@ -34,10 +34,10 @@
 ## Codebase Metrics
 
 - **Crates**: 29 directories (beardog-integration excluded — overstep)
-- **Rust Files**: 2,089 (crates + src + tests; excludes showcase/examples)
+- **Rust Files**: 1,967 (crates + src + tests; excludes showcase/examples)
 - **Crypto Methods**: 97 JSON-RPC methods (`methods()` handler count: +2 contract signing)
-- **`#[allow(`**: 75 (was 193)
-- **`#[expect(`**: 476 (was 361)
+- **`#[allow(`**: 67 (was 75)
+- **`#[expect(`**: 629 (was 476)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
 
 ---

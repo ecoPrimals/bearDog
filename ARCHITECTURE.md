@@ -246,4 +246,4 @@ Key material derived from family seed. Family A never shares keys with Family B.
 
 ---
 
-**Last Updated**: April 11, 2026
+**Last Updated**: April 12, 2026
