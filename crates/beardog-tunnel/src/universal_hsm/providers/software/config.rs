@@ -2,7 +2,7 @@
 
 //! Software HSM configuration
 
-use beardog_types::constants::domains::system::defaults::DEFAULT_KEY_STORAGE_DIR;
+use beardog_types::constants::domains::system::defaults;
 use serde::{Deserialize, Serialize};
 
 /// Software HSM configuration
@@ -22,12 +22,7 @@ impl Default for SoftwareHsmConfig {
     fn default() -> Self {
         // Use environment-driven key storage path
         // Priority: BEARDOG_KEY_STORAGE -> XDG_DATA_HOME/beardog/keys -> /tmp/beardog/keys
-        let key_storage_path = beardog_errors::process_env::var("BEARDOG_KEY_STORAGE")
-            .or_else(|_| {
-                beardog_errors::process_env::var("XDG_DATA_HOME")
-                    .map(|xdg| format!("{}/beardog/keys", xdg))
-            })
-            .unwrap_or_else(|_| DEFAULT_KEY_STORAGE_DIR.to_string());
+        let key_storage_path = defaults::resolve_key_storage_dir();
         
         Self {
             provider_id: "software-hsm".to_string(),

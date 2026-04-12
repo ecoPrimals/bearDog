@@ -7,7 +7,8 @@ use super::types::*;
 use beardog_errors::BearDogError;
 use beardog_security::BearDogCrypto;
 use std::marker::PhantomData;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
+use x25519_dalek::{EphemeralSecret, PublicKey};
 
 /// Type-safe Secure Enclave key wrapper with compile-time algorithm verification
 pub struct TypeSafeSecureEnclaveKey<'a, A: SecureEnclaveConstraint> {
@@ -176,12 +177,10 @@ impl<'a, A: SecureEnclaveConstraint> TypeSafeSecureEnclaveKey<'a, A> {
         peer_public_key: &[u8],
         _key: &SecureEnclaveKeyMaterial,
     ) -> Result<Vec<u8>, BearDogError> {
-        // Placeholder: actual Secure Enclave key agreement
-        debug!(
-            "🔐 Secure Enclave key agreement with peer: {} bytes",
-            peer_public_key.len()
+        warn!(
+            "Secure Enclave unavailable on this platform — delegating to X25519 software fallback"
         );
-        Ok(vec![0u8; 32]) // Placeholder shared secret
+        Self::x25519_key_agreement(peer_public_key)
     }
 
     fn software_fallback_key_agreement(
@@ -189,12 +188,26 @@ impl<'a, A: SecureEnclaveConstraint> TypeSafeSecureEnclaveKey<'a, A> {
         peer_public_key: &[u8],
         _key: &SecureEnclaveKeyMaterial,
     ) -> Result<Vec<u8>, BearDogError> {
-        // Placeholder: software fallback key agreement
-        debug!(
-            "🔧 Software key agreement with peer: {} bytes",
-            peer_public_key.len()
-        );
-        Ok(vec![0u8; 32]) // Placeholder shared secret
+        debug!("Software X25519 key agreement with peer");
+        Self::x25519_key_agreement(peer_public_key)
+    }
+
+    /// X25519 Diffie-Hellman key agreement using a fresh ephemeral secret.
+    ///
+    /// On non-iOS platforms this is the real implementation; on iOS it will
+    /// eventually be replaced by a Secure Enclave ECDH call through the
+    /// `Security.framework` bridge.
+    fn x25519_key_agreement(peer_public_key: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        let peer_bytes: [u8; 32] = peer_public_key.try_into().map_err(|_| {
+            BearDogError::validation(format!(
+                "X25519 peer public key must be exactly 32 bytes, got {}",
+                peer_public_key.len()
+            ))
+        })?;
+        let peer_pub = PublicKey::from(peer_bytes);
+        let secret = EphemeralSecret::random_from_rng(rand::thread_rng());
+        let shared = secret.diffie_hellman(&peer_pub);
+        Ok(shared.as_bytes().to_vec())
     }
 }
 

@@ -7,7 +7,7 @@
 use crate::DoctorArgs;
 use beardog_errors::{BearDogError, SystemErrorCategory};
 use beardog_types::constants::domains::network::ipc_discovery;
-use beardog_types::constants::domains::system::defaults::DEFAULT_KEY_STORAGE_DIR;
+use beardog_types::constants::domains::system::defaults;
 use serde_json::json;
 use tracing::info;
 
@@ -161,20 +161,7 @@ async fn check_entropy() -> HealthCheck {
 }
 
 async fn check_key_storage() -> HealthCheck {
-    // Get key storage directory from environment or XDG-compliant default
-    let key_dir = beardog_errors::process_env::var("BEARDOG_KEY_STORAGE_DIR")
-        .map(std::path::PathBuf::from)
-        .or_else(|_| {
-            // Use XDG_DATA_HOME/beardog/keys if available
-            beardog_errors::process_env::var("XDG_DATA_HOME")
-                .map(|xdg| std::path::PathBuf::from(xdg).join("beardog").join("keys"))
-        })
-        .or_else(|_| {
-            // Fall back to ~/.local/share/beardog/keys (XDG default)
-            beardog_errors::process_env::var("HOME")
-                .map(|home| std::path::PathBuf::from(home).join(".local/share/beardog/keys"))
-        })
-        .unwrap_or_else(|_| std::path::PathBuf::from(DEFAULT_KEY_STORAGE_DIR)); // Last resort
+    let key_dir = std::path::PathBuf::from(defaults::resolve_key_storage_dir());
 
     if key_dir.exists() || std::fs::create_dir_all(&key_dir).is_ok() {
         HealthCheck {

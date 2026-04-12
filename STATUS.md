@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 14,774+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,906+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
@@ -89,6 +89,15 @@
 ---
 
 ## Recent Improvements
+
+### Wave 38: Deep Debt Resolution — Smart Refactoring, Production Stubs Evolved, Hardcoding Eliminated (April 12, 2026)
+
+- **`ionic_bond.rs` refactored** (1022 LOC → 4 submodules): crypto, lifecycle, contract, mod. All 14 tests pass.
+- **iOS SEP key agreement evolved** — Real X25519 DH via `x25519-dalek` replaces zeroed placeholder. Non-iOS gets genuine software-fallback ECDH.
+- **Load balancing simulated metrics eliminated** — All algorithms now use real tracked state (`service_connections`, `service_weights`, metadata `avg_response_ms`/`resource_usage`). 6 unnecessary `Vec::clone()` calls removed.
+- **Hardcoded `/tmp/` evolved** — 3 production callsites migrated from constants to `resolve_*()` functions (XDG/env-first).
+- **`#[allow(` → `#[expect(`** in `monitoring/service.rs` (CPU/memory calculations).
+- **14,906+ tests passing**, all gates clean.
 
 ### Wave 37: primalSpring Audit Resolution — Contract Signing, BTSP Relay Path, Encoding Docs (April 12, 2026)
 

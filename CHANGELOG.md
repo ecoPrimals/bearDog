@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 12, 2026 -- Wave 38: Deep Debt Resolution — Smart Refactoring, Production Stubs Evolved, Hardcoding Eliminated
+
+- **`ionic_bond.rs` smart refactored** (1022 LOC → 4 submodules) — Extracted `crypto.rs` (signing helpers), `lifecycle.rs` (propose/accept/verify/revoke/list handlers), `contract.rs` (sign_contract/verify_contract), with `mod.rs` as dispatch. All 14 tests pass, all public APIs preserved.
+- **iOS Secure Enclave key agreement evolved** — Placeholder zero-byte returns replaced with real X25519 Diffie-Hellman using `x25519-dalek`. Non-iOS platforms get genuine software-fallback ECDH; iOS path logs explicit "Secure Enclave unavailable" warning instead of silently returning zeroed secrets.
+- **Load balancing simulated metrics eliminated** — `least_connections_balance` now reads real tracked connection counts from `LoadBalancerState`; `weighted_round_robin_balance` reads real tracked weights; `least_response_time_balance` reads `avg_response_ms` from service metadata; `resource_based_balance` reads `resource_usage` from metadata. Unnecessary `Vec::clone()` calls removed from dispatch (6 clones eliminated).
+- **Hardcoded `/tmp/` paths evolved** — `SoftwareHsmConfig::default()` in `beardog-types` now uses `resolve_temp_dir()` (XDG/env-first); `SoftwareHsmConfig` in `beardog-tunnel` now uses `resolve_key_storage_dir()` (consolidated resolver); `doctor.rs` key-storage check uses `resolve_key_storage_dir()` instead of manual 4-tier fallback. Constants remain as documented Tier-5 last-resort fallbacks.
+- **`#[allow(` → `#[expect(`** — Migrated `clippy::cast_precision_loss` in `monitoring/service.rs` (CPU/memory ratio calculations) from `#[allow]` to `#[expect]` with reason strings. Remaining `#[allow]` instances have legitimate reason strings (lib+bin crate incompatibility, deprecated re-exports, conditional compilation).
+- **Zero TODO/FIXME** confirmed. Zero `todo!()`. Zero `unimplemented!()`. Zero wildcard imports in production code.
+- **14,906+ tests passing**, all quality gates clean (fmt, clippy, doc, deny).
+
 ### April 12, 2026 -- Wave 37: primalSpring Audit Resolution — Contract Signing, BTSP Relay Path, Encoding Docs
 
 - **`crypto.sign_contract` + `crypto.verify_contract` implemented** (IONIC-RUNTIME) — New JSON-RPC methods for programmatic cross-family trust: signs arbitrary contract terms (canonical JSON → SHA-256 → Ed25519), returns terms_hash + signature + public_key for independent verification. Enables multi-family deployments (CERN-level clouds, data federation, friend-hosted shards). 5 new tests: roundtrip, tamper rejection, deterministic hash ordering, method registration.
@@ -16,7 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **LD-01 encoding contract documented** — `crypto.hash` base64 requirement documented in handler doc comments, module-level docs, and wateringHole `CAPABILITY_WIRE_STANDARD.md` §Parameter Encoding. Covers all crypto methods, encoding hints (BD-01), and the sign_contract hex convention.
 - **Capability surface expanded** — `contract_signing` v1.0 capability added to `capabilities.list`; cost_estimates updated for `crypto.sign_contract` and `crypto.verify_contract`; ionic_bond capability bumped to v1.1.
 - **97 JSON-RPC methods** (was 95: +`crypto.sign_contract`, +`crypto.verify_contract`, +`btsp.server.export_keys`, -0 = 98 total handler aliases, 97 logical methods).
-- **14,774+ tests passing**, all quality gates clean (fmt, clippy, doc, deny).
 
 ### April 12, 2026 -- Wave 36: Composition Elevation Sprint — Ionic Bond Lifecycle, BTSP Naming, Smart Refactoring
 

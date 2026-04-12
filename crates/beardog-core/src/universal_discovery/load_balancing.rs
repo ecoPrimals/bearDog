@@ -177,21 +177,25 @@ impl LoadBalancer {
             return Ok(vec![]);
         }
 
-        // Apply the configured algorithm
+        let state = self.state.read().await;
+
         let result = match self.config.algorithm {
             LoadBalancingAlgorithm::RoundRobin => {
+                drop(state);
                 self.round_robin_balance(healthy_services).await?
             }
-            LoadBalancingAlgorithm::LeastConnections => Self::least_connections_balance(&services),
+            LoadBalancingAlgorithm::LeastConnections => {
+                Self::least_connections_balance(&services, &state.service_connections)
+            }
             LoadBalancingAlgorithm::WeightedRoundRobin => {
-                Self::weighted_round_robin_balance(services.clone())
+                Self::weighted_round_robin_balance(services, &state.service_weights)
             }
-            LoadBalancingAlgorithm::Random => Self::random_balance(services.clone()),
-            LoadBalancingAlgorithm::IpHash => Self::ip_hash_balance(services.clone()),
+            LoadBalancingAlgorithm::Random => Self::random_balance(services),
+            LoadBalancingAlgorithm::IpHash => Self::ip_hash_balance(services),
             LoadBalancingAlgorithm::LeastResponseTime => {
-                Self::least_response_time_balance(services.clone())
+                Self::least_response_time_balance(services)
             }
-            LoadBalancingAlgorithm::ResourceBased => Self::resource_based_balance(services.clone()),
+            LoadBalancingAlgorithm::ResourceBased => Self::resource_based_balance(services),
         };
 
         // Handle sticky sessions if enabled
@@ -273,23 +277,18 @@ impl LoadBalancer {
         Ok(result.into_iter().cloned().collect())
     }
 
-    #[must_use]
-    fn least_connections_balance(services: &[ServiceInfo]) -> Vec<ServiceInfo> {
-        // In a real implementation, this would track active connections per service
-        // For now, simulate by using service_id hash as connection count
+    fn least_connections_balance(
+        services: &[ServiceInfo],
+        tracked: &HashMap<String, u32>,
+    ) -> Vec<ServiceInfo> {
         let mut services_with_connections: Vec<(ServiceInfo, u32)> = services
             .iter()
             .map(|service| {
-                #[expect(
-                    clippy::cast_possible_truncation,
-                    reason = "Simulated connection count from name hash"
-                )]
-                let connection_count = (service.name.len() % 10) as u32; // Simulated connection count
-                (service.clone(), connection_count)
+                let count = tracked.get(&service.name).copied().unwrap_or(0);
+                (service.clone(), count)
             })
             .collect();
 
-        // Sort by connection count (ascending - least connections first)
         services_with_connections.sort_by(|a, b| a.1.cmp(&b.1));
 
         services_with_connections
@@ -298,29 +297,21 @@ impl LoadBalancer {
             .collect()
     }
 
-    #[must_use]
-    fn weighted_round_robin_balance(services: Vec<ServiceInfo>) -> Vec<ServiceInfo> {
-        // In a real implementation, services would have weight metadata
-        // For now, assign weights based on service name length
-        let mut weighted_services: Vec<(ServiceInfo, u32)> = services
+    fn weighted_round_robin_balance(
+        services: Vec<ServiceInfo>,
+        weights: &HashMap<String, f64>,
+    ) -> Vec<ServiceInfo> {
+        let mut weighted: Vec<(ServiceInfo, f64)> = services
             .into_iter()
             .map(|service| {
-                #[expect(
-                    clippy::cast_possible_truncation,
-                    reason = "Simulated weight from name length"
-                )]
-                let weight = (service.name.len() % 5 + 1) as u32; // Weight 1-5 based on name length
-                (service, weight)
+                let w = weights.get(&service.name).copied().unwrap_or(1.0);
+                (service, w)
             })
             .collect();
 
-        // Sort by weight (descending - highest weight first)
-        weighted_services.sort_by(|a, b| b.1.cmp(&a.1));
+        weighted.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        weighted_services
-            .into_iter()
-            .map(|(service, _)| service)
-            .collect()
+        weighted.into_iter().map(|(service, _)| service).collect()
     }
 
     #[must_use]
@@ -374,51 +365,40 @@ impl LoadBalancer {
         services
     }
 
-    #[must_use]
     fn least_response_time_balance(services: Vec<ServiceInfo>) -> Vec<ServiceInfo> {
-        // In a real implementation, this would track response times
-        // For now, simulate response time based on endpoint length
-        let mut services_with_response_time: Vec<(ServiceInfo, u64)> = services
+        let mut with_rt: Vec<(ServiceInfo, u64)> = services
             .into_iter()
             .map(|service| {
-                let response_time_ms = (service.address.len() % 100 + 10) as u64; // 10-109ms simulated
-                (service, response_time_ms)
+                let rt = service
+                    .metadata
+                    .get("avg_response_ms")
+                    .and_then(|v| v.parse::<u64>().ok())
+                    .unwrap_or(u64::MAX);
+                (service, rt)
             })
             .collect();
 
-        // Sort by response time (ascending - fastest first)
-        services_with_response_time.sort_by(|a, b| a.1.cmp(&b.1));
+        with_rt.sort_by(|a, b| a.1.cmp(&b.1));
 
-        services_with_response_time
-            .into_iter()
-            .map(|(service, _)| service)
-            .collect()
+        with_rt.into_iter().map(|(service, _)| service).collect()
     }
 
-    #[must_use]
     fn resource_based_balance(services: Vec<ServiceInfo>) -> Vec<ServiceInfo> {
-        // In a real implementation, this would check CPU/memory usage
-        // For now, simulate resource usage based on capabilities count
-        let mut services_with_resources: Vec<(ServiceInfo, f64)> = services
+        let mut with_usage: Vec<(ServiceInfo, f64)> = services
             .into_iter()
             .map(|service| {
-                #[expect(
-                    clippy::cast_precision_loss,
-                    reason = "Simulated resource score from metadata size"
-                )]
-                let resource_usage = (service.metadata.len() as f64 * 0.1).min(1.0); // 0.0-1.0 usage
-                (service, resource_usage)
+                let usage = service
+                    .metadata
+                    .get("resource_usage")
+                    .and_then(|v| v.parse::<f64>().ok())
+                    .unwrap_or(0.5);
+                (service, usage)
             })
             .collect();
 
-        // Sort by resource usage (ascending - least used first)
-        services_with_resources
-            .sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+        with_usage.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        services_with_resources
-            .into_iter()
-            .map(|(service, _)| service)
-            .collect()
+        with_usage.into_iter().map(|(service, _)| service).collect()
     }
 
     /// Updates service weight for weighted load balancing

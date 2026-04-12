@@ -261,12 +261,14 @@ pub struct SoftwareHsmConfig {
 
 impl Default for SoftwareHsmConfig {
     fn default() -> Self {
-        use crate::constants::domains::system::defaults::DEFAULT_TEMP_DIR;
+        use crate::constants::domains::system::defaults;
+
+        let storage_path = std::env::var("BEARDOG_HSM_STORAGE_PATH")
+            .unwrap_or_else(|_| format!("{}/hsm", defaults::resolve_temp_dir()));
 
         Self {
             base: HsmConfig::default(),
-            storage_path: std::env::var("BEARDOG_HSM_STORAGE_PATH")
-                .unwrap_or_else(|_| format!("{DEFAULT_TEMP_DIR}/hsm")),
+            storage_path,
             kek: None,
             memory_protection: true,
         }

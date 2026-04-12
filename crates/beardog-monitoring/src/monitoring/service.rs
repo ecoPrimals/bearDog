@@ -305,7 +305,7 @@ impl MonitoringService {
         if total == 0 {
             return Some(0.0);
         }
-        #[allow(
+        #[expect(
             clippy::cast_precision_loss,
             reason = "CPU ratio from /proc; f64 sufficient"
         )]
@@ -335,7 +335,7 @@ impl MonitoringService {
         let used = total.saturating_sub(available);
         let total_bytes = total * 1024;
         let used_bytes = used * 1024;
-        #[allow(
+        #[expect(
             clippy::cast_precision_loss,
             reason = "Memory ratio from /proc; f64 sufficient"
         )]
