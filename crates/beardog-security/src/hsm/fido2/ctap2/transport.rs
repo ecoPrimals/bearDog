@@ -21,10 +21,10 @@ use tracing::{debug, info, warn};
 pub async fn ctaphid_init(
     device: &mut Box<dyn beardog_hid::HidDevice>,
 ) -> Result<u32, BearDogError> {
+    use rand::RngCore;
+
     info!("🔗 Initializing CTAPHID channel...");
 
-    // Generate random nonce (8 bytes)
-    use rand::RngCore;
     let mut nonce = [0u8; 8];
     rand::rng().fill_bytes(&mut nonce);
 

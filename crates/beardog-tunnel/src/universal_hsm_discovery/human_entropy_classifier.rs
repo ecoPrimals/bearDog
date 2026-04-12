@@ -4,7 +4,7 @@
 //!
 //! Classifies and evaluates human entropy sources for HSMs
 
-use super::*;
+use super::DiscoveredHsm;
 use beardog_errors::BearDogError;
 use tracing::{debug, info};
 

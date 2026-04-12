@@ -251,29 +251,96 @@ impl MonitoringService {
         self.start_time.elapsed().as_secs()
     }
 
+    /// Collect real system performance metrics from `/proc` (Linux) or
+    /// report "unavailable" with safe defaults on other platforms.
     ///
     /// # Errors
     /// Returns an error if metrics cannot be collected
-    #[allow(
-        clippy::unused_self,
-        reason = "instance method for API symmetry with future OS-backed metrics collection"
-    )]
-    pub const fn collect_performance_metrics(
-        &self,
-    ) -> Result<SystemPerformanceMetrics, BearDogError> {
-        // Collect actual system metrics
-        let metrics = SystemPerformanceMetrics {
-            cpu_usage_percent: 25.0,
-            memory_usage_percent: 60.0,
-            memory_total_bytes: 8_589_934_592, // 8GB
-            memory_used_bytes: 5_153_960_755,  // ~4.8GB
-            disk_usage_percent: 45.0,
-            network_bytes_in: 1_048_576,
-            network_bytes_out: 524_288,
-            uptime_seconds: 86400, // 1 day
-            active_connections: 10,
-        };
-        Ok(metrics)
+    pub fn collect_performance_metrics(&self) -> Result<SystemPerformanceMetrics, BearDogError> {
+        let uptime_seconds = self.start_time.elapsed().as_secs();
+
+        let (cpu_usage_percent, memory_usage_percent, memory_total_bytes, memory_used_bytes) =
+            Self::read_proc_metrics();
+
+        Ok(SystemPerformanceMetrics {
+            cpu_usage_percent,
+            memory_usage_percent,
+            memory_total_bytes,
+            memory_used_bytes,
+            disk_usage_percent: 0.0,
+            network_bytes_in: 0,
+            network_bytes_out: 0,
+            uptime_seconds,
+            active_connections: 0,
+        })
+    }
+
+    #[cfg(target_os = "linux")]
+    fn read_proc_metrics() -> (f64, f64, u64, u64) {
+        let cpu = Self::read_cpu_percent().unwrap_or(0.0);
+        let (mem_pct, mem_total, mem_used) = Self::read_memory_stats().unwrap_or((0.0, 0, 0));
+        (cpu, mem_pct, mem_total, mem_used)
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    fn read_proc_metrics() -> (f64, f64, u64, u64) {
+        (0.0, 0.0, 0, 0)
+    }
+
+    #[cfg(target_os = "linux")]
+    fn read_cpu_percent() -> Option<f64> {
+        let content = std::fs::read_to_string("/proc/stat").ok()?;
+        let cpu_line = content.lines().find(|l| l.starts_with("cpu "))?;
+        let fields: Vec<u64> = cpu_line
+            .split_whitespace()
+            .skip(1)
+            .take(8)
+            .filter_map(|f| f.parse::<u64>().ok())
+            .collect();
+        if fields.len() < 4 {
+            return None;
+        }
+        let total: u64 = fields.iter().sum();
+        let idle = fields[3] + fields.get(4).copied().unwrap_or(0);
+        if total == 0 {
+            return Some(0.0);
+        }
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "CPU ratio from /proc; f64 sufficient"
+        )]
+        Some(((total - idle) as f64 / total as f64) * 100.0)
+    }
+
+    #[cfg(target_os = "linux")]
+    fn read_memory_stats() -> Option<(f64, u64, u64)> {
+        let content = std::fs::read_to_string("/proc/meminfo").ok()?;
+        let mut total_kb: Option<u64> = None;
+        let mut available_kb: Option<u64> = None;
+        for line in content.lines() {
+            if let Some(rest) = line.strip_prefix("MemTotal:") {
+                total_kb = rest.split_whitespace().next()?.parse().ok();
+            } else if let Some(rest) = line.strip_prefix("MemAvailable:") {
+                available_kb = rest.split_whitespace().next()?.parse().ok();
+            }
+            if total_kb.is_some() && available_kb.is_some() {
+                break;
+            }
+        }
+        let total = total_kb?;
+        let available = available_kb?;
+        if total == 0 {
+            return Some((0.0, 0, 0));
+        }
+        let used = total.saturating_sub(available);
+        let total_bytes = total * 1024;
+        let used_bytes = used * 1024;
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "Memory ratio from /proc; f64 sufficient"
+        )]
+        let pct = (used as f64 / total as f64) * 100.0;
+        Some((pct, total_bytes, used_bytes))
     }
 
     fn collect_health_summary(&self) -> Result<HealthSummary, BearDogError> {
@@ -495,7 +562,7 @@ mod tests {
         // TEST_DOMAIN: monitoring
         // TEST_PRIORITY: normal
         assert!(metrics.cpu_usage_percent >= 0.0);
-        assert!(metrics.memory_usage_percent > 0.0);
+        assert!(metrics.memory_usage_percent >= 0.0);
 
         Ok(())
     }

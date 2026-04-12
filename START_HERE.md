@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+
 # BearDog — Start Here
 
 BearDog is the cryptographic service provider for the ecoPrimals ecosystem. It provides secure crypto operations for all primals through the Tower Atomic Pattern via JSON-RPC 2.0 over NDJSON (newline-delimited JSON).

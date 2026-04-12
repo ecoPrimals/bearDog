@@ -4,7 +4,7 @@
 //!
 //! Provides performance benchmarking for HSMs
 
-use super::super::*;
+use super::super::HsmType;
 use crate::tunnel::hsm::types::capability::PerformanceCapabilities;
 use beardog_errors::BearDogError;
 use tracing::debug;

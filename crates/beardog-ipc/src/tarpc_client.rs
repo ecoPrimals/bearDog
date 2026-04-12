@@ -38,7 +38,12 @@ use tokio::net::TcpStream;
 use tokio::sync::RwLock;
 use tracing::info;
 
-use crate::tarpc_types::*;
+use crate::tarpc_types::{
+    BearDogCryptoClient, Capability, CryptoResult, DecryptRequest, DecryptResponse, EncryptRequest,
+    EncryptResponse, HashResponse, HealthStatus, HmacRequest, KeyExchangeRequest, KeyPair,
+    MethodInfo, PrimalInfo, SharedSecret, SignRequest, SignResponse, TlsSecrets, TlsSecretsRequest,
+    VerifyRequest,
+};
 
 /// Default TCP connect timeout for [`TarpcCryptoClient::connect`].
 const DEFAULT_TARPC_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);

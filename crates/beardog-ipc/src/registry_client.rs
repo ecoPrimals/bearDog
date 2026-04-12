@@ -62,6 +62,9 @@ fn fallback_registry_unix_socket_path() -> String {
 }
 
 /// JSON-RPC 2.0 Request (Universal)
+///
+/// Per spec, `id` may be String, Number, or Null. Requests without `id` are
+/// notifications and MUST NOT receive a response.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcRequest {
     /// Protocol version; must be `"2.0"` for compliant servers.
@@ -72,7 +75,7 @@ pub struct JsonRpcRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub params: Option<serde_json::Value>,
     /// Correlation id matching the corresponding [`JsonRpcResponse::id`].
-    pub id: u64,
+    pub id: serde_json::Value,
 }
 
 /// JSON-RPC 2.0 Response (Universal)
@@ -87,7 +90,7 @@ pub struct JsonRpcResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<JsonRpcError>,
     /// Id echoing the originating [`JsonRpcRequest::id`].
-    pub id: u64,
+    pub id: serde_json::Value,
 }
 
 /// JSON-RPC 2.0 Error (Universal)
@@ -360,7 +363,7 @@ impl PrimalRegistryClient {
             jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             method: method.to_string(),
             params,
-            id: self.request_id,
+            id: serde_json::Value::from(self.request_id),
         };
 
         // Serialize and send request
@@ -426,7 +429,7 @@ mod tests {
             jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             method: "primal.ping".to_string(),
             params: None,
-            id: 1,
+            id: serde_json::Value::from(1),
         };
 
         let json = serde_json::to_string(&request)?;

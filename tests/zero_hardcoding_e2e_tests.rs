@@ -96,7 +96,7 @@ fn test_e2e_json_rpc_universal_protocol() {
             "primal_id": "beardog",
             "capabilities": ["encryption"]
         })),
-        id: 1,
+        id: serde_json::json!(1),
     };
 
     let json = serde_json::to_string(&request).unwrap();

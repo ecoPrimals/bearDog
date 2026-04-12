@@ -22,7 +22,7 @@ pub mod transport;
 pub mod types;
 
 pub use parse::parse_get_info_cbor;
-pub use types::*;
+pub use types::{Ctap2Command, Ctap2DeviceInfo, Ctap2Status, CtapHidCommand};
 
 #[cfg(feature = "fido2")]
 pub use transport::{ctaphid_init, send_ctap2_command};

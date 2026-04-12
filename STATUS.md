@@ -1,6 +1,8 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+
 # BearDog Status
 
-**Last Updated**: April 11, 2026
+**Last Updated**: April 12, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -18,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 14,761+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,769+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
@@ -31,8 +33,8 @@
 
 ## Codebase Metrics
 
-- **Crates**: 29 in workspace (beardog-integration excluded — overstep)
-- **Rust Files**: 1,941
+- **Crates**: 29 directories (beardog-integration excluded — overstep)
+- **Rust Files**: 2,089 (crates + src + tests; excludes showcase/examples)
 - **Crypto Methods**: 95 JSON-RPC methods (`methods()` handler count)
 - **`#[allow(`**: 75 (was 193)
 - **`#[expect(`**: 476 (was 361)
@@ -40,7 +42,7 @@
 
 ---
 
-## Per-Crate Coverage (April 11, 2026, llvm-cov)
+## Per-Crate Coverage (April 12, 2026, llvm-cov)
 
 | Crate | Line Coverage | Notes |
 |-------|---------------|-------|
@@ -87,6 +89,16 @@
 ---
 
 ## Recent Improvements
+
+### Wave 36: Composition Elevation Sprint — Ionic Bond Lifecycle, BTSP Naming, Smart Refactoring (April 12, 2026)
+
+- **Ionic bond lifecycle hardened** — `IonicBond` type now carries `terms_hash` (SHA-256 of canonical terms); `crypto.ionic_bond.verify` performs real Ed25519 re-verification of proposer and acceptor signatures against stored terms hash. 4 new lifecycle tests cover storage, tamper detection, and full propose→accept→list→verify→revoke flow.
+- **BTSP naming aligned** — Doc comments updated from legacy `btsp.session.*` to canonical `btsp.server.*`; handler aliases preserved for backward compatibility. `crypto.ionic_bond.list` added to capabilities cost_estimates.
+- **Production mocks eliminated** — `MonitoringService` reads real `/proc/stat` (CPU), `/proc/meminfo` (memory) with graceful non-Linux fallback; `PerformanceMonitor` returns actual recorded history instead of `Default`.
+- **Wildcard imports eliminated** — 11+ production files switched from `use super::*` to explicit imports.
+- **Smart refactoring (3 files)** — `port_discovery.rs` (940 LOC) → 4 submodules; `btsp.rs` (855 LOC) → 6 submodules; `tarpc_server/server.rs` (811 LOC) → 9 domain submodules. All public APIs preserved.
+- **PKCS#11 discovery evolved** — `BEARDOG_PKCS11_SEARCH_PATHS` env var overrides platform defaults.
+- **14,769+ tests passing**, all quality gates clean.
 
 ### Wave 35: Deep Debt Cleanup III — Placeholder Elimination, Real Entropy, Auth Test Evolution (April 11, 2026)
 

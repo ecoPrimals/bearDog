@@ -1,8 +1,10 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+
 # BearDog Architecture
 
-**Last Updated**: April 11, 2026
+**Last Updated**: April 12, 2026
 **Status**: Production Ready
-**Crates**: 29 | **Tests**: 14,761+ | **Coverage**: 90.51% | **MSRV**: 1.93.0
+**Crates**: 29 | **Tests**: 14,769+ | **Coverage**: 90.51% | **MSRV**: 1.93.0
 
 ---
 
@@ -104,7 +106,7 @@ subcommands, per the ecoPrimals UniBin architecture.
 
 ### Showcase Demos (not part of the workspace)
 
-The `showcase/` directory contains 22+ standalone demo binaries illustrating
+The `showcase/` directory contains 29 standalone demo binaries illustrating
 BearDog features. They are **not workspace members** and are excluded from
 `cargo build`/`cargo test`. They exist as working examples and reference
 implementations, not as shipped artifacts.

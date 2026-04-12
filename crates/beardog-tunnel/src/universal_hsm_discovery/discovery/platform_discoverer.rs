@@ -11,7 +11,10 @@
 //! - iOS Secure Enclave
 //! - Platform-specific trusted execution environments
 
-use super::super::*;
+use super::super::{
+    DiscoveredHsm, HsmEndpoint, HsmHealthStatus, HsmTier, HsmType, IntegrationStatus,
+    UniversalHsmCapabilities,
+};
 use beardog_errors::BearDogError;
 use chrono::Utc;
 use std::path::Path;
@@ -241,7 +244,12 @@ impl PlatformDiscoverer {
     /// Create capabilities for Android StrongBox
     #[cfg(target_os = "android")]
     fn create_strongbox_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         UniversalHsmCapabilities {
             crypto_operations: CryptoOperationCapabilities {
@@ -400,7 +408,12 @@ impl PlatformDiscoverer {
     /// Create capabilities for iOS Secure Enclave
     #[cfg(target_os = "ios")]
     fn create_secure_enclave_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         UniversalHsmCapabilities {
             crypto_operations: CryptoOperationCapabilities {
@@ -589,7 +602,12 @@ impl PlatformDiscoverer {
 
     /// Create capabilities for TPM
     fn create_tpm_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         UniversalHsmCapabilities {
             crypto_operations: CryptoOperationCapabilities {
@@ -654,7 +672,12 @@ impl PlatformDiscoverer {
 
     /// Create capabilities for TEE
     fn create_tee_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         UniversalHsmCapabilities {
             crypto_operations: CryptoOperationCapabilities {

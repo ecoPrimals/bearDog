@@ -47,7 +47,6 @@ skip = [
     { crate = "rand_chacha" },
     { crate = "rand_core" },
     { crate = "rustix" },
-    { crate = "socket2" },
     { crate = "syn" },
     { crate = "thiserror" },
     { crate = "thiserror-impl" },

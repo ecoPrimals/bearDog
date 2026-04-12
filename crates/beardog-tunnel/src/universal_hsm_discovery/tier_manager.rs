@@ -4,7 +4,7 @@
 //!
 //! Manages HSM tiers and tier assignments
 
-use super::*;
+use super::{DiscoveredHsm, HsmTier};
 use beardog_errors::BearDogError;
 use tracing::{debug, info};
 

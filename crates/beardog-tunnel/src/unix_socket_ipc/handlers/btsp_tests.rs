@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::*;
+use base64::Engine;
 
 #[tokio::test]
 async fn test_btsp_handler_methods() {

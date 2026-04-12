@@ -73,6 +73,10 @@ pub struct IonicBond {
     pub bond_id: String,
     /// Proposal ID that created this bond.
     pub proposal_id: String,
+    /// SHA-256 hex digest of the canonical bond terms. Both proposer and
+    /// acceptor Ed25519 signatures are over this value, enabling
+    /// cryptographic re-verification at any point during the bond lifetime.
+    pub terms_hash: String,
     /// Proposing primal/domain identifier.
     pub proposer: String,
     /// Accepting primal/domain identifier.

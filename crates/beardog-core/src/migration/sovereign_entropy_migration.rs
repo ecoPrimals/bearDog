@@ -453,9 +453,10 @@ impl SovereignEntropyMigrationManager {
     }
 
     fn fallback_to_legacy_crypto(key_size_bytes: usize) -> Result<Vec<u8>, BearDogError> {
+        use rand::RngCore;
+
         warn!("⚠️  Falling back to legacy cryptographic randomness");
 
-        use rand::RngCore;
         let mut rng = rand::rng();
         let mut bytes = vec![0u8; key_size_bytes];
         rng.fill_bytes(&mut bytes);

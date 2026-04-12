@@ -3,7 +3,6 @@
 //! Cloud KMS Capability Prober
 //!
 
-use super::super::*;
 use crate::tunnel::hsm::types::capability::HsmCapabilities;
 use beardog_errors::BearDogError;
 use tracing::debug;

@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+
 # BearDog Security
 
 **Last Updated**: April 11, 2026

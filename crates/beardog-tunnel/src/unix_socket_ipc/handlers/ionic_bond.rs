@@ -268,6 +268,7 @@ impl IonicBondHandler {
         let bond = IonicBond {
             bond_id: bond_id.clone(),
             proposal_id: accept_params.proposal_id,
+            terms_hash: proposal.terms_hash.clone(),
             proposer: proposal.params.proposer,
             acceptor: accept_params.acceptor.clone(),
             trust_model: proposal.params.trust_model,
@@ -314,21 +315,31 @@ impl IonicBondHandler {
                 .and_then(|exp| chrono::DateTime::parse_from_rfc3339(exp).ok())
                 .is_some_and(|exp| Utc::now() > exp);
 
-            let (valid, state) = if is_expired {
-                (false, BondState::Expired)
+            let sigs_valid = Self::verify_bond_signatures(bond);
+
+            let (valid, state, error) = if is_expired {
+                (
+                    false,
+                    BondState::Expired,
+                    Some("Bond is Expired".to_string()),
+                )
+            } else if !sigs_valid {
+                (
+                    false,
+                    bond.state,
+                    Some("Ed25519 signature verification failed".to_string()),
+                )
+            } else if !is_active {
+                (false, bond.state, Some(format!("Bond is {:?}", bond.state)))
             } else {
-                (is_active, bond.state)
+                (true, bond.state, None)
             };
 
             let resp = IonicBondVerifyResponse {
                 valid,
                 state,
                 bond: if valid { Some(bond.clone()) } else { None },
-                error: if valid {
-                    None
-                } else {
-                    Some(format!("Bond is {state:?}"))
-                },
+                error,
             };
             serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
         } else {
@@ -340,6 +351,25 @@ impl IonicBondHandler {
             };
             serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
         }
+    }
+
+    /// Re-verify both proposer and acceptor Ed25519 signatures on the bond's
+    /// `terms_hash`. Returns `true` only when both signatures are present and
+    /// cryptographically valid.
+    fn verify_bond_signatures(bond: &IonicBond) -> bool {
+        let proposer_ok = match (&bond.proposer_signature, &bond.proposer_public_key) {
+            (Some(sig), Some(pk)) => {
+                Self::verify_ed25519_signature(&bond.terms_hash, sig, pk).is_ok()
+            }
+            _ => false,
+        };
+        let acceptor_ok = match (&bond.acceptor_signature, &bond.acceptor_public_key) {
+            (Some(sig), Some(pk)) => {
+                Self::verify_ed25519_signature(&bond.terms_hash, sig, pk).is_ok()
+            }
+            _ => false,
+        };
+        proposer_ok && acceptor_ok
     }
 
     async fn handle_revoke(
@@ -589,5 +619,132 @@ mod tests {
         assert_eq!(methods.len(), 5);
         assert!(methods.contains(&"crypto.ionic_bond.propose"));
         assert!(methods.contains(&"crypto.ionic_bond.verify"));
+    }
+
+    #[tokio::test]
+    async fn sealed_bond_stores_terms_hash() {
+        let handler = IonicBondHandler::new();
+        let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        let (proposal_id, terms_hash) = propose_bond(&handler, &provider, "alpha", "beta").await;
+        let bond_id = accept_bond(&handler, &provider, &proposal_id, &terms_hash, "beta").await;
+
+        let verify_params = serde_json::json!({ "bond_id": bond_id });
+        let result = handler
+            .handle("crypto.ionic_bond.verify", Some(&verify_params), &provider)
+            .await
+            .expect("verify");
+
+        assert_eq!(result["valid"], true);
+        let bond_terms = result["bond"]["terms_hash"].as_str().unwrap();
+        assert_eq!(bond_terms, terms_hash, "sealed bond must carry terms_hash");
+    }
+
+    #[tokio::test]
+    async fn verify_detects_tampered_proposer_signature() {
+        let handler = IonicBondHandler::new();
+        let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        let (proposal_id, terms_hash) = propose_bond(&handler, &provider, "p", "q").await;
+        let bond_id = accept_bond(&handler, &provider, &proposal_id, &terms_hash, "q").await;
+
+        {
+            let mut bonds = handler.bonds.write().await;
+            let bond = bonds.get_mut(&bond_id).unwrap();
+            bond.proposer_signature = Some(hex::encode([0xDE; 64]));
+        }
+
+        let verify_params = serde_json::json!({ "bond_id": bond_id });
+        let result = handler
+            .handle("crypto.ionic_bond.verify", Some(&verify_params), &provider)
+            .await
+            .expect("verify should succeed but report invalid");
+
+        assert_eq!(result["valid"], false);
+        assert!(
+            result["error"]
+                .as_str()
+                .unwrap()
+                .contains("signature verification failed"),
+        );
+    }
+
+    #[tokio::test]
+    async fn verify_detects_tampered_acceptor_signature() {
+        let handler = IonicBondHandler::new();
+        let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        let (proposal_id, terms_hash) = propose_bond(&handler, &provider, "r", "s").await;
+        let bond_id = accept_bond(&handler, &provider, &proposal_id, &terms_hash, "s").await;
+
+        {
+            let mut bonds = handler.bonds.write().await;
+            let bond = bonds.get_mut(&bond_id).unwrap();
+            bond.acceptor_signature = Some(hex::encode([0xBB; 64]));
+        }
+
+        let verify_params = serde_json::json!({ "bond_id": bond_id });
+        let result = handler
+            .handle("crypto.ionic_bond.verify", Some(&verify_params), &provider)
+            .await
+            .expect("verify should succeed but report invalid");
+
+        assert_eq!(result["valid"], false);
+    }
+
+    #[tokio::test]
+    async fn full_lifecycle_propose_accept_list_revoke() {
+        let handler = IonicBondHandler::new();
+        let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        let (pid, hash) = propose_bond(&handler, &provider, "tower_a", "tower_b").await;
+        let bond_id = accept_bond(&handler, &provider, &pid, &hash, "tower_b").await;
+
+        let list_all = handler
+            .handle("crypto.ionic_bond.list", None, &provider)
+            .await
+            .expect("list all");
+        assert_eq!(list_all["bonds"].as_array().unwrap().len(), 1);
+
+        let verify = handler
+            .handle(
+                "crypto.ionic_bond.verify",
+                Some(&serde_json::json!({ "bond_id": bond_id })),
+                &provider,
+            )
+            .await
+            .expect("verify");
+        assert_eq!(verify["valid"], true);
+        assert_eq!(verify["state"], "active");
+
+        handler
+            .handle(
+                "crypto.ionic_bond.revoke",
+                Some(&serde_json::json!({ "bond_id": bond_id, "revoker": "tower_a" })),
+                &provider,
+            )
+            .await
+            .expect("revoke");
+
+        let verify_after = handler
+            .handle(
+                "crypto.ionic_bond.verify",
+                Some(&serde_json::json!({ "bond_id": bond_id })),
+                &provider,
+            )
+            .await
+            .expect("verify after revoke");
+        assert_eq!(verify_after["valid"], false);
+        assert_eq!(verify_after["state"], "revoked");
+
+        let list_active = handler
+            .handle(
+                "crypto.ionic_bond.list",
+                Some(&serde_json::json!({ "state": "active" })),
+                &provider,
+            )
+            .await
+            .expect("list active");
+        assert!(list_active["bonds"].as_array().unwrap().is_empty());
     }
 }

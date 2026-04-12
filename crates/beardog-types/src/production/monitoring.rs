@@ -521,27 +521,24 @@ impl PerformanceMonitor {
         }
     }
 
-    ///
-    ///
-    /// # Returns
-    /// `Ok(())` if initialization succeeds
+    /// Initialize the performance monitor by clearing stale history.
     ///
     /// # Errors
     /// Returns `BearDogError` if initialization fails
-    /// Initializes componentialize
     pub fn initialize(&mut self) -> Result<(), BearDogError> {
-        // Implementation would initialize performance monitoring
+        self.performance_history.clear();
         Ok(())
     }
 
+    /// Collect aggregate performance metrics from recorded history.
     ///
-    ///
-    /// # Returns
+    /// Returns the most recent entry if available, otherwise returns
+    /// zero-valued defaults (honest "no data collected yet").
     ///
     /// # Errors
     /// Returns `BearDogError` if metric collection fails
     pub fn collect_performance_metrics(&self) -> Result<super::PerformanceMetrics, BearDogError> {
-        Ok(super::PerformanceMetrics::default())
+        Ok(self.performance_history.last().copied().unwrap_or_default())
     }
 
     ///

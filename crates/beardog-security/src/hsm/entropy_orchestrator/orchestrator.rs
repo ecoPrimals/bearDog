@@ -138,10 +138,7 @@ impl HsmEntropyOrchestrator {
             None
         };
 
-        #[expect(
-            unused_mut,
-            reason = "Mutated only when target/feature cfgs enable providers"
-        )]
+        #[allow(unused_mut)]
         let mut total_devices = 0;
 
         #[cfg(feature = "fido2")]

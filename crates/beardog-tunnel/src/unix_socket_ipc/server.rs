@@ -424,12 +424,14 @@ impl UnixSocketIpcServer {
     ) -> Result<()> {
         let mut buf_stream = BufReader::new(stream);
 
-        // Handle first request
-        let response = self
+        // Handle first request (skip write for notifications)
+        if let Some(response) = self
             .handle_one_jsonrpc_request_universal(first_line)
-            .await?;
-        buf_stream.get_mut().write_all(response.as_bytes()).await?;
-        buf_stream.get_mut().write_all(b"\n").await?;
+            .await?
+        {
+            buf_stream.get_mut().write_all(response.as_bytes()).await?;
+            buf_stream.get_mut().write_all(b"\n").await?;
+        }
 
         let mut line_buf = Vec::with_capacity(1024);
 
@@ -467,7 +469,7 @@ impl UnixSocketIpcServer {
             }
 
             match self.handle_one_jsonrpc_request_universal(&line).await {
-                Ok(response) => {
+                Ok(Some(response)) => {
                     if let Err(e) = buf_stream.get_mut().write_all(response.as_bytes()).await {
                         warn!(error = %e, "Failed to write response");
                         break;
@@ -477,6 +479,7 @@ impl UnixSocketIpcServer {
                         break;
                     }
                 }
+                Ok(None) => {} // Notification — no response per JSON-RPC 2.0 spec
                 Err(e) => {
                     warn!(error = %e, "Error handling request");
                     break;
@@ -536,116 +539,42 @@ impl UnixSocketIpcServer {
                 continue;
             }
 
-            let response_str = self.handle_one_jsonrpc_request_universal(&line).await?;
-            let encrypted = session
-                .encrypt_frame(response_str.as_bytes())
-                .map_err(|e| anyhow::anyhow!("BTSP encrypt failed: {e}"))?;
+            if let Some(response_str) = self.handle_one_jsonrpc_request_universal(&line).await? {
+                let encrypted = session
+                    .encrypt_frame(response_str.as_bytes())
+                    .map_err(|e| anyhow::anyhow!("BTSP encrypt failed: {e}"))?;
 
-            btsp_handshake::write_frame(&mut stream, &encrypted)
-                .await
-                .map_err(|e| anyhow::anyhow!("BTSP frame write failed: {e}"))?;
+                btsp_handshake::write_frame(&mut stream, &encrypted)
+                    .await
+                    .map_err(|e| anyhow::anyhow!("BTSP frame write failed: {e}"))?;
+            }
         }
     }
 
-    /// Process one JSON-RPC request and return response string
-    async fn handle_one_jsonrpc_request_universal(&self, line: &str) -> Result<String> {
-        // Parse JSON-RPC request
-        let mut request: JsonRpcRequest = match serde_json::from_str(line.trim()) {
-            Ok(req) => req,
-            Err(e) => {
-                warn!(error = %e, "Invalid JSON-RPC request");
-                let error_response = JsonRpcResponse {
-                    jsonrpc: JSONRPC_VERSION.to_string(),
-                    result: None,
-                    error: Some(JsonRpcError {
-                        code: -32700,
-                        message: format!("Parse error: {e}"),
-                        data: None,
-                    }),
-                    id: serde_json::Value::Null,
-                };
-                return Ok(serde_json::to_string(&error_response)?);
-            }
-        };
-
+    /// Route a parsed JSON-RPC request through the handler registry.
+    ///
+    /// Handles version validation, notification semantics (no response when `id`
+    /// is absent per JSON-RPC 2.0 spec section 4.1), and error-code inference.
+    async fn route_jsonrpc(&self, request: &JsonRpcRequest) -> Option<JsonRpcResponse> {
         debug!(method = %request.method, "JSON-RPC request");
 
-        // Take id to avoid clone (zero-copy: wateringHole standard)
-        let id = request.id.take().unwrap_or(serde_json::Value::Null);
-
-        // Validate JSON-RPC version
-        if request.jsonrpc != "2.0" {
-            let error_response = JsonRpcResponse {
-                jsonrpc: JSONRPC_VERSION.to_string(),
-                result: None,
-                error: Some(JsonRpcError {
-                    code: -32600,
-                    message: "Invalid JSON-RPC version (must be 2.0)".to_string(),
-                    data: None,
-                }),
-                id,
-            };
-            return Ok(serde_json::to_string(&error_response)?);
-        }
-
-        // Process request through handler registry
-        let response = match self
-            .handler_registry
-            .route(
-                &request.method,
-                request.params.as_ref(),
-                &self.btsp_provider,
-            )
-            .await
-        {
-            Ok(result) => JsonRpcResponse {
-                jsonrpc: JSONRPC_VERSION.to_string(),
-                result: Some(result),
-                error: None,
-                id,
-            },
-            Err(error_msg) => JsonRpcResponse {
-                jsonrpc: JSONRPC_VERSION.to_string(),
-                result: None,
-                error: Some(JsonRpcError {
-                    code: -32601,
-                    message: error_msg,
-                    data: None,
-                }),
-                id,
-            },
-        };
-
-        Ok(serde_json::to_string(&response)?)
-    }
-
-    // Legacy handle_jsonrpc_persistent() removed - superseded by handle_jsonrpc_via_registry()
-    // See TARPC_REMOVAL_RATIONALE_JAN_29_2026.md for context
-
-    /// Handle JSON-RPC request via modular handler registry
-    ///
-    /// This method routes requests through the trait-based handler registry,
-    /// bypassing the legacy router for cleaner, more efficient processing.
-    async fn handle_jsonrpc_via_registry(&self, request: &JsonRpcRequest) -> JsonRpcResponse {
-        debug!(method = %request.method, "JSON-RPC request (registry)");
-
         let id = request.id.clone().unwrap_or(serde_json::Value::Null);
+        let is_notification = request.id.is_none();
 
-        // Validate JSON-RPC version
         if request.jsonrpc != "2.0" {
-            return JsonRpcResponse {
+            if is_notification {
+                return None;
+            }
+            return Some(JsonRpcResponse {
                 jsonrpc: JSONRPC_VERSION.to_string(),
                 result: None,
-                error: Some(JsonRpcError {
-                    code: -32600,
-                    message: "Invalid JSON-RPC version (must be 2.0)".to_string(),
-                    data: None,
-                }),
+                error: Some(JsonRpcError::invalid_request(
+                    "Invalid JSON-RPC version (must be 2.0)",
+                )),
                 id,
-            };
+            });
         }
 
-        // Route to handler via registry
         let result = self
             .handler_registry
             .route(
@@ -655,8 +584,11 @@ impl UnixSocketIpcServer {
             )
             .await;
 
-        // Build response with proper error codes
-        match result {
+        if is_notification {
+            return None;
+        }
+
+        Some(match result {
             Ok(value) => JsonRpcResponse {
                 jsonrpc: JSONRPC_VERSION.to_string(),
                 result: Some(value),
@@ -664,44 +596,57 @@ impl UnixSocketIpcServer {
                 id,
             },
             Err(e) => {
-                // Detect error type and use appropriate error code
-                let (code, message) =
-                    if e.contains("Method not found") || e.contains("Unknown method") {
-                        (JsonRpcError::METHOD_NOT_FOUND, e)
-                    } else if e.contains("Invalid params") || e.contains("Missing required") {
-                        (JsonRpcError::INVALID_PARAMS, e)
-                    } else {
-                        (JsonRpcError::INTERNAL_ERROR, e)
-                    };
+                let error = if e.contains("Method not found") || e.contains("Unknown method") {
+                    JsonRpcError::method_not_found(e)
+                } else if e.contains("Invalid params") || e.contains("Missing required") {
+                    JsonRpcError::invalid_params(e)
+                } else {
+                    JsonRpcError::internal_error(e)
+                };
 
                 JsonRpcResponse {
                     jsonrpc: JSONRPC_VERSION.to_string(),
                     result: None,
-                    error: Some(JsonRpcError {
-                        code,
-                        message,
-                        data: None,
-                    }),
+                    error: Some(error),
                     id,
                 }
             }
+        })
+    }
+
+    /// Process one JSON-RPC request line and return the serialized response, or
+    /// `None` for notifications.
+    async fn handle_one_jsonrpc_request_universal(&self, line: &str) -> Result<Option<String>> {
+        let request: JsonRpcRequest = match serde_json::from_str(line.trim()) {
+            Ok(req) => req,
+            Err(e) => {
+                warn!(error = %e, "Invalid JSON-RPC request");
+                let error_response = JsonRpcResponse {
+                    jsonrpc: JSONRPC_VERSION.to_string(),
+                    result: None,
+                    error: Some(JsonRpcError::parse_error(format!("Parse error: {e}"))),
+                    id: serde_json::Value::Null,
+                };
+                return Ok(Some(serde_json::to_string(&error_response)?));
+            }
+        };
+
+        match self.route_jsonrpc(&request).await {
+            Some(resp) => Ok(Some(serde_json::to_string(&resp)?)),
+            None => Ok(None),
         }
     }
 
-    // Legacy handle_one_jsonrpc_request() and route_request() removed
-    // Superseded by handle_jsonrpc_via_registry() - cleaner, more efficient
-
     /// Handle JSON-RPC request (public for testing)
-    ///
-    /// # Note
-    /// This is public for testing purposes but considered internal API
     ///
     /// # Errors
     /// Returns error if unable to parse or handle the request
     pub async fn handle_jsonrpc_request(&self, request_str: &str) -> Result<JsonRpcResponse> {
         let request: JsonRpcRequest =
             serde_json::from_str(request_str).context("Failed to parse JSON-RPC request")?;
-        Ok(self.handle_jsonrpc_via_registry(&request).await)
+        self.route_jsonrpc(&request)
+            .await
+            .ok_or_else(|| anyhow::anyhow!("notification — no response expected"))
     }
 
     // Legacy handle_http_connection() removed - HTTP protocol deprecated

@@ -27,14 +27,13 @@ static ACTIVE_SOCKET: OnceLock<String> = OnceLock::new();
 /// Get the socket path using self-knowledge pattern.
 /// Priority: `ACTIVE_SOCKET` > `BEARDOG_SOCKET` > PRIMAL_NAME-based > default
 fn discover_socket_path() -> String {
+    if let Some(path) = ACTIVE_SOCKET.get() {
+        return path.clone();
+    }
     discover_socket_path_with(|key| std::env::var(key).ok())
 }
 
 fn discover_socket_path_with(get: impl Fn(&str) -> Option<String>) -> String {
-    if let Some(path) = ACTIVE_SOCKET.get() {
-        return path.clone();
-    }
-
     if let Some(path) = get("BEARDOG_SOCKET") {
         return path;
     }

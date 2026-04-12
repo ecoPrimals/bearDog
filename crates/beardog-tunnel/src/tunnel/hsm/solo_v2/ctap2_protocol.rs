@@ -346,6 +346,8 @@ pub fn parse_get_assertion_response(response: &[u8]) -> Result<GetAssertionRespo
 /// `WebAuthn` attested credential data: variable tail of `authData` when AT flag is set.
 fn parse_attested_credential_data(auth_data: &[u8]) -> Result<(Vec<u8>, Vec<u8>), BearDogError> {
     const MIN_PREFIX: usize = 32 + 1 + 4;
+    const AT_FLAG: u8 = 0x40;
+
     if auth_data.len() < MIN_PREFIX {
         return Err(BearDogError::system(format!(
             "authData too short: {} bytes",
@@ -353,7 +355,6 @@ fn parse_attested_credential_data(auth_data: &[u8]) -> Result<(Vec<u8>, Vec<u8>)
         )));
     }
     let flags = auth_data[32];
-    const AT_FLAG: u8 = 0x40;
     if (flags & AT_FLAG) == 0 {
         return Err(BearDogError::system(
             "authData missing AT flag — no attested credential data".to_string(),

@@ -6,7 +6,6 @@
 
 
 use beardog_errors::BearDogError;
-use beardog_types::canonical::*;
 
 pub struct SimplifiedSeedTunnel;
 

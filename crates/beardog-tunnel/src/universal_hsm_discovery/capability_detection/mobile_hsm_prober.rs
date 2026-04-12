@@ -4,7 +4,6 @@
 //!
 //! Provides capability detection for mobile platform HSMs (iOS Secure Enclave, Android StrongBox)
 
-use super::super::*;
 use crate::tunnel::hsm::types::capability::HsmCapabilities;
 use beardog_errors::BearDogError;
 use tracing::debug;

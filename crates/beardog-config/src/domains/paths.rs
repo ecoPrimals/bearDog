@@ -95,59 +95,52 @@ impl PathConfig {
         Ok(())
     }
 
-    /// Discover PKCS#11 libraries on the system
+    /// Discover PKCS#11 libraries on the system.
     ///
-    /// Searches common locations based on the current platform.
+    /// Priority: `BEARDOG_PKCS11_SEARCH_PATHS` (colon-separated) > platform defaults.
     pub fn discover_pkcs11_libraries() -> Vec<PathBuf> {
         let mut paths = Vec::new();
 
-        match env::consts::OS {
-            "linux" => {
-                let search_paths = vec![
-                    "/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so",
-                    "/usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so",
-                    "/usr/lib/softhsm/libsofthsm2.so",
-                    "/usr/local/lib/softhsm/libsofthsm2.so",
-                    "/usr/lib/pkcs11/opensc-pkcs11.so",
-                ];
-
-                for path_str in search_paths {
-                    let path = PathBuf::from(path_str);
-                    if path.exists() {
-                        paths.push(path);
-                    }
+        if let Ok(env_paths) = beardog_errors::process_env::var("BEARDOG_PKCS11_SEARCH_PATHS") {
+            for p in env_paths.split(':') {
+                let path = PathBuf::from(p.trim());
+                if path.exists() {
+                    paths.push(path);
                 }
             }
-            "macos" => {
-                let search_paths = vec![
-                    "/usr/local/lib/opensc-pkcs11.so",
-                    "/opt/homebrew/lib/opensc-pkcs11.so",
-                    "/usr/local/lib/softhsm/libsofthsm2.so",
-                    "/opt/homebrew/lib/softhsm/libsofthsm2.so",
-                ];
-
-                for path_str in search_paths {
-                    let path = PathBuf::from(path_str);
-                    if path.exists() {
-                        paths.push(path);
-                    }
-                }
+            if !paths.is_empty() {
+                return paths;
             }
-            "windows" => {
-                let search_paths = vec![
-                    "C:\\Program Files\\OpenSC Project\\OpenSC\\pkcs11\\opensc-pkcs11.dll",
-                    "C:\\SoftHSM2\\lib\\softhsm2.dll",
-                ];
+        }
 
-                for path_str in search_paths {
-                    let path = PathBuf::from(path_str);
-                    if path.exists() {
-                        paths.push(path);
-                    }
-                }
-            }
+        let search_paths: &[&str] = match env::consts::OS {
+            "linux" => &[
+                "/usr/lib/x86_64-linux-gnu/opensc-pkcs11.so",
+                "/usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so",
+                "/usr/lib/softhsm/libsofthsm2.so",
+                "/usr/local/lib/softhsm/libsofthsm2.so",
+                "/usr/lib/pkcs11/opensc-pkcs11.so",
+            ],
+            "macos" => &[
+                "/usr/local/lib/opensc-pkcs11.so",
+                "/opt/homebrew/lib/opensc-pkcs11.so",
+                "/usr/local/lib/softhsm/libsofthsm2.so",
+                "/opt/homebrew/lib/softhsm/libsofthsm2.so",
+            ],
+            "windows" => &[
+                "C:\\Program Files\\OpenSC Project\\OpenSC\\pkcs11\\opensc-pkcs11.dll",
+                "C:\\SoftHSM2\\lib\\softhsm2.dll",
+            ],
             _ => {
                 tracing::warn!("Unknown OS, cannot discover PKCS#11 libraries");
+                &[]
+            }
+        };
+
+        for path_str in search_paths {
+            let path = PathBuf::from(path_str);
+            if path.exists() {
+                paths.push(path);
             }
         }
 

@@ -70,7 +70,7 @@ mod suite {
             jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             method: "primal.ping".to_string(),
             params: None,
-            id: 1,
+            id: serde_json::Value::from(1),
         };
 
         let json = serde_json::to_string(&request).unwrap();
@@ -85,7 +85,7 @@ mod suite {
         let response: JsonRpcResponse = serde_json::from_str(json).unwrap();
 
         assert_eq!(response.jsonrpc, "2.0");
-        assert_eq!(response.id, 1);
+        assert_eq!(response.id, serde_json::Value::from(1));
         assert!(response.result.is_some());
         assert!(response.error.is_none());
     }
@@ -97,7 +97,7 @@ mod suite {
         let response: JsonRpcResponse = serde_json::from_str(json).unwrap();
 
         assert_eq!(response.jsonrpc, "2.0");
-        assert_eq!(response.id, 1);
+        assert_eq!(response.id, serde_json::Value::from(1));
         assert!(response.result.is_none());
         assert!(response.error.is_some());
 
@@ -251,7 +251,7 @@ mod suite {
             jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             method: "primal.register".to_string(),
             params: None,
-            id: 1,
+            id: serde_json::Value::from(1),
         };
 
         let json = serde_json::to_string(&request).unwrap();
@@ -270,7 +270,7 @@ mod suite {
             jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             method: "primal.ping".to_string(),
             params: None,
-            id: 1,
+            id: serde_json::Value::from(1),
         };
 
         assert_eq!(request.jsonrpc, JSONRPC_VERSION);
@@ -300,12 +300,12 @@ mod suite {
                 jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
                 method: "primal.test".to_string(),
                 params: None,
-                id,
+                id: serde_json::Value::from(id),
             };
 
             let json = serde_json::to_string(&request).unwrap();
             let parsed: JsonRpcRequest = serde_json::from_str(&json).unwrap();
-            assert_eq!(parsed.id, id);
+            assert_eq!(parsed.id, serde_json::Value::from(id));
         }
     }
 
@@ -354,12 +354,12 @@ mod suite {
             jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             method: "primal.register".into(),
             params: Some(serde_json::json!({"k": 1})),
-            id: 42,
+            id: serde_json::Value::from(42),
         };
         let json = serde_json::to_string(&request).unwrap();
         let back: JsonRpcRequest = serde_json::from_str(&json).unwrap();
         assert_eq!(back.method, "primal.register");
-        assert_eq!(back.id, 42);
+        assert_eq!(back.id, serde_json::Value::from(42));
         assert!(back.params.is_some());
     }
 

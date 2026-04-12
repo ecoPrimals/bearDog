@@ -170,23 +170,6 @@ impl MultiCredentialHsmProvider for Fido2MultiCredentialProvider {
     }
 
     async fn get_credential_hierarchy(&self) -> Result<CredentialHierarchy, Self::Error> {
-        let creds = self.credentials.read().await;
-
-        // Build hierarchy tree
-        let mut roots = Vec::new();
-        let mut children_map: HashMap<String, Vec<CredentialInfo>> = HashMap::new();
-
-        // Organize credentials by parent
-        for cred in creds.values() {
-            if let Some(parent_id) = &cred.parent_credential_id {
-                children_map
-                    .entry(parent_id.clone())
-                    .or_default()
-                    .push(cred.clone());
-            }
-        }
-
-        // Build tree starting from roots
         fn build_node(
             cred: &CredentialInfo,
             children_map: &HashMap<String, Vec<CredentialInfo>>,
@@ -203,6 +186,20 @@ impl MultiCredentialHsmProvider for Fido2MultiCredentialProvider {
             CredentialNode {
                 credential: cred.clone(),
                 children,
+            }
+        }
+
+        let creds = self.credentials.read().await;
+
+        let mut roots = Vec::new();
+        let mut children_map: HashMap<String, Vec<CredentialInfo>> = HashMap::new();
+
+        for cred in creds.values() {
+            if let Some(parent_id) = &cred.parent_credential_id {
+                children_map
+                    .entry(parent_id.clone())
+                    .or_default()
+                    .push(cred.clone());
             }
         }
 
@@ -236,17 +233,16 @@ impl MultiCredentialHsmProvider for Fido2MultiCredentialProvider {
         credential_id: &str,
         shared_entropy: &[u8],
     ) -> Result<CredentialReplicationData, Self::Error> {
+        use sha2::{Digest, Sha256};
+
         info!(
             "Preparing credential {} for replication using {} bytes of shared entropy",
             credential_id,
             shared_entropy.len()
         );
 
-        // Get source credential info
         let source_cred = self.get_credential_info(credential_id).await?;
 
-        // Create entropy hash for verification
-        use sha2::{Digest, Sha256};
         let mut hasher = Sha256::new();
         hasher.update(shared_entropy);
         let entropy_hash = hasher.finalize().to_vec();

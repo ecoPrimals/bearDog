@@ -11,7 +11,7 @@ use crate::tunnel::hsm::types::capability::{
     KeyGenerationCapabilities, KeyManagementCapabilities, PerformanceCapabilities,
     SecurityCapabilities,
 };
-use super::*;
+use super::HsmType;
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::time::Instant;

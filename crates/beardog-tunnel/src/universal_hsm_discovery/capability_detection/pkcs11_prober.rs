@@ -4,7 +4,6 @@
 //!
 //! Provides capability detection for PKCS#11 HSMs
 
-use super::super::*;
 use crate::tunnel::hsm::types::capability::HsmCapabilities;
 use beardog_errors::BearDogError;
 use tracing::debug;

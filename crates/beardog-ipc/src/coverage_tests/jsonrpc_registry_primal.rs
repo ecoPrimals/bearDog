@@ -34,7 +34,7 @@ fn test_json_rpc_request_with_params() {
         jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
         method: "primal.register".to_string(),
         params: Some(serde_json::json!({"name": "beardog"})),
-        id: 1,
+        id: serde_json::Value::from(1),
     };
     let json = serde_json::to_string(&req).unwrap();
     assert!(json.contains("2.0"));
@@ -49,7 +49,7 @@ fn test_json_rpc_request_without_params() {
         jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
         method: "primal.ping".to_string(),
         params: None,
-        id: 42,
+        id: serde_json::Value::from(42),
     };
     let json = serde_json::to_string(&req).unwrap();
     assert!(!json.contains("params")); // skip_serializing_if
@@ -62,12 +62,12 @@ fn test_json_rpc_request_roundtrip() {
         jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
         method: "test.method".to_string(),
         params: Some(serde_json::json!({"key": "value"})),
-        id: 7,
+        id: serde_json::Value::from(7),
     };
     let json = serde_json::to_string(&req).unwrap();
     let restored: JsonRpcRequest = serde_json::from_str(&json).unwrap();
     assert_eq!(restored.method, "test.method");
-    assert_eq!(restored.id, 7);
+    assert_eq!(restored.id, serde_json::Value::from(7));
 }
 
 #[test]
@@ -76,7 +76,7 @@ fn test_json_rpc_request_debug_and_clone() {
         jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
         method: "primal.ping".to_string(),
         params: None,
-        id: 1,
+        id: serde_json::Value::from(1),
     };
     let cloned = req.clone();
     assert_eq!(cloned.method, req.method);
@@ -89,7 +89,7 @@ fn test_json_rpc_response_with_result() {
     let resp: JsonRpcResponse = serde_json::from_str(json).unwrap();
     assert!(resp.result.is_some());
     assert!(resp.error.is_none());
-    assert_eq!(resp.id, 1);
+    assert_eq!(resp.id, serde_json::Value::from(1));
 }
 
 #[test]
@@ -109,11 +109,11 @@ fn test_json_rpc_response_roundtrip() {
         jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
         result: Some(serde_json::json!({"ok": true})),
         error: None,
-        id: 99,
+        id: serde_json::Value::from(99),
     };
     let json = serde_json::to_string(&resp).unwrap();
     let restored: JsonRpcResponse = serde_json::from_str(&json).unwrap();
-    assert_eq!(restored.id, 99);
+    assert_eq!(restored.id, serde_json::Value::from(99));
     assert!(restored.result.is_some());
 }
 

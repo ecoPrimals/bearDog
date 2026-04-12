@@ -10,7 +10,10 @@
 //! - Android Keystore (on Android devices)
 //! - Samsung Knox (on Samsung devices)
 
-use super::super::*;
+use super::super::{
+    DiscoveredHsm, HsmEndpoint, HsmHealthStatus, HsmTier, HsmType, IntegrationStatus,
+    UniversalHsmCapabilities,
+};
 use beardog_errors::BearDogError;
 use chrono::Utc;
 use std::env;
@@ -373,7 +376,12 @@ impl MobileDiscoverer {
 
     /// Create iOS Secure Enclave capabilities
     fn create_ios_secure_enclave_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         UniversalHsmCapabilities {
             crypto_operations: CryptoOperationCapabilities {
@@ -438,7 +446,12 @@ impl MobileDiscoverer {
 
     /// Create iOS Keychain capabilities
     fn create_ios_keychain_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         UniversalHsmCapabilities {
             crypto_operations: CryptoOperationCapabilities {
@@ -503,7 +516,12 @@ impl MobileDiscoverer {
 
     /// Create Android StrongBox capabilities
     fn create_android_strongbox_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         UniversalHsmCapabilities {
             crypto_operations: CryptoOperationCapabilities {
@@ -572,7 +590,12 @@ impl MobileDiscoverer {
 
     /// Create Android Keystore capabilities
     fn create_android_keystore_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         UniversalHsmCapabilities {
             crypto_operations: CryptoOperationCapabilities {
@@ -637,7 +660,12 @@ impl MobileDiscoverer {
 
     /// Create Samsung Knox capabilities
     fn create_samsung_knox_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         UniversalHsmCapabilities {
             crypto_operations: CryptoOperationCapabilities {

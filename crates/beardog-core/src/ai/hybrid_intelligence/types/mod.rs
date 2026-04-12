@@ -11,14 +11,30 @@ mod registry;
 mod serving;
 mod training_config;
 
-pub use deployment::*;
-pub use metrics_alerting::*;
-pub use monitoring::*;
-pub use optimizer::*;
-pub use preprocessing::*;
-pub use registry::*;
-pub use serving::*;
-pub use training_config::*;
+#[allow(deprecated)]
+pub use deployment::HealthCheckConfig;
+pub use deployment::{DeploymentConfig, DeploymentStrategy, ResourceRequirements};
+pub use metrics_alerting::{
+    AlertRule, AlertingConfig, ComparisonOperator, MetricType, NotificationChannel,
+};
+#[allow(deprecated)]
+pub use monitoring::MonitoringConfig;
+pub use monitoring::{AIMetricType, AIMonitoringConfig};
+pub use optimizer::{
+    EarlyStoppingConfig, LearningRateSchedule, OptimizerConfig, OptimizerType, RegularizationConfig,
+};
+pub use preprocessing::{
+    AugmentationTechnique, DataAugmentationConfig, FeatureSelectionConfig, FeatureSelectionMethod,
+    MissingValueStrategy, NormalizationStrategy,
+};
+#[allow(deprecated)]
+pub use registry::RegistryConfig;
+pub use registry::{AIRegistryConfig, AuthConfig, AuthType, RegistryType, VersioningStrategy};
+pub use serving::{CachingConfig, EvictionPolicy, LoadBalancingStrategy, ServingConfig};
+pub use training_config::{
+    DecisionEngineConfig, InferenceConfig, LearningConfig, ModelManagementConfig,
+    NeuralNetworkConfig, OptimizationConfig, PredictionConfig, PreprocessingConfig, TrainingConfig,
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // REMOVED: Deprecated type aliases (Nov 8, 2025)

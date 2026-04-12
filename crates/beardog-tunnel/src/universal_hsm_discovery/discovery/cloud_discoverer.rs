@@ -10,7 +10,10 @@
 //! - Google Cloud KMS and Cloud HSM
 //! - Other cloud providers
 
-use super::super::*;
+use super::super::{
+    DiscoveredHsm, HsmEndpoint, HsmHealthStatus, HsmTier, HsmType, IntegrationStatus,
+    UniversalHsmCapabilities,
+};
 use beardog_errors::BearDogError;
 use chrono::Utc;
 use std::collections::HashMap;
@@ -465,7 +468,12 @@ impl CloudDiscoverer {
 
     /// Create AWS KMS capabilities
     fn create_aws_kms_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         UniversalHsmCapabilities {
             crypto_operations: CryptoOperationCapabilities {
@@ -541,7 +549,12 @@ impl CloudDiscoverer {
 
     /// Create AWS CloudHSM capabilities
     fn create_aws_cloudhsm_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         let mut caps = self.create_aws_kms_capabilities();
         caps.api_support.pkcs11 = true;
@@ -553,7 +566,12 @@ impl CloudDiscoverer {
 
     /// Create Azure Key Vault capabilities
     fn create_azure_key_vault_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         UniversalHsmCapabilities {
             crypto_operations: CryptoOperationCapabilities {
@@ -625,7 +643,12 @@ impl CloudDiscoverer {
 
     /// Create Azure Managed HSM capabilities
     fn create_azure_managed_hsm_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         let mut caps = self.create_azure_key_vault_capabilities();
         caps.security.fips_140_2_level = Some(3);
@@ -636,7 +659,12 @@ impl CloudDiscoverer {
 
     /// Create GCP KMS capabilities
     fn create_gcp_kms_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         UniversalHsmCapabilities {
             crypto_operations: CryptoOperationCapabilities {
@@ -711,7 +739,12 @@ impl CloudDiscoverer {
 
     /// Create generic cloud HSM capabilities
     fn create_generic_cloud_hsm_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         UniversalHsmCapabilities {
             crypto_operations: CryptoOperationCapabilities {

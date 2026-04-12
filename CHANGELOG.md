@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+
 # Changelog
 
 All notable changes to the BearDog security platform will be documented in this file.
@@ -6,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### April 12, 2026 -- Wave 36: Composition Elevation Sprint — Ionic Bond Lifecycle, BTSP Naming, Smart Refactoring
+
+- **Ionic bond lifecycle hardened** — `IonicBond` type now carries `terms_hash` (SHA-256 of canonical terms); `crypto.ionic_bond.verify` performs real Ed25519 re-verification of both proposer and acceptor signatures (was state-only check). 4 new lifecycle tests: `sealed_bond_stores_terms_hash`, `verify_detects_tampered_proposer_signature`, `verify_detects_tampered_acceptor_signature`, `full_lifecycle_propose_accept_list_revoke`.
+- **BTSP naming alignment** — Doc comments in `beardog-types/src/btsp/rpc.rs` updated from legacy `btsp.session.*` to canonical `btsp.server.*` names (handler aliases preserved for backward compatibility). `crypto.ionic_bond.list` added to cost_estimates in capabilities.
+- **Production mocks eliminated (2)** — `MonitoringService::collect_performance_metrics` reads real `/proc/stat` (CPU), `/proc/meminfo` (memory) with graceful non-Linux fallback; `PerformanceMonitor::collect_performance_metrics` returns actual history instead of `Default::default()`.
+- **Wildcard imports eliminated** — 11+ production files in `beardog-tunnel/universal_hsm_discovery/`, `beardog-types/providers/`, `simplified_seed_tunnel.rs` switched from `use super::*` to explicit imports.
+- **Smart refactoring (3 large files)** — `port_discovery.rs` (940 LOC) → 4 submodules (config, env, discoverer, hierarchical); `btsp.rs` (855 LOC) → 6 submodules (contact, session, negotiation, peer, tunnel, mod); `tarpc_server/server.rs` (811 LOC) → 9 submodules (keygen, signatures, key_exchange, aead, hashing, kdf, genetic, tls, introspection). All public APIs preserved via re-exports.
+- **PKCS#11 discovery evolved** — `BEARDOG_PKCS11_SEARCH_PATHS` env var added for user-overridable library discovery before platform defaults.
+- **14,769+ tests passing**, all quality gates clean (fmt, clippy, doc, deny).
 
 ### April 11, 2026 -- Wave 35: Deep Debt Cleanup III — Placeholder Elimination, Real Entropy, Auth Test Evolution
 

@@ -11,7 +11,10 @@
 //! - SmartCard readers with crypto tokens
 //! - Other USB security tokens
 
-use super::super::*;
+use super::super::{
+    DiscoveredHsm, HsmEndpoint, HsmHealthStatus, HsmTier, HsmType, IntegrationStatus,
+    UniversalHsmCapabilities,
+};
 use beardog_errors::BearDogError;
 use chrono::Utc;
 use std::collections::HashMap;
@@ -327,7 +330,12 @@ impl UsbDiscoverer {
 
     /// Create capabilities for YubiKey
     fn create_yubikey_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         UniversalHsmCapabilities {
             crypto_operations: CryptoOperationCapabilities {
@@ -401,7 +409,12 @@ impl UsbDiscoverer {
 
     /// Create capabilities for Nitrokey
     fn create_nitrokey_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         UniversalHsmCapabilities {
             crypto_operations: CryptoOperationCapabilities {
@@ -470,7 +483,12 @@ impl UsbDiscoverer {
 
     /// Create capabilities for generic USB token
     fn create_generic_usb_token_capabilities(&self) -> UniversalHsmCapabilities {
-        use crate::tunnel::hsm::types::capability::*;
+        use crate::tunnel::hsm::types::capability::{
+            AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+            CryptoOperationCapabilities, HsmCapabilities as UniversalHsmCapabilities,
+            HumanEntropyCapabilities, KeyGenerationCapabilities, KeyManagementCapabilities,
+            PerformanceCapabilities, SecurityCapabilities, TamperResistanceLevel as TamperResistance,
+        };
 
         UniversalHsmCapabilities {
             crypto_operations: CryptoOperationCapabilities {

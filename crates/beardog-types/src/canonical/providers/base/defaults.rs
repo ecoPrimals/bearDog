@@ -7,9 +7,19 @@ use std::collections::HashMap;
 use crate::canonical::traits::{CacheStrategy, TimeoutPolicy};
 use crate::constants::time;
 
-use super::configuration::*;
-use super::performance::*;
-use super::schema::*;
+use super::configuration::{
+    AbacConfiguration, AuthenticationConfiguration, AuthenticationMethod,
+    AuthorizationConfiguration, AuthorizationMethod, EncryptionAlgorithm,
+    EncryptionConfiguration, EnvironmentSettings, KeyDerivationAlgorithm,
+    KeyDerivationConfiguration, KeyManagementConfiguration, KeyProvider,
+    LoggingConfiguration, PolicyDecision, ProviderConfiguration, RbacConfiguration,
+    ResourceLimits, SecurityConfiguration,
+};
+use super::performance::{
+    BackoffStrategy, CachingConfiguration, ConnectionPoolConfiguration, EvictionPolicy,
+    PerformanceConfiguration, RetryConfiguration, TimeoutConfiguration,
+};
+use super::schema::ConfigurationSchema;
 
 // Default implementations
 impl Default for ProviderConfiguration {

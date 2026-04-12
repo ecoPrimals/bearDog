@@ -51,7 +51,7 @@ mod provider;
 pub mod types;
 
 pub use constants::*;
-pub use discovery::*;
+pub use discovery::discover_fido2_devices;
 pub use multi_credential_provider::*;
 pub use operations::Ctap2Command;
 pub use provider::Fido2HsmProvider;

@@ -22,7 +22,14 @@ use std::time::Duration;
 
 #[path = "learning_optimization.rs"]
 mod learning_optimization;
-pub use learning_optimization::*;
+pub use learning_optimization::{
+    ActivationFunction, BoundConstraint, Constraint, ConstraintConfig, DiversityMeasure,
+    EarlyStoppingCriteria, HyperparameterOptimization, HyperparameterOptimizationMethod,
+    HyperparameterOptimizer, LayerType, ModelType, NasSearchStrategy, NeuralArchitectureSearch,
+    NormalizationStrategy, OptimizationAlgorithm, OptimizationDirection, OptimizationResult,
+    OptimizerType, PerformanceEstimation, PerformanceEstimationMethod, PredictionHorizon,
+    ResourceConstraints, SearchSpace, TrainingPhase, TrialResult, ValidationStrategy,
+};
 
 /// Types of learning algorithms
 ///

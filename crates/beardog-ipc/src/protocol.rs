@@ -7,6 +7,9 @@ use serde_json::Value;
 use std::borrow::Cow;
 
 /// JSON-RPC 2.0 request
+///
+/// Per the JSON-RPC 2.0 spec, `id` may be a String, Number, or Null. Requests
+/// without `id` are *notifications* and MUST NOT receive a response.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcRequest {
     /// JSON-RPC version (always "2.0")
@@ -15,20 +18,38 @@ pub struct JsonRpcRequest {
     pub method: String,
     /// Method parameters
     pub params: Value,
-    /// Request ID (nullable per spec for notifications)
-    pub id: u64,
+    /// Request ID -- absent for notifications (JSON-RPC 2.0 spec section 4.1)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<Value>,
 }
 
 impl JsonRpcRequest {
     /// Construct a new request with version pre-set
     #[must_use]
-    pub fn new(method: impl Into<String>, params: Value, id: u64) -> Self {
+    pub fn new(method: impl Into<String>, params: Value, id: impl Into<Value>) -> Self {
         Self {
             jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             method: method.into(),
             params,
-            id,
+            id: Some(id.into()),
         }
+    }
+
+    /// Construct a notification (no id, server MUST NOT respond)
+    #[must_use]
+    pub fn notification(method: impl Into<String>, params: Value) -> Self {
+        Self {
+            jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
+            method: method.into(),
+            params,
+            id: None,
+        }
+    }
+
+    /// Returns `true` when this is a notification (no `id` field).
+    #[must_use]
+    pub fn is_notification(&self) -> bool {
+        self.id.is_none()
     }
 }
 
@@ -43,14 +64,14 @@ pub struct JsonRpcResponse {
     /// Error (if failed)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<JsonRpcError>,
-    /// Request ID
-    pub id: u64,
+    /// Request ID echoed back from the request
+    pub id: Value,
 }
 
 impl JsonRpcResponse {
     /// Construct a success response
     #[must_use]
-    pub fn success(id: u64, result: Value) -> Self {
+    pub fn success(id: Value, result: Value) -> Self {
         Self {
             jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             result: Some(result),
@@ -61,7 +82,7 @@ impl JsonRpcResponse {
 
     /// Construct an error response
     #[must_use]
-    pub fn error(id: u64, code: i32, message: impl Into<String>) -> Self {
+    pub fn error(id: Value, code: i32, message: impl Into<String>) -> Self {
         Self {
             jsonrpc: Cow::Borrowed(JSONRPC_VERSION),
             result: None,
@@ -155,12 +176,36 @@ mod tests {
             serde_json::from_str(json).expect("deserialize JsonRpcRequest from literal");
         assert_eq!(request.jsonrpc.as_ref(), "2.0");
         assert_eq!(request.method, "primal.ping");
-        assert_eq!(request.id, 1);
+        assert_eq!(request.id, Some(json!(1)));
+    }
+
+    #[test]
+    fn test_request_deserialization_string_id() {
+        let json = r#"{"jsonrpc":"2.0","method":"primal.ping","params":null,"id":"abc-123"}"#;
+        let request: JsonRpcRequest = serde_json::from_str(json).expect("deserialize string id");
+        assert_eq!(request.id, Some(json!("abc-123")));
+    }
+
+    #[test]
+    fn test_notification_deserialization() {
+        let json = r#"{"jsonrpc":"2.0","method":"primal.notify","params":{}}"#;
+        let request: JsonRpcRequest = serde_json::from_str(json).expect("deserialize notification");
+        assert!(request.is_notification());
+        assert_eq!(request.id, None);
+    }
+
+    #[test]
+    fn test_notification_constructor() {
+        let n = JsonRpcRequest::notification("log.event", json!({"level": "info"}));
+        assert!(n.is_notification());
+        assert_eq!(n.id, None);
+        let json = serde_json::to_string(&n).expect("serialize notification");
+        assert!(!json.contains("\"id\""));
     }
 
     #[test]
     fn test_response_with_result() {
-        let response = JsonRpcResponse::success(1, json!({"success": true}));
+        let response = JsonRpcResponse::success(json!(1), json!({"success": true}));
         let json = serde_json::to_string(&response).expect("serialize JsonRpcResponse");
         assert!(json.contains("\"result\""));
         assert!(!json.contains("\"error\""));
@@ -168,7 +213,8 @@ mod tests {
 
     #[test]
     fn test_response_with_error() {
-        let response = JsonRpcResponse::error(1, error_codes::METHOD_NOT_FOUND, "Method not found");
+        let response =
+            JsonRpcResponse::error(json!(1), error_codes::METHOD_NOT_FOUND, "Method not found");
         let json = serde_json::to_string(&response).expect("serialize JsonRpcResponse");
         assert!(!json.contains("\"result\""));
         assert!(json.contains("\"error\""));
@@ -176,11 +222,11 @@ mod tests {
 
     #[test]
     fn test_response_roundtrip() {
-        let response = JsonRpcResponse::success(99, json!({"registered": true}));
+        let response = JsonRpcResponse::success(json!(99), json!({"registered": true}));
         let json = serde_json::to_string(&response).expect("serialize JsonRpcResponse");
         let restored: JsonRpcResponse =
             serde_json::from_str(&json).expect("deserialize JsonRpcResponse roundtrip");
-        assert_eq!(restored.id, 99);
+        assert_eq!(restored.id, json!(99));
         assert!(restored.result.is_some());
     }
 
@@ -227,6 +273,13 @@ mod tests {
     }
 
     #[test]
+    fn test_response_with_null_id() {
+        let response = JsonRpcResponse::error(Value::Null, error_codes::PARSE_ERROR, "bad");
+        let json = serde_json::to_string(&response).expect("serialize null id response");
+        assert!(json.contains("\"id\":null"));
+    }
+
+    #[test]
     fn test_batch_request_deserialization() {
         let json = r#"[
             {"jsonrpc":"2.0","method":"health.liveness","params":null,"id":1},
@@ -254,8 +307,8 @@ mod tests {
     #[test]
     fn test_batch_response_serialization() {
         let batch = JsonRpcResponseMessage::Batch(vec![
-            JsonRpcResponse::success(1, json!("pong")),
-            JsonRpcResponse::error(2, error_codes::METHOD_NOT_FOUND, "not found"),
+            JsonRpcResponse::success(json!(1), json!("pong")),
+            JsonRpcResponse::error(json!(2), error_codes::METHOD_NOT_FOUND, "not found"),
         ]);
         let json = serde_json::to_string(&batch).expect("serialize batch response");
         assert!(json.starts_with('['));
@@ -269,11 +322,11 @@ mod tests {
         assert_eq!(req.jsonrpc.as_ref(), JSONRPC_VERSION);
         assert_eq!(req.method, "health.check");
 
-        let ok = JsonRpcResponse::success(42, json!(true));
+        let ok = JsonRpcResponse::success(json!(42), json!(true));
         assert!(ok.result.is_some());
         assert!(ok.error.is_none());
 
-        let err = JsonRpcResponse::error(42, error_codes::INTERNAL_ERROR, "boom");
+        let err = JsonRpcResponse::error(json!(42), error_codes::INTERNAL_ERROR, "boom");
         assert!(err.result.is_none());
         assert!(err.error.is_some());
     }

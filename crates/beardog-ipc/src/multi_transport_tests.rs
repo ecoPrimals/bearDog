@@ -9,8 +9,8 @@ fn jsonrpc_discover_returns_capabilities_and_echoes_id() -> Result<(), serde_jso
     let v: serde_json::Value = serde_json::from_str(&s)?;
     assert_eq!(v["jsonrpc"], "2.0");
     assert_eq!(v["id"], 42);
-    assert!(v["result"]["capabilities"].is_array());
-    assert_eq!(v["result"]["name"], "BearDog");
+    assert!(v["result"]["provided_capabilities"].is_array());
+    assert_eq!(v["result"]["primal"], "beardog");
     Ok(())
 }
 

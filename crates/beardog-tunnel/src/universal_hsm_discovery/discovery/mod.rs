@@ -4,9 +4,8 @@
 //!
 //! Provides functionality for discovering HSMs across different platforms and protocols
 
-use super::*;
+use super::DiscoveredHsm;
 use beardog_errors::BearDogError;
-use std::collections::HashMap;
 use tracing::{debug, error, info, warn};
 
 // Submodules

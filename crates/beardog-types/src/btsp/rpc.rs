@@ -272,20 +272,22 @@ pub struct TunnelSendHttpResponse {
     pub body: String,
 }
 
-// ── BTSP Session Methods (handshake-as-a-service for other primals) ────
+// ── BTSP Server Methods (handshake-as-a-service for other primals) ────
 
-/// Parameters for `btsp.session.create`
+/// Parameters for `btsp.server.create_session`
 ///
 /// Creates a server-side BTSP session context: generates an ephemeral keypair,
 /// derives the handshake key from the provided family seed, and returns the
 /// server's public key + a random challenge for the client to prove membership.
+///
+/// Legacy alias: `btsp.session.create` (accepted for backward compatibility).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionCreateParams {
     /// Base64-encoded family seed (caller supplies their family's seed).
     pub family_seed: String,
 }
 
-/// Response from `btsp.session.create`
+/// Response from `btsp.server.create_session`
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionCreateResponse {
     /// Base64-encoded server ephemeral X25519 public key.
@@ -296,12 +298,14 @@ pub struct SessionCreateResponse {
     pub session_token: String,
 }
 
-/// Parameters for `btsp.session.verify`
+/// Parameters for `btsp.server.verify`
 ///
 /// Verifies a client's challenge response and, if valid, derives session keys.
+///
+/// Legacy alias: `btsp.session.verify` (accepted for backward compatibility).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionVerifyParams {
-    /// Session token from `btsp.session.create`.
+    /// Session token returned by `btsp.server.create_session`.
     pub session_token: String,
     /// Base64-encoded client ephemeral X25519 public key.
     pub client_ephemeral_pub: String,
@@ -312,7 +316,7 @@ pub struct SessionVerifyParams {
     pub preferred_cipher: String,
 }
 
-/// Response from `btsp.session.verify`
+/// Response from `btsp.server.verify`
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionVerifyResponse {
     /// Whether verification succeeded.
@@ -328,9 +332,11 @@ pub struct SessionVerifyResponse {
     pub error: Option<String>,
 }
 
-/// Parameters for `btsp.session.negotiate`
+/// Parameters for `btsp.server.negotiate`
 ///
 /// Negotiate (or re-negotiate) the cipher suite for an existing session.
+///
+/// Legacy alias: `btsp.session.negotiate` (accepted for backward compatibility).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionNegotiateParams {
     /// Session token or session ID.
@@ -339,7 +345,7 @@ pub struct SessionNegotiateParams {
     pub cipher: String,
 }
 
-/// Response from `btsp.session.negotiate`
+/// Response from `btsp.server.negotiate`
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionNegotiateResponse {
     /// Whether the negotiation succeeded.

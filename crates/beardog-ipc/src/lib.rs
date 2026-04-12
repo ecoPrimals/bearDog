@@ -95,7 +95,13 @@ pub use tarpc_client::TarpcCryptoClient;
 #[cfg(feature = "tarpc")]
 pub use tarpc_server::BearDogCryptoServer;
 #[cfg(feature = "tarpc")]
-pub use tarpc_types::*;
+pub use tarpc_types::{
+    BearDogCrypto, BearDogCryptoClient, CryptoError, CryptoResult, DecryptRequest, DecryptResponse,
+    EncryptRequest, EncryptResponse, EntropyMixRequest, HashResponse, HealthStatus, HmacRequest,
+    KeyExchangeRequest, KeyPair, LineageKey, LineageRequest, MethodInfo, MixedEntropy, PrimalInfo,
+    ProtocolInfo, SharedSecret, SignRequest, SignResponse, TlsSecrets, TlsSecretsRequest,
+    TlsSignRequest, VerifyRequest,
+};
 
 // Protocol routing (always available)
 pub use protocol_router::{Protocol, ProtocolCapabilities, ProtocolDetector, RouterConfig};

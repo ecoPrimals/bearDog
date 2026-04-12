@@ -28,7 +28,7 @@ space.
 ## 2. BearDog Software: AGPL-3.0-or-later
 
 All BearDog **software** in this repository is licensed under **GNU Affero
-General Public License v3.0 only** (`AGPL-3.0-or-later`). Under the AGPL, **use of
+General Public License v3.0 or later** (`AGPL-3.0-or-later`). Under the AGPL, **use of
 the software to provide a network service counts as distribution**: modified
 versions used to run services must be made available to users as **corresponding
 source**. That closes the “SaaS loophole” and keeps server-side deployments

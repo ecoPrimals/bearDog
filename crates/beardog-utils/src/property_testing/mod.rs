@@ -42,7 +42,10 @@ pub mod crypto_properties;
 pub mod mock_implementations;
 
 // Re-export primary types for convenient access
-pub use types::*;
+pub use types::{
+    PropertyBasedTestFramework, PropertyTestConfig, PropertyTestResult, PropertyTestStatistics,
+    TestCase,
+};
 
 // Backward compatibility re-exports
 #[deprecated(

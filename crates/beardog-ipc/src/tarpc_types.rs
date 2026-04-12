@@ -14,16 +14,16 @@
 //! - Type-safe at compile time
 //!
 //! ## Philosophy: Walk → Run (Protocol Graduation)
-//! - **JSON-RPC** (walking): Flexible, text-based, easy debugging, first interactions
-//! - **tarpc** (running): Fast, binary, second nature once patterns stabilize
+//! - **JSON-RPC** (primary): Flexible, text-based, easy debugging, ecosystem standard
+//! - **tarpc** (optional fast path): Binary, type-safe, for stabilized hot-path operations
 //!
-//! Both protocols expose the SAME operations - tarpc is just the "compiled" version
-//! of what was learned through JSON-RPC experimentation.
+//! Both protocols expose the SAME operations - tarpc is the optional "compiled" version
+//! of what was proven through JSON-RPC.
 //!
-//! ## Protocol Priority
-//! 1. **tarpc** (PRIMARY) - High-performance binary RPC for established patterns
-//! 2. **JSON-RPC** (SECONDARY) - Flexible text-based for new/evolving operations
-//! 3. **HTTP** (FALLBACK) - Universal compatibility
+//! ## Protocol Priority (per wateringHole ecosystem standard)
+//! 1. **JSON-RPC** (PRIMARY) - Ecosystem-standard text-based RPC over NDJSON
+//! 2. **tarpc** (OPTIONAL) - High-performance binary RPC for established patterns
+//! 3. **HTTP** (DEPRECATED) - Legacy compatibility only
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
