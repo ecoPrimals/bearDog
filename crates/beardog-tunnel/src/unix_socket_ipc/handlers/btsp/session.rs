@@ -3,8 +3,11 @@
 //! Session creation and verification (`btsp.server.create_session`, `btsp.server.verify`).
 
 use base64::Engine;
+use chacha20poly1305::{ChaCha20Poly1305, KeyInit, aead::Aead};
+use rand::RngCore;
 use serde::Deserialize;
 use tracing::{info, warn};
+use x25519_dalek::{PublicKey, StaticSecret};
 
 use super::BtspHandler;
 
@@ -107,5 +110,84 @@ impl BtspHandler {
                 serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
             }
         }
+    }
+
+    /// Export session keys for a verified session, wrapped under the caller's
+    /// X25519 ephemeral public key.
+    ///
+    /// This completes the BTSP relay path (BTSP-BARRACUDA-WIRE): after
+    /// `btsp.server.verify` succeeds, the relay primal calls `export_keys`
+    /// to retrieve the session keys encrypted so they never appear in
+    /// plaintext in a JSON-RPC response.
+    ///
+    /// Wrapping scheme:
+    /// 1. `BearDog` generates a fresh X25519 ephemeral keypair
+    /// 2. DH with the caller's ephemeral pub → shared secret
+    /// 3. HKDF(shared, "btsp-key-export-v1") → wrapping key (32 bytes)
+    /// 4. ChaCha20-Poly1305 encrypts `encrypt_key || decrypt_key` (64 bytes)
+    /// 5. Returns `nonce || ciphertext` as `wrapped_keys` (base64)
+    pub(super) async fn handle_server_export_keys(
+        &self,
+        params: Option<&serde_json::Value>,
+    ) -> Result<serde_json::Value, String> {
+        let params_value = params.ok_or("Missing params for btsp.server.export_keys")?;
+        let export_params = beardog_types::btsp::SessionExportKeysParams::deserialize(params_value)
+            .map_err(|e| format!("Invalid export_keys params: {e}"))?;
+
+        let caller_pub_bytes: [u8; 32] = base64::engine::general_purpose::STANDARD
+            .decode(&export_params.caller_ephemeral_pub)
+            .map_err(|e| format!("Invalid caller_ephemeral_pub: {e}"))?
+            .try_into()
+            .map_err(|_| "caller_ephemeral_pub must be exactly 32 bytes".to_string())?;
+
+        let (encrypt_key, decrypt_key, cipher) = self
+            .session_store
+            .export_session_keys(&export_params.session_id)
+            .await
+            .map_err(|e| format!("Session lookup failed: {e}"))?;
+
+        let mut plaintext = [0u8; 64];
+        plaintext[..32].copy_from_slice(&encrypt_key);
+        plaintext[32..].copy_from_slice(&decrypt_key);
+
+        let mut wrapper_secret_bytes = [0u8; 32];
+        rand::rng().fill_bytes(&mut wrapper_secret_bytes);
+        let wrapper_secret = StaticSecret::from(wrapper_secret_bytes);
+        let wrapper_pub = PublicKey::from(&wrapper_secret);
+
+        let caller_pub = PublicKey::from(caller_pub_bytes);
+        let shared = *wrapper_secret.diffie_hellman(&caller_pub).as_bytes();
+
+        let hk = hkdf::Hkdf::<sha2::Sha256>::new(Some(b"btsp-key-export-v1"), &shared);
+        let mut wrapping_key = [0u8; 32];
+        hk.expand(b"wrap", &mut wrapping_key)
+            .map_err(|e| format!("HKDF wrapping key derivation failed: {e}"))?;
+
+        let aead = ChaCha20Poly1305::new((&wrapping_key).into());
+        let mut nonce_bytes = [0u8; 12];
+        rand::rng().fill_bytes(&mut nonce_bytes);
+        let nonce = chacha20poly1305::Nonce::from_slice(&nonce_bytes);
+
+        let ciphertext = aead
+            .encrypt(nonce, plaintext.as_ref())
+            .map_err(|e| format!("Key wrapping encryption failed: {e}"))?;
+
+        let mut wrapped = Vec::with_capacity(12 + ciphertext.len());
+        wrapped.extend_from_slice(&nonce_bytes);
+        wrapped.extend_from_slice(&ciphertext);
+
+        info!(
+            session_id = %export_params.session_id,
+            cipher = %cipher.wire_name(),
+            "BTSP session keys exported (wrapped)"
+        );
+
+        let resp = beardog_types::btsp::SessionExportKeysResponse {
+            wrapped_keys: base64::engine::general_purpose::STANDARD.encode(&wrapped),
+            wrapper_ephemeral_pub: base64::engine::general_purpose::STANDARD
+                .encode(wrapper_pub.as_bytes()),
+            cipher: cipher.wire_name().to_string(),
+        };
+        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
     }
 }

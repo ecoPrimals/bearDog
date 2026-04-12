@@ -4,7 +4,7 @@
 
 **Last Updated**: April 12, 2026
 **Status**: Production Ready
-**Crates**: 29 | **Tests**: 14,769+ | **Coverage**: 90.51% | **MSRV**: 1.93.0
+**Crates**: 29 | **Tests**: 14,774+ | **Coverage**: 90.51% | **MSRV**: 1.93.0
 
 ---
 
@@ -17,7 +17,7 @@ BearDog provides **crypto atoms** to the ecoPrimals ecosystem. Every primal dele
 │  Any Primal │ ←─ JSON-RPC ────→ │  BearDog    │
 │ (Protocol)  │    Unix Socket     │  (Crypto)   │
 └─────────────┘                    └─────────────┘
-     Zero crypto code                 95 crypto methods
+     Zero crypto code                 97 crypto methods
 ```
 
 **Principles**:

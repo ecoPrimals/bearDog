@@ -5,6 +5,22 @@
 //! This module provides cryptographic hashing and message authentication code
 //! (MAC) operations for ecoPrimals.
 //!
+//! # Encoding Contract (LD-01)
+//!
+//! All hashing methods expect the `data` parameter as a **standard Base64**
+//! string (RFC 4648 §4, `+/=` alphabet). `BearDog` decodes the Base64 to raw
+//! bytes, hashes those bytes, and returns the digest as Base64. Callers that
+//! pass raw UTF-8 or hex-encoded data directly will get incorrect hashes.
+//!
+//! ```json
+//! { "method": "crypto.hash", "params": { "data": "<base64-encoded bytes>" } }
+//! → { "hash": "<base64-encoded BLAKE3 digest>", "algorithm": "BLAKE3" }
+//! ```
+//!
+//! For Ed25519 sign/verify, per-field encoding hints (`message_encoding`,
+//! `signature_encoding`, `public_key_encoding`) override this default — see
+//! `ATTESTATION_ENCODING_STANDARD.md` v2.0 (BD-01, resolved in Wave 33).
+//!
 //! # Overview
 //!
 //! Hashing operations:
@@ -188,11 +204,17 @@ pub async fn handle_hash_for_cipher(params: Option<&Value>) -> Result<Value, Str
         "cipher_suite": cipher_suite
     }))
 }
-/// Handle BLAKE3 hash operations via JSON-RPC
-
+/// Handle BLAKE3 hash operations via JSON-RPC.
+///
+/// # Wire Contract (LD-01)
+///
+/// The `data` param **must** be standard Base64 (RFC 4648 §4). `BearDog`
+/// decodes to raw bytes, hashes with BLAKE3, and returns the digest as
+/// Base64. Passing raw UTF-8 or hex directly yields incorrect hashes.
+///
 /// # Errors
 ///
-/// Returns an error if hashing fails.
+/// Returns an error if `data` is missing or not valid Base64.
 pub async fn handle_blake3_hash(params: Option<&Value>) -> Result<Value, String> {
     let params = params.ok_or("Missing params for crypto.blake3_hash")?;
 

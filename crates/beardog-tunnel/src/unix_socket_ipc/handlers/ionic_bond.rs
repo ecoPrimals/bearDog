@@ -15,7 +15,8 @@ use async_trait::async_trait;
 use beardog_types::ionic_bond::{
     BondState, IonicBond, IonicBondAcceptParams, IonicBondAcceptResponse, IonicBondListParams,
     IonicBondListResponse, IonicBondProposeParams, IonicBondProposeResponse, IonicBondRevokeParams,
-    IonicBondRevokeResponse, IonicBondVerifyParams, IonicBondVerifyResponse,
+    IonicBondRevokeResponse, IonicBondVerifyParams, IonicBondVerifyResponse, SignContractParams,
+    SignContractResponse, VerifyContractParams, VerifyContractResponse,
 };
 use chrono::Utc;
 use serde::Deserialize;
@@ -167,6 +168,8 @@ impl MethodHandler for IonicBondHandler {
             "crypto.ionic_bond.verify",
             "crypto.ionic_bond.revoke",
             "crypto.ionic_bond.list",
+            "crypto.sign_contract",
+            "crypto.verify_contract",
         ]
     }
 
@@ -182,6 +185,8 @@ impl MethodHandler for IonicBondHandler {
             "crypto.ionic_bond.verify" => self.handle_verify(params).await,
             "crypto.ionic_bond.revoke" => self.handle_revoke(params).await,
             "crypto.ionic_bond.list" => self.handle_list(params).await,
+            "crypto.sign_contract" => self.handle_sign_contract(params, btsp_provider).await,
+            "crypto.verify_contract" => Self::handle_verify_contract(params).await,
             _ => Err(format!("Unknown ionic bond method: {method}")),
         }
     }
@@ -436,6 +441,103 @@ impl IonicBondHandler {
         let resp = IonicBondListResponse { bonds: filtered };
         serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
     }
+
+    /// Sign an arbitrary contract document with `BearDog`'s Ed25519 identity.
+    ///
+    /// The terms JSON is serialized canonically (sorted keys), SHA-256 hashed,
+    /// then signed. Returns the terms hash, signature, and public key so any
+    /// party can independently verify the contract.
+    async fn handle_sign_contract(
+        &self,
+        params: Option<&serde_json::Value>,
+        btsp_provider: &Arc<BeardogBtspProvider>,
+    ) -> Result<serde_json::Value, String> {
+        let params_value = params.ok_or("Missing params for crypto.sign_contract")?;
+        let sign_params = SignContractParams::deserialize(params_value)
+            .map_err(|e| format!("Invalid sign_contract params: {e}"))?;
+
+        let terms_hash = Self::compute_contract_terms_hash(&sign_params.terms);
+
+        let (signature, public_key) = Self::sign_terms_ed25519(btsp_provider, &terms_hash)?;
+
+        info!(
+            signer = %sign_params.signer,
+            context = ?sign_params.context,
+            terms_hash = %terms_hash,
+            "Contract signed"
+        );
+
+        let resp = SignContractResponse {
+            terms_hash,
+            signature,
+            public_key,
+            signed_at: Utc::now().to_rfc3339(),
+        };
+        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+    }
+
+    /// Verify an Ed25519 signature over a contract terms hash.
+    async fn handle_verify_contract(
+        params: Option<&serde_json::Value>,
+    ) -> Result<serde_json::Value, String> {
+        let params_value = params.ok_or("Missing params for crypto.verify_contract")?;
+        let verify_params = VerifyContractParams::deserialize(params_value)
+            .map_err(|e| format!("Invalid verify_contract params: {e}"))?;
+
+        let result = Self::verify_ed25519_signature(
+            &verify_params.terms_hash,
+            &verify_params.signature,
+            &verify_params.public_key,
+        );
+
+        let resp = match result {
+            Ok(()) => VerifyContractResponse {
+                valid: true,
+                error: None,
+            },
+            Err(e) => VerifyContractResponse {
+                valid: false,
+                error: Some(e),
+            },
+        };
+        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+    }
+
+    /// Compute a deterministic SHA-256 hash of arbitrary contract terms.
+    ///
+    /// The JSON value is serialized with sorted keys to ensure determinism
+    /// regardless of field ordering in the caller's payload.
+    fn compute_contract_terms_hash(terms: &serde_json::Value) -> String {
+        use sha2::{Digest, Sha256};
+        let canonical = Self::canonical_json(terms);
+        hex::encode(Sha256::digest(canonical.as_bytes()))
+    }
+
+    /// Recursively sort JSON object keys for deterministic serialization.
+    fn canonical_json(value: &serde_json::Value) -> String {
+        match value {
+            serde_json::Value::Object(map) => {
+                let mut sorted: Vec<_> = map.iter().collect();
+                sorted.sort_by_key(|(k, _)| *k);
+                let entries: Vec<String> = sorted
+                    .iter()
+                    .map(|(k, v)| {
+                        format!(
+                            "{}:{}",
+                            serde_json::to_string(k).unwrap_or_default(),
+                            Self::canonical_json(v)
+                        )
+                    })
+                    .collect();
+                format!("{{{}}}", entries.join(","))
+            }
+            serde_json::Value::Array(arr) => {
+                let entries: Vec<String> = arr.iter().map(Self::canonical_json).collect();
+                format!("[{}]", entries.join(","))
+            }
+            _ => serde_json::to_string(value).unwrap_or_default(),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -616,9 +718,11 @@ mod tests {
     async fn methods_list() {
         let handler = IonicBondHandler::new();
         let methods = handler.methods();
-        assert_eq!(methods.len(), 5);
+        assert_eq!(methods.len(), 7);
         assert!(methods.contains(&"crypto.ionic_bond.propose"));
         assert!(methods.contains(&"crypto.ionic_bond.verify"));
+        assert!(methods.contains(&"crypto.sign_contract"));
+        assert!(methods.contains(&"crypto.verify_contract"));
     }
 
     #[tokio::test]
@@ -746,5 +850,173 @@ mod tests {
             .await
             .expect("list active");
         assert!(list_active["bonds"].as_array().unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn sign_contract_returns_valid_signature() {
+        let handler = IonicBondHandler::new();
+        let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        let params = serde_json::json!({
+            "signer": "hotSpring",
+            "terms": {
+                "type": "gpu_lease",
+                "provider": "tower_a",
+                "consumer": "tower_b",
+                "duration_hours": 24,
+                "capabilities": ["compute.dispatch.submit"]
+            },
+            "context": "gpu_lease"
+        });
+
+        let result = handler
+            .handle("crypto.sign_contract", Some(&params), &provider)
+            .await
+            .expect("sign_contract");
+
+        assert!(!result["terms_hash"].as_str().unwrap().is_empty());
+        assert!(!result["signature"].as_str().unwrap().is_empty());
+        assert!(!result["public_key"].as_str().unwrap().is_empty());
+        assert!(!result["signed_at"].as_str().unwrap().is_empty());
+
+        let sig_hex = result["signature"].as_str().unwrap();
+        assert_eq!(sig_hex.len(), 128, "Ed25519 signature = 64 bytes = 128 hex");
+        let pk_hex = result["public_key"].as_str().unwrap();
+        assert_eq!(pk_hex.len(), 64, "Ed25519 public key = 32 bytes = 64 hex");
+    }
+
+    #[tokio::test]
+    async fn sign_then_verify_contract_roundtrip() {
+        let handler = IonicBondHandler::new();
+        let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        let terms = serde_json::json!({
+            "federation": "cern_grid",
+            "parties": ["family_a", "family_b"],
+            "scope": "data_egress_fence"
+        });
+
+        let sign_result = handler
+            .handle(
+                "crypto.sign_contract",
+                Some(&serde_json::json!({
+                    "signer": "family_a",
+                    "terms": terms,
+                })),
+                &provider,
+            )
+            .await
+            .expect("sign");
+
+        let verify_result = handler
+            .handle(
+                "crypto.verify_contract",
+                Some(&serde_json::json!({
+                    "terms_hash": sign_result["terms_hash"],
+                    "signature": sign_result["signature"],
+                    "public_key": sign_result["public_key"],
+                })),
+                &provider,
+            )
+            .await
+            .expect("verify");
+
+        assert_eq!(verify_result["valid"], true);
+        assert!(
+            verify_result
+                .get("error")
+                .and_then(|e| e.as_str())
+                .is_none()
+        );
+    }
+
+    #[tokio::test]
+    async fn verify_contract_rejects_tampered_signature() {
+        let handler = IonicBondHandler::new();
+        let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        let sign_result = handler
+            .handle(
+                "crypto.sign_contract",
+                Some(&serde_json::json!({
+                    "signer": "tower_a",
+                    "terms": { "scope": "test" },
+                })),
+                &provider,
+            )
+            .await
+            .expect("sign");
+
+        let verify_result = handler
+            .handle(
+                "crypto.verify_contract",
+                Some(&serde_json::json!({
+                    "terms_hash": sign_result["terms_hash"],
+                    "signature": hex::encode([0xDE; 64]),
+                    "public_key": sign_result["public_key"],
+                })),
+                &provider,
+            )
+            .await
+            .expect("verify");
+
+        assert_eq!(verify_result["valid"], false);
+        assert!(
+            verify_result["error"]
+                .as_str()
+                .unwrap()
+                .contains("verification failed")
+        );
+    }
+
+    #[tokio::test]
+    async fn sign_contract_deterministic_terms_hash() {
+        let handler = IonicBondHandler::new();
+        let provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        let terms = serde_json::json!({
+            "z_field": "last",
+            "a_field": "first",
+            "m_field": [1, 2, 3]
+        });
+
+        let r1 = handler
+            .handle(
+                "crypto.sign_contract",
+                Some(&serde_json::json!({ "signer": "a", "terms": terms })),
+                &provider,
+            )
+            .await
+            .expect("sign 1");
+
+        let terms_reordered = serde_json::json!({
+            "m_field": [1, 2, 3],
+            "a_field": "first",
+            "z_field": "last"
+        });
+
+        let r2 = handler
+            .handle(
+                "crypto.sign_contract",
+                Some(&serde_json::json!({ "signer": "a", "terms": terms_reordered })),
+                &provider,
+            )
+            .await
+            .expect("sign 2");
+
+        assert_eq!(
+            r1["terms_hash"].as_str().unwrap(),
+            r2["terms_hash"].as_str().unwrap(),
+            "canonical JSON must produce identical hashes regardless of key order"
+        );
+    }
+
+    #[tokio::test]
+    async fn methods_list_includes_contract_signing() {
+        let handler = IonicBondHandler::new();
+        let methods = handler.methods();
+        assert!(methods.contains(&"crypto.sign_contract"));
+        assert!(methods.contains(&"crypto.verify_contract"));
+        assert_eq!(methods.len(), 7);
     }
 }

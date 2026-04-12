@@ -217,6 +217,65 @@ pub struct IonicBondListResponse {
     pub bonds: Vec<IonicBond>,
 }
 
+// ── Contract Signing Types ─────────────────────────────────────────────
+
+/// Parameters for `crypto.sign_contract`.
+///
+/// Signs an arbitrary contract document with `BearDog`'s Ed25519 identity,
+/// producing a deterministic terms hash and a verifiable signature. This is
+/// the endpoint that enables programmatic cross-family trust establishment
+/// for multi-family deployments (CERN-level clouds, data federation,
+/// friend-hosted shards).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SignContractParams {
+    /// Identity of the signing party (primal name, tower ID, etc.).
+    pub signer: String,
+    /// The contract terms to sign. Serialized canonically (sorted keys) and
+    /// SHA-256 hashed before signing.
+    pub terms: serde_json::Value,
+    /// Optional context label scoping the signature (e.g. `"gpu_lease"`,
+    /// `"data_egress_fence"`, `"ionic_bond"`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context: Option<String>,
+}
+
+/// Response from `crypto.sign_contract`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SignContractResponse {
+    /// SHA-256 hex digest of the canonical contract terms.
+    pub terms_hash: String,
+    /// Ed25519 signature over the terms hash (hex-encoded, 128 hex chars).
+    pub signature: String,
+    /// Ed25519 public key of the signer (hex-encoded, 64 hex chars).
+    pub public_key: String,
+    /// Signing timestamp (RFC 3339).
+    pub signed_at: String,
+}
+
+/// Parameters for `crypto.verify_contract`.
+///
+/// Verifies an Ed25519 signature over a contract terms hash, enabling any
+/// party to confirm that a contract was signed by the claimed signer.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VerifyContractParams {
+    /// SHA-256 hex of the contract terms (from `sign_contract` response).
+    pub terms_hash: String,
+    /// Ed25519 signature to verify (hex-encoded).
+    pub signature: String,
+    /// Ed25519 public key of the claimed signer (hex-encoded).
+    pub public_key: String,
+}
+
+/// Response from `crypto.verify_contract`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VerifyContractResponse {
+    /// Whether the signature is cryptographically valid.
+    pub valid: bool,
+    /// Error detail (set only on failure).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

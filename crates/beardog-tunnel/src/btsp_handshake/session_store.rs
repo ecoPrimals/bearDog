@@ -230,6 +230,24 @@ impl BtspSessionStore {
         Ok(cipher)
     }
 
+    /// Export session keys for an active session (for the relay path).
+    ///
+    /// Returns `(encrypt_key, decrypt_key, cipher)` if the session exists.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the session ID is not found.
+    pub async fn export_session_keys(
+        &self,
+        session_id: &str,
+    ) -> Result<([u8; 32], [u8; 32], BtspCipher), BearDogError> {
+        let active = self.active.read().await;
+        let session = active.get(session_id).ok_or_else(|| {
+            BearDogError::system(format!("BTSP active session not found: {session_id}"))
+        })?;
+        Ok((session.encrypt_key, session.decrypt_key, session.cipher))
+    }
+
     /// Summary statistics for `btsp.server.status`.
     pub async fn status(&self) -> SessionStoreStatus {
         let pending = self.pending.read().await;

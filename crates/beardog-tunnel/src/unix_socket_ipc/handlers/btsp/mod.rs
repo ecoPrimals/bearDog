@@ -35,10 +35,11 @@ use std::sync::Arc;
 /// - `btsp.tunnel.status` / `btsp.tunnel_status` — Get tunnel status
 /// - `btsp.tunnel.close` / `btsp.tunnel_close` — Close tunnel gracefully
 ///
-/// # Server Surface (4 methods, handshake-as-a-service for other primals)
+/// # Server Surface (5 methods, handshake-as-a-service for other primals)
 ///
 /// - `btsp.server.create_session` — Generate ephemeral keys + challenge for a calling primal
 /// - `btsp.server.verify` — Verify a client's challenge response, derive session keys
+/// - `btsp.server.export_keys` — Export wrapped session keys for the relay path
 /// - `btsp.server.negotiate` — Re-negotiate cipher suite for an active session
 /// - `btsp.server.status` — Report session store health and active session count
 ///
@@ -93,6 +94,7 @@ impl MethodHandler for BtspHandler {
             // (canonical `btsp.server.*` namespace per primalSpring gap synthesis)
             "btsp.server.create_session",
             "btsp.server.verify",
+            "btsp.server.export_keys",
             "btsp.server.negotiate",
             "btsp.server.status",
             // Legacy aliases (backward compat with pre-server-surface callers)
@@ -149,6 +151,8 @@ impl MethodHandler for BtspHandler {
             self.handle_server_create_session(params).await
         } else if method == "btsp.server.verify" || method == "btsp.session.verify" {
             self.handle_server_verify(params).await
+        } else if method == "btsp.server.export_keys" {
+            self.handle_server_export_keys(params).await
         } else if method == "btsp.server.negotiate" || method == "btsp.session.negotiate" {
             self.handle_server_negotiate(params).await
         } else if method == "btsp.server.status" {

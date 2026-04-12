@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 12, 2026 -- Wave 37: primalSpring Audit Resolution — Contract Signing, BTSP Relay Path, Encoding Docs
+
+- **`crypto.sign_contract` + `crypto.verify_contract` implemented** (IONIC-RUNTIME) — New JSON-RPC methods for programmatic cross-family trust: signs arbitrary contract terms (canonical JSON → SHA-256 → Ed25519), returns terms_hash + signature + public_key for independent verification. Enables multi-family deployments (CERN-level clouds, data federation, friend-hosted shards). 5 new tests: roundtrip, tamper rejection, deterministic hash ordering, method registration.
+- **`btsp.server.export_keys` implemented** (BTSP-BARRACUDA-WIRE) — Completes the relay path: after `btsp.server.verify` succeeds, relay primals call `export_keys` to retrieve session keys wrapped under their X25519 ephemeral pub via ChaCha20-Poly1305 (keys never appear as plaintext in JSON-RPC). New types: `SessionExportKeysParams`, `SessionExportKeysResponse`.
+- **LD-01 encoding contract documented** — `crypto.hash` base64 requirement documented in handler doc comments, module-level docs, and wateringHole `CAPABILITY_WIRE_STANDARD.md` §Parameter Encoding. Covers all crypto methods, encoding hints (BD-01), and the sign_contract hex convention.
+- **Capability surface expanded** — `contract_signing` v1.0 capability added to `capabilities.list`; cost_estimates updated for `crypto.sign_contract` and `crypto.verify_contract`; ionic_bond capability bumped to v1.1.
+- **97 JSON-RPC methods** (was 95: +`crypto.sign_contract`, +`crypto.verify_contract`, +`btsp.server.export_keys`, -0 = 98 total handler aliases, 97 logical methods).
+- **14,774+ tests passing**, all quality gates clean (fmt, clippy, doc, deny).
+
 ### April 12, 2026 -- Wave 36: Composition Elevation Sprint — Ionic Bond Lifecycle, BTSP Naming, Smart Refactoring
 
 - **Ionic bond lifecycle hardened** — `IonicBond` type now carries `terms_hash` (SHA-256 of canonical terms); `crypto.ionic_bond.verify` performs real Ed25519 re-verification of both proposer and acceptor signatures (was state-only check). 4 new lifecycle tests: `sealed_bond_stores_terms_hash`, `verify_detects_tampered_proposer_signature`, `verify_detects_tampered_acceptor_signature`, `full_lifecycle_propose_accept_list_revoke`.

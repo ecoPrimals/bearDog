@@ -178,9 +178,15 @@ impl CapabilitiesHandler {
                 },
                 {
                     "type": "ionic_bond",
-                    "version": "1.0",
+                    "version": "1.1",
                     "methods": ["propose", "accept", "verify", "revoke", "list"],
                     "description": "Cross-atomic-boundary trust negotiation (ionic bonds for dual-tower enclave, GPU lease, data egress fence)"
+                },
+                {
+                    "type": "contract_signing",
+                    "version": "1.0",
+                    "methods": ["sign_contract", "verify_contract"],
+                    "description": "Ed25519 contract signing for cross-family trust (IONIC-RUNTIME: propose→accept→seal with signed contracts)"
                 },
                 {
                     "type": "graph",
@@ -242,6 +248,8 @@ impl CapabilitiesHandler {
                 "crypto.ionic_bond.accept":        { "cpu": "low",    "latency_ms": 1 },
                 "crypto.ionic_bond.verify":        { "cpu": "low",    "latency_ms": 1 },
                 "crypto.ionic_bond.list":          { "cpu": "low",    "latency_ms": 1 },
+                "crypto.sign_contract":            { "cpu": "low",    "latency_ms": 1 },
+                "crypto.verify_contract":          { "cpu": "low",    "latency_ms": 1 },
                 "security.evaluate":               { "cpu": "medium", "latency_ms": 5 },
                 "graph.authorize_modification":    { "cpu": "medium", "latency_ms": 5 },
                 "tls.derive_secrets":              { "cpu": "medium", "latency_ms": 2 },

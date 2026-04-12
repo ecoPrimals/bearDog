@@ -354,6 +354,42 @@ pub struct SessionNegotiateResponse {
     pub cipher: String,
 }
 
+/// Parameters for `btsp.server.export_keys`
+///
+/// Exports session keys for a verified BTSP session, encrypted under the
+/// caller's X25519 ephemeral public key via ChaCha20-Poly1305. This
+/// completes the relay path (BTSP-BARRACUDA-WIRE): after the relay primal
+/// calls `btsp.server.verify`, it calls `export_keys` to obtain the
+/// session keys needed for post-handshake stream encryption.
+///
+/// The keys are wrapped (encrypted) so they never appear as plaintext in
+/// JSON-RPC responses.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionExportKeysParams {
+    /// Session ID from `btsp.server.verify`.
+    pub session_id: String,
+    /// Base64-encoded X25519 public key of the caller. The session keys
+    /// will be encrypted under a shared secret derived from this key and
+    /// `BearDog`'s ephemeral key.
+    pub caller_ephemeral_pub: String,
+}
+
+/// Response from `btsp.server.export_keys`
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionExportKeysResponse {
+    /// Base64-encoded encrypted payload containing the two 32-byte session
+    /// keys (server-to-client || client-to-server, 64 bytes total), plus a
+    /// 12-byte nonce and 16-byte Poly1305 tag.
+    pub wrapped_keys: String,
+    /// Base64-encoded X25519 ephemeral public key that `BearDog` used for
+    /// the key-wrapping DH. The caller uses this + their secret to derive
+    /// the unwrapping key.
+    pub wrapper_ephemeral_pub: String,
+    /// Cipher used for the session (`"chacha20_poly1305"`, `"hmac_plain"`,
+    /// or `"null"`).
+    pub cipher: String,
+}
+
 fn default_cipher() -> String {
     "chacha20_poly1305".into()
 }

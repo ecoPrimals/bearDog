@@ -10,10 +10,10 @@ async fn test_btsp_handler_methods() {
 
     // - 6 core operations x 4 aliases each = 24
     // - 3 unified methods (configure_tls, verify_peer, tunnel_send_http) = 3
-    // - 4 server methods (server.create_session, server.verify, server.negotiate, server.status) = 4
+    // - 5 server methods (create_session, verify, export_keys, negotiate, status) = 5
     // - 3 legacy session aliases (session.create, session.verify, session.negotiate) = 3
-    // Total = 34 methods
-    assert_eq!(methods.len(), 34);
+    // Total = 35 methods
+    assert_eq!(methods.len(), 35);
 
     // Semantic domain.operation names (primary in registry)
     assert!(methods.contains(&"btsp.contact.exchange"));
