@@ -51,19 +51,26 @@ use tracing::{debug, info, warn};
 
 /// Register `BearDog`'s capabilities with Neural API
 ///
-/// This registers three main capabilities:
+/// This registers four main capabilities:
 /// 1. `crypto` - Core cryptographic operations
 /// 2. `tls_crypto` - TLS-specific crypto operations
 /// 3. `genetic_lineage` - Genetic lineage verification
+/// 4. `security` - Consent, trust evaluation, JWT secrets
 ///
 /// Each capability includes semantic mappings that translate generic
 /// operation names to `BearDog`'s specific method names.
+///
+/// If `signed_attestation` is provided, each registration payload includes
+/// an Ed25519 signature so the Neural API (and downstream Songbird discovery)
+/// can verify the advertisement is authentic. The attestation should be
+/// produced by the primal's unified identity key.
 ///
 /// # Arguments
 ///
 /// * `neural_socket` - Path to Neural API Unix socket
 /// * `primal_name` - Primal identifier (e.g., "beardog-nat0")
 /// * `socket_path` - Path to this primal's Unix socket (e.g., "/tmp/beardog-nat0.sock")
+/// * `signed_attestation` - Optional Ed25519 attestation over the capability surface
 ///
 /// # Errors
 ///
@@ -72,6 +79,7 @@ pub async fn register_with_neural_api(
     neural_socket: &str,
     primal_name: &str,
     socket_path: &str,
+    signed_attestation: Option<&serde_json::Value>,
 ) -> Result<()> {
     info!(
         "🔐 Registering BearDog crypto capabilities with Neural API at {}",
@@ -79,16 +87,26 @@ pub async fn register_with_neural_api(
     );
     info!("   Primal: {}, Socket: {}", primal_name, socket_path);
 
-    // Capability definitions with semantic mappings
-    let capabilities = vec![
-        // Core crypto capability
-        json!({
-            "capability": BEARDOG_CAPABILITY_DOMAIN,
+    let build_cap = |capability: &str, version: &str, operations: Vec<&str>| {
+        let mut cap = json!({
+            "capability": capability,
             "primal": primal_name,
             "socket": socket_path,
             "provider": "beardog",
-            "version": "0.9.0",
-            "operations": [
+            "version": version,
+            "operations": operations,
+        });
+        if let Some(attestation) = signed_attestation {
+            cap["signed_attestation"] = attestation.clone();
+        }
+        cap
+    };
+
+    let capabilities = vec![
+        build_cap(
+            BEARDOG_CAPABILITY_DOMAIN,
+            "0.9.0",
+            vec![
                 "generate_keypair",
                 "ecdh_derive",
                 "encrypt",
@@ -100,54 +118,34 @@ pub async fn register_with_neural_api(
                 "sha256",
                 "sha384",
                 "hkdf_extract",
-                "hkdf_expand"
+                "hkdf_expand",
             ],
-            // NOTE: semantic_mappings are now handled by Neural API's graph-based
-            // translation system (tower_atomic_bootstrap.toml). BearDog just exposes
-            // its API, and the graph wires everything together at runtime.
-            // This enables TRUE PRIMAL pattern with zero coupling!
-        }),
-        // TLS-specific crypto
-        json!({
-            "capability": "tls_crypto",
-            "primal": primal_name,
-            "socket": socket_path,
-            "provider": "beardog",
-            "version": "0.9.0",
-            "operations": [
+        ),
+        build_cap(
+            "tls_crypto",
+            "0.9.0",
+            vec![
                 "derive_handshake_secrets",
                 "derive_application_secrets",
-                "compute_finished_verify_data"
+                "compute_finished_verify_data",
             ],
-            // Semantic mappings handled by graph (see tower_atomic_bootstrap.toml)
-        }),
-        // Genetic lineage
-        json!({
-            "capability": "genetic_lineage",
-            "primal": primal_name,
-            "socket": socket_path,
-            "provider": "beardog",
-            "version": "0.9.0",
-            "operations": [
-                "verify_lineage",
-                "generate_lineage_proof"
-            ],
-        }),
-        // Security domain (consent, trust evaluation)
-        json!({
-            "capability": "security",
-            "primal": primal_name,
-            "socket": socket_path,
-            "provider": "beardog",
-            "version": "1.0.0",
-            "operations": [
+        ),
+        build_cap(
+            "genetic_lineage",
+            "0.9.0",
+            vec!["verify_lineage", "generate_lineage_proof"],
+        ),
+        build_cap(
+            "security",
+            "1.0.0",
+            vec![
                 "verify_consent",
                 "issue_consent_token",
                 "evaluate",
                 "lineage",
-                "generate_jwt_secret"
+                "generate_jwt_secret",
             ],
-        }),
+        ),
     ];
 
     // Register each capability

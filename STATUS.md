@@ -90,6 +90,15 @@
 
 ## Recent Improvements
 
+### Wave 45: Signed Capability Announcements — Unified Identity, Wire Standard SA-01 (April 13, 2026)
+
+- **Unified primal identity key** — One Ed25519 keypair for announcements, ionic bonds, contract signing, neural registration.
+- **Canonical signed message** — Hash-then-sign with sorted methods, fixing unsorted bug.
+- **`discover_capabilities` now signed** — Includes `signed_announcement`.
+- **Neural API attestation** — `capability.register` includes Ed25519 attestation for Songbird verification.
+- **Wire standard SA-01** — New signed announcement spec in `CAPABILITY_WIRE_STANDARD.md`.
+- All quality gates clean.
+
 ### Wave 44: Documentation & Debris Cleanup — Root Docs, Spec Links, Showcase Fixes (April 13, 2026)
 
 - **Root docs aligned** — ROADMAP, START_HERE, CONTEXT, SECURITY all updated to canonical metrics (100 methods, 14,780+ tests, 90.51% coverage).

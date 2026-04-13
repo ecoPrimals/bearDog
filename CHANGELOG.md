@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 13, 2026 -- Wave 45: Signed Capability Announcements — Unified Identity, Wire Standard SA-01
+
+- **Unified primal identity key** — Single Ed25519 derivation (`SHA-256("primal-identity-key:" || name || ":" || node_id)`) shared by capability announcements, ionic bond signing, contract signing, and neural registration. Eliminates prior inconsistency where announcements and ionic bonds used separate keys.
+- **Canonical signed message (schema_version 2)** — `SHA-256(primal ":" version ":" sorted_methods)` with hash-then-sign. Methods are lexicographically sorted before hashing, fixing the prior bug where unsorted registry order was signed despite doc claiming sorted.
+- **`discover_capabilities` now signed** — Response includes `primal`, `version`, `signed_announcement` alongside the capability list. Previously unsigned.
+- **Neural API registration attestation** — `capability.register` payloads now include `signed_attestation` with Ed25519 signature so Neural API and downstream Songbird discovery can verify advertisement authenticity.
+- **Wire standard extended (SA-01)** — New "Signed Capability Announcements" section in `CAPABILITY_WIRE_STANDARD.md` specifying canonical message format, key derivation, verification procedure, and implementation status.
+- **New `primal_signing` module** — `crates/beardog-tunnel/src/unix_socket_ipc/handlers/primal_signing.rs` centralizes identity key derivation, signing, and canonical message construction. 5 unit tests.
+- **All quality gates clean** — fmt, clippy, doc, test.
+
 ### April 13, 2026 -- Wave 44: Documentation & Debris Cleanup — Root Docs, Spec Links, Showcase Fixes
 
 - **Root docs aligned** — ROADMAP.md, START_HERE.md, CONTEXT.md, SECURITY.md updated: method count 95→100, tests 14,761→14,780+, coverage 90%+→90.51%, dates to April 13, 2026.

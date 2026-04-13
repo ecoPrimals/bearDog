@@ -15,6 +15,7 @@ async fn test_register_with_neural_api_connection_failure() {
         "/tmp/nonexistent-neural-api-test.sock",
         "beardog-test",
         "/tmp/beardog-test.sock",
+        None,
     )
     .await;
 

@@ -55,6 +55,7 @@ pub mod graph_security;
 pub mod health;
 pub mod introspection; // Primal introspection (primal.info, rpc.methods)
 pub mod ionic_bond;
+pub mod primal_signing; // Unified primal Ed25519 identity (shared by announcements + ionic bonds)
 pub mod relay; // Relay authorization (lineage-gated, for coordinated punch)
 pub mod secrets; // Encrypted secret storage (family-scoped, ChaCha20-Poly1305)
 pub mod security;

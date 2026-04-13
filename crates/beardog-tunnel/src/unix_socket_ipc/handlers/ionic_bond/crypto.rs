@@ -4,11 +4,12 @@ use crate::btsp_provider::BeardogBtspProvider;
 use beardog_types::ionic_bond::IonicBondProposeParams;
 use std::sync::Arc;
 
-/// Sign the terms hash with the primal's Ed25519 identity key.
+/// Sign the terms hash with the primal's unified Ed25519 identity key.
 ///
-/// Returns `(signature_hex, public_key_hex)`. The key seed is derived
-/// deterministically from the primal's runtime identity (`PRIMAL_NAME` +
-/// node-id) via SHA-256.
+/// Returns `(signature_hex, public_key_hex)`. Uses the shared primal
+/// identity derivation from [`super::super::primal_signing`] so the
+/// same public key appears in capability announcements, ionic bonds,
+/// and neural registration.
 ///
 /// **BTSP Phase 3 (HSM path):** The `_btsp_provider` parameter is
 /// reserved for HSM-backed signing via `HsmKeyProvider::sign()`. When
@@ -19,27 +20,16 @@ pub(super) fn sign_terms_ed25519(
     _btsp_provider: &Arc<BeardogBtspProvider>,
     terms_hash: &str,
 ) -> Result<(String, String), String> {
-    use ed25519_dalek::{Signer, SigningKey};
-    use sha2::{Digest, Sha256};
-
     let primal_name = std::env::var("PRIMAL_NAME").unwrap_or_else(|_| "beardog".to_string());
     let node_id = beardog_types::primal_identity::resolve_node_id_from_env_or_ephemeral(None);
 
-    let mut seed = [0u8; 32];
-    let mut h = Sha256::new();
-    h.update(b"ionic-bond-identity-seed:");
-    h.update(primal_name.as_bytes());
-    h.update(b":");
-    h.update(node_id.as_bytes());
-    seed.copy_from_slice(&h.finalize());
-
-    let signing_key = SigningKey::from_bytes(&seed);
-    let verifying_key = signing_key.verifying_key();
-    let signature = signing_key.sign(terms_hash.as_bytes());
-    Ok((
-        hex::encode(signature.to_bytes()),
-        hex::encode(verifying_key.as_bytes()),
-    ))
+    Ok(
+        crate::unix_socket_ipc::handlers::primal_signing::sign_with_primal_identity(
+            &primal_name,
+            &node_id,
+            terms_hash.as_bytes(),
+        ),
+    )
 }
 
 /// Verify an Ed25519 signature over the terms hash using the provided

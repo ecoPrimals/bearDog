@@ -65,6 +65,28 @@ pub(super) fn neural_registration_address<'a>(
     tcp_listen.unwrap_or(unix_socket_path)
 }
 
+/// Build a signed attestation for Neural API registration using the primal's
+/// unified Ed25519 identity key.
+fn build_neural_attestation(primal_name: &str) -> serde_json::Value {
+    use beardog_tunnel::unix_socket_ipc::handlers::primal_signing::{
+        canonical_announcement_message, sign_with_primal_identity,
+    };
+
+    let node_id = beardog_types::primal_identity::resolve_node_id_from_env_or_ephemeral(None);
+    let version = env!("CARGO_PKG_VERSION");
+    let methods: Vec<String> = Vec::new();
+    let message = canonical_announcement_message(primal_name, version, &methods);
+    let (signature, public_key) = sign_with_primal_identity(primal_name, &node_id, &message);
+
+    serde_json::json!({
+        "schema_version": 2,
+        "algorithm": "ed25519",
+        "public_key": public_key,
+        "signature": signature,
+        "signed_fields": ["primal", "version"],
+    })
+}
+
 /// Handle server command - start long-running service
 ///
 /// # Errors
@@ -209,7 +231,15 @@ pub async fn handle_server(args: ServerArgs) -> Result<(), BearDogError> {
         let registration_addr =
             neural_registration_address(tcp_addr.as_deref(), socket_path.as_str());
 
-        match register_with_neural_api(&neural_socket, &primal_name, registration_addr).await {
+        let attestation = build_neural_attestation(&primal_name);
+        match register_with_neural_api(
+            &neural_socket,
+            &primal_name,
+            registration_addr,
+            Some(&attestation),
+        )
+        .await
+        {
             Ok(()) => info!("registered with Neural API"),
             Err(e) => warn!(error = %e, "Neural API registration failed (non-fatal)"),
         }

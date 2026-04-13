@@ -283,65 +283,66 @@ impl CapabilitiesHandler {
         }))
     }
 
-    /// Produce a signed capability announcement (Ed25519 over the primal
-    /// name + version + sorted method list). Verifiers can reconstruct the
-    /// message and check the signature against the announced public key.
+    /// Produce a signed capability announcement using the primal's unified
+    /// Ed25519 identity key (same key as ionic bonds and neural registration).
+    ///
+    /// The signed payload is `SHA-256(primal ":" version ":" sorted_methods)`,
+    /// ensuring deterministic verification regardless of registry ordering.
+    /// Includes `schema_version` so verifiers know which canonical form was used.
     fn sign_capability_announcement(&self, methods: &[String]) -> serde_json::Value {
-        use ed25519_dalek::{Signer, SigningKey};
-        use sha2::{Digest, Sha256};
+        use super::primal_signing::{canonical_announcement_message, sign_with_primal_identity};
 
         let primal_name = get_primal_name_with(&self.primal_hints);
-        let node_id = beardog_types::primal_identity::resolve_node_id_from_env_or_ephemeral(None);
+        let node_id = self.identity.node_id();
+        let version = env!("CARGO_PKG_VERSION");
 
-        let mut seed = [0u8; 32];
-        let mut h = Sha256::new();
-        h.update(b"capability-announcement-key:");
-        h.update(primal_name.as_bytes());
-        h.update(b":");
-        h.update(node_id.as_bytes());
-        seed.copy_from_slice(&h.finalize());
-        let signing_key = SigningKey::from_bytes(&seed);
-
-        let mut message = Vec::new();
-        message.extend_from_slice(primal_name.as_bytes());
-        message.extend_from_slice(env!("CARGO_PKG_VERSION").as_bytes());
-        for m in methods {
-            message.extend_from_slice(m.as_bytes());
-        }
-        let signature = signing_key.sign(&message);
-        let verifying_key = signing_key.verifying_key();
+        let message = canonical_announcement_message(&primal_name, version, methods);
+        let (signature, public_key) = sign_with_primal_identity(&primal_name, node_id, &message);
 
         serde_json::json!({
+            "schema_version": 2,
             "algorithm": "ed25519",
-            "public_key": hex::encode(verifying_key.as_bytes()),
-            "signature": hex::encode(signature.to_bytes()),
+            "public_key": public_key,
+            "signature": signature,
+            "signed_fields": ["primal", "version", "methods"],
         })
     }
 
     /// Returns a flat list of capability strings for ecosystem consistency.
     /// This mirrors the conventional `discover_capabilities` format, enabling
-    /// uniform capability discovery across all primals.
+    /// uniform capability discovery across all primals. Includes a signed
+    /// attestation so Songbird discovery can verify authenticity.
     async fn handle_discover_capabilities(&self) -> Result<serde_json::Value, String> {
         info!("🔍 discover_capabilities requested");
 
+        let capabilities: Vec<String> = [
+            "crypto.sha256",
+            "crypto.sha512",
+            "crypto.sign",
+            "crypto.verify",
+            "crypto.key_exchange",
+            "crypto.encrypt",
+            "crypto.decrypt",
+            "crypto.hmac",
+            "jwt.provision",
+            "secrets.store",
+            "secrets.retrieve",
+            "relay.authorize",
+            "consent.verify",
+            "consent.issue",
+            "ionic_bond.seal",
+        ]
+        .iter()
+        .map(|s| (*s).to_string())
+        .collect();
+
+        let signed = self.sign_capability_announcement(&capabilities);
+
         Ok(serde_json::json!({
-            "capabilities": [
-                "crypto.sha256",
-                "crypto.sha512",
-                "crypto.sign",
-                "crypto.verify",
-                "crypto.key_exchange",
-                "crypto.encrypt",
-                "crypto.decrypt",
-                "crypto.hmac",
-                "jwt.provision",
-                "secrets.store",
-                "secrets.retrieve",
-                "relay.authorize",
-                "consent.verify",
-                "consent.issue",
-                "ionic_bond.seal"
-            ]
+            "primal": get_primal_name_with(&self.primal_hints),
+            "version": env!("CARGO_PKG_VERSION"),
+            "capabilities": capabilities,
+            "signed_announcement": signed,
         }))
     }
 

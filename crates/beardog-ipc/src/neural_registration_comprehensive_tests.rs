@@ -59,6 +59,7 @@ async fn test_register_with_neural_api_nonexistent_socket() {
         "/tmp/nonexistent-neural-api-test-12345.sock",
         "beardog-test",
         "/tmp/beardog-test.sock",
+        None,
     )
     .await;
     assert!(result.is_err());
@@ -70,6 +71,7 @@ async fn test_register_with_neural_api_invalid_path() {
         "/invalid/path/that/does/not/exist.sock",
         "beardog-test",
         "/tmp/beardog-test.sock",
+        None,
     )
     .await;
     assert!(result.is_err());

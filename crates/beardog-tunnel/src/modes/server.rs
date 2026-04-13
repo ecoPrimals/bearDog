@@ -305,6 +305,9 @@ async fn register_with_discovery_service(
     socket_config: &SocketConfig,
     neural_registration: &NeuralRegistrationParams,
 ) -> anyhow::Result<()> {
+    use crate::unix_socket_ipc::handlers::primal_signing::{
+        canonical_announcement_message, sign_with_primal_identity,
+    };
     use beardog_ipc::{discover_neural_api_socket, register_with_neural_api};
     use beardog_types::primal_identity::PrimalIdentity;
 
@@ -317,7 +320,27 @@ async fn register_with_discovery_service(
         let registration_instance = neural_registration.registration_instance_id(&identity);
         let socket_path = socket_config.socket_path_string();
 
-        match register_with_neural_api(&neural_socket, &registration_instance, &socket_path).await {
+        let node_id = identity.node_id();
+        let version = env!("CARGO_PKG_VERSION");
+        let message = canonical_announcement_message(&registration_instance, version, &[]);
+        let (signature, public_key) =
+            sign_with_primal_identity(&registration_instance, node_id, &message);
+        let attestation = serde_json::json!({
+            "schema_version": 2,
+            "algorithm": "ed25519",
+            "public_key": public_key,
+            "signature": signature,
+            "signed_fields": ["primal", "version"],
+        });
+
+        match register_with_neural_api(
+            &neural_socket,
+            &registration_instance,
+            &socket_path,
+            Some(&attestation),
+        )
+        .await
+        {
             Ok(()) => {
                 info!("✅ Registered with Neural API (TRUE PRIMAL)");
                 return Ok(());
