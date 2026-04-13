@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 13, 2026 -- Wave 40: Deep Debt Sweep — Wildcard Imports, Lint Evolution, Dead Features, Dep Alignment
+
+- **Wildcard imports eliminated** — 3 production `use crate::*` in PKCS#11 discoverer modules replaced with explicit imports. Eliminated `classification.rs`, `discoverer.rs`, `capability_profiles.rs` wildcards.
+- **`#[allow(` → `#[expect(`** — Migrated 4 instances (3× `deprecated` re-exports in `hybrid_intelligence/types`, 1× `unused_mut` in `entropy_orchestrator`). Removed spurious `#[allow(unused_imports)]` in `pkcs11.rs` (import IS used). Remaining `#[allow(deprecated)]` documented as unfulfillable-expect (rustc limitation on deprecated re-exports/definitions).
+- **5 dead Cargo features removed** — `async` (`beardog-config`), `camera` (`beardog-genetics`), `advanced-registry` (`beardog-adapters`), `network-scan` (`beardog-discovery`), `mock-primals` (`beardog-tower-atomic`). Confirmed zero `#[cfg(feature = "…")]` gates and zero cross-crate `features = [...]` references.
+- **`mdns-sd` version aligned** — `beardog-capabilities` 0.19 → 0.11 to match `beardog-core`, `beardog-adapters`, `beardog-discovery`. Eliminates double-version compilation.
+- **`thiserror` version split fixed** — `beardog-utils` optional dep on `thiserror = "1.0"` removed; `test-utils` feature now empty (test modules use dev-dep `thiserror.workspace = true` → 2.0).
+- **`#[allow(` 81** (was 86); **`#[expect(` 646** (was 642); **14,780+ tests**, all quality gates clean.
+
 ### April 13, 2026 -- Wave 39: wetSpring Alignment — Consent Gate, Security Domain Registration
 
 - **`security.verify_consent` + `security.issue_consent_token` implemented** — HMAC-SHA256 consent tokens gating vault data access (NUCLEUS consent protocol). wetSpring's `verify_consent_via_beardog` calls `capability.call("security", "verify_consent", {owner_id, scope, token})` — BearDog now resolves this directly. Token = HMAC-SHA256(BLAKE3(family_id + ":consent-hmac-key"), owner_id + ":" + scope). Cross-family tokens automatically rejected. 6 new tests: roundtrip, bad token, wrong scope, cross-family rejection, missing params, method registration.

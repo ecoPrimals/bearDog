@@ -3,7 +3,7 @@
 //! PKCS#11 HSM discoverer — orchestrates library search, token enumeration, and HSM records.
 
 use super::types::Pkcs11TokenInfo;
-use crate::universal_hsm_discovery::*;
+use crate::universal_hsm_discovery::{DiscoveredHsm, HsmEndpoint, HsmType, UniversalHsmDiscovery};
 use beardog_errors::BearDogError;
 use chrono::Utc;
 use std::collections::HashSet;

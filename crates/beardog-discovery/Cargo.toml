@@ -63,5 +63,4 @@ default = ["service-registry"]
 mdns = ["dep:mdns-sd"]
 dns-sd = ["dep:hickory-resolver"]
 service-registry = []
-network-scan = []  # Opt-in only (slow)
 

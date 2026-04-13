@@ -3,8 +3,12 @@
 //! Static [`UniversalHsmCapabilities`] matrices for PKCS#11 vendor profiles.
 
 use super::discoverer::Pkcs11Discoverer;
-use crate::tunnel::hsm::types::capability::*;
-use crate::universal_hsm_discovery::*;
+use crate::tunnel::hsm::types::capability::HsmCapabilities as UniversalHsmCapabilities;
+use crate::universal_hsm_discovery::{
+    AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
+    CryptoOperationCapabilities, HumanEntropyCapabilities, KeyGenerationCapabilities,
+    KeyManagementCapabilities, PerformanceCapabilities, SecurityCapabilities, TamperResistance,
+};
 
 impl Pkcs11Discoverer {
     /// Create capabilities for enterprise HSMs

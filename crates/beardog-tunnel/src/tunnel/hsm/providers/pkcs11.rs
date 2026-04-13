@@ -6,7 +6,6 @@
 
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
-#[allow(unused_imports)]
 use tracing::debug;
 
 /// PKCS#11 Universal HSM Provider

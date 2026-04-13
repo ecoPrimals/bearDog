@@ -40,6 +40,4 @@ serial_test = { workspace = true }
 
 [features]
 default = []
-# Enable for testing without live primals
-mock-primals = []
 

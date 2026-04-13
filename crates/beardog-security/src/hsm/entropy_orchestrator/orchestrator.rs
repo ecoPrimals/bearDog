@@ -138,7 +138,10 @@ impl HsmEntropyOrchestrator {
             None
         };
 
-        #[allow(unused_mut)]
+        #[expect(
+            unused_mut,
+            reason = "mutated inside #[cfg(feature = \"fido2\")] block"
+        )]
         let mut total_devices = 0;
 
         #[cfg(feature = "fido2")]

@@ -4,8 +4,8 @@
 
 use super::discoverer::Pkcs11Discoverer;
 use super::types::Pkcs11TokenInfo;
-use crate::tunnel::hsm::types::capability::*;
-use crate::universal_hsm_discovery::*;
+use crate::tunnel::hsm::types::capability::HsmCapabilities as UniversalHsmCapabilities;
+use crate::universal_hsm_discovery::{HsmTier, HsmType};
 
 impl Pkcs11Discoverer {
     /// Classify token and determine capabilities

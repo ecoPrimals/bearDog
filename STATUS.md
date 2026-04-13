@@ -36,8 +36,8 @@
 - **Crates**: 29 directories (beardog-integration excluded — overstep)
 - **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
 - **Crypto Methods**: 99 JSON-RPC methods (`methods()` handler count: +2 consent verification)
-- **`#[allow(`**: 86 (was 67)
-- **`#[expect(`**: 642 (was 629)
+- **`#[allow(`**: 81 (was 86)
+- **`#[expect(`**: 646 (was 642)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
 
 ---
@@ -89,6 +89,15 @@
 ---
 
 ## Recent Improvements
+
+### Wave 40: Deep Debt Sweep — Wildcard Imports, Lint Evolution, Dead Features, Dep Alignment (April 13, 2026)
+
+- **Wildcard imports eliminated** — 3 production `use crate::*` in PKCS#11 discoverer modules replaced with explicit imports (classification, discoverer, capability_profiles). iOS/Android wildcards left as-is (conditionally compiled / orphaned modules).
+- **`#[allow(` → `#[expect(`** — 4 migrated: 3× `deprecated` re-exports in `hybrid_intelligence/types/mod.rs`, 1× `unused_mut` in `entropy_orchestrator`. Remaining `#[allow(deprecated)]` instances documented as unfulfillable with `expect` (rustc limitation). Spurious `#[allow(unused_imports)]` on `tracing::debug` removed entirely (import IS used).
+- **5 dead Cargo features removed** — `async` (beardog-config), `camera` (beardog-genetics), `advanced-registry` (beardog-adapters), `network-scan` (beardog-discovery), `mock-primals` (beardog-tower-atomic).
+- **`mdns-sd` version aligned** — `beardog-capabilities` downgraded 0.19 → 0.11 to match workspace standard. Eliminates double-version compilation.
+- **`thiserror` version split fixed** — `beardog-utils` optional dep on thiserror 1.0 removed; `test-utils` feature now empty (test modules use dev-dependency thiserror 2.0 via workspace).
+- **`#[allow(` 81** (was 86); **`#[expect(` 646** (was 642); **14,780+ tests**, all gates clean.
 
 ### Wave 39: wetSpring Alignment — Consent Gate, Security Domain Registration (April 13, 2026)
 
