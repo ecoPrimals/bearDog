@@ -31,7 +31,7 @@ BearDog provides secure cryptographic operations for all primals through the **T
 - **100% Pure Rust** — Zero C dependencies (RustCrypto suite, postcard, hickory-dns)
 - **Rust 2024 Edition** — Modern idioms, MSRV 1.93.0
 - **Fully Concurrent** — Dependency injection architecture, no global mutable state
-- **97 Crypto Methods** — Complete JSON-RPC API (including BTSP handshake-as-a-service + contract signing)
+- **99 JSON-RPC Methods** — Complete crypto API (including BTSP handshake-as-a-service, contract signing, consent gate)
 - **Tor v3 Support** — Onion address derivation + ntor handshake + cell crypto
 - **Multi-Family Support** — `--family-id` flag for per-family instances
 - **Secret Storage** — Encrypted secrets with family-scoped keys
@@ -173,8 +173,8 @@ Key material is derived from the family seed. A BearDog instance serving family 
 | **Format** | `cargo fmt` clean |
 | **TODO/FIXME** | 0 |
 | **Files > 1000 LOC** | 0 (production code) |
-| **Rust files** | 1,967 |
-| **Tests** | 14,906+ (concurrent; 35 `#[serial]` in `beardog-production`) |
+| **Rust files** | 2,150 |
+| **Tests** | 14,780+ (concurrent; 35 `#[serial]` in `beardog-production`) |
 | **Coverage** | 90.51% line (llvm-cov workspace, target 90% met) |
 | **Serial Tests** | 35 (`beardog-production` shared `AtomicBool` state) |
 | **cargo deny** | All 4 checks pass (advisories, bans, licenses, sources) |

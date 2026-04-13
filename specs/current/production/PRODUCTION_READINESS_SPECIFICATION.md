@@ -9,7 +9,7 @@
 - Claims "95/100 EXCEPTIONAL" → Reality: 80% ready (192 tests need repair)
 - Claims "90%+ coverage" → Reality: Coverage unknown (blocked by test repairs)
 
-**For accurate status**: See `../../COMPREHENSIVE_AUDIT_OCT_3_2025_EVENING_FINAL.md`
+**For accurate status**: See [STATUS.md](../../STATUS.md)
 ---
 
 **Status**: ⚠️ **80% PRODUCTION READY** (Updated Oct 3, 2025)  

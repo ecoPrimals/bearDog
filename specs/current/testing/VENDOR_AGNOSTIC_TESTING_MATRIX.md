@@ -591,9 +591,7 @@ cargo build --release
 ## 📚 Related Documentation
 
 - **Architecture**: [UNIVERSAL_HSM_SPECIFICATION.md](../security/UNIVERSAL_HSM_SPECIFICATION.md)
-- **Vendor Cleanup**: [⭐_VENDOR_CLEANUP_COMPLETE_NOV_5_2025.md](../../../⭐_VENDOR_CLEANUP_COMPLETE_NOV_5_2025.md)
-- **Testing Guide**: [TESTING_GUIDE.md](../../../TESTING_GUIDE.md)
-- **Hardware Setup**: [HARDWARE_SETUP.md](../../../HARDWARE_SETUP.md)
+- **Status**: [STATUS.md](../../../STATUS.md)
 
 ---
 

@@ -414,8 +414,8 @@ max_concurrent_assessments = 10
 - **Integration Demo**: `examples/security_sentinel_integration_demo.rs`
 
 ### **Related Documentation**
-- **Security Sentinel Transformation**: `archive/2025-01-beardog-audit-completion/SECURITY_SENTINEL_TRANSFORMATION.md`
-- **Audit Completion Report**: `archive/2025-01-beardog-audit-completion/AUDIT_COMPLETION_REPORT.md`
+- **Security Sentinel Transformation**: *(archived to ecoPrimals fossil record)*
+- **Audit Completion Report**: *(archived to ecoPrimals fossil record)*
 - **BearDog Architecture**: `specs/BEARDOG_ARCHITECTURE.md`
 - **Enhanced Security Architecture**: `specs/ENHANCED_SECURITY_ARCHITECTURE_SPEC.md`
 

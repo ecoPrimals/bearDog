@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 13, 2026 -- Wave 41: Documentation Cleanup — Stale Links, Migration Debris, Metric Alignment
+
+- **Root doc metrics unified** — `README.md`, `ARCHITECTURE.md`, `CONTEXT.md` aligned to canonical numbers: 99 JSON-RPC methods (was 97 in three files), 2,150 Rust files (was 1,967 in README quality table), 14,780+ tests (was 14,906+ in README quality table — historical peak from Wave 38 before test consolidation).
+- **Migration test debris removed** — Deleted `simple_core_tests_migrated.rs` and `adapter_integration_tests_migrated.rs` (exact or subset duplicates of their non-migrated counterparts).
+- **Broken spec links fixed** — `PRODUCTION_READINESS_SPECIFICATION.md` pointed to deleted audit file → redirected to `STATUS.md`. `VENDOR_AGNOSTIC_TESTING_MATRIX.md` referenced 3 missing files → consolidated to `STATUS.md`. `SECURITY_SENTINEL_SPECIFICATION.md` referenced deleted `archive/` paths → annotated as ecoPrimals fossil record.
+- **Test READMEs refreshed** — `tests/chaos/README.md` and `tests/e2e/README.md` replaced from verbose October 2025 versions with concise, current summaries (April 2026).
+- **`.env.example` realigned** — Removed HTTP-centric vars (`BIND_ADDRESS`, `CORS`, `TLS`, `MAX_CONNECTIONS`, `ADMIN_PASSWORD`) that don't match JSON-RPC/NDJSON/Unix socket deployment model.
+- **163 receipt JSON artifacts cleaned** from `crates/beardog-cli/receipts/` (untracked, gitignored).
+- **All quality gates clean** — fmt, clippy, doc, test.
+
 ### April 13, 2026 -- Wave 40: Deep Debt Sweep — Wildcard Imports, Lint Evolution, Dead Features, Dep Alignment
 
 - **Wildcard imports eliminated** — 3 production `use crate::*` in PKCS#11 discoverer modules replaced with explicit imports. Eliminated `classification.rs`, `discoverer.rs`, `capability_profiles.rs` wildcards.

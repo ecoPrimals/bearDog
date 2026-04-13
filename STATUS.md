@@ -90,6 +90,15 @@
 
 ## Recent Improvements
 
+### Wave 41: Documentation Cleanup — Stale Links, Migration Debris, Metric Alignment (April 13, 2026)
+
+- **Root doc metrics unified** — README, ARCHITECTURE, CONTEXT aligned to canonical 99 methods / 2,150 Rust files / 14,780+ tests.
+- **Migration test debris removed** — 2 `_migrated` duplicate test files deleted.
+- **Broken spec links fixed** — 4 references to deleted archive files redirected to STATUS.md or annotated as fossil record.
+- **Test READMEs refreshed** — `tests/chaos/` and `tests/e2e/` READMEs updated from October 2025 to April 2026.
+- **`.env.example` realigned** — HTTP-centric vars removed; aligned with JSON-RPC/NDJSON/Unix socket model.
+- **163 receipt artifacts cleaned** from disk.
+
 ### Wave 40: Deep Debt Sweep — Wildcard Imports, Lint Evolution, Dead Features, Dep Alignment (April 13, 2026)
 
 - **Wildcard imports eliminated** — 3 production `use crate::*` in PKCS#11 discoverer modules replaced with explicit imports (classification, discoverer, capability_profiles). iOS/Android wildcards left as-is (conditionally compiled / orphaned modules).

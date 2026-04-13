@@ -24,7 +24,7 @@ BearDog answers "who is this node?" and "perform this crypto operation safely" f
 
 ## Key Capabilities
 
-- **Protocols:** JSON-RPC 2.0 over NDJSON (97 methods); tarpc optional behind feature gate
+- **Protocols:** JSON-RPC 2.0 over NDJSON (99 methods); tarpc optional behind feature gate
 - **Cryptography:** Ed25519, X25519, ChaCha20-Poly1305, BLAKE3 (plus TLS, Tor, post-quantum, and broader RustCrypto suite as exposed by handlers)
 - **Hardware / identity:** HSM abstraction (software, PKCS#11, StrongBox, etc.), **FIDO2** / HID device discovery (`beardog-hid`)
 - **Witness encoding:** `crypto.verify_ed25519` accepts encoding hints (`base64`, `hex`, `base64url`, `utf8`, `none`) per `ATTESTATION_ENCODING_STANDARD.md` v2.0
