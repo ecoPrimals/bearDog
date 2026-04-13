@@ -31,7 +31,7 @@ BearDog provides secure cryptographic operations for all primals through the **T
 - **100% Pure Rust** — Zero C dependencies (RustCrypto suite, postcard, hickory-dns)
 - **Rust 2024 Edition** — Modern idioms, MSRV 1.93.0
 - **Fully Concurrent** — Dependency injection architecture, no global mutable state
-- **99 JSON-RPC Methods** — Complete crypto API (including BTSP handshake-as-a-service, contract signing, consent gate)
+- **100 JSON-RPC Methods** — Complete crypto API (BTSP handshake-as-a-service, ionic bond lifecycle, contract signing, consent gate)
 - **Tor v3 Support** — Onion address derivation + ntor handshake + cell crypto
 - **Multi-Family Support** — `--family-id` flag for per-family instances
 - **Secret Storage** — Encrypted secrets with family-scoped keys

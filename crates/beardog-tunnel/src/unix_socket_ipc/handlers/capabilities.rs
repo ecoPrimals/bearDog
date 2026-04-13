@@ -178,15 +178,15 @@ impl CapabilitiesHandler {
                 },
                 {
                     "type": "btsp_server",
-                    "version": "1.0",
-                    "methods": ["server.create_session", "server.verify", "server.negotiate", "server.status"],
+                    "version": "1.1",
+                    "methods": ["server.create_session", "server.verify", "server.export_keys", "server.negotiate", "server.status"],
                     "description": "BTSP handshake-as-a-service — other primals call these to establish authenticated sessions"
                 },
                 {
                     "type": "ionic_bond",
-                    "version": "1.1",
-                    "methods": ["propose", "accept", "verify", "revoke", "list"],
-                    "description": "Cross-atomic-boundary trust negotiation (ionic bonds for dual-tower enclave, GPU lease, data egress fence)"
+                    "version": "2.0",
+                    "methods": ["propose", "accept", "seal", "verify", "revoke", "list"],
+                    "description": "Cross-atomic-boundary trust negotiation — propose→accept→seal lifecycle with full Ed25519 verification"
                 },
                 {
                     "type": "contract_signing",
@@ -252,8 +252,10 @@ impl CapabilitiesHandler {
                 "security.issue_consent_token":    { "cpu": "low",    "latency_ms": 1 },
                 "btsp.server.create_session":      { "cpu": "medium", "latency_ms": 2 },
                 "btsp.server.verify":              { "cpu": "medium", "latency_ms": 2 },
+                "btsp.server.export_keys":         { "cpu": "medium", "latency_ms": 2 },
                 "crypto.ionic_bond.propose":       { "cpu": "low",    "latency_ms": 1 },
                 "crypto.ionic_bond.accept":        { "cpu": "low",    "latency_ms": 1 },
+                "crypto.ionic_bond.seal":          { "cpu": "low",    "latency_ms": 1 },
                 "crypto.ionic_bond.verify":        { "cpu": "low",    "latency_ms": 1 },
                 "crypto.ionic_bond.list":          { "cpu": "low",    "latency_ms": 1 },
                 "crypto.sign_contract":            { "cpu": "low",    "latency_ms": 1 },
@@ -266,6 +268,7 @@ impl CapabilitiesHandler {
                 "btsp.server.verify":              ["btsp.server.create_session"],
                 "btsp.server.negotiate":           ["btsp.server.verify"],
                 "crypto.ionic_bond.accept":        ["crypto.ionic_bond.propose"],
+                "crypto.ionic_bond.seal":          ["crypto.ionic_bond.accept"],
                 "crypto.ionic_bond.verify":        ["crypto.ionic_bond.accept"],
                 "crypto.ionic_bond.revoke":        ["crypto.ionic_bond.accept"],
             },
@@ -336,7 +339,8 @@ impl CapabilitiesHandler {
                 "secrets.retrieve",
                 "relay.authorize",
                 "consent.verify",
-                "consent.issue"
+                "consent.issue",
+                "ionic_bond.seal"
             ]
         }))
     }
@@ -508,7 +512,7 @@ mod tests {
         let caps = response["capabilities"]
             .as_array()
             .expect("capabilities should be array in test");
-        assert!(caps.len() >= 14, "Expected at least 14 capabilities");
+        assert!(caps.len() >= 15, "Expected at least 15 capabilities");
 
         let cap_strs: Vec<&str> = caps
             .iter()

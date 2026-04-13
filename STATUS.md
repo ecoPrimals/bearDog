@@ -35,7 +35,7 @@
 
 - **Crates**: 29 directories (beardog-integration excluded — overstep)
 - **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
-- **Crypto Methods**: 99 JSON-RPC methods (`methods()` handler count: +2 consent verification)
+- **Crypto Methods**: 100 JSON-RPC methods (`methods()` handler count: +1 ionic_bond.seal)
 - **`#[allow(`**: 81 (was 86)
 - **`#[expect(`**: 646 (was 642)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
@@ -89,6 +89,13 @@
 ---
 
 ## Recent Improvements
+
+### Wave 42: primalSpring Audit Resolution — Ionic Bond Seal, BTSP Metadata, Accept Hardening (April 13, 2026)
+
+- **`crypto.ionic_bond.seal` implemented** — Explicit propose→accept→seal lifecycle with full Ed25519 re-verification on seal. `BondState::Sealed` added. 5 new tests.
+- **`accept` hardened** — Proposer sig verified at accept (defense in depth). Proposal TTL enforced at accept.
+- **BTSP capability metadata fixed** — `btsp_server` v1.1 includes `export_keys`; `ionic_bond` v2.0 includes `seal`.
+- **100 JSON-RPC methods** (was 99); all quality gates clean.
 
 ### Wave 41: Documentation Cleanup — Stale Links, Migration Debris, Metric Alignment (April 13, 2026)
 

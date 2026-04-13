@@ -6,7 +6,8 @@ use crate::btsp_provider::BeardogBtspProvider;
 use beardog_types::ionic_bond::{
     BondState, IonicBond, IonicBondAcceptParams, IonicBondAcceptResponse, IonicBondListParams,
     IonicBondListResponse, IonicBondProposeParams, IonicBondProposeResponse, IonicBondRevokeParams,
-    IonicBondRevokeResponse, IonicBondVerifyParams, IonicBondVerifyResponse,
+    IonicBondRevokeResponse, IonicBondSealParams, IonicBondSealResponse, IonicBondVerifyParams,
+    IonicBondVerifyResponse,
 };
 use chrono::Utc;
 use serde::Deserialize;
@@ -83,6 +84,23 @@ impl IonicBondHandler {
                 )
             })?;
 
+        if let Some(ref exp) = proposal.expires_at
+            && let Ok(expiry) = chrono::DateTime::parse_from_rfc3339(exp)
+            && Utc::now() > expiry
+        {
+            return Err(format!(
+                "Proposal {} has expired (TTL exceeded)",
+                accept_params.proposal_id
+            ));
+        }
+
+        verify_ed25519_signature(
+            &proposal.terms_hash,
+            &proposal.proposer_signature,
+            &proposal.proposer_public_key,
+        )
+        .map_err(|e| format!("Proposer signature invalid at accept: {e}"))?;
+
         verify_ed25519_signature(
             &proposal.terms_hash,
             &accept_params.acceptor_signature,
@@ -113,12 +131,86 @@ impl IonicBondHandler {
             bond_id = %bond_id,
             proposer = %bond.proposer,
             acceptor = %bond.acceptor,
-            "Ionic bond sealed (signatures verified)"
+            "Ionic bond accepted (both signatures verified)"
         );
 
         self.bonds.write().await.insert(bond_id, bond.clone());
 
         let resp = IonicBondAcceptResponse { bond };
+        serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
+    }
+
+    /// Seal an active bond by re-verifying both Ed25519 signatures and
+    /// transitioning `Active` → `Sealed`. This is the explicit third step
+    /// in the propose → accept → seal lifecycle.
+    pub(super) async fn handle_seal(
+        &self,
+        params: Option<&serde_json::Value>,
+    ) -> Result<serde_json::Value, String> {
+        let params_value = params.ok_or("Missing params for crypto.ionic_bond.seal")?;
+        let seal_params = IonicBondSealParams::deserialize(params_value)
+            .map_err(|e| format!("Invalid seal params: {e}"))?;
+
+        let mut bonds = self.bonds.write().await;
+
+        let bond = bonds
+            .get_mut(&seal_params.bond_id)
+            .ok_or_else(|| format!("Bond not found: {}", seal_params.bond_id))?;
+
+        if bond.proposer != seal_params.sealer && bond.acceptor != seal_params.sealer {
+            return Err(format!(
+                "Sealer '{}' is neither proposer nor acceptor",
+                seal_params.sealer
+            ));
+        }
+
+        if bond.state != BondState::Active {
+            let resp = IonicBondSealResponse {
+                sealed: false,
+                bond: None,
+                error: Some(format!(
+                    "Bond cannot be sealed from state {:?} (must be Active)",
+                    bond.state
+                )),
+            };
+            return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"));
+        }
+
+        if let Some(ref exp) = bond.expires_at
+            && let Ok(expiry) = chrono::DateTime::parse_from_rfc3339(exp)
+            && Utc::now() > expiry
+        {
+            bond.state = BondState::Expired;
+            let resp = IonicBondSealResponse {
+                sealed: false,
+                bond: None,
+                error: Some("Bond has expired".to_string()),
+            };
+            return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"));
+        }
+
+        if !Self::verify_bond_signatures(bond) {
+            let resp = IonicBondSealResponse {
+                sealed: false,
+                bond: None,
+                error: Some("Ed25519 signature verification failed during seal".to_string()),
+            };
+            return serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"));
+        }
+
+        bond.state = BondState::Sealed;
+
+        info!(
+            bond_id = %seal_params.bond_id,
+            sealer = %seal_params.sealer,
+            "Ionic bond sealed — both signatures cryptographically verified"
+        );
+
+        let resp = IonicBondSealResponse {
+            sealed: true,
+            bond: Some(bond.clone()),
+            error: None,
+        };
         serde_json::to_value(resp).map_err(|e| format!("Serialize: {e}"))
     }
 
@@ -133,7 +225,7 @@ impl IonicBondHandler {
         let bonds = self.bonds.read().await;
 
         if let Some(bond) = bonds.get(&verify_params.bond_id) {
-            let is_active = bond.state == BondState::Active;
+            let is_active = bond.state == BondState::Active || bond.state == BondState::Sealed;
 
             let is_expired = bond
                 .expires_at

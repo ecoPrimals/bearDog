@@ -7,7 +7,7 @@
 //! - hotSpring GAP-HS-005: cross-family GPU lease
 //! - healthSpring §2: data egress fence enforcement
 //!
-//! The bond lifecycle is: propose → accept → active → (verify | revoke).
+//! The bond lifecycle is: propose → accept → seal → (verify | revoke).
 
 use super::MethodHandler;
 use crate::btsp_provider::BeardogBtspProvider;
@@ -69,6 +69,7 @@ impl MethodHandler for IonicBondHandler {
         vec![
             "crypto.ionic_bond.propose",
             "crypto.ionic_bond.accept",
+            "crypto.ionic_bond.seal",
             "crypto.ionic_bond.verify",
             "crypto.ionic_bond.revoke",
             "crypto.ionic_bond.list",
@@ -86,6 +87,7 @@ impl MethodHandler for IonicBondHandler {
         match method {
             "crypto.ionic_bond.propose" => self.handle_propose(params, btsp_provider).await,
             "crypto.ionic_bond.accept" => self.handle_accept(params).await,
+            "crypto.ionic_bond.seal" => self.handle_seal(params).await,
             "crypto.ionic_bond.verify" => self.handle_verify(params).await,
             "crypto.ionic_bond.revoke" => self.handle_revoke(params).await,
             "crypto.ionic_bond.list" => self.handle_list(params).await,

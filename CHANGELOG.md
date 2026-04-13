@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 13, 2026 -- Wave 42: primalSpring Audit Resolution — Ionic Bond Seal, BTSP Metadata, Accept Hardening
+
+- **`crypto.ionic_bond.seal` implemented** — Explicit third step in propose→accept→seal lifecycle. Re-verifies both Ed25519 signatures, transitions Active→Sealed. Rejects unauthorized sealers, revoked/expired bonds, and tampered signatures. 5 new tests: full lifecycle, unauthorized sealer, revoked bond, tampered sig, revoke-after-seal.
+- **`BondState::Sealed` added** — New state in the ionic bond state machine. `verify` accepts both Active and Sealed bonds as valid. `revoke` works on both.
+- **`accept` hardened** — Proposer Ed25519 signature now verified at accept time (defense in depth, previously only at `verify`). Proposal TTL enforced at `accept` — expired proposals rejected before bond creation.
+- **BTSP capability metadata fixed** — `btsp_server` capability bumped to v1.1, `server.export_keys` added to methods array and cost estimates. `ionic_bond` capability bumped to v2.0 with `seal` method. `discover_capabilities` includes `ionic_bond.seal`. Operation dependencies updated.
+- **100 JSON-RPC methods** (was 99: +`crypto.ionic_bond.seal`). All quality gates clean.
+
 ### April 13, 2026 -- Wave 41: Documentation Cleanup — Stale Links, Migration Debris, Metric Alignment
 
 - **Root doc metrics unified** — `README.md`, `ARCHITECTURE.md`, `CONTEXT.md` aligned to canonical numbers: 99 JSON-RPC methods (was 97 in three files), 2,150 Rust files (was 1,967 in README quality table), 14,780+ tests (was 14,906+ in README quality table — historical peak from Wave 38 before test consolidation).

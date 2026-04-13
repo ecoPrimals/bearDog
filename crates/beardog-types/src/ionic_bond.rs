@@ -16,12 +16,14 @@
 //!    |-- crypto.ionic_bond.propose --> |                                |
 //!    |<-- proposal_id + terms -------- |                                |
 //!    |                                 |<-- crypto.ionic_bond.accept -- |
-//!    |                                 |--- bond_id + sealed_bond ----> |
+//!    |                                 |--- bond_id + active_bond ----> |
 //!    |                                 |                                |
-//!    |       (bond is now active — both sides can verify)               |
+//!    |       (either party seals — re-verifies both signatures)        |
 //!    |                                 |                                |
-//!    |-- crypto.ionic_bond.verify --> |                                |
-//!    |<-- {valid: true} ------------- |                                |
+//!    |-- crypto.ionic_bond.seal ----> |                                |
+//!    |<-- {sealed: true, bond} ------- |                                |
+//!    |                                 |                                |
+//!    |       (bond is now sealed — enforcement-ready)                   |
 //! ```
 
 use serde::{Deserialize, Serialize};
@@ -58,8 +60,11 @@ pub enum BondTrustModel {
 pub enum BondState {
     /// Bond has been proposed but not yet accepted.
     Proposed,
-    /// Bond has been accepted and cryptographically sealed.
+    /// Bond has been accepted — both parties' signatures stored.
     Active,
+    /// Bond has been cryptographically sealed: both Ed25519 signatures
+    /// re-verified and the bond is ready for enforcement.
+    Sealed,
     /// Bond has been revoked by either party.
     Revoked,
     /// Bond expired (TTL exceeded).
@@ -183,6 +188,33 @@ pub struct IonicBondVerifyResponse {
     pub error: Option<String>,
 }
 
+/// Parameters for `crypto.ionic_bond.seal`.
+///
+/// Cryptographically seals an active bond by re-verifying both proposer and
+/// acceptor Ed25519 signatures. This is the explicit "third step" in the
+/// propose → accept → seal lifecycle that downstream primals call to confirm
+/// the bond is enforcement-ready.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IonicBondSealParams {
+    /// Bond ID to seal.
+    pub bond_id: String,
+    /// Identity of the party requesting the seal (must be proposer or acceptor).
+    pub sealer: String,
+}
+
+/// Response from `crypto.ionic_bond.seal`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IonicBondSealResponse {
+    /// Whether the seal succeeded.
+    pub sealed: bool,
+    /// The sealed bond (with `state: "sealed"`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bond: Option<IonicBond>,
+    /// Error detail (set only on failure).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
 /// Parameters for `crypto.ionic_bond.revoke`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IonicBondRevokeParams {
@@ -299,6 +331,12 @@ mod tests {
         assert_eq!(json, r#""active""#);
         let parsed: BondState = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(parsed, BondState::Active);
+
+        let sealed_json = serde_json::to_string(&BondState::Sealed).expect("serialize sealed");
+        assert_eq!(sealed_json, r#""sealed""#);
+        let sealed_parsed: BondState =
+            serde_json::from_str(&sealed_json).expect("deserialize sealed");
+        assert_eq!(sealed_parsed, BondState::Sealed);
     }
 
     #[test]

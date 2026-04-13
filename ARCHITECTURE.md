@@ -17,7 +17,7 @@ BearDog provides **crypto atoms** to the ecoPrimals ecosystem. Every primal dele
 │  Any Primal │ ←─ JSON-RPC ────→ │  BearDog    │
 │ (Protocol)  │    Unix Socket     │  (Crypto)   │
 └─────────────┘                    └─────────────┘
-     Zero crypto code                 99 JSON-RPC methods
+     Zero crypto code                 100 JSON-RPC methods
 ```
 
 **Principles**:
