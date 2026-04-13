@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 13, 2026 -- Wave 46: Deep Debt Sweep — Dead Features, Version Drift, File Refactor
+
+- **6 dead Cargo features removed** — `json-rpc` (beardog-ipc), `service-registry` (beardog-discovery), `pixel8_optimizations` + `strongbox_hardware` (beardog-tunnel), `mock-upa` (beardog-integration), `pure-rust` (beardog-cli). Zero `cfg` gates existed for any of these.
+- **2 unused optional deps removed** — `adb_client` and `nusb` from beardog-cli (were gated behind the dead `pure-rust` feature).
+- **Production wildcard import eliminated** — `ios_secure_enclave/capability.rs` `use super::types::*` replaced with explicit 5-item import.
+- **Critical version drift fixed** — `thiserror` 1.0→2.0 (beardog-integration), `tokio` 1.43→workspace (beardog-hid, beardog-client), plus `serde`, `serde_json`, `tracing`, `anyhow`, `chrono`, `tempfile`, `async-trait`, `futures`, `tracing-subscriber` normalized to `workspace = true` across 3 crates.
+- **2 large production files refactored** — `registry_client.rs` 827→427 LOC (400 lines of inline tests extracted to `registry_client_inline_tests.rs`), `monitoring/service.rs` 822→552 LOC (270 lines extracted to `service_tests.rs`).
+- **14,784 tests passing**, zero failures, zero clippy warnings, zero doc warnings.
+
 ### April 13, 2026 -- Wave 45: Signed Capability Announcements — Unified Identity, Wire Standard SA-01
 
 - **Unified primal identity key** — Single Ed25519 derivation (`SHA-256("primal-identity-key:" || name || ":" || node_id)`) shared by capability announcements, ionic bond signing, contract signing, and neural registration. Eliminates prior inconsistency where announcements and ionic bonds used separate keys.

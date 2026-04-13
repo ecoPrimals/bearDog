@@ -84,15 +84,6 @@ workspace = true
 [dependencies.aes-gcm]
 workspace = true
 
-# Pure Rust platform integrations (replacing external commands)
-[dependencies.adb_client]
-version = "0.8"
-optional = true  # Pure Rust ADB protocol implementation
-
-[dependencies.nusb]
-version = "0.1"
-optional = true  # Pure Rust USB library, no C dependencies
-
 [dependencies.beardog-genetics]
 path = "../beardog-genetics"
 
@@ -120,5 +111,4 @@ tempfile = { workspace = true }
 serde_json = { workspace = true }
 
 [features]
-default = ["pure-rust"]
-pure-rust = ["adb_client", "nusb"]  # Use pure Rust implementations
+default = []

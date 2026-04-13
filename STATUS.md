@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 14,780+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,784+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
@@ -89,6 +89,14 @@
 ---
 
 ## Recent Improvements
+
+### Wave 46: Deep Debt Sweep — Dead Features, Version Drift, File Refactor (April 13, 2026)
+
+- **6 dead Cargo features + 2 unused optional deps removed** — Zero `cfg` gates for any.
+- **Production wildcard import eliminated** — `ios_secure_enclave/capability.rs`.
+- **Critical version drift fixed** — `thiserror` 1→2, `tokio` pinned to workspace, 11 deps normalized to `workspace = true`.
+- **2 large files refactored** — `registry_client.rs` 827→427, `service.rs` 822→552 via test extraction.
+- **14,784 tests passing**, zero failures, all quality gates clean.
 
 ### Wave 45: Signed Capability Announcements — Unified Identity, Wire Standard SA-01 (April 13, 2026)
 

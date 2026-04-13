@@ -15,16 +15,16 @@ workspace = true
 
 [dependencies]
 beardog-errors = { path = "../beardog-errors" }
-tokio = { version = "1.43", features = ["fs", "io-util"] }
-tracing = "0.1"
-async-trait = "0.1"
+tokio = { workspace = true, features = ["fs", "io-util"] }
+tracing = { workspace = true }
+async-trait = { workspace = true }
 
 # System interface only (acceptable per ecoBin) - used only for O_NONBLOCK flag
 libc = "0.2"
 
 [dev-dependencies]
-tokio = { version = "1.43", features = ["full"] }
-tempfile = "3.8"
+tokio = { workspace = true, features = ["full"] }
+tempfile = { workspace = true }
 
 [features]
 default = []

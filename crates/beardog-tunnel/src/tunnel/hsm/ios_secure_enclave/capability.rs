@@ -4,7 +4,9 @@
 //
 // This module provides iOS Secure Enclave capability detection for the BearDog ecosystem.
 
-use super::types::*;
+use super::types::{
+    BiometricFeature, BiometricPolicy, IOSVersion, SecureEnclaveCapability, SecureEnclaveDevice,
+};
 use beardog_errors::BearDogError;
 use tracing::info;
 

@@ -58,9 +58,8 @@ serde_json = "1.0"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 
 [features]
-default = ["service-registry"]
+default = []
 # biomeOS owns network discovery — these are opt-in for standalone/legacy use
 mdns = ["dep:mdns-sd"]
 dns-sd = ["dep:hickory-resolver"]
-service-registry = []
 

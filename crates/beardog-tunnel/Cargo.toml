@@ -136,8 +136,6 @@ ctap2 = ["solo-v2", "dep:beardog-hid"]
 # `ecosystem` removed: no cfg(feature) gate existed in source -- dead flag.
 default = []
 android_native = []
-pixel8_optimizations = [ "android_native",]
-strongbox_hardware = [ "android_native",]
 
 [package.version]
 workspace = true
