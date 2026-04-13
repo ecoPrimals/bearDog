@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 13, 2026 -- Wave 44: Documentation & Debris Cleanup — Root Docs, Spec Links, Showcase Fixes
+
+- **Root docs aligned** — ROADMAP.md, START_HERE.md, CONTEXT.md, SECURITY.md updated: method count 95→100, tests 14,761→14,780+, coverage 90%+→90.51%, dates to April 13, 2026.
+- **5 broken spec links fixed** — `PRODUCTION_READINESS` STATUS.md path, `ENTROPY_SECURITY` dead quantum spec link, `TOR_CAPABILITY` 3 broken cross-refs (TOR_PHASE2, RPC API, Songbird Integration).
+- **Production readiness notice updated** — Stale October 2025 accuracy warning replaced with current April 2026 status (0 unsafe, 14,780+ tests, 90.51% coverage).
+- **Showcase `btsp-api` stale feature removed** — `songbird-btsp` demo Cargo.toml referenced non-existent `btsp-api` feature on `beardog-tunnel`.
+- **Hardcoded user path eliminated** — `run-demo.sh` songbird path changed from `/home/eastgate/...` to environment-variable-based discovery (`$SONGBIRD_PATH` or relative).
+
 ### April 13, 2026 -- Wave 43: Deep Debt Sweep — Unused Deps, Dead Features, Commented Imports, Smart Refactor
 
 - **4 unused workspace dependencies removed** — `mockall`, `rmp-serde`, `figment`, `config` declared in root `[workspace.dependencies]` but referenced by zero crates.

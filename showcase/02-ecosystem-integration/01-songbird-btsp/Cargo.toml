@@ -9,7 +9,7 @@ license = "AGPL-3.0-or-later"
 
 [dependencies]
 # BearDog crates
-beardog-tunnel = { path = "../../../crates/beardog-tunnel", features = ["btsp-api"] }
+beardog-tunnel = { path = "../../../crates/beardog-tunnel" }
 beardog-types = { path = "../../../crates/beardog-types" }
 beardog-core = { path = "../../../crates/beardog-core" }
 beardog-errors = { path = "../../../crates/beardog-errors" }

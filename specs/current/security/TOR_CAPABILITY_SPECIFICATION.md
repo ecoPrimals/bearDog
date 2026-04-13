@@ -314,7 +314,7 @@ Phase 2 evolves from Tor daemon dependency to **Pure Rust Tor protocol** in Song
 
 ### Tracking Document
 
-See [TOR_PHASE2_EVOLUTION.md](../../../TOR_PHASE2_EVOLUTION.md) at repository root.
+See [TOR_PHASE2_EVOLUTION.md](../../../docs/references/TOR_PHASE2_EVOLUTION.md) in docs/references.
 
 ---
 
@@ -323,8 +323,8 @@ See [TOR_PHASE2_EVOLUTION.md](../../../TOR_PHASE2_EVOLUTION.md) at repository ro
 - [Tor Protocol Specification](https://spec.torproject.org/tor-spec)
 - [Onion Service v3 Specification](https://spec.torproject.org/rend-spec-v3)
 - [ntor Handshake Paper](https://www.cypherpunks.ca/~iang/pubs/ntor.pdf)
-- [BearDog Crypto API](../../docs/BEARDOG_RPC_API.md)
-- [Songbird Integration](../otherTeams/SONGBIRD_INTEGRATION.md)
+- [BearDog Crypto API](../../../README.md)
+- [Songbird Integration](../integration/SONGBIRD_INTEGRATION_SPECIFICATION.md)
 
 ---
 

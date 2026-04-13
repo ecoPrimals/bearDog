@@ -90,6 +90,13 @@
 
 ## Recent Improvements
 
+### Wave 44: Documentation & Debris Cleanup — Root Docs, Spec Links, Showcase Fixes (April 13, 2026)
+
+- **Root docs aligned** — ROADMAP, START_HERE, CONTEXT, SECURITY all updated to canonical metrics (100 methods, 14,780+ tests, 90.51% coverage).
+- **5 broken spec links fixed** across production/security specs.
+- **Showcase stale `btsp-api` feature removed**, hardcoded user path eliminated.
+- **Production readiness notice updated** from stale Oct 2025 to current April 2026 status.
+
 ### Wave 43: Deep Debt Sweep — Unused Deps, Dead Features, Commented Imports, Smart Refactor (April 13, 2026)
 
 - **4 unused workspace deps removed** — mockall, rmp-serde, figment, config.

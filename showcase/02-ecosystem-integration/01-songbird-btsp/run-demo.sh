@@ -17,7 +17,7 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 
 # Check if Songbird is available
-SONGBIRD_PATH="/home/eastgate/Development/ecoPrimals/songbird"
+SONGBIRD_PATH="${SONGBIRD_PATH:-$(cd "$(dirname "$0")/../../../../.." && pwd)/primals/songBird}"
 if [ ! -d "$SONGBIRD_PATH" ]; then
     echo -e "${RED}❌ Error: Songbird not found at $SONGBIRD_PATH${NC}"
     echo "Please ensure Songbird is cloned and built."

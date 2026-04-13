@@ -2,7 +2,7 @@
 
 # BearDog Roadmap
 
-**Updated**: April 11, 2026
+**Updated**: April 13, 2026
 **Status**: Production Ready
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -16,13 +16,13 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 - Rust edition 2024 (MSRV 1.93.0, `rust-toolchain.toml` pinned)
 - 100% Pure Rust (zero C dependencies, RustCrypto suite)
-- 95 JSON-RPC crypto methods (semantic naming; prior 96 was a count error)
+- 100 JSON-RPC methods (semantic naming; ionic bond lifecycle, consent gate, contract signing)
 - 0 clippy warnings (pedantic + nursery + all cast lints warn + `doc_markdown` warn + `missing_errors_doc` warn + unwrap/expect warn, workspace-centralized)
 - 0 missing documentation warnings (all public items documented, all `# Errors` sections present)
 - 0 unsafe code blocks (`forbid(unsafe_code)` workspace-wide)
 - 0 TODO/FIXME/HACK in codebase
 - 0 files exceeding 1000 lines of code (production)
-- 14,761+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
+- 14,780+ tests passing (concurrent; 35 `#[serial]` in `beardog-production`)
 - 90.51% line coverage (llvm-cov workspace) — target 90% met
 - Dependency Injection architecture — pure `Default`, `from_env()` at boundaries
 - `#[serial]` minimized — 35 tests in `beardog-production` (shared `AtomicBool`); all others concurrent
@@ -61,7 +61,7 @@ BearDog is production-ready with TRUE ecoBin v2.0 compliance achieved. Edition 2
 
 ### Test Coverage to 90% — DONE (Wave 20)
 
-Coverage reached **90.51% line** (14,761+ tests passing).
+Coverage reached **90.51% line** (14,780+ tests passing).
 
 ### primalSpring Composition Fixes — DONE (Wave 18c)
 
@@ -118,4 +118,4 @@ These guide all BearDog evolution:
 
 ---
 
-**Last Updated**: April 11, 2026
+**Last Updated**: April 13, 2026

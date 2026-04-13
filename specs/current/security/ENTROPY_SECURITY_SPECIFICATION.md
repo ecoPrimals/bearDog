@@ -341,7 +341,7 @@ The following security vulnerabilities have been **ELIMINATED**:
 - [Universal HSM Specification](./UNIVERSAL_HSM_SPECIFICATION.md)
 - [Security Sentinel Specification](./SECURITY_SENTINEL_SPECIFICATION.md)
 - [Encryption Key Management](./ENCRYPTION_KEY_MANAGEMENT.md)
-- [Quantum Resistant Security](./QUANTUM_RESISTANT_SECURITY_IMPLEMENTATION_2025.md)
+- Quantum Resistant Security (planned)
 
 ---
 
