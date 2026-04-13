@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 13, 2026 -- Wave 39: wetSpring Alignment — Consent Gate, Security Domain Registration
+
+- **`security.verify_consent` + `security.issue_consent_token` implemented** — HMAC-SHA256 consent tokens gating vault data access (NUCLEUS consent protocol). wetSpring's `verify_consent_via_beardog` calls `capability.call("security", "verify_consent", {owner_id, scope, token})` — BearDog now resolves this directly. Token = HMAC-SHA256(BLAKE3(family_id + ":consent-hmac-key"), owner_id + ":" + scope). Cross-family tokens automatically rejected. 6 new tests: roundtrip, bad token, wrong scope, cross-family rejection, missing params, method registration.
+- **Neural API `security` capability registered** — `register_with_neural_api()` now includes `security` domain with operations: `verify_consent`, `issue_consent_token`, `evaluate`, `lineage`, `generate_jwt_secret`. Enables Neural API semantic routing of `capability.call("security", ...)` to BearDog.
+- **Capabilities listing updated** — `provided_capabilities` security type bumped to v1.1 with consent methods; `discover_capabilities` flat list includes `consent.verify` + `consent.issue`; `cost_estimates` include both consent methods at low CPU / 1ms latency.
+- **99 JSON-RPC methods** (was 97: +`security.verify_consent`, +`security.issue_consent_token`).
+- **14,780+ tests passing**, all quality gates clean (fmt, clippy, doc, deny).
+
 ### April 12, 2026 -- Wave 38: Deep Debt Resolution — Smart Refactoring, Production Stubs Evolved, Hardcoding Eliminated
 
 - **`ionic_bond.rs` smart refactored** (1022 LOC → 4 submodules) — Extracted `crypto.rs` (signing helpers), `lifecycle.rs` (propose/accept/verify/revoke/list handlers), `contract.rs` (sign_contract/verify_contract), with `mod.rs` as dispatch. All 14 tests pass, all public APIs preserved.

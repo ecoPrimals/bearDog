@@ -15,15 +15,21 @@ use async_trait::async_trait;
 use base64::Engine;
 use beardog_types::primal_identity::PrimalIdentity;
 use chrono::Utc;
+use hmac::{Hmac, Mac};
 use rand::RngCore;
+use sha2::Sha256;
 use std::sync::Arc;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
+
+type HmacSha256 = Hmac<Sha256>;
 
 /// Handler for security and trust methods
 ///
 /// Supports:
 /// - `security.evaluate` / `trust.evaluate` - Evaluate trust level based on genetic family
 /// - `security.lineage` / `trust.lineage` - Get genetic lineage information
+/// - `security.verify_consent` - Verify HMAC consent tokens (wetSpring vault gate)
+/// - `security.issue_consent_token` - Issue HMAC consent tokens for owner/scope pairs
 /// - `birdsong.encrypt` / `birdsong.decrypt` - `BirdSong` encryption for secure discovery
 /// - `birdsong.generate_encrypted_beacon` - Generate a beacon + encrypt it for a family
 /// - `security.generate_jwt_secret` - Generate cryptographically secure JWT secrets
@@ -57,6 +63,9 @@ impl MethodHandler for SecurityHandler {
             "trust.lineage",
             "security.get_lineage",
             "trust.get_lineage",
+            // Consent verification (wetSpring vault gate, NUCLEUS consent protocol)
+            "security.verify_consent",
+            "security.issue_consent_token",
             // BirdSong encryption (semantic domain.operation first; beardog.* = backward compat)
             "birdsong.encrypt",
             "beardog.birdsong.encrypt",
@@ -85,6 +94,8 @@ impl MethodHandler for SecurityHandler {
             "security.lineage" | "trust.lineage" | "security.get_lineage" | "trust.get_lineage" => {
                 self.handle_lineage().await
             }
+            "security.verify_consent" => self.handle_verify_consent(params).await,
+            "security.issue_consent_token" => self.handle_issue_consent_token(params).await,
             "birdsong.encrypt" | "beardog.birdsong.encrypt" => {
                 self.handle_birdsong_encrypt(params, btsp_provider).await
             }
@@ -251,6 +262,120 @@ impl SecurityHandler {
             "generation": 0,
             "parent": null,
             "capabilities": ["security", "encryption", "trust"],
+        }))
+    }
+
+    /// Derive the HMAC key for consent tokens from the family identity.
+    ///
+    /// Uses BLAKE3 keyed hash: `BLAKE3(family_id || ":consent-hmac-key")` to
+    /// produce a deterministic 32-byte key unique per family. This means only
+    /// the same `BearDog` instance (same family) can issue and verify tokens.
+    fn consent_hmac_key(&self) -> [u8; 32] {
+        let material = format!("{}:consent-hmac-key", self.identity.family_id());
+        *blake3::hash(material.as_bytes()).as_bytes()
+    }
+
+    /// Verify an HMAC-SHA256 consent token.
+    ///
+    /// # Wire contract
+    ///
+    /// ```json
+    /// { "owner_id": "alice", "scope": "vault:read:genome", "token": "<base64>" }
+    /// → { "valid": true|false, "owner_id": "…", "scope": "…" }
+    /// ```
+    ///
+    /// wetSpring calls this via Neural API `capability.call("security", "verify_consent", …)`
+    /// to gate vault data access. The token is an HMAC-SHA256 over `owner_id:scope`.
+    async fn handle_verify_consent(
+        &self,
+        params: Option<&serde_json::Value>,
+    ) -> Result<serde_json::Value, String> {
+        let params = params.ok_or("Missing params for verify_consent")?;
+
+        let owner_id = params
+            .get("owner_id")
+            .and_then(|v| v.as_str())
+            .ok_or("Missing owner_id")?;
+        let scope = params
+            .get("scope")
+            .and_then(|v| v.as_str())
+            .ok_or("Missing scope")?;
+        let token_b64 = params
+            .get("token")
+            .and_then(|v| v.as_str())
+            .ok_or("Missing token")?;
+
+        let token_bytes = base64::engine::general_purpose::STANDARD
+            .decode(token_b64)
+            .map_err(|e| format!("Invalid base64 token: {e}"))?;
+
+        let key = self.consent_hmac_key();
+        let message = format!("{owner_id}:{scope}");
+
+        let mut mac = <HmacSha256 as Mac>::new_from_slice(&key)
+            .map_err(|e| format!("HMAC key error: {e}"))?;
+        mac.update(message.as_bytes());
+
+        let valid = mac.verify_slice(&token_bytes).is_ok();
+
+        if valid {
+            info!("Consent verified — owner={}, scope={}", owner_id, scope);
+        } else {
+            warn!("Consent rejected — owner={}, scope={}", owner_id, scope);
+        }
+
+        Ok(serde_json::json!({
+            "valid": valid,
+            "owner_id": owner_id,
+            "scope": scope,
+            "verified_at": Utc::now().to_rfc3339(),
+            "verified_by": get_primal_name(),
+        }))
+    }
+
+    /// Issue an HMAC-SHA256 consent token for an owner/scope pair.
+    ///
+    /// # Wire contract
+    ///
+    /// ```json
+    /// { "owner_id": "alice", "scope": "vault:read:genome" }
+    /// → { "token": "<base64>", "owner_id": "…", "scope": "…" }
+    /// ```
+    ///
+    /// The returned token can later be verified via `security.verify_consent`.
+    async fn handle_issue_consent_token(
+        &self,
+        params: Option<&serde_json::Value>,
+    ) -> Result<serde_json::Value, String> {
+        let params = params.ok_or("Missing params for issue_consent_token")?;
+
+        let owner_id = params
+            .get("owner_id")
+            .and_then(|v| v.as_str())
+            .ok_or("Missing owner_id")?;
+        let scope = params
+            .get("scope")
+            .and_then(|v| v.as_str())
+            .ok_or("Missing scope")?;
+
+        let key = self.consent_hmac_key();
+        let message = format!("{owner_id}:{scope}");
+
+        let mut mac = <HmacSha256 as Mac>::new_from_slice(&key)
+            .map_err(|e| format!("HMAC key error: {e}"))?;
+        mac.update(message.as_bytes());
+
+        let token_bytes = mac.finalize().into_bytes();
+        let token_b64 = base64::engine::general_purpose::STANDARD.encode(token_bytes);
+
+        info!("Consent token issued — owner={}, scope={}", owner_id, scope);
+
+        Ok(serde_json::json!({
+            "token": token_b64,
+            "owner_id": owner_id,
+            "scope": scope,
+            "issued_at": Utc::now().to_rfc3339(),
+            "issued_by": get_primal_name(),
         }))
     }
 
@@ -676,5 +801,171 @@ mod tests {
             .await
             .expect("JWT low strength should succeed");
         assert_eq!(result["byte_length"], 32);
+    }
+
+    #[tokio::test]
+    async fn test_issue_and_verify_consent_roundtrip() {
+        let identity = Arc::new(PrimalIdentity::for_test("consent-family", "consent-node"));
+        let handler = SecurityHandler::new(identity);
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        let issue_params = serde_json::json!({
+            "owner_id": "alice",
+            "scope": "vault:read:genome"
+        });
+        let issued = handler
+            .handle(
+                "security.issue_consent_token",
+                Some(&issue_params),
+                &btsp_provider,
+            )
+            .await
+            .expect("issue_consent_token should succeed");
+
+        assert_eq!(issued["owner_id"], "alice");
+        assert_eq!(issued["scope"], "vault:read:genome");
+        assert!(issued["token"].is_string());
+        assert!(issued["issued_at"].is_string());
+
+        let verify_params = serde_json::json!({
+            "owner_id": "alice",
+            "scope": "vault:read:genome",
+            "token": issued["token"]
+        });
+        let verified = handler
+            .handle(
+                "security.verify_consent",
+                Some(&verify_params),
+                &btsp_provider,
+            )
+            .await
+            .expect("verify_consent should succeed");
+
+        assert_eq!(verified["valid"], true);
+        assert_eq!(verified["owner_id"], "alice");
+        assert_eq!(verified["scope"], "vault:read:genome");
+    }
+
+    #[tokio::test]
+    async fn test_verify_consent_rejects_bad_token() {
+        let identity = Arc::new(PrimalIdentity::for_test("consent-family", "consent-node"));
+        let handler = SecurityHandler::new(identity);
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        let bad_token = base64::engine::general_purpose::STANDARD.encode(b"not-a-real-hmac");
+        let params = serde_json::json!({
+            "owner_id": "alice",
+            "scope": "vault:read:genome",
+            "token": bad_token
+        });
+        let result = handler
+            .handle("security.verify_consent", Some(&params), &btsp_provider)
+            .await
+            .expect("verify_consent should return ok with valid=false");
+
+        assert_eq!(result["valid"], false);
+    }
+
+    #[tokio::test]
+    async fn test_verify_consent_rejects_wrong_scope() {
+        let identity = Arc::new(PrimalIdentity::for_test("consent-family", "consent-node"));
+        let handler = SecurityHandler::new(identity);
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        let issue_params = serde_json::json!({
+            "owner_id": "alice",
+            "scope": "vault:read:genome"
+        });
+        let issued = handler
+            .handle(
+                "security.issue_consent_token",
+                Some(&issue_params),
+                &btsp_provider,
+            )
+            .await
+            .expect("issue");
+
+        let verify_params = serde_json::json!({
+            "owner_id": "alice",
+            "scope": "vault:write:genome",
+            "token": issued["token"]
+        });
+        let verified = handler
+            .handle(
+                "security.verify_consent",
+                Some(&verify_params),
+                &btsp_provider,
+            )
+            .await
+            .expect("verify");
+
+        assert_eq!(verified["valid"], false);
+    }
+
+    #[tokio::test]
+    async fn test_verify_consent_different_family_rejects() {
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        let handler_a = SecurityHandler::new(Arc::new(PrimalIdentity::for_test("family-a", "n")));
+        let handler_b = SecurityHandler::new(Arc::new(PrimalIdentity::for_test("family-b", "n")));
+
+        let issue_params = serde_json::json!({
+            "owner_id": "alice",
+            "scope": "vault:read"
+        });
+        let issued = handler_a
+            .handle(
+                "security.issue_consent_token",
+                Some(&issue_params),
+                &btsp_provider,
+            )
+            .await
+            .expect("issue by family-a");
+
+        let verify_params = serde_json::json!({
+            "owner_id": "alice",
+            "scope": "vault:read",
+            "token": issued["token"]
+        });
+        let verified = handler_b
+            .handle(
+                "security.verify_consent",
+                Some(&verify_params),
+                &btsp_provider,
+            )
+            .await
+            .expect("verify by family-b");
+
+        assert_eq!(
+            verified["valid"], false,
+            "cross-family token must be rejected"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_verify_consent_missing_params() {
+        let identity = Arc::new(PrimalIdentity::for_test("fam", "node"));
+        let handler = SecurityHandler::new(identity);
+        let btsp_provider = crate::test_helpers::mocks::create_minimal_beardog_provider().await;
+
+        let r = handler
+            .handle("security.verify_consent", None, &btsp_provider)
+            .await;
+        assert!(r.is_err());
+
+        let partial = serde_json::json!({"owner_id": "alice"});
+        let r = handler
+            .handle("security.verify_consent", Some(&partial), &btsp_provider)
+            .await;
+        assert!(r.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_security_handler_includes_consent_methods() {
+        let identity = Arc::new(PrimalIdentity::for_test("fam", "node"));
+        let handler = SecurityHandler::new(identity);
+        let methods = handler.methods();
+        assert!(methods.contains(&"security.verify_consent"));
+        assert!(methods.contains(&"security.issue_consent_token"));
     }
 }

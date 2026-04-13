@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: April 12, 2026
+**Last Updated**: April 13, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -20,7 +20,7 @@
 | **Format** | Clean | `cargo fmt` compliant |
 | **TODO/FIXME** | 0 | All resolved |
 | **Files > 1000 LOC** | 0 | All production .rs files compliant (`api_server.rs` refactored to module) |
-| **Tests** | 14,906+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
+| **Tests** | 14,780+ passing | Concurrent; 35 `#[serial]` in `beardog-production` (shared `AtomicBool`) |
 | **Coverage** | 90.51% line | llvm-cov workspace — target 90% met |
 | **Serial Tests** | 35 | Isolated to `beardog-production` config tests (global `AtomicBool` state) |
 | **cargo deny** | 4/4 pass | 1 advisory ignore (RSA Marvin), 15 transitive version-skips |
@@ -34,10 +34,10 @@
 ## Codebase Metrics
 
 - **Crates**: 29 directories (beardog-integration excluded — overstep)
-- **Rust Files**: 1,967 (crates + src + tests; excludes showcase/examples)
-- **Crypto Methods**: 97 JSON-RPC methods (`methods()` handler count: +2 contract signing)
-- **`#[allow(`**: 67 (was 75)
-- **`#[expect(`**: 629 (was 476)
+- **Rust Files**: 2,150 (crates + src + tests; excludes showcase/examples)
+- **Crypto Methods**: 99 JSON-RPC methods (`methods()` handler count: +2 consent verification)
+- **`#[allow(`**: 86 (was 67)
+- **`#[expect(`**: 642 (was 629)
 - **Platform Support**: Linux, macOS, Android, Windows, iOS
 
 ---
@@ -89,6 +89,13 @@
 ---
 
 ## Recent Improvements
+
+### Wave 39: wetSpring Alignment — Consent Gate, Security Domain Registration (April 13, 2026)
+
+- **`security.verify_consent` + `security.issue_consent_token` implemented** — HMAC-SHA256 consent tokens over `owner_id:scope` using family-derived BLAKE3 key. Enables wetSpring vault data access gating (NUCLEUS consent protocol). 6 new tests.
+- **Neural API `security` capability registered** — Auto-registration includes `verify_consent`, `issue_consent_token`, `evaluate`, `lineage`, `generate_jwt_secret` so Neural API routes `capability.call("security", "verify_consent")` to BearDog.
+- **Capabilities listing updated** — `capabilities.list`, `discover_capabilities`, and `provided_capabilities` all advertise consent domain. Cost estimates added.
+- **99 JSON-RPC methods** (was 97); **14,780+ tests passing**, all gates clean.
 
 ### Wave 38: Deep Debt Resolution — Smart Refactoring, Production Stubs Evolved, Hardcoding Eliminated (April 12, 2026)
 

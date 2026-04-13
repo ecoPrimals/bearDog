@@ -150,9 +150,9 @@ impl CapabilitiesHandler {
             "provided_capabilities": [
                 {
                     "type": "security",
-                    "version": "1.0",
-                    "methods": ["evaluate", "lineage", "generate_jwt_secret"],
-                    "description": "Security provider - trust evaluation, genetic lineage, and secret generation"
+                    "version": "1.1",
+                    "methods": ["evaluate", "lineage", "generate_jwt_secret", "verify_consent", "issue_consent_token"],
+                    "description": "Security provider - trust evaluation, genetic lineage, consent verification, and secret generation"
                 },
                 {
                     "type": "encryption",
@@ -163,6 +163,12 @@ impl CapabilitiesHandler {
                     "type": "trust",
                     "version": "1.0",
                     "methods": ["evaluate", "lineage"],
+                },
+                {
+                    "type": "consent",
+                    "version": "1.0",
+                    "methods": ["verify_consent", "issue_consent_token"],
+                    "description": "HMAC consent token verification for vault/data access gating (NUCLEUS consent protocol)"
                 },
                 {
                     "type": "btsp",
@@ -242,6 +248,8 @@ impl CapabilitiesHandler {
                 "crypto.chacha20_poly1305_decrypt": { "cpu": "low",   "latency_ms": 1 },
                 "crypto.x25519_generate_ephemeral": { "cpu": "low",   "latency_ms": 1 },
                 "crypto.x25519_derive_secret":      { "cpu": "low",   "latency_ms": 1 },
+                "security.verify_consent":         { "cpu": "low",    "latency_ms": 1 },
+                "security.issue_consent_token":    { "cpu": "low",    "latency_ms": 1 },
                 "btsp.server.create_session":      { "cpu": "medium", "latency_ms": 2 },
                 "btsp.server.verify":              { "cpu": "medium", "latency_ms": 2 },
                 "crypto.ionic_bond.propose":       { "cpu": "low",    "latency_ms": 1 },
@@ -326,7 +334,9 @@ impl CapabilitiesHandler {
                 "jwt.provision",
                 "secrets.store",
                 "secrets.retrieve",
-                "relay.authorize"
+                "relay.authorize",
+                "consent.verify",
+                "consent.issue"
             ]
         }))
     }
@@ -447,6 +457,8 @@ mod tests {
         assert!(method_strs.contains(&"health.liveness"));
         assert!(method_strs.contains(&"capabilities.list"));
         assert!(method_strs.contains(&"identity.get"));
+        assert!(method_strs.contains(&"security.verify_consent"));
+        assert!(method_strs.contains(&"security.issue_consent_token"));
     }
 
     #[tokio::test]
@@ -496,7 +508,7 @@ mod tests {
         let caps = response["capabilities"]
             .as_array()
             .expect("capabilities should be array in test");
-        assert!(caps.len() >= 12, "Expected at least 12 capabilities");
+        assert!(caps.len() >= 14, "Expected at least 14 capabilities");
 
         let cap_strs: Vec<&str> = caps
             .iter()
