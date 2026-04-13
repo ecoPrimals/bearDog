@@ -8,7 +8,6 @@
 mod validation_tests {
     use crate::canonical::config::unified::*;
     use std::sync::Arc;
-    // Removed unused import
 
     #[test]
     fn test_default_config_is_valid() {

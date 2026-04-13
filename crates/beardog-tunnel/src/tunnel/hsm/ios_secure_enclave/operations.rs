@@ -3,7 +3,10 @@
 // iOS Secure Enclave cryptographic operations
 
 use super::keychain::TypeSafeSecureEnclave;
-use super::types::*;
+use super::types::{
+    BiometricPolicy, KeyAgreementCapable, SecureEnclaveAlgorithm, SecureEnclaveAlgorithmType,
+    SecureEnclaveConstraint, SecureEnclaveKeyMaterial,
+};
 use beardog_errors::BearDogError;
 use beardog_security::BearDogCrypto;
 use std::marker::PhantomData;

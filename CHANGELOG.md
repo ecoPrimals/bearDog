@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 13, 2026 -- Wave 43: Deep Debt Sweep — Unused Deps, Dead Features, Commented Imports, Smart Refactor
+
+- **4 unused workspace dependencies removed** — `mockall`, `rmp-serde`, `figment`, `config` declared in root `[workspace.dependencies]` but referenced by zero crates.
+- **Dead `mdns-discovery` feature removed** from `beardog-adapters` — no `#[cfg(feature = "mdns-discovery")]` gates or cross-crate enablement.
+- **16 "Removed unused import" comment lines cleaned** across 14 files in `beardog-monitoring`, `beardog-types`, `beardog-threat`, `beardog-traits`, `beardog-core`. Dead comments from earlier refactors.
+- **`security.rs` refactored (971→555 LOC)** — 416-line test module extracted to `security_tests.rs` via `#[path]` attribute. Handler stays routing/crypto only; zero production files over 800 LOC in handlers/.
+- **Production wildcard import eliminated** — `use super::types::*` in `ios_secure_enclave/operations.rs` replaced with 6 explicit type imports.
+- **All quality gates clean** — fmt, clippy, doc, test.
+
 ### April 13, 2026 -- Wave 42: primalSpring Audit Resolution — Ionic Bond Seal, BTSP Metadata, Accept Hardening
 
 - **`crypto.ionic_bond.seal` implemented** — Explicit third step in propose→accept→seal lifecycle. Re-verifies both Ed25519 signatures, transitions Active→Sealed. Rejects unauthorized sealers, revoked/expired bonds, and tampered signatures. 5 new tests: full lifecycle, unauthorized sealer, revoked bond, tampered sig, revoke-after-seal.

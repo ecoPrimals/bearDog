@@ -4,7 +4,6 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-// Removed unused import: tracing::info
 
 use crate::threat::types::{DetectionRule, ThreatType};
 use beardog_errors::BearDogError;

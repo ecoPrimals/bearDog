@@ -11,8 +11,6 @@ use super::types::{
     MetricEvent, MetricEventType, MetricStatistics, MetricType, MetricsSummary, PerformanceMetric,
     SecurityEvent,
 };
-// Removed unused imports: use super::analysis::{AnomalyDetector, TrendAnalyzer};
-
 use beardog_errors::BearDogError;
 use std::sync::Arc;
 use std::time::SystemTime;

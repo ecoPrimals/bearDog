@@ -4,7 +4,6 @@
 //
 // This module provides threat enrichment functionality for the BearDog threat detection system.
 
-// Removed unused imports: super::core::ThreatDetectionEngine, crate::threat::types::*
 use beardog_errors::BearDogError;
 
 /// Optional enrichment stage that can attach [`ExternalIntelligence`] to threats.

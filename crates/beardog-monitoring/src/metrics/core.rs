@@ -5,7 +5,6 @@
 // Fundamental metrics storage, management, and processing functionality.
 
 use beardog_errors::BearDogError;
-// Removed unused import: use crate::monitoring::types::*;
 
 /// Coordinator for baseline metrics collection settings and lifecycle.
 #[derive(Debug, Clone)]

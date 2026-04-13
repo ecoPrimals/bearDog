@@ -7,7 +7,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-// Removed unused import: tracing::debug
 use uuid::Uuid;
 
 /// AI response metadata

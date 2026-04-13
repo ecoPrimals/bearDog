@@ -5,7 +5,6 @@
 // This module provides comprehensive types for ecosystem integration,
 // including service discovery, compute orchestration, and HSM management.
 
-// Removed unused import: beardog_errors::BearDogError
 use beardog_types::canonical::HealthStatus;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

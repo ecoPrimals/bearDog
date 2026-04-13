@@ -4,7 +4,6 @@
 //
 // **MODERNIZED**: Clean, production-ready core types for the BearDog threat detection system.
 
-// Removed unused import - ThreatIntelligenceFeed is defined in mod.rs
 use crate::threat::types::IndicatorType;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

@@ -8,7 +8,6 @@ use crate::threat::{ThreatEvent, ThreatSeverity};
 use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-// Removed unused import: uuid::Uuid
 
 /// Automated threat response handler.
 #[derive(Debug)]

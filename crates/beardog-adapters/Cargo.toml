@@ -14,7 +14,6 @@ license = "AGPL-3.0-or-later"
 
 [features]
 default = []
-mdns-discovery = ["mdns-sd"]
 
 [lints]
 workspace = true

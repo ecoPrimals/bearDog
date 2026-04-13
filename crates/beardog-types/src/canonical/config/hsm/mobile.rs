@@ -7,7 +7,6 @@
 use super::HsmConfigValidation;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-// Removed unused import: use std::collections::HashMap;
 
 /// **UNIFIED MOBILE HSM CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]

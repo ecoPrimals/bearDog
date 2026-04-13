@@ -90,6 +90,15 @@
 
 ## Recent Improvements
 
+### Wave 43: Deep Debt Sweep — Unused Deps, Dead Features, Commented Imports, Smart Refactor (April 13, 2026)
+
+- **4 unused workspace deps removed** — mockall, rmp-serde, figment, config.
+- **Dead `mdns-discovery` feature removed** from beardog-adapters.
+- **16 commented-out import lines cleaned** across 14 files.
+- **`security.rs` refactored** — tests extracted to `security_tests.rs` (971→555 LOC).
+- **Production wildcard eliminated** in `ios_secure_enclave/operations.rs`.
+- All quality gates clean.
+
 ### Wave 42: primalSpring Audit Resolution — Ionic Bond Seal, BTSP Metadata, Accept Hardening (April 13, 2026)
 
 - **`crypto.ionic_bond.seal` implemented** — Explicit propose→accept→seal lifecycle with full Ed25519 re-verification on seal. `BondState::Sealed` added. 5 new tests.

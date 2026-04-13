@@ -2,10 +2,9 @@
 
 //! Logging level, format, and rotation settings for the canonical monitoring bundle.
 
+use super::MonitoringConfigValidation;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
-// Removed unused import: use std::time::Duration;
-use super::MonitoringConfigValidation;
 
 /// Primary logging sink configuration (level, encoder, rotation).
 #[derive(Debug, Clone, Serialize, Deserialize)]

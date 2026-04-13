@@ -4,9 +4,8 @@
 //! Adapter, and Workflow specializations. Implementations compose async health checks and metrics;
 //! see `beardog_types::canonical::providers_unified::traits` for shared value types.
 
-use beardog_types::canonical::{
-    providers_unified::traits::{ProviderCapability, ProviderHealth, ProviderMetrics},
-    // Removed unused import: config::unified::BearDogConfig,
+use beardog_types::canonical::providers_unified::traits::{
+    ProviderCapability, ProviderHealth, ProviderMetrics,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
