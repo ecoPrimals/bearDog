@@ -417,9 +417,9 @@ pub use beardog_types::canonical::hsm::KeyMetadata;
 
 ## 📚 **Additional Resources**
 
-- **Canonical Type System Specification**: `specs/CANONICAL_TYPE_SYSTEM_SPECIFICATION.md`
-- **Architecture Documentation**: `specs/BEARDOG_ARCHITECTURE.md`
-- **API Interfaces**: `specs/API_INTERFACES.md`
+- **Canonical Type System Specification**: `CANONICAL_TYPE_SYSTEM_SPECIFICATION.md`
+- **Architecture Documentation**: `../../../ARCHITECTURE.md`
+- **API Interfaces**: *(see README.md method table)*
 - **Code Examples**: `examples/` directory with canonical type usage
 - **Test Suite**: `tests/` directory with canonical type validation
 

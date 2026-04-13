@@ -14,7 +14,7 @@ content (docs, specs) per the scyBorg provenance trio.
 All contributions must comply with the wateringHole standards:
 
 - **Edition 2024** — Rust 2024, MSRV 1.93.0 (pinned in `rust-toolchain.toml`)
-- **Pure Rust** — Zero C dependencies (ecoBin v3.0)
+- **Pure Rust** — Zero C dependencies in default build (ecoBin v2.0; v3.0 pending serde_yaml elimination)
 - **`forbid(unsafe_code)`** — Workspace-wide; no exceptions without wateringHole approval
 - **Clippy pedantic + nursery** — Zero warnings (`cargo clippy --workspace --all-features`)
 - **All public items documented** — `#![warn(missing_docs)]` on all library crates

@@ -416,8 +416,8 @@ max_concurrent_assessments = 10
 ### **Related Documentation**
 - **Security Sentinel Transformation**: *(archived to ecoPrimals fossil record)*
 - **Audit Completion Report**: *(archived to ecoPrimals fossil record)*
-- **BearDog Architecture**: `specs/BEARDOG_ARCHITECTURE.md`
-- **Enhanced Security Architecture**: `specs/ENHANCED_SECURITY_ARCHITECTURE_SPEC.md`
+- **BearDog Architecture**: `../../ARCHITECTURE.md`
+- **Enhanced Security Architecture**: `../architecture/ENHANCED_SECURITY_ARCHITECTURE_SPEC.md`
 
 ---
 

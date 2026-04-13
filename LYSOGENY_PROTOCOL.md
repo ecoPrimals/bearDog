@@ -61,17 +61,15 @@ reinforces openness rather than enclosure.
 ## 4. Relationship to scyBorg
 
 The full **scyBorg Provenance Trio** is defined in
-`wateringHole/SCYBORG_PROVENANCE_TRIO_GUIDANCE.md`: **AGPL** for software,
+`ecoPrimals/infra/wateringHole/SCYBORG_PROVENANCE_TRIO_GUIDANCE.md`: **AGPL** for software,
 **ORC** for game mechanics, **CC-BY-SA 4.0** for creative and documentary works.
 BearDog is predominantly **code**; this document is **creative/policy** text
-under CC-BY-SA 4.0. The triple-copyleft **wateringHole** summary is in
-`wateringHole/LICENSE`.
+under CC-BY-SA 4.0.
 
 ---
 
 ## References
 
-- `wateringHole/SCYBORG_PROVENANCE_TRIO_GUIDANCE.md` — scyBorg standard  
-- `wateringHole/LICENSE` — triple-copyleft wateringHole companion  
+- `ecoPrimals/infra/wateringHole/SCYBORG_PROVENANCE_TRIO_GUIDANCE.md` — scyBorg standard  
 - `LICENSE` — BearDog software (AGPL-3.0-or-later)  
 - `LICENSE-DOCS.md` — documentation layer (CC-BY-SA 4.0)

@@ -1,6 +1,6 @@
 # 🎬 BearDog Showcase Examples
 
-**Status**: Expanding showcase (Mar 24, 2026)  
+**Status**: Expanding showcase (April 13, 2026)  
 **Location**: `showcase/`  
 **Progress**: 29 runnable demos with `src/main.rs` (~76% of the 38-demo roadmap target; count with `find showcase -name main.rs | wc -l`)
 
@@ -153,13 +153,12 @@ Roadmap target remains **38** comprehensive demos; gaps include hardware-focused
 
 ### Learn More
 - **../ARCHITECTURE.md** - System design
-- **../ENTROPY_HIERARCHY_PRINCIPLE.md** - Core principle ⭐
-- **../COMPREHENSIVE_AUDIT_REPORT_DEC_24_2025.md** - Quality audit
+- **../docs/references/ENTROPY_HIERARCHY_PRINCIPLE.md** - Core principle
 - **../STATUS.md** - Current status
 
 ### Deep Dive
-- **../specs/** - Technical specs (85 files)
-- **../docs/** - Documentation (166 files)
+- **../specs/** - Technical specs (63 files)
+- **../docs/** - Documentation (20 files)
 - **../examples/** - Code examples
 
 ---
@@ -295,7 +294,7 @@ Want to add a showcase demo? Here's how:
 - **Getting Started**: [../START_HERE.md](../START_HERE.md)
 - **Documentation**: [../docs/](../docs/)
 - **Examples**: [../examples/](../examples/)
-- **Audit Report**: [../COMPREHENSIVE_AUDIT_REPORT_DEC_24_2025.md](../COMPREHENSIVE_AUDIT_REPORT_DEC_24_2025.md)
+- **Status**: [../STATUS.md](../STATUS.md)
 
 ---
 
@@ -320,19 +319,14 @@ Want to add a showcase demo? Here's how:
 
 ## 📝 Archived Content
 
-**Note**: Extensive showcase content was archived on December 23, 2025.
+**Note**: Earlier showcase content was archived December 23, 2025 to the ecoPrimals fossil record.
 
-**Archive Location**: `../archive/beardog-dec-23-2025/showcase/`
+**Archived Examples**: ~30 showcase directories (see `ecoPrimals/fossilRecord/` if available locally)
 
-**Archived Examples**: ~30 showcase directories
-
-To restore:
+To restore from fossil record:
 ```bash
-# View archive
-ls ../archive/beardog-dec-23-2025/showcase/
-
-# Restore specific example
-cp -r ../archive/beardog-dec-23-2025/showcase/XX-example showcase/
+# Check fossil record (at parent ecoPrimals level)
+ls ../../fossilRecord/beardog-dec-23-2025/showcase/ 2>/dev/null
 ```
 
 ---

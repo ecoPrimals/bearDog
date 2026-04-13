@@ -371,6 +371,6 @@ The primal sovereignty architecture now includes **Genesis BearDog Ecosystem Spa
 - **Core**: `crates/beardog-core/src/primal_sovereignty.rs`
 - **Genesis**: `crates/beardog-core/src/genesis_spawning.rs` (pending)
 - **Testing**: Software HSM + ToadStool integration ready
-- **Specification**: `specs/GENESIS_BEARDOG_ECOSYSTEM_SPAWNING.md`
+- **Specification**: *(genesis spawning spec — archived to ecoPrimals fossil record)*
 
 **Status**: 🌱 **READY FOR GENESIS BIRTH + ECOSYSTEM SPAWNING** 

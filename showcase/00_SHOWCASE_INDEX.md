@@ -1,6 +1,6 @@
 # BearDog Showcase Index
 
-**Last Updated:** April 7, 2026
+**Last Updated:** April 13, 2026
 **Status:** Active — 29 runnable demos, roadmap target 38
 **Grade:** World-Class Quality (A+), showcase depth varies by directory
 
@@ -165,5 +165,5 @@ XX-demo-name/
 
 ---
 
-**Last Updated**: April 7, 2026
+**Last Updated**: April 13, 2026
 **Status**: Active expansion

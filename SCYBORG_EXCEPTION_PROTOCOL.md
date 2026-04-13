@@ -12,7 +12,7 @@
 
 ## 1. scyBorg Provenance Trio (Ecosystem Default)
 
-The **scyBorg Provenance Trio** is defined in `wateringHole/SCYBORG_PROVENANCE_TRIO_GUIDANCE.md`:
+The **scyBorg Provenance Trio** is defined in `ecoPrimals/infra/wateringHole/SCYBORG_PROVENANCE_TRIO_GUIDANCE.md`:
 
 | Layer | License | Role |
 |-------|---------|------|
@@ -20,7 +20,7 @@ The **scyBorg Provenance Trio** is defined in `wateringHole/SCYBORG_PROVENANCE_T
 | Game mechanics | **ORC** | Rules, stats, progression where applicable |
 | Docs & creative | **CC-BY-SA 4.0** | Specifications, narrative, guides |
 
-Summary text also appears in `wateringHole/LICENSE`.
+Summary text also appears in the wateringHole LICENSE at `ecoPrimals/infra/wateringHole/LICENSE`.
 
 ---
 
@@ -53,7 +53,7 @@ as applicable.
 
 ## References
 
-- `wateringHole/SCYBORG_PROVENANCE_TRIO_GUIDANCE.md`  
-- `wateringHole/SCYBORG_EXCEPTION_PROTOCOL.md` — ecosystem symbiotic exception model  
+- `ecoPrimals/infra/wateringHole/SCYBORG_PROVENANCE_TRIO_GUIDANCE.md`  
+- `ecoPrimals/infra/wateringHole/SCYBORG_EXCEPTION_PROTOCOL.md` — ecosystem symbiotic exception model  
 - `LYSOGENY_PROTOCOL.md` — prior-art and AGPL alignment for BearDog  
 - `LICENSE` — BearDog software terms  

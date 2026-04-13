@@ -6,7 +6,7 @@
 
 Previous accuracy notice (October 2025) is **resolved**:
 - Zero unsafe code blocks — `forbid(unsafe_code)` enforced workspace-wide
-- 14,780+ tests passing, zero failures
+- 14,784+ tests passing, zero failures
 - 90.51% line coverage (llvm-cov)
 - 100 JSON-RPC methods, 29 crates, edition 2024
 

@@ -17,7 +17,7 @@ BearDog answers "who is this node?" and "perform this crypto operation safely" f
 - **Version:** 0.9.0
 - **Workspace:** 29 crates (`Cargo.toml` workspace)
 - **MSRV:** 1.93.0 (`rust-toolchain.toml`)
-- **Tests:** 14,780+ passing (0 failed; `cargo test --workspace`)
+- **Tests:** 14,784+ passing (0 failed; `cargo test --workspace`)
 - **Coverage:** 90.51% line (llvm-cov, workspace; see [STATUS.md](STATUS.md))
 - **Unsafe:** 0 production blocks (`forbid(unsafe_code)` workspace-wide)
 - **IPC:** JSON-RPC 2.0 over NDJSON via Unix sockets / TCP / named pipes (platform-dependent); tarpc optional behind feature gate
@@ -38,7 +38,7 @@ BearDog is not a network mesh, not durable encrypted storage, not a GPU or host 
 ## Build and Test
 
 ```bash
-git clone <repository-url>
+git clone git@github.com:ecoPrimals/bearDog.git
 cd beardog
 cargo build --release
 cargo test --workspace

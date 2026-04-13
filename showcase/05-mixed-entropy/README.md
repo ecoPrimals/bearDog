@@ -17,6 +17,6 @@ Current output is a short placeholder; implementation will grow alongside the en
 
 ## Related docs
 
-- [Entropy hierarchy principle](../../ENTROPY_HIERARCHY_PRINCIPLE.md) (repo root)
+- [Entropy hierarchy principle](../../docs/references/ENTROPY_HIERARCHY_PRINCIPLE.md)
 - [Showcase index](../00_SHOWCASE_INDEX.md)
 - [Start here](../00_START_HERE.md)
