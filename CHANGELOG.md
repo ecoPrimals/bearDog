@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 14, 2026 -- Wave 48: Transport Security Advertisement (TS-01) — primalSpring Audit Response
+
+- **`transport_security` field in capability responses** — `capabilities.list` and `discover_capabilities` now include `transport_security` object with `btsp_required`, `btsp_version`, `btsp_server_available`, `cleartext_available`, and human-readable `note`. Dynamically determined from `FAMILY_ID` at runtime — `true` on family-scoped sockets, `false` on dev/standalone.
+- **BTSP rejection now sends JSON-RPC error** — When a non-BTSP connection arrives on a family-scoped socket, the server sends a `-32600` error with `"BTSP handshake required"` message and guidance before closing, replacing the prior silent connection drop. This gives biomeOS forwarding and primalSpring AtomicHarness a clear signal.
+- **Wire standard extended (TS-01)** — New "Transport Security Advertisement" section in `CAPABILITY_WIRE_STANDARD.md` specifying the `transport_security` object format and the companion rejection behavior.
+- **Not a BearDog bug** — The composition gap (biomeOS forwards plaintext to BTSP-required sockets) and the AtomicHarness FAMILY_ID wiring are biomeOS/primalSpring side work. These changes make BearDog a better citizen by advertising requirements and providing actionable errors.
+- **All quality gates clean** — fmt, clippy, doc, test (14,784 passing).
+
+### April 13, 2026 -- Wave 47: Documentation & Debris Cleanup
+
+- **Root doc metrics unified** — Test count `14,780+` → `14,784+` across 7 root docs. Clone URL placeholders replaced. ecoBin v3.0→v2.0 in CONTRIBUTING (pending serde_yaml elimination).
+- **8 broken links fixed** — Showcase, specs, protocol docs (wateringHole paths corrected).
+- **3 orphaned stale test files removed** — `encrypt_tests.rs`, `decrypt_tests.rs`, `entropy_comprehensive_tests.rs` (24 compilation errors against old API; 990 dead lines removed).
+- **Build artifacts cleaned** — 24.4 GiB / 116,454 files reclaimed.
+- **wateringHole aligned** — 8 stale handoffs archived, BearDog metrics fixed in 6 docs (methods 185→100, tests 14,593→14,784+, wave 35→46), SA-01 gap marked resolved.
+
 ### April 13, 2026 -- Wave 46: Deep Debt Sweep — Dead Features, Version Drift, File Refactor
 
 - **6 dead Cargo features removed** — `json-rpc` (beardog-ipc), `service-registry` (beardog-discovery), `pixel8_optimizations` + `strongbox_hardware` (beardog-tunnel), `mock-upa` (beardog-integration), `pure-rust` (beardog-cli). Zero `cfg` gates existed for any of these.

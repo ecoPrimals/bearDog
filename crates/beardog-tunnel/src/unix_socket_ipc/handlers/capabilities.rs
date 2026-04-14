@@ -275,12 +275,33 @@ impl CapabilitiesHandler {
             "protocols": ["json-rpc"],
             "transport": ["uds", "tcp"],
             "wire_format": "ndjson",
+            "transport_security": {
+                "btsp_version": "2.0",
+                "btsp_required": self.is_btsp_required(),
+                "btsp_server_available": true,
+                "cleartext_available": !self.is_btsp_required(),
+                "note": if self.is_btsp_required() {
+                    "Family-scoped socket: BTSP handshake required before JSON-RPC. Use btsp.server.create_session to initiate."
+                } else {
+                    "Dev/standalone socket: plaintext JSON-RPC accepted. Set FAMILY_ID for BTSP-secured mode."
+                },
+            },
             "btsp_enabled": true,
             "btsp_server_available": true,
             "ionic_bond_available": true,
             "collaborative_intelligence": true,
             "signed_announcement": self.sign_capability_announcement(&methods),
         }))
+    }
+
+    /// Whether this primal instance requires BTSP on incoming connections.
+    ///
+    /// True when `FAMILY_ID` is set to a non-standalone value (production mode).
+    /// Per `PRIMAL_SELF_KNOWLEDGE_STANDARD.md`, family-scoped sockets refuse
+    /// plaintext JSON-RPC without a completed BTSP handshake.
+    fn is_btsp_required(&self) -> bool {
+        let fid = self.identity.family_id();
+        !fid.is_empty() && fid != "standalone" && fid != "default"
     }
 
     /// Produce a signed capability announcement using the primal's unified
@@ -342,6 +363,10 @@ impl CapabilitiesHandler {
             "primal": get_primal_name_with(&self.primal_hints),
             "version": env!("CARGO_PKG_VERSION"),
             "capabilities": capabilities,
+            "transport_security": {
+                "btsp_required": self.is_btsp_required(),
+                "btsp_version": "2.0",
+            },
             "signed_announcement": signed,
         }))
     }

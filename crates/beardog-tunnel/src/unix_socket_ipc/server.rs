@@ -326,7 +326,24 @@ impl UnixSocketIpcServer {
                         return self.handle_jsonrpc_btsp(stream, session).await;
                     }
                     Err(e) => {
-                        warn!(error = %e, "BTSP handshake failed — refusing connection");
+                        warn!(error = %e, "BTSP handshake failed — refusing connection (family-scoped socket requires BTSP)");
+                        let rejection = serde_json::json!({
+                            "jsonrpc": JSONRPC_VERSION,
+                            "error": {
+                                "code": -32600,
+                                "message": "BTSP handshake required",
+                                "data": {
+                                    "reason": "This socket is family-scoped and requires a BTSP handshake before JSON-RPC traffic. Use btsp.server.create_session to initiate, or connect to the dev socket (beardog-default.sock) for plaintext.",
+                                    "btsp_version": "2.0",
+                                }
+                            },
+                            "id": serde_json::Value::Null,
+                        });
+                        if let Ok(msg) = serde_json::to_string(&rejection) {
+                            let mut stream = stream;
+                            let _ = stream.write_all(format!("{msg}\n").as_bytes()).await;
+                            let _ = stream.flush().await;
+                        }
                         return Ok(());
                     }
                 }

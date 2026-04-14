@@ -90,6 +90,17 @@
 
 ## Recent Improvements
 
+### Wave 48: Transport Security Advertisement (TS-01) — primalSpring Audit Response (April 14, 2026)
+
+- **`transport_security` in capability responses** — Consumers now know if BTSP is required before connecting.
+- **JSON-RPC rejection on BTSP-required sockets** — Replaces silent drops with actionable `-32600` error.
+- **Wire standard TS-01** — New section in `CAPABILITY_WIRE_STANDARD.md`.
+
+### Wave 47: Documentation & Debris Cleanup (April 13, 2026)
+
+- **Root doc metrics unified** — 14,780→14,784+ tests, 8 broken links fixed, 3 stale test files removed, 24.4 GiB artifacts cleaned.
+- **wateringHole aligned** — 8 handoffs archived, BearDog metrics fixed in 6 docs, SA-01 resolved.
+
 ### Wave 46: Deep Debt Sweep — Dead Features, Version Drift, File Refactor (April 13, 2026)
 
 - **6 dead Cargo features + 2 unused optional deps removed** — Zero `cfg` gates for any.
