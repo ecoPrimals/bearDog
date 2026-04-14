@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 14, 2026 -- Wave 49: Deep Debt Sweep — Workspace Deps, Large File Refactor, Dead Exports
+
+- **Workspace dependency alignment (5 crates)** — `beardog-config`, `beardog-deploy`, `beardog-core`, `beardog-auth`, `beardog-node-registry` migrated from explicit version strings to `workspace = true` for 30+ dependencies (serde, tokio, tracing, ed25519-dalek, sha2/sha3, clap, chrono, uuid, tempfile, etc.). Eliminates version drift risk and unifies resolution.
+- **Large file smart refactoring (2 files)** — `android_strongbox/core.rs` (850→796 lines): removed dead shadow `AndroidKeyParams` struct + consolidated verbose fully-qualified paths with `unified::` module alias. `cloud_discoverer.rs` (826→790 lines): hoisted 7× repeated capability type imports to module level, eliminating 42 lines of redundant inner `use` blocks.
+- **Dead `pub use` re-exports removed** — `beardog-ipc`: `normalize_method` (zero external references). `beardog-utils`: `BufferPoolSafe`, `BufferPoolStats`, `MemoryPoolStats`, `SafeMemoryPool` aliases (zero external references via aliased names).
+- **`#![allow(dead_code)]` in infrastructure.rs audited** — Documented reason valid (pub serde surface types; `#[expect]` would be unfulfilled). No migration needed.
+- **All quality gates clean** — fmt, clippy -D warnings, doc -D warnings, test (14,784 passing).
+
 ### April 14, 2026 -- Wave 48: Transport Security Advertisement (TS-01) — primalSpring Audit Response
 
 - **`transport_security` field in capability responses** — `capabilities.list` and `discover_capabilities` now include `transport_security` object with `btsp_required`, `btsp_version`, `btsp_server_available`, `cleartext_available`, and human-readable `note`. Dynamically determined from `FAMILY_ID` at runtime — `true` on family-scoped sockets, `false` on dev/standalone.

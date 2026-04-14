@@ -70,10 +70,10 @@ workspace = true
 workspace = true
 
 [dependencies.ed25519-dalek]
-version = "2.1"
+workspace = true
 
 [dependencies.sha3]
-version = "0.10"
+workspace = true
 
 [dependencies.blake3]
 workspace = true

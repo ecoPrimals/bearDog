@@ -70,7 +70,6 @@ pub mod protocol_router;
 pub use client::OrchestratorRegistryClient;
 pub use dispatch::{DispatchOutcome, IpcErrorPhase};
 pub use error::{IpcError, IpcResult};
-pub use method_names::normalize_method;
 pub use types::{Capability, DiscoveryQuery, ServiceInfo};
 // Neural API auto-registration (Tower Atomic TRUE PRIMAL)
 pub use neural_registration::{

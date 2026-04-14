@@ -16,6 +16,7 @@ use async_trait::async_trait;
 use beardog_errors::BearDogError;
 use beardog_traits::hsm::HsmKeyProvider;
 use beardog_types::canonical::UnifiedProvider;
+use beardog_types::canonical::providers_unified::traits::base_traits as unified;
 use beardog_types::canonical::providers_unified::traits::{
     AttestationResponse, AuthenticationRequest, AuthenticationResponse, AuthorizationRequest,
     AuthorizationResponse, BackupInfo, HsmDeviceInfo, KeyBackupSpec, KeyGenerationSpec, KeyInfo,
@@ -284,14 +285,12 @@ impl AndroidStrongBoxHsm {
 // Implement UnifiedProvider (base trait)
 // Note: UnifiedProvider uses RPITIT (native async), not #[async_trait]
 impl UnifiedProvider for AndroidStrongBoxHsm {
-    fn provider_info(
-        &self,
-    ) -> beardog_types::canonical::providers_unified::traits::base_traits::ProviderInfo {
-        beardog_types::canonical::providers_unified::traits::base_traits::ProviderInfo {
+    fn provider_info(&self) -> unified::ProviderInfo {
+        unified::ProviderInfo {
             id: "android_strongbox".to_string(),
             name: "Android StrongBox HSM".to_string(),
             version: super::VERSION.to_string(),
-            provider_type: beardog_types::canonical::providers_unified::traits::base_traits::ProviderType::Security, // HSM is a security provider
+            provider_type: unified::ProviderType::Security,
             supported_capabilities: vec![
                 "hardware_keystore".to_string(),
                 "key_attestation".to_string(),
@@ -300,28 +299,23 @@ impl UnifiedProvider for AndroidStrongBoxHsm {
         }
     }
 
-    async fn health_check(
-        &self,
-    ) -> Result<
-        beardog_types::canonical::providers_unified::traits::base_traits::ProviderHealth,
-        BearDogError,
-    > {
+    async fn health_check(&self) -> Result<unified::ProviderHealth, BearDogError> {
         let health_status = self.health_monitor.check().await?;
 
-        Ok(beardog_types::canonical::providers_unified::traits::base_traits::ProviderHealth {
+        Ok(unified::ProviderHealth {
             status: if health_status.is_healthy {
-                beardog_types::canonical::providers_unified::traits::base_traits::HealthStatus::Healthy
+                unified::HealthStatus::Healthy
             } else {
-                beardog_types::canonical::providers_unified::traits::base_traits::HealthStatus::Degraded
+                unified::HealthStatus::Degraded
             },
             timestamp: std::time::SystemTime::now(),
             details: health_status.details,
-            resource_usage: beardog_types::canonical::providers_unified::traits::base_traits::ResourceUsage {
+            resource_usage: unified::ResourceUsage {
                 cpu_percent: 0.0,
                 memory_bytes: 0,
                 memory_percent: 0.0,
-                disk_io: HashMap::new(), // HashMap<String, u64>
-                network_io: beardog_types::canonical::providers_unified::traits::base_traits::NetworkIoMetrics {
+                disk_io: HashMap::new(),
+                network_io: unified::NetworkIoMetrics {
                     bytes_sent: 0,
                     bytes_received: 0,
                     packets_sent: 0,
@@ -332,49 +326,38 @@ impl UnifiedProvider for AndroidStrongBoxHsm {
         })
     }
 
-    async fn metrics(
-        &self,
-    ) -> Result<
-        beardog_types::canonical::providers_unified::traits::base_traits::ProviderMetrics,
-        BearDogError,
-    > {
-        Ok(
-            beardog_types::canonical::providers_unified::traits::base_traits::ProviderMetrics {
-                timestamp: std::time::SystemTime::now(),
-                performance: HashMap::new(),
-                custom_metrics: vec![],
-                system_metrics: beardog_types::workflow::SystemMetrics {
-                    uptime_seconds: 0,
-                    total_requests: 0,
-                    successful_requests: 0,
-                    failed_requests: 0,
-                    avg_response_time_ms: 0.0,
-                    active_connections: 0,
-                    error_rate: 0.0,
-                },
+    async fn metrics(&self) -> Result<unified::ProviderMetrics, BearDogError> {
+        Ok(unified::ProviderMetrics {
+            timestamp: std::time::SystemTime::now(),
+            performance: HashMap::new(),
+            custom_metrics: vec![],
+            system_metrics: beardog_types::workflow::SystemMetrics {
+                uptime_seconds: 0,
+                total_requests: 0,
+                successful_requests: 0,
+                failed_requests: 0,
+                avg_response_time_ms: 0.0,
+                active_connections: 0,
+                error_rate: 0.0,
             },
-        )
+        })
     }
 
-    fn capabilities(
-        &self,
-    ) -> Vec<beardog_types::canonical::providers_unified::traits::base_traits::ProviderCapability>
-    {
+    fn capabilities(&self) -> Vec<unified::ProviderCapability> {
         vec![
-            // ProviderCapability is now a struct, not enum
-            beardog_types::canonical::providers_unified::traits::base_traits::ProviderCapability {
+            unified::ProviderCapability {
                 name: "HardwareKeyStorage".to_string(),
                 description: "Hardware-backed key storage in StrongBox".to_string(),
                 parameters: vec![],
                 enabled: true,
             },
-            beardog_types::canonical::providers_unified::traits::base_traits::ProviderCapability {
+            unified::ProviderCapability {
                 name: "KeyAttestation".to_string(),
                 description: "Hardware key attestation".to_string(),
                 parameters: vec![],
                 enabled: true,
             },
-            beardog_types::canonical::providers_unified::traits::base_traits::ProviderCapability {
+            unified::ProviderCapability {
                 name: "HardwareRng".to_string(),
                 description: "Hardware random number generation".to_string(),
                 parameters: vec![],
@@ -385,7 +368,7 @@ impl UnifiedProvider for AndroidStrongBoxHsm {
 
     async fn initialize(
         &mut self,
-        _config: beardog_types::canonical::providers_unified::traits::base_traits::ProviderConfiguration,
+        _config: unified::ProviderConfiguration,
     ) -> Result<(), BearDogError> {
         info!("Android StrongBox HSM already initialized");
         Ok(())
@@ -580,42 +563,6 @@ impl UnifiedHsmProvider for AndroidStrongBoxHsm {
             "Key backup not supported for StrongBox keys - keys are hardware-bound for security"
                 .to_string(),
         ))
-    }
-}
-
-// Placeholder types that need to be properly defined in the module
-#[derive(Debug, Clone)]
-struct AndroidKeyParams {
-    algorithm: String,
-    key_size: u32,
-    purposes: Vec<String>,
-    strongbox_backed: bool,
-}
-
-impl AndroidKeyParams {
-    fn new() -> Self {
-        Self {
-            algorithm: String::new(),
-            key_size: 0,
-            purposes: Vec::new(),
-            strongbox_backed: false,
-        }
-    }
-
-    fn set_algorithm(&mut self, algorithm: &str) {
-        self.algorithm = algorithm.to_string();
-    }
-
-    fn set_key_size(&mut self, size: u32) {
-        self.key_size = size;
-    }
-
-    fn set_purposes(&mut self, purposes: Vec<&str>) {
-        self.purposes = purposes.iter().map(|s| s.to_string()).collect();
-    }
-
-    fn set_strongbox_backed(&mut self, backed: bool) {
-        self.strongbox_backed = backed;
     }
 }
 

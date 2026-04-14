@@ -13,43 +13,41 @@ license = "AGPL-3.0-or-later"
 workspace = true
 
 [dependencies]
-serde_json = "1.0"
-tracing = "0.1"
-hex = "0.4"
-ed25519-dalek = "2.1"
-x25519-dalek = "2.0"
-sha2 = "0.10"
-sha3 = "0.10"
-toml = "0.8"
+serde_json = { workspace = true }
+tracing = { workspace = true }
+hex = { workspace = true }
+ed25519-dalek = { workspace = true }
+x25519-dalek = { workspace = true }
+sha2 = { workspace = true }
+sha3 = { workspace = true }
+toml = { workspace = true }
 ahash = "0.8"
-async-trait = "0.1"
+async-trait = { workspace = true }
 rand = { workspace = true }
 urlencoding = "2.1"
-hickory-resolver = "0.24"  # Replaced unmaintained trust-dns
-zeroize = "1.7"
-rand_chacha.workspace = true
+hickory-resolver = "0.24"
+zeroize = { workspace = true }
+rand_chacha = { workspace = true }
 http = "1.3.1"
-aes-gcm = "0.10"  # For real encryption (evolved from mock)
-chacha20poly1305 = "0.10"  # Modern, fast AEAD cipher
-# JWT implementation using RustCrypto (100% Pure Rust!)
-# We implement JWT ourselves using hmac + sha2 + base64 (already in dependencies)
-base64 = "0.22"  # For encoding operations (aligned with workspace version)
-mdns-sd = { version = "0.11", optional = true }  # mDNS service discovery
-gethostname = "0.4"  # Get system hostname for identity
-p256 = { version = "0.13.2", features = ["ecdsa"] }
-rsa = "0.9"  # RSA-PSS signature support
-blake3.workspace = true
-hmac.workspace = true
-hkdf = "0.12.4"
-argon2.workspace = true
-parking_lot.workspace = true  # High-performance RwLock for UniversalAdapter
+aes-gcm = { workspace = true }
+chacha20poly1305 = { workspace = true }
+base64 = { workspace = true }
+mdns-sd = { version = "0.11", optional = true }
+gethostname = "0.4"
+p256 = { workspace = true }
+rsa = { workspace = true }
+blake3 = { workspace = true }
+hmac = { workspace = true }
+hkdf = { workspace = true }
+argon2 = { workspace = true }
+parking_lot = { workspace = true }
 
 [dev-dependencies]
-tokio-test = "0.4.3"
-tracing-subscriber = "0.3"
+tokio-test = { workspace = true }
+tracing-subscriber = { workspace = true }
 approx = "0.5"
-tempfile = "3.8"
-serial_test = "3.0"  # For serial test execution (env tests)
+tempfile = { workspace = true }
+serial_test = { workspace = true }
 
 [package.version]
 workspace = true
@@ -97,20 +95,16 @@ path = "../beardog-adapters"
 path = "../beardog-discovery"
 
 [dependencies.tokio]
-version = "1.0"
-features = [ "full",]
+workspace = true
 
 [dependencies.serde]
-version = "1.0"
-features = [ "derive",]
+workspace = true
 
 [dependencies.uuid]
-version = "1.0"
-features = [ "v4",]
+workspace = true
 
 [dependencies.chrono]
-version = "0.4"
-features = [ "serde",]
+workspace = true
 
 [features]
 default = []

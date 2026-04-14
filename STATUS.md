@@ -2,7 +2,7 @@
 
 # BearDog Status
 
-**Last Updated**: April 13, 2026
+**Last Updated**: April 14, 2026
 **Version**: 0.9.0
 **Edition**: 2024 | **MSRV**: 1.93.0
 
@@ -89,6 +89,13 @@
 ---
 
 ## Recent Improvements
+
+### Wave 49: Deep Debt Sweep — Workspace Deps, Large File Refactor, Dead Exports (April 14, 2026)
+
+- 5 crates migrated to `workspace = true` (30+ deps unified)
+- 2 large files refactored under 800 LOC (dead code removed, imports consolidated)
+- 3 dead `pub use` re-exports removed
+- All quality gates clean (14,784 tests)
 
 ### Wave 48: Transport Security Advertisement (TS-01) — primalSpring Audit Response (April 14, 2026)
 

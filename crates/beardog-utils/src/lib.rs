@@ -114,10 +114,8 @@ pub mod zero_copy_optimized;
 #[cfg(any(test, feature = "test-utils"))]
 pub mod property_testing;
 
-// Export safe implementations by default - specific imports to avoid ambiguity
-pub use buffer_pools_safe::{PoolStats as BufferPoolStats, SafeBufferPool as BufferPoolSafe};
+// Export safe implementations by default
 pub use concurrent_safe::*;
-pub use memory_pools_safe::{PoolStats as MemoryPoolStats, SafeMemoryPool};
 pub use simd_safe::*;
 pub use utils::*;
 pub use zero_copy_safe::*;
