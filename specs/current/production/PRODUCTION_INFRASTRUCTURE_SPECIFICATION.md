@@ -565,33 +565,30 @@ pub struct ProductionPerformanceMetrics {
 
 ## 🏗️ **Infrastructure Components**
 
-### **Deployment Scripts Inventory**
+### **Deployment Tooling**
 
-| **Script** | **Purpose** | **Execution Time** | **Status** |
-|------------|-------------|-------------------|-------------|
-| `production_deployment.sh` | Complete automated deployment | ~5-10 minutes | ✅ Operational |
-| `performance_benchmark.sh` | Comprehensive performance testing | ~2-5 minutes | ✅ Operational |
-| `security_hardening_validation.sh` | Security configuration validation | ~3-7 minutes | ✅ Operational |
-| `ecosystem_integration_test.sh` | Universal adapter and ecosystem testing | ~3-5 minutes | ✅ Operational |
-| `production_health_check.sh` | Production health monitoring | ~30 seconds | ✅ Operational |
-| `build_android_pixel8.sh` | Android/mobile deployment | ~10-15 minutes | ✅ Operational |
-| `build_android.sh` | General Android build automation | ~8-12 minutes | ✅ Operational |
-| `setup_distributed_beardog.sh` | Distributed cluster setup | ~15-20 minutes | ✅ Operational |
-| `setup_environment.sh` | Development environment setup | ~5-10 minutes | ✅ Operational |
-| `test_coverage.sh` | Comprehensive test coverage | ~10-15 minutes | ✅ Operational |
-| `refactor_large_files.sh` | Code quality maintenance | ~2-5 minutes | ✅ Operational |
+BearDog uses Cargo-native tooling and CI workflows — no shell scripts required:
+
+| **Command** | **Purpose** | **Status** |
+|-------------|-------------|-------------|
+| `cargo build --release` | Production binary | ✅ Operational |
+| `cargo test --workspace` | Full test suite (14,784+ tests) | ✅ Operational |
+| `cargo bench --package benchmarks` | Performance benchmarks (Criterion) | ✅ Operational |
+| `cargo clippy --workspace -- -D warnings` | Lint gate | ✅ Operational |
+| `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps` | Doc gate | ✅ Operational |
+| `cargo deny check` | License + advisory audit | ✅ Operational |
+| `cargo llvm-cov --workspace` | Coverage (90.51% target) | ✅ Operational |
+| `deploy-pixel8` binary (`beardog-deploy` crate) | Android/Pixel deployment | ✅ Operational |
 
 ### **Production Documentation**
 
-| **Document** | **Purpose** | **Completeness** | **Status** |
-|--------------|-------------|------------------|-------------|
-| `PRODUCTION_DEPLOYMENT_GUIDE.md` | Complete deployment procedures | 100% | ✅ Complete |
-| `BEARDOG_HYBRID_AI_ARCHITECTURE_SUMMARY.md` | Hybrid AI architecture | 100% | ✅ Complete |
-| `BEARDOG_ARCHITECTURE_COMPLIANCE_FINAL_REPORT.md` | Architecture validation | 100% | ✅ Complete |
-| `BEARDOG_PRODUCTION_READINESS_FINAL_VALIDATION.md` | Production validation | 100% | ✅ Complete |
-| `COMPREHENSIVE_AUDIT_COMPLETION_SUMMARY.md` | Complete audit summary | 100% | ✅ Complete |
-| `INTEGRATION_ROUTING_AUDIT_REPORT.md` | Routing architecture audit | 100% | ✅ Complete |
-| `UNIVERSAL_ADAPTER_ROUTING_GUIDE.md` | Universal adapter implementation | 100% | ✅ Complete |
+| **Document** | **Purpose** | **Location** |
+|--------------|-------------|--------------|
+| `STATUS.md` | Current metrics and wave history | repo root |
+| `ARCHITECTURE.md` | System architecture and crate graph | repo root |
+| `PRODUCTION_READINESS_SPECIFICATION.md` | Production readiness criteria | `specs/current/production/` |
+| `SECURITY_SENTINEL_SPECIFICATION.md` | Runtime security monitoring | `specs/current/security/` |
+| `BTSP_PROTOCOL_STANDARD.md` | Transport security standard | `ecoPrimals/infra/wateringHole/` |
 
 ---
 

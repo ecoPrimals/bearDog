@@ -73,27 +73,20 @@ Historical benchmarks for regression testing:
 ### Run All Benchmarks
 
 ```bash
-./scripts/run_benchmarks.sh
+cargo bench --package benchmarks
 ```
 
-### Run Specific Category
+### Run Specific Benchmark Group
 
 ```bash
 # HSM operations only
-./scripts/run_benchmarks.sh --hsm
+cargo bench --package benchmarks -- hsm
 
 # Discovery operations only
-./scripts/run_benchmarks.sh --discovery
+cargo bench --package benchmarks -- discovery
 
 # Production workloads only
-./scripts/run_benchmarks.sh --production
-```
-
-### Quick Development Run
-
-```bash
-# Reduced sample size for faster iteration
-./scripts/run_benchmarks.sh --quick
+cargo bench --package benchmarks -- production
 ```
 
 ### Compare with Baseline
@@ -102,8 +95,8 @@ Historical benchmarks for regression testing:
 # Save current results as baseline
 cargo bench --package benchmarks -- --save-baseline main
 
-# Run and compare
-./scripts/run_benchmarks.sh --compare main
+# Run and compare against saved baseline
+cargo bench --package benchmarks -- --baseline main
 ```
 
 ## 📈 Reading Results
@@ -173,8 +166,8 @@ Discovery benchmarks simulate realistic network conditions:
 ### CI/CD Integration
 
 ```bash
-# Run in CI mode (exit on regression)
-./scripts/run_benchmarks.sh --ci
+# Run benchmarks in CI (criterion outputs to target/criterion/)
+cargo bench --package benchmarks
 ```
 
 ### Regression Thresholds
@@ -202,7 +195,7 @@ jobs:
           profile: minimal
           toolchain: stable
       - name: Run benchmarks
-        run: ./scripts/run_benchmarks.sh --ci
+        run: cargo bench --package benchmarks
       - name: Upload results
         uses: actions/upload-artifact@v3
         with:

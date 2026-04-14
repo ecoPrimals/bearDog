@@ -39,7 +39,7 @@ BearDog is not a network mesh, not durable encrypted storage, not a GPU or host 
 
 ```bash
 git clone git@github.com:ecoPrimals/bearDog.git
-cd beardog
+cd bearDog
 cargo build --release
 cargo test --workspace
 ```

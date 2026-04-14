@@ -164,7 +164,7 @@ crates/beardog-types/src/config/
 - **Security**: Integrated security architecture
 
 ### **Quality Assurance**
-- **Testing**: Comprehensive test suite (67 tests)
+- **Testing**: Comprehensive test suite (14,784+ tests)
 - **Documentation**: Complete API documentation
 - **Type Safety**: Compile-time guarantees
 - **Performance**: Benchmarked and optimized

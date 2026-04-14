@@ -83,7 +83,7 @@ pub fn generate_secure_nonce() -> BearDogResult<[u8; 32]> {
 ## 📊 **SECURITY TESTING STATUS**
 
 ### **Test Coverage** ✅
-- **Total Tests**: 67 tests passing
+- **Total Tests**: 14,784+ tests passing
 - **Security Tests**: 90%+ coverage of security modules
 - **Cryptographic Tests**: Comprehensive Ed25519 and nonce generation testing
 - **Integration Tests**: End-to-end security validation

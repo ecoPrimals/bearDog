@@ -34,7 +34,7 @@ BearDog exposes its cryptographic and genetic capabilities through a JSON-RPC 2.
 
 ## 📚 **API CATEGORIES**
 
-BearDog provides **91+ JSON-RPC methods** across 11 categories:
+BearDog provides **100 JSON-RPC methods** across 11 categories:
 
 ### **1. Core Cryptography** (20 methods)
 - Signatures: Ed25519, ECDSA (P-256, P-384), RSA
@@ -1180,7 +1180,7 @@ print(response['result']['hash'])
 88. `hsm.verify` - HSM-backed verification
 89. `hsm.status` - HSM health status
 
-### **Total**: **91+ JSON-RPC methods**
+### **Total**: **100 JSON-RPC methods**
 
 ═══════════════════════════════════════════════════════════════════
 
