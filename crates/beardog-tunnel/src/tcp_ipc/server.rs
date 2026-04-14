@@ -131,33 +131,58 @@ impl TcpIpcServer {
 
         debug!("🔌 Handling connection from: {}", peer_addr);
 
-        // ── BTSP production mode: handshake first ─────────────────────
+        // ── BTSP production mode with protocol auto-detection ──────────
+        //
+        // Peek the first byte to distinguish BTSP binary framing from plain
+        // JSON-RPC text. BTSP frames start with a 4-byte big-endian length;
+        // JSON-RPC starts with '{' (0x7B). This allows biomeOS (the local
+        // composition substrate) to forward capability.call via plain JSON-RPC
+        // over TCP without requiring BTSP client implementation, while external
+        // connections still get full BTSP enforcement.
         if let BtspSecurityMode::Production { ref family_seed } = security_mode {
-            debug!(peer = %peer_addr, "BTSP production: initiating TCP handshake");
-            match btsp_handshake::perform_server_handshake(&mut stream, family_seed).await {
-                Ok(mut session) => {
-                    info!(
+            let mut peek_buf = [0u8; 1];
+            match tokio::time::timeout(
+                std::time::Duration::from_secs(5),
+                stream.peek(&mut peek_buf),
+            )
+            .await
+            {
+                Ok(Ok(1)) if peek_buf[0] == b'{' => {
+                    debug!(
                         peer = %peer_addr,
-                        session_id = %session.session_id,
-                        cipher = %session.cipher.wire_name(),
-                        "BTSP TCP handshake succeeded"
+                        "TCP peek: JSON-RPC detected (0x7B) — bypassing BTSP for local composition"
                     );
-                    return Self::handle_jsonrpc_btsp_tcp(
-                        &mut stream,
-                        &mut session,
-                        &registry,
-                        &btsp_provider,
-                    )
-                    .await;
+                    // Fall through to plain NDJSON handler below
                 }
-                Err(e) => {
-                    warn!(peer = %peer_addr, error = %e, "BTSP TCP handshake failed");
-                    return Ok(());
+                _ => {
+                    debug!(peer = %peer_addr, "BTSP production: initiating TCP handshake");
+                    match btsp_handshake::perform_server_handshake(&mut stream, family_seed).await
+                    {
+                        Ok(mut session) => {
+                            info!(
+                                peer = %peer_addr,
+                                session_id = %session.session_id,
+                                cipher = %session.cipher.wire_name(),
+                                "BTSP TCP handshake succeeded"
+                            );
+                            return Self::handle_jsonrpc_btsp_tcp(
+                                &mut stream,
+                                &mut session,
+                                &registry,
+                                &btsp_provider,
+                            )
+                            .await;
+                        }
+                        Err(e) => {
+                            warn!(peer = %peer_addr, error = %e, "BTSP TCP handshake failed");
+                            return Ok(());
+                        }
+                    }
                 }
             }
         }
 
-        // ── Development mode: plain NDJSON ────────────────────────────
+        // ── Plain NDJSON (development mode or JSON-RPC auto-detected) ──
         let (reader, mut writer) = stream.into_split();
         let mut reader = BufReader::new(reader);
         let mut line = String::new();
