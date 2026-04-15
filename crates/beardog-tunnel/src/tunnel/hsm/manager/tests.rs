@@ -65,14 +65,14 @@ impl HsmProvider for MockHsmProvider {
     }
 
     async fn generate_key(&self, request: GenerateKeyRequest) -> Result<HsmKey, BearDogError> {
+        use crate::tunnel::hsm::{KeyHealthStatus, KeyMaterial, KeyMetadata};
+        use chrono::Utc;
+
         if self.fail_generate {
             return Err(BearDogError::system(
                 "Mock generate_key failure".to_string(),
             ));
         }
-
-        use crate::tunnel::hsm::{KeyHealthStatus, KeyMaterial, KeyMetadata};
-        use chrono::Utc;
 
         Ok(HsmKey {
             id: request.key_id.clone(),

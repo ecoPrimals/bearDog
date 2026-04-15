@@ -164,7 +164,7 @@ impl Announcer {
 #[cfg(test)]
 mod tests {
     use super::Announcer;
-    use crate::config::AnnouncementConfig;
+    use crate::config::{AnnouncementConfig, MdnsAnnouncementConfig};
     use crate::types::{Capability, PrimalInfo, ServiceEndpoint};
     use std::collections::HashMap;
 
@@ -174,7 +174,7 @@ mod tests {
             methods: methods.into_iter().map(String::from).collect(),
             announcement_interval_secs: 5,
             ttl_secs: 30,
-            mdns: Default::default(),
+            mdns: MdnsAnnouncementConfig::default(),
         }
     }
 

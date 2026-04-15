@@ -118,10 +118,6 @@ mod monitoring_config_tests {
 // canonical/hsm/config.rs (205 lines, 0%)
 // ===========================================================================
 mod hsm_config_tests {
-    #[expect(
-        deprecated,
-        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
-    )]
     use crate::canonical::hsm::config::*;
 
     #[test]

@@ -193,7 +193,7 @@ mod tests {
             Transport::UnixSocket { path } => {
                 assert_eq!(path, &PathBuf::from("/tmp/beardog.sock"));
             }
-            _ => panic!("Expected UnixSocket"),
+            Transport::TcpSocket { .. } => panic!("Expected UnixSocket"),
         }
 
         assert!(transport.is_unix_socket());
@@ -216,7 +216,7 @@ mod tests {
                 assert_eq!(host, "api.anthropic.com");
                 assert_eq!(*port, 443);
             }
-            _ => panic!("Expected TcpSocket"),
+            Transport::UnixSocket { .. } => panic!("Expected TcpSocket"),
         }
 
         assert!(!transport.is_unix_socket());

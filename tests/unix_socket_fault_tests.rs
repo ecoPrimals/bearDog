@@ -16,6 +16,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 use tempfile::TempDir;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
 use tokio::net::UnixStream;
 
 use beardog_core::socket_config::IpcCapabilitySymlinksConfig;
@@ -94,12 +95,10 @@ async fn fault_test_socket_deletion_during_operation() {
     let mut request_str = serde_json::to_string(&request).unwrap();
     request_str.push('\n');
 
-    use tokio::io::AsyncWriteExt;
     stream.write_all(request_str.as_bytes()).await.unwrap();
     stream.flush().await.unwrap();
 
     // Should still get response on existing connection
-    use tokio::io::AsyncBufReadExt;
     let mut reader = tokio::io::BufReader::new(stream);
     let mut line = String::new();
     let result = reader.read_line(&mut line).await;
@@ -129,12 +128,10 @@ async fn fault_test_connection_timeout() {
     let mut request_str = serde_json::to_string(&request).unwrap();
     request_str.push('\n');
 
-    use tokio::io::AsyncWriteExt;
     stream2.write_all(request_str.as_bytes()).await.unwrap();
     stream2.flush().await.unwrap();
 
     // Should get response despite hanging connection
-    use tokio::io::AsyncBufReadExt;
     let mut reader = tokio::io::BufReader::new(stream2);
     let mut line = String::new();
     let result = tokio::time::timeout(Duration::from_secs(2), reader.read_line(&mut line)).await;
@@ -154,12 +151,10 @@ async fn fault_test_malformed_requests() {
     let mut stream = UnixStream::connect(&socket_path).await.unwrap();
 
     // Send garbage data
-    use tokio::io::AsyncWriteExt;
     stream.write_all(b"GARBAGE{{{INVALID JSON\n").await.unwrap();
     stream.flush().await.unwrap();
 
     // Should get error response (not crash)
-    use tokio::io::AsyncBufReadExt;
     let mut reader = tokio::io::BufReader::new(stream);
     let mut line = String::new();
     let result = tokio::time::timeout(Duration::from_secs(2), reader.read_line(&mut line)).await;
@@ -187,7 +182,6 @@ async fn fault_test_rapid_server_restart() {
         let mut request_str = serde_json::to_string(&request).unwrap();
         request_str.push('\n');
 
-        use tokio::io::AsyncWriteExt;
         stream.write_all(request_str.as_bytes()).await.unwrap();
         stream.flush().await.unwrap();
 
@@ -207,7 +201,6 @@ async fn fault_test_rapid_server_restart() {
     let mut request_str = serde_json::to_string(&request).unwrap();
     request_str.push('\n');
 
-    use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
     stream.write_all(request_str.as_bytes()).await.unwrap();
     stream.flush().await.unwrap();
 
@@ -231,7 +224,6 @@ async fn fault_test_partial_writes() {
     let mut stream = UnixStream::connect(&socket_path).await.unwrap();
 
     // Write partial request (no newline)
-    use tokio::io::AsyncWriteExt;
     stream
         .write_all(b"{\"jsonrpc\":\"2.0\",\"method\":\"health\"")
         .await
@@ -248,7 +240,6 @@ async fn fault_test_partial_writes() {
     stream.flush().await.unwrap();
 
     // Should eventually get response
-    use tokio::io::AsyncBufReadExt;
     let mut reader = tokio::io::BufReader::new(stream);
     let mut line = String::new();
     let result = tokio::time::timeout(Duration::from_secs(2), reader.read_line(&mut line)).await;

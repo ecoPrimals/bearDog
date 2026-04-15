@@ -694,7 +694,7 @@ mod zero_percent_files {
         use crate::canonical::config::domains::security::advanced::*;
         let c = GeneticSecurityConfiguration {
             enable_genetic_security: false,
-            genetic_parameters: Default::default(),
+            genetic_parameters: std::collections::HashMap::default(),
             evolution_strategies: vec!["test".to_string()],
             fitness_criteria: vec!["accuracy".to_string()],
         };
@@ -703,7 +703,7 @@ mod zero_percent_files {
 
     #[test]
     fn test_providers_connection_default() {
-        use crate::canonical::providers_unified::connection::*;
+        use crate::canonical::config::domains::network::ConnectionPoolConfig;
         let c = ConnectionPoolConfig::default();
         let _ = format!("{c:?}");
     }

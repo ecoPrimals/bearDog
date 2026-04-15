@@ -37,7 +37,7 @@ mod hsm_unified_migration_extra_tests {
                 performance: None,
             },
             LegacyHsmConfig::ZeroCostHsm {
-                manager_config: Default::default(),
+                manager_config: std::collections::HashMap::default(),
             },
         ];
         for c in &configs {

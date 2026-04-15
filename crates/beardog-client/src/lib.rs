@@ -271,6 +271,8 @@ mod tests {
             path: vec![],
             proof_chain: vec![],
             merkle_root: vec![0xab; 8],
+            generation: 0,
+            head_commitment: vec![],
             generated_at: Utc::now(),
         }
     }

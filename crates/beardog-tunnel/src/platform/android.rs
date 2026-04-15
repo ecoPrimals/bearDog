@@ -156,7 +156,9 @@ mod tests {
                 assert!(name.starts_with('@'));
                 println!("✅ Abstract socket format correct: {}", name);
             }
-            _ => panic!("Expected Abstract endpoint, got {:?}", endpoint),
+            SocketEndpoint::Filesystem(_) => {
+                panic!("Expected Abstract endpoint, got {:?}", endpoint)
+            }
         }
     }
 
@@ -171,7 +173,9 @@ mod tests {
                     assert!(name.contains(primal));
                     println!("✅ {} → {}", primal, name);
                 }
-                _ => panic!("Expected Abstract endpoint, got {:?}", endpoint),
+                SocketEndpoint::Filesystem(_) => {
+                    panic!("Expected Abstract endpoint, got {:?}", endpoint)
+                }
             }
         }
     }

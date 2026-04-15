@@ -5,6 +5,7 @@
 //! This test demonstrates a complete end-to-end workflow validation
 //! Created: November 1, 2025
 
+use beardog_security::compute_sha256_hash;
 use beardog_types::canonical::HealthStatus;
 
 /// `TEST_CATEGORY`: e2e
@@ -142,7 +143,6 @@ async fn test_multi_step_async_workflow() {
     assert!(check_health_status(&health));
 
     // Step 3: Validate (synchronous)
-    use beardog_security::compute_sha256_hash;
     let data = b"workflow test";
     let hash = compute_sha256_hash(data).unwrap();
     assert_eq!(hash.len(), 32);

@@ -339,7 +339,6 @@ impl PortDiscoverer {
 }
 
 #[cfg(test)]
-#[expect(clippy::unwrap_used, reason = "test assertions")]
 mod tests {
     use super::*;
     use beardog_errors::process_env;

@@ -651,7 +651,6 @@ async fn btsp_tunnel_encrypt_decrypt_status_close_roundtrip() {
         .get("plaintext")
         .and_then(|x| x.as_str())
         .expect("plaintext b64");
-    use base64::Engine;
     let round = base64::engine::general_purpose::STANDARD
         .decode(out_b64)
         .expect("decode roundtrip plaintext");

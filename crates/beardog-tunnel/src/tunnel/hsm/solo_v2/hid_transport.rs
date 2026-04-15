@@ -5,6 +5,7 @@
 //! CTAPHID framing follows FIDO Client to Authenticator Protocol (HID).
 
 use super::transport::Ctap2Transport;
+use async_trait::async_trait;
 use beardog_errors::BearDogError;
 use beardog_hid::HidDevice;
 use rand::RngCore;
@@ -54,7 +55,7 @@ impl HidCtap2Transport {
     }
 }
 
-#[async_trait::async_trait]
+#[async_trait]
 impl Ctap2Transport for HidCtap2Transport {
     async fn send_receive(&mut self, command: &[u8]) -> Result<Vec<u8>, BearDogError> {
         let cid = self.ensure_channel().await?;

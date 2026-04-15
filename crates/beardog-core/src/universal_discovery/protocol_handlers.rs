@@ -13,7 +13,6 @@ use super::types::{DiscoveryProtocol, ProtocolStatistics};
 ///
 /// Defines the interface for discovery protocol implementations (mDNS, DNS-SD,
 /// Consul, etc.), enabling pluggable discovery strategies.
-#[async_trait::async_trait]
 pub trait ProtocolHandler: Send + Sync + std::fmt::Debug {
     /// Start the protocol handler and begin service discovery
     ///
@@ -78,7 +77,6 @@ impl MinimalProtocolHandler {
     }
 }
 
-#[async_trait::async_trait]
 impl ProtocolHandler for MinimalProtocolHandler {
     /// Start the protocol handler and begin service discovery
     /// Starts service
@@ -155,7 +153,6 @@ impl MdnsProtocolHandler {
 }
 
 #[cfg(feature = "mdns")]
-#[async_trait::async_trait]
 impl ProtocolHandler for MdnsProtocolHandler {
     fn start(&self) -> Result<(), BearDogError> {
         tracing::info!(

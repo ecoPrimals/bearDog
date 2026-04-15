@@ -5,12 +5,12 @@
 //! Comprehensive edge case and boundary condition tests to improve code coverage.
 
 #[cfg(test)]
-#[expect(
-    clippy::disallowed_methods,
-    reason = "test assertions use unwrap for failure paths"
-)]
 mod error_edge_cases {
     use crate::*;
+
+    fn sample_err_result() -> Result<i32, BearDogError> {
+        Err(BearDogError::validation("test"))
+    }
 
     // ========================================================================
     // Empty String Handling
@@ -312,28 +312,44 @@ mod error_edge_cases {
 
     #[test]
     fn test_result_unwrap_or() {
-        // Test with Ok value
-        let ok_result = 42;
-        assert_eq!(ok_result, 42);
-
-        // Test with Err value - use a function to avoid literal Err
-        fn get_err() -> Result<i32, BearDogError> {
-            Err(BearDogError::validation("test"))
+        fn mk_ok() -> Result<i32, BearDogError> {
+            Ok(42)
         }
-        assert_eq!(get_err().unwrap_or(0), 0);
+        assert_eq!(mk_ok().unwrap_or(0), 42);
+        assert_eq!(sample_err_result().unwrap_or(0), 0);
     }
 
     #[test]
     fn test_result_unwrap_or_else() {
-        // Test with Ok value
-        let ok_result = 42;
-        assert_eq!(ok_result, 42);
-
-        // Test with Err value - use a function to avoid literal Err
-        fn get_err() -> Result<i32, BearDogError> {
-            Err(BearDogError::validation("test"))
+        fn mk_ok() -> Result<i32, BearDogError> {
+            Ok(42)
         }
-        assert_eq!(get_err().unwrap_or(0), 0);
+
+        let mut err_branch_ran = false;
+        assert_eq!(
+            mk_ok().unwrap_or_else(|_| {
+                err_branch_ran = true;
+                0
+            }),
+            42
+        );
+        assert!(
+            !err_branch_ran,
+            "unwrap_or_else should not run the closure for Ok"
+        );
+
+        let mut err_branch_ran = false;
+        assert_eq!(
+            sample_err_result().unwrap_or_else(|_| {
+                err_branch_ran = true;
+                0
+            }),
+            0
+        );
+        assert!(
+            err_branch_ran,
+            "unwrap_or_else should run the closure for Err"
+        );
     }
 
     // ========================================================================
@@ -512,11 +528,6 @@ mod error_edge_cases {
     // ========================================================================
 
     #[test]
-    #[expect(
-        clippy::cast_possible_truncation,
-        clippy::cast_possible_wrap,
-        reason = "edge-case integer widths exercised intentionally for error construction tests"
-    )]
     fn test_max_error_nesting() {
         // Test deeply nested error propagation
         fn nest(depth: u32) -> Result<i32, BearDogError> {
@@ -524,7 +535,7 @@ mod error_edge_cases {
                 Err(BearDogError::validation("max depth"))
             } else {
                 nest(depth - 1)?;
-                Ok(depth as i32)
+                Ok(i32::try_from(depth).expect("nest depth fits i32 in test"))
             }
         }
 

@@ -270,14 +270,14 @@ mod tests {
             SmartphoneType::Ios { ios_version, .. } => {
                 assert_eq!(ios_version, "17.0");
             }
-            _ => panic!("Expected iOS variant"),
+            SmartphoneType::Android { .. } => panic!("Expected iOS variant"),
         }
 
         match android {
             SmartphoneType::Android { manufacturer, .. } => {
                 assert_eq!(manufacturer, "Google");
             }
-            _ => panic!("Expected Android variant"),
+            SmartphoneType::Ios { .. } => panic!("Expected Android variant"),
         }
     }
 

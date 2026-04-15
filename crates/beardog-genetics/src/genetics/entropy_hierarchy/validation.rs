@@ -490,11 +490,6 @@ mod tests {
     // TEST_DOMAIN: genetics
     // TEST_PRIORITY: high
     #[test]
-    #[expect(
-        clippy::cast_possible_truncation,
-        clippy::cast_sign_loss,
-        reason = "validation counters from usize indices; test inputs keep ranges narrow"
-    )]
     fn test_validate_entropy_full_pass() -> Result<(), BearDogError> {
         use crate::genetics::entropy_hierarchy::{BiometricHash, OwnershipProof};
         let config = EntropyHierarchyConfig {
@@ -509,12 +504,14 @@ mod tests {
         // Create proper biometric data (not all zeros)
         let mut biometric_hash = vec![0u8; 32];
         for (i, byte) in biometric_hash.iter_mut().enumerate() {
-            *byte = (i as u8).wrapping_mul(7).wrapping_add(13); // Non-zero pattern
+            let idx = u8::try_from(i).expect("biometric index fits u8");
+            *byte = idx.wrapping_mul(7).wrapping_add(13); // Non-zero pattern
         }
 
         let mut ownership_proof_sig = vec![0u8; 64];
         for (i, byte) in ownership_proof_sig.iter_mut().enumerate() {
-            *byte = (i as u8).wrapping_mul(3).wrapping_add(5); // Non-zero pattern
+            let idx = u8::try_from(i).expect("proof index fits u8");
+            *byte = idx.wrapping_mul(3).wrapping_add(5); // Non-zero pattern
         }
 
         let entropy = EntropyClass::HumanLivedExperience {

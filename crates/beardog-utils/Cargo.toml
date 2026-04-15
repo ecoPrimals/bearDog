@@ -71,10 +71,12 @@ version = "0.12"
 [dependencies.hex]
 version = "0.4"
 
+[dependencies.thiserror]
+workspace = true
+
 [features]
 test-utils = []
 
 [dev-dependencies]
 futures = "0.3"
-serial_test = "3.0"  # For serial test execution (env tests)
-thiserror.workspace = true
+serial_test = "3.0"

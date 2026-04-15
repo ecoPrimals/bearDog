@@ -309,6 +309,31 @@ impl<T> ZeroCopyBuilder<T> {
 mod tests {
     use super::*;
 
+    #[derive(Debug, Clone, PartialEq)]
+    struct ConfigCacheTestConfig {
+        value: u32,
+    }
+
+    #[derive(Debug)]
+    struct MultiTypeConfigA {
+        a: i32,
+    }
+
+    #[derive(Debug)]
+    struct MultiTypeConfigB {
+        b: String,
+    }
+
+    #[derive(Debug)]
+    struct PoisonRecoverConfigV {
+        v: u32,
+    }
+
+    #[derive(Debug)]
+    struct PoisonRecoverConfigN {
+        n: i16,
+    }
+
     #[test]
     fn test_zero_copy_manager_creation() {
         let manager = ZeroCopyManager::new();
@@ -409,17 +434,14 @@ mod tests {
     fn test_shared_config_cache() {
         let manager = ZeroCopyManager::new();
 
-        #[derive(Debug, Clone, PartialEq)]
-        struct TestConfig {
-            value: u32,
-        }
-
         // First call - cache miss
-        let config1 = manager.get_shared_config("test_config", || TestConfig { value: 42 });
+        let config1 =
+            manager.get_shared_config("test_config", || ConfigCacheTestConfig { value: 42 });
 
         // Second call - cache hit
-        let config2 =
-            manager.get_shared_config::<TestConfig, _>("test_config", || TestConfig { value: 99 });
+        let config2 = manager.get_shared_config::<ConfigCacheTestConfig, _>("test_config", || {
+            ConfigCacheTestConfig { value: 99 }
+        });
 
         assert_eq!(config1.value, 42);
         assert_eq!(config2.value, 42); // Should get cached value, not 99
@@ -642,18 +664,8 @@ mod tests {
     fn test_multiple_config_types() {
         let manager = ZeroCopyManager::new();
 
-        #[derive(Debug)]
-        struct ConfigA {
-            a: i32,
-        }
-
-        #[derive(Debug)]
-        struct ConfigB {
-            b: String,
-        }
-
-        let cfg_a = manager.get_shared_config("test", || ConfigA { a: 1 });
-        let cfg_b = manager.get_shared_config("test", || ConfigB {
+        let cfg_a = manager.get_shared_config("test", || MultiTypeConfigA { a: 1 });
+        let cfg_b = manager.get_shared_config("test", || MultiTypeConfigB {
             b: "hello".to_string(),
         });
 
@@ -701,11 +713,7 @@ mod tests {
             let _g = manager.config_cache.write().expect("lock config cache");
             panic!("poison config cache");
         });
-        #[derive(Debug)]
-        struct C {
-            v: u32,
-        }
-        let c = manager.get_shared_config("k", || C { v: 1 });
+        let c = manager.get_shared_config("k", || PoisonRecoverConfigV { v: 1 });
         assert_eq!(c.v, 1);
     }
 
@@ -742,11 +750,7 @@ mod tests {
             let _g = manager.config_cache.write().expect("lock");
             panic!("poison config cache");
         });
-        #[derive(Debug)]
-        struct C {
-            n: i16,
-        }
-        let c = manager.get_shared_config("pk", || C { n: -3 });
+        let c = manager.get_shared_config("pk", || PoisonRecoverConfigN { n: -3 });
         assert_eq!(c.n, -3);
     }
 }

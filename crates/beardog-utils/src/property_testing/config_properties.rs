@@ -211,10 +211,10 @@ mod tests {
 
     #[test]
     fn test_toml_parsing() {
+        const TEST_PORT: u16 = 8080;
         let framework = PropertyBasedTestFramework::default();
 
         // Test valid TOML
-        const TEST_PORT: u16 = 8080;
         let valid = TestCase {
             id: 1,
             input_data: format!("key = \"value\"\nport = {TEST_PORT}").into_bytes(),
@@ -268,9 +268,8 @@ mod tests {
 
     #[test]
     fn test_type_validation() {
-        let framework = PropertyBasedTestFramework::default();
-
         const TEST_PORT: u16 = 8080;
+        let framework = PropertyBasedTestFramework::default();
         let test_case = TestCase {
             id: 1,
             input_data: format!("port = {TEST_PORT}\nhost = \"localhost\"").into_bytes(),

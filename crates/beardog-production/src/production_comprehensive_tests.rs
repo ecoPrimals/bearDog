@@ -13,8 +13,13 @@
 //! - Deployment readiness
 
 use serial_test::serial;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::thread;
+use std::time::Instant;
 
 use super::*;
+use crate::config::production_ready;
 
 fn set_test_master_key() {
     config::set_test_production_ready(true);
@@ -91,7 +96,6 @@ fn test_config_module_exists() {
 fn test_production_ready_is_public() {
     set_test_master_key();
     // Verify function is exported and accessible
-    use crate::config::production_ready;
     assert!(production_ready());
 }
 
@@ -155,7 +159,6 @@ fn test_production_ready_returns_bool() {
 #[serial]
 fn test_production_ready_thread_safe() {
     set_test_master_key();
-    use std::thread;
 
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
@@ -186,12 +189,9 @@ fn test_production_ready_thread_safe() {
 #[serial]
 fn test_production_ready_concurrent_calls() {
     set_test_master_key();
-    use std::sync::Arc;
-    use std::sync::atomic::{AtomicUsize, Ordering};
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
-    use std::thread;
 
     let counter = Arc::new(AtomicUsize::new(0));
     let mut handles = vec![];
@@ -304,14 +304,12 @@ fn test_production_ready_match() {
 fn test_doc_example_basic() {
     set_test_master_key();
     // From doc comment example
-    use crate::config::production_ready;
     assert!(production_ready());
 }
 
 #[test]
 #[serial]
 fn test_doc_example_in_application() {
-    set_test_master_key();
     // Simulating production startup
     fn startup_check() -> Result<(), String> {
         if !config::production_ready() {
@@ -323,6 +321,7 @@ fn test_doc_example_in_application() {
         Ok(())
     }
 
+    set_test_master_key();
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
@@ -339,8 +338,6 @@ fn test_doc_example_in_application() {
 #[test]
 #[serial]
 fn test_production_ready_performance() {
-    use std::time::Instant;
-
     let start = Instant::now();
 
     for _ in 0..10000 {
@@ -388,7 +385,6 @@ fn test_production_ready_no_side_effects() {
 #[test]
 #[serial]
 fn test_production_readiness_system_check() {
-    set_test_master_key();
     // Comprehensive system readiness check
     struct SystemState {
         database_ready: bool,
@@ -396,6 +392,7 @@ fn test_production_readiness_system_check() {
         network_ready: bool,
     }
 
+    set_test_master_key();
     let state = SystemState {
         database_ready: true,
         // TEST_CATEGORY: unit
@@ -493,7 +490,6 @@ fn test_production_ready_must_use() {
 #[test]
 #[serial]
 fn test_production_guard_pattern() {
-    set_test_master_key();
     fn protected_operation() -> Result<(), &'static str> {
         if !config::production_ready() {
             return Err("Not production ready");
@@ -505,6 +501,7 @@ fn test_production_guard_pattern() {
         Ok(())
     }
 
+    set_test_master_key();
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
@@ -528,7 +525,6 @@ fn test_production_assertion_pattern() {
 #[test]
 #[serial]
 fn test_production_validation_chain() {
-    set_test_master_key();
     fn validate_deployment() -> bool {
         let checks = [
             config::production_ready(),
@@ -542,6 +538,7 @@ fn test_production_validation_chain() {
 
         checks.iter().all(|&check| check)
     }
+    set_test_master_key();
     // TEST_CATEGORY: unit
     // TEST_DOMAIN: core
     // TEST_PRIORITY: normal
@@ -567,7 +564,6 @@ fn test_production_ready_with_feature_flags() {
 #[test]
 #[serial]
 fn test_production_ready_early_return() {
-    set_test_master_key();
     fn maybe_proceed() -> Option<()> {
         if !config::production_ready() {
             return None;
@@ -578,6 +574,7 @@ fn test_production_ready_early_return() {
         Some(())
     }
 
+    set_test_master_key();
     assert!(maybe_proceed().is_some());
 }
 

@@ -283,6 +283,7 @@ mod tests {
     use serde_json::json;
     use std::sync::Arc;
     use tempfile::tempdir;
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
     use tokio::net::UnixListener;
     use tokio::sync::Notify;
 
@@ -305,7 +306,6 @@ mod tests {
                     .accept()
                     .await
                     .expect("mock server accepts connection");
-                use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
                 let mut reader = BufReader::new(&mut stream);
                 let mut request = String::new();

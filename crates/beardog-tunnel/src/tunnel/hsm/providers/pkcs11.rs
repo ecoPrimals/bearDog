@@ -6,7 +6,6 @@
 
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
-use tracing::debug;
 
 /// PKCS#11 Universal HSM Provider
 pub struct Pkcs11UniversalProvider {
@@ -43,7 +42,7 @@ impl Pkcs11UniversalProvider {
     pub async fn new(library_path: String, slot_id: u64) -> Result<Self, BearDogError> {
         #[cfg(not(feature = "pkcs11-provider"))]
         {
-            debug!(
+            tracing::debug!(
                 library_path = %library_path,
                 slot_id,
                 "PKCS#11 provider not compiled in (enable `pkcs11-provider` feature and link a PKCS#11 library)"

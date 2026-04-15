@@ -306,6 +306,8 @@ pub enum ValidationError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(unix)]
+    use std::os::unix::fs::PermissionsExt;
     use tempfile::TempDir;
 
     #[tokio::test]
@@ -465,7 +467,6 @@ mod tests {
         let temp = TempDir::new().expect("tempdir");
         let path = temp.path().join("blocked");
         fs::write(&path, b"x").await.expect("write");
-        use std::os::unix::fs::PermissionsExt;
         let mut perms = fs::metadata(&path).await.expect("meta").permissions();
         perms.set_mode(0o000);
         fs::set_permissions(&path, perms).await.expect("chmod");
@@ -512,7 +513,6 @@ mod tests {
     async fn test_validate_binary_metadata_io_error_surfaces_as_err() {
         let temp = TempDir::new().expect("tempdir");
         let path = temp.path().join("nope");
-        use std::os::unix::fs::PermissionsExt;
         std::fs::write(&path, b"x").expect("write");
         let mut perms = std::fs::metadata(&path).expect("meta").permissions();
         perms.set_mode(0o000);

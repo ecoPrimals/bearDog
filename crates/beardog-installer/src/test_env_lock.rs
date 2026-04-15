@@ -3,4 +3,4 @@
 //! Serialize tests that mutate [`beardog_errors::process_env`] for the same keys.
 
 /// Guards `ECOPRIMALS_GENOME_TARGETS` overlay mutations across concurrent unit tests.
-pub(crate) static ECOPRIMALS_GENOME_TARGETS_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+pub static ECOPRIMALS_GENOME_TARGETS_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());

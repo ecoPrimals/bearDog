@@ -209,12 +209,6 @@ impl Default for SovereigntyManager {
 }
 
 #[cfg(test)]
-#[expect(
-    clippy::float_cmp,
-    clippy::unwrap_used,
-    clippy::expect_used,
-    reason = "test assertions: exact float equality and unwrap on fixed fixtures"
-)]
 mod tests {
     use super::*;
 

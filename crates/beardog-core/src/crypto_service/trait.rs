@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+#![allow(async_fn_in_trait)] // Native `async fn` in public trait; impls are `Send + Sync`
+
 //! Protocol-agnostic `CryptoService` trait
 //!
 //! This trait defines all cryptographic operations in a transport-neutral way.
@@ -13,7 +15,6 @@
 //! - **Auditable**: Operations include context for audit trails
 //! - **Memory-safe only**: pure safe Rust
 
-use async_trait::async_trait;
 use beardog_types::crypto_service::{
     CryptoAlgorithm, DecryptOptions, EncryptOptions, EncryptedData, HealthStatus, KeyAlgorithm,
     KeyGenOptions, KeyInfo, ServiceCapabilities, SignOptions, Signature, SignatureAlgorithm,
@@ -36,7 +37,6 @@ use super::Result;
 ///
 /// All operations return `Result<T>` with `BearDogError` for consistent error handling
 /// across protocols. Protocol adapters can map these to protocol-specific errors.
-#[async_trait]
 pub trait CryptoService: Send + Sync {
     /// Encrypt data using specified algorithm
     ///

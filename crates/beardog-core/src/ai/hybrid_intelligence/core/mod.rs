@@ -3,9 +3,9 @@
 //! Hybrid intelligence core: runtime types, system orchestration, and the rich system builder.
 //!
 //! This module is split by responsibility:
-//! - [`types`] — events, metrics, prediction/decision results, commands, and status snapshots
-//! - [`system`] — [`HybridIntelligenceSystem`] lifecycle, prediction, decisions, and monitoring
-//! - [`builder`] — [`HybridIntelligenceBuilder`] for assembling a system with defaults
+//! - `types` — events, metrics, prediction/decision results, commands, and status snapshots
+//! - `system` — `HybridIntelligenceSystem` lifecycle, prediction, decisions, and monitoring
+//! - `builder` — `HybridIntelligenceBuilder` for assembling a system with defaults
 
 mod builder;
 mod system;

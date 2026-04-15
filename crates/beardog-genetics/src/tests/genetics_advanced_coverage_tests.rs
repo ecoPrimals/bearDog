@@ -42,15 +42,13 @@ fn test_biometric_hash_minimal() {
 }
 
 #[test]
-#[expect(
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    clippy::cast_precision_loss,
-    reason = "synthetic biometric vectors: i % 256 maps to u8 for large fixed patterns"
-)]
 fn test_biometric_hash_large() {
-    let large_hash: Vec<u8> = (0..1024).map(|i| (i % 256) as u8).collect();
-    let large_proof: Vec<u8> = (0..512).map(|i| (i % 256) as u8).collect();
+    let large_hash: Vec<u8> = (0..1024)
+        .map(|i| u8::try_from(i % 256).expect("i % 256 fits u8"))
+        .collect();
+    let large_proof: Vec<u8> = (0..512)
+        .map(|i| u8::try_from(i % 256).expect("i % 256 fits u8"))
+        .collect();
 
     let hash = BiometricHash::new(large_hash, large_proof);
 
@@ -445,20 +443,14 @@ fn test_entropy_class_ordering() {
 // ============================================================================
 
 #[test]
-#[expect(
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    clippy::cast_precision_loss,
-    reason = "thread indices 0..10 fit u8 for small seeded hash buffers"
-)]
 fn test_concurrent_biometric_hash_creation() {
     use std::thread;
 
     let mut handles = vec![];
 
-    for i in 0..10 {
+    for i in 0u8..10 {
         let handle = thread::spawn(move || {
-            let hash = BiometricHash::new(vec![i as u8; 32], vec![(i + 1) as u8; 16]);
+            let hash = BiometricHash::new(vec![i; 32], vec![i.wrapping_add(1); 16]);
             hash.hash.len() + hash.ownership_proof.len()
         });
         handles.push(handle);
@@ -471,20 +463,14 @@ fn test_concurrent_biometric_hash_creation() {
 }
 
 #[test]
-#[expect(
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    clippy::cast_precision_loss,
-    reason = "thread indices 0..10 fit u8 for small seeded proof buffers"
-)]
 fn test_concurrent_ownership_proof_creation() {
     use std::thread;
 
     let mut handles = vec![];
 
-    for i in 0..10 {
+    for i in 0u8..10 {
         let handle = thread::spawn(move || {
-            let proof = OwnershipProof::new(vec![i as u8; 64], vec![(i + 1) as u8; 32]);
+            let proof = OwnershipProof::new(vec![i; 64], vec![i.wrapping_add(1); 32]);
             proof.proof_data.len() + proof.signature.len()
         });
         handles.push(handle);

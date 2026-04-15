@@ -99,6 +99,7 @@ mod tests {
 
     #[test]
     fn test_register_and_retrieve_node() {
+        const TEST_PORT: u16 = 8080;
         let mut registry = InMemoryNodeRegistry::new();
         let node_info = create_test_node_info("node-1");
 
@@ -109,7 +110,6 @@ mod tests {
         assert!(retrieve_result.is_ok(), "Node retrieval should succeed");
 
         let retrieved = retrieve_result.expect("get_node_info after register");
-        const TEST_PORT: u16 = 8080;
         assert_eq!(retrieved.node_id, "node-1");
         assert_eq!(retrieved.address, format!("127.0.0.1:{TEST_PORT}"));
     }

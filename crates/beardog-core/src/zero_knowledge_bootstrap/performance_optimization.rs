@@ -580,15 +580,6 @@ impl std::fmt::Display for PerformanceGrade {
     }
 }
 
-#[expect(
-    unused_imports,
-    clippy::float_cmp,
-    clippy::useless_vec,
-    clippy::needless_range_loop,
-    clippy::uninlined_format_args,
-    dead_code,
-    reason = "large integration test modules: noisy style lints and synthetic helpers"
-)]
 #[cfg(test)]
 mod tests {
     use super::*;

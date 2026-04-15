@@ -420,7 +420,9 @@ mod tests {
                 let s = p.to_str().expect("utf-8 path");
                 assert!(s.contains("myprimal"), "path={s}");
             }
-            other => panic!("expected filesystem socket on this platform: {other:?}"),
+            other @ SocketEndpoint::Abstract(_) => {
+                panic!("expected filesystem socket on this platform: {other:?}")
+            }
         }
     }
 

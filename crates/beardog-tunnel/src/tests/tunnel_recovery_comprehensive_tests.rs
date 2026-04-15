@@ -388,7 +388,6 @@ async fn test_tunnel_operation_retry_after_failure() -> Result<()> {
 
 #[tokio::test]
 #[expect(
-    clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
     reason = "retry counter and simulated delay ticks are small bounded integers in test"
 )]

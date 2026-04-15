@@ -223,7 +223,7 @@ mod tests {
 
     #[test]
     fn test_event_status_all_variants() {
-        let statuses = vec![
+        let statuses = [
             EventStatus::Pending,
             EventStatus::Processing,
             EventStatus::Completed,

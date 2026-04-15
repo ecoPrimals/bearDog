@@ -165,6 +165,8 @@ impl FaultInjector {
 
     /// Check if fault should be injected
     pub fn should_inject_fault(&self, fault_type: FaultType) -> bool {
+        use rand::Rng;
+
         if !self.enabled.load(Ordering::SeqCst) {
             return false;
         }
@@ -173,7 +175,6 @@ impl FaultInjector {
             return false;
         }
 
-        use rand::Rng;
         let mut rng = rand::rng();
         rng.random::<f64>() < self.config.injection_rate
     }

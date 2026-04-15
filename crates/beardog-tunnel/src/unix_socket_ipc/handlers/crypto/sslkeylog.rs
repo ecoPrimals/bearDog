@@ -290,6 +290,16 @@ mod tests {
     fn test_export_with_handshake_secrets() {
         use std::fs;
 
+        // Scope guard for cleanup
+        struct CleanupGuard {
+            path: std::path::PathBuf,
+        }
+        impl Drop for CleanupGuard {
+            fn drop(&mut self) {
+                let _ = std::fs::remove_file(&self.path);
+            }
+        }
+
         // Use a unique temp file with atomically-assigned name to avoid
         // parallel test conflicts and race conditions with env vars.
         let temp_dir = std::env::temp_dir();
@@ -304,15 +314,6 @@ mod tests {
         ));
         let temp_file_str = temp_file.to_string_lossy().to_string();
 
-        // Scope guard for cleanup
-        struct CleanupGuard {
-            path: std::path::PathBuf,
-        }
-        impl Drop for CleanupGuard {
-            fn drop(&mut self) {
-                let _ = std::fs::remove_file(&self.path);
-            }
-        }
         let _guard = CleanupGuard {
             path: temp_file.clone(),
         };

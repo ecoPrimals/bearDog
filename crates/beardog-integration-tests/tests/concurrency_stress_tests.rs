@@ -7,8 +7,12 @@
 //! Philosophy: If it fails under stress, it will fail in production.
 
 use std::sync::Arc;
+use std::sync::Mutex as StdMutex;
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::time::Duration;
+use tokio::sync::watch;
+use tokio::sync::{Barrier, Notify, RwLock, Semaphore};
+use tokio::time::{interval, timeout};
 
 // ============================================================================
 // Massive Concurrency Tests
@@ -55,8 +59,6 @@ async fn stress_test_10k_concurrent_operations() {
 async fn stress_test_synchronized_start_1000_tasks() {
     println!("🔥 STRESS: 1,000 tasks with barrier synchronization");
 
-    use tokio::sync::Barrier;
-
     let barrier = Arc::new(Barrier::new(1_000));
     let started = Arc::new(AtomicBool::new(false));
     let counter = Arc::new(AtomicUsize::new(0));
@@ -96,8 +98,6 @@ async fn stress_test_synchronized_start_1000_tasks() {
 #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
 async fn stress_test_completion_signals_100_tasks() {
     println!("🔥 STRESS: 100 tasks with completion tracking (no sleeps!)");
-
-    use tokio::sync::Notify;
 
     let mut handles = Vec::with_capacity(100);
     let counter = Arc::new(AtomicUsize::new(0));
@@ -148,8 +148,6 @@ async fn stress_test_completion_signals_100_tasks() {
 async fn stress_test_rate_limiter_1000_operations() {
     println!("🔥 STRESS: 1,000 operations with semaphore-based rate limiting");
 
-    use tokio::sync::Semaphore;
-
     let limiter = Arc::new(Semaphore::new(100)); // 100 concurrent operations
     let counter = Arc::new(AtomicUsize::new(0));
     let mut handles = Vec::with_capacity(1_000);
@@ -187,9 +185,6 @@ async fn stress_test_rate_limiter_1000_operations() {
 #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
 async fn stress_test_condition_waiting_race() {
     println!("🔥 STRESS: Condition waiting under race conditions");
-
-    use tokio::sync::Barrier;
-    use tokio::sync::watch;
 
     let waiter_count = Arc::new(AtomicUsize::new(0));
     let (signal_tx, _) = watch::channel(false);
@@ -299,8 +294,6 @@ async fn stress_test_mixed_workload_10k_operations() {
 async fn stress_test_eventual_consistency_assertion() {
     println!("🔥 STRESS: Eventual consistency verification");
 
-    use tokio::time::{interval, timeout};
-
     let target = 1000;
     let counter = Arc::new(AtomicUsize::new(0));
     let counter_clone = counter.clone();
@@ -344,9 +337,7 @@ async fn stress_test_eventual_consistency_assertion() {
 async fn stress_test_no_race_conditions_in_shared_state() {
     println!("🔥 STRESS: Race condition detection - 1000 concurrent writes");
 
-    use std::sync::Mutex;
-
-    let shared_vec = Arc::new(Mutex::new(Vec::new()));
+    let shared_vec = Arc::new(StdMutex::new(Vec::new()));
     let mut handles = Vec::with_capacity(1_000);
 
     let start = std::time::Instant::now();
@@ -388,8 +379,6 @@ async fn stress_test_no_race_conditions_in_shared_state() {
 #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
 async fn stress_test_no_deadlocks_proper_ordering() {
     println!("🔥 STRESS: No deadlocks with proper lock ordering");
-
-    use tokio::sync::RwLock;
 
     let lock1 = Arc::new(RwLock::new(0));
     let lock2 = Arc::new(RwLock::new(0));

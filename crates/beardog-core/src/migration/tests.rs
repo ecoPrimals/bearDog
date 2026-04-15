@@ -166,7 +166,7 @@ fn test_migration_phase_equality() {
 
 #[test]
 fn test_migration_phase_all_variants() {
-    let phases = vec![
+    let phases = [
         MigrationPhase::CryptographicKeys,
         MigrationPhase::NeuralNetworkWeights,
         MigrationPhase::RandomDataGeneration,
@@ -378,9 +378,7 @@ fn test_tier_requirement_validation() {
     for (operation, tier) in &config.operation_tier_requirements {
         assert!(
             *tier >= 1 && *tier <= 4,
-            "Tier for {} should be 1-4, got {}",
-            operation,
-            tier
+            "Tier for {operation} should be 1-4, got {tier}"
         );
     }
 }

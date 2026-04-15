@@ -187,7 +187,7 @@ mod tests {
                 assert_eq!(version, "2.0"); // Should default to "2.0"
                 assert!(features.is_empty()); // Should default to empty
             }
-            _ => panic!("Expected BtspNative"),
+            TunnelProtocol::TlsHttp { .. } => panic!("Expected BtspNative"),
         }
     }
 
@@ -223,7 +223,7 @@ mod tests {
                 assert_eq!(http_version, "2"); // Should default to "2"
                 assert_eq!(alpn_protocols, vec!["h2", "http/1.1"]); // Should default to both
             }
-            _ => panic!("Expected TlsHttp"),
+            TunnelProtocol::BtspNative { .. } => panic!("Expected TlsHttp"),
         }
     }
 

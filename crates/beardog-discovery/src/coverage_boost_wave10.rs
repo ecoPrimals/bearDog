@@ -7,7 +7,7 @@ use crate::capability_env::{
     discovered_services_from_environment, discovered_services_from_environment_with,
     primary_url_to_ipc_socket_path,
 };
-use crate::config::AnnouncementConfig;
+use crate::config::{AnnouncementConfig, MdnsAnnouncementConfig};
 use crate::error::DiscoveryError;
 use crate::types::{Capability, PrimalInfo, ServiceEndpoint};
 use std::collections::HashMap;
@@ -19,7 +19,7 @@ fn sample_announcement_config(enabled: bool, methods: Vec<&str>) -> Announcement
         methods: methods.into_iter().map(String::from).collect(),
         announcement_interval_secs: 10,
         ttl_secs: 60,
-        mdns: Default::default(),
+        mdns: MdnsAnnouncementConfig::default(),
     }
 }
 

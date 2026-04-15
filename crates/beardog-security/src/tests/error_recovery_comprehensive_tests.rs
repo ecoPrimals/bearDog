@@ -242,22 +242,17 @@ fn test_error_propagation() {
 
 /// Test retry strategy for transient failures
 #[test]
-#[expect(
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    reason = "synthetic recovery metrics: indices and signed deltas stay within test ranges"
-)]
 fn test_transient_failure_retry() {
     // When: Transient network error occurs
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: security
     // TEST_PRIORITY: important
-    let max_retries = 3;
+    let max_retries: u32 = 3;
     let base_delay_ms = 100;
 
     // Then: Should retry with exponential backoff
     for attempt in 0..max_retries {
-        let delay = base_delay_ms * 2_u64.pow(attempt as u32);
+        let delay = base_delay_ms * 2_u64.pow(attempt);
         assert!(delay > 0, "Delay should increase: {delay}");
         assert!(delay <= base_delay_ms * 8, "Delay should be bounded");
     }

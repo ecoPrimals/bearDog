@@ -371,7 +371,6 @@ pub async fn handle_tls_compute_finished_verify_data(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use base64::prelude::*;
 
     #[tokio::test]
     async fn sign_handshake_roundtrip() {

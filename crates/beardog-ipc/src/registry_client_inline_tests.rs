@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::*;
+use beardog_core::capabilities::{Capability, IpcEndpoint};
+use std::collections::HashMap;
 use std::sync::Arc;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::sync::Notify;
 
 #[test]
@@ -90,7 +93,6 @@ fn spawn_registry_mock(path: PathBuf, ready: Arc<Notify>) -> tokio::task::JoinHa
             let Ok((stream, _)) = listener.accept().await else {
                 break;
             };
-            use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
             tokio::spawn(async move {
                 let p1_sock_display = std::env::temp_dir()
                     .join("p1.sock")
@@ -217,7 +219,6 @@ async fn test_register_error_response() {
         let Ok((mut stream, _)) = listener.accept().await else {
             return;
         };
-        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
         let mut reader = BufReader::new(&mut stream);
         let mut line = String::new();
         let _ = reader.read_line(&mut line).await;
@@ -257,7 +258,6 @@ async fn test_list_all_error_branch() {
             let Ok((mut stream, _)) = listener.accept().await else {
                 break;
             };
-            use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
             let mut reader = BufReader::new(&mut stream);
             let mut line = String::new();
             let _ = reader.read_line(&mut line).await;
@@ -298,7 +298,6 @@ async fn test_ping_error_branch() {
         let Ok((mut stream, _)) = listener.accept().await else {
             return;
         };
-        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
         let mut reader = BufReader::new(&mut stream);
         let mut line = String::new();
         let _ = reader.read_line(&mut line).await;
@@ -336,7 +335,6 @@ async fn test_unregister_error_branch() {
         let Ok((mut stream, _)) = listener.accept().await else {
             return;
         };
-        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
         let mut reader = BufReader::new(&mut stream);
         let mut line = String::new();
         let _ = reader.read_line(&mut line).await;
@@ -373,8 +371,6 @@ async fn test_register_uses_default_socket_path_when_no_unix_endpoint() {
         .await
         .expect("connect for default socket path registration test");
 
-    use beardog_core::capabilities::{Capability, IpcEndpoint};
-    use std::collections::HashMap;
     let caps = beardog_core::capabilities::BearDogCapabilities {
         primal_id: "beardog".to_string(),
         family_id: None,

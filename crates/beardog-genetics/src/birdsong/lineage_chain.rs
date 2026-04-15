@@ -79,11 +79,15 @@ impl LineageChainManager {
         let mut nodes = HashMap::new();
         nodes.insert(root_node_id, root_node.clone());
 
+        let genesis_commitment = blake3::hash(chain_id.as_bytes()).as_bytes().to_vec();
+
         let chain = LineageChain {
             chain_id: chain_id.clone(),
             root_node,
             nodes,
             relationships: Vec::new(),
+            generation: 0,
+            head_commitment: genesis_commitment,
             created_at: Utc::now(),
         };
 
@@ -186,7 +190,17 @@ impl LineageChainManager {
         chain.nodes.insert(child_id.clone(), child_node.clone());
         chain.relationships.push(relationship);
 
-        info!("✅ Child added: {} (depth: {})", child_id, child_node.depth);
+        chain.generation += 1;
+        let mut hasher = blake3::Hasher::new();
+        hasher.update(&chain.head_commitment);
+        hasher.update(child_id.as_bytes());
+        hasher.update(&chain.generation.to_le_bytes());
+        chain.head_commitment = hasher.finalize().as_bytes().to_vec();
+
+        info!(
+            "✅ Child added: {} (depth: {}, generation: {})",
+            child_id, child_node.depth, chain.generation
+        );
         Ok(child_node)
     }
 

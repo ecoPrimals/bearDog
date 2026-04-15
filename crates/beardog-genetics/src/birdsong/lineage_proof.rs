@@ -93,6 +93,8 @@ impl LineageProofManager {
             path: path.clone(),
             proof_chain,
             merkle_root,
+            generation: chain.generation,
+            head_commitment: chain.head_commitment,
             generated_at: Utc::now(),
         };
 
@@ -191,6 +193,31 @@ impl LineageProofManager {
                 depth: 0,
                 failure_reason: Some("Merkle root mismatch".to_string()),
             });
+        }
+
+        // Verify generational provenance (Phase 3)
+        if !proof.head_commitment.is_empty() {
+            if proof.generation > chain.generation {
+                return Ok(LineageVerificationResult {
+                    valid: false,
+                    depth: 0,
+                    failure_reason: Some(format!(
+                        "Proof generation {} exceeds chain generation {}",
+                        proof.generation, chain.generation,
+                    )),
+                });
+            }
+            if proof.generation == chain.generation
+                && proof.head_commitment != chain.head_commitment
+            {
+                return Ok(LineageVerificationResult {
+                    valid: false,
+                    depth: 0,
+                    failure_reason: Some(
+                        "Head commitment mismatch at current generation".to_string(),
+                    ),
+                });
+            }
         }
 
         // Proof is valid!

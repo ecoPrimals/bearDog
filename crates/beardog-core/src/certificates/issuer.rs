@@ -216,8 +216,6 @@ impl CertificateIssuer {
 
 #[cfg(test)]
 mod tests {
-    #![expect(clippy::unwrap_used, reason = "test assertions")]
-
     use super::*;
 
     fn high_risk_context() -> RequestContext {

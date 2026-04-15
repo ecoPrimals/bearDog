@@ -7,6 +7,7 @@
 //! and genetic entropy mixing.
 
 use super::*;
+use blake3;
 
 #[tokio::test]
 async fn test_genetic_crypto_provider_creation() -> Result<(), BearDogError> {
@@ -350,7 +351,6 @@ async fn test_verify_lineage_valid() -> Result<(), BearDogError> {
     let provider = GeneticCryptoProvider::new_with_lineage(lineage_seed.clone())?;
 
     // Generate valid proof
-    use blake3;
     let mut hasher = blake3::Hasher::new();
     hasher.update(&lineage_seed);
     hasher.update(b"beardog-family");

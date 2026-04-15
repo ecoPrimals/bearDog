@@ -197,7 +197,7 @@ mod tests {
                 assert_eq!(required_generation, None);
                 assert!(verify_ancestry); // Should default to true
             }
-            _ => panic!("Expected GeneticLineage"),
+            TrustMode::Certificate { .. } => panic!("Expected GeneticLineage"),
         }
     }
 
@@ -235,7 +235,7 @@ mod tests {
                 assert_eq!(root_ca_bundle, CaBundle::Mozilla); // Should default to Mozilla
                 assert!(!allow_self_signed); // Should default to false
             }
-            _ => panic!("Expected Certificate"),
+            TrustMode::GeneticLineage { .. } => panic!("Expected Certificate"),
         }
     }
 

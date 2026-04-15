@@ -20,7 +20,7 @@ mod hsm_unified_migration_methods {
                 performance: None,
             },
             LegacyHsmConfig::ZeroCostHsm {
-                manager_config: Default::default(),
+                manager_config: std::collections::HashMap::default(),
             },
         ];
         let result = service.migrate_hsm_configs(configs);

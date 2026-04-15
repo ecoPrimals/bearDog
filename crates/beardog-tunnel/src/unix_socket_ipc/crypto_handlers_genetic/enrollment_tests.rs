@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::*;
+use ed25519_dalek::SigningKey;
 
 #[tokio::test]
 async fn test_derive_device_seed() -> Result<(), Box<dyn std::error::Error>> {
@@ -94,7 +95,6 @@ async fn test_derive_device_seed_deterministic() -> Result<(), Box<dyn std::erro
 async fn test_sign_and_verify_lineage_certificate() -> Result<(), Box<dyn std::error::Error>> {
     let parent_seed = BASE64.encode(b"parent_device_seed_32_bytes!!!!!");
 
-    use ed25519_dalek::SigningKey;
     let child_signing_key = SigningKey::from_bytes(&[42u8; 32]);
     let child_public_key = BASE64.encode(child_signing_key.verifying_key().to_bytes());
 
@@ -134,7 +134,6 @@ async fn test_sign_and_verify_lineage_certificate() -> Result<(), Box<dyn std::e
 async fn test_verify_lineage_certificate_wrong_family() -> Result<(), Box<dyn std::error::Error>> {
     let parent_seed = BASE64.encode(b"parent_device_seed_for_test!!!!!");
 
-    use ed25519_dalek::SigningKey;
     let child_key = SigningKey::from_bytes(&[99u8; 32]);
     let child_pubkey = BASE64.encode(child_key.verifying_key().to_bytes());
 
@@ -249,7 +248,6 @@ async fn test_e2e_complete_enrollment_flow() -> Result<(), Box<dyn std::error::E
     assert_ne!(genesis_seed.device_seed, usb_seed.device_seed);
 
     // Genesis signs certificate for USB Tower
-    use ed25519_dalek::SigningKey;
     let usb_signing_key = SigningKey::from_bytes(
         &(BASE64.decode(&usb_seed.device_seed)?[..32]
             .try_into()
@@ -328,7 +326,6 @@ async fn test_derive_device_seed_enrollment_timestamp_changes_output() {
 #[tokio::test]
 async fn test_verify_lineage_certificate_expired() -> Result<(), Box<dyn std::error::Error>> {
     let parent_seed = BASE64.encode([5u8; 32]);
-    use ed25519_dalek::SigningKey;
     let child = SigningKey::from_bytes(&[6u8; 32]);
     let child_pk = BASE64.encode(child.verifying_key().to_bytes());
 
@@ -359,7 +356,6 @@ async fn test_verify_lineage_certificate_expired() -> Result<(), Box<dyn std::er
 async fn test_verify_lineage_certificate_tampered_signature()
 -> Result<(), Box<dyn std::error::Error>> {
     let parent_seed = BASE64.encode([7u8; 32]);
-    use ed25519_dalek::SigningKey;
     let child = SigningKey::from_bytes(&[8u8; 32]);
     let child_pk = BASE64.encode(child.verifying_key().to_bytes());
 
@@ -392,7 +388,6 @@ async fn test_verify_lineage_certificate_tampered_signature()
 async fn test_verify_lineage_certificate_trust_anchor_match()
 -> Result<(), Box<dyn std::error::Error>> {
     let parent_seed = BASE64.encode([9u8; 32]);
-    use ed25519_dalek::SigningKey;
     let child = SigningKey::from_bytes(&[10u8; 32]);
     let child_pk = BASE64.encode(child.verifying_key().to_bytes());
 
@@ -422,7 +417,6 @@ async fn test_verify_lineage_certificate_trust_anchor_match()
 async fn test_verify_lineage_certificate_trust_anchor_no_match()
 -> Result<(), Box<dyn std::error::Error>> {
     let parent_seed = BASE64.encode([11u8; 32]);
-    use ed25519_dalek::SigningKey;
     let child = SigningKey::from_bytes(&[12u8; 32]);
     let child_pk = BASE64.encode(child.verifying_key().to_bytes());
 

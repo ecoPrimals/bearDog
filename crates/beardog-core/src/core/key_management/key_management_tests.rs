@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-#![expect(clippy::unwrap_used, reason = "test assertions")]
-
 use super::*;
 use ed25519_dalek::{PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SigningKey};
+use rand::RngCore;
 use tempfile::TempDir;
 
 /// Exercises `types.rs` display, default, and serde paths for coverage (re-exported from `super`).
@@ -191,7 +190,6 @@ async fn test_get_signing_key_missing() {
 async fn test_import_public_key_ed25519_and_reject_unsupported_type() {
     let store = KeyStore::new(None);
     let mut sk = [0u8; SECRET_KEY_LENGTH];
-    use rand::RngCore;
     rand::rng().fill_bytes(&mut sk);
     let signing = SigningKey::from_bytes(&sk);
     let vk = signing.verifying_key();
@@ -332,7 +330,6 @@ async fn test_load_from_storage_skips_unsupported_key_type() {
 async fn test_import_signing_key_matches_verifying_key() {
     let store = KeyStore::new(None);
     let mut sk_bytes = [0u8; SECRET_KEY_LENGTH];
-    use rand::RngCore;
     rand::rng().fill_bytes(&mut sk_bytes);
     store
         .import_signing_key(

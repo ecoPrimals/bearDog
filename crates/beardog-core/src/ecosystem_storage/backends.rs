@@ -7,7 +7,6 @@ use super::types::StorageItem;
 use beardog_errors::BearDogError;
 
 /// Storage backend trait
-#[async_trait::async_trait]
 pub trait StorageBackend: Send + Sync {
     /// Store data
     ///

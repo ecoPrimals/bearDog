@@ -38,6 +38,7 @@ use beardog_genetics::genetics::human_entropy::interaction_capture::{
     InteractionCaptureConfig, InteractionEntropyCollector,
 };
 use rand::RngCore;
+use std::io::{self, BufRead};
 use std::time::Instant;
 
 /// Entropy test result for comparison
@@ -421,7 +422,6 @@ async fn run_comparison() -> Result<(), BearDogError> {
     println!("Press 'y' for yes, any other key to skip...");
 
     // Simple yes/no prompt
-    use std::io::{self, BufRead};
     let stdin = io::stdin();
     let mut input = String::new();
     stdin.lock().read_line(&mut input)?;

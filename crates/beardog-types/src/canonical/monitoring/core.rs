@@ -537,6 +537,7 @@ impl RetryStrategy for RetryPolicy {
 mod monitoring_core_coverage_tests {
     use super::*;
     use crate::canonical::monitoring::MonitoringConfigValidation;
+    use crate::canonical::traits::monitoring::MonitoringLevel;
     use crate::canonical::traits::{MonitoringConfig, RetryStrategy};
 
     #[test]
@@ -545,7 +546,6 @@ mod monitoring_core_coverage_tests {
             sampling_rate: 1.0,
             ..CoreMonitoringConfig::default()
         };
-        use crate::canonical::traits::monitoring::MonitoringLevel;
         assert!(matches!(
             MonitoringConfig::monitoring_level(&c),
             MonitoringLevel::Standard

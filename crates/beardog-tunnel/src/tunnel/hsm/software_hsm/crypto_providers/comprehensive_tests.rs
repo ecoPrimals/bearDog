@@ -11,6 +11,7 @@ use super::*;
 use crate::tunnel::hsm::types::KeyType;
 use crate::tunnel::hsm::types::config::CryptoBackend;
 use beardog_errors::BearDogError;
+use ed25519_dalek::SigningKey;
 
 // ============================================================================
 // PROVIDER SELECTION & FALLBACK TESTS
@@ -179,7 +180,6 @@ async fn test_ed25519_sign_verify() -> Result<(), BearDogError> {
     assert!(!signature.is_empty());
 
     // Derive public key for verification
-    use ed25519_dalek::SigningKey;
     let key_array: [u8; 32] = key
         .clone()
         .try_into()
@@ -282,7 +282,6 @@ async fn test_verify_with_wrong_public_key() -> Result<(), BearDogError> {
     let signature = provider.sign(&key1, data).await?;
 
     // Try to verify with key2's public key
-    use ed25519_dalek::SigningKey;
     let key2_array: [u8; 32] = key2
         .try_into()
         .map_err(|_| BearDogError::crypto_error("Invalid key length".to_string()))?;

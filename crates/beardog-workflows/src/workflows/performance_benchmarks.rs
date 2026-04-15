@@ -303,7 +303,7 @@ mod tests {
     use super::{BenchmarkResults, ComprehensiveBenchmarkResults, WorkflowPerformanceBenchmarks};
 
     fn assert_reasonable_benchmark_results(r: &BenchmarkResults) {
-        assert_eq!(r.operations_count, r.operations_count);
+        assert!(r.operations_count < usize::MAX / 2);
         assert!(r.async_trait_time_ms < u64::MAX / 2);
         assert!(r.zero_cost_time_ms < u64::MAX / 2);
         assert!(r.improvement_percent.is_finite());

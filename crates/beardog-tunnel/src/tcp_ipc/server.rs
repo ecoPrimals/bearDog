@@ -156,8 +156,7 @@ impl TcpIpcServer {
                 }
                 _ => {
                     debug!(peer = %peer_addr, "BTSP production: initiating TCP handshake");
-                    match btsp_handshake::perform_server_handshake(&mut stream, family_seed).await
-                    {
+                    match btsp_handshake::perform_server_handshake(&mut stream, family_seed).await {
                         Ok(mut session) => {
                             info!(
                                 peer = %peer_addr,

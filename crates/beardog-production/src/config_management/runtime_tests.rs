@@ -336,7 +336,7 @@ fn load_from_environment_invalid_db_port_errors() {
 fn load_from_file_missing_path_is_noop() {
     let tmp = TempDir::new().expect("tempdir");
     let _guard = CurrentDirGuard::new(tmp.path()).expect("chdir");
-    let mut mgr = ProductionConfigManager::new(Environment::Development).expect("mgr");
+    let mgr = ProductionConfigManager::new(Environment::Development).expect("mgr");
     let mut cfg = ProductionConfig::default();
     mgr.load_from_file(&mut cfg, "nope/not-here.toml")
         .expect("noop");
@@ -352,7 +352,7 @@ fn load_from_file_toml_yaml_and_json() {
     base.application.port = 7777;
     let toml_str = patch_toml_with_db_password(toml::to_string(&base).expect("toml"));
     fs::write("cfg.toml", toml_str).expect("write");
-    let mut mgr = ProductionConfigManager::new(Environment::Development).expect("mgr");
+    let mgr = ProductionConfigManager::new(Environment::Development).expect("mgr");
     let mut cfg = ProductionConfig::default();
     mgr.load_from_file(&mut cfg, "cfg.toml").expect("toml load");
     assert_eq!(cfg.application.port, 7777);
@@ -380,7 +380,7 @@ fn load_from_file_invalid_toml_errors() {
     let tmp = TempDir::new().expect("tempdir");
     let _guard = CurrentDirGuard::new(tmp.path()).expect("chdir");
     fs::write("bad.toml", "not valid toml [[[").expect("write");
-    let mut mgr = ProductionConfigManager::new(Environment::Development).expect("mgr");
+    let mgr = ProductionConfigManager::new(Environment::Development).expect("mgr");
     let mut cfg = ProductionConfig::default();
     assert!(mgr.load_from_file(&mut cfg, "bad.toml").is_err());
 }
@@ -391,7 +391,7 @@ fn load_from_file_read_error_surfaces() {
     let tmp = TempDir::new().expect("tempdir");
     let _guard = CurrentDirGuard::new(tmp.path()).expect("chdir");
     fs::create_dir_all("is_dir.toml").expect("mkdir");
-    let mut mgr = ProductionConfigManager::new(Environment::Development).expect("mgr");
+    let mgr = ProductionConfigManager::new(Environment::Development).expect("mgr");
     let mut cfg = ProductionConfig::default();
     assert!(mgr.load_from_file(&mut cfg, "is_dir.toml").is_err());
 }
@@ -601,7 +601,7 @@ fn load_from_file_unknown_extension_parses_as_json() {
     let json_str = patch_json_with_db_password(&base);
     fs::write("cfg.data", json_str).expect("write");
 
-    let mut mgr = ProductionConfigManager::new(Environment::Development).expect("mgr");
+    let mgr = ProductionConfigManager::new(Environment::Development).expect("mgr");
     let mut cfg = ProductionConfig::default();
     mgr.load_from_file(&mut cfg, "cfg.data")
         .expect("json fallback ext");
@@ -614,7 +614,7 @@ fn load_from_file_invalid_yaml_errors() {
     let tmp = TempDir::new().expect("tempdir");
     let _guard = CurrentDirGuard::new(tmp.path()).expect("chdir");
     fs::write("bad.yaml", "{ not: yaml").expect("write");
-    let mut mgr = ProductionConfigManager::new(Environment::Development).expect("mgr");
+    let mgr = ProductionConfigManager::new(Environment::Development).expect("mgr");
     let mut cfg = ProductionConfig::default();
     assert!(mgr.load_from_file(&mut cfg, "bad.yaml").is_err());
 }
@@ -625,7 +625,7 @@ fn load_from_file_invalid_json_errors() {
     let tmp = TempDir::new().expect("tempdir");
     let _guard = CurrentDirGuard::new(tmp.path()).expect("chdir");
     fs::write("bad.json", "{invalid").expect("write");
-    let mut mgr = ProductionConfigManager::new(Environment::Development).expect("mgr");
+    let mgr = ProductionConfigManager::new(Environment::Development).expect("mgr");
     let mut cfg = ProductionConfig::default();
     assert!(mgr.load_from_file(&mut cfg, "bad.json").is_err());
 }

@@ -22,14 +22,12 @@ pub fn compute_response(challenge: &[u8], secret: &[u8]) -> Vec<u8> {
     hash.to_be_bytes().to_vec()
 }
 
-use std::time::{Duration, Instant};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{Duration, Instant, SystemTime};
 
 /// Configuration for secret sharing
 #[derive(Debug, Clone)]
-#[expect(
-    dead_code,
-    reason = "recovery test config fields exercised only in subset of scenarios"
-)]
+#[allow(dead_code)]
 pub struct ShardConfig {
     total_shards: usize,
     threshold: usize,
@@ -53,10 +51,7 @@ impl ShardConfig {
         })
     }
 
-    #[expect(
-        dead_code,
-        reason = "accessor reserved for threshold-focused recovery tests"
-    )]
+    #[allow(dead_code)]
     pub fn threshold(&self) -> usize {
         self.threshold
     }
@@ -71,7 +66,6 @@ pub struct Shard {
 
 #[expect(
     clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
     reason = "shard index used as u8 XOR mask; test configs keep total_shards within 256"
 )]
 pub fn create_shards(secret: &[u8], config: &ShardConfig) -> Result<Vec<Shard>, BearDogError> {
@@ -91,7 +85,6 @@ pub fn create_shards(secret: &[u8], config: &ShardConfig) -> Result<Vec<Shard>, 
 
 #[expect(
     clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
     reason = "XOR reconstruction uses shard id as byte mask; ids match create_shards range"
 )]
 pub fn reconstruct_from_shards(shards: &[Shard]) -> Result<Vec<u8>, BearDogError> {
@@ -205,33 +198,30 @@ pub struct EphemeralKey {
 }
 
 impl EphemeralKey {
-    #[expect(
-        clippy::cast_possible_truncation,
-        clippy::cast_sign_loss,
-        reason = "test key material: nanos/counter folded into 32 indices; shifts use i*4 < 128"
-    )]
     pub fn generate(expires_after: Duration) -> Self {
         // Generate 32-byte random key (simplified for testing)
         // Use a combination of timing and current instant to ensure uniqueness
-        use std::sync::atomic::{AtomicU64, Ordering};
         static COUNTER: AtomicU64 = AtomicU64::new(0);
 
         let counter = COUNTER.fetch_add(1, Ordering::SeqCst);
         let now = Instant::now();
 
         // Use SystemTime to get actual elapsed time since UNIX_EPOCH for better entropy
-        use std::time::SystemTime;
         let system_nanos = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_nanos();
 
         // Combine counter and system time for uniqueness
-        let key: Vec<u8> = (0..32)
+        let key: Vec<u8> = (0u8..32)
             .map(|i| {
-                let byte_offset = (counter.wrapping_mul(31).wrapping_add(i as u64)) as u8;
-                let time_byte = ((system_nanos >> (i * 4)) & 0xFF) as u8;
-                (i as u8 ^ 0xAA) ^ time_byte ^ byte_offset
+                let byte_offset =
+                    u8::try_from(counter.wrapping_mul(31).wrapping_add(u64::from(i)) & 0xFF)
+                        .expect("masked to u8");
+                let shift = u32::from(i) * 4;
+                let time_byte =
+                    u8::try_from((system_nanos >> shift) & 0xFF).expect("masked low byte");
+                (i ^ 0xAA) ^ time_byte ^ byte_offset
             })
             .collect();
 
@@ -254,32 +244,29 @@ impl EphemeralKey {
         !self.is_expired()
     }
 
-    #[expect(
-        clippy::cast_possible_truncation,
-        clippy::cast_sign_loss,
-        reason = "same bounded folding as generate() for deterministic test keys"
-    )]
     pub fn rotate(&self) -> Self {
         // Create a new key with different seed
-        use std::sync::atomic::{AtomicU64, Ordering};
         static COUNTER: AtomicU64 = AtomicU64::new(1000); // Different counter for rotation
 
         let counter = COUNTER.fetch_add(1, Ordering::SeqCst);
         let now = Instant::now();
 
         // Use SystemTime to get actual elapsed time since UNIX_EPOCH for better entropy
-        use std::time::SystemTime;
         let system_nanos = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_nanos();
 
         // Use a different base XOR pattern to ensure difference from generate()
-        let key: Vec<u8> = (0..32)
+        let key: Vec<u8> = (0u8..32)
             .map(|i| {
-                let byte_offset = (counter.wrapping_mul(37).wrapping_add(i as u64)) as u8;
-                let time_byte = ((system_nanos >> (i * 4)) & 0xFF) as u8;
-                (i as u8 ^ 0x55) ^ time_byte ^ byte_offset // 0x55 instead of 0xAA
+                let byte_offset =
+                    u8::try_from(counter.wrapping_mul(37).wrapping_add(u64::from(i)) & 0xFF)
+                        .expect("masked to u8");
+                let shift = u32::from(i) * 4;
+                let time_byte =
+                    u8::try_from((system_nanos >> shift) & 0xFF).expect("masked low byte");
+                (i ^ 0x55) ^ time_byte ^ byte_offset // 0x55 instead of 0xAA
             })
             .collect();
 
@@ -612,10 +599,7 @@ impl MultiFactorChallenge {
 
 /// Recovery session
 #[derive(Debug, Clone)]
-#[expect(
-    dead_code,
-    reason = "session lifecycle type for extended recovery flow tests"
-)]
+#[allow(dead_code)]
 pub struct RecoverySession {
     session_id: String,
     user_id: String,
@@ -626,13 +610,12 @@ pub struct RecoverySession {
 
 impl RecoverySession {
     pub fn new(user_id: &str, duration: Duration) -> Self {
+        static SESSION_COUNTER: AtomicU64 = AtomicU64::new(0);
         let now = Instant::now();
         // ✅ FIXED: Use thread-safe UUID for truly unique session IDs
         // The previous implementation using now.elapsed().as_nanos() was racy:
         // - elapsed() returns 0 immediately after now(), causing duplicate IDs
         // - This is a concurrency bug that would affect production
-        use std::sync::atomic::{AtomicU64, Ordering};
-        static SESSION_COUNTER: AtomicU64 = AtomicU64::new(0);
         let session_num = SESSION_COUNTER.fetch_add(1, Ordering::SeqCst);
 
         Self {

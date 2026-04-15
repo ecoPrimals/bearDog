@@ -357,6 +357,7 @@ mod timeout_tests {
     #[test]
     fn test_timeouts_reasonable() {
         // No timeout should be longer than 1 hour (except workflow total)
+        const ONE_HOUR: Duration = Duration::from_secs(3600);
         let timeouts = [
             NETWORK_CONNECTION_TIMEOUT,
             HTTP_REQUEST_TIMEOUT,
@@ -367,7 +368,6 @@ mod timeout_tests {
             DATABASE_QUERY_TIMEOUT,
         ];
 
-        const ONE_HOUR: Duration = Duration::from_secs(3600);
         for timeout in &timeouts {
             assert!(
                 timeout < &ONE_HOUR,
@@ -379,6 +379,7 @@ mod timeout_tests {
     #[test]
     fn test_fast_timeouts_under_10_seconds() {
         // Health checks and probes should be fast
+        const TEN_SECONDS: Duration = Duration::from_secs(10);
         let fast_timeouts = [
             HEALTH_CHECK_TIMEOUT,
             HSM_PROBE_TIMEOUT,
@@ -386,7 +387,6 @@ mod timeout_tests {
             DNS_RESOLUTION_TIMEOUT,
         ];
 
-        const TEN_SECONDS: Duration = Duration::from_secs(10);
         for timeout in &fast_timeouts {
             assert!(
                 timeout <= &TEN_SECONDS,

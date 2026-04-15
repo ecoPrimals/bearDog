@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+#![allow(async_fn_in_trait)] // Native `async fn` in traits; `Send` on futures matches our `Send + Sync` impls
+
 //! Generic capability trait definitions
 //!
 //! These traits define capabilities without any primal-specific knowledge.
@@ -166,7 +168,6 @@ pub struct Signature {
 ///
 /// This capability provides cryptographic lineage chains for trust relationships.
 /// Useful for hierarchical trust, family-based access control, or ancestry tracking.
-#[async_trait]
 pub trait LineageSigningProvider: Send + Sync {
     /// Generate a lineage chain
     ///
@@ -263,7 +264,6 @@ pub struct BroadcastKey {
 /// This capability provides "family-only" broadcast encryption where only
 /// nodes within a specific lineage can decrypt messages. Non-family sees
 /// only encrypted noise.
-#[async_trait]
 pub trait BroadcastEncryptionProvider: Send + Sync {
     /// Encrypt data for a specific lineage
     ///
@@ -332,7 +332,6 @@ pub struct DerivationPath {
 /// This capability provides cryptographic key derivation from context data.
 /// Useful for generating session keys, deriving child keys, or creating
 /// deterministic key hierarchies.
-#[async_trait]
 pub trait KeyDerivationProvider: Send + Sync {
     /// Derive a key from context
     ///

@@ -5,7 +5,6 @@
 //! Resolution helpers are covered in `handlers/server.rs` (`server_handler_tests`).
 
 #[cfg(test)]
-#[expect(clippy::unwrap_used, reason = "test assertions")]
 mod tests {
 
     use crate::ServerArgs;

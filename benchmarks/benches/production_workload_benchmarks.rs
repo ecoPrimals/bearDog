@@ -305,6 +305,20 @@ enum BenchError {
     Validation { message: String },
 }
 
+fn bench_error_level3() -> Result<u32, BenchError> {
+    Err(BenchError::Security {
+        message: "Deep error".to_string(),
+    })
+}
+
+fn bench_error_level2() -> Result<u32, BenchError> {
+    bench_error_level3()
+}
+
+fn bench_error_level1() -> Result<u32, BenchError> {
+    bench_error_level2()
+}
+
 fn benchmark_error_handling(c: &mut Criterion) {
     let mut group = c.benchmark_group("error_handling");
 
@@ -319,23 +333,9 @@ fn benchmark_error_handling(c: &mut Criterion) {
     });
 
     // Error propagation (Result chain)
-    fn level1() -> Result<u32, BenchError> {
-        level2()
-    }
-
-    fn level2() -> Result<u32, BenchError> {
-        level3()
-    }
-
-    fn level3() -> Result<u32, BenchError> {
-        Err(BenchError::Security {
-            message: "Deep error".to_string(),
-        })
-    }
-
     group.bench_function("error_propagation_3_levels", |b| {
         b.iter(|| {
-            let result = level1();
+            let result = bench_error_level1();
             black_box(result)
         })
     });

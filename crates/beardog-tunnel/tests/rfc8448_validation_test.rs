@@ -22,11 +22,35 @@ use serde_json::json;
 #[tokio::test]
 #[expect(
     clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    clippy::cast_precision_loss,
     reason = "RFC 8448 fixture bytes parsed from spec tables; casts match reference vectors"
 )]
 async fn test_rfc8448_handshake_key_derivation() {
+    use hkdf::Hkdf;
+    use sha2::{Digest, Sha256};
+
+    fn parse_hex(hex_str: &str) -> Vec<u8> {
+        hex_str
+            .split_whitespace()
+            .map(|b| u8::from_str_radix(b, 16).unwrap())
+            .collect()
+    }
+
+    fn hkdf_expand_label(secret: &[u8], label: &str, context: &[u8], length: usize) -> Vec<u8> {
+        let mut hkdf_label = Vec::new();
+        hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
+
+        let tls13_label = format!("tls13 {label}");
+        hkdf_label.push(tls13_label.len() as u8);
+        hkdf_label.extend_from_slice(tls13_label.as_bytes());
+
+        hkdf_label.push(context.len() as u8);
+        hkdf_label.extend_from_slice(context);
+
+        let hkdf = Hkdf::<Sha256>::from_prk(secret).unwrap();
+        let mut output = vec![0u8; length];
+        hkdf.expand(&hkdf_label, &mut output).unwrap();
+        output
+    }
     // ========================================================================
     // RFC 8448 Known Values
     // ========================================================================
@@ -91,13 +115,6 @@ async fn test_rfc8448_handshake_key_derivation() {
     // Parse Hex Strings
     // ========================================================================
 
-    fn parse_hex(hex_str: &str) -> Vec<u8> {
-        hex_str
-            .split_whitespace()
-            .map(|b| u8::from_str_radix(b, 16).unwrap())
-            .collect()
-    }
-
     let client_hello = parse_hex(client_hello_hex);
     let server_hello = parse_hex(server_hello_hex);
     let ecdh_secret = parse_hex(ecdh_secret_hex);
@@ -111,7 +128,6 @@ async fn test_rfc8448_handshake_key_derivation() {
     // Verify Transcript Hash
     // ========================================================================
 
-    use sha2::{Digest, Sha256};
     let transcript = [client_hello, server_hello].concat();
     let computed_transcript_hash = Sha256::digest(&transcript);
 
@@ -168,25 +184,6 @@ async fn test_rfc8448_handshake_key_derivation() {
     //
     // To validate, we need to derive the keys from the expected secrets
     // and compare them with our output.
-
-    use hkdf::Hkdf;
-
-    fn hkdf_expand_label(secret: &[u8], label: &str, context: &[u8], length: usize) -> Vec<u8> {
-        let mut hkdf_label = Vec::new();
-        hkdf_label.extend_from_slice(&(length as u16).to_be_bytes());
-
-        let tls13_label = format!("tls13 {label}");
-        hkdf_label.push(tls13_label.len() as u8);
-        hkdf_label.extend_from_slice(tls13_label.as_bytes());
-
-        hkdf_label.push(context.len() as u8);
-        hkdf_label.extend_from_slice(context);
-
-        let hkdf = Hkdf::<Sha256>::from_prk(secret).unwrap();
-        let mut okm = vec![0u8; length];
-        hkdf.expand(&hkdf_label, &mut okm).unwrap();
-        okm
-    }
 
     // Derive expected keys from RFC 8448 secrets
     // Key length is 16 for AES-128-GCM (cipher suite 0x1301)

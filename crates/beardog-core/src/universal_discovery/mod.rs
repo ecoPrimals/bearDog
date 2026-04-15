@@ -60,30 +60,12 @@ pub mod load_balancing;
 pub mod network;
 /// Protocol support and negotiation
 pub mod protocols;
-#[expect(
-    unused_imports,
-    clippy::float_cmp,
-    clippy::useless_vec,
-    clippy::needless_range_loop,
-    clippy::uninlined_format_args,
-    dead_code,
-    reason = "large integration test modules: noisy style lints and synthetic helpers"
-)]
 #[cfg(test)]
 #[path = "protocols_tests.rs"]
 mod protocols_tests;
 /// Service registry
 pub mod registry;
 
-#[expect(
-    unused_imports,
-    clippy::float_cmp,
-    clippy::useless_vec,
-    clippy::needless_range_loop,
-    clippy::uninlined_format_args,
-    dead_code,
-    reason = "large integration test modules: noisy style lints and synthetic helpers"
-)]
 #[cfg(test)]
 mod tests;
 

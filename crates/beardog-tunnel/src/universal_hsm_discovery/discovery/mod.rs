@@ -11,6 +11,7 @@ use tracing::{debug, error, info, warn};
 // Submodules
 pub mod cloud_discoverer;
 pub mod mobile_discoverer;
+pub mod mobile_hsm_capabilities;
 pub mod pkcs11_discoverer;
 pub mod platform_discoverer;
 pub mod software_discoverer;

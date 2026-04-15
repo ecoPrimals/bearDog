@@ -5,14 +5,12 @@
 use super::BearDogCryptoService;
 use crate::crypto_service::Result;
 use crate::crypto_service::r#trait::CryptoService;
-use async_trait::async_trait;
 use beardog_types::crypto_service::{
     CryptoAlgorithm, DecryptOptions, EncryptOptions, EncryptedData, HealthStatus, KeyAlgorithm,
     KeyGenOptions, KeyInfo, ServiceCapabilities, SignOptions, Signature, SignatureAlgorithm,
     VerifyOptions,
 };
 
-#[async_trait]
 impl CryptoService for BearDogCryptoService {
     async fn encrypt(
         &self,

@@ -41,6 +41,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::self_knowledge::SimpleCapability;
+use beardog_types::constants::domains::network::ipc_discovery::BIOMEOS_RUNTIME_SOCKET_SUBDIR;
 use beardog_types::primal_identity::resolve_node_id_from_env_or_ephemeral;
 use tracing::warn;
 
@@ -343,7 +344,7 @@ impl SocketConfig {
         if Path::new(&xdg_runtime_dir).exists() {
             Some(
                 PathBuf::from(&xdg_runtime_dir)
-                    .join("biomeos")
+                    .join(BIOMEOS_RUNTIME_SOCKET_SUBDIR)
                     .join(socket_filename),
             )
         } else {

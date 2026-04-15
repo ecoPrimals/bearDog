@@ -433,8 +433,10 @@ async fn get_lineage_proof_for_key_with_home(
         node_id: key_id.to_string(),
         root_id,
         path,
-        proof_chain, // Cryptographic relationship proofs
-        merkle_root, // Merkle root for efficient verification
+        proof_chain,
+        merkle_root,
+        generation: 0,
+        head_commitment: vec![],
         generated_at: chrono::Utc::now(),
     };
 

@@ -68,6 +68,22 @@ use beardog_traits::unified::{CredentialNode, CredentialRequest, MultiCredential
 #[cfg(feature = "fido2")]
 use std::collections::HashMap;
 
+#[cfg(feature = "fido2")]
+fn print_credential_tree(node: &CredentialNode, depth: usize) {
+    let indent = "  ".repeat(depth);
+    println!(
+        "{}├─ {} ({})",
+        indent, node.credential.role, node.credential.credential_id
+    );
+    println!(
+        "{}│  Permissions: {:?}",
+        indent, node.credential.permissions
+    );
+    for child in &node.children {
+        print_credential_tree(child, depth + 1);
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(not(feature = "fido2"))]
@@ -265,25 +281,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                         match provider.get_credential_hierarchy().await {
                                             Ok(hierarchy) => {
                                                 println!("✅ Hierarchy:");
-                                                fn print_tree(node: &CredentialNode, depth: usize) {
-                                                    let indent = "  ".repeat(depth);
-                                                    println!(
-                                                        "{}├─ {} ({})",
-                                                        indent,
-                                                        node.credential.role,
-                                                        node.credential.credential_id
-                                                    );
-                                                    println!(
-                                                        "{}│  Permissions: {:?}",
-                                                        indent, node.credential.permissions
-                                                    );
-                                                    for child in &node.children {
-                                                        print_tree(child, depth + 1);
-                                                    }
-                                                }
-
                                                 for root in &hierarchy.roots {
-                                                    print_tree(root, 0);
+                                                    print_credential_tree(root, 0);
                                                 }
                                                 println!();
                                             }

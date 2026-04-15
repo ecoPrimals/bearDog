@@ -138,30 +138,22 @@ impl HsmEntropyOrchestrator {
             None
         };
 
-        #[expect(
-            unused_mut,
-            reason = "mutated inside #[cfg(feature = \"fido2\")] block"
-        )]
-        let mut total_devices = 0;
-
         #[cfg(feature = "fido2")]
-        {
-            total_devices += fido2_providers.len();
-        }
+        let fido2_device_count = fido2_providers.len();
+        #[cfg(not(feature = "fido2"))]
+        let fido2_device_count = 0usize;
 
         #[cfg(target_os = "android")]
-        {
-            if android_provider.is_some() {
-                total_devices += 1;
-            }
-        }
+        let android_device_count = usize::from(android_provider.is_some());
+        #[cfg(not(target_os = "android"))]
+        let android_device_count = 0usize;
 
         #[cfg(target_os = "ios")]
-        {
-            if ios_provider.is_some() {
-                total_devices += 1;
-            }
-        }
+        let ios_device_count = usize::from(ios_provider.is_some());
+        #[cfg(not(target_os = "ios"))]
+        let ios_device_count = 0usize;
+
+        let total_devices = fido2_device_count + android_device_count + ios_device_count;
 
         info!(
             "🎯 Orchestrator initialized with {} HSM device(s)",

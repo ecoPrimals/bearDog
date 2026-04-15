@@ -259,19 +259,16 @@ mod validation_tests {
         }
     }
 
-    #[expect(
-        clippy::cast_possible_truncation,
-        clippy::cast_sign_loss,
-        reason = "entropy tier indices folded into bounded counters for synthetic coverage vectors"
-    )]
     fn make_valid_human_entropy() -> EntropyClass {
         let mut biometric_hash = vec![0u8; 32];
         for (i, byte) in biometric_hash.iter_mut().enumerate() {
-            *byte = (i as u8).wrapping_mul(7).wrapping_add(13);
+            let idx = u8::try_from(i).expect("biometric hash index fits u8");
+            *byte = idx.wrapping_mul(7).wrapping_add(13);
         }
         let mut sig = vec![0u8; 64];
         for (i, byte) in sig.iter_mut().enumerate() {
-            *byte = (i as u8).wrapping_mul(3).wrapping_add(5);
+            let idx = u8::try_from(i).expect("signature index fits u8");
+            *byte = idx.wrapping_mul(3).wrapping_add(5);
         }
 
         EntropyClass::HumanLivedExperience {

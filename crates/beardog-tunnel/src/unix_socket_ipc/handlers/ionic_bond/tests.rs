@@ -3,12 +3,12 @@
 use super::super::MethodHandler;
 use super::*;
 use crate::btsp_provider::BeardogBtspProvider;
+use ed25519_dalek::{Signer, SigningKey};
 use std::sync::Arc;
 
 /// Generate a real Ed25519 signature over `terms_hash` and return
 /// `(signature_hex, public_key_hex)` for use in accept params.
 fn sign_as_acceptor(terms_hash: &str) -> (String, String) {
-    use ed25519_dalek::{Signer, SigningKey};
     let key = SigningKey::from_bytes(&[0x42; 32]);
     let sig = key.sign(terms_hash.as_bytes());
     (
@@ -17,7 +17,7 @@ fn sign_as_acceptor(terms_hash: &str) -> (String, String) {
     )
 }
 
-/// Helper: propose a bond -> return (proposal_id, terms_hash).
+/// Helper: propose a bond -> return (`proposal_id`, `terms_hash`).
 async fn propose_bond(
     handler: &IonicBondHandler,
     provider: &Arc<BeardogBtspProvider>,
@@ -35,7 +35,7 @@ async fn propose_bond(
     )
 }
 
-/// Helper: accept a bond with real Ed25519 signature -> return bond_id.
+/// Helper: accept a bond with real Ed25519 signature -> return `bond_id`.
 async fn accept_bond(
     handler: &IonicBondHandler,
     provider: &Arc<BeardogBtspProvider>,
@@ -106,7 +106,6 @@ async fn accept_rejects_invalid_signature() {
 
     let (proposal_id, _terms_hash) = propose_bond(&handler, &provider, "a", "b").await;
 
-    use ed25519_dalek::SigningKey;
     let key = SigningKey::from_bytes(&[0x42; 32]);
     let wrong_sig = hex::encode([0xAA; 64]);
     let pubkey = hex::encode(key.verifying_key().as_bytes());

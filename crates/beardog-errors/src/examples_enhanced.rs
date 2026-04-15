@@ -238,10 +238,6 @@ pub fn validate_email(email: &str) -> Result<(), BearDogError> {
 }
 
 #[cfg(test)]
-#[expect(
-    clippy::disallowed_methods,
-    reason = "examples assert error variants with unwrap_err"
-)]
 mod tests {
     use super::*;
 

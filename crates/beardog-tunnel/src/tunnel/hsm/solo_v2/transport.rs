@@ -4,11 +4,12 @@
 //!
 //! Implementations live in `hid_transport` (hardware) or test mocks.
 
+use async_trait::async_trait;
 use beardog_errors::BearDogError;
 
 /// Thin port for CTAP2 device communication.
 /// The ONLY part that needs real hardware to exercise end-to-end.
-#[async_trait::async_trait]
+#[async_trait]
 pub trait Ctap2Transport: Send + Sync {
     /// Send a framed CTAP2 HID message and receive the raw CTAP2 response.
     ///

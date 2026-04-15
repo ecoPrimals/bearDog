@@ -459,7 +459,7 @@ mod tests {
             disk: DiskMetrics::default(),
             network: NetworkMetrics::default(),
             process: ProcessMetrics::default(),
-            custom: [("q".to_string(), 1.5)].into_iter().collect(),
+            custom: std::iter::once(("q".to_string(), 1.5)).collect(),
         };
         let json = serde_json::to_string(&m).expect("serialize");
         let back: SystemMetrics = serde_json::from_str(&json).expect("deserialize");

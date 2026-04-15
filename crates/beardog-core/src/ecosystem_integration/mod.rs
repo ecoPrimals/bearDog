@@ -65,51 +65,15 @@ pub use integration_engine::*;
 pub use license_manager::*;
 
 // Tests
-#[expect(
-    unused_imports,
-    clippy::float_cmp,
-    clippy::useless_vec,
-    clippy::needless_range_loop,
-    clippy::uninlined_format_args,
-    dead_code,
-    reason = "large integration test modules: noisy style lints and synthetic helpers"
-)]
 #[cfg(test)]
 mod integration_engine_tests;
 
-#[expect(
-    unused_imports,
-    clippy::float_cmp,
-    clippy::useless_vec,
-    clippy::needless_range_loop,
-    clippy::uninlined_format_args,
-    dead_code,
-    reason = "large integration test modules: noisy style lints and synthetic helpers"
-)]
 #[cfg(test)]
 mod license_manager_tests;
 
-#[expect(
-    unused_imports,
-    clippy::float_cmp,
-    clippy::useless_vec,
-    clippy::needless_range_loop,
-    clippy::uninlined_format_args,
-    dead_code,
-    reason = "large integration test modules: noisy style lints and synthetic helpers"
-)]
 #[cfg(test)]
 mod performance_optimizer_tests;
 
-#[expect(
-    unused_imports,
-    clippy::float_cmp,
-    clippy::useless_vec,
-    clippy::needless_range_loop,
-    clippy::uninlined_format_args,
-    dead_code,
-    reason = "large integration test modules: noisy style lints and synthetic helpers"
-)]
 #[cfg(test)]
 #[path = "event_system_comprehensive_tests.rs"]
 mod event_system_comprehensive_tests;

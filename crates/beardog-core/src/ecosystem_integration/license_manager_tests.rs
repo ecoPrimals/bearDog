@@ -412,13 +412,11 @@ async fn test_all_capabilities_checkable() {
         let result = core.check_capability_license(capability);
         assert!(
             result.is_ok(),
-            "Should be able to check capability: {}",
-            capability
+            "Should be able to check capability: {capability}"
         );
         assert!(
             result.unwrap(),
-            "Capability should be licensed: {}",
-            capability
+            "Capability should be licensed: {capability}"
         );
     }
 }
@@ -452,8 +450,7 @@ async fn test_license_status_completeness() {
             status
                 .capabilities_granted
                 .contains(&capability.to_string()),
-            "Should contain capability: {}",
-            capability
+            "Should contain capability: {capability}"
         );
     }
 }

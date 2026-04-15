@@ -98,6 +98,8 @@ async fn solo_v2_sign_with_device_errors_on_unknown_key() {
 
 #[test]
 fn solo_v2_universal_trait_directs_to_async_methods() {
+    use crate::universal_hsm::traits::UniversalHsmProvider;
+
     let device_info = SoloV2DeviceInfo {
         device_id: "test-device".to_string(),
         product_name: "Solo V2 Test".to_string(),
@@ -108,7 +110,6 @@ fn solo_v2_universal_trait_directs_to_async_methods() {
     };
     let provider = SoloV2Provider::new(device_info, SoloV2Config::default())
         .expect("connected test Solo V2 device should construct");
-    use crate::universal_hsm::traits::UniversalHsmProvider;
     assert!(
         provider
             .generate_key(crate::tunnel::hsm::types::KeyType::Ed25519)
@@ -151,6 +152,7 @@ mod ctap2_mock_tests {
         parse_make_credential_response,
     };
     use crate::tunnel::hsm::solo_v2::transport::Ctap2Transport;
+    use async_trait::async_trait;
     use ciborium::Value as CborValue;
     use std::sync::Arc;
     use tokio::sync::Mutex;
@@ -206,7 +208,7 @@ mod ctap2_mock_tests {
         }
     }
 
-    #[async_trait::async_trait]
+    #[async_trait]
     impl Ctap2Transport for MockCtap2Transport {
         async fn send_receive(
             &mut self,

@@ -9,6 +9,7 @@ use super::*;
 use crate::tunnel::hsm::SoftwareHsmConfig;
 use crate::tunnel::hsm::manager::HsmManager;
 use crate::tunnel::hsm::software_hsm::RustSoftwareHsm;
+use crate::tunnel::hsm::{KeyMaterial, KeyType};
 use beardog_genetics::ecosystem_evolution::EcosystemGeneticEngine;
 use std::sync::Arc;
 
@@ -109,14 +110,12 @@ async fn test_birdsong_master_key_derivation() {
     let hsm = create_test_hsm().await;
 
     // Generate BirdSong master key
-    use crate::tunnel::hsm::KeyType;
     let key = hsm
         .generate_key("test_birdsong_master", &KeyType::ChaCha20)
         .await
         .expect("Key generation failed");
 
     // Verify key has material
-    use crate::tunnel::hsm::KeyMaterial;
     match &key.key_material {
         KeyMaterial::Encrypted { encrypted_data, .. } => {
             assert!(!encrypted_data.is_empty(), "Key material must not be empty");

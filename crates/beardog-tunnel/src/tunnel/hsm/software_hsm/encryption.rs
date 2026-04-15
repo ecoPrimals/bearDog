@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use aes_gcm::{
-    aead::{Aead, KeyInit},
     Aes256Gcm, Key, Nonce,
+    aead::{Aead, KeyInit},
 };
-use async_trait::async_trait;
 use beardog_errors::BearDogError;
 use rand_core::{OsRng, RngCore};
 use std::sync::Arc;
@@ -13,7 +12,6 @@ const AES_GCM_NONCE_LEN: usize = 12;
 const AES_GCM_TAG_LEN: usize = 16;
 const AES_256_KEY_LEN: usize = 32;
 
-#[async_trait]
 pub trait EncryptionKey: Send + Sync {
     async fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError>;
 
@@ -80,22 +78,18 @@ impl Default for AesGcmEncryptionKey {
     }
 }
 
-#[async_trait]
 impl EncryptionKey for AesGcmEncryptionKey {
     async fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError> {
         let mut nonce_bytes = [0u8; AES_GCM_NONCE_LEN];
         rand::rng().fill_bytes(&mut nonce_bytes);
         let nonce = Nonce::from_slice(&nonce_bytes);
 
-        let ciphertext = self
-            .cipher
-            .encrypt(nonce, plaintext)
-            .map_err(|e| {
-                BearDogError::encryption(
-                    "aes_gcm_encrypt".to_string(),
-                    format!("AES-GCM encryption failed: {e}"),
-                )
-            })?;
+        let ciphertext = self.cipher.encrypt(nonce, plaintext).map_err(|e| {
+            BearDogError::encryption(
+                "aes_gcm_encrypt".to_string(),
+                format!("AES-GCM encryption failed: {e}"),
+            )
+        })?;
 
         let mut result = Vec::with_capacity(nonce_bytes.len() + ciphertext.len());
         result.extend_from_slice(&nonce_bytes);
@@ -114,15 +108,12 @@ impl EncryptionKey for AesGcmEncryptionKey {
         let (nonce_bytes, encrypted_data) = ciphertext.split_at(AES_GCM_NONCE_LEN);
         let nonce = Nonce::from_slice(nonce_bytes);
 
-        let plaintext = self
-            .cipher
-            .decrypt(nonce, encrypted_data)
-            .map_err(|e| {
-                BearDogError::encryption(
-                    "aes_gcm_decrypt".to_string(),
-                    format!("AES-GCM decryption failed: {e}"),
-                )
-            })?;
+        let plaintext = self.cipher.decrypt(nonce, encrypted_data).map_err(|e| {
+            BearDogError::encryption(
+                "aes_gcm_decrypt".to_string(),
+                format!("AES-GCM decryption failed: {e}"),
+            )
+        })?;
         Ok(plaintext)
     }
 }

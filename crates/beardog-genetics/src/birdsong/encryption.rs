@@ -298,6 +298,8 @@ mod tests {
             path: vec!["test-family".to_string(), "test-node".to_string()],
             proof_chain: Vec::new(),
             merkle_root: Vec::new(),
+            generation: 0,
+            head_commitment: vec![],
             generated_at: Utc::now(),
         };
 
@@ -338,6 +340,8 @@ mod tests {
             path: vec!["test-family".to_string()],
             proof_chain: Vec::new(),
             merkle_root: Vec::new(),
+            generation: 0,
+            head_commitment: vec![],
             generated_at: Utc::now(),
         };
 
@@ -356,6 +360,8 @@ mod tests {
             path: vec!["test-family".to_string(), "child".to_string()],
             proof_chain: Vec::new(),
             merkle_root: Vec::new(),
+            generation: 0,
+            head_commitment: vec![],
             generated_at: Utc::now(),
         };
 
@@ -397,6 +403,8 @@ mod tests {
             path: vec!["family-b".to_string(), "family-b-node".to_string()],
             proof_chain: Vec::new(),
             merkle_root: Vec::new(),
+            generation: 0,
+            head_commitment: vec![],
             generated_at: Utc::now(),
         };
 
@@ -433,6 +441,8 @@ mod tests {
                 path: (0..=depth).map(|d| format!("node-depth-{d}")).collect(),
                 proof_chain: Vec::new(),
                 merkle_root: Vec::new(),
+                generation: 0,
+                head_commitment: vec![],
                 generated_at: Utc::now(),
             };
 

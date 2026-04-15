@@ -196,7 +196,7 @@ mod tests {
 
         use std::time::SystemTime;
 
-        let mut primals = vec![
+        let primals = vec![
             DiscoveredPrimal {
                 name: "low-trust".to_string(),
                 endpoints: vec![],
@@ -254,7 +254,7 @@ mod tests {
         use crate::primal_discovery::DiscoveredPrimal;
         use std::time::SystemTime;
 
-        let mut primals = vec![
+        let primals = vec![
             DiscoveredPrimal {
                 name: "first".to_string(),
                 endpoints: vec![],
@@ -293,7 +293,7 @@ mod tests {
         use crate::primal_discovery::DiscoveredPrimal;
         use std::time::SystemTime;
 
-        let mut primals = vec![
+        let primals = vec![
             DiscoveredPrimal {
                 name: "first".to_string(),
                 endpoints: vec![],
@@ -344,7 +344,7 @@ mod tests {
     #[test]
     fn select_primal_errors_when_candidate_list_empty() {
         let mut router = CapabilityRouter::new(PrimalDiscovery::new(DiscoveryMethod::Environment));
-        let mut empty: Vec<crate::primal_discovery::DiscoveredPrimal> = vec![];
+        let empty: Vec<crate::primal_discovery::DiscoveredPrimal> = vec![];
         let ctx = RequestContext::new(SimpleCapability::Cryptography);
         let err = router.select_primal(&empty, &ctx).expect_err("empty slice");
         assert!(err.to_string().contains("No primals available"));
@@ -355,7 +355,7 @@ mod tests {
         use crate::primal_discovery::DiscoveredPrimal;
         use std::time::SystemTime;
 
-        let mut primals = vec![
+        let primals = vec![
             DiscoveredPrimal {
                 name: "a".to_string(),
                 endpoints: vec![],
@@ -398,7 +398,7 @@ mod tests {
         use crate::primal_discovery::DiscoveredPrimal;
         use std::time::SystemTime;
 
-        let mut primals = vec![
+        let primals = vec![
             DiscoveredPrimal {
                 name: "x".to_string(),
                 endpoints: vec![],

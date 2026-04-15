@@ -80,15 +80,11 @@ fn test_single_byte_processing() {
 }
 
 #[test]
-#[expect(
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    clippy::cast_precision_loss,
-    reason = "test iter index to u8 for mod-256 synthetic vectors; values stay in range"
-)]
 fn test_large_data_processing() {
     let processor = UltimatePerformanceProcessor::new();
-    let test_data: Vec<u8> = (0..1024).map(|i| (i % 256) as u8).collect();
+    let test_data: Vec<u8> = (0..1024)
+        .map(|i| u8::try_from(i % 256).expect("mod 256 fits u8"))
+        .collect();
 
     let result = processor.process_with_ultimate_optimization(&test_data);
 
@@ -102,7 +98,9 @@ fn test_large_data_processing() {
 fn process_with_ultimate_optimization_prefetches_across_multiple_cache_lines() {
     let processor = UltimatePerformanceProcessor::new();
     let len = 64 * 12 + 37;
-    let test_data: Vec<u8> = (0..len).map(|i| (i % 251) as u8).collect();
+    let test_data: Vec<u8> = (0..len)
+        .map(|i| u8::try_from(i % 251).expect("mod 251 fits u8"))
+        .collect();
 
     let result = processor.process_with_ultimate_optimization(&test_data);
 

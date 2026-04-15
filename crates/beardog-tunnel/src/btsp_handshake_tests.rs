@@ -16,7 +16,6 @@ mod tests {
     use crate::btsp_handshake::{FamilySeed, perform_server_handshake};
     use base64::Engine;
     use base64::engine::general_purpose::STANDARD as BASE64;
-    use rand::RngCore;
     use tokio::io::duplex;
 
     /// Simulate the client side of the BTSP handshake for testing.
@@ -98,7 +97,7 @@ mod tests {
         let client_handle =
             tokio::spawn(async move { client_handshake(&mut client_stream, seed).await });
 
-        let (server_session, mut client_session) = tokio::join!(server_handle, client_handle);
+        let (server_session, client_session) = tokio::join!(server_handle, client_handle);
         let mut server_session = server_session.expect("join server");
         let mut client_session = client_session.expect("join client");
 

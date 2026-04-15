@@ -253,17 +253,11 @@ fn test_process_mouse_event_moves_clicks_and_scroll() {
 }
 
 #[test]
-#[expect(
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    clippy::cast_precision_loss,
-    reason = "synthetic event timestamps and indices for interaction entropy metrics"
-)]
 fn test_calculate_metrics_multi_interval_std_dev() {
-    let events: Vec<InteractionEvent> = (0..5)
+    let events: Vec<InteractionEvent> = (0u32..5)
         .map(|i| InteractionEvent {
             interaction_type: InteractionType::KeyPress,
-            timestamp_nanos: (i as u128) * 1_000_000,
+            timestamp_nanos: u128::from(i) * 1_000_000,
             data: InteractionData::Keyboard {
                 is_char: true,
                 is_modifier: false,
@@ -347,20 +341,14 @@ fn test_shannon_entropy_single_bucket_max_entropy_zero_branch() {
 }
 
 #[test]
-#[expect(
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    clippy::cast_precision_loss,
-    reason = "mouse delta synthesis: small i16 ranges from bounded loop indices"
-)]
 fn test_calculate_movement_entropy_high_variance_caps_at_one() {
-    let events: Vec<InteractionEvent> = (0..20)
+    let events: Vec<InteractionEvent> = (0i32..20)
         .map(|i| InteractionEvent {
             interaction_type: InteractionType::MouseMove,
-            timestamp_nanos: i as u128 * 1_000_000,
+            timestamp_nanos: u128::try_from(i).expect("non-negative index") * 1_000_000,
             data: InteractionData::Mouse {
-                delta_x: (i * 97) as i16,
-                delta_y: (i * -53) as i16,
+                delta_x: i16::try_from(i * 97).expect("test delta_x fits i16"),
+                delta_y: i16::try_from(-53 * i).expect("test delta_y fits i16"),
             },
         })
         .collect();
@@ -412,17 +400,11 @@ fn test_derive_entropy_bytes_includes_scroll_deltas() {
 }
 
 #[test]
-#[expect(
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    clippy::cast_precision_loss,
-    reason = "keyboard-only event stream uses small index set for nanosecond spacing"
-)]
 fn test_calculate_metrics_all_keyboard_no_mouse_events() {
-    let events: Vec<InteractionEvent> = (0..4)
+    let events: Vec<InteractionEvent> = (0u32..4)
         .map(|i| InteractionEvent {
             interaction_type: InteractionType::KeyPress,
-            timestamp_nanos: (i as u128) * 5_000_000,
+            timestamp_nanos: u128::from(i) * 5_000_000,
             data: InteractionData::Keyboard {
                 is_char: true,
                 is_modifier: false,

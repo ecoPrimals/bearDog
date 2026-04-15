@@ -4,7 +4,6 @@
 
 #[cfg(test)]
 mod resilience_methods_tests {
-    use crate::canonical::config::r#trait::BearDogConfig;
     use crate::canonical::providers_unified::resilience::*;
     use std::time::Duration;
 

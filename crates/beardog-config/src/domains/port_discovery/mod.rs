@@ -35,7 +35,6 @@ pub use discoverer::PortDiscoverer;
 pub use hierarchical::discover_port_hierarchical;
 
 #[cfg(test)]
-#[expect(clippy::unwrap_used, reason = "test assertions")]
 mod tests {
     use super::*;
     use beardog_errors::process_env;
@@ -52,10 +51,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_system_query_strategy() {
-        // Modern idiomatic: Initialize struct with all values at once
         let config = PortDiscoveryConfig {
             strategy: DiscoveryStrategy::SystemQuery,
-            min_port: 58000, // Use high ports for testing
+            min_port: 58000,
             max_port: 58100,
             ..Default::default()
         };
@@ -65,13 +63,11 @@ mod tests {
 
         assert!(result.is_ok(), "Should find available port in range");
         let port = result.expect("system query finds port in range");
-        // Modern idiomatic: Use range contains
         assert!((58000..=58100).contains(&port));
     }
 
     #[tokio::test]
     async fn test_explicit_only_strategy() {
-        // Modern idiomatic: Initialize struct with all values at once
         let config = PortDiscoveryConfig {
             strategy: DiscoveryStrategy::ExplicitOnly,
             ..Default::default()
@@ -90,9 +86,9 @@ mod tests {
     async fn test_hierarchical_discovery_cli_override() {
         let result = discover_port_hierarchical(
             "NONEXISTENT_VAR",
-            Some(12345), // CLI override
-            Some(8080),  // Config value
-            9090,        // Default
+            Some(12345),
+            Some(8080),
+            9090,
             PortDiscoveryConfig::default(),
         )
         .await;
@@ -108,11 +104,11 @@ mod tests {
     async fn test_hierarchical_discovery_default() {
         let result = discover_port_hierarchical(
             "NONEXISTENT_VAR",
-            None, // No CLI
-            None, // No config
-            9090, // Default
+            None,
+            None,
+            9090,
             PortDiscoveryConfig {
-                strategy: DiscoveryStrategy::ExplicitOnly, // Disable discovery
+                strategy: DiscoveryStrategy::ExplicitOnly,
                 ..Default::default()
             },
         )
@@ -238,7 +234,10 @@ mod tests {
             discovery_timeout_ms: 100,
         };
         let discoverer = PortDiscoverer::new(config);
-        let err = discoverer.discover().await.unwrap_err();
+        let err = discoverer
+            .discover()
+            .await
+            .expect_err("should fail with all ports excluded");
         assert!(err.to_string().contains("No available ports"));
     }
 
@@ -293,8 +292,10 @@ mod tests {
 
     #[tokio::test]
     async fn discovered_primal_ports_env_merges_valid_and_ignores_invalid() {
-        let _guard = port_discovery_env_lock();
-        process_env::set_var("BEARDOG_DISCOVERED_PRIMAL_PORTS", "8443,not-a-port,9001");
+        {
+            let _guard = port_discovery_env_lock();
+            process_env::set_var("BEARDOG_DISCOVERED_PRIMAL_PORTS", "8443,not-a-port,9001");
+        }
 
         let config = PortDiscoveryConfig {
             strategy: DiscoveryStrategy::PrimalQuery,
@@ -307,13 +308,16 @@ mod tests {
         let res = discoverer.discover().await;
         assert!(res.is_ok());
 
+        let _guard = port_discovery_env_lock();
         process_env::remove_var("BEARDOG_DISCOVERED_PRIMAL_PORTS");
     }
 
     #[tokio::test]
     async fn hierarchical_prefers_env_overlay_over_config() {
-        let _guard = port_discovery_env_lock();
-        process_env::set_var("HIER_PORT_ENV_OVERLAY", "4411");
+        {
+            let _guard = port_discovery_env_lock();
+            process_env::set_var("HIER_PORT_ENV_OVERLAY", "4411");
+        }
 
         let port = discover_port_hierarchical(
             "HIER_PORT_ENV_OVERLAY",
@@ -327,6 +331,7 @@ mod tests {
 
         assert_eq!(port, 4411);
 
+        let _guard = port_discovery_env_lock();
         process_env::remove_var("HIER_PORT_ENV_OVERLAY");
     }
 
@@ -365,8 +370,10 @@ mod tests {
 
     #[tokio::test]
     async fn discovered_primal_ports_skips_empty_csv_segments() {
-        let _guard = port_discovery_env_lock();
-        process_env::set_var("BEARDOG_DISCOVERED_PRIMAL_PORTS", "8443,,,9001");
+        {
+            let _guard = port_discovery_env_lock();
+            process_env::set_var("BEARDOG_DISCOVERED_PRIMAL_PORTS", "8443,,,9001");
+        }
 
         let config = PortDiscoveryConfig {
             strategy: DiscoveryStrategy::PrimalQuery,
@@ -378,6 +385,7 @@ mod tests {
         let discoverer = PortDiscoverer::new(config);
         assert!(discoverer.discover().await.is_ok());
 
+        let _guard = port_discovery_env_lock();
         process_env::remove_var("BEARDOG_DISCOVERED_PRIMAL_PORTS");
     }
 }

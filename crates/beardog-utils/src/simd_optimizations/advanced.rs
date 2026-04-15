@@ -383,6 +383,7 @@ mod tests {
     // TEST_PRIORITY: normal
 
     use super::{AdvancedSIMDOptimizer, SIMDOperation};
+    use crate::float_eq;
 
     #[test]
     fn simd_copy_and_mismatch_length() {
@@ -450,7 +451,7 @@ mod tests {
 
         let report = opt.performance_report();
         assert!(report.contains_key("operations_count"));
-        assert_eq!(opt.cache_hit_rate(), 0.0);
+        float_eq::f64(opt.cache_hit_rate(), 0.0);
     }
 
     #[test]

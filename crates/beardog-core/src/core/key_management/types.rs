@@ -107,8 +107,6 @@ pub struct KeyMetadata {
 
 #[cfg(test)]
 mod types_tests {
-    #![expect(clippy::unwrap_used, reason = "test assertions")]
-
     use super::*;
 
     #[test]

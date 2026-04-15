@@ -7,7 +7,6 @@ use base64::engine::general_purpose::STANDARD as B64;
 #[expect(
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
-    clippy::cast_precision_loss,
     reason = "deterministic test PRNG mapping small indices to u8 for TLS derive vectors"
 )]
 fn rand32() -> Vec<u8> {

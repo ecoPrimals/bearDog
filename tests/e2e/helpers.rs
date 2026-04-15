@@ -23,6 +23,7 @@
 
 use beardog_core::BearDogCore;
 use beardog_errors::BearDogError;
+use beardog_types::canonical::ComponentStatus;
 use beardog_types::canonical::HealthStatus;
 use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
 use std::sync::Arc;
@@ -284,8 +285,6 @@ pub async fn test_real_state_management(core: &Arc<BearDogCore>) -> Result<(), B
 /// Test real component registration
 pub async fn test_real_component_registration(core: &Arc<BearDogCore>) -> Result<(), BearDogError> {
     info!("📦 Testing real component registration");
-
-    use beardog_types::canonical::ComponentStatus;
 
     {
         let mut state = core.state.write().await;

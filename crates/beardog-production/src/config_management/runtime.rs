@@ -356,7 +356,6 @@ impl ProductionConfigManager {
 
 #[cfg(test)]
 mod tests {
-    #![expect(clippy::unwrap_used, reason = "test assertions")]
     #![expect(clippy::expect_used, reason = "test assertions")]
 
     include!("runtime_tests.rs");

@@ -312,8 +312,6 @@ impl Default for SystemMonitor {
 
 #[cfg(test)]
 mod tests {
-    #![expect(clippy::unwrap_used, reason = "test assertions")]
-
     use super::*;
     use std::collections::HashMap;
     use std::sync::Arc;
@@ -541,10 +539,12 @@ mod tests {
         SystemMonitor::test_process_alerts(&metrics, &health, &handlers, &config)
             .await
             .unwrap();
-        let alerts = received.lock().unwrap();
-        assert_eq!(alerts.len(), 1);
-        assert_eq!(alerts[0].alert_type, AlertType::HighCpuUsage);
-        assert_eq!(alerts[0].severity, AlertSeverity::Warning);
+        {
+            let alerts = received.lock().unwrap();
+            assert_eq!(alerts.len(), 1);
+            assert_eq!(alerts[0].alert_type, AlertType::HighCpuUsage);
+            assert_eq!(alerts[0].severity, AlertSeverity::Warning);
+        }
 
         let metrics_crit = Arc::new(RwLock::new(SystemMetrics {
             cpu_usage_percent: 96.0,

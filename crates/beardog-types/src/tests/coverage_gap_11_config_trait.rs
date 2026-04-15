@@ -393,6 +393,11 @@ mod config_utils_extra_methods {
 
     #[test]
     fn test_create_default_config() {
+        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+        struct Cfg {
+            name: String,
+        }
+
         let ts = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
@@ -400,11 +405,6 @@ mod config_utils_extra_methods {
         let dir = std::env::temp_dir().join(format!("beardog_cdc_test_{ts}"));
         let _ = std::fs::create_dir_all(&dir);
         let path = dir.join("default.toml");
-
-        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-        struct Cfg {
-            name: String,
-        }
 
         let cfg = Cfg {
             name: "default".to_string(),

@@ -251,7 +251,7 @@ mod tests {
         assert!(tags.iter().any(|s| s == "btsp"));
         assert!(tags.iter().any(|s| s == "ed25519"));
         let sorted = tags.clone();
-        let mut cmp = sorted.clone();
+        let mut cmp = sorted;
         cmp.sort();
         assert_eq!(tags, cmp, "tags should be sorted (BTreeSet order)");
     }

@@ -210,6 +210,7 @@ mod production_resources_tests {
 // ===========================================================================
 // canonical/config/production/environment.rs - 80 uncov
 // ===========================================================================
+#[allow(deprecated)]
 mod production_environment_tests {
     use crate::canonical::config::production::environment::*;
     use std::time::Duration;

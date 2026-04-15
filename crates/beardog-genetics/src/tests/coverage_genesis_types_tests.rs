@@ -105,6 +105,8 @@ mod genesis_types_tests {
                 root_node: root,
                 nodes,
                 relationships: vec![],
+                generation: 0,
+                head_commitment: vec![],
                 created_at: chrono::Utc::now(),
             },
             genesis_witness: make_valid_witness(node_id),

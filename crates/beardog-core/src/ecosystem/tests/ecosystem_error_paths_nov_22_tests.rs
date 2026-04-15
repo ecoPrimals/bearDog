@@ -19,6 +19,7 @@
 
 #[cfg(test)]
 mod ecosystem_error_tests {
+    use std::time::Duration;
 
     /// `TEST_CATEGORY`: unit
     /// `TEST_DOMAIN`: ecosystem
@@ -261,7 +262,6 @@ mod ecosystem_error_tests {
         assert!(should_open_circuit, "Should open circuit breaker");
 
         // Test half-open state
-        use std::time::Duration;
         let time_since_open = Duration::from_secs(30);
         let cooldown_period = Duration::from_secs(60);
 

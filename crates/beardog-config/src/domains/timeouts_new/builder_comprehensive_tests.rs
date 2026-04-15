@@ -271,7 +271,7 @@ mod tests {
 
     #[test]
     fn test_builder_default_trait() {
-        let builder1: TimeoutConfigBuilder = Default::default();
+        let builder1 = TimeoutConfigBuilder::default();
         let builder2 = TimeoutConfigBuilder::new();
 
         let config1 = builder1.build();

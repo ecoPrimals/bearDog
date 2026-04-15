@@ -4,6 +4,8 @@
 
 /// Core [`UnifiedProvider`] surface plus telemetry types.
 pub mod base_traits;
+/// Consolidated async provider hierarchy (`ConsolidatedProvider` and shared DTOs).
+pub mod consolidated;
 /// Storage, AI, and ancillary provider contracts.
 pub mod other_traits;
 /// Security, authn/z, and HSM-specific provider APIs.

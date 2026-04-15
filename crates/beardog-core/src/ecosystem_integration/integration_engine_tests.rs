@@ -201,7 +201,7 @@ mod error_handling_tests {
         let result = engine.integrate_with_ecosystem();
 
         if let Err(e) = result {
-            let msg = format!("{}", e);
+            let msg = format!("{e}");
             assert!(!msg.is_empty(), "Error message should not be empty");
             assert!(msg.len() > 10, "Error message should be descriptive");
         }

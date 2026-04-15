@@ -352,6 +352,8 @@ fn test_genetic_lineage_depth() {
             },
             nodes,
             relationships: vec![],
+            generation: 0,
+            head_commitment: vec![],
             created_at: chrono::Utc::now(),
         },
         genesis_witness: GenesisWitness {
@@ -397,6 +399,8 @@ fn test_genetic_lineage_hint() {
             },
             nodes,
             relationships: vec![],
+            generation: 0,
+            head_commitment: vec![],
             created_at: chrono::Utc::now(),
         },
         genesis_witness: GenesisWitness {

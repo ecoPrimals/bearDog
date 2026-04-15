@@ -76,7 +76,6 @@ mod monitoring_migration_tests {
 #[cfg(test)]
 mod system_config_tests {
     use crate::canonical::config::domains::system::*;
-    use crate::canonical::config::r#trait::BearDogConfig;
 
     #[test]
     fn test_system_domain_config_default() {
@@ -170,7 +169,6 @@ mod environment_config_tests {
 #[cfg(test)]
 mod config_utils_methods_tests {
     use crate::canonical::config::utils::*;
-    use std::path::PathBuf;
 
     #[test]
     fn test_get_standard_config_paths() {

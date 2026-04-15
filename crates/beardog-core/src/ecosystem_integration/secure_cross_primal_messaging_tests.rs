@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::primal_self_knowledge::{PrimalIdentity, PrimalIdentityEnvInputs};
+use beardog_types::canonical::discovery::PerformanceProfile;
 
 #[derive(Debug)]
 struct MockDiscoveryService {
@@ -98,7 +99,7 @@ fn sample_network_descriptor(id: &str) -> UniversalServiceDescriptor {
             parameters: std::collections::HashMap::new(),
         },
         auth_method: AuthenticationMethod::None,
-        performance_profile: Default::default(),
+        performance_profile: PerformanceProfile::default(),
         trust_score: 0.9,
     }
 }
@@ -120,7 +121,7 @@ fn sample_security_descriptor(id: &str) -> UniversalServiceDescriptor {
             parameters: std::collections::HashMap::new(),
         },
         auth_method: AuthenticationMethod::None,
-        performance_profile: Default::default(),
+        performance_profile: PerformanceProfile::default(),
         trust_score: 0.95,
     }
 }
@@ -344,9 +345,6 @@ async fn establish_secure_session_errors_when_peer_key_wrong_length() {
 
 #[tokio::test]
 async fn establish_secure_session_succeeds_with_valid_peer_public_key() {
-    let peer_sk = x25519_dalek::EphemeralSecret::random_from_rng(chacha20poly1305::aead::OsRng);
-    let peer_pk = x25519_dalek::PublicKey::from(&peer_sk);
-
     #[derive(Debug)]
     struct GoodKey {
         inner: Arc<MockDiscoveryService>,
@@ -372,6 +370,9 @@ async fn establish_secure_session_succeeds_with_valid_peer_public_key() {
             }))
         }
     }
+
+    let peer_sk = x25519_dalek::EphemeralSecret::random_from_rng(chacha20poly1305::aead::OsRng);
+    let peer_pk = x25519_dalek::PublicKey::from(&peer_sk);
 
     let inner = Arc::new(MockDiscoveryService {
         mock_primals: vec![sample_security_descriptor("sec-ok")],
@@ -413,40 +414,6 @@ async fn send_to_compute_and_storage_primals_happy_path() {
         UniversalCapabilityType,
     };
 
-    let compute = UniversalServiceDescriptor {
-        service_id: "cmp".to_string(),
-        capabilities: vec![UniversalCapabilityType::Compute {
-            abilities: vec![ComputeAbility::DataAnalysis],
-        }],
-        endpoint: ServiceEndpoint {
-            protocol: "grpc".to_string(),
-            host: "c".to_string(),
-            port: 9,
-            path: None,
-            parameters: std::collections::HashMap::new(),
-        },
-        auth_method: AuthenticationMethod::None,
-        performance_profile: Default::default(),
-        trust_score: 0.8,
-    };
-
-    let storage = UniversalServiceDescriptor {
-        service_id: "sto".to_string(),
-        capabilities: vec![UniversalCapabilityType::Storage {
-            characteristics: vec![StorageCharacteristic::Encrypted],
-        }],
-        endpoint: ServiceEndpoint {
-            protocol: "https".to_string(),
-            host: "s".to_string(),
-            port: 8,
-            path: None,
-            parameters: std::collections::HashMap::new(),
-        },
-        auth_method: AuthenticationMethod::None,
-        performance_profile: Default::default(),
-        trust_score: 0.85,
-    };
-
     #[derive(Debug)]
     struct Multi(Arc<MockDiscoveryService>);
 
@@ -473,6 +440,40 @@ async fn send_to_compute_and_storage_primals_happy_path() {
             Ok(serde_json::json!({ "ok": true }))
         }
     }
+
+    let compute = UniversalServiceDescriptor {
+        service_id: "cmp".to_string(),
+        capabilities: vec![UniversalCapabilityType::Compute {
+            abilities: vec![ComputeAbility::DataAnalysis],
+        }],
+        endpoint: ServiceEndpoint {
+            protocol: "grpc".to_string(),
+            host: "c".to_string(),
+            port: 9,
+            path: None,
+            parameters: std::collections::HashMap::new(),
+        },
+        auth_method: AuthenticationMethod::None,
+        performance_profile: PerformanceProfile::default(),
+        trust_score: 0.8,
+    };
+
+    let storage = UniversalServiceDescriptor {
+        service_id: "sto".to_string(),
+        capabilities: vec![UniversalCapabilityType::Storage {
+            characteristics: vec![StorageCharacteristic::Encrypted],
+        }],
+        endpoint: ServiceEndpoint {
+            protocol: "https".to_string(),
+            host: "s".to_string(),
+            port: 8,
+            path: None,
+            parameters: std::collections::HashMap::new(),
+        },
+        auth_method: AuthenticationMethod::None,
+        performance_profile: PerformanceProfile::default(),
+        trust_score: 0.85,
+    };
 
     let inner = Arc::new(MockDiscoveryService {
         mock_primals: vec![compute.clone(), storage.clone()],

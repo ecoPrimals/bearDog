@@ -166,8 +166,6 @@ pub(super) async fn load_from_storage(store: &KeyStore) -> Result<usize, BearDog
 
 #[cfg(test)]
 mod persistence_tests {
-    #![expect(clippy::unwrap_used, reason = "test assertions")]
-
     use super::super::{KeyMetadata, KeyStorage, KeyStore, KeyType, KeyUsage};
     use super::*;
     use ed25519_dalek::{SECRET_KEY_LENGTH, SigningKey};

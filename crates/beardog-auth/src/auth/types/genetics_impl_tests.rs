@@ -2,8 +2,8 @@
 
 use super::*;
 use beardog_types::genetics_constraints::{
-    BehavioralConstraint, ComputeQuota, DataAccessConstraint, KeyConstraints, LifetimeConstraint,
-    ScopeConstraint,
+    BehavioralConstraint, ComputeQuota, ComputeUsage, DataAccessConstraint, KeyConstraints,
+    LifetimeConstraint, ScopeConstraint,
 };
 use chrono::{Duration, Utc};
 use std::collections::HashMap;
@@ -471,7 +471,7 @@ fn test_combined_constraints() {
             max_hours: 1000.0,
             max_memory_bytes: 1024 * 1024 * 500,
             max_cpu_percent: 90,
-            current_usage: Default::default(),
+            current_usage: ComputeUsage::default(),
         }),
         ..Default::default()
     };

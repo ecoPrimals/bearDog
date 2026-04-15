@@ -274,7 +274,6 @@ fn print_help() {
 }
 
 #[cfg(test)]
-#[expect(clippy::unwrap_used, reason = "test assertions")]
 mod client_handler_tests {
     use super::{build_jsonrpc_request, discover_socket_path_with, print_help, send_command};
     use serde_json::json;
@@ -513,6 +512,7 @@ mod client_handler_tests {
 
     #[cfg(unix)]
     #[tokio::test]
+    #[allow(clippy::await_holding_lock)] // serializes handle_client tests against shared env
     async fn test_handle_client_runs_one_shot_command() {
         use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 

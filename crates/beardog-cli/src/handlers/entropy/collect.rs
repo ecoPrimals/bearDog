@@ -236,7 +236,6 @@ pub async fn handle_entropy_collect(
 }
 
 #[cfg(test)]
-#[expect(clippy::unwrap_used, reason = "test assertions")]
 mod collect_handler_tests {
     use beardog_errors::BearDogError;
     use tempfile::TempDir;

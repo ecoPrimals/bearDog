@@ -40,6 +40,8 @@ use super::MethodHandler;
 use super::utils::get_primal_name;
 use crate::btsp_provider::BeardogBtspProvider;
 use async_trait::async_trait;
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64_STD;
 use beardog_types::primal_identity::PrimalIdentity;
 use std::sync::Arc;
 use tracing::{debug, info, warn};
@@ -174,10 +176,7 @@ impl RelayHandler {
     /// # Returns
     /// `Ok(true)` if proof is valid, `Ok(false)` if invalid, `Err` on decode failure
     fn verify_lineage_proof(&self, peer_family_id: &str, proof_b64: &str) -> Result<bool, String> {
-        use base64::Engine;
-        use base64::engine::general_purpose::STANDARD as BASE64;
-
-        let proof_bytes = BASE64
+        let proof_bytes = BASE64_STD
             .decode(proof_b64)
             .map_err(|e| format!("Invalid base64 lineage proof: {e}"))?;
 
@@ -221,6 +220,8 @@ impl MethodHandler for RelayHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use base64::Engine;
+    use base64::engine::general_purpose::STANDARD as BASE64;
 
     fn test_identity() -> Arc<PrimalIdentity> {
         Arc::new(PrimalIdentity::for_test("test-family", "test-node"))
@@ -286,8 +287,6 @@ mod tests {
         hasher.update(b"RELAY_LINEAGE_PROOF_V1");
         let proof = hasher.finalize();
 
-        use base64::Engine;
-        use base64::engine::general_purpose::STANDARD as BASE64;
         let proof_b64 = BASE64.encode(proof.as_bytes());
 
         let params = serde_json::json!({
@@ -310,8 +309,6 @@ mod tests {
     async fn test_authorize_with_invalid_lineage_proof() {
         let handler = RelayHandler::new(test_identity());
 
-        use base64::Engine;
-        use base64::engine::general_purpose::STANDARD as BASE64;
         let bad_proof = BASE64.encode(b"this_is_not_a_valid_proof_at_all_nope");
 
         let params = serde_json::json!({
@@ -425,8 +422,6 @@ mod tests {
         hasher.update(b"RELAY_LINEAGE_PROOF_V1");
         let proof = hasher.finalize();
 
-        use base64::Engine;
-        use base64::engine::general_purpose::STANDARD as BASE64;
         let proof_b64 = BASE64.encode(proof.as_bytes());
 
         assert!(

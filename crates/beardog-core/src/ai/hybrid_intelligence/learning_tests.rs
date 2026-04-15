@@ -9,10 +9,6 @@ use super::learning::*;
 use approx::assert_relative_eq;
 
 #[cfg(test)]
-#[expect(
-    clippy::disallowed_methods,
-    reason = "learning tests use approx macros and intentional unwraps for fixtures"
-)]
 // ═══════════════════════════════════════════════════════════════════
 // LearningAlgorithmType Tests
 // ═══════════════════════════════════════════════════════════════════

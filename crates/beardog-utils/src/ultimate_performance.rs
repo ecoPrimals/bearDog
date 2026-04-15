@@ -136,7 +136,7 @@ struct MemoryAccessPattern {
 
 /// SIMD capability detection and optimization
 /// Best-effort SIMD flags (x86 via `is_x86_feature_detected!`, conservative elsewhere).
-#[expect(dead_code, reason = "pub struct for SIMD capability reporting")]
+#[allow(dead_code)]
 pub struct SIMDCapabilities {
     /// Target reports AVX2 support.
     has_avx2: bool,

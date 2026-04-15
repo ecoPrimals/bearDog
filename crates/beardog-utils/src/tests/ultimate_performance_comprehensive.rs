@@ -185,11 +185,6 @@ fn test_simd_capabilities_detection() {
 }
 
 #[test]
-#[expect(
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    reason = "benchmark indices widened for synthetic load; in-range for test vectors"
-)]
 fn test_process_sequential_data() {
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: core
@@ -201,7 +196,12 @@ fn test_process_sequential_data() {
 
     assert_eq!(result.len(), data.len());
     for (i, &value) in result.iter().enumerate().take(255) {
-        assert_eq!(value, (i as u8).wrapping_add(1));
+        assert_eq!(
+            value,
+            u8::try_from(i)
+                .expect("index within 0..255")
+                .wrapping_add(1)
+        );
     }
     // TEST_CATEGORY: integration
     // TEST_DOMAIN: core

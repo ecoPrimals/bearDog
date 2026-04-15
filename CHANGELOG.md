@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### April 15, 2026 -- Wave 50: Evolution Pass — Hardcoding, Large File Refactor, Overstep Cleanup
+
+- **Hardcoded ecosystem namespace evolved** — `beardog-tower-atomic/discovery.rs`: replaced 4 hardcoded `"biomeos"` strings in production 5-tier socket discovery with `resolve_biomeos_ipc_subdir_from_optional()`. Added `ipc_namespace` field to `DiscoverSocketEnv` for runtime configurability via `BIOMEOS_IPC_NAMESPACE`. `beardog-core/socket_config.rs`: replaced `.join("biomeos")` with shared constant `BIOMEOS_RUNTIME_SOCKET_SUBDIR`.
+- **3 large production files refactored** — `android.rs` 802→588 LOC: deduplicated 220 lines of transport traits/stubs between `android.rs` and orphaned `android_transports.rs`; wired orphan as proper sibling module. `ios.rs` 864→286 LOC: replaced 580 lines of inline tests with `#[path = "ios_tests.rs"]` referencing identical orphaned external file. `mobile_discoverer.rs` 806→471 LOC: extracted 5 repetitive capability builders (353 lines) to new `mobile_hsm_capabilities.rs` with shared default helpers.
+- **3 orphaned files wired** — `android_transports.rs`, `ios_tests.rs`, `mobile_hsm_capabilities.rs` from prior refactoring attempts now properly compiled via module tree.
+- **Audit findings** — 0 unsafe code, 0 production mocks (all 287 behind `#[cfg(test)]`), 0 TODO/FIXME markers, 0 `.bak`/`.old`/`.tmp` debris. `serde_yaml` tracked for migration when maintained fork stabilizes (deprecated upstream, but pure Rust).
+- **All quality gates clean** — fmt, clippy -D warnings, doc -D warnings, test (14,784 passing; 1 pre-existing flaky: `key_export_roundtrip` HOME env race).
+
 ### April 14, 2026 -- Wave 49: Deep Debt Sweep — Workspace Deps, Large File Refactor, Dead Exports
 
 - **Workspace dependency alignment (5 crates)** — `beardog-config`, `beardog-deploy`, `beardog-core`, `beardog-auth`, `beardog-node-registry` migrated from explicit version strings to `workspace = true` for 30+ dependencies (serde, tokio, tracing, ed25519-dalek, sha2/sha3, clap, chrono, uuid, tempfile, etc.). Eliminates version drift risk and unifies resolution.

@@ -668,7 +668,7 @@ fn legacy_hsm_provider_type_display_and_default() {
         name: "x".to_string(),
     };
     assert_eq!(format!("{c}"), "Custom(x)");
-    let d: LegacyHsmProviderType = Default::default();
+    let d: LegacyHsmProviderType = LegacyHsmProviderType::default();
     let _ = format!("{d}");
 }
 

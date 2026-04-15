@@ -11,18 +11,12 @@
 use crate::canonical::config::domains::{bootstrap, database, system};
 
 /// Helper to set env var for test scope
-#[expect(
-    dead_code,
-    reason = "EnvGuard::set used only in subset of modernization tests"
-)]
+#[allow(dead_code)]
 struct EnvGuard {
     key: String,
 }
 
-#[expect(
-    dead_code,
-    reason = "EnvGuard::set used only in subset of modernization tests"
-)]
+#[allow(dead_code)]
 impl EnvGuard {
     fn set(key: &str, value: &str) -> Self {
         beardog_errors::process_env::set_var(key, value);

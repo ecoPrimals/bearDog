@@ -8,7 +8,7 @@
 use crate::ecosystem_integration::{PrimalDiscoveryService, SecureCrossPrimalMessenger};
 use beardog_errors::BearDogError;
 use beardog_types::canonical::discovery::{
-    ComputeAbility, NetworkFunction, SecurityService, StorageCharacteristic,
+    ComputeAbility, NetworkFunction, PerformanceProfile, SecurityService, StorageCharacteristic,
     UniversalCapabilityType, UniversalServiceDescriptor,
 };
 use std::sync::Arc;
@@ -37,7 +37,7 @@ impl MockPrimalEcosystem {
             auth_method: beardog_types::canonical::discovery::AuthenticationMethod::ApiKey {
                 key_location: "network-key".to_string(),
             },
-            performance_profile: Default::default(),
+            performance_profile: PerformanceProfile::default(),
             trust_score: 0.95,
         };
 
@@ -57,7 +57,7 @@ impl MockPrimalEcosystem {
                 cert_path: "security-cert.pem".to_string(),
                 key_path: "security-key.pem".to_string(),
             },
-            performance_profile: Default::default(),
+            performance_profile: PerformanceProfile::default(),
             trust_score: 0.98,
         };
 
@@ -76,7 +76,7 @@ impl MockPrimalEcosystem {
             auth_method: beardog_types::canonical::discovery::AuthenticationMethod::ApiKey {
                 key_location: "compute-key".to_string(),
             },
-            performance_profile: Default::default(),
+            performance_profile: PerformanceProfile::default(),
             trust_score: 0.95,
         };
 
@@ -96,7 +96,7 @@ impl MockPrimalEcosystem {
                 cert_path: "storage-cert.pem".to_string(),
                 key_path: "storage-key.pem".to_string(),
             },
-            performance_profile: Default::default(),
+            performance_profile: PerformanceProfile::default(),
             trust_score: 0.99,
         };
 

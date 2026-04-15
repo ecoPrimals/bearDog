@@ -346,12 +346,6 @@ fn test_all_algorithm_variants_serde() {
 }
 
 #[test]
-#[expect(
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    clippy::cast_precision_loss,
-    reason = "enumerate() index as u8 for small fixed algorithm fixture vectors"
-)]
 fn test_encrypted_data_with_each_algorithm() {
     let algorithms = vec![
         CryptoAlgorithm::Aes256Gcm,
@@ -360,14 +354,15 @@ fn test_encrypted_data_with_each_algorithm() {
     ];
 
     for (idx, alg) in algorithms.into_iter().enumerate() {
+        let idx_u8 = u8::try_from(idx).expect("algorithm fixture index");
         let data = EncryptedData {
-            ciphertext: vec![idx as u8; 100],
+            ciphertext: vec![idx_u8; 100],
             algorithm: alg,
             metadata: EncryptionMetadata {
                 timestamp: SystemTime::now(),
                 key_id: Some(format!("key-{idx}")),
-                nonce: vec![idx as u8; 12],
-                tag: Some(vec![idx as u8; 16]),
+                nonce: vec![idx_u8; 12],
+                tag: Some(vec![idx_u8; 16]),
             },
         };
 

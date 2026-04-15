@@ -17,7 +17,7 @@ async fn test_monitoring_service_creation() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_alert_generation() -> Result<(), BearDogError> {
-    let config = Default::default();
+    let config = MonitoringConfig::default();
 
     let service = MonitoringService::new(config);
     let metrics = service.collect_performance_metrics()?;

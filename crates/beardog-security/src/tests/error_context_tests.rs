@@ -184,8 +184,6 @@ mod tests {
 
     #[test]
     #[expect(
-        clippy::unwrap_or_default,
-        clippy::manual_unwrap_or_default,
         clippy::unnecessary_literal_unwrap,
         reason = "intentionally uses unwrap_or idioms under test for API surface coverage"
     )]
@@ -203,8 +201,6 @@ mod tests {
     #[test]
     #[expect(
         clippy::unnecessary_lazy_evaluations,
-        clippy::unwrap_or_default,
-        clippy::manual_unwrap_or_default,
         clippy::unnecessary_literal_unwrap,
         reason = "intentionally uses unwrap_or_else paths for Result combinator coverage"
     )]

@@ -445,11 +445,15 @@ impl GenesisLineageProvider {
         nodes.insert(witness.device_id.clone(), witness_node.clone());
         nodes.insert(new_node_id.to_string(), new_node);
 
+        let chain_id = Uuid::new_v4().to_string();
+        let genesis_commitment = blake3::hash(chain_id.as_bytes()).as_bytes().to_vec();
         let lineage_chain = LineageChain {
-            chain_id: Uuid::new_v4().to_string(),
+            chain_id,
             root_node: witness_node,
             nodes,
             relationships: vec![relationship],
+            generation: 1,
+            head_commitment: genesis_commitment,
             created_at: now,
         };
 
@@ -476,6 +480,8 @@ impl GenesisLineageProvider {
                 },
                 nodes: std::collections::HashMap::new(),
                 relationships: vec![],
+                generation: 0,
+                head_commitment: vec![],
                 created_at: chrono::Utc::now(),
             },
             genesis_witness: witness.clone(),

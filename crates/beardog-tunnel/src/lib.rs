@@ -4,6 +4,7 @@
     test,
     allow(
         dead_code,
+        clippy::large_stack_arrays,
         clippy::bool_assert_comparison,
         clippy::bool_to_int_with_if,
         clippy::case_sensitive_file_extension_comparisons,

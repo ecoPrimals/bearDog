@@ -237,7 +237,7 @@ mod tests {
                 assert!(path_str.ends_with("beardog.sock"));
                 println!("✅ XDG-compliant path: {}", path.display());
             }
-            _ => panic!("Expected Filesystem endpoint"),
+            SocketEndpoint::Abstract(_) => panic!("Expected Filesystem endpoint"),
         }
 
         std::fs::remove_dir_all(&xdg_runtime).ok();
@@ -261,7 +261,7 @@ mod tests {
                 );
                 println!("✅ Environment override works");
             }
-            _ => panic!("Expected Filesystem endpoint"),
+            SocketEndpoint::Abstract(_) => panic!("Expected Filesystem endpoint"),
         }
     }
 
@@ -279,7 +279,7 @@ mod tests {
                     );
                     println!("✅ {} → {}", primal, path.display());
                 }
-                _ => panic!("Expected Filesystem endpoint"),
+                SocketEndpoint::Abstract(_) => panic!("Expected Filesystem endpoint"),
             }
         }
     }

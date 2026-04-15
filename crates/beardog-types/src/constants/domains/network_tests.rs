@@ -332,15 +332,9 @@ fn test_rate_limiting_headers() {
 #[test]
 fn test_port_consistency() {
     // Ensure deprecated constants match their functional equivalents
-    #[expect(
-        deprecated,
-        reason = "migration in progress — see CANONICAL_TYPE_MIGRATION_GUIDE"
-    )]
-    {
-        assert_eq!(defaults::default_api_port(), 8080);
-        // metrics_port is now 9100 (from config), not 9090
-        assert_eq!(defaults::default_metrics_port(), 9100);
-    }
+    assert_eq!(defaults::default_api_port(), 8080);
+    // metrics_port is now 9100 (from config), not 9090
+    assert_eq!(defaults::default_metrics_port(), 9100);
 }
 
 #[test]

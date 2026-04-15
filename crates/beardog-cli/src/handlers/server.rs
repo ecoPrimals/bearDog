@@ -282,7 +282,6 @@ async fn attempt_orchestrator_registration(_socket_path: &str, _tcp_addr: Option
 }
 
 #[cfg(test)]
-#[expect(clippy::unwrap_used, reason = "test assertions")]
 mod server_handler_tests {
     use crate::ServerArgs;
     use beardog_types::constants::domains::network::ipc_discovery::resolve_biomeos_ipc_subdir_from_optional;

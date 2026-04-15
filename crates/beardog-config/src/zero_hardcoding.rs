@@ -471,13 +471,7 @@ mod tests {
     fn test_zero_hardcoding_config() {
         let config = ZeroHardcodingConfig::auto();
         let http_addr = config.endpoints.http_socket_addr();
-        #[expect(
-            clippy::double_comparisons,
-            reason = "explicit chained comparisons document inclusive numeric bounds"
-        )]
-        {
-            assert!(http_addr.port() == 0 || http_addr.port() > 0);
-        }
+        let _ = http_addr.port();
     }
 
     #[test]

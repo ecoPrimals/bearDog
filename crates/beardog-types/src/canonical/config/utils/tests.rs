@@ -2,6 +2,7 @@
 
 use super::*;
 use serde::{Deserialize, Serialize};
+use std::io::Write;
 use tempfile::NamedTempFile;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -86,7 +87,6 @@ fn test_load_from_file_missing() {
 #[test]
 fn test_load_from_file_invalid_toml() -> Result<(), Box<dyn std::error::Error>> {
     let mut f = NamedTempFile::new()?;
-    use std::io::Write;
     writeln!(f, "not valid {{{{ toml")?;
     let err = UnifiedConfigUtils::load_from_file::<TestConfig, _>(f.path()).unwrap_err();
     assert!(err.to_string().contains("TOML") || err.to_string().contains("Invalid"));
@@ -212,7 +212,6 @@ fn test_find_and_auto_load_with_temp_config() -> Result<(), Box<dyn std::error::
 #[test]
 fn test_load_with_env_overrides() -> Result<(), Box<dyn std::error::Error>> {
     let mut f = NamedTempFile::new()?;
-    use std::io::Write;
     writeln!(
         f,
         r#"

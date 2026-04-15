@@ -222,7 +222,7 @@ mod root_lib_coverage_extension_tests {
             storage_endpoint: None,
         };
 
-        let framework = BearDogFramework::with_config(config.clone());
+        let framework = BearDogFramework::with_config(config);
 
         assert!(framework.is_ok());
         let framework = framework.unwrap();

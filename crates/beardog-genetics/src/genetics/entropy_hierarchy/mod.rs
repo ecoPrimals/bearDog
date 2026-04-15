@@ -37,6 +37,7 @@ pub use validation::EntropyValidator;
 mod tests {
     use super::*;
     use chrono::Utc;
+    use std::collections::HashMap;
 
     // ========================================================================
     // Manager Creation Tests
@@ -107,7 +108,7 @@ mod tests {
             },
             algorithm: "ChaCha20".to_string(),
             seed_source: "hardware".to_string(),
-            quality_metrics: Default::default(),
+            quality_metrics: HashMap::default(),
         };
 
         let entropy = EntropyClass::HumanSupervisedMachine {
@@ -132,7 +133,7 @@ mod tests {
             },
             algorithm: "MT19937".to_string(),
             seed_source: "time".to_string(),
-            quality_metrics: Default::default(),
+            quality_metrics: HashMap::default(),
         };
 
         let entropy = EntropyClass::StoreBoughtMachine {
@@ -174,7 +175,7 @@ mod tests {
             },
             algorithm: "test".to_string(),
             seed_source: "test".to_string(),
-            quality_metrics: Default::default(),
+            quality_metrics: HashMap::default(),
         };
 
         let supervised = EntropyClass::HumanSupervisedMachine {
@@ -201,7 +202,7 @@ mod tests {
             },
             algorithm: "test".to_string(),
             seed_source: "test".to_string(),
-            quality_metrics: Default::default(),
+            quality_metrics: HashMap::default(),
         };
 
         let supervised = EntropyClass::HumanSupervisedMachine {

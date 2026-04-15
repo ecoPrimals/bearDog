@@ -301,6 +301,7 @@ impl Default for LiveFeedValidator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::RngCore;
 
     #[test]
     fn test_live_feed_validator_creation() {
@@ -354,7 +355,6 @@ mod tests {
         let validator = LiveFeedValidator::new();
 
         // Real random data (should have good entropy)
-        use rand::RngCore;
         let mut data = vec![0u8; 256];
         rand::rng().fill_bytes(&mut data);
 

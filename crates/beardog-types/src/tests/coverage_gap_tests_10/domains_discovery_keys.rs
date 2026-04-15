@@ -44,6 +44,7 @@ mod security_domain_mod_tests_extra {
 // ===========================================================================
 mod authorization_tests_extra {
     use crate::canonical::config::security::authorization::*;
+    use std::collections::HashMap;
 
     #[test]
     fn test_canonical_authorization_config_default() {
@@ -57,7 +58,7 @@ mod authorization_tests_extra {
             resource_pattern: "/api/users/*".to_string(),
             required_permissions: vec!["read".to_string()],
             methods: vec!["GET".to_string()],
-            conditions: Default::default(),
+            conditions: HashMap::default(),
         };
         let _ = format!("{c:?}");
     }
@@ -67,10 +68,10 @@ mod authorization_tests_extra {
         let c = AbacPolicyConfig {
             name: "test_policy".to_string(),
             description: "A test policy".to_string(),
-            subject_attributes: Default::default(),
-            resource_attributes: Default::default(),
+            subject_attributes: HashMap::default(),
+            resource_attributes: HashMap::default(),
             action: "read".to_string(),
-            environment_attributes: Default::default(),
+            environment_attributes: HashMap::default(),
             decision: "allow".to_string(),
         };
         let _ = format!("{c:?}");
@@ -137,18 +138,19 @@ mod config_utils_tests_extra {
     #[test]
     fn test_save_and_load_toml() {
         use std::time::SystemTime;
-        let ts = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos();
-        let dir = std::env::temp_dir().join(format!("beardog_utils_test_{ts}"));
-        let _ = std::fs::create_dir_all(&dir);
 
         #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
         struct TestCfg {
             name: String,
             value: i32,
         }
+
+        let ts = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let dir = std::env::temp_dir().join(format!("beardog_utils_test_{ts}"));
+        let _ = std::fs::create_dir_all(&dir);
 
         let cfg = TestCfg {
             name: "test".to_string(),
@@ -168,17 +170,18 @@ mod config_utils_tests_extra {
     #[test]
     fn test_save_and_load_json() {
         use std::time::SystemTime;
+
+        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+        struct TestCfg {
+            name: String,
+        }
+
         let ts = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_nanos();
         let dir = std::env::temp_dir().join(format!("beardog_json_test_{ts}"));
         let _ = std::fs::create_dir_all(&dir);
-
-        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-        struct TestCfg {
-            name: String,
-        }
 
         let cfg = TestCfg {
             name: "json_test".to_string(),
@@ -213,17 +216,18 @@ mod config_utils_tests_extra {
     #[test]
     fn test_create_default_config() {
         use std::time::SystemTime;
+
+        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+        struct Cfg {
+            enabled: bool,
+        }
+
         let ts = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_nanos();
         let dir = std::env::temp_dir().join(format!("beardog_default_cfg_{ts}"));
         let path = dir.join("defaults.toml");
-
-        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-        struct Cfg {
-            enabled: bool,
-        }
 
         let result = UnifiedConfigUtils::create_default_config(Cfg { enabled: true }, &path);
         assert!(result.is_ok());
@@ -234,6 +238,12 @@ mod config_utils_tests_extra {
     #[test]
     fn test_load_with_env_overrides() {
         use std::time::SystemTime;
+
+        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+        struct Cfg {
+            name: String,
+        }
+
         let ts = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -241,11 +251,6 @@ mod config_utils_tests_extra {
         let dir = std::env::temp_dir().join(format!("beardog_env_test_{ts}"));
         let _ = std::fs::create_dir_all(&dir);
         let path = dir.join("test.toml");
-
-        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-        struct Cfg {
-            name: String,
-        }
 
         let cfg = Cfg {
             name: "env_test".to_string(),
@@ -288,6 +293,7 @@ mod config_utils_tests_extra {
 // ===========================================================================
 mod service_discovery_extra_tests {
     use crate::canonical::discovery::service_discovery_capability::*;
+    use std::collections::HashMap;
 
     #[test]
     fn test_service_health_variants() {
@@ -317,7 +323,7 @@ mod service_discovery_extra_tests {
     fn test_discovery_health_status_manual() {
         let h = DiscoveryHealthStatus {
             is_healthy: true,
-            details: Default::default(),
+            details: HashMap::default(),
             response_time_ms: 5,
         };
         let _ = format!("{h:?}");
@@ -405,6 +411,7 @@ mod service_discovery_extra_tests {
 // ===========================================================================
 mod key_management_extra_tests {
     use crate::canonical::discovery::key_management_capability::*;
+    use std::collections::HashMap;
 
     #[test]
     fn test_key_spec_manual() {
@@ -413,7 +420,7 @@ mod key_management_extra_tests {
             key_size: Some(256),
             usage: KeyUsage::Encrypt,
             extractable: false,
-            metadata: Default::default(),
+            metadata: HashMap::default(),
         };
         let _ = format!("{k:?}");
     }
@@ -485,7 +492,7 @@ mod key_management_extra_tests {
     fn test_kms_health_status_manual() {
         let h = KmsHealthStatus {
             is_healthy: true,
-            details: Default::default(),
+            details: HashMap::default(),
             response_time_ms: 5,
         };
         let _ = format!("{h:?}");

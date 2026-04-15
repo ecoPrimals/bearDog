@@ -424,7 +424,7 @@ mod workflow_extra_tests {
             id: "step-1".to_string(),
             name: "test".to_string(),
             step_type: StepType::Action,
-            configuration: Default::default(),
+            configuration: std::collections::HashMap::default(),
             dependencies: vec![],
             timeout_seconds: Some(30),
             retry_count: 3,

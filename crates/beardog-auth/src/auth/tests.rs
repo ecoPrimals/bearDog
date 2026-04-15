@@ -6,6 +6,7 @@
 // This module provides functionality for the BearDog ecosystem.
 mod auth_tests {
     use argon2::{Argon2, PasswordHash, PasswordVerifier};
+    use rand::Rng;
     use tokio;
     #[tokio::test]
     async fn test_password_hashing() -> Result<(), Box<dyn std::error::Error>> {
@@ -62,7 +63,7 @@ mod auth_tests {
 
         let session_data = create_session_data(user_id, session_id).unwrap_or_else(|e| {
             eprintln!("Session creation should succeed: {e:?}");
-            Default::default()
+            MockSessionData::default()
         });
         assert_eq!(session_data.user_id, user_id);
         assert_eq!(session_data.session_id, session_id);
@@ -77,7 +78,7 @@ mod auth_tests {
         let user_id = "test_user_123";
         let token = generate_mfa_token(user_id.to_string()).unwrap_or_else(|e| {
             eprintln!("MFA token generation should succeed: {e:?}");
-            Default::default()
+            String::default()
         });
         assert_eq!(token.len(), 6); // Standard TOTP length
         assert!(token.chars().all(|c| c.is_ascii_digit()));
@@ -106,14 +107,14 @@ mod auth_tests {
 
         let user = create_test_user(username, password).unwrap_or_else(|e| {
             eprintln!("User creation should succeed: {e:?}");
-            Default::default()
+            MockUser::default()
         });
         assert_eq!(user.username, username);
         assert!(!user.password_hash.is_empty());
 
         let auth_result = authenticate_user(username, password).unwrap_or_else(|e| {
             eprintln!("Authentication should succeed: {e:?}");
-            Default::default()
+            MockAuthResult::default()
         });
         assert!(auth_result.success);
         assert!(auth_result.session_token.is_some());
@@ -157,7 +158,6 @@ mod auth_tests {
                                   abcdefghijklmnopqrstuvwxyz\
                                   0123456789";
         let mut rng = rand::rng();
-        use rand::Rng;
         let token: String = (0..length)
             .map(|_| CHARSET[rng.random_range(0..CHARSET.len())] as char)
             .collect();
@@ -179,7 +179,6 @@ mod auth_tests {
     fn generate_mfa_token(user_id: String) -> Result<String, Box<dyn std::error::Error>> {
         let _ = user_id; // Use parameter to avoid warnings
         let mut rng = rand::rng();
-        use rand::Rng;
         let token: String = (0..6)
             .map(|_| rng.random_range(0..10).to_string())
             .collect();

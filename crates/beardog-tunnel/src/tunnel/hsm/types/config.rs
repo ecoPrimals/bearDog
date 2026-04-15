@@ -306,7 +306,7 @@ mod tests {
                 assert!(config.use_secure_enclave);
                 assert!(config.require_biometric);
             }
-            _ => panic!("Expected iOS variant"),
+            SmartphoneHsmConfig::Android(_) => panic!("Expected iOS variant"),
         }
     }
 

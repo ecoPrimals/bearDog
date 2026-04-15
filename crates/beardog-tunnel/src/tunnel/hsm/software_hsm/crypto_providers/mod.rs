@@ -30,6 +30,7 @@ mod tests {
     use crate::tunnel::hsm::types::KeyType;
     use crate::tunnel::hsm::types::config::CryptoBackend;
     use beardog_errors::BearDogError;
+    use ed25519_dalek::SigningKey;
 
     #[tokio::test]
     async fn test_all_crypto_providers() -> Result<(), BearDogError> {
@@ -78,7 +79,6 @@ mod tests {
         })?;
 
         // Derive public key for verification (Ed25519 signing key is 32 bytes, verifying key is also 32 bytes)
-        use ed25519_dalek::SigningKey;
         let key_array: [u8; 32] = signing_key.clone().try_into().map_err(|_| {
             BearDogError::crypto_error("Invalid key length for Ed25519".to_string())
         })?;

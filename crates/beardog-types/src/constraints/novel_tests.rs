@@ -378,7 +378,7 @@ fn test_network_ssid_constraint_meta() {
     };
     assert_eq!(c.constraint_type(), "network_ssid");
     let s = c.serialize_json().expect("json");
-    assert!(s.contains("a") && s.contains("b"));
+    assert!(s.contains('a') && s.contains('b'));
 }
 
 #[test]

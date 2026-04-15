@@ -6,7 +6,6 @@
 //! Targets: `generate_recommendations`, edge cases, all compliance standards
 
 #[cfg(test)]
-#[expect(clippy::unwrap_used, reason = "test assertions")]
 mod handlers_coverage_extension_tests {
     use crate::ComplianceHandler;
     use crate::compliance::types::{

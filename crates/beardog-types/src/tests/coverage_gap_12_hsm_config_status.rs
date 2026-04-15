@@ -124,7 +124,6 @@ mod hsm_capabilities_methods_tests {
 #[cfg(test)]
 mod hsm_config_methods_tests {
     use crate::canonical::hsm::config::*;
-    use std::time::Duration;
 
     #[test]
     fn test_hsm_config_default() {
@@ -211,8 +210,6 @@ mod hsm_config_methods_tests {
 #[cfg(test)]
 mod hsm_status_methods_tests {
     use crate::canonical::hsm::status::*;
-    use std::collections::HashMap;
-    use std::time::SystemTime;
 
     #[test]
     fn test_hsm_status_new() {

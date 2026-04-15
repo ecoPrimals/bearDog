@@ -39,7 +39,14 @@ pub struct LineageMetadata {
     pub custom: std::collections::HashMap<String, String>,
 }
 
-/// A lineage chain representing the cryptographic parent-child relationships
+/// A lineage chain representing the cryptographic parent-child relationships.
+///
+/// Supports generational provenance (Phase 3): each mutation increments
+/// `generation` and updates `head_commitment` with a chained Blake3
+/// hash binding the previous head to the new event.  Proofs include
+/// the generation and commitment so verifiers can confirm they refer
+/// to a specific, ordered point in the chain's history rather than
+/// just a point-in-time tree snapshot.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LineageChain {
     /// Unique identifier for this lineage chain
@@ -50,6 +57,13 @@ pub struct LineageChain {
     pub nodes: std::collections::HashMap<String, LineageNode>,
     /// Parent-child relationships with signatures
     pub relationships: Vec<LineageRelationship>,
+    /// Monotonic generation counter (incremented on every chain mutation).
+    #[serde(default)]
+    pub generation: u64,
+    /// Chained commitment: `Blake3(prev_commitment || event_bytes)`.
+    /// Genesis value is `Blake3(chain_id)`.
+    #[serde(default)]
+    pub head_commitment: Vec<u8>,
     /// Creation timestamp
     pub created_at: DateTime<Utc>,
 }
@@ -81,7 +95,11 @@ pub struct WitnessSignature {
     pub witnessed_at: DateTime<Utc>,
 }
 
-/// A proof that a node belongs to a specific lineage
+/// A proof that a node belongs to a specific lineage at a specific generation.
+///
+/// Contains the generation and head commitment so verifiers can confirm
+/// this proof was issued against a known chain state, enabling
+/// verifiable proof chains (generation N → N+1 → N+2).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LineageProof {
     /// Node claiming lineage membership
@@ -94,6 +112,13 @@ pub struct LineageProof {
     pub proof_chain: Vec<LineageRelationship>,
     /// Merkle root of the lineage tree (for efficient verification)
     pub merkle_root: Vec<u8>,
+    /// Chain generation at which this proof was issued.
+    #[serde(default)]
+    pub generation: u64,
+    /// Head commitment of the chain when this proof was generated.
+    /// Binds the proof to a specific, ordered chain state.
+    #[serde(default)]
+    pub head_commitment: Vec<u8>,
     /// Proof generated at
     pub generated_at: DateTime<Utc>,
 }

@@ -157,12 +157,6 @@ impl AlertManager {
         }
     }
 
-    #[expect(
-        clippy::cast_possible_truncation,
-        clippy::cast_sign_loss,
-        clippy::cast_precision_loss,
-        reason = "alert counters vs limits: usize/u64 mixing in synthetic rate-limit tests"
-    )]
     pub fn send_alert(&self, severity: &str, recipients: Vec<&str>) -> Result<(), BearDogError> {
         if recipients.is_empty() {
             return Err(BearDogError::Business {
